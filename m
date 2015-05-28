@@ -1,363 +1,279 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Cc: Aaron Lu <aaron.lu@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <len.brown@intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Zhang Rui <rui.zhang@intel.com>
-Subject: [PATCH] ACPI / PM: Rework device power management to follow ACPI 6
-Date: Thu, 07 May 2015 00:37:13 +0200
-Message-ID: <5141050.0s0C74Tu0K@vostro.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from serverkommune.de ([176.9.61.43]:57657 "EHLO
+	smtp.serverkommune.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753683AbbE1J3x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 05:29:53 -0400
+Message-ID: <5566DE4F.5080306@lastlog.de>
+Date: Thu, 28 May 2015 11:22:23 +0200
+From: Joachim Schiele <js@lastlog.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: linux-pci@vger.kernel.org
+Subject: Re: lenovo T530+Nvida GTX 660 TI eGPU via PE4H
+References: <mebuq3$mqo$1@ger.gmane.org>	 <CAErSpo4AS0LRas_nYsp3ZL=4wx=Avtq_mX_W_ZcEMUf2hkDm6Q@mail.gmail.com>	 <mecob7$pof$1@ger.gmane.org> <mjqftk$jp4$1@ger.gmane.org> <1432787230.5794.9.camel@redhat.com>
+In-Reply-To: <1432787230.5794.9.camel@redhat.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="7Io4WsslSBQALIkCfBqVcc5kkGSxvgogi"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--7Io4WsslSBQALIkCfBqVcc5kkGSxvgogi
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-The ACPI 6 specification has made some changes in the device power
-management area.  In particular:
+ah nice! thanks for reporting back. i'm looking forward to testing your
+cmdline this weekend.
 
- * The D3hot power state is now supposed to be always available
-   (instead of D3cold) and D3cold is only regarded as valid if the
-   _PR3 object is present for the given device.
+On 28.05.2015 06:27, Alex Williamson wrote:
+> On Sat, 2015-05-23 at 20:12 +0200, Joachim Schiele wrote:
+>> just wanted to report that i got the external graphics card to work wi=
+th
+>> native windows 7 and setup 1.x + pci compaction!
+>>
+>> see:
+>>   http://blog.lastlog.de/posts/setup-1.x/
+>>
+>> i hope to get it also working in linux host using kvm+win7 as guest so=
+on.
+>=20
+> I just setup something similar, using the EXP GDC "Beast" rather than
+> the PE4H.  My Lenovo T530 only leaves 390MB for MMIO space and doesn't
+> provide any 64bit space via ACPI.  I also need to fiddle with the
+> switches to delay the card so the laptop doesn't hang during BIOS boot.=
 
- * The required ordering of transitions into power states deeper than
-   D0 is now such that for a transition into state Dx the _PSx method
-   is supposed to be executed first, if present, and the states of
-   the power resources the device depends on are supposed to be
-   changed after that.
+> I pass pci=3Dnocrs,realloc on the kernel commandline in order to get th=
+e
+> GPU programmed.  I've only actually tested it with KVM/VFIO GPU
+> assignment and it seems to work well, or at least as well as can be
+> expected over a x1 5GT/s link.  Thanks,
+>=20
+> Alex
+>=20
+>> On 18.03.2015 21:48, Joachim Schiele wrote:
+>>> hi,
+>>>
+>>> i've run with pci=3Drealloc two tests, the results are here (also the=
 
- * It is now explicitly forbidden to transition devices from
-   lower-power (deeper) into higher-power (shallower) power states
-   other than D0.
+>>> dmesg) outputs:
+>>>
+>>> https://lastlog.de/wiki/index.php/T530%2BNvida_GTX_660_TI_eGPU_via_PE=
+4H#debugging_using_pci.3Drealloc
+>>>
+>>> thanks in advance,
+>>> joachim schiele
+>>>
+>>>
+>>> On 18.03.2015 18:06, Bjorn Helgaas wrote:
+>>>> [+cc Alex]
+>>>>
+>>>> Hi Joachim,
+>>>>
+>>>> Thanks a lot for the bug report.
+>>>>
+>>>> On Wed, Mar 18, 2015 at 8:32 AM, Joachim Schiele <js@lastlog.de> wro=
+te:
+>>>>> hi,
+>>>>>
+>>>>> =3D=3D=3D question =3D=3D=3D
+>>>>> with the setup described below, i can't pass the graphics adapter i=
+nto a
+>>>>> KVM guest as described below.
+>>>>>
+>>>>> is the BAR stuff in the listing an error i wuld have to fix in orde=
+r to
+>>>>> get my eGPU running? if so, what could i do about it
+>>>>
+>>>> Yes.  If we can't assign resources to the BARs, we can't enable the
+>>>> device.  If you boot with "pci=3Drealloc", Linux will try harder to
+>>>> assign space (including moving other devices to make space if
+>>>> necessary).
+>>>>
+>>>>> i've seen that the
+>>>>> laptop will hang on boot if the eGPU is powered on system startup.
+>>>>
+>>>> It's possible the BIOS is hanging because it tried to assign space f=
+or
+>>>> the eGPU but failed.
+>>>>
+>>>>> i can
+>>>>> see the adapter after hotplugging it using lspci and i never see an=
 
-Those changes have been made so the specification reflects the
-Windows' device power management code that the vast majority of
-systems using ACPI is validated against.
+>>>>> image on the external display.
+>>>>
+>>>> The device will appear in lspci even if we can't assign space for it=
+=2E
+>>>> In that case the device would not work, even though it appears in
+>>>> lspci.
+>>>>
+>>>> So please try "pci=3Drealloc".  Also, please collect a complete dmes=
+g
+>>>> log and "lspci -vv" output (with eGPU attached).  That will contain
+>>>> the information needed to see whether it's possible even in principl=
+e
+>>>> to make this work.
+>>>>
+>>>>> my config is this:
+>>>>> sudo qemu-system-x86_64 -enable-kvm \
+>>>>> -m 8192 \
+>>>>> -M q35 \
+>>>>> -cpu host,kvm=3Doff \
+>>>>> -smp 4,sockets=3D1,cores=3D4,threads=3D1 \
+>>>>> -vga none \
+>>>>> -vnc none \
+>>>>> -device
+>>>>> ioh3420,bus=3Dpcie.0,addr=3D1c.0,multifunction=3Don,port=3D1,chassi=
+s=3D1,id=3Droot.1 \
+>>>>> -device
+>>>>> vfio-pci,host=3D04:00.0,bus=3Droot.1,addr=3D00.0,multifunction=3Don=
+,x-vga=3Don \
+>>>>> -device vfio-pci,host=3D04:00.1,bus=3Droot.1,addr=3D00.1 \
+>>>>> -drive
+>>>>> file=3D/home/joachim/en_windows_7_professional_x64_dvd_X15-65805.is=
+o,id=3Disocd
+>>>>> -device ide-cd,bus=3Dide.1,drive=3Disocd \
+>>>>> -drive file=3D/var/lib/libvirt/images/win7.qcow2,format=3Dqcow2,id=3D=
+hdd
+>>>>> -device ide-hd,bus=3Dide.0,drive=3Dhdd \
+>>>>> -bios /usr/share/seabios/bios.bin \
+>>>>> -soundhw ac97
+>>>>>
+>>>>> =3D=3D=3D when hotplugging the eGPU =3D=3D=3D
+>>>>> i want to use a Nvidia GTX 660 TI as an eGPU using PE4H and when i
+>>>>> hotplug the ePCI adapter i get this log on a 3.18 ubuntu kernel:
+>>>>>
+>>>>> [  960.145002] vgaarb: device changed decodes:
+>>>>> PCI:0000:00:02.0,olddecodes=3Dnone,decodes=3Dio+mem:owns=3Dnone
+>>>>> [  966.574858] pci 0000:04:00.0: [10de:1183] type 00 class 0x030000=
 
-To avoid artificial differences in ACPI device power management
-between Windows and Linux, modify the ACPI device power management
-code to follow the new specification.  Add comments explaining the
-code flow in some unclear places.
+>>>>> [  966.574892] pci 0000:04:00.0: reg 0x10: [mem 0x00000000-0x00ffff=
+ff]
+>>>>> [  966.574921] pci 0000:04:00.0: reg 0x14: [mem 0x00000000-0x07ffff=
+ff
+>>>>> 64bit pref]
+>>>>> [  966.574950] pci 0000:04:00.0: reg 0x1c: [mem 0x00000000-0x01ffff=
+ff
+>>>>> 64bit pref]
+>>>>> [  966.574963] pci 0000:04:00.0: reg 0x24: [io  0x0000-0x007f]
+>>>>> [  966.574974] pci 0000:04:00.0: reg 0x30: [mem 0x00000000-0x0007ff=
+ff pref]
+>>>>> [  966.575224] vgaarb: device added:
+>>>>> PCI:0000:04:00.0,decodes=3Dio+mem,owns=3Dnone,locks=3Dnone
+>>>>> [  966.575227] vgaarb: device changed decodes:
+>>>>> PCI:0000:00:02.0,olddecodes=3Dio+mem,decodes=3Dnone:owns=3Dnone
+>>>>> [  966.575327] pci 0000:04:00.1: [10de:0e0a] type 00 class 0x040300=
 
-This only may affect some real corner cases in which the OS behavior
-expected by the firmware is different from the Windows one, but that's
-quite unlikely.  The transition ordering change affects transitions
-to D1 and D2 which are rarely used (if at all) and into D3hot and
-D3cold for devices actually having _PR3, but those are likely to
-be validated against Windows anyway.  The other changes may affect
-code calling acpi_device_get_power() or acpi_device_update_power()
-where ACPI_STATE_D3_HOT may be returned instead of ACPI_STATE_D3_COLD
-(that's why the ACPI fan driver needs to be updated too) and since
-transitions into ACPI_STATE_D3_HOT may remove power now, it is better
-to avoid this one in acpi_pm_device_sleep_state() if the "no power
-off" PM QoS flag is set.
+>>>>> [  966.575356] pci 0000:04:00.1: reg 0x10: [mem 0x00000000-0x00003f=
+ff]
+>>>>> [  966.998345] pci 0000:04:00.0: BAR 1: no space for [mem size
+>>>>> 0x08000000 64bit pref]
+>>>>> [  966.998350] pci 0000:04:00.0: BAR 1: failed to assign [mem size
+>>>>> 0x08000000 64bit pref]
+>>>>> [  966.998353] pci 0000:04:00.0: BAR 3: no space for [mem size
+>>>>> 0x02000000 64bit pref]
+>>>>> [  966.998355] pci 0000:04:00.0: BAR 3: failed to assign [mem size
+>>>>> 0x02000000 64bit pref]
+>>>>> [  966.998357] pci 0000:04:00.0: BAR 0: no space for [mem size 0x01=
+000000]
+>>>>> [  966.998358] pci 0000:04:00.0: BAR 0: failed to assign [mem size
+>>>>> 0x01000000]
+>>>>> [  966.998360] pci 0000:04:00.0: BAR 6: assigned [mem
+>>>>> 0xf1400000-0xf147ffff pref]
+>>>>> [  966.998363] pci 0000:04:00.1: BAR 0: assigned [mem 0xf1480000-0x=
+f1483fff]
+>>>>> [  966.998369] pci 0000:04:00.1: BAR 0: error updating (0xf1480000 =
+!=3D
+>>>>> 0xffffffff)
+>>>>> [  966.998373] pci 0000:04:00.0: BAR 5: assigned [io  0x3000-0x307f=
+]
+>>>>> [  966.998379] pci 0000:04:00.0: BAR 5: error updating (0x003001 !=3D=
 
-The only existing user of acpi_device_can_poweroff() really cares
-about the case when _PR3 is present, so the change in that function
-should not cause any problems to happen too.
+>>>>> 0xffffffff)
+>>>>> [  966.998392] pcieport 0000:00:1c.2: Max Payload Size set to  128/=
+ 128
+>>>>> (was  128), Max Read Rq  128
+>>>>> [  966.998403] pci 0000:04:00.0: Max Payload Size set to 16384/ 256=
+ (was
+>>>>> 16384), Max Read Rq 16384
+>>>>> [  966.998414] pci 0000:04:00.1: Max Payload Size set to 16384/ 256=
+ (was
+>>>>> 16384), Max Read Rq 16384
+>>>>> [  966.998472] pci-stub 0000:04:00.0: claimed by stub
+>>>>> [  966.998495] pci-stub 0000:04:00.1: claimed by stub
+>>>>> [  967.099040] pcieport 0000:00:1c.2: Max Payload Size set to  128/=
+ 128
+>>>>> (was  128), Max Read Rq  128
+>>>>> [  967.099059] pci-stub 0000:04:00.0: Max Payload Size set to  128/=
+ 256
+>>>>> (was  128), Max Read Rq  512
+>>>>> [  967.099075] pci-stub 0000:04:00.1: Max Payload Size set to  128/=
+ 256
+>>>>> (was  128), Max Read Rq  512
+>>>>> [ 7735.938854] vgaarb: device changed decodes:
+>>>>> PCI:0000:00:02.0,olddecodes=3Dnone,decodes=3Dio+mem:owns=3Dnone
+>>>>>
+>>>>>
+>>>>>
+>>>>>
+>>>>> more at:
+>>>>>
+>>>>> https://lastlog.de/wiki/index.php/T530%2BNvida_GTX_660_TI_eGPU_via_=
+PE4H
+>>>>>
+>>>>> i derived the scripts i'm using from this guide:
+>>>>> http://www.pugetsystems.com/labs/articles/Multiheaded-NVIDIA-Gaming=
+-using-Ubuntu-14-04-KVM-585/
+>>>>>
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci=
+" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" i=
+n
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+>=20
+>=20
 
-A plus is that PCI_D3hot can be mapped to ACPI_STATE_D3_HOT
-now and the compatibility with older systems should be covered
-automatically.
 
-In any case, if any real problems result from this, it still will
-be better to follow the Windows' behavior (which now is reflected
-by the specification too) in general and handle the cases when it
-doesn't work via quirks.
+--=20
+Joachim Schiele
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/device_pm.c |   97 ++++++++++++++++++++++++++++-------------------
- drivers/acpi/fan.c       |    5 +-
- drivers/acpi/power.c     |    3 -
- drivers/acpi/scan.c      |   26 ++----------
- drivers/pci/pci-acpi.c   |    2 
- include/acpi/acpi_bus.h  |    3 -
- 6 files changed, 71 insertions(+), 65 deletions(-)
+blog: http://blog.lastlog.de
+wiki: http://lastlog.de
+jabber: josh@jabber.ccc.de
+GPG: C6AC8770
 
-Index: linux-pm/drivers/acpi/power.c
-===================================================================
---- linux-pm.orig/drivers/acpi/power.c
-+++ linux-pm/drivers/acpi/power.c
-@@ -684,7 +684,8 @@ int acpi_power_get_inferred_state(struct
- 		}
- 	}
- 
--	*state = ACPI_STATE_D3_COLD;
-+	*state = device->power.states[ACPI_STATE_D3_COLD].flags.valid ?
-+		ACPI_STATE_D3_COLD : ACPI_STATE_D3_HOT;
- 	return 0;
- }
- 
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -272,7 +272,6 @@ struct acpi_device_power_flags {
- struct acpi_device_power_state {
- 	struct {
- 		u8 valid:1;
--		u8 os_accessible:1;
- 		u8 explicit_set:1;	/* _PSx present? */
- 		u8 reserved:6;
- 	} flags;
-@@ -602,7 +601,7 @@ static inline bool acpi_device_can_wakeu
- 
- static inline bool acpi_device_can_poweroff(struct acpi_device *adev)
- {
--	return adev->power.states[ACPI_STATE_D3_COLD].flags.os_accessible;
-+	return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
- }
- 
- #else	/* CONFIG_ACPI */
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -1766,15 +1766,9 @@ static void acpi_bus_init_power_state(st
- 	if (acpi_has_method(device->handle, pathname))
- 		ps->flags.explicit_set = 1;
- 
--	/*
--	 * State is valid if there are means to put the device into it.
--	 * D3hot is only valid if _PR3 present.
--	 */
--	if (!list_empty(&ps->resources)
--	    || (ps->flags.explicit_set && state < ACPI_STATE_D3_HOT)) {
-+	/* State is valid if there are means to put the device into it. */
-+	if (!list_empty(&ps->resources) || ps->flags.explicit_set)
- 		ps->flags.valid = 1;
--		ps->flags.os_accessible = 1;
--	}
- 
- 	ps->power = -1;		/* Unknown - driver assigned */
- 	ps->latency = -1;	/* Unknown - driver assigned */
-@@ -1810,21 +1804,13 @@ static void acpi_bus_get_power_flags(str
- 		acpi_bus_init_power_state(device, i);
- 
- 	INIT_LIST_HEAD(&device->power.states[ACPI_STATE_D3_COLD].resources);
-+	if (!list_empty(&device->power.states[ACPI_STATE_D3_HOT].resources))
-+		device->power.states[ACPI_STATE_D3_COLD].flags.valid = 1;
- 
--	/* Set defaults for D0 and D3 states (always valid) */
-+	/* Set defaults for D0 and D3hot states (always valid) */
- 	device->power.states[ACPI_STATE_D0].flags.valid = 1;
- 	device->power.states[ACPI_STATE_D0].power = 100;
--	device->power.states[ACPI_STATE_D3_COLD].flags.valid = 1;
--	device->power.states[ACPI_STATE_D3_COLD].power = 0;
--
--	/* Set D3cold's explicit_set flag if _PS3 exists. */
--	if (device->power.states[ACPI_STATE_D3_HOT].flags.explicit_set)
--		device->power.states[ACPI_STATE_D3_COLD].flags.explicit_set = 1;
--
--	/* Presence of _PS3 or _PRx means we can put the device into D3 cold */
--	if (device->power.states[ACPI_STATE_D3_HOT].flags.explicit_set ||
--			device->power.flags.power_resources)
--		device->power.states[ACPI_STATE_D3_COLD].flags.os_accessible = 1;
-+	device->power.states[ACPI_STATE_D3_HOT].flags.valid = 1;
- 
- 	if (acpi_bus_init_power(device))
- 		device->flags.power_manageable = 0;
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -98,17 +98,16 @@ int acpi_device_get_power(struct acpi_de
- 
- 		/*
- 		 * The power resources settings may indicate a power state
--		 * shallower than the actual power state of the device.
-+		 * shallower than the actual power state of the device, because
-+		 * the same power resources may be referenced by other devices.
- 		 *
--		 * Moreover, on systems predating ACPI 4.0, if the device
--		 * doesn't depend on any power resources and _PSC returns 3,
--		 * that means "power off".  We need to maintain compatibility
--		 * with those systems.
-+		 * For systems predating ACPI 4.0 we assume that D3hot is the
-+		 * deepest state that can be supported.
- 		 */
- 		if (psc > result && psc < ACPI_STATE_D3_COLD)
- 			result = psc;
- 		else if (result == ACPI_STATE_UNKNOWN)
--			result = psc > ACPI_STATE_D2 ? ACPI_STATE_D3_COLD : psc;
-+			result = psc > ACPI_STATE_D2 ? ACPI_STATE_D3_HOT : psc;
- 	}
- 
- 	/*
-@@ -153,8 +152,8 @@ static int acpi_dev_pm_explicit_set(stru
-  */
- int acpi_device_set_power(struct acpi_device *device, int state)
- {
-+	int target_state = state;
- 	int result = 0;
--	bool cut_power = false;
- 
- 	if (!device || !device->flags.power_manageable
- 	    || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
-@@ -169,11 +168,21 @@ int acpi_device_set_power(struct acpi_de
- 		return 0;
- 	}
- 
--	if (!device->power.states[state].flags.valid) {
-+	if (state == ACPI_STATE_D3_COLD) {
-+		/*
-+		 * For transitions to D3cold we need to execute _PS3 and then
-+		 * possibly drop references to the power resources in use.
-+		 */
-+		state = ACPI_STATE_D3_HOT;
-+		/* If _PR3 is not available, use D3hot as the target state. */
-+		if (!device->power.states[ACPI_STATE_D3_COLD].flags.valid)
-+			target_state = state;
-+	} else if (!device->power.states[state].flags.valid) {
- 		dev_warn(&device->dev, "Power state %s not supported\n",
- 			 acpi_power_state_string(state));
- 		return -ENODEV;
- 	}
-+
- 	if (!device->power.flags.ignore_parent &&
- 	    device->parent && (state < device->parent->power.state)) {
- 		dev_warn(&device->dev,
-@@ -183,39 +192,38 @@ int acpi_device_set_power(struct acpi_de
- 		return -ENODEV;
- 	}
- 
--	/* For D3cold we should first transition into D3hot. */
--	if (state == ACPI_STATE_D3_COLD
--	    && device->power.states[ACPI_STATE_D3_COLD].flags.os_accessible) {
--		state = ACPI_STATE_D3_HOT;
--		cut_power = true;
--	}
--
--	if (state < device->power.state && state != ACPI_STATE_D0
--	    && device->power.state >= ACPI_STATE_D3_HOT) {
--		dev_warn(&device->dev,
--			 "Cannot transition to non-D0 state from D3\n");
--		return -ENODEV;
--	}
--
- 	/*
- 	 * Transition Power
- 	 * ----------------
--	 * In accordance with the ACPI specification first apply power (via
--	 * power resources) and then evaluate _PSx.
-+	 * In accordance with ACPI 6, _PSx is executed before manipulating power
-+	 * resources, unless the target state is D0, in which case _PS0 is
-+	 * supposed to be executed after turning the power resources on.
- 	 */
--	if (device->power.flags.power_resources) {
--		result = acpi_power_transition(device, state);
-+	if (state > ACPI_STATE_D0) {
-+		/*
-+		 * According to ACPI 6, devices cannot go from lower-power
-+		 * (deeper) states to higher-power (shallower) states.
-+		 */
-+		if (state < device->power.state) {
-+			dev_warn(&device->dev, "Cannot transition from %s to %s\n",
-+				 acpi_power_state_string(device->power.state),
-+				 acpi_power_state_string(state));
-+			return -ENODEV;
-+		}
-+
-+		result = acpi_dev_pm_explicit_set(device, state);
- 		if (result)
- 			goto end;
--	}
--	result = acpi_dev_pm_explicit_set(device, state);
--	if (result)
--		goto end;
- 
--	if (cut_power) {
--		device->power.state = state;
--		state = ACPI_STATE_D3_COLD;
--		result = acpi_power_transition(device, state);
-+		if (device->power.flags.power_resources)
-+			result = acpi_power_transition(device, target_state);
-+	} else {
-+		if (device->power.flags.power_resources) {
-+			result = acpi_power_transition(device, ACPI_STATE_D0);
-+			if (result)
-+				goto end;
-+		}
-+		result = acpi_dev_pm_explicit_set(device, ACPI_STATE_D0);
- 	}
- 
-  end:
-@@ -264,13 +272,24 @@ int acpi_bus_init_power(struct acpi_devi
- 		return result;
- 
- 	if (state < ACPI_STATE_D3_COLD && device->power.flags.power_resources) {
-+		/* Reference count the power resources. */
- 		result = acpi_power_on_resources(device, state);
- 		if (result)
- 			return result;
- 
--		result = acpi_dev_pm_explicit_set(device, state);
--		if (result)
--			return result;
-+		if (state == ACPI_STATE_D0) {
-+			/*
-+			 * If _PSC is not present and the state inferred from
-+			 * power resources appears to be D0, it still may be
-+			 * necessary to execute _PS0 at this point, because
-+			 * another device using the same power resources may
-+			 * have been put into D0 previously and that's why we
-+			 * see D0 here.
-+			 */
-+			result = acpi_dev_pm_explicit_set(device, state);
-+			if (result)
-+				return result;
-+		}
- 	} else if (state == ACPI_STATE_UNKNOWN) {
- 		/*
- 		 * No power resources and missing _PSC?  Cross fingers and make
-@@ -603,12 +622,12 @@ int acpi_pm_device_sleep_state(struct de
- 	if (d_max_in < ACPI_STATE_D0 || d_max_in > ACPI_STATE_D3_COLD)
- 		return -EINVAL;
- 
--	if (d_max_in > ACPI_STATE_D3_HOT) {
-+	if (d_max_in > ACPI_STATE_D2) {
- 		enum pm_qos_flags_status stat;
- 
- 		stat = dev_pm_qos_flags(dev, PM_QOS_FLAG_NO_POWER_OFF);
- 		if (stat == PM_QOS_FLAGS_ALL)
--			d_max_in = ACPI_STATE_D3_HOT;
-+			d_max_in = ACPI_STATE_D2;
- 	}
- 
- 	adev = ACPI_COMPANION(dev);
-Index: linux-pm/drivers/acpi/fan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/fan.c
-+++ linux-pm/drivers/acpi/fan.c
-@@ -158,8 +158,9 @@ static int fan_get_state(struct acpi_dev
- 	if (result)
- 		return result;
- 
--	*state = (acpi_state == ACPI_STATE_D3_COLD ? 0 :
--		 (acpi_state == ACPI_STATE_D0 ? 1 : -1));
-+	*state = acpi_state == ACPI_STATE_D3_COLD
-+			|| acpi_state == ACPI_STATE_D3_HOT ?
-+		0 : (acpi_state == ACPI_STATE_D0 ? 1 : -1);
- 	return 0;
- }
- 
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -420,7 +420,7 @@ static int acpi_pci_set_power_state(stru
- 		[PCI_D0] = ACPI_STATE_D0,
- 		[PCI_D1] = ACPI_STATE_D1,
- 		[PCI_D2] = ACPI_STATE_D2,
--		[PCI_D3hot] = ACPI_STATE_D3_COLD,
-+		[PCI_D3hot] = ACPI_STATE_D3_HOT,
- 		[PCI_D3cold] = ACPI_STATE_D3_COLD,
- 	};
- 	int error = -EINVAL;
 
+--7Io4WsslSBQALIkCfBqVcc5kkGSxvgogi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJVZt5PAAoJEJhk1bLGrIdw1DMQAK0HiC9kHa27HYuH9gpvHW88
+4XI61dl5TyTqwiq55Xvl7r3Yoa8nsUGA3CGRT7Gq9jSWIHIgzlmf6isPN6OuvkZe
+0i8SwAcIhvXjCZ7BPljfdC6RIFg65XEwA5Nb+3LT/Gtxh1tZ7ZY1toQAExfRvJ2Q
+Rk5Zxo6LU8e4SV4zCa75Hu7jEj2QN0vt28lNst+jBck1pL4fYT9aeuRIoxn3so8z
+hXE7sbAp2gS4MCv/bQs10RNethk2AO8VgS40w7olW2RGffyOFUy9WUn/11euGkj1
+An0Qrdp4zotm/PV0m2L0zpOA/bY6eLDRfZYectKHQ3D2/vYdVMzjhInOA21nAljy
+vvHImEdZQUr9INJsAzWmoeQQnjamUr90NYW6c1zCRPJDOYG3FR/LzK+hNx78CumN
+2pt1A3oPSoIGTJJG9ehnZUGNYOcJBOrVOtiwt9ciWocug1D9XlAO+t/WvCoupkHy
+A3+LNK59iqasyIrVeHLY2i4cx+QcAW09EyKjeRKpwlAZKkpL15U1As/YNytHhi2d
+OngUBkfqIG9UC0B+t4to8GZqw+yP6WjaZiRbWj+LDD9l7MeVgm4R5ntqOhJAsKvZ
+3ASEe9bLD2t53HfKnEoXDKHvwNkCowrdkQLx27lcUF3vFpUggLqtlcfRNitHFqth
+5NK+IK6xd1eGn3UNrQnE
+=IJWu
+-----END PGP SIGNATURE-----
+
+--7Io4WsslSBQALIkCfBqVcc5kkGSxvgogi--
