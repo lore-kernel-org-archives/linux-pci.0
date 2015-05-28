@@ -1,239 +1,320 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: bhelgaas@google.com
-Cc: tomi.valkeinen@ti.com, airlied@linux.ie,
-	linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	xen-devel@lists.xensource.com,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
-	david.vrabel@citrix.com, jbeulich@suse.com,
-	=?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>
-Subject: [PATCH v6 1/4] pci: add pci_iomap_wc() variants
-Date: Wed, 20 May 2015 16:08:10 -0700
-Message-Id: <1432163293-20965-2-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54041 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752664AbbE1IFs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 May 2015 04:05:48 -0400
+Message-ID: <5566CC58.8080400@arm.com>
+Date: Thu, 28 May 2015 09:05:44 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Mark Rutland <Mark.Rutland@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>
+Subject: Re: [PATCH v9 2/4] PCI: X-Gene: Add the APM X-Gene v1 PCIe MSI/MSIX
+ termination driver
+References: <20150525125206.64d15861@arm.com> <cover.1432747280.git.dhdang@apm.com> <8d5049d8c03f8f5883ea626596dafc7d3f1c99f1.1432747280.git.dhdang@apm.com>
+In-Reply-To: <8d5049d8c03f8f5883ea626596dafc7d3f1c99f1.1432747280.git.dhdang@apm.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On 27/05/15 19:27, Duc Dang wrote:
+> APM X-Gene v1 SoC supports its own implementation of MSI, which is not
+> compliant to GIC V2M specification for MSI Termination.
+> 
+> There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+> This MSI block supports 2048 MSI termination ports coalesced into 16
+> physical HW IRQ lines and shared across all 5 PCIe ports.
+> 
+> As there are only 16 HW IRQs to serve 2048 MSI vectors, to support
+> set_affinity correctly for each MSI vectors, the 16 HW IRQs are statically
+> allocated to 8 X-Gene v1 cores (2 HW IRQs for each cores). To steer MSI
+> interrupt to target CPU, MSI vector is moved around these HW IRQs lines.
+> With this approach, the total MSI vectors this driver supports is reduced
+> to 256.
+> 
+> Signed-off-by: Duc Dang <dhdang@apm.com>
+> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/host/Kconfig         |  10 +
+>  drivers/pci/host/Makefile        |   1 +
+>  drivers/pci/host/pci-xgene-msi.c | 595 +++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/host/pci-xgene.c     |  21 ++
+>  4 files changed, 627 insertions(+)
+>  create mode 100644 drivers/pci/host/pci-xgene-msi.c
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 1dfb567..a93fda8 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -89,11 +89,21 @@ config PCI_XGENE
+>         depends on ARCH_XGENE
+>         depends on OF
+>         select PCIEPORTBUS
+> +       select PCI_MSI_IRQ_DOMAIN if PCI_MSI
+>         help
+>           Say Y here if you want internal PCI support on APM X-Gene SoC.
+>           There are 5 internal PCIe ports available. Each port is GEN3 capable
+>           and have varied lanes from x1 to x8.
+> 
+> +config PCI_XGENE_MSI
+> +       bool "X-Gene v1 PCIe MSI feature"
+> +       depends on PCI_XGENE && PCI_MSI
+> +       default y
+> +       help
+> +         Say Y here if you want PCIE MSI support for APM X-Gene v1 SoC.
+> +         This MSI driver will provide MSI support for 5 PCIe ports of
+> +         APM X-Gene v1 SoC
+> +
+>  config PCI_LAYERSCAPE
+>         bool "Freescale Layerscape PCIe controller"
+>         depends on OF && ARM
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index f733b4e..1957431 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -11,6 +11,7 @@ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+>  obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+>  obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+>  obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
+> +obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
+>  obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+>  obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+>  obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+> new file mode 100644
+> index 0000000..461cb11
+> --- /dev/null
+> +++ b/drivers/pci/host/pci-xgene-msi.c
+> @@ -0,0 +1,595 @@
+> +/*
+> + * APM X-Gene MSI Driver
+> + *
+> + * Copyright (c) 2014, Applied Micro Circuits Corporation
+> + * Author: Tanmay Inamdar <tinamdar@apm.com>
+> + *        Duc Dang <dhdang@apm.com>
+> + *
+> + * This program is free software; you can redistribute  it and/or modify it
+> + * under  the terms of  the GNU General  Public License as published by the
+> + * Free Software Foundation;  either version 2 of the  License, or (at your
+> + * option) any later version.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + */
+> +#include <linux/cpu.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/module.h>
+> +#include <linux/msi.h>
+> +#include <linux/of_irq.h>
+> +#include <linux/irqchip/chained_irq.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/of_pci.h>
+> +
+> +#define MSI_IR0                        0x000000
+> +#define MSI_INT0               0x800000
+> +#define IDX_PER_GROUP          8
+> +#define IRQS_PER_IDX           16
+> +#define NR_HW_IRQS             16
+> +#define NR_MSI_VEC             (IDX_PER_GROUP * IRQS_PER_IDX * NR_HW_IRQS)
+> +
+> +struct xgene_msi_group {
+> +       struct xgene_msi                *msi;
+> +       int                             gic_irq;
+> +       u32                             msi_grp;
+> +};
+> +
+> +struct xgene_msi {
+> +       struct device_node              *node;
+> +       struct msi_controller           mchip;
+> +       struct irq_domain               *domain;
+> +       u64                             msi_addr;
+> +       void __iomem                    *msi_regs;
+> +       unsigned long                   *bitmap;
+> +       struct mutex                    bitmap_lock;
+> +       struct xgene_msi_group          *msi_groups;
+> +       int                             num_cpus;
+> +};
+> +
+> +/* Global data */
+> +static struct xgene_msi xgene_msi_ctrl;
+> +
+> +static struct irq_chip xgene_msi_top_irq_chip = {
+> +       .name           = "X-Gene1 MSI",
+> +       .irq_enable     = pci_msi_unmask_irq,
+> +       .irq_disable    = pci_msi_mask_irq,
+> +       .irq_mask       = pci_msi_mask_irq,
+> +       .irq_unmask     = pci_msi_unmask_irq,
+> +};
+> +
+> +static struct  msi_domain_info xgene_msi_domain_info = {
+> +       .flags  = (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+> +                 MSI_FLAG_PCI_MSIX),
+> +       .chip   = &xgene_msi_top_irq_chip,
+> +};
+> +
+> +/*
+> + * X-Gene v1 has 16 groups of MSI termination registers MSInIRx, where
+> + * n is group number (0..F), x is index of registers in each group (0..7)
+> + * The registers layout is like following:
+> + * MSI0IR0                     base_addr
+> + * MSI0IR1                     base_addr +  0x10000
+> + * ...                         ...
+> + * MSI0IR6                     base_addr +  0x60000
+> + * MSI0IR7                     base_addr +  0x70000
+> + * MSI1IR0                     base_addr +  0x80000
+> + * MSI1IR1                     base_addr +  0x90000
+> + * ...                         ...
+> + * MSI1IR7                     base_addr +  0xF0000
+> + * MSI2IR0                     base_addr + 0x100000
+> + * ...                         ...
+> + * MSIFIR0                     base_addr + 0x780000
+> + * MSIFIR1                     base_addr + 0x790000
+> + * ...                         ...
+> + * MSIFIR7                     base_addr + 0x7F0000
+> + * MSIINT0                     base_addr + 0x800000
+> + * MSIINT1                     base_addr + 0x810000
+> + * ...                         ...
+> + * MSIINTF                     base_addr + 0x8F0000
+> + *
+> + * Each index register support 16 MSI vectors (0..15) to generate interrupt.
+> + * There are total 16 GIC IRQs assigned for these 16 groups of MSI termination
+> + * registers.
+> + *
+> + * Each MSI termination group has 1 MSIINTn register (n is 0..15) to indicate
+> + * the MSI pending status caused by 1 of its 8 index registers.
+> + */
+> +
+> +/* MSInIRx read helper */
+> +static inline u32 xgene_msi_ir_read(struct xgene_msi *msi,
+> +                                   u32 msi_grp, u32 msir_idx)
+> +{
+> +       return readl_relaxed(msi->msi_regs + MSI_IR0 +
+> +                             (msi_grp << 19) + (msir_idx << 16));
+> +}
+> +
+> +/* MSIINTn read helper */
+> +static inline u32 xgene_msi_int_read(struct xgene_msi *msi, u32 msi_grp)
+> +{
+> +       return readl_relaxed(msi->msi_regs + MSI_INT0 + (msi_grp << 16));
+> +}
+> +
+> +/* With 2048 MSI vectors supported, the MSI message can be construct using
+> + * following scheme:
+> + * - Divide into 8 256-vector groups
+> + *             Group 0: 0-255
+> + *             Group 1: 256-511
+> + *             Group 2: 512-767
+> + *             ...
+> + *             Group 7: 1792-2047
+> + * - Each 256-vector group is divided into 16 16-vector groups
+> + *     As an example: 16 16-vector groups for 256-vector group 0-255 is
+> + *             Group 0: 0-15
+> + *             Group 1: 16-32
+> + *             ...
+> + *             Group 15: 240-255
+> + * - The termination address of MSI vector in 256-vector group n and 16-vector
+> + * group x is the address of MSIxIRn
+> + * - The data for MSI vector in 16-vector group x is x
+> + */
+> +static inline u32 hwirq_to_reg_set(unsigned long hwirq)
+> +{
+> +       return (hwirq / (NR_HW_IRQS * IRQS_PER_IDX));
+> +}
+> +
+> +static inline u32 hwirq_to_group(unsigned long hwirq)
+> +{
+> +       return (hwirq % NR_HW_IRQS);
+> +}
+> +
+> +static inline u32 hwirq_to_msi_data(unsigned long hwirq)
+> +{
+> +       return ((hwirq / NR_HW_IRQS) % IRQS_PER_IDX);
+> +}
 
-This allows drivers to take advantage of write-combining
-when possible. The PCI specification does not allow for us
-to automatically identify a memory region which needs
-write-combining so drivers have to identify these areas
-on their own. There is IORESOURCE_PREFETCH but as clarified
-by Michael and confirmed later by Bjorn, PCI prefetch bit
-merely means bridges can combine writes and prefetch reads.
-Prefetch does not affect ordering rules and does not allow
-writes to be collapsed [0]. WC is stronger, it allows collapsing
-and changes ordering rules. WC can also hurt latency as small
-writes are buffered. Because of all this drivers needs to
-know what they are doing, we can't set a write-combining
-preference flag in the pci core automatically for drivers.
+These "inline" are superfluous (including the ones for the HW
+accessors). The compiler is bright enough to do it itself.
 
-Lastly although there is also arch_phys_wc_add() this makes
-use of architecture specific write-combining *hacks* and
-the only one currently defined and used is MTRR for x86.
-MTRRs are legacy, limited in number, have restrictive size
-constraints, and are known to interact pooly with the BIOS.
-MTRRs should only really be considered on old video framebuffer
-drivers. If we made ioremap_wc() and similar calls start
-automatically adding MTRRs, then performance will vary wildly
-with the order of driver loading because we'll run out of MTRRs
-part-way through bootup.
+> +
+> +static void xgene_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> +{
+> +       struct xgene_msi *msi = irq_data_get_irq_chip_data(data);
+> +       u32 reg_set = hwirq_to_reg_set(data->hwirq);
+> +       u32 group = hwirq_to_group(data->hwirq);
+> +       u64 target_addr = msi->msi_addr + (((8 * group) + reg_set) << 16);
+> +
+> +       msg->address_hi = upper_32_bits(target_addr);
+> +       msg->address_lo = lower_32_bits(target_addr);
+> +       msg->data = hwirq_to_msi_data(data->hwirq);
+> +}
+> +
+> +/*
+> + * X-Gene v1 only has 16 MSI GIC IRQs for 2048 MSI vectors.
+> + * To maintain the expected behaviour of .set_affinity for each MSI
+> + * interrupt, the 16 MSI GIC IRQs are statically allocated to 8 X-Gene
+> + * v1 cores (2 GIC IRQs for each core). The MSI vector is moved fom 1
+> + * MSI GIC IRQ to another MSI GIC IRQ to steer its MSI interrupt to
+> + * correct X-Gene v1 core. As a consequence, the total MSI vectors that
+> + * X-Gene v1 supports will be reduced to 256 (2048/8) vectors.
+> + */
+> +static inline int hwirq_to_cpu(unsigned long hwirq)
+> +{
+> +       return ((hwirq % NR_HW_IRQS) % xgene_msi_ctrl.num_cpus);
+> +}
+> +
+> +static inline unsigned long hwirq_to_canonical_hwirq(unsigned long hwirq)
+> +{
+> +       return (hwirq - (hwirq % xgene_msi_ctrl.num_cpus));
+> +}
 
-There are a few motivations for phasing out of MTRR and
-helping driver change over to use write-combining with PAT:
+Hmmm. This is weird. The canonical hwirq is defined as the IRQ seen from
+CPU0. So it is possible to write hwirq_to_canonical_hwirq as:
 
-a) Take advantage of PAT when available
+static irq_hw_number_t hwirq_to_canonical_hwirq(irq_hw_number_t hwirq)
+{
+	return hwirq - hwirq_to_cpu(hwirq);
+}
 
-b) Help bury MTRR code away, MTRR is architecture specific and on
-   x86 its replaced by PAT
+But you've defined hwirq_to_cpu as "(hwirq % NR_HW_IRQS) %
+xgene_msi_ctrl.num_cpus", which doesn't match your definition of a
+canonical hwirq. Can you explain the discrepancy?
 
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
+> +
+> +static int xgene_msi_set_affinity(struct irq_data *irq_data,
+> +                                 const struct cpumask *mask, bool force)
+> +{
+> +       int target_cpu = cpumask_first(mask);
+> +       int curr_cpu;
+> +
+> +       curr_cpu = hwirq_to_cpu(irq_data->hwirq);
+> +       if (curr_cpu == target_cpu)
+> +               return IRQ_SET_MASK_OK_DONE;
+> +
+> +       /* Update MSI number to target the new CPU */
+> +       irq_data->hwirq = irq_data->hwirq + (target_cpu - curr_cpu);
 
-[0] https://lkml.org/lkml/2015/4/21/714
+irq_data->hwirq = hwirq_to_canonical_hwirq(irq_data->hwirq) + target_cpu;
 
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: venkatesh.pallipadi@intel.com
-Cc: Stefan Bader <stefan.bader@canonical.com>
-Cc: Ville Syrjälä <syrjala@sci.fi>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: konrad.wilk@oracle.com
-Cc: ville.syrjala@linux.intel.com
-Cc: david.vrabel@citrix.com
-Cc: jbeulich@suse.com
-Cc: Roger Pau Monné <roger.pau@citrix.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: xen-devel@lists.xensource.com
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- include/asm-generic/pci_iomap.h | 14 ++++++++++
- lib/pci_iomap.c                 | 61 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 75 insertions(+)
+> +
+> +       return IRQ_SET_MASK_OK;
+> +}
 
-diff --git a/include/asm-generic/pci_iomap.h b/include/asm-generic/pci_iomap.h
-index 7389c87..b1e17fc 100644
---- a/include/asm-generic/pci_iomap.h
-+++ b/include/asm-generic/pci_iomap.h
-@@ -15,9 +15,13 @@ struct pci_dev;
- #ifdef CONFIG_PCI
- /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
- extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
-+extern void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max);
- extern void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
- 				     unsigned long offset,
- 				     unsigned long maxlen);
-+extern void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-+					unsigned long offset,
-+					unsigned long maxlen);
- /* Create a virtual mapping cookie for a port on a given PCI device.
-  * Do not call this directly, it exists to make it easier for architectures
-  * to override */
-@@ -34,12 +38,22 @@ static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned lon
- 	return NULL;
- }
- 
-+static inline void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max)
-+{
-+	return NULL;
-+}
- static inline void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
- 					    unsigned long offset,
- 					    unsigned long maxlen)
- {
- 	return NULL;
- }
-+static inline void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-+					       unsigned long offset,
-+					       unsigned long maxlen)
-+{
-+	return NULL;
-+}
- #endif
- 
- #endif /* __ASM_GENERIC_IO_H */
-diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
-index bcce5f1..9604dcb 100644
---- a/lib/pci_iomap.c
-+++ b/lib/pci_iomap.c
-@@ -52,6 +52,46 @@ void __iomem *pci_iomap_range(struct pci_dev *dev,
- EXPORT_SYMBOL(pci_iomap_range);
- 
- /**
-+ * pci_iomap_wc_range - create a virtual WC mapping cookie for a PCI BAR
-+ * @dev: PCI device that owns the BAR
-+ * @bar: BAR number
-+ * @offset: map memory at the given offset in BAR
-+ * @maxlen: max length of the memory to map
-+ *
-+ * Using this function you will get a __iomem address to your device BAR.
-+ * You can access it using ioread*() and iowrite*(). These functions hide
-+ * the details if this is a MMIO or PIO address space and will just do what
-+ * you expect from them in the correct way. When possible write combining
-+ * is used.
-+ *
-+ * @maxlen specifies the maximum length to map. If you want to get access to
-+ * the complete BAR from offset to the end, pass %0 here.
-+ * */
-+void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
-+				 int bar,
-+				 unsigned long offset,
-+				 unsigned long maxlen)
-+{
-+	resource_size_t start = pci_resource_start(dev, bar);
-+	resource_size_t len = pci_resource_len(dev, bar);
-+	unsigned long flags = pci_resource_flags(dev, bar);
-+
-+	if (len <= offset || !start)
-+		return NULL;
-+	len -= offset;
-+	start += offset;
-+	if (maxlen && len > maxlen)
-+		len = maxlen;
-+	if (flags & IORESOURCE_IO)
-+		return NULL;
-+	if (flags & IORESOURCE_MEM)
-+		return ioremap_wc(start, len);
-+	/* What? */
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(pci_iomap_wc_range);
-+
-+/**
-  * pci_iomap - create a virtual mapping cookie for a PCI BAR
-  * @dev: PCI device that owns the BAR
-  * @bar: BAR number
-@@ -70,4 +110,25 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
- 	return pci_iomap_range(dev, bar, 0, maxlen);
- }
- EXPORT_SYMBOL(pci_iomap);
-+
-+/**
-+ * pci_iomap_wc - create a virtual WC mapping cookie for a PCI BAR
-+ * @dev: PCI device that owns the BAR
-+ * @bar: BAR number
-+ * @maxlen: length of the memory to map
-+ *
-+ * Using this function you will get a __iomem address to your device BAR.
-+ * You can access it using ioread*() and iowrite*(). These functions hide
-+ * the details if this is a MMIO or PIO address space and will just do what
-+ * you expect from them in the correct way. When possible write combining
-+ * is used.
-+ *
-+ * @maxlen specifies the maximum length to map. If you want to get access to
-+ * the complete BAR without checking for its length first, pass %0 here.
-+ * */
-+void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long maxlen)
-+{
-+	return pci_iomap_wc_range(dev, bar, 0, maxlen);
-+}
-+EXPORT_SYMBOL_GPL(pci_iomap_wc);
- #endif /* CONFIG_PCI */
+Thanks,
+
+	M.
 -- 
-2.3.2.209.gd67f9d5.dirty
-
+Jazz is not dead. It just smells funny...
