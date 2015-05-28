@@ -1,81 +1,196 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5559E44B.2010702@linaro.org>
-Date: Mon, 18 May 2015 21:08:27 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 28 May 2015 07:41:12 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Will Deacon <will.deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+Message-ID: <20150528124112.GJ10210@google.com>
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+ <20150527210447.GY32152@google.com>
+ <20150528022332.GA23724@roeck-us.net>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>
-CC: Lv Zheng <lv.zheng@intel.com>, LKML <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch v3 5/7] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1431593803-5213-6-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150528022332.GA23724@roeck-us.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jiang,
+On Wed, May 27, 2015 at 07:23:32PM -0700, Guenter Roeck wrote:
+> On Wed, May 27, 2015 at 04:04:47PM -0500, Bjorn Helgaas wrote:
+> > [+cc Lorenzo, Suravee, Will]
+> > 
+> > I cc'd Lorenzo, Suravee, and Will because Lorenzo is working on calling
+> > pci_read_bases() from the PCI core instead of from arch code, and there are
+> > likely some dependencies between these two things.
+> > 
+> > On Fri, May 22, 2015 at 05:52:16PM -0700, Guenter Roeck wrote:
+> > > The PCI subsystem always assumes that I/O is supported on PCIe bridges
+> > > and tries to assign an I/O window to each port even if that is not
+> > > the case.
+> > > 
+> > > This may result in messages such as
+> > > 
+> > > pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
+> > > 					get_res_add_size add_size 1000
+> > > pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
+> > > pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
+> > > 
+> > > for each bridge port, even if a port or its parent does not support
+> > > I/O in the first place.
+> > > 
+> > > To avoid this message, check if a port supports I/O before trying to
+> > > enable it. Also check if port's parent supports I/O, and only modify
+> > > a port's I/O resource size if both the port and its parent support I/O.
+> > > 
+> > > If IO is disabled after the initial port scan, the IO base and size
+> > > registers are set to 0x00f0 to indicate that IO is disabled. A later
+> > > rescan interprets this as "IO supported" and enables the IO range,
+> > > even if the parent does not support IO. Handle this situation as well.
+> > > 
+> > > Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+> > > ---
+> > >  drivers/pci/probe.c     | 14 ++++++++++++++
+> > >  drivers/pci/setup-bus.c |  4 ++--
+> > >  include/linux/pci.h     |  9 +++++++++
+> > >  3 files changed, 25 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > index 6675a7a1b9fc..f4944ef45148 100644
+> > > --- a/drivers/pci/probe.c
+> > > +++ b/drivers/pci/probe.c
+> > > @@ -354,6 +354,20 @@ static void pci_read_bridge_io(struct pci_bus *child)
+> > >  	base = (io_base_lo & io_mask) << 8;
+> > >  	limit = (io_limit_lo & io_mask) << 8;
+> > >  
+> > > +	/* If necessary, check if the bridge supports an I/O aperture */
+> > > +	if (!io_base_lo && !io_limit_lo) {
+> > > +		u16 io;
+> > > +
+> > > +		if (!pci_parent_supports_io(child))
+> > > +			return;
+> > > +
+> > > +		pci_write_config_word(dev, PCI_IO_BASE, 0xe0f0);
+> > > +		pci_read_config_word(dev, PCI_IO_BASE, &io);
+> > > +		pci_write_config_word(dev, PCI_IO_BASE, 0x0);
+> > > +		if (!io)
+> > > +			return;
+> > > +	}
+> > 
+> > I really like the idea of pushing this into pci_read_bridge_io().
+> > 
+> > I wonder if we can do the same with pci_read_bridge_mmio_pref(), and
+> > somehow get rid of pci_bridge_check_ranges() altogether?
+> > 
+> Sure, I just figured I'd start with IO, and do the rest after
+> I have a better idea if I am going into the right direction.
 
-On 2015年05月14日 16:56, Jiang Liu wrote:
-> Introduce common interface acpi_pci_root_create() and related data
-> structures to create PCI root bus for ACPI PCI host bridges. It will
-> be used to kill duplicated arch specific code for IA64 and x86. It may
-> also help ARM64 in future.
+I definitely think this is the right direction :)
 
-As I commented in previous version, this patch will introduce
-compile error on ACPI enabled ARM64 kernel because struct
-pci_controller is not defined for ARM64, so how about adding
-the following patch before this patch, or squash to this one,
-does it make sense?
+> > It does make sense that if the bridge supports an I/O aperture, but there's
+> > no possibility of I/O resources on the primary side, we should pretend the
+> > bridge has no I/O aperture.  But I think it might be nice to emit a
+> > diagnostic about *why* we're ignoring it.  Otherwise there's a little
+> > discrepancy between dmesg and lspci.
+> > 
+> Ok, makes sense. Would you want to see that message for every port ?
+> Guess I can check how it looks like, to make sure that I don't end up
+> getting a lot of noise again.
 
- From 11d0e98154e681e75936698208398cb4dcd73632 Mon Sep 17 00:00:00 2001
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Date: Mon, 18 May 2015 19:41:56 +0800
-Subject: [PATCH] ARM64 / PCI: introduce struct pci_controller for ACPI
+I was thinking once per port.  We currently print a line for every enabled
+bridge window, so it shouldn't be too much.  In fact, we often print the
+bridge windows several times (which I think is overkill; I'd prefer to
+print it once when we discover it and again only if we change something
+later).
 
-ARM64 ACPI based PCI host bridge init needs a arch dependent
-struct pci_controller to accommodate common PCI host bridge
-code which is introduced later, or it will lead to compile
-errors on ARM64.
+> > > +
+> > >  	if ((io_base_lo & PCI_IO_RANGE_TYPE_MASK) == PCI_IO_RANGE_TYPE_32) {
+> > >  		u16 io_base_hi, io_limit_hi;
+> > >  
+> > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> > > index 4fd0cacf7ca0..963b31a109a9 100644
+> > > --- a/drivers/pci/setup-bus.c
+> > > +++ b/drivers/pci/setup-bus.c
+> > > @@ -750,12 +750,12 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+> > >  	b_res[1].flags |= IORESOURCE_MEM;
+> > >  
+> > >  	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > > -	if (!io) {
+> > > +	if (!io && pci_parent_supports_io(bus)) {
+> > >  		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
+> > >  		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > >  		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+> > >  	}
+> > > -	if (io)
+> > > +	if (io && (io != 0x00f0 || pci_parent_supports_io(bus)))
+> > 
+> > I *think* this 0x00f0 depends on what pci_setup_bridge_io() writes to
+> > PCI_IO_BASE when it disables an I/O aperture.  Depending on that particular
+> 
+> Correct. I could have checked if io is disabled (limit < base),
+> but at least for the time being I wanted the impact to be minimal.
+> So far the code auto-enables IO if it was disabled (eg by the BIOS)
+> but the bridge chip supports it. I only wanted to keep it disabled
+> if it was likely that it was disabled by pci_setup_bridge_io().
 
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
-CC: Catalin Marinas <catalin.marinas@arm.com>
-CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>
----
-  arch/arm64/include/asm/pci.h | 10 ++++++++++
-  1 file changed, 10 insertions(+)
+OK, I see.  What I think we *should* do is:
 
-diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-index b008a72..7088495 100644
---- a/arch/arm64/include/asm/pci.h
-+++ b/arch/arm64/include/asm/pci.h
-@@ -10,6 +10,16 @@
-  #include <asm-generic/pci-bridge.h>
-  #include <asm-generic/pci-dma-compat.h>
+  - If the I/O window was enabled by the BIOS, leave it that way unless we
+    need to change it
 
-+struct acpi_device;
-+
-+struct pci_controller {
-+#ifdef CONFIG_ACPI
-+       struct acpi_device *companion;  /* ACPI companion device */
-+#endif
-+       int             segment;        /* PCI domain */
-+       int             node;           /* NUMA node */
-+};
-+
-  #define PCIBIOS_MIN_IO         0x1000
-  #define PCIBIOS_MIN_MEM                0
+  - If the I/O window was left disabled by the BIOS, enable it only if we
+    need it, i.e., there's I/O space available on the primary side of the
+    bridge and one of the following is true:
 
+      1) the bridge supports hotplug
+      2) a downstream bridge supports hotplug
+      3) a downstream device needs I/O space
 
-Thanks
-Hanjun
+> > But it would be ideal if we could get rid of pci_bridge_check_ranges()
+> > altogether and have the rule that we read bridge window characteristics
+> > (IORESOURCE_IO, IORESOURCE_MEM, IORESOURCE_PREFETCH, IORESOURCE_MEM_64)
+> > once when we enumerate the bridge.  After that, the only changes would be
+> > to change res->start and res->end and update the hardware correspondingly.
+> > 
+> Would be great - this should solve the above problem automatically.
+> I was hesitant to do that, because I don't know if there would be side
+> effects. I could take out the io handling from pci_bridge_check_ranges()
+> and see what happens, but obviously my test coverage would be somewhat
+> limited.
+
+I'm willing to take the risk :)  Of course, we'll need to analyze it as
+much as we can to make sure we believe it is correct.
+
+> > I'd like res->flags to reflect the capabilities of the hardware, not
+> > whether the window is currently enabled.
+> > 
+> Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
+> purpose, or could that cause conflicts elsewhere ?
+
+Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
+below a host bridge that doesn't support I/O space.
+
+> > > +static inline bool pci_parent_supports_io(struct pci_bus *pbus)
+> > > +{
+> > > +	return pci_is_root_bus(pbus) || pci_is_root_bus(pbus->parent) ||
+> > > +	       (pbus->parent->resource[0]->flags & IORESOURCE_IO);
+> > 
+> > This is not obvious to me.  There are host bridges that do not have I/O
+> > apertures, so I don't see what the pci_is_root_bus() tests have to do with
+> > this.  The resource[0]->flags & IORESOURCE_IO part does make sense to me.
+> > 
+> More a matter of me not knowing what I need to do. resource[0] is NULL
+> for the root bus, at least on the powerpc system I used for testing.
+> 
+> > I think at the root bus, we'd have to iterate through all the host bridge
+> > resources to figure out whether there are any I/O apertures.
+> > 
+> Can you give me a hint on how to do that, hopefully in a platform
+> independent way ? Walk through bus->resources and search for an
+> IO resource ? Or does resource[0] == NULL already indicate
+> that there is no IO aperture ?
+
+Use pci_bus_for_each_resource() and look for one with IORESOURCE_IO set.
+
+Bjorn
