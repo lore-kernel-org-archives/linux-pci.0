@@ -1,199 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:48340 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750812AbbE1BEs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 21:04:48 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	linux-sh@vger.kernel.org,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v2 10/14] genirq: Move field 'affinity' from struct irq_data into struct irq_common_data
-Date: Wed, 20 May 2015 17:40:41 +0800
-Message-Id: <1432114845-24304-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Paul Mundt <lethal@linux-sh.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH 2/2] PCI: pciehp: Convert pciehp to be builtin only, not modular
+Date: Thu, 28 May 2015 03:30:19 +0200
+Message-ID: <4269355.CI4MW738Od@vostro.rjw.lan>
+In-Reply-To: <20150527193149.GD10210@google.com>
+References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop> <CAE9FiQXq59tSBM0SQ4OToXydZrRC3yukALmWEb6K9xpCGbdUhg@mail.gmail.com> <20150527193149.GD10210@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Irq affinity mask is per-irq instead of per irqchip, so move it into
-struct irq_common_data.
+On Wednesday, May 27, 2015 02:31:49 PM Bjorn Helgaas wrote:
+> [updated Rafael's email addr; not sure if sisk.pl still works or not]
+> 
+> On Wed, May 27, 2015 at 11:31:21AM -0700, Yinghai Lu wrote:
+> > On Fri, Jul 26, 2013 at 5:43 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > > On Thu, Jul 25, 2013 at 10:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > >> Convert pciehp to be builtin only, with no module option.
+> > >>
+> > >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > >> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > >> ---
+> > >>  drivers/pci/pcie/Kconfig |    5 +----
+> > >>  1 file changed, 1 insertion(+), 4 deletions(-)
+> > >>
+> > >> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+> > >> index 569f82f..3b94cfc 100644
+> > >> --- a/drivers/pci/pcie/Kconfig
+> > >> +++ b/drivers/pci/pcie/Kconfig
+> > >> @@ -14,15 +14,12 @@ config PCIEPORTBUS
+> > >>  # Include service Kconfig here
+> > >>  #
+> > >>  config HOTPLUG_PCI_PCIE
+> > >> -       tristate "PCI Express Hotplug driver"
+> > >> +       bool "PCI Express Hotplug driver"
+> > >>         depends on HOTPLUG_PCI && PCIEPORTBUS
+> > >>         help
+> > >>           Say Y here if you have a motherboard that supports PCI Express Native
+> > >>           Hotplug
+> > >>
+> > >> -         To compile this driver as a module, choose M here: the
+> > >> -         module will be called pciehp.
+> > >> -
+> > >>           When in doubt, say N.
+> > >>
+> > >>  source "drivers/pci/pcie/aer/Kconfig"
+> > >>
+> > >
+> > > Acked-by: Yinghai Lu <yinghai@kernel.org>
+> > 
+> > Hi Bjorn,
+> > 
+> > Looks like we lose the option to disable pciehp after we make it as built-in.
+> > 
+> > Before acpiphp and pciehp could be compiled as modules, and user could
+> > blacklist to disable them.
+> > 
+> > Now they are all built-in, but only acpiphp has acpiphp.disable to
+> > disable acpiphp.
+> > we don't have pciehp.disable yet.
+> > 
+> > Do you think if we should add pciehp.disable ?
+> 
+> Did you find a situation that would require pciehp.disable?  I hesitate to
+> add it because if there's a problem and pciehp.disable fixes it, people
+> tend to think the solution is "boot with pciehp.disable."  But the *real*
+> solution is to fix whatever is broken in the kernel, so no parameter is
+> needed at all.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irq.h  |   12 ++++++------
- kernel/irq/irqdesc.c |    9 +++++----
- kernel/irq/manage.c  |   12 ++++++------
- kernel/irq/proc.c    |    2 +-
- 4 files changed, 18 insertions(+), 17 deletions(-)
+Agreed.
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 2eb82257aaee..e33cc0b040f2 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -110,8 +110,8 @@ enum {
- /*
-  * Return value for chip->irq_set_affinity()
-  *
-- * IRQ_SET_MASK_OK	- OK, core updates irq_data.affinity
-- * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_data.affinity
-+ * IRQ_SET_MASK_OK	- OK, core updates irq_common_data.affinity
-+ * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_common_data.affinity
-  * IRQ_SET_MASK_OK_DONE	- Same as IRQ_SET_MASK_OK for core. Special code to
-  *			  support stacked irqchips, which indicates skipping
-  *			  all descendent irqchips.
-@@ -131,6 +131,7 @@ struct irq_domain;
-  *			Use accessor functions to deal with it
-  * @node:		node index useful for balancing
-  * @handler_data:	per-IRQ data for the irq_chip methods
-+ * @affinity:		IRQ affinity on SMP
-  */
- struct irq_common_data {
- 	unsigned int		state_use_accessors;
-@@ -138,6 +139,7 @@ struct irq_common_data {
- 	unsigned int		node;
- #endif
- 	void			*handler_data;
-+	cpumask_var_t		affinity;
- };
- 
- /**
-@@ -154,7 +156,6 @@ struct irq_common_data {
-  * @chip_data:		platform-specific per-chip private data for the chip
-  *			methods, to allow shared chip implementations
-  * @msi_desc:		MSI descriptor
-- * @affinity:		IRQ affinity on SMP
-  *
-  * The fields here need to overlay the ones in irq_desc until we
-  * cleaned up the direct references and switched everything over to
-@@ -172,7 +173,6 @@ struct irq_data {
- #endif
- 	void			*chip_data;
- 	struct msi_desc		*msi_desc;
--	cpumask_var_t		affinity;
- };
- 
- /*
-@@ -654,12 +654,12 @@ static inline struct cpumask *irq_get_affinity_mask(int irq)
- {
- 	struct irq_data *d = irq_get_irq_data(irq);
- 
--	return d ? d->affinity : NULL;
-+	return d ? d->common->affinity : NULL;
- }
- 
- static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
- {
--	return d->affinity;
-+	return d->common->affinity;
- }
- 
- unsigned int arch_dynirq_lower_bound(unsigned int from);
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 7f881792ad5f..2c39a203f78b 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -38,12 +38,13 @@ static void __init init_irq_default_affinity(void)
- #ifdef CONFIG_SMP
- static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
- {
--	if (!zalloc_cpumask_var_node(&desc->irq_data.affinity, gfp, node))
-+	if (!zalloc_cpumask_var_node(&desc->irq_common_data.affinity,
-+				     gfp, node))
- 		return -ENOMEM;
- 
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	if (!zalloc_cpumask_var_node(&desc->pending_mask, gfp, node)) {
--		free_cpumask_var(desc->irq_data.affinity);
-+		free_cpumask_var(desc->irq_common_data.affinity);
- 		return -ENOMEM;
- 	}
- #endif
-@@ -52,7 +53,7 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
- 
- static void desc_smp_init(struct irq_desc *desc, int node)
- {
--	cpumask_copy(desc->irq_data.affinity, irq_default_affinity);
-+	cpumask_copy(desc->irq_common_data.affinity, irq_default_affinity);
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	cpumask_clear(desc->pending_mask);
- #endif
-@@ -124,7 +125,7 @@ static void free_masks(struct irq_desc *desc)
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	free_cpumask_var(desc->pending_mask);
- #endif
--	free_cpumask_var(desc->irq_data.affinity);
-+	free_cpumask_var(desc->irq_common_data.affinity);
- }
- #else
- static inline void free_masks(struct irq_desc *desc) { }
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index d206aa2c3378..7588bf87e8f3 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -190,7 +190,7 @@ int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
- 	switch (ret) {
- 	case IRQ_SET_MASK_OK:
- 	case IRQ_SET_MASK_OK_DONE:
--		cpumask_copy(data->affinity, mask);
-+		cpumask_copy(desc->irq_common_data.affinity, mask);
- 	case IRQ_SET_MASK_OK_NOCOPY:
- 		irq_set_thread_affinity(desc);
- 		ret = 0;
-@@ -271,7 +271,7 @@ static void irq_affinity_notify(struct work_struct *work)
- 	if (irq_move_pending(&desc->irq_data))
- 		irq_get_pending(cpumask, desc);
- 	else
--		cpumask_copy(cpumask, desc->irq_data.affinity);
-+		cpumask_copy(cpumask, desc->irq_common_data.affinity);
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
- 
- 	notify->notify(notify, cpumask);
-@@ -343,9 +343,9 @@ setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
- 	 * one of the targets is online.
- 	 */
- 	if (irqd_has_set(&desc->irq_data, IRQD_AFFINITY_SET)) {
--		if (cpumask_intersects(desc->irq_data.affinity,
-+		if (cpumask_intersects(desc->irq_common_data.affinity,
- 				       cpu_online_mask))
--			set = desc->irq_data.affinity;
-+			set = desc->irq_common_data.affinity;
- 		else
- 			irqd_clear(&desc->irq_data, IRQD_AFFINITY_SET);
- 	}
-@@ -796,8 +796,8 @@ irq_thread_check_affinity(struct irq_desc *desc, struct irqaction *action)
- 	 * This code is triggered unconditionally. Check the affinity
- 	 * mask pointer. For CPU_MASK_OFFSTACK=n this is optimized out.
- 	 */
--	if (desc->irq_data.affinity)
--		cpumask_copy(mask, desc->irq_data.affinity);
-+	if (desc->irq_common_data.affinity)
-+		cpumask_copy(mask, desc->irq_common_data.affinity);
- 	else
- 		valid = false;
- 	raw_spin_unlock_irq(&desc->lock);
-diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
-index 0e97c142ce40..e3a8c9577ba6 100644
---- a/kernel/irq/proc.c
-+++ b/kernel/irq/proc.c
-@@ -39,7 +39,7 @@ static struct proc_dir_entry *root_irq_dir;
- static int show_irq_affinity(int type, struct seq_file *m, void *v)
- {
- 	struct irq_desc *desc = irq_to_desc((long)m->private);
--	const struct cpumask *mask = desc->irq_data.affinity;
-+	const struct cpumask *mask = desc->irq_common_data.affinity;
- 
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	if (irqd_is_setaffinity_pending(&desc->irq_data))
--- 
-1.7.10.4
+For debug you can always use pcie_ports=compat and that will disable
+pciehp too.
+
+> > BTW we don't have any description for acpiphp.disable anywhere.
+> 
+> True.  I'll give you my opinion; Rafael may have a different one.
+> 
+> I don't know whether it's a good idea to add a description or not, for the
+> same reason as above.  I think we should actively discourage people from
+> using kernel parameters, except for debugging purposes and for some legacy
+> issues where there's no way for the kernel to figure things out by itself.
+> But in my opinion, acpiphp isn't in any of those categories, so I'm content
+> to have the parameter present but undocumented.  It seems more likely that
+> we'll hear about issues then, and we might be able to do something about
+> them.
+
+Agreed again.
+
+Rafael
 
