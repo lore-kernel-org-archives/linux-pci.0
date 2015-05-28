@@ -1,108 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:49848 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbbEKCAH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 May 2015 22:00:07 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 11 May 2015 12:00:04 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 4C9072CE8040
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:00:02 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4B1xsew30081074
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 12:00:02 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4B1xTAR016056
-	for <linux-pci@vger.kernel.org>; Mon, 11 May 2015 11:59:29 +1000
-Date: Mon, 11 May 2015 11:59:04 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org
-Subject: Re: [PATCH v4 01/21] pci: Add pcibios_setup_bridge()
-Message-ID: <20150511015904.GB3694@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1430460188-31343-2-git-send-email-gwshan@linux.vnet.ibm.com>
- <20150507221224.GN24643@google.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:52752 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753574AbbE1Mbk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 08:31:40 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: linux-arm-kernel@lists.infradead.org, zhudacai@hisilicon.com,
+	devicetree@vger.kernel.org, 'Zhang Jukuo' <zhangjukuo@huawei.com>,
+	'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	'Pratyush Anand' <pratyush.anand@gmail.com>,
+	'Richard Zhu' <Richard.Zhu@freescale.com>,
+	'Zhichang Yuan' <yuanzhichang@hisilicon.com>,
+	'Kishon Vijay Abraham I' <kishon@ti.com>,
+	qiuzhenfa@hisilicon.com, linux-pci@vger.kernel.org,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Liviu Dudau' <liviu.dudau@arm.com>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	'Liguozhu' <liguozhu@hisilicon.com>,
+	'Lucas Stach' <l.stach@pengutronix.de>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+Date: Thu, 28 May 2015 14:30:57 +0200
+Message-ID: <4282256.8pP4M6Uy35@wuerfel>
+In-Reply-To: <5566FD5C.4050708@hisilicon.com>
+References: <000001d096a9$27bf43f0$773dcbd0$@com> <2095085.CuXXeGT0Wg@wuerfel> <5566FD5C.4050708@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150507221224.GN24643@google.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 07, 2015 at 05:12:24PM -0500, Bjorn Helgaas wrote:
->Hi Gavin,
->
->[Please run "git log --oneline drivers/pci/setup-bus.c" and observe the
->capitalization convention.]
->
+On Thursday 28 May 2015 19:34:52 Zhou Wang wrote:
+> > @@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+> >               if (!sys)
+> >                       panic("PCI: unable to allocate sys data!");
+> >  
+> > -#ifdef CONFIG_PCI_MSI
+> > -             sys->msi_ctrl = hw->msi_ctrl;
+> > -#endif
+> >               sys->busnr   = busnr;
+> >               sys->swizzle = hw->swizzle;
+> >               sys->map_irq = hw->map_irq;
+> > @@ -493,6 +481,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+> >                               panic("PCI: unable to scan bus!");
+> >  
+> >                       busnr = sys->bus->busn_res.end + 1;
+> > +#ifdef CONFIG_PCI_MSI
+> > +                     bus->msi = hw->msi_ctrl;
+> > +#endif
+> >  
+> >                       list_add(&sys->node, head);
+> >               } else {
+> > 
+> 
+> Hi Arnd,
+> 
+> I think it does not work in above way(with adaptation as Fabrice mentioned).
+> As the msi controller is passed to secondary bus one by one during the process of enumeration.
+> Here we just set msi controller for root bus.
 
-Bjorn, thanks for review. Yeah, it should be something like
-"PCI: xxxx" for the subject. I'll fix it up in next revision.
+Ah, too bad. I guess you are right, the bus->msi pointer here would
+really need to be set between pci_create_root_bus() and pci_scan_child_bus(),
+but we currently don't run any ARM specific code between the two.
 
->On Fri, May 01, 2015 at 04:02:48PM +1000, Gavin Shan wrote:
->> Currently, PowerPC PowerNV platform utilizes ppc_md.pcibios_fixup(),
->> which is called for once after PCI probing and resource assignment
->> are completed, to allocate platform required resources for PCI devices:
->> PE#, IO and MMIO mapping, DMA address translation (TCE) table etc.
->> Obviously, it's not hotplug friendly.
->> 
->> The patch adds weak function pcibios_setup_bridge(), which is called
->> by pci_setup_bridge(). PowerPC PowerNV platform will reuse the function
->> to assign above platform required resources to newly added PCI devices,
->> in order to support PCI hotplug on PowerPC PowerNV platform.
->> 
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  drivers/pci/setup-bus.c | 12 +++++++++---
->>  include/linux/pci.h     |  1 +
->>  2 files changed, 10 insertions(+), 3 deletions(-)
->> 
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 4fd0cac..a7d0c3c 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -674,7 +674,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
->>  	pci_write_config_dword(bridge, PCI_PREF_LIMIT_UPPER32, lu);
->>  }
->>  
->> -static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
->> +
->> +void pci_setup_bridge_resources(struct pci_bus *bus, unsigned long type)
->>  {
->>  	struct pci_dev *bridge = bus->self;
->>  
->> @@ -693,12 +694,17 @@ static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
->>  	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, bus->bridge_ctl);
->>  }
->>  
->> +void __weak pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
->> +{
->> +	pci_setup_bridge_resources(bus, type);
->> +}
->
->I'm not opposed to adding a pcibios_setup_bridge(), but I would rather do
->the architected updates in the generic PCI core code instead of down in the
->pcibios code.  In other words, I would rather have this:
->
->  void pci_setup_bridge(struct pci_bus *bus)
->  {
->    pcibios_setup_bridge(bus, type);
->    pci_setup_bridge_resources(bus, type);
->  }
->
->That way the default pcibios hook is empty, showing that by default there's
->no arch-specific code in this path, and we only have to look at the generic
->core code to verify that we actually do program the bridge windows.
->
-
-Ok. I'll change the code accordingly in next revision. Thanks for the
-suggestion.
-
-Thanks,
-Gavin
-
+	Arnd
