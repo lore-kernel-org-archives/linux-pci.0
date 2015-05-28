@@ -1,129 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 26 May 2015 15:21:55 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	"yasutake.koichi@jp.panasonic.com" <yasutake.koichi@jp.panasonic.com>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [RFC/RFT PATCH] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-Message-ID: <20150526142155.GA6464@red-moon>
-References: <1432214067-2752-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20150526125759.GK1565@arm.com>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: [PATCH] Revert "PCI/PM: Remove pci_pm_complete()"
+Date: Thu, 28 May 2015 04:12:58 +0200
+Message-ID: <2708462.WpN2O508C5@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150526125759.GK1565@arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 26, 2015 at 01:57:59PM +0100, Will Deacon wrote:
-> Hi Lorenzo,
-> 
-> On Thu, May 21, 2015 at 02:14:25PM +0100, Lorenzo Pieralisi wrote:
-> > When a PCI bus is scanned, upon PCI bridge detection the kernel
-> > has to read the bridge registers to set-up its resources so that
-> > the PCI resource hierarchy can be validated properly.
-> > 
-> > Most if not all architectures read PCI bridge registers in the
-> > pcibios_fixup_bus hook, that is called by the PCI generic layer
-> > whenever a PCI bus is scanned.
-> > 
-> > Since pci_read_bridge_bases is an arch agnostic operation (and it
-> > is carried out on all architectures) it can be moved to the generic
-> > PCI layer in order to consolidate code and remove the respective
-> > calls from the architectures back-ends.
-> > 
-> > The PCI_PROBE_ONLY flag is not checked before calling
-> > pci_read_bridge_buses in the generic layer since reading the bridge
-> > bases is not related to resources assignment; this implies that it
-> > can be carried out safely on PCI_PROBE_ONLY systems too and should
-> > not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
-> > flag before reading the bridge bases.
-> 
-> [...]
-> 
-> > diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-> > index 82f738e..cded02c 100644
-> > --- a/arch/alpha/kernel/pci.c
-> > +++ b/arch/alpha/kernel/pci.c
-> > @@ -242,12 +242,7 @@ pci_restore_srm_config(void)
-> >  
-> >  void pcibios_fixup_bus(struct pci_bus *bus)
-> >  {
-> > -	struct pci_dev *dev = bus->self;
-> > -
-> > -	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
-> > - 		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
-> > - 		pci_read_bridge_bases(bus);
-> > -	} 
-> 
-> I appreciate you're basically moving this code ...
-> 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 062fee6..335d9f2 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -453,7 +453,11 @@ void pci_read_bridge_bases(struct pci_bus *child)
-> >  	struct resource *res;
-> >  	int i;
-> >  
-> > -	if (pci_is_root_bus(child))	/* It's a host bus, nothing to read */
-> > +	/*
-> > +	 * If it is not a PCI bridge there is nothing to read
-> > +	 */
-> > +	if (pci_is_root_bus(child) || !dev ||
-> > +		!((dev->class >> 8) == PCI_CLASS_BRIDGE_PCI))
-> >  		return;
-> 
-> ... to here, but shouldn't we dispense with the class check and use
-> pci_is_bridge instead? pci_read_bridge_bases is making an assumption
-> that the header type is BRIDGE, so that seems like the more sensible
-> check to me.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+    
+Revert commit 84822b158fd3 "PCI/PM: Remove pci_pm_complete()" that
+removed the execution of the device driver's ->complete callback
+from the PCI bus type.
+    
+That was a mistake, because those callbacks are not executed at all
+now even if present.
+    
+Fixes: 84822b158fd3 "PCI/PM: Remove pci_pm_complete()"
+Cc: 3.13+ <stable@vger.kernel.org> # 3.13+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Yes I thought about that before posting. I added the class check to make
-sure it covers the current checks carried out on all architectures
-I am patching (ie pci_is_bridge() would allow reading bridge bases
-for a cardbus header and I do not think that's correct as the code
-stands).
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3cb2210de553..75c6aaec5c9b 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -669,10 +669,18 @@ static int pci_pm_prepare(struct device *dev)
+ 	return pci_dev_keep_suspended(to_pci_dev(dev));
+ }
+ 
++static void pci_pm_complete(struct device *dev)
++{
++	struct device_driver *drv = dev->driver;
++
++	if (drv && drv->pm && drv->pm->complete)
++		drv->pm->complete(dev);
++}
+ 
+ #else /* !CONFIG_PM_SLEEP */
+ 
+ #define pci_pm_prepare	NULL
++#define pci_pm_complete	NULL
+ 
+ #endif /* !CONFIG_PM_SLEEP */
+ 
+@@ -1203,6 +1211,7 @@ static int pci_pm_runtime_idle(struct device *dev)
+ 
+ static const struct dev_pm_ops pci_dev_pm_ops = {
+ 	.prepare = pci_pm_prepare,
++	.complete = pci_pm_complete,
+ 	.suspend = pci_pm_suspend,
+ 	.resume = pci_pm_resume,
+ 	.freeze = pci_pm_freeze,
 
-I am happy to refactor the check once we have some coverage for all
-archs.
-
-> Also, with these changes, can we now make pci_read_bridge_bases static
-> (as it has an implicit rdering requirement on the device having been
-> scanned)?
-
-As far as I understand the code, SPARC still needs it in arch specific
-code that scans the PCI bus, so I could not make it static with this
-set, I removed the call from all pcibios_fixup_bus implementations
-that were calling it but that's where I had to stop.
-
-Thanks for having a look,
-Lorenzo
