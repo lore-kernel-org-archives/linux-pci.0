@@ -1,49 +1,33 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 28 May 2015 13:35:32 -0600
+From: Jonathan Corbet <corbet@lwn.net>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mingo@elte.hu, gnomes@lxorguk.ukuu.org.uk,
+	gregkh@linuxfoundation.org, jkosina@suse.cz, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org,
+	bp@suse.de
+Subject: Re: [PATCH] Documentation: extend use case for EXPORT_SYMBOL_GPL()
+Message-ID: <20150528133532.7b80729c@lwn.net>
+In-Reply-To: <20150528191844.GU23057@wotan.suse.de>
+References: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
+	<20150528130923.42f34540@lwn.net>
+	<20150528191844.GU23057@wotan.suse.de>
 MIME-Version: 1.0
-In-Reply-To: <1431747401-20847-2-git-send-email-aleksey.makarov@auriga.com>
-References: <1431747401-20847-1-git-send-email-aleksey.makarov@auriga.com> <1431747401-20847-2-git-send-email-aleksey.makarov@auriga.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 16 May 2015 09:49:40 -0500
-Message-ID: <CAErSpo4fLHEu_NOuy9CkrS9DOfSyCOkddPHEQz=pp6et8wa2AA@mail.gmail.com>
-Subject: Re: [PATCH net-next v3 1/2] pci: Add Cavium PCI vendor id
-To: Aleksey Makarov <aleksey.makarov@auriga.com>
-Cc: netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Aleksey,
+On Thu, 28 May 2015 21:18:44 +0200
+"Luis R. Rodriguez" <mcgrof@suse.com> wrote:
 
-On Fri, May 15, 2015 at 10:36 PM, Aleksey Makarov
-<aleksey.makarov@auriga.com> wrote:
-> Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
-> ---
->  include/linux/pci_ids.h | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index e63c02a..3633cc6 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2327,6 +2327,8 @@
->  #define PCI_DEVICE_ID_ALTIMA_AC9100    0x03ea
->  #define PCI_DEVICE_ID_ALTIMA_AC1003    0x03eb
->
-> +#define PCI_VENDOR_ID_CAVIUM           0x177d
+> > As a nit, I would take out "have a preference to".  
+> 
+> Fine by me, do you need a new submission on my part of can you amend yourself?
 
-Please read the note at the top of include/linux/pci_ids.h.  If this
-definition is used in two or more drivers, mention that in the
-changelog.  Otherwise, just use the bare hex value or a private
-#define in your driver.
+I can tweak it on the way in.
 
-Bjorn
+Thanks,
 
->  #define PCI_VENDOR_ID_BELKIN           0x1799
->  #define PCI_DEVICE_ID_BELKIN_F5D7010V7 0x701f
->
-> --
-> 2.4.0
->
+jon
