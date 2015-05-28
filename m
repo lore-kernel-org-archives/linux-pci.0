@@ -1,35 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55479D35.3060603@ti.com>
-Date: Mon, 4 May 2015 21:54:21 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:50836 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755265AbbE1XKr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 May 2015 19:10:47 -0400
+Date: Fri, 29 May 2015 01:10:44 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, corbet@lwn.net,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mingo@elte.hu, gnomes@lxorguk.ukuu.org.uk,
+	gregkh@linuxfoundation.org, jkosina@suse.cz, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org,
+	bp@suse.de
+Subject: Re: [PATCH] Documentation: extend use case for EXPORT_SYMBOL_GPL()
+Message-ID: <20150528231044.GY23057@wotan.suse.de>
+References: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
+ <20150528200749.GD7232@ZenIV.linux.org.uk>
+ <20150528211736.GV23057@wotan.suse.de>
+ <20150528215618.GE7232@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-To: <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	<jg1.han@samsung.com>, Mohit Kumar <mohit.kumar@st.com>,
-	<kishon@ti.com>
-Subject: [Query] PCIe power management with designware
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150528215618.GE7232@ZenIV.linux.org.uk>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, May 28, 2015 at 10:56:19PM +0100, Al Viro wrote:
+> On Thu, May 28, 2015 at 11:17:36PM +0200, Luis R. Rodriguez wrote:
+> > > ... while some of us consider that as pointless posturing and will refuse
+> > > to merge such exports regardless.
+> > 
+> > Can you elaborate why, for those maintainers not aware of such positions?
+> 
+> *shrug*
+> 
+> Either one states that all modules are derivative works of the kernel,
+> period (in which case attaching _GPL to specific exports is completely
+> pointless), or it's a claim that this specific export is something
+> special on its own, which is a fairly strong claim, completely unfounded
+> more often than not.  In the worst cases it's the former being misrepresented
+> as the latter.  That only serves to weaken our position in case of copyright
+> violations, IMO.  When obviously BS claims like "encoding and decoding
+> of UIDs between the numeric values as seen by userland and stored on
+> filesystem and opaque pointers as used by the userns stuff is so special
+> that its use alone is sufficient to change whether the code is derivative
+> of the kernel or not" are thrown around, we end up with weaker protection,
+> not stronger one.  If something like _that_ makes the difference between
+> derived and non-derived, the former can't be worth much...
 
-I'm planning to add power management (suspend/resume) support for DRA7xx and 
-have a query.
+Great, thanks. This seems to be in alignment with those who have all along said
+they've used EXPORT_SYMBOL() to mean what EXPORT_SYMBOL_GPL() users now use it
+for. Nevertheless -- maintainers should know that some stubborn developers use
+EXPORT_SYMBOL_GPL() for its technical merit should violators abuse those
+symbols.
 
-The pci_pm_suspend_noirq callback being a bus pm_ops gets invoked late i.e 
-after the suspend hooks of the pci devices (including the RC driver). The 
-problem is after the 'suspend' of the RC driver, the clocks are disabled. Now 
-pci_pm_suspend_noirq has a call to pci_save_state() which tries to access the
-configuration space registers. Since the clocks are disabled by now, this 
-results in an abort. Shouldn't we do save_state() earlier?
-
-After working around the above problem, I face one more issue with broadcom 
-BCM95721 A211 card. After resuming, I'm unable to access the memory space. I'm 
-not sure if that is specific to that particular card, since I have no problems 
-with USB cards.
-
-Cheers
-Kishon
+  Luis
