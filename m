@@ -1,104 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Amir Vadai <amirv@mellanox.com>,
-	Ido Shamay <idos@mellanox.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Hadar Hen Zion <hadarh@mellanox.com>,
-	Eran Ben Elisha <eranbe@mellanox.com>,
-	Saeed Mahameed <saeedm@mellanox.com>,
-	Matan Barak <matanb@mellanox.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, netdev@vger.kernel.org
-Subject: [Patch v2 09/14] net/mlx4: Cache irq_desc->affinity instead of irq_desc
-Date: Wed, 20 May 2015 17:40:40 +0800
-Message-Id: <1432114845-24304-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1432114845-24304-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:43923 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753107AbbE1LgY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 May 2015 07:36:24 -0400
+Message-ID: <5566FD5C.4050708@hisilicon.com>
+Date: Thu, 28 May 2015 19:34:52 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>, <zhudacai@hisilicon.com>,
+	<devicetree@vger.kernel.org>,
+	"'Zhang Jukuo'" <zhangjukuo@huawei.com>,
+	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Richard Zhu'" <Richard.Zhu@freescale.com>,
+	"'Zhichang Yuan'" <yuanzhichang@hisilicon.com>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	<qiuzhenfa@hisilicon.com>, <linux-pci@vger.kernel.org>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Liviu Dudau'" <liviu.dudau@arm.com>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	"'Liguozhu'" <liguozhu@hisilicon.com>,
+	"'Lucas Stach'" <l.stach@pengutronix.de>
+Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
+References: <000001d096a9$27bf43f0$773dcbd0$@com> <5565CD0B.6020206@hisilicon.com> <2378629.Ocol8HRDqD@wuerfel> <2095085.CuXXeGT0Wg@wuerfel>
+In-Reply-To: <2095085.CuXXeGT0Wg@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The field 'affinity' in irq_desc won't change once the irq_desc data
-structure is created. So cache irq_desc->affinity instead of irq_desc.
-This also helps to hide struct irq_desc from device drivers.
+On 2015/5/27 23:43, Arnd Bergmann wrote:
+> On Wednesday 27 May 2015 17:31:46 Arnd Bergmann wrote:
+>> Yes, that works. However there are two problems with the approach:
+>>
+>> - we have to change all PCI host drivers on ARM to do this in order to remove
+>>   the ARM-specific pcibios_msi_controller() function
+>> - it's possible that there are dw_pcie implementations that do not include
+>>   an MSI controller, so that pointer would be NULL, which leads to the
+>>   core code to still call the ARM-specific pcibios_msi_controller() function
+>>   unless we remove it.
+> 
+> I wonder if this simple patch would be sufficient to kill off
+> pcibios_msi_controller().
+> 
+> Can one of you try it?
+> 
+> 	Arnd
+> 
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index fcbbbb1b9e95..7afb6d253162 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -18,15 +18,6 @@
+>  
+>  static int debug_pci;
+>  
+> -#ifdef CONFIG_PCI_MSI
+> -struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+> -{
+> -	struct pci_sys_data *sysdata = dev->bus->sysdata;
+> -
+> -	return sysdata->msi_ctrl;
+> -}
+> -#endif
+> -
+>  /*
+>   * We can't use pci_get_device() here since we are
+>   * called from interrupt context.
+> @@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  		if (!sys)
+>  			panic("PCI: unable to allocate sys data!");
+>  
+> -#ifdef CONFIG_PCI_MSI
+> -		sys->msi_ctrl = hw->msi_ctrl;
+> -#endif
+>  		sys->busnr   = busnr;
+>  		sys->swizzle = hw->swizzle;
+>  		sys->map_irq = hw->map_irq;
+> @@ -493,6 +481,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  				panic("PCI: unable to scan bus!");
+>  
+>  			busnr = sys->bus->busn_res.end + 1;
+> +#ifdef CONFIG_PCI_MSI
+> +			bus->msi = hw->msi_ctrl;
+> +#endif
+>  
+>  			list_add(&sys->node, head);
+>  		} else {
+> 
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/net/ethernet/mellanox/mlx4/en_cq.c   |    6 +++---
- drivers/net/ethernet/mellanox/mlx4/en_rx.c   |    5 +----
- drivers/net/ethernet/mellanox/mlx4/mlx4_en.h |    2 +-
- 3 files changed, 5 insertions(+), 8 deletions(-)
+Hi Arnd,
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/en_cq.c b/drivers/net/ethernet/mellanox/mlx4/en_cq.c
-index 22da4d0d0f05..a03a01625398 100644
---- a/drivers/net/ethernet/mellanox/mlx4/en_cq.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/en_cq.c
-@@ -31,6 +31,7 @@
-  *
-  */
- 
-+#include <linux/irq.h>
- #include <linux/mlx4/cq.h>
- #include <linux/mlx4/qp.h>
- #include <linux/mlx4/cmd.h>
-@@ -135,9 +136,8 @@ int mlx4_en_activate_cq(struct mlx4_en_priv *priv, struct mlx4_en_cq *cq,
- 				mdev->dev->caps.num_comp_vectors;
- 		}
- 
--		cq->irq_desc =
--			irq_to_desc(mlx4_eq_get_irq(mdev->dev,
--						    cq->vector));
-+		cq->irq_affinity = irq_get_affinity_mask(
-+					mlx4_eq_get_irq(mdev->dev, cq->vector));
- 	} else {
- 		/* For TX we use the same irq per
- 		ring we assigned for the RX    */
-diff --git a/drivers/net/ethernet/mellanox/mlx4/en_rx.c b/drivers/net/ethernet/mellanox/mlx4/en_rx.c
-index 2a77a6b19121..5675febf478e 100644
---- a/drivers/net/ethernet/mellanox/mlx4/en_rx.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/en_rx.c
-@@ -1044,14 +1044,11 @@ int mlx4_en_poll_rx_cq(struct napi_struct *napi, int budget)
- 	/* If we used up all the quota - we're probably not done yet... */
- 	if (done == budget) {
- 		int cpu_curr;
--		const struct cpumask *aff;
- 
- 		INC_PERF_COUNTER(priv->pstats.napi_quota);
- 
- 		cpu_curr = smp_processor_id();
--		aff = irq_desc_get_irq_data(cq->irq_desc)->affinity;
--
--		if (likely(cpumask_test_cpu(cpu_curr, aff)))
-+		if (likely(cpumask_test_cpu(cpu_curr, cq->irq_affinity)))
- 			return budget;
- 
- 		/* Current cpu is not according to smp_irq_affinity -
-diff --git a/drivers/net/ethernet/mellanox/mlx4/mlx4_en.h b/drivers/net/ethernet/mellanox/mlx4/mlx4_en.h
-index d021f079f181..33d544a1fe84 100644
---- a/drivers/net/ethernet/mellanox/mlx4/mlx4_en.h
-+++ b/drivers/net/ethernet/mellanox/mlx4/mlx4_en.h
-@@ -357,7 +357,7 @@ struct mlx4_en_cq {
- #define CQ_USER_PEND (MLX4_EN_CQ_STATE_POLL | MLX4_EN_CQ_STATE_POLL_YIELD)
- 	spinlock_t poll_lock; /* protects from LLS/napi conflicts */
- #endif  /* CONFIG_NET_RX_BUSY_POLL */
--	struct irq_desc *irq_desc;
-+	struct cpumask	*irq_affinity;
- };
- 
- struct mlx4_en_port_profile {
--- 
-1.7.10.4
+I think it does not work in above way(with adaptation as Fabrice mentioned).
+As the msi controller is passed to secondary bus one by one during the process of enumeration.
+Here we just set msi controller for root bus.
+
+Best Regards,
+Zhou
+
+> 
+> .
+> 
+
 
