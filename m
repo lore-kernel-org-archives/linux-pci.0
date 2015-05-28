@@ -1,110 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:32805 "EHLO
-	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098AbbEFN3f (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 May 2015 09:29:35 -0400
-Received: by qkx62 with SMTP id 62so5615392qkx.0
-        for <linux-pci@vger.kernel.org>; Wed, 06 May 2015 06:29:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAG374jAv9aHBPGV+x+xs2MyRGz+fw1ymwu78fqNXDPtPqehgZA@mail.gmail.com>
-References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org>
- <1428657168-12495-4-git-send-email-gabriel.fernandez@linaro.org>
- <20150505221646.GE24643@google.com> <CAG374jAv9aHBPGV+x+xs2MyRGz+fw1ymwu78fqNXDPtPqehgZA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 6 May 2015 08:29:14 -0500
-Message-ID: <CAErSpo7_ev1oYptvBObK2dS9_LXkU2_W_OMD825POE6L5Yh7Lw@mail.gmail.com>
-Subject: Re: [PATCH v3 3/5] PCI: st: Provide support for the sti PCIe controller
-To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Muralidharan Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
+Received: from gate.crashing.org ([63.228.1.57]:36005 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754577AbbE1WWg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 May 2015 18:22:36 -0400
+Message-ID: <1432851590.4526.4.camel@kernel.crashing.org>
+Subject: Re: [PATCH 2/2] PCI: pciehp: Convert pciehp to be builtin only, not
+ modular
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	linux-sh@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>,
+	Paul Mackerras <paulus@samba.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Date: Thu, 28 May 2015 17:19:50 -0500
+In-Reply-To: <CAE9FiQWDsQxKK3m4_-dSXm8V3xNc4oOtg2UQi=aayeKhLutwQg@mail.gmail.com>
+References: <20130725175242.6006.56007.stgit@bhelgaas-glaptop>
+	 <CAE9FiQXq59tSBM0SQ4OToXydZrRC3yukALmWEb6K9xpCGbdUhg@mail.gmail.com>
+	 <20150527193149.GD10210@google.com> <4269355.CI4MW738Od@vostro.rjw.lan>
+	 <CAE9FiQWDsQxKK3m4_-dSXm8V3xNc4oOtg2UQi=aayeKhLutwQg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 6, 2015 at 4:14 AM, Gabriel Fernandez
-<gabriel.fernandez@linaro.org> wrote:
-> Hi Bjorn,
->
-> On 6 May 2015 at 00:16, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Fri, Apr 10, 2015 at 11:12:46AM +0200, Gabriel FERNANDEZ wrote:
->>> sti pcie is built around a Synopsis Designware PCIe IP.
->>>
->>> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->>> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->>
->>> +/* ST PCIe driver does not allow module unload */
->>
->> Is there something that prevents module unload, or is it just untested?
->>
-> Yes we haven't tested
->
->>> +static int __init pcie_init(void)
->>> +{
->>> +     return platform_driver_probe(&st_pcie_driver, st_pcie_probe);
->>> +}
->>> +device_initcall(pcie_init);
->>
->> Can you use module_platform_driver_probe() or module_init() here?
->>
->
-> Yes we can use module_init() here.
->
-> By the way if figure out i removed __init attribute on st_pcie_probe()
-> in previous version to follow Arnd's remark.
-> But st_pcie_probe calls hook_fault_code() that has __init attribute.
-> So I think we need to keep __init for probe routine ?
-> Also, we have to restrict bind/unbind with "suppress_bind_attrs" in
-> platform_driver structure.
-> This is the main reason to not allow module unload/reload.
+On Thu, 2015-05-28 at 15:08 -0700, Yinghai Lu wrote:
+> On Wed, May 27, 2015 at 6:30 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Wednesday, May 27, 2015 02:31:49 PM Bjorn Helgaas wrote:
+> > For debug you can always use pcie_ports=compat and that will disable
+> > pciehp too.
+> 
+> That will disable AER at the same time, right?.
 
-I don't really care which solution you end up with here.  But please
-do take a look at how the other drivers solve the same problem.  Using
-"device_initcall()" is unique in drivers/pci/host, and I don't believe
-the problem is unique.  If several drivers have the same issue, they
-should solve it the same way.
+For ppc machines under either our hypervisor or running bare metal with
+our EEH-enabled bridges, both generic AER and hotplug code are going to
+interfere.
 
-> If you are ok i will send a v4 ?
+EEH "subsumes" AER, and we have firmware interfaces to do hotplug that
+know more than what the generic code can know about (such as on-board
+GPIOs that can control PERST, it's not always via the hotplug registers
+or hotplug from top-level slots which isn't the same as hotplug from
+switch slots on our platforms).
 
-I think I'll have a few questions about the designware changes, too,
-so you might want to wait a day or two.
+So basically, at this point, we must not have the PCIe port drivers at
+all, just just interfere.
 
->>> +MODULE_AUTHOR("Fabrice Gasnier <fabrice.gasnier@st.com>");
->>> +MODULE_DESCRIPTION("PCI express Driver for ST SoCs");
->>> +MODULE_LICENSE("GPL v2");
->>> --
->>> 1.9.1
->>>
+We should replace that with the appropriate "hooks" for the platform to
+disable selected functions (hotplug and AER) from the generic port
+drivers.
+
+Cheers,
+Ben.
+
+
