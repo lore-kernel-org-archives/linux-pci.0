@@ -1,68 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50099 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751806AbbEKOcU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 10:32:20 -0400
-Date: Mon, 11 May 2015 10:32:11 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Mark Hounschell <markh@compro.net>
-Cc: wdavis@nvidia.com, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org, jglisse@redhat.com,
-	jhubbard@nvidia.com, tripperda@nvidia.com
-Subject: Re: [PATCH 0/6] IOMMU/DMA map_resource support for peer-to-peer
-Message-ID: <20150511143211.GE20282@l.oracle.com>
-References: <1430505138-2877-1-git-send-email-wdavis@nvidia.com>
- <20150508202134.GB26795@l.oracle.com>
- <554D2099.2030907@compro.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <554D2099.2030907@compro.net>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Mark Rutland <mark.rutland@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v10 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX termination driver
+Date: Fri, 29 May 2015 11:24:28 -0700
+Message-Id: <cover.1432922451.git.dhdang@apm.com>
+In-Reply-To: <5566CC58.8080400@arm.com>
+References: <5566CC58.8080400@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 08, 2015 at 04:46:17PM -0400, Mark Hounschell wrote:
-> On 05/08/2015 04:21 PM, Konrad Rzeszutek Wilk wrote:
-> >On Fri, May 01, 2015 at 01:32:12PM -0500, wdavis@nvidia.com wrote:
-> >>From: Will Davis <wdavis@nvidia.com>
-> >>
-> >>Hi,
-> >>
-> >>This patch series adds DMA APIs to map and unmap a struct resource to and from
-> >>a PCI device's IOVA domain, and implements the AMD, Intel, and nommu versions
-> >>of these interfaces.
-> >>
-> >>This solves a long-standing problem with the existing DMA-remapping interfaces,
-> >>which require that a struct page be given for the region to be mapped into a
-> >>device's IOVA domain. This requirement cannot support peer device BAR ranges,
-> >>for which no struct pages exist.
-> >>
-> >>The underlying implementations of map_page and map_sg convert the struct page
-> >>into its physical address anyway, so we just need a way to route the physical
-> >>address of the BAR region to these implementations. The new interfaces do this
-> >>by taking the struct resource describing a device's BAR region, from which the
-> >>physical address is derived.
-> >>
-> >>The Intel and nommu versions have been verified on a dual Intel Xeon E5405
-> >>workstation. I'm in the process of obtaining hardware to test the AMD version
-> >>as well. Please review.
-> >
-> >Does it work if you boot with 'iommu=soft swiotlb=force' which will mandate
-> >an strict usage of the DMA API?
-> >
-> 
-> PCIe peer2peer is borked on all motherboards I've tried. Only writes are
+This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
+APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
+to GIC V2M specification for MSI Termination.
 
-:-(
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+This MSI block supports 2048 MSI termination ports coalesced into 16 physical
+HW IRQ lines and shared across all 5 PCIe ports. Starting from version 5 of
+this patch series, the total MSI vectors this driver supports is reduced to 256
+to maintain the correct set_affinity behavior for each MSI.
 
-> possible. Reads are not supported. I suppose if you have a platform with
-> only PCI and an IOMMU this would be very useful. Without both read and write
-> PCIe peer2peer support, this seems unnecessary.
-> 
+v10 changes:
+	1. Remove inline in helper functions
+	2. Simplify hwirq_to_cpu implementation
 
-It is a perfect way to test the code to make sure the API works (or it
-fails in the failure modes) _and_ that the drivers as well (use the
-pci_map_sync, and so on).
+v9 changes:
+        1. Add more helpers for manipulating MSI messages
+        2. Improve code readability
+        3. Make PCI_XGENE_MSI selectable
 
-> Mark
-> 
-> 
+v8 changes:
+        1. Add helper to read MSI registers
+        2. Resample interrupt status of the same group after handling interrupts
+           in that group
+        3. Error handling in case fail to allocate CPU mask for affinity setting
+
+v7 changes:
+        1. Add more error handling cases
+        2. Clear spurious interrupts that may happen during driver probe
+        3. Not using free_irq for chained irqs
+        4. Improve GIC IRQ number look up in chained handler
+
+v6 changes:
+        1. Correctly allocate MSI with bitmap_find_next_zero_area
+        2. Add notifier for CPU hotplug case
+        3. Driver clean up
+        4. Add more detailed information into device tree binding document
+           and move the device tree binding patch before the driver/dts patch
+
+v5 changes:
+        1. Implement set_affinity for each MSI by statically allocating 2
+	   MSI GIC IRQs for each X-Gene CPU core and moving MSI vectors around
+	   these GIC IRQs to steer them to target CPU core. As a consequence,
+	   the total MSI vectors that X-Gene v1 supports is reduced to 256.
+
+v4 changes:
+        1. Remove affinity setting for each MSI
+        2. Add description about register layout, MSI termination address
+	   and data
+        3. Correct total number of MSI vectors to 2048
+        4. Clean up error messages
+        5. Remove unused module code
+
+v3 changes:
+        1. Implement MSI support using PCI MSI IRQ domain
+        2. Only use msi_controller to store IRQ domain
+
+v2 changes:
+        1. Use msi_controller structure
+        2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
+
+ .../devicetree/bindings/pci/xgene-pci-msi.txt      |  68 +++
+ MAINTAINERS                                        |   8 +
+ arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 +
+ drivers/pci/host/Kconfig                           |  10 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-xgene-msi.c                   | 595 +++++++++++++++++++++
+ drivers/pci/host/pci-xgene.c                       |  21 +
+ 7 files changed, 730 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ create mode 100644 drivers/pci/host/pci-xgene-msi.c
+
+-- 
+1.9.1
+
