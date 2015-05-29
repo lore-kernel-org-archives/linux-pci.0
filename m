@@ -1,67 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:48508 "EHLO gate.crashing.org"
+Received: from 8bytes.org ([81.169.241.247]:33653 "EHLO theia.8bytes.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750785AbbEBCsw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 May 2015 22:48:52 -0400
-Message-ID: <1430534906.7979.85.camel@kernel.crashing.org>
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	id S1753234AbbE2IYv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 May 2015 04:24:51 -0400
+Date: Fri, 29 May 2015 10:24:44 +0200
+From: "joro@8bytes.org" <joro@8bytes.org>
+To: Mark Hounschell <markh@compro.net>
+Cc: William Davis <wdavis@nvidia.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Date: Sat, 02 May 2015 12:48:26 +1000
-In-Reply-To: <1430522976.7979.78.camel@kernel.crashing.org>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
-	 <1430493730.7979.58.camel@kernel.crashing.org>
-	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
-	 <1430521038.7979.70.camel@kernel.crashing.org>
-	 <1430522976.7979.78.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Terence Ripperda <TRipperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	"jglisse@redhat.com" <jglisse@redhat.com>,
+	"konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
+Message-ID: <20150529082444.GB13130@8bytes.org>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+ <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
+ <20150519234300.GA31666@google.com>
+ <555C79E5.9040507@compro.net>
+ <ea891abe867444d193742030348a6ad1@HQMAIL106.nvidia.com>
+ <555CDD6F.40304@compro.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <555CDD6F.40304@compro.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2015-05-02 at 09:29 +1000, Benjamin Herrenschmidt wrote:
-
-> Looking a bit more at it, I don't quite see how I can attach a subtree
-> using that stuff.
+On Wed, May 20, 2015 at 03:15:59PM -0400, Mark Hounschell wrote:
+> On 05/20/2015 01:30 PM, William Davis wrote:
+> >In an IOMMU environment, the DMA ops would be one of the IOMMU
+> >implementations, so these APIs would create a mapping for the peer device
+> >resource, even if it's on the same bus. Would a transaction targeting that
+> >mapping be forwarded upstream until it hits an IOMMU, which would then send
+> >the translated request back downstream? Or is my understanding of this
+> >configuration incorrect?
+> >
 > 
-> Instead, each node in the overlay seems to need extra nodes and
-> properties to refer to the original.
-> 
-> So the FW would essentially have to create something a lot more complex
-> than just reflattening a bit of its internal tree. For each internal
-> node, it will need to add all those __overlay__ nodes and properties.
-> 
-> That is not going to fly for me at all. It's order of magnitudes more
-> complex than the solution we are pursuing.
-> 
-> So I think for our use case, we should continue in the direction of
-> having a helper to unflatten a piece of FDT underneath an existing
-> node. I don't like the "HYBRID" stuff though, we should not refer to
-> the original FDT, we should just make them normal dynamic nodes.
+> It's my understanding of the IOMMU that is lacking here. I have no
+> idea if that is actually what would happen. Does it?
 
-A bit more thought... if we were to use the overlay stuff, Gavin, what
-we *could* do is add to OPAL FW internal representation a generation
-count to every node and property.
-
-That way we could essentially know whenever something's changed from
-what we flattened originally for the kernel.
-
-We can then create a generic (not PCI specific) call that generates
-an overlay tree for every node and property that has a generation
-count that is newer than what was flattened (or passed by the OS).
-
-It's still a LOT more complex than what we need though...
-
-Cheers,
-Ben.
+On the x86 side at least the IOMMU drivers enable ACS when available,
+forcing all perr-to-peer DMA between PCIe devices to go through the
+IOMMU. This only works when the peers are in different iommu groups,
+though.
 
 
+	Joerg
 
