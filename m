@@ -1,71 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:27988 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752119AbbEMGhy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 May 2015 02:37:54 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Jingoo Han <jg1.han@samsung.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mohit Kumar <mohit.kumar@st.com>, Arnd Bergmann <arnd@arndb.de>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<yuanzhichang@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH] PCI: designware: Add 8 lanes support
-Date: Wed, 13 May 2015 14:44:34 +0800
-Message-ID: <1431499474-102380-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:16785 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755347AbbE2R2I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 13:28:08 -0400
+From: <wdavis@nvidia.com>
+To: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Mark Hounschell <markh@compro.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v3 3/7] dma-mapping: pci: add pci_(un)map_resource
+Date: Fri, 29 May 2015 12:14:42 -0500
+Message-ID: <1432919686-32306-4-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
+References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds 8 lanes support. Following suggestion from Arnd, just split
-this patch from http://www.spinics.net/lists/linux-pci/msg40467.html
+From: Will Davis <wdavis@nvidia.com>
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Simply route these through to the new dma_(un)map_resource APIs.
+
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 ---
- drivers/pci/host/pcie-designware.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ include/asm-generic/pci-dma-compat.h | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 2e9f84f..4ce0aa5 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -31,6 +31,7 @@
- #define PORT_LINK_MODE_1_LANES		(0x1 << 16)
- #define PORT_LINK_MODE_2_LANES		(0x3 << 16)
- #define PORT_LINK_MODE_4_LANES		(0x7 << 16)
-+#define PORT_LINK_MODE_8_LANES		(0xf << 16)
+diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
+index c110843..ac4a4ad 100644
+--- a/include/asm-generic/pci-dma-compat.h
++++ b/include/asm-generic/pci-dma-compat.h
+@@ -61,6 +61,20 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
+ 	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
+ }
  
- #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
- #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
-@@ -38,6 +39,7 @@
- #define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
- #define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
- #define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
-+#define PORT_LOGIC_LINK_WIDTH_8_LANES	(0x8 << 8)
- 
- #define PCIE_MSI_ADDR_LO		0x820
- #define PCIE_MSI_ADDR_HI		0x824
-@@ -778,6 +780,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	case 4:
- 		val |= PORT_LINK_MODE_4_LANES;
- 		break;
-+	case 8:
-+		val |= PORT_LINK_MODE_8_LANES;
-+		break;
- 	}
- 	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
- 
-@@ -794,6 +799,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	case 4:
- 		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
- 		break;
-+	case 8:
-+		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
-+		break;
- 	}
- 	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
- 
++static inline dma_addr_t
++pci_map_resource(struct pci_dev *hwdev, struct resource *resource,
++		 unsigned long offset, size_t size, int direction)
++{
++	return dma_map_resource(hwdev == NULL ? NULL : &hwdev->dev, resource, offset, size, (enum dma_data_direction)direction);
++}
++
++static inline void
++pci_unmap_resource(struct pci_dev *hwdev, dma_addr_t dma_address, size_t size,
++		   int direction)
++{
++	dma_unmap_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
++}
++
+ static inline int
+ pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
+ 	   int nents, int direction)
 -- 
-1.9.1
+2.4.0
 
