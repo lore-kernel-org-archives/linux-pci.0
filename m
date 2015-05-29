@@ -1,89 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:51991 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600AbbE0Pnw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 May 2015 11:43:52 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Zhou Wang <wangzhou1@hisilicon.com>, zhudacai@hisilicon.com,
-	devicetree@vger.kernel.org, 'Zhang Jukuo' <zhangjukuo@huawei.com>,
-	'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	'Pratyush Anand' <pratyush.anand@gmail.com>,
-	'Richard Zhu' <Richard.Zhu@freescale.com>,
-	'Zhichang Yuan' <yuanzhichang@hisilicon.com>,
-	'Kishon Vijay Abraham I' <kishon@ti.com>,
-	qiuzhenfa@hisilicon.com, linux-pci@vger.kernel.org,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Liviu Dudau' <liviu.dudau@arm.com>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	'Liguozhu' <liguozhu@hisilicon.com>,
-	'Lucas Stach' <l.stach@pengutronix.de>
-Subject: Re: [RFC PATCH v1 1/3] PCI: designware: Add ARM64 support
-Date: Wed, 27 May 2015 17:43:14 +0200
-Message-ID: <2095085.CuXXeGT0Wg@wuerfel>
-In-Reply-To: <2378629.Ocol8HRDqD@wuerfel>
-References: <000001d096a9$27bf43f0$773dcbd0$@com> <5565CD0B.6020206@hisilicon.com> <2378629.Ocol8HRDqD@wuerfel>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:38026 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757166AbbE2VQR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 17:16:17 -0400
+Received: by igbjd9 with SMTP id jd9so24197570igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 29 May 2015 14:16:16 -0700 (PDT)
+Date: Fri, 29 May 2015 16:16:13 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] PCI: keep resource size during alignment reordering
+Message-ID: <20150529211613.GC12733@google.com>
+References: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 27 May 2015 17:31:46 Arnd Bergmann wrote:
-> Yes, that works. However there are two problems with the approach:
+On Thu, May 28, 2015 at 10:40:00PM -0700, Yinghai Lu wrote:
+> In d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing
+> and assigning"), it stores additional alignment in realloc_head and takes
+> this into consideration for assignment.
+> During update the resource before reordering, it does not calculate
+> resource end correctly.
 > 
-> - we have to change all PCI host drivers on ARM to do this in order to remove
->   the ARM-specific pcibios_msi_controller() function
-> - it's possible that there are dw_pcie implementations that do not include
->   an MSI controller, so that pointer would be NULL, which leads to the
->   core code to still call the ARM-specific pcibios_msi_controller() function
->   unless we remove it.
+> We need to keep the original resource size before updating start.
+> otherwise we will smaller size during updating end.
+> 
+> Fixes: d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing and assigning")
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-I wonder if this simple patch would be sufficient to kill off
-pcibios_msi_controller().
+I already merged this fix for the same commit:
 
-Can one of you try it?
+http://lkml.kernel.org/r/1432016657-16816-1-git-send-email-weiyang@linux.vnet.ibm.com
 
-	Arnd
+Is this a separate fix for a different problem?  Is it a fix for the same
+problem, just implemented differently?
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index fcbbbb1b9e95..7afb6d253162 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -18,15 +18,6 @@
- 
- static int debug_pci;
- 
--#ifdef CONFIG_PCI_MSI
--struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
--{
--	struct pci_sys_data *sysdata = dev->bus->sysdata;
--
--	return sysdata->msi_ctrl;
--}
--#endif
--
- /*
-  * We can't use pci_get_device() here since we are
-  * called from interrupt context.
-@@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 		if (!sys)
- 			panic("PCI: unable to allocate sys data!");
- 
--#ifdef CONFIG_PCI_MSI
--		sys->msi_ctrl = hw->msi_ctrl;
--#endif
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
-@@ -493,6 +481,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 				panic("PCI: unable to scan bus!");
- 
- 			busnr = sys->bus->busn_res.end + 1;
-+#ifdef CONFIG_PCI_MSI
-+			bus->msi = hw->msi_ctrl;
-+#endif
- 
- 			list_add(&sys->node, head);
- 		} else {
+I'd like Wei's ack for this just to make sure we don't get things mixed up.
 
+Wei's first fix is on my for-linus branch:
+
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=a6b65983dabceb7ccb1801ee7f5bd421c2704d16
+
+> ---
+>  drivers/pci/setup-bus.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -428,9 +428,10 @@ static void __assign_resources_sorted(st
+>  		 * consistent.
+>  		 */
+>  		if (add_align > dev_res->res->start) {
+> +			resource_size_t r_size = resource_size(dev_res->res);
+> +
+>  			dev_res->res->start = add_align;
+> -			dev_res->res->end = add_align +
+> -				            resource_size(dev_res->res);
+> +			dev_res->res->end = add_align + r_size - 1;
+>  
+>  			list_for_each_entry(dev_res2, head, list) {
+>  				align = pci_resource_alignment(dev_res2->dev,
