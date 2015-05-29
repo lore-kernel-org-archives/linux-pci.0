@@ -1,114 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og109.obsmtp.com ([64.18.0.188]:57235 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756688AbbE2SZc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 14:25:32 -0400
-Received: by pdbki1 with SMTP id ki1so59275497pdb.1
-        for <linux-pci@vger.kernel.org>; Fri, 29 May 2015 11:25:31 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Mark Rutland <mark.rutland@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v10 3/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
-Date: Fri, 29 May 2015 11:24:31 -0700
-Message-Id: <ca49b9d54f4b365924400761a288ec3a53ae9efe.1432922451.git.dhdang@apm.com>
-In-Reply-To: <cover.1432922451.git.dhdang@apm.com>
-References: <cover.1432922451.git.dhdang@apm.com>
-In-Reply-To: <cover.1432922451.git.dhdang@apm.com>
-References: <5566CC58.8080400@arm.com> <cover.1432922451.git.dhdang@apm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 28 May 2015 22:00:09 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, corbet@lwn.net,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mingo@elte.hu, gnomes@lxorguk.ukuu.org.uk,
+	gregkh@linuxfoundation.org, jkosina@suse.cz, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org,
+	bp@suse.de
+Subject: Re: [PATCH] Documentation: extend use case for EXPORT_SYMBOL_GPL()
+Message-ID: <20150529050009.GA26034@infradead.org>
+References: <1432839361-10308-1-git-send-email-mcgrof@do-not-panic.com>
+ <20150528200749.GD7232@ZenIV.linux.org.uk>
+ <20150528211736.GV23057@wotan.suse.de>
+ <20150528215618.GE7232@ZenIV.linux.org.uk>
+ <20150528231044.GY23057@wotan.suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150528231044.GY23057@wotan.suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+On Fri, May 29, 2015 at 01:10:44AM +0200, Luis R. Rodriguez wrote:
+> Great, thanks. This seems to be in alignment with those who have all along said
+> they've used EXPORT_SYMBOL() to mean what EXPORT_SYMBOL_GPL() users now use it
+> for. Nevertheless -- maintainers should know that some stubborn developers use
+> EXPORT_SYMBOL_GPL() for its technical merit should violators abuse those
+> symbols.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
----
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+FYI, I think the naming here is really unfortunate.  If if was named
+EXPORT_SYMBOL_INTERNAL as just a kernel export for specific uses we'd
+be much better off in being able to explain what it actually does.
 
-diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-index c8d3e0e..d8f3a1c 100644
---- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-@@ -374,6 +374,28 @@
- 			};
- 		};
- 
-+		msi: msi@79000000 {
-+			compatible = "apm,xgene1-msi";
-+			msi-controller;
-+			reg = <0x00 0x79000000 0x0 0x900000>;
-+			interrupts = <  0x0 0x10 0x4
-+					0x0 0x11 0x4
-+					0x0 0x12 0x4
-+					0x0 0x13 0x4
-+					0x0 0x14 0x4
-+					0x0 0x15 0x4
-+					0x0 0x16 0x4
-+					0x0 0x17 0x4
-+					0x0 0x18 0x4
-+					0x0 0x19 0x4
-+					0x0 0x1a 0x4
-+					0x0 0x1b 0x4
-+					0x0 0x1c 0x4
-+					0x0 0x1d 0x4
-+					0x0 0x1e 0x4
-+					0x0 0x1f 0x4>;
-+		};
-+
- 		pcie0: pcie@1f2b0000 {
- 			status = "disabled";
- 			device_type = "pci";
-@@ -395,6 +417,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie0clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie1: pcie@1f2c0000 {
-@@ -418,6 +441,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie1clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie2: pcie@1f2d0000 {
-@@ -441,6 +465,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie2clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie3: pcie@1f500000 {
-@@ -464,6 +489,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie3clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		pcie4: pcie@1f510000 {
-@@ -487,6 +513,7 @@
- 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
- 			dma-coherent;
- 			clocks = <&pcie4clk 0>;
-+			msi-parent = <&msi>;
- 		};
- 
- 		serial0: serial@1c020000 {
--- 
-1.9.1
+Even better would e a system were we have specific export groups, e.g.
+symbols would be "core" "mm", "vfs", or "legacy_hack_for_drm" and any
+consumer would specificly declare which symbol they pull in.
 
+This would have a couple advantages:
+
+ - anyone adding an export needs to think hard into which category
+   it falls, and think again if exporting really makes sense
+ - it's reasy to review modules to see if they pull in anything
+   unexpected.
