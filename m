@@ -1,54 +1,182 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 13 May 2015 16:49:40 +0800
-From: Dave Young <dyoung@redhat.com>
-To: "Li, ZhenHua" <zhen-hual@hp.com>
-Cc: dwmw2@infradead.org, indou.takao@jp.fujitsu.com, bhe@redhat.com,
-	joro@8bytes.org, vgoyal@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v11 05/10] iommu/vt-d: Add functions to load and save old
- re
-Message-ID: <20150513084940.GP4561@localhost.localdomain>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
- <1431337974-545-6-git-send-email-zhen-hual@hp.com>
- <20150512083745.GE4561@localhost.localdomain>
- <5552AD1B.6030208@hp.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:10266 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755347AbbE2R2L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 13:28:11 -0400
+From: <wdavis@nvidia.com>
+To: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Mark Hounschell <markh@compro.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Jonathan Corbet" <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	"Dave Jiang" <dave.jiang@intel.com>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v3 5/7] iommu/amd: Implement (un)map_resource
+Date: Fri, 29 May 2015 12:14:44 -0500
+Message-ID: <1432919686-32306-6-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
+References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5552AD1B.6030208@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/13/15 at 09:47am, Li, ZhenHua wrote:
-> On 05/12/2015 04:37 PM, Dave Young wrote:
-> >Seems the subject was truncated? Maybe "re" means root entry? Then please fix it
-> >
-> >On 05/11/15 at 05:52pm, Li, Zhen-Hua wrote:
-> >>Add functions to load root entry table from old kernel, and to save updated
-> >>root entry table.
-> >>Add two member in struct intel_iommu, to store the RTA in old kernel, and
-> >>the mapped virt address of it.
-> >
-> >Please explain a bit what is "RTA" in patch log, it is unclear to most of people
-> >who do not know iommu details.
-> >
-> >>
-> 
-> If people want to understand this patchset, I assume they have read the vt-d
-> specs. RTA is defined clearly in this spec.
-> 
+From: Will Davis <wdavis@nvidia.com>
 
-I think explain a bit is better, it will be easier for review, RTA is defined in spec,
-right, but if you refer to it in kernel source code, describe the meaning will help
-people to understand your code.
+Implement 'map_resource' for the AMD IOMMU driver. Generalize the existing
+map_page implementation to operate on a physical address, and make both
+map_page and map_resource wrappers around that helper (and similiarly, for
+unmap_page and unmap_resource).
 
-I would not stick on this 'RTA', but a descriptive subject and patch log is still
-important, please check the logs, not only for this patch.
+This allows a device to map another's resource, to enable peer-to-peer
+transactions.
 
-Thanks
-Dave
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ drivers/iommu/amd_iommu.c | 76 +++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 63 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index e43d489..ca2dac6 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -503,6 +503,8 @@ DECLARE_STATS_COUNTER(cnt_map_single);
+ DECLARE_STATS_COUNTER(cnt_unmap_single);
+ DECLARE_STATS_COUNTER(cnt_map_sg);
+ DECLARE_STATS_COUNTER(cnt_unmap_sg);
++DECLARE_STATS_COUNTER(cnt_map_resource);
++DECLARE_STATS_COUNTER(cnt_unmap_resource);
+ DECLARE_STATS_COUNTER(cnt_alloc_coherent);
+ DECLARE_STATS_COUNTER(cnt_free_coherent);
+ DECLARE_STATS_COUNTER(cross_page);
+@@ -541,6 +543,8 @@ static void amd_iommu_stats_init(void)
+ 	amd_iommu_stats_add(&cnt_unmap_single);
+ 	amd_iommu_stats_add(&cnt_map_sg);
+ 	amd_iommu_stats_add(&cnt_unmap_sg);
++	amd_iommu_stats_add(&cnt_map_resource);
++	amd_iommu_stats_add(&cnt_unmap_resource);
+ 	amd_iommu_stats_add(&cnt_alloc_coherent);
+ 	amd_iommu_stats_add(&cnt_free_coherent);
+ 	amd_iommu_stats_add(&cross_page);
+@@ -2752,20 +2756,16 @@ static void __unmap_single(struct dma_ops_domain *dma_dom,
+ }
+ 
+ /*
+- * The exported map_single function for dma_ops.
++ * Wrapper function that contains code common to mapping a physical address
++ * range from a page or a resource.
+  */
+-static dma_addr_t map_page(struct device *dev, struct page *page,
+-			   unsigned long offset, size_t size,
+-			   enum dma_data_direction dir,
+-			   struct dma_attrs *attrs)
++static dma_addr_t __map_phys(struct device *dev, phys_addr_t paddr,
++			     size_t size, enum dma_data_direction dir)
+ {
+ 	unsigned long flags;
+ 	struct protection_domain *domain;
+ 	dma_addr_t addr;
+ 	u64 dma_mask;
+-	phys_addr_t paddr = page_to_phys(page) + offset;
+-
+-	INC_STATS_COUNTER(cnt_map_single);
+ 
+ 	domain = get_domain(dev);
+ 	if (PTR_ERR(domain) == -EINVAL)
+@@ -2791,16 +2791,15 @@ out:
+ }
+ 
+ /*
+- * The exported unmap_single function for dma_ops.
++ * Wrapper function that contains code common to unmapping a physical address
++ * range from a page or a resource.
+  */
+-static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
+-		       enum dma_data_direction dir, struct dma_attrs *attrs)
++static void __unmap_phys(struct device *dev, dma_addr_t dma_addr, size_t size,
++			 enum dma_data_direction dir)
+ {
+ 	unsigned long flags;
+ 	struct protection_domain *domain;
+ 
+-	INC_STATS_COUNTER(cnt_unmap_single);
+-
+ 	domain = get_domain(dev);
+ 	if (IS_ERR(domain))
+ 		return;
+@@ -2815,6 +2814,55 @@ static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
+ }
+ 
+ /*
++ * The exported map_single function for dma_ops.
++ */
++static dma_addr_t map_page(struct device *dev, struct page *page,
++			   unsigned long offset, size_t size,
++			   enum dma_data_direction dir,
++			   struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_map_single);
++
++	return __map_phys(dev, page_to_phys(page) + offset, size, dir);
++}
++
++/*
++ * The exported unmap_single function for dma_ops.
++ */
++static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
++		       enum dma_data_direction dir, struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_unmap_single);
++
++	__unmap_phys(dev, dma_addr, size, dir);
++}
++
++/*
++ * The exported map_resource function for dma_ops.
++ */
++static dma_addr_t map_resource(struct device *dev, struct resource *res,
++			       unsigned long offset, size_t size,
++			       enum dma_data_direction dir,
++			       struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_map_resource);
++
++	return __map_phys(dev, res->start + offset, size, dir);
++}
++
++/*
++ * The exported unmap_resource function for dma_ops.
++ */
++static void unmap_resource(struct device *dev, dma_addr_t dma_addr,
++			   size_t size, enum dma_data_direction dir,
++			   struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_unmap_resource);
++
++	__unmap_phys(dev, dma_addr, size, dir);
++}
++
++/*
+  * The exported map_sg function for dma_ops (handles scatter-gather
+  * lists).
+  */
+@@ -3066,6 +3114,8 @@ static struct dma_map_ops amd_iommu_dma_ops = {
+ 	.unmap_page = unmap_page,
+ 	.map_sg = map_sg,
+ 	.unmap_sg = unmap_sg,
++	.map_resource = map_resource,
++	.unmap_resource = unmap_resource,
+ 	.dma_supported = amd_iommu_dma_supported,
+ };
+ 
+-- 
+2.4.0
+
