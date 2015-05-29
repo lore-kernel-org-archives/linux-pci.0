@@ -1,46 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:51315 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755194AbbEZNuG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 May 2015 09:50:06 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Will Deacon <will.deacon@arm.com>
-Cc: "Jayachandran C." <jchandra@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH v2 1/2] PCI: generic: remove dependency on hw_pci
-Date: Tue, 26 May 2015 12:38:41 +0200
-Message-ID: <4112847.4hqbDCX9Jk@wuerfel>
-In-Reply-To: <20150526095924.GF1565@arm.com>
-References: <1430791333-26013-1-git-send-email-jchandra@broadcom.com> <20150521063729.GB31418@jayachandranc.netlogicmicro.com> <20150526095924.GF1565@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from userp1040.oracle.com ([156.151.31.81]:50967 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754759AbbE2FkV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 01:40:21 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: [PATCH] PCI: keep resource size during alignment reordering
+Date: Thu, 28 May 2015 22:40:00 -0700
+Message-Id: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 26 May 2015 10:59:24 Will Deacon wrote:
-> > > Secondly, the hack to put pci_sys_data as the first member of gen_pci is ugly
-> > > at best
-> > 
-> > On balance, it removes the problem of using hw_pci interface which has its own
-> > ugliness (Arnd's mail on this http://www.spinics.net/lists/linux-pci/msg40703.html)
-> 
-> To me, that sounds like we should be disposing of the hw_pci interface
-> altogether and moving arch/arm/ over to the new architecture-independent
-> interface.
+In d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing
+and assigning"), it stores additional alignment in realloc_head and takes
+this into consideration for assignment.
+During update the resource before reordering, it does not calculate
+resource end correctly.
 
-I'd like to do that for all drivers in drivers/pci/host, but leave the
-ones for the legacy platforms in arch/arm alone, in particular the ones
-that use nr_controllers != 1.
+We need to keep the original resource size before updating start.
+otherwise we will smaller size during updating end.
 
-We should be able to remove pci_common_init_dev() and directly probe
-all devices that are using that, while we keep pci_common_init()
-around for the legacy case that also does not have a parent device.
+Fixes: d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing and assigning")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-	Arnd
+---
+ drivers/pci/setup-bus.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -428,9 +428,10 @@ static void __assign_resources_sorted(st
+ 		 * consistent.
+ 		 */
+ 		if (add_align > dev_res->res->start) {
++			resource_size_t r_size = resource_size(dev_res->res);
++
+ 			dev_res->res->start = add_align;
+-			dev_res->res->end = add_align +
+-				            resource_size(dev_res->res);
++			dev_res->res->end = add_align + r_size - 1;
+ 
+ 			list_for_each_entry(dev_res2, head, list) {
+ 				align = pci_resource_alignment(dev_res2->dev,
