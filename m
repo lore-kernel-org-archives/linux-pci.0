@@ -1,128 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:57529 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751337AbbELAFv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 May 2015 20:05:51 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 12 May 2015 10:05:49 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 3B6952CE804E
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 10:05:47 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4C05dVu31326318
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 10:05:47 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4C05EKb005881
-	for <linux-pci@vger.kernel.org>; Tue, 12 May 2015 10:05:14 +1000
-Date: Tue, 12 May 2015 10:04:49 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com
-Subject: Re: [PATCH v4 10/21] powerpc/powernv: Fundamental reset for PCI bus
- reset
-Message-ID: <20150512000449.GD4646@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1430460188-31343-11-git-send-email-gwshan@linux.vnet.ibm.com>
- <554E15C2.40506@ozlabs.ru>
- <20150511064720.GB8241@gwshan>
- <55505796.5030904@ozlabs.ru>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:37632 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753912AbbE2XjU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 19:39:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55505796.5030904@ozlabs.ru>
+Date: Sat, 30 May 2015 01:39:19 +0200
+Message-ID: <CAJZ5v0i5Z5rn49Qk33Ygnriu_UWeeoeMxe01UGbX86ov+8H8YQ@mail.gmail.com>
+Subject: [GIT PULL] PCI / ACPI fix for 4.1-rc6
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 11, 2015 at 05:17:42PM +1000, Alexey Kardashevskiy wrote:
->On 05/11/2015 04:47 PM, Gavin Shan wrote:
->>On Sun, May 10, 2015 at 12:12:18AM +1000, Alexey Kardashevskiy wrote:
->>>On 05/01/2015 04:02 PM, Gavin Shan wrote:
->>>>Function pnv_pci_reset_secondary_bus() is used to reset specified
->>>>PCI bus, which is leaded by root complex or PCI bridge. That means
->>>>the function shouldn't be called on PCI root bus and the patch
->>>>removes the logic for that case.
->>>>
->>>>Also, some adapters beneath the indicated PCI bus may require
->>>>fundamental reset in order to successfully reload their firmwares
->>>>after the reset. The patch translates hot reset to fundamental reset
->>>>for that case.
->>>>
->>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>>>---
->>>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 35 +++++++++++++++++++++-------
->>>>  1 file changed, 26 insertions(+), 9 deletions(-)
->>>>
->>>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>>>index 3c01095..58e4dcf 100644
->>>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->>>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>>>@@ -888,18 +888,35 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->>>>  	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
->>>>  }
->>>>
->>>>-void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->>>
->>>
->>>Why changing dev to pdev? Keeping "dev" could make the patch simpler.
->>>
->>
->>In the early stage when I wrote the EEH code, I had "dev" to refer PCI
->>device, which isn't precisely enough. Actually, "dev" means "struct device"
->>while "pdev" stands for "struct pci_dev". That's why I changed it.
->
->
->The rest of the file and the kernel overall use "dev" for pci_dev just fine.
->I would not bother.
->
+Hi Linus,
 
-Ok. I'll keep it.
+Please pull from
 
->>>>+static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
->>>>  {
->>>>-	struct pci_controller *hose;
->>>>+	int *freset = data;
->>>>
->>>>-	if (pci_is_root_bus(dev->bus)) {
->>>>-		hose = pci_bus_to_host(dev->bus);
->>>>-		pnv_eeh_phb_reset(hose, EEH_RESET_HOT);
->>>>-		pnv_eeh_phb_reset(hose, EEH_RESET_DEACTIVATE);
->>>>-	} else {
->>>>-		pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
->>>>-		pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
->>>>+	/*
->>>>+	 * Stop the iteration immediately if there is any
->>>>+	 * one PCI device requesting fundamental reset
->>>>+	 */
->>>>+	*freset |= pdev->needs_freset;
->>>>+	return *freset;
->>>>+}
->>>>+
->>>>+void pnv_pci_reset_secondary_bus(struct pci_dev *pdev)
->>>>+{
->>>>+	int option = EEH_RESET_HOT;
->>>>+	int freset = 0;
->>>>+
->>>>+	/* Check if there're any PCI devices asking for fundamental reset */
->>>>+	if (pdev->subordinate) {
->>>>+		pci_walk_bus(pdev->subordinate,
->>>>+			     pnv_pci_dev_reset_type,
->>>>+			     &freset);
->>>>+		if (freset)
->>>>+			option = EEH_RESET_FUNDAMENTAL;
->>>>  	}
->>>>+
->>>>+	/* Issue the requested type of reset */
->>>>+	pnv_eeh_bridge_reset(pdev, option);
->>>>+	pnv_eeh_bridge_reset(pdev, EEH_RESET_DEACTIVATE);
->>>>  }
->>>>
->>>>  /**
->>>>
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ acpi-pci-4.1-rc6
 
-Thanks,
-Gavin
+to receive a fix for the ACPI PCI host bridge initialization code
+as commit dc4fdaf0e4839109169d8261814813816951c75f
 
+ PCI / ACPI: Do not set ACPI companions for host bridges with parents
+
+on top of commit ba155e2d21f6bf05de86a78dbe5bfd8757604a65
+
+ Linux 4.1-rc5
+
+This fixes a bug uncovered by a recent driver core change that
+modified the implementation of the ACPI_COMPANION_SET() macro to
+strictly rely on its second argument to be either NULL or a valid
+pointer to struct acpi_device.
+
+As it turns out, pcibios_root_bridge_prepare() on x86 and ia64
+works with the assumption that the only code path calling
+pci_create_root_bus() is pci_acpi_scan_root() and therefore
+the sysdata argument passed to it will always match the
+expectations of pcibios_root_bridge_prepare().  That need not
+be the case, however, and in particular it is not the case for
+the Xen pcifront driver that passes a pointer to its own private
+data strcture as sysdata to pci_scan_bus_parented() which then
+passes it to pci_create_root_bus() and it ends up being used
+incorrectly by pcibios_root_bridge_prepare().
+
+Thanks!
+
+
+---------------
+
+Rafael J. Wysocki (1):
+      PCI / ACPI: Do not set ACPI companions for host bridges with parents
+
+---------------
+
+ arch/ia64/pci/pci.c | 13 ++++++++++---
+ arch/x86/pci/acpi.c | 13 ++++++++++---
+ 2 files changed, 20 insertions(+), 6 deletions(-)
