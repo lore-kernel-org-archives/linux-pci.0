@@ -1,101 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:50258 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423054AbbEOAKV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 May 2015 20:10:21 -0400
-Message-ID: <1431645953.4160.82.camel@kernel.crashing.org>
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Pantelis Antoniou <panto@antoniou-consulting.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Date: Fri, 15 May 2015 09:25:53 +1000
-In-Reply-To: <A748C569-24CF-41B9-BA91-822A67132DA9@antoniou-consulting.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
-	 <1430493730.7979.58.camel@kernel.crashing.org>
-	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
-	 <1430521038.7979.70.camel@kernel.crashing.org>
-	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
-	 <1430774063.7979.139.camel@kernel.crashing.org>
-	 <1431560124.20218.91.camel@kernel.crashing.org>
-	 <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
-	 <1431564871.4160.8.camel@kernel.crashing.org>
-	 <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com>
-	 <1431585994.4160.32.camel@kernel.crashing.org>
-	 <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
-	 <1431587657.4160.37.camel@kernel.crashing.org>
-	 <75F026CA-5AC1-4106-B2F0-AB0D006DEF5A@antoniou-consulting.com>
-	 <1431588358.4160.42.camel@kernel.crashing.org>
-	 <D7FC0542-DD1A-42 8F-8E75-81620C6D83DC@antoniou-consulting.com>
-	 <1431589652.4160.49.camel@kernel.crashing.org>
-	 <A748C569-24CF-41B9-BA91-822A67132DA9@antoniou-consulting.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:35290 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756050AbbE2QUY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 12:20:24 -0400
+Received: by iesa3 with SMTP id a3so66745659ies.2
+        for <linux-pci@vger.kernel.org>; Fri, 29 May 2015 09:20:24 -0700 (PDT)
+Date: Fri, 29 May 2015 11:20:21 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Casey Leedom <leedom@chelsio.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Request for advice on where to put Root Complex "fix up" code
+ for downstream device
+Message-ID: <20150529162021.GA12733@google.com>
+References: <4985EFDD773FCB459EF7915D2A3621ADBC7408@nice.asicdesigners.com>
+ <20150507230426.GO24643@google.com>
+ <4985EFDD773FCB459EF7915D2A3621ADBC80D4@nice.asicdesigners.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4985EFDD773FCB459EF7915D2A3621ADBC80D4@nice.asicdesigners.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-05-14 at 14:02 +0300, Pantelis Antoniou wrote:
-> Hi Ben,
+Hi Casey,
+
+Sorry, this one slipped through and I forgot to respond earlier.
+
+On Thu, May 07, 2015 at 11:31:58PM +0000, Casey Leedom wrote:
+> | From: Bjorn Helgaas [bhelgaas@google.com]
+> | Sent: Thursday, May 07, 2015 4:04 PM
+> | 
+> | There are a lot of fixups in drivers/pci/quirks.c.  For things that have to
+> | be worked around either before a driver claims the device or if there is no
+> | driver at all, the fixup *has* to go in drivers/pci/quirks.c
+> | 
+> | But for things like this, where the problem can only occur after a driver
+> | claims the device, I think it makes more sense to put the fixup in the
+> | driver itself.  The only wrinkle here is that the fixup has to be done on a
+> | separate device, not the device claimed by the driver.  But I think it
+> | probably still makes sense to put this fixup in the driver.
 > 
-> > On May 14, 2015, at 10:47 , Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
-> > 
+>   Okay, the example code that I provided (still quoted below) was indeed
+> done as a fix within the cxgb4 Network Driver.  I've also worked up a
+> version as a PCI Quirk but if you and David Miller agree that the fixup
+> code should go into cxgb4, I'm comfortable with that.  I can also provide
+> the example PCI Quirk code I worked up if you like.
 > 
-> [snip]
+>   One complication to doing this in cxgb4 is that it attaches to Physical
+> Function 4 of our T5 chip.  Meanwhile, a completely separate storage
+> driver, csiostor, connections to PF5 and PF6 and there's no
+> requirement at all that cxgb4 be loaded.  So if we go down the road of
+> putting the fixup code in the cxgb4 driver, we'll also need to duplicate
+> that code in the csiostor driver.
+
+Sounds simpler to just put the quirk in drivers/pci/quirks.c.
+
+> | > +static void clear_root_complex_tlp_attributes(struct pci_dev *pdev)
+> | > +{
+> | > +     struct pci_bus *bus = pdev->bus;
+> | > +     struct pci_dev *highest_pcie_bridge = NULL;
+> | > +
+> | > +     while (bus) {
+> | > +             struct pci_dev *bridge = bus->self;
+> | > +
+> | > +             if (!bridge || !bridge->pcie_cap)
+> | > +                     break;
+> | > +             highest_pcie_bridge = bridge;
+> | > +             bus = bus->parent;
+> | > +     }
+> | 
+> | Can you use pci_upstream_bridge() here?  There are a couple places where we
+> | want to find the Root Port, so we might factor that out someday.  It'll be
+> | easier to find all those places if they use with pci_upstream_bridge().
 > 
-> So I spend some time thinking about your use case and I think it boils down
-> to this:
-> 
-> I have a live tree in the firmware, I have made changes and I need to reflect
-> those changes to the live tree in the kernel.
-> 
-> Sounds like ‘how do I generate a patch for getting those two in sync'. No?
+> It looks like pci_upstream_bridge() just traverses one like upstream toward the
+> Root Complex?  Or am I misunderstanding that function?
 
-More or less.
+No, you're right.  I was just trying to suggest using pci_upstream_bridge()
+instead of bus->parent->self in your loop.  It wouldn't replace the loop
+completely.
 
-> I can see where this might be useful for others as all.
-> 
-> I think we really need to create a liblivedt like we have libfdt since
-> we have a number of projects going about using/manipulating DT at runtime.
-> 
-> 1. The linux kernel, with it’s own live tree implementation.
-> 2. The device tree compiler (it has a live tree) custom implemented.
-> 3. Your weird and wonderful (or wacky) firmware.
-> 4. u-boot does use DT now, but it does with libfdt. I believe this is suboptimal.
-> 5. barebox does DT as well.
-> 
-> Most of what we want to do with DT can be abstracted in a library I think that
-> all of those projects can use.
-> 
-> What are your thoughts?
-
-Well, we have at least two implementations, the kernel one and the one
-in our OPAL firmware:
-
-https://github.com/open-power/skiboot/blob/master/include/device.h
-https://github.com/open-power/skiboot/blob/master/core/device.c
-
-The latter uses some nice Rusty tricks (tm) for multiple argument
-functions.
-
-It would make sense to do a library somewhere yes. However, I need to
-cut my firmware API pretty much today so I think for now I'll stick
-to something Ad-Hoc for the PCI hotplug code that just passes the
-bit of FDT with the new devices and leave the "grand project" of live
-sync of the tree for later.
-
-There are other implementations of live DT in various Open Firmware
-variants out there, most are in Forth which I suggest you don't bother
-with unless you enjoy pain, but I think at least one of these is
-actually in C.
-
-Cheers,
-Ben.
-
-
+Bjorn
