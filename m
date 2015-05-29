@@ -1,68 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:34554 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754815AbbEOTZz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 May 2015 15:25:55 -0400
-Received: by qgfa7 with SMTP id a7so8724168qgf.1
-        for <linux-pci@vger.kernel.org>; Fri, 15 May 2015 12:25:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150515172836.GA27797@svl-evodev-groeck.juniper.net>
-References: <20150515172836.GA27797@svl-evodev-groeck.juniper.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 15 May 2015 14:25:34 -0500
-Message-ID: <CAErSpo5R0WF7J1OCagXNB2PcFUnNDB3LD6Q8A3pi=YYswzsaLw@mail.gmail.com>
-Subject: Re: BAR 7 io space assignment errors
-To: Guenter Roeck <groeck@juniper.net>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from exprod5og109.obsmtp.com ([64.18.0.188]:57235 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756688AbbE2SZc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 May 2015 14:25:32 -0400
+Received: by pdbki1 with SMTP id ki1so59275497pdb.1
+        for <linux-pci@vger.kernel.org>; Fri, 29 May 2015 11:25:31 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Mark Rutland <mark.rutland@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v10 3/4] arm64: dts: Add the device tree entry for the APM X-Gene PCIe MSI node
+Date: Fri, 29 May 2015 11:24:31 -0700
+Message-Id: <ca49b9d54f4b365924400761a288ec3a53ae9efe.1432922451.git.dhdang@apm.com>
+In-Reply-To: <cover.1432922451.git.dhdang@apm.com>
+References: <cover.1432922451.git.dhdang@apm.com>
+In-Reply-To: <cover.1432922451.git.dhdang@apm.com>
+References: <5566CC58.8080400@arm.com> <cover.1432922451.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
+There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
 
-Hi Guenter,
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ arch/arm64/boot/dts/apm/apm-storm.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-On Fri, May 15, 2015 at 12:28 PM, Guenter Roeck <groeck@juniper.net> wrote:
-> Hi all,
->
-> ever since 3.18(ish), we see lots of pcie io range allocation error messages
-> when booting our systems.
->
-> pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
-> pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
-> pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
->
-> This is repeated for each port.
->
-> What we atually _want_ is no IO address range, but so far I have not been able to
-> tell this to the code (or to the bridge).
+diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+index c8d3e0e..d8f3a1c 100644
+--- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+@@ -374,6 +374,28 @@
+ 			};
+ 		};
+ 
++		msi: msi@79000000 {
++			compatible = "apm,xgene1-msi";
++			msi-controller;
++			reg = <0x00 0x79000000 0x0 0x900000>;
++			interrupts = <  0x0 0x10 0x4
++					0x0 0x11 0x4
++					0x0 0x12 0x4
++					0x0 0x13 0x4
++					0x0 0x14 0x4
++					0x0 0x15 0x4
++					0x0 0x16 0x4
++					0x0 0x17 0x4
++					0x0 0x18 0x4
++					0x0 0x19 0x4
++					0x0 0x1a 0x4
++					0x0 0x1b 0x4
++					0x0 0x1c 0x4
++					0x0 0x1d 0x4
++					0x0 0x1e 0x4
++					0x0 0x1f 0x4>;
++		};
++
+ 		pcie0: pcie@1f2b0000 {
+ 			status = "disabled";
+ 			device_type = "pci";
+@@ -395,6 +417,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xc5 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie0clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie1: pcie@1f2c0000 {
+@@ -418,6 +441,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xcb 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie1clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie2: pcie@1f2d0000 {
+@@ -441,6 +465,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd1 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie2clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie3: pcie@1f500000 {
+@@ -464,6 +489,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xd7 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie3clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		pcie4: pcie@1f510000 {
+@@ -487,6 +513,7 @@
+ 					 0x0 0x0 0x0 0x4 &gic 0x0 0xdd 0x1>;
+ 			dma-coherent;
+ 			clocks = <&pcie4clk 0>;
++			msi-parent = <&msi>;
+ 		};
+ 
+ 		serial0: serial@1c020000 {
+-- 
+1.9.1
 
-What information does the core have that we could use to figure out
-that you want no I/O space?  For example, does the host bridge have no
-I/O apertures?  Or are there no devices below 02:00.0 that require I/O
-space?  If you can post a complete dmesg log, that should contain this
-information.
-
-I think we currently will try to assign enough I/O space for any I/O
-BARs below the bridge.  Or, if the bridge supports hotplug, we will
-try to assign at least pci_hotplug_io_size, which defaults to 256.
-
-> The IO space "0x1000-0xfff" gives an indication of what is going on, at least
-> to some degree. The io range is calculated in pbus_size_io() as
->         b_res->start = min_align;
->         b_res->end = b_res->start + size0 - 1;
-> with size0 == 0, so end < start.
->
-> Searching for the get_res_add_size and the BAR7 message suggests that many
-> others see the problem as well, so it appears that we are not alone.
-> I have not been able to find a solution, though.
->
-> Any idea what we may have to do to fix the problem, or in other words
-> what may be wrong ?
-
-Is the problem that some device doesn't work, or is it just extra
-annoying messages.  We should fix something in either case, of course,
-but it's more urgent if a device used to work but no longer does.
-
-Bjorn
