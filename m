@@ -1,163 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:51728 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751157AbbENHOl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 May 2015 03:14:41 -0400
-Message-ID: <1431587657.4160.37.camel@kernel.crashing.org>
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Pantelis Antoniou <panto@antoniou-consulting.com>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Date: Thu, 14 May 2015 17:14:17 +1000
-In-Reply-To: <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
-	 <1430493730.7979.58.camel@kernel.crashing.org>
-	 <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
-	 <1430521038.7979.70.camel@kernel.crashing.org>
-	 <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
-	 <1430774063.7979.139.camel@kernel.crashing.org>
-	 <1431560124.20218.91.camel@kernel.crashing.org>
-	 <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
-	 <1431564871.4160.8.camel@kernel.crashing.org>
-	 <53EAE361-0015-4702-97C6-9F67B87963C2@antoniou-consulting.com>
-	 <1431585994.4160.32.camel@kernel.crashing.org>
-	 <3988EABE-3DE9-4E1C-9778-22E35138E359@antoniou-consulting.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:38608 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225AbbE3FqZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 May 2015 01:46:25 -0400
+Received: by igbjd9 with SMTP id jd9so29317882igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 29 May 2015 22:46:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150529211613.GC12733@google.com>
+References: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
+	<20150529211613.GC12733@google.com>
+Date: Fri, 29 May 2015 22:46:24 -0700
+Message-ID: <CAE9FiQUqo-fNhqd-Yg0pdq8TpEh9gEH2piVJjxfybKSi7mB5cQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: keep resource size during alignment reordering
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-05-14 at 10:04 +0300, Pantelis Antoniou wrote:
-
-> Hmm, since you just want to transmit a whole subtree things are a bit
-> simpler.
-> 
-> You don’t need any of the fixups, and your target node is known.
-> 
-> So your overlay is simply:
-> 
-> / {
-> 	fragment@0 {
-> 		target-path = “/foo”;
-> 		__overlay__ {
-> 			/* contents of the slot */
-> 		};
-> 	}; 
-> };
+On Fri, May 29, 2015 at 2:16 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, May 28, 2015 at 10:40:00PM -0700, Yinghai Lu wrote:
+>> In d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing
+>> and assigning"), it stores additional alignment in realloc_head and takes
+>> this into consideration for assignment.
+>> During update the resource before reordering, it does not calculate
+>> resource end correctly.
+>>
+>> We need to keep the original resource size before updating start.
+>> otherwise we will smaller size during updating end.
+...
+> I already merged this fix for the same commit:
 >
-> I think it’s possible to just bit-mangle a blob (in pseudo code).
-> 
-> 	const u8 template_overlay_blob[] = { <compiled blob of the above> };
-> 
-> 	flatten_slot(slot_blob);
-> 
-> 	overlay_blob = allocate_new_blob(template_overlay_blob, slot_blob);
-> 
-> 	overlay_node = find_node(overlay_blob, “/fragment@0/__overlay__);
-> 	target_prop = find_prop(overlay_blob, “/fragment@0/target-path”);
-> 
-> 	inject_slot_blob(overlay_blob, overlay_node, slot_blob);
-> 	modify_slot_target(overlay_blob, target_prop, slot_target);
-> 	
-> I don’t think you need to re-flatten anything, shuffling bits around with
-> memmove should work.
+> http://lkml.kernel.org/r/1432016657-16816-1-git-send-email-weiyang@linux.vnet.ibm.com
+>
+> Is this a separate fix for a different problem?  Is it a fix for the same
+> problem, just implemented differently?
 
-Fairly gross :-)
+It is a separate fix for different problem.
+We should keep the size while changing the alignement.
 
-But yeah generating the overlay doesn't necessarily scare me, I can
-generate a temp tree that is the overlay in which I "copy" the subtree
-(or in my internal ptr-based representation I could have a concept of
-alias which I follow while flattening).
+Thanks
 
-That leaves me with these problems:
-
- - No support for removing of nodes, so that needs to be added back to
-the format and to Linux unless I continue removing by hand in the PCI
-hotplug code itself
-
- - No support for "committing" the overlay which needs to be added as
-well.
-
-> >>> Now we could consider that subtree as a changeset that can be undone,
-> >>> but that wouldn't work for boot time. And subsequent updates wouldn't
-> >>> have that concept of "undoing" anyway.
-> >>> 
-> >> 
-> >> I have posted another patch that does boot-time DT quirk which are
-> >> non-revertable.
-> >> 
-> >> https://lkml.org/lkml/2015/2/18/258
-> > 
-> > Not sure how that applies in my case ... I can't change the
-> > representation of the PCI subtree, this is standard OFW representation,
-> > I can't change the FW to make it an overlay-like thing at boot time,
-> > that would break existing kernels.
-> > 
-> 
-> The idea is to append the ‘quirk’ to the already booting device tree blob.
-
-I know but that's not how things work for me. At boot time the FW passes
-me one tree that contains all the PCI stuff it has probed.
-
-> Another idea floating around was to simple concatenate the booting blob with
-> any overlay blobs you want applied at boot time.
-
-Sure but I don't get overlay blobs at boot time.
-
-> >>> IE. conceptually, what overlays do today is quite rooted around the idea
-> >>> of having a fixed "base" DT and some pre-compiled DTB overlays that
-> >>> get added/removed. The design completely ignore the idea of a FW that
-> >>> maintains a "live" tree which we want to keep in sync, which is what we
-> >>> want to do here, or what we could do with a "live" open firmware
-> >>> implementation.
-> >>> 
-> >>> Now we might be able to reconcile them, but it feels to me that the
-> >>> overlay/changeset stuff is too rooted in the first concept…
-> >>> 
-> >> 
-> >> The first DT overlays use case (beaglebone capes) is what got the concept
-> >> started.
-> >> 
-> >> Right now is a generic mechanism to apply modifications to the kernel
-> >> live tree, with the possibility to revert them.
-> > 
-> > Yes but as I said it's not really thought in term of keeping the kernel
-> > tree in sync with an external dynamically generated tree. Maybe we can
-> > fix it, but it's more complex…
-> > 
-> 
-> Yes it is, unfortunately.
-
-Right. Which makes the solution of just passing my bit of tree as a blob
-which I expand in Linux where I want it rather than an overlay tempting
-if we can make Gavin patch more palatable (removing the hybrid stuff
-etc...).
-
-Cheers,
-Ben.
-
-> > Ben.
-> > 
-> >>> Ben.
-> >>> 
-> >>> 
-> >> 
-> >> Regards
-> >> 
-> >> — Pantelis
-> > 
-> > 
-> 
-> Regards
-> 
-> — Pantelis
-
-
+Yinghai
