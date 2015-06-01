@@ -1,100 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joerg Roedel <joro@8bytes.org>
-To: iommu@lists.linux-foundation.org
-Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
-	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
-	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
-	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
-Subject: [PATCH 00/17] Fixes and Cleanups for the Intel VT-d driver
-Date: Fri,  5 Jun 2015 16:10:46 +0200
-Message-Id: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: [Patch v3 25/36] sh, irq: Use access helper irq_data_get_affinity_mask()
+Date: Mon,  1 Jun 2015 16:05:34 +0800
+Message-Id: <1433145945-789-26-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey,
+Use access helper irq_data_get_affinity_mask() to hide implementation
+details of struct irq_desc.
 
-here are a couple of patches to fix the fall-out from the
-patch set fixing the kdump faults with VT-d enabled. A few
-important issues have been fixed:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/sh/kernel/irq.c   |    7 ++++---
+ drivers/sh/intc/chip.c |    6 +++---
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-	* Moved sleeping functions out of atomic sections,
-	  mainly iremap_cache/iounmap.
-
-	* Mark domain ids used in the old kernel as reserved
-	  in the kdump kernel, so that any new domains don't
-	  interfere with domains from the old kernel
-
-	* Mark all IRT entries from the old kernel as
-	  reservered in the new kernel, so that we don't
-	  overwrite an entry which might still be in use by
-	  a device
-
-	* Only try to load anything from the old kernel when
-	  we are in a kdump kernel. If we find the iommu
-	  hardware enabled and we are not in a kdump kernel,
-	  just disable the iommu and proceed with
-	  initialization.
-
-	* Fix a compile error
-
-Besides that I also cleaned up the code to simplify it:
-
-	* Move necessary initialization steps before the
-	  root entry table and the irq remapping table is
-	  programmed into hardware. This makes sure QI is
-	  initialized so that we can flush the iommu caches
-	  when hardware got the new tables.
-
-	* Make the new root entry table and irq remapping
-	  table visible to hardware immediatly after they
-	  are created and loaded with the data from the old
-	  kernel. This allows to remove the code to update
-	  both, the old and the new version of the table at
-	  the same time.
-
-	* Clean up log messages from the VT-d driver to have
-	  a common prefix that can be grepped for.
-
-	* Remove unused code
-
-The changes have been tested by me an Baoquan He. I'll plan
-to put them into the x86/vt-d branch for v4.2.
-
-Regards,
-
-	Joerg
-
-Joerg Roedel (17):
-  iommu/vt-d: Fix compile error when CONFIG_INTEL_IOMMU=n
-  iommu/vt-d: Remove __iommu_save_to_oldmem() function
-  iommu/vt-d: Make two functions static
-  iommu/vt-d: Load old data structures only in kdump kernel
-  iommu/vt-d: Mark root-entry present in set_root_entry
-  iommu/vt-d: Rework loading of old root-entry table
-  iommu/vt-d: Copy context-tables outside of spin_lock
-  iommu/vt-d: Don't reuse domain-ids from old kernel
-  iommu/vt-d: Clean up log messages in intel-iommu.c
-  iommu/vt-d: Allocate irq remapping table bitmap with GFP_KERNEL
-  iommu/vt-d: Move QI initialization to intel_setup_irq_remapping
-  iommu/vt-d: Move EIM detection to intel_prepare_irq_remapping
-  iommu/vt-d: Split up iommu_set_irq_remapping
-  iommu/vt-d: Move kdump pointer intialization to __iommu_load_old_irte
-  iommu/vt-d: Mark irt entries from old kernel as allocated
-  iommu/vt-d: Copy old irte in intel_setup_irq_remapping
-  iommu/vt-d: Remove update code for old ir-table
-
- drivers/iommu/dmar.c                |  26 +-
- drivers/iommu/intel-iommu.c         | 463 ++++++++++++++----------------------
- drivers/iommu/intel_irq_remapping.c | 263 +++++++++-----------
- include/linux/intel-iommu.h         |  17 +-
- 4 files changed, 299 insertions(+), 470 deletions(-)
-
+diff --git a/arch/sh/kernel/irq.c b/arch/sh/kernel/irq.c
+index 8dc677cc136b..6c0378c0b8b5 100644
+--- a/arch/sh/kernel/irq.c
++++ b/arch/sh/kernel/irq.c
+@@ -228,15 +228,16 @@ void migrate_irqs(void)
+ 		struct irq_data *data = irq_get_irq_data(irq);
+ 
+ 		if (irq_data_get_node(data) == cpu) {
+-			unsigned int newcpu = cpumask_any_and(data->affinity,
++			struct cpumask *mask = irq_data_get_affinity_mask(data);
++			unsigned int newcpu = cpumask_any_and(mask,
+ 							      cpu_online_mask);
+ 			if (newcpu >= nr_cpu_ids) {
+ 				pr_info_ratelimited("IRQ%u no longer affine to CPU%u\n",
+ 						    irq, cpu);
+ 
+-				cpumask_setall(data->affinity);
++				cpumask_setall(mask);
+ 			}
+-			irq_set_affinity(irq, data->affinity);
++			irq_set_affinity(irq, mask);
+ 		}
+ 	}
+ }
+diff --git a/drivers/sh/intc/chip.c b/drivers/sh/intc/chip.c
+index 46427b48e2f1..358df7510186 100644
+--- a/drivers/sh/intc/chip.c
++++ b/drivers/sh/intc/chip.c
+@@ -22,7 +22,7 @@ void _intc_enable(struct irq_data *data, unsigned long handle)
+ 
+ 	for (cpu = 0; cpu < SMP_NR(d, _INTC_ADDR_E(handle)); cpu++) {
+ #ifdef CONFIG_SMP
+-		if (!cpumask_test_cpu(cpu, data->affinity))
++		if (!cpumask_test_cpu(cpu, irq_data_get_affinity_mask(data)))
+ 			continue;
+ #endif
+ 		addr = INTC_REG(d, _INTC_ADDR_E(handle), cpu);
+@@ -50,7 +50,7 @@ static void intc_disable(struct irq_data *data)
+ 
+ 	for (cpu = 0; cpu < SMP_NR(d, _INTC_ADDR_D(handle)); cpu++) {
+ #ifdef CONFIG_SMP
+-		if (!cpumask_test_cpu(cpu, data->affinity))
++		if (!cpumask_test_cpu(cpu, irq_data_get_affinity_mask(data)))
+ 			continue;
+ #endif
+ 		addr = INTC_REG(d, _INTC_ADDR_D(handle), cpu);
+@@ -72,7 +72,7 @@ static int intc_set_affinity(struct irq_data *data,
+ 	if (!cpumask_intersects(cpumask, cpu_online_mask))
+ 		return -1;
+ 
+-	cpumask_copy(data->affinity, cpumask);
++	cpumask_copy(irq_data_get_affinity_mask(data), cpumask);
+ 
+ 	return IRQ_SET_MASK_OK_NOCOPY;
+ }
 -- 
-1.9.1
+1.7.10.4
 
