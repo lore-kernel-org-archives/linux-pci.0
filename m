@@ -1,54 +1,133 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 5 Jun 2015 11:53:13 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>,
-	the arch/x86 maintainers <x86@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-mediatek@lists.infradead.org
-Subject: Re: [RFT v2 00/48] Refine irq interfaces to reduce number of
- parameters
-Message-ID: <20150605035313.GA7707@wfg-t540p.sh.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
- <CAMuHMdUfGMU3m35xWD9vE1RNW80jjHx_KLM3a4GWq=JfuGcGBw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:37850 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633AbbFAXqt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 19:46:49 -0400
+Received: by igbsb11 with SMTP id sb11so74730586igb.0
+        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2015 16:46:48 -0700 (PDT)
+Date: Mon, 1 Jun 2015 18:46:45 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
+Message-ID: <20150601234645.GF3631@google.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdUfGMU3m35xWD9vE1RNW80jjHx_KLM3a4GWq=JfuGcGBw@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > The patch set passes Fengguang's 0day test suites as below. And tests
-> > with other platforms and configurations will be appreciated:)
-> > ----------------------------------------------------------
-> > configs tested: 95
+On Tue, May 19, 2015 at 06:50:08PM +0800, Wei Yang wrote:
+> Current EEH recovery code works with the assumption: the PE has primary
+> bus. Unfortunately, that's not true to VF PEs, which generally contains
+> one or multiple VFs (for VF group case). The patch creates PEs for VFs
+> at PCI final fixup time. Those PEs for VFs are indentified with newly
+> introduced flag EEH_PE_VF so that we handle them differently during
+> EEH recovery.
 > 
-> [...]
+> [gwshan: changelog and code refactoring]
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/eeh.h               |    1 +
+>  arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
+>  arch/powerpc/platforms/powernv/eeh-powernv.c |   17 +++++++++++++++++
+>  3 files changed, 26 insertions(+), 2 deletions(-)
 > 
-> > m68k                          amiga_defconfig
-> > m68k                       m5475evb_defconfig
-> > m68k                          multi_defconfig
-> 
-> For Fengguang: amiga_defconfig is a subset of multi_defconfig.
-> But sun3_defconfig is distinct, as Sun-3 has a different MMU and thus support
-> for it cannot be included in multi-platform kernels.
-> So I think you better replace amiga_defconfig by sun3_defconfig for build tests.
+> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+> index 1b3614d..c1fde48 100644
+> --- a/arch/powerpc/include/asm/eeh.h
+> +++ b/arch/powerpc/include/asm/eeh.h
+> @@ -70,6 +70,7 @@ struct pci_dn;
+>  #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+>  #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+>  #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
+> +#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+>  
+>  #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+>  #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+> diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+> index 35f0b62..260a701 100644
+> --- a/arch/powerpc/kernel/eeh_pe.c
+> +++ b/arch/powerpc/kernel/eeh_pe.c
+> @@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+>  	 * EEH device already having associated PE, but
+>  	 * the direct parent EEH device doesn't have yet.
+>  	 */
+> -	pdn = pdn ? pdn->parent : NULL;
+> +	if (edev->physfn)
+> +		pdn = pci_get_pdn(edev->physfn);
+> +	else
+> +		pdn = pdn ? pdn->parent : NULL;
+>  	while (pdn) {
+>  		/* We're poking out of PCI territory */
+>  		parent = pdn_to_eeh_dev(pdn);
+> @@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+>  	}
+>  
+>  	/* Create a new EEH PE */
+> -	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+> +	if (edev->physfn)
+> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
+> +	else
+> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>  	if (!pe) {
+>  		pr_err("%s: out of memory!\n", __func__);
+>  		return -ENOMEM;
+> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> index ce738ab..c505036 100644
+> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> @@ -1520,6 +1520,23 @@ static struct eeh_ops pnv_eeh_ops = {
+>  	.restore_config		= pnv_eeh_restore_config
+>  };
+>  
+> +static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
+> +{
+> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+> +
+> +	if (!pdev->is_virtfn)
+> +		return;
+> +
+> +	/*
+> +	 * The following operations will fail if VF's sysfs files
+> +	 * aren't created or its resources aren't finalized.
+> +	 */
 
-Got it and changed the code accordingly, thank you for the suggestion!
+I don't understand this comment.  "The following operations" seems to refer
+to eeh_add_device_early() and eeh_add_device_late(), and
+"VF's sysfs files being created" seems to refer to eeh_sysfs_add_device().
 
-Thanks,
-Fengguang
+So the comment suggests that eeh_add_device_early() and
+eeh_add_device_late() will fail because they're called before
+eeh_sysfs_add_device().  So I think you must be talking about some other
+"following operations," not eeh_add_device_early() and
+eeh_add_device_late().
+
+> +	eeh_add_device_early(pdn);
+> +	eeh_add_device_late(pdev);
+> +	eeh_sysfs_add_device(pdev);
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
+
+Ugh.  This is powerpc code, but I don't like using fixups as a hook like
+this.  There is a pcibios_add_device() -- could this be done there?
+
+If not, what happens after pcibios_add_device() that is required for this
+code?  Maybe we need a pcibios_bus_add_device() hook?
+
+> +
+>  /**
+>   * eeh_powernv_init - Register platform dependent EEH operations
+>   *
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
