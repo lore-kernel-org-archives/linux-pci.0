@@ -1,48 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43656 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759150AbbFBREm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 13:04:42 -0400
-Subject: [PATCH 0/2] pci: Provide a flag to access VPD through function 0
-From: Mark D Rustad <mark.d.rustad@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Tue, 02 Jun 2015 10:04:08 -0700
-Message-ID: <20150602165706.6252.76253.stgit@mdrustad-wks.jf.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"David S. Miller" <davem@davemloft.net>,
+	bob picco <bpicco@meloft.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Andreas Larsson <andreas@gaisler.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sparclinux@vger.kernel.org
+Subject: [Patch v3 26/36] sparc, irq: Use access helper irq_data_get_affinity_mask()
+Date: Mon,  1 Jun 2015 16:05:35 +0800
+Message-Id: <1433145945-789-27-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Many multi-function devices provide shared registers in extended
-config space for accessing VPD. The behavior of these registers
-means that the state must be tracked and access locked correctly
-for accesses not to hang or worse. One way to meet these needs is
-to always perform the accesses through function 0, thereby using
-the state tracking and mutex that already exists.
+Use access helper irq_data_get_affinity_mask() to hide implementation
+details of struct irq_desc.
 
-To provide this behavior, add a dev_flags bit to indicate that this
-should be done. This bit can then be set for any non-zero function
-that needs to redirect such VPD access to function 0. Do not set
-this bit on the zero function or there will be an infinite recursion.
-
-The second patch uses this new flag to invoke this behavior on all
-multi-function Intel Ethernet devices.
-
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
+ arch/sparc/kernel/irq_64.c      |   12 +++++++-----
+ arch/sparc/kernel/leon_kernel.c |    6 +++---
+ 2 files changed, 10 insertions(+), 8 deletions(-)
 
-Mark D Rustad (2):
-      pci: Add dev_flags bit to access VPD through function 0
-      pci: Add VPD quirk for Intel Ethernet devices
-
-
- drivers/pci/access.c |   39 ++++++++++++++++++++++++++++++++++++++-
- drivers/pci/quirks.c |    9 +++++++++
- include/linux/pci.h  |    2 ++
- 3 files changed, 49 insertions(+), 1 deletion(-)
-
+diff --git a/arch/sparc/kernel/irq_64.c b/arch/sparc/kernel/irq_64.c
+index 5130f6e3e68e..e22416ce56ea 100644
+--- a/arch/sparc/kernel/irq_64.c
++++ b/arch/sparc/kernel/irq_64.c
+@@ -377,7 +377,8 @@ static void sun4u_irq_enable(struct irq_data *data)
+ 		unsigned long cpuid, imap, val;
+ 		unsigned int tid;
+ 
+-		cpuid = irq_choose_cpu(data->irq, data->affinity);
++		cpuid = irq_choose_cpu(data->irq,
++				       irq_data_get_affinity_mask(data));
+ 		imap = handler_data->imap;
+ 
+ 		tid = sun4u_compute_tid(imap, cpuid);
+@@ -449,7 +450,8 @@ static void sun4u_irq_eoi(struct irq_data *data)
+ 
+ static void sun4v_irq_enable(struct irq_data *data)
+ {
+-	unsigned long cpuid = irq_choose_cpu(data->irq, data->affinity);
++	unsigned long cpuid = irq_choose_cpu(data->irq,
++					     irq_data_get_affinity_mask(data));
+ 	unsigned int ino = irq_data_to_sysino(data);
+ 	int err;
+ 
+@@ -511,7 +513,7 @@ static void sun4v_virq_enable(struct irq_data *data)
+ 	unsigned long cpuid;
+ 	int err;
+ 
+-	cpuid = irq_choose_cpu(data->irq, data->affinity);
++	cpuid = irq_choose_cpu(data->irq, irq_data_get_affinity_mask(data));
+ 
+ 	err = sun4v_vintr_set_target(dev_handle, dev_ino, cpuid);
+ 	if (err != HV_EOK)
+@@ -884,8 +886,8 @@ void fixup_irqs(void)
+ 		if (desc->action && !irqd_is_per_cpu(data)) {
+ 			if (data->chip->irq_set_affinity)
+ 				data->chip->irq_set_affinity(data,
+-							     data->affinity,
+-							     false);
++					irq_data_get_affinity_mask(data),
++					false);
+ 		}
+ 		raw_spin_unlock_irqrestore(&desc->lock, flags);
+ 	}
+diff --git a/arch/sparc/kernel/leon_kernel.c b/arch/sparc/kernel/leon_kernel.c
+index 9bbb8f2bbfcc..0299f052a2ef 100644
+--- a/arch/sparc/kernel/leon_kernel.c
++++ b/arch/sparc/kernel/leon_kernel.c
+@@ -126,7 +126,7 @@ static int leon_set_affinity(struct irq_data *data, const struct cpumask *dest,
+ 	int oldcpu, newcpu;
+ 
+ 	mask = (unsigned long)data->chip_data;
+-	oldcpu = irq_choose_cpu(data->affinity);
++	oldcpu = irq_choose_cpu(irq_data_get_affinity_mask(data));
+ 	newcpu = irq_choose_cpu(dest);
+ 
+ 	if (oldcpu == newcpu)
+@@ -149,7 +149,7 @@ static void leon_unmask_irq(struct irq_data *data)
+ 	int cpu;
+ 
+ 	mask = (unsigned long)data->chip_data;
+-	cpu = irq_choose_cpu(data->affinity);
++	cpu = irq_choose_cpu(irq_data_get_affinity_mask(data));
+ 	spin_lock_irqsave(&leon_irq_lock, flags);
+ 	oldmask = LEON3_BYPASS_LOAD_PA(LEON_IMASK(cpu));
+ 	LEON3_BYPASS_STORE_PA(LEON_IMASK(cpu), (oldmask | mask));
+@@ -162,7 +162,7 @@ static void leon_mask_irq(struct irq_data *data)
+ 	int cpu;
+ 
+ 	mask = (unsigned long)data->chip_data;
+-	cpu = irq_choose_cpu(data->affinity);
++	cpu = irq_choose_cpu(irq_data_get_affinity_mask(data));
+ 	spin_lock_irqsave(&leon_irq_lock, flags);
+ 	oldmask = LEON3_BYPASS_LOAD_PA(LEON_IMASK(cpu));
+ 	LEON3_BYPASS_STORE_PA(LEON_IMASK(cpu), (oldmask & ~mask));
 -- 
-Mark Rustad, Network Division, Intel Corporation
+1.7.10.4
+
