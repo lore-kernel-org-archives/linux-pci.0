@@ -1,213 +1,198 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f196.google.com ([209.85.213.196]:35118 "EHLO
-	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544AbbFKUg7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jun 2015 16:36:59 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 11 Jun 2015 13:36:38 -0700
-Message-ID: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
-Subject: RIP MTRR - status update for upcoming v4.2
-To: Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Borislav Petkov <bp@suse.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jej B <James.Bottomley@hansenpartnership.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-media@vger.kernel.org,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Toshi Kani <toshi.kani@hp.com>, X86 ML <x86@kernel.org>,
-	Juergen Gross <jgross@suse.com>,
-	Dave Airlie <airlied@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	xen-devel@lists.xenproject.org, Julia Lawall <julia.lawall@lip6.fr>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v3 31/36] genirq: Move field 'affinity' from struct irq_data into struct irq_common_data
+Date: Mon,  1 Jun 2015 16:05:40 +0800
+Message-Id: <1433145945-789-32-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The series to bury direct MTRR use is almost all in and on its way to
-v4.2. As the pending series continue slowly to be merged I wanted to
-take the time to reiterate the justification for these changes in
-hopes it may help those still reviewing some of these patches which
-are pending and to help document all these changes. There are also
-some series which depend on symbols now exported through some other
-subsystem trees so coordination is needed there. In those cases we
-have the option there to sit and wait for the exported symbols to
-trickle in through v4.2 and later on v4.3 finalize the changes, or to
-let some of the depending changes to in through other subsystem trees.
-I don't consider the coordination required difficult to handle so
-would prefer to see the changes in for v4.2 to be able to put a nail
-on the MTRR coffin sooner rather than later and to also help get more
-testing out of this sooner rather than later. PAT is known to have
-errata for some CPUs so hearing reports of issues with PAT would be
-very valuable. I'll let maintainers decide on how that trickles
-through. To help with all this towards the end I provide a status of
-all the pending patches to get this work completed.
+Irq affinity mask is per-irq instead of per irqchip, so move it into
+struct irq_common_data.
 
-Justification
-=========
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irq.h  |   12 ++++++------
+ kernel/irq/irqdesc.c |    9 +++++----
+ kernel/irq/manage.c  |   12 ++++++------
+ kernel/irq/proc.c    |    2 +-
+ 4 files changed, 18 insertions(+), 17 deletions(-)
 
-We want to bury direct use of MTRR code because:
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 91fbf10bdae0..9d01cd8ca8a2 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -110,8 +110,8 @@ enum {
+ /*
+  * Return value for chip->irq_set_affinity()
+  *
+- * IRQ_SET_MASK_OK	- OK, core updates irq_data.affinity
+- * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_data.affinity
++ * IRQ_SET_MASK_OK	- OK, core updates irq_common_data.affinity
++ * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_common_data.affinity
+  * IRQ_SET_MASK_OK_DONE	- Same as IRQ_SET_MASK_OK for core. Special code to
+  *			  support stacked irqchips, which indicates skipping
+  *			  all descendent irqchips.
+@@ -131,6 +131,7 @@ struct irq_domain;
+  *			Use accessor functions to deal with it
+  * @node:		node index useful for balancing
+  * @handler_data:	per-IRQ data for the irq_chip methods
++ * @affinity:		IRQ affinity on SMP
+  */
+ struct irq_common_data {
+ 	unsigned int		state_use_accessors;
+@@ -138,6 +139,7 @@ struct irq_common_data {
+ 	unsigned int		node;
+ #endif
+ 	void			*handler_data;
++	cpumask_var_t		affinity;
+ };
+ 
+ /**
+@@ -154,7 +156,6 @@ struct irq_common_data {
+  * @chip_data:		platform-specific per-chip private data for the chip
+  *			methods, to allow shared chip implementations
+  * @msi_desc:		MSI descriptor
+- * @affinity:		IRQ affinity on SMP
+  *
+  * The fields here need to overlay the ones in irq_desc until we
+  * cleaned up the direct references and switched everything over to
+@@ -172,7 +173,6 @@ struct irq_data {
+ #endif
+ 	void			*chip_data;
+ 	struct msi_desc		*msi_desc;
+-	cpumask_var_t		affinity;
+ };
+ 
+ /*
+@@ -660,12 +660,12 @@ static inline struct cpumask *irq_get_affinity_mask(int irq)
+ {
+ 	struct irq_data *d = irq_get_irq_data(irq);
+ 
+-	return d ? d->affinity : NULL;
++	return d ? d->common->affinity : NULL;
+ }
+ 
+ static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
+ {
+-	return d->affinity;
++	return d->common->affinity;
+ }
+ 
+ unsigned int arch_dynirq_lower_bound(unsigned int from);
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 7f881792ad5f..2c39a203f78b 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -38,12 +38,13 @@ static void __init init_irq_default_affinity(void)
+ #ifdef CONFIG_SMP
+ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
+ {
+-	if (!zalloc_cpumask_var_node(&desc->irq_data.affinity, gfp, node))
++	if (!zalloc_cpumask_var_node(&desc->irq_common_data.affinity,
++				     gfp, node))
+ 		return -ENOMEM;
+ 
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+ 	if (!zalloc_cpumask_var_node(&desc->pending_mask, gfp, node)) {
+-		free_cpumask_var(desc->irq_data.affinity);
++		free_cpumask_var(desc->irq_common_data.affinity);
+ 		return -ENOMEM;
+ 	}
+ #endif
+@@ -52,7 +53,7 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
+ 
+ static void desc_smp_init(struct irq_desc *desc, int node)
+ {
+-	cpumask_copy(desc->irq_data.affinity, irq_default_affinity);
++	cpumask_copy(desc->irq_common_data.affinity, irq_default_affinity);
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+ 	cpumask_clear(desc->pending_mask);
+ #endif
+@@ -124,7 +125,7 @@ static void free_masks(struct irq_desc *desc)
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+ 	free_cpumask_var(desc->pending_mask);
+ #endif
+-	free_cpumask_var(desc->irq_data.affinity);
++	free_cpumask_var(desc->irq_common_data.affinity);
+ }
+ #else
+ static inline void free_masks(struct irq_desc *desc) { }
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index f9744853b656..e7688140bfb6 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -190,7 +190,7 @@ int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
+ 	switch (ret) {
+ 	case IRQ_SET_MASK_OK:
+ 	case IRQ_SET_MASK_OK_DONE:
+-		cpumask_copy(data->affinity, mask);
++		cpumask_copy(desc->irq_common_data.affinity, mask);
+ 	case IRQ_SET_MASK_OK_NOCOPY:
+ 		irq_set_thread_affinity(desc);
+ 		ret = 0;
+@@ -302,7 +302,7 @@ static void irq_affinity_notify(struct work_struct *work)
+ 	if (irq_move_pending(&desc->irq_data))
+ 		irq_get_pending(cpumask, desc);
+ 	else
+-		cpumask_copy(cpumask, desc->irq_data.affinity);
++		cpumask_copy(cpumask, desc->irq_common_data.affinity);
+ 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+ 
+ 	notify->notify(notify, cpumask);
+@@ -374,9 +374,9 @@ setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
+ 	 * one of the targets is online.
+ 	 */
+ 	if (irqd_has_set(&desc->irq_data, IRQD_AFFINITY_SET)) {
+-		if (cpumask_intersects(desc->irq_data.affinity,
++		if (cpumask_intersects(desc->irq_common_data.affinity,
+ 				       cpu_online_mask))
+-			set = desc->irq_data.affinity;
++			set = desc->irq_common_data.affinity;
+ 		else
+ 			irqd_clear(&desc->irq_data, IRQD_AFFINITY_SET);
+ 	}
+@@ -827,8 +827,8 @@ irq_thread_check_affinity(struct irq_desc *desc, struct irqaction *action)
+ 	 * This code is triggered unconditionally. Check the affinity
+ 	 * mask pointer. For CPU_MASK_OFFSTACK=n this is optimized out.
+ 	 */
+-	if (desc->irq_data.affinity)
+-		cpumask_copy(mask, desc->irq_data.affinity);
++	if (desc->irq_common_data.affinity)
++		cpumask_copy(mask, desc->irq_common_data.affinity);
+ 	else
+ 		valid = false;
+ 	raw_spin_unlock_irq(&desc->lock);
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index 0e97c142ce40..e3a8c9577ba6 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -39,7 +39,7 @@ static struct proc_dir_entry *root_irq_dir;
+ static int show_irq_affinity(int type, struct seq_file *m, void *v)
+ {
+ 	struct irq_desc *desc = irq_to_desc((long)m->private);
+-	const struct cpumask *mask = desc->irq_data.affinity;
++	const struct cpumask *mask = desc->irq_common_data.affinity;
+ 
+ #ifdef CONFIG_GENERIC_PENDING_IRQ
+ 	if (irqd_is_setaffinity_pending(&desc->irq_data))
+-- 
+1.7.10.4
 
-a) MTRR is x86 specific, this means all existing MTRR code is #idef'd
-out. PAT support for x86 was implemented using architecture agnostic
-APIs, this enables other architectures to provide support for a
-similar write-combining feature, and removes the nasty #idef eyesores.
-MTRR should be seen as a first step temporary architectural evolution
-to what PAT eventually became on x86.
-
-b) We have a long term goal to change the default behavior of
-ioremap_nocache() and pci_mmap_page_range() to use PAT strong UC,
-right now we cannot do this, but after all drivers are converted (all
-these series I've been posting) we expect to be able to make the
-change. Making a change to strong UC on these two calls can only
-happen after a period of time of having Linux bake with all these
-changes merged and in place. How many kernels we will want Linux baked
-with all these transformations to arch_phys before making a change to
-ioremap_nocache() and pci_mmap_page_range() is up to x86 folks. There
-are other gains possible with this but I welcome others to chime in
-here with what gains we can expect from this.
-
-c) MTRR acts on physical addresses and requires power-of-two
-alignment, on both the base used and size, this limits the flexibility
-for MTRR use. For a good example of its limitations refer to the
-patches which change the atyfb driver from using MTRR to PAT.
-
-d) MTRR is known to be unreliable, it can at times not work even on
-modern systems.
-
-e) There is a limit to how many MTRRs you can use on a system. If
-using a large number of devices with MTRR support you will quickly run
-out of MTRRs. This is why originally Andy Lutomirski ended up adding
-the arch_phys_wc_add() API, in order to take advantage of PAT which is
-*not* bound to the same limitations as MTRRs are.
-
-f) PAT has been available for quite a long time, since Pentium III
-(circa 1999) and newer, but having PAT enabled does not restrict use
-of MTRR and because of this some systems may end up then combining
-MTRR and PAT. I do not believe this wasn't an original highly expected
-wide use situation, it technically should work to combine both but
-there might be issues with interactions between both, exactly what
-issues can exist or have existed remains quite unclear as MTRR in and
-of itself has been known to be unreliable anyway. If possible its best
-to just be binary about this and only use MTRR if and only if
-necessary because of the other issues known with MTRR.
-
-g) Linux has support for Xen PV domains using PAT, this was introduced
-by Juergen via v3.19 via commit 47591df50512 ("xen: Support Xen
-pv-domains using PAT"). Since MTRR is old we don't want to add MTRR
-support into Xen on Linux, instead since Linux now supports PV domains
-with PAT we can take full advantage of write combining for PV domains
-on Xen provided all Linux drivers are converted to use PAT properly.a
-framebuffer folks's ACK
-
-Review of the changes
-================
-
-Most of the series has consisted of driver transformations using
-Coccinelle SmPL patches to transform existing code which access MTRR
-APIs directly to the architecture agnostic write-combining calls.
-Other patches extend bus subsystems to make available new
-write-combining architecture agnostic APIs. Other patches have
-consisted of extending architecture agnostic APIs to help work around
-old MTRR hacks -- this was perhaps the hardest task and took quite a
-bit of time and review as it required review of implications of all
-combinatorial possibilities with MTRR and PAT, which also got
-documented as part of the series. In the end it was also determined
-some drivers required substantial work to be able to work properly
-with PAT, the atyfb driver is an example driver which had the homework
-required done. Due to complexities and since the driver / hardware was
-ancient we decided to reach a compromise and require users of those
-drivers to boot with a kernel parameter to disable PAT, fortunately
-this was only required for two old device drivers:
-
-* ipath: the ipath device driver powers the old HTX bus cards that
-only work in AMD systems, while the newer IB/qib device driver powers
-all PCI-e cards. The ipath device driver is obsolete, hardware hard to
-find
-
-* ivtv: the hardware is really rare these days, and perhaps only some
-lost souls in some third world country are expected to be using this
-feature of the device driver.
-
-Pending RIP MTRR patches
-====================
-
-There are a few pending series so I wanted to provide a status update
-on those series.
-
-mtrr: bury MTRR - unexport mtrr_add() and mtrr_del()
-
-This is the nail on the MTRR coffin, it will prevent future direct
-access to MTRR code. This will not be posted until all of the below
-patches are in and merged. A possible next step here might be to
-consider separating PAT code from MTRR code and making PAT a first
-class citizen, enabling distributions to disable MTRR code in the
-future. I thought this was possible but for some reason I recently
-thought that there was one possible issue to make this happen. I
-suppose we won't know unless we try, unless of course someone already
-knows, Toshi?
-
-IB/ipath: use arch_phys_wc_add() and require PAT disabled
-IB/ipath: add counting for MTRR
-ivtv: use arch_phys_wc_add() and require PAT disabled
-
-This v7 series just posted addresses all drivers which cannot work
-with PAT, fortunately we end up with only 2! This series has all
-subsystem and driver maintainers ACKs, it was just posted with a few
-fixes with the intent to be merged through Boris' x86 tree as it
-depends on the newly exported pat_enabled() symbol.
-
-fusion: remove dead MTRR code
-
-This should go through Bottomley's tree, driver maintainer provided an
-ACKed, this is just pending integration into the SCSI subsystem tree.
-As a last resort my hope is that this can go through Andrew Morton's
-tree.
-
-video: fbdev: vesafb: use arch_phys_wc_add()
-video: fbdev: vesafb: add missing mtrr_del() for added MTRR
-video: fbdev: vesafb: only support MTRR_TYPE_WRCOMB
-
-A v4 series was posted, pending review / Integration through Tomis' tree
-
-video: fbdev: atyfb: use arch_phys_wc_add() and ioremap_wc()
-video: fbdev: atyfb: replace MTRR UC hole with strong UC
-video: fbdev: atyfb: clarify ioremap() base and length used
-video: fbdev: atyfb: move framebuffer length fudging to helper
-
-This provides a work around replacement for the direct MTRR use hack
-using the new ioremap_uc() API. This is pending review / ACK by the
-driver maintainer Ville Syrjälä, and the subsystem maintainer, Tomi.
-Since it relies on ioremap_uc(), which is merged through Boris' tree,
-this should go through Boris' tree *iff* we want it in for v4.2,
-otherwise this will have to wait for v4.3.
-
-video: fbdev: vt8623fb: use arch_phys_wc_add() and pci_iomap_wc()
-video: fbdev: s3fb: use arch_phys_wc_add() and pci_iomap_wc()
-video: fbdev: arkfb: use arch_phys_wc_add() and pci_iomap_wc()
-lib: devres: add pcim_iomap_wc() variants
-pci: add pci_iomap_wc() variants
-
-This has Tomi's ACK already for the driver specific changes, Bjorn
-asked for a Documentation guidance update for EXPORT_SYMBOL_GPL(),
-this is now merged via linux-next. This is pending consent from Tomi
-if it can go in through Bjorn's tree. It is also obviously pending a
-final ACK from Bjorn. The devres change would go in without any users,
-I leave this for Bjorn to decide but do note my concern of someone in
-the future adding a non EXPORT_SYMBOL_GPL() for this implementation.
-
-video: fbdev: gxt4500: use pci_ioremap_wc_bar() for framebuffer
-video: fbdev: kyrofb: use arch_phys_wc_add() and pci_ioremap_wc_bar()
-video: fbdev: i740fb: use arch_phys_wc_add() and pci_ioremap_wc_bar()
-pci: add pci_ioremap_wc_bar()
-
-This requires Tomi's Ack / review, and then obviously Bjorn's own ACK
-/ integration. Consent from Tomi of whether or not this can go through
-Bjorn's tree is also needed.
-
- Luis
