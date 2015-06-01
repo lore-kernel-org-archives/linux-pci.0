@@ -1,45 +1,57 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 15 Jun 2015 12:50:27 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: jakeo@microsoft.com
-Cc: kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, pebolle@tiscali.nl,
-	haiyangz@microsoft.com, mebersol@microsoft.com
-Subject: Re: [PATCH v2 6/6] drivers:pci:hv: New paravirtual PCI front-end for
- Hyper-V VMs
-Message-ID: <20150615195027.GA5257@kroah.com>
-References: <1434387999-1885-1-git-send-email-jakeo@microsoft.com>
- <1434387999-1885-7-git-send-email-jakeo@microsoft.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1434387999-1885-7-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1432116013-25902-6-git-send-email-jiang.liu@linux.intel.com>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
+	<1432116013-25902-6-git-send-email-jiang.liu@linux.intel.com>
+Date: Mon, 1 Jun 2015 14:45:59 +0200
+Message-ID: <CACRpkdZfWK5H+gRD6inX31Ouq1XCvq7CneNDJV8x0iihXHzWjw@mail.gmail.com>
+Subject: Re: [RFC v1 05/25] gpio: Use irq_desc_get_xxx() to avoid redundant
+ lookup of irq_desc
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Ray Jui <rjui@broadcom.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Santosh Shilimkar <ssantosh@kernel.org>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	Linux-OMAP <linux-omap@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 15, 2015 at 05:06:39PM +0000, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> This patch supplies a new driver, hv_pcifront, which exposes new root PCI
-> buses.  When a Hyper-V VM running Linux is offered a paravirtual PCI bus
-> in order to expose a device passed through on that bus, this drver
-> registers a new bus with the PCI driver.  This new bus is bus "zero"
-> within a new PCI domain.  This is done so that there's no overlap between
-> the emulated, or fully virtualized, PCI that may be in the VM and a real
-> PCIe device that will be exposed.
-> 
-> This PCI front-end only supports PCIe devices which do not use I/O BARs and
-> which do not need a legacy INTx# interrupt (relying on MSI or MSI-X).
-> Multifunction devices are supported, but devices with Type 1 or Type 2
-> config headers are not supported.  (These are bridges to other PCI buses.)
-> 
-> The content of this patch differs from the one sent previously in that it
-> incorporates feedback related to unused code (which has been removed) and
-> GPL license (which has been updated.)  It also removes Kconfig lines that
-> had been copied from the Xen PCI front-end entry, but which shouldn't be
-> used here.
+On Wed, May 20, 2015 at 11:59 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
 
-This paragraph goes below the --- line, we don't need it in the
-changelog :(
+> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+> already have a pointer to corresponding irq_desc.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
+
+Are there dependencies on this patch or can I just apply it
+directly to the GPIO tree?
+
+Yours,
+Linus Walleij
