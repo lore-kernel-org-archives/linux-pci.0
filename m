@@ -1,180 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:32385 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751098AbbFYB77 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2015 21:59:59 -0400
-Message-ID: <558B608F.9060003@huawei.com>
-Date: Thu, 25 Jun 2015 09:59:43 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-CC: PCI <linux-pci@vger.kernel.org>,
-	"Herui (Ray)" <Ray.herui@huawei.com>
-Subject: Re: Assign mem resource fail after remove and rescan
-References: <55167C1C.6010001@huawei.com> <CAE9FiQWWNmJA1qKDaumuc8+EOj7E+fhbaZaNzTVyaDzbX4j9Hg@mail.gmail.com> <551A40E8.4080708@huawei.com> <CAE9FiQUQ_Kz8sNzu9RmOfoe4xEwfZ3atGcfQ39UAp4dRz2rRFA@mail.gmail.com> <20150505190729.GA24643@google.com>
-In-Reply-To: <20150505190729.GA24643@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"David S. Miller" <davem@davemloft.net>,
+	bob picco <bpicco@meloft.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, sparclinux@vger.kernel.org
+Subject: [Patch v3 08/36] sparc, irq: Use helper irq_data_get_irq_handler_data() to hide irq_desc details
+Date: Mon,  1 Jun 2015 16:05:17 +0800
+Message-Id: <1433145945-789-9-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->> Subject: [PATCH] PCI: Optimize bus mem sizing to small size
->>
->> Current code try to get min_align as possible and use that to
->> align final size.
->>
->> That could cause generate wrong align/size or too big size in some case.
->>
->>  when we have align/size: 16M/64M
->>  min_align/size0 will be 8M/64M, that is wrong, align must be 16M.
->>
->>  when we have align/size: 1M/1M, 64M/64M,
->>  min_align/size0 will be 32M/96M, that is way too big for sum size 65M.
->>
->> That will cuase allocation fails.
->>
->> The patch introduce max_align/size0_max, and size0_max is just
->> sum of all children resource.
->>
->> Prefer small size instead of small align. Only use min_align when
->> two size is the same.
->>
->> The new size will only need to be aligned to bus window alignment.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> I'm sorry, I can't make any sense out of this.  I can't understand
-> what you're trying to say.
-> 
-> A specific simple example might help.
-> 
-> Is this a regression?  Should it be marked for stable?  If so, how far
-> back?
-> 
-> It doesn't apply on v4.1-rc2 (I would apply it manually if I could
-> understand the changelog and comments, but you might as well refresh it at
-> the same time as you rewrite those).
-> 
-> Please include a link to the problem report.
-> 
-> Please include the patch inline in the message.  It is a significant hassle
-> for me to deal with attachments, and you are the only major contributor who
-> uses them.
+Use helper function irq_data_get_irq_handler_data() to hide irq_desc
+implementation details.
 
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/sparc/kernel/irq_64.c    |   15 +++++++++------
+ arch/sparc/kernel/sun4d_irq.c |    4 ++--
+ arch/sparc/kernel/sun4m_irq.c |    6 ++++--
+ 3 files changed, 15 insertions(+), 10 deletions(-)
 
-Hi Yinghai, do you have some updates for this patch ?
-I open a bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=100451
-
-I hope this fix could be merged in upstream.
-
-Thanks!
-Yijing.
-
-> 
-> Bjorn
-> 
->> ---
->>  drivers/pci/setup-bus.c |   50 +++++++++++++++++++++++++++++++++++++++++++++---
->>  1 file changed, 47 insertions(+), 3 deletions(-)
->>
->> Index: linux-2.6/drivers/pci/setup-bus.c
->> ===================================================================
->> --- linux-2.6.orig/drivers/pci/setup-bus.c
->> +++ linux-2.6/drivers/pci/setup-bus.c
->> @@ -882,12 +882,14 @@ static void pbus_size_io(struct pci_bus
->>  	}
->>  
->>  	size0 = calculate_iosize(size, min_size, size1,
->> -			resource_size(b_res), min_align);
->> +				 resource_size(b_res),
->> +				 window_alignment(bus, IORESOURCE_IO));
->>  	if (children_add_size > add_size)
->>  		add_size = children_add_size;
->>  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
->>  		calculate_iosize(size, min_size, add_size + size1,
->> -			resource_size(b_res), min_align);
->> +				 resource_size(b_res),
->> +				 window_alignment(bus, IORESOURCE_IO));
->>  	if (!size0 && !size1) {
->>  		if (b_res->start || b_res->end)
->>  			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
->> @@ -962,6 +964,8 @@ static int pbus_size_mem(struct pci_bus
->>  	struct resource *b_res = find_free_bus_resource(bus,
->>  					mask | IORESOURCE_PREFETCH, type);
->>  	resource_size_t children_add_size = 0;
->> +	resource_size_t max_align = 0, size0_max;
->> +	int count = 0;
->>  
->>  	if (!b_res)
->>  		return -ENOSPC;
->> @@ -1016,19 +1020,59 @@ static int pbus_size_mem(struct pci_bus
->>  			if (order > max_order)
->>  				max_order = order;
->>  
->> +			count++;
->> +			if (align > max_align)
->> +				max_align = align;
->> +
->>  			if (realloc_head)
->>  				children_add_size += get_res_add_size(realloc_head, r);
->>  		}
->>  	}
->>  
->> +	/*
->> +	 * New rule: Prefer to small size instead of small align,
->> +	 * when we have align/size: 1M/1M, 2M/2M,
->> +	 *  min_align/size0: 1M/3M, max_align/size0_max: 2M/3M
->> +	 *  pick 1M/3M.
->> +	 * when we have align/size: 1M/1M, 64M/64M,
->> +	 *  min_align/size0: 32M/96M, max_align/size0_max: 64M/65M
->> +	 *  pick 64M/65M.
->> +	 * when we have align/size: 1M/1M, 16M/64M,
->> +	 *  min_align/size0: 8M/72M, max_align/size0_max: 16M/65M
->> +	 *  pick 16M/65M.
->> +	 * when we have align/size: 32M/64M, 128M/512M
->> +	 *  min_align/size0: 64M/576M, max_align/size0_max: 128M/576M
->> +	 *  pick 64M/576M.
->> +	 * when we have align/size: 16M/32M, 128M/512M
->> +	 *  min_align/size0: 64M/576M, max_align/size0_max: 128M/554M
->> +	 *  pick 128M/554M.
->> +	 * when we have align/size: 16M/64M
->> +	 *  min_align/size0: 8M/64M, max_align/size0_max: 16M/64M
->> +	 *  have to use 16M/64M.
->> +	 */
->>  	min_align = calculate_mem_align(aligns, max_order);
->>  	min_align = max(min_align, window_alignment(bus, b_res->flags));
->> +	max_align = max(max_align, window_alignment(bus, b_res->flags));
->> +	if (count == 1)
->> +		min_align = max_align;
->> +
->>  	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
->> +	size0_max = calculate_memsize(size, min_size, 0, resource_size(b_res),
->> +					window_alignment(bus, b_res->flags));
->> +
->> +	if (size0_max < size0) {
->> +		size0 = size0_max;
->> +		min_align = max_align;
->> +		max_align--; /* to use small align for size1 calculation */
->> +	}
->> +
->>  	if (children_add_size > add_size)
->>  		add_size = children_add_size;
->>  	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
->>  		calculate_memsize(size, min_size, add_size,
->> -				resource_size(b_res), min_align);
->> +				resource_size(b_res),
->> +				min_align <= max_align ? min_align :
->> +					window_alignment(bus, b_res->flags));
->>  	if (!size0 && !size1) {
->>  		if (b_res->start || b_res->end)
->>  			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
-> 
-> 
-> .
-> 
-
-
+diff --git a/arch/sparc/kernel/irq_64.c b/arch/sparc/kernel/irq_64.c
+index 4033c23bdfa6..5130f6e3e68e 100644
+--- a/arch/sparc/kernel/irq_64.c
++++ b/arch/sparc/kernel/irq_64.c
+@@ -210,21 +210,21 @@ struct irq_handler_data {
+ 
+ static inline unsigned int irq_data_to_handle(struct irq_data *data)
+ {
+-	struct irq_handler_data *ihd = data->handler_data;
++	struct irq_handler_data *ihd = irq_data_get_irq_handler_data(data);
+ 
+ 	return ihd->dev_handle;
+ }
+ 
+ static inline unsigned int irq_data_to_ino(struct irq_data *data)
+ {
+-	struct irq_handler_data *ihd = data->handler_data;
++	struct irq_handler_data *ihd = irq_data_get_irq_handler_data(data);
+ 
+ 	return ihd->dev_ino;
+ }
+ 
+ static inline unsigned long irq_data_to_sysino(struct irq_data *data)
+ {
+-	struct irq_handler_data *ihd = data->handler_data;
++	struct irq_handler_data *ihd = irq_data_get_irq_handler_data(data);
+ 
+ 	return ihd->sysino;
+ }
+@@ -370,8 +370,9 @@ static int irq_choose_cpu(unsigned int irq, const struct cpumask *affinity)
+ 
+ static void sun4u_irq_enable(struct irq_data *data)
+ {
+-	struct irq_handler_data *handler_data = data->handler_data;
++	struct irq_handler_data *handler_data;
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (likely(handler_data)) {
+ 		unsigned long cpuid, imap, val;
+ 		unsigned int tid;
+@@ -393,8 +394,9 @@ static void sun4u_irq_enable(struct irq_data *data)
+ static int sun4u_set_affinity(struct irq_data *data,
+ 			       const struct cpumask *mask, bool force)
+ {
+-	struct irq_handler_data *handler_data = data->handler_data;
++	struct irq_handler_data *handler_data;
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (likely(handler_data)) {
+ 		unsigned long cpuid, imap, val;
+ 		unsigned int tid;
+@@ -438,8 +440,9 @@ static void sun4u_irq_disable(struct irq_data *data)
+ 
+ static void sun4u_irq_eoi(struct irq_data *data)
+ {
+-	struct irq_handler_data *handler_data = data->handler_data;
++	struct irq_handler_data *handler_data;
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (likely(handler_data))
+ 		upa_writeq(ICLR_IDLE, handler_data->iclr);
+ }
+diff --git a/arch/sparc/kernel/sun4d_irq.c b/arch/sparc/kernel/sun4d_irq.c
+index a1bb2675b280..a87d0e47c168 100644
+--- a/arch/sparc/kernel/sun4d_irq.c
++++ b/arch/sparc/kernel/sun4d_irq.c
+@@ -188,7 +188,7 @@ void sun4d_handler_irq(unsigned int pil, struct pt_regs *regs)
+ 
+ static void sun4d_mask_irq(struct irq_data *data)
+ {
+-	struct sun4d_handler_data *handler_data = data->handler_data;
++	struct sun4d_handler_data *handler_data = irq_data_get_irq_handler_data(data);
+ 	unsigned int real_irq;
+ #ifdef CONFIG_SMP
+ 	int cpuid = handler_data->cpuid;
+@@ -206,7 +206,7 @@ static void sun4d_mask_irq(struct irq_data *data)
+ 
+ static void sun4d_unmask_irq(struct irq_data *data)
+ {
+-	struct sun4d_handler_data *handler_data = data->handler_data;
++	struct sun4d_handler_data *handler_data = irq_data_get_irq_handler_data(data);
+ 	unsigned int real_irq;
+ #ifdef CONFIG_SMP
+ 	int cpuid = handler_data->cpuid;
+diff --git a/arch/sparc/kernel/sun4m_irq.c b/arch/sparc/kernel/sun4m_irq.c
+index 8bb3b3fddea7..da737c712fa8 100644
+--- a/arch/sparc/kernel/sun4m_irq.c
++++ b/arch/sparc/kernel/sun4m_irq.c
+@@ -188,9 +188,10 @@ static unsigned long sun4m_imask[0x50] = {
+ 
+ static void sun4m_mask_irq(struct irq_data *data)
+ {
+-	struct sun4m_handler_data *handler_data = data->handler_data;
++	struct sun4m_handler_data *handler_data;
+ 	int cpu = smp_processor_id();
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (handler_data->mask) {
+ 		unsigned long flags;
+ 
+@@ -206,9 +207,10 @@ static void sun4m_mask_irq(struct irq_data *data)
+ 
+ static void sun4m_unmask_irq(struct irq_data *data)
+ {
+-	struct sun4m_handler_data *handler_data = data->handler_data;
++	struct sun4m_handler_data *handler_data;
+ 	int cpu = smp_processor_id();
+ 
++	handler_data = irq_data_get_irq_handler_data(data);
+ 	if (handler_data->mask) {
+ 		unsigned long flags;
+ 
 -- 
-Thanks!
-Yijing
+1.7.10.4
 
