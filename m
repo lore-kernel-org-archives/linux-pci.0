@@ -1,135 +1,190 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34418 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754594AbbFLSNU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 14:13:20 -0400
-Received: by oiax69 with SMTP id x69so5176152oia.1
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 11:13:20 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: rajatxjain@gmail.com
-In-Reply-To: <557A9661.8030603@huawei.com>
-References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
-	<557A9661.8030603@huawei.com>
-Date: Fri, 12 Jun 2015 11:13:19 -0700
-Message-ID: <CAA93t1pD=fzAY3nQsi=JZ9a_NPcP-jOAW4jLkFy4fhzmhh1Sjg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
-From: Rajat Jain <rajatxjain@gmail.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatja@google.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	James Hogan <james.hogan@imgtec.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Manuel Lauss <manuel.lauss@gmail.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-ia64@vger.kernel.org,
+	linux-mips@linux-mips.org, linux-gpio@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-metag@vger.kernel.org
+Subject: [Patch v3 35/36] genirq: Pass irq_data to helper function __irq_set_chip_handler_name_locked()
+Date: Mon,  1 Jun 2015 16:05:44 +0800
+Message-Id: <1433145945-789-36-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+Guenter]
+For most cases, callers pass irq_data->irq to helper function
+__irq_set_chip_handler_name_locked() and __irq_set_chip_handler_name_locked()
+looks up irq_data again by calling irq_get_irq_data(irq_data->irq).
 
-Looks good to me. Unfortunately, I do not have the hardware anymore to
-test it :-(
+So pass irq_data directly instead of irq_data->irq to
+__irq_set_chip_handler_name_locked().
 
-Guenter: Do you have it, or know some body who has and wants to test this?
+This also helps to better support hierarchy irqdomain in irq core.
 
-Thanks,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/ia64/kernel/iosapic.c      |    6 +++---
+ arch/mips/alchemy/common/irq.c  |    4 ++--
+ drivers/gpio/gpio-zynq.c        |    9 ++++-----
+ drivers/irqchip/irq-metag-ext.c |    5 ++---
+ drivers/irqchip/irq-mips-gic.c  |   11 ++++-------
+ include/linux/irqdesc.h         |    7 +++----
+ 6 files changed, 18 insertions(+), 24 deletions(-)
 
-Rajat
+diff --git a/arch/ia64/kernel/iosapic.c b/arch/ia64/kernel/iosapic.c
+index 4d2698d43c39..317993e92cba 100644
+--- a/arch/ia64/kernel/iosapic.c
++++ b/arch/ia64/kernel/iosapic.c
+@@ -610,9 +610,9 @@ register_intr (unsigned int gsi, int irq, unsigned char delivery,
+ 			       chip->name, irq_type->name);
+ 		chip = irq_type;
+ 	}
+-	__irq_set_chip_handler_name_locked(irq, chip, trigger == IOSAPIC_EDGE ?
+-					   handle_edge_irq : handle_level_irq,
+-					   NULL);
++	__irq_set_chip_handler_name_locked(irq_get_irq_data(irq), chip,
++		trigger == IOSAPIC_EDGE ? handle_edge_irq : handle_level_irq,
++		NULL);
+ 	return 0;
+ }
+ 
+diff --git a/arch/mips/alchemy/common/irq.c b/arch/mips/alchemy/common/irq.c
+index 6cb60abfdcc9..026c4eed37d5 100644
+--- a/arch/mips/alchemy/common/irq.c
++++ b/arch/mips/alchemy/common/irq.c
+@@ -491,7 +491,7 @@ static int au1x_ic_settype(struct irq_data *d, unsigned int flow_type)
+ 	default:
+ 		ret = -EINVAL;
+ 	}
+-	__irq_set_chip_handler_name_locked(d->irq, chip, handler, name);
++	__irq_set_chip_handler_name_locked(d, chip, handler, name);
+ 
+ 	wmb();
+ 
+@@ -703,7 +703,7 @@ static int au1300_gpic_settype(struct irq_data *d, unsigned int type)
+ 		return -EINVAL;
+ 	}
+ 
+-	__irq_set_chip_handler_name_locked(d->irq, &au1300_gpic, hdl, name);
++	__irq_set_chip_handler_name_locked(d, &au1300_gpic, hdl, name);
+ 
+ 	au1300_gpic_chgcfg(d->irq - ALCHEMY_GPIC_INT_BASE, GPIC_CFG_IC_MASK, s);
+ 
+diff --git a/drivers/gpio/gpio-zynq.c b/drivers/gpio/gpio-zynq.c
+index 184c4b1b2558..aea6075e5b2e 100644
+--- a/drivers/gpio/gpio-zynq.c
++++ b/drivers/gpio/gpio-zynq.c
+@@ -422,13 +422,12 @@ static int zynq_gpio_set_irq_type(struct irq_data *irq_data, unsigned int type)
+ 	writel_relaxed(int_any,
+ 		       gpio->base_addr + ZYNQ_GPIO_INTANY_OFFSET(bank_num));
+ 
+-	if (type & IRQ_TYPE_LEVEL_MASK) {
+-		__irq_set_chip_handler_name_locked(irq_data->irq,
++	if (type & IRQ_TYPE_LEVEL_MASK)
++		__irq_set_chip_handler_name_locked(irq_data,
+ 			&zynq_gpio_level_irqchip, handle_fasteoi_irq, NULL);
+-	} else {
+-		__irq_set_chip_handler_name_locked(irq_data->irq,
++	else
++		__irq_set_chip_handler_name_locked(irq_data,
+ 			&zynq_gpio_edge_irqchip, handle_level_irq, NULL);
+-	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/irqchip/irq-metag-ext.c b/drivers/irqchip/irq-metag-ext.c
+index 2cb474ad8809..52e501d8c8f0 100644
+--- a/drivers/irqchip/irq-metag-ext.c
++++ b/drivers/irqchip/irq-metag-ext.c
+@@ -404,7 +404,6 @@ static int meta_intc_irq_set_type(struct irq_data *data, unsigned int flow_type)
+ #ifdef CONFIG_METAG_SUSPEND_MEM
+ 	struct meta_intc_priv *priv = &meta_intc_priv;
+ #endif
+-	unsigned int irq = data->irq;
+ 	irq_hw_number_t hw = data->hwirq;
+ 	unsigned int bit = 1 << meta_intc_offset(hw);
+ 	void __iomem *level_addr = meta_intc_level_addr(hw);
+@@ -413,10 +412,10 @@ static int meta_intc_irq_set_type(struct irq_data *data, unsigned int flow_type)
+ 
+ 	/* update the chip/handler */
+ 	if (flow_type & IRQ_TYPE_LEVEL_MASK)
+-		__irq_set_chip_handler_name_locked(irq, &meta_intc_level_chip,
++		__irq_set_chip_handler_name_locked(data, &meta_intc_level_chip,
+ 						   handle_level_irq, NULL);
+ 	else
+-		__irq_set_chip_handler_name_locked(irq, &meta_intc_edge_chip,
++		__irq_set_chip_handler_name_locked(data, &meta_intc_edge_chip,
+ 						   handle_edge_irq, NULL);
+ 
+ 	/* and clear/set the bit in HWLEVELEXT */
+diff --git a/drivers/irqchip/irq-mips-gic.c b/drivers/irqchip/irq-mips-gic.c
+index 09257c301bd2..fb2e64b1f414 100644
+--- a/drivers/irqchip/irq-mips-gic.c
++++ b/drivers/irqchip/irq-mips-gic.c
+@@ -365,15 +365,12 @@ static int gic_set_type(struct irq_data *d, unsigned int type)
+ 		break;
+ 	}
+ 
+-	if (is_edge) {
+-		__irq_set_chip_handler_name_locked(d->irq,
+-						   &gic_edge_irq_controller,
++	if (is_edge)
++		__irq_set_chip_handler_name_locked(d, &gic_edge_irq_controller,
+ 						   handle_edge_irq, NULL);
+-	} else {
+-		__irq_set_chip_handler_name_locked(d->irq,
+-						   &gic_level_irq_controller,
++	else
++		__irq_set_chip_handler_name_locked(d, &gic_level_irq_controller,
+ 						   handle_level_irq, NULL);
+-	}
+ 	spin_unlock_irqrestore(&gic_lock, flags);
+ 
+ 	return 0;
+diff --git a/include/linux/irqdesc.h b/include/linux/irqdesc.h
+index 41544024f464..4dfa46b99a14 100644
+--- a/include/linux/irqdesc.h
++++ b/include/linux/irqdesc.h
+@@ -177,15 +177,14 @@ static inline void __irq_set_handler_locked(unsigned int irq,
+ 
+ /* caller has locked the irq_desc and both params are valid */
+ static inline void
+-__irq_set_chip_handler_name_locked(unsigned int irq, struct irq_chip *chip,
++__irq_set_chip_handler_name_locked(struct irq_data *data, struct irq_chip *chip,
+ 				   irq_flow_handler_t handler, const char *name)
+ {
+-	struct irq_desc *desc;
++	struct irq_desc *desc = irq_data_to_desc(data);
+ 
+-	desc = irq_to_desc(irq);
+-	irq_desc_get_irq_data(desc)->chip = chip;
+ 	desc->handle_irq = handler;
+ 	desc->name = name;
++	data->chip = chip;
+ }
+ 
+ static inline int irq_balancing_disabled(unsigned int irq)
+-- 
+1.7.10.4
 
-
-On Fri, Jun 12, 2015 at 1:20 AM, Yijing Wang <wangyijing@huawei.com> wrote:
-> rajatjain@juniper.net is not reachable now.
->
-> So add CC: rajatxjain@gmail.com
->
-> On 2015/6/11 19:12, Yijing Wang wrote:
->> Rajat Jain reported a deadlock when a hierarchical hot plug
->> thread and aer recovery thread both run.
->> https://lkml.org/lkml/2015/3/11/861
->>
->> thread 1:
->> pciehp_enable_slot()
->>       pciehp_configure_device()
->>               pci_bus_add_devices()
->>                       device_attach(dev)
->>                               device_lock(dev) //acquire device mutex successfully
->>                       ...
->>                       pciehp_probe(dev)
->>                               __pci_hp_register()
->>                                       pci_create_slot()
->>                                               down_write(pci_bus_sem) //deadlock here
->>
->> thread 2:
->> aer_isr_one_error()
->>       aer_process_err_device()
->>               do_recovery()
->>                       broadcast_error_message()
->>                               pci_walk_bus()
->>                                       down_read(&pci_bus_sem) //acquire pci_bus_sem successfully
->>                                               report_error_detected(dev)
->>                                                       device_lock(dev) // deadlock here
->>
->> Now we use pci_bus_sem to protect pci_slot creation and destroy,
->> it's unnecessary. We could introduce a new local mutex instead of
->> pci_bus_sem to avoid the deadlock.
->>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> ---
->>  drivers/pci/slot.c |   11 ++++++-----
->>  1 files changed, 6 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
->> index 396c200..feb08de 100644
->> --- a/drivers/pci/slot.c
->> +++ b/drivers/pci/slot.c
->> @@ -14,6 +14,7 @@
->>
->>  struct kset *pci_slots_kset;
->>  EXPORT_SYMBOL_GPL(pci_slots_kset);
->> +static DEFINE_MUTEX(pci_slot_mutex);
->>
->>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
->>                                       struct attribute *attr, char *buf)
->> @@ -195,7 +196,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
->>  {
->>       struct pci_slot *slot;
->>       /*
->> -      * We already hold pci_bus_sem so don't worry
->> +      * We already hold pci_slot_mutex so don't worry
->>        */
->>       list_for_each_entry(slot, &parent->slots, list)
->>               if (slot->number == slot_nr) {
->> @@ -253,7 +254,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
->>       int err = 0;
->>       char *slot_name = NULL;
->>
->> -     down_write(&pci_bus_sem);
->> +     mutex_lock(&pci_slot_mutex);
->>
->>       if (slot_nr == -1)
->>               goto placeholder;
->> @@ -310,7 +311,7 @@ placeholder:
->>
->>  out:
->>       kfree(slot_name);
->> -     up_write(&pci_bus_sem);
->> +     mutex_unlock(&pci_slot_mutex);
->>       return slot;
->>  err:
->>       kfree(slot);
->> @@ -332,9 +333,9 @@ void pci_destroy_slot(struct pci_slot *slot)
->>       dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
->>               slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
->>
->> -     down_write(&pci_bus_sem);
->> +     mutex_lock(&pci_slot_mutex);
->>       kobject_put(&slot->kobj);
->> -     up_write(&pci_bus_sem);
->> +     mutex_unlock(&pci_slot_mutex);
->>  }
->>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
->>
->>
->
->
-> --
-> Thanks!
-> Yijing
->
