@@ -1,221 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	mebersol@microsoft.com, haiyangz@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH 1/6] drivers:hv: Modify vmbus to search for all MMIO ranges available
-Date: Thu, 11 Jun 2015 16:22:22 +0000
-Message-Id: <1434039747-44535-2-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
-References: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tejun Heo <tj@kernel.org>, Joe Perches <joe@perches.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-ia64@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [Patch v3 33/36] genirq: Use helper function to access irq_data->msi_desc
+Date: Mon,  1 Jun 2015 16:05:42 +0800
+Message-Id: <1433145945-789-34-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Use irq_data access helper to access irq_data->msi_desc, so we could
+move msi_desc from struct irq_data into struct irq_common_data later.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/hv/vmbus_drv.c          | 105 ++++++++++++++++++++++++++++++++++------
- drivers/video/fbdev/hyperv_fb.c |   2 +-
- include/linux/hyperv.h          |   2 +-
- 3 files changed, 92 insertions(+), 17 deletions(-)
+ arch/ia64/kernel/msi_ia64.c         |    2 +-
+ arch/ia64/sn/kernel/msi_sn.c        |    2 +-
+ arch/powerpc/sysdev/xics/ics-opal.c |    2 +-
+ arch/powerpc/sysdev/xics/ics-rtas.c |    2 +-
+ arch/tile/kernel/pci_gx.c           |    2 +-
+ drivers/pci/msi.c                   |    2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index c85235e..d0e8832 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -72,10 +72,7 @@ static struct notifier_block hyperv_panic_block = {
- 	.notifier_call = hyperv_panic_event,
- };
+diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
+index 6c50d332b7d7..af4eaec0f7c3 100644
+--- a/arch/ia64/kernel/msi_ia64.c
++++ b/arch/ia64/kernel/msi_ia64.c
+@@ -23,7 +23,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
+ 	if (irq_prepare_move(irq, cpu))
+ 		return -1;
  
--struct resource hyperv_mmio = {
--	.name  = "hyperv mmio",
--	.flags = IORESOURCE_MEM,
--};
-+struct resource *hyperv_mmio;
- EXPORT_SYMBOL_GPL(hyperv_mmio);
+-	__get_cached_msi_msg(idata->msi_desc, &msg);
++	__get_cached_msi_msg(irq_data_get_msi_desc(idata), &msg);
  
- static int vmbus_exists(void)
-@@ -982,30 +979,105 @@ void vmbus_device_unregister(struct hv_device *device_obj)
- 
- 
- /*
-- * VMBUS is an acpi enumerated device. Get the the information we
-+ * VMBUS is an acpi enumerated device. Get the information we
-  * need from DSDT.
-  */
--
-+#define VTPM_BASE_ADDRESS 0xfed40000
- static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
- {
-+	resource_size_t start = 0;
-+	resource_size_t end = 0;
-+	struct resource *new_res;
-+	struct resource **old_res = &hyperv_mmio;
-+	struct resource **prev_res = NULL;
-+
- 	switch (res->type) {
- 	case ACPI_RESOURCE_TYPE_IRQ:
- 		irq = res->data.irq.interrupts[0];
-+		return AE_OK;
-+
-+	/*
-+	 * "Address" descriptors are for bus windows. Ignore
-+	 * "memory" descriptors, which are for registers on
-+	 * devices.
-+	 */
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+		start = res->data.address32.address.minimum;
-+		end = res->data.address32.address.maximum;
- 		break;
- 
- 	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		hyperv_mmio.start = res->data.address64.address.minimum;
--		hyperv_mmio.end = res->data.address64.address.maximum;
-+		start = res->data.address64.address.minimum;
-+		end = res->data.address64.address.maximum;
- 		break;
-+
-+	default:
-+		/* Unused resource type */
-+		return AE_OK;
-+
- 	}
-+	/*
-+	 * Ignore ranges that are below 1MB, as they're not
-+	 * necessary or useful here.
-+	 */
-+	if (end < 0x100000)
-+		return AE_OK;
-+
-+	new_res = kzalloc(sizeof(*new_res), GFP_ATOMIC);
-+	if (!new_res)
-+		return AE_NO_MEMORY;
-+
-+	/* If this range overlaps the virtual TPM, truncate it. */
-+	if (end > VTPM_BASE_ADDRESS && start < VTPM_BASE_ADDRESS)
-+		end = VTPM_BASE_ADDRESS;
-+
-+	new_res->name = "hyperv mmio";
-+	new_res->flags = IORESOURCE_MEM;
-+	new_res->start = start;
-+	new_res->end = end;
-+
-+	do {
-+		if (!*old_res) {
-+			*old_res = new_res;
-+			break;
-+		}
-+
-+		if ((*old_res)->end < new_res->start) {
-+			new_res->sibling = *old_res;
-+			if (prev_res)
-+				(*prev_res)->sibling = new_res;
-+			*old_res = new_res;
-+			break;
-+		}
-+
-+		prev_res = old_res;
-+		old_res = &(*old_res)->sibling;
-+
-+	} while (1);
- 
- 	return AE_OK;
- }
- 
-+static int vmbus_acpi_remove(struct acpi_device *device)
-+{
-+	struct resource *cur_res;
-+	struct resource *next_res;
-+
-+	if (hyperv_mmio) {
-+		for (cur_res = hyperv_mmio; cur_res; cur_res = next_res) {
-+			next_res = cur_res->sibling;
-+			kfree(cur_res);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int vmbus_acpi_add(struct acpi_device *device)
- {
- 	acpi_status result;
- 	int ret_val = -ENODEV;
-+	struct acpi_device *ancestor;
- 
- 	hv_acpi_dev = device;
- 
-@@ -1015,23 +1087,25 @@ static int vmbus_acpi_add(struct acpi_device *device)
- 	if (ACPI_FAILURE(result))
- 		goto acpi_walk_err;
- 	/*
--	 * The parent of the vmbus acpi device (Gen2 firmware) is the VMOD that
--	 * has the mmio ranges. Get that.
-+	 * Some ancestor of the vmbus acpi device (Gen1 or Gen2
-+	 * firmware) is the VMOD that has the mmio ranges. Get that.
+ 	addr = msg.address_lo;
+ 	addr &= MSI_ADDR_DEST_ID_MASK;
+diff --git a/arch/ia64/sn/kernel/msi_sn.c b/arch/ia64/sn/kernel/msi_sn.c
+index 42b5a13af142..fb25065b22c6 100644
+--- a/arch/ia64/sn/kernel/msi_sn.c
++++ b/arch/ia64/sn/kernel/msi_sn.c
+@@ -175,7 +175,7 @@ static int sn_set_msi_irq_affinity(struct irq_data *data,
+ 	 * Release XIO resources for the old MSI PCI address
  	 */
--	if (device->parent) {
--		result = acpi_walk_resources(device->parent->handle,
-+	for (ancestor = device->parent; ancestor; ancestor = ancestor->parent) {
-+		result = acpi_walk_resources(ancestor->handle,
- 					METHOD_NAME__CRS,
- 					vmbus_walk_resources, NULL);
  
- 		if (ACPI_FAILURE(result))
--			goto acpi_walk_err;
--		if (hyperv_mmio.start && hyperv_mmio.end)
--			request_resource(&iomem_resource, &hyperv_mmio);
-+			continue;
-+		if (hyperv_mmio)
-+			break;
- 	}
- 	ret_val = 0;
+-	__get_cached_msi_msg(data->msi_desc, &msg);
++	__get_cached_msi_msg(irq_data_get_msi_desc(data), &msg);
+ 	sn_pdev = (struct pcidev_info *)sn_irq_info->irq_pciioinfo;
+ 	pdev = sn_pdev->pdi_linux_pcidev;
+ 	provider = SN_PCIDEV_BUSPROVIDER(pdev);
+diff --git a/arch/powerpc/sysdev/xics/ics-opal.c b/arch/powerpc/sysdev/xics/ics-opal.c
+index 3996393c254d..27c936c080a6 100644
+--- a/arch/powerpc/sysdev/xics/ics-opal.c
++++ b/arch/powerpc/sysdev/xics/ics-opal.c
+@@ -72,7 +72,7 @@ static unsigned int ics_opal_startup(struct irq_data *d)
+ 	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
+ 	 * at that level, so we do it here by hand.
+ 	 */
+-	if (d->msi_desc)
++	if (irq_data_get_msi_desc(d))
+ 		pci_msi_unmask_irq(d);
+ #endif
  
- acpi_walk_err:
- 	complete(&probe_event);
-+	if (ret_val)
-+		vmbus_acpi_remove(device);
- 	return ret_val;
- }
+diff --git a/arch/powerpc/sysdev/xics/ics-rtas.c b/arch/powerpc/sysdev/xics/ics-rtas.c
+index e2665a9dfc0f..3854dd41558d 100644
+--- a/arch/powerpc/sysdev/xics/ics-rtas.c
++++ b/arch/powerpc/sysdev/xics/ics-rtas.c
+@@ -75,7 +75,7 @@ static unsigned int ics_rtas_startup(struct irq_data *d)
+ 	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
+ 	 * at that level, so we do it here by hand.
+ 	 */
+-	if (d->msi_desc)
++	if (irq_data_get_msi_desc(d))
+ 		pci_msi_unmask_irq(d);
+ #endif
+ 	/* unmask it */
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index b1df847d0686..65b701b3b5ed 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -1442,7 +1442,7 @@ static struct pci_ops tile_cfg_ops = {
+ /* MSI support starts here. */
+ static unsigned int tilegx_msi_startup(struct irq_data *d)
+ {
+-	if (d->msi_desc)
++	if (irq_data_get_msi_desc(d))
+ 		pci_msi_unmask_irq(d);
  
-@@ -1047,6 +1121,7 @@ static struct acpi_driver vmbus_acpi_driver = {
- 	.ids = vmbus_acpi_device_ids,
- 	.ops = {
- 		.add = vmbus_acpi_add,
-+		.remove = vmbus_acpi_remove,
- 	},
- };
+ 	return 0;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index be6034cf5c21..c2f0da733d3a 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1178,7 +1178,7 @@ EXPORT_SYMBOL(pci_enable_msix_range);
+  */
+ void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg)
+ {
+-	struct msi_desc *desc = irq_data->msi_desc;
++	struct msi_desc *desc = irq_data_get_msi_desc(irq_data);
  
-diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
-index 807ee22..b54ee1c 100644
---- a/drivers/video/fbdev/hyperv_fb.c
-+++ b/drivers/video/fbdev/hyperv_fb.c
-@@ -688,7 +688,7 @@ static int hvfb_getmem(struct fb_info *info)
- 	par->mem.name = KBUILD_MODNAME;
- 	par->mem.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
- 	if (gen2vm) {
--		ret = allocate_resource(&hyperv_mmio, &par->mem,
-+		ret = allocate_resource(hyperv_mmio, &par->mem,
- 					screen_fb_size,
- 					0, -1,
- 					screen_fb_size,
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 902c37a..21fa867 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1245,7 +1245,7 @@ void hv_vss_deinit(void);
- void hv_vss_onchannelcallback(void *);
- void hv_process_channel_removal(struct vmbus_channel *channel, u32 relid);
- 
--extern struct resource hyperv_mmio;
-+extern struct resource *hyperv_mmio;
- 
- /*
-  * Negotiated version with the Host.
+ 	/*
+ 	 * For MSI-X desc->irq is always equal to irq_data->irq. For
 -- 
-1.9.1
+1.7.10.4
 
