@@ -1,120 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 8 Jun 2015 16:14:43 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Will Deacon <Will.Deacon@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-Message-ID: <20150608151443.GA16151@red-moon>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
- <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org>
- <20150526170817.GU1565@arm.com>
- <55657B02.5090805@linaro.org>
- <20150602133215.GC23650@red-moon>
- <55701A31.808@linaro.org>
- <20150604102253.GA31773@red-moon>
- <5570447D.3020705@linaro.org>
- <557504A2.3060203@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <557504A2.3060203@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [Patch v3 16/36] ARM, irq: Use access helper irq_data_get_affinity_mask()
+Date: Mon,  1 Jun 2015 16:05:25 +0800
+Message-Id: <1433145945-789-17-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 08, 2015 at 03:57:38AM +0100, Hanjun Guo wrote:
+Use access helper irq_data_get_affinity_mask() to hide implementation
+details of struct irq_desc.
 
-[...]
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/arm/kernel/irq.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> >>>>>> Why can't we make use of the ECAM implementation used by
-> >>>>>> pci-host-generic
-> >>>>>> and drivers/pci/access.c?
-> >>>>>
-> >>>>> We had that question when I had posted MMCFG patch set separately,
-> >>>>> please see:
-> >>>>> https://lkml.org/lkml/2015/3/11/492
-> >>>>
-> >>>> Yes, but the real question is, why do we need to have PCI config space
-> >>>> up and running before a bus struct is even created ? I think the
-> >>>> reason is
-> >>>> the PCI configuration address space format (ACPI 6.0, Table 5-27, page
-> >>>> 108):
-> >>>>
-> >>>> "PCI Configuration space addresses must be confined to devices on
-> >>>> PCI Segment Group 0, bus 0. This restriction exists to accommodate
-> >>>> access to fixed hardware prior to PCI bus enumeration".
-> >>>>
-> >>>> On HW reduced platforms I do not even think this is required at all,
-> >>>> we have to look into this to avoid code duplication that might well
-> >>>> turn out useless.
-> >>>
-> >>> This is only for the fixed hardware, which will be not available for
-> >>> ARM64 (reduced hardware mode), but in Generic Hardware Programming
-> >>> Model, we using OEM-provided ACPI Machine Language (AML) code to access
-> >>> generic hardware registers, this will be available for reduced hardware
-> >>> too.
-> >>>
-> >>> So in ACPI spec, it says: (ACPI 6.0 page 66, last paragraph)
-> >>>
-> >>> ACPI defines eight address spaces that may be accessed by generic
-> >>> hardware implementations. These include:
-> >>> * System I/O space
-> >>> * System memory space
-> >>> * PCI configuration space
-> >>> * Embedded controller space
-> >>> * System Management Bus (SMBus) space
-> >>> * CMOS
-> >>> * PCI BAR Target
-> >>> * IPMI space
-> >>>
-> >>> So if any device using the PCI address space for control, such
-> >>> as a system reset control device, its address space can be reside
-> >>> in PCI configuration space (who can prevent a OEM do that crazy
-> >>> thing? :) ), and it should be accessible before the PCI bus is
-> >>> created.
-> >>
-> >> Us, by changing attitude and questioning features whose usefulness
-> >> is questionable. I will look into this and raise the point, I am not
-> >> thrilled by the idea of adding another set of PCI accessor functions
-> >> and drivers because we have to access a register through PCI before
-> >> enumerating the bus (and on arm64 this is totally useless since
-> >> we are not meant to support fixed HW anyway). Maybe we can make acpica
-> >> code use a "special" stub (ACPI specific, PCI configuration space address
-> >> space has restrictions anyway), I have to review this set in its
-> >> entirety to see how to do that (and I would kindly ask you to do
-> >> it too, before saying it is not possible to implement it).
-> >
-> > I'm willing to do that, actually, if we don't need a mechanism to
-> > access PCI config space before the bus is created, the code can be
-> > simplified a lot.
-> 
-> After more investigation on the spec and the ACPI core code, I'm
-> still not convinced that accessing to PCI config space before PCI
-> bus creating is impossible, also there is no enough ARM64 hardware
-> to prove that too. But I think we can go in this way, reuse the
-> ECAM implementation by pci-host-generic for now, and implement the PCI
-> accessor functions before enumerating PCI bus when needed in the
-> future, does it make sense?
+diff --git a/arch/arm/kernel/irq.c b/arch/arm/kernel/irq.c
+index 350f188c92d2..baf8edebe26f 100644
+--- a/arch/arm/kernel/irq.c
++++ b/arch/arm/kernel/irq.c
+@@ -140,7 +140,7 @@ int __init arch_probe_nr_irqs(void)
+ static bool migrate_one_irq(struct irq_desc *desc)
+ {
+ 	struct irq_data *d = irq_desc_get_irq_data(desc);
+-	const struct cpumask *affinity = d->affinity;
++	const struct cpumask *affinity = irq_data_get_affinity_mask(d);
+ 	struct irq_chip *c;
+ 	bool ret = false;
+ 
+@@ -160,7 +160,7 @@ static bool migrate_one_irq(struct irq_desc *desc)
+ 	if (!c->irq_set_affinity)
+ 		pr_debug("IRQ%u: unable to set affinity\n", d->irq);
+ 	else if (c->irq_set_affinity(d, affinity, false) == IRQ_SET_MASK_OK && ret)
+-		cpumask_copy(d->affinity, affinity);
++		cpumask_copy(irq_data_get_affinity_mask(d), affinity);
+ 
+ 	return ret;
+ }
+-- 
+1.7.10.4
 
-You mean we rewrite the patch to make sure we can use the PCI host generic
-driver with MCFG and we leave the acpica PCI config call empty stubs on
-arm64 (as they are now) ?
-
-Thanks,
-Lorenzo
