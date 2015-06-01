@@ -1,159 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v2 05/17] NTB: Add parameters for Intel SNB B2B addresses
-Date: Thu, 21 May 2015 04:20:49 -0400
-Message-Id: <64ddbb8af4594d7c5053831f26f55b18ae905217.1432196075.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432192681.git.Allen.Hubbe@emc.com>
-References: <cover.1432192681.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1432196075.git.Allen.Hubbe@emc.com>
-References: <cover.1432196075.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:45329 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754790AbbFAC0t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 31 May 2015 22:26:49 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Mon, 1 Jun 2015 12:26:46 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 4E7723578053
+	for <linux-pci@vger.kernel.org>; Mon,  1 Jun 2015 12:26:44 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t512QY4A56164538
+	for <linux-pci@vger.kernel.org>; Mon, 1 Jun 2015 12:26:43 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t512QANt016214
+	for <linux-pci@vger.kernel.org>; Mon, 1 Jun 2015 12:26:11 +1000
+Date: Mon, 1 Jun 2015 10:25:53 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] PCI: keep resource size during alignment reordering
+Message-ID: <20150601022553.GA5855@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add module parameters for the addresses to be used in b2b topology.
+On Thu, May 28, 2015 at 10:40:00PM -0700, Yinghai Lu wrote:
+>In d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing
+>and assigning"), it stores additional alignment in realloc_head and takes
+>this into consideration for assignment.
+>During update the resource before reordering, it does not calculate
+>resource end correctly.
+>
+>We need to keep the original resource size before updating start.
+>otherwise we will smaller size during updating end.
+>
+>Fixes: d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing and assigning")
+>Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+>Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- Documentation/ntb.txt               | 10 +++++
- drivers/ntb/hw/intel/ntb_hw_intel.c | 77 ++++++++++++++++++++++++++++---------
- 2 files changed, 68 insertions(+), 19 deletions(-)
+Acked-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-diff --git a/Documentation/ntb.txt b/Documentation/ntb.txt
-index 725ba1e..00a3f92 100644
---- a/Documentation/ntb.txt
-+++ b/Documentation/ntb.txt
-@@ -56,3 +56,13 @@ Module Parameters:
- * b2b\_mw\_share - If the peer ntb is to be accessed via a memory window, and if
- 	the memory window is large enough, still allow the client to use the
- 	second half of the memory window for address translation to the peer.
-+* snb\_b2b\_usd\_bar2\_addr64 - If using B2B topology on Xeon hardware, use this
-+	64 bit address on the bus between the NTB devices for the window at
-+	BAR2, on the upstream side of the link.
-+* snb\_b2b\_usd\_bar4\_addr64 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_usd\_bar4\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_usd\_bar5\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar2\_addr64 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar4\_addr64 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar4\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar5\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
-index 89fea50..7e19d46 100644
---- a/drivers/ntb/hw/intel/ntb_hw_intel.c
-+++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
-@@ -72,20 +72,6 @@ MODULE_AUTHOR("Intel Corporation");
- #define bar0_off(base, bar) ((base) + ((bar) << 2))
- #define bar2_off(base, bar) bar0_off(base, (bar) - 2)
- 
--static int b2b_mw_idx = -1;
--module_param(b2b_mw_idx, int, 0644);
--MODULE_PARM_DESC(b2b_mw_idx, "Use this mw idx to access the peer ntb.  A "
--		 "value of zero or positive starts from first mw idx, and a "
--		 "negative value starts from last mw idx.  Both sides MUST "
--		 "set the same value here!");
--
--static unsigned int b2b_mw_share;
--module_param(b2b_mw_share, uint, 0644);
--MODULE_PARM_DESC(b2b_mw_share, "If the b2b mw is large enough, configure the "
--		 "ntb so that the peer ntb only occupies the first half of "
--		 "the mw, so the second half can still be used as a mw.  Both "
--		 "sides MUST set the same value here!");
--
- static const struct intel_ntb_reg bwd_reg;
- static const struct intel_ntb_alt_reg bwd_pri_reg;
- static const struct intel_ntb_alt_reg bwd_sec_reg;
-@@ -98,14 +84,67 @@ static const struct intel_ntb_alt_reg snb_sec_reg;
- static const struct intel_ntb_alt_reg snb_b2b_reg;
- static const struct intel_ntb_xlat_reg snb_pri_xlat;
- static const struct intel_ntb_xlat_reg snb_sec_xlat;
--static const struct intel_b2b_addr snb_b2b_usd_addr;
--static const struct intel_b2b_addr snb_b2b_dsd_addr;
--
-+static struct intel_b2b_addr snb_b2b_usd_addr;
-+static struct intel_b2b_addr snb_b2b_dsd_addr;
- static const struct ntb_dev_ops intel_ntb_ops;
- 
- static const struct file_operations intel_ntb_debugfs_info;
- static struct dentry *debugfs_dir;
- 
-+static int b2b_mw_idx = -1;
-+module_param(b2b_mw_idx, int, 0644);
-+MODULE_PARM_DESC(b2b_mw_idx, "Use this mw idx to access the peer ntb.  A "
-+		 "value of zero or positive starts from first mw idx, and a "
-+		 "negative value starts from last mw idx.  Both sides MUST "
-+		 "set the same value here!");
-+
-+static unsigned int b2b_mw_share;
-+module_param(b2b_mw_share, uint, 0644);
-+MODULE_PARM_DESC(b2b_mw_share, "If the b2b mw is large enough, configure the "
-+		 "ntb so that the peer ntb only occupies the first half of "
-+		 "the mw, so the second half can still be used as a mw.  Both "
-+		 "sides MUST set the same value here!");
-+
-+module_param_named(snb_b2b_usd_bar2_addr64,
-+		   snb_b2b_usd_addr.bar2_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD BAR 2 64-bit address");
-+
-+module_param_named(snb_b2b_usd_bar4_addr64,
-+		   snb_b2b_usd_addr.bar4_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD BAR 4 64-bit address");
-+
-+module_param_named(snb_b2b_usd_bar4_addr32,
-+		   snb_b2b_usd_addr.bar4_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD split-BAR 4 32-bit address");
-+
-+module_param_named(snb_b2b_usd_bar5_addr32,
-+		   snb_b2b_usd_addr.bar5_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD split-BAR 5 32-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar2_addr64,
-+		   snb_b2b_dsd_addr.bar2_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD BAR 2 64-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar4_addr64,
-+		   snb_b2b_dsd_addr.bar4_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD BAR 4 64-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar4_addr32,
-+		   snb_b2b_dsd_addr.bar4_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD split-BAR 4 32-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar5_addr32,
-+		   snb_b2b_dsd_addr.bar5_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD split-BAR 5 32-bit address");
-+
- #ifndef ioread64
- #ifdef readq
- #define ioread64 readq
-@@ -2086,14 +2125,14 @@ static const struct intel_ntb_xlat_reg snb_sec_xlat = {
- 	.bar2_xlat		= SNB_SBAR23XLAT_OFFSET,
- };
- 
--static const struct intel_b2b_addr snb_b2b_usd_addr = {
-+static struct intel_b2b_addr snb_b2b_usd_addr = {
- 	.bar2_addr64		= SNB_B2B_BAR2_USD_ADDR64,
- 	.bar4_addr64		= SNB_B2B_BAR4_USD_ADDR64,
- 	.bar4_addr32		= SNB_B2B_BAR4_USD_ADDR32,
- 	.bar5_addr32		= SNB_B2B_BAR5_USD_ADDR32,
- };
- 
--static const struct intel_b2b_addr snb_b2b_dsd_addr = {
-+static struct intel_b2b_addr snb_b2b_dsd_addr = {
- 	.bar2_addr64		= SNB_B2B_BAR2_DSD_ADDR64,
- 	.bar4_addr64		= SNB_B2B_BAR4_DSD_ADDR64,
- 	.bar4_addr32		= SNB_B2B_BAR4_DSD_ADDR32,
+
+Thanks Yinghai,
+
+I have tested this on Power8, your code is correct. :-)
+
+>
+>---
+> drivers/pci/setup-bus.c |    5 +++--
+> 1 file changed, 3 insertions(+), 2 deletions(-)
+>
+>Index: linux-2.6/drivers/pci/setup-bus.c
+>===================================================================
+>--- linux-2.6.orig/drivers/pci/setup-bus.c
+>+++ linux-2.6/drivers/pci/setup-bus.c
+>@@ -428,9 +428,10 @@ static void __assign_resources_sorted(st
+> 		 * consistent.
+> 		 */
+> 		if (add_align > dev_res->res->start) {
+>+			resource_size_t r_size = resource_size(dev_res->res);
+>+
+> 			dev_res->res->start = add_align;
+>-			dev_res->res->end = add_align +
+>-				            resource_size(dev_res->res);
+>+			dev_res->res->end = add_align + r_size - 1;
+>
+> 			list_for_each_entry(dev_res2, head, list) {
+> 				align = pci_resource_alignment(dev_res2->dev,
+
 -- 
-2.4.0.rc0.43.gcf8a8c6
+Richard Yang
+Help you, Help me
 
