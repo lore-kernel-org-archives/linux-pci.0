@@ -1,135 +1,119 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joerg Roedel <joro@8bytes.org>
-To: iommu@lists.linux-foundation.org
-Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
-	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
-	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
-	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Jonas Gorski <jogo@openwrt.org>,
+	Aleksey Makarov <aleksey.makarov@auriga.com>,
+	David Daney <david.daney@cavium.com>,
+	Christoph Lameter <cl@linux.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
-Subject: [PATCH 14/17] iommu/vt-d: Move kdump pointer intialization to __iommu_load_old_irte
-Date: Fri,  5 Jun 2015 16:11:00 +0200
-Message-Id: <1433513463-19128-15-git-send-email-joro@8bytes.org>
-In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, linux-mips@linux-mips.org
+Subject: [Patch v3 21/36] mips, irq: Use access helper irq_data_get_affinity_mask()
+Date: Mon,  1 Jun 2015 16:05:30 +0800
+Message-Id: <1433145945-789-22-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
+Use access helper irq_data_get_affinity_mask() to hide implementation
+details of struct irq_desc.
 
-We initialize the base_old_phys and base_old_virt in this
-function. This cleans up the caller and makes the code more
-readable. Also add a check for the size of the irq
-remapping table of the old kernel, break out if it does not
-match our size. Rename the function to iommu_load_old_irte
-while at it.
-
-Tested-by: Baoquan He <bhe@redhat.com>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/intel_irq_remapping.c | 50 +++++++++++++++++++++----------------
- include/linux/intel-iommu.h         |  1 +
- 2 files changed, 29 insertions(+), 22 deletions(-)
+ arch/mips/bcm63xx/irq.c              |    2 +-
+ arch/mips/cavium-octeon/octeon-irq.c |   14 ++++++++------
+ arch/mips/pmcs-msp71xx/msp_irq_cic.c |    3 ++-
+ 3 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index c3d1e63..fd6c25b 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -21,7 +21,7 @@
- 
- #include "irq_remapping.h"
- 
--static int __iommu_load_old_irte(struct intel_iommu *iommu);
-+static int iommu_load_old_irte(struct intel_iommu *iommu);
- static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
- static void iommu_check_pre_ir_status(struct intel_iommu *iommu);
- 
-@@ -698,14 +698,7 @@ static int __init intel_enable_irq_remapping(void)
- 	 */
- 	for_each_iommu(iommu, drhd) {
- 		if (iommu->pre_enabled_ir) {
--			unsigned long long q;
--
--			q = dmar_readq(iommu->reg + DMAR_IRTA_REG);
--			iommu->ir_table->base_old_phys = q & VTD_PAGE_MASK;
--			iommu->ir_table->base_old_virt = ioremap_cache(
--				iommu->ir_table->base_old_phys,
--				INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
--			__iommu_load_old_irte(iommu);
-+			iommu_load_old_irte(iommu);
- 		} else {
- 			iommu_set_irq_remapping(iommu, eim_mode);
- 			iommu_enable_irq_remapping(iommu);
-@@ -1303,21 +1296,34 @@ int dmar_ir_hotplug(struct dmar_drhd_unit *dmaru, bool insert)
- 	return ret;
+diff --git a/arch/mips/bcm63xx/irq.c b/arch/mips/bcm63xx/irq.c
+index e3e808a6c542..02983b90826d 100644
+--- a/arch/mips/bcm63xx/irq.c
++++ b/arch/mips/bcm63xx/irq.c
+@@ -60,7 +60,7 @@ static inline int enable_irq_for_cpu(int cpu, struct irq_data *d,
+ 	if (m)
+ 		enable &= cpumask_test_cpu(cpu, m);
+ 	else if (irqd_affinity_was_set(d))
+-		enable &= cpumask_test_cpu(cpu, d->affinity);
++		enable &= cpumask_test_cpu(cpu, irq_data_get_affinity_mask(d));
+ #endif
+ 	return enable;
  }
+diff --git a/arch/mips/cavium-octeon/octeon-irq.c b/arch/mips/cavium-octeon/octeon-irq.c
+index 10f762557b92..0643ae614284 100644
+--- a/arch/mips/cavium-octeon/octeon-irq.c
++++ b/arch/mips/cavium-octeon/octeon-irq.c
+@@ -225,13 +225,14 @@ static int next_cpu_for_irq(struct irq_data *data)
  
--static int __iommu_load_old_irte(struct intel_iommu *iommu)
-+static int iommu_load_old_irte(struct intel_iommu *iommu)
+ #ifdef CONFIG_SMP
+ 	int cpu;
+-	int weight = cpumask_weight(data->affinity);
++	struct cpumask *mask = irq_data_get_affinity_mask(data);
++	int weight = cpumask_weight(mask);
+ 	struct octeon_ciu_chip_data *cd = irq_data_get_irq_chip_data(data);
+ 
+ 	if (weight > 1) {
+ 		cpu = cd->current_cpu;
+ 		for (;;) {
+-			cpu = cpumask_next(cpu, data->affinity);
++			cpu = cpumask_next(cpu, mask);
+ 			if (cpu >= nr_cpu_ids) {
+ 				cpu = -1;
+ 				continue;
+@@ -240,7 +241,7 @@ static int next_cpu_for_irq(struct irq_data *data)
+ 			}
+ 		}
+ 	} else if (weight == 1) {
+-		cpu = cpumask_first(data->affinity);
++		cpu = cpumask_first(mask);
+ 	} else {
+ 		cpu = smp_processor_id();
+ 	}
+@@ -710,16 +711,17 @@ static void octeon_irq_cpu_offline_ciu(struct irq_data *data)
  {
--	if ((!iommu)
--		|| (!iommu->ir_table)
--		|| (!iommu->ir_table->base)
--		|| (!iommu->ir_table->base_old_phys)
--		|| (!iommu->ir_table->base_old_virt))
--		return -1;
-+	struct irte *old_ir_table;
-+	phys_addr_t irt_phys;
-+	size_t size;
-+	u64 irta;
-+
-+	/* Check whether the old ir-table has the same size as ours */
-+	irta = dmar_readq(iommu->reg + DMAR_IRTA_REG);
-+	if ((irta & INTR_REMAP_TABLE_REG_SIZE_MASK)
-+		 != INTR_REMAP_TABLE_REG_SIZE)
-+		return -EINVAL;
-+
-+	irt_phys = irta & VTD_PAGE_MASK;
-+	size     = INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte);
-+
-+	/* Map the old IR table */
-+	old_ir_table = ioremap_cache(irt_phys, size);
-+	if (!old_ir_table)
-+		return -ENOMEM;
-+
-+	/* Copy data over */
-+	memcpy(iommu->ir_table->base, old_ir_table, size);
+ 	int cpu = smp_processor_id();
+ 	cpumask_t new_affinity;
++	struct cpumask *mask = irq_data_get_affinity_mask(data);
  
--	memcpy(iommu->ir_table->base,
--		iommu->ir_table->base_old_virt,
--		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
-+	__iommu_flush_cache(iommu, iommu->ir_table->base, size);
+-	if (!cpumask_test_cpu(cpu, data->affinity))
++	if (!cpumask_test_cpu(cpu, mask))
+ 		return;
  
--	__iommu_flush_cache(iommu, iommu->ir_table->base,
--		INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
-+	iommu->ir_table->base_old_phys = irt_phys;
-+	iommu->ir_table->base_old_virt = old_ir_table;
- 
- 	return 0;
- }
-@@ -1327,7 +1333,7 @@ static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
- 	int start;
- 	unsigned long size;
- 	void __iomem *to;
--	void *from;
-+void *from;
- 
- 	if ((!iommu)
- 		|| (!iommu->ir_table)
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index 6c37de9..5aa8834 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -295,6 +295,7 @@ struct q_inval {
- /* 1MB - maximum possible interrupt remapping table size */
- #define INTR_REMAP_PAGE_ORDER	8
- #define INTR_REMAP_TABLE_REG_SIZE	0xf
-+#define INTR_REMAP_TABLE_REG_SIZE_MASK  0xf
- 
- #define INTR_REMAP_TABLE_ENTRIES	65536
+-	if (cpumask_weight(data->affinity) > 1) {
++	if (cpumask_weight(mask) > 1) {
+ 		/*
+ 		 * It has multi CPU affinity, just remove this CPU
+ 		 * from the affinity set.
+ 		 */
+-		cpumask_copy(&new_affinity, data->affinity);
++		cpumask_copy(&new_affinity, mask);
+ 		cpumask_clear_cpu(cpu, &new_affinity);
+ 	} else {
+ 		/* Otherwise, put it on lowest numbered online CPU. */
+diff --git a/arch/mips/pmcs-msp71xx/msp_irq_cic.c b/arch/mips/pmcs-msp71xx/msp_irq_cic.c
+index 1207ec4dfb77..8b9cf6463040 100644
+--- a/arch/mips/pmcs-msp71xx/msp_irq_cic.c
++++ b/arch/mips/pmcs-msp71xx/msp_irq_cic.c
+@@ -88,7 +88,8 @@ static void unmask_cic_irq(struct irq_data *d)
+ 	* Make sure we have IRQ affinity.  It may have changed while
+ 	* we were processing the IRQ.
+ 	*/
+-	if (!cpumask_test_cpu(smp_processor_id(), d->affinity))
++	if (!cpumask_test_cpu(smp_processor_id(),
++			      irq_data_get_affinity_mask(d)))
+ 		return;
+ #endif
  
 -- 
-1.9.1
+1.7.10.4
 
