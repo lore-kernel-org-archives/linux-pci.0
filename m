@@ -1,74 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Wan ZongShun <Vincent.Wan@amd.com>
-To: <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
-	<linux-i2c@vger.kernel.org>, <bp@alien8.de>, <jdelvare@suse.de>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Wan ZongShun <Vincent.Wan@amd.com>,
-	Wan ZongShun <mcuos.com@gmail.com>
-Subject: [PATCH 3/3] SDHCI: Change AMD SDHCI quirk application scope
-Date: Sat, 6 Jun 2015 21:13:40 +0800
-Message-ID: <1433596420-5612-3-git-send-email-Vincent.Wan@amd.com>
-In-Reply-To: <1433596420-5612-1-git-send-email-Vincent.Wan@amd.com>
-References: <1433596420-5612-1-git-send-email-Vincent.Wan@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v3 01/36] genirq: Enhance irq_data_to_desc() to support hierarchy irqdomain
+Date: Mon,  1 Jun 2015 16:05:10 +0800
+Message-Id: <1433145945-789-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change this quirk to apply to AMD Carrizo platform.
+For irq associated with hierarchy irqdomains, there will be multiple
+irq_datas for one irq_desc. So enhance irq_data_to_desc() to support
+hierarchy irqdomain. Also export irq_data_to_desc() as an inline
+function for later reuse.
 
-Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
-Signed-off-by: Wan ZongShun <mcuos.com@gmail.com>
-
-Tested-by: Nath, Arindam <Arindam.Nath@amd.com>
-Tested-by: Ramesh, Ramya <Ramya.Ramesh@amd.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/mmc/host/sdhci-pci.c | 25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
+ include/linux/irqdesc.h |    9 +++++++++
+ kernel/irq/internals.h  |    2 --
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mmc/host/sdhci-pci.c b/drivers/mmc/host/sdhci-pci.c
-index f208f20..94f54d2 100644
---- a/drivers/mmc/host/sdhci-pci.c
-+++ b/drivers/mmc/host/sdhci-pci.c
-@@ -724,14 +724,37 @@ static const struct sdhci_pci_fixes sdhci_rtsx = {
- 	.probe_slot	= rtsx_probe_slot,
- };
+diff --git a/include/linux/irqdesc.h b/include/linux/irqdesc.h
+index dd1109fb241e..a113a8dc7438 100644
+--- a/include/linux/irqdesc.h
++++ b/include/linux/irqdesc.h
+@@ -93,6 +93,15 @@ struct irq_desc {
+ extern struct irq_desc irq_desc[NR_IRQS];
+ #endif
  
-+/*AMD chipset generation*/
-+enum amd_chipset_gen {
-+	AMD_CHIPSET_BEFORE_ML,
-+	AMD_CHIPSET_CZ,
-+	AMD_CHIPSET_NL,
-+	AMD_CHIPSET_UNKNOWN,
-+};
++static inline struct irq_desc *irq_data_to_desc(struct irq_data *data)
++{
++#ifdef CONFIG_IRQ_DOMAIN_HIERARCHY
++	return irq_to_desc(data->irq);
++#else
++	return container_of(data, struct irq_desc, irq_data);
++#endif
++}
 +
- static int amd_probe(struct sdhci_pci_chip *chip)
+ static inline struct irq_data *irq_desc_get_irq_data(struct irq_desc *desc)
  {
- 	struct pci_dev	*smbus_dev;
-+	enum amd_chipset_gen gen;
+ 	return &desc->irq_data;
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index df553b0af936..b93d434e70bd 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -59,8 +59,6 @@ enum {
+ #include "debug.h"
+ #include "settings.h"
  
- 	smbus_dev = pci_get_device(PCI_VENDOR_ID_AMD,
- 			PCI_DEVICE_ID_AMD_HUDSON2_SMBUS, NULL);
-+	if (smbus_dev) {
-+		gen = AMD_CHIPSET_BEFORE_ML;
-+	} else {
-+		smbus_dev = pci_get_device(PCI_VENDOR_ID_AMD,
-+				PCI_DEVICE_ID_AMD_KERNCZ_SMBUS, NULL);
-+		if (smbus_dev) {
-+			if (smbus_dev->revision < 0x51)
-+				gen = AMD_CHIPSET_CZ;
-+			else
-+				gen = AMD_CHIPSET_NL;
-+		} else {
-+			gen = AMD_CHIPSET_UNKNOWN;
-+		}
-+	}
- 
--	if (smbus_dev && (smbus_dev->revision < 0x51)) {
-+	if ((gen == AMD_CHIPSET_BEFORE_ML) || (gen == AMD_CHIPSET_CZ)) {
- 		chip->quirks2 |= SDHCI_QUIRK2_CLEAR_TRANSFERMODE_REG_BEFORE_CMD;
- 		chip->quirks2 |= SDHCI_QUIRK2_BROKEN_HS200;
- 	}
+-#define irq_data_to_desc(data)	container_of(data, struct irq_desc, irq_data)
+-
+ extern int __irq_set_trigger(struct irq_desc *desc, unsigned int irq,
+ 		unsigned long flags);
+ extern void __disable_irq(struct irq_desc *desc, unsigned int irq);
 -- 
-1.9.1
+1.7.10.4
 
