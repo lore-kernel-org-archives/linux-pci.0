@@ -1,130 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwdur.emc.com ([128.221.224.79]:58596 "EHLO
-	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487AbbFAOZK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 10:25:10 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH] NTB: Register client drivers with name and owner
-Date: Mon,  1 Jun 2015 05:24:19 -0400
-Message-Id: <93af09225e9d09ae14578bd8e4fae4aa2c5ffea6.1433150439.git.Allen.Hubbe@emc.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Amir Vadai <amirv@mellanox.com>,
+	Ido Shamay <idos@mellanox.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Hadar Hen Zion <hadarh@mellanox.com>,
+	Eran Ben Elisha <eranbe@mellanox.com>,
+	Saeed Mahameed <saeedm@mellanox.com>,
+	Matan Barak <matanb@mellanox.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, netdev@vger.kernel.org
+Subject: [Patch v3 30/36] net/mlx4: Cache irq_desc->affinity instead of irq_desc
+Date: Mon,  1 Jun 2015 16:05:39 +0800
+Message-Id: <1433145945-789-31-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Following the example of pci_register_driver, change ntb_register_client
-to be a macro, calling __ntb_register_client with THIS_MODULE and
-KBUILD_MODNAME to initialize the driver .owner and .name members.
+The field 'affinity' in irq_desc won't change once the irq_desc data
+structure is created. So cache irq_desc->affinity instead of irq_desc.
+This also helps to hide struct irq_desc from device drivers.
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/ntb/ntb.c               | 10 +++++-----
- drivers/ntb/ntb_transport.c     |  1 -
- drivers/ntb/test/ntb_pingpong.c |  1 -
- drivers/ntb/test/ntb_tool.c     |  1 -
- include/linux/ntb.h             |  8 +++++---
- 5 files changed, 10 insertions(+), 11 deletions(-)
+ drivers/net/ethernet/mellanox/mlx4/en_cq.c   |    6 +++---
+ drivers/net/ethernet/mellanox/mlx4/en_rx.c   |    5 +----
+ drivers/net/ethernet/mellanox/mlx4/mlx4_en.h |    2 +-
+ 3 files changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ntb/ntb.c b/drivers/ntb/ntb.c
-index 0e27745b9c4b..23435f2a5486 100644
---- a/drivers/ntb/ntb.c
-+++ b/drivers/ntb/ntb.c
-@@ -74,22 +74,22 @@ MODULE_DESCRIPTION(DRIVER_DESCRIPTION);
- static struct bus_type ntb_bus;
- static void ntb_dev_release(struct device *dev);
- 
--int ntb_register_client(struct ntb_client *client)
-+int __ntb_register_client(struct ntb_client *client, struct module *mod,
-+			  const char *mod_name)
- {
- 	if (!client)
- 		return -EINVAL;
--	if (!client->name)
--		return -EINVAL;
- 	if (!ntb_client_ops_is_valid(&client->ops))
- 		return -EINVAL;
- 
- 	memset(&client->drv, 0, sizeof(client->drv));
- 	client->drv.bus = &ntb_bus;
--	client->drv.name = client->name;
-+	client->drv.name = mod_name;
-+	client->drv.owner = mod;
- 
- 	return driver_register(&client->drv);
- }
--EXPORT_SYMBOL(ntb_register_client);
-+EXPORT_SYMBOL(__ntb_register_client);
- 
- void ntb_unregister_client(struct ntb_client *client)
- {
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index b70b6a30a0b5..cbf649caabbe 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -1948,7 +1948,6 @@ static struct ntb_client ntb_transport_client = {
- 		.probe = ntb_transport_probe,
- 		.remove = ntb_transport_free,
- 	},
--	.name = NTB_TRANSPORT_NAME,
- };
- 
- static int __init ntb_transport_init(void)
-diff --git a/drivers/ntb/test/ntb_pingpong.c b/drivers/ntb/test/ntb_pingpong.c
-index a18f895839c3..fe1600566981 100644
---- a/drivers/ntb/test/ntb_pingpong.c
-+++ b/drivers/ntb/test/ntb_pingpong.c
-@@ -246,6 +246,5 @@ static struct ntb_client pp_client = {
- 		.probe = pp_probe,
- 		.remove = pp_remove,
- 	},
--	.name = DRIVER_NAME,
- };
- module_ntb_client(pp_client);
-diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-index 49628efc0c2b..c7933936b41d 100644
---- a/drivers/ntb/test/ntb_tool.c
-+++ b/drivers/ntb/test/ntb_tool.c
-@@ -527,7 +527,6 @@ static struct ntb_client tool_client = {
- 		.probe = tool_probe,
- 		.remove = tool_remove,
- 	},
--	.name = DRIVER_NAME,
- };
- 
- static int __init tool_init(void)
-diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-index e8f29be3c543..790b8ee181f6 100644
---- a/include/linux/ntb.h
-+++ b/include/linux/ntb.h
-@@ -304,12 +304,10 @@ static inline int ntb_dev_ops_is_valid(const struct ntb_dev_ops *ops)
- /**
-  * struct ntb_client - client interested in ntb devices
-  * @drv:		Linux driver object.
-- * @name:		Client driver name.
-  * @ops:		See &ntb_client_ops.
-  */
- struct ntb_client {
- 	struct device_driver		drv;
--	const char			*name;
- 	const struct ntb_client_ops	ops;
- };
- 
-@@ -353,7 +351,11 @@ struct ntb_dev {
+diff --git a/drivers/net/ethernet/mellanox/mlx4/en_cq.c b/drivers/net/ethernet/mellanox/mlx4/en_cq.c
+index 22da4d0d0f05..a03a01625398 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/en_cq.c
++++ b/drivers/net/ethernet/mellanox/mlx4/en_cq.c
+@@ -31,6 +31,7 @@
   *
-  * Return: Zero if the client is registered, otherwise an error number.
   */
--int ntb_register_client(struct ntb_client *client);
-+#define ntb_register_client(__client) \
-+	__ntb_register_client((__client), THIS_MODULE, KBUILD_MODNAME)
-+
-+int __ntb_register_client(struct ntb_client *client, struct module *mod,
-+			  const char *mod_name);
  
- /**
-  * ntb_unregister_client() - unregister a client for interest in ntb devices
++#include <linux/irq.h>
+ #include <linux/mlx4/cq.h>
+ #include <linux/mlx4/qp.h>
+ #include <linux/mlx4/cmd.h>
+@@ -135,9 +136,8 @@ int mlx4_en_activate_cq(struct mlx4_en_priv *priv, struct mlx4_en_cq *cq,
+ 				mdev->dev->caps.num_comp_vectors;
+ 		}
+ 
+-		cq->irq_desc =
+-			irq_to_desc(mlx4_eq_get_irq(mdev->dev,
+-						    cq->vector));
++		cq->irq_affinity = irq_get_affinity_mask(
++					mlx4_eq_get_irq(mdev->dev, cq->vector));
+ 	} else {
+ 		/* For TX we use the same irq per
+ 		ring we assigned for the RX    */
+diff --git a/drivers/net/ethernet/mellanox/mlx4/en_rx.c b/drivers/net/ethernet/mellanox/mlx4/en_rx.c
+index 2a77a6b19121..5675febf478e 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/en_rx.c
++++ b/drivers/net/ethernet/mellanox/mlx4/en_rx.c
+@@ -1044,14 +1044,11 @@ int mlx4_en_poll_rx_cq(struct napi_struct *napi, int budget)
+ 	/* If we used up all the quota - we're probably not done yet... */
+ 	if (done == budget) {
+ 		int cpu_curr;
+-		const struct cpumask *aff;
+ 
+ 		INC_PERF_COUNTER(priv->pstats.napi_quota);
+ 
+ 		cpu_curr = smp_processor_id();
+-		aff = irq_desc_get_irq_data(cq->irq_desc)->affinity;
+-
+-		if (likely(cpumask_test_cpu(cpu_curr, aff)))
++		if (likely(cpumask_test_cpu(cpu_curr, cq->irq_affinity)))
+ 			return budget;
+ 
+ 		/* Current cpu is not according to smp_irq_affinity -
+diff --git a/drivers/net/ethernet/mellanox/mlx4/mlx4_en.h b/drivers/net/ethernet/mellanox/mlx4/mlx4_en.h
+index d021f079f181..33d544a1fe84 100644
+--- a/drivers/net/ethernet/mellanox/mlx4/mlx4_en.h
++++ b/drivers/net/ethernet/mellanox/mlx4/mlx4_en.h
+@@ -357,7 +357,7 @@ struct mlx4_en_cq {
+ #define CQ_USER_PEND (MLX4_EN_CQ_STATE_POLL | MLX4_EN_CQ_STATE_POLL_YIELD)
+ 	spinlock_t poll_lock; /* protects from LLS/napi conflicts */
+ #endif  /* CONFIG_NET_RX_BUSY_POLL */
+-	struct irq_desc *irq_desc;
++	struct cpumask	*irq_affinity;
+ };
+ 
+ struct mlx4_en_port_profile {
 -- 
-2.4.0.rc0.43.gcf8a8c6
+1.7.10.4
 
