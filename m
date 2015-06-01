@@ -1,54 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:36520 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018AbbFEPLg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 11:11:36 -0400
-Received: by qgep100 with SMTP id p100so29642921qge.3
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 08:11:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55714AA3.1070407@monstr.eu>
-References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150604214929.2399.85988.stgit@bhelgaas-glaptop2.roam.corp.google.com> <55714AA3.1070407@monstr.eu>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 5 Jun 2015 10:11:15 -0500
-Message-ID: <CAErSpo6pMzOUwwxD0snOpcpdoCH5mBQhH2eXO74SVRnXvazX=A@mail.gmail.com>
-Subject: Re: [PATCH 1/7] microblaze/PCI: Remove unused declarations
-To: Michal Simek <monstr@monstr.eu>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [Patch v3 05/36] x86, irq: Use accessor irq_data_get_node() to hide struct irq_data detail
+Date: Mon,  1 Jun 2015 16:05:14 +0800
+Message-Id: <1433145945-789-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 5, 2015 at 2:07 AM, Michal Simek <monstr@monstr.eu> wrote:
-> On 06/04/2015 11:49 PM, Bjorn Helgaas wrote:
->> The following declarations were copied from powerpc but are unused on
->> microblaze:
->>
->>   struct pci_controller *init_phb_dynamic(struct device_node *dn)
->>   int remove_phb_dynamic(struct pci_controller *phb)
->>   struct pci_dev *of_create_pci_dev(struct device_node *node, ...)
->>   void of_scan_pci_bridge(struct device_node *node, ...)
->>   void of_scan_bus(struct device_node *node, struct pci_bus *bus)
->>   void of_rescan_bus(struct device_node *node, struct pci_bus *bus)
->>
->> Remove them.
->>
->> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Michal Simek <monstr@monstr.eu>
->> ---
->>  arch/microblaze/include/asm/pci.h |   12 ------------
->>  1 file changed, 12 deletions(-)
->
-> Reviewed-by: Michal Simek <michal.simek@xilinx.com>
->
-> Bjorn: Do you want me to take this via Microblaze tree?
+Use accessor irq_data_get_node() to hide struct irq_data implementation
+detail, so we could easily reconstruct struct irq_data later.
 
-Sure, it'd be great if you take all the Microblaze-specific patches.
-There aren't any dependencies on them, so there shouldn't be any
-problem.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/kernel/apic/vector.c |    8 ++++----
+ arch/x86/platform/uv/uv_irq.c |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-I do have a Microblaze hunk in "PCI: Remove unused
-pci_dma_burst_advice()" and if you agree, I'll merge that one through
-my tree since the change for each arch is essentially identical.
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 28eba2d38b15..9b62f690b0ff 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -296,7 +296,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 	struct irq_alloc_info *info = arg;
+ 	struct apic_chip_data *data;
+ 	struct irq_data *irq_data;
+-	int i, err;
++	int i, err, node;
+ 
+ 	if (disable_apic)
+ 		return -ENXIO;
+@@ -308,12 +308,13 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 	for (i = 0; i < nr_irqs; i++) {
+ 		irq_data = irq_domain_get_irq_data(domain, virq + i);
+ 		BUG_ON(!irq_data);
++		node = irq_data_get_node(irq_data);
+ #ifdef	CONFIG_X86_IO_APIC
+ 		if (virq + i < nr_legacy_irqs() && legacy_irq_data[virq + i])
+ 			data = legacy_irq_data[virq + i];
+ 		else
+ #endif
+-			data = alloc_apic_chip_data(irq_data->node);
++			data = alloc_apic_chip_data(node);
+ 		if (!data) {
+ 			err = -ENOMEM;
+ 			goto error;
+@@ -322,8 +323,7 @@ static int x86_vector_alloc_irqs(struct irq_domain *domain, unsigned int virq,
+ 		irq_data->chip = &lapic_controller;
+ 		irq_data->chip_data = data;
+ 		irq_data->hwirq = virq + i;
+-		err = assign_irq_vector_policy(virq, irq_data->node, data,
+-					       info);
++		err = assign_irq_vector_policy(virq, node, data, info);
+ 		if (err)
+ 			goto error;
+ 	}
+diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
+index 8570abe68be1..e1c24631afbb 100644
+--- a/arch/x86/platform/uv/uv_irq.c
++++ b/arch/x86/platform/uv/uv_irq.c
+@@ -89,7 +89,7 @@ static int uv_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 		return -EINVAL;
+ 
+ 	chip_data = kmalloc_node(sizeof(*chip_data), GFP_KERNEL,
+-				 irq_data->node);
++				 irq_data_get_node(irq_data));
+ 	if (!chip_data)
+ 		return -ENOMEM;
+ 
+-- 
+1.7.10.4
 
-Bjorn
