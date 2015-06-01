@@ -1,57 +1,70 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1432116013-25902-6-git-send-email-jiang.liu@linux.intel.com>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>
-	<1432116013-25902-6-git-send-email-jiang.liu@linux.intel.com>
-Date: Mon, 1 Jun 2015 14:45:59 +0200
-Message-ID: <CACRpkdZfWK5H+gRD6inX31Ouq1XCvq7CneNDJV8x0iihXHzWjw@mail.gmail.com>
-Subject: Re: [RFC v1 05/25] gpio: Use irq_desc_get_xxx() to avoid redundant
- lookup of irq_desc
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Ray Jui <rjui@broadcom.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Chris Zankel <chris@zankel.net>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	Linux-OMAP <linux-omap@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-xtensa@linux-xtensa.org
+Subject: [Patch v3 28/36] xtensa, irq: Use access helper irq_data_get_affinity_mask()
+Date: Mon,  1 Jun 2015 16:05:37 +0800
+Message-Id: <1433145945-789-29-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 20, 2015 at 11:59 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+Use access helper irq_data_get_affinity_mask() to hide implementation
+details of struct irq_desc.
 
-> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-> already have a pointer to corresponding irq_desc.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/xtensa/kernel/irq.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
+diff --git a/arch/xtensa/kernel/irq.c b/arch/xtensa/kernel/irq.c
+index 3eee94f621eb..d7b5a4c8ae5d 100644
+--- a/arch/xtensa/kernel/irq.c
++++ b/arch/xtensa/kernel/irq.c
+@@ -166,23 +166,25 @@ void migrate_irqs(void)
+ 
+ 	for_each_active_irq(i) {
+ 		struct irq_data *data = irq_get_irq_data(i);
++		struct cpumask *mask;
+ 		unsigned int newcpu;
+ 
+ 		if (irqd_is_per_cpu(data))
+ 			continue;
+ 
+-		if (!cpumask_test_cpu(cpu, data->affinity))
++		mask = irq_data_get_affinity_mask(data);
++		if (!cpumask_test_cpu(cpu, mask))
+ 			continue;
+ 
+-		newcpu = cpumask_any_and(data->affinity, cpu_online_mask);
++		newcpu = cpumask_any_and(mask, cpu_online_mask);
+ 
+ 		if (newcpu >= nr_cpu_ids) {
+ 			pr_info_ratelimited("IRQ%u no longer affine to CPU%u\n",
+ 					    i, cpu);
+ 
+-			cpumask_setall(data->affinity);
++			cpumask_setall(mask);
+ 		}
+-		irq_set_affinity(i, data->affinity);
++		irq_set_affinity(i, mask);
+ 	}
+ }
+ #endif /* CONFIG_HOTPLUG_CPU */
+-- 
+1.7.10.4
 
-Are there dependencies on this patch or can I just apply it
-directly to the GPIO tree?
-
-Yours,
-Linus Walleij
