@@ -1,123 +1,144 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 3 Jun 2015 11:03:43 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
 	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [Patch v4 5/8] ARM64/PCI/ACPI: Introduce struct pci_controller
- for ACPI
-Message-ID: <20150603100343.GA27917@red-moon>
-References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
- <1433225576-8215-6-git-send-email-jiang.liu@linux.intel.com>
- <20150602093525.GA23543@red-moon>
- <556EBE6D.90907@linaro.org>
- <556ECA93.7040800@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <556ECA93.7040800@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v3 04/36] genirq: Introduce helper function irq_data_get_node()
+Date: Mon,  1 Jun 2015 16:05:13 +0800
+Message-Id: <1433145945-789-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 03, 2015 at 10:36:19AM +0100, Jiang Liu wrote:
-> On 2015/6/3 16:44, Hanjun Guo wrote:
-> > On 2015???06???02??? 17:35, Lorenzo Pieralisi wrote:
-> >> On Tue, Jun 02, 2015 at 07:12:53AM +0100, Jiang Liu wrote:
-> >>> From: Hanjun Guo <hanjun.guo@linaro.org>
-> >>>
-> >>> ARM64 ACPI based PCI host bridge init needs a arch dependent
-> >>> struct pci_controller to accommodate common PCI host bridge
-> >>> code which is introduced later, or it will lead to compile
-> >>> errors on ARM64.
-> >>>
-> >>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> >>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> >>> CC: Arnd Bergmann <arnd@arndb.de>
-> >>> CC: Catalin Marinas <catalin.marinas@arm.com>
-> >>> CC: Liviu Dudau <Liviu.Dudau@arm.com>
-> >>> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-> >>> CC: Will Deacon <will.deacon@arm.com>
-> >>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> >>> ---
-> >>>   arch/arm64/include/asm/pci.h |   10 ++++++++++
-> >>>   1 file changed, 10 insertions(+)
-> >>>
-> >>> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-> >>> index b008a72f8bc0..70884957f253 100644
-> >>> --- a/arch/arm64/include/asm/pci.h
-> >>> +++ b/arch/arm64/include/asm/pci.h
-> >>> @@ -10,6 +10,16 @@
-> >>>   #include <asm-generic/pci-bridge.h>
-> >>>   #include <asm-generic/pci-dma-compat.h>
-> >>>
-> >>> +struct acpi_device;
-> >>> +
-> >>> +struct pci_controller {
-> >>> +#ifdef CONFIG_ACPI
-> >>> +    struct acpi_device *companion;    /* ACPI companion device */
-> >>> +#endif
-> >>> +    int        segment;    /* PCI domain */
-> >>> +    int        node;        /* NUMA node */
-> >>> +};
-> >>
-> >> There is nothing ARM64 specific in this structure. The only
-> >> reason I see you want to keep it arch specific is the iommu
-> >> pointer on x86,
-> > 
-> > And also plarform_data for IA64 too.
-> > 
-> >> but I think we should find a way to make
-> >> the common bits shared across archs (ie the struct above) and
-> >> add (maybe a void*) to the generic struct to cater for arch
-> >> specific data.
-> >>
-> >> Thoughts ?
-> > 
-> > We discussed this already, it has limitations to make it
-> > common to all archs, I think the limitation are:
-> > 
-> >   - struct pci_controller are also used for other archs
-> >     such as PowerPC and Tile, they will not use it for
-> >     ACPI purpose, so we can not used for all archs.
-> > 
-> >   - if we let struct pci_controller defined only for archs
-> >     using ACPI, such as introduce it in linux/acpi.h, we still
-> >     can not satisfy that the struct pci_controller is not
-> >     only used for ACPI case on x86, it will be used for
-> >     non-ACPI too.
-> > 
-> > So it's pretty difficult to share it with across archs to me,
-> > any more ideas?
-> Hi Hanjun and Lorenzo,
-> 	As mentioned by Hanjun, I have no idea yet about how to
-> consolidating "struct pci_controller" further. One possible
-> way is to move "struct pci_controller" related code into
-> arch, but apparently that will reduce code reusing.
+Introduce helper function irq_data_get_node() and friends to hide
+struct irq_data implementation details.
 
-I guess you can't move that struct pci_controller to generic code
-since it is present on other archs too (with completely different
-members).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ include/linux/irq.h    |    5 +++++
+ kernel/irq/internals.h |    5 +++++
+ kernel/irq/irqdesc.c   |    8 +-------
+ kernel/irq/irqdomain.c |    3 ++-
+ kernel/irq/manage.c    |    2 +-
+ kernel/irq/proc.c      |    2 +-
+ 6 files changed, 15 insertions(+), 10 deletions(-)
 
-What you can do is creating a new struct (ie same purpose of pci_controller
-with a different name) common to all archs that contains the common bits
-+ a void* data that contains arch specific data, and convert x86 and ia64
-to using it.
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 3c7fbe44edae..b3b82a5344c8 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -640,6 +640,11 @@ static inline u32 irq_get_trigger_type(unsigned int irq)
+ 	return d ? irqd_get_trigger_type(d) : 0;
+ }
+ 
++static inline int irq_data_get_node(struct irq_data *d)
++{
++	return d->node;
++}
++
+ unsigned int arch_dynirq_lower_bound(unsigned int from);
+ 
+ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index a1ed80d11800..4834ee828c41 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -197,6 +197,11 @@ static inline void kstat_incr_irqs_this_cpu(unsigned int irq, struct irq_desc *d
+ 	__this_cpu_inc(kstat.irqs_sum);
+ }
+ 
++static inline int irq_desc_get_node(struct irq_desc *desc)
++{
++	return irq_data_get_node(&desc->irq_data);
++}
++
+ #ifdef CONFIG_PM_SLEEP
+ bool irq_pm_check_wakeup(struct irq_desc *desc);
+ void irq_pm_install_action(struct irq_desc *desc, struct irqaction *action);
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index eac1aac906ea..b18d3f1d73d9 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -59,16 +59,10 @@ static void desc_smp_init(struct irq_desc *desc, int node)
+ #endif
+ }
+ 
+-static inline int desc_node(struct irq_desc *desc)
+-{
+-	return desc->irq_data.node;
+-}
+-
+ #else
+ static inline int
+ alloc_masks(struct irq_desc *desc, gfp_t gfp, int node) { return 0; }
+ static inline void desc_smp_init(struct irq_desc *desc, int node) { }
+-static inline int desc_node(struct irq_desc *desc) { return 0; }
+ #endif
+ 
+ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
+@@ -300,7 +294,7 @@ static void free_desc(unsigned int irq)
+ 	unsigned long flags;
+ 
+ 	raw_spin_lock_irqsave(&desc->lock, flags);
+-	desc_set_defaults(irq, desc, desc_node(desc), NULL);
++	desc_set_defaults(irq, desc, irq_desc_get_node(desc), NULL);
+ 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+ }
+ 
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 3552b8750efd..1b06dfed4574 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -830,7 +830,8 @@ static struct irq_data *irq_domain_insert_irq_data(struct irq_domain *domain,
+ {
+ 	struct irq_data *irq_data;
+ 
+-	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL, child->node);
++	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL,
++				irq_data_get_node(child));
+ 	if (irq_data) {
+ 		child->parent_data = irq_data;
+ 		irq_data->irq = child->irq;
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index b1c7e8f46bfb..f9744853b656 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -363,7 +363,7 @@ static int
+ setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
+ {
+ 	struct cpumask *set = irq_default_affinity;
+-	int node = desc->irq_data.node;
++	int node = irq_desc_get_node(desc);
+ 
+ 	/* Excludes PER_CPU and NO_BALANCE interrupts */
+ 	if (!irq_can_set_affinity(irq))
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index df2f4642d1e7..0e97c142ce40 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -241,7 +241,7 @@ static int irq_node_proc_show(struct seq_file *m, void *v)
+ {
+ 	struct irq_desc *desc = irq_to_desc((long) m->private);
+ 
+-	seq_printf(m, "%d\n", desc->irq_data.node);
++	seq_printf(m, "%d\n", irq_desc_get_node(desc));
+ 	return 0;
+ }
+ 
+-- 
+1.7.10.4
 
-It is weird to be forced to declare a pci_controller structure in arm64
-code with 0 arch specific data in it.
-
-Lorenzo
