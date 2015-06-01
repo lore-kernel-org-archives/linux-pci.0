@@ -1,85 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:42078 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752465AbbFDGnt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:49 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:46 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 11/42] powerpc/powernv: Increase PE# capacity
-Date: Thu,  4 Jun 2015 16:41:40 +1000
-Message-Id: <1433400131-18429-12-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v3 14/36] genirq: Introduce helper function irq_data_get_affinity_mask()
+Date: Mon,  1 Jun 2015 16:05:23 +0800
+Message-Id: <1433145945-789-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB maintains an array helping to translate RID (Request
-ID) to PE# with the assumption that PE# takes 8 bits, indicating
-that we can't have more than 256 PEs. However, pci_dn->pe_number
-already had 4-bytes for the PE#.
+Introduce helper function irq_data_get_affinity_mask() and
+irq_get_affinity_mask() to hide implementation details,
+so we could move field 'affinity' from struct irq_data into
+struct irq_common_data later.
 
-The patch extends the PE# capacity so that each of them will be
-4-bytes long. Then we can use IODA_INVALID_PE to check one entry
-in phb->pe_rmap[] is valid or not.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
-v5:
-  * Split from [PATCH v5 v4 06/21]
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 5 ++++-
- arch/powerpc/platforms/powernv/pci.h      | 5 ++---
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ include/linux/irq.h |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 2087c5c..d8b0ef5 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -840,7 +840,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 68874efe19d3..91fbf10bdae0 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -656,6 +656,18 @@ static inline int irq_data_get_node(struct irq_data *d)
+ 	return irq_common_data_get_node(d->common);
+ }
  
- 	/* Clear the reverse map */
- 	for (rid = pe->rid; rid < rid_end; rid++)
--		phb->ioda.pe_rmap[rid] = 0;
-+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
- 
- 	/* Release from all parents PELT-V */
- 	while (parent) {
-@@ -3303,6 +3303,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	if (prop32)
- 		phb->ioda.reserved_pe = be32_to_cpup(prop32);
- 
-+	/* Invalidate RID to PE# mapping */
-+	memset(phb->ioda.pe_rmap, 0xff, sizeof(phb->ioda.pe_rmap));
++static inline struct cpumask *irq_get_affinity_mask(int irq)
++{
++	struct irq_data *d = irq_get_irq_data(irq);
 +
- 	/* Parse 64-bit MMIO range */
- 	pnv_ioda_parse_m64_window(phb);
++	return d ? d->affinity : NULL;
++}
++
++static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
++{
++	return d->affinity;
++}
++
+ unsigned int arch_dynirq_lower_bound(unsigned int from);
  
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 94ef1df..590f778 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -175,11 +175,10 @@ struct pnv_phb {
- 			struct list_head	pe_list;
- 			struct mutex            pe_list_mutex;
- 
--			/* Reverse map of PEs, will have to extend if
--			 * we are to support more than 256 PEs, indexed
-+			/* Reverse map of PEs, indexed by
- 			 * bus { bus, devfn }
- 			 */
--			unsigned char		pe_rmap[0x10000];
-+			int			pe_rmap[0x10000];
- 
- 			/* Number of 32-bit DMA segments */
- 			unsigned long		dma32_segcount;
+ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
 -- 
-2.1.0
+1.7.10.4
 
