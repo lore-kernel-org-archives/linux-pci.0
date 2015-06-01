@@ -1,53 +1,80 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 25 Jun 2015 22:47:03 +0200
-From: Borislav Petkov <bp@suse.de>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: mingo@kernel.org, arnd@arndb.de, bhelgaas@google.com,
-	luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v8 0/9] pci: add pci_iomap_wc() and pci_ioremap_wc_bar()
-Message-ID: <20150625204703.GC4898@pd.tnic>
-References: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Anton Blanchard <anton@samba.org>,
+	Mahesh Salgaonkar <mahesh@linux.vnet.ibm.com>,
+	Christoph Lameter <cl@linux.com>, Tejun Heo <tj@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [Patch v3 24/36] powerpc, irq: Use access helper irq_data_get_affinity_mask()
+Date: Mon,  1 Jun 2015 16:05:33 +0800
+Message-Id: <1433145945-789-25-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 24, 2015 at 06:22:13PM -0700, Luis R. Rodriguez wrote:
-> Luis R. Rodriguez (9):
->   pci: add pci_ioremap_wc_bar()
->   video: fbdev: i740fb: use arch_phys_wc_add() and pci_ioremap_wc_bar()
->   video: fbdev: kyrofb: use arch_phys_wc_add() and pci_ioremap_wc_bar()
->   video: fbdev: gxt4500: use pci_ioremap_wc_bar() for framebuffer
->   PCI: Add pci_iomap_wc() variants
->   lib: devres: add pcim_iomap_wc() variants
->   video: fbdev: arkfb: use arch_phys_wc_add() and pci_iomap_wc()
->   video: fbdev: s3fb: use arch_phys_wc_add() and pci_iomap_wc()
->   video: fbdev: vt8623fb: use arch_phys_wc_add() and pci_iomap_wc()
-> 
->  drivers/pci/pci.c                | 14 ++++++++
->  drivers/video/fbdev/arkfb.c      | 36 +++----------------
->  drivers/video/fbdev/gxt4500.c    |  2 +-
->  drivers/video/fbdev/i740fb.c     | 35 ++++--------------
->  drivers/video/fbdev/kyro/fbdev.c | 33 ++++++-----------
->  drivers/video/fbdev/s3fb.c       | 35 ++++--------------
->  drivers/video/fbdev/vt8623fb.c   | 31 ++++------------
->  include/asm-generic/pci_iomap.h  | 14 ++++++++
->  include/linux/pci.h              |  3 ++
->  include/video/kyro.h             |  4 +--
->  lib/devres.c                     | 76 ++++++++++++++++++++++++++++++++++++++++
->  lib/pci_iomap.c                  | 61 ++++++++++++++++++++++++++++++++
->  12 files changed, 204 insertions(+), 140 deletions(-)
+Use access helper irq_data_get_affinity_mask() to hide implementation
+details of struct irq_desc.
 
-Took those, modulo the devres one.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/powerpc/kernel/irq.c           |    2 +-
+ arch/powerpc/sysdev/xics/ics-opal.c |    2 +-
+ arch/powerpc/sysdev/xics/ics-rtas.c |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/arch/powerpc/kernel/irq.c b/arch/powerpc/kernel/irq.c
+index 45096033d37b..290559df1e8b 100644
+--- a/arch/powerpc/kernel/irq.c
++++ b/arch/powerpc/kernel/irq.c
+@@ -441,7 +441,7 @@ void migrate_irqs(void)
+ 
+ 		chip = irq_data_get_irq_chip(data);
+ 
+-		cpumask_and(mask, data->affinity, map);
++		cpumask_and(mask, irq_data_get_affinity_mask(data), map);
+ 		if (cpumask_any(mask) >= nr_cpu_ids) {
+ 			pr_warn("Breaking affinity for irq %i\n", irq);
+ 			cpumask_copy(mask, map);
+diff --git a/arch/powerpc/sysdev/xics/ics-opal.c b/arch/powerpc/sysdev/xics/ics-opal.c
+index 68c7e5cc98e0..3996393c254d 100644
+--- a/arch/powerpc/sysdev/xics/ics-opal.c
++++ b/arch/powerpc/sysdev/xics/ics-opal.c
+@@ -54,7 +54,7 @@ static void ics_opal_unmask_irq(struct irq_data *d)
+ 	if (hw_irq == XICS_IPI || hw_irq == XICS_IRQ_SPURIOUS)
+ 		return;
+ 
+-	server = xics_get_irq_server(d->irq, d->affinity, 0);
++	server = xics_get_irq_server(d->irq, irq_data_get_affinity_mask(d), 0);
+ 	server = ics_opal_mangle_server(server);
+ 
+ 	rc = opal_set_xive(hw_irq, server, DEFAULT_PRIORITY);
+diff --git a/arch/powerpc/sysdev/xics/ics-rtas.c b/arch/powerpc/sysdev/xics/ics-rtas.c
+index 0af97deb83f3..e2665a9dfc0f 100644
+--- a/arch/powerpc/sysdev/xics/ics-rtas.c
++++ b/arch/powerpc/sysdev/xics/ics-rtas.c
+@@ -47,7 +47,7 @@ static void ics_rtas_unmask_irq(struct irq_data *d)
+ 	if (hw_irq == XICS_IPI || hw_irq == XICS_IRQ_SPURIOUS)
+ 		return;
+ 
+-	server = xics_get_irq_server(d->irq, d->affinity, 0);
++	server = xics_get_irq_server(d->irq, irq_data_get_affinity_mask(d), 0);
+ 
+ 	call_status = rtas_call(ibm_set_xive, 3, 1, NULL, hw_irq, server,
+ 				DEFAULT_PRIORITY);
 -- 
-Regards/Gruss,
-    Boris.
+1.7.10.4
 
-ECO tip #101: Trim your mails when you reply.
---
