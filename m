@@ -1,163 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Helge Deller <deller@gmx.de>,
 	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v2 2/4] PCI, x86: Allocate PCI IRQ on demand and free it when not used anymore
-Date: Tue,  2 Jun 2015 10:49:17 +0800
-Message-Id: <1433213360-3700-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-parisc@vger.kernel.org
+Subject: [Patch v3 23/36] parisc, irq: Use access helper irq_data_get_affinity_mask()
+Date: Mon,  1 Jun 2015 16:05:32 +0800
+Message-Id: <1433145945-789-24-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support IOAPIC hotplug, we need to correctly manage IOAPIC pin usage,
-which is to allocate IRQs on demand and free them when not used anymore.
-So use pcibios_alloc_irq() and pcibios_free_irq() to dynamically allocate
-and free PCI IRQs.
-
-Also remove obseleted code mp_should_keep_irq().
+Use access helper irq_data_get_affinity_mask() to hide implementation
+details of struct irq_desc.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/x86/include/asm/pci_x86.h |    2 --
- arch/x86/pci/common.c          |   20 +++++++++-----------
- arch/x86/pci/intel_mid_pci.c   |    7 +++++--
- arch/x86/pci/irq.c             |   15 +--------------
- drivers/acpi/pci_irq.c         |    9 +--------
- 5 files changed, 16 insertions(+), 37 deletions(-)
+ arch/parisc/kernel/irq.c |   12 ++++++------
+ drivers/parisc/iosapic.c |    2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 164e3f8d3c3d..fa1195dae425 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -93,8 +93,6 @@ extern raw_spinlock_t pci_config_lock;
- extern int (*pcibios_enable_irq)(struct pci_dev *dev);
- extern void (*pcibios_disable_irq)(struct pci_dev *dev);
+diff --git a/arch/parisc/kernel/irq.c b/arch/parisc/kernel/irq.c
+index f3191db6e2e9..413ec3c3f9cc 100644
+--- a/arch/parisc/kernel/irq.c
++++ b/arch/parisc/kernel/irq.c
+@@ -131,7 +131,7 @@ static int cpu_set_affinity_irq(struct irq_data *d, const struct cpumask *dest,
+ 	if (cpu_dest < 0)
+ 		return -1;
  
--extern bool mp_should_keep_irq(struct device *dev);
--
- struct pci_raw_ops {
- 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
- 						int reg, int len, u32 *val);
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 8fd6f44aee83..dc78a4a9a466 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -673,24 +673,22 @@ int pcibios_add_device(struct pci_dev *dev)
+-	cpumask_copy(d->affinity, dest);
++	cpumask_copy(irq_data_get_affinity_mask(d), dest);
+ 
  	return 0;
  }
- 
--int pcibios_enable_device(struct pci_dev *dev, int mask)
-+int pcibios_alloc_irq(struct pci_dev *dev)
+@@ -339,7 +339,7 @@ unsigned long txn_affinity_addr(unsigned int irq, int cpu)
  {
--	int err;
--
--	if ((err = pci_enable_resources(dev, mask)) < 0)
--		return err;
--
--	if (!pci_dev_msi_enabled(dev))
--		return pcibios_enable_irq(dev);
--	return 0;
-+	return pcibios_enable_irq(dev);
- }
+ #ifdef CONFIG_SMP
+ 	struct irq_data *d = irq_get_irq_data(irq);
+-	cpumask_copy(d->affinity, cpumask_of(cpu));
++	cpumask_copy(irq_data_get_affinity_mask(d), cpumask_of(cpu));
+ #endif
  
--void pcibios_disable_device (struct pci_dev *dev)
-+void pcibios_free_irq(struct pci_dev *dev)
- {
--	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
-+	if (pcibios_disable_irq)
- 		pcibios_disable_irq(dev);
- }
+ 	return per_cpu(cpu_data, cpu).txn_addr;
+@@ -508,7 +508,7 @@ void do_cpu_irq_mask(struct pt_regs *regs)
+ 	unsigned long eirr_val;
+ 	int irq, cpu = smp_processor_id();
+ #ifdef CONFIG_SMP
+-	struct irq_desc *desc;
++	struct irq_data *irq_data;
+ 	cpumask_t dest;
+ #endif
  
-+int pcibios_enable_device(struct pci_dev *dev, int mask)
-+{
-+	return pci_enable_resources(dev, mask);
-+}
-+
- int pci_ext_cfg_avail(void)
- {
- 	if (raw_pci_ext_ops)
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 27062303c881..fb7a1f96d80c 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -234,10 +234,13 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+@@ -522,9 +522,9 @@ void do_cpu_irq_mask(struct pt_regs *regs)
+ 	irq = eirr_to_irq(eirr_val);
  
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
--	    dev->irq > 0) {
-+	if (dev->irq_managed && dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq_managed = 0;
-+		/*
-+		 * Don't reset dev->irq here, otherwise
-+		 * intel_mid_pci_irq_enable() will fail on next call.
-+		 */
- 	}
- }
+ #ifdef CONFIG_SMP
+-	desc = irq_to_desc(irq);
+-	cpumask_copy(&dest, desc->irq_data.affinity);
+-	if (irqd_is_per_cpu(&desc->irq_data) &&
++	irq_data = irq_get_irq_data(irq);
++	cpumask_copy(&dest, irq_data_get_affinity_mask(irq_data));
++	if (irqd_is_per_cpu(irq_data) &&
+ 	    !cpumask_test_cpu(smp_processor_id(), &dest)) {
+ 		int cpu = cpumask_first(&dest);
  
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 9bd115484745..72108f0b66b1 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1257,22 +1257,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 	return 0;
- }
+diff --git a/drivers/parisc/iosapic.c b/drivers/parisc/iosapic.c
+index 9ee04b4b68bf..144c77dfe4b1 100644
+--- a/drivers/parisc/iosapic.c
++++ b/drivers/parisc/iosapic.c
+@@ -691,7 +691,7 @@ static int iosapic_set_affinity_irq(struct irq_data *d,
+ 	if (dest_cpu < 0)
+ 		return -1;
  
--bool mp_should_keep_irq(struct device *dev)
--{
--	if (dev->power.is_prepared)
--		return true;
--#ifdef CONFIG_PM
--	if (dev->power.runtime_status == RPM_SUSPENDING)
--		return true;
--#endif
--
--	return false;
--}
--
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
--	    dev->irq_managed && dev->irq) {
-+	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
- 		dev->irq_managed = 0;
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index b1def411c0b8..e7f718d6918a 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -485,14 +485,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
+-	cpumask_copy(d->affinity, cpumask_of(dest_cpu));
++	cpumask_copy(irq_data_get_affinity_mask(d), cpumask_of(dest_cpu));
+ 	vi->txn_addr = txn_affinity_addr(d->irq, dest_cpu);
  
--	/* Keep IOAPIC pin configuration when suspending */
--	if (dev->dev.power.is_prepared)
--		return;
--#ifdef	CONFIG_PM
--	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
--		return;
--#endif
--
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry)
- 		return;
-@@ -513,5 +505,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
- 		dev->irq_managed = 0;
-+		dev->irq = 0;
- 	}
- }
+ 	spin_lock_irqsave(&iosapic_lock, flags);
 -- 
 1.7.10.4
 
