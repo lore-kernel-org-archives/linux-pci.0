@@ -1,76 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rajat Jain <rajatja@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/4] PCI: pciehp: Clean up debug logging
-Date: Thu, 18 Jun 2015 23:52:49 +0200
-Message-ID: <1650350.VG8hpWuxzd@vostro.rjw.lan>
-In-Reply-To: <CAErSpo5-ny8xjb=KgETZMAoiNMQykYC2iMG8iw03UQnjtLeG8g@mail.gmail.com>
-References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com> <CACK8Z6Gh=rLS_tBdx-xyr-RwtTFtnkUD=A5ibJyy6SrE5jAZbw@mail.gmail.com> <CAErSpo5-ny8xjb=KgETZMAoiNMQykYC2iMG8iw03UQnjtLeG8g@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <556C63DC.4000904@linux.intel.com>
+Date: Mon, 01 Jun 2015 21:53:32 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: Re: [Patch v3 11/36] sh, irq: Use helper irq_data_get_irq_handler_data()
+ to hide irq_desc details
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com> <1433145945-789-12-git-send-email-jiang.liu@linux.intel.com> <556C4451.50503@cogentembedded.com>
+In-Reply-To: <556C4451.50503@cogentembedded.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, June 18, 2015 04:22:53 PM Bjorn Helgaas wrote:
-> [+cc Rafael]
+On 2015/6/1 19:38, Sergei Shtylyov wrote:
+> Hello.
 > 
-> On Thu, Jun 18, 2015 at 1:08 PM, Rajat Jain <rajatja@google.com> wrote:
-> > On Thu, Jun 18, 2015 at 11:01 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> On Thu, Jun 18, 2015 at 12:27 PM, Rajat Jain <rajatja@google.com> wrote:
-> >>> Hi,
-> >>>
-> >>> On Thu, Jun 18, 2015 at 9:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >>>> The pciehp debug logging is overly verbose and often redundant.  Almost all
-> >>>> of the information printed by dbg_ctrl() is also printed by the normal PCI
-> >>>> core enumeration code and by pcie_init().
-> >>>>
-> >>>> Remove the redundant debug info.
-> >>>>
-> >>>> When claiming a pciehp bridge, we print the slot characteristics, e.g.,
-> >>>>
-> >>>>   Slot #6 AttnBtn- AttnInd- PwrInd- PwrCtrl- MRL- Interlock- NoCompl+ LLActRep+
-> >>>>
-> >>>> Add the Hot-Plug Capable and Hot-Plug Surprise bits to this information,
-> >>>
-> >>> If the slot is not hotplug capable. then pciehp wouldn't claim it in
-> >>> the first place.
-> >>>
-> >>> So printing of "hotplug capable" may really not be needed..
-> >>
-> >> Yes, I did think about that, and you're right that it probably isn't
-> >> needed.  But the criteria for claiming a slot and deciding whether
-> >> acpiphp or pciehp should manage it are not 100% clear yet, so I
-> >> figured it wouldn't hurt to be a bit more transparent.
-> >
-> > Sounds right.
-> >
-> > Reviewed-by : Rajat Jain <rajatja@google.com>
-> >
-> > Side note: To clarify when and why the slot was claimed by pciehp or
-> > acpihp, do you think we need some mumbling / logging in
-> > acpi_pci_detect_ejectable() or pciehp_acpi_slot_detection_check()?
+> On 6/1/2015 11:05 AM, Jiang Liu wrote:
 > 
-> Maybe so (but I haven't added anything).
+>> Use helper function irq_data_get_irq_handler_data() to hide irq_desc
+>> implementation details.
 > 
-> My intuition is that acpiphp and pciehp are not really symmetric.  I
-> think pciehp should claim PCIe downstream ports (Root Ports and
-> Downstream Ports) when _OSC has granted us control.
+>    I'm only seeing calls to irq_{get|set}_handler_data() below...
+Hi Sergei,
+	Thanks for review, I will fix the commit message.
+Thanks!
+Gerry
+
 > 
-> But it doesn't seem like acpiphp should decide whether to claim
-> certain devices based on whether they have _ADR, _EJ0, _RMV, etc.
-
-But it doesn't do that, does it?
-
-> Shouldn't it just be integrated with the ACPI core so  it can field
-> notifications from the platform, no matter what methods are present,
-> and even if pciehp has claimed a bridge in that scope?
-
-That's how it is implemented today AFAICS.
-
-Thanks,
-Rafael
-
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>   drivers/sh/intc/virq.c |   12 +++++++-----
+>>   1 file changed, 7 insertions(+), 5 deletions(-)
+> 
+>> diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
+>> index f30ac9354ff2..bc0601cf0f8f 100644
+>> --- a/drivers/sh/intc/virq.c
+>> +++ b/drivers/sh/intc/virq.c
+>> @@ -83,12 +83,11 @@ EXPORT_SYMBOL_GPL(intc_irq_lookup);
+>>
+>>   static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
+>>   {
+>> -    struct intc_virq_list **last, *entry;
+>> -    struct irq_data *data = irq_get_irq_data(irq);
+>> +    struct intc_virq_list *entry;
+>> +    struct intc_virq_list **last = NULL;
+>>
+>>       /* scan for duplicates */
+>> -    last = (struct intc_virq_list **)&data->handler_data;
+>> -    for_each_virq(entry, data->handler_data) {
+>> +    for_each_virq(entry, irq_get_handler_data(irq)) {
+>>           if (entry->irq == virq)
+>>               return 0;
+>>           last = &entry->next;
+>> @@ -102,7 +101,10 @@ static int add_virq_to_pirq(unsigned int irq,
+>> unsigned int virq)
+>>
+>>       entry->irq = virq;
+>>
+>> -    *last = entry;
+>> +    if (last)
+>> +        *last = entry;
+>> +    else
+>> +        irq_set_handler_data(irq, entry);
+>>
+>>       return 0;
+>>   }
+> 
+> WBR, Sergei
+> 
