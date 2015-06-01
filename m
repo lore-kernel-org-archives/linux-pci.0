@@ -1,57 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:49312 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756151AbbFRSBI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 14:01:08 -0400
-Date: Thu, 18 Jun 2015 11:01:03 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-Message-ID: <20150618180103.GA23809@roeck-us.net>
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
- <20150527210447.GY32152@google.com>
- <20150528022332.GA23724@roeck-us.net>
- <20150528124112.GJ10210@google.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:35110 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633AbbFAXUJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 19:20:09 -0400
+Received: by iesa3 with SMTP id a3so120999926ies.2
+        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2015 16:20:08 -0700 (PDT)
+Date: Mon, 1 Jun 2015 18:20:05 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V7 03/10] powerpc/pci: Remove VFs prior to PF
+Message-ID: <20150601232005.GD3631@google.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-4-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150528124112.GJ10210@google.com>
+In-Reply-To: <1432032612-21701-4-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 28, 2015 at 07:41:12AM -0500, Bjorn Helgaas wrote:
+On Tue, May 19, 2015 at 06:50:05PM +0800, Wei Yang wrote:
+> As commit ac205b7b ("PCI: make sriov work with hotplug remove") indicates,
+
+The conventional reference is:
+
+  ac205b7bb72f ("PCI: make sriov work with hotplug remove")
+
+> VFs, which might be hooked to same PCI bus as their PF should be removed
+> before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
+> cause kernel crash.
 > 
-> > > I'd like res->flags to reflect the capabilities of the hardware, not
-> > > whether the window is currently enabled.
-> > > 
-> > Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
-> > purpose, or could that cause conflicts elsewhere ?
+> The patch applies the above pattern to PowerPC PCI hotplug path.
 > 
-> Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
-> below a host bridge that doesn't support I/O space.
+> [gwshan: changelog]
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/kernel/pci-hotplug.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-I integrated Lorenzo's patch and tried to get this working.
-
-Problem is that the use of a resource is widely checked with "!res->flags"
-throughout the code. That would have to be changed to something like
-"(!res->flags || (res->flags & IORESOURCE_DISABLED))" whereever it is used.
-
-I tried going with "!res->flags" instead, but have not been able to get it
-to work realiably; it is just very difficult to distinguish if "!res->flags"
-means that the resource has not yet been assigned or if it means that it is not
-supported.
-
-The correct approach, in my opinion, would be to go with IORESOURCE_DISABLED
-and make the necessary changes whereever needed. Effectively this means to
-replace the "!res->flags" check with something like pci_res_used() [ pick
-your preferred name ] and define it as
-
-#define pci_res_used(res) ((res)->flags && !((res)->flags & IORESOURCE_DISABLED))
-
-Is that the right direction ?
-
-Thanks,
-Guenter
+> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+> index 7ed85a6..98f84ed 100644
+> --- a/arch/powerpc/kernel/pci-hotplug.c
+> +++ b/arch/powerpc/kernel/pci-hotplug.c
+> @@ -50,7 +50,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+>  
+>  	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+>  		 pci_domain_nr(bus),  bus->number);
+> -	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
+> +	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+>  		pr_debug("   Removing %s...\n", pci_name(dev));
+>  		pci_stop_and_remove_bus_device(dev);
+>  	}
+> -- 
+> 1.7.9.5
+> 
