@@ -1,140 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:53975 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241AbbFRIGx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:06:53 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 18 Jun 2015 13:36:50 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 26F54E004C
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:40:19 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I86moJ8978820
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:48 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I78vXY020219
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 12:38:57 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V8 00/10] VF EEH on Power8
-Date: Thu, 18 Jun 2015 16:06:35 +0800
-Message-Id: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:35748 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468AbbFAXci (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 19:32:38 -0400
+Received: by igbyr2 with SMTP id yr2so74509390igb.0
+        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2015 16:32:36 -0700 (PDT)
+Date: Mon, 1 Jun 2015 18:32:33 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V7 04/10] powerpc/eeh: Trace first 7 BARs in address cache
+Message-ID: <20150601233233.GE3631@google.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-5-git-send-email-weiyang@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432032612-21701-5-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset enables EEH on SRIOV VFs. The general idea is to create proper
-VF edev and VF PE and handle them properly.
+The subject says "Trace first 7 BARs..."  I think maybe you meant "Track
+first 7 BARs" or maybe "Cache only BARs, not windows or IOV BARs"
 
-Different from the Bus PE, VF PE just contain one VF. This introduces the
-difference of EEH error handling on a VF PE. Generally, it has several
-differences.
+On Tue, May 19, 2015 at 06:50:06PM +0800, Wei Yang wrote:
+> EEH address cache, which helps to locate the PCI device according to
+> the given (physical) MMIO address, didn't cover PCI bridges. 
 
-First, the VF's removal and re-enumerate rely on its PF. VF has a tight
-relationship between its PF. This is not proper to enumerate a VF by usual
-scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
-set.
+"doesn't contain PCI bridge windows"?
 
-Second, the reset/restore of a VF is done in kernel space. FW is not aware of
-the VF, this means the usual reset function done in FW will not work. One of
-the patch will imitate the reset/restore function in kernel space.
+I see that eeh_addr_cache_insert_dev() ignores bridges because it never
+calls __eeh_addr_cache_insert_dev() when "(dev->class >> 16) ==
+PCI_BASE_CLASS_BRIDGE".  I think it would be more technically correct if
+you removed that test and relied on the "i <= PCI_ROM_RESOURCE" test in
+this patch, because it is legal (though rare) for bridge devices to have
+two BARs, and I assume you would want to put those in your cache if they
+exist.
 
-Third, the VF may be removed during the PF's error_detected function. In this
-case, the original error_detected->slot_reset->resume sequence is not proper
-to those removed VFs, since they are re-created by PF in a fresh state. A flag
-in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
-track whether this device needs to be reset or not.
-
-This has been tested both on host and in guest on Power8 with latest kernel
-version.
-
-v8:
-   * fix on checking the return value of pnv_eeh_do_flr()
-   * introduced a weak function pcibios_bus_add_device() to create PE for VFs
-   * rebase it on v4.1-rc8
-v7:
-   * fix compile error when PCI_IOV is not set
-v6:
-   * code / commit log refactor by Gavin
-v5:
-   * remove the compound field, iterate on Master VF PE instead
-   * some code refine on PCI config restore and reset on VF
-     the wait time for assert and deassert
-     PCI device address format
-     check on edev->pcie_cap and edev->aer_cap before access them
-v4:
-   * refine the change logs, comment and code style
-   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
-     CONFIG_PCI_IOV macro
-   * reorder patch 5/6 to make the logic more reasonable
-   * remove remove_dev_pci_data()
-   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
-     remove related CONFIG_PCI_IOV macro
-   * add the option for VF reset
-   * fix the pnv_eeh_cfg_blocked() logic
-   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
-     pnv_eeh_vf_restore_config()
-   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
-   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
-     to arch/powerpc/platforms/powernv/pci.c
-   * add a field compound in pnv_ioda_pe to link compound PEs
-   * handle compound PE for VF PEs
-v3:
-   * add back vf_index in pci_dn to track the VF's index
-   * rename ppdev in eeh_dev to physfn for consistency
-   * move edev->physfn assignment before dev->dev.archdata.edev is set
-   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
-   * more clear and detail in commit log and comment in code
-   * merge eeh_rmv_virt_device() with eeh_rmv_device()
-   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
-     pnv_eeh_cfg_blocked()
-   * move the vf reset/restore logic into its own patch, two patches are
-     created.
-     powerpc/powernv: Support PCI config restore for VFs
-     powerpc/powernv: Support EEH reset for VFs
-   * simplify the vf reset logic
-v2:
-   * add prefix pci_iov_ to virtfn_add/virtfn_remove
-   * use EEH_DEV_VF as a flag for a VF's eeh_dev
-   * use eeh_dev instead of edev in change log
-   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
-   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
-     well initialized
-   * do FLR to reset a VF PE
-   * imitate the restore function in FW for VF
-   * remove the reverse order patch, since it is still under discussion
-
-Wei Yang (10):
-  PCI/IOV: Rename and export virtfn_add/virtfn_remove
-  powerpc/pci: Cache VF index in pci_dn
-  powerpc/pci: Remove VFs prior to PF
-  powerpc/eeh: Cache only BARs, not windows or IOV BARs
-  powerpc/powernv: EEH device for VF
-  powerpc/eeh: Create PE for VFs
-  powerpc/powernv: Support EEH reset for VF PE
-  powerpc/powernv: Support PCI config restore for VFs
-  powerpc/eeh: Support error recovery for VF PE
-  powerpc/powernv: compound PE for VFs
-
- arch/powerpc/include/asm/eeh.h               |    4 +
- arch/powerpc/include/asm/pci-bridge.h        |    2 +
- arch/powerpc/kernel/eeh.c                    |    8 +
- arch/powerpc/kernel/eeh_cache.c              |    6 +-
- arch/powerpc/kernel/eeh_driver.c             |  100 +++++++++---
- arch/powerpc/kernel/eeh_pe.c                 |   13 +-
- arch/powerpc/kernel/pci-hotplug.c            |    2 +-
- arch/powerpc/kernel/pci_dn.c                 |   16 +-
- arch/powerpc/platforms/powernv/eeh-powernv.c |  220 +++++++++++++++++++++++++-
- arch/powerpc/platforms/powernv/pci-ioda.c    |   46 +++++-
- arch/powerpc/platforms/powernv/pci.c         |   35 +++-
- drivers/pci/bus.c                            |    2 +
- drivers/pci/iov.c                            |   10 +-
- include/linux/pci.h                          |    8 +
- 14 files changed, 427 insertions(+), 45 deletions(-)
-
--- 
-1.7.9.5
-
+> Also, it
+> shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
+> should be returned.
+> The patch restricts the address cache to cover first 7 BARs for the
+> above purposes.
+> 
+> [gwshan: changelog]
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/kernel/eeh_cache.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
+> index eeabeab..f6c5f05 100644
+> --- a/arch/powerpc/kernel/eeh_cache.c
+> +++ b/arch/powerpc/kernel/eeh_cache.c
+> @@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
+>  	}
+>  
+>  	/* Walk resources on this device, poke them into the tree */
+> -	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+> +	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+>  		unsigned long start = pci_resource_start(dev,i);
+>  		unsigned long end = pci_resource_end(dev,i);
+>  		unsigned int flags = pci_resource_flags(dev,i);
+> -- 
+> 1.7.9.5
+> 
