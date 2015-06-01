@@ -1,50 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:35629 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889AbbFAWMU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 18:12:20 -0400
-Received: by iesa3 with SMTP id a3so120040186ies.2
-        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2015 15:12:19 -0700 (PDT)
-Date: Mon, 1 Jun 2015 17:12:16 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, "Jan C. Nordholz" <jckn@gmx.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Rajat Jain <rajatxjain@gmail.com>, linux-pci@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
-Subject: Re: [PATCH RFC 2/4] PCI: pciehp: Wait for hotplug command completion
- lazily
-Message-ID: <20150601221216.GB3631@google.com>
-References: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20140614212126.15202.66060.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <1432939534.5794.56.camel@redhat.com>
- <20150601214322.GA3631@google.com>
- <1433196179.5794.159.camel@redhat.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <556C4451.50503@cogentembedded.com>
+Date: Mon, 01 Jun 2015 14:38:57 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433196179.5794.159.camel@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>
+CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: Re: [Patch v3 11/36] sh, irq: Use helper irq_data_get_irq_handler_data()
+ to hide irq_desc details
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com> <1433145945-789-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-12-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 01, 2015 at 04:02:59PM -0600, Alex Williamson wrote:
-> On Mon, 2015-06-01 at 16:43 -0500, Bjorn Helgaas wrote:
-> > If we added calls to pcie_wait_cmd() in these places:
-> > 
-> >   pciehp_power_on_slot
-> >   pciehp_power_off_slot
-> >   pcie_disable_notification
-> >   pciehp_reset_slot
-> > 
-> > do you think that would be enough?
-> 
-> I think that would solve the problem, but the API becomes very difficult
-> to use correctly if the programmer just needs to know that a
-> pcie_wait_cmd() is necessary following a pcie_write_cmd() if you really
-> want to be sure it's synchronous.  pcie_write_cmd() should probably
-> incorporate the "safe" behavior and some new _nowait version should
-> handle the special cases where we don't need to wait
+Hello.
 
-I don't think of pcie_write_cmd() as an API, since it's static to
-pciehp_hpc.c, but I do like your idea.
+On 6/1/2015 11:05 AM, Jiang Liu wrote:
 
-Bjorn
+> Use helper function irq_data_get_irq_handler_data() to hide irq_desc
+> implementation details.
+
+    I'm only seeing calls to irq_{get|set}_handler_data() below...
+
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>   drivers/sh/intc/virq.c |   12 +++++++-----
+>   1 file changed, 7 insertions(+), 5 deletions(-)
+
+> diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
+> index f30ac9354ff2..bc0601cf0f8f 100644
+> --- a/drivers/sh/intc/virq.c
+> +++ b/drivers/sh/intc/virq.c
+> @@ -83,12 +83,11 @@ EXPORT_SYMBOL_GPL(intc_irq_lookup);
+>
+>   static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
+>   {
+> -	struct intc_virq_list **last, *entry;
+> -	struct irq_data *data = irq_get_irq_data(irq);
+> +	struct intc_virq_list *entry;
+> +	struct intc_virq_list **last = NULL;
+>
+>   	/* scan for duplicates */
+> -	last = (struct intc_virq_list **)&data->handler_data;
+> -	for_each_virq(entry, data->handler_data) {
+> +	for_each_virq(entry, irq_get_handler_data(irq)) {
+>   		if (entry->irq == virq)
+>   			return 0;
+>   		last = &entry->next;
+> @@ -102,7 +101,10 @@ static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
+>
+>   	entry->irq = virq;
+>
+> -	*last = entry;
+> +	if (last)
+> +		*last = entry;
+> +	else
+> +		irq_set_handler_data(irq, entry);
+>
+>   	return 0;
+>   }
+
+WBR, Sergei
+
