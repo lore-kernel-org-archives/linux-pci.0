@@ -1,86 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:36832 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751724AbbFYBdY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2015 21:33:24 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: bp@suse.de
-Cc: mingo@kernel.org, arnd@arndb.de, bhelgaas@google.com,
-	luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Subject: [PATCH v8 4/9] video: fbdev: gxt4500: use pci_ioremap_wc_bar() for framebuffer
-Date: Wed, 24 Jun 2015 18:22:17 -0700
-Message-Id: <1435195342-26879-5-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	James Hogan <james.hogan@imgtec.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-metag@vger.kernel.org
+Subject: [Patch v3 20/36] metag, irq: Use access helper irq_data_get_affinity_mask()
+Date: Mon,  1 Jun 2015 16:05:29 +0800
+Message-Id: <1433145945-789-21-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Use access helper irq_data_get_affinity_mask() to hide implementation
+details of struct irq_desc.
 
-The driver doesn't use mtrr_add() or arch_phys_wc_add() but
-since we know the framebuffer is isolated already on an
-ioremap() we can take advantage of write combining for
-performance where possible.
-
-In this case there are a few motivations for this:
-
-a) Take advantage of PAT when available
-
-b) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
-
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Rob Clark <robdclark@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/video/fbdev/gxt4500.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/metag/kernel/irq.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/video/fbdev/gxt4500.c b/drivers/video/fbdev/gxt4500.c
-index 135d78a..f19133a 100644
---- a/drivers/video/fbdev/gxt4500.c
-+++ b/drivers/video/fbdev/gxt4500.c
-@@ -662,7 +662,7 @@ static int gxt4500_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+diff --git a/arch/metag/kernel/irq.c b/arch/metag/kernel/irq.c
+index 4f8f1f87ef11..a336094a7a6c 100644
+--- a/arch/metag/kernel/irq.c
++++ b/arch/metag/kernel/irq.c
+@@ -270,23 +270,25 @@ void migrate_irqs(void)
  
- 	info->fix.smem_start = fb_phys;
- 	info->fix.smem_len = pci_resource_len(pdev, 1);
--	info->screen_base = pci_ioremap_bar(pdev, 1);
-+	info->screen_base = pci_ioremap_wc_bar(pdev, 1);
- 	if (!info->screen_base) {
- 		dev_err(&pdev->dev, "gxt4500: cannot map framebuffer\n");
- 		goto err_unmap_regs;
+ 	for_each_active_irq(i) {
+ 		struct irq_data *data = irq_get_irq_data(i);
++		struct cpumask *mask;
+ 		unsigned int newcpu;
+ 
+ 		if (irqd_is_per_cpu(data))
+ 			continue;
+ 
+-		if (!cpumask_test_cpu(cpu, data->affinity))
++		mask = irq_data_get_affinity_mask(data);
++		if (!cpumask_test_cpu(cpu, mask))
+ 			continue;
+ 
+-		newcpu = cpumask_any_and(data->affinity, cpu_online_mask);
++		newcpu = cpumask_any_and(mask, cpu_online_mask);
+ 
+ 		if (newcpu >= nr_cpu_ids) {
+ 			pr_info_ratelimited("IRQ%u no longer affine to CPU%u\n",
+ 					    i, cpu);
+ 
+-			cpumask_setall(data->affinity);
++			cpumask_setall(mask);
+ 		}
+-		irq_set_affinity(i, data->affinity);
++		irq_set_affinity(i, mask);
+ 	}
+ }
+ #endif /* CONFIG_HOTPLUG_CPU */
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.7.10.4
 
