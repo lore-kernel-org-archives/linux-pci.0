@@ -1,50 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:36175 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932331AbbFCLpx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2015 07:45:53 -0400
-Received: by qgep100 with SMTP id p100so2334127qge.3
-        for <linux-pci@vger.kernel.org>; Wed, 03 Jun 2015 04:45:52 -0700 (PDT)
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:46642 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751596AbbFBEM2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jun 2015 00:12:28 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 2 Jun 2015 14:12:25 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id E3ADA2BB0047
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2015 14:12:21 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t524CD6W61145210
+	for <linux-pci@vger.kernel.org>; Tue, 2 Jun 2015 14:12:21 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t524BnsR012830
+	for <linux-pci@vger.kernel.org>; Tue, 2 Jun 2015 14:11:49 +1000
+Date: Tue, 2 Jun 2015 14:11:24 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, gwshan@linux.vnet.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V7 04/10] powerpc/eeh: Trace first 7 BARs in address cache
+Message-ID: <20150602041124.GA19672@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150601233233.GE3631@google.com>
+ <20150602035115.GB6785@richard>
 MIME-Version: 1.0
-In-Reply-To: <000301d09888$09d01370$1d703a50$@com>
-References: <000301d09888$09d01370$1d703a50$@com>
-Date: Wed, 3 Jun 2015 17:15:52 +0530
-Message-ID: <CAHM4w1mGB1GET6s-rkLs-0=Cqc4-zEm5q9-i8vxpFGgjf-V8JA@mail.gmail.com>
-Subject: Re: [PATCH Part1 v11 3/5] PCI: designware: Use pci_scan_root_bus()
- for simplicity
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Jingoo Han <jingoohan1@gmail.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Daniel Axtens <dja@axtens.net>, Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Mohit Kumar <mohit.kumar@st.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150602035115.GB6785@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 27, 2015 at 7:48 PM, Jingoo Han <jingoohan1@gmail.com> wrote:
-> On Tue, 28 Apr 2015 15:01:37 +0800, Yijing Wang wrote:
->
->> Pci_bus_add_devices() was ripped out of pci_scan_root_bus().
->> Now pci_scan_root_bus() == pci_create_root_bus() +
->> pci_scan_child_bus() if busn resource is supplied.
->> Designware added the busn resource to resources list
->> in dw_pcie_setup(). So it should be safe to use
->> pci_scan_root_bus() instead.
+On Tue, Jun 02, 2015 at 11:51:15AM +0800, Wei Yang wrote:
+>On Mon, Jun 01, 2015 at 06:32:33PM -0500, Bjorn Helgaas wrote:
+>>The subject says "Trace first 7 BARs..."  I think maybe you meant "Track
+>>first 7 BARs" or maybe "Cache only BARs, not windows or IOV BARs"
 >>
->> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
->> CC: Mohit Kumar <mohit.kumar@st.com>
->> CC: Jingoo Han <jg1.han@samsung.com>
 >
-> +cc: Pratyush Anand, Lucas Stach
+>Agree, Track is more accurate.
 >
-> Acked-by: Jingoo Han <jingoohan1@gmail.com>
+>Gavin,
+>
+>Which subject you prefer?
+>
 
+"Cache only BARs, not windows or IOV BARs" is better.
 
+>>On Tue, May 19, 2015 at 06:50:06PM +0800, Wei Yang wrote:
+>>> EEH address cache, which helps to locate the PCI device according to
+>>> the given (physical) MMIO address, didn't cover PCI bridges. 
+>>
+>>"doesn't contain PCI bridge windows"?
+>>
+>>I see that eeh_addr_cache_insert_dev() ignores bridges because it never
+>>calls __eeh_addr_cache_insert_dev() when "(dev->class >> 16) ==
+>>PCI_BASE_CLASS_BRIDGE".  I think it would be more technically correct if
+>>you removed that test and relied on the "i <= PCI_ROM_RESOURCE" test in
+>>this patch, because it is legal (though rare) for bridge devices to have
+>>two BARs, and I assume you would want to put those in your cache if they
+>>exist.
+>>
+>
+>I think this is fine to remove the test "(dev->class >> 16) ==
+>PCI_BASE_CLASS_BRIDGE" for a bridge and rely on the "i <= PCI_ROM_RESOURCE"
+>
+>Gavin,
+>
+>Do you thinks this is fine?
+>
 
-Looks fine to me:
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+Fine to me.
+
+>>> Also, it
+>>> shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
+>>> should be returned.
+>>> The patch restricts the address cache to cover first 7 BARs for the
+>>> above purposes.
+>>> 
+>>> [gwshan: changelog]
+>>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> ---
+>>>  arch/powerpc/kernel/eeh_cache.c |    2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>> 
+>>> diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
+>>> index eeabeab..f6c5f05 100644
+>>> --- a/arch/powerpc/kernel/eeh_cache.c
+>>> +++ b/arch/powerpc/kernel/eeh_cache.c
+>>> @@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
+>>>  	}
+>>>  
+>>>  	/* Walk resources on this device, poke them into the tree */
+>>> -	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+>>> +	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+>>>  		unsigned long start = pci_resource_start(dev,i);
+>>>  		unsigned long end = pci_resource_end(dev,i);
+>>>  		unsigned int flags = pci_resource_flags(dev,i);
+>>> -- 
+>>> 1.7.9.5
+>>> 
+>
+>-- 
+>Richard Yang
+>Help you, Help me
+
