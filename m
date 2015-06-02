@@ -1,61 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:40569 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933473AbbFVNhZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Jun 2015 09:37:25 -0400
-Message-ID: <1434980241.3014.16.camel@pengutronix.de>
-Subject: Re: [PATCH] ARM: imx6: Fix "BUG: scheduling while atomic" if PCIe
- switch is attached
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: David =?ISO-8859-1?Q?M=FCller?= <dave.mueller@gmx.ch>,
+Received: from mga01.intel.com ([192.55.52.88]:62066 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759664AbbFBSPQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Jun 2015 14:15:16 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Alexander Duyck <alexander.h.duyck@redhat.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Date: Mon, 22 Jun 2015 15:37:21 +0200
-In-Reply-To: <CAOMZO5BLQXKwVjykQVVmD1kHHm=M31RJPmgGa1Tznz8gpYwvyw@mail.gmail.com>
-References: <1434614214-2085-1-git-send-email-dave.mueller@gmx.ch>
-	 <1434616021.3061.2.camel@pengutronix.de>
-	 <CAOMZO5BLQXKwVjykQVVmD1kHHm=M31RJPmgGa1Tznz8gpYwvyw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Intel-wired-lan] [PATCH 1/2] pci: Add dev_flags bit to access
+ VPD through function 0
+Date: Tue, 2 Jun 2015 18:15:14 +0000
+Message-ID: <CCF4C06B-1029-4341-B5AE-846C834DD747@intel.com>
+References: <20150602165706.6252.76253.stgit@mdrustad-wks.jf.intel.com>
+ <20150602170414.6252.48036.stgit@mdrustad-wks.jf.intel.com>
+ <556DEC80.70206@redhat.com>
+In-Reply-To: <556DEC80.70206@redhat.com>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_E85B156B-4084-42DB-AC89-B61AD227E479";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 22.06.2015, 10:30 -0300 schrieb Fabio Estevam:
-> On Thu, Jun 18, 2015 at 5:27 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> 
-> >> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> >> index fdb9536..c63691c 100644
-> >> --- a/drivers/pci/host/pci-imx6.c
-> >> +++ b/drivers/pci/host/pci-imx6.c
-> >> @@ -489,7 +489,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
-> >>                * Wait a little bit, then re-check if the link finished
-> >>                * the training.
-> >>                */
-> >> -             usleep_range(1000, 2000);
-> >> +             mdelay(20);
-> >
-> > While switching to mdelay might be the right thing to do here, you are
-> > also changing the timeout. This is a change in behavior and so not okay.
-> 
-> msleep(2) is not recommended according to Documentation/timers/timers-howto.txt.
-> 
-> What would be the proper fix then?
-> 
-mdelay(2) is completely reasonable. Note the difference between delay
-and sleep.
+--Apple-Mail=_E85B156B-4084-42DB-AC89-B61AD227E479
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=windows-1252
 
-The mid-term correct solution would be to move all the link-up handling
-out of the atomic path.
+> On Jun 2, 2015, at 10:48 AM, Alexander Duyck =
+<alexander.h.duyck@redhat.com> wrote:
+>=20
+> I'm pretty sure these could cause some serious errors if you direct =
+assign the device into a VM since you then end up with multiple devices =
+sharing a bus.  Also it would likely have side-effects on a LOM (Lan On =
+Motherboard) as it also shares the bus with multiple non-Ethernet =
+devices.
+>=20
+> I believe you still need to add something like a check for =
+!pci_is_root_bus(dev->bus) before you attempt to grab function 0.  It =
+probably also wouldn't hurt to check the dev->multifunction bit before =
+running this code since it wouldn't make sense to go chasing down the =
+VPD on another function if the device doesn't have one.  You could =
+probably do that either as a part of this code, or perhaps put it in the =
+quirk.
 
-Regards,
-Lucas
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+I'll look into those. I think you are right about more checks being =
+needed. Thanks for the comments.
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+Mark Rustad, Networking Division, Intel Corporation
+
+
+--Apple-Mail=_E85B156B-4084-42DB-AC89-B61AD227E479
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJVbfKyAAoJEDwO/+eO4+5uS1EP/0iz43K4T06SNaevlhCtbIJE
+Hs15bymg8LzlrmiB7fPnNG0UCEBm7ZRxYPHQk3XHlhDa9NzbmDSd/9AkFWQfJD7v
+o5ldapmrw0mMPrNwSiAGQe786JwVaY7OWholffaYPCoH0tvHEE1u6i+Y0XgijiZO
+uCngOplCqcVOF/ZQSZZFgL0J2tjYVtgjozN/N1gY9kb5qhGqGBrq2Y8KHQnGgWQo
+Gv1In08cOyqVc92PuVgRR8Yt/WiUZy319LuTpJLCaCHszYr6OB5PRrrtKwBHiHbE
+34CPrw9wyezz9D8Q96OYSKazEm8TiavsQxMs/TchwEl9oRStAELvEDXVzWbVLV1e
+n3mc2g7G0qcJVFsd9tRe++5C8pZslqGW2tMrmM7ZdYErK9iW63qWyleJ+YsHnSFd
+HVKidcMytR5K+FWosYO478J1VvTDKmpFAH2XQduByqskYZIJrWaGBWfPO3ort4F5
+T38w8+ZPPOvOTtVOpwfBnlKMhlrF3U/PVKmJDl9WwHyDqD1NZuX9IbHmy071vb9T
+t8KJ976ADLUCuQSouSTmZRCc3HErDYaJ8qCi4c1Edh6dWiMH9j77WwypNk/QvChy
+Mr+/uYifPsI5IX+K8421bWueC4U7SawVXZC++PeRJ38jK7PDy+peljN9vNKxT5j7
+d5t53styxL54g7GsKmMg
+=h75D
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_E85B156B-4084-42DB-AC89-B61AD227E479--
