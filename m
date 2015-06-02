@@ -1,62 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from filtteri1.pp.htv.fi ([213.243.153.184]:51087 "EHLO
-	filtteri1.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbbFYXRG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2015 19:17:06 -0400
-Date: Fri, 26 Jun 2015 02:11:03 +0300
-From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Borislav Petkov <bp@suse.de>, Ingo Molnar <mingo@elte.hu>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
-	<ville.syrjala@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Mathias Krause <minipli@googlemail.com>,
-	Andrzej Hajda <a.hajda@samsung.com>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Davidlohr Bueso <dbueso@suse.de>
-Subject: Re: [PATCH v5 1/3] video: fbdev: atyfb: clarify ioremap() base and
- length used
-Message-ID: <20150625231103.GB4362@sci.fi>
-References: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
- <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
- <20150625230437.GA4362@sci.fi>
- <CAB=NE6V0HGCkpYFghUyyk=+St-494Y8e9PEakF9F7cEB8vpKvA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAB=NE6V0HGCkpYFghUyyk=+St-494Y8e9PEakF9F7cEB8vpKvA@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:22289 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755651AbbFBGLm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Jun 2015 02:11:42 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>
+Cc: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: [Patch v4 5/8] ARM64/PCI/ACPI: Introduce struct pci_controller for ACPI
+Date: Tue,  2 Jun 2015 14:12:53 +0800
+Message-Id: <1433225576-8215-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 25, 2015 at 04:06:45PM -0700, Luis R. Rodriguez wrote:
-> On Thu, Jun 25, 2015 at 4:04 PM, Ville Syrjälä <syrjala@sci.fi> wrote:
-> > it doesn't hurt too much
-> > since smem_len gets overwritten later in aty_init().
-> 
-> That's the idea, we set it with a default as it will be overwritten
-> later anyway.
+From: Hanjun Guo <hanjun.guo@linaro.org>
 
-Maybe toss in a comment? Otherwise it's a bit dishonest and might give
-someone the impression that all PCI cards really have 8MB of memory.
+ARM64 ACPI based PCI host bridge init needs a arch dependent
+struct pci_controller to accommodate common PCI host bridge
+code which is introduced later, or it will lead to compile
+errors on ARM64.
 
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+CC: Will Deacon <will.deacon@arm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/arm64/include/asm/pci.h |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+index b008a72f8bc0..70884957f253 100644
+--- a/arch/arm64/include/asm/pci.h
++++ b/arch/arm64/include/asm/pci.h
+@@ -10,6 +10,16 @@
+ #include <asm-generic/pci-bridge.h>
+ #include <asm-generic/pci-dma-compat.h>
+ 
++struct acpi_device;
++
++struct pci_controller {
++#ifdef CONFIG_ACPI
++	struct acpi_device *companion;	/* ACPI companion device */
++#endif
++	int		segment;	/* PCI domain */
++	int		node;		/* NUMA node */
++};
++
+ #define PCIBIOS_MIN_IO		0x1000
+ #define PCIBIOS_MIN_MEM		0
+ 
 -- 
-Ville Syrjälä
-syrjala@sci.fi
-http://www.sci.fi/~syrjala/
+1.7.10.4
+
