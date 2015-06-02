@@ -1,146 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:35567 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277AbbFZBGp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2015 21:06:45 -0400
-Received: by pdbci14 with SMTP id ci14so63904933pdb.2
-        for <linux-pci@vger.kernel.org>; Thu, 25 Jun 2015 18:06:45 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH 1/1] pci: xgene: Enable huge outbound bar support
-Date: Thu, 25 Jun 2015 18:05:56 -0700
-Message-Id: <1435280756-24455-1-git-send-email-dhdang@apm.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:59311 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751587AbbFBDpB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 23:45:01 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 2 Jun 2015 13:44:59 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 722862BB0047
+	for <linux-pci@vger.kernel.org>; Tue,  2 Jun 2015 13:44:55 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t523ik9957475116
+	for <linux-pci@vger.kernel.org>; Tue, 2 Jun 2015 13:44:55 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t523iMms013248
+	for <linux-pci@vger.kernel.org>; Tue, 2 Jun 2015 13:44:22 +1000
+Date: Tue, 2 Jun 2015 11:44:04 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V7 03/10] powerpc/pci: Remove VFs prior to PF
+Message-ID: <20150602034404.GA6785@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-4-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150601232005.GD3631@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150601232005.GD3631@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-X-Gene PCIe controllers support huge outbound BARs (with size upto
-64GB). This patch configures additional 1 outbound BAR for X-Gene
-PCIe controllers with size larger than 4GB. This is required to
-support devices that request huge outbound memory (nVidia K40 as an
-example)
+On Mon, Jun 01, 2015 at 06:20:05PM -0500, Bjorn Helgaas wrote:
+>On Tue, May 19, 2015 at 06:50:05PM +0800, Wei Yang wrote:
+>> As commit ac205b7b ("PCI: make sriov work with hotplug remove") indicates,
+>
+>The conventional reference is:
+>
+>  ac205b7bb72f ("PCI: make sriov work with hotplug remove")
+>
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 33 +++++++++++++++++++--------------
- drivers/pci/host/pci-xgene.c           |  6 +++++-
- 2 files changed, 24 insertions(+), 15 deletions(-)
+Thanks, will change it in next version.
 
-diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-index d8f3a1c..039206b 100644
---- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-@@ -404,10 +404,11 @@
- 			#size-cells = <2>;
- 			#address-cells = <3>;
- 			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
--				0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+				0xe0 0x00000000 0x0 0x00040000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
- 			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
--				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000   /* mem */
-+				  0x02000000 0x10 0x00000000 0xf0 0x00000000 0x10 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-@@ -428,10 +429,11 @@
- 			#size-cells = <2>;
- 			#address-cells = <3>;
- 			reg = < 0x00 0x1f2c0000 0x0 0x00010000   /* Controller registers */
--				0xd0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+				0xd0 0x00000000 0x0 0x00040000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
--			ranges = <0x01000000 0x0 0x00000000 0xd0 0x10000000 0x00 0x00010000   /* io  */
--				  0x02000000 0x0 0x80000000 0xd1 0x80000000 0x00 0x80000000>; /* mem */
-+			ranges = <0x01000000 0x00 0x00000000 0xd0 0x10000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x00 0x80000000 0xd1 0x80000000 0x00 0x80000000   /* mem */
-+				  0x02000000 0x08 0x00000000 0xd8 0x00000000 0x08 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-@@ -452,10 +454,11 @@
- 			#size-cells = <2>;
- 			#address-cells = <3>;
- 			reg =  < 0x00 0x1f2d0000 0x0 0x00010000   /* Controller registers */
--				 0x90 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+				 0x90 0x00000000 0x0 0x00040000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
--			ranges = <0x01000000 0x0 0x00000000 0x90 0x10000000 0x0 0x00010000   /* io  */
--				  0x02000000 0x0 0x80000000 0x91 0x80000000 0x0 0x80000000>; /* mem */
-+			ranges = <0x01000000 0x00 0x00000000 0x90 0x10000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x00 0x80000000 0x91 0x80000000 0x00 0x80000000   /* mem */
-+				  0x02000000 0x04 0x00000000 0x94 0x00000000 0x04 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-@@ -476,10 +479,11 @@
- 			#size-cells = <2>;
- 			#address-cells = <3>;
- 			reg = < 0x00 0x1f500000 0x0 0x00010000   /* Controller registers */
--				0xa0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-+				0xa0 0x00000000 0x0 0x00040000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
--			ranges = <0x01000000 0x0 0x00000000 0xa0 0x10000000 0x0 0x00010000   /* io   */
--				  0x02000000 0x0 0x80000000 0xa1 0x80000000 0x0 0x80000000>; /* mem  */
-+			ranges = <0x01000000 0x00 0x00000000 0xa0 0x10000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x00 0x80000000 0xa1 0x80000000 0x00 0x80000000   /* mem */
-+				  0x02000000 0x10 0x00000000 0xb0 0x00000000 0x10 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-@@ -500,10 +504,11 @@
- 			#size-cells = <2>;
- 			#address-cells = <3>;
- 			reg = < 0x00 0x1f510000 0x0 0x00010000   /* Controller registers */
--				0xc0 0xd0000000 0x0 0x00200000>; /* PCI config space */
-+				0xc0 0x00000000 0x0 0x00040000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
--			ranges = <0x01000000 0x0 0x00000000 0xc0 0x10000000 0x0 0x00010000   /* io  */
--				  0x02000000 0x0 0x80000000 0xc1 0x80000000 0x0 0x80000000>; /* mem */
-+			ranges = <0x01000000 0x00 0x00000000 0xc0 0x10000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x00 0x80000000 0xc1 0x80000000 0x00 0x80000000   /* mem */
-+				  0x02000000 0x08 0x00000000 0xc8 0x00000000 0x08 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index a9dfb70..62d7843 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -305,6 +305,7 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
- 	struct resource_entry *window;
- 	struct device *dev = port->dev;
- 	int ret;
-+	u32 omr_idx = 0;
- 
- 	resource_list_for_each_entry(window, res) {
- 		struct resource *res = window->res;
-@@ -321,8 +322,11 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
- 				return ret;
- 			break;
- 		case IORESOURCE_MEM:
--			xgene_pcie_setup_ob_reg(port, res, OMR1BARL, res->start,
-+			xgene_pcie_setup_ob_reg(port, res,
-+						OMR1BARL + (omr_idx * 0x18),
-+						res->start,
- 						res->start - window->offset);
-+			omr_idx++;
- 			break;
- 		case IORESOURCE_BUS:
- 			break;
+>> VFs, which might be hooked to same PCI bus as their PF should be removed
+>> before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
+>> cause kernel crash.
+>> 
+>> The patch applies the above pattern to PowerPC PCI hotplug path.
+>> 
+>> [gwshan: changelog]
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/kernel/pci-hotplug.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> 
+>> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+>> index 7ed85a6..98f84ed 100644
+>> --- a/arch/powerpc/kernel/pci-hotplug.c
+>> +++ b/arch/powerpc/kernel/pci-hotplug.c
+>> @@ -50,7 +50,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+>>  
+>>  	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+>>  		 pci_domain_nr(bus),  bus->number);
+>> -	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
+>> +	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+>>  		pr_debug("   Removing %s...\n", pci_name(dev));
+>>  		pci_stop_and_remove_bus_device(dev);
+>>  	}
+>> -- 
+>> 1.7.9.5
+>> 
+
 -- 
-1.9.1
+Richard Yang
+Help you, Help me
 
