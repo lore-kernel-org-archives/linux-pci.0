@@ -1,101 +1,73 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 5 Jun 2015 16:17:32 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [Patch v2 1/4] PCI: Add hooks to allocate/free IRQ resources
- when binding/unbinding driver
-Message-ID: <20150605211732.GR3631@google.com>
-References: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
- <1433213360-3700-2-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433213360-3700-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433145945-789-34-git-send-email-jiang.liu@linux.intel.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Paul Mackerras <paulus@samba.org>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tejun Heo <tj@kernel.org>, Joe Perches <joe@perches.com>
+From: Michael Ellerman <mpe@ellerman.id.au>
+Cc: linux-ia64@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [v3,33/36] genirq: Use helper function to access irq_data->msi_desc
+Message-Id: <20150602034507.1BBCB1412F1@ozlabs.org>
+Date: Tue,  2 Jun 2015 13:45:07 +1000 (AEST)
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 02, 2015 at 10:49:16AM +0800, Jiang Liu wrote:
-> Add two hook points pcibios_{alloc|free}_irq() into PCI core, which will
-> be called when binding/unbinding PCI device drivers. Then PCI arch code
-> may hook into these two points to allocate IRQ resources on demand and
-> free them when not used anymore.
+On Mon, 2015-01-06 at 08:05:42 UTC, Jiang Liu wrote:
+> Use irq_data access helper to access irq_data->msi_desc, so we could
+> move msi_desc from struct irq_data into struct irq_common_data later.
 > 
 > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 > ---
->  drivers/pci/pci-driver.c |   26 ++++++++++++++++++++------
->  include/linux/pci.h      |    2 ++
->  2 files changed, 22 insertions(+), 6 deletions(-)
+>  arch/powerpc/sysdev/xics/ics-opal.c |    2 +-
+>  arch/powerpc/sysdev/xics/ics-rtas.c |    2 +-
 > 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 3cb2210de553..450ad36ffc77 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -388,18 +388,31 @@ static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
->  	return error;
->  }
+> diff --git a/arch/powerpc/sysdev/xics/ics-opal.c b/arch/powerpc/sysdev/xics/ics-opal.c
+> index 3996393c254d..27c936c080a6 100644
+> --- a/arch/powerpc/sysdev/xics/ics-opal.c
+> +++ b/arch/powerpc/sysdev/xics/ics-opal.c
+> @@ -72,7 +72,7 @@ static unsigned int ics_opal_startup(struct irq_data *d)
+>  	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
+>  	 * at that level, so we do it here by hand.
+>  	 */
+> -	if (d->msi_desc)
+> +	if (irq_data_get_msi_desc(d))
+>  		pci_msi_unmask_irq(d);
+>  #endif
 >  
-> +int __weak pcibios_alloc_irq(struct pci_dev *dev)
-> +{
-> +	return dev->irq;
+> diff --git a/arch/powerpc/sysdev/xics/ics-rtas.c b/arch/powerpc/sysdev/xics/ics-rtas.c
+> index e2665a9dfc0f..3854dd41558d 100644
+> --- a/arch/powerpc/sysdev/xics/ics-rtas.c
+> +++ b/arch/powerpc/sysdev/xics/ics-rtas.c
+> @@ -75,7 +75,7 @@ static unsigned int ics_rtas_startup(struct irq_data *d)
+>  	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
+>  	 * at that level, so we do it here by hand.
+>  	 */
+> -	if (d->msi_desc)
+> +	if (irq_data_get_msi_desc(d))
+>  		pci_msi_unmask_irq(d);
+>  #endif
+>  	/* unmask it */
 
-Based on your usage, pcibios_alloc_irq() returns either zero or a negative
-errno.  So I think you should return 0 here.
+These look OK.
 
-> +}
-> +
-> +void __weak pcibios_free_irq(struct pci_dev *dev)
-> +{
-> +}
-> +
->  static int pci_device_probe(struct device *dev)
->  {
-> -	int error = 0;
-> -	struct pci_driver *drv;
-> -	struct pci_dev *pci_dev;
-> +	int error;
-> +	struct pci_dev *pci_dev = to_pci_dev(dev);
-> +	struct pci_driver *drv = to_pci_driver(dev->driver);
-> +
-> +	error = pcibios_alloc_irq(pci_dev);
-> +	if (error < 0)
-> +		return error;
->  
-> -	drv = to_pci_driver(dev->driver);
-> -	pci_dev = to_pci_dev(dev);
->  	pci_dev_get(pci_dev);
->  	error = __pci_device_probe(drv, pci_dev);
-> -	if (error)
-> +	if (error) {
-> +		pcibios_free_irq(pci_dev);
->  		pci_dev_put(pci_dev);
-> +	}
->  
->  	return error;
->  }
-> @@ -415,6 +428,7 @@ static int pci_device_remove(struct device *dev)
->  			drv->remove(pci_dev);
->  			pm_runtime_put_noidle(dev);
->  		}
-> +		pcibios_free_irq(pci_dev);
->  		pci_dev->driver = NULL;
->  	}
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 353db8dc4c6e..f50d16a04abc 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1656,6 +1656,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
->  int pcibios_add_device(struct pci_dev *dev);
->  void pcibios_release_device(struct pci_dev *dev);
->  void pcibios_penalize_isa_irq(int irq, int active);
-> +int pcibios_alloc_irq(struct pci_dev *dev);
-> +void pcibios_free_irq(struct pci_dev *dev);
->  
->  #ifdef CONFIG_HIBERNATE_CALLBACKS
->  extern struct dev_pm_ops pcibios_pm_ops;
-> -- 
-> 1.7.10.4
-> 
+Though I would point out we already have 16 irq_foo_get_bar() accessors?!
+
+Acked-by: Michael Ellerman <mpe@ellerman.id.au>
+
+cheers
