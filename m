@@ -1,59 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50857 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:24059 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752334AbbFQTDz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Jun 2015 15:03:55 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH 1/2] x86: intel_mid_pci: propagate actual return code
-Date: Wed, 17 Jun 2015 22:03:49 +0300
-Message-Id: <1434567830-237840-2-git-send-email-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <1434567830-237840-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1434567830-237840-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	id S1754261AbbFBFqm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Jun 2015 01:46:42 -0400
+Message-ID: <556D433C.4040508@linux.intel.com>
+Date: Tue, 02 Jun 2015 13:46:36 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Michael Ellerman <mpe@ellerman.id.au>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Paul Mackerras <paulus@samba.org>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Tejun Heo <tj@kernel.org>, Joe Perches <joe@perches.com>
+CC: linux-ia64@vger.kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	linux-pci@vger.kernel.org, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [v3,33/36] genirq: Use helper function to access irq_data->msi_desc
+References: <20150602034507.1BBCB1412F1@ozlabs.org>
+In-Reply-To: <20150602034507.1BBCB1412F1@ozlabs.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mp_map_gsi_to_irq() returns different codes if it fails.
-intel_mid_pci_irq_enable() hides this under -EBUSY. The patch replaces it by
-what is actually returned.
+On 2015/6/2 11:45, Michael Ellerman wrote:
+> On Mon, 2015-01-06 at 08:05:42 UTC, Jiang Liu wrote:
+>> Use irq_data access helper to access irq_data->msi_desc, so we could
+>> move msi_desc from struct irq_data into struct irq_common_data later.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  arch/powerpc/sysdev/xics/ics-opal.c |    2 +-
+>>  arch/powerpc/sysdev/xics/ics-rtas.c |    2 +-
+>>
+>> diff --git a/arch/powerpc/sysdev/xics/ics-opal.c b/arch/powerpc/sysdev/xics/ics-opal.c
+>> index 3996393c254d..27c936c080a6 100644
+>> --- a/arch/powerpc/sysdev/xics/ics-opal.c
+>> +++ b/arch/powerpc/sysdev/xics/ics-opal.c
+>> @@ -72,7 +72,7 @@ static unsigned int ics_opal_startup(struct irq_data *d)
+>>  	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
+>>  	 * at that level, so we do it here by hand.
+>>  	 */
+>> -	if (d->msi_desc)
+>> +	if (irq_data_get_msi_desc(d))
+>>  		pci_msi_unmask_irq(d);
+>>  #endif
+>>  
+>> diff --git a/arch/powerpc/sysdev/xics/ics-rtas.c b/arch/powerpc/sysdev/xics/ics-rtas.c
+>> index e2665a9dfc0f..3854dd41558d 100644
+>> --- a/arch/powerpc/sysdev/xics/ics-rtas.c
+>> +++ b/arch/powerpc/sysdev/xics/ics-rtas.c
+>> @@ -75,7 +75,7 @@ static unsigned int ics_rtas_startup(struct irq_data *d)
+>>  	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
+>>  	 * at that level, so we do it here by hand.
+>>  	 */
+>> -	if (d->msi_desc)
+>> +	if (irq_data_get_msi_desc(d))
+>>  		pci_msi_unmask_irq(d);
+>>  #endif
+>>  	/* unmask it */
+> 
+> These look OK.
+> 
+> Though I would point out we already have 16 irq_foo_get_bar() accessors?!
+Hi Michael,
+	Thanks for review. We are trying to solve some issues introduced
+by hierarchy irqdomain/irqchip by splitting irq_data into a common part
+(irq_common_data) and per-chip part(irq_data). These accessors are used
+to ease the transition and hide implementation details.
+Thanks!
+Gerry
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- arch/x86/pci/intel_mid_pci.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 2706230..0af2e78 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -210,10 +210,12 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- {
- 	struct irq_alloc_info info;
- 	int polarity;
-+	int ret;
- 
- 	if (dev->irq_managed && dev->irq > 0)
- 		return 0;
- 
-+	/* Set IRQ polarity */
- 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
- 		polarity = 0; /* active high */
- 	else
-@@ -224,8 +226,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	 * MRST only have IOAPIC, the PCI irq lines are 1:1 mapped to
- 	 * IOAPIC RTE entries, so we just enable RTE for the device.
- 	 */
--	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC, &info) < 0)
--		return -EBUSY;
-+	ret = mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC, &info);
-+	if (ret < 0)
-+		return ret;
- 
- 	dev->irq_managed = 1;
- 
--- 
-2.1.4
-
+> 
+> Acked-by: Michael Ellerman <mpe@ellerman.id.au>
+> 
+> cheers
+> 
