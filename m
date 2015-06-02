@@ -1,138 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64714 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756626AbbFCSrA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Jun 2015 14:47:00 -0400
-Subject: [PATCH V3 1/2] pci: Add dev_flags bit to access VPD through
- function 0
-From: Mark D Rustad <mark.d.rustad@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Wed, 03 Jun 2015 11:46:59 -0700
-Message-ID: <20150603184659.109080.6915.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
-References: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:12310 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759078AbbFBO1H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jun 2015 10:27:07 -0400
+From: William Davis <wdavis@nvidia.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: "joro@8bytes.org" <joro@8bytes.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Terence Ripperda <TRipperda@nvidia.com>,
+	"John Hubbard" <jhubbard@nvidia.com>,
+	"jglisse@redhat.com" <jglisse@redhat.com>
+Subject: RE: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
+Date: Tue, 2 Jun 2015 14:27:05 +0000
+Message-ID: <37dbe5add91042539fd8dffd596d7738@HQMAIL106.nvidia.com>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+ <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
+ <20150601212528.GC7354@konrad-lan.dumpdata.com>
+In-Reply-To: <20150601212528.GC7354@konrad-lan.dumpdata.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
-function 0 to provide VPD access on other functions. This solves
-concurrent access problems on many devices without changing the
-attributes exposed in sysfs. Never set this bit on function 0 or
-there will be an infinite recursion.
 
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
----
-Changes in V2:
-- Corrected spelling in log message
-- Added checks to see that the referenced function 0 is reasonable
-Changes in V3:
-- Don't leak a device reference
-- Check that function 0 has VPD
-- Make a helper for the function 0 checks
-- Do multifunction check in the quirk
----
- drivers/pci/access.c |   61 +++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 60 insertions(+), 1 deletion(-)
+> -----Original Message-----
+> From: Konrad Rzeszutek Wilk [mailto:konrad.wilk@oracle.com]
+> Sent: Monday, June 1, 2015 4:25 PM
+> To: William Davis
+> Cc: joro@8bytes.org; bhelgaas@google.com; iommu@lists.linux-foundation.org;
+> linux-pci@vger.kernel.org; Terence Ripperda; John Hubbard;
+> jglisse@redhat.com
+> Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource()
+> documentation
+> 
+> On Mon, May 18, 2015 at 01:25:01PM -0500, wdavis@nvidia.com wrote:
+> > From: Will Davis <wdavis@nvidia.com>
+> >
+> > Add references to both the general API documentation as well as the
+> HOWTO.
+> >
+> > Signed-off-by: Will Davis <wdavis@nvidia.com>
+> > ---
+> >  Documentation/DMA-API-HOWTO.txt | 39
+> +++++++++++++++++++++++++++++++++++++--
+> >  Documentation/DMA-API.txt       | 36 +++++++++++++++++++++++++++++++----
+> -
+> >  2 files changed, 68 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/Documentation/DMA-API-HOWTO.txt
+> > b/Documentation/DMA-API-HOWTO.txt index 0f7afb2..89bd730 100644
+> > --- a/Documentation/DMA-API-HOWTO.txt
+> > +++ b/Documentation/DMA-API-HOWTO.txt
+> > @@ -138,6 +138,10 @@ What about block I/O and networking buffers?  The
+> > block I/O and  networking subsystems make sure that the buffers they
+> > use are valid  for you to DMA from/to.
+> >
+> > +In some systems, it may also be possible to DMA to and/or from a peer
+> > +device's MMIO region, as described by a 'struct resource'. This is
+> > +referred to as a peer-to-peer mapping.
+> > +
+> >  			DMA addressing limitations
+> >
+> >  Does your device have any DMA addressing limitations?  For example,
+> > is @@ -648,6 +652,35 @@ Every dma_map_{single,sg}() call should have
+> > its dma_unmap_{single,sg}()  counterpart, because the bus address
+> > space is a shared resource and  you could render the machine unusable by
+> consuming all bus addresses.
+> >
+> > +Peer-to-peer DMA mappings can be obtained using dma_map_resource() to
+> > +map another device's MMIO region for the given device:
+> > +
+> > +	struct resource *peer_mmio_res = &other_dev->resource[0];
+> > +	dma_addr_t dma_handle = dma_map_resource(dev, peer_mmio_res,
+> > +						 offset, size, direction);
+> > +	if (dma_handle == 0 || dma_mapping_error(dev, dma_handle))
+> 
+> Don't check for 0. That can be a valid value.
+> 
+> > +	{
+> > +		/*
+> > +		 * If dma_handle == 0, dma_map_resource() is not
+> > +		 * implemented, and peer-to-peer transactions will not
+> > +		 * work.
+> 
+> Perhaps we should just have an dma_can_map_resource function instead to
+> check for this?
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d9b64a175990..b965c12168b7 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -439,6 +439,56 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
- 	.release = pci_vpd_pci22_release,
- };
- 
-+static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-+			       void *arg)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	ssize_t ret;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+
-+	ret = pci_read_vpd(tdev, pos, count, arg);
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
-+static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
-+				const void *arg)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	ssize_t ret;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+
-+	ret = pci_write_vpd(tdev, pos, count, arg);
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
-+static const struct pci_vpd_ops pci_vpd_f0_ops = {
-+	.read = pci_vpd_f0_read,
-+	.write = pci_vpd_f0_write,
-+	.release = pci_vpd_pci22_release,
-+};
-+
-+static int pci_vpd_f0_dev_check(struct pci_dev *dev)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	int ret = 0;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+	if (!tdev->vpd || !tdev->multifunction ||
-+	    dev->class != tdev->class || dev->vendor != tdev->vendor ||
-+	    dev->device != tdev->device)
-+		ret = -ENODEV;
-+
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
- int pci_vpd_pci22_init(struct pci_dev *dev)
- {
- 	struct pci_vpd_pci22 *vpd;
-@@ -447,12 +497,21 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
- 	if (!cap)
- 		return -ENODEV;
-+	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
-+		int ret = pci_vpd_f0_dev_check(dev);
-+
-+		if (ret)
-+			return ret;
-+	}
- 	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
- 	if (!vpd)
- 		return -ENOMEM;
- 
- 	vpd->base.len = PCI_VPD_PCI22_SIZE;
--	vpd->base.ops = &pci_vpd_pci22_ops;
-+	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
-+		vpd->base.ops = &pci_vpd_f0_ops;
-+	else
-+		vpd->base.ops = &pci_vpd_pci22_ops;
- 	mutex_init(&vpd->lock);
- 	vpd->cap = cap;
- 	vpd->busy = false;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8dc4c6e..194df6d635e6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -180,6 +180,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
- 	/* Do not use PM reset even if device advertises NoSoftRst- */
- 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-+	/* Get VPD from function 0 VPD */
-+	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
- };
- 
- enum pci_irq_reroute_variant {
+In v3 of this patch set, I've added a BUG_ON(ops->map_resource == NULL) to
+dma_map_resource() instead of possibly returning 0, at Joerg's suggestion.
 
+In that case, a dma_can_map_resource() would do the same check a driver
+would before calling dma_map_resource(), e.g., that
+ops->map_resource != NULL. It does seem nicer to wrap that in an API call.
+
+Thanks,
+Will
+
+--
+nvpublic
