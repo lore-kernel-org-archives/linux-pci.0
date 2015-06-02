@@ -1,72 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:33265 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362AbbFLXjc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 19:39:32 -0400
-Received: by iebgx4 with SMTP id gx4so32965581ieb.0
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 16:39:32 -0700 (PDT)
-Date: Fri, 12 Jun 2015 18:39:28 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Troy Kisky <troy.kisky@boundarydevices.com>
-Cc: festevam@gmail.com, marex@denx.de, linux-pci@vger.kernel.org,
-	r65037@freescale.com, l.stach@pengutronix.de, tharvey@gateworks.com
-Subject: Re: [PATCH 1/1] pci-imx6: add speed change timeout message
-Message-ID: <20150612233928.GL23119@google.com>
-References: <1433543864-7252-1-git-send-email-troy.kisky@boundarydevices.com>
- <20150612202008.GI23119@google.com>
- <557B5C75.7040905@boundarydevices.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:43915 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753893AbbFBCHy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 22:07:54 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<yuanzhichang@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH] PCI: designware: set PORT_LOGIC_SPEED_CHANGE before linkup
+Date: Tue, 2 Jun 2015 10:14:33 +0800
+Message-ID: <1433211273-226508-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <557B5C75.7040905@boundarydevices.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 12, 2015 at 03:25:57PM -0700, Troy Kisky wrote:
-> On 6/12/2015 1:20 PM, Bjorn Helgaas wrote:
-> > Unrelated to your patch, but noticed while doing this: what's the magic
-> > constant 0x80 here?
-> > 
-> > +	tmp = readl(pp->dbi_base + 0x80);
-> > 
-> > Is that correct?  Can we add a symbolic name for it?
-> > 
-> > Bjorn
-> > 
-> 
-> The name in the manual for +x80 is
-> PCIE_RC_LCSR - Link Control and Status Register
+When connected some PCIe3.0 cards(e.g. LSI 2208 PCIe-RAID card, Mellanox IB card),
+It will appear link unstable which will lead reading/writing fail.
 
+Here just move the setting of PORT_LOGIC_SPEED_CHANGE bit before starting
+building link. After doing this, it will work fine with above PCIe3.0 card.
 
-commit bc82467358d3793e1291e38cd01883e74e872eeb
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri Jun 12 17:27:43 2015 -0500
+This patch is based on v4.1-rc4
 
-    PCI: imx6: Add #define PCIE_RC_LCSR
-    
-    Define PCIE_RC_LCSR and use it instead of the bare offset "0x80."
-    No functional change.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ drivers/pci/host/pcie-designware.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index a032c01..57db1c1 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -47,6 +47,8 @@ struct imx6_pcie {
- #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2	0x2
- #define PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK	0xf
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 2e9f84f..64ebc51 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -498,10 +498,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	/* program correct class for RC */
+ 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
  
-+#define PCIE_RC_LCSR				0x80
-+
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET 0x700
- #define PCIE_PL_PFLR (PL_OFFSET + 0x08)
-@@ -427,7 +429,7 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
- 		return ret;
+-	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+-	val |= PORT_LOGIC_SPEED_CHANGE;
+-	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+-
+ #ifdef CONFIG_PCI_MSI
+ 	dw_pcie_msi_chip.dev = pp->dev;
+ 	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+@@ -797,6 +793,10 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
  	}
+ 	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
  
--	tmp = readl(pp->dbi_base + 0x80);
-+	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
- 	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
- 	return 0;
- }
++	dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, &val);
++	val |= PORT_LOGIC_SPEED_CHANGE;
++	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
++
+ 	/* setup RC BARs */
+ 	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
+ 	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_1);
+-- 
+1.9.1
+
