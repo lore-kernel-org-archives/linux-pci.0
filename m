@@ -1,128 +1,159 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <55871787.5080504@pr.hu>
-Date: Sun, 21 Jun 2015 21:59:03 +0200
-From: Boszormenyi Zoltan <zboszor@pr.hu>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Andreas Mohr <andi@lisas.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: ACPI regression? Was Re: Ethernet chip disappeared from lspci
-References: <55841815.5000701@pr.hu> <558419B2.7010703@pr.hu> <55841D48.8080809@pr.hu> <12950452.K8inU2UIYe@vostro.rjw.lan> <55869329.4040908@pr.hu> <CAErSpo4W9N+vtqNM=b24Temh16JHHT4ANk_NwUxjPysMGcJVfA@mail.gmail.com> <5586C7E2.9070902@pr.hu> <5586F371.2040100@linux.intel.com> <5586FAAB.3050303@linux.intel.com> <558708B5.5000706@pr.hu>
-In-Reply-To: <558708B5.5000706@pr.hu>
-Content-Type: text/plain; charset=utf-8
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [Patch v2 3/4] PCI: Introduce helpers to manage pci_dev->irq and pci_dev->irq_managed
+Date: Tue,  2 Jun 2015 10:49:18 +0800
+Message-Id: <1433213360-3700-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2015-06-21 20:55 keltezéssel, Boszormenyi Zoltan írta:
-> 2015-06-21 19:55 keltezéssel, Jiang Liu írta:
->> On 2015/6/22 1:25, Jiang Liu wrote:
->> [...]
->>>>>> -       Memory behind bridge: 80000000-801fffff
->>>>>> -       Prefetchable memory behind bridge: 0000000080200000-00000000803fffff
->>>>>> +       Memory behind bridge: ff000000-ff1fffff
->>>>>> +       Prefetchable memory behind bridge: 00000000ff200000-00000000ff3fffff
->>>>>>
->>>>>> Can't this cause a problem? E.g. programming the bridge with an address range
->>>>>> that the bridge doesn't actually support?
->>>>> This worked in v3.18.16, but not in v4.0.5 or v4.1.0-rc8.  You
->>>>> attached a v4.1.0-rc8 dmesg log earlier.  Would you mind collecting a
->>>>> v3.18.16 dmesg log, so we can compare them?
->>>> I collected all 3 for you to compare them, compressed, attached.
->>>>
->>>> BTW, I browsed git log and found 2ea3d266bab3b497238113b20136f7c3f69ad9c0
->>>> as suspicious. I will try the 4.0/4.1 kernels with this one reverted.
->>>>
->>>>> These (from the v4.1.0-rc8 dmesg) look wrong, but I'll have to look at
->>>>> the code to see what might be going on:
->>>>>
->>>>>   acpi PNP0A08:00: host bridge window expanded to [mem
->>>>> 0x00000000-0xffffffff window]; [mem 0x00000000-0xffffffff window]
->>>>> ignored
->>>>>   pci 0000:00:1c.1: can't claim BAR 15 [mem 0xfdf00000-0xfdffffff
->>>>> 64bit pref]: address conflict with PCI Bus 0000:00 [mem
->>>>> 0xf0000000-0xfed8ffff window]
->>>>>
->>>>> Bjorn
->>> Hi Bjorn and Boszormenyi,
->>> 	From the 3.18 kernel, we got a message:
->>> [    0.126248] acpi PNP0A08:00: host bridge window
->>> [0x400000000-0xfffffffff] (ignored, not CPU addressable)
->>> 	And from 4.1.-rc8, we got another message:
->>> [    0.127051] acpi PNP0A08:00: host bridge window expanded to [mem
->>> 0x00000000-0xffffffff window]; [mem 0x00000000-0xffffffff window] ignored
->>>
->>> That smells like a 32bit overflow or 64bit cut-off issue.
->> Hi Bjorn and Boszormenyi,
->> 	With v3.18.6, it uses u64 to compare resource ranges. We changed to use
->> resource_size_t with recent changes, and resource_size_t
->> may be u32 or u64 depending on configuration. So resource range
->> [0x400000000-0xfffffffff] may have been cut-off as
->> [0x00000000-0xffffffff], thus cause the trouble.
->>
->> Hi Boszormenyi,
->> 	Could you please help to try following test patch?
->> against v4.1-rc8?
-> I have tried it. The result (dmesg, lspci before/after modprobe) is attached.
-> The "not CPU addressable" message shows up once in dmesg.
-> The device shows up in lspci and the module can be loaded. The previously
-> experienced sluggishness is gone now, but the network doesn't work after modprobe.
-> I think it was an expected outcome, since that particular range is ignored with this patch.
+Introduce three helpers to manage pci_dev->irq and pci_dev->irq_managed,
+which helps to improve maintenance.
 
-Hm, I can see a very similar message in 3.18.16, so it was not
-the expected outcome.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/intel_mid_pci.c |    4 ++--
+ arch/x86/pci/irq.c           |   10 ++++------
+ drivers/acpi/pci_irq.c       |   10 ++++------
+ include/linux/pci.h          |   17 +++++++++++++++++
+ 4 files changed, 27 insertions(+), 14 deletions(-)
 
-After building the "official" r8168 from Realtek for 4.1.0-rc8,
-the difference in lspci from the working 3.18.16 is nil, before
-and after modprobe. (r8168 was build for 3.18.16, that's why.)
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index fb7a1f96d80c..22aaefb4f1ca 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -211,7 +211,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	struct irq_alloc_info info;
+ 	int polarity;
+ 
+-	if (dev->irq_managed && dev->irq > 0)
++	if (pci_has_managed_irq(dev))
+ 		return 0;
+ 
+ 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+@@ -234,7 +234,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (dev->irq_managed && dev->irq > 0) {
++	if (pci_has_managed_irq(dev)) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq_managed = 0;
+ 		/*
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 72108f0b66b1..32e70343e6fd 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1202,7 +1202,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			struct pci_dev *temp_dev;
+ 			int irq;
+ 
+-			if (dev->irq_managed && dev->irq > 0)
++			if (pci_has_managed_irq(dev))
+ 				return 0;
+ 
+ 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
+@@ -1230,8 +1230,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			}
+ 			dev = temp_dev;
+ 			if (irq >= 0) {
+-				dev->irq_managed = 1;
+-				dev->irq = irq;
++				pci_set_managed_irq(dev, irq);
+ 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
+ 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
+ 				return 0;
+@@ -1259,9 +1258,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
++	if (io_apic_assign_pci_irqs && pci_has_managed_irq(dev)) {
+ 		mp_unmap_irq(dev->irq);
+-		dev->irq = 0;
+-		dev->irq_managed = 0;
++		pci_reset_managed_irq(dev);
+ 	}
+ }
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index e7f718d6918a..9d6343d02f7e 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -413,7 +413,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		return 0;
+ 	}
+ 
+-	if (dev->irq_managed && dev->irq > 0)
++	if (pci_has_managed_irq(dev))
+ 		return 0;
+ 
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+@@ -458,8 +458,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		kfree(entry);
+ 		return rc;
+ 	}
+-	dev->irq = rc;
+-	dev->irq_managed = 1;
++	pci_set_managed_irq(dev, rc);
+ 
+ 	if (link)
+ 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
+@@ -482,7 +481,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	u8 pin;
+ 
+ 	pin = dev->pin;
+-	if (!pin || !dev->irq_managed || dev->irq <= 0)
++	if (!pin || !pci_has_managed_irq(dev))
+ 		return;
+ 
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+@@ -504,7 +503,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+ 	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
+-		dev->irq_managed = 0;
+-		dev->irq = 0;
++		pci_reset_managed_irq(dev);
+ 	}
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f50d16a04abc..4bc640eef76f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -958,6 +958,23 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ 	return pdev->is_managed;
+ }
+ 
++static inline void pci_set_managed_irq(struct pci_dev *pdev, unsigned int irq)
++{
++	pdev->irq = irq;
++	pdev->irq_managed = 1;
++}
++
++static inline void pci_reset_managed_irq(struct pci_dev *pdev)
++{
++	pdev->irq = 0;
++	pdev->irq_managed = 0;
++}
++
++static inline bool pci_has_managed_irq(struct pci_dev *pdev)
++{
++	return pdev->irq_managed && pdev->irq > 0;
++}
++
+ void pci_disable_device(struct pci_dev *dev);
+ 
+ extern unsigned int pcibios_max_latency;
+-- 
+1.7.10.4
 
-However, connman (similar to NetworkManager) still sees the network
-connectivity as "down". I checked that the firmware files are there in
-/lib/firmware/rtl_nic.
-
-With r8168 (the "official" Realtek driver), the kernel message about
-"link up" appears immediately and connman can configure the network.
-
-I have tried the patch on 4.0.5, too, with the same result.
-
-So, there may be another problem with the r8169 driver itself besides
-this ACPI problem but no matter what I do, I can't seem to be able
-to enable debugging messages for r8169.
-
-So, for now I can use r8168 instead of r8169 with this patch.
-
-Thanks,
-Zoltán
-
->
-> Thanks,
-> Zoltán
->
->> Thanks!
->> Gerry
->> -------------------------------------------------------------------
->> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->> index 8244f013f210..d7b8c392c420 100644
->> --- a/drivers/acpi/resource.c
->> +++ b/drivers/acpi/resource.c
->> @@ -206,6 +206,11 @@ static bool acpi_decode_space(struct resource_win *win,
->>
->>         res->start = attr->minimum;
->>         res->end = attr->maximum;
->> +       if (res->start != attr->minimum || res->end != attr->maximum) {
->> +               pr_warn("resource window ([%#llx-%#llx] ignored, not CPU
->> addressable)\n",
->> +                       attr->minimum, attr->maximum);
->> +               return false;
->> +       }
->>
->>         /*
->>          * For bridges that translate addresses across the bridge,
->> -----------------------------------------------------------------------------
->>
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
