@@ -1,60 +1,124 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:35152 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754137AbbFBRTL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jun 2015 13:19:11 -0400
+Received: by igbyr2 with SMTP id yr2so92318291igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 02 Jun 2015 10:19:10 -0700 (PDT)
+Date: Tue, 2 Jun 2015 12:19:07 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V7 01/10] PCI/IOV: Rename and export
+ virtfn_add/virtfn_remove
+Message-ID: <20150602171907.GI3631@google.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-2-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <1433391238-19471-46-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-	<1433391238-19471-46-git-send-email-jiang.liu@linux.intel.com>
-Date: Thu, 4 Jun 2015 13:28:51 +0200
-Message-ID: <CACRpkdafGYG3Bt+0Xe4z=5NOoaRK-c-ViOUvJ3P_9yeZg0tLLw@mail.gmail.com>
-Subject: Re: [RFT v2 45/48] genirq, gpio: Kill the first parameter 'irq' of irq_flow_handler_t
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Tien Hock Loh <thloh@altera.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Ray Jui <rjui@broadcom.com>,
-	David Cohen <david.a.cohen@linux.intel.com>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	Linux-OMAP <linux-omap@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432032612-21701-2-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 4, 2015 at 6:13 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+On Tue, May 19, 2015 at 06:50:03PM +0800, Wei Yang wrote:
+> During EEH recovery, hotplug is applied to the devices which don't
+> have drivers or their drivers don't support EEH. However, the hotplug,
+> which was implemented based on PCI bus, can't be applied to VF directly.
+> 
+> The patch renames virtn_{add,remove}() and exports them so that they
+> can be used in PCI hotplug during EEH recovery.
+> 
+> [gwshan: changelog]
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-> Now most IRQ flow handlers make no use of the first parameter 'irq'.
-> And for those who do make use of 'irq', we could easily get the irq
-> number through irq_desc->irq_data->irq. So kill the first parameter
-> 'irq' of irq_flow_handler_t.
->
-> To ease review, I have split the changes into several parts, though
-> they should be merge as one to support bisecting.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
+I assume you'll merge this along with the rest of this series via the
+powerpc tree.
 
-Yours,
-Linus Walleij
+> ---
+>  drivers/pci/iov.c   |   10 +++++-----
+>  include/linux/pci.h |    8 ++++++++
+>  2 files changed, 13 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ee0ebff..cc941dd 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+>  	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
+>  }
+>  
+> -static int virtfn_add(struct pci_dev *dev, int id, int reset)
+> +int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
+>  {
+>  	int i;
+>  	int rc = -ENOMEM;
+> @@ -183,7 +183,7 @@ failed:
+>  	return rc;
+>  }
+>  
+> -static void virtfn_remove(struct pci_dev *dev, int id, int reset)
+> +void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
+>  {
+>  	char buf[VIRTFN_ID_LEN];
+>  	struct pci_dev *virtfn;
+> @@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	}
+>  
+>  	for (i = 0; i < initial; i++) {
+> -		rc = virtfn_add(dev, i, 0);
+> +		rc = pci_iov_virtfn_add(dev, i, 0);
+>  		if (rc)
+>  			goto failed;
+>  	}
+> @@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  
+>  failed:
+>  	for (j = 0; j < i; j++)
+> -		virtfn_remove(dev, j, 0);
+> +		pci_iov_virtfn_remove(dev, j, 0);
+>  
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+> @@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
+>  		return;
+>  
+>  	for (i = 0; i < iov->num_VFs; i++)
+> -		virtfn_remove(dev, i, 0);
+> +		pci_iov_virtfn_remove(dev, i, 0);
+>  
+>  	pcibios_sriov_disable(dev);
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 353db8d..06aa5dd 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+>  
+>  int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+>  void pci_disable_sriov(struct pci_dev *dev);
+> +int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
+> +void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
+>  int pci_num_vf(struct pci_dev *dev);
+>  int pci_vfs_assigned(struct pci_dev *dev);
+>  int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+> @@ -1696,6 +1698,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+>  static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+>  { return -ENODEV; }
+>  static inline void pci_disable_sriov(struct pci_dev *dev) { }
+> +static inline int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
+> +{
+> +	return -ENOSYS;
+> +}
+> +static inline void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
+> +{ }
+>  static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
+>  static inline int pci_vfs_assigned(struct pci_dev *dev)
+>  { return 0; }
+> -- 
+> 1.7.9.5
+> 
