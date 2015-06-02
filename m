@@ -1,102 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:54974 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752566AbbFDGnm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:42 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:40 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 26/42] powerpc/powernv: Use PCI slot reset infrastructure
-Date: Thu,  4 Jun 2015 16:41:55 +1000
-Message-Id: <1433400131-18429-27-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <556D4D61.8080509@huawei.com>
+Date: Tue, 2 Jun 2015 14:29:53 +0800
+From: Hanjun Guo <guohanjun@huawei.com>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, <x86@kernel.org>
+CC: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch v3 6/7] x86/PCI/ACPI: Use common interface to support
+ PCI host bridge
+References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-7-git-send-email-jiang.liu@linux.intel.com> <555F355E.7060706@linaro.org> <556D45A3.9070708@linux.intel.com>
+In-Reply-To: <556D45A3.9070708@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The skiboot firmware might provide the capability of resetting PCI
-slot by property "ibm,reset-by-firmware" on the PCI slot associated
-device node. The patch checks on the property and route the reset
-to firmware if the property exists. Otherwise, we fail back to the
-old path as before.
+On 2015/6/2 13:56, Jiang Liu wrote:
+> On 2015/5/22 21:55, Hanjun Guo wrote:
+>> On 2015年05月14日 16:56, Jiang Liu wrote:
+>>> Use common interface to simplify ACPI PCI host bridge implementation.
+>>>
+>>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>>> ---
+>>>   arch/x86/pci/acpi.c |  292
+>>> +++++++++++++++------------------------------------
+>>>   1 file changed, 85 insertions(+), 207 deletions(-)
+>>>
+>> [...]
+>>> -static void release_pci_root_info(struct pci_host_bridge *bridge)
+>>> +static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
+>>>   {
+>>> -    struct resource *res;
+>>> -    struct resource_entry *entry;
+>>> -    struct pci_root_info *info = bridge->release_data;
+>>> -
+>>> -    resource_list_for_each_entry(entry, &bridge->windows) {
+>>> -        res = entry->res;
+>>> -        if (res->parent &&
+>>> -            (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+>>> -            release_resource(res);
+>>> -    }
+>>> -
+>>> -    teardown_mcfg_map(info);
+>>> -    kfree(info);
+>>> +    teardown_mcfg_map(ci);
+>>> +    kfree(ci);
+>> Implicit pointer cast? I think add a comment here that %p of ci
+>> is same as %p of info would be helpful for review and easy understood.
+> Good point, will change as:
+> 	kfree(container_of(ci, struct pci_root_info, common));
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
-v5:
-  * Derived from PATCH[v4 09/21]
----
- arch/powerpc/platforms/powernv/eeh-powernv.c | 44 +++++++++++++++++++++++++++-
- 1 file changed, 43 insertions(+), 1 deletion(-)
+This way is better :)
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 4fd8f15..4feb533 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -841,7 +841,7 @@ out:
- 	return 0;
- }
- 
--static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-+static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- {
- 	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-@@ -892,6 +892,48 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	return 0;
- }
- 
-+static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
-+{
-+	struct pci_controller *hose;
-+	struct pnv_phb *phb;
-+	struct device_node *dn = pdev ? pci_device_to_OF_node(pdev) : NULL;
-+	uint64_t id = (0x1ul << 60);
-+	uint8_t scope;
-+	int64_t rc;
-+
-+	/*
-+	 * If the firmware can't handle it, we will issue hot reset
-+	 * on the secondary bus despite the requested reset type.
-+	 */
-+	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
-+		return __pnv_eeh_bridge_reset(pdev, option);
-+
-+	/* The firmware can handle the request */
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+		scope = OPAL_RESET_PCI_HOT;
-+		break;
-+	case EEH_RESET_FUNDAMENTAL:
-+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		return 0;
-+	default:
-+		dev_warn(&pdev->dev, "%s: Unsupported reset %d\n",
-+			 __func__, option);
-+		return -EINVAL;
-+	}
-+
-+	hose = pci_bus_to_host(pdev->bus);
-+	phb = hose->private_data;
-+	id |= (pdev->bus->number << 24) | (pdev->devfn << 16) | phb->opal_id;
-+	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
-+	if (rc > 0)
-+		rc = pnv_eeh_poll(id);
-+
-+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-+}
-+
- static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
- 				     u16 mask, bool af_flr_rst)
- {
--- 
-2.1.0
+Thanks
+Hanjun
 
