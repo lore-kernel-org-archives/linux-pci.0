@@ -1,47 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:60198 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753131AbbFZUnt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jun 2015 16:43:49 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Duc Dang <dhdang@apm.com>
-Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	patches <patches@apm.com>, linux-kernel@vger.kernel.org,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH 1/1] pci: xgene: Enable huge outbound bar support
-Date: Fri, 26 Jun 2015 22:43:32 +0200
-Message-ID: <1674778.6xGik39Z0J@wuerfel>
-In-Reply-To: <46305464.n5SOjGAhJb@wuerfel>
-References: <1435280756-24455-1-git-send-email-dhdang@apm.com> <CADaLNDkck5TaG48sjF9y1wrXTzUeVkYOsXw7Dm8a629KqBafFg@mail.gmail.com> <46305464.n5SOjGAhJb@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: [Patch v2 4/4] PCI, MSI: Optionally free legacy PCI IRQ when enabling MSI/MSI-X
+Date: Tue,  2 Jun 2015 10:49:19 +0800
+Message-Id: <1433213360-3700-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 26 June 2015 22:35:08 Arnd Bergmann wrote:
-> > >
-> > > Can you configure one of the two windows as prefetchable for improved performance?
-> > >
-> > The new huge window will be prefetchable.
-> 
-> The DT marks it as non-prefetchable, so the kernel will now try to allocate
-> space for non-prefetchable BARs from this area, which is a bug. If the second
-> memory window is always prefetchable, you have to mark it accordingly in DT,
-> to prevent it from being used for normal 64 bit BARs.
+Once PCI MSI/MSI-X is enabled by the device driver, PCI device won't
+make use of legacy PCI IRQ until PCI MSI/MSI-X is disabled again.
+So optionally free legacy PCI IRQ when enabling MSI/MSI-X and reallocate
+when disabling MSI/MSI-X.
 
-Forget what I wrote here, I just remembered that 64-bit BARs are by definition
-prefetchable. You should still mark the range accordingly in DT for correct
-operation, but it won't be used for non-prefetchable 64-bit BARs if you don't
-because they do not exist.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/msi.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-	Arnd
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index c3e7dfcf9ff5..47cf72c669f0 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -686,6 +686,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	msi_set_enable(dev, 1);
+ 	dev->msi_enabled = 1;
+ 
++	pcibios_free_irq(dev);
+ 	dev->irq = entry->irq;
+ 	return 0;
+ }
+@@ -813,9 +814,10 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	/* Set MSI-X enabled bits and unmask the function */
+ 	pci_intx_for_msi(dev, 0);
+ 	dev->msix_enabled = 1;
+-
+ 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ 
++	pcibios_free_irq(dev);
++
+ 	return 0;
+ 
+ out_avail:
+@@ -930,6 +932,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+ 
+ 	/* Restore dev->irq to its default pin-assertion irq */
+ 	dev->irq = desc->msi_attrib.default_irq;
++	pcibios_alloc_irq(dev);
+ }
+ 
+ void pci_disable_msi(struct pci_dev *dev)
+@@ -1030,6 +1033,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+ 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ 	pci_intx_for_msi(dev, 1);
+ 	dev->msix_enabled = 0;
++	pcibios_alloc_irq(dev);
+ }
+ 
+ void pci_disable_msix(struct pci_dev *dev)
+-- 
+1.7.10.4
+
