@@ -1,91 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:35846 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753134AbbFPNWr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jun 2015 09:22:47 -0400
-Received: by ykdr198 with SMTP id r198so12991649ykd.3
-        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2015 06:22:46 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 2 Jun 2015 14:32:15 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: Will Deacon <Will.Deacon@arm.com>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+Message-ID: <20150602133215.GC23650@red-moon>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+ <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org>
+ <20150526170817.GU1565@arm.com>
+ <55657B02.5090805@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <20150616085024.GA1230@richard>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150601234645.GF3631@google.com> <20150603033142.GA22584@richard>
- <20150603051023.GA26652@gwshan> <20150603154638.GL3631@google.com> <20150616085024.GA1230@richard>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 16 Jun 2015 08:22:26 -0500
-Message-ID: <CAErSpo7uqjQTN0NZyFcjoKMa4THyBwwEAtP29GDmL67WyWC0FQ@mail.gmail.com>
-Subject: Re: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55657B02.5090805@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 16, 2015 at 3:50 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> On Wed, Jun 03, 2015 at 10:46:38AM -0500, Bjorn Helgaas wrote:
->>On Wed, Jun 03, 2015 at 03:10:23PM +1000, Gavin Shan wrote:
->>> It's correct. "The following operations" refers to eeh_add_device_late()
->>> and eeh_sysfs_add_device(). The former one requires the resources for
->>> one particular PCI device (VF here) are finalized (assigned). eeh_sysfs_add_device()
->>> will fail if the sysfs entry for the PCI device isn't populated yet.
->>
->>eeh_add_device_late() contains several things that read config space:
->>eeh_save_bars() caches the entire config header, and
->>eeh_addr_cache_insert_dev() looks at the device resources (which are
->>determined by BARs in config space).  I think this is an error-prone
->>approach.  I think it would be simpler and safer for you to capture what
->>you need in your PCI config accessors.
->>
->>eeh_add_device_late() also contains code to deal with an EEH cache that
->>"might not be removed correctly because of unbalanced kref to the device
->>during unplug time."  That's unrelated to this patch series, but it sounds
->>... like a hacky workaround for some bug in the unplug path.
->>
->>> >>> +        eeh_add_device_early(pdn);
->>> >>> +        eeh_add_device_late(pdev);
->>> >>> +        eeh_sysfs_add_device(pdev);
->>> >>> +}
->>> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
->>> >>
->>> >>Ugh.  This is powerpc code, but I don't like using fixups as a hook like
->>> >>this.  There is a pcibios_add_device() -- could this be done there?
->>> >>
->>> >
->>> >I don't like it neither :-) But looks we can't put it in the
->>> >pcibios_add_device().
->>> >
->>> >>If not, what happens after pcibios_add_device() that is required for this
->>> >>code?  Maybe we need a pcibios_bus_add_device() hook?
->>> >
->>> >The pnv_eeh_vf_final_fixup() will try to create sysfs for VFs. This requires
->>> >the VF sysfs(kobj) is initialized properly. If we put these into
->>> >pcibios_add_device(), the eeh_sysfs_add_device() would fail.
->>> >
->>> >Below is the call flow for your reference:
->>> >
->>> >pci_device_add()
->>> >    pcibios_add_device()
->>> >    device_add()                <--- kobj initialized here
->>> >
->>>
->>> We can put it into pcibios_bus_add_device(), but we don't it currently. If
->>> Bjorn agree to add pcibios_bus_add_device(), I'm fine to move the block code
->>> there.
->>
->>I think I'm OK with adding a pcibios_bus_add_device().  I think that would
->>be better than using the fixup mechanism for this.
->>
->
-> Hi, Bjorn, Gavin,
->
-> Been working on some bug recently, just got a chance to this one.
->
-> Would you mind giving me some hint, where you suggest to put the
-> pcibios_bus_add_device()?
+On Wed, May 27, 2015 at 09:06:26AM +0100, Tomasz Nowicki wrote:
+> On 26.05.2015 19:08, Will Deacon wrote:
+> > On Tue, May 26, 2015 at 01:49:18PM +0100, Hanjun Guo wrote:
+> >> From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+> >>
+> >> ECAM standard and MCFG table are architecture independent and it makes
+> >> sense to share common code across all architectures. Both are going to
+> >> corresponding files - ecam.c and mcfg.c
+> >>
+> >> While we are here, rename pci_parse_mcfg to acpi_parse_mcfg.
+> >> We already have acpi_parse_mcfg prototype which is used nowhere.
+> >> At the same time, we need pci_parse_mcfg been global so acpi_parse_mcfg
+> >> can be used perfectly here.
+> >>
+> >> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+> >> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> >> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> >> ---
+> >>   arch/x86/Kconfig               |   3 +
+> >>   arch/x86/include/asm/pci_x86.h |  33 ------
+> >>   arch/x86/pci/acpi.c            |   1 +
+> >>   arch/x86/pci/mmconfig-shared.c | 244 +---------------------------------------
+> >>   arch/x86/pci/mmconfig_32.c     |   1 +
+> >>   arch/x86/pci/mmconfig_64.c     |   1 +
+> >>   arch/x86/pci/numachip.c        |   1 +
+> >>   drivers/acpi/Makefile          |   1 +
+> >>   drivers/acpi/mcfg.c            |  57 ++++++++++
+> >>   drivers/pci/Kconfig            |   7 ++
+> >>   drivers/pci/Makefile           |   5 +
+> >>   drivers/pci/ecam.c             | 245 +++++++++++++++++++++++++++++++++++++++++
+> >
+> > Why can't we make use of the ECAM implementation used by pci-host-generic
+> > and drivers/pci/access.c?
+> 
+> We had that question when I had posted MMCFG patch set separately, 
+> please see:
+> https://lkml.org/lkml/2015/3/11/492
 
-I would expect it to be called from pci_bus_add_device().
+Yes, but the real question is, why do we need to have PCI config space
+up and running before a bus struct is even created ? I think the reason is
+the PCI configuration address space format (ACPI 6.0, Table 5-27, page
+108):
 
-Bjorn
+"PCI Configuration space addresses must be confined to devices on
+PCI Segment Group 0, bus 0. This restriction exists to accommodate
+access to fixed hardware prior to PCI bus enumeration".
+
+On HW reduced platforms I do not even think this is required at all,
+we have to look into this to avoid code duplication that might well
+turn out useless.
+
+Lorenzo
