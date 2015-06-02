@@ -1,35 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0138.outbound.protection.outlook.com ([157.56.110.138]:9502
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755665AbbFLSUZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 12 Jun 2015 14:20:25 -0400
-Date: Fri, 12 Jun 2015 11:20:13 -0700
-From: Guenter Roeck <groeck@juniper.net>
-To: Rajat Jain <rajatxjain@gmail.com>
-CC: Yijing Wang <wangyijing@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
- deadlock
-Message-ID: <20150612182013.GA4455@svl-evodev-groeck.juniper.net>
-References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
- <557A9661.8030603@huawei.com>
- <CAA93t1ooSY2keDigmUPpO7LzvT12YwQjpxH0b1xA508LL+VWdg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAA93t1ooSY2keDigmUPpO7LzvT12YwQjpxH0b1xA508LL+VWdg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: [Patch v2 0/4] Introduce a mechanism to allocate PCI IRQ on demand
+Date: Tue,  2 Jun 2015 10:49:15 +0800
+Message-Id: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 12, 2015 at 11:12:35AM -0700, Rajat Jain wrote:
-> [+Guenter]
-> 
-> Looks good to me. Unfortunately, I do not have the hardware anymore to test
-> it :-(
-> 
-> Guenter: Do you have it, or know some body who has and wants to test this?
-> 
-I'll dig up the patch and test it.
+This patch set introduces a mechanism to allocate PCI IRQ on demand and
+free it when not used anymore by hooking pci_device_probe() and
+pci_device_remove().
 
-Guenter
+It will be used to track IOAPIC pin usage on x86 so we could support
+IOAPIC hot-removal.
+
+The patch set passes Fengguang's 0day test suite.
+
+V1->V2:
+1) Refine pci_device_probe() to optimize for mainline code as suggested
+   by Bjorn
+2) Reorder patch set to put optional patch as the last (Patch 4)
+
+Thanks!
+Gerry
+
+
+Jiang Liu (4):
+  PCI: Add hooks to allocate/free IRQ resources when binding/unbinding
+    driver
+  PCI, x86: Allocate PCI IRQ on demand and free it when not used
+    anymore
+  PCI: Introduce helpers to manage pci_dev->irq and
+    pci_dev->irq_managed
+  PCI, MSI: Optionally free legacy PCI IRQ when enabling MSI/MSI-X
+
+ arch/x86/include/asm/pci_x86.h |    2 --
+ arch/x86/pci/common.c          |   20 +++++++++-----------
+ arch/x86/pci/intel_mid_pci.c   |    9 ++++++---
+ arch/x86/pci/irq.c             |   23 ++++-------------------
+ drivers/acpi/pci_irq.c         |   17 ++++-------------
+ drivers/pci/msi.c              |    6 +++++-
+ drivers/pci/pci-driver.c       |   26 ++++++++++++++++++++------
+ include/linux/pci.h            |   19 +++++++++++++++++++
+ 8 files changed, 67 insertions(+), 55 deletions(-)
+
+-- 
+1.7.10.4
+
