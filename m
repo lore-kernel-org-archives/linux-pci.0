@@ -1,73 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22289 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755651AbbFBGLm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 02:11:42 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>
-Cc: Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: [Patch v4 5/8] ARM64/PCI/ACPI: Introduce struct pci_controller for ACPI
-Date: Tue,  2 Jun 2015 14:12:53 +0800
-Message-Id: <1433225576-8215-6-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <556DE1B9.6020100@roeck-us.net>
+Date: Tue, 02 Jun 2015 10:02:49 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+MIME-Version: 1.0
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net> <20150527210447.GY32152@google.com> <20150602145510.GE23650@red-moon>
+In-Reply-To: <20150602145510.GE23650@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hanjun Guo <hanjun.guo@linaro.org>
+On 06/02/2015 07:55 AM, Lorenzo Pieralisi wrote:
+> Bjorn, Guenter,
+>
+> On Wed, May 27, 2015 at 10:04:47PM +0100, Bjorn Helgaas wrote:
+>> [+cc Lorenzo, Suravee, Will]
+>>
+>> I cc'd Lorenzo, Suravee, and Will because Lorenzo is working on calling
+>> pci_read_bases() from the PCI core instead of from arch code, and there are
+>> likely some dependencies between these two things.
+>>
+>> On Fri, May 22, 2015 at 05:52:16PM -0700, Guenter Roeck wrote:
+>>> The PCI subsystem always assumes that I/O is supported on PCIe bridges
+>>> and tries to assign an I/O window to each port even if that is not
+>>> the case.
+>>>
+>>> This may result in messages such as
+>>>
+>>> pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
+>>> 					get_res_add_size add_size 1000
+>>> pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
+>>> pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
+>>>
+>>> for each bridge port, even if a port or its parent does not support
+>>> I/O in the first place.
+>>>
+>>> To avoid this message, check if a port supports I/O before trying to
+>>> enable it. Also check if port's parent supports I/O, and only modify
+>>> a port's I/O resource size if both the port and its parent support I/O.
+>>>
+>>> If IO is disabled after the initial port scan, the IO base and size
+>>> registers are set to 0x00f0 to indicate that IO is disabled. A later
+>>> rescan interprets this as "IO supported" and enables the IO range,
+>>> even if the parent does not support IO. Handle this situation as well.
+>>>
+>>> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+>>> ---
+>>>   drivers/pci/probe.c     | 14 ++++++++++++++
+>>>   drivers/pci/setup-bus.c |  4 ++--
+>>>   include/linux/pci.h     |  9 +++++++++
+>>>   3 files changed, 25 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>> index 6675a7a1b9fc..f4944ef45148 100644
+>>> --- a/drivers/pci/probe.c
+>>> +++ b/drivers/pci/probe.c
+>>> @@ -354,6 +354,20 @@ static void pci_read_bridge_io(struct pci_bus *child)
+>>>   	base = (io_base_lo & io_mask) << 8;
+>>>   	limit = (io_limit_lo & io_mask) << 8;
+>>>
+>>> +	/* If necessary, check if the bridge supports an I/O aperture */
+>>> +	if (!io_base_lo && !io_limit_lo) {
+>>> +		u16 io;
+>>> +
+>>> +		if (!pci_parent_supports_io(child))
+>>> +			return;
+>>> +
+>>> +		pci_write_config_word(dev, PCI_IO_BASE, 0xe0f0);
+>>> +		pci_read_config_word(dev, PCI_IO_BASE, &io);
+>>> +		pci_write_config_word(dev, PCI_IO_BASE, 0x0);
+>>> +		if (!io)
+>>> +			return;
+>>> +	}
+>>
+>> I really like the idea of pushing this into pci_read_bridge_io().
+>>
+>> I wonder if we can do the same with pci_read_bridge_mmio_pref(), and
+>> somehow get rid of pci_bridge_check_ranges() altogether?
+>>
+>> I think I looked at doing that a while back, and it seems like there was
+>> some wrinkle, but I don't remember what it was.
+>
 
-ARM64 ACPI based PCI host bridge init needs a arch dependent
-struct pci_controller to accommodate common PCI host bridge
-code which is introduced later, or it will lead to compile
-errors on ARM64.
+After looking into this some more, I think the wrinkle may be that
+pci_read_bridge_bases() and thus pci_read_bridge_io() isn't called
+on probe-only systems (if PCI_PROBE_ONLY is set). A secondary
+problem is that pci_read_bridge_io() does not enable a resource
+if it is explicitly disabled (base > limit), but the subsequent call
+to pci_bridge_check_ranges() unconditionally enables it.
 
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Catalin Marinas <catalin.marinas@arm.com>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/arm64/include/asm/pci.h |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+Not really sure how to address this; my current code checks IO support
+in both pci_read_bridge_io() and pci_bridge_check_ranges(). And since
+pci_read_bridge_io() is not always called, I don't see how it might
+be possible to get rid of pci_bridge_check_ranges(), or even the check
+for IO support in pci_bridge_check_ranges().
 
-diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-index b008a72f8bc0..70884957f253 100644
---- a/arch/arm64/include/asm/pci.h
-+++ b/arch/arm64/include/asm/pci.h
-@@ -10,6 +10,16 @@
- #include <asm-generic/pci-bridge.h>
- #include <asm-generic/pci-dma-compat.h>
- 
-+struct acpi_device;
-+
-+struct pci_controller {
-+#ifdef CONFIG_ACPI
-+	struct acpi_device *companion;	/* ACPI companion device */
-+#endif
-+	int		segment;	/* PCI domain */
-+	int		node;		/* NUMA node */
-+};
-+
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0
- 
--- 
-1.7.10.4
+> While at it, do you think it is reasonable to also claim the bridge
+> windows (resources) in the respective pci_read_bridge_* calls ?
+>
+> Is there a reason why we don't/can't do it ? I noticed that on
+> PROBE_ONLY systems on ARM/ARM64 at the moment we do not claim
+> the bridge apertures and this is not correct, see below:
+>
+> [5.980127] pcieport 0000:00:02.1: can't enable device: BAR 8
+> [mem 0xbff00000 - 0xbfffffff] not claimed
+> [5.988056] pcieport: probe of 0000:00:02.1 failed with error -22
+>
+Is this when trying my patches or with the current upstream code ?
+
+Thanks,
+Guenter
 
