@@ -1,212 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: arnd@arndb.de
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xen-devel@lists.xensource.com, linux-fbdev@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>
-Subject: [PATCH v7 7/9] video: fbdev: arkfb: use arch_phys_wc_add() and pci_iomap_wc()
-Date: Fri, 19 Jun 2015 15:08:30 -0700
-Message-Id: <1434751712-24333-8-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org
+Subject: [Patch v4 3/8] ia64/PCI: Use common struct resource_entry to replace struct iospace_resource
+Date: Tue,  2 Jun 2015 14:12:51 +0800
+Message-Id: <1433225576-8215-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Use common struct resource_entry to replace private
+struct iospace_resource.
 
-Convert the driver from using the x86 specific MTRR code to
-the architecture agnostic arch_phys_wc_add(). arch_phys_wc_add()
-will avoid MTRR if write-combining is available, in order to
-take advantage of that also ensure the ioremap'd area is requested
-as write-combining.
-
-There are a few motivations for this:
-
-a) Take advantage of PAT when available
-
-b) Help bury MTRR code away, MTRR is architecture specific and on
-   x86 its replaced by PAT
-
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
-
-The conversion done is expressed by the following Coccinelle
-SmPL patch, it additionally required manual intervention to
-address all the #ifdery and removal of redundant things which
-arch_phys_wc_add() already addresses such as verbose message
-about when MTRR fails and doing nothing when we didn't get
-an MTRR.
-
-@ mtrr_found @
-expression index, base, size;
-@@
-
--index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
-+index = arch_phys_wc_add(base, size);
-
-@ mtrr_rm depends on mtrr_found @
-expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
-@@
-
--mtrr_del(index, base, size);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_zero_arg depends on mtrr_found @
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, 0, 0);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_fb_info depends on mtrr_found @
-struct fb_info *info;
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
-+arch_phys_wc_del(index);
-
-@ ioremap_replace_nocache depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap_nocache(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-@ ioremap_replace_default depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-Generated-by: Coccinelle SmPL
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 ---
- drivers/video/fbdev/arkfb.c | 36 +++++-------------------------------
- 1 file changed, 5 insertions(+), 31 deletions(-)
+ arch/ia64/include/asm/pci.h |    5 -----
+ arch/ia64/pci/pci.c         |   17 ++++++++---------
+ 2 files changed, 8 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/video/fbdev/arkfb.c b/drivers/video/fbdev/arkfb.c
-index b305a1e..6a317de 100644
---- a/drivers/video/fbdev/arkfb.c
-+++ b/drivers/video/fbdev/arkfb.c
-@@ -26,13 +26,9 @@
- #include <linux/console.h> /* Why should fb driver call console functions? because console_lock() */
- #include <video/vga.h>
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 52af5ed9f60b..5c10e0ec48d4 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -83,11 +83,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
  
--#ifdef CONFIG_MTRR
--#include <asm/mtrr.h>
--#endif
+-struct iospace_resource {
+-	struct list_head list;
+-	struct resource res;
+-};
 -
- struct arkfb_info {
- 	int mclk_freq;
--	int mtrr_reg;
-+	int wc_cookie;
+ struct pci_controller {
+ 	struct acpi_device *companion;
+ 	void *iommu;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index d20db9e48014..b1846b891ea5 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -154,14 +154,14 @@ new_space (u64 phys_base, int sparse)
+ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 			struct resource_entry *entry)
+ {
+-	struct iospace_resource *iospace;
++	struct resource_entry *iospace;
+ 	struct resource *resource, *res = entry->res;
+ 	char *name;
+ 	unsigned long base, min, max, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
  
- 	struct dac_info *dac;
- 	struct vgastate state;
-@@ -102,10 +98,6 @@ static const struct svga_timing_regs ark_timing_regs     = {
+ 	len = strlen(info->name) + 32;
+-	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
++	iospace = resource_list_create_entry(NULL, len);
+ 	if (!iospace) {
+ 		dev_err(dev, "PCI: No memory for %s I/O port space\n",
+ 			info->name);
+@@ -190,7 +190,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	if (space_nr == 0)
+ 		sparse = 1;
  
- static char *mode_option = "640x480-8@60";
+-	resource = &iospace->res;
++	resource = iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+ 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+@@ -205,12 +205,12 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	entry->offset = base_port;
+ 	res->start = min + base_port;
+ 	res->end = max + base_port;
+-	list_add_tail(&iospace->list, &info->io_resources);
++	resource_list_add_tail(iospace, &info->io_resources);
  
--#ifdef CONFIG_MTRR
--static int mtrr = 1;
--#endif
--
- MODULE_AUTHOR("(c) 2007 Ondrej Zajicek <santiago@crfreenet.org>");
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("fbdev driver for ARK 2000PV");
-@@ -115,11 +107,6 @@ MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
- module_param_named(mode, mode_option, charp, 0444);
- MODULE_PARM_DESC(mode, "Default video mode ('640x480-8@60', etc) (deprecated)");
- 
--#ifdef CONFIG_MTRR
--module_param(mtrr, int, 0444);
--MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
--#endif
--
- static int threshold = 4;
- 
- module_param(threshold, int, 0644);
-@@ -1002,7 +989,7 @@ static int ark_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	info->fix.smem_len = pci_resource_len(dev, 0);
- 
- 	/* Map physical IO memory address into kernel space */
--	info->screen_base = pci_iomap(dev, 0, 0);
-+	info->screen_base = pci_iomap_wc(dev, 0, 0);
- 	if (! info->screen_base) {
- 		rc = -ENOMEM;
- 		dev_err(info->device, "iomap for framebuffer failed\n");
-@@ -1057,14 +1044,8 @@ static int ark_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 
- 	/* Record a reference to the driver data */
- 	pci_set_drvdata(dev, info);
--
--#ifdef CONFIG_MTRR
--	if (mtrr) {
--		par->mtrr_reg = -1;
--		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
--	}
--#endif
--
-+	par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
-+					  info->fix.smem_len);
  	return 0;
  
- 	/* Error handling */
-@@ -1092,14 +1073,7 @@ static void ark_pci_remove(struct pci_dev *dev)
+ free_resource:
+-	kfree(iospace);
++	resource_list_free_entry(iospace);
+ 	return -ENOSPC;
+ }
  
- 	if (info) {
- 		struct arkfb_info *par = info->par;
--
--#ifdef CONFIG_MTRR
--		if (par->mtrr_reg >= 0) {
--			mtrr_del(par->mtrr_reg, 0, 0);
--			par->mtrr_reg = -1;
--		}
--#endif
--
-+		arch_phys_wc_del(par->wc_cookie);
- 		dac_release(par->dac);
- 		unregister_framebuffer(info);
- 		fb_dealloc_cmap(&info->cmap);
+@@ -369,12 +369,11 @@ static void add_resources(struct pci_root_info *info, struct device *dev)
+ static void __release_pci_root_info(struct pci_root_info *info)
+ {
+ 	struct resource *res;
+-	struct iospace_resource *iospace, *tmp;
+ 	struct resource_entry *entry, *tentry;
+ 
+-	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
+-		release_resource(&iospace->res);
+-		kfree(iospace);
++	resource_list_for_each_entry_safe(entry, tentry, &info->io_resources) {
++		release_resource(entry->res);
++		resource_list_destroy_entry(entry);
+ 	}
+ 
+ 	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.7.10.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-Please read the FAQ at  http://www.tux.org/lkml/
