@@ -1,171 +1,193 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH] PCI: pciehp: Wait for hotplug command completion where
- necessary
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, mstowe@redhat.com
-Date: Mon, 08 Jun 2015 17:10:50 -0600
-Message-ID: <20150608230833.18712.45528.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:37899 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754065AbbFBABk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 20:01:40 -0400
+Received: by igbjd9 with SMTP id jd9so74712354igb.1
+        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2015 17:01:39 -0700 (PDT)
+Date: Mon, 1 Jun 2015 19:01:36 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V7 08/10] powerpc/powernv: Support PCI config restore for
+ VFs
+Message-ID: <20150602000136.GH3631@google.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-9-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432032612-21701-9-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The commit referenced below deferred waiting for command completion
-until the start of the next command, allowing hardware to do the
-latching asynchronously.  Unfortunately, being ready to accept a new
-command is the only indication we have that the previous command is
-completed.  In cases where we need that state change to be enabled, we
-must still wait for completion.  For instance, pciehp_reset_slot()
-attempts to disable anything that might generate a surprise hotplug on
-slots that support presence detection.  If we don't wait for those
-settings to latch before the secondary bus reset, we negate any value
-in attempting to prevent the spurious hotplug.
+On Tue, May 19, 2015 at 06:50:10PM +0800, Wei Yang wrote:
+> After PE reset, OPAL API opal_pci_reinit() is called on all devices
+> contained in the PE to reinitialize them. However, VFs can't be seen
+> from skiboot firmware. We have to implement the functions, similar
+> those in skiboot firmware, to reinitialize VFs after reset on PE
+> for VFs.
+> 
+> [gwshan: changelog and code refactoring]
+> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/pci-bridge.h        |    1 +
+>  arch/powerpc/platforms/powernv/eeh-powernv.c |   70 +++++++++++++++++++++++++-
+>  arch/powerpc/platforms/powernv/pci.c         |   18 +++++++
+>  3 files changed, 88 insertions(+), 1 deletion(-)
+> 
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index c324882..ad60263 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -206,6 +206,7 @@ struct pci_dn {
+>  #define IODA_INVALID_M64        (-1)
+>  	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+>  #endif /* CONFIG_PCI_IOV */
+> +	int	mps;
+>  #endif
+>  	struct list_head child_list;
+>  	struct list_head list;
+> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> index 7af3c1e..33deb78 100644
+> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> @@ -1612,6 +1612,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+>  	return ret;
+>  }
+>  
+> +static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
+> +{
+> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+> +	u32 devctl, cmd, cap2, aer_capctl;
+> +	int old_mps;
+> +
+> +	/* Restore MPS */
+> +	if (edev->pcie_cap) {
+> +		old_mps = (ffs(pdn->mps) - 8) << 5;
+> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+> +				     2, &devctl);
+> +		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
+> +		devctl |= old_mps;
+> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+> +				      2, devctl);
+> +	}
+> +
+> +	/* Disable Completion Timeout */
+> +	if (edev->pcie_cap) {
+> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
+> +				     4, &cap2);
+> +		if (cap2 & 0x10) {
+> +			eeh_ops->read_config(pdn,
+> +					edev->pcie_cap + PCI_EXP_DEVCTL2,
+> +					4, &cap2);
+> +			cap2 |= 0x10;
+> +			eeh_ops->write_config(pdn,
+> +					edev->pcie_cap + PCI_EXP_DEVCTL2,
+> +					4, cap2);
+> +		}
+> +	}
+> +
+> +	/* Enable SERR and parity checking */
+> +	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
+> +	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+> +	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
+> +
+> +	/* Enable report various errors */
+> +	if (edev->pcie_cap) {
+> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+> +				2, &devctl);
+> +		devctl &= ~PCI_EXP_DEVCTL_CERE;
+> +		devctl |= (PCI_EXP_DEVCTL_NFERE |
+> +			   PCI_EXP_DEVCTL_FERE |
+> +			   PCI_EXP_DEVCTL_URRE);
+> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+> +				2, devctl);
+> +	}
+> +
+> +	/* Enable ECRC generation and check */
+> +	if (edev->pcie_cap && edev->aer_cap) {
+> +		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
+> +				4, &aer_capctl);
+> +		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
+> +		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
+> +				4, aer_capctl);
+> +	}
 
-Create a base function with optional wait and helper functions so that
-pcie_write_cmd() turns back into the "safe" interface which waits
-before and after issuing a command and add pcie_write_cmd_nowait(),
-which eliminates the trailing wait for asynchronous completion.  The
-following functions are returned to their previous behavior:
+Where is all this stuff set up the first time?  It'd be nice if we could
+use the same path that did it the first time.
 
- pciehp_power_on_slot
- pciehp_power_off_slot
- pcie_disable_notification
- pciehp_reset_slot
+Are we setting up a PF or a VF here?  The function is called
+pnv_eeh_restore_vf_config(), but it's called when "edev->physfn", so it's a
+little confusing.
 
-The rationale is that pciehp_power_on_slot() enables the link and
-therefore relies on completion of power-on.  pciehp_power_off_slot()
-and pcie_disable_notification() need a wait because data structures
-may be freed after these calls and continued signaling from the device
-would be unexpected.  And, of course, pciehp_reset_slot() needs to
-wait for the scenario outlined above.
+> +
+> +	return 0;
+> +}
+> +
+>  static int pnv_eeh_restore_config(struct pci_dn *pdn)
+>  {
+>  	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+> @@ -1622,7 +1683,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+>  		return -EEXIST;
+>  
+>  	phb = edev->phb->private_data;
+> -	ret = opal_pci_reinit(phb->opal_id,
+> +	/*
+> +	 * We have to restore the PCI config space after reset since the
+> +	 * firmware can't see SRIOV VFs.
+> +	 */
+> +	if (edev->physfn)
+> +		ret = pnv_eeh_restore_vf_config(pdn);
+> +	else
+> +		ret = opal_pci_reinit(phb->opal_id,
+>  			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+>  	if (ret) {
+>  		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+> index bca2aeb..10bc8c3 100644
+> --- a/arch/powerpc/platforms/powernv/pci.c
+> +++ b/arch/powerpc/platforms/powernv/pci.c
+> @@ -729,6 +729,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
+> +{
+> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+> +	int parent_mps;
+> +
+> +	if (!pdev->is_virtfn)
+> +		return;
+> +
+> +	/* Synchronize MPS for VF and PF */
+> +	parent_mps = pcie_get_mps(pdev->physfn);
+> +	if ((128 << pdev->pcie_mpss) >= parent_mps)
+> +		pcie_set_mps(pdev, parent_mps);
+> +	pdn->mps = pcie_get_mps(pdev);
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
 
-Fixes: 3461a068661c ("PCI: pciehp: Wait for hotplug command completion lazily")
-Cc: stable@vger.kernel.org # v3.17+
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/hotplug/pciehp_hpc.c |   52 ++++++++++++++++++++++++++++----------
- 1 file changed, 38 insertions(+), 14 deletions(-)
+Same comment as before -- I don't like this usage of fixups.  Would it work
+to do this in pcibios_add_device()?
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 0ebf754..6d68688 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -176,20 +176,17 @@ static void pcie_wait_cmd(struct controller *ctrl)
- 			  jiffies_to_msecs(jiffies - ctrl->cmd_started));
- }
- 
--/**
-- * pcie_write_cmd - Issue controller command
-- * @ctrl: controller to which the command is issued
-- * @cmd:  command value written to slot control register
-- * @mask: bitmask of slot control register to be modified
-- */
--static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
-+static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
-+			      u16 mask, bool wait)
- {
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	u16 slot_ctrl;
- 
- 	mutex_lock(&ctrl->ctrl_lock);
- 
--	/* Wait for any previous command that might still be in progress */
-+	/*
-+	 * Always wait for any previous command that might still be in progress
-+	 */
- 	pcie_wait_cmd(ctrl);
- 
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
-@@ -201,9 +198,33 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
- 	ctrl->cmd_started = jiffies;
- 	ctrl->slot_ctrl = slot_ctrl;
- 
-+	/*
-+	 * Optionally wait for the hardware to be ready for a new command,
-+	 * indicating completion of the above issued command.
-+	 */
-+	if (wait)
-+		pcie_wait_cmd(ctrl);
-+
- 	mutex_unlock(&ctrl->ctrl_lock);
- }
- 
-+/**
-+ * pcie_write_cmd - Issue controller command
-+ * @ctrl: controller to which the command is issued
-+ * @cmd:  command value written to slot control register
-+ * @mask: bitmask of slot control register to be modified
-+ */
-+static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
-+{
-+	pcie_do_write_cmd(ctrl, cmd, mask, true);
-+}
-+
-+/* Same as above without waiting for the hardware to latch */
-+static void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask)
-+{
-+	pcie_do_write_cmd(ctrl, cmd, mask, false);
-+}
-+
- bool pciehp_check_link_active(struct controller *ctrl)
- {
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
-@@ -422,7 +443,7 @@ void pciehp_set_attention_status(struct slot *slot, u8 value)
- 	default:
- 		return;
- 	}
--	pcie_write_cmd(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
-+	pcie_write_cmd_nowait(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
- }
-@@ -434,7 +455,8 @@ void pciehp_green_led_on(struct slot *slot)
- 	if (!PWR_LED(ctrl))
- 		return;
- 
--	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON, PCI_EXP_SLTCTL_PIC);
-+	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON,
-+			      PCI_EXP_SLTCTL_PIC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
- 		 PCI_EXP_SLTCTL_PWR_IND_ON);
-@@ -447,7 +469,8 @@ void pciehp_green_led_off(struct slot *slot)
- 	if (!PWR_LED(ctrl))
- 		return;
- 
--	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF, PCI_EXP_SLTCTL_PIC);
-+	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF,
-+			      PCI_EXP_SLTCTL_PIC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
- 		 PCI_EXP_SLTCTL_PWR_IND_OFF);
-@@ -460,7 +483,8 @@ void pciehp_green_led_blink(struct slot *slot)
- 	if (!PWR_LED(ctrl))
- 		return;
- 
--	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK, PCI_EXP_SLTCTL_PIC);
-+	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK,
-+			      PCI_EXP_SLTCTL_PIC);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
- 		 PCI_EXP_SLTCTL_PWR_IND_BLINK);
-@@ -613,7 +637,7 @@ void pcie_enable_notification(struct controller *ctrl)
- 		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
- 		PCI_EXP_SLTCTL_DLLSCE);
- 
--	pcie_write_cmd(ctrl, cmd, mask);
-+	pcie_write_cmd_nowait(ctrl, cmd, mask);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
- }
-@@ -664,7 +688,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
- 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
- 
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
--	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
-+	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
- 	if (pciehp_poll_mode)
+I assume you need this to happen when you hot-remove and hot-add a VF
+during EEH recovery?  Where does this happen in the normal hotplug path,
+e.g., pciehp, and can you do it in a corresponding place for EEH hotplug?
 
+
+> +#endif /* CONFIG_PCI_IOV */
+> +
+>  void __init pnv_pci_init(void)
+>  {
+>  	struct device_node *np;
+> -- 
+> 1.7.9.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
