@@ -1,186 +1,238 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:41021 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391AbbFKPkR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jun 2015 11:40:17 -0400
-Message-ID: <1434037212.3907.82.camel@infradead.org>
-Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
- kernel
-From: David Woodhouse <dwmw2@infradead.org>
-To: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: indou.takao@jp.fujitsu.com, bhe@redhat.com, joro@8bytes.org,
-	vgoyal@redhat.com, dyoung@redhat.com, tom.vaden@hp.com,
-	rwright@hp.com, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, iommu@lists.linux-foundation.org,
-	lisa.mitchell@hp.com, linux-kernel@vger.kernel.org,
-	doug.hatch@hp.com, ishii.hironobu@jp.fujitsu.com,
-	bhelgaas@google.com, billsumnerlinux@gmail.com, li.zhang6@hp.com
-Date: Thu, 11 Jun 2015 16:40:12 +0100
-In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
-References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
-Content-Type: multipart/signed; micalg="sha-1"; protocol="application/x-pkcs7-signature";
-	boundary="=-lDByxYIZC/Ch3KSraFDH"
-Mime-Version: 1.0
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:45066 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752133AbbFCBkD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jun 2015 21:40:03 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 3 Jun 2015 11:40:01 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 7B05E2BB0040
+	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2015 11:39:58 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t531cZ5632178364
+	for <linux-pci@vger.kernel.org>; Wed, 3 Jun 2015 11:38:43 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t531cAGY022718
+	for <linux-pci@vger.kernel.org>; Wed, 3 Jun 2015 11:38:11 +1000
+Date: Wed, 3 Jun 2015 09:37:53 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, gwshan@linux.vnet.ibm.com,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V7 08/10] powerpc/powernv: Support PCI config restore for
+ VFs
+Message-ID: <20150603013753.GA7387@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-9-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150602000136.GH3631@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150602000136.GH3631@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Jun 01, 2015 at 07:01:36PM -0500, Bjorn Helgaas wrote:
+>On Tue, May 19, 2015 at 06:50:10PM +0800, Wei Yang wrote:
+>> After PE reset, OPAL API opal_pci_reinit() is called on all devices
+>> contained in the PE to reinitialize them. However, VFs can't be seen
+>> from skiboot firmware. We have to implement the functions, similar
+>> those in skiboot firmware, to reinitialize VFs after reset on PE
+>> for VFs.
+>> 
+>> [gwshan: changelog and code refactoring]
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  arch/powerpc/include/asm/pci-bridge.h        |    1 +
+>>  arch/powerpc/platforms/powernv/eeh-powernv.c |   70 +++++++++++++++++++++++++-
+>>  arch/powerpc/platforms/powernv/pci.c         |   18 +++++++
+>>  3 files changed, 88 insertions(+), 1 deletion(-)
+>> 
+>> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>> index c324882..ad60263 100644
+>> --- a/arch/powerpc/include/asm/pci-bridge.h
+>> +++ b/arch/powerpc/include/asm/pci-bridge.h
+>> @@ -206,6 +206,7 @@ struct pci_dn {
+>>  #define IODA_INVALID_M64        (-1)
+>>  	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+>>  #endif /* CONFIG_PCI_IOV */
+>> +	int	mps;
+>>  #endif
+>>  	struct list_head child_list;
+>>  	struct list_head list;
+>> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>> index 7af3c1e..33deb78 100644
+>> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>> @@ -1612,6 +1612,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+>>  	return ret;
+>>  }
+>>  
+>> +static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
+>> +{
+>> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>> +	u32 devctl, cmd, cap2, aer_capctl;
+>> +	int old_mps;
+>> +
+>> +	/* Restore MPS */
+>> +	if (edev->pcie_cap) {
+>> +		old_mps = (ffs(pdn->mps) - 8) << 5;
+>> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+>> +				     2, &devctl);
+>> +		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
+>> +		devctl |= old_mps;
+>> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+>> +				      2, devctl);
+>> +	}
+>> +
+>> +	/* Disable Completion Timeout */
+>> +	if (edev->pcie_cap) {
+>> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
+>> +				     4, &cap2);
+>> +		if (cap2 & 0x10) {
+>> +			eeh_ops->read_config(pdn,
+>> +					edev->pcie_cap + PCI_EXP_DEVCTL2,
+>> +					4, &cap2);
+>> +			cap2 |= 0x10;
+>> +			eeh_ops->write_config(pdn,
+>> +					edev->pcie_cap + PCI_EXP_DEVCTL2,
+>> +					4, cap2);
+>> +		}
+>> +	}
+>> +
+>> +	/* Enable SERR and parity checking */
+>> +	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
+>> +	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
+>> +	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
+>> +
+>> +	/* Enable report various errors */
+>> +	if (edev->pcie_cap) {
+>> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+>> +				2, &devctl);
+>> +		devctl &= ~PCI_EXP_DEVCTL_CERE;
+>> +		devctl |= (PCI_EXP_DEVCTL_NFERE |
+>> +			   PCI_EXP_DEVCTL_FERE |
+>> +			   PCI_EXP_DEVCTL_URRE);
+>> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
+>> +				2, devctl);
+>> +	}
+>> +
+>> +	/* Enable ECRC generation and check */
+>> +	if (edev->pcie_cap && edev->aer_cap) {
+>> +		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
+>> +				4, &aer_capctl);
+>> +		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
+>> +		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
+>> +				4, aer_capctl);
+>> +	}
+>
+>Where is all this stuff set up the first time?  It'd be nice if we could
+>use the same path that did it the first time.
+>
 
---=-lDByxYIZC/Ch3KSraFDH
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Those steps in this function are called to setup the pci_dev. For those PFs,
+they are done in the skiboot firmware, invoked by opal_pci_reinit(). For VFs,
+since skiboot firmware is not aware of those VFs, we need to setup it in
+kernel.
 
-On Fri, 2015-04-10 at 16:42 +0800, Li, Zhen-Hua wrote:
-> This patchset is an update of Bill Sumner's patchset, implements a fix fo=
-r:
-> If a kernel boots with intel_iommu=3Don on a system that supports intel v=
-t-d,=20
-> when a panic happens, the kdump kernel will boot with these faults:
+This means originally, those stuffs are in skiboot firmware. This is the first
+time appears in kernel.
 
-But, in the general case, it *does* boot.
+>Are we setting up a PF or a VF here?  The function is called
+>pnv_eeh_restore_vf_config(), but it's called when "edev->physfn", so it's a
+>little confusing.
+>
 
-There are two cases where it doesn't actually boot, and those are the
-interesting ones.
+Yes, this is called for VFs. "edev->physfn" means the edev has a PF, so that
+this edev is a VF.
 
-Firstly, a device just keeps generating faults and we die in an
-interrupt storm, reporting the same fault over and over again. That can
-actually happen without kdump/kexec and the correct fix for that is to
-have rate-limiting, disable fault reporting for the offending device
-after too many are seen, and then eventually to tie it in to the PCIe
-error handling as has been discussed elsewhere.
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>  static int pnv_eeh_restore_config(struct pci_dn *pdn)
+>>  {
+>>  	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>> @@ -1622,7 +1683,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+>>  		return -EEXIST;
+>>  
+>>  	phb = edev->phb->private_data;
+>> -	ret = opal_pci_reinit(phb->opal_id,
+>> +	/*
+>> +	 * We have to restore the PCI config space after reset since the
+>> +	 * firmware can't see SRIOV VFs.
+>> +	 */
+>> +	if (edev->physfn)
+>> +		ret = pnv_eeh_restore_vf_config(pdn);
+>> +	else
+>> +		ret = opal_pci_reinit(phb->opal_id,
+>>  			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+>>  	if (ret) {
+>>  		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+>> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+>> index bca2aeb..10bc8c3 100644
+>> --- a/arch/powerpc/platforms/powernv/pci.c
+>> +++ b/arch/powerpc/platforms/powernv/pci.c
+>> @@ -729,6 +729,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
+>>  }
+>>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
+>>  
+>> +#ifdef CONFIG_PCI_IOV
+>> +static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
+>> +{
+>> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+>> +	int parent_mps;
+>> +
+>> +	if (!pdev->is_virtfn)
+>> +		return;
+>> +
+>> +	/* Synchronize MPS for VF and PF */
+>> +	parent_mps = pcie_get_mps(pdev->physfn);
+>> +	if ((128 << pdev->pcie_mpss) >= parent_mps)
+>> +		pcie_set_mps(pdev, parent_mps);
+>> +	pdn->mps = pcie_get_mps(pdev);
+>> +}
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
+>
+>Same comment as before -- I don't like this usage of fixups.  Would it work
+>to do this in pcibios_add_device()?
+>
+>I assume you need this to happen when you hot-remove and hot-add a VF
+>during EEH recovery?  Where does this happen in the normal hotplug path,
+>e.g., pciehp, and can you do it in a corresponding place for EEH hotplug?
+>
 
-Secondly, there are devices which do not correctly respond to a
-hardware reset. This is broken hardware, and if we really have to copy
-the old contexts from the crashed kernel to work around it then I'd
-like it to be on a blacklist basis =E2=80=94 we do it only for hardware whi=
-ch
-is *known* to be broken in this way.
+Yes, this is called in the EEH recovery. While not only in the hot-add case,
+when we do the normal EEH reset, 
 
-(There's also some cases where the device driver doesn't even *try* to
-reset the hardware and just assumes it'll find it in a sane state as
-the BIOS or a cleanly shut down kexec would have left it. In those
-cases of course we can just fix the driver).
+eeh_reset_device()
+    eeh_pe_restore_bars()
+        eeh_restore_one_device_bars()
+	    eeh_ops->restore_config()
+	        pnv_eeh_restore_config()
 
-I don't much like the idea of doing this context copy for *all*
-hardware. That's masking hardware issues with reset that we really
-*ought* to be finding.
+eeh_reset_device() would handle both hot-add and non-hot-add cases. So this is
+not proper to move it to the hot-plug path.
 
-I believe that most of the offending hardware is HP's; they like to do
-the most, erm, "interesting" things with odd hardware and RMRRs and
-stuff. So Zhen-Hua would you be able to provide the list of broken
-devices that HP has shipped, for the purpose of such a blacklist?
+>
+>> +#endif /* CONFIG_PCI_IOV */
+>> +
+>>  void __init pnv_pci_init(void)
+>>  {
+>>  	struct device_node *np;
+>> -- 
+>> 1.7.9.5
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I assume you've already contacted the hardware folks responsible and
-insisted that their devices are fixed to be resettable already, right?
-
---=20
-dwmw2
-
---=-lDByxYIZC/Ch3KSraFDH
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIISjjCCBicw
-ggUPoAMCAQICAw3vNzANBgkqhkiG9w0BAQUFADCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
-YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
-ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
-MB4XDTE1MDUwNTA5NDM0MVoXDTE2MDUwNTA5NTMzNlowQjEcMBoGA1UEAwwTZHdtdzJAaW5mcmFk
-ZWFkLm9yZzEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcN
-AQEBBQADggEPADCCAQoCggEBAMkbm9kPbx1j/X4RVyf/pPKSYwelcco69TvnQQbKM8m8xkWjXJI1
-jpJ1jMaGUZGFToINMSZi7lZawUozudWbXSKy1SikENSTJHffsdRAIlsp+hR8vWvjsKUry6sEdqPG
-doa5RY7+N4WRusWZDYW/RRWE6i9EL9qV86CVPYqw22UBOUw4/j/HVGCV6TSB8yE5iEwhk/hUuzRr
-FZm1MJMR7mCS7BCR8Lr5jFY61lWpBiXNXIxLZCvDc26KR5L5tYX43iUVO3fzES1GRVoYnxxk2tmz
-fcsZG5vK+Trc9L8OZJfkYrEHH3+Iw41MQ0w/djVtYr1+HYldx0QmYXAtnhIj+UMCAwEAAaOCAtkw
-ggLVMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcD
-BDAdBgNVHQ4EFgQUszC96C3w5/2+d+atSr0IpT26YI4wHwYDVR0jBBgwFoAUU3Ltkpzg2ssBXHx+
-ljVO8tS4UYIwHgYDVR0RBBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzCCAUwGA1UdIASCAUMwggE/
-MIIBOwYLKwYBBAGBtTcBAgMwggEqMC4GCCsGAQUFBwIBFiJodHRwOi8vd3d3LnN0YXJ0c3NsLmNv
-bS9wb2xpY3kucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1
-dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0
-aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVpcmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9s
-aWN5LCByZWxpYW5jZSBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNl
-IG9mIHRoZSByZWx5aW5nIHBhcnR5IG9ibGlnYXRpb25zLjA2BgNVHR8ELzAtMCugKaAnhiVodHRw
-Oi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsG
-AQUFBzABhi1odHRwOi8vb2NzcC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYI
-KwYBBQUHMAKGNmh0dHA6Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50
-LmNhLmNydDAjBgNVHRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEF
-BQADggEBAHMQmxHHodpS85X8HRyxhvfkys7r+taCNOaNU9cxQu/cZ/6k5nS2qGNMzZ6jb7ueY/V7
-7p+4DW/9ZWODDTf4Fz00mh5SSVc20Bz7t+hhxwHd62PZgENh5i76Qq2tw48U8AsYo5damHby1epf
-neZafLpUkLLO7AGBJIiRVTevdvyXQ0qnixOmKMWyvrhSNGuVIKVdeqLP+102Dwf+dpFyw+j1hz28
-jEEKpHa+NR1b2kXuSPi/rMGhexwlJOh4tK8KQ6Ryr0rIN//NSbOgbyYZrzc/ZUWX9V5OA84ChFb2
-vkFl0OcYrttp/rhDBLITwffPxSZeoBh9H7zYzkbCXKL3BUIwggYnMIIFD6ADAgECAgMN7zcwDQYJ
-KoZIhvcNAQEFBQAwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYD
-VQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENv
-bSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTAeFw0xNTA1MDUwOTQzNDFa
-Fw0xNjA1MDUwOTUzMzZaMEIxHDAaBgNVBAMME2R3bXcyQGluZnJhZGVhZC5vcmcxIjAgBgkqhkiG
-9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
-AQDJG5vZD28dY/1+EVcn/6TykmMHpXHKOvU750EGyjPJvMZFo1ySNY6SdYzGhlGRhU6CDTEmYu5W
-WsFKM7nVm10istUopBDUkyR337HUQCJbKfoUfL1r47ClK8urBHajxnaGuUWO/jeFkbrFmQ2Fv0UV
-hOovRC/alfOglT2KsNtlATlMOP4/x1Rglek0gfMhOYhMIZP4VLs0axWZtTCTEe5gkuwQkfC6+YxW
-OtZVqQYlzVyMS2Qrw3NuikeS+bWF+N4lFTt38xEtRkVaGJ8cZNrZs33LGRubyvk63PS/DmSX5GKx
-Bx9/iMONTENMP3Y1bWK9fh2JXcdEJmFwLZ4SI/lDAgMBAAGjggLZMIIC1TAJBgNVHRMEAjAAMAsG
-A1UdDwQEAwIEsDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwHQYDVR0OBBYEFLMwvegt
-8Of9vnfmrUq9CKU9umCOMB8GA1UdIwQYMBaAFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB4GA1UdEQQX
-MBWBE2R3bXcyQGluZnJhZGVhZC5vcmcwggFMBgNVHSAEggFDMIIBPzCCATsGCysGAQQBgbU3AQID
-MIIBKjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjCB9wYI
-KwYBBQUHAgIwgeowJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwAwIBARqBvlRo
-aXMgY2VydGlmaWNhdGUgd2FzIGlzc3VlZCBhY2NvcmRpbmcgdG8gdGhlIENsYXNzIDEgVmFsaWRh
-dGlvbiByZXF1aXJlbWVudHMgb2YgdGhlIFN0YXJ0Q29tIENBIHBvbGljeSwgcmVsaWFuY2Ugb25s
-eSBmb3IgdGhlIGludGVuZGVkIHB1cnBvc2UgaW4gY29tcGxpYW5jZSBvZiB0aGUgcmVseWluZyBw
-YXJ0eSBvYmxpZ2F0aW9ucy4wNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5zdGFydHNzbC5j
-b20vY3J0dTEtY3JsLmNybDCBjgYIKwYBBQUHAQEEgYEwfzA5BggrBgEFBQcwAYYtaHR0cDovL29j
-c3Auc3RhcnRzc2wuY29tL3N1Yi9jbGFzczEvY2xpZW50L2NhMEIGCCsGAQUFBzAChjZodHRwOi8v
-YWlhLnN0YXJ0c3NsLmNvbS9jZXJ0cy9zdWIuY2xhc3MxLmNsaWVudC5jYS5jcnQwIwYDVR0SBBww
-GoYYaHR0cDovL3d3dy5zdGFydHNzbC5jb20vMA0GCSqGSIb3DQEBBQUAA4IBAQBzEJsRx6HaUvOV
-/B0csYb35MrO6/rWgjTmjVPXMULv3Gf+pOZ0tqhjTM2eo2+7nmP1e+6fuA1v/WVjgw03+Bc9NJoe
-UklXNtAc+7foYccB3etj2YBDYeYu+kKtrcOPFPALGKOXWph28tXqX53mWny6VJCyzuwBgSSIkVU3
-r3b8l0NKp4sTpijFsr64UjRrlSClXXqiz/tdNg8H/naRcsPo9Yc9vIxBCqR2vjUdW9pF7kj4v6zB
-oXscJSToeLSvCkOkcq9KyDf/zUmzoG8mGa83P2VFl/VeTgPOAoRW9r5BZdDnGK7baf64QwSyE8H3
-z8UmXqAYfR+82M5Gwlyi9wVCMIIGNDCCBBygAwIBAgIBHjANBgkqhkiG9w0BAQUFADB9MQswCQYD
-VQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwg
-Q2VydGlmaWNhdGUgU2lnbmluZzEpMCcGA1UEAxMgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRo
-b3JpdHkwHhcNMDcxMDI0MjEwMTU1WhcNMTcxMDI0MjEwMTU1WjCBjDELMAkGA1UEBhMCSUwxFjAU
-BgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRl
-IFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUg
-Q2xpZW50IENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxwmDzM4t2BqxKaQuE6uW
-vooyg4ymiEGWVUet1G8SD+rqvyNH4QrvnEIaFHxOhESip7vMz39ScLpNLbL1QpOlPW/tFIzNHS3q
-d2XRNYG5Sv9RcGE+T4qbLtsjjJbi6sL7Ls/f/X9ftTyhxvxWkf8KW37iKrueKsxw2HqolH7GM6FX
-5UfNAwAu4ZifkpmZzU1slBhyWwaQPEPPZRsWoTb7q8hmgv6Nv3Hg9rmA1/VPBIOQ6SKRkHXG0Hhm
-q1dOFoAFI411+a/9nWm5rcVjGcIWZ2v/43Yksq60jExipA4l5uv9/+Hm33mbgmCszdj/Dthf13tg
-Av2O83hLJ0exTqfrlwIDAQABo4IBrTCCAakwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
-AQYwHQYDVR0OBBYEFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB8GA1UdIwQYMBaAFE4L7xqkQFulF2mH
-MMo0aEPQQa7yMGYGCCsGAQUFBwEBBFowWDAnBggrBgEFBQcwAYYbaHR0cDovL29jc3Auc3RhcnRz
-c2wuY29tL2NhMC0GCCsGAQUFBzAChiFodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9zZnNjYS5jcnQw
-WwYDVR0fBFQwUjAnoCWgI4YhaHR0cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3JsMCegJaAj
-hiFodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9zZnNjYS5jcmwwgYAGA1UdIAR5MHcwdQYLKwYBBAGB
-tTcBAgEwZjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjA0
-BggrBgEFBQcCARYoaHR0cDovL3d3dy5zdGFydHNzbC5jb20vaW50ZXJtZWRpYXRlLnBkZjANBgkq
-hkiG9w0BAQUFAAOCAgEACoMIfXirLAZcuGOMXq4cuSN3TaFx2H2GvD5VSy/6rV55BYHbWNaPeQn3
-oBSU8KgQZn/Kck1JxbLpAxVCNtsxeW1R87ifhsYZ0qjdrA9anrW2MAWCtosmAOT4OxK9QPoSjCMx
-M3HbkZCDJgnlE8jMopH21BbyAYr7b5EfGRQJNtgWcvqSXwKHnTutR08+Kkn0KAkXCzeQNLeA5LlY
-UzFyM7kPAp8pIRMQ+seHunmyG642S2+y/qHEdMuGIwpfz3eDF1PdctL04qYK/zu+Qg1Bw0RwgigV
-Zs/0c5HP2/e9DBHh7eSwtzYlk4AUr6yxLlcwSjOfOmKEQ/Q8tzh0IFiNu9IPuTGAPBn4CPxD0+Ru
-8T2wg8/s43R/PT3kd1OEqOJUl7q+h+r6fpvU0Fzxd2tC8Ga6fDEPme+1Nbi+03pVjuZQKbGwKJ66
-gEn06WqaxVZC+J8hh/jR0k9mST1iAZPNYulcNJ8tKmVtjYsv0L1TSm2+NwON58tO+pIVzu3DWwSE
-XSf+qkDavQam+QtEOZxLBXI++aMUEapSn+k3Lxm48ZCYfAWLb/Xj7F5JQMbZvCexglAbYR0kIHqW
-5DnsYSdMD/IplJMojx0NBrxJ3fN9dvX2Y6BIXRsF1du4qESm4/3CKuyUV7p9DW3mPlHTGLvYxnyK
-Qy7VFBkoLINszBrOUeIxggNvMIIDawIBATCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
-YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
-ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
-AgMN7zcwCQYFKw4DAhoFAKCCAa8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMTUwNjExMTU0MDEyWjAjBgkqhkiG9w0BCQQxFgQU3CEkruMDwwhvSqfYMkT+3deHZ30w
-gaUGCSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0
-ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMT
-L1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMN7zcwgacG
-CyqGSIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
-LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMv
-U3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAw3vNzANBgkq
-hkiG9w0BAQEFAASCAQCdUbbEOxAO9B7Gt6SQPx3/IXbU1kO6kyBL2neXKU2yJJbix34s9HcyHYbK
-9s9KEi1l4Fw61ozNgpbYUuWRHlcH/cfOkWtQr/5jdn1eM+9toGCi42kgL1BU3MITfl0KtJnkUpRD
-5K4DJu/RnnkEGmwhw0XGu1zw+az8CYXyWFmPgTzhV+85gcLpcXWMkCFvH2PQxFV54pLnB9rgCCEm
-Yl5Ozp2Dj/MQMU7mBw6tS4vGefnQanYDLZDCreDQI0R5BjhHiceh2C9JGcXAeZmVToDGVh4ldmFM
-AD6uz4TTwGVzyCmimflus11qmcletfknQswv3be1AFRq+JpXtgU/j0OdAAAAAAAA
-
-
---=-lDByxYIZC/Ch3KSraFDH--
+-- 
+Richard Yang
+Help you, Help me
 
