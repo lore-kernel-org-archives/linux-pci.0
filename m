@@ -1,40 +1,138 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sat, 13 Jun 2015 11:00:08 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Thomas Gleixner <tglx@linutronix.de>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of
- irq_flow_handler_t
-In-Reply-To: <alpine.DEB.2.11.1505201750280.4225@nanos>
-Message-ID: <alpine.DEB.2.10.1506131059180.2486@hadrien>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com>
- <alpine.DEB.2.11.1505201750280.4225@nanos>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:64714 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756626AbbFCSrA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Jun 2015 14:47:00 -0400
+Subject: [PATCH V3 1/2] pci: Add dev_flags bit to access VPD through
+ function 0
+From: Mark D Rustad <mark.d.rustad@intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	netdev@vger.kernel.org
+Date: Wed, 03 Jun 2015 11:46:59 -0700
+Message-ID: <20150603184659.109080.6915.stgit@mdrustad-wks.jf.intel.com>
+In-Reply-To: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
+References: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->     unsigned irq = irq_desc_get_irq(desc);
+Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
+function 0 to provide VPD access on other functions. This solves
+concurrent access problems on many devices without changing the
+attributes exposed in sysfs. Never set this bit on function 0 or
+there will be an infinite recursion.
 
-Actually, it seems that this function doesn't exist in linux-next either.
-What is the correct name of the function, or is there some other tree that
-I should be working on?
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+---
+Changes in V2:
+- Corrected spelling in log message
+- Added checks to see that the referenced function 0 is reasonable
+Changes in V3:
+- Don't leak a device reference
+- Check that function 0 has VPD
+- Make a helper for the function 0 checks
+- Do multifunction check in the quirk
+---
+ drivers/pci/access.c |   61 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 60 insertions(+), 1 deletion(-)
 
-thanks,
-julia
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index d9b64a175990..b965c12168b7 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -439,6 +439,56 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
+ 	.release = pci_vpd_pci22_release,
+ };
+ 
++static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
++			       void *arg)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
++	ssize_t ret;
++
++	if (!tdev)
++		return -ENODEV;
++
++	ret = pci_read_vpd(tdev, pos, count, arg);
++	pci_dev_put(tdev);
++	return ret;
++}
++
++static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
++				const void *arg)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
++	ssize_t ret;
++
++	if (!tdev)
++		return -ENODEV;
++
++	ret = pci_write_vpd(tdev, pos, count, arg);
++	pci_dev_put(tdev);
++	return ret;
++}
++
++static const struct pci_vpd_ops pci_vpd_f0_ops = {
++	.read = pci_vpd_f0_read,
++	.write = pci_vpd_f0_write,
++	.release = pci_vpd_pci22_release,
++};
++
++static int pci_vpd_f0_dev_check(struct pci_dev *dev)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
++	int ret = 0;
++
++	if (!tdev)
++		return -ENODEV;
++	if (!tdev->vpd || !tdev->multifunction ||
++	    dev->class != tdev->class || dev->vendor != tdev->vendor ||
++	    dev->device != tdev->device)
++		ret = -ENODEV;
++
++	pci_dev_put(tdev);
++	return ret;
++}
++
+ int pci_vpd_pci22_init(struct pci_dev *dev)
+ {
+ 	struct pci_vpd_pci22 *vpd;
+@@ -447,12 +497,21 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
+ 	if (!cap)
+ 		return -ENODEV;
++	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
++		int ret = pci_vpd_f0_dev_check(dev);
++
++		if (ret)
++			return ret;
++	}
+ 	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
+ 	if (!vpd)
+ 		return -ENOMEM;
+ 
+ 	vpd->base.len = PCI_VPD_PCI22_SIZE;
+-	vpd->base.ops = &pci_vpd_pci22_ops;
++	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
++		vpd->base.ops = &pci_vpd_f0_ops;
++	else
++		vpd->base.ops = &pci_vpd_pci22_ops;
+ 	mutex_init(&vpd->lock);
+ 	vpd->cap = cap;
+ 	vpd->busy = false;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8dc4c6e..194df6d635e6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -180,6 +180,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
+ 	/* Do not use PM reset even if device advertises NoSoftRst- */
+ 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
++	/* Get VPD from function 0 VPD */
++	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
+ };
+ 
+ enum pci_irq_reroute_variant {
+
