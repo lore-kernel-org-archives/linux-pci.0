@@ -1,194 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:56598 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343AbbFCFMo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2015 01:12:44 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 3 Jun 2015 15:12:41 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 7478C357804F
-	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2015 15:12:39 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t535BFEH52494498
-	for <linux-pci@vger.kernel.org>; Wed, 3 Jun 2015 15:11:24 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t535Ap1q016157
-	for <linux-pci@vger.kernel.org>; Wed, 3 Jun 2015 15:10:52 +1000
-Date: Wed, 3 Jun 2015 15:10:23 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, gwshan@linux.vnet.ibm.com,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
-Message-ID: <20150603051023.GA26652@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150601234645.GF3631@google.com>
- <20150603033142.GA22584@richard>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150603033142.GA22584@richard>
+Received: from mga09.intel.com ([134.134.136.24]:30357 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751673AbbFCDoy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Jun 2015 23:44:54 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Feng Wu <feng.wu@intel.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Brian Gerst <brgerst@gmail.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Juergen Gross <jgross@suse.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Ingo Molnar <mingo@kernel.org>, xen-devel@lists.xenproject.org
+Subject: [Patch v3 27/36] x86, irq: Use access helper irq_data_get_affinity_mask()
+Date: Wed,  3 Jun 2015 11:46:22 +0800
+Message-Id: <1433303201-27625-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <alpine.DEB.2.11.1506021714170.20347@nanos>
+References: <alpine.DEB.2.11.1506021714170.20347@nanos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 03, 2015 at 11:31:42AM +0800, Wei Yang wrote:
->On Mon, Jun 01, 2015 at 06:46:45PM -0500, Bjorn Helgaas wrote:
->>On Tue, May 19, 2015 at 06:50:08PM +0800, Wei Yang wrote:
->>> Current EEH recovery code works with the assumption: the PE has primary
->>> bus. Unfortunately, that's not true to VF PEs, which generally contains
->>> one or multiple VFs (for VF group case). The patch creates PEs for VFs
->>> at PCI final fixup time. Those PEs for VFs are indentified with newly
->>> introduced flag EEH_PE_VF so that we handle them differently during
->>> EEH recovery.
->>> 
->>> [gwshan: changelog and code refactoring]
->>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>  arch/powerpc/include/asm/eeh.h               |    1 +
->>>  arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
->>>  arch/powerpc/platforms/powernv/eeh-powernv.c |   17 +++++++++++++++++
->>>  3 files changed, 26 insertions(+), 2 deletions(-)
->>> 
->>> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
->>> index 1b3614d..c1fde48 100644
->>> --- a/arch/powerpc/include/asm/eeh.h
->>> +++ b/arch/powerpc/include/asm/eeh.h
->>> @@ -70,6 +70,7 @@ struct pci_dn;
->>>  #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
->>>  #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
->>>  #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
->>> +#define EEH_PE_VF	(1 << 4)	/* VF PE     */
->>>  
->>>  #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
->>>  #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
->>> diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
->>> index 35f0b62..260a701 100644
->>> --- a/arch/powerpc/kernel/eeh_pe.c
->>> +++ b/arch/powerpc/kernel/eeh_pe.c
->>> @@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
->>>  	 * EEH device already having associated PE, but
->>>  	 * the direct parent EEH device doesn't have yet.
->>>  	 */
->>> -	pdn = pdn ? pdn->parent : NULL;
->>> +	if (edev->physfn)
->>> +		pdn = pci_get_pdn(edev->physfn);
->>> +	else
->>> +		pdn = pdn ? pdn->parent : NULL;
->>>  	while (pdn) {
->>>  		/* We're poking out of PCI territory */
->>>  		parent = pdn_to_eeh_dev(pdn);
->>> @@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
->>>  	}
->>>  
->>>  	/* Create a new EEH PE */
->>> -	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
->>> +	if (edev->physfn)
->>> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
->>> +	else
->>> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
->>>  	if (!pe) {
->>>  		pr_err("%s: out of memory!\n", __func__);
->>>  		return -ENOMEM;
->>> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>> index ce738ab..c505036 100644
->>> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
->>> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
->>> @@ -1520,6 +1520,23 @@ static struct eeh_ops pnv_eeh_ops = {
->>>  	.restore_config		= pnv_eeh_restore_config
->>>  };
->>>  
->>> +static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
->>> +{
->>> +	struct pci_dn *pdn = pci_get_pdn(pdev);
->>> +
->>> +	if (!pdev->is_virtfn)
->>> +		return;
->>> +
->>> +	/*
->>> +	 * The following operations will fail if VF's sysfs files
->>> +	 * aren't created or its resources aren't finalized.
->>> +	 */
->>
->>I don't understand this comment.  "The following operations" seems to refer
->>to eeh_add_device_early() and eeh_add_device_late(), and
->>"VF's sysfs files being created" seems to refer to eeh_sysfs_add_device().
->>
->>So the comment suggests that eeh_add_device_early() and
->>eeh_add_device_late() will fail because they're called before
->>eeh_sysfs_add_device().  So I think you must be talking about some other
->>"following operations," not eeh_add_device_early() and
->>eeh_add_device_late().
->
->Sorry for this confusion.
->
->The comment here wants to say the eeh_sysfs_add_device() will fail if the VF's
->sysfs is not created well. Or it will fail if the VF's resources are not set
->properly, since we would cache the VF's BAR in eeh_add_device_late().
->
->Gavin,
->
->If my understanding is not correct please let me know.
->
+Use access helper irq_data_get_affinity_mask() to hide implementation
+details of struct irq_desc.
 
-It's correct. "The following operations" refers to eeh_add_device_late()
-and eeh_sysfs_add_device(). The former one requires the resources for
-one particular PCI device (VF here) are finalized (assigned). eeh_sysfs_add_device()
-will fail if the sysfs entry for the PCI device isn't populated yet.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+Hi Thomas,
+	This version changes the patch to correctly support bisecting.
+Thanks!
+Gerry
+---
+ arch/x86/kernel/apic/io_apic.c   |    2 +-
+ arch/x86/kernel/apic/vector.c    |    3 ++-
+ arch/x86/kernel/irq.c            |    5 +++--
+ drivers/xen/events/events_base.c |    4 ++--
+ 4 files changed, 8 insertions(+), 6 deletions(-)
 
->>
->>> +	eeh_add_device_early(pdn);
->>> +	eeh_add_device_late(pdev);
->>> +	eeh_sysfs_add_device(pdev);
->>> +}
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
->>
->>Ugh.  This is powerpc code, but I don't like using fixups as a hook like
->>this.  There is a pcibios_add_device() -- could this be done there?
->>
->
->I don't like it neither :-) But looks we can't put it in the
->pcibios_add_device().
->
->>If not, what happens after pcibios_add_device() that is required for this
->>code?  Maybe we need a pcibios_bus_add_device() hook?
->
->The pnv_eeh_vf_final_fixup() will try to create sysfs for VFs. This requires
->the VF sysfs(kobj) is initialized properly. If we put these into
->pcibios_add_device(), the eeh_sysfs_add_device() would fail.
->
->Below is the call flow for your reference:
->
->pci_device_add()
->    pcibios_add_device()
->    device_add()                <--- kobj initialized here
->
-
-We can put it into pcibios_bus_add_device(), but we don't it currently. If
-Bjorn agree to add pcibios_bus_add_device(), I'm fine to move the block code
-there.
-
-Thanks,
-Gavin
-
->>
->>> +
->>>  /**
->>>   * eeh_powernv_init - Register platform dependent EEH operations
->>>   *
->>> -- 
->>> 1.7.9.5
->>> 
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->-- 
->Richard Yang
->Help you, Help me
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index 845dc0df2002..09921de4210f 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2541,7 +2541,7 @@ void __init setup_ioapic_dest(void)
+ 		 * Honour affinities which have been set in early boot
+ 		 */
+ 		if (!irqd_can_balance(idata) || irqd_affinity_was_set(idata))
+-			mask = idata->affinity;
++			mask = irq_data_get_affinity_mask(idata);
+ 		else
+ 			mask = apic->target_cpus();
+ 
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 9b62f690b0ff..7ad911ea4f56 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -496,7 +496,8 @@ static int apic_set_affinity(struct irq_data *irq_data,
+ 	if (err) {
+ 		struct irq_data *top = irq_get_irq_data(irq);
+ 
+-		if (assign_irq_vector(irq, data, top->affinity))
++		if (assign_irq_vector(irq, data,
++				      irq_data_get_affinity_mask(top)))
+ 			pr_err("Failed to recover vector for irq %d\n", irq);
+ 		return err;
+ 	}
+diff --git a/arch/x86/kernel/irq.c b/arch/x86/kernel/irq.c
+index 7e10c8b4b318..37685e37550c 100644
+--- a/arch/x86/kernel/irq.c
++++ b/arch/x86/kernel/irq.c
+@@ -342,7 +342,8 @@ int check_irq_vectors_for_cpu_disable(void)
+ 				continue;
+ 
+ 			data = irq_desc_get_irq_data(desc);
+-			cpumask_copy(&affinity_new, data->affinity);
++			cpumask_copy(&affinity_new,
++				     irq_data_get_affinity_mask(data));
+ 			cpumask_clear_cpu(this_cpu, &affinity_new);
+ 
+ 			/* Do not count inactive or per-cpu irqs. */
+@@ -420,7 +421,7 @@ void fixup_irqs(void)
+ 		raw_spin_lock(&desc->lock);
+ 
+ 		data = irq_desc_get_irq_data(desc);
+-		affinity = data->affinity;
++		affinity = irq_data_get_affinity_mask(data);
+ 		if (!irq_has_action(irq) || irqd_is_per_cpu(data) ||
+ 		    cpumask_subset(affinity, cpu_online_mask)) {
+ 			raw_spin_unlock(&desc->lock);
+diff --git a/drivers/xen/events/events_base.c b/drivers/xen/events/events_base.c
+index 2b8553bd8715..d00e0be8e9ea 100644
+--- a/drivers/xen/events/events_base.c
++++ b/drivers/xen/events/events_base.c
+@@ -336,7 +336,7 @@ static void bind_evtchn_to_cpu(unsigned int chn, unsigned int cpu)
+ 
+ 	BUG_ON(irq == -1);
+ #ifdef CONFIG_SMP
+-	cpumask_copy(irq_get_irq_data(irq)->affinity, cpumask_of(cpu));
++	cpumask_copy(irq_get_affinity_mask(irq), cpumask_of(cpu));
+ #endif
+ 	xen_evtchn_port_bind_to_cpu(info, cpu);
+ 
+@@ -373,7 +373,7 @@ static void xen_irq_init(unsigned irq)
+ 	struct irq_info *info;
+ #ifdef CONFIG_SMP
+ 	/* By default all event channels notify CPU#0. */
+-	cpumask_copy(irq_get_irq_data(irq)->affinity, cpumask_of(0));
++	cpumask_copy(irq_get_affinity_mask(irq), cpumask_of(0));
+ #endif
+ 
+ 	info = kzalloc(sizeof(*info), GFP_KERNEL);
+-- 
+1.7.10.4
 
