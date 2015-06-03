@@ -1,151 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38698 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752382AbbFIGNK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 02:13:10 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 9 Jun 2015 16:13:08 +1000
-Date: Tue, 9 Jun 2015 16:10:52 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	aik@ozlabs.ru, panto@antoniou-consulting.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-Subject: Re: [PATCH v5 31/42] powerpc/pci: Move pcibios_find_pci_bus() around
-Message-ID: <20150609061052.GA387@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1433400131-18429-32-git-send-email-gwshan@linux.vnet.ibm.com>
- <20150605194730.GO3631@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 3 Jun 2015 11:07:26 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+Message-ID: <20150603180726.GA6115@roeck-us.net>
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+ <20150527210447.GY32152@google.com>
+ <20150602145510.GE23650@red-moon>
+ <556DE1B9.6020100@roeck-us.net>
+ <20150603103235.GC27917@red-moon>
+ <556F1958.5050003@roeck-us.net>
+ <20150603165535.GB11928@red-moon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150605194730.GO3631@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150603165535.GB11928@red-moon>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 05, 2015 at 02:47:30PM -0500, Bjorn Helgaas wrote:
->"Move pcibios_find_pci_bus() from pSeries to generic powerpc code"?
->
->On Thu, Jun 04, 2015 at 04:42:00PM +1000, Gavin Shan wrote:
->> The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
->
->s/kerenl/kernel/
->
+On Wed, Jun 03, 2015 at 05:55:35PM +0100, Lorenzo Pieralisi wrote:
+> On Wed, Jun 03, 2015 at 04:12:24PM +0100, Guenter Roeck wrote:
+> 
+> [...]
+> 
+> > >> After looking into this some more, I think the wrinkle may be that
+> > >> pci_read_bridge_bases() and thus pci_read_bridge_io() isn't called
+> > >> on probe-only systems (if PCI_PROBE_ONLY is set). A secondary
+> > >
+> > > That's what we would like to change :)
+> > >
+> > > https://lkml.org/lkml/2015/5/21/359
+> > 
+> > Yes, that should help. I had a brief look last night and concluded
+> > that this would require changes all over the place, which your patch
+> > pretty much confirms. Glad that you are tackling it - changes all over
+> > the place spell trouble and would probably require more time than I have
+> > available to spend on the problem.
+> 
+> Eh, trouble did not even start because we have just tested it on ARM/ARM64
+> systems (that's all I can do no sign of testing on any other arch), so I do
+> not expect it will be merged quickly, it will take me time to get all the
+> required acks.
+> 
+> I should be able to send a v2 beginning of next week.
+> 
+Ok.
 
-Thanks. I'll fix it in next revision.
+> > >> problem is that pci_read_bridge_io() does not enable a resource
+> > >> if it is explicitly disabled (base > limit), but the subsequent call
+> > >> to pci_bridge_check_ranges() unconditionally enables it.
+> > >>
+> > >> Not really sure how to address this; my current code checks IO support
+> > >> in both pci_read_bridge_io() and pci_bridge_check_ranges(). And since
+> > >> pci_read_bridge_io() is not always called, I don't see how it might
+> > >> be possible to get rid of pci_bridge_check_ranges(), or even the check
+> > >> for IO support in pci_bridge_check_ranges().
+> > >>
+> > >>> While at it, do you think it is reasonable to also claim the bridge
+> > >>> windows (resources) in the respective pci_read_bridge_* calls ?
+> > >>>
+> > >>> Is there a reason why we don't/can't do it ? I noticed that on
+> > >>> PROBE_ONLY systems on ARM/ARM64 at the moment we do not claim
+> > >>> the bridge apertures and this is not correct, see below:
+> > >>>
+> > >>> [5.980127] pcieport 0000:00:02.1: can't enable device: BAR 8
+> > >>> [mem 0xbff00000 - 0xbfffffff] not claimed
+> > >>> [5.988056] pcieport: probe of 0000:00:02.1 failed with error -22
+> > >>>
+> > >> Is this when trying my patches or with the current upstream code ?
+> > >
+> > > It is upstream code with a couple of ARM64 related patches not yet
+> > > merged. Still, it shows an issue that must be tackled.
+> > >
+> > > It is not caused by your patches but it can be solved by them.
+> > > On PROBE_ONLY systems, all resources must be claimed (since they
+> > > are not reassigned, hence not claimed by the code that reassigns them),
+> > > otherwise we can't enable a device resources (ie pcibios_enable_device
+> > > calls pci_enable_resources that fails, since resources are not claimed).
+> > >
+> > > That's why we are suggesting claiming the bridge apertures as soon
+> > > as they are read from the base registers, even on PROBE_ONLY systems.
+> > >
+> > > I think that's the only approach Bjorn would accept, otherwise
+> > > we will have to fiddle with PROBE_ONLY on ARM64, and either avoid calling
+> > > pci_enable_resources or avoid checking if a resource is claimed in
+> > > pci_enable_resources, neither solution seems sane to me.
+> > >
+> > 
+> > Looks like I'll need one of those arm64 systems at some point ;-).
+> > 
+> > Where is your patch in respect to acceptance ? Would it make sense to
+> > merge it into my code and base my patch(es) on it, or do you expect
+> > major changes which would make that difficult ?
+> 
+> I have a tweak to v1, I will post v2 next week and copy you in.
 
-Thanks,
-Gavin
+Thanks!
 
->> that it can be reused by hotplug code for pSeries and PowerNV
->> platform at the same time.
->> 
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> ---
->> v5:
->>   * Derived from PATCH[v4 12/21]
->> ---
->>  arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
->>  arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
->>  2 files changed, 36 insertions(+), 32 deletions(-)
->> 
->> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
->> index ca392fc..1482bc1 100644
->> --- a/arch/powerpc/kernel/pci-hotplug.c
->> +++ b/arch/powerpc/kernel/pci-hotplug.c
->> @@ -21,6 +21,42 @@
->>  #include <asm/firmware.h>
->>  #include <asm/eeh.h>
->>  
->> +static struct pci_bus *find_pci_bus(struct pci_bus *bus,
->> +				    struct device_node *dn)
->> +{
->> +	struct pci_bus *tmp, *child = NULL;
->> +	struct device_node *busdn;
->> +
->> +	busdn = pci_bus_to_OF_node(bus);
->> +	if (busdn == dn)
->> +		return bus;
->> +
->> +	list_for_each_entry(tmp, &bus->children, node) {
->> +		child = find_pci_bus(tmp, dn);
->> +		if (child)
->> +			break;
->> +	}
->> +
->> +	return child;
->> +}
->> +
->> +/**
->> + * pcibios_find_pci_bus - find PCI bus according to the given device node
->> + * @dn: Device node
->> + *
->> + * Find the corresponding PCI bus according to the given device node.
->> + */
->> +struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
->> +{
->> +	struct pci_dn *pdn = PCI_DN(dn);
->> +
->> +	if (!pdn  || !pdn->phb || !pdn->phb->bus)
->> +		return NULL;
->> +
->> +	return find_pci_bus(pdn->phb->bus, dn);
->> +}
->> +EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
->> +
->>  /**
->>   * pcibios_release_device - release PCI device
->>   * @dev: PCI device
->> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
->> index 5d4a3df..906dbaa 100644
->> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
->> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
->> @@ -34,38 +34,6 @@
->>  
->>  #include "pseries.h"
->>  
->> -static struct pci_bus *
->> -find_bus_among_children(struct pci_bus *bus,
->> -                        struct device_node *dn)
->> -{
->> -	struct pci_bus *child = NULL;
->> -	struct pci_bus *tmp;
->> -	struct device_node *busdn;
->> -
->> -	busdn = pci_bus_to_OF_node(bus);
->> -	if (busdn == dn)
->> -		return bus;
->> -
->> -	list_for_each_entry(tmp, &bus->children, node) {
->> -		child = find_bus_among_children(tmp, dn);
->> -		if (child)
->> -			break;
->> -	};
->> -	return child;
->> -}
->> -
->> -struct pci_bus *
->> -pcibios_find_pci_bus(struct device_node *dn)
->> -{
->> -	struct pci_dn *pdn = dn->data;
->> -
->> -	if (!pdn  || !pdn->phb || !pdn->phb->bus)
->> -		return NULL;
->> -
->> -	return find_bus_among_children(pdn->phb->bus, dn);
->> -}
->> -EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
->> -
->>  struct pci_controller *init_phb_dynamic(struct device_node *dn)
->>  {
->>  	struct pci_controller *phb;
->> -- 
->> 2.1.0
->> 
->
+> Acceptance, I think it received review only from ARM guys/platforms
+> so we are still far from merging it.
+> 
+I should be able to test it on powerpc (p2020/p5020) and x86.
 
+Guenter
