@@ -1,134 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og123.obsmtp.com ([64.18.0.198]:49826 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751429AbbFEVLk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 17:11:40 -0400
-Received: by obcej4 with SMTP id ej4so12091835obc.0
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 14:11:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150605210500.GQ3631@google.com>
-References: <5566CC58.8080400@arm.com> <cover.1432922451.git.dhdang@apm.com> <20150605210500.GQ3631@google.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Fri, 5 Jun 2015 14:11:09 -0700
-Message-ID: <CADaLNDmNHsyoYGEgrHKTCrcjS70pTZ=mnH2uYPNCEK1X5+vVPQ@mail.gmail.com>
-Subject: Re: [PATCH v10 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX
- termination driver
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Grant Likely <grant.likely@linaro.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 3 Jun 2015 11:03:43 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
 	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Yijing Wang <wangyijing@huawei.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [Patch v4 5/8] ARM64/PCI/ACPI: Introduce struct pci_controller
+ for ACPI
+Message-ID: <20150603100343.GA27917@red-moon>
+References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433225576-8215-6-git-send-email-jiang.liu@linux.intel.com>
+ <20150602093525.GA23543@red-moon>
+ <556EBE6D.90907@linaro.org>
+ <556ECA93.7040800@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <556ECA93.7040800@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 5, 2015 at 2:05 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, May 29, 2015 at 11:24:28AM -0700, Duc Dang wrote:
->> This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
->> APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
->> to GIC V2M specification for MSI Termination.
->>
->> There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
->> This MSI block supports 2048 MSI termination ports coalesced into 16 physical
->> HW IRQ lines and shared across all 5 PCIe ports. Starting from version 5 of
->> this patch series, the total MSI vectors this driver supports is reduced to 256
->> to maintain the correct set_affinity behavior for each MSI.
->>
->> v10 changes:
->>       1. Remove inline in helper functions
->>       2. Simplify hwirq_to_cpu implementation
->>
->> v9 changes:
->>         1. Add more helpers for manipulating MSI messages
->>         2. Improve code readability
->>         3. Make PCI_XGENE_MSI selectable
->>
->> v8 changes:
->>         1. Add helper to read MSI registers
->>         2. Resample interrupt status of the same group after handling interrupts
->>            in that group
->>         3. Error handling in case fail to allocate CPU mask for affinity setting
->>
->> v7 changes:
->>         1. Add more error handling cases
->>         2. Clear spurious interrupts that may happen during driver probe
->>         3. Not using free_irq for chained irqs
->>         4. Improve GIC IRQ number look up in chained handler
->>
->> v6 changes:
->>         1. Correctly allocate MSI with bitmap_find_next_zero_area
->>         2. Add notifier for CPU hotplug case
->>         3. Driver clean up
->>         4. Add more detailed information into device tree binding document
->>            and move the device tree binding patch before the driver/dts patch
->>
->> v5 changes:
->>         1. Implement set_affinity for each MSI by statically allocating 2
->>          MSI GIC IRQs for each X-Gene CPU core and moving MSI vectors around
->>          these GIC IRQs to steer them to target CPU core. As a consequence,
->>          the total MSI vectors that X-Gene v1 supports is reduced to 256.
->>
->> v4 changes:
->>         1. Remove affinity setting for each MSI
->>         2. Add description about register layout, MSI termination address
->>          and data
->>         3. Correct total number of MSI vectors to 2048
->>         4. Clean up error messages
->>         5. Remove unused module code
->>
->> v3 changes:
->>         1. Implement MSI support using PCI MSI IRQ domain
->>         2. Only use msi_controller to store IRQ domain
->>
->> v2 changes:
->>         1. Use msi_controller structure
->>         2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
->>
->>  .../devicetree/bindings/pci/xgene-pci-msi.txt      |  68 +++
->>  MAINTAINERS                                        |   8 +
->>  arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 +
->>  drivers/pci/host/Kconfig                           |  10 +
->>  drivers/pci/host/Makefile                          |   1 +
->>  drivers/pci/host/pci-xgene-msi.c                   | 595 +++++++++++++++++++++
->>  drivers/pci/host/pci-xgene.c                       |  21 +
->>  7 files changed, 730 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
->>  create mode 100644 drivers/pci/host/pci-xgene-msi.c
->
-> I applied these to pci/host-xgene for v4.2, thanks!
->
-> I squashed the doc, driver, and maintainer updates into a single patch with
-> the following changelog:
->
-> PCI: xgene: Add APM X-Gene v1 PCIe MSI/MSIX termination driver
->
-> APM X-Gene v1 SoC supports its own implementation of MSI, which is not
-> compliant to GIC V2M specification for MSI Termination.
->
-> There is a single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
-> This MSI block supports 2048 MSI termination ports coalesced into 16
-> physical HW IRQ lines and shared across all 5 PCIe ports.
->
-> As there are only 16 HW IRQs to serve 2048 MSI vectors, to support
-> set_affinity correctly for each MSI vectors, the 16 HW IRQs are statically
-> allocated to 8 X-Gene v1 cores (2 HW IRQs for each cores).  To steer MSI
-> interrupt to target CPU, MSI vector is moved around these HW IRQs lines.
-> With this approach, the total MSI vectors this driver supports is reduced
-> to 256.
->
-> [bhelgaas: squash doc, driver, maintainer update]
-> Signed-off-by: Duc Dang <dhdang@apm.com>
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
->
-Thanks, Bjorn and Marc.
+On Wed, Jun 03, 2015 at 10:36:19AM +0100, Jiang Liu wrote:
+> On 2015/6/3 16:44, Hanjun Guo wrote:
+> > On 2015???06???02??? 17:35, Lorenzo Pieralisi wrote:
+> >> On Tue, Jun 02, 2015 at 07:12:53AM +0100, Jiang Liu wrote:
+> >>> From: Hanjun Guo <hanjun.guo@linaro.org>
+> >>>
+> >>> ARM64 ACPI based PCI host bridge init needs a arch dependent
+> >>> struct pci_controller to accommodate common PCI host bridge
+> >>> code which is introduced later, or it will lead to compile
+> >>> errors on ARM64.
+> >>>
+> >>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> >>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> >>> CC: Arnd Bergmann <arnd@arndb.de>
+> >>> CC: Catalin Marinas <catalin.marinas@arm.com>
+> >>> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+> >>> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+> >>> CC: Will Deacon <will.deacon@arm.com>
+> >>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> >>> ---
+> >>>   arch/arm64/include/asm/pci.h |   10 ++++++++++
+> >>>   1 file changed, 10 insertions(+)
+> >>>
+> >>> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> >>> index b008a72f8bc0..70884957f253 100644
+> >>> --- a/arch/arm64/include/asm/pci.h
+> >>> +++ b/arch/arm64/include/asm/pci.h
+> >>> @@ -10,6 +10,16 @@
+> >>>   #include <asm-generic/pci-bridge.h>
+> >>>   #include <asm-generic/pci-dma-compat.h>
+> >>>
+> >>> +struct acpi_device;
+> >>> +
+> >>> +struct pci_controller {
+> >>> +#ifdef CONFIG_ACPI
+> >>> +    struct acpi_device *companion;    /* ACPI companion device */
+> >>> +#endif
+> >>> +    int        segment;    /* PCI domain */
+> >>> +    int        node;        /* NUMA node */
+> >>> +};
+> >>
+> >> There is nothing ARM64 specific in this structure. The only
+> >> reason I see you want to keep it arch specific is the iommu
+> >> pointer on x86,
+> > 
+> > And also plarform_data for IA64 too.
+> > 
+> >> but I think we should find a way to make
+> >> the common bits shared across archs (ie the struct above) and
+> >> add (maybe a void*) to the generic struct to cater for arch
+> >> specific data.
+> >>
+> >> Thoughts ?
+> > 
+> > We discussed this already, it has limitations to make it
+> > common to all archs, I think the limitation are:
+> > 
+> >   - struct pci_controller are also used for other archs
+> >     such as PowerPC and Tile, they will not use it for
+> >     ACPI purpose, so we can not used for all archs.
+> > 
+> >   - if we let struct pci_controller defined only for archs
+> >     using ACPI, such as introduce it in linux/acpi.h, we still
+> >     can not satisfy that the struct pci_controller is not
+> >     only used for ACPI case on x86, it will be used for
+> >     non-ACPI too.
+> > 
+> > So it's pretty difficult to share it with across archs to me,
+> > any more ideas?
+> Hi Hanjun and Lorenzo,
+> 	As mentioned by Hanjun, I have no idea yet about how to
+> consolidating "struct pci_controller" further. One possible
+> way is to move "struct pci_controller" related code into
+> arch, but apparently that will reduce code reusing.
 
-Regards,
-Duc Dang.
+I guess you can't move that struct pci_controller to generic code
+since it is present on other archs too (with completely different
+members).
+
+What you can do is creating a new struct (ie same purpose of pci_controller
+with a different name) common to all archs that contains the common bits
++ a void* data that contains arch specific data, and convert x86 and ia64
+to using it.
+
+It is weird to be forced to declare a pci_controller structure in arm64
+code with 0 arch specific data in it.
+
+Lorenzo
