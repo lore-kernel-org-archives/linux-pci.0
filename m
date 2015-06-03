@@ -1,170 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:42053 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752481AbbFDGnl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:41 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:39 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 35/42] powerpc/pci: Create eeh_dev while creating pci_dn
-Date: Thu,  4 Jun 2015 16:42:04 +1000
-Message-Id: <1433400131-18429-36-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 3 Jun 2015 11:32:35 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+Message-ID: <20150603103235.GC27917@red-moon>
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+ <20150527210447.GY32152@google.com>
+ <20150602145510.GE23650@red-moon>
+ <556DE1B9.6020100@roeck-us.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <556DE1B9.6020100@roeck-us.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The eeh_dev is always created based on pci_dn, but with initcall
-core_initcall_sync(). The patch creates eeh_dev when pci_dn is
-created, indicating they have same life cycle.
+On Tue, Jun 02, 2015 at 06:02:49PM +0100, Guenter Roeck wrote:
+> On 06/02/2015 07:55 AM, Lorenzo Pieralisi wrote:
+> > Bjorn, Guenter,
+> >
+> > On Wed, May 27, 2015 at 10:04:47PM +0100, Bjorn Helgaas wrote:
+> >> [+cc Lorenzo, Suravee, Will]
+> >>
+> >> I cc'd Lorenzo, Suravee, and Will because Lorenzo is working on calling
+> >> pci_read_bases() from the PCI core instead of from arch code, and there are
+> >> likely some dependencies between these two things.
+> >>
+> >> On Fri, May 22, 2015 at 05:52:16PM -0700, Guenter Roeck wrote:
+> >>> The PCI subsystem always assumes that I/O is supported on PCIe bridges
+> >>> and tries to assign an I/O window to each port even if that is not
+> >>> the case.
+> >>>
+> >>> This may result in messages such as
+> >>>
+> >>> pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
+> >>> 					get_res_add_size add_size 1000
+> >>> pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
+> >>> pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
+> >>>
+> >>> for each bridge port, even if a port or its parent does not support
+> >>> I/O in the first place.
+> >>>
+> >>> To avoid this message, check if a port supports I/O before trying to
+> >>> enable it. Also check if port's parent supports I/O, and only modify
+> >>> a port's I/O resource size if both the port and its parent support I/O.
+> >>>
+> >>> If IO is disabled after the initial port scan, the IO base and size
+> >>> registers are set to 0x00f0 to indicate that IO is disabled. A later
+> >>> rescan interprets this as "IO supported" and enables the IO range,
+> >>> even if the parent does not support IO. Handle this situation as well.
+> >>>
+> >>> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+> >>> ---
+> >>>   drivers/pci/probe.c     | 14 ++++++++++++++
+> >>>   drivers/pci/setup-bus.c |  4 ++--
+> >>>   include/linux/pci.h     |  9 +++++++++
+> >>>   3 files changed, 25 insertions(+), 2 deletions(-)
+> >>>
+> >>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> >>> index 6675a7a1b9fc..f4944ef45148 100644
+> >>> --- a/drivers/pci/probe.c
+> >>> +++ b/drivers/pci/probe.c
+> >>> @@ -354,6 +354,20 @@ static void pci_read_bridge_io(struct pci_bus *child)
+> >>>   	base = (io_base_lo & io_mask) << 8;
+> >>>   	limit = (io_limit_lo & io_mask) << 8;
+> >>>
+> >>> +	/* If necessary, check if the bridge supports an I/O aperture */
+> >>> +	if (!io_base_lo && !io_limit_lo) {
+> >>> +		u16 io;
+> >>> +
+> >>> +		if (!pci_parent_supports_io(child))
+> >>> +			return;
+> >>> +
+> >>> +		pci_write_config_word(dev, PCI_IO_BASE, 0xe0f0);
+> >>> +		pci_read_config_word(dev, PCI_IO_BASE, &io);
+> >>> +		pci_write_config_word(dev, PCI_IO_BASE, 0x0);
+> >>> +		if (!io)
+> >>> +			return;
+> >>> +	}
+> >>
+> >> I really like the idea of pushing this into pci_read_bridge_io().
+> >>
+> >> I wonder if we can do the same with pci_read_bridge_mmio_pref(), and
+> >> somehow get rid of pci_bridge_check_ranges() altogether?
+> >>
+> >> I think I looked at doing that a while back, and it seems like there was
+> >> some wrinkle, but I don't remember what it was.
+> >
+> 
+> After looking into this some more, I think the wrinkle may be that
+> pci_read_bridge_bases() and thus pci_read_bridge_io() isn't called
+> on probe-only systems (if PCI_PROBE_ONLY is set). A secondary
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
-v5:
-  * Derived from PATCH[v4 16/21]
----
- arch/powerpc/include/asm/eeh.h         |  6 ++++--
- arch/powerpc/kernel/eeh_dev.c          | 18 ++++--------------
- arch/powerpc/kernel/pci_dn.c           | 12 ++++++++++++
- arch/powerpc/platforms/pseries/setup.c |  6 +-----
- 4 files changed, 21 insertions(+), 21 deletions(-)
+That's what we would like to change :)
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index ea1f13c4..c0236a6 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -272,7 +272,8 @@ void eeh_pe_restore_bars(struct eeh_pe *pe);
- const char *eeh_pe_loc_get(struct eeh_pe *pe);
- struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe);
- 
--void *eeh_dev_init(struct pci_dn *pdn, void *data);
-+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
-+			     struct pci_controller *phb);
- void eeh_dev_phb_init_dynamic(struct pci_controller *phb);
- int eeh_init(void);
- int __init eeh_ops_register(struct eeh_ops *ops);
-@@ -325,7 +326,8 @@ static inline int eeh_init(void)
- 	return 0;
- }
- 
--static inline void *eeh_dev_init(struct pci_dn *pdn, void *data)
-+static inline struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
-+					   struct pci_controller *phb)
- {
- 	return NULL;
- }
-diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
-index f33ce5b..7486932 100644
---- a/arch/powerpc/kernel/eeh_dev.c
-+++ b/arch/powerpc/kernel/eeh_dev.c
-@@ -44,14 +44,14 @@
- /**
-  * eeh_dev_init - Create EEH device according to OF node
-  * @pdn: PCI device node
-- * @data: PHB
-+ * @phb: PCI controller
-  *
-  * It will create EEH device according to the given OF node. The function
-  * might be called by PCI emunation, DR, PHB hotplug.
-  */
--void *eeh_dev_init(struct pci_dn *pdn, void *data)
-+struct eeh_dev *eeh_dev_init(struct pci_dn *pdn,
-+			     struct pci_controller *phb)
- {
--	struct pci_controller *phb = data;
- 	struct eeh_dev *edev;
- 
- 	/* Allocate EEH device */
-@@ -68,7 +68,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
- 	edev->phb = phb;
- 	INIT_LIST_HEAD(&edev->list);
- 
--	return NULL;
-+	return edev;
- }
- 
- /**
-@@ -80,16 +80,8 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
-  */
- void eeh_dev_phb_init_dynamic(struct pci_controller *phb)
- {
--	struct pci_dn *root = phb->pci_data;
--
- 	/* EEH PE for PHB */
- 	eeh_phb_pe_create(phb);
--
--	/* EEH device for PHB */
--	eeh_dev_init(root, phb);
--
--	/* EEH devices for children OF nodes */
--	traverse_pci_dn(root, eeh_dev_init, phb);
- }
- 
- /**
-@@ -105,8 +97,6 @@ static int __init eeh_dev_phb_init(void)
- 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
- 		eeh_dev_phb_init_dynamic(phb);
- 
--	pr_info("EEH: devices created\n");
--
- 	return 0;
- }
- 
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index 35554c2..d4330d2 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -287,6 +287,9 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	const __be32 *regs;
- 	struct device_node *parent;
- 	struct pci_dn *pdn;
-+#ifdef CONFIG_EEH
-+	struct eeh_dev *edev;
-+#endif
- 
- 	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
- 	if (pdn == NULL)
-@@ -317,6 +320,15 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	/* Extended config space */
- 	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
- 
-+	/* Initialize EEH device */
-+#ifdef CONFIG_EEH
-+	edev = eeh_dev_init(pdn, phb);
-+	if (!edev) {
-+		kfree(pdn);
-+		return NULL;
-+	}
-+#endif
-+
- 	/* Attach to parent node */
- 	INIT_LIST_HEAD(&pdn->child_list);
- 	INIT_LIST_HEAD(&pdn->list);
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 5f80758..92974aa 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -261,12 +261,8 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
- 	switch (action) {
- 	case OF_RECONFIG_ATTACH_NODE:
- 		pci = np->parent->data;
--		if (pci) {
-+		if (pci)
- 			update_dn_pci_info(np, pci->phb);
--
--			/* Create EEH device for the OF node */
--			eeh_dev_init(PCI_DN(np), pci->phb);
--		}
- 		break;
- 	default:
- 		err = NOTIFY_DONE;
--- 
-2.1.0
+https://lkml.org/lkml/2015/5/21/359
 
+> problem is that pci_read_bridge_io() does not enable a resource
+> if it is explicitly disabled (base > limit), but the subsequent call
+> to pci_bridge_check_ranges() unconditionally enables it.
+> 
+> Not really sure how to address this; my current code checks IO support
+> in both pci_read_bridge_io() and pci_bridge_check_ranges(). And since
+> pci_read_bridge_io() is not always called, I don't see how it might
+> be possible to get rid of pci_bridge_check_ranges(), or even the check
+> for IO support in pci_bridge_check_ranges().
+> 
+> > While at it, do you think it is reasonable to also claim the bridge
+> > windows (resources) in the respective pci_read_bridge_* calls ?
+> >
+> > Is there a reason why we don't/can't do it ? I noticed that on
+> > PROBE_ONLY systems on ARM/ARM64 at the moment we do not claim
+> > the bridge apertures and this is not correct, see below:
+> >
+> > [5.980127] pcieport 0000:00:02.1: can't enable device: BAR 8
+> > [mem 0xbff00000 - 0xbfffffff] not claimed
+> > [5.988056] pcieport: probe of 0000:00:02.1 failed with error -22
+> >
+> Is this when trying my patches or with the current upstream code ?
+
+It is upstream code with a couple of ARM64 related patches not yet
+merged. Still, it shows an issue that must be tackled.
+
+It is not caused by your patches but it can be solved by them.
+On PROBE_ONLY systems, all resources must be claimed (since they
+are not reassigned, hence not claimed by the code that reassigns them),
+otherwise we can't enable a device resources (ie pcibios_enable_device
+calls pci_enable_resources that fails, since resources are not claimed).
+
+That's why we are suggesting claiming the bridge apertures as soon
+as they are read from the base registers, even on PROBE_ONLY systems.
+
+I think that's the only approach Bjorn would accept, otherwise
+we will have to fiddle with PROBE_ONLY on ARM64, and either avoid calling
+pci_enable_resources or avoid checking if a resource is claimed in
+pci_enable_resources, neither solution seems sane to me.
+
+Lorenzo
