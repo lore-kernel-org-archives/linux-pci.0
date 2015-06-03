@@ -1,127 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Steven Miao <realmz6@gmail.com>,
-	Christoph Lameter <cl@linux.com>,
-	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	adi-buildroot-devel@lists.sourceforge.net
-Subject: [RFT v2 37/48] genirq, blackfin: Kill the first parameter 'irq' of irq_flow_handler_t
-Date: Thu,  4 Jun 2015 12:13:47 +0800
-Message-Id: <1433391238-19471-38-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:37702 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753325AbbFCIes (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2015 04:34:48 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <fabrice.gasnier@st.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v2 4/4] Documentation: DT: Add Hisilicon PCIe host binding
+Date: Wed, 3 Jun 2015 16:35:42 +0800
+Message-ID: <1433320542-49576-5-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now most IRQ flow handlers make no use of the first parameter 'irq'.
-And for those who do make use of 'irq', we could easily get the irq
-number through irq_desc->irq_data->irq. So kill the first parameter
-'irq' of irq_flow_handler_t.
+This patch adds related DTS binding document for Hisilicon PCIe host driver.
 
-To ease review, I have split the changes into several parts, though
-they should be merge as one to support bisecting.
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 ---
- arch/blackfin/include/asm/irq_handler.h   |    4 ++--
- arch/blackfin/kernel/ipipe.c              |    2 +-
- arch/blackfin/mach-bf537/ints-priority.c  |    8 +++-----
- arch/blackfin/mach-common/ints-priority.c |    6 ++----
- 4 files changed, 8 insertions(+), 12 deletions(-)
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
 
-diff --git a/arch/blackfin/include/asm/irq_handler.h b/arch/blackfin/include/asm/irq_handler.h
-index 4b2a992794d7..d2f90c72378e 100644
---- a/arch/blackfin/include/asm/irq_handler.h
-+++ b/arch/blackfin/include/asm/irq_handler.h
-@@ -60,7 +60,7 @@ extern void bfin_internal_mask_irq(unsigned int irq);
- extern void bfin_internal_unmask_irq(unsigned int irq);
- 
- struct irq_desc;
--extern void bfin_demux_mac_status_irq(unsigned int, struct irq_desc *);
--extern void bfin_demux_gpio_irq(unsigned int, struct irq_desc *);
-+extern void bfin_demux_mac_status_irq(struct irq_desc *);
-+extern void bfin_demux_gpio_irq(struct irq_desc *);
- 
- #endif
-diff --git a/arch/blackfin/kernel/ipipe.c b/arch/blackfin/kernel/ipipe.c
-index 6007a1375c5b..8daca4d56992 100644
---- a/arch/blackfin/kernel/ipipe.c
-+++ b/arch/blackfin/kernel/ipipe.c
-@@ -54,7 +54,7 @@ atomic_t __ipipe_irq_lvdepth[IVG15 + 1];
- unsigned long __ipipe_irq_lvmask = bfin_no_irqs;
- EXPORT_SYMBOL(__ipipe_irq_lvmask);
- 
--static void __ipipe_ack_irq(unsigned irq, struct irq_desc *desc)
-+static void __ipipe_ack_irq(struct irq_desc *desc)
- {
- 	desc->ipipe_ack(irq_desc_get_irq(desc), desc);
- }
-diff --git a/arch/blackfin/mach-bf537/ints-priority.c b/arch/blackfin/mach-bf537/ints-priority.c
-index 2137a209a22b..a48baae4384d 100644
---- a/arch/blackfin/mach-bf537/ints-priority.c
-+++ b/arch/blackfin/mach-bf537/ints-priority.c
-@@ -89,8 +89,7 @@ static struct irq_chip bf537_generic_error_irqchip = {
- 	.irq_unmask = bf537_generic_error_unmask_irq,
- };
- 
--static void bf537_demux_error_irq(unsigned int int_err_irq,
--				  struct irq_desc *inta_desc)
-+static void bf537_demux_error_irq(struct irq_desc *inta_desc)
- {
- 	int irq = 0;
- 
-@@ -182,13 +181,12 @@ static struct irq_chip bf537_mac_rx_irqchip = {
- 	.irq_unmask = bf537_mac_rx_unmask_irq,
- };
- 
--static void bf537_demux_mac_rx_irq(unsigned int int_irq,
--				   struct irq_desc *desc)
-+static void bf537_demux_mac_rx_irq(struct irq_desc *desc)
- {
- 	if (bfin_read_DMA1_IRQ_STATUS() & (DMA_DONE | DMA_ERR))
- 		bfin_handle_irq(IRQ_MAC_RX);
- 	else
--		bfin_demux_gpio_irq(int_irq, desc);
-+		bfin_demux_gpio_irq(desc);
- }
- #endif
- 
-diff --git a/arch/blackfin/mach-common/ints-priority.c b/arch/blackfin/mach-common/ints-priority.c
-index 4e3155e5aa20..e7d6d65e0946 100644
---- a/arch/blackfin/mach-common/ints-priority.c
-+++ b/arch/blackfin/mach-common/ints-priority.c
-@@ -656,8 +656,7 @@ static struct irq_chip bfin_mac_status_irqchip = {
- 	.irq_set_wake = bfin_mac_status_set_wake,
- };
- 
--void bfin_demux_mac_status_irq(unsigned int int_err_irq,
--			       struct irq_desc *inta_desc)
-+void bfin_demux_mac_status_irq(struct irq_desc *inta_desc)
- {
- 	int i, irq = 0;
- 	u32 status = bfin_read_EMAC_SYSTAT();
-@@ -825,8 +824,7 @@ static void bfin_demux_gpio_block(unsigned int irq)
- 	}
- }
- 
--void bfin_demux_gpio_irq(unsigned int inta_irq,
--			struct irq_desc *desc)
-+void bfin_demux_gpio_irq(struct irq_desc *desc)
- {
- 	unsigned int irq;
- 
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+new file mode 100644
+index 0000000..6c9b827
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -0,0 +1,46 @@
++Hisilicon PCIe host bridge DT description
++
++Hisilicon PCIe host controller is based on Designware PCI core.
++It shares common functions with PCIe Designware core driver and inherits
++common properties defined in
++Documentation/devicetree/bindings/pci/designware-pci.txt.
++
++Additional properties are described here:
++
++Required properties:
++- compatible: Should contain "hisilicon,hip05-pcie".
++- reg: Should contain rc_dbi, subctrl, config registers location and length.
++- reg-names: Must include the following entries:
++  "rc_dbi": controller configuration registers;
++  "subctrl": whole PCIe hosts configuration registers;
++  "config": PCIe configuration space registers.
++- msi-parent: Should be its_pcie which is an its receiving MSI interrupts.
++- port-id: Should be 0, 1, 2 or 3.
++
++Optional properties:
++- status: Either "ok" or "disabled".
++- dma-coherent: Present if dma operations are coherent.
++
++Example:
++	pcie@0xb0080000 {
++		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
++		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
++		      <0x220 0x00000000 0 0x2000>;
++		reg-names = "rc_dbi", "subctrl", "config";
++		bus-range = <0  15>;
++		msi-parent = <&its_pcie>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		dma-coherent;
++		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
++		num-lanes = <8>;
++		port-id = <1>;
++		#interrupts-cells = <1>;
++		interrupts-map-mask = <0xf800 0 0 7>;
++		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
++				  0x0 0 0 2 &mbigen_pcie 2 11
++				  0x0 0 0 3 &mbigen_pcie 3 12
++				  0x0 0 0 4 &mbigen_pcie 4 13>;
++		status = "ok";
++	};
 -- 
-1.7.10.4
+1.9.1
 
