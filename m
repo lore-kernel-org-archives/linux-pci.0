@@ -1,45 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45087 "EHLO mx2.suse.de"
+Received: from mga09.intel.com ([134.134.136.24]:64714 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751585AbbFYUsX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Jun 2015 16:48:23 -0400
-Date: Thu, 25 Jun 2015 22:48:08 +0200
-From: Borislav Petkov <bp@suse.de>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: akpm@linux-foundation.org, mingo@elte.hu, syrjala@sci.fi,
-	ville.syrjala@linux.intel.com, luto@amacapital.net,
-	tomi.valkeinen@ti.com, mst@redhat.com, benh@kernel.crashing.org,
-	linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, airlied@redhat.com,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: Re: [PATCH v5 0/3] atyfb: address MTRR corner case
-Message-ID: <20150625204808.GD4898@pd.tnic>
-References: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
+	id S1753652AbbFCSqz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Jun 2015 14:46:55 -0400
+Subject: [PATCH V3 0/2] pci: Provide a flag to access VPD through function 0
+From: Mark D Rustad <mark.d.rustad@intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	netdev@vger.kernel.org
+Date: Wed, 03 Jun 2015 11:46:53 -0700
+Message-ID: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 24, 2015 at 06:34:17PM -0700, Luis R. Rodriguez wrote:
-> Luis R. Rodriguez (3):
->   video: fbdev: atyfb: clarify ioremap() base and length used
->   video: fbdev: atyfb: replace MTRR UC hole with strong UC
->   video: fbdev: atyfb: use arch_phys_wc_add() and ioremap_wc()
-> 
->  drivers/video/fbdev/aty/atyfb.h      |  5 +--
->  drivers/video/fbdev/aty/atyfb_base.c | 74 +++++++++++-------------------------
->  2 files changed, 24 insertions(+), 55 deletions(-)
+Many multi-function devices provide shared registers in extended
+config space for accessing VPD. The behavior of these registers
+means that the state must be tracked and access locked correctly
+for accesses not to hang or worse. One way to meet these needs is
+to always perform the accesses through function 0, thereby using
+the state tracking and mutex that already exists.
 
-Took those too along with
+To provide this behavior, add a dev_flags bit to indicate that this
+should be done. This bit can then be set for any non-zero function
+that needs to redirect such VPD access to function 0. Do not set
+this bit on the zero function or there will be an infinite recursion.
 
-"[PATCH] video: fbdev: atyfb: move framebuffer length fudging to helper"
+The second patch uses this new flag to invoke this behavior on all
+multi-function Intel Ethernet devices.
 
-which was missing here.
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+
+---
+Changes in V2:
+- Corrected a spelling error in a log message
+- Added checks to see that the referenced function 0 is reasonable
+Changes in V3:
+- Don't leak a device reference
+- Check that function 0 has VPD
+- Make a helper for the function 0 checks
+- Moved a multifunction check to the quirk patch
+
+---
+
+Mark D Rustad (2):
+      pci: Add dev_flags bit to access VPD through function 0
+      pci: Add VPD quirk for Intel Ethernet devices
+
+
+ drivers/pci/access.c |   61 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/quirks.c |    9 +++++++
+ 2 files changed, 69 insertions(+), 1 deletion(-)
 
 -- 
-Regards/Gruss,
-    Boris.
-
-ECO tip #101: Trim your mails when you reply.
---
+Mark Rustad, Network Division, Intel Corporation
