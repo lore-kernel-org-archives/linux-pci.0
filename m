@@ -1,61 +1,120 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 8 Jun 2015 17:29:58 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, indou.takao@jp.fujitsu.com,
-	bhe@redhat.com, vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Subject: Re: [PATCH v11 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
- kernel
-Message-ID: <20150608152957.GW20384@8bytes.org>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
- <1433773583.2952.52.camel@infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:18457 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752250AbbFCAKM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Jun 2015 20:10:12 -0400
+Subject: [PATCH V2 1/2] pci: Add dev_flags bit to access VPD through
+ function 0
+From: Mark D Rustad <mark.d.rustad@intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	netdev@vger.kernel.org
+Date: Tue, 02 Jun 2015 17:10:11 -0700
+Message-ID: <20150603001011.71269.79857.stgit@mdrustad-wks.jf.intel.com>
+In-Reply-To: <20150603000645.71269.26134.stgit@mdrustad-wks.jf.intel.com>
+References: <20150603000645.71269.26134.stgit@mdrustad-wks.jf.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433773583.2952.52.camel@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 08, 2015 at 03:26:23PM +0100, David Woodhouse wrote:
-> There are some interesting corner cases to handle here.
-> 
-> Firstly, you don't seem to handle the case of extended root/context
-> tables (where ecap_ecs is set). You need to preserve the DMA_RTADDR_RT
-> bit in the Root Table Address register, surely?
-> 
-> I think we also need to cope with inheriting page tables from a kernel
-> that *doesn't* use extended page tables, even on hardware that supports
-> it. Which means the use of extended page tables in the new kernel would
-> need to be contingent on something *other* than the pure hardware
-> capabilities.
+Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
+function 0 to provide VPD access on other functions. This solves
+concurrent access problems on many devices without changing the
+attributes exposed in sysfs. Never set this bit on function 0 or
+there will be an infinite recursion.
 
-Hmm, I also limited this functionality to kdump kernels. Do we still
-need to preserve these extended data structures even when there is no
-upstream support for them yet?
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+---
+Changes in V2:
+- Corrected spelling in log message
+- Added checks to see that the referenced function 0 is reasonable
+---
+ drivers/pci/access.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 47 insertions(+), 1 deletion(-)
 
-> > 5. Keep using the old page tables before driver is loaded.
-> > 6. After device driver is loaded, when it issues the first dma_map command, 
-> >    free the dmar_domain structure for this device, and generate a new one, so 
-> >    that the device can be assigned a new and empty page table. 
-> 
-> What if there were RMRRs for this device? Don't we need to ensure that
-> those are present in the "new and empty page table" when we take it
-> over?
-
-That is still a problem, but not specific to this patch-set. RMRRs will
-not be restored, because domains allocated out of the DMA-API path will
-not get any RMRR mappings. This is also a problem with device hotplug
-(unplug a device with RMRRs and replug it in and the RMRR mappings will
- be gone).
-
-I agree that this needs to be fixed.
-
-
-	Joerg
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index d9b64a175990..74634d4868a2 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -439,6 +439,40 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
+ 	.release = pci_vpd_pci22_release,
+ };
+ 
++static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
++			       void *arg)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
++	ssize_t ret;
++
++	if (!tdev)
++		return -ENODEV;
++
++	ret = pci_read_vpd(tdev, pos, count, arg);
++	pci_dev_put(tdev);
++	return ret;
++}
++
++static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
++				const void *arg)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
++	ssize_t ret;
++
++	if (!tdev)
++		return -ENODEV;
++
++	ret = pci_write_vpd(tdev, pos, count, arg);
++	pci_dev_put(tdev);
++	return ret;
++}
++
++static const struct pci_vpd_ops pci_vpd_f0_ops = {
++	.read = pci_vpd_f0_read,
++	.write = pci_vpd_f0_write,
++	.release = pci_vpd_pci22_release,
++};
++
+ int pci_vpd_pci22_init(struct pci_dev *dev)
+ {
+ 	struct pci_vpd_pci22 *vpd;
+@@ -447,12 +481,24 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
+ 	if (!cap)
+ 		return -ENODEV;
++	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
++		struct pci_dev *tdev;
++
++		tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
++		if (!tdev || !dev->multifunction || !tdev->multifunction ||
++		    dev->class != tdev->class || dev->vendor != tdev->vendor ||
++		    dev->device != tdev->device)
++			return -ENODEV;
++	}
+ 	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
+ 	if (!vpd)
+ 		return -ENOMEM;
+ 
+ 	vpd->base.len = PCI_VPD_PCI22_SIZE;
+-	vpd->base.ops = &pci_vpd_pci22_ops;
++	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
++		vpd->base.ops = &pci_vpd_f0_ops;
++	else
++		vpd->base.ops = &pci_vpd_pci22_ops;
+ 	mutex_init(&vpd->lock);
+ 	vpd->cap = cap;
+ 	vpd->busy = false;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8dc4c6e..194df6d635e6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -180,6 +180,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
+ 	/* Do not use PM reset even if device advertises NoSoftRst- */
+ 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
++	/* Get VPD from function 0 VPD */
++	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
+ };
+ 
+ enum pci_irq_reroute_variant {
 
