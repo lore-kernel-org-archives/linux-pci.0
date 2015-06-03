@@ -1,92 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:36340 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879AbbFXW2J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2015 18:28:09 -0400
-Received: by igbiq7 with SMTP id iq7so107190474igb.1
-        for <linux-pci@vger.kernel.org>; Wed, 24 Jun 2015 15:28:08 -0700 (PDT)
-Date: Wed, 24 Jun 2015 17:28:02 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: get correct bridge mmio size with old size checking
-Message-ID: <20150624222802.GP7710@google.com>
-References: <1434235142-2751-1-git-send-email-yinghai@kernel.org>
- <20150619022612.GI7710@google.com>
- <CAE9FiQVZngaPYvxi1DcXDLvDnDvx6qb2md1xbhMBc0uCPyLisw@mail.gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:58495 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754777AbbFCQRD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Jun 2015 12:17:03 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [Intel-wired-lan] [PATCH V2 1/2] pci: Add dev_flags bit to
+ access VPD through function 0
+Date: Wed, 3 Jun 2015 16:16:43 +0000
+Message-ID: <4033DF50-0126-4F69-88FA-C6AABC0CADCE@intel.com>
+References: <20150603000645.71269.26134.stgit@mdrustad-wks.jf.intel.com>
+ <20150603001011.71269.79857.stgit@mdrustad-wks.jf.intel.com>
+ <556E6667.1020000@gmail.com>
+In-Reply-To: <556E6667.1020000@gmail.com>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_B443E2EF-BF6E-486A-A6C8-5F41C784D5D3";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVZngaPYvxi1DcXDLvDnDvx6qb2md1xbhMBc0uCPyLisw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 18, 2015 at 08:02:57PM -0700, Yinghai Lu wrote:
-> On Thu, Jun 18, 2015 at 7:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Sat, Jun 13, 2015 at 03:39:02PM -0700, Yinghai Lu wrote:
-> >> Found allocation request too big size for must+optional during pci
-> >> bus rescan via /sys/bus/pci/rescan, and fail with that size.
+--Apple-Mail=_B443E2EF-BF6E-486A-A6C8-5F41C784D5D3
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=windows-1252
 
-Is this a hotplug thing?  I assume you wouldn't normally use
-/sys/bus/pci/rescan unless there's some kind of hotplug and
-notification is broken.
+> On Jun 2, 2015, at 7:28 PM, Alexander Duyck =
+<alexander.duyck@gmail.com> wrote:
+>=20
+> You can probably combine the dev->multifunction check with the =
+dev_flags check.  After all you don't need this workaround if the device =
+is not multifunction.  It might even make more sense to move the =
+multifunction check to the quirk in patch 2/2.
 
-> >> [ 1217.699800] pci 0000:85:02.0: bridge window [mem 0x00100000-0x001fffff] to [bus 86] add_size 100000 add_align 100000
-> >> [ 1217.699821] pci 0000:85:03.0: bridge window [mem 0x00100000-0x001fffff] to [bus 87] add_size 100000 add_align 100000
-> >> [ 1217.699907] pci 0000:85:02.0: res[14]=[mem 0x00100000-0x001fffff] res_to_dev_res add_size 100000 min_align 100000
-> >> [ 1217.699909] pci 0000:85:03.0: res[14]=[mem 0x00100000-0x001fffff] res_to_dev_res add_size 100000 min_align 100000
-> >> [ 1217.699933] pci 0000:85:02.0: BAR 14: assigned [mem 0xedf00000-0xee0fffff]
-> >> [ 1217.699936] pci 0000:85:03.0: BAR 14: no space for [mem size 0x00200000]
-> >> [ 1217.699939] pci 0000:85:03.0: BAR 14: failed to assign [mem size 0x00200000]
-> >>
-> >> After close look, for 85:02.0 only need 1M for must+optional.
-> >
-> > I'm pretty sure this is fixing a bug, but I haven't figured out how it
-> > works yet.  (Is there a bugzilla or URL for an email problem report?)
-> 
-> No bugzilla, and it is with internal test with current upstream +
-> pci/next ... + my local
-> patches.
-> 
-> > Please strip out timestamps unless they help understand the problem.
-> 
-> ok.
-> 
-> > Are both 85:02.0 and 85:03.0 relevant to the problem?  If not, strip out
-> > the one that doesn't matter.
-> 
-> kind of. please check more detail printout:
-> 
-> [ 1217.699800] pci 0000:85:02.0: bridge window [mem
-> 0x00100000-0x001fffff] to [bus 86] add_size 100000 add_align 100000
-> [ 1217.699821] pci 0000:85:03.0: bridge window [mem
-> 0x00100000-0x001fffff] to [bus 87] add_size 100000 add_align 100000
-> [ 1217.699904] pci 0000:85:02.0: res[14]=[mem 0x00100000-0x001fffff]
-> res_to_dev_res add_size 100000 min_align 100000
-> [ 1217.699907] pci 0000:85:02.0: res[14]=[mem 0x00100000-0x001fffff]
-> res_to_dev_res add_size 100000 min_align 100000
-> ...
+Yes. I also realized that I really should check that tdev->vpd is not =
+NULL. There is no point in referencing it if, for whatever reason, it =
+has no VPD.
 
-This is slipping down my priority list because I have more interesting
-things to work on than trying to decipher what's going on here.
+> I also believe this leaks a reference to the device.
 
-And immediately after I suggested that you remove irrelevant
-information like timestamps, you send a bunch more logs WITH the
-distracting timestamps :)
+Yes, and I was thinking that when I wrote the line, but forgot to do =
+anything about it. Good catch!
 
-85:02.0 is a bridge to bus 86.  85:03.0 is a bridge to bus 87.
-Apparently we assigned too much space for the 85:02.0 mem window.
-So I'm expecting a list of the devices on bus 86 along with their
-resource requirements.  And I'm looking for some discussion about
-which are required, which are optional, what size we actually computed,
-and what size we *should* have computed.  In English, not C.
+> You should be calling pci_dev_put(tdev) if tdev is not NULL.  As such =
+you probably need to split up the !tdev and the rest of the checks.
 
-You say 85:03.0 is also relevant, but your only explanation is "kind of."
-That doesn't really help me.  Is the problem that the window leading
-to bus 85 is limited, 85:03.0 takes some, and what's left isn't enough
-for 85:02.0?  I don't see any information about the windows leading to
-bus 85.
+Yup. I will have a V3 coming. I still don't have anything to handle PFs =
+assigned to guests, but I think that would be best in a separate patch =
+set if there is need to fix that. It looks to me like that would involve =
+trapping on all config space accesses to such devices and then emulating =
+the behavior of the VPD Address/F and Data registers. It may be worth =
+seeing if anyone cares before doing anything about it. I haven't seen =
+any reports related to such a setup.
 
-I'm dropping this for now; please post an update with an improved
-changelog.
+Again, thank you for your comments.
 
-Bjorn
+--
+Mark Rustad, Networking Division, Intel Corporation
+
+
+--Apple-Mail=_B443E2EF-BF6E-486A-A6C8-5F41C784D5D3
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJVbyhsAAoJEDwO/+eO4+5uKZYP/RTdMtrlhEh6X3JqPAMXfUQ7
+v+idF6gb2R9xmoJ+zvmoSiG+ggM7YvPi91fCee7g4YbmPJKs+yJ0lFfZgHGtV97U
+WwHehHjrYjWU1gr4vXeI/igeJj2WdCX5uiqImFss9cV0bgHG8YjkNx2JpXjGs6P2
+4SSoXg3Y/Dy2u8i89V0qg59n/ub4b6fNQLhVQrQZWe4KSh6gzgAOSKQpfPwmlBpY
+wWgvtSMmlbUVDQ4sxNxtYwTCBSUhuGOgKsND3epOUtRvZjAKNG2ji1p29D1pJ5bi
+Jc1KIQ874LO+pfPO66G/p0HOOTbJm9XRREJogHam7WMW6xbPVgO5fas55jAfjOuv
+qjQE9qwtqs62IGOtjkaKV1cc8Ryphr3sp6l/dXO/Hrq3t8bWyZ1eVuuXPEn68WDQ
+QFOcufx+qIp3WzQggn8n89Ip02DsR5IK0aJtlEoUz9vOH8lwJnHt6SxyDQgWLfXH
+cVyUg5syiL+0zKzF71E0c9w/aTdmyiK3yP2Y47+G5dWtb7CHL+ii6zejdAJRJvL4
+t9IXRXW6+sXYkVPMWYoG4QPkhZrMt1Gf89G8/anuBkJIZmOS0j9+xedfZbr8GUmH
+b2Z5bDCQi1GMRveKMvcf9khdw7xcSAngfB4fdISwAYmZPT+vGTlFytG1XJfRUF77
+DiEoFPL6MIoZ4CAM3k12
+=5hJu
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_B443E2EF-BF6E-486A-A6C8-5F41C784D5D3--
