@@ -1,65 +1,101 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1434151758.2160.98.camel@HansenPartnership.com>
-Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Jan Beulich <JBeulich@suse.com>, Juergen Gross <jgross@suse.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Dave Airlie <airlied@redhat.com>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	X86 ML <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-media@vger.kernel.org, Luis Rodriguez <Mcgrof@suse.com>,
+Date: Wed, 3 Jun 2015 17:55:35 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Toshi Kani <toshi.kani@hp.com>, Borislav Petkov <bp@suse.de>,
-	Julia Lawall <julia.lawall@lip6.fr>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ville.syrjala@linux.intel.com
-Date: Fri, 12 Jun 2015 16:29:18 -0700
-In-Reply-To: <CALCETrXWZU2NZRZy7b74z54Tt5aKmTOmgMmf5WYG1OZtEmjw7A@mail.gmail.com>
-References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
-	 <1434064996.11808.64.camel@misato.fc.hp.com>
-	 <557AAD910200007800084014@mail.emea.novell.com>
-	 <CALCETrXWZU2NZRZy7b74z54Tt5aKmTOmgMmf5WYG1OZtEmjw7A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+Message-ID: <20150603165535.GB11928@red-moon>
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+ <20150527210447.GY32152@google.com>
+ <20150602145510.GE23650@red-moon>
+ <556DE1B9.6020100@roeck-us.net>
+ <20150603103235.GC27917@red-moon>
+ <556F1958.5050003@roeck-us.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <556F1958.5050003@roeck-us.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2015-06-12 at 16:15 -0700, Andy Lutomirski wrote:
-> On Jun 12, 2015 12:59 AM, "Jan Beulich" <JBeulich@suse.com> wrote:
+On Wed, Jun 03, 2015 at 04:12:24PM +0100, Guenter Roeck wrote:
+
+[...]
+
+> >> After looking into this some more, I think the wrinkle may be that
+> >> pci_read_bridge_bases() and thus pci_read_bridge_io() isn't called
+> >> on probe-only systems (if PCI_PROBE_ONLY is set). A secondary
 > >
-> > >>> On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
-> > > There are two usages on MTRRs:
-> > >  1) MTRR entries set by firmware
-> > >  2) MTRR entries set by OS drivers
-> > >
-> > > We can obsolete 2), but we have no control over 1).  As UEFI firmwares
-> > > also set this up, this usage will continue to stay.  So, we should not
-> > > get rid of the MTRR code that looks up the MTRR entries, while we have
-> > > no need to modify them.
-> > >
-> > > Such MTRR entries provide safe guard to /dev/mem, which allows
-> > > privileged user to access a range that may require UC mapping while
-> > > the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
-> > > such a case.
+> > That's what we would like to change :)
 > >
-> > But it wouldn't be impossible to simply read the MTRRs upon boot,
-> > store the information, disable MTRRs, and correctly use PAT to
-> > achieve the same effect (i.e. the "blindly maps" part of course
-> > would need fixing).
+> > https://lkml.org/lkml/2015/5/21/359
 > 
-> This may crash and burn badly when we call a UEFI function or an SMI
-> happens.  I think we should just leave the MTRRs alone.
+> Yes, that should help. I had a brief look last night and concluded
+> that this would require changes all over the place, which your patch
+> pretty much confirms. Glad that you are tackling it - changes all over
+> the place spell trouble and would probably require more time than I have
+> available to spend on the problem.
 
-Wholeheartedly agree: PAT only works when the given memory map is in
-operation but MTRRs function everywhere.  Anything that goes into real
-mode or installs its own memory map won't see the Linux page attributes.
+Eh, trouble did not even start because we have just tested it on ARM/ARM64
+systems (that's all I can do no sign of testing on any other arch), so I do
+not expect it will be merged quickly, it will take me time to get all the
+required acks.
 
-James
+I should be able to send a v2 beginning of next week.
 
+> >> problem is that pci_read_bridge_io() does not enable a resource
+> >> if it is explicitly disabled (base > limit), but the subsequent call
+> >> to pci_bridge_check_ranges() unconditionally enables it.
+> >>
+> >> Not really sure how to address this; my current code checks IO support
+> >> in both pci_read_bridge_io() and pci_bridge_check_ranges(). And since
+> >> pci_read_bridge_io() is not always called, I don't see how it might
+> >> be possible to get rid of pci_bridge_check_ranges(), or even the check
+> >> for IO support in pci_bridge_check_ranges().
+> >>
+> >>> While at it, do you think it is reasonable to also claim the bridge
+> >>> windows (resources) in the respective pci_read_bridge_* calls ?
+> >>>
+> >>> Is there a reason why we don't/can't do it ? I noticed that on
+> >>> PROBE_ONLY systems on ARM/ARM64 at the moment we do not claim
+> >>> the bridge apertures and this is not correct, see below:
+> >>>
+> >>> [5.980127] pcieport 0000:00:02.1: can't enable device: BAR 8
+> >>> [mem 0xbff00000 - 0xbfffffff] not claimed
+> >>> [5.988056] pcieport: probe of 0000:00:02.1 failed with error -22
+> >>>
+> >> Is this when trying my patches or with the current upstream code ?
+> >
+> > It is upstream code with a couple of ARM64 related patches not yet
+> > merged. Still, it shows an issue that must be tackled.
+> >
+> > It is not caused by your patches but it can be solved by them.
+> > On PROBE_ONLY systems, all resources must be claimed (since they
+> > are not reassigned, hence not claimed by the code that reassigns them),
+> > otherwise we can't enable a device resources (ie pcibios_enable_device
+> > calls pci_enable_resources that fails, since resources are not claimed).
+> >
+> > That's why we are suggesting claiming the bridge apertures as soon
+> > as they are read from the base registers, even on PROBE_ONLY systems.
+> >
+> > I think that's the only approach Bjorn would accept, otherwise
+> > we will have to fiddle with PROBE_ONLY on ARM64, and either avoid calling
+> > pci_enable_resources or avoid checking if a resource is claimed in
+> > pci_enable_resources, neither solution seems sane to me.
+> >
+> 
+> Looks like I'll need one of those arm64 systems at some point ;-).
+> 
+> Where is your patch in respect to acceptance ? Would it make sense to
+> merge it into my code and base my patch(es) on it, or do you expect
+> major changes which would make that difficult ?
 
+I have a tweak to v1, I will post v2 next week and copy you in.
+Acceptance, I think it received review only from ARM guys/platforms
+so we are still far from merging it.
+
+Thanks,
+Lorenzo
