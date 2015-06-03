@@ -1,60 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: [Patch v3 0/4] Introduce a mechanism to allocate PCI IRQ on demand
-Date: Wed, 10 Jun 2015 16:54:57 +0800
-Message-Id: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 3 Jun 2015 20:37:49 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH v6 1/2] PCI/MSI: Don't disable MSI/MSI-X at shutdown
+Message-ID: <20150603203217-mutt-send-email-mst@redhat.com>
+References: <1431431730-25164-1-git-send-email-mst@redhat.com>
+ <1431431730-25164-2-git-send-email-mst@redhat.com>
+ <871tilmwiq.fsf@x220.int.ebiederm.org>
+ <20150513081101-mutt-send-email-mst@redhat.com>
+ <20150514075957-mutt-send-email-mst@redhat.com>
+ <46708A26-16CB-4417-BCFA-12F4C78FC2F7@xmission.com>
+ <20150514113732-mutt-send-email-mst@redhat.com>
+ <20150528182645-mutt-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150528182645-mutt-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-	I have verified that this patch set could be applied to the
-mainstream kernel without dependency on other patches, so could you
-please help to merge it?
+On Thu, May 28, 2015 at 06:36:22PM +0200, Michael S. Tsirkin wrote:
+> On Thu, May 14, 2015 at 11:53:34AM +0200, Michael S. Tsirkin wrote:
+> > > you are almost certainly going to subject it to a
+> > > screaming MSI interrupt and there almost certainly will
+> > > not be code to disable MSIs as they are disabled by at
+> > > boot up by default.
+> > > 
+> > > Eric
+> > 
+> > OTOH if you do disable MSI but leave device functioning you will just
+> > get screaming INT#x which is even worse because it will end up disabling
+> > INT#x which is shared, and so breaking multiple devices and not just
+> > this one.
+> 
+> Eric, can you comment on this please?
+> To list the points again:
+> 	1- if device is properly shut down there's no need to disable MSIs
+> 	2- if device is not properly shut down disabling MSIs will cause
+> 	   screaming INT#x interrupts
+> 	3- in both cases if we leave MSI on then we can be sure we won't
+> 	   get screaming interrupts since we now disable bus mastering
+>            which suppresses MSIs (but not INT#x)
+> 
+> Looking at the commit that added the disable, that is d52877c7b1af, you
+> will see that historically it preceded b566a22c23. So the screaming MSI
+> problem that d52877c7b1af tried to address is now gone, addressed by
+> b566a22c23.
+> 
+> What do you think?
 
-This patch set introduces a mechanism to allocate PCI IRQ on demand and
-free it when not used anymore by hooking pci_device_probe() and
-pci_device_remove().
+Eric, Bjor, could you comment?
+I'm sorry if these repeating questions are annoying to you, but the
+comment that not disabling msi can cause screaming interrupts seems to
+be based on state of the kernel before 2012.
 
-It will be used to track IOAPIC pin usage on x86 so we could support
-IOAPIC hot-removal.
+Ever since
+commit b566a22c23327f18ce941ffad0ca907e50a53d41
+    PCI: disable Bus Master on PCI device shutdown
+even broken devices that don't disable msi on shutdown can
+not cause screaming interrupts even if core leaves msi alone.
 
-The patch set passes Fengguang's 0day test suite.
+So I don't see how can removing that code cause regressions, and it
+might improve the situation since it reduces the chance of
+getting screaming INT#x.
 
-V2->V3:
-1) Change the default pcibios_alloc_irq() to always return 0, as
-   suggested by Bjorn.
-2) Refine comments.
-
-V1->V2:
-1) Refine pci_device_probe() to optimize for mainline code as suggested
-   by Bjorn
-2) Reorder patch set to put optional patch as the last (Patch 4)
-
-
-Jiang Liu (4):
-  PCI: Add hooks to allocate/free IRQ resources when binding/unbinding
-    driver
-  PCI, x86: Allocate PCI IRQ on demand and free it when not used
-    anymore
-  PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed
-  PCI, MSI: Free legacy PCI IRQ when enabling MSI/MSI-X
-
- arch/x86/include/asm/pci_x86.h |    2 --
- arch/x86/pci/common.c          |   20 +++++++++-----------
- arch/x86/pci/intel_mid_pci.c   |    9 ++++++---
- arch/x86/pci/irq.c             |   23 ++++-------------------
- drivers/acpi/pci_irq.c         |   17 ++++-------------
- drivers/pci/msi.c              |    6 +++++-
- drivers/pci/pci-driver.c       |   26 ++++++++++++++++++++------
- include/linux/pci.h            |   19 +++++++++++++++++++
- 8 files changed, 67 insertions(+), 55 deletions(-)
-
--- 
-1.7.10.4
-
+> > -- 
+> > MST
