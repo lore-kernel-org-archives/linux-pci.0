@@ -1,384 +1,327 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:59208 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423038AbbFEOLS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Jun 2015 10:11:18 -0400
-From: Joerg Roedel <joro@8bytes.org>
-To: iommu@lists.linux-foundation.org
-Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
-	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
-	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
-	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
-Subject: [PATCH 06/17] iommu/vt-d: Rework loading of old root-entry table
-Date: Fri,  5 Jun 2015 16:10:52 +0200
-Message-Id: <1433513463-19128-7-git-send-email-joro@8bytes.org>
-In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:37541 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753178AbbFCIgi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2015 04:36:38 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <fabrice.gasnier@st.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v2 3/4] PCI: hisi: Add PCIe host support for Hisilicon Soc Hip05
+Date: Wed, 3 Jun 2015 16:35:41 +0800
+Message-ID: <1433320542-49576-4-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
+This patch adds PCIe host support for Hisilicon Soc Hip05.
 
-Instead of keeping pointers to the old data structures
-around forever, just map the old root entry table to copy
-the context entries and make the new table immidiatly
-visible to the hardware.
-
-Tested-by: Baoquan He <bhe@redhat.com>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 ---
- drivers/iommu/intel-iommu.c | 216 +++++++++++++++-----------------------------
- include/linux/intel-iommu.h |   3 -
- 2 files changed, 74 insertions(+), 145 deletions(-)
+ drivers/pci/host/Kconfig     |   5 +
+ drivers/pci/host/Makefile    |   1 +
+ drivers/pci/host/pcie-hisi.c | 258 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 264 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-hisi.c
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index cda0901..c0b72e8 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -371,10 +371,6 @@ static struct context_entry *device_to_existing_context_entry(
- 				struct intel_iommu *iommu,
- 				u8 bus, u8 devfn);
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 1dfb567..486d822 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -125,4 +125,9 @@ config PCIE_IPROC_PLATFORM
+ 	  Say Y here if you want to use the Broadcom iProc PCIe controller
+ 	  through the generic platform bus interface
  
--static void __iommu_load_old_root_entry(struct intel_iommu *iommu);
--
--static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index);
--
- /*
-  * A structure used to store the address allocated by ioremap();
-  * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
-@@ -392,7 +388,8 @@ static DEFINE_MUTEX(__iommu_mem_list_lock);
-  * ------------------------------------------------------------------------
-  */
- 
--static int copy_root_entry_table(struct intel_iommu *iommu);
-+static int copy_root_entry_table(struct intel_iommu *iommu,
-+				 struct root_entry *old_re);
- 
- static int intel_iommu_load_translation_tables(struct intel_iommu *iommu);
- 
-@@ -798,9 +795,6 @@ static inline struct context_entry *iommu_context_addr(struct intel_iommu *iommu
- 		phy_addr = virt_to_phys((void *)context);
- 		*entry = phy_addr | 1;
- 		__iommu_flush_cache(iommu, entry, sizeof(*entry));
--
--		if (iommu->pre_enabled_trans)
--			__iommu_update_old_root_entry(iommu, bus);
- 	}
- 	return &context[devfn];
- }
-@@ -918,12 +912,6 @@ static void free_context_table(struct intel_iommu *iommu)
- 
- 	}
- 
--	if (iommu->pre_enabled_trans) {
--		iommu->root_entry_old_phys = 0;
--		root = iommu->root_entry_old_virt;
--		iommu->root_entry_old_virt = NULL;
--	}
--
- 	free_pgtable_page(iommu->root_entry);
- 	iommu->root_entry = NULL;
- 
-@@ -2942,6 +2930,20 @@ static int __init init_dmars(void)
- 		if (ret)
- 			goto free_iommu;
- 
-+		if (!ecap_pass_through(iommu->ecap))
-+			hw_pass_through = 0;
++config PCI_HISI
++	depends on OF && ARM64
++	bool "Hisilicon Soc HIP05 PCIe controller"
++	select PCIE_DW
 +
-+		intel_iommu_init_qi(iommu);
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index f733b4e..562142e 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -15,3 +15,4 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
++obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+new file mode 100644
+index 0000000..2a4d72e
+--- /dev/null
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -0,0 +1,258 @@
++/*
++ * PCIe host controller driver for Hisilicon Hip05 SoCs
++ *
++ * Copyright (C) 2015 Hisilicon Co., Ltd. http://www.hisilicon.com
++ *
++ * Author: Zhou Wang <wangzhou1@hisilicon.com>
++ *         Dacai Zhu <zhudacai@hisilicon.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#include <linux/interrupt.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_pci.h>
++#include <linux/platform_device.h>
 +
-+		/*
-+		 * TBD:
-+		 * We could share the same root & context tables
-+		 * among all IOMMU's. Need to Split it later.
-+		 */
-+		ret = iommu_alloc_root_entry(iommu);
-+		if (ret)
-+			goto free_iommu;
++#include "pcie-designware.h"
 +
- 		iommu_check_pre_te_status(iommu);
- 
- 		/*
-@@ -2957,35 +2959,43 @@ static int __init init_dmars(void)
- 		}
- 
- 		if (iommu->pre_enabled_trans) {
--			pr_info("IOMMU Copying translate tables from panicked kernel\n");
- 			ret = intel_iommu_load_translation_tables(iommu);
- 			if (ret) {
--				pr_err("IOMMU: Copy translate tables failed\n");
-+				/*
-+				 * We found the IOMMU with translation
-+				 * enabled - but failed to copy over the
-+				 * old root-entry table. Try to proceed
-+				 * by disabling translation now and
-+				 * allocating a clean root-entry table.
-+				 * This might cause DMAR faults, but
-+				 * probably the dump will still succeed.
-+				 */
-+				pr_err("Failed to copy translation tables from previous kernel for %s\n",
-+						iommu->name);
- 
--				/* Best to stop trying */
--				goto free_iommu;
-+				iommu_disable_translation(iommu);
-+				iommu->pre_enabled_trans = 0;
-+			} else {
-+				pr_info("Copied translation tables from previous kernel for %s\n",
-+					iommu->name);
- 			}
--			pr_info("IOMMU: root_cache:0x%12.12llx phys:0x%12.12llx\n",
--				(u64)iommu->root_entry,
--				(u64)iommu->root_entry_old_phys);
--		} else {
--			/*
--			 * TBD:
--			 * we could share the same root & context tables
--			 * among all IOMMU's. Need to Split it later.
--			 */
--			ret = iommu_alloc_root_entry(iommu);
--			if (ret)
--				goto free_iommu;
- 		}
- 
--		if (!ecap_pass_through(iommu->ecap))
--			hw_pass_through = 0;
-+		/*
-+		 * Make the new root entry visible. If IOMMU was
-+		 * disabled before we are safe because translation is
-+		 * not enabled yet, so any DMA access to RMRR regions
-+		 * still works.
-+		 * If we are in a kdump kernel and IOMMU was enabled
-+		 * before, we must make sure that the hardware uses the
-+		 * new root entry table from now on.
-+		 */
-+		iommu_flush_write_buffer(iommu);
-+		iommu_set_root_entry(iommu);
-+		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
-+		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
- 	}
- 
--	for_each_active_iommu(iommu, drhd)
--		intel_iommu_init_qi(iommu);
--
- 	if (iommu_pass_through)
- 		iommu_identity_mapping |= IDENTMAP_ALL;
- 
-@@ -3063,21 +3073,14 @@ skip_new_domains_for_si_rmrr_isa:;
- 			continue;
- 		}
- 
--		iommu_flush_write_buffer(iommu);
--
- 		ret = dmar_set_interrupt(iommu);
- 		if (ret)
- 			goto free_iommu;
- 
--		iommu_set_root_entry(iommu);
--
- 		iommu->flush.flush_context(iommu, 0, 0, 0, DMA_CCMD_GLOBAL_INVL);
- 		iommu->flush.flush_iotlb(iommu, 0, 0, 0, DMA_TLB_GLOBAL_FLUSH);
- 
--		if (iommu->pre_enabled_trans) {
--			if (!(iommu->gcmd & DMA_GCMD_TE))
--				iommu_enable_translation(iommu);
--		} else
-+		if (!iommu->pre_enabled_trans)
- 			iommu_enable_translation(iommu);
- 
- 		iommu_disable_protect_mem_regions(iommu);
-@@ -5009,94 +5012,37 @@ static int __iommu_free_mapped_mem(void)
- }
- 
- /*
-- * Load the old root entry table to new root entry table.
-- */
--static void __iommu_load_old_root_entry(struct intel_iommu *iommu)
--{
--	if ((!iommu)
--		|| (!iommu->root_entry)
--		|| (!iommu->root_entry_old_virt)
--		|| (!iommu->root_entry_old_phys))
--		return;
--	memcpy(iommu->root_entry, iommu->root_entry_old_virt, PAGE_SIZE);
--
--	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
--}
--
--/*
-- * When the data in new root entry table is changed, this function
-- * must be called to save the updated data to old root entry table.
-- */
--static void __iommu_update_old_root_entry(struct intel_iommu *iommu, int index)
--{
--	u8 start;
--	unsigned long size;
--	void __iomem *to;
--	void *from;
--
--	if ((!iommu)
--		|| (!iommu->root_entry)
--		|| (!iommu->root_entry_old_virt)
--		|| (!iommu->root_entry_old_phys))
--		return;
--
--	if (index < -1 || index >= ROOT_ENTRY_NR)
--		return;
--
--	if (index == -1) {
--		start = 0;
--		size = ROOT_ENTRY_NR * sizeof(struct root_entry);
--	} else {
--		start = index * sizeof(struct root_entry);
--		size = sizeof(struct root_entry);
--	}
--	to = iommu->root_entry_old_virt;
--	from = iommu->root_entry;
--	memcpy(to + start, from + start, size);
--
--	__iommu_flush_cache(iommu, to + start, size);
--}
--
--/*
-  * Load root entry tables from old kernel.
-  */
--static int copy_root_entry_table(struct intel_iommu *iommu)
-+static int copy_root_entry_table(struct intel_iommu *iommu,
-+				 struct root_entry *old_re)
- {
--	u32 bus;				/* Index: root-entry-table */
--	struct root_entry  *re;			/* Virt(iterator: new table) */
--	unsigned long context_old_phys;		/* Phys(context table entry) */
--	struct context_entry *context_new_virt;	/* Virt(new context_entry) */
-+	struct context_entry *context_new_virt;
-+	unsigned long context_old_phys;
-+	u32 bus;
- 
--	/*
--	 * A new root entry table has been allocated ,
--	 * we need copy re from old kernel to the new allocated one.
--	 */
--
--	if (!iommu->root_entry_old_phys)
--		return -ENOMEM;
--
--	for (bus = 0, re = iommu->root_entry; bus < 256; bus += 1, re += 1) {
--		if (!root_present(re))
-+	for (bus = 0; bus < 256; bus++, old_re++) {
-+		if (!root_present(old_re))
- 			continue;
- 
--		context_old_phys = get_context_phys_from_root(re);
-+		context_old_phys = get_context_phys_from_root(old_re);
- 
- 		if (!context_old_phys)
- 			continue;
- 
--		context_new_virt =
--			(struct context_entry *)alloc_pgtable_page(iommu->node);
-+		context_new_virt = alloc_pgtable_page(iommu->node);
- 
- 		if (!context_new_virt)
- 			return -ENOMEM;
- 
- 		__iommu_load_from_oldmem(context_new_virt,
--					context_old_phys,
--					VTD_PAGE_SIZE);
-+					 context_old_phys,
-+					 VTD_PAGE_SIZE);
- 
- 		__iommu_flush_cache(iommu, context_new_virt, VTD_PAGE_SIZE);
- 
--		set_root_value(re, virt_to_phys(context_new_virt));
-+		set_root_value(&iommu->root_entry[bus],
-+			       virt_to_phys(context_new_virt));
- 	}
- 
- 	return 0;
-@@ -5108,49 +5054,35 @@ static int copy_root_entry_table(struct intel_iommu *iommu)
-  */
- static int intel_iommu_load_translation_tables(struct intel_iommu *iommu)
- {
--	unsigned long long q;		/* quadword scratch */
--	int ret = 0;			/* Integer return code */
-+	struct root_entry *old_re;
-+	phys_addr_t old_re_phys;
- 	unsigned long flags;
-+	int ret = 0;
-+	u64 q;
- 
- 	q = dmar_readq(iommu->reg + DMAR_RTADDR_REG);
- 	if (!q)
- 		return -1;
- 
--	spin_lock_irqsave(&iommu->lock, flags);
--
--	/* Load the root-entry table from the old kernel
--	 * foreach context_entry_table in root_entry
--	 *   Copy each entry table from old kernel
--	 */
--	if (!iommu->root_entry) {
--		iommu->root_entry =
--			(struct root_entry *)alloc_pgtable_page(iommu->node);
--		if (!iommu->root_entry) {
--			spin_unlock_irqrestore(&iommu->lock, flags);
--			return -ENOMEM;
--		}
--	}
--
--	iommu->root_entry_old_phys = q & VTD_PAGE_MASK;
--	if (!iommu->root_entry_old_phys) {
--		pr_err("Could not read old root entry address.");
--		return -1;
--	}
-+	old_re_phys = q & VTD_PAGE_MASK;
-+	if (!old_re_phys)
++#define PCIE_SUBCTRL_MODE_REG                           0x2800
++#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
++#define PCIE_SLV_DBI_MODE                               0x0
++#define PCIE_SLV_SYSCTRL_MODE                           0x1
++#define PCIE_SLV_CONTENT_MODE                           0x2
++#define PCIE_SLV_MSI_ASID                               0x10
++#define PCIE_LTSSM_LINKUP_STATE                         0x11
++#define PCIE_LTSSM_STATE_MASK                           0x3F
++#define PCIE_MSI_ASID_ENABLE                            (0x1 << 12)
++#define PCIE_MSI_ASID_VALUE                             (0x1 << 16)
++#define PCIE_MSI_TRANS_ENABLE                           (0x1 << 12)
++#define PCIE_MSI_TRANS_REG                              0x1c8
++#define PCIE_MSI_LOW_ADDRESS                            0x1b4
++#define PCIE_MSI_HIGH_ADDRESS                           0x1c4
++#define PCIE_MSI_ADDRESS_VAL                            0xb7010040
++
++#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
++
++struct hisi_pcie {
++	void __iomem *subctrl_base;
++	void __iomem *reg_base;
++	struct msi_controller *msi;
++	u32 port_id;
++	struct pcie_port pp;
++};
++
++static inline void hisi_pcie_subctrl_writel(struct hisi_pcie *pcie,
++					    u32 val, u32 reg)
++{
++	writel(val, pcie->subctrl_base + reg);
++}
++
++static inline u32 hisi_pcie_subctrl_readl(struct hisi_pcie *pcie, u32 reg)
++{
++	return readl(pcie->subctrl_base + reg);
++}
++
++static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
++					u32 val, u32 reg)
++{
++	writel(val, pcie->reg_base + reg);
++}
++
++static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
++{
++	return readl(pcie->reg_base + reg);
++}
++
++/*
++ * Change mode to indicate the same reg_base to base of PCIe host configure
++ * registers, base of RC configure space or base of vmid/asid context table
++ */
++static void hisi_pcie_change_apb_mode(struct hisi_pcie *pcie, u32 mode)
++{
++	u32 val;
++	u32 bit_mask;
++	u32 bit_shift;
++	u32 port_id = pcie->port_id;
++	u32 reg = PCIE_SUBCTRL_MODE_REG + 0x100 * port_id;
++
++	if ((port_id == 1) || (port_id == 2)) {
++		bit_mask = 0xc;
++		bit_shift = 0x2;
++	} else {
++		bit_mask = 0x6;
++		bit_shift = 0x1;
++	}
++
++	val = hisi_pcie_subctrl_readl(pcie, reg);
++	val = (val & (~bit_mask)) | (mode << bit_shift);
++	hisi_pcie_subctrl_writel(pcie, val, reg);
++}
++
++/* Configure vmid/asid table in PCIe host */
++static void hisi_pcie_config_context(struct hisi_pcie *pcie)
++{
++	int i;
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
++
++	/*
++	 * init vmid and asid tables for all PCIes device as 0
++	 * vmid table: 0 ~ 0x3ff, asid table: 0x400 ~ 0x7ff
++	 */
++	for (i = 0; i < 0x800; i++)
++		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
++
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_ADDRESS_VAL, PCIE_MSI_LOW_ADDRESS);
++	hisi_pcie_apb_writel(pcie, 0x0, PCIE_MSI_HIGH_ADDRESS);
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_ASID_ENABLE | PCIE_MSI_ASID_VALUE,
++			     PCIE_SLV_MSI_ASID);
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, PCIE_MSI_TRANS_REG);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
++}
++
++static int hisi_pcie_link_up(struct pcie_port *pp)
++{
++	u32 val;
++
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	val = hisi_pcie_subctrl_readl(hisi_pcie, PCIE_SUBCTRL_SYS_STATE4_REG +
++				      0x100 * hisi_pcie->port_id);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
++static
++int hisi_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
++{
++	struct device_node *msi_node;
++	struct msi_controller *msi;
++	struct device_node *np = pp->dev->of_node;
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	msi_node = of_parse_phandle(np, "msi-parent", 0);
++	if (!msi_node) {
++		pr_err("failed to find msi-parent\n");
 +		return -ENODEV;
- 
--	iommu->root_entry_old_virt = ioremap_cache(iommu->root_entry_old_phys,
--						VTD_PAGE_SIZE);
--	if (!iommu->root_entry_old_virt) {
--		pr_err("Could not map the old root entry.");
-+	old_re = ioremap_cache(old_re_phys, PAGE_SIZE);
-+	if (!old_re) {
-+		pr_err("Could not map old root entry\n");
- 		return -ENOMEM;
- 	}
- 
--	__iommu_load_old_root_entry(iommu);
--	ret = copy_root_entry_table(iommu);
-+	spin_lock_irqsave(&iommu->lock, flags);
++	}
 +
-+	ret = copy_root_entry_table(iommu, old_re);
- 	__iommu_flush_cache(iommu, iommu->root_entry, PAGE_SIZE);
--	__iommu_update_old_root_entry(iommu, -1);
- 
- 	spin_unlock_irqrestore(&iommu->lock, flags);
- 
-+	iounmap(old_re);
++	msi = of_pci_find_msi_chip_by_node(msi_node);
++	hisi_pcie->msi = msi;
 +
- 	__iommu_free_mapped_mem();
- 
- 	return ret;
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index 7e771c2..6c37de9 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -345,9 +345,6 @@ struct intel_iommu {
- 	/* whether translation is enabled prior to OS*/
- 	u8		pre_enabled_trans;
- 
--	void __iomem	*root_entry_old_virt; /* mapped from old root entry */
--	unsigned long	root_entry_old_phys; /* root entry in old kernel */
--
- 	struct iommu_flush flush;
- #endif
- 	struct q_inval  *qi;            /* Queued invalidation info */
++	pp->irq_domain = msi->domain;
++
++	return 0;
++}
++
++static struct pcie_host_ops hisi_pcie_host_ops = {
++	.link_up = hisi_pcie_link_up,
++	.msi_host_init = hisi_pcie_msi_host_init,
++};
++
++static int __init hisi_add_pcie_port(struct pcie_port *pp,
++				     struct platform_device *pdev)
++{
++	int ret;
++	u32 port_id;
++	struct resource busn;
++
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
++		dev_err(&pdev->dev, "failed to read port-id\n");
++		return -EINVAL;
++	}
++	if (port_id > 3) {
++		dev_err(&pdev->dev, "Invalid port-id\n");
++		return -EINVAL;
++	}
++
++	hisi_pcie->port_id = port_id;
++
++	if (of_pci_parse_bus_range(pdev->dev.of_node, &busn)) {
++		dev_err(&pdev->dev, "failed to parse bus-ranges\n");
++		return -EINVAL;
++	}
++
++	pp->root_bus_nr = busn.start;
++	pp->ops = &hisi_pcie_host_ops;
++
++	hisi_pcie_config_context(hisi_pcie);
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int __init hisi_pcie_probe(struct platform_device *pdev)
++{
++	struct hisi_pcie *hisi_pcie;
++	struct pcie_port *pp;
++	struct resource *reg;
++	struct resource *subctrl;
++	int ret;
++
++	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
++	if (!hisi_pcie)
++		return -ENOMEM;
++
++	pp = &hisi_pcie->pp;
++	pp->dev = &pdev->dev;
++
++	subctrl = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subctrl");
++	hisi_pcie->subctrl_base = devm_ioremap_nocache(&pdev->dev,
++					subctrl->start, resource_size(subctrl));
++	if (IS_ERR(hisi_pcie->subctrl_base)) {
++		dev_err(pp->dev, "cannot get subctrl base\n");
++		return PTR_ERR(hisi_pcie->subctrl_base);
++	}
++
++	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
++	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
++	if (IS_ERR(hisi_pcie->reg_base)) {
++		dev_err(pp->dev, "cannot get reg base\n");
++		return PTR_ERR(hisi_pcie->reg_base);
++	}
++
++	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
++
++	ret = hisi_add_pcie_port(pp, pdev);
++	if (ret < 0)
++		return ret;
++
++	platform_set_drvdata(pdev, hisi_pcie);
++
++	return ret;
++}
++
++static const struct of_device_id hisi_pcie_of_match[] = {
++	{.compatible = "hisilicon,hip05-pcie",},
++	{},
++};
++
++MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
++
++static struct platform_driver hisi_pcie_driver = {
++	.probe  = hisi_pcie_probe,
++	.driver = {
++		   .name = "hisi-pcie",
++		   .owner = THIS_MODULE,
++		   .of_match_table = hisi_pcie_of_match,
++	},
++};
++
++module_platform_driver(hisi_pcie_driver);
++
++MODULE_AUTHOR("Zhou Wang <wangzhou1@huawei.com>");
++MODULE_AUTHOR("Dacai Zhu <zhudacai@huawei.com>");
++MODULE_LICENSE("GPL v2");
 -- 
 1.9.1
 
