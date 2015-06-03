@@ -1,71 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vn0-f53.google.com ([209.85.216.53]:44027 "EHLO
-	mail-vn0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbbFSXHM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 19:07:12 -0400
-Received: by vnbf1 with SMTP id f1so820146vnb.10
-        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 16:07:12 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <556EBE6D.90907@linaro.org>
+Date: Wed, 03 Jun 2015 16:44:29 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <20150619224243.14626.59367.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150619224243.14626.59367.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 19 Jun 2015 18:06:52 -0500
-Message-ID: <CAErSpo6JtrMS9wvF8KHfVank+iLzP9BqvE9xZo_he_3w-+zA3Q@mail.gmail.com>
-Subject: Re: [PATCH 4/6] PCI: Fix Intel generic reset quirk class code check
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: "x86@kernel.org" <x86@kernel.org>, Felipe Balbi <balbi@ti.com>,
-	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
-	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
-	Jason Chang <jason.chang@amd.com>,
-	Mathias Nyman <mathias.nyman@intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [Patch v4 5/8] ARM64/PCI/ACPI: Introduce struct pci_controller
+ for ACPI
+References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com> <1433225576-8215-6-git-send-email-jiang.liu@linux.intel.com> <20150602093525.GA23543@red-moon>
+In-Reply-To: <20150602093525.GA23543@red-moon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[-cc Dexuan, Matthew (bounced)]
-[+cc Mathias, since MAINTAINERS mentions USB, Intel, and you in one entry :)]
+On 2015年06月02日 17:35, Lorenzo Pieralisi wrote:
+> On Tue, Jun 02, 2015 at 07:12:53AM +0100, Jiang Liu wrote:
+>> From: Hanjun Guo <hanjun.guo@linaro.org>
+>>
+>> ARM64 ACPI based PCI host bridge init needs a arch dependent
+>> struct pci_controller to accommodate common PCI host bridge
+>> code which is introduced later, or it will lead to compile
+>> errors on ARM64.
+>>
+>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>> CC: Arnd Bergmann <arnd@arndb.de>
+>> CC: Catalin Marinas <catalin.marinas@arm.com>
+>> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+>> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+>> CC: Will Deacon <will.deacon@arm.com>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>   arch/arm64/include/asm/pci.h |   10 ++++++++++
+>>   1 file changed, 10 insertions(+)
+>>
+>> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+>> index b008a72f8bc0..70884957f253 100644
+>> --- a/arch/arm64/include/asm/pci.h
+>> +++ b/arch/arm64/include/asm/pci.h
+>> @@ -10,6 +10,16 @@
+>>   #include <asm-generic/pci-bridge.h>
+>>   #include <asm-generic/pci-dma-compat.h>
+>>
+>> +struct acpi_device;
+>> +
+>> +struct pci_controller {
+>> +#ifdef CONFIG_ACPI
+>> +	struct acpi_device *companion;	/* ACPI companion device */
+>> +#endif
+>> +	int		segment;	/* PCI domain */
+>> +	int		node;		/* NUMA node */
+>> +};
+>
+> There is nothing ARM64 specific in this structure. The only
+> reason I see you want to keep it arch specific is the iommu
+> pointer on x86,
 
-On Fri, Jun 19, 2015 at 5:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> We checked for "dev->class == PCI_CLASS_SERIAL_USB", but dev->class
-> contains the entire three-byte base class/sub-class/interface, while
-> PCI_CLASS_SERIAL_USB is only the two-byte base class/sub-class.
->
-> This error meant that we used the Intel device-specific reset on devices
-> with class code 0x000c03 instead of those with class code 0x0c03xx.
-> 0x000c03 is a reserved value in the 0x00 backwards compatibility base class
-> and shouldn't match any devices, so I think reset_intel_generic_dev()
-> always failed.
->
-> Shift dev->class to discard the interface byte before comparing with
-> PCI_CLASS_SERIAL_USB.
->
-> Fixes: aeb30016fec3 ("PCI: add Intel USB specific reset method")
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Dexuan Cui <dexuan.cui@intel.com>
-> CC: Yu Zhao <yu.zhao@intel.com>
-> ---
->  drivers/pci/quirks.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 8bc60c2..356a401 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3358,7 +3358,7 @@ static int reset_intel_generic_dev(struct pci_dev *dev, int probe)
->         int pos;
->
->         /* only implement PCI_CLASS_SERIAL_USB at present */
-> -       if (dev->class == PCI_CLASS_SERIAL_USB) {
-> +       if ((dev->class >> 8) == PCI_CLASS_SERIAL_USB) {
+And also plarform_data for IA64 too.
 
-I'm a little bit concerned about this change because it *looks* like
-this has always been broken, but I assume it was tested and somebody
-would have noticed.
-
->                 pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
->                 if (!pos)
->                         return -ENOTTY;
+> but I think we should find a way to make
+> the common bits shared across archs (ie the struct above) and
+> add (maybe a void*) to the generic struct to cater for arch
+> specific data.
 >
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> Thoughts ?
+
+We discussed this already, it has limitations to make it
+common to all archs, I think the limitation are:
+
+   - struct pci_controller are also used for other archs
+     such as PowerPC and Tile, they will not use it for
+     ACPI purpose, so we can not used for all archs.
+
+   - if we let struct pci_controller defined only for archs
+     using ACPI, such as introduce it in linux/acpi.h, we still
+     can not satisfy that the struct pci_controller is not
+     only used for ACPI case on x86, it will be used for
+     non-ACPI too.
+
+So it's pretty difficult to share it with across archs to me,
+any more ideas?
+
+Thanks
+Hanjun
