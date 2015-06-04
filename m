@@ -1,69 +1,153 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <556D4C73.7090202@huawei.com>
-Date: Tue, 2 Jun 2015 14:25:55 +0800
-From: Hanjun Guo <guohanjun@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:42128 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752801AbbFDNSz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Jun 2015 09:18:55 -0400
+Message-ID: <55705036.7030004@arm.com>
+Date: Thu, 04 Jun 2015 14:18:46 +0100
+From: James Morse <james.morse@arm.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+To: Zhou Wang <wangzhou1@hisilicon.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"Catalin Marinas" <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Sudeep Holla <sudeep.holla@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, <x86@kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch v3 17/36] ARM64, irq: Use access helper irq_data_get_affinity_mask()
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com> <1433145945-789-18-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-18-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"fabrice.gasnier@st.com" <fabrice.gasnier@st.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	"yuanzhichang@hisilicon.com" <yuanzhichang@hisilicon.com>,
+	"zhudacai@hisilicon.com" <zhudacai@hisilicon.com>,
+	"zhangjukuo@huawei.com" <zhangjukuo@huawei.com>,
+	"qiuzhenfa@hisilicon.com" <qiuzhenfa@hisilicon.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v2 1/4] ARM/PCI: remove align_resource callback in pcibios_align_resource
+References: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com> <1433320542-49576-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1433320542-49576-2-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/1 16:05, Jiang Liu wrote:
-> Use access helper irq_data_get_affinity_mask() to hide implementation
-> details of struct irq_desc.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/arm64/kernel/irq.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/arch/arm64/kernel/irq.c b/arch/arm64/kernel/irq.c
-> index 240b75c0e94f..463fa2e7e34c 100644
-> --- a/arch/arm64/kernel/irq.c
-> +++ b/arch/arm64/kernel/irq.c
-> @@ -61,7 +61,7 @@ void __init init_IRQ(void)
->  static bool migrate_one_irq(struct irq_desc *desc)
->  {
->  	struct irq_data *d = irq_desc_get_irq_data(desc);
-> -	const struct cpumask *affinity = d->affinity;
-> +	const struct cpumask *affinity = irq_data_get_affinity_mask(d);
->  	struct irq_chip *c;
->  	bool ret = false;
+On 03/06/15 09:35, Zhou Wang wrote:
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index fcbbbb1..47588dc 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -468,7 +468,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  		sys->busnr   = busnr;
+>  		sys->swizzle = hw->swizzle;
+>  		sys->map_irq = hw->map_irq;
+> -		sys->align_resource = hw->align_resource;
+>  		INIT_LIST_HEAD(&sys->resources);
 >  
-> @@ -81,7 +81,7 @@ static bool migrate_one_irq(struct irq_desc *desc)
->  	if (!c->irq_set_affinity)
->  		pr_debug("IRQ%u: unable to set affinity\n", d->irq);
->  	else if (c->irq_set_affinity(d, affinity, false) == IRQ_SET_MASK_OK && ret)
-> -		cpumask_copy(d->affinity, affinity);
-> +		cpumask_copy(irq_data_get_affinity_mask(d), affinity);
+>  		if (hw->private_data)
+> @@ -597,9 +596,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
 >  
->  	return ret;
+>  	start = (start + align - 1) & ~(align - 1);
+>  
+> -	if (sys->align_resource)
+> -		return sys->align_resource(dev, res, start, size, align);
+> -
+>  	return start;
 >  }
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+This leaves both 'sys' and 'dev' in this function as unused variables.
+Please remove them too.
 
-Thanks
-Hanjun
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 1ab8635..155d05f 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -22,6 +22,8 @@
+>  #include <linux/of_pci.h>
+>  #include <linux/of_platform.h>
+>  
+> +#include "../pci.h" /* HACK to see pci_find_host_bridge */
+> +
+
+Wouldn't it be better to promote pci_find_host_bridge to be declared in
+include/linux/pci.h instead?
 
 
+Thanks,
+
+James
+
+>  /*
+>   * PCIe unit register offsets.
+>   */
+> @@ -751,27 +753,20 @@ static int mvebu_pcie_setup(int nr, struct pci_sys_data *sys)
+>  	return 1;
+>  }
+>  
+> -static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> +static resource_size_t mvebu_pcie_align_resource(void *data,
+> +						 const struct resource *res,
+> +						 resource_size_t size,
+> +						 resource_size_t align)
+>  {
+> -	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+> -	struct pci_bus *bus;
+> +	struct pci_dev *dev = data;
+>  
+> -	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
+> -				  &mvebu_pcie_ops, sys, &sys->resources);
+> -	if (!bus)
+> -		return NULL;
+> +	resource_size_t start = res->start;
+>  
+> -	pci_scan_child_bus(bus);
+> +	if (res->flags & IORESOURCE_IO && start & 0x300)
+> +		start = (start + 0x3ff) & ~0x3ff;
+>  
+> -	return bus;
+> -}
+> +	start = (start + align - 1) & ~(align - 1);
+>  
+> -static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+> -						 const struct resource *res,
+> -						 resource_size_t start,
+> -						 resource_size_t size,
+> -						 resource_size_t align)
+> -{
+>  	if (dev->bus->number != 0)
+>  		return start;
+>  
+> @@ -796,6 +791,25 @@ static resource_size_t mvebu_pcie_align_resource(struct pci_dev *dev,
+>  		return start;
+>  }
+>  
+> +static struct pci_bus *mvebu_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> +{
+> +	struct mvebu_pcie *pcie = sys_to_pcie(sys);
+> +	struct pci_host_bridge *phb;
+> +	struct pci_bus *bus;
+> +
+> +	bus = pci_create_root_bus(&pcie->pdev->dev, sys->busnr,
+> +				  &mvebu_pcie_ops, sys, &sys->resources);
+> +	if (!bus)
+> +		return NULL;
+> +
+> +	phb = pci_find_host_bridge(bus);
+> +	phb->align_resource = mvebu_pcie_align_resource;
+> +
+> +	pci_scan_child_bus(bus);
+> +
+> +	return bus;
+> +}
+> +
+>  static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+>  {
+>  	struct hw_pci hw;
+> @@ -812,7 +826,6 @@ static void mvebu_pcie_enable(struct mvebu_pcie *pcie)
+>  	hw.scan           = mvebu_pcie_scan_bus;
+>  	hw.map_irq        = of_irq_parse_and_map_pci;
+>  	hw.ops            = &mvebu_pcie_ops;
+> -	hw.align_resource = mvebu_pcie_align_resource;
+>  
+>  	pci_common_init(&hw);
+>  }
 
