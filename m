@@ -1,78 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1434098643.2271.141.camel@x220>
-Subject: Re: [PATCH 6/6] drivers:pci:hv: New paravirtual PCI front-end for
- Hyper-V VMs
-From: Paul Bolle <pebolle@tiscali.nl>
-To: jakeo@microsoft.com
-Cc: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	mebersol@microsoft.com, haiyangz@microsoft.com
-Date: Fri, 12 Jun 2015 10:44:03 +0200
-In-Reply-To: <1434039747-44535-7-git-send-email-jakeo@microsoft.com>
-References: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
-	 <1434039747-44535-7-git-send-email-jakeo@microsoft.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:59172 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752664AbbFDGpF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:45:05 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:45:03 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 13/42] powerpc/pci: Override pcibios_setup_bridge()
+Date: Thu,  4 Jun 2015 16:41:42 +1000
+Message-Id: <1433400131-18429-14-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Greg has already asked you to resend. So here follow a few remarks to
-take into account for that resend.
+The patch overrides pcibios_setup_bridge(), called to update PCI
+bridge windows at completion of PCI resource assignment, to assign
+PE and setup various (resource) mapping in next patch.
 
-On Thu, 2015-06-11 at 16:22 +0000, jakeo@microsoft.com wrote:
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+v5:
+  * Split from [PATCH v5 v4 06/21]
+---
+ arch/powerpc/include/asm/pci-bridge.h | 1 +
+ arch/powerpc/kernel/pci-common.c      | 8 ++++++++
+ 2 files changed, 9 insertions(+)
 
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 1252cd5..1f39ca7 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -29,6 +29,7 @@ struct pci_controller_ops {
  
-> +config HYPERV_VPCI
-> +        tristate "Hyper-V PCI Frontend"
-> +        depends on PCI && X86 && HYPERV
-> +        select PCI_HV
-
-That symbol doesn't exist and is not added in this series, right? If so,
-scripts/checkkconsymbols.py could have told you that.
-
-> +        default y
-
-Are you sure?
-
-> +        help
-> +          The PCI device frontend driver allows the kernel to import arbitrary
-> +          PCI devices from a PCI backend to support PCI driver domains.
-
-> --- /dev/null
-> +++ b/drivers/pci/host/hv_pcifront.c
-
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms of the GNU General Public License version 2 as published
-> + * by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
-> + * NON INFRINGEMENT.  See the GNU General Public License for more
-
-This states the license is GPL v2.
-
-> +EXPORT_SYMBOL(hv_read_config_block);
-
-> +EXPORT_SYMBOL(hv_write_config_block);
-
-> +EXPORT_SYMBOL(hv_register_block_invalidate);
-
-I couldn't spot any users of these exports. Actually, I couldn't even
-spot any users of these three functions. Why were they added?
-
-> +MODULE_LICENSE("GPL");
-
-This states, according to include/linux/module.h, that the license is
-GPL v2 or later. So I think either the comment at the top of this file
-or the ident used in the MODULE_LICENSE() macro needs to change.
-
-Thanks,
-
-
-Paul Bolle
+ 	/* Called during PCI resource reassignment */
+ 	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long);
++	void		(*setup_bridge)(struct pci_bus *, unsigned long);
+ 	void		(*reset_secondary_bus)(struct pci_dev *);
+ };
+ 
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0d05406..0358f24 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -122,6 +122,14 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 	return 1;
+ }
+ 
++void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
++{
++	struct pci_controller *hose = pci_bus_to_host(bus);
++
++	if (hose->controller_ops.setup_bridge)
++		hose->controller_ops.setup_bridge(bus, type);
++}
++
+ void pcibios_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	struct pci_controller *phb = pci_bus_to_host(dev->bus);
+-- 
+2.1.0
 
