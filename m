@@ -1,206 +1,416 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:41419 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751931AbbFDGpC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:45:02 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:45:00 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 06/42] powerpc/powernv: Improve IO and M32 mapping
-Date: Thu,  4 Jun 2015 16:41:35 +1000
-Message-Id: <1433400131-18429-7-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:32990 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932204AbbFDVuP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 17:50:15 -0400
+Received: by obbea3 with SMTP id ea3so42178539obb.0
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 14:50:14 -0700 (PDT)
+Subject: [PATCH 7/7] PCI: Remove unused pci_dma_burst_advice()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Date: Thu, 04 Jun 2015 16:50:12 -0500
+Message-ID: <20150604215012.2399.56382.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PHB's IO or M32 window is divided evenly to segments, each of
-them can be mapped to arbitrary PE# by IODT or M32DT. Current code
-figures out the consumed IO and M32 segments by one particular PE
-from the windows of the PE's upstream bridge. It won't be reliable
-once we extend M64 windows of root port, or the upstream port of
-the PCIE switch behind root port to PHB's IO or M32 window, in order
-to support PCI hotplug in future.
+pci_dma_burst_advice() was added by e24c2d963a60 ("[PATCH] PCI: DMA
+bursting advice") but apparently never used.  Remove it.
 
-The patch improves the above situation by calculating PE's consumed
-IO or M32 segments from its contained devices, no PCI bridge windows
-involved if the PE doesn't contain all the subordinate PCI buses.
-Otherwise, the PCI bridge windows still contribute to PE's consumed
-IO or M32 segments.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: David S. Miller <davem@davemloft.net>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 136 ++++++++++++++++++------------
- 1 file changed, 80 insertions(+), 56 deletions(-)
+ arch/alpha/include/asm/pci.h       |   16 ----------------
+ arch/arm/include/asm/pci.h         |   10 ----------
+ arch/frv/include/asm/pci.h         |   10 ----------
+ arch/ia64/include/asm/pci.h        |   19 -------------------
+ arch/microblaze/include/asm/pci.h  |   10 ----------
+ arch/mips/include/asm/pci.h        |   10 ----------
+ arch/parisc/include/asm/pci.h      |   19 -------------------
+ arch/powerpc/include/asm/pci.h     |   30 ------------------------------
+ arch/sh/include/asm/pci.h          |   18 ------------------
+ arch/sparc/include/asm/pci_32.h    |   10 ----------
+ arch/sparc/include/asm/pci_64.h    |   19 -------------------
+ arch/unicore32/include/asm/pci.h   |   10 ----------
+ arch/x86/include/asm/pci.h         |    7 -------
+ drivers/net/ethernet/sun/cassini.c |    1 -
+ include/linux/pci.h                |   11 -----------
+ 15 files changed, 200 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 3bb4ce8..46a5e10 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -2959,76 +2959,100 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- }
- #endif /* CONFIG_PCI_IOV */
+diff --git a/arch/alpha/include/asm/pci.h b/arch/alpha/include/asm/pci.h
+index f7f680f..8b02afe 100644
+--- a/arch/alpha/include/asm/pci.h
++++ b/arch/alpha/include/asm/pci.h
+@@ -71,22 +71,6 @@ extern void pcibios_set_master(struct pci_dev *dev);
+ /* implement the pci_ DMA API in terms of the generic device dma_ one */
+ #include <asm-generic/pci-dma-compat.h>
  
--/*
-- * This function is supposed to be called on basis of PE from top
-- * to bottom style. So the the I/O or MMIO segment assigned to
-- * parent PE could be overrided by its child PEs if necessary.
-- */
--static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
--				  struct pnv_ioda_pe *pe)
-+static int pnv_ioda_map_pe_one_res(struct pci_controller *hose,
-+				   struct pnv_ioda_pe *pe,
-+				   struct resource *res)
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	unsigned long cacheline_size;
+-	u8 byte;
+-
+-	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &byte);
+-	if (byte == 0)
+-		cacheline_size = 1024;
+-	else
+-		cacheline_size = (int) byte * 4;
+-
+-	*strat = PCI_DMA_BURST_BOUNDARY;
+-	*strategy_parameter = cacheline_size;
+-}
+ #endif
+ 
+ /* TODO: integrate with include/asm-generic/pci.h ? */
+diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+index 585dc33..a563544 100644
+--- a/arch/arm/include/asm/pci.h
++++ b/arch/arm/include/asm/pci.h
+@@ -31,16 +31,6 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+  */
+ #define PCI_DMA_BUS_IS_PHYS     (1)
+ 
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	*strat = PCI_DMA_BURST_INFINITY;
+-	*strategy_parameter = ~0UL;
+-}
+-#endif
+-
+ #define HAVE_PCI_MMAP
+ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+                                enum pci_mmap_state mmap_state, int write_combine);
+diff --git a/arch/frv/include/asm/pci.h b/arch/frv/include/asm/pci.h
+index 2035a4d..a6d4ed0 100644
+--- a/arch/frv/include/asm/pci.h
++++ b/arch/frv/include/asm/pci.h
+@@ -41,16 +41,6 @@ extern void pci_free_consistent(struct pci_dev *hwdev, size_t size,
+ /* Return the index of the PCI controller for device PDEV. */
+ #define pci_controller_num(PDEV)	(0)
+ 
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	*strat = PCI_DMA_BURST_INFINITY;
+-	*strategy_parameter = ~0UL;
+-}
+-#endif
+-
+ /*
+  *	These are pretty much arbitrary with the CoMEM implementation.
+  *	We have the whole address space to ourselves.
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 32ea19a..b897fae 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -52,25 +52,6 @@ extern unsigned long ia64_max_iommu_merge_mask;
+ 
+ #include <asm-generic/pci-dma-compat.h>
+ 
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	unsigned long cacheline_size;
+-	u8 byte;
+-
+-	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &byte);
+-	if (byte == 0)
+-		cacheline_size = 1024;
+-	else
+-		cacheline_size = (int) byte * 4;
+-
+-	*strat = PCI_DMA_BURST_MULTIPLE;
+-	*strategy_parameter = cacheline_size;
+-}
+-#endif
+-
+ #define HAVE_PCI_MMAP
+ extern int pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
+ 				enum pci_mmap_state mmap_state, int write_combine);
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index e910a29..b42ed68 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -42,16 +42,6 @@
+  */
+ #define pcibios_assign_all_busses()	0
+ 
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	*strat = PCI_DMA_BURST_INFINITY;
+-	*strategy_parameter = ~0UL;
+-}
+-#endif
+-
+ extern int pci_domain_nr(struct pci_bus *bus);
+ 
+ /* Decide whether to display the domain number in /proc */
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index d969299..70dcc54 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -113,16 +113,6 @@ struct pci_dev;
+  */
+ extern unsigned int PCI_DMA_BUS_IS_PHYS;
+ 
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	*strat = PCI_DMA_BURST_INFINITY;
+-	*strategy_parameter = ~0UL;
+-}
+-#endif
+-
+ #ifdef CONFIG_PCI_DOMAINS
+ #define pci_domain_nr(bus) ((struct pci_controller *)(bus)->sysdata)->index
+ 
+diff --git a/arch/parisc/include/asm/pci.h b/arch/parisc/include/asm/pci.h
+index 20df2b0..bf5e044 100644
+--- a/arch/parisc/include/asm/pci.h
++++ b/arch/parisc/include/asm/pci.h
+@@ -196,25 +196,6 @@ static inline void pcibios_register_hba(struct pci_hba_data *x)
+ /* export the pci_ DMA API in terms of the dma_ one */
+ #include <asm-generic/pci-dma-compat.h>
+ 
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	unsigned long cacheline_size;
+-	u8 byte;
+-
+-	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &byte);
+-	if (byte == 0)
+-		cacheline_size = 1024;
+-	else
+-		cacheline_size = (int) byte * 4;
+-
+-	*strat = PCI_DMA_BURST_MULTIPLE;
+-	*strategy_parameter = cacheline_size;
+-}
+-#endif
+-
+ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
  {
- 	struct pnv_phb *phb = hose->private_data;
- 	struct pci_bus_region region;
--	struct resource *res;
--	int i, index;
-+	int index;
- 	unsigned int segsize;
- 	unsigned long *segmap, *pe_segmap;
- 	uint16_t win;
- 	int64_t rc;
+ 	return channel ? 15 : 14;
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 4aef8d6..99dc432 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -71,36 +71,6 @@ extern struct dma_map_ops *get_pci_dma_ops(void);
+  */
+ #define PCI_DISABLE_MWI
  
--	/*
--	 * NOTE: We only care PCI bus based PE for now. For PCI
--	 * device based PE, for example SRIOV sensitive VF should
--	 * be figured out later.
--	 */
--	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
-+	/* Check if we need map the resource */
-+	if (!res->parent ||
-+	    !res->flags ||
-+	    res->start > res->end ||
-+	    pnv_pci_is_mem_pref_64(res->flags))
-+		return 0;
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	unsigned long cacheline_size;
+-	u8 byte;
+-
+-	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &byte);
+-	if (byte == 0)
+-		cacheline_size = 1024;
+-	else
+-		cacheline_size = (int) byte * 4;
+-
+-	*strat = PCI_DMA_BURST_MULTIPLE;
+-	*strategy_parameter = cacheline_size;
+-}
+-#endif
+-
+-#else /* 32-bit */
+-
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	*strat = PCI_DMA_BURST_INFINITY;
+-	*strategy_parameter = ~0UL;
+-}
+-#endif
+ #endif /* CONFIG_PPC64 */
  
--	pci_bus_for_each_resource(pe->pbus, res, i) {
--		if (!res || !res->flags ||
--		    res->start > res->end)
--			continue;
-+	if (res->flags & IORESOURCE_IO) {
-+		region.start = res->start - phb->ioda.io_pci_base;
-+		region.end   = res->end - phb->ioda.io_pci_base;
-+		segsize      = phb->ioda.io_segsize;
-+		segmap       = phb->ioda.io_segmap;
-+		pe_segmap    = pe->io_segmap;
-+		win          = OPAL_IO_WINDOW_TYPE;
-+	} else if ((res->flags & IORESOURCE_MEM) &&
-+		   !pnv_pci_is_mem_pref_64(res->flags)) {
-+		region.start = res->start -
-+			       hose->mem_offset[0] -
-+			       phb->ioda.m32_pci_base;
-+		region.end   = res->end -
-+			       hose->mem_offset[0] -
-+			       phb->ioda.m32_pci_base;
-+		segsize      = phb->ioda.m32_segsize;
-+		segmap       = phb->ioda.m32_segmap;
-+		pe_segmap    = pe->m32_segmap;
-+		win          = OPAL_M32_WINDOW_TYPE;
-+	} else {
-+		return 0;
-+	}
+ extern int pci_domain_nr(struct pci_bus *bus);
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index 5b45115..e343dbd0 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -86,24 +86,6 @@ extern void pcibios_set_master(struct pci_dev *dev);
+  * direct memory write.
+  */
+ #define PCI_DISABLE_MWI
+-
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	unsigned long cacheline_size;
+-	u8 byte;
+-
+-	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &byte);
+-
+-	if (byte == 0)
+-		cacheline_size = L1_CACHE_BYTES;
+-	else
+-		cacheline_size = byte << 2;
+-
+-	*strat = PCI_DMA_BURST_MULTIPLE;
+-	*strategy_parameter = cacheline_size;
+-}
+ #endif
  
--		if (res->flags & IORESOURCE_IO) {
--			region.start = res->start - phb->ioda.io_pci_base;
--			region.end   = res->end - phb->ioda.io_pci_base;
--			segsize      = phb->ioda.io_segsize;
--			segmap       = phb->ioda.io_segmap;
--			pe_segmap    = pe->io_segmap;
--			win          = OPAL_IO_WINDOW_TYPE;
--		} else if ((res->flags & IORESOURCE_MEM) &&
--			    !pnv_pci_is_mem_pref_64(res->flags)) {
--			region.start = res->start -
--				       hose->mem_offset[0] -
--				       phb->ioda.m32_pci_base;
--			region.end   = res->end -
--				       hose->mem_offset[0] -
--				       phb->ioda.m32_pci_base;
--			segsize      = phb->ioda.m32_segsize;
--			segmap       = phb->ioda.m32_segmap;
--			pe_segmap    = pe->m32_segmap;
--			win          = OPAL_M32_WINDOW_TYPE;
--		} else {
--			continue;
-+	index = region.start / phb->ioda.io_segsize;
-+	while (index < phb->ioda.total_pe &&
-+	       region.start <= region.end) {
-+		set_bit(index, segmap);
-+		set_bit(index, pe_segmap);
-+
-+		rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+				pe->pe_number, win, 0, index);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_err("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
-+				__func__, rc, win, index,
-+				pe->phb->hose->global_number,
-+				pe->pe_number);
-+			return -EIO;
- 		}
+ /* Board-specific fixup routines. */
+diff --git a/arch/sparc/include/asm/pci_32.h b/arch/sparc/include/asm/pci_32.h
+index 53e9b49..b7c092df 100644
+--- a/arch/sparc/include/asm/pci_32.h
++++ b/arch/sparc/include/asm/pci_32.h
+@@ -22,16 +22,6 @@
  
--		index = region.start / phb->ioda.io_segsize;
--		while (index < phb->ioda.total_pe &&
--		       region.start <= region.end) {
--			set_bit(index, segmap);
--			set_bit(index, pe_segmap);
-+		region.start += segsize;
-+		index++;
-+	}
+ struct pci_dev;
  
--			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
--					pe->pe_number, win, 0, index);
--			if (rc != OPAL_SUCCESS) {
--				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
--					__func__, rc, win, index,
--					pe->phb->hose->global_number,
--					pe->pe_number);
--				break;
--			}
-+	return 0;
-+}
-+
-+static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
-+				  struct pnv_ioda_pe *pe)
-+{
-+	struct pci_dev *pdev;
-+	struct resource *res;
-+	int i;
-+
-+	/* This function only works for bus dependent PE */
-+	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
-+
-+	list_for_each_entry(pdev, &pe->pbus->devices, bus_list) {
-+		for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
-+			res = &pdev->resource[i];
-+			if (pnv_ioda_map_pe_one_res(hose, pe, res))
-+				return;
-+		}
-+
-+		/* If the PE contains all subordinate PCI buses, the
-+		 * resources of the child bridges should be mapped
-+		 * to the PE as well.
-+		 */
-+		if (!(pe->flags & PNV_IODA_PE_BUS_ALL) ||
-+		    (pdev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
-+			continue;
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	*strat = PCI_DMA_BURST_INFINITY;
+-	*strategy_parameter = ~0UL;
+-}
+-#endif
+-
+ #endif /* __KERNEL__ */
  
--			region.start += segsize;
--			index++;
-+		for (i = 0; i <= PCI_BRIDGE_RESOURCE_NUM; i++) {
-+			res = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
-+			if (pnv_ioda_map_pe_one_res(hose, pe, res))
-+				return;
- 		}
- 	}
- }
--- 
-2.1.0
+ #ifndef CONFIG_LEON_PCI
+diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
+index bd00a62..022d160 100644
+--- a/arch/sparc/include/asm/pci_64.h
++++ b/arch/sparc/include/asm/pci_64.h
+@@ -31,25 +31,6 @@
+ #define PCI64_REQUIRED_MASK	(~(u64)0)
+ #define PCI64_ADDR_BASE		0xfffc000000000000UL
+ 
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	unsigned long cacheline_size;
+-	u8 byte;
+-
+-	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &byte);
+-	if (byte == 0)
+-		cacheline_size = 1024;
+-	else
+-		cacheline_size = (int) byte * 4;
+-
+-	*strat = PCI_DMA_BURST_BOUNDARY;
+-	*strategy_parameter = cacheline_size;
+-}
+-#endif
+-
+ /* Return the index of the PCI controller for device PDEV. */
+ 
+ int pci_domain_nr(struct pci_bus *bus);
+diff --git a/arch/unicore32/include/asm/pci.h b/arch/unicore32/include/asm/pci.h
+index 654407e..38b3f37 100644
+--- a/arch/unicore32/include/asm/pci.h
++++ b/arch/unicore32/include/asm/pci.h
+@@ -18,16 +18,6 @@
+ #include <asm-generic/pci.h>
+ #include <mach/hardware.h> /* for PCIBIOS_MIN_* */
+ 
+-#ifdef CONFIG_PCI
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	*strat = PCI_DMA_BURST_INFINITY;
+-	*strategy_parameter = ~0UL;
+-}
+-#endif
+-
+ #define HAVE_PCI_MMAP
+ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 	enum pci_mmap_state mmap_state, int write_combine);
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4e370a5..e51c229 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -80,13 +80,6 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 
+ #ifdef CONFIG_PCI
+ extern void early_quirks(void);
+-static inline void pci_dma_burst_advice(struct pci_dev *pdev,
+-					enum pci_dma_burst_strategy *strat,
+-					unsigned long *strategy_parameter)
+-{
+-	*strat = PCI_DMA_BURST_INFINITY;
+-	*strategy_parameter = ~0UL;
+-}
+ #else
+ static inline void early_quirks(void) { }
+ #endif
+diff --git a/drivers/net/ethernet/sun/cassini.c b/drivers/net/ethernet/sun/cassini.c
+index 3dc1f68..6ce9731 100644
+--- a/drivers/net/ethernet/sun/cassini.c
++++ b/drivers/net/ethernet/sun/cassini.c
+@@ -3058,7 +3058,6 @@ static void cas_init_mac(struct cas *cp)
+ 	/* setup core arbitration weight register */
+ 	writel(CAWR_RR_DIS, cp->regs + REG_CAWR);
+ 
+-	/* XXX Use pci_dma_burst_advice() */
+ #if !defined(CONFIG_SPARC64) && !defined(CONFIG_ALPHA)
+ 	/* set the infinite burst register for chips that don't have
+ 	 * pci issues.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8d..08fb4e3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1197,15 +1197,6 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ #define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
+ #define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
+ 
+-enum pci_dma_burst_strategy {
+-	PCI_DMA_BURST_INFINITY,	/* make bursts as large as possible,
+-				   strategy_parameter is N/A */
+-	PCI_DMA_BURST_BOUNDARY, /* disconnect at every strategy_parameter
+-				   byte boundaries */
+-	PCI_DMA_BURST_MULTIPLE, /* disconnect at some multiple of
+-				   strategy_parameter byte boundaries */
+-};
+-
+ struct msix_entry {
+ 	u32	vector;	/* kernel uses to write allocated vector */
+ 	u16	entry;	/* driver uses to specify entry, OS writes */
+@@ -1430,8 +1421,6 @@ static inline int pci_request_regions(struct pci_dev *dev, const char *res_name)
+ { return -EIO; }
+ static inline void pci_release_regions(struct pci_dev *dev) { }
+ 
+-#define pci_dma_burst_advice(pdev, strat, strategy_parameter) do { } while (0)
+-
+ static inline void pci_block_cfg_access(struct pci_dev *dev) { }
+ static inline int pci_block_cfg_access_in_atomic(struct pci_dev *dev)
+ { return 0; }
 
