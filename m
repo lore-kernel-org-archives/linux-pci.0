@@ -1,63 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v3 14/36] genirq: Introduce helper function irq_data_get_affinity_mask()
-Date: Mon,  1 Jun 2015 16:05:23 +0800
-Message-Id: <1433145945-789-15-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:55211 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752495AbbFDGpT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:45:19 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:45:17 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 37/42] powerpc/pci: Update bridge windows on PCI plugging
+Date: Thu,  4 Jun 2015 16:42:06 +1000
+Message-Id: <1433400131-18429-38-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helper function irq_data_get_affinity_mask() and
-irq_get_affinity_mask() to hide implementation details,
-so we could move field 'affinity' from struct irq_data into
-struct irq_common_data later.
+During the PCI plugging event, the PCI devices are rescanned and
+their IO and MMIO resources are reassigned. However, the PowerNV
+platform will assign PE# based on that, which depends on updating
+to window of bridge of the PE's primary bus.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
+The patch updates the windows of bridge of PE's primary bus if
+we have valid bridge. Otherwise, we assume it's root bus or SRIOV
+virtual bus and PE won't be assigned during PCI plugging time.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- include/linux/irq.h |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+v5:
+  * Derived from PATCH[v4 18/21]
+---
+ arch/powerpc/kernel/pci-common.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 68874efe19d3..91fbf10bdae0 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -656,6 +656,18 @@ static inline int irq_data_get_node(struct irq_data *d)
- 	return irq_common_data_get_node(d->common);
- }
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0358f24..811eb4d 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1471,8 +1471,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+ 	/* Allocate bus and devices resources */
+ 	pcibios_allocate_bus_resources(bus);
+ 	pcibios_claim_one_bus(bus);
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_assign_unassigned_bus_resources(bus);
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		if (bus->self)
++			pci_assign_unassigned_bridge_resources(bus->self);
++		else
++			pci_assign_unassigned_bus_resources(bus);
++	}
  
-+static inline struct cpumask *irq_get_affinity_mask(int irq)
-+{
-+	struct irq_data *d = irq_get_irq_data(irq);
-+
-+	return d ? d->affinity : NULL;
-+}
-+
-+static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
-+{
-+	return d->affinity;
-+}
-+
- unsigned int arch_dynirq_lower_bound(unsigned int from);
- 
- int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 	/* Fixup EEH */
+ 	eeh_add_device_tree_late(bus);
 -- 
-1.7.10.4
+2.1.0
 
