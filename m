@@ -1,179 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:34826 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753731AbbFCPqm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2015 11:46:42 -0400
-Received: by iesa3 with SMTP id a3so16278174ies.2
-        for <linux-pci@vger.kernel.org>; Wed, 03 Jun 2015 08:46:41 -0700 (PDT)
-Date: Wed, 3 Jun 2015 10:46:38 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
-Message-ID: <20150603154638.GL3631@google.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150601234645.GF3631@google.com>
- <20150603033142.GA22584@richard>
- <20150603051023.GA26652@gwshan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150603051023.GA26652@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Steven Miao <realmz6@gmail.com>,
+	Christoph Lameter <cl@linux.com>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	adi-buildroot-devel@lists.sourceforge.net
+Subject: [RFT v2 37/48] genirq, blackfin: Kill the first parameter 'irq' of irq_flow_handler_t
+Date: Thu,  4 Jun 2015 12:13:47 +0800
+Message-Id: <1433391238-19471-38-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 03, 2015 at 03:10:23PM +1000, Gavin Shan wrote:
-> On Wed, Jun 03, 2015 at 11:31:42AM +0800, Wei Yang wrote:
-> >On Mon, Jun 01, 2015 at 06:46:45PM -0500, Bjorn Helgaas wrote:
-> >>On Tue, May 19, 2015 at 06:50:08PM +0800, Wei Yang wrote:
-> >>> Current EEH recovery code works with the assumption: the PE has primary
-> >>> bus. Unfortunately, that's not true to VF PEs, which generally contains
-> >>> one or multiple VFs (for VF group case). The patch creates PEs for VFs
-> >>> at PCI final fixup time. Those PEs for VFs are indentified with newly
-> >>> introduced flag EEH_PE_VF so that we handle them differently during
-> >>> EEH recovery.
-> >>> 
-> >>> [gwshan: changelog and code refactoring]
-> >>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> >>> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> >>> ---
-> >>>  arch/powerpc/include/asm/eeh.h               |    1 +
-> >>>  arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
-> >>>  arch/powerpc/platforms/powernv/eeh-powernv.c |   17 +++++++++++++++++
-> >>>  3 files changed, 26 insertions(+), 2 deletions(-)
-> >>> 
-> >>> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-> >>> index 1b3614d..c1fde48 100644
-> >>> --- a/arch/powerpc/include/asm/eeh.h
-> >>> +++ b/arch/powerpc/include/asm/eeh.h
-> >>> @@ -70,6 +70,7 @@ struct pci_dn;
-> >>>  #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
-> >>>  #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
-> >>>  #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
-> >>> +#define EEH_PE_VF	(1 << 4)	/* VF PE     */
-> >>>  
-> >>>  #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
-> >>>  #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
-> >>> diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-> >>> index 35f0b62..260a701 100644
-> >>> --- a/arch/powerpc/kernel/eeh_pe.c
-> >>> +++ b/arch/powerpc/kernel/eeh_pe.c
-> >>> @@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
-> >>>  	 * EEH device already having associated PE, but
-> >>>  	 * the direct parent EEH device doesn't have yet.
-> >>>  	 */
-> >>> -	pdn = pdn ? pdn->parent : NULL;
-> >>> +	if (edev->physfn)
-> >>> +		pdn = pci_get_pdn(edev->physfn);
-> >>> +	else
-> >>> +		pdn = pdn ? pdn->parent : NULL;
-> >>>  	while (pdn) {
-> >>>  		/* We're poking out of PCI territory */
-> >>>  		parent = pdn_to_eeh_dev(pdn);
-> >>> @@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
-> >>>  	}
-> >>>  
-> >>>  	/* Create a new EEH PE */
-> >>> -	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
-> >>> +	if (edev->physfn)
-> >>> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
-> >>> +	else
-> >>> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
-> >>>  	if (!pe) {
-> >>>  		pr_err("%s: out of memory!\n", __func__);
-> >>>  		return -ENOMEM;
-> >>> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> >>> index ce738ab..c505036 100644
-> >>> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> >>> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> >>> @@ -1520,6 +1520,23 @@ static struct eeh_ops pnv_eeh_ops = {
-> >>>  	.restore_config		= pnv_eeh_restore_config
-> >>>  };
-> >>>  
-> >>> +static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
-> >>> +{
-> >>> +	struct pci_dn *pdn = pci_get_pdn(pdev);
-> >>> +
-> >>> +	if (!pdev->is_virtfn)
-> >>> +		return;
-> >>> +
-> >>> +	/*
-> >>> +	 * The following operations will fail if VF's sysfs files
-> >>> +	 * aren't created or its resources aren't finalized.
-> >>> +	 */
-> >>
-> >>I don't understand this comment.  "The following operations" seems to refer
-> >>to eeh_add_device_early() and eeh_add_device_late(), and
-> >>"VF's sysfs files being created" seems to refer to eeh_sysfs_add_device().
-> >>
-> >>So the comment suggests that eeh_add_device_early() and
-> >>eeh_add_device_late() will fail because they're called before
-> >>eeh_sysfs_add_device().  So I think you must be talking about some other
-> >>"following operations," not eeh_add_device_early() and
-> >>eeh_add_device_late().
-> >
-> >Sorry for this confusion.
-> >
-> >The comment here wants to say the eeh_sysfs_add_device() will fail if the VF's
-> >sysfs is not created well. Or it will fail if the VF's resources are not set
-> >properly, since we would cache the VF's BAR in eeh_add_device_late().
-> >
-> >Gavin,
-> >
-> >If my understanding is not correct please let me know.
-> >
-> 
-> It's correct. "The following operations" refers to eeh_add_device_late()
-> and eeh_sysfs_add_device(). The former one requires the resources for
-> one particular PCI device (VF here) are finalized (assigned). eeh_sysfs_add_device()
-> will fail if the sysfs entry for the PCI device isn't populated yet.
+Now most IRQ flow handlers make no use of the first parameter 'irq'.
+And for those who do make use of 'irq', we could easily get the irq
+number through irq_desc->irq_data->irq. So kill the first parameter
+'irq' of irq_flow_handler_t.
 
-eeh_add_device_late() contains several things that read config space:
-eeh_save_bars() caches the entire config header, and
-eeh_addr_cache_insert_dev() looks at the device resources (which are
-determined by BARs in config space).  I think this is an error-prone
-approach.  I think it would be simpler and safer for you to capture what
-you need in your PCI config accessors.
+To ease review, I have split the changes into several parts, though
+they should be merge as one to support bisecting.
 
-eeh_add_device_late() also contains code to deal with an EEH cache that
-"might not be removed correctly because of unbalanced kref to the device
-during unplug time."  That's unrelated to this patch series, but it sounds
-... like a hacky workaround for some bug in the unplug path.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/blackfin/include/asm/irq_handler.h   |    4 ++--
+ arch/blackfin/kernel/ipipe.c              |    2 +-
+ arch/blackfin/mach-bf537/ints-priority.c  |    8 +++-----
+ arch/blackfin/mach-common/ints-priority.c |    6 ++----
+ 4 files changed, 8 insertions(+), 12 deletions(-)
 
-> >>> +	eeh_add_device_early(pdn);
-> >>> +	eeh_add_device_late(pdev);
-> >>> +	eeh_sysfs_add_device(pdev);
-> >>> +}
-> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
-> >>
-> >>Ugh.  This is powerpc code, but I don't like using fixups as a hook like
-> >>this.  There is a pcibios_add_device() -- could this be done there?
-> >>
-> >
-> >I don't like it neither :-) But looks we can't put it in the
-> >pcibios_add_device().
-> >
-> >>If not, what happens after pcibios_add_device() that is required for this
-> >>code?  Maybe we need a pcibios_bus_add_device() hook?
-> >
-> >The pnv_eeh_vf_final_fixup() will try to create sysfs for VFs. This requires
-> >the VF sysfs(kobj) is initialized properly. If we put these into
-> >pcibios_add_device(), the eeh_sysfs_add_device() would fail.
-> >
-> >Below is the call flow for your reference:
-> >
-> >pci_device_add()
-> >    pcibios_add_device()
-> >    device_add()                <--- kobj initialized here
-> >
-> 
-> We can put it into pcibios_bus_add_device(), but we don't it currently. If
-> Bjorn agree to add pcibios_bus_add_device(), I'm fine to move the block code
-> there.
+diff --git a/arch/blackfin/include/asm/irq_handler.h b/arch/blackfin/include/asm/irq_handler.h
+index 4b2a992794d7..d2f90c72378e 100644
+--- a/arch/blackfin/include/asm/irq_handler.h
++++ b/arch/blackfin/include/asm/irq_handler.h
+@@ -60,7 +60,7 @@ extern void bfin_internal_mask_irq(unsigned int irq);
+ extern void bfin_internal_unmask_irq(unsigned int irq);
+ 
+ struct irq_desc;
+-extern void bfin_demux_mac_status_irq(unsigned int, struct irq_desc *);
+-extern void bfin_demux_gpio_irq(unsigned int, struct irq_desc *);
++extern void bfin_demux_mac_status_irq(struct irq_desc *);
++extern void bfin_demux_gpio_irq(struct irq_desc *);
+ 
+ #endif
+diff --git a/arch/blackfin/kernel/ipipe.c b/arch/blackfin/kernel/ipipe.c
+index 6007a1375c5b..8daca4d56992 100644
+--- a/arch/blackfin/kernel/ipipe.c
++++ b/arch/blackfin/kernel/ipipe.c
+@@ -54,7 +54,7 @@ atomic_t __ipipe_irq_lvdepth[IVG15 + 1];
+ unsigned long __ipipe_irq_lvmask = bfin_no_irqs;
+ EXPORT_SYMBOL(__ipipe_irq_lvmask);
+ 
+-static void __ipipe_ack_irq(unsigned irq, struct irq_desc *desc)
++static void __ipipe_ack_irq(struct irq_desc *desc)
+ {
+ 	desc->ipipe_ack(irq_desc_get_irq(desc), desc);
+ }
+diff --git a/arch/blackfin/mach-bf537/ints-priority.c b/arch/blackfin/mach-bf537/ints-priority.c
+index 2137a209a22b..a48baae4384d 100644
+--- a/arch/blackfin/mach-bf537/ints-priority.c
++++ b/arch/blackfin/mach-bf537/ints-priority.c
+@@ -89,8 +89,7 @@ static struct irq_chip bf537_generic_error_irqchip = {
+ 	.irq_unmask = bf537_generic_error_unmask_irq,
+ };
+ 
+-static void bf537_demux_error_irq(unsigned int int_err_irq,
+-				  struct irq_desc *inta_desc)
++static void bf537_demux_error_irq(struct irq_desc *inta_desc)
+ {
+ 	int irq = 0;
+ 
+@@ -182,13 +181,12 @@ static struct irq_chip bf537_mac_rx_irqchip = {
+ 	.irq_unmask = bf537_mac_rx_unmask_irq,
+ };
+ 
+-static void bf537_demux_mac_rx_irq(unsigned int int_irq,
+-				   struct irq_desc *desc)
++static void bf537_demux_mac_rx_irq(struct irq_desc *desc)
+ {
+ 	if (bfin_read_DMA1_IRQ_STATUS() & (DMA_DONE | DMA_ERR))
+ 		bfin_handle_irq(IRQ_MAC_RX);
+ 	else
+-		bfin_demux_gpio_irq(int_irq, desc);
++		bfin_demux_gpio_irq(desc);
+ }
+ #endif
+ 
+diff --git a/arch/blackfin/mach-common/ints-priority.c b/arch/blackfin/mach-common/ints-priority.c
+index 4e3155e5aa20..e7d6d65e0946 100644
+--- a/arch/blackfin/mach-common/ints-priority.c
++++ b/arch/blackfin/mach-common/ints-priority.c
+@@ -656,8 +656,7 @@ static struct irq_chip bfin_mac_status_irqchip = {
+ 	.irq_set_wake = bfin_mac_status_set_wake,
+ };
+ 
+-void bfin_demux_mac_status_irq(unsigned int int_err_irq,
+-			       struct irq_desc *inta_desc)
++void bfin_demux_mac_status_irq(struct irq_desc *inta_desc)
+ {
+ 	int i, irq = 0;
+ 	u32 status = bfin_read_EMAC_SYSTAT();
+@@ -825,8 +824,7 @@ static void bfin_demux_gpio_block(unsigned int irq)
+ 	}
+ }
+ 
+-void bfin_demux_gpio_irq(unsigned int inta_irq,
+-			struct irq_desc *desc)
++void bfin_demux_gpio_irq(struct irq_desc *desc)
+ {
+ 	unsigned int irq;
+ 
+-- 
+1.7.10.4
 
-I think I'm OK with adding a pcibios_bus_add_device().  I think that would
-be better than using the fixup mechanism for this.
-
-Bjorn
