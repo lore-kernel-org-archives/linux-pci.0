@@ -1,71 +1,148 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1433391238-19471-7-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-	<1433391238-19471-7-git-send-email-jiang.liu@linux.intel.com>
-Date: Wed, 10 Jun 2015 12:29:42 +0200
-Message-ID: <CABuKBeLs21NZ_uTUJ=P6TwX-jAiCaJO--ZnV7O2MZy-TfV6sNw@mail.gmail.com>
-Subject: Re: [RFT v2 06/48] pinctrl: Use irq_desc_get_xxx() to avoid redundant
- lookup of irq_desc
-From: Matthias Brugger <matthias.bgg@gmail.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alessandro Rubini <rubini@unipv.it>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Tomasz Figa <tomasz.figa@gmail.com>,
-	Thomas Abraham <thomas.abraham@linaro.org>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Barry Song <baohua@kernel.org>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Hongzhou Yang <hongzhou.yang@mediatek.com>,
-	Maoguang Meng <maoguang.meng@mediatek.com>,
-	Yingjoe Chen <yingjoe.chen@mediatek.com>,
-	Axel Lin <axel.lin@ingics.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Stephen Boyd <sboyd@codeaurora.org>, Bin Shi <Bin.Shi@csr.com>,
-	Fan Wu <fwu@marvell.com>, Hans de Goede <hdegoede@redhat.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Barry Song <Baohua.Song@csr.com>, linux-gpio@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"moderated list:ARM/Mediatek SoC..."
-	<linux-mediatek@lists.infradead.org>,
-	linux-rockchip@lists.infradead.org, kernel@stlinux.com,
-	linux-samsung-soc@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46527 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752483AbbFDGnl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:41 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:43:38 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 40/42] drivers/of: Allow to specify root node in of_fdt_unflatten_tree()
+Date: Thu,  4 Jun 2015 16:42:09 +1000
+Message-Id: <1433400131-18429-41-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2015-06-04 6:13 GMT+02:00 Jiang Liu <jiang.liu@linux.intel.com>:
-> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-> already have a pointer to corresponding irq_desc.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Acked-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
-[...]
->  drivers/pinctrl/mediatek/pinctrl-mtk-common.c |    4 ++--
+The patch introduces one more argument to of_fdt_unflatten_tree()
+to specify the root node for the FDT blob, which is going to be
+unflattened. In the result, the function can be used to unflatten
+FDT blob, which represents device sub-tree in subsequent patches.
 
-For the changes in pinctrl-mtk-common.c:
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+v5:
+  * Newly introduced
+---
+ drivers/of/fdt.c       | 26 ++++++++++++++++++--------
+ drivers/of/unittest.c  |  2 +-
+ include/linux/of_fdt.h |  3 ++-
+ 3 files changed, 21 insertions(+), 10 deletions(-)
 
-Acked-by: Matthias Brugger <matthias.brugger@gmail.com>
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index b87c157..b6a6c59 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -380,9 +380,16 @@ static void *unflatten_dt_node(void *blob,
+ 			       struct device_node **nodepp,
+ 			       bool dryrun)
+ {
++	unsigned long fpsize = 0;
++
++	if (dad)
++		fpsize = strlen(of_node_full_name(dad));
++	else
++		fpsize = 0;
++
+ 	cur_node_depth = 1;
+ 	return __unflatten_dt_node(blob, mem, poffset,
+-				   dad, nodepp, 0, dryrun);
++				   dad, nodepp, fpsize, dryrun);
+ }
+ 
+ /**
+@@ -393,13 +400,15 @@ static void *unflatten_dt_node(void *blob,
+  * pointers of the nodes so the normal device-tree walking functions
+  * can be used.
+  * @blob: The blob to expand
++ * @dad: The root node of the created device_node tree
+  * @mynodes: The device_node tree created by the call
+  * @dt_alloc: An allocator that provides a virtual address to memory
+  * for the resulting tree
+  */
+ static void __unflatten_device_tree(void *blob,
+-			     struct device_node **mynodes,
+-			     void * (*dt_alloc)(u64 size, u64 align))
++				    struct device_node *dad,
++				    struct device_node **mynodes,
++				    void * (*dt_alloc)(u64 size, u64 align))
+ {
+ 	unsigned long size;
+ 	int start;
+@@ -425,7 +434,7 @@ static void __unflatten_device_tree(void *blob,
+ 	/* First pass, scan for size */
+ 	start = 0;
+ 	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
+-						NULL, NULL, true);
++						dad, NULL, true);
+ 	size = ALIGN(size, 4);
+ 
+ 	pr_debug("  size is %lx, allocating...\n", size);
+@@ -440,7 +449,7 @@ static void __unflatten_device_tree(void *blob,
+ 
+ 	/* Second pass, do actual unflattening */
+ 	start = 0;
+-	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
++	unflatten_dt_node(blob, mem, &start, dad, mynodes, false);
+ 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+ 		pr_warning("End of tree marker overwritten: %08x\n",
+ 			   be32_to_cpup(mem + size));
+@@ -462,9 +471,10 @@ static void *kernel_tree_alloc(u64 size, u64 align)
+  * can be used.
+  */
+ void of_fdt_unflatten_tree(unsigned long *blob,
+-			struct device_node **mynodes)
++			   struct device_node *dad,
++			   struct device_node **mynodes)
+ {
+-	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
++	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+ }
+ EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+ 
+@@ -1095,7 +1105,7 @@ bool __init early_init_dt_scan(void *params)
+  */
+ void __init unflatten_device_tree(void)
+ {
+-	__unflatten_device_tree(initial_boot_params, &of_root,
++	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
+ 				early_init_dt_alloc_memory_arch);
+ 
+ 	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
+diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+index 1801634..2270830 100644
+--- a/drivers/of/unittest.c
++++ b/drivers/of/unittest.c
+@@ -907,7 +907,7 @@ static int __init unittest_data_add(void)
+ 			"not running tests\n", __func__);
+ 		return -ENOMEM;
+ 	}
+-	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
++	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
+ 	if (!unittest_data_node) {
+ 		pr_warn("%s: No tree to attach; not running tests\n", __func__);
+ 		return -ENODATA;
+diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+index 587ee50..8882640 100644
+--- a/include/linux/of_fdt.h
++++ b/include/linux/of_fdt.h
+@@ -38,7 +38,8 @@ extern bool of_fdt_is_big_endian(const void *blob,
+ extern int of_fdt_match(const void *blob, unsigned long node,
+ 			const char *const *compat);
+ extern void of_fdt_unflatten_tree(unsigned long *blob,
+-			       struct device_node **mynodes);
++				  struct device_node *dad,
++				  struct device_node **mynodes);
+ 
+ /* TBD: Temporary export of fdt globals - remove when code fully merged */
+ extern int __initdata dt_root_addr_cells;
+-- 
+2.1.0
+
