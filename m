@@ -1,70 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:36746 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932772AbbFHVee (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jun 2015 17:34:34 -0400
-Received: by obbqz1 with SMTP id qz1so90441978obb.3
-        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2015 14:34:33 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1433797073.4526.163.camel@kernel.crashing.org>
-References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
- <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
- <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
- <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org>
- <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
- <1431564871.4160.8.camel@kernel.crashing.org> <20150607075422.6ECE9C40A12@trevor.secretlab.ca>
- <1433797073.4526.163.camel@kernel.crashing.org>
-From: Grant Likely <grant.likely@linaro.org>
-Date: Mon, 8 Jun 2015 22:34:13 +0100
-Message-ID: <CACxGe6uMijVvU_yK_Yk3GSABHjqxYAwY76WcOJcxAhoPcW02sQ@mail.gmail.com>
-Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Rob Herring <robherring2@gmail.com>,
-	Pantelis Antoniou <panto@antoniou-consulting.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+In-Reply-To: <1433391238-19471-4-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com> <1433391238-19471-4-git-send-email-jiang.liu@linux.intel.com>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Thu, 4 Jun 2015 15:15:10 +0300
+Message-ID: <CAHNKnsQfxRrG_gzVUyCkxj5svRcS-znGZWLf+R14_guJH0MO1g@mail.gmail.com>
+Subject: Re: [RFT v2 03/48] MIPS, irq: Use irq_desc_get_xxx() to avoid
+ redundant lookup of irq_desc
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Aleksey Makarov <aleksey.makarov@auriga.com>,
+	David Daney <david.daney@cavium.com>,
+	Christoph Lameter <cl@linux.com>,
+	John Crispin <blogic@openwrt.org>,
+	Andrew Bresticker <abrestic@chromium.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	open list <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Linux MIPS <linux-mips@linux-mips.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 8, 2015 at 9:57 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Sun, 2015-06-07 at 08:54 +0100, Grant Likely wrote:
->> > IE. conceptually, what overlays do today is quite rooted around the idea
->> > of having a fixed "base" DT and some pre-compiled DTB overlays that
->> > get added/removed. The design completely ignore the idea of a FW that
->> > maintains a "live" tree which we want to keep in sync, which is what we
->> > want to do here, or what we could do with a "live" open firmware
->> > implementation.
->>
->> Right, which is exactly the reason for the changeset/overlay split.
->> Overlays assume a fixed base, and that overlays are kind of like plug-in
->> modules. changeset makes no such assumption.
+2015-06-04 7:13 GMT+03:00 Jiang Liu <jiang.liu@linux.intel.com>:
+> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+> already have a pointer to corresponding irq_desc.
 >
-> So you suggest we create a function that takes an fdt and an "anchor" as input,
-> and expands that FDT below that anchor, but does so by using the changeset API
-> under the hood ?
+> Note: this patch has been queued by Ralf Baechle <ralf@linux-mips.org>.
 >
-> Even that looks somewhat tricky (turn that bit of FDT into a pile of changeset
-> actions), however, I can see how we could create a new function inside changeset
-> to attach a subtree.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  arch/mips/ath25/ar2315.c             |    2 +-
+>  arch/mips/ath25/ar5312.c             |    2 +-
+>  arch/mips/cavium-octeon/octeon-irq.c |    4 +++-
+>  arch/mips/pci/pci-ar2315.c           |    2 +-
+>  arch/mips/pci/pci-ar71xx.c           |    2 +-
+>  arch/mips/pci/pci-ar724x.c           |    2 +-
+>  arch/mips/pci/pci-rt3883.c           |    2 +-
+>  arch/mips/ralink/irq.c               |    2 +-
+>  8 files changed, 10 insertions(+), 8 deletions(-)
 >
-> Ie. of_attach_subtree() (which could have it's own reconfig action but we
-> don't care that much yet), which takes an expanded subtree and an anchor, and
-> calls of_attach_node() in effect for all nodes in there.
->
-> We could then have a two pass mechanism in our hotplug code:
->
->  - Expand the bit of fdt into a separate tree
->  - Use of_attach_subtree to "add" that subtree to the main tree
->
-> What do you think ?
+For ath25 (AR231x/AR5312) changes
 
-I like that.
+Acked-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 
-g.
+-- 
+Sergey
