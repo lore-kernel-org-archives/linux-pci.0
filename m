@@ -1,75 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:38313 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752424AbbFRIHs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:07:48 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 18 Jun 2015 18:07:46 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id F01022BB004D
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:07:42 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I87WbH51642466
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:07:40 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I879OJ026958
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:07:10 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V8 04/10] powerpc/eeh: Cache only BARs, not windows or IOV BARs
-Date: Thu, 18 Jun 2015 16:06:39 +0800
-Message-Id: <1434614805-19002-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-id: <556FD916.3070103@samsung.com>
+Date: Thu, 04 Jun 2015 13:50:30 +0900
+From: Krzysztof Kozlowski <k.kozlowski@samsung.com>
+MIME-version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kukjin Kim <kgene@kernel.org>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org
+Subject: Re: [RFT v2 10/48] irqchip: Use irq_desc_get_xxx() to avoid redundant
+ lookup of irq_desc
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433391238-19471-11-git-send-email-jiang.liu@linux.intel.com>
+In-reply-to: <1433391238-19471-11-git-send-email-jiang.liu@linux.intel.com>
+Content-type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EEH address cache, which helps to locate the PCI device according to
-the given (physical) MMIO address, didn't cover PCI bridges. Also, it
-shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
-should be returned.
+On 04.06.2015 13:13, Jiang Liu wrote:
+> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+> already have a pointer to corresponding irq_desc.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/irqchip/exynos-combiner.c   |    4 ++--
 
-Also, by doing so, it removes the type check in
-eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
+For exynos:
+Acked-by: Krzysztof Kozlowski <k.kozlowski@samsung.com>
 
-The patch restricts the address cache to cover first 7 BARs for the
-above purposes.
-
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/eeh_cache.c |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
-index eeabeab..7b30487 100644
---- a/arch/powerpc/kernel/eeh_cache.c
-+++ b/arch/powerpc/kernel/eeh_cache.c
-@@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
- 	}
- 
- 	/* Walk resources on this device, poke them into the tree */
--	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
- 		unsigned long start = pci_resource_start(dev,i);
- 		unsigned long end = pci_resource_end(dev,i);
- 		unsigned int flags = pci_resource_flags(dev,i);
-@@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
- {
- 	unsigned long flags;
- 
--	/* Ignore PCI bridges */
--	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
--		return;
--
- 	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
- 	__eeh_addr_cache_insert_dev(dev);
- 	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
--- 
-1.7.9.5
-
+Best regards,
+Krzysztof
