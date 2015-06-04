@@ -7,22 +7,26 @@ To: Thomas Gleixner <tglx@linutronix.de>,
 	"H. Peter Anvin" <hpa@zytor.com>,
 	Randy Dunlap <rdunlap@infradead.org>,
 	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Sergey Ryazanov <ryazanov.s.a@gmail.com>,
-	Aleksey Makarov <aleksey.makarov@auriga.com>,
-	David Daney <david.daney@cavium.com>,
-	Christoph Lameter <cl@linux.com>,
-	John Crispin <blogic@openwrt.org>,
-	Andrew Bresticker <abrestic@chromium.org>
+	Borislav Petkov <bp@alien8.de>, Ray Jui <rjui@broadcom.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Santosh Shilimkar <ssantosh@kernel.org>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
 	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
 	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-mips@linux-mips.org
-Subject: [RFT v2 03/48] MIPS, irq: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
-Date: Thu,  4 Jun 2015 12:13:13 +0800
-Message-Id: <1433391238-19471-4-git-send-email-jiang.liu@linux.intel.com>
+	linux-acpi@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+	linux-gpio@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 05/48] gpio: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Thu,  4 Jun 2015 12:13:15 +0800
+Message-Id: <1433391238-19471-6-git-send-email-jiang.liu@linux.intel.com>
 In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
 References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
@@ -31,126 +35,177 @@ List-ID: <linux-pci.vger.kernel.org>
 Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
 already have a pointer to corresponding irq_desc.
 
-Note: this patch has been queued by Ralf Baechle <ralf@linux-mips.org>.
-
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
 ---
- arch/mips/ath25/ar2315.c             |    2 +-
- arch/mips/ath25/ar5312.c             |    2 +-
- arch/mips/cavium-octeon/octeon-irq.c |    4 +++-
- arch/mips/pci/pci-ar2315.c           |    2 +-
- arch/mips/pci/pci-ar71xx.c           |    2 +-
- arch/mips/pci/pci-ar724x.c           |    2 +-
- arch/mips/pci/pci-rt3883.c           |    2 +-
- arch/mips/ralink/irq.c               |    2 +-
- 8 files changed, 10 insertions(+), 8 deletions(-)
+ drivers/gpio/gpio-bcm-kona.c   |    2 +-
+ drivers/gpio/gpio-dwapb.c      |    2 +-
+ drivers/gpio/gpio-mvebu.c      |    2 +-
+ drivers/gpio/gpio-mxc.c        |    6 +++---
+ drivers/gpio/gpio-mxs.c        |    2 +-
+ drivers/gpio/gpio-omap.c       |    2 +-
+ drivers/gpio/gpio-tegra.c      |    4 +---
+ drivers/gpio/gpio-timberdale.c |    5 +++--
+ drivers/gpio/gpio-vf610.c      |    2 +-
+ drivers/gpio/gpio-zynq.c       |    2 +-
+ 10 files changed, 14 insertions(+), 15 deletions(-)
 
-diff --git a/arch/mips/ath25/ar2315.c b/arch/mips/ath25/ar2315.c
-index 2befa7d766a6..8742e1cee492 100644
---- a/arch/mips/ath25/ar2315.c
-+++ b/arch/mips/ath25/ar2315.c
-@@ -76,7 +76,7 @@ static void ar2315_misc_irq_handler(unsigned irq, struct irq_desc *desc)
- 	unsigned nr, misc_irq = 0;
+diff --git a/drivers/gpio/gpio-bcm-kona.c b/drivers/gpio/gpio-bcm-kona.c
+index b164ce837b43..2e7a8c66fe57 100644
+--- a/drivers/gpio/gpio-bcm-kona.c
++++ b/drivers/gpio/gpio-bcm-kona.c
+@@ -432,7 +432,7 @@ static void bcm_kona_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 	void __iomem *reg_base;
+ 	int bit, bank_id;
+ 	unsigned long sta;
+-	struct bcm_kona_gpio_bank *bank = irq_get_handler_data(irq);
++	struct bcm_kona_gpio_bank *bank = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
  
- 	if (pending) {
--		struct irq_domain *domain = irq_get_handler_data(irq);
-+		struct irq_domain *domain = irq_desc_get_handler_data(desc);
+ 	chained_irq_enter(chip, desc);
+diff --git a/drivers/gpio/gpio-dwapb.c b/drivers/gpio/gpio-dwapb.c
+index 58faf04fce5d..649be07a845d 100644
+--- a/drivers/gpio/gpio-dwapb.c
++++ b/drivers/gpio/gpio-dwapb.c
+@@ -149,7 +149,7 @@ static u32 dwapb_do_irq(struct dwapb_gpio *gpio)
  
- 		nr = __ffs(pending);
- 		misc_irq = irq_find_mapping(domain, nr);
-diff --git a/arch/mips/ath25/ar5312.c b/arch/mips/ath25/ar5312.c
-index b6887f75144c..094b938fd603 100644
---- a/arch/mips/ath25/ar5312.c
-+++ b/arch/mips/ath25/ar5312.c
-@@ -80,7 +80,7 @@ static void ar5312_misc_irq_handler(unsigned irq, struct irq_desc *desc)
- 	unsigned nr, misc_irq = 0;
- 
- 	if (pending) {
--		struct irq_domain *domain = irq_get_handler_data(irq);
-+		struct irq_domain *domain = irq_desc_get_handler_data(desc);
- 
- 		nr = __ffs(pending);
- 		misc_irq = irq_find_mapping(domain, nr);
-diff --git a/arch/mips/cavium-octeon/octeon-irq.c b/arch/mips/cavium-octeon/octeon-irq.c
-index 0643ae614284..18bf3dcb9d1b 100644
---- a/arch/mips/cavium-octeon/octeon-irq.c
-+++ b/arch/mips/cavium-octeon/octeon-irq.c
-@@ -699,7 +699,9 @@ static void octeon_irq_ciu_gpio_ack(struct irq_data *data)
- 
- static void octeon_irq_handle_trigger(unsigned int irq, struct irq_desc *desc)
+ static void dwapb_irq_handler(u32 irq, struct irq_desc *desc)
  {
--	if (irq_get_trigger_type(irq) & IRQ_TYPE_EDGE_BOTH)
+-	struct dwapb_gpio *gpio = irq_get_handler_data(irq);
++	struct dwapb_gpio *gpio = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 
+ 	dwapb_do_irq(gpio);
+diff --git a/drivers/gpio/gpio-mvebu.c b/drivers/gpio/gpio-mvebu.c
+index 1a54205860f5..a8c302ef7bc4 100644
+--- a/drivers/gpio/gpio-mvebu.c
++++ b/drivers/gpio/gpio-mvebu.c
+@@ -460,7 +460,7 @@ static int mvebu_gpio_irq_set_type(struct irq_data *d, unsigned int type)
+ 
+ static void mvebu_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct mvebu_gpio_chip *mvchip = irq_get_handler_data(irq);
++	struct mvebu_gpio_chip *mvchip = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	u32 cause, type;
+ 	int i;
+diff --git a/drivers/gpio/gpio-mxc.c b/drivers/gpio/gpio-mxc.c
+index 9f7446a7ac64..f10948c04f7c 100644
+--- a/drivers/gpio/gpio-mxc.c
++++ b/drivers/gpio/gpio-mxc.c
+@@ -275,8 +275,8 @@ static void mxc_gpio_irq_handler(struct mxc_gpio_port *port, u32 irq_stat)
+ static void mx3_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ {
+ 	u32 irq_stat;
+-	struct mxc_gpio_port *port = irq_get_handler_data(irq);
+-	struct irq_chip *chip = irq_get_chip(irq);
++	struct mxc_gpio_port *port = irq_desc_get_handler_data(desc);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 
+ 	chained_irq_enter(chip, desc);
+ 
+@@ -292,7 +292,7 @@ static void mx2_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ {
+ 	u32 irq_msk, irq_stat;
+ 	struct mxc_gpio_port *port;
+-	struct irq_chip *chip = irq_get_chip(irq);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 
+ 	chained_irq_enter(chip, desc);
+ 
+diff --git a/drivers/gpio/gpio-mxs.c b/drivers/gpio/gpio-mxs.c
+index 84cbda6acdda..039c7d50e64f 100644
+--- a/drivers/gpio/gpio-mxs.c
++++ b/drivers/gpio/gpio-mxs.c
+@@ -157,7 +157,7 @@ static void mxs_flip_edge(struct mxs_gpio_port *port, u32 gpio)
+ static void mxs_gpio_irq_handler(u32 irq, struct irq_desc *desc)
+ {
+ 	u32 irq_stat;
+-	struct mxs_gpio_port *port = irq_get_handler_data(irq);
++	struct mxs_gpio_port *port = irq_desc_get_handler_data(desc);
+ 
+ 	desc->irq_data.chip->irq_ack(&desc->irq_data);
+ 
+diff --git a/drivers/gpio/gpio-omap.c b/drivers/gpio/gpio-omap.c
+index b232397ad7ec..acbf3feff1e2 100644
+--- a/drivers/gpio/gpio-omap.c
++++ b/drivers/gpio/gpio-omap.c
+@@ -719,7 +719,7 @@ static void omap_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 	struct gpio_bank *bank;
+ 	int unmasked = 0;
+ 	struct irq_chip *irqchip = irq_desc_get_chip(desc);
+-	struct gpio_chip *chip = irq_get_handler_data(irq);
++	struct gpio_chip *chip = irq_desc_get_handler_data(desc);
+ 
+ 	chained_irq_enter(irqchip, desc);
+ 
+diff --git a/drivers/gpio/gpio-tegra.c b/drivers/gpio/gpio-tegra.c
+index 1741981d53c8..89ed8a56eb0b 100644
+--- a/drivers/gpio/gpio-tegra.c
++++ b/drivers/gpio/gpio-tegra.c
+@@ -268,16 +268,14 @@ static void tegra_gpio_irq_shutdown(struct irq_data *d)
+ 
+ static void tegra_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct tegra_gpio_bank *bank;
+ 	int port;
+ 	int pin;
+ 	int unmasked = 0;
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct tegra_gpio_bank *bank = irq_desc_get_handler_data(desc);
+ 
+ 	chained_irq_enter(chip, desc);
+ 
+-	bank = irq_get_handler_data(irq);
+-
+ 	for (port = 0; port < 4; port++) {
+ 		int gpio = tegra_gpio_compose(bank->bank, port, 0);
+ 		unsigned long sta = tegra_gpio_readl(GPIO_INT_STA(gpio)) &
+diff --git a/drivers/gpio/gpio-timberdale.c b/drivers/gpio/gpio-timberdale.c
+index e8f97e03c9bb..2b8baf1ea16e 100644
+--- a/drivers/gpio/gpio-timberdale.c
++++ b/drivers/gpio/gpio-timberdale.c
+@@ -194,11 +194,12 @@ out:
+ 
+ static void timbgpio_irq(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct timbgpio *tgpio = irq_get_handler_data(irq);
++	struct timbgpio *tgpio = irq_desc_get_handler_data(desc);
 +	struct irq_data *data = irq_desc_get_irq_data(desc);
-+
-+	if (irqd_get_trigger_type(data) & IRQ_TYPE_EDGE_BOTH)
- 		handle_edge_irq(irq, desc);
- 	else
- 		handle_level_irq(irq, desc);
-diff --git a/arch/mips/pci/pci-ar2315.c b/arch/mips/pci/pci-ar2315.c
-index 07a18228e63a..dadb30306a0a 100644
---- a/arch/mips/pci/pci-ar2315.c
-+++ b/arch/mips/pci/pci-ar2315.c
-@@ -320,7 +320,7 @@ static int ar2315_pci_host_setup(struct ar2315_pci_ctrl *apc)
+ 	unsigned long ipr;
+ 	int offset;
  
- static void ar2315_pci_irq_handler(unsigned irq, struct irq_desc *desc)
+-	desc->irq_data.chip->irq_ack(irq_get_irq_data(irq));
++	data->chip->irq_ack(data);
+ 	ipr = ioread32(tgpio->membase + TGPIO_IPR);
+ 	iowrite32(ipr, tgpio->membase + TGPIO_ICR);
+ 
+diff --git a/drivers/gpio/gpio-vf610.c b/drivers/gpio/gpio-vf610.c
+index 7bd9f209ffa8..fa344388f4da 100644
+--- a/drivers/gpio/gpio-vf610.c
++++ b/drivers/gpio/gpio-vf610.c
+@@ -120,7 +120,7 @@ static int vf610_gpio_direction_output(struct gpio_chip *chip, unsigned gpio,
+ 
+ static void vf610_gpio_irq_handler(u32 irq, struct irq_desc *desc)
  {
--	struct ar2315_pci_ctrl *apc = irq_get_handler_data(irq);
-+	struct ar2315_pci_ctrl *apc = irq_desc_get_handler_data(desc);
- 	u32 pending = ar2315_pci_reg_read(apc, AR2315_PCI_ISR) &
- 		      ar2315_pci_reg_read(apc, AR2315_PCI_IMR);
- 	unsigned pci_irq = 0;
-diff --git a/arch/mips/pci/pci-ar71xx.c b/arch/mips/pci/pci-ar71xx.c
-index 9e62ad31d4b5..dac6a07c45bf 100644
---- a/arch/mips/pci/pci-ar71xx.c
-+++ b/arch/mips/pci/pci-ar71xx.c
-@@ -232,7 +232,7 @@ static void ar71xx_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
- 	void __iomem *base = ath79_reset_base;
- 	u32 pending;
+-	struct vf610_gpio_port *port = irq_get_handler_data(irq);
++	struct vf610_gpio_port *port = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	int pin;
+ 	unsigned long irq_isfr;
+diff --git a/drivers/gpio/gpio-zynq.c b/drivers/gpio/gpio-zynq.c
+index aea6075e5b2e..70e3a568b1cb 100644
+--- a/drivers/gpio/gpio-zynq.c
++++ b/drivers/gpio/gpio-zynq.c
+@@ -499,7 +499,7 @@ static void zynq_gpio_irqhandler(unsigned int irq, struct irq_desc *desc)
+ {
+ 	u32 int_sts, int_enb;
+ 	unsigned int bank_num;
+-	struct zynq_gpio *gpio = irq_get_handler_data(irq);
++	struct zynq_gpio *gpio = irq_desc_get_handler_data(desc);
+ 	struct irq_chip *irqchip = irq_desc_get_chip(desc);
  
--	apc = irq_get_handler_data(irq);
-+	apc = irq_desc_get_handler_data(desc);
- 
- 	pending = __raw_readl(base + AR71XX_RESET_REG_PCI_INT_STATUS) &
- 		  __raw_readl(base + AR71XX_RESET_REG_PCI_INT_ENABLE);
-diff --git a/arch/mips/pci/pci-ar724x.c b/arch/mips/pci/pci-ar724x.c
-index a1b7d2a1b0d5..0af362b5af92 100644
---- a/arch/mips/pci/pci-ar724x.c
-+++ b/arch/mips/pci/pci-ar724x.c
-@@ -231,7 +231,7 @@ static void ar724x_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
- 	void __iomem *base;
- 	u32 pending;
- 
--	apc = irq_get_handler_data(irq);
-+	apc = irq_desc_get_handler_data(desc);
- 	base = apc->ctrl_base;
- 
- 	pending = __raw_readl(base + AR724X_PCI_REG_INT_STATUS) &
-diff --git a/arch/mips/pci/pci-rt3883.c b/arch/mips/pci/pci-rt3883.c
-index ec9be8ca4ada..80fafe646e74 100644
---- a/arch/mips/pci/pci-rt3883.c
-+++ b/arch/mips/pci/pci-rt3883.c
-@@ -134,7 +134,7 @@ static void rt3883_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
- 	struct rt3883_pci_controller *rpc;
- 	u32 pending;
- 
--	rpc = irq_get_handler_data(irq);
-+	rpc = irq_desc_get_handler_data(desc);
- 
- 	pending = rt3883_pci_r32(rpc, RT3883_PCI_REG_PCIINT) &
- 		  rt3883_pci_r32(rpc, RT3883_PCI_REG_PCIENA);
-diff --git a/arch/mips/ralink/irq.c b/arch/mips/ralink/irq.c
-index 7cf91b92e9d1..da301e0a2f1f 100644
---- a/arch/mips/ralink/irq.c
-+++ b/arch/mips/ralink/irq.c
-@@ -100,7 +100,7 @@ static void ralink_intc_irq_handler(unsigned int irq, struct irq_desc *desc)
- 	u32 pending = rt_intc_r32(INTC_REG_STATUS0);
- 
- 	if (pending) {
--		struct irq_domain *domain = irq_get_handler_data(irq);
-+		struct irq_domain *domain = irq_desc_get_handler_data(desc);
- 		generic_handle_irq(irq_find_mapping(domain, __ffs(pending)));
- 	} else {
- 		spurious_interrupt();
+ 	chained_irq_enter(irqchip, desc);
 -- 
 1.7.10.4
 
