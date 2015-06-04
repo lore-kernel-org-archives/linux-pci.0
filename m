@@ -1,80 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	mebersol@microsoft.com, haiyangz@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH 3/6] arch:x86:hv: Add mechanism for Hyper-V paravirt drivers to hook msi message creation
-Date: Thu, 11 Jun 2015 16:22:24 +0000
-Message-Id: <1434039747-44535-4-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
-References: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:35567 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753354AbbFDWCI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 18:02:08 -0400
+Received: by oihd6 with SMTP id d6so41003811oih.2
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 15:02:07 -0700 (PDT)
+Subject: [PATCH 4/5] PCI: layerscape: Factor out ls_pcie_establish_link()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Date: Thu, 04 Jun 2015 17:02:06 -0500
+Message-ID: <20150604220205.4377.47992.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+All other DesignWare-based drivers have a *_establish_link() function.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+This functionality is trivial for Layerscape, but factor out a
+ls_pcie_establish_link() for consistency with the other drivers.  No
+functional change.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/include/asm/mshyperv.h |  2 ++
- arch/x86/kernel/cpu/mshyperv.c  | 30 ++++++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+)
+ drivers/pci/host/pci-layerscape.c |   19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
-index c163215..bf7789e 100644
---- a/arch/x86/include/asm/mshyperv.h
-+++ b/arch/x86/include/asm/mshyperv.h
-@@ -19,5 +19,7 @@ void hyperv_callback_vector(void);
- void hyperv_vector_handler(struct pt_regs *regs);
- void hv_setup_vmbus_irq(void (*handler)(void));
- void hv_remove_vmbus_irq(void);
-+void hyperv_install_interrupt_translation(struct x86_msi_ops *new_ops);
-+void hyperv_uninstall_interrupt_translation(void);
- 
- #endif
-diff --git a/arch/x86/kernel/cpu/mshyperv.c b/arch/x86/kernel/cpu/mshyperv.c
-index 939155f..816e329 100644
---- a/arch/x86/kernel/cpu/mshyperv.c
-+++ b/arch/x86/kernel/cpu/mshyperv.c
-@@ -69,6 +69,36 @@ void hv_remove_vmbus_irq(void)
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index bb5894f..434b116 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -62,23 +62,30 @@ static int ls_pcie_link_up(struct pcie_port *pp)
+ 	return 1;
  }
- EXPORT_SYMBOL_GPL(hv_setup_vmbus_irq);
- EXPORT_SYMBOL_GPL(hv_remove_vmbus_irq);
-+
-+struct x86_msi_ops old_msi_ops;
-+
-+void hyperv_install_interrupt_translation(struct x86_msi_ops *new_ops)
-+{
-+	old_msi_ops.setup_msi_irqs = xchg(&(x86_msi.setup_msi_irqs),
-+					  new_ops->setup_msi_irqs);
-+	old_msi_ops.compose_msi_msg = xchg(&(x86_msi.compose_msi_msg),
-+					   new_ops->compose_msi_msg);
-+	old_msi_ops.teardown_msi_irqs = xchg(&(x86_msi.teardown_msi_irqs),
-+					     new_ops->teardown_msi_irqs);
-+	old_msi_ops.restore_msi_irqs = xchg(&(x86_msi.restore_msi_irqs),
-+					    new_ops->restore_msi_irqs);
-+
-+	new_ops->setup_msi_irqs = old_msi_ops.setup_msi_irqs;
-+	new_ops->compose_msi_msg = old_msi_ops.compose_msi_msg;
-+	new_ops->teardown_msi_irqs = old_msi_ops.teardown_msi_irqs;
-+	new_ops->restore_msi_irqs = old_msi_ops.restore_msi_irqs;
-+}
-+EXPORT_SYMBOL_GPL(hyperv_install_interrupt_translation);
-+
-+void hyperv_uninstall_interrupt_translation(void)
-+{
-+	xchg(&(x86_msi.setup_msi_irqs), old_msi_ops.setup_msi_irqs);
-+	xchg(&(x86_msi.compose_msi_msg), old_msi_ops.compose_msi_msg);
-+	xchg(&(x86_msi.teardown_msi_irqs), old_msi_ops.teardown_msi_irqs);
-+	xchg(&(x86_msi.restore_msi_irqs), old_msi_ops.restore_msi_irqs);
-+}
-+EXPORT_SYMBOL_GPL(hyperv_uninstall_interrupt_translation);
-+
- #endif
  
- static uint32_t  __init ms_hyperv_platform(void)
--- 
-1.9.1
+-static void ls_pcie_host_init(struct pcie_port *pp)
++static int ls_pcie_establish_link(struct pcie_port *pp)
+ {
+-	struct ls_pcie *pcie = to_ls_pcie(pp);
+ 	int count = 0;
+-	u32 val;
+-
+-	dw_pcie_setup_rc(pp);
+ 
+ 	while (!dw_pcie_link_up(pp)) {
+ 		usleep_range(100, 1000);
+ 		count++;
+ 		if (count >= 200) {
+ 			dev_err(pp->dev, "phy link never came up\n");
+-			return;
++			return -EINVAL;
+ 		}
+ 	}
+ 
++	return 0;
++}
++
++static void ls_pcie_host_init(struct pcie_port *pp)
++{
++	struct ls_pcie *pcie = to_ls_pcie(pp);
++	u32 val;
++
++	dw_pcie_setup_rc(pp);
++	ls_pcie_establish_link(pp);
++
+ 	/*
+ 	 * LS1021A Workaround for internal TKT228622
+ 	 * to fix the INTx hang issue
 
