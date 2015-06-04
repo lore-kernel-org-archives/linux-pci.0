@@ -1,90 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:35006 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755725AbbFOJzJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2015 05:55:09 -0400
-Received: by qgeu36 with SMTP id u36so586953qge.2
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2015 02:55:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1434024707-6245-3-git-send-email-Vincent.Wan@amd.com>
-References: <1434024707-6245-1-git-send-email-Vincent.Wan@amd.com>
-	<1434024707-6245-3-git-send-email-Vincent.Wan@amd.com>
-Date: Mon, 15 Jun 2015 11:55:08 +0200
-Message-ID: <CAPDyKFpPSNr-J9Nx=aMAdTm8f33vOBSytzyFQGo6xE+WF-KGdA@mail.gmail.com>
-Subject: Re: [PATCH V2 3/3] SDHCI: Change AMD SDHCI quirk application scope
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: Wan ZongShun <Vincent.Wan@amd.com>
-Cc: linux-mmc <linux-mmc@vger.kernel.org>,
-	"linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-	bp@alien8.de, Jean Delvare <jdelvare@suse.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ZongShun Wan <mcuos.com@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:36319 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629AbbFDGoE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:44:04 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:44:02 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 31/42] powerpc/pci: Move pcibios_find_pci_bus() around
+Date: Thu,  4 Jun 2015 16:42:00 +1000
+Message-Id: <1433400131-18429-32-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11 June 2015 at 14:11, Wan ZongShun <Vincent.Wan@amd.com> wrote:
-> Change this quirk to apply to AMD Carrizo platform.
->
-> Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
->
-> Tested-by: Nath, Arindam <Arindam.Nath@amd.com>
-> Tested-by: Ramesh, Ramya <Ramya.Ramesh@amd.com>
+The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
+that it can be reused by hotplug code for pSeries and PowerNV
+platform at the same time.
 
-Thanks, applied! I changed the prefix of the commit message header
-from "SDHCI." to "mmc: sdhci-pci:"
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+v5:
+  * Derived from PATCH[v4 12/21]
+---
+ arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
+ arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
+ 2 files changed, 36 insertions(+), 32 deletions(-)
 
-Kind regards
-Uffe
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index ca392fc..1482bc1 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -21,6 +21,42 @@
+ #include <asm/firmware.h>
+ #include <asm/eeh.h>
+ 
++static struct pci_bus *find_pci_bus(struct pci_bus *bus,
++				    struct device_node *dn)
++{
++	struct pci_bus *tmp, *child = NULL;
++	struct device_node *busdn;
++
++	busdn = pci_bus_to_OF_node(bus);
++	if (busdn == dn)
++		return bus;
++
++	list_for_each_entry(tmp, &bus->children, node) {
++		child = find_pci_bus(tmp, dn);
++		if (child)
++			break;
++	}
++
++	return child;
++}
++
++/**
++ * pcibios_find_pci_bus - find PCI bus according to the given device node
++ * @dn: Device node
++ *
++ * Find the corresponding PCI bus according to the given device node.
++ */
++struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
++{
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	if (!pdn  || !pdn->phb || !pdn->phb->bus)
++		return NULL;
++
++	return find_pci_bus(pdn->phb->bus, dn);
++}
++EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
++
+ /**
+  * pcibios_release_device - release PCI device
+  * @dev: PCI device
+diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
+index 5d4a3df..906dbaa 100644
+--- a/arch/powerpc/platforms/pseries/pci_dlpar.c
++++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
+@@ -34,38 +34,6 @@
+ 
+ #include "pseries.h"
+ 
+-static struct pci_bus *
+-find_bus_among_children(struct pci_bus *bus,
+-                        struct device_node *dn)
+-{
+-	struct pci_bus *child = NULL;
+-	struct pci_bus *tmp;
+-	struct device_node *busdn;
+-
+-	busdn = pci_bus_to_OF_node(bus);
+-	if (busdn == dn)
+-		return bus;
+-
+-	list_for_each_entry(tmp, &bus->children, node) {
+-		child = find_bus_among_children(tmp, dn);
+-		if (child)
+-			break;
+-	};
+-	return child;
+-}
+-
+-struct pci_bus *
+-pcibios_find_pci_bus(struct device_node *dn)
+-{
+-	struct pci_dn *pdn = dn->data;
+-
+-	if (!pdn  || !pdn->phb || !pdn->phb->bus)
+-		return NULL;
+-
+-	return find_bus_among_children(pdn->phb->bus, dn);
+-}
+-EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
+-
+ struct pci_controller *init_phb_dynamic(struct device_node *dn)
+ {
+ 	struct pci_controller *phb;
+-- 
+2.1.0
 
-> ---
->  drivers/mmc/host/sdhci-pci.c | 25 ++++++++++++++++++++++++-
->  1 file changed, 24 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/mmc/host/sdhci-pci.c b/drivers/mmc/host/sdhci-pci.c
-> index f208f20..94f54d2 100644
-> --- a/drivers/mmc/host/sdhci-pci.c
-> +++ b/drivers/mmc/host/sdhci-pci.c
-> @@ -724,14 +724,37 @@ static const struct sdhci_pci_fixes sdhci_rtsx = {
->         .probe_slot     = rtsx_probe_slot,
->  };
->
-> +/*AMD chipset generation*/
-> +enum amd_chipset_gen {
-> +       AMD_CHIPSET_BEFORE_ML,
-> +       AMD_CHIPSET_CZ,
-> +       AMD_CHIPSET_NL,
-> +       AMD_CHIPSET_UNKNOWN,
-> +};
-> +
->  static int amd_probe(struct sdhci_pci_chip *chip)
->  {
->         struct pci_dev  *smbus_dev;
-> +       enum amd_chipset_gen gen;
->
->         smbus_dev = pci_get_device(PCI_VENDOR_ID_AMD,
->                         PCI_DEVICE_ID_AMD_HUDSON2_SMBUS, NULL);
-> +       if (smbus_dev) {
-> +               gen = AMD_CHIPSET_BEFORE_ML;
-> +       } else {
-> +               smbus_dev = pci_get_device(PCI_VENDOR_ID_AMD,
-> +                               PCI_DEVICE_ID_AMD_KERNCZ_SMBUS, NULL);
-> +               if (smbus_dev) {
-> +                       if (smbus_dev->revision < 0x51)
-> +                               gen = AMD_CHIPSET_CZ;
-> +                       else
-> +                               gen = AMD_CHIPSET_NL;
-> +               } else {
-> +                       gen = AMD_CHIPSET_UNKNOWN;
-> +               }
-> +       }
->
-> -       if (smbus_dev && (smbus_dev->revision < 0x51)) {
-> +       if ((gen == AMD_CHIPSET_BEFORE_ML) || (gen == AMD_CHIPSET_CZ)) {
->                 chip->quirks2 |= SDHCI_QUIRK2_CLEAR_TRANSFERMODE_REG_BEFORE_CMD;
->                 chip->quirks2 |= SDHCI_QUIRK2_BROKEN_HS200;
->         }
-> --
-> 1.9.1
->
