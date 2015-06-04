@@ -1,74 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:43285 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752638AbbF3BSH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 21:18:07 -0400
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:42051 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752457AbbFDGnk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:40 -0400
 Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 30 Jun 2015 11:18:05 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 2838C3578048
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 11:18:02 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5U1HqQx58196154
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 11:18:01 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5U1HTPv024636
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 11:17:29 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V2 4/4] PCI: consolidate return value check for pci_find_(ext_)capability
-Date: Tue, 30 Jun 2015 09:16:44 +0800
-Message-Id: <1435627004-6029-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:43:39 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 23/42] powerpc/powernv: Cleanup on pnv_pci_ioda2_release_dma_pe()
+Date: Thu,  4 Jun 2015 16:41:52 +1000
+Message-Id: <1433400131-18429-24-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The return value of the pci_find_(ext_)capability is the position of this
-Cap.  After previous two patches clean up, the position returned is an
-unsigned value. Only 0 indicates the Cap is not presented.
+The patch applies cleanup on pnv_pci_ioda2_release_dma_pe():
 
-This patch consolidates the form of check from (pos <= 0)to (!pos).
+  * Rename it to pnv_pci_ioda2_release_pe_dma() to match the
+    function names used to release resources for one PE in the
+    subsequent patches.
+  * Remove the parameter of PCI device, which is used to figure
+    out device node. VFs don't have associated device nodes in
+    SRIOV case. For other cases, the device node can be figured
+    out from the PCI bus or device the PE was allocated for.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/pci.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+v5:
+  * Newly introduced
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 26 +++++++++++++++++++-------
+ 1 file changed, 19 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4bd3a0c..e1282aa 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -971,7 +971,7 @@ static int pci_save_pcix_state(struct pci_dev *dev)
- 	struct pci_cap_saved_state *save_state;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 3d5aec8d..2e31472 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -197,11 +197,11 @@ static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable)
+ 		pe->tce_bypass_enabled = enable;
+ }
  
- 	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
--	if (pos <= 0)
-+	if (!pos)
- 		return 0;
+-static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev,
+-					 struct pnv_ioda_pe *pe)
++static void pnv_pci_ioda2_release_pe_dma(struct pnv_ioda_pe *pe)
+ {
+-	struct iommu_table    *tbl;
+-	int64_t               rc;
++	struct iommu_table *tbl;
++	struct device_node *dn;
++	int64_t rc;
  
- 	save_state = pci_find_saved_cap(dev, PCI_CAP_ID_PCIX);
-@@ -995,7 +995,7 @@ static void pci_restore_pcix_state(struct pci_dev *dev)
+ 	tbl = pe->table_group.tables[0];
+ 	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
+@@ -213,8 +213,20 @@ static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev,
+ 		iommu_group_put(pe->table_group.group);
+ 		BUG_ON(pe->table_group.group);
+ 	}
++
++	if (pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL))
++		dn = pci_bus_to_OF_node(pe->pbus);
++	else if (pe->flags & PNV_IODA_PE_DEV)
++		dn = pci_device_to_OF_node(pe->pdev);
++#ifdef CONFIG_PCI_IOV
++	else if (pe->flags & PNV_IODA_PE_VF)
++		dn = pci_device_to_OF_node(pe->parent_dev);
++#endif
++	else
++		dn = NULL;
++
+ 	pnv_pci_ioda2_table_free_pages(tbl);
+-	iommu_free_table(tbl, of_node_full_name(dev->dev.of_node));
++	iommu_free_table(tbl, of_node_full_name(dn));
+ }
  
- 	save_state = pci_find_saved_cap(dev, PCI_CAP_ID_PCIX);
- 	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
--	if (!save_state || pos <= 0)
-+	if (!save_state || !pos)
- 		return;
- 	cap = (u16 *)&save_state->cap.data[0];
+ static int pnv_ioda_set_one_peltv(struct pnv_phb *phb,
+@@ -1495,14 +1507,14 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 		if ((pe->flags & PNV_IODA_PE_MASTER) &&
+ 		    (pe->flags & PNV_IODA_PE_VF)) {
+ 			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
+-				pnv_pci_ioda2_release_dma_pe(pdev, s);
++				pnv_pci_ioda2_release_pe_dma(s);
+ 				list_del(&s->list);
+ 				pnv_ioda_deconfigure_pe(phb, s);
+ 				pnv_ioda_free_pe(phb, s->pe_number);
+ 			}
+ 		}
  
-@@ -2159,7 +2159,7 @@ static int _pci_add_cap_save_buffer(struct pci_dev *dev, u16 cap,
- 	else
- 		pos = pci_find_capability(dev, cap);
+-		pnv_pci_ioda2_release_dma_pe(pdev, pe);
++		pnv_pci_ioda2_release_pe_dma(pe);
  
--	if (pos <= 0)
-+	if (!pos)
- 		return 0;
- 
- 	save_state = kzalloc(sizeof(*save_state) + size, GFP_KERNEL);
+ 		/* Remove from list */
+ 		mutex_lock(&phb->ioda.pe_list_mutex);
 -- 
-1.7.9.5
+2.1.0
 
