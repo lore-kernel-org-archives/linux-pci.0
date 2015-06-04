@@ -1,67 +1,156 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:59232 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423047AbbFEOLW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Jun 2015 10:11:22 -0400
-From: Joerg Roedel <joro@8bytes.org>
-To: iommu@lists.linux-foundation.org
-Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
-	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
-	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
-	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	Aleksey Makarov <aleksey.makarov@auriga.com>,
+	David Daney <david.daney@cavium.com>,
+	Christoph Lameter <cl@linux.com>,
+	John Crispin <blogic@openwrt.org>,
+	Andrew Bresticker <abrestic@chromium.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
 	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
-Subject: [PATCH 15/17] iommu/vt-d: Mark irt entries from old kernel as allocated
-Date: Fri,  5 Jun 2015 16:11:01 +0200
-Message-Id: <1433513463-19128-16-git-send-email-joro@8bytes.org>
-In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, linux-mips@linux-mips.org
+Subject: [RFT v2 03/48] MIPS, irq: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Thu,  4 Jun 2015 12:13:13 +0800
+Message-Id: <1433391238-19471-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
+Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+already have a pointer to corresponding irq_desc.
 
-After we copied over all irq remapping entries from the old
-kernel we need to mark the present entries as allocated in
-our table too. Otherwise we might overwrite entries from the
-previous kernel and cause DMAR faults.
+Note: this patch has been queued by Ralf Baechle <ralf@linux-mips.org>.
 
-Tested-by: Baoquan He <bhe@redhat.com>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/iommu/intel_irq_remapping.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ arch/mips/ath25/ar2315.c             |    2 +-
+ arch/mips/ath25/ar5312.c             |    2 +-
+ arch/mips/cavium-octeon/octeon-irq.c |    4 +++-
+ arch/mips/pci/pci-ar2315.c           |    2 +-
+ arch/mips/pci/pci-ar71xx.c           |    2 +-
+ arch/mips/pci/pci-ar724x.c           |    2 +-
+ arch/mips/pci/pci-rt3883.c           |    2 +-
+ arch/mips/ralink/irq.c               |    2 +-
+ 8 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index fd6c25b..f7b02ca 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -1300,6 +1300,7 @@ static int iommu_load_old_irte(struct intel_iommu *iommu)
+diff --git a/arch/mips/ath25/ar2315.c b/arch/mips/ath25/ar2315.c
+index 2befa7d766a6..8742e1cee492 100644
+--- a/arch/mips/ath25/ar2315.c
++++ b/arch/mips/ath25/ar2315.c
+@@ -76,7 +76,7 @@ static void ar2315_misc_irq_handler(unsigned irq, struct irq_desc *desc)
+ 	unsigned nr, misc_irq = 0;
+ 
+ 	if (pending) {
+-		struct irq_domain *domain = irq_get_handler_data(irq);
++		struct irq_domain *domain = irq_desc_get_handler_data(desc);
+ 
+ 		nr = __ffs(pending);
+ 		misc_irq = irq_find_mapping(domain, nr);
+diff --git a/arch/mips/ath25/ar5312.c b/arch/mips/ath25/ar5312.c
+index b6887f75144c..094b938fd603 100644
+--- a/arch/mips/ath25/ar5312.c
++++ b/arch/mips/ath25/ar5312.c
+@@ -80,7 +80,7 @@ static void ar5312_misc_irq_handler(unsigned irq, struct irq_desc *desc)
+ 	unsigned nr, misc_irq = 0;
+ 
+ 	if (pending) {
+-		struct irq_domain *domain = irq_get_handler_data(irq);
++		struct irq_domain *domain = irq_desc_get_handler_data(desc);
+ 
+ 		nr = __ffs(pending);
+ 		misc_irq = irq_find_mapping(domain, nr);
+diff --git a/arch/mips/cavium-octeon/octeon-irq.c b/arch/mips/cavium-octeon/octeon-irq.c
+index 0643ae614284..18bf3dcb9d1b 100644
+--- a/arch/mips/cavium-octeon/octeon-irq.c
++++ b/arch/mips/cavium-octeon/octeon-irq.c
+@@ -699,7 +699,9 @@ static void octeon_irq_ciu_gpio_ack(struct irq_data *data)
+ 
+ static void octeon_irq_handle_trigger(unsigned int irq, struct irq_desc *desc)
  {
- 	struct irte *old_ir_table;
- 	phys_addr_t irt_phys;
-+	unsigned int i;
- 	size_t size;
- 	u64 irta;
- 
-@@ -1325,6 +1326,15 @@ static int iommu_load_old_irte(struct intel_iommu *iommu)
- 	iommu->ir_table->base_old_phys = irt_phys;
- 	iommu->ir_table->base_old_virt = old_ir_table;
- 
-+	/*
-+	 * Now check the table for used entries and mark those as
-+	 * allocated in the bitmap
-+	 */
-+	for (i = 0; i < INTR_REMAP_TABLE_ENTRIES; i++) {
-+		if (iommu->ir_table->base[i].present)
-+			bitmap_set(iommu->ir_table->bitmap, i, 1);
-+	}
+-	if (irq_get_trigger_type(irq) & IRQ_TYPE_EDGE_BOTH)
++	struct irq_data *data = irq_desc_get_irq_data(desc);
 +
- 	return 0;
- }
++	if (irqd_get_trigger_type(data) & IRQ_TYPE_EDGE_BOTH)
+ 		handle_edge_irq(irq, desc);
+ 	else
+ 		handle_level_irq(irq, desc);
+diff --git a/arch/mips/pci/pci-ar2315.c b/arch/mips/pci/pci-ar2315.c
+index 07a18228e63a..dadb30306a0a 100644
+--- a/arch/mips/pci/pci-ar2315.c
++++ b/arch/mips/pci/pci-ar2315.c
+@@ -320,7 +320,7 @@ static int ar2315_pci_host_setup(struct ar2315_pci_ctrl *apc)
  
+ static void ar2315_pci_irq_handler(unsigned irq, struct irq_desc *desc)
+ {
+-	struct ar2315_pci_ctrl *apc = irq_get_handler_data(irq);
++	struct ar2315_pci_ctrl *apc = irq_desc_get_handler_data(desc);
+ 	u32 pending = ar2315_pci_reg_read(apc, AR2315_PCI_ISR) &
+ 		      ar2315_pci_reg_read(apc, AR2315_PCI_IMR);
+ 	unsigned pci_irq = 0;
+diff --git a/arch/mips/pci/pci-ar71xx.c b/arch/mips/pci/pci-ar71xx.c
+index 9e62ad31d4b5..dac6a07c45bf 100644
+--- a/arch/mips/pci/pci-ar71xx.c
++++ b/arch/mips/pci/pci-ar71xx.c
+@@ -232,7 +232,7 @@ static void ar71xx_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 	void __iomem *base = ath79_reset_base;
+ 	u32 pending;
+ 
+-	apc = irq_get_handler_data(irq);
++	apc = irq_desc_get_handler_data(desc);
+ 
+ 	pending = __raw_readl(base + AR71XX_RESET_REG_PCI_INT_STATUS) &
+ 		  __raw_readl(base + AR71XX_RESET_REG_PCI_INT_ENABLE);
+diff --git a/arch/mips/pci/pci-ar724x.c b/arch/mips/pci/pci-ar724x.c
+index a1b7d2a1b0d5..0af362b5af92 100644
+--- a/arch/mips/pci/pci-ar724x.c
++++ b/arch/mips/pci/pci-ar724x.c
+@@ -231,7 +231,7 @@ static void ar724x_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 	void __iomem *base;
+ 	u32 pending;
+ 
+-	apc = irq_get_handler_data(irq);
++	apc = irq_desc_get_handler_data(desc);
+ 	base = apc->ctrl_base;
+ 
+ 	pending = __raw_readl(base + AR724X_PCI_REG_INT_STATUS) &
+diff --git a/arch/mips/pci/pci-rt3883.c b/arch/mips/pci/pci-rt3883.c
+index ec9be8ca4ada..80fafe646e74 100644
+--- a/arch/mips/pci/pci-rt3883.c
++++ b/arch/mips/pci/pci-rt3883.c
+@@ -134,7 +134,7 @@ static void rt3883_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 	struct rt3883_pci_controller *rpc;
+ 	u32 pending;
+ 
+-	rpc = irq_get_handler_data(irq);
++	rpc = irq_desc_get_handler_data(desc);
+ 
+ 	pending = rt3883_pci_r32(rpc, RT3883_PCI_REG_PCIINT) &
+ 		  rt3883_pci_r32(rpc, RT3883_PCI_REG_PCIENA);
+diff --git a/arch/mips/ralink/irq.c b/arch/mips/ralink/irq.c
+index 7cf91b92e9d1..da301e0a2f1f 100644
+--- a/arch/mips/ralink/irq.c
++++ b/arch/mips/ralink/irq.c
+@@ -100,7 +100,7 @@ static void ralink_intc_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 	u32 pending = rt_intc_r32(INTC_REG_STATUS0);
+ 
+ 	if (pending) {
+-		struct irq_domain *domain = irq_get_handler_data(irq);
++		struct irq_domain *domain = irq_desc_get_handler_data(desc);
+ 		generic_handle_irq(irq_find_mapping(domain, __ffs(pending)));
+ 	} else {
+ 		spurious_interrupt();
 -- 
-1.9.1
+1.7.10.4
 
