@@ -1,80 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:42018 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752434AbbFDGnZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:25 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:23 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 01/42] PCI: Add pcibios_setup_bridge()
-Date: Thu,  4 Jun 2015 16:41:30 +1000
-Message-Id: <1433400131-18429-2-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	abdoulaye berthe <berthe.ab@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: [RFT v2 42/48] genirq, sh: Kill the first parameter 'irq' of irq_flow_handler_t
+Date: Thu,  4 Jun 2015 12:13:52 +0800
+Message-Id: <1433391238-19471-43-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, PowerPC PowerNV platform utilizes ppc_md.pcibios_fixup(),
-which is called for once after PCI probing and resource assignment
-are completed, to allocate platform required resources for PCI devices:
-PE#, IO and MMIO mapping, DMA address translation (TCE) table etc.
-Obviously, it's not hotplug friendly.
+Now most IRQ flow handlers make no use of the first parameter 'irq'.
+And for those who do make use of 'irq', we could easily get the irq
+number through irq_desc->irq_data->irq. So kill the first parameter
+'irq' of irq_flow_handler_t.
 
-The patch adds weak function pcibios_setup_bridge(), which is called
-by pci_setup_bridge(). PowerPC PowerNV platform will reuse the function
-to assign above platform required resources to newly added PCI devices,
-in order to support PCI hotplug in subsequent patches.
+To ease review, I have split the changes into several parts, though
+they should be merge as one to support bisecting.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-v5:
-  * Corrected subject as Bjorn suggested
-  * pci_setup_bridge() calls pcibios_setup_bridge() and __pci_setup_bridge()
----
- drivers/pci/setup-bus.c | 5 +++++
- include/linux/pci.h     | 1 +
- 2 files changed, 6 insertions(+)
+ arch/sh/boards/mach-se/7343/irq.c  |    2 +-
+ arch/sh/boards/mach-se/7722/irq.c  |    2 +-
+ arch/sh/boards/mach-se/7724/irq.c  |    2 +-
+ arch/sh/boards/mach-x3proto/gpio.c |    2 +-
+ arch/sh/cchips/hd6446x/hd64461.c   |    2 +-
+ drivers/sh/intc/core.c             |    2 +-
+ drivers/sh/intc/virq.c             |    4 ++--
+ 7 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4fd0cac..623dee3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -693,11 +693,16 @@ static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
- 	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, bus->bridge_ctl);
- }
+diff --git a/arch/sh/boards/mach-se/7343/irq.c b/arch/sh/boards/mach-se/7343/irq.c
+index 6f97a8f0d0d6..6129aef6db76 100644
+--- a/arch/sh/boards/mach-se/7343/irq.c
++++ b/arch/sh/boards/mach-se/7343/irq.c
+@@ -29,7 +29,7 @@
+ static void __iomem *se7343_irq_regs;
+ struct irq_domain *se7343_irq_domain;
  
-+void __weak pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
-+{
-+}
-+
- void pci_setup_bridge(struct pci_bus *bus)
+-static void se7343_irq_demux(unsigned int irq, struct irq_desc *desc)
++static void se7343_irq_demux(struct irq_desc *desc)
  {
- 	unsigned long type = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
+ 	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+diff --git a/arch/sh/boards/mach-se/7722/irq.c b/arch/sh/boards/mach-se/7722/irq.c
+index 60aebd14ccf8..24c74a88290c 100644
+--- a/arch/sh/boards/mach-se/7722/irq.c
++++ b/arch/sh/boards/mach-se/7722/irq.c
+@@ -28,7 +28,7 @@
+ static void __iomem *se7722_irq_regs;
+ struct irq_domain *se7722_irq_domain;
  
-+	pcibios_setup_bridge(bus, type);
- 	__pci_setup_bridge(bus, type);
+-static void se7722_irq_demux(unsigned int irq, struct irq_desc *desc)
++static void se7722_irq_demux(struct irq_desc *desc)
+ {
+ 	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+diff --git a/arch/sh/boards/mach-se/7724/irq.c b/arch/sh/boards/mach-se/7724/irq.c
+index 5feb246f642d..d5f05af72d68 100644
+--- a/arch/sh/boards/mach-se/7724/irq.c
++++ b/arch/sh/boards/mach-se/7724/irq.c
+@@ -92,7 +92,7 @@ static struct irq_chip se7724_irq_chip __read_mostly = {
+ 	.irq_unmask	= enable_se7724_irq,
+ };
+ 
+-static void se7724_irq_demux(unsigned int irq, struct irq_desc *desc)
++static void se7724_irq_demux(struct irq_desc *desc)
+ {
+ 	struct fpga_irq set = get_fpga_irq(irq_desc_get_irq(desc));
+ 	unsigned short intv = __raw_readw(set.sraddr);
+diff --git a/arch/sh/boards/mach-x3proto/gpio.c b/arch/sh/boards/mach-x3proto/gpio.c
+index 24555c364d5b..1fb2cbee25f2 100644
+--- a/arch/sh/boards/mach-x3proto/gpio.c
++++ b/arch/sh/boards/mach-x3proto/gpio.c
+@@ -60,7 +60,7 @@ static int x3proto_gpio_to_irq(struct gpio_chip *chip, unsigned gpio)
+ 	return virq;
  }
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 94bacfa..5aacd0a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -811,6 +811,7 @@ void pci_stop_and_remove_bus_device_locked(struct pci_dev *dev);
- void pci_stop_root_bus(struct pci_bus *bus);
- void pci_remove_root_bus(struct pci_bus *bus);
- void pci_setup_cardbus(struct pci_bus *bus);
-+void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type);
- void pci_sort_breadthfirst(void);
- #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
- #define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
+-static void x3proto_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
++static void x3proto_gpio_irq_handler(struct irq_desc *desc)
+ {
+ 	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+diff --git a/arch/sh/cchips/hd6446x/hd64461.c b/arch/sh/cchips/hd6446x/hd64461.c
+index e9735616bdc8..8180092502f7 100644
+--- a/arch/sh/cchips/hd6446x/hd64461.c
++++ b/arch/sh/cchips/hd6446x/hd64461.c
+@@ -56,7 +56,7 @@ static struct irq_chip hd64461_irq_chip = {
+ 	.irq_unmask	= hd64461_unmask_irq,
+ };
+ 
+-static void hd64461_irq_demux(unsigned int irq, struct irq_desc *desc)
++static void hd64461_irq_demux(struct irq_desc *desc)
+ {
+ 	unsigned short intv = __raw_readw(HD64461_NIRR);
+ 	unsigned int ext_irq = HD64461_IRQBASE;
+diff --git a/drivers/sh/intc/core.c b/drivers/sh/intc/core.c
+index 6dc0361aeeeb..2fd4c163dd85 100644
+--- a/drivers/sh/intc/core.c
++++ b/drivers/sh/intc/core.c
+@@ -65,7 +65,7 @@ void intc_set_prio_level(unsigned int irq, unsigned int level)
+ 	raw_spin_unlock_irqrestore(&intc_big_lock, flags);
+ }
+ 
+-static void intc_redirect_irq(unsigned int irq, struct irq_desc *desc)
++static void intc_redirect_irq(struct irq_desc *desc)
+ {
+ 	generic_handle_irq((unsigned int)irq_desc_get_handler_data(desc));
+ }
+diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
+index 8704873e8186..d50169cb4af1 100644
+--- a/drivers/sh/intc/virq.c
++++ b/drivers/sh/intc/virq.c
+@@ -109,7 +109,7 @@ static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
+ 	return 0;
+ }
+ 
+-static void intc_virq_handler(unsigned int irq, struct irq_desc *desc)
++static void intc_virq_handler(struct irq_desc *desc)
+ {
+ 	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+@@ -126,7 +126,7 @@ static void intc_virq_handler(unsigned int irq, struct irq_desc *desc)
+ 			handle = (unsigned long)irq_desc_get_handler_data(vdesc);
+ 			addr = INTC_REG(d, _INTC_ADDR_E(handle), 0);
+ 			if (intc_reg_fns[_INTC_FN(handle)](addr, handle, 0))
+-				generic_handle_irq_desc(entry->irq, vdesc);
++				generic_handle_irq_desc(vdesc);
+ 		}
+ 	}
+ 
 -- 
-2.1.0
+1.7.10.4
 
