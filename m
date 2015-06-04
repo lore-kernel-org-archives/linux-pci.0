@@ -1,87 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:35906 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753549AbbFPSty (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jun 2015 14:49:54 -0400
-Received: by igbiq7 with SMTP id iq7so49893202igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2015 11:49:54 -0700 (PDT)
-Date: Tue, 16 Jun 2015 13:49:50 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Yijing Wang <wangyijing@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	dja@axtens.net, Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org, Duc Dang <dhdang@apm.com>,
-	Loc Ho <lho@apm.com>
-Subject: Re: [PATCH Part1 v11 4/5] PCI: xgene: Use pci_scan_root_bus()
- instead of pci_create_root_bus()
-Message-ID: <20150616184950.GA7710@google.com>
-References: <1430204499-19571-1-git-send-email-wangyijing@huawei.com>
- <1430204499-19571-5-git-send-email-wangyijing@huawei.com>
- <20150527154758.GU32152@google.com>
- <CACoXjcnZG9+oyc43G2NM1tvrZycMGiQFHm2E27+1Q_8_Vu9aEQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACoXjcnZG9+oyc43G2NM1tvrZycMGiQFHm2E27+1Q_8_Vu9aEQ@mail.gmail.com>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:35901 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752692AbbFDGpT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:45:19 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:45:18 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 17/42] powerpc/powernv: PE oriented during configuration
+Date: Thu,  4 Jun 2015 16:41:46 +1000
+Message-Id: <1433400131-18429-18-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Duc, Loc]
+Except pnv_ioda_configure_pe(), all PE configuration related functions
+are already PE oriented. The patch changes the return value from PE
+number to PE instance for its callee for the purpose.
 
-On Wed, May 27, 2015 at 10:21:40AM -0700, Tanmay Inamdar wrote:
-> On Wed, May 27, 2015 at 8:47 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Tue, Apr 28, 2015 at 03:01:38PM +0800, Yijing Wang wrote:
-> >> Pci_bus_add_devices() was ripped out of pci_scan_root_bus().
-> >> Now pci_scan_root_bus() == pci_create_root_bus() +
-> >> pci_scan_child_bus() if busn resource is supplied.
-> >> Xgene added the busn resource to resources list
-> >> in of_pci_get_host_bridge_resources(). So it should be safe
-> >> to use pci_scan_root_bus() instead.
-> >>
-> >> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> >> CC: Tanmay Inamdar <tinamdar@apm.com>
-> >
-> > Tanmay, any comments on this?
-> >
-> 
-> Looks good to me.
-> 
-> Acked-by: Tanmay Inamdar <tinamdar@apm.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+v5:
+  * Split from PATCH[v4 07/21]
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 44 ++++++++++++++++---------------
+ arch/powerpc/platforms/powernv/pci.h      |  3 ++-
+ 2 files changed, 25 insertions(+), 22 deletions(-)
 
-I had applied this, but dropped it because it conflicted with Duc's
-MSI patch, which adds a call to xgene_pcie_msi_enable() between
-pci_create_root_bus() and pci_scan_child_bus().
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index fd2f898..6187f84 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -132,25 +132,26 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+ 		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+ }
+ 
+-static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
++static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+ {
+ 	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe)) {
+ 		pr_warn("%s: Invalid PE %d on PHB#%x\n",
+ 			__func__, pe_no, phb->hose->global_number);
+-		return;
++		return NULL;
+ 	}
+ 
+ 	if (test_and_set_bit(pe_no, phb->ioda.pe_alloc)) {
+ 		pr_warn("%s: PE %d was assigned on PHB#%x\n",
+ 			__func__, pe_no, phb->hose->global_number);
+-		return;
++		return NULL;
+ 	}
+ 
+ 	phb->ioda.pe_array[pe_no].phb = phb;
+ 	phb->ioda.pe_array[pe_no].pe_number = pe_no;
++	return &phb->ioda.pe_array[pe_no];
+ }
+ 
+-static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
++static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+ {
+ 	unsigned long pe_no;
+ 	unsigned long limit = phb->ioda.total_pe - 1;
+@@ -163,12 +164,12 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+ 			break;
+ 
+ 		if (--limit >= phb->ioda.total_pe)
+-			return IODA_INVALID_PE;
++			return NULL;
+ 	} while (1);
+ 
+ 	phb->ioda.pe_array[pe_no].phb = phb;
+ 	phb->ioda.pe_array[pe_no].pe_number = pe_no;
+-	return pe_no;
++	return &phb->ioda.pe_array[pe_no];
+ }
+ 
+ static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
+@@ -389,8 +390,8 @@ static void pnv_ioda_reserve_m64_pe(struct pnv_phb *phb,
+ 	}
+ }
+ 
+-static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
+-				struct pci_bus *bus, int all)
++static struct pnv_ioda_pe *pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
++						struct pci_bus *bus, int all)
+ {
+ 	resource_size_t segsz = phb->ioda.m64_segsize;
+ 	struct pci_dev *pdev;
+@@ -401,13 +402,13 @@ static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
+ 	int i;
+ 
+ 	if (!pnv_ioda_need_m64_pe(phb, bus))
+-		return IODA_INVALID_PE;
++		return NULL;
+ 
+ 	/* Allocate bitmap */
+ 	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
+ 	pe_bitmap = kzalloc(size, GFP_KERNEL);
+ 	if (!pe_bitmap)
+-		return IODA_INVALID_PE;
++		return NULL;
+ 
+ 	/* The bridge's M64 window might be extended to PHB's M64
+ 	 * window by intention to support PCI hotplug. So we have
+@@ -444,7 +445,7 @@ static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
+ 	/* No M64 window found ? */
+ 	if (bitmap_empty(pe_bitmap, phb->ioda.total_pe)) {
+ 		kfree(pe_bitmap);
+-		return IODA_INVALID_PE;
++		return NULL;
+ 	}
+ 
+ 	/* Figure out the master PE and put all slave PEs
+@@ -495,7 +496,7 @@ static int pnv_ioda_pick_m64_pe(struct pnv_phb *phb,
+ 	}
+ 
+ 	kfree(pe_bitmap);
+-	return master_pe->pe_number;
++	return master_pe;
+ }
+ 
+ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+@@ -1224,7 +1225,7 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+ 	struct pnv_phb *phb = hose->private_data;
+-	struct pnv_ioda_pe *pe;
++	struct pnv_ioda_pe *pe = NULL;
+ 	int pe_num = IODA_INVALID_PE;
+ 
+ 	/* For partial hotplug case, the PE instance hasn't been destroyed
+@@ -1240,24 +1241,25 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
+ 	}
+ 
+ 	/* PE number for root bus should have been reserved */
+-	if (pci_is_root_bus(bus))
+-		pe_num = phb->ioda.root_pe;
++	if (pci_is_root_bus(bus) &&
++	    phb->ioda.root_pe != IODA_INVALID_PE)
++		pe = &phb->ioda.pe_array[phb->ioda.root_pe];
+ 
+ 	/* Check if PE is determined by M64 */
+-	if (pe_num == IODA_INVALID_PE && phb->pick_m64_pe)
+-		pe_num = phb->pick_m64_pe(phb, bus, all);
++	if (!pe && phb->pick_m64_pe)
++		pe = phb->pick_m64_pe(phb, bus, all);
+ 
+ 	/* The PE number isn't pinned by M64 */
+-	if (pe_num == IODA_INVALID_PE)
+-		pe_num = pnv_ioda_alloc_pe(phb);
++	if (!pe)
++		pe = pnv_ioda_alloc_pe(phb);
+ 
+-	if (pe_num == IODA_INVALID_PE) {
++	if (!pe) {
+ 		pr_warning("%s: Not enough PE# available for PCI bus %04x:%02x\n",
+ 			__func__, pci_domain_nr(bus), bus->number);
+ 		return NULL;
+ 	}
+ 
+-	pe = &phb->ioda.pe_array[pe_num];
++	pe_num = pe->pe_number;
+ 	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
+ 	pe->pbus = bus;
+ 	pe->pdev = NULL;
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 45a6450..64c7f03 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -119,7 +119,8 @@ struct pnv_phb {
+ 	void (*shutdown)(struct pnv_phb *phb);
+ 	int (*init_m64)(struct pnv_phb *phb);
+ 	void (*reserve_m64_pe)(struct pnv_phb *phb, struct pci_bus *bus);
+-	int (*pick_m64_pe)(struct pnv_phb *phb, struct pci_bus *bus, int all);
++	struct pnv_ioda_pe * (*pick_m64_pe)(struct pnv_phb *phb,
++					    struct pci_bus *bus, int all);
+ 	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
+ 	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
+ 	int (*unfreeze_pe)(struct pnv_phb *phb, int pe_no, int opt);
+-- 
+2.1.0
 
-We should figure out a better way to do this, e.g., with
-pci_host_bridge_ops, so we can use pci_scan_root_bus() on X-Gene.  But we
-don't have that yet.
-
-> >> ---
-> >>  drivers/pci/host/pci-xgene.c |    3 +--
-> >>  1 files changed, 1 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> >> index ee082c0..87e3962 100644
-> >> --- a/drivers/pci/host/pci-xgene.c
-> >> +++ b/drivers/pci/host/pci-xgene.c
-> >> @@ -499,12 +499,11 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
-> >>       if (ret)
-> >>               return ret;
-> >>
-> >> -     bus = pci_create_root_bus(&pdev->dev, 0,
-> >> +     bus = pci_scan_root_bus(&pdev->dev, 0,
-> >>                                       &xgene_pcie_ops, port, &res);
-> >>       if (!bus)
-> >>               return -ENOMEM;
-> >>
-> >> -     pci_scan_child_bus(bus);
-> >>       pci_assign_unassigned_bus_resources(bus);
-> >>       pci_bus_add_devices(bus);
-> >>
-> >> --
-> >> 1.7.1
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
