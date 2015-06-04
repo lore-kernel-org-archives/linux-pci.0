@@ -1,126 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwdur.emc.com ([128.221.224.79]:50492 "EHLO
-	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964947AbbFJOJH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 10:09:07 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v4 00/19] NTB: Add NTB hardware abstraction layer
-Date: Wed, 10 Jun 2015 05:08:05 -0400
-Message-Id: <cover.1433925092.git.Allen.Hubbe@emc.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <556FF0AD.6000901@linaro.org>
+Date: Thu, 04 Jun 2015 14:31:09 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
+MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>, Al Stone <ahs3@redhat.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>
+CC: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Mark Salter <msalter@redhat.com>
+Subject: Re: [Patch v4 0/8] Consolidate ACPI PCI root common code into ACPI
+ core
+References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com> <556F6332.2040501@redhat.com> <556FAFEF.6040802@linux.intel.com>
+In-Reply-To: <556FAFEF.6040802@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The NTB drivers currently support only one hardware driver, and one
-client type.  This patch set adds an abstraction layer, enabling
-hardware drivers by other vendors, and clients other than ntb_transport.
+Hi Jiang,
 
-The commits in this set may also be pulled from:
-github.com/allenbh/linux
-tagged ntb-abh-v4
+On 2015年06月04日 09:54, Jiang Liu wrote:
+> On 2015/6/4 4:27, Al Stone wrote:
+>> On 06/02/2015 12:12 AM, Jiang Liu wrote:
+>>> This patch set consolidates common code to support ACPI PCI root on x86
+>>> and IA64 platforms into ACPI core, to reproduce duplicated code and
+>>> simplify maintenance. And a patch set based on this to support ACPI based
+>>> PCIe host bridge on ARM64 has been posted at:
+>>
+>> Link is missing (or it's a typo of some flavor).
+> HI Al,
+> 	Sorry, I missed the link. It has been posted at:
+> https://lkml.org/lkml/2015/5/26/207
 
-Compare against previous tags ntb-abh-v1..ntb-abh-v3 to see exactly what
-changed in the each revised version of this series.
+I failed to get io resources for PCI hostbridge  when I was testing PCI
+on ARM64 QEMU, I debugged this for quite a while, and finally found out
+that ACPI resource parsing for IO is not suitable for ARM64, because io
+space for x86 is 64K, but 16M for ARM64.
 
-Different in v4:
- - Correct spelling, grammer, and capitalization grammer in commit messages.
- - Zero-initialize device structure in ntb_hw_intel with kzalloc_node.
- - Use __copy_from_user_inatomic_nocache only if the arch has it.
- - Split adding the ntb hardware abstraction layer into two patches:
-   NTB: Add NTB hardware abstraction layer
-      Adding the abstraction layer now stands alone in its own patch.
-   NTB: Split ntb_hw_intel and ntb_transport drivers
-      This patch is still rather large, at just under 200k.
-   Unfortunately, since the original code in ntb_hw_intel and
-   ntb_transport called in both directions, one driver can't be changed
-   by itself without breaking the other.
+This issue is only found when the firmware representing the io resource
+using the type ACPI_RESOURCE_TYPE_ADDRESS32, so the io address will
+greater than 64k.
 
-Different in v3:
- - Reschedule long running tasklets to avoid stalls in transport.
- - Initialize driver .owner and .name in ntb_register_client.
- - Eliminate calls to BUG() in ntb_hw_intel.
- - Fix incorrect PBARXLAT split-bar address assignment in ntb_hw_intel.
- - Add bugfix patch: Read peer info from local SPAD in transport.
- - Arrange the above bugfix, and three patches affecting transport link
-   down, to earlier in the series, because they are higher importance.
- - Add performance patch: Increase transport MTU to 64k form 16k.
- - Rebase on ff25ea8f4eee to resolve a merge conflict in MAINTAINERS
-   (conflicting context lines only, no conflicting changes).
+In drivers/acpi/resource.c:
 
-Different in v2:
- - Rewrite shortlog descriptions for spelling and style
- - Remove extraneous NTB dependency from Kconfig files
- - Reindent Kconfig files with leading tabs
- - Reindent some lines in ntb_transport
- - Append patch NTB: Rename intel hw to proper platform names
+static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+                                       u8 io_decode, u8 translation_type)
+{
+         res->flags = IORESOURCE_IO;
 
-Allen Hubbe (12):
-  NTB: Move files in preparation for NTB abstraction
-  NTB: Add NTB hardware abstraction layer
-  NTB: Split ntb_hw_intel and ntb_transport drivers
-  NTB: Differentiate transport link down messages
-  NTB: Do not advance transport RX on link down
-  NTB: Reset transport QP link stats on down
-  NTB: Add parameters for Intel SNB B2B addresses
-  NTB: Add ping pong test client
-  NTB: Add tool test client
-  NTB: Rate limit ntb_qp_link_work
-  NTB: Use NUMA memory and DMA chan in transport
-  NTB: Use NUMA memory in Intel driver
+[...]
 
-Dave Jiang (7):
-  NTB: Read peer info from local SPAD in transport
-  NTB: Enable link for Intel root port mode in probe
-  NTB: Check the device ID to set errata flags
-  NTB: Improve performance with write combining
-  NTB: Default to CPU memcpy for performance
-  NTB: Rename Intel code names to platform names
-  NTB: Increase transport MTU to 64k from 16k
+         if (res->end >= 0x10003)
+                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
 
- Documentation/ntb.txt               |  127 ++
- MAINTAINERS                         |   16 +-
- drivers/net/ntb_netdev.c            |   58 +-
- drivers/ntb/Kconfig                 |   39 +-
- drivers/ntb/Makefile                |    5 +-
- drivers/ntb/hw/Kconfig              |    1 +
- drivers/ntb/hw/Makefile             |    1 +
- drivers/ntb/hw/intel/Kconfig        |    7 +
- drivers/ntb/hw/intel/Makefile       |    1 +
- drivers/ntb/hw/intel/ntb_hw_intel.c | 2214 +++++++++++++++++++++++++++++++++++
- drivers/ntb/hw/intel/ntb_hw_intel.h |  342 ++++++
- drivers/ntb/ntb.c                   |  251 ++++
- drivers/ntb/ntb_hw.c                | 1896 ------------------------------
- drivers/ntb/ntb_hw.h                |  256 ----
- drivers/ntb/ntb_regs.h              |  177 ---
- drivers/ntb/ntb_transport.c         | 1027 +++++++++-------
- drivers/ntb/test/Kconfig            |   19 +
- drivers/ntb/test/Makefile           |    2 +
- drivers/ntb/test/ntb_pingpong.c     |  250 ++++
- drivers/ntb/test/ntb_tool.c         |  556 +++++++++
- include/linux/ntb.h                 |  970 ++++++++++++++-
- include/linux/ntb_transport.h       |   85 ++
- 22 files changed, 5485 insertions(+), 2815 deletions(-)
- create mode 100644 Documentation/ntb.txt
- create mode 100644 drivers/ntb/hw/Kconfig
- create mode 100644 drivers/ntb/hw/Makefile
- create mode 100644 drivers/ntb/hw/intel/Kconfig
- create mode 100644 drivers/ntb/hw/intel/Makefile
- create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.c
- create mode 100644 drivers/ntb/hw/intel/ntb_hw_intel.h
- create mode 100644 drivers/ntb/ntb.c
- delete mode 100644 drivers/ntb/ntb_hw.c
- delete mode 100644 drivers/ntb/ntb_hw.h
- delete mode 100644 drivers/ntb/ntb_regs.h
- create mode 100644 drivers/ntb/test/Kconfig
- create mode 100644 drivers/ntb/test/Makefile
- create mode 100644 drivers/ntb/test/ntb_pingpong.c
- create mode 100644 drivers/ntb/test/ntb_tool.c
- create mode 100644 include/linux/ntb_transport.h
+[...]
+}
 
--- 
-2.4.0.rc0.43.gcf8a8c6
+so the code will filter out res->end >= 0x10003, and in my case, it will
+more than 64K, so we can't get the IO resources.
 
+I got a question, why we use if (res->end >= 0x10003) here?
+I mean 64k will be 0x10000, and in that case, we should use
+if (res->end >= 0x10000) here, not 0x10003, any history behind that?
+
+This is not the problem of this patch set, but need updating
+the core ACPI resource parsing code, I'm working on that. I'm
+just wondering there is no special IO space on IA64, how this works
+on IA64?
+
+Thanks
+Hanjun
