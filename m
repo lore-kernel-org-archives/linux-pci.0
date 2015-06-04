@@ -1,90 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:58495 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754777AbbFCQRD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Jun 2015 12:17:03 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH V2 1/2] pci: Add dev_flags bit to
- access VPD through function 0
-Date: Wed, 3 Jun 2015 16:16:43 +0000
-Message-ID: <4033DF50-0126-4F69-88FA-C6AABC0CADCE@intel.com>
-References: <20150603000645.71269.26134.stgit@mdrustad-wks.jf.intel.com>
- <20150603001011.71269.79857.stgit@mdrustad-wks.jf.intel.com>
- <556E6667.1020000@gmail.com>
-In-Reply-To: <556E6667.1020000@gmail.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_B443E2EF-BF6E-486A-A6C8-5F41C784D5D3";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Gilad Avidov <gavidov@codeaurora.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFT v2 14/48] spmi: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Thu,  4 Jun 2015 12:13:24 +0800
+Message-Id: <1433391238-19471-15-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_B443E2EF-BF6E-486A-A6C8-5F41C784D5D3
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=windows-1252
+Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+already have a pointer to corresponding irq_desc.
 
-> On Jun 2, 2015, at 7:28 PM, Alexander Duyck =
-<alexander.duyck@gmail.com> wrote:
->=20
-> You can probably combine the dev->multifunction check with the =
-dev_flags check.  After all you don't need this workaround if the device =
-is not multifunction.  It might even make more sense to move the =
-multifunction check to the quirk in patch 2/2.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/spmi/spmi-pmic-arb.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Yes. I also realized that I really should check that tdev->vpd is not =
-NULL. There is no point in referencing it if, for whatever reason, it =
-has no VPD.
+diff --git a/drivers/spmi/spmi-pmic-arb.c b/drivers/spmi/spmi-pmic-arb.c
+index d7119db49cfe..b32cb0a813cb 100644
+--- a/drivers/spmi/spmi-pmic-arb.c
++++ b/drivers/spmi/spmi-pmic-arb.c
+@@ -453,8 +453,8 @@ static void periph_interrupt(struct spmi_pmic_arb_dev *pa, u8 apid)
+ 
+ static void pmic_arb_chained_irq(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct spmi_pmic_arb_dev *pa = irq_get_handler_data(irq);
+-	struct irq_chip *chip = irq_get_chip(irq);
++	struct spmi_pmic_arb_dev *pa = irq_desc_get_handler_data(desc);
++	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	void __iomem *intr = pa->intr;
+ 	int first = pa->min_apid >> 5;
+ 	int last = pa->max_apid >> 5;
+-- 
+1.7.10.4
 
-> I also believe this leaks a reference to the device.
-
-Yes, and I was thinking that when I wrote the line, but forgot to do =
-anything about it. Good catch!
-
-> You should be calling pci_dev_put(tdev) if tdev is not NULL.  As such =
-you probably need to split up the !tdev and the rest of the checks.
-
-Yup. I will have a V3 coming. I still don't have anything to handle PFs =
-assigned to guests, but I think that would be best in a separate patch =
-set if there is need to fix that. It looks to me like that would involve =
-trapping on all config space accesses to such devices and then emulating =
-the behavior of the VPD Address/F and Data registers. It may be worth =
-seeing if anyone cares before doing anything about it. I haven't seen =
-any reports related to such a setup.
-
-Again, thank you for your comments.
-
---
-Mark Rustad, Networking Division, Intel Corporation
-
-
---Apple-Mail=_B443E2EF-BF6E-486A-A6C8-5F41C784D5D3
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJVbyhsAAoJEDwO/+eO4+5uKZYP/RTdMtrlhEh6X3JqPAMXfUQ7
-v+idF6gb2R9xmoJ+zvmoSiG+ggM7YvPi91fCee7g4YbmPJKs+yJ0lFfZgHGtV97U
-WwHehHjrYjWU1gr4vXeI/igeJj2WdCX5uiqImFss9cV0bgHG8YjkNx2JpXjGs6P2
-4SSoXg3Y/Dy2u8i89V0qg59n/ub4b6fNQLhVQrQZWe4KSh6gzgAOSKQpfPwmlBpY
-wWgvtSMmlbUVDQ4sxNxtYwTCBSUhuGOgKsND3epOUtRvZjAKNG2ji1p29D1pJ5bi
-Jc1KIQ874LO+pfPO66G/p0HOOTbJm9XRREJogHam7WMW6xbPVgO5fas55jAfjOuv
-qjQE9qwtqs62IGOtjkaKV1cc8Ryphr3sp6l/dXO/Hrq3t8bWyZ1eVuuXPEn68WDQ
-QFOcufx+qIp3WzQggn8n89Ip02DsR5IK0aJtlEoUz9vOH8lwJnHt6SxyDQgWLfXH
-cVyUg5syiL+0zKzF71E0c9w/aTdmyiK3yP2Y47+G5dWtb7CHL+ii6zejdAJRJvL4
-t9IXRXW6+sXYkVPMWYoG4QPkhZrMt1Gf89G8/anuBkJIZmOS0j9+xedfZbr8GUmH
-b2Z5bDCQi1GMRveKMvcf9khdw7xcSAngfB4fdISwAYmZPT+vGTlFytG1XJfRUF77
-DiEoFPL6MIoZ4CAM3k12
-=5hJu
------END PGP SIGNATURE-----
-
---Apple-Mail=_B443E2EF-BF6E-486A-A6C8-5F41C784D5D3--
