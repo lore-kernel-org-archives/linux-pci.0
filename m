@@ -1,79 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwdur.emc.com ([128.221.224.79]:46703 "EHLO
-	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752662AbbF2Ouh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 10:50:37 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH 3/9] NTB: Fix transport stats for multiple devices
-Date: Mon, 29 Jun 2015 10:49:59 -0400
-Message-Id: <1d24d41d6f61b4e06bf7097ea235adf4ca58c363.1435587291.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
-References: <cover.1435587291.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
-References: <cover.1435587291.git.Allen.Hubbe@emc.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-mips@linux-mips.org
+Subject: [RFT v2 31/48] irqchip: Prepare for killing the first parameter 'irq' of irq_flow_handler_t
+Date: Thu,  4 Jun 2015 12:13:41 +0800
+Message-Id: <1433391238-19471-32-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dave Jiang <dave.jiang@intel.com>
+Change irq flow handler to prepare for killing the first parameter 'irq'
+of irq_flow_handler_t.
 
-Currently the debugfs does not have files for all NTB transport queue
-pairs.  When there are multiple NTBs present in a system, the QP names
-of the last transport clobber the names of previously added transport
-QPs.  Only the last added QPs can be observed via debugfs.
-
-Create a directory per NTB transport to associate the QPs with that
-transport.  Name the directory the same as the PCI device.
-
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/ntb/ntb_transport.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/irqchip/irq-brcmstb-l2.c     |    7 ++++---
+ drivers/irqchip/irq-imgpdc.c         |    3 ++-
+ drivers/irqchip/irq-keystone.c       |    4 ++--
+ drivers/irqchip/irq-mmp.c            |    3 ++-
+ drivers/irqchip/irq-s3c24xx.c        |    4 ++--
+ drivers/irqchip/irq-tb10x.c          |    2 +-
+ drivers/irqchip/irq-versatile-fpga.c |    6 +++---
+ 7 files changed, 16 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index 3c257f1d235f..30d8b52421ec 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -211,6 +211,8 @@ struct ntb_transport_ctx {
- 	bool link_is_up;
- 	struct delayed_work link_work;
- 	struct work_struct link_cleanup;
-+
-+	struct dentry *debugfs_node_dir;
+diff --git a/drivers/irqchip/irq-brcmstb-l2.c b/drivers/irqchip/irq-brcmstb-l2.c
+index d6bcc6be0777..994c01fdb4b5 100644
+--- a/drivers/irqchip/irq-brcmstb-l2.c
++++ b/drivers/irqchip/irq-brcmstb-l2.c
+@@ -51,7 +51,7 @@ struct brcmstb_l2_intc_data {
+ 	u32 saved_mask; /* for suspend/resume */
  };
  
- enum {
-@@ -951,12 +953,12 @@ static int ntb_transport_init_queue(struct ntb_transport_ctx *nt,
- 	qp->tx_max_frame = min(transport_mtu, tx_size / 2);
- 	qp->tx_max_entry = tx_size / qp->tx_max_frame;
+-static void brcmstb_l2_intc_irq_handle(unsigned int irq, struct irq_desc *desc)
++static void brcmstb_l2_intc_irq_handle(unsigned int __irq, struct irq_desc *desc)
+ {
+ 	struct brcmstb_l2_intc_data *b = irq_desc_get_handler_data(desc);
+ 	struct irq_chip_generic *gc = irq_get_domain_generic_chip(b->domain, 0);
+@@ -65,13 +65,14 @@ static void brcmstb_l2_intc_irq_handle(unsigned int irq, struct irq_desc *desc)
  
--	if (nt_debugfs_dir) {
-+	if (nt->debugfs_node_dir) {
- 		char debugfs_name[4];
- 
- 		snprintf(debugfs_name, 4, "qp%d", qp_num);
- 		qp->debugfs_dir = debugfs_create_dir(debugfs_name,
--						     nt_debugfs_dir);
-+						     nt->debugfs_node_dir);
- 
- 		qp->debugfs_stats = debugfs_create_file("stats", S_IRUSR,
- 							qp->debugfs_dir, qp,
-@@ -1059,6 +1061,11 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 		goto err2;
+ 	if (status == 0) {
+ 		raw_spin_lock(&desc->lock);
+-		handle_bad_irq(irq, desc);
++		handle_bad_irq(__irq, desc);
+ 		raw_spin_unlock(&desc->lock);
+ 		goto out;
  	}
  
-+	if (nt_debugfs_dir) {
-+		nt->debugfs_node_dir =
-+			debugfs_create_dir(pci_name(ndev->pdev), nt_debugfs_dir);
-+	}
+ 	do {
+-		irq = ffs(status) - 1;
++		unsigned int irq = ffs(status) - 1;
 +
- 	for (i = 0; i < qp_count; i++) {
- 		rc = ntb_transport_init_queue(nt, i);
- 		if (rc)
+ 		/* ack at our level */
+ 		irq_reg_writel(gc, 1 << irq, CPU_CLEAR);
+ 		status &= ~(1 << irq);
+diff --git a/drivers/irqchip/irq-imgpdc.c b/drivers/irqchip/irq-imgpdc.c
+index 8071c2eb0248..d94eb43f252a 100644
+--- a/drivers/irqchip/irq-imgpdc.c
++++ b/drivers/irqchip/irq-imgpdc.c
+@@ -218,8 +218,9 @@ static int pdc_irq_set_wake(struct irq_data *data, unsigned int on)
+ 	return 0;
+ }
+ 
+-static void pdc_intc_perip_isr(unsigned int irq, struct irq_desc *desc)
++static void pdc_intc_perip_isr(unsigned int __irq, struct irq_desc *desc)
+ {
++	unsigned int irq = irq_desc_get_irq(desc);
+ 	struct pdc_intc_priv *priv;
+ 	unsigned int i, irq_no;
+ 
+diff --git a/drivers/irqchip/irq-keystone.c b/drivers/irqchip/irq-keystone.c
+index 78e8b3ce5252..8b05603d3be0 100644
+--- a/drivers/irqchip/irq-keystone.c
++++ b/drivers/irqchip/irq-keystone.c
+@@ -90,7 +90,7 @@ static void keystone_irq_handler(unsigned irq, struct irq_desc *desc)
+ 	unsigned long pending;
+ 	int src, virq;
+ 
+-	dev_dbg(kirq->dev, "start irq %d\n", irq);
++	dev_dbg(kirq->dev, "start irq %d\n", irq_desc_get_irq(desc));
+ 
+ 	chained_irq_enter(irq_desc_get_chip(desc), desc);
+ 
+@@ -117,7 +117,7 @@ static void keystone_irq_handler(unsigned irq, struct irq_desc *desc)
+ 
+ 	chained_irq_exit(irq_desc_get_chip(desc), desc);
+ 
+-	dev_dbg(kirq->dev, "end irq %d\n", irq);
++	dev_dbg(kirq->dev, "end irq %d\n", irq_desc_get_irq(desc));
+ }
+ 
+ static int keystone_irq_map(struct irq_domain *h, unsigned int virq,
+diff --git a/drivers/irqchip/irq-mmp.c b/drivers/irqchip/irq-mmp.c
+index c0da57bdb89d..44febf10be2f 100644
+--- a/drivers/irqchip/irq-mmp.c
++++ b/drivers/irqchip/irq-mmp.c
+@@ -130,8 +130,9 @@ struct irq_chip icu_irq_chip = {
+ 	.irq_unmask	= icu_unmask_irq,
+ };
+ 
+-static void icu_mux_irq_demux(unsigned int irq, struct irq_desc *desc)
++static void icu_mux_irq_demux(unsigned int __irq, struct irq_desc *desc)
+ {
++	unsigned int irq = irq_desc_get_irq(desc);
+ 	struct irq_domain *domain;
+ 	struct icu_chip_data *data;
+ 	int i;
+diff --git a/drivers/irqchip/irq-s3c24xx.c b/drivers/irqchip/irq-s3c24xx.c
+index c8d373fcd823..efca6390aa87 100644
+--- a/drivers/irqchip/irq-s3c24xx.c
++++ b/drivers/irqchip/irq-s3c24xx.c
+@@ -327,8 +327,8 @@ static void s3c_irq_demux(unsigned int irq, struct irq_desc *desc)
+ 	while (src) {
+ 		n = __ffs(src);
+ 		src &= ~(1 << n);
+-		irq = irq_find_mapping(sub_intc->domain, offset + n);
+-		generic_handle_irq(irq);
++		generic_handle_irq(irq_find_mapping(sub_intc->domain,
++						    offset + n));
+ 	}
+ 
+ 	chained_irq_exit(chip, desc);
+diff --git a/drivers/irqchip/irq-tb10x.c b/drivers/irqchip/irq-tb10x.c
+index accc20036a3c..117cf25c6cfe 100644
+--- a/drivers/irqchip/irq-tb10x.c
++++ b/drivers/irqchip/irq-tb10x.c
+@@ -101,7 +101,7 @@ static void tb10x_irq_cascade(unsigned int irq, struct irq_desc *desc)
+ {
+ 	struct irq_domain *domain = irq_desc_get_handler_data(desc);
+ 
+-	generic_handle_irq(irq_find_mapping(domain, irq));
++	generic_handle_irq(irq_find_mapping(domain, irq_desc_get_irq(desc)));
+ }
+ 
+ static int __init of_tb10x_init_irq(struct device_node *ictl,
+diff --git a/drivers/irqchip/irq-versatile-fpga.c b/drivers/irqchip/irq-versatile-fpga.c
+index 1ab451729a5c..efbfd425d2e0 100644
+--- a/drivers/irqchip/irq-versatile-fpga.c
++++ b/drivers/irqchip/irq-versatile-fpga.c
+@@ -66,18 +66,18 @@ static void fpga_irq_unmask(struct irq_data *d)
+ 	writel(mask, f->base + IRQ_ENABLE_SET);
+ }
+ 
+-static void fpga_irq_handle(unsigned int irq, struct irq_desc *desc)
++static void fpga_irq_handle(unsigned int __irq, struct irq_desc *desc)
+ {
+ 	struct fpga_irq_data *f = irq_desc_get_handler_data(desc);
+ 	u32 status = readl(f->base + IRQ_STATUS);
+ 
+ 	if (status == 0) {
+-		do_bad_IRQ(irq, desc);
++		do_bad_IRQ(__irq, desc);
+ 		return;
+ 	}
+ 
+ 	do {
+-		irq = ffs(status) - 1;
++		unsigned int irq = ffs(status) - 1;
+ 		status &= ~(1 << irq);
+ 		generic_handle_irq(irq_find_mapping(f->domain, irq));
+ 	} while (status);
 -- 
-2.4.0.rc0.43.gcf8a8c6
+1.7.10.4
 
