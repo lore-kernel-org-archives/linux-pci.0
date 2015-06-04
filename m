@@ -1,248 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:38709 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636AbbFDGoy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:44:54 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:44:53 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 36/42] powerpc/pci: Export traverse_pci_device_nodes()
-Date: Thu,  4 Jun 2015 16:42:05 +1000
-Message-Id: <1433400131-18429-37-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33461 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753195AbbFDWBx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 18:01:53 -0400
+Received: by oiww2 with SMTP id w2so41068154oiw.0
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 15:01:53 -0700 (PDT)
+Subject: [PATCH 2/5] PCI: dra7xx: Use dw_pcie_link_up() consistently
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Date: Thu, 04 Jun 2015 17:01:51 -0500
+Message-ID: <20150604220151.4377.38040.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch exports following functions, which are derived from their
-original implementation, so that the PCI hotplug logic can reuse
-the functions to add or remove pci_dn for all device nodes under
-specified PCI slot.
+We already use dw_pcie_link_up() once in dra7xx_pcie_establish_link(), but
+we duplicate its code later.  Use dw_pcie_link_up() for consistency.  No
+functional change.
 
-   traverse_pci_device_nodes()     traverse_pci_devices()
-   add_pci_device_node_info()      update_dn_pci_info()
-   remove_pci_device_node_info()   newly added
-
-The patch also releases eeh_dev when its corresponding pci_dn
-is released, indicating they have same life cycle.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-v5:
-  * Derived from PATCH[v4 17/21]
-  * Fixed "assignment in if condition" from checkpatch.pl
----
- arch/powerpc/include/asm/pci-bridge.h  |  4 +-
- arch/powerpc/include/asm/ppc-pci.h     |  7 ++--
- arch/powerpc/kernel/pci_dn.c           | 71 ++++++++++++++++++++++++++++------
- arch/powerpc/platforms/pseries/msi.c   |  4 +-
- arch/powerpc/platforms/pseries/setup.c |  2 +-
- 5 files changed, 70 insertions(+), 18 deletions(-)
+ drivers/pci/host/pci-dra7xx.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 9a83cdb..d0b4b1a 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -222,7 +222,9 @@ extern struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
- extern struct pci_dn *pci_get_pdn(struct pci_dev *pdev);
- extern struct pci_dn *add_dev_pci_data(struct pci_dev *pdev);
- extern void remove_dev_pci_data(struct pci_dev *pdev);
--extern void *update_dn_pci_info(struct device_node *dn, void *data);
-+extern void *add_pci_device_node_info(struct device_node *dn,
-+				      struct pci_controller *phb);
-+extern void remove_pci_device_node_info(struct device_node *dn);
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 2d57e19..e3d15d7 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -107,8 +107,7 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
  
- static inline int pci_device_from_OF_node(struct device_node *np,
- 					  u8 *bus, u8 *devfn)
-diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-index 7388316..a5b0ea0 100644
---- a/arch/powerpc/include/asm/ppc-pci.h
-+++ b/arch/powerpc/include/asm/ppc-pci.h
-@@ -33,9 +33,10 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
- struct device_node;
- struct pci_dn;
- 
--typedef void *(*traverse_func)(struct device_node *me, void *data);
--void *traverse_pci_devices(struct device_node *start, traverse_func pre,
--		void *data);
-+void *traverse_pci_device_nodes(struct device_node *start,
-+				void *(*fn)(struct device_node *,
-+					    struct pci_controller *),
-+				void *data);
- void *traverse_pci_dn(struct pci_dn *root,
- 		      void *(*fn)(struct pci_dn *, void *),
- 		      void *data);
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index d4330d2..f821e96 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -276,13 +276,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
- #endif /* CONFIG_PCI_IOV */
- }
- 
--/*
-- * Traverse_func that inits the PCI fields of the device node.
-- * NOTE: this *must* be done before read/write config to the device.
-+/**
-+ * add_pci_device_node_info - Add pci_dn for PCI device node
-+ * @dn: PCI device node
-+ * @phb: PHB
-+ *
-+ * Add pci_dn for the indicated PCI device node. The newly created
-+ * pci_dn will be put into the child list of the parent device node.
-  */
--void *update_dn_pci_info(struct device_node *dn, void *data)
-+void *add_pci_device_node_info(struct device_node *dn,
-+			       struct pci_controller *phb)
- {
--	struct pci_controller *phb = data;
- 	const __be32 *type = of_get_property(dn, "ibm,pci-config-space-type", NULL);
- 	const __be32 *regs;
- 	struct device_node *parent;
-@@ -339,8 +343,48 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 
- 	return NULL;
- }
-+EXPORT_SYMBOL(add_pci_device_node_info);
- 
--/*
-+/**
-+ * remove_pci_device_node_info - Remove pci_dn from PCI device node
-+ * @dn: PCI device node
-+ *
-+ * Remove pci_dn from PCI device node. The pci_dn is also removed
-+ * from the child list of the parent pci_dn.
-+ */
-+void remove_pci_device_node_info(struct device_node *np)
-+{
-+	struct pci_dn *pdn = np ? PCI_DN(np) : NULL;
-+#ifdef CONFIG_EEH
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+#endif
-+
-+	if (!pdn)
-+		return;
-+
-+#ifdef CONFIG_EEH
-+	if (edev) {
-+		pdn->edev = NULL;
-+		kfree(edev);
-+	}
-+#endif
-+
-+	BUG_ON(!list_empty(&pdn->child_list));
-+	list_del(&pdn->list);
-+	if (pdn->parent)
-+		of_node_put(pdn->parent->node);
-+
-+	np->data = NULL;
-+	kfree(pdn);
-+}
-+EXPORT_SYMBOL(remove_pci_device_node_info);
-+
-+/**
-+ * traverse_pci_device_nodes - Traverse children of indicated device node
-+ * @start: indicated device node
-+ * @pre: callback
-+ * @data: additional parameter to the callback
-+ *
-  * Traverse a device tree stopping each PCI device in the tree.
-  * This is done depth first.  As each node is processed, a "pre"
-  * function is called and the children are processed recursively.
-@@ -358,8 +402,10 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
-  * one of these nodes we also assume its siblings are non-pci for
-  * performance.
-  */
--void *traverse_pci_devices(struct device_node *start, traverse_func pre,
--		void *data)
-+void *traverse_pci_device_nodes(struct device_node *start,
-+				void *(*fn)(struct device_node *,
-+					    struct pci_controller *phb),
-+				void *data)
- {
- 	struct device_node *dn, *nextdn;
- 	void *ret;
-@@ -374,7 +420,8 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
- 		if (classp)
- 			class = of_read_number(classp, 1);
- 
--		if (pre && ((ret = pre(dn, data)) != NULL))
-+		ret = fn ? fn(dn, data) : NULL;
-+		if (ret != NULL)
- 			return ret;
- 
- 		/* If we are a PCI bridge, go down */
-@@ -395,8 +442,10 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
- 			nextdn = dn->sibling;
- 		}
+ 	while (retries--) {
+-		reg = dra7xx_pcie_readl(dra7xx,	PCIECTRL_DRA7XX_CONF_PHY_CS);
+-		if (reg & LINK_UP)
++		if (dw_pcie_link_up(pp))
+ 			break;
+ 		usleep_range(10, 20);
  	}
-+
- 	return NULL;
- }
-+EXPORT_SYMBOL_GPL(traverse_pci_device_nodes);
- 
- static struct pci_dn *pci_dn_next_one(struct pci_dn *root,
- 				      struct pci_dn *pdn)
-@@ -452,7 +501,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
- 	struct pci_dn *pdn;
- 
- 	/* PHB nodes themselves must not match */
--	update_dn_pci_info(dn, phb);
-+	add_pci_device_node_info(dn, phb);
- 	pdn = dn->data;
- 	if (pdn) {
- 		pdn->devfn = pdn->busno = -1;
-@@ -462,7 +511,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
- 	}
- 
- 	/* Update dn->phb ptrs for new phb and children devices */
--	traverse_pci_devices(dn, update_dn_pci_info, phb);
-+	traverse_pci_device_nodes(dn, add_pci_device_node_info, phb);
- }
- 
- /** 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index c8d24f9..9ebbd19 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -303,7 +303,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
- 	memset(&counts, 0, sizeof(struct msi_counts));
- 
- 	/* Work out how many devices we have below this PE */
--	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
-+	traverse_pci_device_nodes(pe_dn, count_non_bridge_devices, &counts);
- 
- 	if (counts.num_devices == 0) {
- 		pr_err("rtas_msi: found 0 devices under PE for %s\n",
-@@ -318,7 +318,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
- 	/* else, we have some more calculating to do */
- 	counts.requestor = pci_device_to_OF_node(dev);
- 	counts.request = request;
--	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
-+	traverse_pci_device_nodes(pe_dn, count_spare_msis, &counts);
- 
- 	/* If the quota isn't an integer multiple of the total, we can
- 	 * use the remainder as spare MSIs for anyone that wants them. */
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 92974aa..ed8c894 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -262,7 +262,7 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
- 	case OF_RECONFIG_ATTACH_NODE:
- 		pci = np->parent->data;
- 		if (pci)
--			update_dn_pci_info(np, pci->phb);
-+			add_pci_device_node_info(np, pci->phb);
- 		break;
- 	default:
- 		err = NOTIFY_DONE;
--- 
-2.1.0
 
