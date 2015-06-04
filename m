@@ -1,50 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:33310 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756151AbbFRSB1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 14:01:27 -0400
-Received: by ykfr66 with SMTP id r66so72630862ykf.0
-        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 11:01:26 -0700 (PDT)
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:59138 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788AbbFDFrM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 01:47:12 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 15:47:09 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 4D4D23578048
+	for <linux-pci@vger.kernel.org>; Thu,  4 Jun 2015 15:47:06 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t545kvk265863820
+	for <linux-pci@vger.kernel.org>; Thu, 4 Jun 2015 15:47:06 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t545kXn6010136
+	for <linux-pci@vger.kernel.org>; Thu, 4 Jun 2015 15:46:33 +1000
+Date: Thu, 4 Jun 2015 13:46:15 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
+Message-ID: <20150604054615.GA8052@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150601234645.GF3631@google.com>
+ <20150603033142.GA22584@richard>
+ <20150603051023.GA26652@gwshan>
+ <20150603154638.GL3631@google.com>
 MIME-Version: 1.0
-In-Reply-To: <CACK8Z6E_bobMhP1_0Y87R20DMfDa881LVmswZpM=YqQEZC2+=Q@mail.gmail.com>
-References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150618161238.32739.42666.stgit@bhelgaas-glaptop2.roam.corp.google.com> <CACK8Z6E_bobMhP1_0Y87R20DMfDa881LVmswZpM=YqQEZC2+=Q@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 18 Jun 2015 13:01:06 -0500
-Message-ID: <CAErSpo6BCtM8zJS=yNTNTugXW--8PpuRhod2GAydZj38tCo+-w@mail.gmail.com>
-Subject: Re: [PATCH 1/4] PCI: pciehp: Clean up debug logging
-To: Rajat Jain <rajatja@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150603154638.GL3631@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 18, 2015 at 12:27 PM, Rajat Jain <rajatja@google.com> wrote:
-> Hi,
+On Wed, Jun 03, 2015 at 10:46:38AM -0500, Bjorn Helgaas wrote:
+>On Wed, Jun 03, 2015 at 03:10:23PM +1000, Gavin Shan wrote:
+>> On Wed, Jun 03, 2015 at 11:31:42AM +0800, Wei Yang wrote:
+>> >On Mon, Jun 01, 2015 at 06:46:45PM -0500, Bjorn Helgaas wrote:
+>> >>On Tue, May 19, 2015 at 06:50:08PM +0800, Wei Yang wrote:
+>> >>> Current EEH recovery code works with the assumption: the PE has primary
+>> >>> bus. Unfortunately, that's not true to VF PEs, which generally contains
+>> >>> one or multiple VFs (for VF group case). The patch creates PEs for VFs
+>> >>> at PCI final fixup time. Those PEs for VFs are indentified with newly
+>> >>> introduced flag EEH_PE_VF so that we handle them differently during
+>> >>> EEH recovery.
+>> >>> 
+>> >>> [gwshan: changelog and code refactoring]
+>> >>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>> >>> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> >>> ---
+>> >>>  arch/powerpc/include/asm/eeh.h               |    1 +
+>> >>>  arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
+>> >>>  arch/powerpc/platforms/powernv/eeh-powernv.c |   17 +++++++++++++++++
+>> >>>  3 files changed, 26 insertions(+), 2 deletions(-)
+>> >>> 
+>> >>> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+>> >>> index 1b3614d..c1fde48 100644
+>> >>> --- a/arch/powerpc/include/asm/eeh.h
+>> >>> +++ b/arch/powerpc/include/asm/eeh.h
+>> >>> @@ -70,6 +70,7 @@ struct pci_dn;
+>> >>>  #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+>> >>>  #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+>> >>>  #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
+>> >>> +#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+>> >>>  
+>> >>>  #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+>> >>>  #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+>> >>> diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+>> >>> index 35f0b62..260a701 100644
+>> >>> --- a/arch/powerpc/kernel/eeh_pe.c
+>> >>> +++ b/arch/powerpc/kernel/eeh_pe.c
+>> >>> @@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+>> >>>  	 * EEH device already having associated PE, but
+>> >>>  	 * the direct parent EEH device doesn't have yet.
+>> >>>  	 */
+>> >>> -	pdn = pdn ? pdn->parent : NULL;
+>> >>> +	if (edev->physfn)
+>> >>> +		pdn = pci_get_pdn(edev->physfn);
+>> >>> +	else
+>> >>> +		pdn = pdn ? pdn->parent : NULL;
+>> >>>  	while (pdn) {
+>> >>>  		/* We're poking out of PCI territory */
+>> >>>  		parent = pdn_to_eeh_dev(pdn);
+>> >>> @@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+>> >>>  	}
+>> >>>  
+>> >>>  	/* Create a new EEH PE */
+>> >>> -	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>> >>> +	if (edev->physfn)
+>> >>> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
+>> >>> +	else
+>> >>> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+>> >>>  	if (!pe) {
+>> >>>  		pr_err("%s: out of memory!\n", __func__);
+>> >>>  		return -ENOMEM;
+>> >>> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>> >>> index ce738ab..c505036 100644
+>> >>> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>> >>> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>> >>> @@ -1520,6 +1520,23 @@ static struct eeh_ops pnv_eeh_ops = {
+>> >>>  	.restore_config		= pnv_eeh_restore_config
+>> >>>  };
+>> >>>  
+>> >>> +static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
+>> >>> +{
+>> >>> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+>> >>> +
+>> >>> +	if (!pdev->is_virtfn)
+>> >>> +		return;
+>> >>> +
+>> >>> +	/*
+>> >>> +	 * The following operations will fail if VF's sysfs files
+>> >>> +	 * aren't created or its resources aren't finalized.
+>> >>> +	 */
+>> >>
+>> >>I don't understand this comment.  "The following operations" seems to refer
+>> >>to eeh_add_device_early() and eeh_add_device_late(), and
+>> >>"VF's sysfs files being created" seems to refer to eeh_sysfs_add_device().
+>> >>
+>> >>So the comment suggests that eeh_add_device_early() and
+>> >>eeh_add_device_late() will fail because they're called before
+>> >>eeh_sysfs_add_device().  So I think you must be talking about some other
+>> >>"following operations," not eeh_add_device_early() and
+>> >>eeh_add_device_late().
+>> >
+>> >Sorry for this confusion.
+>> >
+>> >The comment here wants to say the eeh_sysfs_add_device() will fail if the VF's
+>> >sysfs is not created well. Or it will fail if the VF's resources are not set
+>> >properly, since we would cache the VF's BAR in eeh_add_device_late().
+>> >
+>> >Gavin,
+>> >
+>> >If my understanding is not correct please let me know.
+>> >
+>> 
+>> It's correct. "The following operations" refers to eeh_add_device_late()
+>> and eeh_sysfs_add_device(). The former one requires the resources for
+>> one particular PCI device (VF here) are finalized (assigned). eeh_sysfs_add_device()
+>> will fail if the sysfs entry for the PCI device isn't populated yet.
 >
-> On Thu, Jun 18, 2015 at 9:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> The pciehp debug logging is overly verbose and often redundant.  Almost all
->> of the information printed by dbg_ctrl() is also printed by the normal PCI
->> core enumeration code and by pcie_init().
->>
->> Remove the redundant debug info.
->>
->> When claiming a pciehp bridge, we print the slot characteristics, e.g.,
->>
->>   Slot #6 AttnBtn- AttnInd- PwrInd- PwrCtrl- MRL- Interlock- NoCompl+ LLActRep+
->>
->> Add the Hot-Plug Capable and Hot-Plug Surprise bits to this information,
+>eeh_add_device_late() contains several things that read config space:
+>eeh_save_bars() caches the entire config header, and
+>eeh_addr_cache_insert_dev() looks at the device resources (which are
+>determined by BARs in config space).  I think this is an error-prone
+>approach.  I think it would be simpler and safer for you to capture what
+>you need in your PCI config accessors.
 >
-> If the slot is not hotplug capable. then pciehp wouldn't claim it in
-> the first place.
+>eeh_add_device_late() also contains code to deal with an EEH cache that
+>"might not be removed correctly because of unbalanced kref to the device
+>during unplug time."  That's unrelated to this patch series, but it sounds
+>... like a hacky workaround for some bug in the unplug path.
 >
-> So printing of "hotplug capable" may really not be needed..
+>> >>> +	eeh_add_device_early(pdn);
+>> >>> +	eeh_add_device_late(pdev);
+>> >>> +	eeh_sysfs_add_device(pdev);
+>> >>> +}
+>> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
+>> >>
+>> >>Ugh.  This is powerpc code, but I don't like using fixups as a hook like
+>> >>this.  There is a pcibios_add_device() -- could this be done there?
+>> >>
+>> >
+>> >I don't like it neither :-) But looks we can't put it in the
+>> >pcibios_add_device().
+>> >
+>> >>If not, what happens after pcibios_add_device() that is required for this
+>> >>code?  Maybe we need a pcibios_bus_add_device() hook?
+>> >
+>> >The pnv_eeh_vf_final_fixup() will try to create sysfs for VFs. This requires
+>> >the VF sysfs(kobj) is initialized properly. If we put these into
+>> >pcibios_add_device(), the eeh_sysfs_add_device() would fail.
+>> >
+>> >Below is the call flow for your reference:
+>> >
+>> >pci_device_add()
+>> >    pcibios_add_device()
+>> >    device_add()                <--- kobj initialized here
+>> >
+>> 
+>> We can put it into pcibios_bus_add_device(), but we don't it currently. If
+>> Bjorn agree to add pcibios_bus_add_device(), I'm fine to move the block code
+>> there.
+>
+>I think I'm OK with adding a pcibios_bus_add_device().  I think that would
+>be better than using the fixup mechanism for this.
+>
 
-Yes, I did think about that, and you're right that it probably isn't
-needed.  But the criteria for claiming a slot and deciding whether
-acpiphp or pciehp should manage it are not 100% clear yet, so I
-figured it wouldn't hurt to be a bit more transparent.
+Thanks for your confirmation.
 
-Bjorn
+While I am a little out of the page, where should I put the
+pcibios_bus_add_device()?
+
+Gavin,
+
+After we have this, we should move the EEH probe related code all to this
+place, right? Then both PF and VF has the same place to initialized the EEH,
+right?
+
+If my understanding is not correct, please let me know:)
+
+>Bjorn
+
+-- 
+Richard Yang
+Help you, Help me
+
