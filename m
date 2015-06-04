@@ -1,62 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 24 Jun 2015 10:30:19 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:21275 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753261AbbFDEQp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Jun 2015 00:16:45 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Boszormenyi Zoltan <zboszor@pr.hu>,
-	Len Brown <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [Bugfix v2] PCI, ACPI: Fix regressions caused by resource_size_t
- overflow with 32bit kernel
-Message-ID: <20150624083019.GA26672@gmail.com>
-References: <1435131817-28167-1-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435131817-28167-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: [RFT v2 27/48] sh, irq: Prepare for killing the first parameter 'irq' of irq_flow_handler_t
+Date: Thu,  4 Jun 2015 12:13:37 +0800
+Message-Id: <1433391238-19471-28-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Change irq flow handlers to prepare for killing the first parameter 'irq'
+of irq_flow_handler_t.
 
-* Jiang Liu <jiang.liu@linux.intel.com> wrote:
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/sh/boards/mach-se/7722/irq.c |    2 +-
+ arch/sh/boards/mach-se/7724/irq.c |    2 +-
+ drivers/sh/intc/virq.c            |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-> Since commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces to 
-> simplify implementation"), x86 PCI ACPI host bridge driver validates ACPI 
-> resources by first converting an ACPI resource to a 'struct resource' structure 
-> and then applying checks against the converted resource structure. The 'start' 
-> and 'end' fields in 'struct resource' are defined to be type of resource_size_t, 
-> which may be 32 bits or 64 bits depending on CONFIG_PHYS_ADDR_T_64BIT.
-> 
-> This may cause incorrect resource validation results with 32 bit kernels because 
-> 64bit ACPI resource descriptors may get truncated when converting to 32bit 
-> 'start' and 'end' fields in 'struct resource'. And eventually affects PCI 
-> resource allocation subsystem and causes some PCI devices unusable.
-
-s/causes some PCI devices unusuable.
-  makes some PCI devices unusuable.
-
-Also, this description is still pretty vague. What exactly happened? Did some PCI 
-devices not show up during bootup? Or did they hang? Or did something else happen?
-
-This is _by far_ the most important part of the changelog and determines whether a 
-patch gets backported or not. Why does a usable regression description have to be 
-coaxed out of you like pulling teeth??
-
-> So enhance the ACPI resource parsing interfaces to ignore ACPI resource 
-> descriptors with address/offset observe 4G when running in 32bit mode. This 
-> reverts to the behavior before commit 593669c2ac0f.
-> 
-> This issue was triggered on a platform running 32bit kernel with an ACPI 
-> resource descriptor with address range [0x400000000-0xfffffffff]. Please refer 
-> to https://lkml.org/lkml/2015/6/19/277 for more information.
-
-s/32bit/32-bit
-s/64bit/64-bit
-s/32 bit/32-bit
-s/64 bit/64-bit
-
-Thanks,
-
-    Ingo
+diff --git a/arch/sh/boards/mach-se/7722/irq.c b/arch/sh/boards/mach-se/7722/irq.c
+index 00e699232621..60aebd14ccf8 100644
+--- a/arch/sh/boards/mach-se/7722/irq.c
++++ b/arch/sh/boards/mach-se/7722/irq.c
+@@ -30,7 +30,7 @@ struct irq_domain *se7722_irq_domain;
+ 
+ static void se7722_irq_demux(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct irq_data *data = irq_get_irq_data(irq);
++	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+ 	unsigned long mask;
+ 	int bit;
+diff --git a/arch/sh/boards/mach-se/7724/irq.c b/arch/sh/boards/mach-se/7724/irq.c
+index 5d1d3ec9a6cd..5feb246f642d 100644
+--- a/arch/sh/boards/mach-se/7724/irq.c
++++ b/arch/sh/boards/mach-se/7724/irq.c
+@@ -94,7 +94,7 @@ static struct irq_chip se7724_irq_chip __read_mostly = {
+ 
+ static void se7724_irq_demux(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct fpga_irq set = get_fpga_irq(irq);
++	struct fpga_irq set = get_fpga_irq(irq_desc_get_irq(desc));
+ 	unsigned short intv = __raw_readw(set.sraddr);
+ 	unsigned int ext_irq = set.base;
+ 
+diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
+index bb7e745d4266..8704873e8186 100644
+--- a/drivers/sh/intc/virq.c
++++ b/drivers/sh/intc/virq.c
+@@ -114,7 +114,7 @@ static void intc_virq_handler(unsigned int irq, struct irq_desc *desc)
+ 	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+ 	struct intc_virq_list *entry, *vlist = irq_data_get_irq_handler_data(data);
+-	struct intc_desc_int *d = get_intc_desc(irq);
++	struct intc_desc_int *d = get_intc_desc(irq_desc_get_irq(desc));
+ 
+ 	chip->irq_mask_ack(data);
+ 
+-- 
+1.7.10.4
 
