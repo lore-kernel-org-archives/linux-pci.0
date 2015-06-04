@@ -1,98 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:49000 "EHLO mga03.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:1269 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753997AbbFJIxD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 10 Jun 2015 04:53:03 -0400
+	id S1752629AbbFDEPy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Jun 2015 00:15:54 -0400
 From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Mark Salter <msalter@redhat.com>,
+	Aurelien Jacquiot <a-jacquiot@ti.com>
 Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: [Patch v3 1/4] PCI: Add hooks to allocate/free IRQ resources when binding/unbinding driver
-Date: Wed, 10 Jun 2015 16:54:58 +0800
-Message-Id: <1433926501-22956-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-c6x-dev@linux-c6x.org
+Subject: [RFT v2 23/48] c6x, irq: Prepare for killing the first parameter 'irq' of irq_flow_handler_t
+Date: Thu,  4 Jun 2015 12:13:33 +0800
+Message-Id: <1433391238-19471-24-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add two hook points pcibios_{alloc|free}_irq() into PCI core, which will
-be called when binding/unbinding PCI device drivers. Then PCI arch code
-may hook into these two points to allocate IRQ resources on demand and
-free them when not used anymore.
+Change irq flow handler to prepare for killing the first parameter 'irq'
+of irq_flow_handler_t.
 
 Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci-driver.c |   26 ++++++++++++++++++++------
- include/linux/pci.h      |    2 ++
- 2 files changed, 22 insertions(+), 6 deletions(-)
+ arch/c6x/platforms/megamod-pic.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 3cb2210de553..52a880ca1768 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -388,18 +388,31 @@ static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
- 	return error;
- }
+diff --git a/arch/c6x/platforms/megamod-pic.c b/arch/c6x/platforms/megamod-pic.c
+index 74e3371eb824..2e303b75060a 100644
+--- a/arch/c6x/platforms/megamod-pic.c
++++ b/arch/c6x/platforms/megamod-pic.c
+@@ -107,12 +107,9 @@ static void megamod_irq_cascade(unsigned int irq, struct irq_desc *desc)
  
-+int __weak pcibios_alloc_irq(struct pci_dev *dev)
-+{
-+	return 0;
-+}
-+
-+void __weak pcibios_free_irq(struct pci_dev *dev)
-+{
-+}
-+
- static int pci_device_probe(struct device *dev)
- {
--	int error = 0;
--	struct pci_driver *drv;
--	struct pci_dev *pci_dev;
-+	int error;
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	struct pci_driver *drv = to_pci_driver(dev->driver);
-+
-+	error = pcibios_alloc_irq(pci_dev);
-+	if (error < 0)
-+		return error;
- 
--	drv = to_pci_driver(dev->driver);
--	pci_dev = to_pci_dev(dev);
- 	pci_dev_get(pci_dev);
- 	error = __pci_device_probe(drv, pci_dev);
--	if (error)
-+	if (error) {
-+		pcibios_free_irq(pci_dev);
- 		pci_dev_put(pci_dev);
-+	}
- 
- 	return error;
- }
-@@ -415,6 +428,7 @@ static int pci_device_remove(struct device *dev)
- 			drv->remove(pci_dev);
- 			pm_runtime_put_noidle(dev);
- 		}
-+		pcibios_free_irq(pci_dev);
- 		pci_dev->driver = NULL;
+ 	while ((events = soc_readl(&pic->regs->mevtflag[idx])) != 0) {
+ 		n = __ffs(events);
+-
+-		irq = irq_linear_revmap(pic->irqhost, idx * 32 + n);
+-
+ 		soc_writel(1 << n, &pic->regs->evtclr[idx]);
+-
+-		generic_handle_irq(irq);
++		generic_handle_irq(irq_linear_revmap(pic->irqhost,
++						     idx * 32 + n));
  	}
+ }
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8dc4c6e..f50d16a04abc 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1656,6 +1656,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
- void pcibios_penalize_isa_irq(int irq, int active);
-+int pcibios_alloc_irq(struct pci_dev *dev);
-+void pcibios_free_irq(struct pci_dev *dev);
- 
- #ifdef CONFIG_HIBERNATE_CALLBACKS
- extern struct dev_pm_ops pcibios_pm_ops;
 -- 
 1.7.10.4
 
