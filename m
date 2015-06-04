@@ -1,77 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50857 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758018AbbFQTD4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Jun 2015 15:03:56 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH 2/2] x86: intel_mid_pci: work around for IRQ0 assignment
-Date: Wed, 17 Jun 2015 22:03:50 +0300
-Message-Id: <1434567830-237840-3-git-send-email-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <1434567830-237840-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1434567830-237840-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:54972 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752559AbbFDGnm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:42 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:43:39 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 39/42] drivers/of: Unflatten nodes equal or deeper than specified level
+Date: Thu,  4 Jun 2015 16:42:08 +1000
+Message-Id: <1433400131-18429-40-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A few devices on Intel Edison board (Intel Tangier) has IRQ0 as an IRQ line in
-the PCI configuration. The actual one which is using that is a first eMMC host
-controller.
+unflatten_dt_node() is called recursively to unflatten FDT nodes
+with the assumption that FDT blob has only one root node, which
+isn't true when the FDT blob represents device sub-tree. The
+patch improves the function to supporting device sub-tree that
+have multiple root nodes:
 
-In case we compile sdhci-pci as a module and leave serial driver built-in,
-first serial device not in use and has IRQ0 assigned as well, the latter takes
-the interrupt allocation. The result of such behaviour is impossibility to
-allocate the interrupt by sdhci-pci driver.
+   * Rename original unflatten_dt_node() to __unflatten_dt_node().
+   * Wrapper unflatten_dt_node() calls __unflatten_dt_node() with
+     adjusted current node depth to 1 to avoid underflow.
 
-This patch introduces a quirk inside intel_mid_pci_irq_enable() to avoid
-described behaviour.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/x86/pci/intel_mid_pci.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+v5:
+  * Split from PATCH[v4 19/21]
+  * Fixed "line over 80 characters" from checkpatch.pl
+---
+ drivers/of/fdt.c | 56 ++++++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 38 insertions(+), 18 deletions(-)
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 0af2e78..66e215d 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -206,15 +206,33 @@ static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
- 			       where, size, value);
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index cde35c5d01..b87c157 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -28,6 +28,8 @@
+ #include <asm/setup.h>  /* for COMMAND_LINE_SIZE */
+ #include <asm/page.h>
+ 
++static int cur_node_depth;
++
+ /*
+  * of_fdt_limit_memory - limit the number of regions in the /memory node
+  * @limit: maximum entries
+@@ -161,27 +163,26 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
  }
  
-+#define PCI_DEVICE_ID_INTEL_MRFL_MMC	0x1190
-+
- static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ /**
+- * unflatten_dt_node - Alloc and populate a device_node from the flat tree
++ * __unflatten_dt_node - Alloc and populate a device_node from the flat tree
+  * @blob: The parent device tree blob
+  * @mem: Memory chunk to use for allocating device nodes and properties
+  * @p: pointer to node in flat tree
+  * @dad: Parent struct device_node
+  * @fpsize: Size of the node path up at the current depth.
+  */
+-static void * unflatten_dt_node(void *blob,
+-				void *mem,
+-				int *poffset,
+-				struct device_node *dad,
+-				struct device_node **nodepp,
+-				unsigned long fpsize,
+-				bool dryrun)
++static void *__unflatten_dt_node(void *blob,
++				 void *mem,
++				 int *poffset,
++				 struct device_node *dad,
++				 struct device_node **nodepp,
++				 unsigned long fpsize,
++				 bool dryrun)
  {
- 	struct irq_alloc_info info;
- 	int polarity;
- 	int ret;
+ 	const __be32 *p;
+ 	struct device_node *np;
+ 	struct property *pp, **prev_pp = NULL;
+ 	const char *pathp;
+ 	unsigned int l, allocl;
+-	static int depth = 0;
+ 	int old_depth;
+ 	int offset;
+ 	int has_name = 0;
+@@ -334,13 +335,19 @@ static void * unflatten_dt_node(void *blob,
+ 			np->type = "<NULL>";
+ 	}
  
--	if (dev->irq_managed && dev->irq > 0)
-+	if (dev->irq_managed && dev->irq >= 0)
- 		return 0;
- 
-+	/* Special treatment for IRQ0 */
-+	if (dev->irq == 0) {
-+		switch (intel_mid_identify_cpu()) {
-+		case INTEL_MID_CPU_CHIP_TANGIER:
-+			/*
-+			 * TNG has IRQ0 assigned to eMMC controller. This makes
-+			 * it happy to get an interrupt.
-+			 */
-+			if (dev->device != PCI_DEVICE_ID_INTEL_MRFL_MMC)
-+				return -EBUSY;
+-	old_depth = depth;
+-	*poffset = fdt_next_node(blob, *poffset, &depth);
+-	if (depth < 0)
+-		depth = 0;
+-	while (*poffset > 0 && depth > old_depth)
+-		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+-					fpsize, dryrun);
++	old_depth = cur_node_depth;
++	*poffset = fdt_next_node(blob, *poffset, &cur_node_depth);
++	while (*poffset > 0) {
++		if (cur_node_depth < old_depth)
 +			break;
-+		default:
-+			break;
-+		}
-+	}
 +
- 	/* Set IRQ polarity */
- 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
- 		polarity = 0; /* active high */
++		if (cur_node_depth == old_depth)
++			mem = __unflatten_dt_node(blob, mem, poffset,
++						  dad, NULL, fpsize, dryrun);
++		else if (cur_node_depth > old_depth)
++			mem = __unflatten_dt_node(blob, mem, poffset,
++						  np, NULL, fpsize, dryrun);
++	}
+ 
+ 	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+ 		pr_err("unflatten: error %d processing FDT\n", *poffset);
+@@ -366,6 +373,18 @@ static void * unflatten_dt_node(void *blob,
+ 	return mem;
+ }
+ 
++static void *unflatten_dt_node(void *blob,
++			       void *mem,
++			       int *poffset,
++			       struct device_node *dad,
++			       struct device_node **nodepp,
++			       bool dryrun)
++{
++	cur_node_depth = 1;
++	return __unflatten_dt_node(blob, mem, poffset,
++				   dad, nodepp, 0, dryrun);
++}
++
+ /**
+  * __unflatten_device_tree - create tree of device_nodes from flat blob
+  *
+@@ -405,7 +424,8 @@ static void __unflatten_device_tree(void *blob,
+ 
+ 	/* First pass, scan for size */
+ 	start = 0;
+-	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
++	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
++						NULL, NULL, true);
+ 	size = ALIGN(size, 4);
+ 
+ 	pr_debug("  size is %lx, allocating...\n", size);
+@@ -420,7 +440,7 @@ static void __unflatten_device_tree(void *blob,
+ 
+ 	/* Second pass, do actual unflattening */
+ 	start = 0;
+-	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
++	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
+ 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+ 		pr_warning("End of tree marker overwritten: %08x\n",
+ 			   be32_to_cpup(mem + size));
 -- 
-2.1.4
+2.1.0
 
