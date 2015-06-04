@@ -1,61 +1,180 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:36081 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932157AbbFDVtw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 17:49:52 -0400
-Received: by oihb142 with SMTP id b142so40741816oih.3
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 14:49:52 -0700 (PDT)
-Subject: [PATCH 4/7] PCI: Include <linux/pci.h>, not <asm/pci.h>
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Date: Thu, 04 Jun 2015 16:49:50 -0500
-Message-ID: <20150604214950.2399.16890.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFT v2 19/48] genirq: Change prototypes of register_irq_proc() and friends
+Date: Thu,  4 Jun 2015 12:13:29 +0800
+Message-Id: <1433391238-19471-20-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We already include <asm/pci.h> from <linux/pci.h>, so just include
-<linux/pci.h> directly.
+Change prototypes of register_irq_proc() and friends, so we either
+passing 'irq' or 'irq_desc', but not both.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: linuxppc-dev@lists.ozlabs.org
-CC: linux-s390@vger.kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/platforms/52xx/mpc52xx_pci.c |    2 +-
- arch/s390/kernel/suspend.c                |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ kernel/irq/internals.h |   18 ++++++++++--------
+ kernel/irq/irqdesc.c   |    2 +-
+ kernel/irq/manage.c    |    8 ++++----
+ kernel/irq/proc.c      |   16 ++++++++--------
+ 4 files changed, 23 insertions(+), 21 deletions(-)
 
-diff --git a/arch/powerpc/platforms/52xx/mpc52xx_pci.c b/arch/powerpc/platforms/52xx/mpc52xx_pci.c
-index e2d401a..6eb3b2a 100644
---- a/arch/powerpc/platforms/52xx/mpc52xx_pci.c
-+++ b/arch/powerpc/platforms/52xx/mpc52xx_pci.c
-@@ -12,7 +12,7 @@
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index 3d274e2fe605..ed0388b754fa 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -94,16 +94,18 @@ bool irq_wait_for_poll(struct irq_desc *desc);
+ void __irq_wake_thread(struct irq_desc *desc, struct irqaction *action);
  
- #undef DEBUG
+ #ifdef CONFIG_PROC_FS
+-extern void register_irq_proc(unsigned int irq, struct irq_desc *desc);
+-extern void unregister_irq_proc(unsigned int irq, struct irq_desc *desc);
+-extern void register_handler_proc(unsigned int irq, struct irqaction *action);
+-extern void unregister_handler_proc(unsigned int irq, struct irqaction *action);
++extern void register_irq_proc(struct irq_desc *desc);
++extern void unregister_irq_proc(struct irq_desc *desc);
++extern void register_handler_proc(struct irq_desc *desc,
++				  struct irqaction *action);
++extern void unregister_handler_proc(struct irq_desc *desc,
++				    struct irqaction *action);
+ #else
+-static inline void register_irq_proc(unsigned int irq, struct irq_desc *desc) { }
+-static inline void unregister_irq_proc(unsigned int irq, struct irq_desc *desc) { }
+-static inline void register_handler_proc(unsigned int irq,
++static inline void register_irq_proc(struct irq_desc *desc) { }
++static inline void unregister_irq_proc(struct irq_desc *desc) { }
++static inline void register_handler_proc(struct irq_desc *desc,
+ 					 struct irqaction *action) { }
+-static inline void unregister_handler_proc(unsigned int irq,
++static inline void unregister_handler_proc(struct irq_desc *desc,
+ 					   struct irqaction *action) { }
+ #endif
  
--#include <asm/pci.h>
-+#include <linux/pci.h>
- #include <asm/mpc52xx.h>
- #include <asm/delay.h>
- #include <asm/machdep.h>
-diff --git a/arch/s390/kernel/suspend.c b/arch/s390/kernel/suspend.c
-index d3236c9..39e2f41 100644
---- a/arch/s390/kernel/suspend.c
-+++ b/arch/s390/kernel/suspend.c
-@@ -9,10 +9,10 @@
- #include <linux/pfn.h>
- #include <linux/suspend.h>
- #include <linux/mm.h>
-+#include <linux/pci.h>
- #include <asm/ctl_reg.h>
- #include <asm/ipl.h>
- #include <asm/cio.h>
--#include <asm/pci.h>
- #include <asm/sections.h>
- #include "entry.h"
+diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
+index 500e6fd11d78..969f7e252846 100644
+--- a/kernel/irq/irqdesc.c
++++ b/kernel/irq/irqdesc.c
+@@ -175,7 +175,7 @@ static void free_desc(unsigned int irq)
+ {
+ 	struct irq_desc *desc = irq_to_desc(irq);
  
+-	unregister_irq_proc(irq, desc);
++	unregister_irq_proc(desc);
+ 
+ 	/*
+ 	 * sparse_irq_lock protects also show_interrupts() and
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index 32567d4d7031..e478a0f25bd6 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -1293,9 +1293,9 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
+ 	if (new->thread)
+ 		wake_up_process(new->thread);
+ 
+-	register_irq_proc(irq, desc);
++	register_irq_proc(desc);
+ 	new->dir = NULL;
+-	register_handler_proc(irq, new);
++	register_handler_proc(desc, new);
+ 	free_cpumask_var(mask);
+ 
+ 	return 0;
+@@ -1405,7 +1405,7 @@ static struct irqaction *__free_irq(unsigned int irq, void *dev_id)
+ 
+ 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+ 
+-	unregister_handler_proc(irq, action);
++	unregister_handler_proc(desc, action);
+ 
+ 	/* Make sure it's not being used on another CPU: */
+ 	synchronize_irq(irq);
+@@ -1712,7 +1712,7 @@ static struct irqaction *__free_percpu_irq(unsigned int irq, void __percpu *dev_
+ 
+ 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+ 
+-	unregister_handler_proc(irq, action);
++	unregister_handler_proc(desc, action);
+ 
+ 	module_put(desc->owner);
+ 	return action;
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index e3a8c9577ba6..3e2514b47367 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -301,13 +301,12 @@ static int name_unique(unsigned int irq, struct irqaction *new_action)
+ 	return ret;
+ }
+ 
+-void register_handler_proc(unsigned int irq, struct irqaction *action)
++void register_handler_proc(struct irq_desc *desc, struct irqaction *action)
+ {
+ 	char name [MAX_NAMELEN];
+-	struct irq_desc *desc = irq_to_desc(irq);
+ 
+ 	if (!desc->dir || action->dir || !action->name ||
+-					!name_unique(irq, action))
++	    !name_unique(irq_desc_get_irq(desc), action))
+ 		return;
+ 
+ 	memset(name, 0, MAX_NAMELEN);
+@@ -321,9 +320,10 @@ void register_handler_proc(unsigned int irq, struct irqaction *action)
+ 
+ #define MAX_NAMELEN 10
+ 
+-void register_irq_proc(unsigned int irq, struct irq_desc *desc)
++void register_irq_proc(struct irq_desc *desc)
+ {
+ 	char name [MAX_NAMELEN];
++	unsigned int irq = irq_desc_get_irq(desc);
+ 
+ 	if (!root_irq_dir || (desc->irq_data.chip == &no_irq_chip) || desc->dir)
+ 		return;
+@@ -357,7 +357,7 @@ void register_irq_proc(unsigned int irq, struct irq_desc *desc)
+ 			 &irq_spurious_proc_fops, (void *)(long)irq);
+ }
+ 
+-void unregister_irq_proc(unsigned int irq, struct irq_desc *desc)
++void unregister_irq_proc(struct irq_desc *desc)
+ {
+ 	char name [MAX_NAMELEN];
+ 
+@@ -372,13 +372,13 @@ void unregister_irq_proc(unsigned int irq, struct irq_desc *desc)
+ 	remove_proc_entry("spurious", desc->dir);
+ 
+ 	memset(name, 0, MAX_NAMELEN);
+-	sprintf(name, "%u", irq);
++	sprintf(name, "%u", irq_desc_get_irq(desc));
+ 	remove_proc_entry(name, root_irq_dir);
+ }
+ 
+ #undef MAX_NAMELEN
+ 
+-void unregister_handler_proc(unsigned int irq, struct irqaction *action)
++void unregister_handler_proc(struct irq_desc *desc, struct irqaction *action)
+ {
+ 	proc_remove(action->dir);
+ }
+@@ -410,7 +410,7 @@ void init_irq_proc(void)
+ 		if (!desc)
+ 			continue;
+ 
+-		register_irq_proc(irq, desc);
++		register_irq_proc(desc);
+ 	}
+ }
+ 
+-- 
+1.7.10.4
 
