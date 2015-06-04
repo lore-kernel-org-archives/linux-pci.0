@@ -1,101 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:36977 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643AbbFSWmc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:42:32 -0400
-Received: by igblr2 with SMTP id lr2so22559753igb.0
-        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 15:42:31 -0700 (PDT)
-Subject: [PATCH 2/6] PCI: Fix generic NCR 53c810 class code quirk
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dexuan Cui <dexuan.cui@intel.com>, Matthew Wilcox <matthew@wil.cx>,
-	x86@kernel.org, Felipe Balbi <balbi@ti.com>,
-	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
-	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Jason Chang <jason.chang@amd.com>
-Date: Fri, 19 Jun 2015 17:42:30 -0500
-Message-ID: <20150619224230.14626.82853.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <55701A31.808@linaro.org>
+Date: Thu, 04 Jun 2015 17:28:17 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+CC: Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org> <20150526170817.GU1565@arm.com> <55657B02.5090805@linaro.org> <20150602133215.GC23650@red-moon>
+In-Reply-To: <20150602133215.GC23650@red-moon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the generic quirk fixup_rev1_53c810(), added by a5312e28c195 ("[PATCH]
-PCI: NCR 53c810 quirk"), we assigned "class = PCI_CLASS_STORAGE_SCSI".  But
-PCI_CLASS_STORAGE_SCSI is only the two-byte base class/sub-class and needs
-to be shifted to make space for the low-order interface byte.
+Hi Lorenzo,
 
-Furthermore, we had a similar quirk, pci_fixup_ncr53c810(), for arch/x86,
-which assigned class correctly.  The arch code is linked before the PCI
-core, so arch quirks run before generic quirks.  Therefore, on x86, the x86
-arch quirk ran first, and the generic quirk did nothing because it saw that
-dev->class was already set.  But on other arches, the generic quirk set the
-wrong class code.
+On 2015年06月02日 21:32, Lorenzo Pieralisi wrote:
+> On Wed, May 27, 2015 at 09:06:26AM +0100, Tomasz Nowicki wrote:
+>> On 26.05.2015 19:08, Will Deacon wrote:
+>>> On Tue, May 26, 2015 at 01:49:18PM +0100, Hanjun Guo wrote:
+>>>> From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+>>>>
+>>>> ECAM standard and MCFG table are architecture independent and it makes
+>>>> sense to share common code across all architectures. Both are going to
+>>>> corresponding files - ecam.c and mcfg.c
+>>>>
+>>>> While we are here, rename pci_parse_mcfg to acpi_parse_mcfg.
+>>>> We already have acpi_parse_mcfg prototype which is used nowhere.
+>>>> At the same time, we need pci_parse_mcfg been global so acpi_parse_mcfg
+>>>> can be used perfectly here.
+>>>>
+>>>> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+>>>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+>>>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>>>> ---
+>>>>    arch/x86/Kconfig               |   3 +
+>>>>    arch/x86/include/asm/pci_x86.h |  33 ------
+>>>>    arch/x86/pci/acpi.c            |   1 +
+>>>>    arch/x86/pci/mmconfig-shared.c | 244 +---------------------------------------
+>>>>    arch/x86/pci/mmconfig_32.c     |   1 +
+>>>>    arch/x86/pci/mmconfig_64.c     |   1 +
+>>>>    arch/x86/pci/numachip.c        |   1 +
+>>>>    drivers/acpi/Makefile          |   1 +
+>>>>    drivers/acpi/mcfg.c            |  57 ++++++++++
+>>>>    drivers/pci/Kconfig            |   7 ++
+>>>>    drivers/pci/Makefile           |   5 +
+>>>>    drivers/pci/ecam.c             | 245 +++++++++++++++++++++++++++++++++++++++++
+>>>
+>>> Why can't we make use of the ECAM implementation used by pci-host-generic
+>>> and drivers/pci/access.c?
+>>
+>> We had that question when I had posted MMCFG patch set separately,
+>> please see:
+>> https://lkml.org/lkml/2015/3/11/492
+>
+> Yes, but the real question is, why do we need to have PCI config space
+> up and running before a bus struct is even created ? I think the reason is
+> the PCI configuration address space format (ACPI 6.0, Table 5-27, page
+> 108):
+>
+> "PCI Configuration space addresses must be confined to devices on
+> PCI Segment Group 0, bus 0. This restriction exists to accommodate
+> access to fixed hardware prior to PCI bus enumeration".
+>
+> On HW reduced platforms I do not even think this is required at all,
+> we have to look into this to avoid code duplication that might well
+> turn out useless.
 
-Fix the generic quirk to set the correct class code and remove the
-now-unnecessary x86-specific quirk.
+This is only for the fixed hardware, which will be not available for
+ARM64 (reduced hardware mode), but in Generic Hardware Programming
+Model, we using OEM-provided ACPI Machine Language (AML) code to access
+generic hardware registers, this will be available for reduced hardware
+too.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Matthew Wilcox <matthew@wil.cx>
----
- arch/x86/pci/fixup.c |   13 -------------
- drivers/pci/quirks.c |   14 +++++++++-----
- 2 files changed, 9 insertions(+), 18 deletions(-)
+So in ACPI spec, it says: (ACPI 6.0 page 66, last paragraph)
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 9a2b710..e585655 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -62,19 +62,6 @@ static void pci_fixup_umc_ide(struct pci_dev *d)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_UMC, PCI_DEVICE_ID_UMC_UM8886BF, pci_fixup_umc_ide);
- 
--static void pci_fixup_ncr53c810(struct pci_dev *d)
--{
--	/*
--	 * NCR 53C810 returns class code 0 (at least on some systems).
--	 * Fix class to be PCI_CLASS_STORAGE_SCSI
--	 */
--	if (!d->class) {
--		dev_warn(&d->dev, "Fixing NCR 53C810 class code\n");
--		d->class = PCI_CLASS_STORAGE_SCSI << 8;
--	}
--}
--DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NCR, PCI_DEVICE_ID_NCR_53C810, pci_fixup_ncr53c810);
--
- static void pci_fixup_latency(struct pci_dev *d)
- {
- 	/*
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2dab425..64177a6 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1997,14 +1997,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1508, quirk_disable_aspm_l0s);
- 
- static void fixup_rev1_53c810(struct pci_dev *dev)
- {
--	/* rev 1 ncr53c810 chips don't set the class at all which means
-+	u32 class = dev->class;
-+
-+	/*
-+	 * rev 1 ncr53c810 chips don't set the class at all which means
- 	 * they don't get their resources remapped. Fix that here.
- 	 */
-+	if (class)
-+		return;
- 
--	if (dev->class == PCI_CLASS_NOT_DEFINED) {
--		dev_info(&dev->dev, "NCR 53c810 rev 1 detected; setting PCI class\n");
--		dev->class = PCI_CLASS_STORAGE_SCSI;
--	}
-+	dev->class = PCI_CLASS_STORAGE_SCSI << 8;
-+	dev_info(&dev->dev, "NCR 53c810 rev 1 PCI class overridden (%#08x -> %#08x)\n",
-+		 class, dev->class);
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NCR, PCI_DEVICE_ID_NCR_53C810, fixup_rev1_53c810);
- 
+ACPI defines eight address spaces that may be accessed by generic
+hardware implementations. These include:
+• System I/O space
+• System memory space
+• PCI configuration space
+• Embedded controller space
+• System Management Bus (SMBus) space
+• CMOS
+• PCI BAR Target
+• IPMI space
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+So if any device using the PCI address space for control, such
+as a system reset control device, its address space can be reside
+in PCI configuration space (who can prevent a OEM do that crazy
+thing? :) ), and it should be accessible before the PCI bus is
+created.
+
+Thanks
+Hanjun
