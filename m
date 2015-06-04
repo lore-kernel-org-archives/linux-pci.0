@@ -1,126 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46540 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978AbbFDGnl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:41 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:40 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 27/42] powerpc/powernv: Simplify pnv_eeh_reset()
-Date: Thu,  4 Jun 2015 16:41:56 +1000
-Message-Id: <1433400131-18429-28-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	Russell King <rmk+kernel@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 09/48] ARM, irq: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Thu,  4 Jun 2015 12:13:19 +0800
+Message-Id: <1433391238-19471-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch simplifies pnv_eeh_reset() by dropping unnecessary nested
-if statement. No logic changed by the patch.
+Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+already have a pointer to corresponding irq_desc.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
-v5:
-  * Split from PATCH[v4 09/21]
-  * Fixed "quoted string split across lines" from checkpatch.pl
----
- arch/powerpc/platforms/powernv/eeh-powernv.c | 65 +++++++++++++---------------
- 1 file changed, 31 insertions(+), 34 deletions(-)
+ arch/arm/common/locomo.c   |    2 +-
+ arch/arm/common/sa1111.c   |    2 +-
+ arch/arm/plat-orion/gpio.c |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 4feb533..4669122 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1084,7 +1084,9 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+diff --git a/arch/arm/common/locomo.c b/arch/arm/common/locomo.c
+index b55c3625d7ee..02af4a07ceca 100644
+--- a/arch/arm/common/locomo.c
++++ b/arch/arm/common/locomo.c
+@@ -140,7 +140,7 @@ static struct locomo_dev_info locomo_devices[] = {
+ 
+ static void locomo_handler(unsigned int irq, struct irq_desc *desc)
  {
- 	struct pci_controller *hose = pe->phb;
-+	struct pnv_phb *phb = hose->private_data;
- 	struct pci_bus *bus;
-+	int64_t rc;
- 	int ret;
+-	struct locomo *lchip = irq_get_chip_data(irq);
++	struct locomo *lchip = irq_desc_get_chip_data(desc);
+ 	int req, i;
  
- 	/*
-@@ -1101,44 +1103,39 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- 	 * reset. The side effect is that EEH core has to clear the frozen
- 	 * state explicitly after BAR restore.
- 	 */
--	if (pe->type & EEH_PE_PHB) {
--		ret = pnv_eeh_phb_reset(hose, option);
--	} else {
--		struct pnv_phb *phb;
--		s64 rc;
-+	if (pe->type & EEH_PE_PHB)
-+		return pnv_eeh_phb_reset(hose, option);
+ 	/* Acknowledge the parent IRQ */
+diff --git a/arch/arm/common/sa1111.c b/arch/arm/common/sa1111.c
+index 5cc779c8e9c6..0d0844fa54c2 100644
+--- a/arch/arm/common/sa1111.c
++++ b/arch/arm/common/sa1111.c
+@@ -200,7 +200,7 @@ static void
+ sa1111_irq_handler(unsigned int irq, struct irq_desc *desc)
+ {
+ 	unsigned int stat0, stat1, i;
+-	struct sa1111 *sachip = irq_get_handler_data(irq);
++	struct sa1111 *sachip = irq_desc_get_handler_data(desc);
+ 	void __iomem *mapbase = sachip->base + SA1111_INTC;
  
--		/*
--		 * The frozen PE might be caused by PAPR error injection
--		 * registers, which are expected to be cleared after hitting
--		 * frozen PE as stated in the hardware spec. Unfortunately,
--		 * that's not true on P7IOC. So we have to clear it manually
--		 * to avoid recursive EEH errors during recovery.
--		 */
--		phb = hose->private_data;
--		if (phb->model == PNV_PHB_MODEL_P7IOC &&
--		    (option == EEH_RESET_HOT ||
--		    option == EEH_RESET_FUNDAMENTAL)) {
--			rc = opal_pci_reset(phb->opal_id,
--					    OPAL_RESET_PHB_ERROR,
--					    OPAL_ASSERT_RESET);
--			if (rc != OPAL_SUCCESS) {
--				pr_warn("%s: Failure %lld clearing "
--					"error injection registers\n",
--					__func__, rc);
--				return -EIO;
--			}
-+	/*
-+	 * The frozen PE might be caused by PAPR error injection
-+	 * registers, which are expected to be cleared after hitting
-+	 * frozen PE as stated in the hardware spec. Unfortunately,
-+	 * that's not true on P7IOC. So we have to clear it manually
-+	 * to avoid recursive EEH errors during recovery.
-+	 */
-+	phb = hose->private_data;
-+	if (phb->model == PNV_PHB_MODEL_P7IOC &&
-+	    (option == EEH_RESET_HOT ||
-+	    option == EEH_RESET_FUNDAMENTAL)) {
-+		rc = opal_pci_reset(phb->opal_id,
-+				    OPAL_RESET_PHB_ERROR,
-+				    OPAL_ASSERT_RESET);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("%s: Error %lld clearing errinjct registers\n",
-+				__func__, rc);
-+			return -EIO;
- 		}
--
--		bus = eeh_pe_bus_get(pe);
--		if (pe->type & EEH_PE_VF)
--			ret = pnv_eeh_vf_pe_reset(pe, option);
--		else if (pci_is_root_bus(bus) ||
--			pci_is_root_bus(bus->parent))
--			ret = pnv_eeh_root_reset(hose, option);
--		else
--			ret = pnv_eeh_bridge_reset(bus->self, option);
- 	}
+ 	stat0 = sa1111_readl(mapbase + SA1111_INTSTATCLR0);
+diff --git a/arch/arm/plat-orion/gpio.c b/arch/arm/plat-orion/gpio.c
+index 5168a52a17f9..caba04340619 100644
+--- a/arch/arm/plat-orion/gpio.c
++++ b/arch/arm/plat-orion/gpio.c
+@@ -409,7 +409,7 @@ static int gpio_irq_set_type(struct irq_data *d, u32 type)
  
-+	bus = eeh_pe_bus_get(pe);
-+	if (pe->type & EEH_PE_VF)
-+		ret = pnv_eeh_vf_pe_reset(pe, option);
-+	else if (pci_is_root_bus(bus) ||
-+		pci_is_root_bus(bus->parent))
-+		ret = pnv_eeh_root_reset(hose, option);
-+	else
-+		ret = pnv_eeh_bridge_reset(bus->self, option);
-+
- 	return ret;
- }
+ static void gpio_irq_handler(unsigned irq, struct irq_desc *desc)
+ {
+-	struct orion_gpio_chip *ochip = irq_get_handler_data(irq);
++	struct orion_gpio_chip *ochip = irq_desc_get_handler_data(desc);
+ 	u32 cause, type;
+ 	int i;
  
 -- 
-2.1.0
+1.7.10.4
 
