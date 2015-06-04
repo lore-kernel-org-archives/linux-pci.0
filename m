@@ -1,152 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFT v2 15/48] genirq: Kill the parameter 'irq' of kstat_incr_irqs_this_cpu()
-Date: Thu,  4 Jun 2015 12:13:25 +0800
-Message-Id: <1433391238-19471-16-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:37273 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbbFDGoE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:44:04 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:44:02 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 25/42] powerpc/powernv: Supports slot ID
+Date: Thu,  4 Jun 2015 16:41:54 +1000
+Message-Id: <1433400131-18429-26-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The first parameter 'irq' is never used by kstat_incr_irqs_this_cpu(),
-so kill it. So one step further to kill the first parameter 'irq'
-of irq_flow_handler_t.
+PowerNV platform is running on top of skiboot firmware, which has
+changes supporting PCI slots. PCI slots are identified by PHB's
+OPAL ID (PHB slot) or combo of that and PCI slot ID. The patch
+changes argument names of opal_pci_reset() and opal_pci_poll()
+to reflect the firmware's change. pnv_eeh_phb_poll() is also
+renamed to pnv_eeh_poll() to reflect the firmware's change.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- kernel/irq/chip.c      |   16 ++++++++--------
- kernel/irq/handle.c    |    2 +-
- kernel/irq/internals.h |    2 +-
- kernel/irq/irqdesc.c   |    2 +-
- 4 files changed, 11 insertions(+), 11 deletions(-)
+v5:
+  * Split from PATCH[v4 09/21]
+---
+ arch/powerpc/include/asm/opal.h              | 4 ++--
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 8 ++++----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index da14c388b579..fc7545ca6bf7 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -315,7 +315,7 @@ void handle_nested_irq(unsigned int irq)
- 	raw_spin_lock_irq(&desc->lock);
+diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
+index 042af1a..6d467df 100644
+--- a/arch/powerpc/include/asm/opal.h
++++ b/arch/powerpc/include/asm/opal.h
+@@ -129,7 +129,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
+ int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
+ 					uint16_t dma_window_number, uint64_t pci_start_addr,
+ 					uint64_t pci_mem_size);
+-int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
++int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
  
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
--	kstat_incr_irqs_this_cpu(irq, desc);
-+	kstat_incr_irqs_this_cpu(desc);
+ int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
+ 				   uint64_t diag_buffer_len);
+@@ -145,7 +145,7 @@ int64_t opal_get_epow_status(__be64 *status);
+ int64_t opal_set_system_attention_led(uint8_t led_action);
+ int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
+ 			    __be16 *pci_error_type, __be16 *severity);
+-int64_t opal_pci_poll(uint64_t phb_id);
++int64_t opal_pci_poll(uint64_t id, uint8_t *val);
+ int64_t opal_return_cpu(void);
+ int64_t opal_check_token(uint64_t token);
+ int64_t opal_reinit_cpus(uint64_t flags);
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index dfdb31f..4fd8f15 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -743,12 +743,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
+ 	return ret;
+ }
  
- 	action = desc->action;
- 	if (unlikely(!action || irqd_irq_disabled(&desc->irq_data))) {
-@@ -391,7 +391,7 @@ handle_simple_irq(unsigned int irq, struct irq_desc *desc)
- 		goto out_unlock;
+-static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
++static s64 pnv_eeh_poll(uint64_t id)
+ {
+ 	s64 rc = OPAL_HARDWARE;
  
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
--	kstat_incr_irqs_this_cpu(irq, desc);
-+	kstat_incr_irqs_this_cpu(desc);
+ 	while (1) {
+-		rc = opal_pci_poll(phb->opal_id);
++		rc = opal_pci_poll(id, NULL);
+ 		if (rc <= 0)
+ 			break;
  
- 	if (unlikely(!desc->action || irqd_irq_disabled(&desc->irq_data))) {
- 		desc->istate |= IRQS_PENDING;
-@@ -443,7 +443,7 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
- 		goto out_unlock;
- 
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
--	kstat_incr_irqs_this_cpu(irq, desc);
-+	kstat_incr_irqs_this_cpu(desc);
- 
- 	/*
- 	 * If its disabled or no action available
-@@ -515,7 +515,7 @@ handle_fasteoi_irq(unsigned int irq, struct irq_desc *desc)
+@@ -788,7 +788,7 @@ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
+ 	 * reset followed by hot reset on root bus. So we also
+ 	 * need the PCI bus settlement delay.
+ 	 */
+-	rc = pnv_eeh_phb_poll(phb);
++	rc = pnv_eeh_poll(phb->opal_id);
+ 	if (option == EEH_RESET_DEACTIVATE) {
+ 		if (system_state < SYSTEM_RUNNING)
+ 			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
+@@ -831,7 +831,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
  		goto out;
  
- 	desc->istate &= ~(IRQS_REPLAY | IRQS_WAITING);
--	kstat_incr_irqs_this_cpu(irq, desc);
-+	kstat_incr_irqs_this_cpu(desc);
- 
- 	/*
- 	 * If its disabled or no action available
-@@ -583,7 +583,7 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
- 		goto out_unlock;
- 	}
- 
--	kstat_incr_irqs_this_cpu(irq, desc);
-+	kstat_incr_irqs_this_cpu(desc);
- 
- 	/* Start handling the irq */
- 	desc->irq_data.chip->irq_ack(&desc->irq_data);
-@@ -646,7 +646,7 @@ void handle_edge_eoi_irq(unsigned int irq, struct irq_desc *desc)
- 		goto out_eoi;
- 	}
- 
--	kstat_incr_irqs_this_cpu(irq, desc);
-+	kstat_incr_irqs_this_cpu(desc);
- 
- 	do {
- 		if (unlikely(!desc->action))
-@@ -675,7 +675,7 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 
--	kstat_incr_irqs_this_cpu(irq, desc);
-+	kstat_incr_irqs_this_cpu(desc);
- 
- 	if (chip->irq_ack)
- 		chip->irq_ack(&desc->irq_data);
-@@ -705,7 +705,7 @@ void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc)
- 	void *dev_id = raw_cpu_ptr(action->percpu_dev_id);
- 	irqreturn_t res;
- 
--	kstat_incr_irqs_this_cpu(irq, desc);
-+	kstat_incr_irqs_this_cpu(desc);
- 
- 	if (chip->irq_ack)
- 		chip->irq_ack(&desc->irq_data);
-diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
-index 635480270858..4d37b96343e9 100644
---- a/kernel/irq/handle.c
-+++ b/kernel/irq/handle.c
-@@ -30,7 +30,7 @@
- void handle_bad_irq(unsigned int irq, struct irq_desc *desc)
- {
- 	print_irq_desc(irq, desc);
--	kstat_incr_irqs_this_cpu(irq, desc);
-+	kstat_incr_irqs_this_cpu(desc);
- 	ack_bad_irq(irq);
- }
- 
-diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index b117e4c243d8..d6f65336650c 100644
---- a/kernel/irq/internals.h
-+++ b/kernel/irq/internals.h
-@@ -191,7 +191,7 @@ static inline bool irqd_has_set(struct irq_data *d, unsigned int mask)
- 	return __irqd_to_state(d) & mask;
- }
- 
--static inline void kstat_incr_irqs_this_cpu(unsigned int irq, struct irq_desc *desc)
-+static inline void kstat_incr_irqs_this_cpu(struct irq_desc *desc)
- {
- 	__this_cpu_inc(*desc->kstat_irqs);
- 	__this_cpu_inc(kstat.irqs_sum);
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 358f620c035a..500e6fd11d78 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -586,7 +586,7 @@ int irq_set_percpu_devid(unsigned int irq)
- 
- void kstat_incr_irq_this_cpu(unsigned int irq)
- {
--	kstat_incr_irqs_this_cpu(irq, irq_to_desc(irq));
-+	kstat_incr_irqs_this_cpu(irq_to_desc(irq));
- }
- 
- /**
+ 	/* Poll state of the PHB until the request is done */
+-	rc = pnv_eeh_phb_poll(phb);
++	rc = pnv_eeh_poll(phb->opal_id);
+ 	if (option == EEH_RESET_DEACTIVATE)
+ 		msleep(EEH_PE_RST_SETTLE_TIME);
+ out:
 -- 
-1.7.10.4
+2.1.0
 
