@@ -1,102 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:12310 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759078AbbFBO1H convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jun 2015 10:27:07 -0400
-From: William Davis <wdavis@nvidia.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-CC: "joro@8bytes.org" <joro@8bytes.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Terence Ripperda <TRipperda@nvidia.com>,
-	"John Hubbard" <jhubbard@nvidia.com>,
-	"jglisse@redhat.com" <jglisse@redhat.com>
-Subject: RE: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
-Date: Tue, 2 Jun 2015 14:27:05 +0000
-Message-ID: <37dbe5add91042539fd8dffd596d7738@HQMAIL106.nvidia.com>
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
- <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
- <20150601212528.GC7354@konrad-lan.dumpdata.com>
-In-Reply-To: <20150601212528.GC7354@konrad-lan.dumpdata.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Simon Horman <horms@verge.net.au>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	abdoulaye berthe <berthe.ab@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: [RFT v2 12/48] sh: intc: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
+Date: Thu,  4 Jun 2015 12:13:22 +0800
+Message-Id: <1433391238-19471-13-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+already have a pointer to corresponding irq_desc.
 
-> -----Original Message-----
-> From: Konrad Rzeszutek Wilk [mailto:konrad.wilk@oracle.com]
-> Sent: Monday, June 1, 2015 4:25 PM
-> To: William Davis
-> Cc: joro@8bytes.org; bhelgaas@google.com; iommu@lists.linux-foundation.org;
-> linux-pci@vger.kernel.org; Terence Ripperda; John Hubbard;
-> jglisse@redhat.com
-> Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource()
-> documentation
-> 
-> On Mon, May 18, 2015 at 01:25:01PM -0500, wdavis@nvidia.com wrote:
-> > From: Will Davis <wdavis@nvidia.com>
-> >
-> > Add references to both the general API documentation as well as the
-> HOWTO.
-> >
-> > Signed-off-by: Will Davis <wdavis@nvidia.com>
-> > ---
-> >  Documentation/DMA-API-HOWTO.txt | 39
-> +++++++++++++++++++++++++++++++++++++--
-> >  Documentation/DMA-API.txt       | 36 +++++++++++++++++++++++++++++++----
-> -
-> >  2 files changed, 68 insertions(+), 7 deletions(-)
-> >
-> > diff --git a/Documentation/DMA-API-HOWTO.txt
-> > b/Documentation/DMA-API-HOWTO.txt index 0f7afb2..89bd730 100644
-> > --- a/Documentation/DMA-API-HOWTO.txt
-> > +++ b/Documentation/DMA-API-HOWTO.txt
-> > @@ -138,6 +138,10 @@ What about block I/O and networking buffers?  The
-> > block I/O and  networking subsystems make sure that the buffers they
-> > use are valid  for you to DMA from/to.
-> >
-> > +In some systems, it may also be possible to DMA to and/or from a peer
-> > +device's MMIO region, as described by a 'struct resource'. This is
-> > +referred to as a peer-to-peer mapping.
-> > +
-> >  			DMA addressing limitations
-> >
-> >  Does your device have any DMA addressing limitations?  For example,
-> > is @@ -648,6 +652,35 @@ Every dma_map_{single,sg}() call should have
-> > its dma_unmap_{single,sg}()  counterpart, because the bus address
-> > space is a shared resource and  you could render the machine unusable by
-> consuming all bus addresses.
-> >
-> > +Peer-to-peer DMA mappings can be obtained using dma_map_resource() to
-> > +map another device's MMIO region for the given device:
-> > +
-> > +	struct resource *peer_mmio_res = &other_dev->resource[0];
-> > +	dma_addr_t dma_handle = dma_map_resource(dev, peer_mmio_res,
-> > +						 offset, size, direction);
-> > +	if (dma_handle == 0 || dma_mapping_error(dev, dma_handle))
-> 
-> Don't check for 0. That can be a valid value.
-> 
-> > +	{
-> > +		/*
-> > +		 * If dma_handle == 0, dma_map_resource() is not
-> > +		 * implemented, and peer-to-peer transactions will not
-> > +		 * work.
-> 
-> Perhaps we should just have an dma_can_map_resource function instead to
-> check for this?
+Also replace generic_handle_irq with generic_handle_irq_desc() to avoid
+looking up irq_desc again.
 
-In v3 of this patch set, I've added a BUG_ON(ops->map_resource == NULL) to
-dma_map_resource() instead of possibly returning 0, at Joerg's suggestion.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/sh/boards/mach-se/7343/irq.c  |    2 +-
+ arch/sh/boards/mach-x3proto/gpio.c |    2 +-
+ drivers/sh/intc/core.c             |    2 +-
+ drivers/sh/intc/virq.c             |   14 ++++++++------
+ 4 files changed, 11 insertions(+), 9 deletions(-)
 
-In that case, a dma_can_map_resource() would do the same check a driver
-would before calling dma_map_resource(), e.g., that
-ops->map_resource != NULL. It does seem nicer to wrap that in an API call.
+diff --git a/arch/sh/boards/mach-se/7343/irq.c b/arch/sh/boards/mach-se/7343/irq.c
+index 1087dba9b015..6f97a8f0d0d6 100644
+--- a/arch/sh/boards/mach-se/7343/irq.c
++++ b/arch/sh/boards/mach-se/7343/irq.c
+@@ -31,7 +31,7 @@ struct irq_domain *se7343_irq_domain;
+ 
+ static void se7343_irq_demux(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct irq_data *data = irq_get_irq_data(irq);
++	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+ 	unsigned long mask;
+ 	int bit;
+diff --git a/arch/sh/boards/mach-x3proto/gpio.c b/arch/sh/boards/mach-x3proto/gpio.c
+index f035a7ac6456..24555c364d5b 100644
+--- a/arch/sh/boards/mach-x3proto/gpio.c
++++ b/arch/sh/boards/mach-x3proto/gpio.c
+@@ -62,7 +62,7 @@ static int x3proto_gpio_to_irq(struct gpio_chip *chip, unsigned gpio)
+ 
+ static void x3proto_gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct irq_data *data = irq_get_irq_data(irq);
++	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+ 	unsigned long mask;
+ 	int pin;
+diff --git a/drivers/sh/intc/core.c b/drivers/sh/intc/core.c
+index 81f22980b2de..6dc0361aeeeb 100644
+--- a/drivers/sh/intc/core.c
++++ b/drivers/sh/intc/core.c
+@@ -67,7 +67,7 @@ void intc_set_prio_level(unsigned int irq, unsigned int level)
+ 
+ static void intc_redirect_irq(unsigned int irq, struct irq_desc *desc)
+ {
+-	generic_handle_irq((unsigned int)irq_get_handler_data(irq));
++	generic_handle_irq((unsigned int)irq_desc_get_handler_data(desc));
+ }
+ 
+ static void __init intc_register_irq(struct intc_desc *desc,
+diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
+index bc0601cf0f8f..bb7e745d4266 100644
+--- a/drivers/sh/intc/virq.c
++++ b/drivers/sh/intc/virq.c
+@@ -111,7 +111,7 @@ static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
+ 
+ static void intc_virq_handler(unsigned int irq, struct irq_desc *desc)
+ {
+-	struct irq_data *data = irq_get_irq_data(irq);
++	struct irq_data *data = irq_desc_get_irq_data(desc);
+ 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+ 	struct intc_virq_list *entry, *vlist = irq_data_get_irq_handler_data(data);
+ 	struct intc_desc_int *d = get_intc_desc(irq);
+@@ -120,12 +120,14 @@ static void intc_virq_handler(unsigned int irq, struct irq_desc *desc)
+ 
+ 	for_each_virq(entry, vlist) {
+ 		unsigned long addr, handle;
++		struct irq_desc *vdesc = irq_to_desc(entry->irq);
+ 
+-		handle = (unsigned long)irq_get_handler_data(entry->irq);
+-		addr = INTC_REG(d, _INTC_ADDR_E(handle), 0);
+-
+-		if (intc_reg_fns[_INTC_FN(handle)](addr, handle, 0))
+-			generic_handle_irq(entry->irq);
++		if (vdesc) {
++			handle = (unsigned long)irq_desc_get_handler_data(vdesc);
++			addr = INTC_REG(d, _INTC_ADDR_E(handle), 0);
++			if (intc_reg_fns[_INTC_FN(handle)](addr, handle, 0))
++				generic_handle_irq_desc(entry->irq, vdesc);
++		}
+ 	}
+ 
+ 	chip->irq_unmask(data);
+-- 
+1.7.10.4
 
-Thanks,
-Will
-
---
-nvpublic
