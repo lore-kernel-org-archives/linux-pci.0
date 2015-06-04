@@ -1,56 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:54624 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbbF3Hio (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jun 2015 03:38:44 -0400
-Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 30 Jun 2015 13:08:40 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id 7CB5B394005A
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 13:08:37 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5U7cYfM56295650
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 13:08:35 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5U6WM6O002139
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 12:02:23 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH] PCI: Don't update VF's BAR
-Date: Tue, 30 Jun 2015 15:37:14 +0800
-Message-Id: <1435649834-3148-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFT v2 17/48] genirq: Kill the parameter 'irq' of check_irq_resend()
+Date: Thu,  4 Jun 2015 12:13:27 +0800
+Message-Id: <1433391238-19471-18-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VF BARs are RO zero, so updating VF BARs will not take any effect.
-See the SR-IOV spec r1.1, sec 3.4.1.11.
+Simplify interrupt management interfaces by killing the parameter 'irq'
+of check_irq_resend().
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/setup-res.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ kernel/irq/chip.c      |    2 +-
+ kernel/irq/internals.h |    2 +-
+ kernel/irq/manage.c    |    2 +-
+ kernel/irq/resend.c    |    4 +++-
+ 4 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 232f925..334b394 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -37,6 +37,13 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	struct resource *res = dev->resource + resno;
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index fc7545ca6bf7..7fe80d2fcc6c 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -187,7 +187,7 @@ int irq_startup(struct irq_desc *desc, bool resend)
+ 		irq_enable(desc);
+ 	}
+ 	if (resend)
+-		check_irq_resend(desc, desc->irq_data.irq);
++		check_irq_resend(desc);
+ 	return ret;
+ }
  
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index d6f65336650c..ca2ca5531be6 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -90,7 +90,7 @@ irqreturn_t handle_irq_event_percpu(struct irq_desc *desc, struct irqaction *act
+ irqreturn_t handle_irq_event(struct irq_desc *desc);
+ 
+ /* Resending of interrupts :*/
+-void check_irq_resend(struct irq_desc *desc, unsigned int irq);
++void check_irq_resend(struct irq_desc *desc);
+ bool irq_wait_for_poll(struct irq_desc *desc);
+ void __irq_wake_thread(struct irq_desc *desc, struct irqaction *action);
+ 
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index e7688140bfb6..379a1d60c4f4 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -516,7 +516,7 @@ void __enable_irq(struct irq_desc *desc, unsigned int irq)
+ 		/* Prevent probing on this irq: */
+ 		irq_settings_set_noprobe(desc);
+ 		irq_enable(desc);
+-		check_irq_resend(desc, irq);
++		check_irq_resend(desc);
+ 		/* fall-through */
+ 	}
+ 	default:
+diff --git a/kernel/irq/resend.c b/kernel/irq/resend.c
+index 9065107f083e..32fc47c2c622 100644
+--- a/kernel/irq/resend.c
++++ b/kernel/irq/resend.c
+@@ -53,7 +53,7 @@ static DECLARE_TASKLET(resend_tasklet, resend_irqs, 0);
+  *
+  * Is called with interrupts disabled and desc->lock held.
+  */
+-void check_irq_resend(struct irq_desc *desc, unsigned int irq)
++void check_irq_resend(struct irq_desc *desc)
+ {
  	/*
-+	 * Per SRIOV SPEC 3.4.1.11, VF BARs are RO zero.
-+	 * If this is a VF, just return.
-+	 */
-+	if (dev->is_virtfn)
-+		return;
+ 	 * We do not resend level type interrupts. Level type
+@@ -74,6 +74,8 @@ void check_irq_resend(struct irq_desc *desc, unsigned int irq)
+ 		if (!desc->irq_data.chip->irq_retrigger ||
+ 		    !desc->irq_data.chip->irq_retrigger(&desc->irq_data)) {
+ #ifdef CONFIG_HARDIRQS_SW_RESEND
++			unsigned int irq = irq_desc_get_irq(desc);
 +
-+	/*
- 	 * Ignore resources for unimplemented BARs and unused resource slots
- 	 * for 64 bit BARs.
- 	 */
+ 			/*
+ 			 * If the interrupt has a parent irq and runs
+ 			 * in the thread context of the parent irq,
 -- 
-1.7.9.5
+1.7.10.4
 
