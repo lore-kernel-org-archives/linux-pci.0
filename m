@@ -1,50 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:59212 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423041AbbFEOLS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Jun 2015 10:11:18 -0400
-From: Joerg Roedel <joro@8bytes.org>
-To: iommu@lists.linux-foundation.org
-Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
-	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
-	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
-	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
-Subject: [PATCH 10/17] iommu/vt-d: Allocate irq remapping table bitmap with GFP_KERNEL
-Date: Fri,  5 Jun 2015 16:10:56 +0200
-Message-Id: <1433513463-19128-11-git-send-email-joro@8bytes.org>
-In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1433391238-19471-6-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+	<1433391238-19471-6-git-send-email-jiang.liu@linux.intel.com>
+Date: Thu, 4 Jun 2015 08:20:12 +0200
+Message-ID: <CABxcv==Gg7GOzyo5kAEC5ezQpsTMPo=Bi0H4rfRUY5iQJ4oSTQ@mail.gmail.com>
+Subject: Re: [RFT v2 05/48] gpio: Use irq_desc_get_xxx() to avoid redundant
+ lookup of irq_desc
+From: Javier Martinez Canillas <javier@dowhile0.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>, Ray Jui <rjui@broadcom.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Santosh Shilimkar <ssantosh@kernel.org>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	Linux GPIO List <linux-gpio@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
+Hello Jiang,
 
-This function does not run in atomic context, so no reason
-to do a GFP_ATOMIC allocation.
+On Thu, Jun 4, 2015 at 6:13 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+> already have a pointer to corresponding irq_desc.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Acked-by: Linus Walleij <linus.walleij@linaro.org>
+> ---
+>  drivers/gpio/gpio-bcm-kona.c   |    2 +-
+>  drivers/gpio/gpio-dwapb.c      |    2 +-
+>  drivers/gpio/gpio-mvebu.c      |    2 +-
+>  drivers/gpio/gpio-mxc.c        |    6 +++---
+>  drivers/gpio/gpio-mxs.c        |    2 +-
+>  drivers/gpio/gpio-omap.c       |    2 +-
 
-Tested-by: Baoquan He <bhe@redhat.com>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
----
- drivers/iommu/intel_irq_remapping.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+For gpio-omap:
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 34667d5..d22518d 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -510,7 +510,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu)
- 	}
- 
- 	bitmap = kcalloc(BITS_TO_LONGS(INTR_REMAP_TABLE_ENTRIES),
--			 sizeof(long), GFP_ATOMIC);
-+			 sizeof(long), GFP_KERNEL | __GFP_ZERO);
- 	if (bitmap == NULL) {
- 		pr_err("Failed to allocate bitmap for IR[%d]\n", iommu->seq_id);
- 		goto out_free_pages;
--- 
-1.9.1
+Acked-by: Javier Martinez Canillas <javier@dowhile0.org>
 
+Best regards,
+Javier
