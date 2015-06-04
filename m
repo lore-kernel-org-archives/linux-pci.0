@@ -1,50 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1433391238-19471-35-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-	<1433391238-19471-35-git-send-email-jiang.liu@linux.intel.com>
-Date: Wed, 10 Jun 2015 15:14:06 +0200
-Message-ID: <CACRpkdZUD3VQkrT1JReiKvM1SZf_nJiN-=JNZoyMJjK0MGefuQ@mail.gmail.com>
-Subject: Re: [RFT v2 34/48] pinctrl: Prepare for killing the first parameter
- 'irq' of irq_flow_handler_t
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Barry Song <baohua@kernel.org>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Bin Shi <Bin.Shi@csr.com>, Fan Wu <fwu@marvell.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Barry Song <Baohua.Song@csr.com>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:35890 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751931AbbFDGpS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:45:18 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:45:16 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 29/42] powerpc/powernv: Issue fundamental reset in pnv_pci_reset_secondary_bus()
+Date: Thu,  4 Jun 2015 16:41:58 +1000
+Message-Id: <1433400131-18429-30-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 4, 2015 at 6:13 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
+There might have PCI devices, under the specified PCI bus, asking
+for fundamental reset. The patch iterates all PCI devices under
+the specified PCI bus and issue fundamental reset to the PCI bus
+if any PCI device is asking for that. Otherwise, hot reset is
+issued to the PCI bus.
 
-> Change irq flow handler to prepare for killing the first parameter 'irq'
-> of irq_flow_handler_t.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+v5:
+  * Derived from PATCH[v4 10/21]
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 18167c5..4eb53ed 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1055,9 +1055,32 @@ static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
+ 	return 0;
+ }
+ 
++static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
++{
++	int *freset = data;
++
++	/*
++	 * Stop the iteration immediately if there is any
++	 * one PCI device requesting fundamental reset
++	 */
++	*freset |= pdev->needs_freset;
++	return *freset;
++}
++
+ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+-	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
++	int option = EEH_RESET_HOT;
++
++	if (dev->subordinate) {
++		int freset = 0;
++
++		pci_walk_bus(dev->subordinate,
++			     pnv_pci_dev_reset_type,
++			     &freset);
++		option = freset ? EEH_RESET_FUNDAMENTAL : EEH_RESET_HOT;
++	}
++
++	pnv_eeh_bridge_reset(dev, option);
+ 	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+ }
+ 
+-- 
+2.1.0
 
-Yours,
-Linus Walleij
