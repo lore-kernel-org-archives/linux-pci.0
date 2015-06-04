@@ -1,63 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53410 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751195AbbFZBJd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Jun 2015 21:09:33 -0400
-Date: Fri, 26 Jun 2015 03:09:27 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Borislav Petkov <bp@suse.de>, Ingo Molnar <mingo@elte.hu>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
-	<ville.syrjala@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@redhat.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-id: <556FD9A1.5000406@samsung.com>
+Date: Thu, 04 Jun 2015 13:52:49 +0900
+From: Krzysztof Kozlowski <k.kozlowski@samsung.com>
+MIME-version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Mathias Krause <minipli@googlemail.com>,
-	Andrzej Hajda <a.hajda@samsung.com>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Davidlohr Bueso <dbueso@suse.de>
-Subject: Re: [PATCH v5 1/3] video: fbdev: atyfb: clarify ioremap() base and
- length used
-Message-ID: <20150626010927.GI3005@wotan.suse.de>
-References: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
- <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
- <20150625230437.GA4362@sci.fi>
- <CAB=NE6V0HGCkpYFghUyyk=+St-494Y8e9PEakF9F7cEB8vpKvA@mail.gmail.com>
- <20150625231103.GB4362@sci.fi>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20150625231103.GB4362@sci.fi>
-Sender: linux-pci-owner@vger.kernel.org
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kukjin Kim <kgene@kernel.org>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	James Hogan <james.hogan@imgtec.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, linux-mips@linux-mips.org,
+	linux-metag@vger.kernel.org
+Subject: Re: [RFT v2 46/48] genirq, irqchip: Kill the first parameter 'irq' of
+ irq_flow_handler_t
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433391238-19471-47-git-send-email-jiang.liu@linux.intel.com>
+In-reply-to: <1433391238-19471-47-git-send-email-jiang.liu@linux.intel.com>
+Content-type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 26, 2015 at 02:11:03AM +0300, Ville Syrjälä wrote:
-> On Thu, Jun 25, 2015 at 04:06:45PM -0700, Luis R. Rodriguez wrote:
-> > On Thu, Jun 25, 2015 at 4:04 PM, Ville Syrjälä <syrjala@sci.fi> wrote:
-> > > it doesn't hurt too much
-> > > since smem_len gets overwritten later in aty_init().
-> > 
-> > That's the idea, we set it with a default as it will be overwritten
-> > later anyway.
+On 04.06.2015 13:13, Jiang Liu wrote:
+> Now most IRQ flow handlers make no use of the first parameter 'irq'.
+> And for those who do make use of 'irq', we could easily get the irq
+> number through irq_desc->irq_data->irq. So kill the first parameter
+> 'irq' of irq_flow_handler_t.
 > 
-> Maybe toss in a comment? Otherwise it's a bit dishonest and might give
-> someone the impression that all PCI cards really have 8MB of memory.
+> To ease review, I have split the changes into several parts, though
+> they should be merge as one to support bisecting.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Acked-by: Ralf Baechle <ralf@linux-mips.org>
+> ---
+>  drivers/irqchip/exynos-combiner.c    |    4 ++--
 
-Sure, mind this as a follow up patch if its too late?
+For exynos:
+Acked-by: Krzysztof Kozlowski <k.kozlowski@samsung.com>
 
-  Luis
+Best regards,
+Krzysztof
