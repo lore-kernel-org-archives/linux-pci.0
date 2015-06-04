@@ -1,386 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwdur.emc.com ([128.221.224.79]:52580 "EHLO
-	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752629AbbF2Ouj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 10:50:39 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH 1/9] NTB: Fix ntb_transport out-of-order RX update
-Date: Mon, 29 Jun 2015 10:49:57 -0400
-Message-Id: <453fd81fb650346a957476a94d57dfc0ccc6b2b9.1435587291.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
-References: <cover.1435587291.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
-References: <cover.1435587291.git.Allen.Hubbe@emc.com>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:54965 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752520AbbFDGnl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:41 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:43:38 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 15/42] powerpc/powernv: Reserve PE# for root bus
+Date: Thu,  4 Jun 2015 16:41:44 +1000
+Message-Id: <1433400131-18429-16-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It was possible for a synchronous update of the RX index in the error
-case to get ahead of the asynchronous RX index update in the normal
-case.  Change the RX processing to preserve an RX completion order.
+pcibios_setup_bridge(), called to update PCI bridge windows, will
+allocate PE for PCI buses. The function isn't called for root bus
+that doesn't have upstream bridge. The patch reserves PE# for root
+bus in advance so that we can setup it in next patch.
 
-There were two error cases.  First, if a buffer is not present to
-receive data, there would be no queue entry to preserve the RX
-completion order.  Instead of dropping the RX frame, leave the RX frame
-in the ring.  Schedule RX processing when RX entries are enqueued, in
-case there are RX frames waiting in the ring to be received.
-
-Second, if a buffer is too small to receive data, drop the frame in the
-ring, mark the RX entry as done, and indicate the error in the RX entry
-length.  Check for a negative length in the receive callback in
-ntb_netdev, and count occurances as rx_length_errors.
-
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/net/ntb_netdev.c    |   7 ++
- drivers/ntb/ntb_transport.c | 168 ++++++++++++++++++++++++++------------------
- 2 files changed, 106 insertions(+), 69 deletions(-)
+v5:
+  * Split from [PATCH v5 v4 06/21]
+  * Replace "strip of" with "strip off" in comments
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 31 ++++++++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.h      |  1 +
+ 2 files changed, 31 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/ntb_netdev.c b/drivers/net/ntb_netdev.c
-index 3cc316cb7e6b..5f1ee7c05f68 100644
---- a/drivers/net/ntb_netdev.c
-+++ b/drivers/net/ntb_netdev.c
-@@ -102,6 +102,12 @@ static void ntb_netdev_rx_handler(struct ntb_transport_qp *qp, void *qp_data,
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 0d6539a..2eb8baa 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -230,6 +230,13 @@ static int pnv_ioda1_init_m64(struct pnv_phb *phb)
+ 		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
+ 			phb->ioda.reserved_pe);
  
- 	netdev_dbg(ndev, "%s: %d byte payload received\n", __func__, len);
- 
-+	if (len < 0) {
-+		ndev->stats.rx_errors++;
-+		ndev->stats.rx_length_errors++;
-+		goto enqueue_again;
-+	}
++	/* Strip off the segment used by PE for PCI root bus,
++	 * which is last supported PE#, or one next to the
++	 * reserved PE#
++	 */
++	if (phb->ioda.root_pe != IODA_INVALID_PE)
++		r->end -= phb->ioda.m64_segsize;
 +
- 	skb_put(skb, len);
- 	skb->protocol = eth_type_trans(skb, ndev);
- 	skb->ip_summed = CHECKSUM_NONE;
-@@ -121,6 +127,7 @@ static void ntb_netdev_rx_handler(struct ntb_transport_qp *qp, void *qp_data,
- 		return;
- 	}
- 
-+enqueue_again:
- 	rc = ntb_transport_rx_enqueue(qp, skb, skb->data, ndev->mtu + ETH_HLEN);
- 	if (rc) {
- 		dev_kfree_skb(skb);
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index efe3ad4122f2..b87578fb91d6 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -142,10 +142,10 @@ struct ntb_transport_qp {
- 
- 	void (*rx_handler)(struct ntb_transport_qp *qp, void *qp_data,
- 			   void *data, int len);
-+	struct list_head rx_post_q;
- 	struct list_head rx_pend_q;
- 	struct list_head rx_free_q;
--	spinlock_t ntb_rx_pend_q_lock;
--	spinlock_t ntb_rx_free_q_lock;
-+	spinlock_t ntb_rx_q_lock;
- 	void *rx_buff;
- 	unsigned int rx_index;
- 	unsigned int rx_max_entry;
-@@ -534,6 +534,27 @@ out:
- 	return entry;
- }
- 
-+static struct ntb_queue_entry *ntb_list_mv(spinlock_t *lock,
-+					   struct list_head *list,
-+					   struct list_head *to_list)
-+{
-+	struct ntb_queue_entry *entry;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(lock, flags);
-+
-+	if (list_empty(list)) {
-+		entry = NULL;
-+	} else {
-+		entry = list_first_entry(list, struct ntb_queue_entry, entry);
-+		list_move(&entry->entry, to_list);
-+	}
-+
-+	spin_unlock_irqrestore(lock, flags);
-+
-+	return entry;
-+}
-+
- static int ntb_transport_setup_qp_mw(struct ntb_transport_ctx *nt,
- 				     unsigned int qp_num)
- {
-@@ -941,10 +962,10 @@ static int ntb_transport_init_queue(struct ntb_transport_ctx *nt,
- 	INIT_DELAYED_WORK(&qp->link_work, ntb_qp_link_work);
- 	INIT_WORK(&qp->link_cleanup, ntb_qp_link_cleanup_work);
- 
--	spin_lock_init(&qp->ntb_rx_pend_q_lock);
--	spin_lock_init(&qp->ntb_rx_free_q_lock);
-+	spin_lock_init(&qp->ntb_rx_q_lock);
- 	spin_lock_init(&qp->ntb_tx_free_q_lock);
- 
-+	INIT_LIST_HEAD(&qp->rx_post_q);
- 	INIT_LIST_HEAD(&qp->rx_pend_q);
- 	INIT_LIST_HEAD(&qp->rx_free_q);
- 	INIT_LIST_HEAD(&qp->tx_free_q);
-@@ -1107,22 +1128,47 @@ static void ntb_transport_free(struct ntb_client *self, struct ntb_dev *ndev)
- 	kfree(nt);
- }
- 
--static void ntb_rx_copy_callback(void *data)
-+static void ntb_complete_rxc(struct ntb_transport_qp *qp)
- {
--	struct ntb_queue_entry *entry = data;
--	struct ntb_transport_qp *qp = entry->qp;
--	void *cb_data = entry->cb_data;
--	unsigned int len = entry->len;
--	struct ntb_payload_header *hdr = entry->rx_hdr;
-+	struct ntb_queue_entry *entry;
-+	void *cb_data;
-+	unsigned int len;
-+	unsigned long irqflags;
-+
-+	spin_lock_irqsave(&qp->ntb_rx_q_lock, irqflags);
-+
-+	while (!list_empty(&qp->rx_post_q)) {
-+		entry = list_first_entry(&qp->rx_post_q,
-+					 struct ntb_queue_entry, entry);
-+		if (!(entry->flags & DESC_DONE_FLAG))
-+			break;
-+
-+		entry->rx_hdr->flags = 0;
-+		iowrite32(entry->index, &qp->rx_info->entry);
-+
-+		cb_data = entry->cb_data;
-+		len = entry->len;
-+
-+		list_move_tail(&entry->entry, &qp->rx_free_q);
- 
--	hdr->flags = 0;
-+		spin_unlock_irqrestore(&qp->ntb_rx_q_lock, irqflags);
- 
--	iowrite32(entry->index, &qp->rx_info->entry);
-+		if (qp->rx_handler && qp->client_ready)
-+			qp->rx_handler(qp, qp->cb_data, cb_data, len);
- 
--	ntb_list_add(&qp->ntb_rx_free_q_lock, &entry->entry, &qp->rx_free_q);
-+		spin_lock_irqsave(&qp->ntb_rx_q_lock, irqflags);
-+	}
- 
--	if (qp->rx_handler && qp->client_ready)
--		qp->rx_handler(qp, qp->cb_data, cb_data, len);
-+	spin_unlock_irqrestore(&qp->ntb_rx_q_lock, irqflags);
-+}
-+
-+static void ntb_rx_copy_callback(void *data)
-+{
-+	struct ntb_queue_entry *entry = data;
-+
-+	entry->flags |= DESC_DONE_FLAG;
-+
-+	ntb_complete_rxc(entry->qp);
- }
- 
- static void ntb_memcpy_rx(struct ntb_queue_entry *entry, void *offset)
-@@ -1138,19 +1184,18 @@ static void ntb_memcpy_rx(struct ntb_queue_entry *entry, void *offset)
- 	ntb_rx_copy_callback(entry);
- }
- 
--static void ntb_async_rx(struct ntb_queue_entry *entry, void *offset,
--			 size_t len)
-+static void ntb_async_rx(struct ntb_queue_entry *entry, void *offset)
- {
- 	struct dma_async_tx_descriptor *txd;
- 	struct ntb_transport_qp *qp = entry->qp;
- 	struct dma_chan *chan = qp->dma_chan;
- 	struct dma_device *device;
--	size_t pay_off, buff_off;
-+	size_t pay_off, buff_off, len;
- 	struct dmaengine_unmap_data *unmap;
- 	dma_cookie_t cookie;
- 	void *buf = entry->buf;
- 
--	entry->len = len;
-+	len = entry->len;
- 
- 	if (!chan)
- 		goto err;
-@@ -1226,7 +1271,6 @@ static int ntb_process_rxc(struct ntb_transport_qp *qp)
- 	struct ntb_payload_header *hdr;
- 	struct ntb_queue_entry *entry;
- 	void *offset;
--	int rc;
- 
- 	offset = qp->rx_buff + qp->rx_max_frame * qp->rx_index;
- 	hdr = offset + qp->rx_max_frame - sizeof(struct ntb_payload_header);
-@@ -1255,65 +1299,43 @@ static int ntb_process_rxc(struct ntb_transport_qp *qp)
- 		return -EIO;
- 	}
- 
--	entry = ntb_list_rm(&qp->ntb_rx_pend_q_lock, &qp->rx_pend_q);
-+	entry = ntb_list_mv(&qp->ntb_rx_q_lock, &qp->rx_pend_q, &qp->rx_post_q);
- 	if (!entry) {
- 		dev_dbg(&qp->ndev->pdev->dev, "no receive buffer\n");
- 		qp->rx_err_no_buf++;
--
--		rc = -ENOMEM;
--		goto err;
-+		return -EAGAIN;
- 	}
- 
-+	entry->rx_hdr = hdr;
-+	entry->index = qp->rx_index;
-+
- 	if (hdr->len > entry->len) {
- 		dev_dbg(&qp->ndev->pdev->dev,
- 			"receive buffer overflow! Wanted %d got %d\n",
- 			hdr->len, entry->len);
- 		qp->rx_err_oflow++;
- 
--		rc = -EIO;
--		goto err;
--	}
-+		entry->len = -EIO;
-+		entry->flags |= DESC_DONE_FLAG;
- 
--	dev_dbg(&qp->ndev->pdev->dev,
--		"RX OK index %u ver %u size %d into buf size %d\n",
--		qp->rx_index, hdr->ver, hdr->len, entry->len);
-+		ntb_complete_rxc(qp);
-+	} else {
-+		dev_dbg(&qp->ndev->pdev->dev,
-+			"RX OK index %u ver %u size %d into buf size %d\n",
-+			qp->rx_index, hdr->ver, hdr->len, entry->len);
- 
--	qp->rx_bytes += hdr->len;
--	qp->rx_pkts++;
-+		qp->rx_bytes += hdr->len;
-+		qp->rx_pkts++;
- 
--	entry->index = qp->rx_index;
--	entry->rx_hdr = hdr;
-+		entry->len = hdr->len;
- 
--	ntb_async_rx(entry, offset, hdr->len);
-+		ntb_async_rx(entry, offset);
-+	}
- 
- 	qp->rx_index++;
- 	qp->rx_index %= qp->rx_max_entry;
- 
  	return 0;
--
--err:
--	/* FIXME: if this syncrhonous update of the rx_index gets ahead of
--	 * asyncrhonous ntb_rx_copy_callback of previous entry, there are three
--	 * scenarios:
--	 *
--	 * 1) The peer might miss this update, but observe the update
--	 * from the memcpy completion callback.  In this case, the buffer will
--	 * not be freed on the peer to be reused for a different packet.  The
--	 * successful rx of a later packet would clear the condition, but the
--	 * condition could persist if several rx fail in a row.
--	 *
--	 * 2) The peer may observe this update before the asyncrhonous copy of
--	 * prior packets is completed.  The peer may overwrite the buffers of
--	 * the prior packets before they are copied.
--	 *
--	 * 3) Both: the peer may observe the update, and then observe the index
--	 * decrement by the asynchronous completion callback.  Who knows what
--	 * badness that will cause.
--	 */
--	hdr->flags = 0;
--	iowrite32(qp->rx_index, &qp->rx_info->entry);
--
--	return rc;
- }
  
- static void ntb_transport_rxc_db(unsigned long data)
-@@ -1333,7 +1355,7 @@ static void ntb_transport_rxc_db(unsigned long data)
- 			break;
- 	}
+ fail:
+@@ -287,6 +294,13 @@ static int pnv_ioda2_init_m64(struct pnv_phb *phb)
+ 		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
+ 			phb->ioda.reserved_pe);
  
--	if (qp->dma_chan)
-+	if (i && qp->dma_chan)
- 		dma_async_issue_pending(qp->dma_chan);
- 
- 	if (i == qp->rx_max_entry) {
-@@ -1609,7 +1631,7 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
- 			goto err1;
- 
- 		entry->qp = qp;
--		ntb_list_add(&qp->ntb_rx_free_q_lock, &entry->entry,
-+		ntb_list_add(&qp->ntb_rx_q_lock, &entry->entry,
- 			     &qp->rx_free_q);
- 	}
- 
-@@ -1634,7 +1656,7 @@ err2:
- 	while ((entry = ntb_list_rm(&qp->ntb_tx_free_q_lock, &qp->tx_free_q)))
- 		kfree(entry);
- err1:
--	while ((entry = ntb_list_rm(&qp->ntb_rx_free_q_lock, &qp->rx_free_q)))
-+	while ((entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_free_q)))
- 		kfree(entry);
- 	if (qp->dma_chan)
- 		dma_release_channel(qp->dma_chan);
-@@ -1689,11 +1711,16 @@ void ntb_transport_free_queue(struct ntb_transport_qp *qp)
- 	qp->tx_handler = NULL;
- 	qp->event_handler = NULL;
- 
--	while ((entry = ntb_list_rm(&qp->ntb_rx_free_q_lock, &qp->rx_free_q)))
-+	while ((entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_free_q)))
- 		kfree(entry);
- 
--	while ((entry = ntb_list_rm(&qp->ntb_rx_pend_q_lock, &qp->rx_pend_q))) {
--		dev_warn(&pdev->dev, "Freeing item from a non-empty queue\n");
-+	while ((entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_pend_q))) {
-+		dev_warn(&pdev->dev, "Freeing item from non-empty rx_pend_q\n");
-+		kfree(entry);
-+	}
++	/* Strip off the segment used by PE for PCI root bus,
++	 * which is last supported PE#, or one next to the
++	 * reserved PE#
++	 */
++	if (phb->ioda.root_pe != IODA_INVALID_PE)
++		r->end -= phb->ioda.m64_segsize;
 +
-+	while ((entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_post_q))) {
-+		dev_warn(&pdev->dev, "Freeing item from non-empty rx_post_q\n");
- 		kfree(entry);
- 	}
- 
-@@ -1724,14 +1751,14 @@ void *ntb_transport_rx_remove(struct ntb_transport_qp *qp, unsigned int *len)
- 	if (!qp || qp->client_ready)
- 		return NULL;
- 
--	entry = ntb_list_rm(&qp->ntb_rx_pend_q_lock, &qp->rx_pend_q);
-+	entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_pend_q);
- 	if (!entry)
- 		return NULL;
- 
- 	buf = entry->cb_data;
- 	*len = entry->len;
- 
--	ntb_list_add(&qp->ntb_rx_free_q_lock, &entry->entry, &qp->rx_free_q);
-+	ntb_list_add(&qp->ntb_rx_q_lock, &entry->entry, &qp->rx_free_q);
- 
- 	return buf;
- }
-@@ -1757,15 +1784,18 @@ int ntb_transport_rx_enqueue(struct ntb_transport_qp *qp, void *cb, void *data,
- 	if (!qp)
- 		return -EINVAL;
- 
--	entry = ntb_list_rm(&qp->ntb_rx_free_q_lock, &qp->rx_free_q);
-+	entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_free_q);
- 	if (!entry)
- 		return -ENOMEM;
- 
- 	entry->cb_data = cb;
- 	entry->buf = data;
- 	entry->len = len;
-+	entry->flags = 0;
-+
-+	ntb_list_add(&qp->ntb_rx_q_lock, &entry->entry, &qp->rx_pend_q);
- 
--	ntb_list_add(&qp->ntb_rx_pend_q_lock, &entry->entry, &qp->rx_pend_q);
-+	tasklet_schedule(&qp->rxc_db_work);
- 
  	return 0;
- }
+ 
+ fail:
+@@ -3331,7 +3345,22 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	aux = memblock_virt_alloc(size, 0);
+ 	phb->ioda.pe_alloc = aux;
+ 	phb->ioda.pe_array = aux + pemap_off;
+-	set_bit(phb->ioda.reserved_pe, phb->ioda.pe_alloc);
++
++	/* Choose number of PE for root bus, which shouldn't consume
++	 * any M64 resource. So we avoid picking low-end PE#, which
++	 * is usually binding with 64-bits prefetchable memory resources
++	 * closely.
++	 */
++	pnv_ioda_reserve_pe(phb, phb->ioda.reserved_pe);
++	if (phb->ioda.reserved_pe == 0) {
++		phb->ioda.root_pe = phb->ioda.total_pe - 1;
++		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe);
++	} else if (phb->ioda.reserved_pe == (phb->ioda.total_pe - 1)) {
++		phb->ioda.root_pe = phb->ioda.reserved_pe - 1;
++		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe);
++	} else {
++		phb->ioda.root_pe = IODA_INVALID_PE;
++	}
+ 
+ 	INIT_LIST_HEAD(&phb->ioda.pe_dma_list);
+ 	INIT_LIST_HEAD(&phb->ioda.pe_list);
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 590f778..e372b9f 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -133,6 +133,7 @@ struct pnv_phb {
+ 		struct {
+ 			/* Global bridge info */
+ 			unsigned int		total_pe;
++			unsigned int		root_pe;
+ 			unsigned int		reserved_pe;
+ 
+ 			/* 32-bit MMIO window */
 -- 
-2.4.0.rc0.43.gcf8a8c6
+2.1.0
 
