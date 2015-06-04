@@ -1,139 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:48732 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752435AbbFRIIH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:08:07 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 18 Jun 2015 18:08:04 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id B1AEE2BB0040
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:08:02 +1000 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I87sWd32243892
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:08:03 +1000
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I87T7h003601
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:07:30 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V8 06/10] powerpc/eeh: Create PE for VFs
-Date: Thu, 18 Jun 2015 16:06:41 +0800
-Message-Id: <1434614805-19002-7-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Anatolij Gustschin <agust@denx.de>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	cbe-oss-dev@lists.ozlabs.org
+Subject: [RFT v2 26/48] powerpc, irq: Prepare for killing the first parameter 'irq' of irq_flow_handler_t
+Date: Thu,  4 Jun 2015 12:13:36 +0800
+Message-Id: <1433391238-19471-27-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current EEH recovery code works with the assumption: the PE has primary
-bus. Unfortunately, that's not true for VF PEs, which generally contains
-one or multiple VFs (for VF group case).
+Change irq flow handler to prepare for killing the first parameter 'irq'
+of irq_flow_handler_t.
 
-The patch introduces a weak function pcibios_bus_add_device() which is
-called by pci_bus_add_device(). In this function, we creates PEs for VFs.
-Those PEs for VFs are identified with newly introduced flag EEH_PE_VF so
-that we handle them differently during EEH recovery.
-
-[gwshan: changelog and code refactoring]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- arch/powerpc/include/asm/eeh.h               |    1 +
- arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
- arch/powerpc/platforms/powernv/eeh-powernv.c |   16 ++++++++++++++++
- drivers/pci/bus.c                            |    2 ++
- 4 files changed, 27 insertions(+), 2 deletions(-)
+ arch/powerpc/platforms/512x/mpc5121_ads_cpld.c  |    4 +++-
+ arch/powerpc/platforms/85xx/socrates_fpga_pic.c |    2 +-
+ arch/powerpc/platforms/cell/interrupt.c         |    3 ++-
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 1b3614d..c1fde48 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -70,6 +70,7 @@ struct pci_dn;
- #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
- #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
- #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
-+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+diff --git a/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c b/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
+index ca3a062ed1b9..4411ed51803e 100644
+--- a/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
++++ b/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
+@@ -105,8 +105,10 @@ cpld_pic_get_irq(int offset, u8 ignore, u8 __iomem *statusp,
+ }
  
- #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
- #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index 35f0b62..260a701 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
- 	 * EEH device already having associated PE, but
- 	 * the direct parent EEH device doesn't have yet.
- 	 */
--	pdn = pdn ? pdn->parent : NULL;
-+	if (edev->physfn)
-+		pdn = pci_get_pdn(edev->physfn);
-+	else
-+		pdn = pdn ? pdn->parent : NULL;
- 	while (pdn) {
- 		/* We're poking out of PCI territory */
- 		parent = pdn_to_eeh_dev(pdn);
-@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
- 	}
- 
- 	/* Create a new EEH PE */
--	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
-+	if (edev->physfn)
-+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
-+	else
-+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
- 	if (!pe) {
- 		pr_err("%s: out of memory!\n", __func__);
- 		return -ENOMEM;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index ce738ab..4ec1d2e 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1520,6 +1520,22 @@ static struct eeh_ops pnv_eeh_ops = {
- 	.restore_config		= pnv_eeh_restore_config
- };
- 
-+void pcibios_bus_add_device(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	/*
-+	 * The following operations will fail if VF's sysfs files
-+	 * aren't created or its resources aren't finalized.
-+	 */
-+	eeh_add_device_early(pdn);
-+	eeh_add_device_late(pdev);
-+	eeh_sysfs_add_device(pdev);
-+}
-+
- /**
-  * eeh_powernv_init - Register platform dependent EEH operations
-  *
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 90fa3a7..960577f 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -267,6 +267,7 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
- 
- void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
- 
-+void __weak pcibios_bus_add_device(struct pci_dev *dev) { }
- /**
-  * pci_bus_add_device - start driver for a single device
-  * @dev: device to add
-@@ -277,6 +278,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+ static void
+-cpld_pic_cascade(unsigned int irq, struct irq_desc *desc)
++cpld_pic_cascade(unsigned int __irq, struct irq_desc *desc)
  {
- 	int retval;
++	unsigned int irq;
++
+ 	irq = cpld_pic_get_irq(0, PCI_IGNORE, &cpld_regs->pci_status,
+ 		&cpld_regs->pci_mask);
+ 	if (irq != NO_IRQ) {
+diff --git a/arch/powerpc/platforms/85xx/socrates_fpga_pic.c b/arch/powerpc/platforms/85xx/socrates_fpga_pic.c
+index 55a9682b9529..5153e58654f7 100644
+--- a/arch/powerpc/platforms/85xx/socrates_fpga_pic.c
++++ b/arch/powerpc/platforms/85xx/socrates_fpga_pic.c
+@@ -100,7 +100,7 @@ void socrates_fpga_pic_cascade(unsigned int irq, struct irq_desc *desc)
+ 	 * See if we actually have an interrupt, call generic handling code if
+ 	 * we do.
+ 	 */
+-	cascade_irq = socrates_fpga_pic_get_irq(irq);
++	cascade_irq = socrates_fpga_pic_get_irq(irq_desc_get_irq(desc));
  
-+	pcibios_bus_add_device(dev);
- 	/*
- 	 * Can not put in pci_device_add yet because resources
- 	 * are not assigned yet for some devices.
+ 	if (cascade_irq != NO_IRQ)
+ 		generic_handle_irq(cascade_irq);
+diff --git a/arch/powerpc/platforms/cell/interrupt.c b/arch/powerpc/platforms/cell/interrupt.c
+index 3af8324c122e..e2dd6c9d3a78 100644
+--- a/arch/powerpc/platforms/cell/interrupt.c
++++ b/arch/powerpc/platforms/cell/interrupt.c
+@@ -99,8 +99,9 @@ static void iic_ioexc_eoi(struct irq_data *d)
+ {
+ }
+ 
+-static void iic_ioexc_cascade(unsigned int irq, struct irq_desc *desc)
++static void iic_ioexc_cascade(unsigned int __irq, struct irq_desc *desc)
+ {
++	unsigned int irq = irq_desc_get_irq(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct cbe_iic_regs __iomem *node_iic =
+ 		(void __iomem *)irq_desc_get_handler_data(desc);
 -- 
-1.7.9.5
+1.7.10.4
 
