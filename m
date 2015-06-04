@@ -1,66 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55787191.6060400@linux.intel.com>
-Date: Thu, 11 Jun 2015 01:19:13 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch v5 4/6] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com> <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com> <20150609161230.GC8591@red-moon> <55771B27.1060509@linux.intel.com> <20150610164821.GA18832@red-moon>
-In-Reply-To: <20150610164821.GA18832@red-moon>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:38741 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680AbbFDGpD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:45:03 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:45:01 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v5 09/42] powerpc/powernv: pnv_ioda_setup_dma() configure one PE only
+Date: Thu,  4 Jun 2015 16:41:38 +1000
+Message-Id: <1433400131-18429-10-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/11 0:48, Lorenzo Pieralisi wrote:
-> On Tue, Jun 09, 2015 at 05:58:15PM +0100, Jiang Liu wrote:
->> On 2015/6/10 0:12, Lorenzo Pieralisi wrote:
-> 
-> [...]
-> 
->>>> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
->>>> +				     struct acpi_pci_root_ops *ops,
->>>> +				     struct acpi_pci_root_info *info,
->>>> +				     void *sysdata, int segment, int node)
->>>
->>> I do not think you need to pass segment and node, they clutter the
->>> function signature when you can retrieve them from root, I would
->>> make them local variables and use root->segment and acpi_get_node
->>> in the function body to retrieve them.
->> On x86, node and segment may be overridden under certain conditions.
->> For example, segment will always be 0 if 'pci_ignore_seg' is set.
-> 
-> Ok, so the question would be then why do you not override the value
-> in root->segment then (actually, is it *correct* to leave the segment
-> value in root-> unchanged even if it is overriden) ?
-> 
-> Anyway, node is just used for a printk, why do not you add segment and
-> node to acpi_pci_root_info ? Just cosmetic stuff, trying to help you
-> simplify the code, it is not easy to parse.
-Hi Lorenzo,
-	I used the complex prototype to explicitly reminder callers
-that you need to prepare all these information. If simpler interface
-is preferred, we could pack all ops, sysdata, segment, node, root
-into info, that there's will be only one parameter "info" left.
-The drawback is that it will add several lines of code to each arch
-using this interface. So prefer simpler interface or less lines of code?:)
-Thanks!
-Gerry
+The original implementation of pnv_ioda_setup_dma() iterates the
+list of PEs and configures the DMA32 space for them one by one.
+The function was designed to be called during PHB fixup time.
+When configuring PE's DMA32 space in pcibios_setup_bridge(), in
+order to support PCI hotplug, we have to have the function PE
+oriented.
 
-> 
-> Thanks,
-> Lorenzo
-> 
+The patch introduces one more argument "struct pnv_ioda_pe *pe"
+to pnv_ioda_setup_dma(). The caller, pnv_pci_ioda_setup_DMA(),
+gets PE from the list and passes to it. The patch shouldn't
+cause logic changes.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+v5:
+  * Split from PATCH[v4 06/21]
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 60 ++++++++++++++-----------------
+ 1 file changed, 27 insertions(+), 33 deletions(-)
+
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 4af3d06..63fad4d 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2558,12 +2558,14 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 		pnv_ioda_setup_bus_dma(pe, pe->pbus);
+ }
+ 
+-static void pnv_ioda_setup_dma(struct pnv_phb *phb)
++static void pnv_ioda_setup_dma(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+ {
+ 	struct pci_controller *hose = phb->hose;
+-	struct pnv_ioda_pe *pe;
+ 	unsigned int dma_weight;
+ 
++	if (!pe->dma32_weight)
++		return;
++
+ 	/* Calculate the PHB's DMA weight */
+ 	dma_weight = pnv_ioda_phb_dma_weight(phb);
+ 	pr_info("PCI%04x has %ld DMA32 segments, total weight %d\n",
+@@ -2571,38 +2573,28 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+ 
+ 	pnv_pci_ioda_setup_opal_tce_kill(phb);
+ 
+-	/* Walk our PE list and configure their DMA segments, hand them
+-	 * out one base segment plus any residual segments based on
+-	 * weight
++	/*
++	 * For IODA2 compliant PHB3, we needn't care about the weight.
++	 * The all available 32-bits DMA space will be assigned to
++	 * the specific PE.
+ 	 */
+-	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
+-		if (!pe->dma32_weight)
+-			continue;
++	if (phb->type == PNV_PHB_IODA1) {
++		unsigned int segs, base = 0;
+ 
+-		/*
+-		 * For IODA2 compliant PHB3, we needn't care about the weight.
+-		 * The all available 32-bits DMA space will be assigned to
+-		 * the specific PE.
+-		 */
+-		if (phb->type == PNV_PHB_IODA1) {
+-			unsigned int segs, base = 0;
+-
+-			if (pe->dma32_weight <
+-			    dma_weight / phb->ioda.dma32_segcount)
+-				segs = 1;
+-			else
+-				segs = (pe->dma32_weight *
+-					phb->ioda.dma32_segcount) / dma_weight;
+-
+-			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
+-				pe->dma32_weight, segs);
+-			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
++		if (pe->dma32_weight <
++		    dma_weight / phb->ioda.dma32_segcount)
++			segs = 1;
++		else
++			segs = (pe->dma32_weight *
++				phb->ioda.dma32_segcount) / dma_weight;
+ 
+-			base += segs;
+-		} else {
+-			pe_info(pe, "Assign DMA32 space\n");
+-			pnv_pci_ioda2_setup_dma_pe(phb, pe);
+-		}
++		pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
++			pe->dma32_weight, segs);
++		pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
++		base += segs;
++	} else {
++		pe_info(pe, "Assign DMA32 space\n");
++		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+ 	}
+ }
+ 
+@@ -3073,12 +3065,14 @@ static void pnv_pci_ioda_setup_DMA(void)
+ {
+ 	struct pci_controller *hose, *tmp;
+ 	struct pnv_phb *phb;
++	struct pnv_ioda_pe *pe;
+ 
+ 	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+-		pnv_ioda_setup_dma(hose->private_data);
++		phb = hose->private_data;
++		list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link)
++			pnv_ioda_setup_dma(phb, pe);
+ 
+ 		/* Mark the PHB initialization done */
+-		phb = hose->private_data;
+ 		phb->initialized = 1;
+ 	}
+ }
+-- 
+2.1.0
+
