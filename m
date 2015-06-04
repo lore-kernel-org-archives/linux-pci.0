@@ -1,148 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46527 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752483AbbFDGnl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:41 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:38 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 40/42] drivers/of: Allow to specify root node in of_fdt_unflatten_tree()
-Date: Thu,  4 Jun 2015 16:42:09 +1000
-Message-Id: <1433400131-18429-41-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mga14.intel.com ([192.55.52.115]:54099 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753096AbbFDEQI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Jun 2015 00:16:08 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-mips@linux-mips.org
+Subject: [RFT v2 25/48] mips, irq: Prepare for killing the first parameter 'irq' of irq_flow_handler_t
+Date: Thu,  4 Jun 2015 12:13:35 +0800
+Message-Id: <1433391238-19471-26-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch introduces one more argument to of_fdt_unflatten_tree()
-to specify the root node for the FDT blob, which is going to be
-unflattened. In the result, the function can be used to unflatten
-FDT blob, which represents device sub-tree in subsequent patches.
+Change irq flow handlers to prepare for killing the first parameter 'irq'
+of irq_flow_handler_t.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
-v5:
-  * Newly introduced
----
- drivers/of/fdt.c       | 26 ++++++++++++++++++--------
- drivers/of/unittest.c  |  2 +-
- include/linux/of_fdt.h |  3 ++-
- 3 files changed, 21 insertions(+), 10 deletions(-)
+ arch/mips/alchemy/devboards/bcsr.c |    3 ++-
+ arch/mips/ath79/irq.c              |    9 ++++++---
+ arch/mips/pci/pci-rt3883.c         |    4 +---
+ 3 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index b87c157..b6a6c59 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -380,9 +380,16 @@ static void *unflatten_dt_node(void *blob,
- 			       struct device_node **nodepp,
- 			       bool dryrun)
+diff --git a/arch/mips/alchemy/devboards/bcsr.c b/arch/mips/alchemy/devboards/bcsr.c
+index c98c9ea3372c..8d6ea369bde4 100644
+--- a/arch/mips/alchemy/devboards/bcsr.c
++++ b/arch/mips/alchemy/devboards/bcsr.c
+@@ -85,8 +85,9 @@ EXPORT_SYMBOL_GPL(bcsr_mod);
+ /*
+  * DB1200/PB1200 CPLD IRQ muxer
+  */
+-static void bcsr_csc_handler(unsigned int irq, struct irq_desc *d)
++static void bcsr_csc_handler(unsigned int __irq, struct irq_desc *d)
  {
-+	unsigned long fpsize = 0;
-+
-+	if (dad)
-+		fpsize = strlen(of_node_full_name(dad));
-+	else
-+		fpsize = 0;
-+
- 	cur_node_depth = 1;
- 	return __unflatten_dt_node(blob, mem, poffset,
--				   dad, nodepp, 0, dryrun);
-+				   dad, nodepp, fpsize, dryrun);
++	unsigned int irq = irq_desc_get_irq(d);
+ 	unsigned short bisr = __raw_readw(bcsr_virt + BCSR_REG_INTSTAT);
+ 
+ 	disable_irq_nosync(irq);
+diff --git a/arch/mips/ath79/irq.c b/arch/mips/ath79/irq.c
+index 6adae366f11a..1b6620b0c057 100644
+--- a/arch/mips/ath79/irq.c
++++ b/arch/mips/ath79/irq.c
+@@ -120,8 +120,9 @@ static void __init ath79_misc_irq_init(void)
+ 	irq_set_chained_handler(ATH79_CPU_IRQ(6), ath79_misc_irq_handler);
  }
  
- /**
-@@ -393,13 +400,15 @@ static void *unflatten_dt_node(void *blob,
-  * pointers of the nodes so the normal device-tree walking functions
-  * can be used.
-  * @blob: The blob to expand
-+ * @dad: The root node of the created device_node tree
-  * @mynodes: The device_node tree created by the call
-  * @dt_alloc: An allocator that provides a virtual address to memory
-  * for the resulting tree
-  */
- static void __unflatten_device_tree(void *blob,
--			     struct device_node **mynodes,
--			     void * (*dt_alloc)(u64 size, u64 align))
-+				    struct device_node *dad,
-+				    struct device_node **mynodes,
-+				    void * (*dt_alloc)(u64 size, u64 align))
+-static void ar934x_ip2_irq_dispatch(unsigned int irq, struct irq_desc *desc)
++static void ar934x_ip2_irq_dispatch(unsigned int __irq, struct irq_desc *desc)
  {
- 	unsigned long size;
- 	int start;
-@@ -425,7 +434,7 @@ static void __unflatten_device_tree(void *blob,
- 	/* First pass, scan for size */
- 	start = 0;
- 	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
--						NULL, NULL, true);
-+						dad, NULL, true);
- 	size = ALIGN(size, 4);
++	unsigned int irq = irq_desc_get_irq(desc);
+ 	u32 status;
  
- 	pr_debug("  size is %lx, allocating...\n", size);
-@@ -440,7 +449,7 @@ static void __unflatten_device_tree(void *blob,
- 
- 	/* Second pass, do actual unflattening */
- 	start = 0;
--	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
-+	unflatten_dt_node(blob, mem, &start, dad, mynodes, false);
- 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
- 		pr_warning("End of tree marker overwritten: %08x\n",
- 			   be32_to_cpup(mem + size));
-@@ -462,9 +471,10 @@ static void *kernel_tree_alloc(u64 size, u64 align)
-  * can be used.
-  */
- void of_fdt_unflatten_tree(unsigned long *blob,
--			struct device_node **mynodes)
-+			   struct device_node *dad,
-+			   struct device_node **mynodes)
- {
--	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
-+	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+ 	disable_irq_nosync(irq);
+@@ -153,8 +154,9 @@ static void ar934x_ip2_irq_init(void)
+ 	irq_set_chained_handler(ATH79_CPU_IRQ(2), ar934x_ip2_irq_dispatch);
  }
- EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
  
-@@ -1095,7 +1105,7 @@ bool __init early_init_dt_scan(void *params)
-  */
- void __init unflatten_device_tree(void)
+-static void qca955x_ip2_irq_dispatch(unsigned int irq, struct irq_desc *desc)
++static void qca955x_ip2_irq_dispatch(unsigned int __irq, struct irq_desc *desc)
  {
--	__unflatten_device_tree(initial_boot_params, &of_root,
-+	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
- 				early_init_dt_alloc_memory_arch);
++	unsigned int irq = irq_desc_get_irq(desc);
+ 	u32 status;
  
- 	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
-diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
-index 1801634..2270830 100644
---- a/drivers/of/unittest.c
-+++ b/drivers/of/unittest.c
-@@ -907,7 +907,7 @@ static int __init unittest_data_add(void)
- 			"not running tests\n", __func__);
- 		return -ENOMEM;
+ 	disable_irq_nosync(irq);
+@@ -181,8 +183,9 @@ enable:
+ 	enable_irq(irq);
+ }
+ 
+-static void qca955x_ip3_irq_dispatch(unsigned int irq, struct irq_desc *desc)
++static void qca955x_ip3_irq_dispatch(unsigned int __irq, struct irq_desc *desc)
+ {
++	unsigned int irq = irq_desc_get_irq(desc);
+ 	u32 status;
+ 
+ 	disable_irq_nosync(irq);
+diff --git a/arch/mips/pci/pci-rt3883.c b/arch/mips/pci/pci-rt3883.c
+index 80fafe646e74..67d483206d6c 100644
+--- a/arch/mips/pci/pci-rt3883.c
++++ b/arch/mips/pci/pci-rt3883.c
+@@ -147,9 +147,7 @@ static void rt3883_pci_irq_handler(unsigned int irq, struct irq_desc *desc)
+ 	while (pending) {
+ 		unsigned bit = __ffs(pending);
+ 
+-		irq = irq_find_mapping(rpc->irq_domain, bit);
+-		generic_handle_irq(irq);
+-
++		generic_handle_irq(irq_find_mapping(rpc->irq_domain, bit));
+ 		pending &= ~BIT(bit);
  	}
--	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
-+	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
- 	if (!unittest_data_node) {
- 		pr_warn("%s: No tree to attach; not running tests\n", __func__);
- 		return -ENODATA;
-diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
-index 587ee50..8882640 100644
---- a/include/linux/of_fdt.h
-+++ b/include/linux/of_fdt.h
-@@ -38,7 +38,8 @@ extern bool of_fdt_is_big_endian(const void *blob,
- extern int of_fdt_match(const void *blob, unsigned long node,
- 			const char *const *compat);
- extern void of_fdt_unflatten_tree(unsigned long *blob,
--			       struct device_node **mynodes);
-+				  struct device_node *dad,
-+				  struct device_node **mynodes);
- 
- /* TBD: Temporary export of fdt globals - remove when code fully merged */
- extern int __initdata dt_root_addr_cells;
+ }
 -- 
-2.1.0
+1.7.10.4
 
