@@ -1,81 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:52440 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752184AbbF0ASP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Jun 2015 20:18:15 -0400
-Message-ID: <1435362871.26815.24.camel@kernel.crashing.org>
-Subject: Re: [Xen-devel] [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Dave Airlie <airlied@redhat.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Antonino Daplas <adaplas@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Roger Pau =?ISO-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	ville.syrjala@linux.intel.com,
-	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Casey Leedom <leedom@chelsio.com>,
-	Juergen Gross <jgross@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Arnd Bergmann <arnd@arndb.de>, Jan Beulich <jbeulich@suse.com>
-Date: Sat, 27 Jun 2015 09:54:31 +1000
-In-Reply-To: <CAB=NE6XwczF6FYXV=RHyK=7ikVk_tGp+h9ouWPyORNENq4+=Kw@mail.gmail.com>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1435189081.3790.24.camel@kernel.crashing.org>
-	 <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
-	 <6806026.xb91q6Ad7G@wuerfel>
-	 <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>
-	 <1435272718.3822.7.camel@kernel.crashing.org>
-	 <20150626193158.GJ3005@wotan.suse.de>
-	 <1435356258.26815.13.camel@kernel.crashing.org>
-	 <CAB=NE6XwczF6FYXV=RHyK=7ikVk_tGp+h9ouWPyORNENq4+=Kw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46566 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613AbbFDGnw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:52 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 4 Jun 2015 16:43:50 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Daniel Axtens <dja@axtens.net>
+Subject: [PATCH v5 12/42] powerpc/pci: Cleanup on pci_controller_ops
+Date: Thu,  4 Jun 2015 16:41:41 +1000
+Message-Id: <1433400131-18429-13-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2015-06-26 at 15:41 -0700, Luis R. Rodriguez wrote:
+Each PHB maintains one instance of "struct pci_controller_ops",
+which includes various callbacks called by PCI subsystem. In the
+definition of this struct, some callbacks have explicit names for
+its arguments, but the left don't have.
 
-> > It wasn't nullified for the main user at the time, the fb. And I
-> > mentioned an IB adapter or two for which the code had been hand
-> tuned.
-> 
-> This still means there could be some affected drivers when used on
-> powerpc, no?
+The patch removes all explicit names of the arguments to the
+callbacks in "struct pci_controller_ops" to keep the code look
+consistent.
 
-Yes. In fact what about things like ARM who also have barriers in their
-writel() ? Won't they also break WC ?
+Cc: Daniel Axtens <dja@axtens.net>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+v5:
+  * Newly introduced
+---
+ arch/powerpc/include/asm/pci-bridge.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-I'm trying to work with the architect and designers here to figure out
-exactly where we stand and what we can do. As spelled out by our
-architecture, things don't look great, because basically, we only have
-attribute bit (garded) which when not set implies both WC and out of
-order (& prefetch), and unclear barrier semantics in that case as well.
-
-I *think* we might be able to settle with something along the lines of
-"writel_relaxed() will allow combine on a WC mapping" but how I'm going
-to get there is TBD.
-
-It would be interesting to clarify the semantics of using the relaxed
-accessors in combination with WC anyway. I wouldn't mind if the
-definition involved also relaxing general ordering :-) It would
-definitely make my life easier.
-
-Cheers,
-Ben.
-
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 744884b..1252cd5 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -18,8 +18,8 @@ struct device_node;
+  * PCI controller operations
+  */
+ struct pci_controller_ops {
+-	void		(*dma_dev_setup)(struct pci_dev *dev);
+-	void		(*dma_bus_setup)(struct pci_bus *bus);
++	void		(*dma_dev_setup)(struct pci_dev *);
++	void		(*dma_bus_setup)(struct pci_bus *);
+ 
+ 	int		(*probe_mode)(struct pci_bus *);
+ 
+@@ -28,8 +28,8 @@ struct pci_controller_ops {
+ 	bool		(*enable_device_hook)(struct pci_dev *);
+ 
+ 	/* Called during PCI resource reassignment */
+-	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
+-	void		(*reset_secondary_bus)(struct pci_dev *dev);
++	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long);
++	void		(*reset_secondary_bus)(struct pci_dev *);
+ };
+ 
+ /*
+-- 
+2.1.0
 
