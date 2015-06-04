@@ -1,679 +1,181 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v3 11/18] NTB: Add tool test client
-Date: Tue,  9 Jun 2015 05:44:38 -0400
-Message-Id: <cf13e1b8f800ea4a5402250ec206d92075936335.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:35881 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762AbbFDVuB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 17:50:01 -0400
+Received: by obbqz1 with SMTP id qz1so23846362obb.3
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 14:50:00 -0700 (PDT)
+Subject: [PATCH 5/7] PCI: Remove unnecessary #includes of <asm/pci.h>
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, x86@kernel.org,
+	linux-alpha@vger.kernel.org
+Date: Thu, 04 Jun 2015 16:49:57 -0500
+Message-ID: <20150604214957.2399.66129.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a simple debugging driver that enables the doorbell and
-scratchpad registers to be read and written from the debugfs.  This
-tool enables more complicated debugging to be scripted from user space.
-This driver may be used to test that your ntb hardware and drivers are
-functioning at a basic level.
+In include/linux/pci.h, we already #include <asm/pci.h>, so we don't need
+to include <asm/pci.h> directly.
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+Remove the unnecessary includes.  All the files here already include
+<linux/pci.h>.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-alpha@vger.kernel.org
+CC: linux-mips@linux-mips.org
+CC: linuxppc-dev@lists.ozlabs.org
+CC: linux-sh@vger.kernel.org
+CC: x86@kernel.org
 ---
- Documentation/ntb.txt       |  32 +++
- MAINTAINERS                 |   1 +
- drivers/ntb/test/Kconfig    |  11 +
- drivers/ntb/test/Makefile   |   1 +
- drivers/ntb/test/ntb_tool.c | 556 ++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 601 insertions(+)
- create mode 100644 drivers/ntb/test/ntb_tool.c
+ arch/alpha/kernel/core_irongate.c |    1 -
+ arch/alpha/kernel/sys_eiger.c     |    1 -
+ arch/alpha/kernel/sys_nautilus.c  |    1 -
+ arch/mips/pci/fixup-cobalt.c      |    1 -
+ arch/mips/pci/ops-mace.c          |    1 -
+ arch/mips/pci/pci-lantiq.c        |    1 -
+ arch/powerpc/kernel/prom.c        |    1 -
+ arch/powerpc/kernel/prom_init.c   |    1 -
+ arch/sh/drivers/pci/ops-sh5.c     |    1 -
+ arch/sh/drivers/pci/pci-sh5.c     |    1 -
+ arch/x86/kernel/x86_init.c        |    1 -
+ 11 files changed, 11 deletions(-)
 
-diff --git a/Documentation/ntb.txt b/Documentation/ntb.txt
-index e5d1591478ca..b48249a7b607 100644
---- a/Documentation/ntb.txt
-+++ b/Documentation/ntb.txt
-@@ -64,6 +64,38 @@ Module Parameters:
- * dyndbg - It is suggested to specify dyndbg=+p when loading this module, and
- 	then to observe debugging output on the console.
+diff --git a/arch/alpha/kernel/core_irongate.c b/arch/alpha/kernel/core_irongate.c
+index 00096df..83d0a35 100644
+--- a/arch/alpha/kernel/core_irongate.c
++++ b/arch/alpha/kernel/core_irongate.c
+@@ -22,7 +22,6 @@
+ #include <linux/bootmem.h>
  
-+### NTB Tool Test Client (ntb\_tool)
-+
-+The Tool test client serves for debugging, primarily, ntb hardware and drivers.
-+The Tool provides access through debugfs for reading, setting, and clearing the
-+NTB doorbell, and reading and writing scratchpads.
-+
-+The Tool does not currently have any module parameters.
-+
-+Debugfs Files:
-+
-+* *debugfs*/ntb\_tool/*hw*/ - A directory in debugfs will be created for each
-+	NTB device probed by the tool.  This directory is shortened to *hw*
-+	below.
-+* *hw*/db - This file is used to read, set, and clear the local doorbell.  Not
-+	all operations may be supported by all hardware.  To read the doorbell,
-+	read the file.  To set the doorbell, write `s` followed by the bits to
-+	set (eg: `echo 's 0x0101' > db`).  To clear the doorbell, write `c`
-+	followed by the bits to clear.
-+* *hw*/mask - This file is used to read, set, and clear the local doorbell mask.
-+	See *db* for details.
-+* *hw*/peer\_db - This file is used to read, set, and clear the peer doorbell.
-+	See *db* for details.
-+* *hw*/peer\_mask - This file is used to read, set, and clear the peer doorbell
-+	mask.  See *db* for details.
-+* *hw*/spad - This file is used to read and write local scratchpads.  To read
-+	the values of all scratchpads, read the file.  To write values, write a
-+	series of pairs of scratchpad number and value
-+	(eg: `echo '4 0x123 7 0xabc' > spad`
-+	# to set scratchpads `4` and `7` to `0x123` and `0xabc`, respectively).
-+* *hw*/peer\_spad - This file is used to read and write peer scratchpads.  See
-+	*spad* for details.
-+
- ## NTB Hardware Drivers
+ #include <asm/ptrace.h>
+-#include <asm/pci.h>
+ #include <asm/cacheflush.h>
+ #include <asm/tlbflush.h>
  
- NTB hardware drivers should register devices with the NTB core driver.  After
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 69dad8e01d80..ec19f09f6c0c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6988,6 +6988,7 @@ F:	drivers/ntb/
- F:	drivers/net/ntb_netdev.c
- F:	drivers/ntb/ntb.c
- F:	drivers/ntb/ntb_pingpong.c
-+F:	drivers/ntb/ntb_tool.c
- F:	drivers/ntb/ntb_transport.c
- F:	include/linux/ntb.h
- F:	include/linux/ntb_transport.h
-diff --git a/drivers/ntb/test/Kconfig b/drivers/ntb/test/Kconfig
-index 72d255d220c8..01852f98a843 100644
---- a/drivers/ntb/test/Kconfig
-+++ b/drivers/ntb/test/Kconfig
-@@ -6,3 +6,14 @@ config NTB_PINGPONG
- 	 your ntb hardware and drivers are functioning at a basic level.
+diff --git a/arch/alpha/kernel/sys_eiger.c b/arch/alpha/kernel/sys_eiger.c
+index 79d69d7..15f4208 100644
+--- a/arch/alpha/kernel/sys_eiger.c
++++ b/arch/alpha/kernel/sys_eiger.c
+@@ -22,7 +22,6 @@
+ #include <asm/irq.h>
+ #include <asm/mmu_context.h>
+ #include <asm/io.h>
+-#include <asm/pci.h>
+ #include <asm/pgtable.h>
+ #include <asm/core_tsunami.h>
+ #include <asm/hwrpb.h>
+diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
+index 700686d..2cfaa0e 100644
+--- a/arch/alpha/kernel/sys_nautilus.c
++++ b/arch/alpha/kernel/sys_nautilus.c
+@@ -39,7 +39,6 @@
+ #include <asm/irq.h>
+ #include <asm/mmu_context.h>
+ #include <asm/io.h>
+-#include <asm/pci.h>
+ #include <asm/pgtable.h>
+ #include <asm/core_irongate.h>
+ #include <asm/hwrpb.h>
+diff --git a/arch/mips/pci/fixup-cobalt.c b/arch/mips/pci/fixup-cobalt.c
+index a138e8e..b3ab593 100644
+--- a/arch/mips/pci/fixup-cobalt.c
++++ b/arch/mips/pci/fixup-cobalt.c
+@@ -13,7 +13,6 @@
+ #include <linux/kernel.h>
+ #include <linux/init.h>
  
- 	 If unsure, say N.
-+
-+config NTB_TOOL
-+	tristate "NTB Debugging Tool Test Client"
-+	help
-+	 This is a simple debugging driver that enables the doorbell and
-+	 scratchpad registers to be read and written from the debugfs.  This
-+	 enables more complicated debugging to be scripted from user space.
-+	 This driver may be used to test that your ntb hardware and drivers are
-+	 functioning at a basic level.
-+
-+	 If unsure, say N.
-diff --git a/drivers/ntb/test/Makefile b/drivers/ntb/test/Makefile
-index b32309307771..0ea32a324b6c 100644
---- a/drivers/ntb/test/Makefile
-+++ b/drivers/ntb/test/Makefile
-@@ -1 +1,2 @@
- obj-$(CONFIG_NTB_PINGPONG) += ntb_pingpong.o
-+obj-$(CONFIG_NTB_TOOL) += ntb_tool.o
-diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-new file mode 100644
-index 000000000000..c7933936b41d
---- /dev/null
-+++ b/drivers/ntb/test/ntb_tool.c
-@@ -0,0 +1,556 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ *   redistributing this file, you may do so under either license.
-+ *
-+ *   GPL LICENSE SUMMARY
-+ *
-+ *   Copyright (C) 2015 EMC Corporation. All Rights Reserved.
-+ *
-+ *   This program is free software; you can redistribute it and/or modify
-+ *   it under the terms of version 2 of the GNU General Public License as
-+ *   published by the Free Software Foundation.
-+ *
-+ *   This program is distributed in the hope that it will be useful, but
-+ *   WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ *   General Public License for more details.
-+ *
-+ *   BSD LICENSE
-+ *
-+ *   Copyright (C) 2015 EMC Corporation. All Rights Reserved.
-+ *
-+ *   Redistribution and use in source and binary forms, with or without
-+ *   modification, are permitted provided that the following conditions
-+ *   are met:
-+ *
-+ *     * Redistributions of source code must retain the above copyright
-+ *       notice, this list of conditions and the following disclaimer.
-+ *     * Redistributions in binary form must reproduce the above copy
-+ *       notice, this list of conditions and the following disclaimer in
-+ *       the documentation and/or other materials provided with the
-+ *       distribution.
-+ *     * Neither the name of Intel Corporation nor the names of its
-+ *       contributors may be used to endorse or promote products derived
-+ *       from this software without specific prior written permission.
-+ *
-+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ * PCIe NTB Debugging Tool Linux driver
-+ *
-+ * Contact Information:
-+ * Allen Hubbe <Allen.Hubbe@emc.com>
-+ */
-+
-+/*
-+ * How to use this tool, by example.
-+ *
-+ * Assuming $DBG_DIR is something like:
-+ * '/sys/kernel/debug/ntb_tool/0000:00:03.0'
-+ *
-+ * Eg: check if clearing the doorbell mask generates an interrupt.
-+ *
-+ * # Set the doorbell mask
-+ * root@self# echo 's 1' > $DBG_DIR/mask
-+ *
-+ * # Ring the doorbell from the peer
-+ * root@peer# echo 's 1' > $DBG_DIR/peer_db
-+ *
-+ * # Clear the doorbell mask
-+ * root@self# echo 'c 1' > $DBG_DIR/mask
-+ *
-+ * Observe debugging output in dmesg or your console.  You should see a
-+ * doorbell event triggered by clearing the mask.  If not, this may indicate an
-+ * issue with the hardware that needs to be worked around in the driver.
-+ *
-+ * Eg: read and write scratchpad registers
-+ *
-+ * root@peer# echo '0 0x01010101 1 0x7f7f7f7f' > $DBG_DIR/peer_spad
-+ *
-+ * root@self# cat $DBG_DIR/spad
-+ *
-+ * Observe that spad 0 and 1 have the values set by the peer.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+
-+#include <linux/debugfs.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/pci.h>
-+#include <linux/slab.h>
-+
-+#include <linux/ntb.h>
-+
-+#define DRIVER_NAME			"ntb_tool"
-+#define DRIVER_DESCRIPTION		"PCIe NTB Debugging Tool"
-+
-+#define DRIVER_LICENSE			"Dual BSD/GPL"
-+#define DRIVER_VERSION			"1.0"
-+#define DRIVER_RELDATE			"22 April 2015"
-+#define DRIVER_AUTHOR			"Allen Hubbe <Allen.Hubbe@emc.com>"
-+
-+MODULE_LICENSE(DRIVER_LICENSE);
-+MODULE_VERSION(DRIVER_VERSION);
-+MODULE_AUTHOR(DRIVER_AUTHOR);
-+MODULE_DESCRIPTION(DRIVER_DESCRIPTION);
-+
-+static struct dentry *tool_dbgfs;
-+
-+struct tool_ctx {
-+	struct ntb_dev *ntb;
-+	struct dentry *dbgfs;
-+};
-+
-+#define SPAD_FNAME_SIZE 0x10
-+#define INT_PTR(x) ((void *)(unsigned long)x)
-+#define PTR_INT(x) ((int)(unsigned long)x)
-+
-+#define TOOL_FOPS_RDWR(__name, __read, __write) \
-+	const struct file_operations __name = {	\
-+		.owner = THIS_MODULE,		\
-+		.open = simple_open,		\
-+		.read = __read,			\
-+		.write = __write,		\
-+	}
-+
-+static void tool_link_event(void *ctx)
-+{
-+	struct tool_ctx *tc = ctx;
-+	enum ntb_speed speed;
-+	enum ntb_width width;
-+	int up;
-+
-+	up = ntb_link_is_up(tc->ntb, &speed, &width);
-+
-+	dev_dbg(&tc->ntb->dev, "link is %s speed %d width %d\n",
-+		up ? "up" : "down", speed, width);
-+}
-+
-+static void tool_db_event(void *ctx, int vec)
-+{
-+	struct tool_ctx *tc = ctx;
-+	u64 db_bits, db_mask;
-+
-+	db_mask = ntb_db_vector_mask(tc->ntb, vec);
-+	db_bits = ntb_db_read(tc->ntb);
-+
-+	dev_dbg(&tc->ntb->dev, "doorbell vec %d mask %#llx bits %#llx\n",
-+		vec, db_mask, db_bits);
-+}
-+
-+static const struct ntb_ctx_ops tool_ops = {
-+	.link_event = tool_link_event,
-+	.db_event = tool_db_event,
-+};
-+
-+static ssize_t tool_dbfn_read(struct tool_ctx *tc, char __user *ubuf,
-+			      size_t size, loff_t *offp,
-+			      u64 (*db_read_fn)(struct ntb_dev *))
-+{
-+	size_t buf_size;
-+	char *buf;
-+	ssize_t pos, rc;
-+
-+	if (!db_read_fn)
-+		return -EINVAL;
-+
-+	buf_size = min(size, 0x20ul);
-+
-+	buf = kmalloc(buf_size, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	pos = scnprintf(buf, buf_size, "%#llx\n",
-+			db_read_fn(tc->ntb));
-+
-+	rc = simple_read_from_buffer(ubuf, size, offp, buf, pos);
-+
-+	kfree(buf);
-+
-+	return rc;
-+}
-+
-+static ssize_t tool_dbfn_write(struct tool_ctx *tc,
-+			       const char __user *ubuf,
-+			       size_t size, loff_t *offp,
-+			       int (*db_set_fn)(struct ntb_dev *, u64),
-+			       int (*db_clear_fn)(struct ntb_dev *, u64))
-+{
-+	u64 db_bits;
-+	char *buf, cmd;
-+	ssize_t rc;
-+	int n;
-+
-+	buf = kmalloc(size + 1, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	rc = simple_write_to_buffer(buf, size, offp, ubuf, size);
-+	if (rc < 0) {
-+		kfree(buf);
-+		return rc;
-+	}
-+
-+	buf[size] = 0;
-+
-+	n = sscanf(buf, "%c %lli", &cmd, &db_bits);
-+
-+	kfree(buf);
-+
-+	if (n != 2) {
-+		rc = -EINVAL;
-+	} else if (cmd == 's') {
-+		if (!db_set_fn)
-+			rc = -EINVAL;
-+		else
-+			rc = db_set_fn(tc->ntb, db_bits);
-+	} else if (cmd == 'c') {
-+		if (!db_clear_fn)
-+			rc = -EINVAL;
-+		else
-+			rc = db_clear_fn(tc->ntb, db_bits);
-+	} else {
-+		rc = -EINVAL;
-+	}
-+
-+	return rc ? : size;
-+}
-+
-+static ssize_t tool_spadfn_read(struct tool_ctx *tc, char __user *ubuf,
-+				size_t size, loff_t *offp,
-+				u32 (*spad_read_fn)(struct ntb_dev *, int))
-+{
-+	size_t buf_size;
-+	char *buf;
-+	ssize_t pos, rc;
-+	int i, spad_count;
-+
-+	if (!spad_read_fn)
-+		return -EINVAL;
-+
-+	buf_size = min(size, 0x100ul);
-+
-+	buf = kmalloc(buf_size, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	pos = 0;
-+
-+	spad_count = ntb_spad_count(tc->ntb);
-+	for (i = 0; i < spad_count; ++i) {
-+		pos += scnprintf(buf + pos, buf_size - pos, "%d\t%#x\n",
-+				 i, spad_read_fn(tc->ntb, i));
-+	}
-+
-+	rc = simple_read_from_buffer(ubuf, size, offp, buf, pos);
-+
-+	kfree(buf);
-+
-+	return rc;
-+}
-+
-+static ssize_t tool_spadfn_write(struct tool_ctx *tc,
-+				 const char __user *ubuf,
-+				 size_t size, loff_t *offp,
-+				 int (*spad_write_fn)(struct ntb_dev *,
-+						      int, u32))
-+{
-+	int spad_idx;
-+	u32 spad_val;
-+	char *buf;
-+	int pos, n;
-+	ssize_t rc;
-+
-+	if (!spad_write_fn) {
-+		dev_dbg(&tc->ntb->dev, "no spad write fn\n");
-+		return -EINVAL;
-+	}
-+
-+	buf = kmalloc(size + 1, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	rc = simple_write_to_buffer(buf, size, offp, ubuf, size);
-+	if (rc < 0) {
-+		kfree(buf);
-+		return rc;
-+	}
-+
-+	buf[size] = 0;
-+
-+	n = sscanf(buf, "%d %i%n", &spad_idx, &spad_val, &pos);
-+	while (n == 2) {
-+		rc = spad_write_fn(tc->ntb, spad_idx, spad_val);
-+		if (rc)
-+			break;
-+
-+		n = sscanf(buf + pos, "%d %i%n", &spad_idx, &spad_val, &pos);
-+	}
-+
-+	if (n < 0)
-+		rc = n;
-+
-+	kfree(buf);
-+
-+	return rc ? : size;
-+}
-+
-+static ssize_t tool_db_read(struct file *filep, char __user *ubuf,
-+			    size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_read(tc, ubuf, size, offp,
-+			      tc->ntb->ops->db_read);
-+}
-+
-+static ssize_t tool_db_write(struct file *filep, const char __user *ubuf,
-+			     size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_write(tc, ubuf, size, offp,
-+			       tc->ntb->ops->db_set,
-+			       tc->ntb->ops->db_clear);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_db_fops,
-+		      tool_db_read,
-+		      tool_db_write);
-+
-+static ssize_t tool_mask_read(struct file *filep, char __user *ubuf,
-+			      size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_read(tc, ubuf, size, offp,
-+			      tc->ntb->ops->db_read_mask);
-+}
-+
-+static ssize_t tool_mask_write(struct file *filep, const char __user *ubuf,
-+			       size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_write(tc, ubuf, size, offp,
-+			       tc->ntb->ops->db_set_mask,
-+			       tc->ntb->ops->db_clear_mask);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_mask_fops,
-+		      tool_mask_read,
-+		      tool_mask_write);
-+
-+static ssize_t tool_peer_db_read(struct file *filep, char __user *ubuf,
-+				 size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_read(tc, ubuf, size, offp,
-+			      tc->ntb->ops->peer_db_read);
-+}
-+
-+static ssize_t tool_peer_db_write(struct file *filep, const char __user *ubuf,
-+				  size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_write(tc, ubuf, size, offp,
-+			       tc->ntb->ops->peer_db_set,
-+			       tc->ntb->ops->peer_db_clear);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_peer_db_fops,
-+		      tool_peer_db_read,
-+		      tool_peer_db_write);
-+
-+static ssize_t tool_peer_mask_read(struct file *filep, char __user *ubuf,
-+				   size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_read(tc, ubuf, size, offp,
-+			      tc->ntb->ops->peer_db_read_mask);
-+}
-+
-+static ssize_t tool_peer_mask_write(struct file *filep, const char __user *ubuf,
-+				    size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_dbfn_write(tc, ubuf, size, offp,
-+			       tc->ntb->ops->peer_db_set_mask,
-+			       tc->ntb->ops->peer_db_clear_mask);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_peer_mask_fops,
-+		      tool_peer_mask_read,
-+		      tool_peer_mask_write);
-+
-+static ssize_t tool_spad_read(struct file *filep, char __user *ubuf,
-+			      size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_spadfn_read(tc, ubuf, size, offp,
-+				tc->ntb->ops->spad_read);
-+}
-+
-+static ssize_t tool_spad_write(struct file *filep, const char __user *ubuf,
-+			       size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_spadfn_write(tc, ubuf, size, offp,
-+				 tc->ntb->ops->spad_write);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_spad_fops,
-+		      tool_spad_read,
-+		      tool_spad_write);
-+
-+static ssize_t tool_peer_spad_read(struct file *filep, char __user *ubuf,
-+				   size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_spadfn_read(tc, ubuf, size, offp,
-+				tc->ntb->ops->peer_spad_read);
-+}
-+
-+static ssize_t tool_peer_spad_write(struct file *filep, const char __user *ubuf,
-+				    size_t size, loff_t *offp)
-+{
-+	struct tool_ctx *tc = filep->private_data;
-+
-+	return tool_spadfn_write(tc, ubuf, size, offp,
-+				 tc->ntb->ops->peer_spad_write);
-+}
-+
-+static TOOL_FOPS_RDWR(tool_peer_spad_fops,
-+		      tool_peer_spad_read,
-+		      tool_peer_spad_write);
-+
-+static void tool_setup_dbgfs(struct tool_ctx *tc)
-+{
-+	/* This modules is useless without dbgfs... */
-+	if (!tool_dbgfs) {
-+		tc->dbgfs = NULL;
-+		return;
-+	}
-+
-+	tc->dbgfs = debugfs_create_dir(dev_name(&tc->ntb->dev),
-+				       tool_dbgfs);
-+	if (!tc->dbgfs)
-+		return;
-+
-+	debugfs_create_file("db", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_db_fops);
-+
-+	debugfs_create_file("mask", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_mask_fops);
-+
-+	debugfs_create_file("peer_db", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_peer_db_fops);
-+
-+	debugfs_create_file("peer_mask", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_peer_mask_fops);
-+
-+	debugfs_create_file("spad", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_spad_fops);
-+
-+	debugfs_create_file("peer_spad", S_IRUSR | S_IWUSR, tc->dbgfs,
-+			    tc, &tool_peer_spad_fops);
-+}
-+
-+static int tool_probe(struct ntb_client *self, struct ntb_dev *ntb)
-+{
-+	struct tool_ctx *tc;
-+	int rc;
-+
-+	if (ntb_db_is_unsafe(ntb))
-+		dev_dbg(&ntb->dev, "doorbell is unsafe\n");
-+
-+	if (ntb_spad_is_unsafe(ntb))
-+		dev_dbg(&ntb->dev, "scratchpad is unsafe\n");
-+
-+	tc = kmalloc(sizeof(*tc), GFP_KERNEL);
-+	if (!tc) {
-+		rc = -ENOMEM;
-+		goto err_tc;
-+	}
-+
-+	tc->ntb = ntb;
-+
-+	tool_setup_dbgfs(tc);
-+
-+	rc = ntb_set_ctx(ntb, tc, &tool_ops);
-+	if (rc)
-+		goto err_ctx;
-+
-+	ntb_link_enable(ntb, NTB_SPEED_AUTO, NTB_WIDTH_AUTO);
-+	ntb_link_event(ntb);
-+
-+	return 0;
-+
-+err_ctx:
-+	debugfs_remove_recursive(tc->dbgfs);
-+	kfree(tc);
-+err_tc:
-+	return rc;
-+}
-+
-+static void tool_remove(struct ntb_client *self, struct ntb_dev *ntb)
-+{
-+	struct tool_ctx *tc = ntb->ctx;
-+
-+	ntb_clear_ctx(ntb);
-+	ntb_link_disable(ntb);
-+
-+	debugfs_remove_recursive(tc->dbgfs);
-+	kfree(tc);
-+}
-+
-+static struct ntb_client tool_client = {
-+	.ops = {
-+		.probe = tool_probe,
-+		.remove = tool_remove,
-+	},
-+};
-+
-+static int __init tool_init(void)
-+{
-+	int rc;
-+
-+	if (debugfs_initialized())
-+		tool_dbgfs = debugfs_create_dir(KBUILD_MODNAME, NULL);
-+
-+	rc = ntb_register_client(&tool_client);
-+	if (rc)
-+		goto err_client;
-+
-+	return 0;
-+
-+err_client:
-+	debugfs_remove_recursive(tool_dbgfs);
-+	return rc;
-+}
-+module_init(tool_init);
-+
-+static void __exit tool_exit(void)
-+{
-+	ntb_unregister_client(&tool_client);
-+	debugfs_remove_recursive(tool_dbgfs);
-+}
-+module_exit(tool_exit);
--- 
-2.4.0.rc0.43.gcf8a8c6
+-#include <asm/pci.h>
+ #include <asm/io.h>
+ #include <asm/gt64120.h>
+ 
+diff --git a/arch/mips/pci/ops-mace.c b/arch/mips/pci/ops-mace.c
+index 6b5821f..951d807 100644
+--- a/arch/mips/pci/ops-mace.c
++++ b/arch/mips/pci/ops-mace.c
+@@ -8,7 +8,6 @@
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/types.h>
+-#include <asm/pci.h>
+ #include <asm/ip32/mace.h>
+ 
+ #if 0
+diff --git a/arch/mips/pci/pci-lantiq.c b/arch/mips/pci/pci-lantiq.c
+index 8b117e6..c5347d9 100644
+--- a/arch/mips/pci/pci-lantiq.c
++++ b/arch/mips/pci/pci-lantiq.c
+@@ -20,7 +20,6 @@
+ #include <linux/of_irq.h>
+ #include <linux/of_pci.h>
+ 
+-#include <asm/pci.h>
+ #include <asm/gpio.h>
+ #include <asm/addrspace.h>
+ 
+diff --git a/arch/powerpc/kernel/prom.c b/arch/powerpc/kernel/prom.c
+index 308c5e1..00fdea2 100644
+--- a/arch/powerpc/kernel/prom.c
++++ b/arch/powerpc/kernel/prom.c
+@@ -46,7 +46,6 @@
+ #include <asm/mmu.h>
+ #include <asm/paca.h>
+ #include <asm/pgtable.h>
+-#include <asm/pci.h>
+ #include <asm/iommu.h>
+ #include <asm/btext.h>
+ #include <asm/sections.h>
+diff --git a/arch/powerpc/kernel/prom_init.c b/arch/powerpc/kernel/prom_init.c
+index fd1fe4c..fcca807 100644
+--- a/arch/powerpc/kernel/prom_init.c
++++ b/arch/powerpc/kernel/prom_init.c
+@@ -37,7 +37,6 @@
+ #include <asm/smp.h>
+ #include <asm/mmu.h>
+ #include <asm/pgtable.h>
+-#include <asm/pci.h>
+ #include <asm/iommu.h>
+ #include <asm/btext.h>
+ #include <asm/sections.h>
+diff --git a/arch/sh/drivers/pci/ops-sh5.c b/arch/sh/drivers/pci/ops-sh5.c
+index 4ce95a0..4536194 100644
+--- a/arch/sh/drivers/pci/ops-sh5.c
++++ b/arch/sh/drivers/pci/ops-sh5.c
+@@ -18,7 +18,6 @@
+ #include <linux/delay.h>
+ #include <linux/types.h>
+ #include <linux/irq.h>
+-#include <asm/pci.h>
+ #include <asm/io.h>
+ #include "pci-sh5.h"
+ 
+diff --git a/arch/sh/drivers/pci/pci-sh5.c b/arch/sh/drivers/pci/pci-sh5.c
+index 16c1e72..8229114 100644
+--- a/arch/sh/drivers/pci/pci-sh5.c
++++ b/arch/sh/drivers/pci/pci-sh5.c
+@@ -20,7 +20,6 @@
+ #include <linux/types.h>
+ #include <linux/irq.h>
+ #include <cpu/irq.h>
+-#include <asm/pci.h>
+ #include <asm/io.h>
+ #include "pci-sh5.h"
+ 
+diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+index 234b072..eed5625 100644
+--- a/arch/x86/kernel/x86_init.c
++++ b/arch/x86/kernel/x86_init.c
+@@ -11,7 +11,6 @@
+ #include <asm/bios_ebda.h>
+ #include <asm/paravirt.h>
+ #include <asm/pci_x86.h>
+-#include <asm/pci.h>
+ #include <asm/mpspec.h>
+ #include <asm/setup.h>
+ #include <asm/apic.h>
 
