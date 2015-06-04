@@ -1,196 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: arnd@arndb.de
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xen-devel@lists.xensource.com, linux-fbdev@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
-	david.vrabel@citrix.com, jbeulich@suse.com,
-	=?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>
-Subject: [PATCH v7 6/9] lib: devres: add pcim_iomap_wc() variants
-Date: Fri, 19 Jun 2015 15:08:29 -0700
-Message-Id: <1434751712-24333-7-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: [RFT v2 20/48] genirq: Kill the parameter 'irq' of setup_affinity()
+Date: Thu,  4 Jun 2015 12:13:30 +0800
+Message-Id: <1433391238-19471-21-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Simplify interrupt management interfaces by killing the parameter 'irq'
+of setup_affinity().
 
-Now that we have pci_iomap_wc() add the respective devres helpers.
-
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: venkatesh.pallipadi@intel.com
-Cc: Stefan Bader <stefan.bader@canonical.com>
-Cc: Ville Syrjälä <syrjala@sci.fi>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: konrad.wilk@oracle.com
-Cc: ville.syrjala@linux.intel.com
-Cc: david.vrabel@citrix.com
-Cc: jbeulich@suse.com
-Cc: Roger Pau Monné <roger.pau@citrix.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: xen-devel@lists.xensource.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- include/linux/pci.h |  2 ++
- lib/devres.c        | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 80 insertions(+)
+ kernel/irq/manage.c |   31 +++++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1193975..5ff15c1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1609,9 +1609,11 @@ static inline void pci_dev_specific_enable_acs(struct pci_dev *dev) { }
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index e478a0f25bd6..cce2b52c865d 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -115,6 +115,15 @@ EXPORT_SYMBOL(synchronize_irq);
+ #ifdef CONFIG_SMP
+ cpumask_var_t irq_default_affinity;
+ 
++static int __irq_can_set_affinity(struct irq_desc *desc)
++{
++	if (!desc || !irqd_can_balance(&desc->irq_data) ||
++	    !desc->irq_data.chip || !desc->irq_data.chip->irq_set_affinity)
++		return 0;
++
++	return 1;
++}
++
+ /**
+  *	irq_can_set_affinity - Check if the affinity of a given irq can be set
+  *	@irq:		Interrupt to check
+@@ -122,13 +131,7 @@ cpumask_var_t irq_default_affinity;
+  */
+ int irq_can_set_affinity(unsigned int irq)
+ {
+-	struct irq_desc *desc = irq_to_desc(irq);
+-
+-	if (!desc || !irqd_can_balance(&desc->irq_data) ||
+-	    !desc->irq_data.chip || !desc->irq_data.chip->irq_set_affinity)
+-		return 0;
+-
+-	return 1;
++	return __irq_can_set_affinity(irq_to_desc(irq));
+ }
+ 
+ /**
+@@ -360,13 +363,13 @@ EXPORT_SYMBOL_GPL(irq_set_affinity_notifier);
+  * Generic version of the affinity autoselector.
+  */
+ static int
+-setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
++setup_affinity(struct irq_desc *desc, struct cpumask *mask)
+ {
+ 	struct cpumask *set = irq_default_affinity;
+ 	int node = irq_desc_get_node(desc);
+ 
+ 	/* Excludes PER_CPU and NO_BALANCE interrupts */
+-	if (!irq_can_set_affinity(irq))
++	if (!__irq_can_set_affinity(desc))
+ 		return 0;
+ 
+ 	/*
+@@ -394,9 +397,9 @@ setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
+ }
+ #else
+ static inline int
+-setup_affinity(unsigned int irq, struct irq_desc *d, struct cpumask *mask)
++setup_affinity(struct irq_desc *d, struct cpumask *mask)
+ {
+-	return irq_select_affinity(irq);
++	return irq_select_affinity(irq_desc_get_irq(d));
+ }
  #endif
  
- void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
-+void __iomem *pcim_iomap_wc(struct pci_dev *pdev, int bar, unsigned long maxlen);
- void pcim_iounmap(struct pci_dev *pdev, void __iomem *addr);
- void __iomem * const *pcim_iomap_table(struct pci_dev *pdev);
- int pcim_iomap_regions(struct pci_dev *pdev, int mask, const char *name);
-+int pcim_iomap_wc_regions(struct pci_dev *pdev, int mask, const char *name);
- int pcim_iomap_regions_request_all(struct pci_dev *pdev, int mask,
- 				   const char *name);
- void pcim_iounmap_regions(struct pci_dev *pdev, int mask);
-diff --git a/lib/devres.c b/lib/devres.c
-index fbe2aac..d59a2b9 100644
---- a/lib/devres.c
-+++ b/lib/devres.c
-@@ -304,6 +304,30 @@ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen)
- EXPORT_SYMBOL(pcim_iomap);
+@@ -410,14 +413,14 @@ int irq_select_affinity_usr(unsigned int irq, struct cpumask *mask)
+ 	int ret;
  
- /**
-+ * pcim_iomap_wc - Managed pcim_iomap_wc()
-+ * @pdev: PCI device to iomap for
-+ * @bar: BAR to iomap
-+ * @maxlen: Maximum length of iomap
-+ *
-+ * Managed pci_iomap_wc().  Map is automatically unmapped on driver
-+ * detach.
-+ */
-+void __iomem *pcim_iomap_wc(struct pci_dev *pdev, int bar, unsigned long maxlen)
-+{
-+	void __iomem **tbl;
-+
-+	BUG_ON(bar >= PCIM_IOMAP_MAX);
-+
-+	tbl = (void __iomem **)pcim_iomap_table(pdev);
-+	if (!tbl || tbl[bar])	/* duplicate mappings not allowed */
-+		return NULL;
-+
-+	tbl[bar] = pci_iomap_wc(pdev, bar, maxlen);
-+	return tbl[bar];
-+}
-+EXPORT_SYMBOL_GPL(pcim_iomap_wc);
-+
-+/**
-  * pcim_iounmap - Managed pci_iounmap()
-  * @pdev: PCI device to iounmap for
-  * @addr: Address to unmap
-@@ -383,6 +407,60 @@ int pcim_iomap_regions(struct pci_dev *pdev, int mask, const char *name)
- EXPORT_SYMBOL(pcim_iomap_regions);
+ 	raw_spin_lock_irqsave(&desc->lock, flags);
+-	ret = setup_affinity(irq, desc, mask);
++	ret = setup_affinity(desc, mask);
+ 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+ 	return ret;
+ }
  
- /**
-+ * pcim_iomap_wc_regions - Request and iomap PCI BARs with write-combining
-+ * @pdev: PCI device to map IO resources for
-+ * @mask: Mask of BARs to request and iomap
-+ * @name: Name used when requesting regions
-+ *
-+ * Request and iomap regions specified by @mask with a preference for
-+ * write-combining.
-+ */
-+int pcim_iomap_wc_regions(struct pci_dev *pdev, int mask, const char *name)
-+{
-+	void __iomem * const *iomap;
-+	int i, rc;
-+
-+	iomap = pcim_iomap_table(pdev);
-+	if (!iomap)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-+		unsigned long len;
-+
-+		if (!(mask & (1 << i)))
-+			continue;
-+
-+		rc = -EINVAL;
-+		len = pci_resource_len(pdev, i);
-+		if (!len)
-+			goto err_inval;
-+
-+		rc = pci_request_region(pdev, i, name);
-+		if (rc)
-+			goto err_inval;
-+
-+		rc = -ENOMEM;
-+		if (!pcim_iomap_wc(pdev, i, 0))
-+			goto err_region;
-+	}
-+
-+	return 0;
-+
-+ err_region:
-+	pci_release_region(pdev, i);
-+ err_inval:
-+	while (--i >= 0) {
-+		if (!(mask & (1 << i)))
-+			continue;
-+		pcim_iounmap(pdev, iomap[i]);
-+		pci_release_region(pdev, i);
-+	}
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(pcim_iomap_wc_regions);
-+
-+/**
-  * pcim_iomap_regions_request_all - Request all BARs and iomap specified ones
-  * @pdev: PCI device to map IO resources for
-  * @mask: Mask of BARs to iomap
+ #else
+ static inline int
+-setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
++setup_affinity(struct irq_desc *desc, struct cpumask *mask)
+ {
+ 	return 0;
+ }
+@@ -1254,7 +1257,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
+ 		}
+ 
+ 		/* Set default affinity mask once everything is setup */
+-		setup_affinity(irq, desc, mask);
++		setup_affinity(desc, mask);
+ 
+ 	} else if (new->flags & IRQF_TRIGGER_MASK) {
+ 		unsigned int nmsk = new->flags & IRQF_TRIGGER_MASK;
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.7.10.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-Please read the FAQ at  http://www.tux.org/lkml/
