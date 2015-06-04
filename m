@@ -1,100 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:56247 "EHLO pokefinder.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754158AbbFKNHs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Jun 2015 09:07:48 -0400
-Date: Thu, 11 Jun 2015 22:07:35 +0900
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Wan ZongShun <Vincent.Wan@amd.com>
-Cc: ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
-	linux-i2c@vger.kernel.org, bp@alien8.de, jdelvare@suse.de,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mcuos.com@gmail.com
-Subject: Re: [PATCH V2 2/3] i2c-piix4: Use Macro for AMD CZ SMBus device ID
-Message-ID: <20150611130734.GA1510@katana>
-References: <1434024707-6245-1-git-send-email-Vincent.Wan@amd.com>
- <1434024707-6245-2-git-send-email-Vincent.Wan@amd.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:34031 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932068AbbFDVtj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 17:49:39 -0400
+Received: by obew15 with SMTP id w15so42353675obe.1
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 14:49:38 -0700 (PDT)
+Subject: [PATCH 2/7] microblaze/PCI: Remove unnecessary
+ pci_bus_find_capability() declaration
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <monstr@monstr.eu>
+Date: Thu, 04 Jun 2015 16:49:36 -0500
+Message-ID: <20150604214936.2399.94190.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
-In-Reply-To: <1434024707-6245-2-git-send-email-Vincent.Wan@amd.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+pci_bus_find_capability() is declared in include/linux/pci.h.
 
---YZ5djTAD1cGYuMQK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Remove the pci_bus_find_capability() declaration from
+arch/microblaze/include/asm/pci.h.
 
-On Thu, Jun 11, 2015 at 08:11:46PM +0800, Wan ZongShun wrote:
-> Change AMD CZ SMBUS device ID from 0x790b to
-> use Macro definition
->=20
-> Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Michal Simek <monstr@monstr.eu>
+---
+ arch/microblaze/include/asm/pci.h |    3 ---
+ 1 file changed, 3 deletions(-)
 
-I think it makes sense that this patch goes in via MMC. This I2C change
-is trivial, but for MMC there is more to handle. I don't expect
-conflicts. So:
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index b6b5b3c..541400d 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -102,9 +102,6 @@ extern void pcibios_finish_adding_to_bus(struct pci_bus *bus);
+ 
+ extern void pcibios_resource_survey(void);
+ 
+-extern int pci_bus_find_capability(struct pci_bus *bus,
+-						unsigned int devfn, int cap);
+-
+ struct file;
+ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
+ 					 unsigned long pfn,
 
-Acked-by: Wolfram Sang <wsa@the-dreams.de>
-
-> ---
->  drivers/i2c/busses/i2c-piix4.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix=
-4.c
-> index 67cbec6..630bce6 100644
-> --- a/drivers/i2c/busses/i2c-piix4.c
-> +++ b/drivers/i2c/busses/i2c-piix4.c
-> @@ -245,7 +245,7 @@ static int piix4_setup_sb800(struct pci_dev *PIIX4_de=
-v,
->  	     PIIX4_dev->device =3D=3D PCI_DEVICE_ID_AMD_HUDSON2_SMBUS &&
->  	     PIIX4_dev->revision >=3D 0x41) ||
->  	    (PIIX4_dev->vendor =3D=3D PCI_VENDOR_ID_AMD &&
-> -	     PIIX4_dev->device =3D=3D 0x790b &&
-> +	     PIIX4_dev->device =3D=3D PCI_DEVICE_ID_AMD_KERNCZ_SMBUS &&
->  	     PIIX4_dev->revision >=3D 0x49))
->  		smb_en =3D 0x00;
->  	else
-> @@ -545,7 +545,7 @@ static const struct pci_device_id piix4_ids[] =3D {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
-> -	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x790b) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_KERNCZ_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
->  		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
-> --=20
-> 1.9.1
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-i2c" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---YZ5djTAD1cGYuMQK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJVeYgWAAoJEBQN5MwUoCm2QvEP/jYI/5yGd3x2EmLzgg402dSa
-7eUCtoN/wDtLECdisx34ORQ8CTmD6QMXjv7/Uqtv191mS4RdFK6IFI6OpQcnLvdj
-ZS/7GSR7x7MG8lLeZkkzxvwhtlihWJILqZ8UZGWTRa3tO12V06P+dIH7icpF7MAS
-3bYveVKpgolPFCXKj6o19LZgkrBYkCP47Or2haX0BhoBMom4DaMy9fjUr171dqN8
-GzNbx/uAdQSTzVp5YTKHoXQ+31WFVRSxOPtbCuPN0b9qay4GZ4aV1R/V3RI8sUBt
-JTGRzbdf09nwa3KZudFSA2WXcRf+6Wr7sevU93SyMK6N5jcinlZBOwoKqMVTmUuK
-YLAqHpl3JPyiaEkJ5MVbMN+xgGFatl+2fFwhl6VxLFu2IdxYhbUKZomnwCRPjVHL
-K7Xue/PxZmh71cr6fnftomjYW8Ds/QiMfqA46/YuEnkjObvPMp2sQCU8uMeH06QT
-0wsQ1u7KU5Go1cDA9iuYGLIx0Jc06hPMCQpNQL8wZCJmJI82BJ78JyeRpRm+9Tk+
-R0G7m8g/0wFuhnMxqqiH2xbueYqNyrZXAKUGp7TQ0pmzdSUsozYlTS7CMcf2umma
-CzZevQqb1JO0lvTttRV1JJ3oKjRgB18nna+1lpGw0pea7nNcfFszylLJ4Pl+ZhHb
-hI6cE2Ab9ilMheG0Natq
-=WYym
------END PGP SIGNATURE-----
-
---YZ5djTAD1cGYuMQK--
