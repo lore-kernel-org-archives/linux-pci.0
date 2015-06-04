@@ -1,76 +1,494 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:33447 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751743AbbFEHHT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 03:07:19 -0400
-Received: by wiwd19 with SMTP id d19so11309467wiw.0
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 00:07:18 -0700 (PDT)
-Message-ID: <55714AA3.1070407@monstr.eu>
-Date: Fri, 05 Jun 2015 09:07:15 +0200
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/7] microblaze/PCI: Remove unused declarations
-References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150604214929.2399.85988.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150604214929.2399.85988.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="gTsS6AOsC0FdSSf1x5bWItB88aUvCenDu"
+Received: from mga11.intel.com ([192.55.52.93]:64613 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753597AbbFDETJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Jun 2015 00:19:09 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Anatolij Gustschin <agust@denx.de>,
+	Scott Wood <scottwood@freescale.com>,
+	Kumar Gala <galak@kernel.crashing.org>,
+	Vitaly Bordug <vitb@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Anton Blanchard <anton@samba.org>,
+	Daniel Axtens <dja@axtens.net>, Alexander Graf <agraf@suse.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Hongtao Jia <hongtao.jia@freescale.com>,
+	Arseny Solokha <asolokha@kb.kras.ru>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	cbe-oss-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFT v2 38/48] genirq, powerpc: Kill the first parameter 'irq' of irq_flow_handler_t
+Date: Thu,  4 Jun 2015 12:13:48 +0800
+Message-Id: <1433391238-19471-39-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---gTsS6AOsC0FdSSf1x5bWItB88aUvCenDu
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Now most IRQ flow handlers make no use of the first parameter 'irq'.
+And for those who do make use of 'irq', we could easily get the irq
+number through irq_desc->irq_data->irq. So kill the first parameter
+'irq' of irq_flow_handler_t.
 
-On 06/04/2015 11:49 PM, Bjorn Helgaas wrote:
-> The following declarations were copied from powerpc but are unused on
-> microblaze:
->=20
->   struct pci_controller *init_phb_dynamic(struct device_node *dn)
->   int remove_phb_dynamic(struct pci_controller *phb)
->   struct pci_dev *of_create_pci_dev(struct device_node *node, ...)
->   void of_scan_pci_bridge(struct device_node *node, ...)
->   void of_scan_bus(struct device_node *node, struct pci_bus *bus)
->   void of_rescan_bus(struct device_node *node, struct pci_bus *bus)
->=20
-> Remove them.
->=20
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Michal Simek <monstr@monstr.eu>
-> ---
->  arch/microblaze/include/asm/pci.h |   12 ------------
->  1 file changed, 12 deletions(-)
+To ease review, I have split the changes into several parts, though
+they should be merge as one to support bisecting.
 
-Reviewed-by: Michal Simek <michal.simek@xilinx.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/powerpc/include/asm/qe_ic.h                |   23 +++++++++--------------
+ arch/powerpc/include/asm/tsi108_pci.h           |    2 +-
+ arch/powerpc/platforms/512x/mpc5121_ads_cpld.c  |    2 +-
+ arch/powerpc/platforms/52xx/media5200.c         |    2 +-
+ arch/powerpc/platforms/52xx/mpc52xx_gpt.c       |    2 +-
+ arch/powerpc/platforms/82xx/pq2ads-pci-pic.c    |    2 +-
+ arch/powerpc/platforms/85xx/common.c            |    2 +-
+ arch/powerpc/platforms/85xx/mpc85xx_cds.c       |    5 ++---
+ arch/powerpc/platforms/85xx/mpc85xx_ds.c        |    2 +-
+ arch/powerpc/platforms/85xx/socrates_fpga_pic.c |    2 +-
+ arch/powerpc/platforms/86xx/pic.c               |    2 +-
+ arch/powerpc/platforms/8xx/m8xx_setup.c         |    2 +-
+ arch/powerpc/platforms/cell/axon_msi.c          |    2 +-
+ arch/powerpc/platforms/cell/interrupt.c         |    2 +-
+ arch/powerpc/platforms/cell/spider-pic.c        |    2 +-
+ arch/powerpc/platforms/chrp/setup.c             |    2 +-
+ arch/powerpc/platforms/embedded6xx/hlwd-pic.c   |    3 +--
+ arch/powerpc/platforms/embedded6xx/mvme5100.c   |    2 +-
+ arch/powerpc/platforms/pseries/setup.c          |    2 +-
+ arch/powerpc/sysdev/ge/ge_pic.c                 |    2 +-
+ arch/powerpc/sysdev/ge/ge_pic.h                 |    2 +-
+ arch/powerpc/sysdev/mpic.c                      |    2 +-
+ arch/powerpc/sysdev/qe_lib/qe_ic.c              |    4 ++--
+ arch/powerpc/sysdev/tsi108_pci.c                |    2 +-
+ arch/powerpc/sysdev/uic.c                       |    2 +-
+ arch/powerpc/sysdev/xilinx_intc.c               |    2 +-
+ 26 files changed, 36 insertions(+), 43 deletions(-)
 
-Bjorn: Do you want me to take this via Microblaze tree?
+diff --git a/arch/powerpc/include/asm/qe_ic.h b/arch/powerpc/include/asm/qe_ic.h
+index 25784cc959a0..1e155ca6d33c 100644
+--- a/arch/powerpc/include/asm/qe_ic.h
++++ b/arch/powerpc/include/asm/qe_ic.h
+@@ -59,14 +59,14 @@ enum qe_ic_grp_id {
+ 
+ #ifdef CONFIG_QUICC_ENGINE
+ void qe_ic_init(struct device_node *node, unsigned int flags,
+-		void (*low_handler)(unsigned int irq, struct irq_desc *desc),
+-		void (*high_handler)(unsigned int irq, struct irq_desc *desc));
++		void (*low_handler)(struct irq_desc *desc),
++		void (*high_handler)(struct irq_desc *desc));
+ unsigned int qe_ic_get_low_irq(struct qe_ic *qe_ic);
+ unsigned int qe_ic_get_high_irq(struct qe_ic *qe_ic);
+ #else
+ static inline void qe_ic_init(struct device_node *node, unsigned int flags,
+-		void (*low_handler)(unsigned int irq, struct irq_desc *desc),
+-		void (*high_handler)(unsigned int irq, struct irq_desc *desc))
++		void (*low_handler)(struct irq_desc *desc),
++		void (*high_handler)(struct irq_desc *desc))
+ {}
+ static inline unsigned int qe_ic_get_low_irq(struct qe_ic *qe_ic)
+ { return 0; }
+@@ -78,8 +78,7 @@ void qe_ic_set_highest_priority(unsigned int virq, int high);
+ int qe_ic_set_priority(unsigned int virq, unsigned int priority);
+ int qe_ic_set_high_priority(unsigned int virq, unsigned int priority, int high);
+ 
+-static inline void qe_ic_cascade_low_ipic(unsigned int irq,
+-					  struct irq_desc *desc)
++static inline void qe_ic_cascade_low_ipic(struct irq_desc *desc)
+ {
+ 	struct qe_ic *qe_ic = irq_desc_get_handler_data(desc);
+ 	unsigned int cascade_irq = qe_ic_get_low_irq(qe_ic);
+@@ -88,8 +87,7 @@ static inline void qe_ic_cascade_low_ipic(unsigned int irq,
+ 		generic_handle_irq(cascade_irq);
+ }
+ 
+-static inline void qe_ic_cascade_high_ipic(unsigned int irq,
+-					   struct irq_desc *desc)
++static inline void qe_ic_cascade_high_ipic(struct irq_desc *desc)
+ {
+ 	struct qe_ic *qe_ic = irq_desc_get_handler_data(desc);
+ 	unsigned int cascade_irq = qe_ic_get_high_irq(qe_ic);
+@@ -98,8 +96,7 @@ static inline void qe_ic_cascade_high_ipic(unsigned int irq,
+ 		generic_handle_irq(cascade_irq);
+ }
+ 
+-static inline void qe_ic_cascade_low_mpic(unsigned int irq,
+-					  struct irq_desc *desc)
++static inline void qe_ic_cascade_low_mpic(struct irq_desc *desc)
+ {
+ 	struct qe_ic *qe_ic = irq_desc_get_handler_data(desc);
+ 	unsigned int cascade_irq = qe_ic_get_low_irq(qe_ic);
+@@ -111,8 +108,7 @@ static inline void qe_ic_cascade_low_mpic(unsigned int irq,
+ 	chip->irq_eoi(&desc->irq_data);
+ }
+ 
+-static inline void qe_ic_cascade_high_mpic(unsigned int irq,
+-					   struct irq_desc *desc)
++static inline void qe_ic_cascade_high_mpic(struct irq_desc *desc)
+ {
+ 	struct qe_ic *qe_ic = irq_desc_get_handler_data(desc);
+ 	unsigned int cascade_irq = qe_ic_get_high_irq(qe_ic);
+@@ -124,8 +120,7 @@ static inline void qe_ic_cascade_high_mpic(unsigned int irq,
+ 	chip->irq_eoi(&desc->irq_data);
+ }
+ 
+-static inline void qe_ic_cascade_muxed_mpic(unsigned int irq,
+-					    struct irq_desc *desc)
++static inline void qe_ic_cascade_muxed_mpic(struct irq_desc *desc)
+ {
+ 	struct qe_ic *qe_ic = irq_desc_get_handler_data(desc);
+ 	unsigned int cascade_irq;
+diff --git a/arch/powerpc/include/asm/tsi108_pci.h b/arch/powerpc/include/asm/tsi108_pci.h
+index 5653d7cc3e24..ae59d5b672b0 100644
+--- a/arch/powerpc/include/asm/tsi108_pci.h
++++ b/arch/powerpc/include/asm/tsi108_pci.h
+@@ -39,7 +39,7 @@
+ 
+ extern int tsi108_setup_pci(struct device_node *dev, u32 cfg_phys, int primary);
+ extern void tsi108_pci_int_init(struct device_node *node);
+-extern void tsi108_irq_cascade(unsigned int irq, struct irq_desc *desc);
++extern void tsi108_irq_cascade(struct irq_desc *desc);
+ extern void tsi108_clear_pci_cfg_error(void);
+ 
+ #endif				/*  _ASM_POWERPC_TSI108_PCI_H */
+diff --git a/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c b/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
+index 4411ed51803e..4dc8f4f3d5ac 100644
+--- a/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
++++ b/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
+@@ -105,7 +105,7 @@ cpld_pic_get_irq(int offset, u8 ignore, u8 __iomem *statusp,
+ }
+ 
+ static void
+-cpld_pic_cascade(unsigned int __irq, struct irq_desc *desc)
++cpld_pic_cascade(struct irq_desc *desc)
+ {
+ 	unsigned int irq;
+ 
+diff --git a/arch/powerpc/platforms/52xx/media5200.c b/arch/powerpc/platforms/52xx/media5200.c
+index 32cae33c4266..0c64f63cc187 100644
+--- a/arch/powerpc/platforms/52xx/media5200.c
++++ b/arch/powerpc/platforms/52xx/media5200.c
+@@ -80,7 +80,7 @@ static struct irq_chip media5200_irq_chip = {
+ 	.irq_mask_ack = media5200_irq_mask,
+ };
+ 
+-void media5200_irq_cascade(unsigned int virq, struct irq_desc *desc)
++void media5200_irq_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	int sub_virq, val;
+diff --git a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
+index 63016621aff8..1f5f4775930c 100644
+--- a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
++++ b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
+@@ -191,7 +191,7 @@ static struct irq_chip mpc52xx_gpt_irq_chip = {
+ 	.irq_set_type = mpc52xx_gpt_irq_set_type,
+ };
+ 
+-void mpc52xx_gpt_irq_cascade(unsigned int virq, struct irq_desc *desc)
++void mpc52xx_gpt_irq_cascade(struct irq_desc *desc)
+ {
+ 	struct mpc52xx_gpt_priv *gpt = irq_desc_get_handler_data(desc);
+ 	int sub_virq;
+diff --git a/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c b/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
+index 74861a7fb807..60e89fc9c753 100644
+--- a/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
++++ b/arch/powerpc/platforms/82xx/pq2ads-pci-pic.c
+@@ -78,7 +78,7 @@ static struct irq_chip pq2ads_pci_ic = {
+ 	.irq_disable = pq2ads_pci_mask_irq
+ };
+ 
+-static void pq2ads_pci_irq_demux(unsigned int irq, struct irq_desc *desc)
++static void pq2ads_pci_irq_demux(struct irq_desc *desc)
+ {
+ 	struct pq2ads_pci_pic *priv = irq_desc_get_handler_data(desc);
+ 	u32 stat, mask, pend;
+diff --git a/arch/powerpc/platforms/85xx/common.c b/arch/powerpc/platforms/85xx/common.c
+index 7bfb9b184dd4..23791de7b688 100644
+--- a/arch/powerpc/platforms/85xx/common.c
++++ b/arch/powerpc/platforms/85xx/common.c
+@@ -49,7 +49,7 @@ int __init mpc85xx_common_publish_devices(void)
+ 	return of_platform_bus_probe(NULL, mpc85xx_common_ids, NULL);
+ }
+ #ifdef CONFIG_CPM2
+-static void cpm2_cascade(unsigned int irq, struct irq_desc *desc)
++static void cpm2_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	int cascade_irq;
+diff --git a/arch/powerpc/platforms/85xx/mpc85xx_cds.c b/arch/powerpc/platforms/85xx/mpc85xx_cds.c
+index b0753e222086..5ac70de3e48a 100644
+--- a/arch/powerpc/platforms/85xx/mpc85xx_cds.c
++++ b/arch/powerpc/platforms/85xx/mpc85xx_cds.c
+@@ -192,8 +192,7 @@ void mpc85xx_cds_fixup_bus(struct pci_bus *bus)
+ }
+ 
+ #ifdef CONFIG_PPC_I8259
+-static void mpc85xx_8259_cascade_handler(unsigned int irq,
+-					 struct irq_desc *desc)
++static void mpc85xx_8259_cascade_handler(struct irq_desc *desc)
+ {
+ 	unsigned int cascade_irq = i8259_irq();
+ 
+@@ -202,7 +201,7 @@ static void mpc85xx_8259_cascade_handler(unsigned int irq,
+ 		generic_handle_irq(cascade_irq);
+ 
+ 	/* check for any interrupts from the shared IRQ line */
+-	handle_fasteoi_irq(irq, desc);
++	handle_fasteoi_irq(desc);
+ }
+ 
+ static irqreturn_t mpc85xx_8259_cascade_action(int irq, void *dev_id)
+diff --git a/arch/powerpc/platforms/85xx/mpc85xx_ds.c b/arch/powerpc/platforms/85xx/mpc85xx_ds.c
+index ffdf02121a7c..f858306dba6a 100644
+--- a/arch/powerpc/platforms/85xx/mpc85xx_ds.c
++++ b/arch/powerpc/platforms/85xx/mpc85xx_ds.c
+@@ -46,7 +46,7 @@
+ #endif
+ 
+ #ifdef CONFIG_PPC_I8259
+-static void mpc85xx_8259_cascade(unsigned int irq, struct irq_desc *desc)
++static void mpc85xx_8259_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq = i8259_irq();
+diff --git a/arch/powerpc/platforms/85xx/socrates_fpga_pic.c b/arch/powerpc/platforms/85xx/socrates_fpga_pic.c
+index 5153e58654f7..227e2854bc08 100644
+--- a/arch/powerpc/platforms/85xx/socrates_fpga_pic.c
++++ b/arch/powerpc/platforms/85xx/socrates_fpga_pic.c
+@@ -91,7 +91,7 @@ static inline unsigned int socrates_fpga_pic_get_irq(unsigned int irq)
+ 			(irq_hw_number_t)i);
+ }
+ 
+-void socrates_fpga_pic_cascade(unsigned int irq, struct irq_desc *desc)
++void socrates_fpga_pic_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq;
+diff --git a/arch/powerpc/platforms/86xx/pic.c b/arch/powerpc/platforms/86xx/pic.c
+index d5b98c0f958a..845defa1fd19 100644
+--- a/arch/powerpc/platforms/86xx/pic.c
++++ b/arch/powerpc/platforms/86xx/pic.c
+@@ -17,7 +17,7 @@
+ #include <asm/i8259.h>
+ 
+ #ifdef CONFIG_PPC_I8259
+-static void mpc86xx_8259_cascade(unsigned int irq, struct irq_desc *desc)
++static void mpc86xx_8259_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq = i8259_irq();
+diff --git a/arch/powerpc/platforms/8xx/m8xx_setup.c b/arch/powerpc/platforms/8xx/m8xx_setup.c
+index d3037747031d..c289fc77b4ba 100644
+--- a/arch/powerpc/platforms/8xx/m8xx_setup.c
++++ b/arch/powerpc/platforms/8xx/m8xx_setup.c
+@@ -214,7 +214,7 @@ void mpc8xx_restart(char *cmd)
+ 	panic("Restart failed\n");
+ }
+ 
+-static void cpm_cascade(unsigned int irq, struct irq_desc *desc)
++static void cpm_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	int cascade_irq = cpm_get_irq();
+diff --git a/arch/powerpc/platforms/cell/axon_msi.c b/arch/powerpc/platforms/cell/axon_msi.c
+index 817d0e6747ea..677836a1b5e4 100644
+--- a/arch/powerpc/platforms/cell/axon_msi.c
++++ b/arch/powerpc/platforms/cell/axon_msi.c
+@@ -92,7 +92,7 @@ static void msic_dcr_write(struct axon_msic *msic, unsigned int dcr_n, u32 val)
+ 	dcr_write(msic->dcr_host, dcr_n, val);
+ }
+ 
+-static void axon_msi_cascade(unsigned int irq, struct irq_desc *desc)
++static void axon_msi_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct axon_msic *msic = irq_desc_get_handler_data(desc);
+diff --git a/arch/powerpc/platforms/cell/interrupt.c b/arch/powerpc/platforms/cell/interrupt.c
+index e2dd6c9d3a78..65ea856a583e 100644
+--- a/arch/powerpc/platforms/cell/interrupt.c
++++ b/arch/powerpc/platforms/cell/interrupt.c
+@@ -99,7 +99,7 @@ static void iic_ioexc_eoi(struct irq_data *d)
+ {
+ }
+ 
+-static void iic_ioexc_cascade(unsigned int __irq, struct irq_desc *desc)
++static void iic_ioexc_cascade(struct irq_desc *desc)
+ {
+ 	unsigned int irq = irq_desc_get_irq(desc);
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+diff --git a/arch/powerpc/platforms/cell/spider-pic.c b/arch/powerpc/platforms/cell/spider-pic.c
+index 1f72f4ab6353..9d27de62dc62 100644
+--- a/arch/powerpc/platforms/cell/spider-pic.c
++++ b/arch/powerpc/platforms/cell/spider-pic.c
+@@ -199,7 +199,7 @@ static const struct irq_domain_ops spider_host_ops = {
+ 	.xlate = spider_host_xlate,
+ };
+ 
+-static void spider_irq_cascade(unsigned int irq, struct irq_desc *desc)
++static void spider_irq_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct spider_pic *pic = irq_desc_get_handler_data(desc);
+diff --git a/arch/powerpc/platforms/chrp/setup.c b/arch/powerpc/platforms/chrp/setup.c
+index 15ebc4e8a151..987d1b8d68e3 100644
+--- a/arch/powerpc/platforms/chrp/setup.c
++++ b/arch/powerpc/platforms/chrp/setup.c
+@@ -363,7 +363,7 @@ void __init chrp_setup_arch(void)
+ 	if (ppc_md.progress) ppc_md.progress("Linux/PPC "UTS_RELEASE"\n", 0x0);
+ }
+ 
+-static void chrp_8259_cascade(unsigned int irq, struct irq_desc *desc)
++static void chrp_8259_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq = i8259_irq();
+diff --git a/arch/powerpc/platforms/embedded6xx/hlwd-pic.c b/arch/powerpc/platforms/embedded6xx/hlwd-pic.c
+index 9dd154d6f89a..9b7975706bfc 100644
+--- a/arch/powerpc/platforms/embedded6xx/hlwd-pic.c
++++ b/arch/powerpc/platforms/embedded6xx/hlwd-pic.c
+@@ -120,8 +120,7 @@ static unsigned int __hlwd_pic_get_irq(struct irq_domain *h)
+ 	return irq_linear_revmap(h, irq);
+ }
+ 
+-static void hlwd_pic_irq_cascade(unsigned int cascade_virq,
+-				      struct irq_desc *desc)
++static void hlwd_pic_irq_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct irq_domain *irq_domain = irq_desc_get_handler_data(desc);
+diff --git a/arch/powerpc/platforms/embedded6xx/mvme5100.c b/arch/powerpc/platforms/embedded6xx/mvme5100.c
+index 1613303177e6..8f65aa3747f5 100644
+--- a/arch/powerpc/platforms/embedded6xx/mvme5100.c
++++ b/arch/powerpc/platforms/embedded6xx/mvme5100.c
+@@ -42,7 +42,7 @@
+ static phys_addr_t pci_membase;
+ static u_char *restart;
+ 
+-static void mvme5100_8259_cascade(unsigned int irq, struct irq_desc *desc)
++static void mvme5100_8259_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq = i8259_irq();
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index df6a7041922b..642f5a49718b 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -111,7 +111,7 @@ static void __init fwnmi_init(void)
+ 		fwnmi_active = 1;
+ }
+ 
+-static void pseries_8259_cascade(unsigned int irq, struct irq_desc *desc)
++static void pseries_8259_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq = i8259_irq();
+diff --git a/arch/powerpc/sysdev/ge/ge_pic.c b/arch/powerpc/sysdev/ge/ge_pic.c
+index 2bcb78bb3a15..bf52768a162e 100644
+--- a/arch/powerpc/sysdev/ge/ge_pic.c
++++ b/arch/powerpc/sysdev/ge/ge_pic.c
+@@ -91,7 +91,7 @@ static int gef_pic_cascade_irq;
+  * should be masked out.
+  */
+ 
+-void gef_pic_cascade(unsigned int irq, struct irq_desc *desc)
++void gef_pic_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq;
+diff --git a/arch/powerpc/sysdev/ge/ge_pic.h b/arch/powerpc/sysdev/ge/ge_pic.h
+index 908dbd9826b6..077c5fe9a575 100644
+--- a/arch/powerpc/sysdev/ge/ge_pic.h
++++ b/arch/powerpc/sysdev/ge/ge_pic.h
+@@ -2,7 +2,7 @@
+ #define __GEF_PIC_H__
+ 
+ 
+-void gef_pic_cascade(unsigned int, struct irq_desc *);
++void gef_pic_cascade(struct irq_desc *);
+ unsigned int gef_pic_get_irq(void);
+ void gef_pic_init(struct device_node *);
+ 
+diff --git a/arch/powerpc/sysdev/mpic.c b/arch/powerpc/sysdev/mpic.c
+index b2b8447a227a..caed5f221f03 100644
+--- a/arch/powerpc/sysdev/mpic.c
++++ b/arch/powerpc/sysdev/mpic.c
+@@ -1180,7 +1180,7 @@ static int mpic_host_xlate(struct irq_domain *h, struct device_node *ct,
+ }
+ 
+ /* IRQ handler for a secondary MPIC cascaded from another IRQ controller */
+-static void mpic_cascade(unsigned int irq, struct irq_desc *desc)
++static void mpic_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct mpic *mpic = irq_desc_get_handler_data(desc);
+diff --git a/arch/powerpc/sysdev/qe_lib/qe_ic.c b/arch/powerpc/sysdev/qe_lib/qe_ic.c
+index 543765e1ef14..50179099e728 100644
+--- a/arch/powerpc/sysdev/qe_lib/qe_ic.c
++++ b/arch/powerpc/sysdev/qe_lib/qe_ic.c
+@@ -310,8 +310,8 @@ unsigned int qe_ic_get_high_irq(struct qe_ic *qe_ic)
+ }
+ 
+ void __init qe_ic_init(struct device_node *node, unsigned int flags,
+-		void (*low_handler)(unsigned int irq, struct irq_desc *desc),
+-		void (*high_handler)(unsigned int irq, struct irq_desc *desc))
++		void (*low_handler)(struct irq_desc *desc),
++		void (*high_handler)(struct irq_desc *desc))
+ {
+ 	struct qe_ic *qe_ic;
+ 	struct resource res;
+diff --git a/arch/powerpc/sysdev/tsi108_pci.c b/arch/powerpc/sysdev/tsi108_pci.c
+index 188012c58f7f..0b36e6a22d25 100644
+--- a/arch/powerpc/sysdev/tsi108_pci.c
++++ b/arch/powerpc/sysdev/tsi108_pci.c
+@@ -428,7 +428,7 @@ void __init tsi108_pci_int_init(struct device_node *node)
+ 	init_pci_source();
+ }
+ 
+-void tsi108_irq_cascade(unsigned int irq, struct irq_desc *desc)
++void tsi108_irq_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq = get_pci_source();
+diff --git a/arch/powerpc/sysdev/uic.c b/arch/powerpc/sysdev/uic.c
+index e763fe215cf5..902af049b492 100644
+--- a/arch/powerpc/sysdev/uic.c
++++ b/arch/powerpc/sysdev/uic.c
+@@ -194,7 +194,7 @@ static struct irq_domain_ops uic_host_ops = {
+ 	.xlate	= irq_domain_xlate_twocell,
+ };
+ 
+-void uic_irq_cascade(unsigned int virq, struct irq_desc *desc)
++void uic_irq_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct irq_data *idata = irq_desc_get_irq_data(desc);
+diff --git a/arch/powerpc/sysdev/xilinx_intc.c b/arch/powerpc/sysdev/xilinx_intc.c
+index 56f0524e47a6..78e0f1be1474 100644
+--- a/arch/powerpc/sysdev/xilinx_intc.c
++++ b/arch/powerpc/sysdev/xilinx_intc.c
+@@ -222,7 +222,7 @@ int xilinx_intc_get_irq(void)
+ /*
+  * Support code for cascading to 8259 interrupt controllers
+  */
+-static void xilinx_i8259_cascade(unsigned int irq, struct irq_desc *desc)
++static void xilinx_i8259_cascade(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	unsigned int cascade_irq = i8259_irq();
+-- 
+1.7.10.4
 
-Thanks,
-Michal
-
---=20
-Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
-Maintainer of Linux kernel - Xilinx Zynq ARM architecture
-Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
-
-
-
---gTsS6AOsC0FdSSf1x5bWItB88aUvCenDu
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.14 (GNU/Linux)
-
-iEYEARECAAYFAlVxSqMACgkQykllyylKDCHAzACgnDyWr5hzD/SZFf15eW6Vv8UR
-nmEAnig9NCuoA68OERPBhSVObhuTrZ9J
-=MMqf
------END PGP SIGNATURE-----
-
---gTsS6AOsC0FdSSf1x5bWItB88aUvCenDu--
