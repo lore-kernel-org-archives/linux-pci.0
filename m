@@ -1,102 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <556FF820.5070405@linaro.org>
+Date: Thu, 04 Jun 2015 15:02:56 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6Xyd-THK2385W7VfS358PSJfkfHRnjoZRJWP_LFrzOWJA@mail.gmail.com>
-References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
- <1432163293-20965-2-git-send-email-mcgrof@do-not-panic.com>
- <20150521223321.GG32152@google.com> <20150522002341.GM23057@wotan.suse.de>
- <20150526174008.GN32152@google.com> <20150527200402.GS23057@wotan.suse.de> <CAB=NE6Xyd-THK2385W7VfS358PSJfkfHRnjoZRJWP_LFrzOWJA@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Tue, 16 Jun 2015 12:16:38 -0700
-Message-ID: <CAB=NE6Ut4QNmumYJku=At9QC==kAMzFZP-ANHWd3EWKY-tKHBA@mail.gmail.com>
-Subject: Re: [PATCH v6 1/4] pci: add pci_iomap_wc() variants
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Dave Airlie <airlied@linux.ie>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>, Al Stone <ahs3@redhat.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>
+CC: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Mark Salter <msalter@redhat.com>
+Subject: Re: [Patch v4 0/8] Consolidate ACPI PCI root common code into ACPI
+ core
+References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com> <556F6332.2040501@redhat.com> <556FAFEF.6040802@linux.intel.com> <556FF0AD.6000901@linaro.org> <556FF32B.9010900@linux.intel.com>
+In-Reply-To: <556FF32B.9010900@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 28, 2015 at 5:36 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> On Wed, May 27, 2015 at 1:04 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
->> On Tue, May 26, 2015 at 12:40:08PM -0500, Bjorn Helgaas wrote:
->>> On Fri, May 22, 2015 at 02:23:41AM +0200, Luis R. Rodriguez wrote:
->>> > On Thu, May 21, 2015 at 05:33:21PM -0500, Bjorn Helgaas wrote:
->>> > >
->>> > > I tentatively put this (and the rest of the series) on a pci/resource
->>> > > branch.  I'm hoping you'll propose some clarification about
->>> > > EXPORT_SYMBOL_GPL().
->>> >
->>> > EXPORT_SYMBOL_GPL() also serves to ensure only GPL modules can
->>> > only run that code. So for instance although we have "Dual BSD/GPL"
->>> > tags for modules pure "BSD" tags do not exist for module tags and
->>> > cannot run EXPORT_SYMBOL_GPL() code [0]. Also there is some folks
->>> > who do believe tha at run time all kernel modules are GPL [1] [2].
->>> > And to be precise even though the FSF may claim a list of licenses
->>> > are GPL-compatible we cannot rely on this list alone for our own
->>> > goals and if folks want to use our EXPORT_SYMBOL_GPL()s they must
->>> > discuss this on lkml [2].
->>>
->>> By "propose some clarification," I meant that I hoped you would propose a
->>> patch to Documentation/ that would give maintainers some guidance.
+On 2015年06月04日 14:41, Jiang Liu wrote:
+> On 2015/6/4 14:31, Hanjun Guo wrote:
+>> Hi Jiang,
 >>
->> I *really really* would hate to do so but only because you insist, I'll look
->> into this...
+>> On 2015年06月04日 09:54, Jiang Liu wrote:
+>>> On 2015/6/4 4:27, Al Stone wrote:
+>>>> On 06/02/2015 12:12 AM, Jiang Liu wrote:
+>>>>> This patch set consolidates common code to support ACPI PCI root on x86
+>>>>> and IA64 platforms into ACPI core, to reproduce duplicated code and
+>>>>> simplify maintenance. And a patch set based on this to support ACPI
+>>>>> based
+>>>>> PCIe host bridge on ARM64 has been posted at:
+>>>>
+>>>> Link is missing (or it's a typo of some flavor).
+>>> HI Al,
+>>>      Sorry, I missed the link. It has been posted at:
+>>> https://lkml.org/lkml/2015/5/26/207
+>>
+>> I failed to get io resources for PCI hostbridge  when I was testing PCI
+>> on ARM64 QEMU, I debugged this for quite a while, and finally found out
+>> that ACPI resource parsing for IO is not suitable for ARM64, because io
+>> space for x86 is 64K, but 16M for ARM64.
+>>
+>> This issue is only found when the firmware representing the io resource
+>> using the type ACPI_RESOURCE_TYPE_ADDRESS32, so the io address will
+>> greater than 64k.
+>>
+>> In drivers/acpi/resource.c:
+>>
+>> static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+>>                                        u8 io_decode, u8 translation_type)
+>> {
+>>          res->flags = IORESOURCE_IO;
+>>
+>> [...]
+>>
+>>          if (res->end >= 0x10003)
+>>                  res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+>>
+>> [...]
+>> }
+>>
+>> so the code will filter out res->end >= 0x10003, and in my case, it will
+>> more than 64K, so we can't get the IO resources.
+>>
+>> I got a question, why we use if (res->end >= 0x10003) here?
+>> I mean 64k will be 0x10000, and in that case, we should use
+>> if (res->end >= 0x10000) here, not 0x10003, any history behind that?
 >
-> OK done.
+> Hi Hanjun,
+> This is a special tricky for x86. You may read a dword(four bytes) from
+> IO port 0xffff, so the effective io port space is 0x10003 bytes.
 
-Bjorn,
+Thanks for the explanation, how about add a patch to comment on it?
+if it's ok to you and will improve the code readability, I can prepare
+one.
 
-This is now on Jonathan Corbet's tree and visible on linux-next:
+>
+>>
+>> This is not the problem of this patch set, but need updating
+>> the core ACPI resource parsing code, I'm working on that. I'm
+>> just wondering there is no special IO space on IA64, how this works
+>> on IA64?
+> There is special handling for IO port on IA64. IA64 io ports are
+> actually memory-mapped, and there may be multiple 64K IO port spaces.
+> For example, each PCI domain may have its own 64k memory-mapped
+> IO space.
 
-https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit/?id=582ed8d51e2b6cb8a168c94852bca482685c2509
+That's the case for ARM64 too, I will review the IA64 code for
+reference, great thanks for the help and explanation :)
 
-> Please let me know if there is anything else I can do to
-> help.
-
-Please let me know.
-
-> Also as per review with Tomi, the framebuffer maintainer, he
-> would prefer for only the required symbols to go through your tree.
-> We'd then wait for the next merge window for them to perculate to
-> Linus' tree and once there I'd send him a pull request for the
-> framebuffer device driver changes alone. So this does mean we'll have
-> no users of the symbols for a full release, but again, this is as per
-> Tomi's preference. This strategy is also the preference then for the
-> pci_iomap_wc() series as well. With that in mind, perhaps the lib
-> patch can go in as we'd have no users but we do have a few future
-> possible expected users.
-
-I repoked Tomi about this topic with a new context provided, my
-expressed hope was to just merge the fbvdev dependent changes for both
-series (now both Acked by Tomi) through your tree.
-
- Luis
+Thanks
+Hanjun
