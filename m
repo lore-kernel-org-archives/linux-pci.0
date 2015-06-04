@@ -1,108 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v4 06/19] NTB: Check the device ID to set errata flags
-Date: Wed, 10 Jun 2015 05:08:11 -0400
-Message-Id: <a89e1223bffe954995c932ae36d3ff76c5fc6297.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1433433105.24429.30.camel@deneb.redhat.com>
+Subject: Re: [Patch v4 0/8] Consolidate ACPI PCI root common code into ACPI
+ core
+From: Mark Salter <msalter@redhat.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>, Al Stone <ahs3@redhat.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Date: Thu, 04 Jun 2015 11:51:45 -0400
+In-Reply-To: <556FF32B.9010900@linux.intel.com>
+References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
+	 <556F6332.2040501@redhat.com> <556FAFEF.6040802@linux.intel.com>
+	 <556FF0AD.6000901@linaro.org> <556FF32B.9010900@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dave Jiang <dave.jiang@intel.com>
+On Thu, 2015-06-04 at 14:41 +0800, Jiang Liu wrote:
+> On 2015/6/4 14:31, Hanjun Guo wrote:
+> > Hi Jiang,
+> > 
+> > On 2015年06月04日 09:54, Jiang Liu wrote:
+> >> On 2015/6/4 4:27, Al Stone wrote:
+> >>> On 06/02/2015 12:12 AM, Jiang Liu wrote:
+> >>>> This patch set consolidates common code to support ACPI PCI root on x86
+> >>>> and IA64 platforms into ACPI core, to reproduce duplicated code and
+> >>>> simplify maintenance. And a patch set based on this to support ACPI
+> >>>> based
+> >>>> PCIe host bridge on ARM64 has been posted at:
+> >>>
+> >>> Link is missing (or it's a typo of some flavor).
+> >> HI Al,
+> >>     Sorry, I missed the link. It has been posted at:
+> >> https://lkml.org/lkml/2015/5/26/207
+> > 
+> > I failed to get io resources for PCI hostbridge  when I was testing PCI
+> > on ARM64 QEMU, I debugged this for quite a while, and finally found out
+> > that ACPI resource parsing for IO is not suitable for ARM64, because io
+> > space for x86 is 64K, but 16M for ARM64.
+> > 
+> > This issue is only found when the firmware representing the io resource
+> > using the type ACPI_RESOURCE_TYPE_ADDRESS32, so the io address will
+> > greater than 64k.
+> > 
+> > In drivers/acpi/resource.c:
+> > 
+> > static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+> >                                       u8 io_decode, u8 translation_type)
+> > {
+> >         res->flags = IORESOURCE_IO;
+> > 
+> > [...]
+> > 
+> >         if (res->end >= 0x10003)
+> >                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+> > 
+> > [...]
+> > }
+> > 
+> > so the code will filter out res->end >= 0x10003, and in my case, it will
+> > more than 64K, so we can't get the IO resources.
+> > 
+> > I got a question, why we use if (res->end >= 0x10003) here?
+> > I mean 64k will be 0x10000, and in that case, we should use
+> > if (res->end >= 0x10000) here, not 0x10003, any history behind that?
+> 
+> Hi Hanjun,
+> This is a special tricky for x86. You may read a dword(four bytes) from
+> IO port 0xffff, so the effective io port space is 0x10003 bytes.
+> 
 
-Set errata flags for the specific device IDs to which they apply,
-instead of the whole Xeon hardware class.
+Is there something in ACPI spec which would limit PCI IO space to 64K?
+PCI itself allows 32-bit IO addresses and at least some arm64 platforms
+use PCI bus addresses above 64K for IO transactions. From a PCI view,
+the (res->end >= 0x10003) check doesn't make sense. Am I missing
+something?
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
----
- drivers/ntb/hw/intel/ntb_hw_intel.c | 49 +++++++++++++++++++++++++++++++++----
- 1 file changed, 44 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
-index 8ad4a6343d96..ff397fae9cf4 100644
---- a/drivers/ntb/hw/intel/ntb_hw_intel.c
-+++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
-@@ -1719,29 +1719,68 @@ static int snb_init_dev(struct intel_ntb_dev *ndev)
- 	u8 ppd;
- 	int rc, mem;
- 
-+	pdev = ndev_pdev(ndev);
-+
-+	switch (pdev->device) {
- 	/* There is a Xeon hardware errata related to writes to SDOORBELL or
- 	 * B2BDOORBELL in conjunction with inbound access to NTB MMIO Space,
- 	 * which may hang the system.  To workaround this use the second memory
- 	 * window to access the interrupt and scratch pad registers on the
- 	 * remote system.
- 	 */
--	ndev->hwerr_flags |= NTB_HWERR_SDOORBELL_LOCKUP;
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
-+		ndev->hwerr_flags |= NTB_HWERR_SDOORBELL_LOCKUP;
-+		break;
-+	}
- 
-+	switch (pdev->device) {
- 	/* There is a hardware errata related to accessing any register in
- 	 * SB01BASE in the presence of bidirectional traffic crossing the NTB.
- 	 */
--	ndev->hwerr_flags |= NTB_HWERR_SB01BASE_LOCKUP;
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
-+		ndev->hwerr_flags |= NTB_HWERR_SB01BASE_LOCKUP;
-+		break;
-+	}
- 
-+	switch (pdev->device) {
- 	/* HW Errata on bit 14 of b2bdoorbell register.  Writes will not be
- 	 * mirrored to the remote system.  Shrink the number of bits by one,
- 	 * since bit 14 is the last bit.
- 	 */
--	ndev->hwerr_flags |= NTB_HWERR_B2BDOORBELL_BIT14;
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
-+		ndev->hwerr_flags |= NTB_HWERR_B2BDOORBELL_BIT14;
-+		break;
-+	}
- 
- 	ndev->reg = &snb_reg;
- 
--	pdev = ndev_pdev(ndev);
--
- 	rc = pci_read_config_byte(pdev, SNB_PPD_OFFSET, &ppd);
- 	if (rc)
- 		return -EIO;
--- 
-2.4.0.rc0.43.gcf8a8c6
 
