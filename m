@@ -1,110 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:33022 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751148AbbFYB0r (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2015 21:26:47 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: bp@suse.de
-Cc: mingo@kernel.org, arnd@arndb.de, bhelgaas@google.com,
-	luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Davidlohr Bueso <dbueso@suse.de>
-Subject: [PATCH v8 1/9] pci: add pci_ioremap_wc_bar()
-Date: Wed, 24 Jun 2015 18:22:14 -0700
-Message-Id: <1435195342-26879-2-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:36802 "EHLO
+	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753019AbbFDWCB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 18:02:01 -0400
+Received: by oihb142 with SMTP id b142so40930107oih.3
+        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 15:02:00 -0700 (PDT)
+Subject: [PATCH 3/5] PCI: layerscape: Use dw_pcie_link_up() consistently
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Date: Thu, 04 Jun 2015 17:01:58 -0500
+Message-ID: <20150604220158.4377.97359.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+All the other DesignWare-based drivers use dw_pcie_link_up(), so use it in
+this driver, too, for consistency.  No functional change.
 
-This lets drivers take advantage of PAT when available. This
-should help with the transition of converting video drivers over
-to ioremap_wc() to help with the goal of eventually using
-_PAGE_CACHE_UC over _PAGE_CACHE_UC_MINUS on x86 on
-ioremap_nocache() (de33c442e titled "x86 PAT: fix performance
-drop for glx, use UC minus for ioremap(), ioremap_nocache() and
-pci_mmap_page_range()")
-
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Ville Syrjälä <syrjala@sci.fi>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.c   | 14 ++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 15 insertions(+)
+ drivers/pci/host/pci-layerscape.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0008c95..fdae37b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -138,6 +138,20 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
- 	return ioremap_nocache(res->start, resource_size(res));
- }
- EXPORT_SYMBOL_GPL(pci_ioremap_bar);
-+
-+void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
-+{
-+	/*
-+	 * Make sure the BAR is actually a memory resource, not an IO resource
-+	 */
-+	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM)) {
-+		WARN_ON(1);
-+		return NULL;
-+	}
-+	return ioremap_wc(pci_resource_start(pdev, bar),
-+			  pci_resource_len(pdev, bar));
-+}
-+EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
- #endif
+diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+index 4a6e62f..bb5894f 100644
+--- a/drivers/pci/host/pci-layerscape.c
++++ b/drivers/pci/host/pci-layerscape.c
+@@ -70,7 +70,7 @@ static void ls_pcie_host_init(struct pcie_port *pp)
  
- #define PCI_FIND_CAP_TTL	48
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c0dd4ab..1193975 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1657,6 +1657,7 @@ static inline void pci_mmcfg_late_init(void) { }
- int pci_ext_cfg_avail(void);
+ 	dw_pcie_setup_rc(pp);
  
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
-+void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
- int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
--- 
-2.3.2.209.gd67f9d5.dirty
+-	while (!ls_pcie_link_up(pp)) {
++	while (!dw_pcie_link_up(pp)) {
+ 		usleep_range(100, 1000);
+ 		count++;
+ 		if (count >= 200) {
 
