@@ -1,136 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33550 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017AbbFYBgc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2015 21:36:32 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: akpm@linux-foundation.org
-Cc: bp@suse.de, mingo@elte.hu, syrjala@sci.fi,
-	ville.syrjala@linux.intel.com, luto@amacapital.net,
-	tomi.valkeinen@ti.com, mst@redhat.com, benh@kernel.crashing.org,
-	linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, airlied@redhat.com,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: [PATCH v5 0/3] atyfb: address MTRR corner case
-Date: Wed, 24 Jun 2015 18:34:17 -0700
-Message-Id: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from exprod5og123.obsmtp.com ([64.18.0.198]:49826 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751429AbbFEVLk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 17:11:40 -0400
+Received: by obcej4 with SMTP id ej4so12091835obc.0
+        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 14:11:39 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20150605210500.GQ3631@google.com>
+References: <5566CC58.8080400@arm.com> <cover.1432922451.git.dhdang@apm.com> <20150605210500.GQ3631@google.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Fri, 5 Jun 2015 14:11:09 -0700
+Message-ID: <CADaLNDmNHsyoYGEgrHKTCrcjS70pTZ=mnH2uYPNCEK1X5+vVPQ@mail.gmail.com>
+Subject: Re: [PATCH v10 0/4] PCI: X-Gene: Add APM X-Gene v1 MSI/MSIX
+ termination driver
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Grant Likely <grant.likely@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Fri, Jun 5, 2015 at 2:05 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, May 29, 2015 at 11:24:28AM -0700, Duc Dang wrote:
+>> This patch set adds MSI/MSIX termination driver support for APM X-Gene v1 SoC.
+>> APM X-Gene v1 SoC supports its own implementation of MSI, which is not compliant
+>> to GIC V2M specification for MSI Termination.
+>>
+>> There is single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+>> This MSI block supports 2048 MSI termination ports coalesced into 16 physical
+>> HW IRQ lines and shared across all 5 PCIe ports. Starting from version 5 of
+>> this patch series, the total MSI vectors this driver supports is reduced to 256
+>> to maintain the correct set_affinity behavior for each MSI.
+>>
+>> v10 changes:
+>>       1. Remove inline in helper functions
+>>       2. Simplify hwirq_to_cpu implementation
+>>
+>> v9 changes:
+>>         1. Add more helpers for manipulating MSI messages
+>>         2. Improve code readability
+>>         3. Make PCI_XGENE_MSI selectable
+>>
+>> v8 changes:
+>>         1. Add helper to read MSI registers
+>>         2. Resample interrupt status of the same group after handling interrupts
+>>            in that group
+>>         3. Error handling in case fail to allocate CPU mask for affinity setting
+>>
+>> v7 changes:
+>>         1. Add more error handling cases
+>>         2. Clear spurious interrupts that may happen during driver probe
+>>         3. Not using free_irq for chained irqs
+>>         4. Improve GIC IRQ number look up in chained handler
+>>
+>> v6 changes:
+>>         1. Correctly allocate MSI with bitmap_find_next_zero_area
+>>         2. Add notifier for CPU hotplug case
+>>         3. Driver clean up
+>>         4. Add more detailed information into device tree binding document
+>>            and move the device tree binding patch before the driver/dts patch
+>>
+>> v5 changes:
+>>         1. Implement set_affinity for each MSI by statically allocating 2
+>>          MSI GIC IRQs for each X-Gene CPU core and moving MSI vectors around
+>>          these GIC IRQs to steer them to target CPU core. As a consequence,
+>>          the total MSI vectors that X-Gene v1 supports is reduced to 256.
+>>
+>> v4 changes:
+>>         1. Remove affinity setting for each MSI
+>>         2. Add description about register layout, MSI termination address
+>>          and data
+>>         3. Correct total number of MSI vectors to 2048
+>>         4. Clean up error messages
+>>         5. Remove unused module code
+>>
+>> v3 changes:
+>>         1. Implement MSI support using PCI MSI IRQ domain
+>>         2. Only use msi_controller to store IRQ domain
+>>
+>> v2 changes:
+>>         1. Use msi_controller structure
+>>         2. Remove arch hooks arch_teardown_msi_irqs and arch_setup_msi_irqs
+>>
+>>  .../devicetree/bindings/pci/xgene-pci-msi.txt      |  68 +++
+>>  MAINTAINERS                                        |   8 +
+>>  arch/arm64/boot/dts/apm/apm-storm.dtsi             |  27 +
+>>  drivers/pci/host/Kconfig                           |  10 +
+>>  drivers/pci/host/Makefile                          |   1 +
+>>  drivers/pci/host/pci-xgene-msi.c                   | 595 +++++++++++++++++++++
+>>  drivers/pci/host/pci-xgene.c                       |  21 +
+>>  7 files changed, 730 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+>>  create mode 100644 drivers/pci/host/pci-xgene-msi.c
+>
+> I applied these to pci/host-xgene for v4.2, thanks!
+>
+> I squashed the doc, driver, and maintainer updates into a single patch with
+> the following changelog:
+>
+> PCI: xgene: Add APM X-Gene v1 PCIe MSI/MSIX termination driver
+>
+> APM X-Gene v1 SoC supports its own implementation of MSI, which is not
+> compliant to GIC V2M specification for MSI Termination.
+>
+> There is a single MSI block in X-Gene v1 SOC which serves all 5 PCIe ports.
+> This MSI block supports 2048 MSI termination ports coalesced into 16
+> physical HW IRQ lines and shared across all 5 PCIe ports.
+>
+> As there are only 16 HW IRQs to serve 2048 MSI vectors, to support
+> set_affinity correctly for each MSI vectors, the 16 HW IRQs are statically
+> allocated to 8 X-Gene v1 cores (2 HW IRQs for each cores).  To steer MSI
+> interrupt to target CPU, MSI vector is moved around these HW IRQs lines.
+> With this approach, the total MSI vectors this driver supports is reduced
+> to 256.
+>
+> [bhelgaas: squash doc, driver, maintainer update]
+> Signed-off-by: Duc Dang <dhdang@apm.com>
+> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+>
+Thanks, Bjorn and Marc.
 
-Andrew,
-
-Forgive me for the TL;DR, I'm afraid I need to be crystal clear on this
-patchset as its the most complex in the entire series. The skinny is that this
-patchset addresses a complex work around with APIs now merged upstream going in
-for v4.2, the driver maintainer hasn't followed up with the driver changes for
-over a month and no one else has provided Acks for these device driver
-changes [0]. We have a few options:
-
-0) Sit and wait for a driver maintainer to review this
-1) Merge this as-is and hope for reports
-2) go with the nopat requirement as with the ivtv and ipath driver
-
-I'd prefer to merge this as is, and only if reports come back with
-issues should we then consider 2) as we'd then have at least a well
-documented work effort required for this transformation. This device
-driver is also old, so I don't expect much reports anyway.
-
-----
-
-The TL;DR:
-
-As part of the long haul effort to rid the world of direct MTRR use [1] we've
-have had to also work on alternative solutions which can co-exist with PAT
-interfaces. Most of the transformation of device drivers to use PAT was fairly
-easy (TM): so long as ioremap_wc() was used we could then convert over the
-drivers using mtrr_add() over to the arch-agnostic and PAT-aware (ignored when
-PAT is enabled) arch_phys_wc_add(). This was typically easy to do, for instance
-in cases where a full PCI BAR was used for MMIO registers and another PCI BAR
-was used with write-combining effects desirable. In some cases we just needed
-new WC apis for some buses. This was the case for most modern devices, but a
-few old devices had a combined set of MMIO registers and the write-combined
-area mixed. In such situations even when using MTRR one had to figure out
-creative solutions to make things work, specially considering MTRRs were
-limited and they had size constraints: an MTRR base and size must be
-a power of two.
-
-The good news is that on Linux there were only three device drivers in total
-that we ended up with radical issue with when converting them over to PAT
-interfaces. One was with the ivtv media device driver, another was the
-infiniband ipath device driver. The other one was the framebuffer atyfb
-device driver that this series addresses. For both ivtv and ipath we've
-decided to simply require users of those devices to boot with the nopat
-kernel parameter because both devices drivers are ancient and the work
-required to fully convert to PAT interfaces is significant (in the ipath case)
-or nearly almost impossible (ivtv). For details please refer to the respective
-and now upstream commits:
-
-7ea402d x86/mm/pat, drivers/infiniband/ipath: Use arch_phys_wc_add() and require PAT disabled
-1bf1735 x86/mm/pat, drivers/media/ivtv: Use arch_phys_wc_add() and require PAT disabled
-
-To demo exactly how much effort would have been required I decided to venture
-into atyfb and try to fix that device driver first, considering it had the
-worst case situation to address as it used size hackery and MTRR combinations
-of different types. In order to accomplish this we needed to map out all
-possible combinatorial effects of PAT page entries with write-combining, and
-page attributes (PAT, PCD, PWT) with write-combining effects for non-PAT
-systems. We did this not only for atyfb's sake but also for any other possible
-future driver which might meet these same needs. We needed to take this a bit
-more seriously given that our long term goal was also to change the default
-behaviour of ioremap_nocache() to use strong UC instead of UC-, we needed
-to take this into consideration when converting drivers over. The documentation
-table for all these possible combinatorial entries is now upstream:
-
-2f9e897 x86/mm/mtrr, pat: Document Write Combining MTRR type effects on PAT / non-PAT pages
-
-Of importance to this patch set is this table:
-
-----------------------------------------------------------------------
-MTRR Non-PAT   PAT    Linux ioremap value        Effective memory type
-----------------------------------------------------------------------
-                                                  Non-PAT |  PAT
-     PAT
-     |PCD
-     ||PWT
-     |||
-WC   000      WB      _PAGE_CACHE_MODE_WB            WC   |   WC
-WC   001      WC      _PAGE_CACHE_MODE_WC            WC*  |   WC
-WC   010      UC-     _PAGE_CACHE_MODE_UC_MINUS      WC*  |   UC
-WC   011      UC      _PAGE_CACHE_MODE_UC            UC   |   UC
-----------------------------------------------------------------------
-
-In the atyfb case it used to use two MTRR calls, a large WC MTRR followed by a
-UC MTRR "hole" call for the MMIO registers. This was done this way on atyfb
-because of the offset and size of the framebuffer area would only work well
-this way, otherwise you'd also have to try a series of small MTRR calls and you
-might end up running out of MTRRs. For non-PAT systems we take advantage of the
-above map to protect an MMIO region with 011 page attributes (this maps to
-strong UC for PAT systems) so that if a large MTRR is issued that encompasses
-the MMIO region, the MMIO region remains with an effective UC type, while the
-desired wc area would have an effective memory type of WC as its region would
-have been mapped with ioremap_wc(). This makes use of the newly introduced
-ioremap_uc() as otherwise if we would have used ioremap_nocache() we would
-not get the UC effective memeory type. This also let us remove the only UC MTRR
-call from the kernel :) after this then we'd only have WC MTRR calls in effect
-on non-PAT systems on Linux. The more complex patch then is patch 2 which does
-most of the magic.
-
-[0] http://lkml.kernel.org/r/CAB=NE6Xy1UGAqZ8CsVc+JzKqsxREaXBYK+1GjZKN8d2FG8xqJg@mail.gmail.com
-[1] http://lkml.kernel.org/r/CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com
-
-Luis R. Rodriguez (3):
-  video: fbdev: atyfb: clarify ioremap() base and length used
-  video: fbdev: atyfb: replace MTRR UC hole with strong UC
-  video: fbdev: atyfb: use arch_phys_wc_add() and ioremap_wc()
-
- drivers/video/fbdev/aty/atyfb.h      |  5 +--
- drivers/video/fbdev/aty/atyfb_base.c | 74 +++++++++++-------------------------
- 2 files changed, 24 insertions(+), 55 deletions(-)
-
--- 
-2.3.2.209.gd67f9d5.dirty
-
+Regards,
+Duc Dang.
