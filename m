@@ -1,148 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <557504A2.3060203@linaro.org>
-Date: Mon, 08 Jun 2015 10:57:38 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:38356 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836AbbFETig (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 15:38:36 -0400
+Received: by igblz2 with SMTP id lz2so22058510igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 12:38:35 -0700 (PDT)
+Date: Fri, 5 Jun 2015 14:38:31 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] PCI: keep resource size during alignment reordering
+Message-ID: <20150605193831.GB20943@google.com>
+References: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org> <20150526170817.GU1565@arm.com> <55657B02.5090805@linaro.org> <20150602133215.GC23650@red-moon> <55701A31.808@linaro.org> <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org>
-In-Reply-To: <5570447D.3020705@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年06月04日 20:28, Hanjun Guo wrote:
-> On 2015年06月04日 18:22, Lorenzo Pieralisi wrote:
->> Hi Hanjun,
->>
->> On Thu, Jun 04, 2015 at 10:28:17AM +0100, Hanjun Guo wrote:
->>> Hi Lorenzo,
->>>
->>> On 2015???06???02??? 21:32, Lorenzo Pieralisi wrote:
->>>> On Wed, May 27, 2015 at 09:06:26AM +0100, Tomasz Nowicki wrote:
->>>>> On 26.05.2015 19:08, Will Deacon wrote:
->>>>>> On Tue, May 26, 2015 at 01:49:18PM +0100, Hanjun Guo wrote:
->>>>>>> From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
->>>>>>>
->>>>>>> ECAM standard and MCFG table are architecture independent and it
->>>>>>> makes
->>>>>>> sense to share common code across all architectures. Both are
->>>>>>> going to
->>>>>>> corresponding files - ecam.c and mcfg.c
->>>>>>>
->>>>>>> While we are here, rename pci_parse_mcfg to acpi_parse_mcfg.
->>>>>>> We already have acpi_parse_mcfg prototype which is used nowhere.
->>>>>>> At the same time, we need pci_parse_mcfg been global so
->>>>>>> acpi_parse_mcfg
->>>>>>> can be used perfectly here.
->>>>>>>
->>>>>>> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
->>>>>>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->>>>>>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>>>>>> ---
->>>>>>>     arch/x86/Kconfig               |   3 +
->>>>>>>     arch/x86/include/asm/pci_x86.h |  33 ------
->>>>>>>     arch/x86/pci/acpi.c            |   1 +
->>>>>>>     arch/x86/pci/mmconfig-shared.c | 244
->>>>>>> +---------------------------------------
->>>>>>>     arch/x86/pci/mmconfig_32.c     |   1 +
->>>>>>>     arch/x86/pci/mmconfig_64.c     |   1 +
->>>>>>>     arch/x86/pci/numachip.c        |   1 +
->>>>>>>     drivers/acpi/Makefile          |   1 +
->>>>>>>     drivers/acpi/mcfg.c            |  57 ++++++++++
->>>>>>>     drivers/pci/Kconfig            |   7 ++
->>>>>>>     drivers/pci/Makefile           |   5 +
->>>>>>>     drivers/pci/ecam.c             | 245
->>>>>>> +++++++++++++++++++++++++++++++++++++++++
->>>>>>
->>>>>> Why can't we make use of the ECAM implementation used by
->>>>>> pci-host-generic
->>>>>> and drivers/pci/access.c?
->>>>>
->>>>> We had that question when I had posted MMCFG patch set separately,
->>>>> please see:
->>>>> https://lkml.org/lkml/2015/3/11/492
->>>>
->>>> Yes, but the real question is, why do we need to have PCI config space
->>>> up and running before a bus struct is even created ? I think the
->>>> reason is
->>>> the PCI configuration address space format (ACPI 6.0, Table 5-27, page
->>>> 108):
->>>>
->>>> "PCI Configuration space addresses must be confined to devices on
->>>> PCI Segment Group 0, bus 0. This restriction exists to accommodate
->>>> access to fixed hardware prior to PCI bus enumeration".
->>>>
->>>> On HW reduced platforms I do not even think this is required at all,
->>>> we have to look into this to avoid code duplication that might well
->>>> turn out useless.
->>>
->>> This is only for the fixed hardware, which will be not available for
->>> ARM64 (reduced hardware mode), but in Generic Hardware Programming
->>> Model, we using OEM-provided ACPI Machine Language (AML) code to access
->>> generic hardware registers, this will be available for reduced hardware
->>> too.
->>>
->>> So in ACPI spec, it says: (ACPI 6.0 page 66, last paragraph)
->>>
->>> ACPI defines eight address spaces that may be accessed by generic
->>> hardware implementations. These include:
->>> * System I/O space
->>> * System memory space
->>> * PCI configuration space
->>> * Embedded controller space
->>> * System Management Bus (SMBus) space
->>> * CMOS
->>> * PCI BAR Target
->>> * IPMI space
->>>
->>> So if any device using the PCI address space for control, such
->>> as a system reset control device, its address space can be reside
->>> in PCI configuration space (who can prevent a OEM do that crazy
->>> thing? :) ), and it should be accessible before the PCI bus is
->>> created.
->>
->> Us, by changing attitude and questioning features whose usefulness
->> is questionable. I will look into this and raise the point, I am not
->> thrilled by the idea of adding another set of PCI accessor functions
->> and drivers because we have to access a register through PCI before
->> enumerating the bus (and on arm64 this is totally useless since
->> we are not meant to support fixed HW anyway). Maybe we can make acpica
->> code use a "special" stub (ACPI specific, PCI configuration space address
->> space has restrictions anyway), I have to review this set in its
->> entirety to see how to do that (and I would kindly ask you to do
->> it too, before saying it is not possible to implement it).
->
-> I'm willing to do that, actually, if we don't need a mechanism to
-> access PCI config space before the bus is created, the code can be
-> simplified a lot.
+On Thu, May 28, 2015 at 10:40:00PM -0700, Yinghai Lu wrote:
+> In d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing
+> and assigning"), it stores additional alignment in realloc_head and takes
+> this into consideration for assignment.
+> During update the resource before reordering, it does not calculate
+> resource end correctly.
+> 
+> We need to keep the original resource size before updating start.
+> otherwise we will smaller size during updating end.
+> 
+> Fixes: d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing and assigning")
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-After more investigation on the spec and the ACPI core code, I'm
-still not convinced that accessing to PCI config space before PCI
-bus creating is impossible, also there is no enough ARM64 hardware
-to prove that too. But I think we can go in this way, reuse the
-ECAM implementation by pci-host-generic for now, and implement the PCI
-accessor functions before enumerating PCI bus when needed in the
-future, does it make sense?
+I applied this with the following changelog, included here so search
+engines can find the original thread:
 
-Thanks
-Hanjun
+
+PCI: Preserve resource size during alignment reordering
+
+In d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing
+and assigning"), we store additional alignment in realloc_head and take
+this into consideration for assignment.
+
+In __assign_resources_sorted(), we changed dev_res->res->start, then used
+resource_start() (which depends on res->start), so the recomputed res->end
+was completely bogus.  Even if we'd had the correct size, the end would
+have been off by one.
+
+Preserve the resource size when we adjust its alignment.
+
+[bhelgaas: changelog]
+Fixes: d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing and assigning")
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
