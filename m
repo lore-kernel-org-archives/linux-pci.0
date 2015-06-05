@@ -1,80 +1,314 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v3 32/36] genirq: Rename irq_data_get_msi() as irq_data_get_msi_desc()
-Date: Mon,  1 Jun 2015 16:05:41 +0800
-Message-Id: <1433145945-789-33-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:9001 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753004AbbFEIQb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 04:16:31 -0400
+Message-ID: <557159B2.9090103@hisilicon.com>
+Date: Fri, 5 Jun 2015 16:11:30 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: James Morse <james.morse@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"fabrice.gasnier@st.com" <fabrice.gasnier@st.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	"yuanzhichang@hisilicon.com" <yuanzhichang@hisilicon.com>,
+	"zhudacai@hisilicon.com" <zhudacai@hisilicon.com>,
+	"zhangjukuo@huawei.com" <zhangjukuo@huawei.com>,
+	"qiuzhenfa@hisilicon.com" <qiuzhenfa@hisilicon.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v2 2/4] PCI: designware: Add ARM64 support
+References: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com> <1433320542-49576-3-git-send-email-wangzhou1@hisilicon.com> <5570507F.4030704@arm.com>
+In-Reply-To: <5570507F.4030704@arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename irq_data_get_msi() as irq_data_get_msi_desc() to keep consistency
-with other irq_data access helpers.
+On 2015/6/4 21:19, James Morse wrote:
+> On 03/06/15 09:35, Zhou Wang wrote:
+>> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
+>> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+>> move related operations to dw_pcie_host_init. Also set pp->root_bus_nr = 0 in
+>> each PCIe host driver which is based on pcie-designware.
+>>
+>> I am not very clear about I/O resource management:
+>>> 	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+>>> 		pci_ioremap_io(global_io_offset, pp->io_base);
+>>> 		global_io_offset += SZ_64K;
+>>> 		pci_add_resource_offset(&res, &pp->io,
+>>> 					global_io_offset - pp->io_bus_addr);
+>>> 	}
+>> so just move steps in dw_pcie_setup to dw_pcie_host_init.
+>>
+>> I have compiled the driver with multi_v7_defconfig. However, I don't have
+>> ARM32 PCIe related board to do test. It will be appreciated if someone could
+>> help to test it.
+> 
+> I have tested this on a 'Freescale i.MX6 Quad SABRE Lite Board', which also
+> uses a designware pcie host controller (PCI_IMX6). Booted,
+> removed/rescanned the bus, then scanned for wireless access points using
+> the b43 driver. Please note my change below.
+> 
+> Tested-by: James Morse <james.morse@arm.com>
+> 
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-designware.c |    2 +-
- drivers/pci/msi.c                  |    2 +-
- include/linux/irq.h                |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+Hi James,
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 2e9f84fdd9ce..7b3432d331fd 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -309,7 +309,7 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
- static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
- {
- 	struct irq_data *data = irq_get_irq_data(irq);
--	struct msi_desc *msi = irq_data_get_msi(data);
-+	struct msi_desc *msi = irq_data_get_msi_desc(data);
- 	struct pcie_port *pp = sys_to_pcie(msi->dev->bus->sysdata);
- 
- 	clear_irq_range(pp, irq, 1, data->hwirq);
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c3e7dfcf9ff5..be6034cf5c21 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -270,7 +270,7 @@ static void msix_mask_irq(struct msi_desc *desc, u32 flag)
- 
- static void msi_set_mask_bit(struct irq_data *data, u32 flag)
- {
--	struct msi_desc *desc = irq_data_get_msi(data);
-+	struct msi_desc *desc = irq_data_get_msi_desc(data);
- 
- 	if (desc->msi_attrib.is_msix) {
- 		msix_mask_irq(desc, flag);
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 9d01cd8ca8a2..2b95fee48c55 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -631,7 +631,7 @@ static inline struct msi_desc *irq_get_msi_desc(unsigned int irq)
- 	return d ? d->msi_desc : NULL;
- }
- 
--static inline struct msi_desc *irq_data_get_msi(struct irq_data *d)
-+static inline struct msi_desc *irq_data_get_msi_desc(struct irq_data *d)
- {
- 	return d->msi_desc;
- }
--- 
-1.7.10.4
+Many thanks for your help to test :)
+
+>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>> index 2e9f84f..b3f0ac7 100644
+>> --- a/drivers/pci/host/pcie-designware.c
+>> +++ b/drivers/pci/host/pcie-designware.c
+>> @@ -11,6 +11,7 @@
+>>   * published by the Free Software Foundation.
+>>   */
+>>  
+>> +#include <linux/hardirq.h>
+>>  #include <linux/irq.h>
+>>  #include <linux/irqdomain.h>
+>>  #include <linux/kernel.h>
+>> @@ -67,17 +68,10 @@
+>>  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+>>  #define PCIE_ATU_UPPER_TARGET		0x91C
+>>  
+>> -static struct hw_pci dw_pci;
+>> +static struct pci_ops dw_pcie_ops;
+>>  
+>>  static unsigned long global_io_offset;
+>>  
+>> -static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+>> -{
+>> -	BUG_ON(!sys->private_data);
+>> -
+>> -	return sys->private_data;
+>> -}
+>> -
+>>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>>  {
+>>  	*val = readl(addr);
+>> @@ -238,7 +232,7 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+>>  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>>  {
+>>  	int irq, pos0, i;
+>> -	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
+>> +	struct pcie_port *pp = desc->dev->bus->sysdata;
+>>  
+>>  	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
+>>  				       order_base_2(no_irqs));
+>> @@ -281,7 +275,7 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+>>  {
+>>  	int irq, pos;
+>>  	struct msi_msg msg;
+>> -	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+>> +	struct pcie_port *pp = pdev->bus->sysdata;
+>>  
+>>  	if (desc->msi_attrib.is_msix)
+>>  		return -EINVAL;
+>> @@ -310,7 +304,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+>>  {
+>>  	struct irq_data *data = irq_get_irq_data(irq);
+>>  	struct msi_desc *msi = irq_data_get_msi(data);
+>> -	struct pcie_port *pp = sys_to_pcie(msi->dev->bus->sysdata);
+>> +	struct pcie_port *pp = msi->dev->bus->sysdata;
+>>  
+>>  	clear_irq_range(pp, irq, 1, data->hwirq);
+>>  }
+>> @@ -342,13 +336,15 @@ static const struct irq_domain_ops msi_domain_ops = {
+>>  	.map = dw_pcie_msi_map,
+>>  };
+>>  
+>> -int dw_pcie_host_init(struct pcie_port *pp)
+>> +int __init dw_pcie_host_init(struct pcie_port *pp)
+>>  {
+>>  	struct device_node *np = pp->dev->of_node;
+>>  	struct platform_device *pdev = to_platform_device(pp->dev);
+>>  	struct of_pci_range range;
+>>  	struct of_pci_range_parser parser;
+>> +	struct pci_bus *bus;
+>>  	struct resource *cfg_res;
+>> +	LIST_HEAD(res);
+>>  	u32 val, na, ns;
+>>  	const __be32 *addrp;
+>>  	int i, index, ret;
+>> @@ -502,15 +498,49 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>  	val |= PORT_LOGIC_SPEED_CHANGE;
+>>  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+>>  
+>> -#ifdef CONFIG_PCI_MSI
+>> -	dw_pcie_msi_chip.dev = pp->dev;
+>> -	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+>> +#ifdef CONFIG_ARM
+>> +	/*
+>> +	 * FIXME: we should really be able to use
+>> +	 * of_pci_get_host_bridge_resources on arm32 as well,
+>> +	 * but the conversion needs some more testing
+>> +	 */
+>> +	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+>> +		pci_ioremap_io(global_io_offset, pp->io_base);
+>> +		global_io_offset += SZ_64K;
+>> +		pci_add_resource_offset(&res, &pp->io,
+>> +					global_io_offset - pp->io_bus_addr);
+>> +	}
+>> +	pci_add_resource_offset(&res, &pp->mem,
+>> +				pp->mem.start - pp->mem_bus_addr);
+>> +	pci_add_resource(&res, &pp->busn);
+> 
+> I don't think this #ifdef is necessary. In the spirit of 'the conversion
+> needs some more testing', I removed it leaving just the below arm64 code.
+> 
+> This worked on my Freescale i.MX6 Quad SABRE Lite Board, I went as far as
+> scanning for wireless access points.
+> 
+
+I think it depends on which kind of PCIe device you use, if we use a PCIe device
+with a I/O Bar, it may not work well without above code. But so far, I have not
+met a PCIe device which must work with a I/O Bar.
+
+>> +#else
+>> +	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
+> 
+> of_pci_get_host_bridge_resources expects &pp->io_base to be a
+> resource_size_t*, but &io_base is u64*. This generates a warning on arm
+> with the above change. Changing the the type in
+> drivers/pci/host/pcie-designware.h fixes this.
+> 
+> 
+> Thanks,
+> 
+> James
+> 
+
+OK, will modify this in next version.
+
+Best Regards and thanks again for your test,
+Zhou
+
+>> +	if (ret)
+>> +		return ret;
+>> +#endif
+>> +
+>> +	bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
+>> +			      pp, &res);
+>> +	if (!bus)
+>> +		return -ENOMEM;
+>> +
+>> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+>> +	bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
+>> +#else
+>> +	bus->msi = &dw_pcie_msi_chip;
+>>  #endif
+>>  
+>> -	dw_pci.nr_controllers = 1;
+>> -	dw_pci.private_data = (void **)&pp;
+>> +	pci_scan_child_bus(bus);
+>> +	if (pp->ops->scan_bus)
+>> +		pp->ops->scan_bus(pp);
+>>  
+>> -	pci_common_init_dev(pp->dev, &dw_pci);
+>> +#ifdef CONFIG_ARM
+>> +	/* support old dtbs that incorrectly describe IRQs */
+>> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+>> +#endif
+>> +
+>> +	pci_assign_unassigned_bus_resources(bus);
+>> +	pci_bus_add_devices(bus);
+>>  
+>>  	return 0;
+>>  }
+>> @@ -653,7 +683,7 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
+>>  static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>>  			int size, u32 *val)
+>>  {
+>> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+>> +	struct pcie_port *pp = bus->sysdata;
+>>  	int ret;
+>>  
+>>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
+>> @@ -677,7 +707,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>>  static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>>  			int where, int size, u32 val)
+>>  {
+>> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+>> +	struct pcie_port *pp = bus->sysdata;
+>>  	int ret;
+>>  
+>>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+>> @@ -701,64 +731,6 @@ static struct pci_ops dw_pcie_ops = {
+>>  	.write = dw_pcie_wr_conf,
+>>  };
+>>  
+>> -static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+>> -{
+>> -	struct pcie_port *pp;
+>> -
+>> -	pp = sys_to_pcie(sys);
+>> -
+>> -	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+>> -		sys->io_offset = global_io_offset - pp->io_bus_addr;
+>> -		pci_ioremap_io(global_io_offset, pp->io_base);
+>> -		global_io_offset += SZ_64K;
+>> -		pci_add_resource_offset(&sys->resources, &pp->io,
+>> -					sys->io_offset);
+>> -	}
+>> -
+>> -	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
+>> -	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
+>> -	pci_add_resource(&sys->resources, &pp->busn);
+>> -
+>> -	return 1;
+>> -}
+>> -
+>> -static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>> -{
+>> -	struct pci_bus *bus;
+>> -	struct pcie_port *pp = sys_to_pcie(sys);
+>> -
+>> -	pp->root_bus_nr = sys->busnr;
+>> -	bus = pci_create_root_bus(pp->dev, sys->busnr,
+>> -				  &dw_pcie_ops, sys, &sys->resources);
+>> -	if (!bus)
+>> -		return NULL;
+>> -
+>> -	pci_scan_child_bus(bus);
+>> -
+>> -	if (bus && pp->ops->scan_bus)
+>> -		pp->ops->scan_bus(pp);
+>> -
+>> -	return bus;
+>> -}
+>> -
+>> -static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>> -{
+>> -	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
+>> -	int irq;
+>> -
+>> -	irq = of_irq_parse_and_map_pci(dev, slot, pin);
+>> -	if (!irq)
+>> -		irq = pp->irq;
+>> -
+>> -	return irq;
+>> -}
+>> -
+>> -static struct hw_pci dw_pci = {
+>> -	.setup		= dw_pcie_setup,
+>> -	.scan		= dw_pcie_scan_bus,
+>> -	.map_irq	= dw_pcie_map_irq,
+>> -};
+>> -
+>>  void dw_pcie_setup_rc(struct pcie_port *pp)
+>>  {
+>>  	u32 val;
+> 
+> 
+> .
+> 
+
 
