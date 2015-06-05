@@ -1,110 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwdur.emc.com ([128.221.224.79]:49392 "EHLO
-	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964972AbbFJOJM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 10:09:12 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v4 09/19] NTB: Reset transport QP link stats on down
-Date: Wed, 10 Jun 2015 05:08:14 -0400
-Message-Id: <d129363dc72a431f33bdf64a34996b4b183be9aa.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51701 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751433AbbFETIO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 15:08:14 -0400
+Date: Fri, 5 Jun 2015 15:07:58 -0400
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tina Ruchandani <ruchandani.tina@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, y2038@lists.linaro.org,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2] xen/pcifront: Remove usage of struct timeval
+Message-ID: <20150605190758.GF21113@l.oracle.com>
+References: <20150519060809.GA27777@tinar>
+ <CAErSpo47yMfPREFOTCiL8Pa=xbqgsSWk90Ge=u2YeTkUgdFESQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo47yMfPREFOTCiL8Pa=xbqgsSWk90Ge=u2YeTkUgdFESQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reset the link stats when the link goes down.  In particular, the TX and
-RX index and count must be reset, or else the TX side will be sending
-packets to the RX side where the RX side is not expecting them.  Reset
-all the stats, to be consistent.
+On Wed, May 20, 2015 at 08:16:24AM -0500, Bjorn Helgaas wrote:
+> On Tue, May 19, 2015 at 1:08 AM, Tina Ruchandani
+> <ruchandani.tina@gmail.com> wrote:
+> > struct timeval uses a 32-bit field for representing seconds,
+> > which will overflow in the year 2038 and beyond. This patch replaces
+> > struct timeval with 64-bit ktime_t which is 2038 safe.
+> > The patch is part of a larger effort to remove instances of
+> > 32-bit timekeeping variables (timeval, time_t and timespec)
+> > from the kernel.
+> >
+> > Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+> > Suggested-by: Arnd Bergmann <arnd@arndb.de>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> This isn't PCI-related, so I expect Konrad, Boris, or David will merge this.
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- drivers/ntb/ntb_transport.c | 36 ++++++++++++++++++++++++++++--------
- 1 file changed, 28 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index 0f86b60a0c0e..2efd1eae9a7c 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -648,18 +648,37 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
- 	return 0;
- }
- 
-+static void ntb_qp_link_down_reset(struct ntb_transport_qp *qp)
-+{
-+	qp->link_is_up = false;
-+
-+	qp->tx_index = 0;
-+	qp->rx_index = 0;
-+	qp->rx_bytes = 0;
-+	qp->rx_pkts = 0;
-+	qp->rx_ring_empty = 0;
-+	qp->rx_err_no_buf = 0;
-+	qp->rx_err_oflow = 0;
-+	qp->rx_err_ver = 0;
-+	qp->rx_memcpy = 0;
-+	qp->rx_async = 0;
-+	qp->tx_bytes = 0;
-+	qp->tx_pkts = 0;
-+	qp->tx_ring_full = 0;
-+	qp->tx_err_no_buf = 0;
-+	qp->tx_memcpy = 0;
-+	qp->tx_async = 0;
-+}
-+
- static void ntb_qp_link_cleanup(struct ntb_transport_qp *qp)
- {
- 	struct ntb_transport_ctx *nt = qp->transport;
- 	struct pci_dev *pdev = nt->ndev->pdev;
- 
--	if (qp->link_is_up) {
--		cancel_delayed_work_sync(&qp->link_work);
--		return;
--	}
--
- 	dev_info(&pdev->dev, "qp %d: Link Cleanup\n", qp->qp_num);
--	qp->link_is_up = false;
-+
-+	cancel_delayed_work_sync(&qp->link_work);
-+	ntb_qp_link_down_reset(qp);
- 
- 	if (qp->event_handler)
- 		qp->event_handler(qp->cb_data, qp->link_is_up);
-@@ -866,9 +885,9 @@ static int ntb_transport_init_queue(struct ntb_transport_ctx *nt,
- 	qp->qp_num = qp_num;
- 	qp->transport = nt;
- 	qp->ndev = nt->ndev;
--	qp->link_is_up = false;
- 	qp->client_ready = false;
- 	qp->event_handler = NULL;
-+	ntb_qp_link_down_reset(qp);
- 
- 	if (qp_count % mw_count && mw_num + 1 < qp_count / mw_count)
- 		num_qps_mw = qp_count / mw_count + 1;
-@@ -1468,7 +1487,6 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
- 	if (!qp->link_is_up)
- 		return;
- 
--	qp->link_is_up = false;
- 	dev_info(&pdev->dev, "qp %d: Send Link Down\n", qp->qp_num);
- 
- 	for (i = 0; i < NTB_LINK_DOWN_TIMEOUT; i++) {
-@@ -1490,6 +1508,8 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
- 	if (rc)
- 		dev_err(&pdev->dev, "ntb: QP%d unable to send linkdown msg\n",
- 			qp->qp_num);
-+
-+	ntb_qp_link_down_reset(qp);
- }
- 
- /**
--- 
-2.4.0.rc0.43.gcf8a8c6
-
+OK. Thanks.
+> 
+> > --
+> > Changes in v2:
+> > - Use monotonic time (ktime_get_ns()) instead of real time
+> > since we only care about elapsed delta here.
+> > - Use macro ktime_get_ns() instead of getting ktime_t and
+> > converting it to ns.
+> > ---
+> >  drivers/pci/xen-pcifront.c | 8 +++-----
+> >  1 file changed, 3 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+> > index 7cfd2db..c4796c8 100644
+> > --- a/drivers/pci/xen-pcifront.c
+> > +++ b/drivers/pci/xen-pcifront.c
+> > @@ -20,6 +20,7 @@
+> >  #include <linux/workqueue.h>
+> >  #include <linux/bitops.h>
+> >  #include <linux/time.h>
+> > +#include <linux/ktime.h>
+> >  #include <xen/platform_pci.h>
+> >
+> >  #include <asm/xen/swiotlb-xen.h>
+> > @@ -115,7 +116,6 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+> >         evtchn_port_t port = pdev->evtchn;
+> >         unsigned irq = pdev->irq;
+> >         s64 ns, ns_timeout;
+> > -       struct timeval tv;
+> >
+> >         spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
+> >
+> > @@ -132,8 +132,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+> >          * (in the latter case we end up continually re-executing poll() with a
+> >          * timeout in the past). 1s difference gives plenty of slack for error.
+> >          */
+> > -       do_gettimeofday(&tv);
+> > -       ns_timeout = timeval_to_ns(&tv) + 2 * (s64)NSEC_PER_SEC;
+> > +       ns_timeout = ktime_get_ns() + 2 * (s64)NSEC_PER_SEC;
+> >
+> >         xen_clear_irq_pending(irq);
+> >
+> > @@ -141,8 +140,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
+> >                         (unsigned long *)&pdev->sh_info->flags)) {
+> >                 xen_poll_irq_timeout(irq, jiffies + 3*HZ);
+> >                 xen_clear_irq_pending(irq);
+> > -               do_gettimeofday(&tv);
+> > -               ns = timeval_to_ns(&tv);
+> > +               ns = ktime_get_ns();
+> >                 if (ns > ns_timeout) {
+> >                         dev_err(&pdev->xdev->dev,
+> >                                 "pciback not responding!!!\n");
+> > --
+> > 2.2.0.rc0.207.ga3a616c
+> >
