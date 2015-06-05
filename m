@@ -1,105 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33036 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbbF3SXQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jun 2015 14:23:16 -0400
-Received: by pacws9 with SMTP id ws9so9419797pac.0
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 11:23:15 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v2 1/2] arm64: dts: Add 1 more window with large size for X-Gene PCIe nodes
-Date: Tue, 30 Jun 2015 11:22:27 -0700
-Message-Id: <410796b8709b370be29909aa2f68e59566c63481.1435688121.git.dhdang@apm.com>
-In-Reply-To: <cover.1435688121.git.dhdang@apm.com>
-References: <cover.1435688121.git.dhdang@apm.com>
-In-Reply-To: <cover.1435688121.git.dhdang@apm.com>
-References: <46305464.n5SOjGAhJb@wuerfel> <cover.1435688121.git.dhdang@apm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1433391238-19471-7-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+	<1433391238-19471-7-git-send-email-jiang.liu@linux.intel.com>
+Date: Fri, 5 Jun 2015 12:06:06 +0900
+Message-ID: <CA+Ln22Euot24co7qKLTej43j3Z2BS-p5WhjRq9WgRb-+U=Tyqw@mail.gmail.com>
+Subject: Re: [RFT v2 06/48] pinctrl: Use irq_desc_get_xxx() to avoid redundant
+ lookup of irq_desc
+From: Tomasz Figa <tomasz.figa@gmail.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Alessandro Rubini <rubini@unipv.it>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Thomas Abraham <thomas.abraham@linaro.org>,
+	Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Barry Song <baohua@kernel.org>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Hongzhou Yang <hongzhou.yang@mediatek.com>,
+	Maoguang Meng <maoguang.meng@mediatek.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Axel Lin <axel.lin@ingics.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Stephen Boyd <sboyd@codeaurora.org>, Bin Shi <Bin.Shi@csr.com>,
+	Fan Wu <fwu@marvell.com>, Hans de Goede <hdegoede@redhat.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Barry Song <Baohua.Song@csr.com>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	linux-mediatek@lists.infradead.org,
+	linux-rockchip@lists.infradead.org, kernel@stlinux.com,
+	"linux-samsung-soc@vger.kernel.org"
+	<linux-samsung-soc@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds 1 additional window with large size (up to 64GB) for
-X-Gene PCIe nodes to support devices that require huge BAR.
+Hi,
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
----
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+2015-06-04 13:13 GMT+09:00 Jiang Liu <jiang.liu@linux.intel.com>:
+> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+> already have a pointer to corresponding irq_desc.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Acked-by: Linus Walleij <linus.walleij@linaro.org>
+> ---
+>  drivers/pinctrl/intel/pinctrl-cherryview.c    |    2 +-
+>  drivers/pinctrl/intel/pinctrl-intel.c         |    2 +-
+>  drivers/pinctrl/mediatek/pinctrl-mtk-common.c |    4 ++--
+>  drivers/pinctrl/nomadik/pinctrl-nomadik.c     |   12 +++++-------
+>  drivers/pinctrl/pinctrl-amd.c                 |    2 +-
+>  drivers/pinctrl/pinctrl-at91.c                |    2 +-
+>  drivers/pinctrl/pinctrl-coh901.c              |    4 ++--
+>  drivers/pinctrl/pinctrl-rockchip.c            |    4 ++--
+>  drivers/pinctrl/pinctrl-single.c              |    2 +-
+>  drivers/pinctrl/pinctrl-st.c                  |    6 +++---
+>  drivers/pinctrl/qcom/pinctrl-msm.c            |    2 +-
+>  drivers/pinctrl/samsung/pinctrl-exynos.c      |    8 ++++----
+>  drivers/pinctrl/samsung/pinctrl-s3c24xx.c     |   18 +++++++++---------
+>  drivers/pinctrl/samsung/pinctrl-s3c64xx.c     |   22 ++++++++++------------
 
-diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-index d8f3a1c..80a8050 100644
---- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-@@ -407,7 +407,8 @@
- 				0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
- 			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
--				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-+				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000   /* mem */
-+				  0x43000000 0xf0 0x00000000 0xf0 0x00000000 0x10 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-@@ -430,8 +431,9 @@
- 			reg = < 0x00 0x1f2c0000 0x0 0x00010000   /* Controller registers */
- 				0xd0 0xd0000000 0x0 0x00040000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
--			ranges = <0x01000000 0x0 0x00000000 0xd0 0x10000000 0x00 0x00010000   /* io  */
--				  0x02000000 0x0 0x80000000 0xd1 0x80000000 0x00 0x80000000>; /* mem */
-+			ranges = <0x01000000 0x00 0x00000000 0xd0 0x10000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x00 0x80000000 0xd1 0x80000000 0x00 0x80000000   /* mem */
-+				  0x43000000 0xd8 0x00000000 0xd8 0x00000000 0x08 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-@@ -454,8 +456,9 @@
- 			reg =  < 0x00 0x1f2d0000 0x0 0x00010000   /* Controller registers */
- 				 0x90 0xd0000000 0x0 0x00040000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
--			ranges = <0x01000000 0x0 0x00000000 0x90 0x10000000 0x0 0x00010000   /* io  */
--				  0x02000000 0x0 0x80000000 0x91 0x80000000 0x0 0x80000000>; /* mem */
-+			ranges = <0x01000000 0x00 0x00000000 0x90 0x10000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x00 0x80000000 0x91 0x80000000 0x00 0x80000000   /* mem */
-+				  0x43000000 0x94 0x00000000 0x94 0x00000000 0x04 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-@@ -478,8 +481,9 @@
- 			reg = < 0x00 0x1f500000 0x0 0x00010000   /* Controller registers */
- 				0xa0 0xd0000000 0x0 0x00040000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
--			ranges = <0x01000000 0x0 0x00000000 0xa0 0x10000000 0x0 0x00010000   /* io   */
--				  0x02000000 0x0 0x80000000 0xa1 0x80000000 0x0 0x80000000>; /* mem  */
-+			ranges = <0x01000000 0x00 0x00000000 0xa0 0x10000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x00 0x80000000 0xa1 0x80000000 0x00 0x80000000   /* mem */
-+				  0x43000000 0xb0 0x00000000 0xb0 0x00000000 0x10 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-@@ -502,8 +506,9 @@
- 			reg = < 0x00 0x1f510000 0x0 0x00010000   /* Controller registers */
- 				0xc0 0xd0000000 0x0 0x00200000>; /* PCI config space */
- 			reg-names = "csr", "cfg";
--			ranges = <0x01000000 0x0 0x00000000 0xc0 0x10000000 0x0 0x00010000   /* io  */
--				  0x02000000 0x0 0x80000000 0xc1 0x80000000 0x0 0x80000000>; /* mem */
-+			ranges = <0x01000000 0x00 0x00000000 0xc0 0x10000000 0x00 0x00010000   /* io  */
-+				  0x02000000 0x00 0x80000000 0xc1 0x80000000 0x00 0x80000000   /* mem */
-+				  0x43000000 0xc8 0x00000000 0xc8 0x00000000 0x08 0x00000000>; /* mem */
- 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
- 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
- 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
--- 
-1.9.1
+For Samsung stuff:
 
+Acked-by: Tomasz Figa <tomasz.figa@gmail.com>
+
+Best regards,
+Tomasz
