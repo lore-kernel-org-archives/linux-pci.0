@@ -1,50 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:36802 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753019AbbFDWCB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 18:02:01 -0400
-Received: by oihb142 with SMTP id b142so40930107oih.3
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 15:02:00 -0700 (PDT)
-Subject: [PATCH 3/5] PCI: layerscape: Use dw_pcie_link_up() consistently
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Date: Thu, 04 Jun 2015 17:01:58 -0500
-Message-ID: <20150604220158.4377.97359.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mga02.intel.com ([134.134.136.20]:28784 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752187AbbFEBPV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Jun 2015 21:15:21 -0400
+Message-ID: <5570F823.4010200@linux.intel.com>
+Date: Fri, 05 Jun 2015 09:15:15 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Daniel Axtens <dja@axtens.net>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Subject: Re: [RFT v2 00/48] Refine irq interfaces to reduce number of parameters
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com> <1433463773.7208.0.camel@axtens.net>
+In-Reply-To: <1433463773.7208.0.camel@axtens.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All the other DesignWare-based drivers use dw_pcie_link_up(), so use it in
-this driver, too, for consistency.  No functional change.
+On 2015/6/5 8:22, Daniel Axtens wrote:
+> Hi Gerry,
+> 
+> You seem to be missing the links where I can grab this patch set from,
+> as indicated below. Is there somewhere I can pull this from to make it a
+> bit easier for me to build?
+Hi Daniel,
+Yeah, sorry. You may pull from:
+https://github.com/jiangliu/linux.git genirq_v2
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-layerscape.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index 4a6e62f..bb5894f 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -70,7 +70,7 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_setup_rc(pp);
- 
--	while (!ls_pcie_link_up(pp)) {
-+	while (!dw_pcie_link_up(pp)) {
- 		usleep_range(100, 1000);
- 		count++;
- 		if (count >= 200) {
-
+Thanks!
+Gerry
