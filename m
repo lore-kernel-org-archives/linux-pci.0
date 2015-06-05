@@ -1,59 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:1269 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:63566 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752629AbbFDEPy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Jun 2015 00:15:54 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Mark Salter <msalter@redhat.com>,
-	Aurelien Jacquiot <a-jacquiot@ti.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-c6x-dev@linux-c6x.org
-Subject: [RFT v2 23/48] c6x, irq: Prepare for killing the first parameter 'irq' of irq_flow_handler_t
-Date: Thu,  4 Jun 2015 12:13:33 +0800
-Message-Id: <1433391238-19471-24-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+	id S1751968AbbFEV7W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Jun 2015 17:59:22 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH V3 0/2] pci: Provide a flag to access VPD through
+ function 0
+Date: Fri, 5 Jun 2015 21:59:20 +0000
+Message-ID: <051B68B4-3E77-4EB0-B9FE-8523631884A2@intel.com>
+References: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
+In-Reply-To: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_926CE864-1ACB-499A-B033-66D4E3C73A01";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change irq flow handler to prepare for killing the first parameter 'irq'
-of irq_flow_handler_t.
+--Apple-Mail=_926CE864-1ACB-499A-B033-66D4E3C73A01
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/c6x/platforms/megamod-pic.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+> On Jun 3, 2015, at 11:46 AM, Mark D Rustad <mark.d.rustad@intel.com> =
+wrote:
+>=20
+> Many multi-function devices provide shared registers in extended
+> config space for accessing VPD. The behavior of these registers
+> means that the state must be tracked and access locked correctly
+> for accesses not to hang or worse. One way to meet these needs is
+> to always perform the accesses through function 0, thereby using
+> the state tracking and mutex that already exists.
+>=20
+> To provide this behavior, add a dev_flags bit to indicate that this
+> should be done. This bit can then be set for any non-zero function
+> that needs to redirect such VPD access to function 0. Do not set
+> this bit on the zero function or there will be an infinite recursion.
+>=20
+> The second patch uses this new flag to invoke this behavior on all
+> multi-function Intel Ethernet devices.
+>=20
+> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+>=20
+> ---
+> Changes in V2:
+> - Corrected a spelling error in a log message
+> - Added checks to see that the referenced function 0 is reasonable
+> Changes in V3:
+> - Don't leak a device reference
+> - Check that function 0 has VPD
+> - Make a helper for the function 0 checks
+> - Moved a multifunction check to the quirk patch
 
-diff --git a/arch/c6x/platforms/megamod-pic.c b/arch/c6x/platforms/megamod-pic.c
-index 74e3371eb824..2e303b75060a 100644
---- a/arch/c6x/platforms/megamod-pic.c
-+++ b/arch/c6x/platforms/megamod-pic.c
-@@ -107,12 +107,9 @@ static void megamod_irq_cascade(unsigned int irq, struct irq_desc *desc)
- 
- 	while ((events = soc_readl(&pic->regs->mevtflag[idx])) != 0) {
- 		n = __ffs(events);
--
--		irq = irq_linear_revmap(pic->irqhost, idx * 32 + n);
--
- 		soc_writel(1 << n, &pic->regs->evtclr[idx]);
--
--		generic_handle_irq(irq);
-+		generic_handle_irq(irq_linear_revmap(pic->irqhost,
-+						     idx * 32 + n));
- 	}
- }
- 
--- 
-1.7.10.4
+So does this series look acceptable now? I think I addressed the issues =
+that Alex raised. Can these also be considered for -stable?
 
+--
+Mark Rustad, Networking Division, Intel Corporation
+
+
+--Apple-Mail=_926CE864-1ACB-499A-B033-66D4E3C73A01
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJVchu3AAoJEDwO/+eO4+5ulYAP/A1UBUn+VE9AjaORMDHs+i+X
+Cs/zLjQNLGg7u9c2gKNnzNowsngZI6gxlId5Pk/OLiRWidjKWccWLAGtpxrEDXiu
+a3XU4qogJ/MEK1PcStJEn2URZcH0u+prH2agEfl7Y4A4nC/FMW4HlK84D1gcGLtr
+ZTnR61OtjYEwYXomDoeMaBhgHjPwDR/8yyEdTpSVASpmIw6W26G5nh3Xmvj/JTCq
+DlfJ3Uqb40I8yCluCxPR+zsaPJ7Z+K2aKbGuISm1JMf6kyaGcgsy2DoW2cGaVNVj
+cZ//5oHyW2lwaIqcvbHTp/JKEfuiWpfxH2PJzwk2jgXoQdwVILUJuMimdEkznsXR
+qx3jJX/ZSZWQv7AccG9uIjK9HtkcrKhd8q34NVh+L3zzrpu+jVYgLHmQ7jEUKHbO
+cfB5s798wO2mzNtssmUvOUT3/McZrLYpc1VHYepXgIzpXt+pMukEGYFb3hRSyH7k
+DHiY/dmfjBRywbXpQBPU5aICJupHhK3OeCqZprOZxkGgEKp0oYvW0rccjrxZfRCj
+P5FrM3I5HzIU9UyPyzYb2KfSHwzrbkNExzP2qWyDS68+8yhhV9x2H7GHYG+z1Q7L
+Jv9hoj1ZLjHbrSasAayNRnzoxYEWQ51VfzH6MZ1AT+SEUOUGiVffzxgsxhHxaw1B
+ZNogdJHKqrP3fSa6WwPT
+=9LFS
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_926CE864-1ACB-499A-B033-66D4E3C73A01--
