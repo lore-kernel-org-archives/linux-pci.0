@@ -1,137 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:33845 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860AbbFETre (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 15:47:34 -0400
-Received: by iebmu5 with SMTP id mu5so29769506ieb.1
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 12:47:34 -0700 (PDT)
-Date: Fri, 5 Jun 2015 14:47:30 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	aik@ozlabs.ru, panto@antoniou-consulting.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-Subject: Re: [PATCH v5 31/42] powerpc/pci: Move pcibios_find_pci_bus() around
-Message-ID: <20150605194730.GO3631@google.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1433400131-18429-32-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:34788 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597AbbFEHHc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 03:07:32 -0400
+Received: by wgv5 with SMTP id 5so49517067wgv.1
+        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 00:07:31 -0700 (PDT)
+Message-ID: <55714AB1.9050306@monstr.eu>
+Date: Fri, 05 Jun 2015 09:07:29 +0200
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433400131-18429-32-git-send-email-gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/7] microblaze/PCI: Remove unnecessary pci_bus_find_capability()
+ declaration
+References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150604214936.2399.94190.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150604214936.2399.94190.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="wa6DEjNB307lh7uLImNFHe97Vg0fjqwTe"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-"Move pcibios_find_pci_bus() from pSeries to generic powerpc code"?
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--wa6DEjNB307lh7uLImNFHe97Vg0fjqwTe
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jun 04, 2015 at 04:42:00PM +1000, Gavin Shan wrote:
-> The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
-
-s/kerenl/kernel/
-
-> that it can be reused by hotplug code for pSeries and PowerNV
-> platform at the same time.
-> 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+On 06/04/2015 11:49 PM, Bjorn Helgaas wrote:
+> pci_bus_find_capability() is declared in include/linux/pci.h.
+>=20
+> Remove the pci_bus_find_capability() declaration from
+> arch/microblaze/include/asm/pci.h.
+>=20
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Michal Simek <monstr@monstr.eu>
 > ---
-> v5:
->   * Derived from PATCH[v4 12/21]
-> ---
->  arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
->  arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
->  2 files changed, 36 insertions(+), 32 deletions(-)
-> 
-> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-> index ca392fc..1482bc1 100644
-> --- a/arch/powerpc/kernel/pci-hotplug.c
-> +++ b/arch/powerpc/kernel/pci-hotplug.c
-> @@ -21,6 +21,42 @@
->  #include <asm/firmware.h>
->  #include <asm/eeh.h>
->  
-> +static struct pci_bus *find_pci_bus(struct pci_bus *bus,
-> +				    struct device_node *dn)
-> +{
-> +	struct pci_bus *tmp, *child = NULL;
-> +	struct device_node *busdn;
-> +
-> +	busdn = pci_bus_to_OF_node(bus);
-> +	if (busdn == dn)
-> +		return bus;
-> +
-> +	list_for_each_entry(tmp, &bus->children, node) {
-> +		child = find_pci_bus(tmp, dn);
-> +		if (child)
-> +			break;
-> +	}
-> +
-> +	return child;
-> +}
-> +
-> +/**
-> + * pcibios_find_pci_bus - find PCI bus according to the given device node
-> + * @dn: Device node
-> + *
-> + * Find the corresponding PCI bus according to the given device node.
-> + */
-> +struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
-> +{
-> +	struct pci_dn *pdn = PCI_DN(dn);
-> +
-> +	if (!pdn  || !pdn->phb || !pdn->phb->bus)
-> +		return NULL;
-> +
-> +	return find_pci_bus(pdn->phb->bus, dn);
-> +}
-> +EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
-> +
->  /**
->   * pcibios_release_device - release PCI device
->   * @dev: PCI device
-> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> index 5d4a3df..906dbaa 100644
-> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> @@ -34,38 +34,6 @@
->  
->  #include "pseries.h"
->  
-> -static struct pci_bus *
-> -find_bus_among_children(struct pci_bus *bus,
-> -                        struct device_node *dn)
-> -{
-> -	struct pci_bus *child = NULL;
-> -	struct pci_bus *tmp;
-> -	struct device_node *busdn;
+>  arch/microblaze/include/asm/pci.h |    3 ---
+>  1 file changed, 3 deletions(-)
+>=20
+> diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/includ=
+e/asm/pci.h
+> index b6b5b3c..541400d 100644
+> --- a/arch/microblaze/include/asm/pci.h
+> +++ b/arch/microblaze/include/asm/pci.h
+> @@ -102,9 +102,6 @@ extern void pcibios_finish_adding_to_bus(struct pci=
+_bus *bus);
+> =20
+>  extern void pcibios_resource_survey(void);
+> =20
+> -extern int pci_bus_find_capability(struct pci_bus *bus,
+> -						unsigned int devfn, int cap);
 > -
-> -	busdn = pci_bus_to_OF_node(bus);
-> -	if (busdn == dn)
-> -		return bus;
-> -
-> -	list_for_each_entry(tmp, &bus->children, node) {
-> -		child = find_bus_among_children(tmp, dn);
-> -		if (child)
-> -			break;
-> -	};
-> -	return child;
-> -}
-> -
-> -struct pci_bus *
-> -pcibios_find_pci_bus(struct device_node *dn)
-> -{
-> -	struct pci_dn *pdn = dn->data;
-> -
-> -	if (!pdn  || !pdn->phb || !pdn->phb->bus)
-> -		return NULL;
-> -
-> -	return find_bus_among_children(pdn->phb->bus, dn);
-> -}
-> -EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
-> -
->  struct pci_controller *init_phb_dynamic(struct device_node *dn)
->  {
->  	struct pci_controller *phb;
-> -- 
-> 2.1.0
-> 
+>  struct file;
+>  extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
+>  					 unsigned long pfn,
+>=20
+
+
+Reviewed-by: Michal Simek <michal.simek@xilinx.com>
+
+Bjorn: Do you want me to take this via Microblaze tree?
+
+Thanks,
+Michal
+
+--=20
+Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
+Maintainer of Linux kernel - Xilinx Zynq ARM architecture
+Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
+
+
+
+--wa6DEjNB307lh7uLImNFHe97Vg0fjqwTe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.14 (GNU/Linux)
+
+iEYEARECAAYFAlVxSrEACgkQykllyylKDCH8FgCfRsVeXyetlnxbZblxCOFbkSdX
+Bj4AnjcK7SoHU8tJyXYZZbDHGFPeriI9
+=cGGd
+-----END PGP SIGNATURE-----
+
+--wa6DEjNB307lh7uLImNFHe97Vg0fjqwTe--
