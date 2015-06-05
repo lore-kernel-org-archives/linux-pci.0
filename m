@@ -1,76 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:33848 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753182AbbFSWmx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:42:53 -0400
-Received: by igboe5 with SMTP id oe5so26599804igb.1
-        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 15:42:53 -0700 (PDT)
-Subject: [PATCH 5/6] PCI: Simplify reset_intel_generic_dev()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dexuan Cui <dexuan.cui@intel.com>, Matthew Wilcox <matthew@wil.cx>,
-	x86@kernel.org, Felipe Balbi <balbi@ti.com>,
-	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
-	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Jason Chang <jason.chang@amd.com>
-Date: Fri, 19 Jun 2015 17:42:51 -0500
-Message-ID: <20150619224251.14626.51652.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from 8bytes.org ([81.169.241.247]:59221 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423044AbbFEOLU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Jun 2015 10:11:20 -0400
+From: Joerg Roedel <joro@8bytes.org>
+To: iommu@lists.linux-foundation.org
+Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
+	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
+	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
+	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
+Subject: [PATCH 12/17] iommu/vt-d: Move EIM detection to intel_prepare_irq_remapping
+Date: Fri,  5 Jun 2015 16:10:58 +0200
+Message-Id: <1433513463-19128-13-git-send-email-joro@8bytes.org>
+In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Restructure reset_intel_generic_dev() slightly to return early for non-USB
-devices.  That makes the body of the function non-indented.
+From: Joerg Roedel <jroedel@suse.de>
 
-No functional change.
+This needs to be set up before the ir-table can be
+programmed to the iommu hardware register. This programming
+will be moved to intel_setup_irq_remapping, so EIM needs to
+be set up earlier too.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Dexuan Cui <dexuan.cui@intel.com>
-CC: Yu Zhao <yu.zhao@intel.com>
+Tested-by: Baoquan He <bhe@redhat.com>
+Signed-off-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/pci/quirks.c |   23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+ drivers/iommu/intel_irq_remapping.c | 44 +++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 356a401..ed2763b2 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3358,21 +3358,20 @@ static int reset_intel_generic_dev(struct pci_dev *dev, int probe)
- 	int pos;
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 70e4955..35d73f6 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -637,10 +637,26 @@ static int __init intel_prepare_irq_remapping(void)
+ 		goto error;
+ 	}
  
- 	/* only implement PCI_CLASS_SERIAL_USB at present */
--	if ((dev->class >> 8) == PCI_CLASS_SERIAL_USB) {
--		pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
--		if (!pos)
--			return -ENOTTY;
++	if (x2apic_supported()) {
++		eim_mode = !dmar_x2apic_optout();
++		if (!eim_mode)
++			pr_info("BIOS set x2apic opt out bit. Use "
++				"'intremap=no_x2apic_optout' to enable x2apic\n");
++	}
++
+ 	/* First make sure all IOMMUs support IRQ remapping */
+-	for_each_iommu(iommu, drhd)
++	for_each_iommu(iommu, drhd) {
+ 		if (!ecap_ir_support(iommu->ecap))
+ 			goto error;
++		if (eim_mode && !ecap_eim_support(iommu->ecap)) {
++			printk(KERN_INFO "DRHD %Lx: EIM not supported by DRHD, "
++			       " ecap %Lx\n", drhd->reg_base_addr, iommu->ecap);
++			eim_mode = 0;
++		}
++	}
++
++	if (eim_mode)
++		pr_info("Queued invalidation will be enabled to support x2apic and Intr-remapping.\n");
+ 
+ 	/* Do the allocations early */
+ 	for_each_iommu(iommu, drhd)
+@@ -659,13 +675,6 @@ static int __init intel_enable_irq_remapping(void)
+ 	struct dmar_drhd_unit *drhd;
+ 	struct intel_iommu *iommu;
+ 	bool setup = false;
+-	int eim = 0;
 -
--		if (probe)
--			return 0;
-+	if ((dev->class >> 8) != PCI_CLASS_SERIAL_USB)
-+		return -ENOTTY;
- 
--		pci_write_config_byte(dev, pos + 0x4, 1);
--		msleep(100);
-+	pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
-+	if (!pos)
-+		return -ENOTTY;
- 
-+	if (probe)
- 		return 0;
--	} else {
--		return -ENOTTY;
+-	if (x2apic_supported()) {
+-		eim = !dmar_x2apic_optout();
+-		if (!eim)
+-			pr_info("x2apic is disabled because BIOS sets x2apic opt out bit. You can use 'intremap=no_x2apic_optout' to override the BIOS setting.\n");
 -	}
-+
-+	pci_write_config_byte(dev, pos + 0x4, 1);
-+	msleep(100);
-+
-+	return 0;
- }
  
- static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+ 	for_each_iommu(iommu, drhd) {
+ 		iommu_check_pre_ir_status(iommu);
+@@ -679,19 +688,6 @@ static int __init intel_enable_irq_remapping(void)
+ 	}
+ 
+ 	/*
+-	 * check for the Interrupt-remapping support
+-	 */
+-	for_each_iommu(iommu, drhd)
+-		if (eim && !ecap_eim_support(iommu->ecap)) {
+-			printk(KERN_INFO "DRHD %Lx: EIM not supported by DRHD, "
+-			       " ecap %Lx\n", drhd->reg_base_addr, iommu->ecap);
+-			eim = 0;
+-		}
+-	eim_mode = eim;
+-	if (eim)
+-		pr_info("Queued invalidation will be enabled to support x2apic and Intr-remapping.\n");
+-
+-	/*
+ 	 * Setup Interrupt-remapping for all the DRHD's now.
+ 	 */
+ 	for_each_iommu(iommu, drhd) {
+@@ -705,7 +701,7 @@ static int __init intel_enable_irq_remapping(void)
+ 				INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
+ 			__iommu_load_old_irte(iommu);
+ 		} else
+-			iommu_set_irq_remapping(iommu, eim);
++			iommu_set_irq_remapping(iommu, eim_mode);
+ 
+ 		setup = true;
+ 	}
+@@ -722,9 +718,9 @@ static int __init intel_enable_irq_remapping(void)
+ 	 */
+ 	x86_io_apic_ops.print_entries = intel_ir_io_apic_print_entries;
+ 
+-	pr_info("Enabled IRQ remapping in %s mode\n", eim ? "x2apic" : "xapic");
++	pr_info("Enabled IRQ remapping in %s mode\n", eim_mode ? "x2apic" : "xapic");
+ 
+-	return eim ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
++	return eim_mode ? IRQ_REMAP_X2APIC_MODE : IRQ_REMAP_XAPIC_MODE;
+ 
+ error:
+ 	intel_cleanup_irq_remapping();
+-- 
+1.9.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
