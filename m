@@ -1,89 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1433433105.24429.30.camel@deneb.redhat.com>
-Subject: Re: [Patch v4 0/8] Consolidate ACPI PCI root common code into ACPI
- core
-From: Mark Salter <msalter@redhat.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>, Al Stone <ahs3@redhat.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Date: Thu, 04 Jun 2015 11:51:45 -0400
-In-Reply-To: <556FF32B.9010900@linux.intel.com>
-References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
-	 <556F6332.2040501@redhat.com> <556FAFEF.6040802@linux.intel.com>
-	 <556FF0AD.6000901@linaro.org> <556FF32B.9010900@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:33447 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743AbbFEHHT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 03:07:19 -0400
+Received: by wiwd19 with SMTP id d19so11309467wiw.0
+        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 00:07:18 -0700 (PDT)
+Message-ID: <55714AA3.1070407@monstr.eu>
+Date: Fri, 05 Jun 2015 09:07:15 +0200
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/7] microblaze/PCI: Remove unused declarations
+References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150604214929.2399.85988.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150604214929.2399.85988.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="gTsS6AOsC0FdSSf1x5bWItB88aUvCenDu"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-06-04 at 14:41 +0800, Jiang Liu wrote:
-> On 2015/6/4 14:31, Hanjun Guo wrote:
-> > Hi Jiang,
-> > 
-> > On 2015年06月04日 09:54, Jiang Liu wrote:
-> >> On 2015/6/4 4:27, Al Stone wrote:
-> >>> On 06/02/2015 12:12 AM, Jiang Liu wrote:
-> >>>> This patch set consolidates common code to support ACPI PCI root on x86
-> >>>> and IA64 platforms into ACPI core, to reproduce duplicated code and
-> >>>> simplify maintenance. And a patch set based on this to support ACPI
-> >>>> based
-> >>>> PCIe host bridge on ARM64 has been posted at:
-> >>>
-> >>> Link is missing (or it's a typo of some flavor).
-> >> HI Al,
-> >>     Sorry, I missed the link. It has been posted at:
-> >> https://lkml.org/lkml/2015/5/26/207
-> > 
-> > I failed to get io resources for PCI hostbridge  when I was testing PCI
-> > on ARM64 QEMU, I debugged this for quite a while, and finally found out
-> > that ACPI resource parsing for IO is not suitable for ARM64, because io
-> > space for x86 is 64K, but 16M for ARM64.
-> > 
-> > This issue is only found when the firmware representing the io resource
-> > using the type ACPI_RESOURCE_TYPE_ADDRESS32, so the io address will
-> > greater than 64k.
-> > 
-> > In drivers/acpi/resource.c:
-> > 
-> > static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
-> >                                       u8 io_decode, u8 translation_type)
-> > {
-> >         res->flags = IORESOURCE_IO;
-> > 
-> > [...]
-> > 
-> >         if (res->end >= 0x10003)
-> >                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-> > 
-> > [...]
-> > }
-> > 
-> > so the code will filter out res->end >= 0x10003, and in my case, it will
-> > more than 64K, so we can't get the IO resources.
-> > 
-> > I got a question, why we use if (res->end >= 0x10003) here?
-> > I mean 64k will be 0x10000, and in that case, we should use
-> > if (res->end >= 0x10000) here, not 0x10003, any history behind that?
-> 
-> Hi Hanjun,
-> This is a special tricky for x86. You may read a dword(four bytes) from
-> IO port 0xffff, so the effective io port space is 0x10003 bytes.
-> 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--gTsS6AOsC0FdSSf1x5bWItB88aUvCenDu
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Is there something in ACPI spec which would limit PCI IO space to 64K?
-PCI itself allows 32-bit IO addresses and at least some arm64 platforms
-use PCI bus addresses above 64K for IO transactions. From a PCI view,
-the (res->end >= 0x10003) check doesn't make sense. Am I missing
-something?
+On 06/04/2015 11:49 PM, Bjorn Helgaas wrote:
+> The following declarations were copied from powerpc but are unused on
+> microblaze:
+>=20
+>   struct pci_controller *init_phb_dynamic(struct device_node *dn)
+>   int remove_phb_dynamic(struct pci_controller *phb)
+>   struct pci_dev *of_create_pci_dev(struct device_node *node, ...)
+>   void of_scan_pci_bridge(struct device_node *node, ...)
+>   void of_scan_bus(struct device_node *node, struct pci_bus *bus)
+>   void of_rescan_bus(struct device_node *node, struct pci_bus *bus)
+>=20
+> Remove them.
+>=20
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Michal Simek <monstr@monstr.eu>
+> ---
+>  arch/microblaze/include/asm/pci.h |   12 ------------
+>  1 file changed, 12 deletions(-)
+
+Reviewed-by: Michal Simek <michal.simek@xilinx.com>
+
+Bjorn: Do you want me to take this via Microblaze tree?
+
+Thanks,
+Michal
+
+--=20
+Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
+Maintainer of Linux kernel - Xilinx Zynq ARM architecture
+Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
 
 
 
+--gTsS6AOsC0FdSSf1x5bWItB88aUvCenDu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.14 (GNU/Linux)
+
+iEYEARECAAYFAlVxSqMACgkQykllyylKDCHAzACgnDyWr5hzD/SZFf15eW6Vv8UR
+nmEAnig9NCuoA68OERPBhSVObhuTrZ9J
+=MMqf
+-----END PGP SIGNATURE-----
+
+--gTsS6AOsC0FdSSf1x5bWItB88aUvCenDu--
