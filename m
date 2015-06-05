@@ -1,117 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:42223 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737AbbFDGo4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:44:56 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:44:54 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 41/42] drivers/of: Return allocated memory chunk from of_fdt_unflatten_tree()
-Date: Thu,  4 Jun 2015 16:42:10 +1000
-Message-Id: <1433400131-18429-42-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1433513800.24429.56.camel@deneb.redhat.com>
+Subject: Re: [RFT v2 43/48] genirq, arch: Kill the first parameter 'irq' of
+ irq_flow_handler_t
+From: Mark Salter <msalter@redhat.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Richard Henderson <rth@twiddle.net>,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+	Matt Turner <mattst88@gmail.com>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Hans-Christian Egtvedt <egtvedt@samfundet.no>,
+	Aurelien Jacquiot <a-jacquiot@ti.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Andreas Larsson <andreas@gaisler.com>,
+	Joe Perches <joe@perches.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-alpha@vger.kernel.org,
+	linux-c6x-dev@linux-c6x.org, sparclinux@vger.kernel.org
+Date: Fri, 05 Jun 2015 10:16:40 -0400
+In-Reply-To: <1433391238-19471-44-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+	 <1433391238-19471-44-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch changes of_fdt_unflatten_tree() so that it returns the
-allocated memory chunk for unflattened device-tree, which can be
-released once it's obsoleted.
+On Thu, 2015-06-04 at 12:13 +0800, Jiang Liu wrote:
+> Now most IRQ flow handlers make no use of the first parameter 'irq'.
+> And for those who do make use of 'irq', we could easily get the irq
+> number through irq_desc->irq_data->irq. So kill the first parameter
+> 'irq' of irq_flow_handler_t.
+> 
+> To ease review, I have split the changes into several parts, though
+> they should be merge as one to support bisecting.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Acked-by: Hans-Christian Egtvedt <egtvedt@samfundet.no>
+> ---
+>  arch/alpha/kernel/irq.c             |    2 +-
+>  arch/avr32/mach-at32ap/extint.c     |    2 +-
+>  arch/avr32/mach-at32ap/pio.c        |    2 +-
+>  arch/c6x/platforms/megamod-pic.c    |    2 +-
+>  arch/sparc/kernel/leon_kernel.c     |    2 +-
+>  arch/sparc/kernel/leon_pci_grpci1.c |    2 +-
+>  arch/sparc/kernel/leon_pci_grpci2.c |    2 +-
+>  arch/tile/kernel/pci_gx.c           |    4 ++--
+>  arch/unicore32/kernel/irq.c         |    2 +-
+>  9 files changed, 10 insertions(+), 10 deletions(-)
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
-v5:
-  * Newly introduced
----
- drivers/of/fdt.c       | 21 +++++++++++----------
- include/linux/of_fdt.h |  6 +++---
- 2 files changed, 14 insertions(+), 13 deletions(-)
+For c6x:
 
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index b6a6c59..a954279 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -405,10 +405,10 @@ static void *unflatten_dt_node(void *blob,
-  * @dt_alloc: An allocator that provides a virtual address to memory
-  * for the resulting tree
-  */
--static void __unflatten_device_tree(void *blob,
--				    struct device_node *dad,
--				    struct device_node **mynodes,
--				    void * (*dt_alloc)(u64 size, u64 align))
-+static void *__unflatten_device_tree(void *blob,
-+				     struct device_node *dad,
-+				     struct device_node **mynodes,
-+				     void * (*dt_alloc)(u64 size, u64 align))
- {
- 	unsigned long size;
- 	int start;
-@@ -418,7 +418,7 @@ static void __unflatten_device_tree(void *blob,
- 
- 	if (!blob) {
- 		pr_debug("No device tree pointer\n");
--		return;
-+		return NULL;
- 	}
- 
- 	pr_debug("Unflattening device tree:\n");
-@@ -428,7 +428,7 @@ static void __unflatten_device_tree(void *blob,
- 
- 	if (fdt_check_header(blob)) {
- 		pr_err("Invalid device tree blob header\n");
--		return;
-+		return NULL;
- 	}
- 
- 	/* First pass, scan for size */
-@@ -455,6 +455,7 @@ static void __unflatten_device_tree(void *blob,
- 			   be32_to_cpup(mem + size));
- 
- 	pr_debug(" <- unflatten_device_tree()\n");
-+	return mem;
- }
- 
- static void *kernel_tree_alloc(u64 size, u64 align)
-@@ -470,11 +471,11 @@ static void *kernel_tree_alloc(u64 size, u64 align)
-  * pointers of the nodes so the normal device-tree walking functions
-  * can be used.
-  */
--void of_fdt_unflatten_tree(unsigned long *blob,
--			   struct device_node *dad,
--			   struct device_node **mynodes)
-+void *of_fdt_unflatten_tree(unsigned long *blob,
-+			    struct device_node *dad,
-+			    struct device_node **mynodes)
- {
--	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
-+	return __unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
- }
- EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
- 
-diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
-index 8882640..8a38c6a 100644
---- a/include/linux/of_fdt.h
-+++ b/include/linux/of_fdt.h
-@@ -37,9 +37,9 @@ extern bool of_fdt_is_big_endian(const void *blob,
- 				 unsigned long node);
- extern int of_fdt_match(const void *blob, unsigned long node,
- 			const char *const *compat);
--extern void of_fdt_unflatten_tree(unsigned long *blob,
--				  struct device_node *dad,
--				  struct device_node **mynodes);
-+extern void *of_fdt_unflatten_tree(unsigned long *blob,
-+				   struct device_node *dad,
-+				   struct device_node **mynodes);
- 
- /* TBD: Temporary export of fdt globals - remove when code fully merged */
- extern int __initdata dt_root_addr_cells;
--- 
-2.1.0
+Acked-by: Mark Salter <msalter@redhat.com>
+
 
