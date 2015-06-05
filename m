@@ -1,49 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35859 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933968AbbFWXCf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jun 2015 19:02:35 -0400
-Received: by wicnd19 with SMTP id nd19so119547668wic.1
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jun 2015 16:02:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1435099588.3996.14.camel@kernel.crashing.org>
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
- <20150527210447.GY32152@google.com> <20150602145510.GE23650@red-moon> <1435099588.3996.14.camel@kernel.crashing.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 5 Jun 2015 16:24:17 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 23 Jun 2015 18:02:14 -0500
-Message-ID: <CAErSpo6AziA5GXEi6AizW2WP6oLVMd1p57pWunDNBQeVXxp1nw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: Re: [Patch v2 0/4] Introduce a mechanism to allocate PCI IRQ on
+ demand
+Message-ID: <20150605212417.GU3631@google.com>
+References: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 23, 2015 at 5:46 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Tue, 2015-06-02 at 15:55 +0100, Lorenzo Pieralisi wrote:
->> While at it, do you think it is reasonable to also claim the bridge
->> windows (resources) in the respective pci_read_bridge_* calls ?
->
-> No, don't claim in read. There's a clear distinction between gathering
-> resources and claiming them, and we need to keep that.
->
-> Some fixups might happen in between the two for example.
+On Tue, Jun 02, 2015 at 10:49:15AM +0800, Jiang Liu wrote:
+> This patch set introduces a mechanism to allocate PCI IRQ on demand and
+> free it when not used anymore by hooking pci_device_probe() and
+> pci_device_remove().
+> 
+> It will be used to track IOAPIC pin usage on x86 so we could support
+> IOAPIC hot-removal.
+> 
+> The patch set passes Fengguang's 0day test suite.
+> 
+> V1->V2:
+> 1) Refine pci_device_probe() to optimize for mainline code as suggested
+>    by Bjorn
+> 2) Reorder patch set to put optional patch as the last (Patch 4)
+> 
+> Thanks!
+> Gerry
+> 
+> 
+> Jiang Liu (4):
+>   PCI: Add hooks to allocate/free IRQ resources when binding/unbinding
+>     driver
+>   PCI, x86: Allocate PCI IRQ on demand and free it when not used
+>     anymore
+>   PCI: Introduce helpers to manage pci_dev->irq and
+>     pci_dev->irq_managed
+>   PCI, MSI: Optionally free legacy PCI IRQ when enabling MSI/MSI-X
+> 
+>  arch/x86/include/asm/pci_x86.h |    2 --
+>  arch/x86/pci/common.c          |   20 +++++++++-----------
+>  arch/x86/pci/intel_mid_pci.c   |    9 ++++++---
+>  arch/x86/pci/irq.c             |   23 ++++-------------------
+>  drivers/acpi/pci_irq.c         |   17 ++++-------------
+>  drivers/pci/msi.c              |    6 +++++-
+>  drivers/pci/pci-driver.c       |   26 ++++++++++++++++++++------
+>  include/linux/pci.h            |   19 +++++++++++++++++++
+>  8 files changed, 67 insertions(+), 55 deletions(-)
 
-Are there any existing fixups like that?  Concrete examples would help
-figure out the best way forward.
+I'm fine with these patches, and I can merge them, but I would like an ack
+from Thomas.
 
-Most arches call pci_read_bridge_bases() from pcibios_fixup_bus().  I
-think that's a poor place to do it because it's code that normally
-doesn't have to be arch-specific.  Resource claiming is also usually
-done from arch code, and it shouldn't be arch-specific either.
+Or, if it makes more sense to route these along with other related patches
+through Thomas, here's my ack:
 
-If we move both the read and claim into generic code, then we might
-need to make sure there's a fixup phase in between or something.
-
-Bjorn
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
