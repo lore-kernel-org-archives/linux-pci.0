@@ -1,66 +1,100 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <556C62C5.2040107@linux.intel.com>
-Date: Mon, 01 Jun 2015 21:48:53 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Joerg Roedel <joro@8bytes.org>
+To: iommu@lists.linux-foundation.org
+Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
+	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
+	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
+	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
+Subject: [PATCH 00/17] Fixes and Cleanups for the Intel VT-d driver
+Date: Fri,  5 Jun 2015 16:10:46 +0200
+Message-Id: <1433513463-19128-1-git-send-email-joro@8bytes.org>
 MIME-Version: 1.0
-To: Linus Walleij <linus.walleij@linaro.org>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Ray Jui <rjui@broadcom.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?B?U8O2cmVuIEJyaW5rbWFubg==?= <soren.brinkmann@xilinx.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	Linux-OMAP <linux-omap@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC v1 05/25] gpio: Use irq_desc_get_xxx() to avoid redundant
- lookup of irq_desc
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com>	<1432116013-25902-6-git-send-email-jiang.liu@linux.intel.com> <CACRpkdZfWK5H+gRD6inX31Ouq1XCvq7CneNDJV8x0iihXHzWjw@mail.gmail.com>
-In-Reply-To: <CACRpkdZfWK5H+gRD6inX31Ouq1XCvq7CneNDJV8x0iihXHzWjw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/1 20:45, Linus Walleij wrote:
-> On Wed, May 20, 2015 at 11:59 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> 
->> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
->> already have a pointer to corresponding irq_desc.
->>
->> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> 
-> Acked-by: Linus Walleij <linus.walleij@linaro.org>
-> 
-> Are there dependencies on this patch or can I just apply it
-> directly to the GPIO tree?
-Hi Linus,
-	Thanks for review.
-	There's a very long dependency list of this patch set,
-so it would be safer to merge this patch set altogether through
-the irq tree if that works:)
-Thanks!
-Gerry
+Hey,
 
-> 
-> Yours,
-> Linus Walleij
-> 
+here are a couple of patches to fix the fall-out from the
+patch set fixing the kdump faults with VT-d enabled. A few
+important issues have been fixed:
+
+	* Moved sleeping functions out of atomic sections,
+	  mainly iremap_cache/iounmap.
+
+	* Mark domain ids used in the old kernel as reserved
+	  in the kdump kernel, so that any new domains don't
+	  interfere with domains from the old kernel
+
+	* Mark all IRT entries from the old kernel as
+	  reservered in the new kernel, so that we don't
+	  overwrite an entry which might still be in use by
+	  a device
+
+	* Only try to load anything from the old kernel when
+	  we are in a kdump kernel. If we find the iommu
+	  hardware enabled and we are not in a kdump kernel,
+	  just disable the iommu and proceed with
+	  initialization.
+
+	* Fix a compile error
+
+Besides that I also cleaned up the code to simplify it:
+
+	* Move necessary initialization steps before the
+	  root entry table and the irq remapping table is
+	  programmed into hardware. This makes sure QI is
+	  initialized so that we can flush the iommu caches
+	  when hardware got the new tables.
+
+	* Make the new root entry table and irq remapping
+	  table visible to hardware immediatly after they
+	  are created and loaded with the data from the old
+	  kernel. This allows to remove the code to update
+	  both, the old and the new version of the table at
+	  the same time.
+
+	* Clean up log messages from the VT-d driver to have
+	  a common prefix that can be grepped for.
+
+	* Remove unused code
+
+The changes have been tested by me an Baoquan He. I'll plan
+to put them into the x86/vt-d branch for v4.2.
+
+Regards,
+
+	Joerg
+
+Joerg Roedel (17):
+  iommu/vt-d: Fix compile error when CONFIG_INTEL_IOMMU=n
+  iommu/vt-d: Remove __iommu_save_to_oldmem() function
+  iommu/vt-d: Make two functions static
+  iommu/vt-d: Load old data structures only in kdump kernel
+  iommu/vt-d: Mark root-entry present in set_root_entry
+  iommu/vt-d: Rework loading of old root-entry table
+  iommu/vt-d: Copy context-tables outside of spin_lock
+  iommu/vt-d: Don't reuse domain-ids from old kernel
+  iommu/vt-d: Clean up log messages in intel-iommu.c
+  iommu/vt-d: Allocate irq remapping table bitmap with GFP_KERNEL
+  iommu/vt-d: Move QI initialization to intel_setup_irq_remapping
+  iommu/vt-d: Move EIM detection to intel_prepare_irq_remapping
+  iommu/vt-d: Split up iommu_set_irq_remapping
+  iommu/vt-d: Move kdump pointer intialization to __iommu_load_old_irte
+  iommu/vt-d: Mark irt entries from old kernel as allocated
+  iommu/vt-d: Copy old irte in intel_setup_irq_remapping
+  iommu/vt-d: Remove update code for old ir-table
+
+ drivers/iommu/dmar.c                |  26 +-
+ drivers/iommu/intel-iommu.c         | 463 ++++++++++++++----------------------
+ drivers/iommu/intel_irq_remapping.c | 263 +++++++++-----------
+ include/linux/intel-iommu.h         |  17 +-
+ 4 files changed, 299 insertions(+), 470 deletions(-)
+
+-- 
+1.9.1
+
