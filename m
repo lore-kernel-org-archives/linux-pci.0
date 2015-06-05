@@ -1,69 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [Patch v3 09/36] x86, irq: Use helper irq_data_get_irq_handler_data() to hide irq_desc details
-Date: Mon,  1 Jun 2015 16:05:18 +0800
-Message-Id: <1433145945-789-10-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:59212 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423041AbbFEOLS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Jun 2015 10:11:18 -0400
+From: Joerg Roedel <joro@8bytes.org>
+To: iommu@lists.linux-foundation.org
+Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
+	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
+	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
+	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
+Subject: [PATCH 10/17] iommu/vt-d: Allocate irq remapping table bitmap with GFP_KERNEL
+Date: Fri,  5 Jun 2015 16:10:56 +0200
+Message-Id: <1433513463-19128-11-git-send-email-joro@8bytes.org>
+In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use helper function irq_data_get_irq_handler_data() to hide irq_desc
-implementation details.
+From: Joerg Roedel <jroedel@suse.de>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This function does not run in atomic context, so no reason
+to do a GFP_ATOMIC allocation.
+
+Tested-by: Baoquan He <bhe@redhat.com>
+Signed-off-by: Joerg Roedel <jroedel@suse.de>
 ---
- arch/x86/kernel/apic/msi.c |    2 +-
- arch/x86/kernel/hpet.c     |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/iommu/intel_irq_remapping.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 1a9d735e09c6..5f1feb6854af 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -264,7 +264,7 @@ static inline int hpet_dev_id(struct irq_domain *domain)
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 34667d5..d22518d 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -510,7 +510,7 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu)
+ 	}
  
- static void hpet_msi_write_msg(struct irq_data *data, struct msi_msg *msg)
- {
--	hpet_msi_write(data->handler_data, msg);
-+	hpet_msi_write(irq_data_get_irq_handler_data(data), msg);
- }
- 
- static struct irq_chip hpet_msi_controller = {
-diff --git a/arch/x86/kernel/hpet.c b/arch/x86/kernel/hpet.c
-index e2449cf38b06..40cf79a55fe7 100644
---- a/arch/x86/kernel/hpet.c
-+++ b/arch/x86/kernel/hpet.c
-@@ -426,7 +426,7 @@ static struct irq_domain *hpet_domain;
- 
- void hpet_msi_unmask(struct irq_data *data)
- {
--	struct hpet_dev *hdev = data->handler_data;
-+	struct hpet_dev *hdev = irq_data_get_irq_handler_data(data);
- 	unsigned int cfg;
- 
- 	/* unmask it */
-@@ -437,7 +437,7 @@ void hpet_msi_unmask(struct irq_data *data)
- 
- void hpet_msi_mask(struct irq_data *data)
- {
--	struct hpet_dev *hdev = data->handler_data;
-+	struct hpet_dev *hdev = irq_data_get_irq_handler_data(data);
- 	unsigned int cfg;
- 
- 	/* mask it */
+ 	bitmap = kcalloc(BITS_TO_LONGS(INTR_REMAP_TABLE_ENTRIES),
+-			 sizeof(long), GFP_ATOMIC);
++			 sizeof(long), GFP_KERNEL | __GFP_ZERO);
+ 	if (bitmap == NULL) {
+ 		pr_err("Failed to allocate bitmap for IR[%d]\n", iommu->seq_id);
+ 		goto out_free_pages;
 -- 
-1.7.10.4
+1.9.1
 
