@@ -1,57 +1,167 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 15 Jun 2015 14:27:57 +0200
-From: Jean Delvare <jdelvare@suse.de>
-To: Wan ZongShun <Vincent.Wan@amd.com>
-Cc: <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
-	<linux-i2c@vger.kernel.org>, <bp@alien8.de>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<mcuos.com@gmail.com>
-Subject: Re: [PATCH V2 2/3] i2c-piix4: Use Macro for AMD CZ SMBus device ID
-Message-ID: <20150615142757.0142351c@endymion.delvare>
-In-Reply-To: <1434024707-6245-2-git-send-email-Vincent.Wan@amd.com>
-References: <1434024707-6245-1-git-send-email-Vincent.Wan@amd.com>
-	<1434024707-6245-2-git-send-email-Vincent.Wan@amd.com>
+Date: Fri, 5 Jun 2015 16:20:47 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Len Brown <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [Patch v2 3/4] PCI: Introduce helpers to manage pci_dev->irq and
+ pci_dev->irq_managed
+Message-ID: <20150605212047.GS3631@google.com>
+References: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433213360-3700-4-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433213360-3700-4-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 11 Jun 2015 20:11:46 +0800, Wan ZongShun wrote:
-> Change AMD CZ SMBUS device ID from 0x790b to
-> use Macro definition
+I'm on a campaign to squeeze more useful information into changelog
+subjects.  "Add" means the same as "Introduce" but leaves more space for
+other useful information.
+
+On Tue, Jun 02, 2015 at 10:49:18AM +0800, Jiang Liu wrote:
+> Introduce three helpers to manage pci_dev->irq and pci_dev->irq_managed,
+> which helps to improve maintenance.
 > 
-> Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 > ---
->  drivers/i2c/busses/i2c-piix4.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  arch/x86/pci/intel_mid_pci.c |    4 ++--
+>  arch/x86/pci/irq.c           |   10 ++++------
+>  drivers/acpi/pci_irq.c       |   10 ++++------
+>  include/linux/pci.h          |   17 +++++++++++++++++
+>  4 files changed, 27 insertions(+), 14 deletions(-)
 > 
-> diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
-> index 67cbec6..630bce6 100644
-> --- a/drivers/i2c/busses/i2c-piix4.c
-> +++ b/drivers/i2c/busses/i2c-piix4.c
-> @@ -245,7 +245,7 @@ static int piix4_setup_sb800(struct pci_dev *PIIX4_dev,
->  	     PIIX4_dev->device == PCI_DEVICE_ID_AMD_HUDSON2_SMBUS &&
->  	     PIIX4_dev->revision >= 0x41) ||
->  	    (PIIX4_dev->vendor == PCI_VENDOR_ID_AMD &&
-> -	     PIIX4_dev->device == 0x790b &&
-> +	     PIIX4_dev->device == PCI_DEVICE_ID_AMD_KERNCZ_SMBUS &&
->  	     PIIX4_dev->revision >= 0x49))
->  		smb_en = 0x00;
->  	else
-> @@ -545,7 +545,7 @@ static const struct pci_device_id piix4_ids[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
-> -	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x790b) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_KERNCZ_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
->  		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
-
-Probably too late but anyway:
-
-Acked-by: Jean Delvare <jdelvare@suse.de>
-
--- 
-Jean Delvare
-SUSE L3 Support
+> diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+> index fb7a1f96d80c..22aaefb4f1ca 100644
+> --- a/arch/x86/pci/intel_mid_pci.c
+> +++ b/arch/x86/pci/intel_mid_pci.c
+> @@ -211,7 +211,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+>  	struct irq_alloc_info info;
+>  	int polarity;
+>  
+> -	if (dev->irq_managed && dev->irq > 0)
+> +	if (pci_has_managed_irq(dev))
+>  		return 0;
+>  
+>  	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+> @@ -234,7 +234,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+>  
+>  static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+>  {
+> -	if (dev->irq_managed && dev->irq > 0) {
+> +	if (pci_has_managed_irq(dev)) {
+>  		mp_unmap_irq(dev->irq);
+>  		dev->irq_managed = 0;
+>  		/*
+> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+> index 72108f0b66b1..32e70343e6fd 100644
+> --- a/arch/x86/pci/irq.c
+> +++ b/arch/x86/pci/irq.c
+> @@ -1202,7 +1202,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+>  			struct pci_dev *temp_dev;
+>  			int irq;
+>  
+> -			if (dev->irq_managed && dev->irq > 0)
+> +			if (pci_has_managed_irq(dev))
+>  				return 0;
+>  
+>  			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
+> @@ -1230,8 +1230,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+>  			}
+>  			dev = temp_dev;
+>  			if (irq >= 0) {
+> -				dev->irq_managed = 1;
+> -				dev->irq = irq;
+> +				pci_set_managed_irq(dev, irq);
+>  				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
+>  					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
+>  				return 0;
+> @@ -1259,9 +1258,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
+>  
+>  static void pirq_disable_irq(struct pci_dev *dev)
+>  {
+> -	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
+> +	if (io_apic_assign_pci_irqs && pci_has_managed_irq(dev)) {
+>  		mp_unmap_irq(dev->irq);
+> -		dev->irq = 0;
+> -		dev->irq_managed = 0;
+> +		pci_reset_managed_irq(dev);
+>  	}
+>  }
+> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+> index e7f718d6918a..9d6343d02f7e 100644
+> --- a/drivers/acpi/pci_irq.c
+> +++ b/drivers/acpi/pci_irq.c
+> @@ -413,7 +413,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>  		return 0;
+>  	}
+>  
+> -	if (dev->irq_managed && dev->irq > 0)
+> +	if (pci_has_managed_irq(dev))
+>  		return 0;
+>  
+>  	entry = acpi_pci_irq_lookup(dev, pin);
+> @@ -458,8 +458,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>  		kfree(entry);
+>  		return rc;
+>  	}
+> -	dev->irq = rc;
+> -	dev->irq_managed = 1;
+> +	pci_set_managed_irq(dev, rc);
+>  
+>  	if (link)
+>  		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
+> @@ -482,7 +481,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+>  	u8 pin;
+>  
+>  	pin = dev->pin;
+> -	if (!pin || !dev->irq_managed || dev->irq <= 0)
+> +	if (!pin || !pci_has_managed_irq(dev))
+>  		return;
+>  
+>  	entry = acpi_pci_irq_lookup(dev, pin);
+> @@ -504,7 +503,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+>  	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+>  	if (gsi >= 0) {
+>  		acpi_unregister_gsi(gsi);
+> -		dev->irq_managed = 0;
+> -		dev->irq = 0;
+> +		pci_reset_managed_irq(dev);
+>  	}
+>  }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index f50d16a04abc..4bc640eef76f 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -958,6 +958,23 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+>  	return pdev->is_managed;
+>  }
+>  
+> +static inline void pci_set_managed_irq(struct pci_dev *pdev, unsigned int irq)
+> +{
+> +	pdev->irq = irq;
+> +	pdev->irq_managed = 1;
+> +}
+> +
+> +static inline void pci_reset_managed_irq(struct pci_dev *pdev)
+> +{
+> +	pdev->irq = 0;
+> +	pdev->irq_managed = 0;
+> +}
+> +
+> +static inline bool pci_has_managed_irq(struct pci_dev *pdev)
+> +{
+> +	return pdev->irq_managed && pdev->irq > 0;
+> +}
+> +
+>  void pci_disable_device(struct pci_dev *dev);
+>  
+>  extern unsigned int pcibios_max_latency;
+> -- 
+> 1.7.10.4
+> 
