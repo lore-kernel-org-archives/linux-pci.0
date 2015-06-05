@@ -1,101 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:40986 "EHLO mga01.intel.com"
+Received: from 8bytes.org ([81.169.241.247]:59220 "EHLO theia.8bytes.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753449AbbFQQ3i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Jun 2015 12:29:38 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Subject: Re: [PATCH V3 0/2] pci: Provide a flag to access VPD through
- function 0
-Date: Wed, 17 Jun 2015 16:29:14 +0000
-Message-ID: <45099CC7-DDAB-41D9-AB74-5A81E2AAF64C@intel.com>
-References: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
- <051B68B4-3E77-4EB0-B9FE-8523631884A2@intel.com>
-In-Reply-To: <051B68B4-3E77-4EB0-B9FE-8523631884A2@intel.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_933DBC4A-33F1-459A-87A3-C3AAF3D93F76";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
-MIME-Version: 1.0
+	id S1423045AbbFEOLU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Jun 2015 10:11:20 -0400
+From: Joerg Roedel <joro@8bytes.org>
+To: iommu@lists.linux-foundation.org
+Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
+	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
+	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
+	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
+Subject: [PATCH 13/17] iommu/vt-d: Split up iommu_set_irq_remapping
+Date: Fri,  5 Jun 2015 16:10:59 +0200
+Message-Id: <1433513463-19128-14-git-send-email-joro@8bytes.org>
+In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_933DBC4A-33F1-459A-87A3-C3AAF3D93F76
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+From: Joerg Roedel <jroedel@suse.de>
 
-+ Alex
+Split out the part that enables irq remapping into the new
+function iommu_enable_irq_remapping. This allows to program
+the irq remapping table to the hardware without enabling irq
+remapping.
 
-> On Jun 5, 2015, at 2:59 PM, Rustad, Mark D <mark.d.rustad@intel.com> =
-wrote:
->=20
->> On Jun 3, 2015, at 11:46 AM, Mark D Rustad <mark.d.rustad@intel.com> =
-wrote:
->>=20
->> Many multi-function devices provide shared registers in extended
->> config space for accessing VPD. The behavior of these registers
->> means that the state must be tracked and access locked correctly
->> for accesses not to hang or worse. One way to meet these needs is
->> to always perform the accesses through function 0, thereby using
->> the state tracking and mutex that already exists.
->>=20
->> To provide this behavior, add a dev_flags bit to indicate that this
->> should be done. This bit can then be set for any non-zero function
->> that needs to redirect such VPD access to function 0. Do not set
->> this bit on the zero function or there will be an infinite recursion.
->>=20
->> The second patch uses this new flag to invoke this behavior on all
->> multi-function Intel Ethernet devices.
->>=20
->> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
->>=20
->> ---
->> Changes in V2:
->> - Corrected a spelling error in a log message
->> - Added checks to see that the referenced function 0 is reasonable
->> Changes in V3:
->> - Don't leak a device reference
->> - Check that function 0 has VPD
->> - Make a helper for the function 0 checks
->> - Moved a multifunction check to the quirk patch
->=20
-> So does this series look acceptable now? I think I addressed the =
-issues that Alex raised. Can these also be considered for -stable?
+Tested-by: Baoquan He <bhe@redhat.com>
+Signed-off-by: Joerg Roedel <jroedel@suse.de>
+---
+ drivers/iommu/intel_irq_remapping.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-More than a week has passed without any comment. Is this going to be =
-accepted or is there still an issue?
+diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
+index 35d73f6..c3d1e63 100644
+--- a/drivers/iommu/intel_irq_remapping.c
++++ b/drivers/iommu/intel_irq_remapping.c
+@@ -440,9 +440,9 @@ static int set_msi_sid(struct irte *irte, struct pci_dev *dev)
+ 
+ static void iommu_set_irq_remapping(struct intel_iommu *iommu, int mode)
+ {
++	unsigned long flags;
+ 	u64 addr;
+ 	u32 sts;
+-	unsigned long flags;
+ 
+ 	addr = virt_to_phys((void *)iommu->ir_table->base);
+ 
+@@ -463,6 +463,12 @@ static void iommu_set_irq_remapping(struct intel_iommu *iommu, int mode)
+ 	 * interrupt-remapping.
+ 	 */
+ 	qi_global_iec(iommu);
++}
++
++static void iommu_enable_irq_remapping(struct intel_iommu *iommu)
++{
++	unsigned long flags;
++	u32 sts;
+ 
+ 	raw_spin_lock_irqsave(&iommu->register_lock, flags);
+ 
+@@ -700,8 +706,10 @@ static int __init intel_enable_irq_remapping(void)
+ 				iommu->ir_table->base_old_phys,
+ 				INTR_REMAP_TABLE_ENTRIES*sizeof(struct irte));
+ 			__iommu_load_old_irte(iommu);
+-		} else
++		} else {
+ 			iommu_set_irq_remapping(iommu, eim_mode);
++			iommu_enable_irq_remapping(iommu);
++		}
+ 
+ 		setup = true;
+ 	}
+@@ -939,6 +947,7 @@ static int reenable_irq_remapping(int eim)
+ 
+ 		/* Set up interrupt remapping for iommu.*/
+ 		iommu_set_irq_remapping(iommu, eim);
++		iommu_enable_irq_remapping(iommu);
+ 		setup = true;
+ 	}
+ 
+@@ -1257,6 +1266,7 @@ static int dmar_ir_add(struct dmar_drhd_unit *dmaru, struct intel_iommu *iommu)
+ 		ir_remove_ioapic_hpet_scope(iommu);
+ 	} else {
+ 		iommu_set_irq_remapping(iommu, eim);
++		iommu_enable_irq_remapping(iommu);
+ 	}
+ 
+ 	return ret;
+-- 
+1.9.1
 
---
-Mark Rustad, Networking Division, Intel Corporation
-
-
---Apple-Mail=_933DBC4A-33F1-459A-87A3-C3AAF3D93F76
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJVgaBZAAoJEDwO/+eO4+5uGukQAKOK+W+hOnYngKpbDANNutZn
-jAJIdQ9+tnf+bShEU5F+hNEtmmj4nSw6OCvHrI+34TgBlMJxcrF2hfV5TAebmIZX
-rd4dbz1Xjw7tU49XJKj7CNq2vKELiezlqDJCbi9p+0q+/xDRDfwNzYNv2BsgW3zQ
-bGtfV3WvYnKQ26A9FKmAK+fe9SQKt+P/AipRilsGlt9xIQljZrsXm6RUuFyqpURn
-2AAlYF5cIqehVSPi8igRj8OI3RrfHqImgOtEMuJHXLhuHq8hNjC26Gw6X8r9N/U0
-ooz4fSQC/fcpzFtsxMuhasNWhoxquVBbPSmFKhQf70t44WHmyy8pIxkZYVmyrYIv
-u1fCQAa+Ot2BrQ5/v0FLTCMnJzurdkL0yTJC8VzLwzQGC0OCQ+K2d4VkKp5mOakN
-wUkBdQsYNbMH5Bwi+0VMQxhleYo3t7se8Rin89dyZQnLZLYjBav0lQU4j0oPrfh5
-xEYQ2Iy+H4B+Bka5CR5kwbeAYoTy6kW9Hqf38FpVgSV2A2D7tir2lNpVnbjz8XZg
-q1hhcYqmkJTk2eIa+d670JNE1Y1O+tCMeFDOEW0xziD2e9aJdk4uTxn1RrahB0UN
-6cNepkGeiqaDVyWJwrmOrqlv8g5L0WIc87lIY/x5mWV87+7/1GIu0Z29jN3kr58p
-KkCsxWobnNpZCFkkDdS9
-=33l1
------END PGP SIGNATURE-----
-
---Apple-Mail=_933DBC4A-33F1-459A-87A3-C3AAF3D93F76--
