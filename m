@@ -1,69 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:52763 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201AbbFYUxI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2015 16:53:08 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Casey Leedom <leedom@chelsio.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Juergen Gross <jgross@suse.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?=
-	<ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	Roger Pau =?ISO-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
-Subject: Re: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
-Date: Thu, 25 Jun 2015 22:44:07 +0200
-Message-ID: <6806026.xb91q6Ad7G@wuerfel>
-In-Reply-To: <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com> <1435189081.3790.24.camel@kernel.crashing.org> <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:38714 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728AbbFEULO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 16:11:14 -0400
+Received: by igblz2 with SMTP id lz2so22639595igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 13:11:13 -0700 (PDT)
+Date: Fri, 5 Jun 2015 15:11:10 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	aik@ozlabs.ru, panto@antoniou-consulting.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v5 42/42] pci/hotplug: PowerPC PowerNV PCI hotplug driver
+Message-ID: <20150605201110.GP3631@google.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1433400131-18429-43-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433400131-18429-43-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 25 June 2015 15:01:56 Casey Leedom wrote:
+On Thu, Jun 04, 2015 at 04:42:11PM +1000, Gavin Shan wrote:
+> The patch intends to add standalone driver to support PCI hotplug
+> for PowerPC PowerNV platform, which runs on top of skiboot firmware.
+> The firmware identified hotpluggable slots and marked their device
+> tree node with proper "ibm,slot-pluggable" and "ibm,reset-by-firmware".
+> The driver simply scans device-tree to create/register PCI hotplug slot
+> accordingly.
 > 
->   Is there a reference I can read on this so I can understand
-> when and where we can use the __raw_*() APIs?  Can these
-> Raw Read/Write operations be reordered with respect to
-> each other or are the use of the various flavors of SYNC
-> instructions just to maintain order between Cached Memory
-> Accesses and I/O Instructions?
+> If the skiboot firmware doesn't support slot status retrieval, the PCI
+> slot device node shouldn't have property "ibm,reset-by-firmware". In
+> that case, none of valid PCI slots will be detected from device tree.
+> The skiboot firmware doesn't export the capability to access attention
+> LEDs yet and it's something for TBD.
+> 
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-The interpretation is not consistent across architectures.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-My best description would be that the __raw_*() accessors should
-only be used for accessing RAM areas that are known to have no
-side-effects and can be read in any size (8-bit to 64-bit wide),
-any alignment, and do not have a specific endianess.
+But I do have a few comments (my ack is valid whether you do anything with
+them or not):
 
-If you are dealing with MMIO registers that have a fixed endianess
-and size, the correct accessor would be readl_relaxed(), which
-is like readl() but lacks the barriers on certain architectures.
+> +static void slot_power_off_handler(struct powernv_php_slot *slot)
+> +{
+> +	int ret;
+> +
+> +	/* Release the firmware data for the child device nodes */
+> +	remove_child_pdn(slot->dn);
+> +
+> +	/*
+> +	 * Release the child device nodes. If the sub-tree was
+> +	 * built with the help of overlay, we just need revert
+> +	 * the changes introduced by the overlay
+> +	 */
+> +	if (slot->overlay_id >= 0) {
+> +		ret = of_overlay_destroy(slot->overlay_id);
+> +		if (ret)
+> +			pr_warn("%s: Error %d destroying overlay %d\n",
+> +				__func__, ret, slot->overlay_id);
 
-	Arnd
+For this and similar messages: isn't there a device you can use with
+dev_warn() here?  I think a device name would be much better than a
+function name.
+
+> +scan:
+> +	switch (presence) {
+> +	case POWERNV_PHP_SLOT_PRESENT:
+> +		if (rescan) {
+> +			pci_lock_rescan_remove();
+> +			pcibios_add_pci_devices(slot->bus);
+
+You didn't add this, but "pcibios_add_pci_devices" doesn't seem like the
+right name.  "pcibios" generally refers to an arch-specific hook that's
+called by the generic PCI core.  In this case, pcibios_add_pci_devices()
+contains powerpc-specific code, and it's only called from powerpc code, so
+I think using "pcibios_" in the name is a bit misleading.
+
+> +	/* Remove all devices behind the slot */
+> +	pci_lock_rescan_remove();
+> +	pcibios_remove_pci_devices(slot->bus);
+
+Same comment for pcibios_remove_pci_devices().  It would be better if the
+name didn't suggest that this was part of the pcibios_ interface between
+the PCI core and the arch code, because it's not.
+
+> +	/* Slot indentifier */
+
+s/indentifier/identifier/
+
+> +	if (!php_slot_get_id(dn, &id))
+> +		return NULL;
+> +
+
+> +	/* PCI bus */
+> +	bus = pcibios_find_pci_bus(dn);
+
+And pcibios_find_pci_bus() (it's also powerpc-specific).
+
+Bjorn
