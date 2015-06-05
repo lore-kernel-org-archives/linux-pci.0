@@ -1,70 +1,168 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5577A557.4030408@linaro.org>
-Date: Wed, 10 Jun 2015 10:47:51 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Jagan Teki <jteki@openedev.com>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-acpi@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	linaro-acpi@lists.linaro.org, Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>	<1951882.p8DdrcurkC@vostro.rjw.lan>	<556540C7.6080301@linaro.org> <CAD6G_RQnm-y9eQdYGV89zzY-x90ESo6-APPVpY7eiJ=AJbg2rg@mail.gmail.com>
-In-Reply-To: <CAD6G_RQnm-y9eQdYGV89zzY-x90ESo6-APPVpY7eiJ=AJbg2rg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:59205 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423039AbbFEOLS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Jun 2015 10:11:18 -0400
+From: Joerg Roedel <joro@8bytes.org>
+To: iommu@lists.linux-foundation.org
+Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
+	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
+	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
+	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
+	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
+	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
+Subject: [PATCH 08/17] iommu/vt-d: Don't reuse domain-ids from old kernel
+Date: Fri,  5 Jun 2015 16:10:54 +0200
+Message-Id: <1433513463-19128-9-git-send-email-joro@8bytes.org>
+In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jagan,
+From: Joerg Roedel <jroedel@suse.de>
 
-On 06/08/2015 08:05 PM, Jagan Teki wrote:
-> On 27 May 2015 at 09:27, Hanjun Guo <hanjun.guo@linaro.org> wrote:
->> On 2015年05月27日 08:30, Rafael J. Wysocki wrote:
->>>
->>> On Tuesday, May 26, 2015 08:49:13 PM Hanjun Guo wrote:
->>>>
->>>> This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
->>>> which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
->>>> code into ACPI core":
->>>>
->>>> https://lkml.org/lkml/2015/5/14/98
->>>
->>>
->>> I'll be regarding this patchset as an RFC until the one from Jiang Liu
->>> goes in.
->>
->>
->> Yes, please, Jiang Liu's patch set should go in first.
->
-> Apart from picking all, I have skipped x86, ia64 changes from above
-> and Jiang Liu's
-> series with disabling MSI, but I'm observing my arm64 board isn't
-> booted from uefi.
+Change the context table copy code to copy context
+entrys one by one and check whether they are present and
+mark the used domain-id as reserved in the allocation
+bitmap. This way the domain-id will not be reused by new
+domains allocated in the kdump kernel.
 
-Do you boot with ACPI? There is no support for ACPI PCI for ARM64
-in mainline, which kernel do you use?
+Tested-by: Baoquan He <bhe@redhat.com>
+Signed-off-by: Joerg Roedel <jroedel@suse.de>
+---
+ drivers/iommu/intel-iommu.c | 80 ++++++++++++++-------------------------------
+ 1 file changed, 25 insertions(+), 55 deletions(-)
 
->
-> I'm suspecting pci-acpi changes were generic to specific pcie root
-> bridge controller,
-> but do I need to do any changes wrt pcie bridge? let me know if I miss
-> anything here.
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 2602b33..82239e3 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -367,10 +367,6 @@ static inline int first_pte_in_page(struct dma_pte *pte)
+  * do the same thing as crashdump kernel.
+  */
+ 
+-static struct context_entry *device_to_existing_context_entry(
+-				struct intel_iommu *iommu,
+-				u8 bus, u8 devfn);
+-
+ /*
+  * A structure used to store the address allocated by ioremap();
+  * The we need to call iounmap() to free them out of spin_lock_irqsave/unlock;
+@@ -2337,7 +2333,6 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	unsigned long flags;
+ 	u8 bus, devfn;
+ 	int did = -1;   /* Default to "no domain_id supplied" */
+-	struct context_entry *ce = NULL;
+ 
+ 	domain = find_domain(dev);
+ 	if (domain)
+@@ -2372,19 +2367,6 @@ static struct dmar_domain *get_domain_for_dev(struct device *dev, int gaw)
+ 	if (!domain)
+ 		return NULL;
+ 
+-	if (iommu->pre_enabled_trans) {
+-		/*
+-		 * if this device had a did in the old kernel
+-		 * use its values instead of generating new ones
+-		 */
+-		ce = device_to_existing_context_entry(iommu, bus, devfn);
+-
+-		if (ce) {
+-			did = context_domain_id(ce);
+-			gaw = agaw_to_width(context_address_width(ce));
+-		}
+-	}
+-
+ 	domain->id = iommu_attach_domain_with_id(domain, iommu, did);
+ 	if (domain->id < 0) {
+ 		free_domain_mem(domain);
+@@ -4931,49 +4913,37 @@ static void __init check_tylersburg_isoch(void)
+ 	       vtisochctrl);
+ }
+ 
+-static struct context_entry *device_to_existing_context_entry(
+-				struct intel_iommu *iommu,
+-				u8 bus, u8 devfn)
+-{
+-	struct root_entry *root;
+-	struct context_entry *context;
+-	struct context_entry *ret = NULL;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&iommu->lock, flags);
+-	root = &iommu->root_entry[bus];
+-	context = get_context_addr_from_root(root);
+-	if (context && context_present(context+devfn))
+-		ret = &context[devfn];
+-	spin_unlock_irqrestore(&iommu->lock, flags);
+-	return ret;
+-}
+-
+ /*
+- * Copy memory from a physically-addressed area into a virtually-addressed area
++ * Copy one context table
+  */
+-static int copy_from_oldmem_phys(void *to, phys_addr_t from, size_t size)
++static int copy_one_context_table(struct intel_iommu *iommu,
++				  struct context_entry *ctxt_tbl,
++				  phys_addr_t old_table_phys)
+ {
+-	void __iomem *virt_mem;
+-	unsigned long offset;
+-	unsigned long pfn;
++	struct context_entry __iomem *ctxt_tbl_old, ce;
++	int did, devfn;
+ 
+-	pfn    = from >> VTD_PAGE_SHIFT;
+-	offset = from & (~VTD_PAGE_MASK);
++	ctxt_tbl_old = ioremap_cache(old_table_phys, VTD_PAGE_SIZE);
++	if (!ctxt_tbl_old)
++		return -ENOMEM;
+ 
+-	if (page_is_ram(pfn)) {
+-		memcpy(to, pfn_to_kaddr(pfn) + offset, size);
+-	} else {
+-		virt_mem = ioremap_cache((unsigned long)from, size);
+-		if (!virt_mem)
+-			return -ENOMEM;
++	for (devfn = 0; devfn < 256; devfn++) {
++		memcpy_fromio(&ce, &ctxt_tbl_old[devfn],
++			      sizeof(struct context_entry));
+ 
+-		memcpy(to, virt_mem, size);
++		if (!context_present(&ce))
++			continue;
++
++		did = context_domain_id(&ce);
++		if (did >=0 && did < cap_ndoms(iommu->cap))
++			set_bit(did, iommu->domain_ids);
+ 
+-		iounmap(virt_mem);
++		ctxt_tbl[devfn] = ce;
+ 	}
+ 
+-	return size;
++	iounmap(ctxt_tbl_old);
++
++	return 0;
+ }
+ 
+ /*
+@@ -5002,9 +4972,9 @@ static int copy_context_tables(struct intel_iommu *iommu,
+ 		if (!context_new_virt)
+ 			goto out_err;
+ 
+-		ret = copy_from_oldmem_phys(context_new_virt, context_old_phys,
+-					    VTD_PAGE_SIZE);
+-		if (ret != VTD_PAGE_SIZE) {
++		ret = copy_one_context_table(iommu, context_new_virt,
++					     context_old_phys);
++		if (ret) {
+ 			pr_err("Failed to copy context table for bus %d from physical address 0x%llx\n",
+ 			       bus, context_old_phys);
+ 			free_pgtable_page(context_new_virt);
+-- 
+1.9.1
 
-ARM64 need special handling for IO port resources based on Jiang's patch
-set, we still working on it.
-
-Thanks
-Hanjun
