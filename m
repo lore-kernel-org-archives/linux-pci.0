@@ -1,71 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46566 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752613AbbFDGnw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:52 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:50 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Daniel Axtens <dja@axtens.net>
-Subject: [PATCH v5 12/42] powerpc/pci: Cleanup on pci_controller_ops
-Date: Thu,  4 Jun 2015 16:41:41 +1000
-Message-Id: <1433400131-18429-13-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:33845 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750860AbbFETre (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 15:47:34 -0400
+Received: by iebmu5 with SMTP id mu5so29769506ieb.1
+        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 12:47:34 -0700 (PDT)
+Date: Fri, 5 Jun 2015 14:47:30 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	aik@ozlabs.ru, panto@antoniou-consulting.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v5 31/42] powerpc/pci: Move pcibios_find_pci_bus() around
+Message-ID: <20150605194730.GO3631@google.com>
 References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1433400131-18429-32-git-send-email-gwshan@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433400131-18429-32-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB maintains one instance of "struct pci_controller_ops",
-which includes various callbacks called by PCI subsystem. In the
-definition of this struct, some callbacks have explicit names for
-its arguments, but the left don't have.
+"Move pcibios_find_pci_bus() from pSeries to generic powerpc code"?
 
-The patch removes all explicit names of the arguments to the
-callbacks in "struct pci_controller_ops" to keep the code look
-consistent.
+On Thu, Jun 04, 2015 at 04:42:00PM +1000, Gavin Shan wrote:
+> The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
 
-Cc: Daniel Axtens <dja@axtens.net>
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
-v5:
-  * Newly introduced
----
- arch/powerpc/include/asm/pci-bridge.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+s/kerenl/kernel/
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 744884b..1252cd5 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -18,8 +18,8 @@ struct device_node;
-  * PCI controller operations
-  */
- struct pci_controller_ops {
--	void		(*dma_dev_setup)(struct pci_dev *dev);
--	void		(*dma_bus_setup)(struct pci_bus *bus);
-+	void		(*dma_dev_setup)(struct pci_dev *);
-+	void		(*dma_bus_setup)(struct pci_bus *);
- 
- 	int		(*probe_mode)(struct pci_bus *);
- 
-@@ -28,8 +28,8 @@ struct pci_controller_ops {
- 	bool		(*enable_device_hook)(struct pci_dev *);
- 
- 	/* Called during PCI resource reassignment */
--	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
--	void		(*reset_secondary_bus)(struct pci_dev *dev);
-+	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long);
-+	void		(*reset_secondary_bus)(struct pci_dev *);
- };
- 
- /*
--- 
-2.1.0
-
+> that it can be reused by hotplug code for pSeries and PowerNV
+> platform at the same time.
+> 
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> ---
+> v5:
+>   * Derived from PATCH[v4 12/21]
+> ---
+>  arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
+>  arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
+>  2 files changed, 36 insertions(+), 32 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+> index ca392fc..1482bc1 100644
+> --- a/arch/powerpc/kernel/pci-hotplug.c
+> +++ b/arch/powerpc/kernel/pci-hotplug.c
+> @@ -21,6 +21,42 @@
+>  #include <asm/firmware.h>
+>  #include <asm/eeh.h>
+>  
+> +static struct pci_bus *find_pci_bus(struct pci_bus *bus,
+> +				    struct device_node *dn)
+> +{
+> +	struct pci_bus *tmp, *child = NULL;
+> +	struct device_node *busdn;
+> +
+> +	busdn = pci_bus_to_OF_node(bus);
+> +	if (busdn == dn)
+> +		return bus;
+> +
+> +	list_for_each_entry(tmp, &bus->children, node) {
+> +		child = find_pci_bus(tmp, dn);
+> +		if (child)
+> +			break;
+> +	}
+> +
+> +	return child;
+> +}
+> +
+> +/**
+> + * pcibios_find_pci_bus - find PCI bus according to the given device node
+> + * @dn: Device node
+> + *
+> + * Find the corresponding PCI bus according to the given device node.
+> + */
+> +struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
+> +{
+> +	struct pci_dn *pdn = PCI_DN(dn);
+> +
+> +	if (!pdn  || !pdn->phb || !pdn->phb->bus)
+> +		return NULL;
+> +
+> +	return find_pci_bus(pdn->phb->bus, dn);
+> +}
+> +EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
+> +
+>  /**
+>   * pcibios_release_device - release PCI device
+>   * @dev: PCI device
+> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
+> index 5d4a3df..906dbaa 100644
+> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
+> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
+> @@ -34,38 +34,6 @@
+>  
+>  #include "pseries.h"
+>  
+> -static struct pci_bus *
+> -find_bus_among_children(struct pci_bus *bus,
+> -                        struct device_node *dn)
+> -{
+> -	struct pci_bus *child = NULL;
+> -	struct pci_bus *tmp;
+> -	struct device_node *busdn;
+> -
+> -	busdn = pci_bus_to_OF_node(bus);
+> -	if (busdn == dn)
+> -		return bus;
+> -
+> -	list_for_each_entry(tmp, &bus->children, node) {
+> -		child = find_bus_among_children(tmp, dn);
+> -		if (child)
+> -			break;
+> -	};
+> -	return child;
+> -}
+> -
+> -struct pci_bus *
+> -pcibios_find_pci_bus(struct device_node *dn)
+> -{
+> -	struct pci_dn *pdn = dn->data;
+> -
+> -	if (!pdn  || !pdn->phb || !pdn->phb->bus)
+> -		return NULL;
+> -
+> -	return find_bus_among_children(pdn->phb->bus, dn);
+> -}
+> -EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
+> -
+>  struct pci_controller *init_phb_dynamic(struct device_node *dn)
+>  {
+>  	struct pci_controller *phb;
+> -- 
+> 2.1.0
+> 
