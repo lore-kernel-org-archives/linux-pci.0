@@ -1,51 +1,74 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 12 Jun 2015 15:34:18 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wan ZongShun <Vincent.Wan@amd.com>
-Cc: ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
-	linux-i2c@vger.kernel.org, bp@alien8.de, jdelvare@suse.de,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mcuos.com@gmail.com
-Subject: Re: [PATCH V2 1/3] pci_ids: Add AMD KERNCZ device ID support
-Message-ID: <20150612203418.GJ23119@google.com>
-References: <1434024707-6245-1-git-send-email-Vincent.Wan@amd.com>
+From: Wan ZongShun <Vincent.Wan@amd.com>
+To: <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
+	<linux-i2c@vger.kernel.org>, <bp@alien8.de>, <jdelvare@suse.de>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Wan ZongShun <Vincent.Wan@amd.com>,
+	Wan ZongShun <mcuos.com@gmail.com>
+Subject: [PATCH 3/3] SDHCI: Change AMD SDHCI quirk application scope
+Date: Sat, 6 Jun 2015 21:13:40 +0800
+Message-ID: <1433596420-5612-3-git-send-email-Vincent.Wan@amd.com>
+In-Reply-To: <1433596420-5612-1-git-send-email-Vincent.Wan@amd.com>
+References: <1433596420-5612-1-git-send-email-Vincent.Wan@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1434024707-6245-1-git-send-email-Vincent.Wan@amd.com>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 11, 2015 at 08:11:45PM +0800, Wan ZongShun wrote:
-> The KERNCZ is new AMD SB/FCH generation name, like HUDSON2.
-> We will adopt 0x790b as device ID since from this gereration.
+Change this quirk to apply to AMD Carrizo platform.
 
-s/We will adopt 0x790b as device ID since from/0x790b is the device ID for/
-s/gereration/generation/
+Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
+Signed-off-by: Wan ZongShun <mcuos.com@gmail.com>
 
-> Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
+Tested-by: Nath, Arindam <Arindam.Nath@amd.com>
+Tested-by: Ramesh, Ramya <Ramya.Ramesh@amd.com>
+---
+ drivers/mmc/host/sdhci-pci.c | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+diff --git a/drivers/mmc/host/sdhci-pci.c b/drivers/mmc/host/sdhci-pci.c
+index f208f20..94f54d2 100644
+--- a/drivers/mmc/host/sdhci-pci.c
++++ b/drivers/mmc/host/sdhci-pci.c
+@@ -724,14 +724,37 @@ static const struct sdhci_pci_fixes sdhci_rtsx = {
+ 	.probe_slot	= rtsx_probe_slot,
+ };
+ 
++/*AMD chipset generation*/
++enum amd_chipset_gen {
++	AMD_CHIPSET_BEFORE_ML,
++	AMD_CHIPSET_CZ,
++	AMD_CHIPSET_NL,
++	AMD_CHIPSET_UNKNOWN,
++};
++
+ static int amd_probe(struct sdhci_pci_chip *chip)
+ {
+ 	struct pci_dev	*smbus_dev;
++	enum amd_chipset_gen gen;
+ 
+ 	smbus_dev = pci_get_device(PCI_VENDOR_ID_AMD,
+ 			PCI_DEVICE_ID_AMD_HUDSON2_SMBUS, NULL);
++	if (smbus_dev) {
++		gen = AMD_CHIPSET_BEFORE_ML;
++	} else {
++		smbus_dev = pci_get_device(PCI_VENDOR_ID_AMD,
++				PCI_DEVICE_ID_AMD_KERNCZ_SMBUS, NULL);
++		if (smbus_dev) {
++			if (smbus_dev->revision < 0x51)
++				gen = AMD_CHIPSET_CZ;
++			else
++				gen = AMD_CHIPSET_NL;
++		} else {
++			gen = AMD_CHIPSET_UNKNOWN;
++		}
++	}
+ 
+-	if (smbus_dev && (smbus_dev->revision < 0x51)) {
++	if ((gen == AMD_CHIPSET_BEFORE_ML) || (gen == AMD_CHIPSET_CZ)) {
+ 		chip->quirks2 |= SDHCI_QUIRK2_CLEAR_TRANSFERMODE_REG_BEFORE_CMD;
+ 		chip->quirks2 |= SDHCI_QUIRK2_BROKEN_HS200;
+ 	}
+-- 
+1.9.1
 
-> ---
->  include/linux/pci_ids.h | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 2f7b9a4..cb63a7b 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -579,6 +579,7 @@
->  #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
->  #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
->  #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
-> +#define PCI_DEVICE_ID_AMD_KERNCZ_SMBUS  0x790b
->  
->  #define PCI_VENDOR_ID_TRIDENT		0x1023
->  #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
