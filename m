@@ -1,73 +1,35 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1433145945-789-34-git-send-email-jiang.liu@linux.intel.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tejun Heo <tj@kernel.org>, Joe Perches <joe@perches.com>
-From: Michael Ellerman <mpe@ellerman.id.au>
-Cc: linux-ia64@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [v3,33/36] genirq: Use helper function to access irq_data->msi_desc
-Message-Id: <20150602034507.1BBCB1412F1@ozlabs.org>
-Date: Tue,  2 Jun 2015 13:45:07 +1000 (AEST)
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 6 Jun 2015 19:00:10 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Wan ZongShun <Vincent.Wan@amd.com>
+Cc: ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
+	linux-i2c@vger.kernel.org, jdelvare@suse.de,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Wan ZongShun <mcuos.com@gmail.com>
+Subject: Re: [PATCH 1/3] pci_ids: Add AMD KERNCZ device ID support
+Message-ID: <20150606170010.GE545@pd.tnic>
+References: <1433596420-5612-1-git-send-email-Vincent.Wan@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1433596420-5612-1-git-send-email-Vincent.Wan@amd.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2015-01-06 at 08:05:42 UTC, Jiang Liu wrote:
-> Use irq_data access helper to access irq_data->msi_desc, so we could
-> move msi_desc from struct irq_data into struct irq_common_data later.
+On Sat, Jun 06, 2015 at 09:13:38PM +0800, Wan ZongShun wrote:
+> The KERNCZ is new AMD SB/FCH generation name, like HUDSON2.
+> We will adopt 0x790b as device ID since from this gereration.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  arch/powerpc/sysdev/xics/ics-opal.c |    2 +-
->  arch/powerpc/sysdev/xics/ics-rtas.c |    2 +-
-> 
-> diff --git a/arch/powerpc/sysdev/xics/ics-opal.c b/arch/powerpc/sysdev/xics/ics-opal.c
-> index 3996393c254d..27c936c080a6 100644
-> --- a/arch/powerpc/sysdev/xics/ics-opal.c
-> +++ b/arch/powerpc/sysdev/xics/ics-opal.c
-> @@ -72,7 +72,7 @@ static unsigned int ics_opal_startup(struct irq_data *d)
->  	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
->  	 * at that level, so we do it here by hand.
->  	 */
-> -	if (d->msi_desc)
-> +	if (irq_data_get_msi_desc(d))
->  		pci_msi_unmask_irq(d);
->  #endif
->  
-> diff --git a/arch/powerpc/sysdev/xics/ics-rtas.c b/arch/powerpc/sysdev/xics/ics-rtas.c
-> index e2665a9dfc0f..3854dd41558d 100644
-> --- a/arch/powerpc/sysdev/xics/ics-rtas.c
-> +++ b/arch/powerpc/sysdev/xics/ics-rtas.c
-> @@ -75,7 +75,7 @@ static unsigned int ics_rtas_startup(struct irq_data *d)
->  	 * card, using the MSI mask bits. Firmware doesn't appear to unmask
->  	 * at that level, so we do it here by hand.
->  	 */
-> -	if (d->msi_desc)
-> +	if (irq_data_get_msi_desc(d))
->  		pci_msi_unmask_irq(d);
->  #endif
->  	/* unmask it */
+> Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
+> Signed-off-by: Wan ZongShun <mcuos.com@gmail.com>
 
-These look OK.
+You need to choose one email address, not two for the same person's
+Signed-off-by line. I'd prefer the amd.com one.
 
-Though I would point out we already have 16 irq_foo_get_bar() accessors?!
+For more info, please read Documentation/SubmittingPatches.
 
-Acked-by: Michael Ellerman <mpe@ellerman.id.au>
+-- 
+Regards/Gruss,
+    Boris.
 
-cheers
+ECO tip #101: Trim your mails when you reply.
+--
