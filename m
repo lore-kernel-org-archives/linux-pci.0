@@ -1,50 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v4 07/19] NTB: Differentiate transport link down messages
-Date: Wed, 10 Jun 2015 05:08:12 -0400
-Message-Id: <e2fa2858d56a919d15e69b89d1bca82af1139bf2.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:40153 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750984AbbFGFiF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 7 Jun 2015 01:38:05 -0400
+Message-ID: <5573D8A5.8030309@ti.com>
+Date: Sun, 7 Jun 2015 11:07:41 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Pratyush Anand <pratyush.anand@st.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH 2/5] PCI: dra7xx: Use dw_pcie_link_up() consistently
+References: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150604220151.4377.38040.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150604220151.4377.38040.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The same message "qp %d: Link Down\n" was printed at two locations in
-ntb_transport.  Change the messages so they are distinct.
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- drivers/ntb/ntb_transport.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index d9538e911df6..8d9b59f7fa07 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -658,7 +658,7 @@ static void ntb_qp_link_cleanup(struct ntb_transport_qp *qp)
- 		return;
- 	}
- 
--	dev_info(&pdev->dev, "qp %d: Link Down\n", qp->qp_num);
-+	dev_info(&pdev->dev, "qp %d: Link Cleanup\n", qp->qp_num);
- 	qp->link_is_up = false;
- 
- 	if (qp->event_handler)
-@@ -1470,7 +1470,7 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
- 		return;
- 
- 	qp->link_is_up = false;
--	dev_info(&pdev->dev, "qp %d: Link Down\n", qp->qp_num);
-+	dev_info(&pdev->dev, "qp %d: Send Link Down\n", qp->qp_num);
- 
- 	for (i = 0; i < NTB_LINK_DOWN_TIMEOUT; i++) {
- 		entry = ntb_list_rm(&qp->ntb_tx_free_q_lock, &qp->tx_free_q);
--- 
-2.4.0.rc0.43.gcf8a8c6
+On Friday 05 June 2015 03:31 AM, Bjorn Helgaas wrote:
+> We already use dw_pcie_link_up() once in dra7xx_pcie_establish_link(), but
+> we duplicate its code later.  Use dw_pcie_link_up() for consistency.  No
+> functional change.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>   drivers/pci/host/pci-dra7xx.c |    3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index 2d57e19..e3d15d7 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -107,8 +107,7 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+>   	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+>
+>   	while (retries--) {
+> -		reg = dra7xx_pcie_readl(dra7xx,	PCIECTRL_DRA7XX_CONF_PHY_CS);
+> -		if (reg & LINK_UP)
+> +		if (dw_pcie_link_up(pp))
+>   			break;
+>   		usleep_range(10, 20);
+>   	}
+>
