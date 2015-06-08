@@ -1,54 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f41.google.com ([209.85.213.41]:32915 "EHLO
-	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751932AbbFRW6L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 18:58:11 -0400
-Received: by yhpn97 with SMTP id n97so66821129yhp.0
-        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 15:58:10 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <55751332.50409@linaro.org>
+Date: Mon, 08 Jun 2015 11:59:46 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <1434665458-28354-1-git-send-email-dhdang@apm.com>
-References: <1434665458-28354-1-git-send-email-dhdang@apm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 18 Jun 2015 17:57:50 -0500
-Message-ID: <CAErSpo6fn++u3uyE+Z-h9T6qmy30f2eyuO4929a=_xShhHHeDQ@mail.gmail.com>
-Subject: Re: [PATCH 1/1] pci: xgene: Fix compilation warning
-To: Duc Dang <dhdang@apm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Tanmay Inamdar <tinamdar@apm.com>, patches <patches@apm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Mark Salter <msalter@redhat.com>
+CC: Al Stone <ahs3@redhat.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch v4 0/8] Consolidate ACPI PCI root common code into ACPI
+ core
+References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>	 <556F6332.2040501@redhat.com> <556FAFEF.6040802@linux.intel.com>	 <556FF0AD.6000901@linaro.org> <556FF32B.9010900@linux.intel.com> <1433433105.24429.30.camel@deneb.redhat.com> <55707CF2.9070604@linux.intel.com>
+In-Reply-To: <55707CF2.9070604@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 18, 2015 at 5:10 PM, Duc Dang <dhdang@apm.com> wrote:
-> commit 979595bcb8da ("PCI: xgene: Allow config access to Root Port even
-> when link is down") removes the port->link_up check, which makes 'port'
-> become unused variable. This patch remove struct xgene_pcie_port *port
-> declaration to avoid compilation warning.
+On 2015年06月05日 00:29, Jiang Liu wrote:
+> On 2015/6/4 23:51, Mark Salter wrote:
+>> On Thu, 2015-06-04 at 14:41 +0800, Jiang Liu wrote:
+>>> On 2015/6/4 14:31, Hanjun Guo wrote:
+>>>> Hi Jiang,
+>>>>
+>>>> On 2015年06月04日 09:54, Jiang Liu wrote:
+>>>>> On 2015/6/4 4:27, Al Stone wrote:
+>>>>>> On 06/02/2015 12:12 AM, Jiang Liu wrote:
+>>>>>>> This patch set consolidates common code to support ACPI PCI root on x86
+>>>>>>> and IA64 platforms into ACPI core, to reproduce duplicated code and
+>>>>>>> simplify maintenance. And a patch set based on this to support ACPI
+>>>>>>> based
+>>>>>>> PCIe host bridge on ARM64 has been posted at:
+>>>>>>
+>>>>>> Link is missing (or it's a typo of some flavor).
+>>>>> HI Al,
+>>>>>      Sorry, I missed the link. It has been posted at:
+>>>>> https://lkml.org/lkml/2015/5/26/207
+>>>>
+>>>> I failed to get io resources for PCI hostbridge  when I was testing PCI
+>>>> on ARM64 QEMU, I debugged this for quite a while, and finally found out
+>>>> that ACPI resource parsing for IO is not suitable for ARM64, because io
+>>>> space for x86 is 64K, but 16M for ARM64.
+>>>>
+>>>> This issue is only found when the firmware representing the io resource
+>>>> using the type ACPI_RESOURCE_TYPE_ADDRESS32, so the io address will
+>>>> greater than 64k.
+>>>>
+>>>> In drivers/acpi/resource.c:
+>>>>
+>>>> static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+>>>>                                        u8 io_decode, u8 translation_type)
+>>>> {
+>>>>          res->flags = IORESOURCE_IO;
+>>>>
+>>>> [...]
+>>>>
+>>>>          if (res->end >= 0x10003)
+>>>>                  res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+>>>>
+>>>> [...]
+>>>> }
+>>>>
+>>>> so the code will filter out res->end >= 0x10003, and in my case, it will
+>>>> more than 64K, so we can't get the IO resources.
+>>>>
+>>>> I got a question, why we use if (res->end >= 0x10003) here?
+>>>> I mean 64k will be 0x10000, and in that case, we should use
+>>>> if (res->end >= 0x10000) here, not 0x10003, any history behind that?
+>>>
+>>> Hi Hanjun,
+>>> This is a special tricky for x86. You may read a dword(four bytes) from
+>>> IO port 0xffff, so the effective io port space is 0x10003 bytes.
+>>>
+>>
+>> Is there something in ACPI spec which would limit PCI IO space to 64K?
+>> PCI itself allows 32-bit IO addresses and at least some arm64 platforms
+>> use PCI bus addresses above 64K for IO transactions. From a PCI view,
+>> the (res->end >= 0x10003) check doesn't make sense. Am I missing
+>> something?
+> HI Mark,
+> 	Something interesting here. According to my understanding,
+> the actually limitations are
+> 1) the maximum size for each IO port space is 64k,
+> 2) each PCI segment may only have one IO port space assigned at most.
 >
-> Signed-off-by: Duc Dang <dhdang@apm.com>
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> Other than those, it's flexible for system designer to:
+> 1) have multiple IO port spaces, each is 64K at most.
+> 2) CPU may use MMIO transactions to access PCI IO space, and PCI host
+>     bridge will do the translation from CPU side MMIO address to PCI side
+>     IO port address.
+>
+> For example, we may have following configuration on IA64 platforms:
+> 1) CPU side physical address [0x100000000-0x100010000] maps to IO space
+>     [0x00000-0x10000] on PCI segment 0
+> 2) CPU side physical address [0x100010000-0x100020000] maps to IO space
+>     [0x00000-0x10000] on PCI segment 1
+> And ACPI resource descriptor provides 'translation_offset' to support
+> such an usage case. Hope this helps:)
 
-I folded this fix into the original patch and updated my branch.  Thanks!
+Hi Jiang,
 
-> ---
->  drivers/pci/host/pci-xgene.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> index 3684126..105fd83 100644
-> --- a/drivers/pci/host/pci-xgene.c
-> +++ b/drivers/pci/host/pci-xgene.c
-> @@ -137,8 +137,6 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
->  static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
->                               int offset)
->  {
-> -       struct xgene_pcie_port *port = bus->sysdata;
-> -
->         if ((pci_is_root_bus(bus) && devfn != 0) ||
->             xgene_pcie_hide_rc_bars(bus, offset))
->                 return NULL;
-> --
-> 1.9.1
->
+It seems the translation_offset for IA64 is assuming to zero in this
+patch set, which have regressions if we use DworldIO() with offset
+to report io port resources, am I missing something?
+
+Thanks
+Hanjun
