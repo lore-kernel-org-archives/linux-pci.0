@@ -1,102 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:38714 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728AbbFEULO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 16:11:14 -0400
-Received: by igblz2 with SMTP id lz2so22639595igb.1
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 13:11:13 -0700 (PDT)
-Date: Fri, 5 Jun 2015 15:11:10 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	aik@ozlabs.ru, panto@antoniou-consulting.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-Subject: Re: [PATCH v5 42/42] pci/hotplug: PowerPC PowerNV PCI hotplug driver
-Message-ID: <20150605201110.GP3631@google.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1433400131-18429-43-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:36746 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932772AbbFHVee (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jun 2015 17:34:34 -0400
+Received: by obbqz1 with SMTP id qz1so90441978obb.3
+        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2015 14:34:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433400131-18429-43-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433797073.4526.163.camel@kernel.crashing.org>
+References: <1430460188-31343-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1430460188-31343-20-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqKEUevxSe0Q=pGdsWOiT+TW9iAnCsAWuuqOYj3ZPOG7dg@mail.gmail.com>
+ <1430493730.7979.58.camel@kernel.crashing.org> <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+ <1430521038.7979.70.camel@kernel.crashing.org> <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+ <1430774063.7979.139.camel@kernel.crashing.org> <1431560124.20218.91.camel@kernel.crashing.org>
+ <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
+ <1431564871.4160.8.camel@kernel.crashing.org> <20150607075422.6ECE9C40A12@trevor.secretlab.ca>
+ <1433797073.4526.163.camel@kernel.crashing.org>
+From: Grant Likely <grant.likely@linaro.org>
+Date: Mon, 8 Jun 2015 22:34:13 +0100
+Message-ID: <CACxGe6uMijVvU_yK_Yk3GSABHjqxYAwY76WcOJcxAhoPcW02sQ@mail.gmail.com>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 04, 2015 at 04:42:11PM +1000, Gavin Shan wrote:
-> The patch intends to add standalone driver to support PCI hotplug
-> for PowerPC PowerNV platform, which runs on top of skiboot firmware.
-> The firmware identified hotpluggable slots and marked their device
-> tree node with proper "ibm,slot-pluggable" and "ibm,reset-by-firmware".
-> The driver simply scans device-tree to create/register PCI hotplug slot
-> accordingly.
-> 
-> If the skiboot firmware doesn't support slot status retrieval, the PCI
-> slot device node shouldn't have property "ibm,reset-by-firmware". In
-> that case, none of valid PCI slots will be detected from device tree.
-> The skiboot firmware doesn't export the capability to access attention
-> LEDs yet and it's something for TBD.
-> 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On Mon, Jun 8, 2015 at 9:57 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Sun, 2015-06-07 at 08:54 +0100, Grant Likely wrote:
+>> > IE. conceptually, what overlays do today is quite rooted around the idea
+>> > of having a fixed "base" DT and some pre-compiled DTB overlays that
+>> > get added/removed. The design completely ignore the idea of a FW that
+>> > maintains a "live" tree which we want to keep in sync, which is what we
+>> > want to do here, or what we could do with a "live" open firmware
+>> > implementation.
+>>
+>> Right, which is exactly the reason for the changeset/overlay split.
+>> Overlays assume a fixed base, and that overlays are kind of like plug-in
+>> modules. changeset makes no such assumption.
+>
+> So you suggest we create a function that takes an fdt and an "anchor" as input,
+> and expands that FDT below that anchor, but does so by using the changeset API
+> under the hood ?
+>
+> Even that looks somewhat tricky (turn that bit of FDT into a pile of changeset
+> actions), however, I can see how we could create a new function inside changeset
+> to attach a subtree.
+>
+> Ie. of_attach_subtree() (which could have it's own reconfig action but we
+> don't care that much yet), which takes an expanded subtree and an anchor, and
+> calls of_attach_node() in effect for all nodes in there.
+>
+> We could then have a two pass mechanism in our hotplug code:
+>
+>  - Expand the bit of fdt into a separate tree
+>  - Use of_attach_subtree to "add" that subtree to the main tree
+>
+> What do you think ?
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+I like that.
 
-But I do have a few comments (my ack is valid whether you do anything with
-them or not):
-
-> +static void slot_power_off_handler(struct powernv_php_slot *slot)
-> +{
-> +	int ret;
-> +
-> +	/* Release the firmware data for the child device nodes */
-> +	remove_child_pdn(slot->dn);
-> +
-> +	/*
-> +	 * Release the child device nodes. If the sub-tree was
-> +	 * built with the help of overlay, we just need revert
-> +	 * the changes introduced by the overlay
-> +	 */
-> +	if (slot->overlay_id >= 0) {
-> +		ret = of_overlay_destroy(slot->overlay_id);
-> +		if (ret)
-> +			pr_warn("%s: Error %d destroying overlay %d\n",
-> +				__func__, ret, slot->overlay_id);
-
-For this and similar messages: isn't there a device you can use with
-dev_warn() here?  I think a device name would be much better than a
-function name.
-
-> +scan:
-> +	switch (presence) {
-> +	case POWERNV_PHP_SLOT_PRESENT:
-> +		if (rescan) {
-> +			pci_lock_rescan_remove();
-> +			pcibios_add_pci_devices(slot->bus);
-
-You didn't add this, but "pcibios_add_pci_devices" doesn't seem like the
-right name.  "pcibios" generally refers to an arch-specific hook that's
-called by the generic PCI core.  In this case, pcibios_add_pci_devices()
-contains powerpc-specific code, and it's only called from powerpc code, so
-I think using "pcibios_" in the name is a bit misleading.
-
-> +	/* Remove all devices behind the slot */
-> +	pci_lock_rescan_remove();
-> +	pcibios_remove_pci_devices(slot->bus);
-
-Same comment for pcibios_remove_pci_devices().  It would be better if the
-name didn't suggest that this was part of the pcibios_ interface between
-the PCI core and the arch code, because it's not.
-
-> +	/* Slot indentifier */
-
-s/indentifier/identifier/
-
-> +	if (!php_slot_get_id(dn, &id))
-> +		return NULL;
-> +
-
-> +	/* PCI bus */
-> +	bus = pcibios_find_pci_bus(dn);
-
-And pcibios_find_pci_bus() (it's also powerpc-specific).
-
-Bjorn
+g.
