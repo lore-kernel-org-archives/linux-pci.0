@@ -1,63 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1433391238-19471-6-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-	<1433391238-19471-6-git-send-email-jiang.liu@linux.intel.com>
-Date: Thu, 4 Jun 2015 08:20:12 +0200
-Message-ID: <CABxcv==Gg7GOzyo5kAEC5ezQpsTMPo=Bi0H4rfRUY5iQJ4oSTQ@mail.gmail.com>
-Subject: Re: [RFT v2 05/48] gpio: Use irq_desc_get_xxx() to avoid redundant
- lookup of irq_desc
-From: Javier Martinez Canillas <javier@dowhile0.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, Ray Jui <rjui@broadcom.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	Linux GPIO List <linux-gpio@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [Patch v5 0/6] Consolidate ACPI PCI root common code into ACPI core
+Date: Tue,  9 Jun 2015 00:20:42 +0800
+Message-Id: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Jiang,
+This patch set consolidates common code to support ACPI PCI root on x86
+and IA64 platforms into ACPI core, to reproduce duplicated code and
+simplify maintenance. And a patch set based on previous version to support
+ACPI based PCIe host bridge on ARM64 has been posted at:
+https://lkml.org/lkml/2015/5/26/207
 
-On Thu, Jun 4, 2015 at 6:13 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-> already have a pointer to corresponding irq_desc.
->
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Acked-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
->  drivers/gpio/gpio-bcm-kona.c   |    2 +-
->  drivers/gpio/gpio-dwapb.c      |    2 +-
->  drivers/gpio/gpio-mvebu.c      |    2 +-
->  drivers/gpio/gpio-mxc.c        |    6 +++---
->  drivers/gpio/gpio-mxs.c        |    2 +-
->  drivers/gpio/gpio-omap.c       |    2 +-
+It's based on latest mainstream kernel. It passes Fengguang's 0day test
+suite and has been tested on two IA64 platforms and one x86 platform.
 
-For gpio-omap:
+V4-V5:
+1) As suggested by Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, do not
+   introduce "struct pci_controller" into generic drivers/acpi/pci_root.c,
+   so ARM64 doesn't need to define a useless structure. And it simplifies
+   code a little too.
 
-Acked-by: Javier Martinez Canillas <javier@dowhile0.org>
+V3->V4:
+1) Add patch[05/08] support solve building issue on ARM64
+2) Solve an implicitly pointer cast issue.
+3) Rebase to latest mainstream kernel
 
-Best regards,
-Javier
+V2->V3:
+1. Move memory allocation/free from ACPI core into arch
+2. Kill the field 'segment' in struct pci_root_info on x86
+
+Thanks!
+Gerry
+
+Jiang Liu (6):
+  ACPI/PCI: Enhance ACPI core to support sparse IO space
+  ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
+    bridge
+  ia64/PCI: Use common struct resource_entry to replace struct
+    iospace_resource
+  PCI/ACPI: Consolidate common PCI host bridge code into ACPI core
+  x86/PCI/ACPI: Use common interface to support PCI host bridge
+  ia64/PCI/ACPI: Use common interface to support PCI host bridge
+
+ arch/ia64/include/asm/pci.h |    5 -
+ arch/ia64/pci/pci.c         |  366 ++++++++++++-------------------------------
+ arch/x86/pci/acpi.c         |  294 ++++++++++------------------------
+ drivers/acpi/pci_root.c     |  198 +++++++++++++++++++++++
+ drivers/acpi/resource.c     |    9 +-
+ include/linux/ioport.h      |    1 +
+ include/linux/pci-acpi.h    |   23 +++
+ 7 files changed, 415 insertions(+), 481 deletions(-)
+
+-- 
+1.7.10.4
+
