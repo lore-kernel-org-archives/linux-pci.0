@@ -1,230 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:37231 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751817AbbFDGns (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:48 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:44 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 07/42] powerpc/powernv: Calculate PHB's DMA weight dynamically
-Date: Thu,  4 Jun 2015 16:41:36 +1000
-Message-Id: <1433400131-18429-8-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55754D15.9090205@hp.com>
+Date: Mon, 08 Jun 2015 16:06:45 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
+MIME-Version: 1.0
+To: Joerg Roedel <joro@8bytes.org>
+CC: iommu@lists.linux-foundation.org, bhe@redhat.com,
+	dwmw2@infradead.org, vgoyal@redhat.com, dyoung@redhat.com,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, indou.takao@jp.fujitsu.com,
+	bhelgaas@google.com, doug.hatch@hp.com, jerry.hoemann@hp.com,
+	tom.vaden@hp.com, li.zhang6@hp.com, lisa.mitchell@hp.com,
+	billsumnerlinux@gmail.com, rwright@hp.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, jroedel@suse.de,
+	"Li, ZhenHua" <zhen-hual@hp.com>
+Subject: Re: [PATCH 00/17] Fixes and Cleanups for the Intel VT-d driver
+References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For P7IOC, the whole available DMA32 space, which is below the
-MEM32 space, is divided evenly into 256MB segments. How many
-continuous segments assigned to one particular PE depends on
-the PE's DMA weight that is figured out from the type of each
-PCI devices contained in the PE, and PHB's DMA weight which is
-accumulative DMA weight of PEs contained in the PHB. It means
-that the PHB's DMA weight calculation depends on existing PEs,
-which works perfectly now, but not hotplug friendly. As the
-whole available DMA32 space can be assigned to one PE on PHB3,
-so we don't have the issue on PHB3.
+Finished testing on my HP huge system, SuperDome X.
+It works well.
 
-The patch calculates PHB's DMA weight based on the PCI devices
-contained in the PHB dynamically so that it's hotplug friendly.
-At the meanwhile, the patch removes the code handling DMA weight
-for PHB3 in pnv_ioda_setup_dma().
+Thanks
+Zhenhua
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
-v5:
-  * Split from PATCH[v4 5/21]
-  * Fixed line over 80 characters reported from checkpatch.pl
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 90 +++++++++++++++----------------
- arch/powerpc/platforms/powernv/pci.h      |  6 ---
- 2 files changed, 44 insertions(+), 52 deletions(-)
-
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 46a5e10..d9ff739 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -979,8 +979,11 @@ static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
- 	list_add_tail(&pe->dma_link, &phb->ioda.pe_dma_list);
- }
- 
--static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
-+static unsigned int pnv_ioda_dev_dma_weight(struct pci_dev *dev)
- {
-+	struct pci_controller *hose = pci_bus_to_host(dev->bus);
-+	struct pnv_phb *phb = hose->private_data;
-+
- 	/* This is quite simplistic. The "base" weight of a device
- 	 * is 10. 0 means no DMA is to be accounted for it.
- 	 */
-@@ -993,14 +996,34 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
- 	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
- 	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
- 	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
--		return 3;
-+		return 3 * phb->ioda.tce32_count;
- 
- 	/* Increase the weight of RAID (includes Obsidian) */
- 	if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
--		return 15;
-+		return 15 * phb->ioda.tce32_count;
- 
- 	/* Default */
--	return 10;
-+	return 10 * phb->ioda.tce32_count;
-+}
-+
-+static int __pnv_ioda_phb_dma_weight(struct pci_dev *pdev, void *data)
-+{
-+	unsigned int *dma_weight = data;
-+
-+	*dma_weight += pnv_ioda_dev_dma_weight(pdev);
-+	return 0;
-+}
-+
-+static unsigned int pnv_ioda_phb_dma_weight(struct pnv_phb *phb)
-+{
-+	unsigned int dma_weight = 0;
-+
-+	if (!phb->hose->bus)
-+		return dma_weight;
-+
-+	pci_walk_bus(phb->hose->bus,
-+		     __pnv_ioda_phb_dma_weight, &dma_weight);
-+	return dma_weight;
- }
- 
- #ifdef CONFIG_PCI_IOV
-@@ -1159,7 +1182,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 			continue;
- 		}
- 		pdn->pe_number = pe->pe_number;
--		pe->dma_weight += pnv_ioda_dma_weight(dev);
-+		pe->dma_weight += pnv_ioda_dev_dma_weight(dev);
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
- 			pnv_ioda_setup_same_PE(dev->subordinate, pe);
- 	}
-@@ -1222,14 +1245,6 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, int all)
- 	/* Put PE to the list */
- 	list_add_tail(&pe->list, &phb->ioda.pe_list);
- 
--	/* Account for one DMA PE if at least one DMA capable device exist
--	 * below the bridge
--	 */
--	if (pe->dma_weight != 0) {
--		phb->ioda.dma_weight += pe->dma_weight;
--		phb->ioda.dma_pe_count++;
--	}
--
- 	/* Link the PE */
- 	pnv_ioda_link_pe_by_weight(phb, pe);
- }
-@@ -2546,24 +2561,13 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- static void pnv_ioda_setup_dma(struct pnv_phb *phb)
- {
- 	struct pci_controller *hose = phb->hose;
--	unsigned int residual, remaining, segs, tw, base;
- 	struct pnv_ioda_pe *pe;
-+	unsigned int dma_weight;
- 
--	/* If we have more PE# than segments available, hand out one
--	 * per PE until we run out and let the rest fail. If not,
--	 * then we assign at least one segment per PE, plus more based
--	 * on the amount of devices under that PE
--	 */
--	if (phb->ioda.dma_pe_count > phb->ioda.tce32_count)
--		residual = 0;
--	else
--		residual = phb->ioda.tce32_count -
--			phb->ioda.dma_pe_count;
--
--	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
--		hose->global_number, phb->ioda.tce32_count);
--	pr_info("PCI: %d PE# for a total weight of %d\n",
--		phb->ioda.dma_pe_count, phb->ioda.dma_weight);
-+	/* Calculate the PHB's DMA weight */
-+	dma_weight = pnv_ioda_phb_dma_weight(phb);
-+	pr_info("PCI%04x has %ld DMA32 segments, total weight %d\n",
-+		hose->global_number, phb->ioda.tce32_count, dma_weight);
- 
- 	pnv_pci_ioda_setup_opal_tce_kill(phb);
- 
-@@ -2571,22 +2575,9 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
- 	 * out one base segment plus any residual segments based on
- 	 * weight
- 	 */
--	remaining = phb->ioda.tce32_count;
--	tw = phb->ioda.dma_weight;
--	base = 0;
- 	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
- 		if (!pe->dma_weight)
- 			continue;
--		if (!remaining) {
--			pe_warn(pe, "No DMA32 resources available\n");
--			continue;
--		}
--		segs = 1;
--		if (residual) {
--			segs += ((pe->dma_weight * residual)  + (tw / 2)) / tw;
--			if (segs > remaining)
--				segs = remaining;
--		}
- 
- 		/*
- 		 * For IODA2 compliant PHB3, we needn't care about the weight.
-@@ -2594,17 +2585,24 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
- 		 * the specific PE.
- 		 */
- 		if (phb->type == PNV_PHB_IODA1) {
-+			unsigned int segs, base = 0;
-+
-+			if (pe->dma_weight <
-+			    dma_weight / phb->ioda.tce32_count)
-+				segs = 1;
-+			else
-+				segs = (pe->dma_weight *
-+					phb->ioda.tce32_count) / dma_weight;
-+
- 			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
- 				pe->dma_weight, segs);
- 			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
-+
-+			base += segs;
- 		} else {
- 			pe_info(pe, "Assign DMA32 space\n");
--			segs = 0;
- 			pnv_pci_ioda2_setup_dma_pe(phb, pe);
- 		}
--
--		remaining -= segs;
--		base += segs;
- 	}
- }
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 0a8cecb..38d8616 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -185,12 +185,6 @@ struct pnv_phb {
- 			/* 32-bit TCE tables allocation */
- 			unsigned long		tce32_count;
- 
--			/* Total "weight" for the sake of DMA resources
--			 * allocation
--			 */
--			unsigned int		dma_weight;
--			unsigned int		dma_pe_count;
--
- 			/* Sorted list of used PE's, sorted at
- 			 * boot for resource allocation purposes
- 			 */
--- 
-2.1.0
+On 06/05/2015 10:10 PM, Joerg Roedel wrote:
+> Hey,
+>
+> here are a couple of patches to fix the fall-out from the
+> patch set fixing the kdump faults with VT-d enabled. A few
+> important issues have been fixed:
+>
+> 	* Moved sleeping functions out of atomic sections,
+> 	  mainly iremap_cache/iounmap.
+>
+> 	* Mark domain ids used in the old kernel as reserved
+> 	  in the kdump kernel, so that any new domains don't
+> 	  interfere with domains from the old kernel
+>
+> 	* Mark all IRT entries from the old kernel as
+> 	  reservered in the new kernel, so that we don't
+> 	  overwrite an entry which might still be in use by
+> 	  a device
+>
+> 	* Only try to load anything from the old kernel when
+> 	  we are in a kdump kernel. If we find the iommu
+> 	  hardware enabled and we are not in a kdump kernel,
+> 	  just disable the iommu and proceed with
+> 	  initialization.
+>
+> 	* Fix a compile error
+>
+> Besides that I also cleaned up the code to simplify it:
+>
+> 	* Move necessary initialization steps before the
+> 	  root entry table and the irq remapping table is
+> 	  programmed into hardware. This makes sure QI is
+> 	  initialized so that we can flush the iommu caches
+> 	  when hardware got the new tables.
+>
+> 	* Make the new root entry table and irq remapping
+> 	  table visible to hardware immediatly after they
+> 	  are created and loaded with the data from the old
+> 	  kernel. This allows to remove the code to update
+> 	  both, the old and the new version of the table at
+> 	  the same time.
+>
+> 	* Clean up log messages from the VT-d driver to have
+> 	  a common prefix that can be grepped for.
+>
+> 	* Remove unused code
+>
+> The changes have been tested by me an Baoquan He. I'll plan
+> to put them into the x86/vt-d branch for v4.2.
+>
+> Regards,
+>
+> 	Joerg
+>
+> Joerg Roedel (17):
+>    iommu/vt-d: Fix compile error when CONFIG_INTEL_IOMMU=n
+>    iommu/vt-d: Remove __iommu_save_to_oldmem() function
+>    iommu/vt-d: Make two functions static
+>    iommu/vt-d: Load old data structures only in kdump kernel
+>    iommu/vt-d: Mark root-entry present in set_root_entry
+>    iommu/vt-d: Rework loading of old root-entry table
+>    iommu/vt-d: Copy context-tables outside of spin_lock
+>    iommu/vt-d: Don't reuse domain-ids from old kernel
+>    iommu/vt-d: Clean up log messages in intel-iommu.c
+>    iommu/vt-d: Allocate irq remapping table bitmap with GFP_KERNEL
+>    iommu/vt-d: Move QI initialization to intel_setup_irq_remapping
+>    iommu/vt-d: Move EIM detection to intel_prepare_irq_remapping
+>    iommu/vt-d: Split up iommu_set_irq_remapping
+>    iommu/vt-d: Move kdump pointer intialization to __iommu_load_old_irte
+>    iommu/vt-d: Mark irt entries from old kernel as allocated
+>    iommu/vt-d: Copy old irte in intel_setup_irq_remapping
+>    iommu/vt-d: Remove update code for old ir-table
+>
+>   drivers/iommu/dmar.c                |  26 +-
+>   drivers/iommu/intel-iommu.c         | 463 ++++++++++++++----------------------
+>   drivers/iommu/intel_irq_remapping.c | 263 +++++++++-----------
+>   include/linux/intel-iommu.h         |  17 +-
+>   4 files changed, 299 insertions(+), 470 deletions(-)
+>
 
