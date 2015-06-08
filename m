@@ -1,110 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 13 Jun 2015 10:12:00 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [RFC/RFT PATCH v2] PCI: move pci_read_bridge_bases to the
- generic PCI layer
-Message-ID: <20150613091200.GA8125@red-moon>
-References: <1433840506-20083-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20150613014755.GA29649@roeck-us.net>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <55757E65.5030401@linux.intel.com>
+Date: Mon, 08 Jun 2015 19:37:09 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150613014755.GA29649@roeck-us.net>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Vinod Koul <vinod.koul@intel.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Steve Longerbeam <slongerbeam@gmail.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, dmaengine@vger.kernel.org
+Subject: Re: [RFT v2 11/48] ipu: Use irq_desc_get_xxx() to avoid redundant
+ lookup of irq_desc
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com> <1433391238-19471-12-git-send-email-jiang.liu@linux.intel.com> <20150608111658.GL28601@localhost>
+In-Reply-To: <20150608111658.GL28601@localhost>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 13, 2015 at 02:47:55AM +0100, Guenter Roeck wrote:
-> On Tue, Jun 09, 2015 at 10:01:45AM +0100, Lorenzo Pieralisi wrote:
-> > When a PCI bus is scanned, upon PCI bridge detection the kernel
-> > has to read the bridge registers to set-up its resources so that
-> > the PCI resource hierarchy can be validated properly.
-> > 
-> > Most if not all architectures read PCI bridge registers in the
-> > pcibios_fixup_bus hook, that is called by the PCI generic layer
-> > whenever a PCI bus is scanned.
-> > 
-> > Since pci_read_bridge_bases is an arch agnostic operation (and it
-> > is carried out on all architectures) it can be moved to the generic
-> > PCI layer in order to consolidate code and remove the respective
-> > calls from the architectures back-ends.
-> > 
-> > The PCI_PROBE_ONLY flag is not checked before calling
-> > pci_read_bridge_buses in the generic layer since reading the bridge
-> > bases is not related to resources assignment; this implies that it
-> > can be carried out safely on PCI_PROBE_ONLY systems too and should
-> > not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
-> > flag before reading the bridge bases.
-> > 
-> > In order to validate the resource hierarchy as soon as the resources
-> > themselves are probed (ie read from the bridge), this patch also adds
-> > code to pci_read_bridge_bases that claims the bridge resources, so that
-> > they are validated and inserted in the resource hierarchy as soon as
-> > the bridge bases are probed.
-> > 
+On 2015/6/8 19:16, Vinod Koul wrote:
+> On Thu, Jun 04, 2015 at 12:13:21PM +0800, Jiang Liu wrote:
+>> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
+>> already have a pointer to corresponding irq_desc.
+>>
+>> Do the same thing to avoid pattern "irq_get_chip_data(data->irq)".
 > 
-> Hi Lorenzo,
-> 
-> on one of our systems, I see a lot of messages with your patch applied.
-> 
-> bart kernel: pci 0000:b0:00.0: can't claim BAR 7 [io 0x0000-0x0fff]: no compatible bridge window
-> bart kernel: pci 0000:b0:00.0: can't claim BAR 8 [mem 0x94000000-0x941fffff]: no compatible bridge window
-> bart kernel: pci 0000:b1:03.0: can't claim BAR 7 [io 0x0000-0x0fff]: no compatible bridge window
-> bart kernel: pci 0000:b1:03.0: can't claim BAR 8 [mem 0x95800000-0x959fffff]: no compatible bridge window
-> 
-> and so on. The final IO memory assignment is the same, though,
-> before and after your patch.
-> 
->       95800000-95bfffff : PCI Bus 0000:b0
->         95800000-959fffff : PCI Bus 0000:b1
-> 	  95800000-959fffff : PCI Bus 0000:b2
-> 	95a00000-95a3ffff : 0000:b0:00.0
-> 
-> 
-> Does that have any relevance or is it just nuisance messages ?
+> And I am missing the context, it is a bad practice to send some part of the
+> series without giving context. Is this dependent on something else...?
+This patch set touches too many files, so I didn't send the cover letter
+to all maintainers. The whole patch set is to simplify core irq
+interfaces by killing the 'irq' parameter. Please refer to
+lkml.org/lkml/2015/6/4/113
 
-Yes, I knew this could happen. It should be just nuisance messages,
-since we are claming bridge resources even on systems where they
-are reassigned. We should remove those messages, this means that I
-have to craft a function that claims resources without spitting too
-much unwanted noise, I can't use pci_claim_bridge_resource for this
-purpose as you have noticed, unless I refactor it, open to suggestions
-(we claim bridge resources by default, regardless of PROBE_ONLY flag).
-
-Thanks a lot for testing it, appreciated, I will prepare a v3.
-
-Lorenzo
-
-> 
-> Thanks,
-> Guenter
-> 
+And it may depends on preceding patches in tip/x86/apic branch, so it
+would be safer to handle the patch set altogether.
+Thanks!
+Gerry
