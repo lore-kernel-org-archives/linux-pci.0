@@ -1,107 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:33852 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751743AbbFEGm1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 02:42:27 -0400
-Received: by wibut5 with SMTP id ut5so10700251wib.1
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 23:42:26 -0700 (PDT)
-Message-ID: <557144CF.50500@monstr.eu>
-Date: Fri, 05 Jun 2015 08:42:23 +0200
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 8 Jun 2015 17:29:58 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: "Li, Zhen-Hua" <zhen-hual@hp.com>, indou.takao@jp.fujitsu.com,
+	bhe@redhat.com, vgoyal@redhat.com, dyoung@redhat.com,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	alex.williamson@redhat.com, ddutile@redhat.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
+	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
+	rwright@hp.com
+Subject: Re: [PATCH v11 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+Message-ID: <20150608152957.GW20384@8bytes.org>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+ <1433773583.2952.52.camel@infradead.org>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] microblaze/PCI: Remove unused declarations
-References: <20150604195706.17951.85004.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150604195706.17951.85004.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="Rv08Rem4XacV1r4k19hG8MJVL8IoJGp34"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433773583.2952.52.camel@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---Rv08Rem4XacV1r4k19hG8MJVL8IoJGp34
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jun 08, 2015 at 03:26:23PM +0100, David Woodhouse wrote:
+> There are some interesting corner cases to handle here.
+> 
+> Firstly, you don't seem to handle the case of extended root/context
+> tables (where ecap_ecs is set). You need to preserve the DMA_RTADDR_RT
+> bit in the Root Table Address register, surely?
+> 
+> I think we also need to cope with inheriting page tables from a kernel
+> that *doesn't* use extended page tables, even on hardware that supports
+> it. Which means the use of extended page tables in the new kernel would
+> need to be contingent on something *other* than the pure hardware
+> capabilities.
 
-Hi Bjorn,
+Hmm, I also limited this functionality to kdump kernels. Do we still
+need to preserve these extended data structures even when there is no
+upstream support for them yet?
 
-On 06/04/2015 09:57 PM, Bjorn Helgaas wrote:
-> The following declarations were copied from powerpc but are unused on
-> microblaze:
->=20
->   struct pci_controller *init_phb_dynamic(struct device_node *dn)
->   int remove_phb_dynamic(struct pci_controller *phb)
->   struct pci_dev *of_create_pci_dev(struct device_node *node, ...)
->   void of_scan_pci_bridge(struct device_node *node, ...)
->   void of_scan_bus(struct device_node *node, struct pci_bus *bus)
->   void of_rescan_bus(struct device_node *node, struct pci_bus *bus)
->=20
-> Remove them.
->=20
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/microblaze/include/asm/pci.h |   12 ------------
->  1 file changed, 12 deletions(-)
->=20
-> diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/includ=
-e/asm/pci.h
-> index 468aca8..b6b5b3c 100644
-> --- a/arch/microblaze/include/asm/pci.h
-> +++ b/arch/microblaze/include/asm/pci.h
-> @@ -102,18 +102,6 @@ extern void pcibios_finish_adding_to_bus(struct pc=
-i_bus *bus);
-> =20
->  extern void pcibios_resource_survey(void);
-> =20
-> -extern struct pci_controller *init_phb_dynamic(struct device_node *dn)=
-;
-> -extern int remove_phb_dynamic(struct pci_controller *phb);
-> -
-> -extern struct pci_dev *of_create_pci_dev(struct device_node *node,
-> -					struct pci_bus *bus, int devfn);
-> -
-> -extern void of_scan_pci_bridge(struct device_node *node,
-> -				struct pci_dev *dev);
-> -
-> -extern void of_scan_bus(struct device_node *node, struct pci_bus *bus)=
-;
-> -extern void of_rescan_bus(struct device_node *node, struct pci_bus *bu=
-s);
-> -
->  extern int pci_bus_find_capability(struct pci_bus *bus,
->  						unsigned int devfn, int cap);
-> =20
->=20
+> > 5. Keep using the old page tables before driver is loaded.
+> > 6. After device driver is loaded, when it issues the first dma_map command, 
+> >    free the dmar_domain structure for this device, and generate a new one, so 
+> >    that the device can be assigned a new and empty page table. 
+> 
+> What if there were RMRRs for this device? Don't we need to ensure that
+> those are present in the "new and empty page table" when we take it
+> over?
 
-I think I should ignore this because you have sent another series where
-this patch is included.
+That is still a problem, but not specific to this patch-set. RMRRs will
+not be restored, because domains allocated out of the DMA-API path will
+not get any RMRR mappings. This is also a problem with device hotplug
+(unplug a device with RMRRs and replug it in and the RMRR mappings will
+ be gone).
 
-Thanks,
-Michal
-
---=20
-Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
-Maintainer of Linux kernel - Xilinx Zynq ARM architecture
-Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
+I agree that this needs to be fixed.
 
 
+	Joerg
 
---Rv08Rem4XacV1r4k19hG8MJVL8IoJGp34
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.14 (GNU/Linux)
-
-iEYEARECAAYFAlVxRNAACgkQykllyylKDCFC/gCfTs8xZybO5RVwHpMKdQFErpkw
-Zv0AnjCNrBZ4JXCHaXM8PE+nhD8uEDMh
-=h0tK
------END PGP SIGNATURE-----
-
---Rv08Rem4XacV1r4k19hG8MJVL8IoJGp34--
