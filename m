@@ -1,77 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:53249 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755224AbbFQGGR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Jun 2015 02:06:17 -0400
-Message-ID: <55810E42.4080500@ti.com>
-Date: Wed, 17 Jun 2015 09:05:54 +0300
-From: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 8 Jun 2015 18:13:15 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: bhe@redhat.com, tom.vaden@hp.com, rwright@hp.com,
+	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
+	linux-kernel@vger.kernel.org, lisa.mitchell@hp.com,
+	iommu@lists.linux-foundation.org,
+	"Li, Zhen-Hua" <zhen-hual@hp.com>, doug.hatch@hp.com,
+	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
+	billsumnerlinux@gmail.com, li.zhang6@hp.com, dyoung@redhat.com,
+	vgoyal@redhat.com
+Subject: Re: [PATCH v11 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+Message-ID: <20150608161315.GX20384@8bytes.org>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+ <1433773583.2952.52.camel@infradead.org>
+ <20150608152957.GW20384@8bytes.org>
+ <1433778624.2952.82.camel@infradead.org>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "Michael S. Tsirkin" <mst@redhat.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Borislav Petkov <bp@suse.de>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"cocci@systeme.lip6.fr" <cocci@systeme.lip6.fr>,
-	Andy Lutomirski <luto@amacapital.net>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: [Cocci] [PATCH v3 0/4] pci: add and use pci_ioremap_wc_bar()
-References: <1429647634-17169-1-git-send-email-mcgrof@do-not-panic.com> <CAB=NE6VYvd-Au58QRJprCquuvJkY9NYe1x8FmbW7qAhVrVE=QQ@mail.gmail.com> <20150519175310.GH23057@wotan.suse.de> <CAB=NE6UsMMoPhkKof+VN7ZUCd81VxrwP9nqHDUj5Lr3DJLm3bA@mail.gmail.com> <CAB=NE6UdW2d6zO1hYbTnPcoZWt8+Yg5KdWE_bdqAuR_ysey_+A@mail.gmail.com> <557FCD1A.4020105@ti.com> <20150616190504.GH11147@wotan.suse.de>
-In-Reply-To: <20150616190504.GH11147@wotan.suse.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature";
-	boundary="bHKNgDXgGvhid6M81pc8ijc6i5GvW6h73"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1433778624.2952.82.camel@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---bHKNgDXgGvhid6M81pc8ijc6i5GvW6h73
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jun 08, 2015 at 04:50:24PM +0100, David Woodhouse wrote:
+> On Mon, 2015-06-08 at 17:29 +0200, Joerg Roedel wrote:
+> > Hmm, I also limited this functionality to kdump kernels. Do we still
+> > need to preserve these extended data structures even when there is no
+> > upstream support for them yet?
+> 
+> We *do* have upstream support. The 4.1 kernel will use the extended
+> root/context tables and will set the DMA_RTADDR_RTT bit in the Root
+> Table Address register, even though it doesn't yet actually *use* any
+> of the shiny new bits in the extended context tables.
+> 
+> So the code which copies the context tables needs to take that into
+> account.
 
-Hi Luis,
+Right, I missed that until now. So what the code with my changes does
+is, it sets the DMA_RTADDR_RTT bit as it would do on a normal boot. But
+unlike the root entry table address, this bit can not be changed while
+translation is active.
 
-On 16/06/15 22:05, Luis R. Rodriguez wrote:
+So I think we need to read out that bit when we find translation enabled
+and if it is different from what we would set it to, we bail out of any
+copying, disable translation and proceed as in a normal boot.
 
-> Can the fbdev parts go through Bjorn's tree? We last discussed if the s=
-eries
-> was important to be fully merged or not by v4.2 and I recentlty provide=
-d a
-> long winded review of the entire series to help maintainers pick and ch=
-oose
-> and decide [1].
->=20
-> Based on this can the fbdev patches from both of these series go throug=
-h Bjorn's tree?
+> Yeah. We need the same thing with hardware passthrough — currently I
+> think we refuse to put RMRR-afflicted devices into the passthrough
+> domain purely because we lack the capability to install the RMRR
+> regions if/when we later take it *out* of the hardware passthrough
+> domain. Although I can't quite remember the logic there; surely if it's
+> RMRR-afflicted and we have iommu=pt, it'll *never* be taken out of the
+> 1:1 domain? A device driver might come along and tell us it really is
+> 64-bit capable and thus we might put it *in* to the passthrough domain
+> where previously we'd kept it out... but taking it *out*... ?
 
-Yes, they can go through Bjorn's tree if there are no non-trivial
-conflicts with the main fbdev stuff. linux-next should contain all the
-fbdev patches going for 4.2.
+Well, yeah, the logic is complicated. My hope is to move all that logic
+to the iommu core code to have it unified between iommu drivers.
 
- Tomi
+The way it should work then is basically: Every device (better:
+iommu-group) has a default domain (which can be a PT domain) and if the
+device has RMRR mappings, it can not be taken out of that domain. The
+default-domain branch of my tree contains the beginnings of that, but
+there is still a lot of work to do to get there.
 
 
---bHKNgDXgGvhid6M81pc8ijc6i5GvW6h73
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+	Joerg
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJVgQ5CAAoJEPo9qoy8lh71Gs8P/0GkgK8a+Dj9rYw4YtmRKYRo
-dyM8OCUPY3JvFLf3h/TZUe9jJpsHkAq2dzSuBYKGPPjNvqi26t/oCfb8crLqUpTO
-QQ1g8lmqD7VsoqicVuwLET42J2O9Q0v9LU9Mk8SHuU+2MS2qsKoVRqyrcA0OyJ2f
-F4XnpnRWfm25FwvxqhBlQmf3Qk3/0la6f+Nd//l5UyKw8fcPPajDp47vnrTTSJu9
-n0y+nj8X0xw/onG/K3ywRmAmnspbEIGW/Z2kdxBPKwh+drDbCia+Zeyuc7VAJQwq
-Ym9qNr13HcSpUn5hcv8mnrMqomEA51uvPyDv+cma8f38vmf5/eZ9lT93RfiRSuWW
-q16JrbBsJer/dmomw+5U0V0iyFMgjZBq4AAuRJfgwIgzs1g156LwnxS3iQpNgwYR
-R+38c2dgV+ssJ/TKMTPSwTbFUoqQWYu+kkrpmXyb6Fl6BArr1Mb1x6+0Sydmgjy5
-nAF++5jnEgbiRSJ1xMsohvdraTB4q90XYRyYoJ9pXU3RYZY75IX0vld+8MwvhfgS
-AS2DfYC503mRko/T0ffGRwbqG5lINRhM22euCfCwZe8kOB2IOPKMp6RcrfjXbd05
-+/9hTj+3pScHwXmCjLgkGq3Xc/c6IOu5qTr6ssSP41Ij6Vos9AFQPfkV8I32ePV1
-GbXnKC2IETXlEEi1s5yb
-=HAX8
------END PGP SIGNATURE-----
-
---bHKNgDXgGvhid6M81pc8ijc6i5GvW6h73--
