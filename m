@@ -1,124 +1,171 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:54005 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643AbbFRIGz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:06:55 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 18 Jun 2015 13:36:53 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 20D5AE0059
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:40:21 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I86oCD43515996
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:50 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I86nva027084
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:49 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V8 01/10] PCI/IOV: Rename and export virtfn_add/virtfn_remove
-Date: Thu, 18 Jun 2015 16:06:36 +0800
-Message-Id: <1434614805-19002-2-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH] PCI: pciehp: Wait for hotplug command completion where
+ necessary
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, mstowe@redhat.com
+Date: Mon, 08 Jun 2015 17:10:50 -0600
+Message-ID: <20150608230833.18712.45528.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During EEH recovery, hotplug is applied to the devices which don't
-have drivers or their drivers don't support EEH. However, the hotplug,
-which was implemented based on PCI bus, can't be applied to VF directly.
+The commit referenced below deferred waiting for command completion
+until the start of the next command, allowing hardware to do the
+latching asynchronously.  Unfortunately, being ready to accept a new
+command is the only indication we have that the previous command is
+completed.  In cases where we need that state change to be enabled, we
+must still wait for completion.  For instance, pciehp_reset_slot()
+attempts to disable anything that might generate a surprise hotplug on
+slots that support presence detection.  If we don't wait for those
+settings to latch before the secondary bus reset, we negate any value
+in attempting to prevent the spurious hotplug.
 
-The patch renames virtn_{add,remove}() and exports them so that they
-can be used in PCI hotplug during EEH recovery.
+Create a base function with optional wait and helper functions so that
+pcie_write_cmd() turns back into the "safe" interface which waits
+before and after issuing a command and add pcie_write_cmd_nowait(),
+which eliminates the trailing wait for asynchronous completion.  The
+following functions are returned to their previous behavior:
 
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+ pciehp_power_on_slot
+ pciehp_power_off_slot
+ pcie_disable_notification
+ pciehp_reset_slot
+
+The rationale is that pciehp_power_on_slot() enables the link and
+therefore relies on completion of power-on.  pciehp_power_off_slot()
+and pcie_disable_notification() need a wait because data structures
+may be freed after these calls and continued signaling from the device
+would be unexpected.  And, of course, pciehp_reset_slot() needs to
+wait for the scenario outlined above.
+
+Fixes: 3461a068661c ("PCI: pciehp: Wait for hotplug command completion lazily")
+Cc: stable@vger.kernel.org # v3.17+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- drivers/pci/iov.c   |   10 +++++-----
- include/linux/pci.h |    8 ++++++++
- 2 files changed, 13 insertions(+), 5 deletions(-)
+ drivers/pci/hotplug/pciehp_hpc.c |   52 ++++++++++++++++++++++++++++----------
+ 1 file changed, 38 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..cc941dd 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
- 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 0ebf754..6d68688 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -176,20 +176,17 @@ static void pcie_wait_cmd(struct controller *ctrl)
+ 			  jiffies_to_msecs(jiffies - ctrl->cmd_started));
  }
  
--static int virtfn_add(struct pci_dev *dev, int id, int reset)
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
+-/**
+- * pcie_write_cmd - Issue controller command
+- * @ctrl: controller to which the command is issued
+- * @cmd:  command value written to slot control register
+- * @mask: bitmask of slot control register to be modified
+- */
+-static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
++static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
++			      u16 mask, bool wait)
  {
- 	int i;
- 	int rc = -ENOMEM;
-@@ -183,7 +183,7 @@ failed:
- 	return rc;
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 slot_ctrl;
+ 
+ 	mutex_lock(&ctrl->ctrl_lock);
+ 
+-	/* Wait for any previous command that might still be in progress */
++	/*
++	 * Always wait for any previous command that might still be in progress
++	 */
+ 	pcie_wait_cmd(ctrl);
+ 
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &slot_ctrl);
+@@ -201,9 +198,33 @@ static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
+ 	ctrl->cmd_started = jiffies;
+ 	ctrl->slot_ctrl = slot_ctrl;
+ 
++	/*
++	 * Optionally wait for the hardware to be ready for a new command,
++	 * indicating completion of the above issued command.
++	 */
++	if (wait)
++		pcie_wait_cmd(ctrl);
++
+ 	mutex_unlock(&ctrl->ctrl_lock);
  }
  
--static void virtfn_remove(struct pci_dev *dev, int id, int reset)
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
++/**
++ * pcie_write_cmd - Issue controller command
++ * @ctrl: controller to which the command is issued
++ * @cmd:  command value written to slot control register
++ * @mask: bitmask of slot control register to be modified
++ */
++static void pcie_write_cmd(struct controller *ctrl, u16 cmd, u16 mask)
++{
++	pcie_do_write_cmd(ctrl, cmd, mask, true);
++}
++
++/* Same as above without waiting for the hardware to latch */
++static void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask)
++{
++	pcie_do_write_cmd(ctrl, cmd, mask, false);
++}
++
+ bool pciehp_check_link_active(struct controller *ctrl)
  {
- 	char buf[VIRTFN_ID_LEN];
- 	struct pci_dev *virtfn;
-@@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+@@ -422,7 +443,7 @@ void pciehp_set_attention_status(struct slot *slot, u8 value)
+ 	default:
+ 		return;
  	}
- 
- 	for (i = 0; i < initial; i++) {
--		rc = virtfn_add(dev, i, 0);
-+		rc = pci_iov_virtfn_add(dev, i, 0);
- 		if (rc)
- 			goto failed;
- 	}
-@@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 
- failed:
- 	for (j = 0; j < i; j++)
--		virtfn_remove(dev, j, 0);
-+		pci_iov_virtfn_remove(dev, j, 0);
- 
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
+-	pcie_write_cmd(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
++	pcie_write_cmd_nowait(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
+ }
+@@ -434,7 +455,8 @@ void pciehp_green_led_on(struct slot *slot)
+ 	if (!PWR_LED(ctrl))
  		return;
  
- 	for (i = 0; i < iov->num_VFs; i++)
--		virtfn_remove(dev, i, 0);
-+		pci_iov_virtfn_remove(dev, i, 0);
+-	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON, PCI_EXP_SLTCTL_PIC);
++	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON,
++			      PCI_EXP_SLTCTL_PIC);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+ 		 PCI_EXP_SLTCTL_PWR_IND_ON);
+@@ -447,7 +469,8 @@ void pciehp_green_led_off(struct slot *slot)
+ 	if (!PWR_LED(ctrl))
+ 		return;
  
- 	pcibios_sriov_disable(dev);
+-	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF, PCI_EXP_SLTCTL_PIC);
++	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF,
++			      PCI_EXP_SLTCTL_PIC);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+ 		 PCI_EXP_SLTCTL_PWR_IND_OFF);
+@@ -460,7 +483,8 @@ void pciehp_green_led_blink(struct slot *slot)
+ 	if (!PWR_LED(ctrl))
+ 		return;
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8d..06aa5dd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+-	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK, PCI_EXP_SLTCTL_PIC);
++	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK,
++			      PCI_EXP_SLTCTL_PIC);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+ 		 PCI_EXP_SLTCTL_PWR_IND_BLINK);
+@@ -613,7 +637,7 @@ void pcie_enable_notification(struct controller *ctrl)
+ 		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
+ 		PCI_EXP_SLTCTL_DLLSCE);
  
- int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
- void pci_disable_sriov(struct pci_dev *dev);
-+int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
-+void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
- int pci_num_vf(struct pci_dev *dev);
- int pci_vfs_assigned(struct pci_dev *dev);
- int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
-@@ -1696,6 +1698,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
- static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
- { return -ENODEV; }
- static inline void pci_disable_sriov(struct pci_dev *dev) { }
-+static inline int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
-+{
-+	return -ENOSYS;
-+}
-+static inline void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
-+{ }
- static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
- static inline int pci_vfs_assigned(struct pci_dev *dev)
- { return 0; }
--- 
-1.7.9.5
+-	pcie_write_cmd(ctrl, cmd, mask);
++	pcie_write_cmd_nowait(ctrl, cmd, mask);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+ }
+@@ -664,7 +688,7 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+ 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
+ 
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
+-	pcie_write_cmd(ctrl, ctrl_mask, ctrl_mask);
++	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
+ 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+ 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
+ 	if (pciehp_poll_mode)
 
