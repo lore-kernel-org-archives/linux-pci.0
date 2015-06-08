@@ -1,81 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:35567 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753354AbbFDWCI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 18:02:08 -0400
-Received: by oihd6 with SMTP id d6so41003811oih.2
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 15:02:07 -0700 (PDT)
-Subject: [PATCH 4/5] PCI: layerscape: Factor out ls_pcie_establish_link()
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Date: Thu, 04 Jun 2015 17:02:06 -0500
-Message-ID: <20150604220205.4377.47992.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org
+Subject: [Patch v5 3/6] ia64/PCI: Use common struct resource_entry to replace struct iospace_resource
+Date: Tue,  9 Jun 2015 00:20:45 +0800
+Message-Id: <1433780448-18636-4-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-All other DesignWare-based drivers have a *_establish_link() function.
+Use common struct resource_entry to replace private
+struct iospace_resource.
 
-This functionality is trivial for Layerscape, but factor out a
-ls_pcie_establish_link() for consistency with the other drivers.  No
-functional change.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 ---
- drivers/pci/host/pci-layerscape.c |   19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+ arch/ia64/include/asm/pci.h |    5 -----
+ arch/ia64/pci/pci.c         |   17 ++++++++---------
+ 2 files changed, 8 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index bb5894f..434b116 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -62,23 +62,30 @@ static int ls_pcie_link_up(struct pcie_port *pp)
- 	return 1;
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 52af5ed9f60b..5c10e0ec48d4 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -83,11 +83,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_read platform_pci_legacy_read
+ #define pci_legacy_write platform_pci_legacy_write
+ 
+-struct iospace_resource {
+-	struct list_head list;
+-	struct resource res;
+-};
+-
+ struct pci_controller {
+ 	struct acpi_device *companion;
+ 	void *iommu;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index d20db9e48014..b1846b891ea5 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -154,14 +154,14 @@ new_space (u64 phys_base, int sparse)
+ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 			struct resource_entry *entry)
+ {
+-	struct iospace_resource *iospace;
++	struct resource_entry *iospace;
+ 	struct resource *resource, *res = entry->res;
+ 	char *name;
+ 	unsigned long base, min, max, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
+ 
+ 	len = strlen(info->name) + 32;
+-	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
++	iospace = resource_list_create_entry(NULL, len);
+ 	if (!iospace) {
+ 		dev_err(dev, "PCI: No memory for %s I/O port space\n",
+ 			info->name);
+@@ -190,7 +190,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	if (space_nr == 0)
+ 		sparse = 1;
+ 
+-	resource = &iospace->res;
++	resource = iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+ 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+@@ -205,12 +205,12 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	entry->offset = base_port;
+ 	res->start = min + base_port;
+ 	res->end = max + base_port;
+-	list_add_tail(&iospace->list, &info->io_resources);
++	resource_list_add_tail(iospace, &info->io_resources);
+ 
+ 	return 0;
+ 
+ free_resource:
+-	kfree(iospace);
++	resource_list_free_entry(iospace);
+ 	return -ENOSPC;
  }
  
--static void ls_pcie_host_init(struct pcie_port *pp)
-+static int ls_pcie_establish_link(struct pcie_port *pp)
+@@ -369,12 +369,11 @@ static void add_resources(struct pci_root_info *info, struct device *dev)
+ static void __release_pci_root_info(struct pci_root_info *info)
  {
--	struct ls_pcie *pcie = to_ls_pcie(pp);
- 	int count = 0;
--	u32 val;
--
--	dw_pcie_setup_rc(pp);
+ 	struct resource *res;
+-	struct iospace_resource *iospace, *tmp;
+ 	struct resource_entry *entry, *tentry;
  
- 	while (!dw_pcie_link_up(pp)) {
- 		usleep_range(100, 1000);
- 		count++;
- 		if (count >= 200) {
- 			dev_err(pp->dev, "phy link never came up\n");
--			return;
-+			return -EINVAL;
- 		}
+-	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
+-		release_resource(&iospace->res);
+-		kfree(iospace);
++	resource_list_for_each_entry_safe(entry, tentry, &info->io_resources) {
++		release_resource(entry->res);
++		resource_list_destroy_entry(entry);
  	}
  
-+	return 0;
-+}
-+
-+static void ls_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct ls_pcie *pcie = to_ls_pcie(pp);
-+	u32 val;
-+
-+	dw_pcie_setup_rc(pp);
-+	ls_pcie_establish_link(pp);
-+
- 	/*
- 	 * LS1021A Workaround for internal TKT228622
- 	 * to fix the INTx hang issue
+ 	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
+-- 
+1.7.10.4
 
