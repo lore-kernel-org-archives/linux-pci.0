@@ -1,57 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 10 Jun 2015 17:48:22 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch v5 4/6] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-Message-ID: <20150610164821.GA18832@red-moon>
-References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
- <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com>
- <20150609161230.GC8591@red-moon>
- <55771B27.1060509@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:33406 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643AbbFHIGk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Jun 2015 04:06:40 -0400
+Received: by wiwd19 with SMTP id d19so77027123wiw.0
+        for <linux-pci@vger.kernel.org>; Mon, 08 Jun 2015 01:06:39 -0700 (PDT)
+Message-ID: <55754D06.9050201@monstr.eu>
+Date: Mon, 08 Jun 2015 10:06:30 +0200
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55771B27.1060509@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 1/7] microblaze/PCI: Remove unused declarations
+References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150604214929.2399.85988.stgit@bhelgaas-glaptop2.roam.corp.google.com> <55714AA3.1070407@monstr.eu> <CAErSpo6pMzOUwwxD0snOpcpdoCH5mBQhH2eXO74SVRnXvazX=A@mail.gmail.com>
+In-Reply-To: <CAErSpo6pMzOUwwxD0snOpcpdoCH5mBQhH2eXO74SVRnXvazX=A@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="xD4GjdoCpLbSnTpnIaCGGsvFUdlcOKRP9"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 09, 2015 at 05:58:15PM +0100, Jiang Liu wrote:
-> On 2015/6/10 0:12, Lorenzo Pieralisi wrote:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--xD4GjdoCpLbSnTpnIaCGGsvFUdlcOKRP9
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-[...]
+On 06/05/2015 05:11 PM, Bjorn Helgaas wrote:
+> On Fri, Jun 5, 2015 at 2:07 AM, Michal Simek <monstr@monstr.eu> wrote:
+>> On 06/04/2015 11:49 PM, Bjorn Helgaas wrote:
+>>> The following declarations were copied from powerpc but are unused on=
 
-> >> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> >> +				     struct acpi_pci_root_ops *ops,
-> >> +				     struct acpi_pci_root_info *info,
-> >> +				     void *sysdata, int segment, int node)
-> > 
-> > I do not think you need to pass segment and node, they clutter the
-> > function signature when you can retrieve them from root, I would
-> > make them local variables and use root->segment and acpi_get_node
-> > in the function body to retrieve them.
-> On x86, node and segment may be overridden under certain conditions.
-> For example, segment will always be 0 if 'pci_ignore_seg' is set.
+>>> microblaze:
+>>>
+>>>   struct pci_controller *init_phb_dynamic(struct device_node *dn)
+>>>   int remove_phb_dynamic(struct pci_controller *phb)
+>>>   struct pci_dev *of_create_pci_dev(struct device_node *node, ...)
+>>>   void of_scan_pci_bridge(struct device_node *node, ...)
+>>>   void of_scan_bus(struct device_node *node, struct pci_bus *bus)
+>>>   void of_rescan_bus(struct device_node *node, struct pci_bus *bus)
+>>>
+>>> Remove them.
+>>>
+>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>> CC: Michal Simek <monstr@monstr.eu>
+>>> ---
+>>>  arch/microblaze/include/asm/pci.h |   12 ------------
+>>>  1 file changed, 12 deletions(-)
+>>
+>> Reviewed-by: Michal Simek <michal.simek@xilinx.com>
+>>
+>> Bjorn: Do you want me to take this via Microblaze tree?
+>=20
+> Sure, it'd be great if you take all the Microblaze-specific patches.
+> There aren't any dependencies on them, so there shouldn't be any
+> problem.
 
-Ok, so the question would be then why do you not override the value
-in root->segment then (actually, is it *correct* to leave the segment
-value in root-> unchanged even if it is overriden) ?
+Ok. Added these 3 patches to microblaze next branch - it will be in
+linux-next tmr.
 
-Anyway, node is just used for a printk, why do not you add segment and
-node to acpi_pci_root_info ? Just cosmetic stuff, trying to help you
-simplify the code, it is not easy to parse.
+>=20
+> I do have a Microblaze hunk in "PCI: Remove unused
+> pci_dma_burst_advice()" and if you agree, I'll merge that one through
+> my tree since the change for each arch is essentially identical.
+
+No problem at all. Feel free to add there my acked-by line for microblaze=
+=2E
 
 Thanks,
-Lorenzo
+Michal
+
+--=20
+Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
+Maintainer of Linux kernel - Xilinx Zynq ARM architecture
+Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
+
+
+
+--xD4GjdoCpLbSnTpnIaCGGsvFUdlcOKRP9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.14 (GNU/Linux)
+
+iEYEARECAAYFAlV1TQoACgkQykllyylKDCGjQACeKqvLqRFB8H/FjjmBmHU+IN09
+AjIAn1jQXoGXwqL4OyVmlkjMnnZO6oz9
+=aMAQ
+-----END PGP SIGNATURE-----
+
+--xD4GjdoCpLbSnTpnIaCGGsvFUdlcOKRP9--
