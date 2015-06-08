@@ -1,79 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 5 Jun 2015 16:22:52 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Jakub Sitnicki <jsitnicki@gmail.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lv Zheng <lv.zheng@intel.com>,
 	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [Patch v2 4/4] PCI, MSI: Optionally free legacy PCI IRQ when
- enabling MSI/MSI-X
-Message-ID: <20150605212252.GT3631@google.com>
-References: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
- <1433213360-3700-5-git-send-email-jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433213360-3700-5-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [Patch v5 1/6] ACPI/PCI: Enhance ACPI core to support sparse IO space
+Date: Tue,  9 Jun 2015 00:20:43 +0800
+Message-Id: <1433780448-18636-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From the point of view of the generic code in this patch, freeing the IRQ
-isn't optional -- there's no "if" in this this patch.
+Enhance ACPI resource parsing interfaces to support sparse IO space,
+which will be used to share common code between x86 and IA64 later.
 
-It's true that the default pcibios_free_irq() implementation does nothing,
-but the changelog of this patch should describe what this patch does.
+Tested-by: Tony Luck <tony.luck@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+---
+ drivers/acpi/resource.c |    9 ++++++---
+ include/linux/ioport.h  |    1 +
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-On Tue, Jun 02, 2015 at 10:49:19AM +0800, Jiang Liu wrote:
-> Once PCI MSI/MSI-X is enabled by the device driver, PCI device won't
-> make use of legacy PCI IRQ until PCI MSI/MSI-X is disabled again.
-> So optionally free legacy PCI IRQ when enabling MSI/MSI-X and reallocate
-> when disabling MSI/MSI-X.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/pci/msi.c |    6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index c3e7dfcf9ff5..47cf72c669f0 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -686,6 +686,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
->  	msi_set_enable(dev, 1);
->  	dev->msi_enabled = 1;
->  
-> +	pcibios_free_irq(dev);
->  	dev->irq = entry->irq;
->  	return 0;
->  }
-> @@ -813,9 +814,10 @@ static int msix_capability_init(struct pci_dev *dev,
->  	/* Set MSI-X enabled bits and unmask the function */
->  	pci_intx_for_msi(dev, 0);
->  	dev->msix_enabled = 1;
-> -
->  	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
->  
-> +	pcibios_free_irq(dev);
-> +
->  	return 0;
->  
->  out_avail:
-> @@ -930,6 +932,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
->  
->  	/* Restore dev->irq to its default pin-assertion irq */
->  	dev->irq = desc->msi_attrib.default_irq;
-> +	pcibios_alloc_irq(dev);
->  }
->  
->  void pci_disable_msi(struct pci_dev *dev)
-> @@ -1030,6 +1033,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
->  	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->  	pci_intx_for_msi(dev, 1);
->  	dev->msix_enabled = 0;
-> +	pcibios_alloc_irq(dev);
->  }
->  
->  void pci_disable_msix(struct pci_dev *dev)
-> -- 
-> 1.7.10.4
-> 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 8244f013f210..fdcc73dad2c1 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+ EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+ 
+ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+-				      u8 io_decode)
++				      u8 io_decode, u8 translation_type)
+ {
+ 	res->flags = IORESOURCE_IO;
+ 
+@@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+ 
+ 	if (io_decode == ACPI_DECODE_16)
+ 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
++	if (translation_type == ACPI_SPARSE_TRANSLATION)
++		res->flags |= IORESOURCE_IO_SPARSE;
+ }
+ 
+ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+@@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+ {
+ 	res->start = start;
+ 	res->end = start + len - 1;
+-	acpi_dev_ioresource_flags(res, len, io_decode);
++	acpi_dev_ioresource_flags(res, len, io_decode, 0);
+ }
+ 
+ /**
+@@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
+ 		acpi_dev_memresource_flags(res, len, wp);
+ 		break;
+ 	case ACPI_IO_RANGE:
+-		acpi_dev_ioresource_flags(res, len, iodec);
++		acpi_dev_ioresource_flags(res, len, iodec,
++					  addr->info.io.translation_type);
+ 		break;
+ 	case ACPI_BUS_NUMBER_RANGE:
+ 		res->flags = IORESOURCE_BUS;
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 388e3ae94f7a..24bea087e7af 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -94,6 +94,7 @@ struct resource {
+ /* PnP I/O specific bits (IORESOURCE_BITS) */
+ #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
+ #define IORESOURCE_IO_FIXED		(1<<1)
++#define IORESOURCE_IO_SPARSE		(1<<2)
+ 
+ /* PCI ROM control bits (IORESOURCE_BITS) */
+ #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
+-- 
+1.7.10.4
+
