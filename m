@@ -1,133 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:37850 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633AbbFAXqt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 19:46:49 -0400
-Received: by igbsb11 with SMTP id sb11so74730586igb.0
-        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2015 16:46:48 -0700 (PDT)
-Date: Mon, 1 Jun 2015 18:46:45 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
-Message-ID: <20150601234645.GF3631@google.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 8 Jun 2015 16:14:43 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+Message-ID: <20150608151443.GA16151@red-moon>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+ <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org>
+ <20150526170817.GU1565@arm.com>
+ <55657B02.5090805@linaro.org>
+ <20150602133215.GC23650@red-moon>
+ <55701A31.808@linaro.org>
+ <20150604102253.GA31773@red-moon>
+ <5570447D.3020705@linaro.org>
+ <557504A2.3060203@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <557504A2.3060203@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 19, 2015 at 06:50:08PM +0800, Wei Yang wrote:
-> Current EEH recovery code works with the assumption: the PE has primary
-> bus. Unfortunately, that's not true to VF PEs, which generally contains
-> one or multiple VFs (for VF group case). The patch creates PEs for VFs
-> at PCI final fixup time. Those PEs for VFs are indentified with newly
-> introduced flag EEH_PE_VF so that we handle them differently during
-> EEH recovery.
+On Mon, Jun 08, 2015 at 03:57:38AM +0100, Hanjun Guo wrote:
+
+[...]
+
+> >>>>>> Why can't we make use of the ECAM implementation used by
+> >>>>>> pci-host-generic
+> >>>>>> and drivers/pci/access.c?
+> >>>>>
+> >>>>> We had that question when I had posted MMCFG patch set separately,
+> >>>>> please see:
+> >>>>> https://lkml.org/lkml/2015/3/11/492
+> >>>>
+> >>>> Yes, but the real question is, why do we need to have PCI config space
+> >>>> up and running before a bus struct is even created ? I think the
+> >>>> reason is
+> >>>> the PCI configuration address space format (ACPI 6.0, Table 5-27, page
+> >>>> 108):
+> >>>>
+> >>>> "PCI Configuration space addresses must be confined to devices on
+> >>>> PCI Segment Group 0, bus 0. This restriction exists to accommodate
+> >>>> access to fixed hardware prior to PCI bus enumeration".
+> >>>>
+> >>>> On HW reduced platforms I do not even think this is required at all,
+> >>>> we have to look into this to avoid code duplication that might well
+> >>>> turn out useless.
+> >>>
+> >>> This is only for the fixed hardware, which will be not available for
+> >>> ARM64 (reduced hardware mode), but in Generic Hardware Programming
+> >>> Model, we using OEM-provided ACPI Machine Language (AML) code to access
+> >>> generic hardware registers, this will be available for reduced hardware
+> >>> too.
+> >>>
+> >>> So in ACPI spec, it says: (ACPI 6.0 page 66, last paragraph)
+> >>>
+> >>> ACPI defines eight address spaces that may be accessed by generic
+> >>> hardware implementations. These include:
+> >>> * System I/O space
+> >>> * System memory space
+> >>> * PCI configuration space
+> >>> * Embedded controller space
+> >>> * System Management Bus (SMBus) space
+> >>> * CMOS
+> >>> * PCI BAR Target
+> >>> * IPMI space
+> >>>
+> >>> So if any device using the PCI address space for control, such
+> >>> as a system reset control device, its address space can be reside
+> >>> in PCI configuration space (who can prevent a OEM do that crazy
+> >>> thing? :) ), and it should be accessible before the PCI bus is
+> >>> created.
+> >>
+> >> Us, by changing attitude and questioning features whose usefulness
+> >> is questionable. I will look into this and raise the point, I am not
+> >> thrilled by the idea of adding another set of PCI accessor functions
+> >> and drivers because we have to access a register through PCI before
+> >> enumerating the bus (and on arm64 this is totally useless since
+> >> we are not meant to support fixed HW anyway). Maybe we can make acpica
+> >> code use a "special" stub (ACPI specific, PCI configuration space address
+> >> space has restrictions anyway), I have to review this set in its
+> >> entirety to see how to do that (and I would kindly ask you to do
+> >> it too, before saying it is not possible to implement it).
+> >
+> > I'm willing to do that, actually, if we don't need a mechanism to
+> > access PCI config space before the bus is created, the code can be
+> > simplified a lot.
 > 
-> [gwshan: changelog and code refactoring]
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/include/asm/eeh.h               |    1 +
->  arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
->  arch/powerpc/platforms/powernv/eeh-powernv.c |   17 +++++++++++++++++
->  3 files changed, 26 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-> index 1b3614d..c1fde48 100644
-> --- a/arch/powerpc/include/asm/eeh.h
-> +++ b/arch/powerpc/include/asm/eeh.h
-> @@ -70,6 +70,7 @@ struct pci_dn;
->  #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
->  #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
->  #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
-> +#define EEH_PE_VF	(1 << 4)	/* VF PE     */
->  
->  #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
->  #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
-> diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-> index 35f0b62..260a701 100644
-> --- a/arch/powerpc/kernel/eeh_pe.c
-> +++ b/arch/powerpc/kernel/eeh_pe.c
-> @@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
->  	 * EEH device already having associated PE, but
->  	 * the direct parent EEH device doesn't have yet.
->  	 */
-> -	pdn = pdn ? pdn->parent : NULL;
-> +	if (edev->physfn)
-> +		pdn = pci_get_pdn(edev->physfn);
-> +	else
-> +		pdn = pdn ? pdn->parent : NULL;
->  	while (pdn) {
->  		/* We're poking out of PCI territory */
->  		parent = pdn_to_eeh_dev(pdn);
-> @@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
->  	}
->  
->  	/* Create a new EEH PE */
-> -	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
-> +	if (edev->physfn)
-> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
-> +	else
-> +		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
->  	if (!pe) {
->  		pr_err("%s: out of memory!\n", __func__);
->  		return -ENOMEM;
-> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> index ce738ab..c505036 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> @@ -1520,6 +1520,23 @@ static struct eeh_ops pnv_eeh_ops = {
->  	.restore_config		= pnv_eeh_restore_config
->  };
->  
-> +static void pnv_eeh_vf_final_fixup(struct pci_dev *pdev)
-> +{
-> +	struct pci_dn *pdn = pci_get_pdn(pdev);
-> +
-> +	if (!pdev->is_virtfn)
-> +		return;
-> +
-> +	/*
-> +	 * The following operations will fail if VF's sysfs files
-> +	 * aren't created or its resources aren't finalized.
-> +	 */
+> After more investigation on the spec and the ACPI core code, I'm
+> still not convinced that accessing to PCI config space before PCI
+> bus creating is impossible, also there is no enough ARM64 hardware
+> to prove that too. But I think we can go in this way, reuse the
+> ECAM implementation by pci-host-generic for now, and implement the PCI
+> accessor functions before enumerating PCI bus when needed in the
+> future, does it make sense?
 
-I don't understand this comment.  "The following operations" seems to refer
-to eeh_add_device_early() and eeh_add_device_late(), and
-"VF's sysfs files being created" seems to refer to eeh_sysfs_add_device().
+You mean we rewrite the patch to make sure we can use the PCI host generic
+driver with MCFG and we leave the acpica PCI config call empty stubs on
+arm64 (as they are now) ?
 
-So the comment suggests that eeh_add_device_early() and
-eeh_add_device_late() will fail because they're called before
-eeh_sysfs_add_device().  So I think you must be talking about some other
-"following operations," not eeh_add_device_early() and
-eeh_add_device_late().
-
-> +	eeh_add_device_early(pdn);
-> +	eeh_add_device_late(pdev);
-> +	eeh_sysfs_add_device(pdev);
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
-
-Ugh.  This is powerpc code, but I don't like using fixups as a hook like
-this.  There is a pcibios_add_device() -- could this be done there?
-
-If not, what happens after pcibios_add_device() that is required for this
-code?  Maybe we need a pcibios_bus_add_device() hook?
-
-> +
->  /**
->   * eeh_powernv_init - Register platform dependent EEH operations
->   *
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Lorenzo
