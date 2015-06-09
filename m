@@ -1,64 +1,45 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-am33-list@redhat.com
-Subject: [Patch v3 13/36] mn10300: Fix incorrect use of data->affinity
-Date: Mon,  1 Jun 2015 16:05:22 +0800
-Message-Id: <1433145945-789-14-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
+Subject: RE: [PATCH v3 02/18] NTB: Add NTB hardware abstraction layer
+Date: Tue, 9 Jun 2015 17:32:01 +0000
+Message-ID: <40F65EF2B5E2254199711F58E3ACB84D830FFF99@MX104CL02.corp.emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+ <21347a93355f40d945cf9f565f95e790d9b3bda5.1433838377.git.Allen.Hubbe@emc.com>
+ <20150609165328.GH23119@google.com>
+In-Reply-To: <20150609165328.GH23119@google.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The field affinity in struct irq_data is type of cpumask_var_t, so
-we should pass in data->affinity instead of &data->affinity when
-calling cpumask_xxxx().
-
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/mn10300/kernel/irq.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/arch/mn10300/kernel/irq.c b/arch/mn10300/kernel/irq.c
-index 6ab3b73efcf8..480de70f4059 100644
---- a/arch/mn10300/kernel/irq.c
-+++ b/arch/mn10300/kernel/irq.c
-@@ -320,11 +320,11 @@ void migrate_irqs(void)
- 		if (irqd_is_per_cpu(data))
- 			continue;
- 
--		if (cpumask_test_cpu(self, &data->affinity) &&
-+		if (cpumask_test_cpu(self, data->affinity) &&
- 		    !cpumask_intersects(&irq_affinity[irq], cpu_online_mask)) {
- 			int cpu_id;
- 			cpu_id = cpumask_first(cpu_online_mask);
--			cpumask_set_cpu(cpu_id, &data->affinity);
-+			cpumask_set_cpu(cpu_id, data->affinity);
- 		}
- 		/* We need to operate irq_affinity_online atomically. */
- 		arch_local_cli_save(flags);
-@@ -335,7 +335,7 @@ void migrate_irqs(void)
- 			GxICR(irq) = x & GxICR_LEVEL;
- 			tmp = GxICR(irq);
- 
--			new = cpumask_any_and(&data->affinity,
-+			new = cpumask_any_and(data->affinity,
- 					      cpu_online_mask);
- 			irq_affinity_online[irq] = new;
- 
--- 
-1.7.10.4
-
+RnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4gSXQg
+d2FzIHBvaW50ZWQgb3V0IGluIHYxIHRoYXQgdGhpcyBvbmUgcGF0Y2ggaXMgb3ZlciAyMDBLQi4g
+IFBsZWFzZQ0KPiA+IGFjY2VwdCBteSBhcHBvbG9naWVzIGZvciBub3QgYnJlYWtpbmcgdGhpcyBk
+b3duIGZ1cnRoZXIuICBUaGUgYWZmZWN0ZWQNCj4gPiBjb21wb25lbnRzIGluIHRoaXMgcGF0Y2gg
+aGFkIGludGVyZGVwZW5kZW5jaWVzLCB3aGljaCBtYWtlcyBpdA0KPiBkaWZmaWN1bHQNCj4gPiB0
+byBjb250YWluIHRoZSBjaGFuZ2VzLiAgVGhpcyBjaGFuZ2Ugc2VwYXJhdGVzIHRoZSBjb21wb25l
+bnRzLCBzbw0KPiBmdXR1cmUNCj4gPiBjaGFuZ2VzIGNhbiBiZSBiZXR0ZXIgY29udGFpbmVkLg0K
+PiA+DQouLi4NCj4gDQo+IEknbSBub3QgcmVhbGx5IGEgcmV2aWV3ZXIgKEknbSBvbmx5IGNvbW1l
+bnRpbmcgb24gb2J2aW91cyBFbmdsaXNoIGFuZA0KPiBzcGVsbGluZyBpc3N1ZXMpLCBzbyBtYXli
+ZSB0aGUgcmVhbCByZXZpZXdlcnMgY2FuIGhhbmRsZSB0aGlzLiAgQnV0IGlmIEkNCj4gd2VyZSBy
+ZXZpZXdpbmcgdGhlIGNvZGUsIHRoaXMgcGF0Y2ggd291bGQgYmUgZmFyIHRvbyBsYXJnZSBmb3Ig
+bWUgdG8NCj4gbWFrZQ0KPiBzZW5zZSBvZi4NCj4gDQo+IEFuZCBpdCBtYWtlcyBiaXNlY3Rpb24g
+YW5kIHJldmVyc2lvbiBzaWduaWZpY2FudGx5IGxlc3MgdXNlZnVsLg0KPiANCj4gQmpvcm4NCg0K
+SSdtIG5vdCBoYXBweSBhYm91dCBpdCBlaXRoZXIuICBJIGRpZCBtYWtlIGEgZmV3IGF0dGVtcHRz
+IHRvIHNwbGl0IHRoaXMsIHNvIEkgY2FuIHNheSBhdCBsZWFzdCB0aGF0IGl0IHdpbGwgbm90IGJl
+IGVhc3kuDQoNCkkgcmVhbGx5IGNhbid0IGNoYW5nZSBudGJfdHJhbnNwb3J0IGFuZCBudGJfaHdf
+aW50ZWwgc2VwYXJhdGVseS4gIFRoZXkgY2FsbCBlYWNoIG90aGVyLCBzbyBzcGxpdHRpbmcgb25l
+IGRyaXZlciB0byB1c2UgdGhlIGFic3RyYWN0aW9uIGxheWVyIHJlcXVpcmVzIHRoZSBvdGhlciBk
+cml2ZXIgdG8gY2hhbmdlIGF0IHRoZSBzYW1lIHRpbWUsIG9yIHRoZSBvdGhlciBkcml2ZXIgYnJl
+YWtzLiAgVW5mb3J0dW5hdGVseSwgc3BsaXR0aW5nIHRoZXNlIGRyaXZlcnMgaXMgdGhlIGxhcmdl
+IGJ1bGsgb2YgdGhlIHBhdGNoLg0KDQpJIGFsc28gdHJpZWQgdG8ganVzdCBhZGQgbnRiLmgsIG50
+Yi5jIHNlcGFyYXRlbHksIGJlZm9yZSBzcGxpdGluZyBudGJfaHdfaW50ZWwgYW5kIG50Yl90cmFu
+c3BvcnQuICBJIGZvcmdldCBleGFjdGx5IHdoeSBJIGJhY2tlZCBvdXQgb2YgdGhhdCBjaGFuZ2Ug
+YSBjb3VwbGUgd2Vla3MgYWdvLiAgSSB0aGluayBpdCBoYXMgc29tZXRoaW5nIHRvIGRvIHdpdGgg
+dGhlIHdvbmt5IG1ha2UgdGFyZ2V0cyBpbiBkcml2ZXJzL250YiBhZnRlciB0aGUgZmlyc3QgcGF0
+Y2guICBJJ2xsIHRyeSBvbmNlIGFnYWluIHRvIHNwbGl0IGl0IHRoaXMgd2F5Lg0K
