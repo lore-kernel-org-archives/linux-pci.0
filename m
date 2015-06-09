@@ -1,71 +1,232 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwdur.emc.com ([128.221.224.79]:28153 "EHLO
-	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964894AbbFJOJH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 10:09:07 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v4 05/19] NTB: Enable link for Intel root port mode in probe
-Date: Wed, 10 Jun 2015 05:08:10 -0400
-Message-Id: <b67f11e5ca260171920b366f43ec3d4f55f4ad12.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 9 Jun 2015 17:12:30 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch v5 4/6] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+Message-ID: <20150609161230.GC8591@red-moon>
+References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dave Jiang <dave.jiang@intel.com>
+On Mon, Jun 08, 2015 at 05:20:46PM +0100, Jiang Liu wrote:
 
-Link training should be enabled in the driver probe for root port mode.
-We should not have to wait for transport to be loaded for this to
-happen.  Otherwise the ntb device will not show up on the transparent
-bridge side of the link.
+[...]
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
----
- drivers/ntb/hw/intel/ntb_hw_intel.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+> +static int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+> +{
+> +	int ret;
+> +	struct list_head *list = &info->resources;
+> +	struct acpi_device *device = info->bridge;
+> +	struct resource_entry *entry, *tmp;
+> +	unsigned long flags;
+> +
+> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
 
-diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
-index e4a22d7963fa..8ad4a6343d96 100644
---- a/drivers/ntb/hw/intel/ntb_hw_intel.c
-+++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
-@@ -1318,6 +1318,9 @@ static int snb_poll_link(struct intel_ntb_dev *ndev)
- 
- static int snb_link_is_up(struct intel_ntb_dev *ndev)
- {
-+	if (ndev->ntb.topo == NTB_TOPO_SEC)
-+		return 1;
-+
- 	return NTB_LNK_STA_ACTIVE(ndev->lnk_sta);
- }
- 
-@@ -1614,6 +1617,7 @@ static int snb_setup_b2b_mw(struct intel_ntb_dev *ndev,
- static int snb_init_ntb(struct intel_ntb_dev *ndev)
- {
- 	int rc;
-+	u32 ntb_ctl;
- 
- 	if (ndev->bar4_split)
- 		ndev->mw_count = HSX_SPLIT_BAR_MW_COUNT;
-@@ -1630,6 +1634,12 @@ static int snb_init_ntb(struct intel_ntb_dev *ndev)
- 			dev_err(ndev_dev(ndev), "NTB Primary config disabled\n");
- 			return -EINVAL;
- 		}
-+
-+		/* enable link to allow secondary side device to appear */
-+		ntb_ctl = ioread32(ndev->self_mmio + ndev->reg->ntb_ctl);
-+		ntb_ctl &= ~NTB_CTL_DISABLE;
-+		iowrite32(ntb_ctl, ndev->self_mmio + ndev->reg->ntb_ctl);
-+
- 		/* use half the spads for the peer */
- 		ndev->spad_count >>= 1;
- 		ndev->self_reg = &snb_pri_reg;
--- 
-2.4.0.rc0.43.gcf8a8c6
+Is IORESOURCE_MEM_8AND16BIT required because of some pending patches
+that will change ACPI resource filtering ? It does not seem to make
+a difference in the mainline code, AFAICT.
 
+> +	ret = acpi_dev_get_resources(device, list,
+> +				     acpi_dev_filter_resource_type_cb,
+> +				     (void *)flags);
+> +	if (ret < 0)
+> +		dev_warn(&device->dev,
+> +			 "failed to parse _CRS method, error code %d\n", ret);
+> +	else if (ret == 0)
+> +		dev_dbg(&device->dev,
+> +			"no IO and memory resources present in _CRS\n");
+> +	else {
+> +		resource_list_for_each_entry_safe(entry, tmp, list) {
+> +			if (entry->res->flags & IORESOURCE_DISABLED)
+> +				resource_list_destroy_entry(entry);
+> +			else
+> +				entry->res->name = info->name;
+> +		}
+> +		acpi_pci_root_validate_resources(&device->dev, list,
+> +						 IORESOURCE_MEM);
+> +		acpi_pci_root_validate_resources(&device->dev, list,
+> +						 IORESOURCE_IO);
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+> +static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
+> +{
+> +	struct resource_entry *entry, *tmp;
+> +	struct resource *res, *conflict, *root = NULL;
+> +
+> +	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
+> +		res = entry->res;
+> +		if (res->flags & IORESOURCE_MEM)
+> +			root = &iomem_resource;
+> +		else if (res->flags & IORESOURCE_IO)
+> +			root = &ioport_resource;
+> +		else
+> +			continue;
+> +
+> +		conflict = insert_resource_conflict(root, res);
+> +		if (conflict) {
+> +			dev_info(&info->bridge->dev,
+> +				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
+> +				 res, conflict->name, conflict);
+> +			resource_list_destroy_entry(entry);
+> +		}
+> +	}
+> +}
+> +
+> +static void __acpi_pci_root_release_info(struct acpi_pci_root_info *info)
+> +{
+> +	struct resource *res;
+> +	struct resource_entry *entry, *tmp;
+> +
+> +	if (!info)
+> +		return;
+> +
+> +	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
+> +		res = entry->res;
+> +		if (res->parent &&
+> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> +			release_resource(res);
+
+> +		resource_list_destroy_entry(entry);
+> +	}
+> +
+> +	info->ops->release_info(info);
+> +}
+> +
+> +static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
+> +{
+> +	struct resource *res;
+> +	struct resource_entry *entry;
+> +
+> +	resource_list_for_each_entry(entry, &bridge->windows) {
+> +		res = entry->res;
+> +		if (res->parent &&
+> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> +			release_resource(res);
+> +	}
+
+It is a question: is this loop necessary given that we are already
+releasing resources in __acpi_pci_root_release_info() ?
+
+> +	__acpi_pci_root_release_info(bridge->release_data);
+> +}
+> +
+> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> +				     struct acpi_pci_root_ops *ops,
+> +				     struct acpi_pci_root_info *info,
+> +				     void *sysdata, int segment, int node)
+
+I do not think you need to pass segment and node, they clutter the
+function signature when you can retrieve them from root, I would
+make them local variables and use root->segment and acpi_get_node
+in the function body to retrieve them.
+
+> +{
+> +	int ret, busnum = root->secondary.start;
+> +	struct acpi_device *device = root->device;
+> +	struct pci_bus *bus;
+> +
+> +	info->root = root;
+> +	info->bridge = device;
+> +	info->ops = ops;
+> +	INIT_LIST_HEAD(&info->resources);
+> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
+> +		 segment, busnum);
+> +
+> +	if (ops->init_info && ops->init_info(info))
+> +		goto out_release_info;
+> +	ret = acpi_pci_probe_root_resources(info);
+> +	if (ops->prepare_resources)
+> +		ret = ops->prepare_resources(info, ret);
+
+You go through this ret passing song and dance because we may want to
+call prepare_resources even if acpi_pci_probe_root_resource failed (on
+x86), correct ? I will have a further look at x86 and ia64 if we
+can consolidate these ops function hooks even further.
+
+Thanks,
+Lorenzo
+
+> +	if (ret < 0)
+> +		goto out_release_info;
+> +	else if (ret > 0)
+> +		pci_acpi_root_add_resources(info);
+> +	pci_add_resource(&info->resources, &root->secondary);
+> +
+> +	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+> +				  sysdata, &info->resources);
+> +	if (bus) {
+> +		pci_scan_child_bus(bus);
+> +		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
+> +					    acpi_pci_root_release_info, info);
+> +		if (node != NUMA_NO_NODE)
+> +			dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n",
+> +				   node);
+> +		return bus;
+> +	}
+> +
+> +out_release_info:
+> +	__acpi_pci_root_release_info(info);
+> +	return NULL;
+> +}
+> +
+>  void __init acpi_pci_root_init(void)
+>  {
+>  	acpi_hest_init();
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index a965efa52152..a76cb6f24ca1 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -52,6 +52,29 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+>  	return ACPI_HANDLE(dev);
+>  }
+>  
+> +struct acpi_pci_root;
+> +struct acpi_pci_root_ops;
+> +
+> +struct acpi_pci_root_info {
+> +	struct acpi_pci_root		*root;
+> +	struct acpi_device		*bridge;
+> +	struct acpi_pci_root_ops	*ops;
+> +	struct list_head		resources;
+> +	char				name[16];
+> +};
+> +
+> +struct acpi_pci_root_ops {
+> +	struct pci_ops *pci_ops;
+> +	int (*init_info)(struct acpi_pci_root_info *info);
+> +	void (*release_info)(struct acpi_pci_root_info *info);
+> +	int (*prepare_resources)(struct acpi_pci_root_info *info, int status);
+> +};
+> +
+> +extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> +					    struct acpi_pci_root_ops *ops,
+> +					    struct acpi_pci_root_info *info,
+> +					    void *sd, int seg, int node);
+> +
+>  void acpi_pci_add_bus(struct pci_bus *bus);
+>  void acpi_pci_remove_bus(struct pci_bus *bus);
+>  
+> -- 
+> 1.7.10.4
+> 
