@@ -1,63 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 5 Jun 2015 16:24:17 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 9 Jun 2015 11:46:32 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [Patch v2 0/4] Introduce a mechanism to allocate PCI IRQ on
- demand
-Message-ID: <20150605212417.GU3631@google.com>
-References: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
+To: Allen Hubbe <Allen.Hubbe@emc.com>
+Cc: linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [PATCH v3 15/18] NTB: Improve performance with write combining
+Message-ID: <20150609164632.GG23119@google.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+ <bc5eb3dd58e308b06a3a7464627704210c175394.1433838377.git.Allen.Hubbe@emc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <bc5eb3dd58e308b06a3a7464627704210c175394.1433838377.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 02, 2015 at 10:49:15AM +0800, Jiang Liu wrote:
-> This patch set introduces a mechanism to allocate PCI IRQ on demand and
-> free it when not used anymore by hooking pci_device_probe() and
-> pci_device_remove().
+On Tue, Jun 09, 2015 at 05:44:42AM -0400, Allen Hubbe wrote:
+> From: Dave Jiang <dave.jiang@intel.com>
 > 
-> It will be used to track IOAPIC pin usage on x86 so we could support
-> IOAPIC hot-removal.
-> 
-> The patch set passes Fengguang's 0day test suite.
-> 
-> V1->V2:
-> 1) Refine pci_device_probe() to optimize for mainline code as suggested
->    by Bjorn
-> 2) Reorder patch set to put optional patch as the last (Patch 4)
-> 
-> Thanks!
-> Gerry
-> 
-> 
-> Jiang Liu (4):
->   PCI: Add hooks to allocate/free IRQ resources when binding/unbinding
->     driver
->   PCI, x86: Allocate PCI IRQ on demand and free it when not used
->     anymore
->   PCI: Introduce helpers to manage pci_dev->irq and
->     pci_dev->irq_managed
->   PCI, MSI: Optionally free legacy PCI IRQ when enabling MSI/MSI-X
-> 
->  arch/x86/include/asm/pci_x86.h |    2 --
->  arch/x86/pci/common.c          |   20 +++++++++-----------
->  arch/x86/pci/intel_mid_pci.c   |    9 ++++++---
->  arch/x86/pci/irq.c             |   23 ++++-------------------
->  drivers/acpi/pci_irq.c         |   17 ++++-------------
->  drivers/pci/msi.c              |    6 +++++-
->  drivers/pci/pci-driver.c       |   26 ++++++++++++++++++++------
->  include/linux/pci.h            |   19 +++++++++++++++++++
->  8 files changed, 67 insertions(+), 55 deletions(-)
+> Changing the memory window BAR mappings to write combining significantly
+> boosts the performance.  We will also use memcpy that utilizies
 
-I'm fine with these patches, and I can merge them, but I would like an ack
-from Thomas.
+s/utilizies/uses/
 
-Or, if it makes more sense to route these along with other related patches
-through Thomas, here's my ack:
+> non-temporal store which showed performance improement when doing
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+s/improement/improvement/
+
+> non-cached memcpys.
+> 
+> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> ---
+>  drivers/ntb/ntb_transport.c | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+> index dc14ec81c43e..528ea0af6d54 100644
+> --- a/drivers/ntb/ntb_transport.c
+> +++ b/drivers/ntb/ntb_transport.c
+> @@ -58,6 +58,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/slab.h>
+>  #include <linux/types.h>
+> +#include <linux/uaccess.h>
+>  #include "linux/ntb.h"
+>  #include "linux/ntb_transport.h"
+>  
+> @@ -993,7 +994,7 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+>  		if (rc)
+>  			goto err1;
+>  
+> -		mw->vbase = ioremap(mw->phys_addr, mw->phys_size);
+> +		mw->vbase = ioremap_wc(mw->phys_addr, mw->phys_size);
+>  		if (!mw->vbase) {
+>  			rc = -ENOMEM;
+>  			goto err1;
+> @@ -1375,7 +1376,11 @@ static void ntb_tx_copy_callback(void *data)
+>  
+>  static void ntb_memcpy_tx(struct ntb_queue_entry *entry, void __iomem *offset)
+>  {
+> -	memcpy_toio(offset, entry->buf, entry->len);
+> +	/*
+> +	 * Using non-temporal mov to improve performance on non-cached
+> +	 * writes. Even though we aren't actually copying from user space.
+> +	 */
+> +	__copy_from_user_inatomic_nocache(offset, entry->buf, entry->len);
+
+__copy_from_user_inatomic_nocache() only exists on x86, but this file looks
+like it's intended to be arch-agnostic?
+
+>  
+>  	/* Ensure that the data is fully copied out before setting the flags */
+>  	wmb();
+> -- 
+> 2.4.0.rc0.43.gcf8a8c6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
