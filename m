@@ -1,66 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:56730 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513AbbF3BQy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 21:16:54 -0400
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 30 Jun 2015 06:46:51 +0530
-Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id A658CE004C
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 06:50:29 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5U1GmTM60424374
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 06:46:48 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5U1Gl0W022630
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 06:46:48 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V2 0/4] PCI: code clean up on pci configuration space
-Date: Tue, 30 Jun 2015 09:16:40 +0800
-Message-Id: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:38753 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbbFIQXu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 12:23:50 -0400
+Received: by igblz2 with SMTP id lz2so15460897igb.1
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2015 09:23:49 -0700 (PDT)
+Date: Tue, 9 Jun 2015 11:23:46 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Allen Hubbe <Allen.Hubbe@emc.com>
+Cc: linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [PATCH v3 02/18] NTB: Add NTB hardware abstraction layer
+Message-ID: <20150609162346.GC23119@google.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+ <21347a93355f40d945cf9f565f95e790d9b3bda5.1433838377.git.Allen.Hubbe@emc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <21347a93355f40d945cf9f565f95e790d9b3bda5.1433838377.git.Allen.Hubbe@emc.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series is a clean up in the pci subsystem when accessing the pci
-configuration space.
+These refer to English text usage (doc, comments, Kconfig help), not C code:
 
-The first one is to re-use the PCI_FIND_CAP_TTL to limit the times iterating
-in pci configuration space.
+  s/ntb/NTB/ (except where it refers directly to the driver)
+  s/pci/PCI/
+  s/PCI-E/PCIe/
+  s/api/API/
+  s/intel/Intel/
 
-The next three are to use the exact type to access the pci cap and pcie ext
-cap.
-
-Tested on x86 and powerpc on top of v4.1.
-
-The original thread could be referenced in below link:
-http://comments.gmane.org/gmane.linux.kernel.pci/35931
-
----
-v1->v2:
-   * define PCI_FIND_CAP_TTL in drivers/pci/pci.h instead of
-     include/linux/pci.h
-   * split the change for return position check from second one, and make the
-     forth patch
-
-Wei Yang (4):
-  PCI: move PCI_FIND_CAP_TTL to pci.h and use it in quirks
-  PCI: use u8 to represent pci configuration space pos and cap
-  PCI: use u16 to represent pci express extended capabilities pos and
-    cap
-  PCI: consolidate return value check for pci_find_(ext_)capability
-
- drivers/pci/iov.c    |    2 +-
- drivers/pci/pci.c    |   68 +++++++++++++++++++++++++-------------------------
- drivers/pci/pci.h    |    2 ++
- drivers/pci/probe.c  |   10 ++++----
- drivers/pci/quirks.c |   19 +++++++-------
- include/linux/pci.h  |   26 +++++++++----------
- 6 files changed, 65 insertions(+), 62 deletions(-)
-
--- 
-1.7.9.5
-
+On Tue, Jun 09, 2015 at 05:44:29AM -0400, Allen Hubbe wrote:
+> Abstract the ntb device behind a programming interface, so that it can
+> support different hardware.  Change the intel hardware driver to fit the
+> abstraction.
+> 
+> Expose the ntb hardware api to client drivers instead of tying it to
+> ntb_transport.  Make ntb_transport a client of the ntb hardware api.
