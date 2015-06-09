@@ -1,63 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <556540C7.6080301@linaro.org>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
-	<1951882.p8DdrcurkC@vostro.rjw.lan>
-	<556540C7.6080301@linaro.org>
-Date: Mon, 8 Jun 2015 17:35:34 +0530
-Message-ID: <CAD6G_RQnm-y9eQdYGV89zzY-x90ESo6-APPVpY7eiJ=AJbg2rg@mail.gmail.com>
-Subject: Re: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
-From: Jagan Teki <jteki@openedev.com>
-To: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-acpi@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	linaro-acpi@lists.linaro.org, Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Mark Salter <msalter@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailuogwdur.emc.com ([128.221.224.79]:52258 "EHLO
+	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933015AbbFIOpn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 10:45:43 -0400
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v3 16/18] NTB: Default to CPU memcpy for performance
+Date: Tue,  9 Jun 2015 05:44:43 -0400
+Message-Id: <5c88264b00edf231f515d4d03878a61946a7b3b7.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27 May 2015 at 09:27, Hanjun Guo <hanjun.guo@linaro.org> wrote:
-> On 2015年05月27日 08:30, Rafael J. Wysocki wrote:
->>
->> On Tuesday, May 26, 2015 08:49:13 PM Hanjun Guo wrote:
->>>
->>> This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
->>> which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
->>> code into ACPI core":
->>>
->>> https://lkml.org/lkml/2015/5/14/98
->>
->>
->> I'll be regarding this patchset as an RFC until the one from Jiang Liu
->> goes in.
->
->
-> Yes, please, Jiang Liu's patch set should go in first.
+From: Dave Jiang <dave.jiang@intel.com>
 
-Apart from picking all, I have skipped x86, ia64 changes from above
-and Jiang Liu's
-series with disabling MSI, but I'm observing my arm64 board isn't
-booted from uefi.
+Disable DMA usage by default, since the CPU provides much better
+performance with write combining.  Provide a module parameter to enable
+DMA usage when offloading the memcpy is preferred.
 
-I'm suspecting pci-acpi changes were generic to specific pcie root
-bridge controller,
-but do I need to do any changes wrt pcie bridge? let me know if I miss
-anything here.
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ drivers/ntb/ntb_transport.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-thanks!
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 528ea0af6d54..ea237aeca28c 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -88,6 +88,10 @@ static unsigned int copy_bytes = 1024;
+ module_param(copy_bytes, uint, 0644);
+ MODULE_PARM_DESC(copy_bytes, "Threshold under which NTB will use the CPU to copy instead of DMA");
+ 
++static bool use_dma;
++module_param(use_dma, bool, 0644);
++MODULE_PARM_DESC(use_dma, "Use DMA engine to perform large data copy");
++
+ static struct dentry *nt_debugfs_dir;
+ 
+ struct ntb_queue_entry {
+@@ -1585,10 +1589,15 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
+ 	dma_cap_zero(dma_mask);
+ 	dma_cap_set(DMA_MEMCPY, dma_mask);
+ 
+-	qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
+-					   (void *)(unsigned long)node);
+-	if (!qp->dma_chan)
+-		dev_info(&pdev->dev, "Unable to allocate DMA channel, using CPU instead\n");
++	if (use_dma) {
++		qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
++						   (void *)(unsigned long)node);
++		if (!qp->dma_chan)
++			dev_info(&pdev->dev, "Unable to allocate DMA channel\n");
++	} else {
++		qp->dma_chan = NULL;
++	}
++	dev_dbg(&pdev->dev, "Using %s memcpy\n", qp->dma_chan ? "DMA" : "CPU");
+ 
+ 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
+ 		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
 -- 
-Jagan.
+2.4.0.rc0.43.gcf8a8c6
+
