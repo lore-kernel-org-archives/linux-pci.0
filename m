@@ -1,79 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 9 Jun 2015 11:24:52 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Allen Hubbe <Allen.Hubbe@emc.com>
-Cc: linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>
-Subject: Re: [PATCH v3 03/18] NTB: Read peer info from local SPAD in transport
-Message-ID: <20150609162452.GD23119@google.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
- <29c8beeb128ad2e86ee21dfebb5fb39056b47e93.1433838377.git.Allen.Hubbe@emc.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:47569 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751228AbbFIFu1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 01:50:27 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 9 Jun 2015 15:50:26 +1000
+Date: Tue, 9 Jun 2015 15:49:23 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	aik@ozlabs.ru, panto@antoniou-consulting.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v5 01/42] PCI: Add pcibios_setup_bridge()
+Message-ID: <20150609054922.GB25215@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1433400131-18429-2-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20150605194432.GN3631@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <29c8beeb128ad2e86ee21dfebb5fb39056b47e93.1433838377.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150605194432.GN3631@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 09, 2015 at 05:44:30AM -0400, Allen Hubbe wrote:
-> From: Dave Jiang <dave.jiang@intel.com>
-> 
-> Importance:	High
+On Fri, Jun 05, 2015 at 02:44:32PM -0500, Bjorn Helgaas wrote:
+>On Thu, Jun 04, 2015 at 04:41:30PM +1000, Gavin Shan wrote:
+>> Currently, PowerPC PowerNV platform utilizes ppc_md.pcibios_fixup(),
+>> which is called for once after PCI probing and resource assignment
+>> are completed, to allocate platform required resources for PCI devices:
+>> PE#, IO and MMIO mapping, DMA address translation (TCE) table etc.
+>> Obviously, it's not hotplug friendly.
+>> 
+>> The patch adds weak function pcibios_setup_bridge(), which is called
+>> by pci_setup_bridge(). PowerPC PowerNV platform will reuse the function
+>> to assign above platform required resources to newly added PCI devices,
+>> in order to support PCI hotplug in subsequent patches.
+>> 
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>
+>Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
 
-Looks like junk, maybe inadvertently copied from an email header?
+Thanks for your review, Bjorn.
 
-> The transport was writing and then reading the peer spad, essentially
-> reading what it just wrote instead of exchanging any information with
-> the peer.  The transport expects the peer values to be the same as the
-> local values, so this issue was not obvious.
-> 
-> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-> ---
->  drivers/ntb/ntb_transport.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-> index 9faf1c6029af..d9538e911df6 100644
-> --- a/drivers/ntb/ntb_transport.c
-> +++ b/drivers/ntb/ntb_transport.c
-> @@ -761,17 +761,17 @@ static void ntb_transport_link_work(struct work_struct *work)
->  	ntb_peer_spad_write(ndev, VERSION, NTB_TRANSPORT_VERSION);
->  
->  	/* Query the remote side for its info */
-> -	val = ntb_peer_spad_read(ndev, VERSION);
-> +	val = ntb_spad_read(ndev, VERSION);
->  	dev_dbg(&pdev->dev, "Remote version = %d\n", val);
->  	if (val != NTB_TRANSPORT_VERSION)
->  		goto out;
->  
-> -	val = ntb_peer_spad_read(ndev, NUM_QPS);
-> +	val = ntb_spad_read(ndev, NUM_QPS);
->  	dev_dbg(&pdev->dev, "Remote max number of qps = %d\n", val);
->  	if (val != nt->qp_count)
->  		goto out;
->  
-> -	val = ntb_peer_spad_read(ndev, NUM_MWS);
-> +	val = ntb_spad_read(ndev, NUM_MWS);
->  	dev_dbg(&pdev->dev, "Remote number of mws = %d\n", val);
->  	if (val != nt->mw_count)
->  		goto out;
-> @@ -779,10 +779,10 @@ static void ntb_transport_link_work(struct work_struct *work)
->  	for (i = 0; i < nt->mw_count; i++) {
->  		u64 val64;
->  
-> -		val = ntb_peer_spad_read(ndev, MW0_SZ_HIGH + (i * 2));
-> +		val = ntb_spad_read(ndev, MW0_SZ_HIGH + (i * 2));
->  		val64 = (u64)val << 32;
->  
-> -		val = ntb_peer_spad_read(ndev, MW0_SZ_LOW + (i * 2));
-> +		val = ntb_spad_read(ndev, MW0_SZ_LOW + (i * 2));
->  		val64 |= val;
->  
->  		dev_dbg(&pdev->dev, "Remote MW%d size = %#llx\n", i, val64);
-> -- 
-> 2.4.0.rc0.43.gcf8a8c6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Gavin
+
+>> ---
+>> v5:
+>>   * Corrected subject as Bjorn suggested
+>>   * pci_setup_bridge() calls pcibios_setup_bridge() and __pci_setup_bridge()
+>> ---
+>>  drivers/pci/setup-bus.c | 5 +++++
+>>  include/linux/pci.h     | 1 +
+>>  2 files changed, 6 insertions(+)
+>> 
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 4fd0cac..623dee3 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -693,11 +693,16 @@ static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+>>  	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, bus->bridge_ctl);
+>>  }
+>>  
+>> +void __weak pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
+>> +{
+>> +}
+>> +
+>>  void pci_setup_bridge(struct pci_bus *bus)
+>>  {
+>>  	unsigned long type = IORESOURCE_IO | IORESOURCE_MEM |
+>>  				  IORESOURCE_PREFETCH;
+>>  
+>> +	pcibios_setup_bridge(bus, type);
+>>  	__pci_setup_bridge(bus, type);
+>>  }
+>>  
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 94bacfa..5aacd0a 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -811,6 +811,7 @@ void pci_stop_and_remove_bus_device_locked(struct pci_dev *dev);
+>>  void pci_stop_root_bus(struct pci_bus *bus);
+>>  void pci_remove_root_bus(struct pci_bus *bus);
+>>  void pci_setup_cardbus(struct pci_bus *bus);
+>> +void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type);
+>>  void pci_sort_breadthfirst(void);
+>>  #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+>>  #define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
+>> -- 
+>> 2.1.0
+>> 
+>
+
