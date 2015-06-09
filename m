@@ -1,48 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:35976 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643AbbF3SXO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jun 2015 14:23:14 -0400
-Received: by paceq1 with SMTP id eq1so9193431pac.3
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 11:23:13 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v2 0/2] pci: xgene: Add multiple memory ranges support
-Date: Tue, 30 Jun 2015 11:22:26 -0700
-Message-Id: <cover.1435688121.git.dhdang@apm.com>
-In-Reply-To: <46305464.n5SOjGAhJb@wuerfel>
-References: <46305464.n5SOjGAhJb@wuerfel>
+Received: from mailuogwhop.emc.com ([168.159.213.141]:41889 "EHLO
+	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933087AbbFIOpl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 10:45:41 -0400
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
+Subject: [PATCH v3 15/18] NTB: Improve performance with write combining
+Date: Tue,  9 Jun 2015 05:44:42 -0400
+Message-Id: <bc5eb3dd58e308b06a3a7464627704210c175394.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set adds 1 large (up to 64GB) memory window for each PCIe
-controller nodes in X-Gene device tree and fix PCIe controller driver
-to handle multiple memory ranges correctly. These changes are required
-to support PCIe devices that has huge BAR.
+From: Dave Jiang <dave.jiang@intel.com>
 
-v2 changes:
-	1. Separate device-tree changes and driver changes into different
-	patches
-	2. Explicitly define new large window as 64-bit prefetchable in dts
-	3. Use IORESOURCE_PREFETCH flag to determine which PCIe controller
-	register to be used to configure the memory ranges.
+Changing the memory window BAR mappings to write combining significantly
+boosts the performance.  We will also use memcpy that utilizies
+non-temporal store which showed performance improement when doing
+non-cached memcpys.
+
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+---
+ drivers/ntb/ntb_transport.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index dc14ec81c43e..528ea0af6d54 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -58,6 +58,7 @@
+ #include <linux/pci.h>
+ #include <linux/slab.h>
+ #include <linux/types.h>
++#include <linux/uaccess.h>
+ #include "linux/ntb.h"
+ #include "linux/ntb_transport.h"
  
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
- drivers/pci/host/pci-xgene.c           | 12 ++++++++++--
- 2 files changed, 24 insertions(+), 11 deletions(-)
-
+@@ -993,7 +994,7 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 		if (rc)
+ 			goto err1;
+ 
+-		mw->vbase = ioremap(mw->phys_addr, mw->phys_size);
++		mw->vbase = ioremap_wc(mw->phys_addr, mw->phys_size);
+ 		if (!mw->vbase) {
+ 			rc = -ENOMEM;
+ 			goto err1;
+@@ -1375,7 +1376,11 @@ static void ntb_tx_copy_callback(void *data)
+ 
+ static void ntb_memcpy_tx(struct ntb_queue_entry *entry, void __iomem *offset)
+ {
+-	memcpy_toio(offset, entry->buf, entry->len);
++	/*
++	 * Using non-temporal mov to improve performance on non-cached
++	 * writes. Even though we aren't actually copying from user space.
++	 */
++	__copy_from_user_inatomic_nocache(offset, entry->buf, entry->len);
+ 
+ 	/* Ensure that the data is fully copied out before setting the flags */
+ 	wmb();
 -- 
-1.9.1
+2.4.0.rc0.43.gcf8a8c6
 
