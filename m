@@ -1,177 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:39291 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753257AbbFRIIL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:08:11 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 18 Jun 2015 13:38:09 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 292CA1258056
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:40:43 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I880bZ49873044
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:38:01 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I87v2j015362
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:37:58 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V8 08/10] powerpc/powernv: Support PCI config restore for VFs
-Date: Thu, 18 Jun 2015 16:06:43 +0800
-Message-Id: <1434614805-19002-9-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <aba15cd979bc3523c0289f4766b47d3f45f32c38.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com> <aba15cd979bc3523c0289f4766b47d3f45f32c38.1433838377.git.Allen.Hubbe@emc.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 9 Jun 2015 11:04:46 -0500
+Message-ID: <CAErSpo7B8qP34ZObkzjZ-r7bCnG6A0KG3Rorw+TajP4XU43wFg@mail.gmail.com>
+Subject: Re: [PATCH v3 18/18] NTB: Increase transport MTU to 64k from 16k
+To: Allen Hubbe <Allen.Hubbe@emc.com>
+Cc: linux-ntb@googlegroups.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After PE reset, OPAL API opal_pci_reinit() is called on all devices
-contained in the PE to reinitialize them. However, VFs can't be seen
-from skiboot firmware. We have to implement the functions, similar
-those in skiboot firmware, to reinitialize VFs after reset on PE
-for VFs.
+On Tue, Jun 9, 2015 at 4:44 AM, Allen Hubbe <Allen.Hubbe@emc.com> wrote:
+> From: Dave Jiang <dave.jiang@intel.com>
+>
+> Benchmarking showed significant performance increase going from MTU size
+> of 64k from 16k.  Changing the default.
 
-[gwshan: changelog and code refactoring]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h        |    1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c |   70 +++++++++++++++++++++++++-
- arch/powerpc/platforms/powernv/pci.c         |   18 +++++++
- 3 files changed, 88 insertions(+), 1 deletion(-)
+This changelog doesn't parse.  I think you mean "going from MTU size
+16k to 64k."
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index c324882..ad60263 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -206,6 +206,7 @@ struct pci_dn {
- #define IODA_INVALID_M64        (-1)
- 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
- #endif /* CONFIG_PCI_IOV */
-+	int	mps;
- #endif
- 	struct list_head child_list;
- 	struct list_head list;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index fe1d1e5..4a5adae 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1612,6 +1612,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
- 	return ret;
- }
- 
-+static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 devctl, cmd, cap2, aer_capctl;
-+	int old_mps;
-+
-+	/* Restore MPS */
-+	if (edev->pcie_cap) {
-+		old_mps = (ffs(pdn->mps) - 8) << 5;
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+		devctl |= old_mps;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      2, devctl);
-+	}
-+
-+	/* Disable Completion Timeout */
-+	if (edev->pcie_cap) {
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
-+				     4, &cap2);
-+		if (cap2 & 0x10) {
-+			eeh_ops->read_config(pdn,
-+					edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					4, &cap2);
-+			cap2 |= 0x10;
-+			eeh_ops->write_config(pdn,
-+					edev->pcie_cap + PCI_EXP_DEVCTL2,
-+					4, cap2);
-+		}
-+	}
-+
-+	/* Enable SERR and parity checking */
-+	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
-+	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
-+
-+	/* Enable report various errors */
-+	if (edev->pcie_cap) {
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				2, &devctl);
-+		devctl &= ~PCI_EXP_DEVCTL_CERE;
-+		devctl |= (PCI_EXP_DEVCTL_NFERE |
-+			   PCI_EXP_DEVCTL_FERE |
-+			   PCI_EXP_DEVCTL_URRE);
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				2, devctl);
-+	}
-+
-+	/* Enable ECRC generation and check */
-+	if (edev->pcie_cap && edev->aer_cap) {
-+		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				4, &aer_capctl);
-+		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-+		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-+				4, aer_capctl);
-+	}
-+
-+	return 0;
-+}
-+
- static int pnv_eeh_restore_config(struct pci_dn *pdn)
- {
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-@@ -1622,7 +1683,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
- 		return -EEXIST;
- 
- 	phb = edev->phb->private_data;
--	ret = opal_pci_reinit(phb->opal_id,
-+	/*
-+	 * We have to restore the PCI config space after reset since the
-+	 * firmware can't see SRIOV VFs.
-+	 */
-+	if (edev->physfn)
-+		ret = pnv_eeh_restore_vf_config(pdn);
-+	else
-+		ret = opal_pci_reinit(phb->opal_id,
- 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
- 	if (ret) {
- 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index bca2aeb..10bc8c3 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -729,6 +729,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
- 
-+#ifdef CONFIG_PCI_IOV
-+static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	int parent_mps;
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	/* Synchronize MPS for VF and PF */
-+	parent_mps = pcie_get_mps(pdev->physfn);
-+	if ((128 << pdev->pcie_mpss) >= parent_mps)
-+		pcie_set_mps(pdev, parent_mps);
-+	pdn->mps = pcie_get_mps(pdev);
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
-+#endif /* CONFIG_PCI_IOV */
-+
- void __init pnv_pci_init(void)
- {
- 	struct device_node *np;
--- 
-1.7.9.5
+The original value was 0x401e (16k + 0x1e), and the new value is
+exactly 64k.  Please include a note about what that extra 0x1e was for
+and why it isn't needed in the new value.
 
+> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+> ---
+>  drivers/ntb/ntb_transport.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+> index ea237aeca28c..c87bc0cbd607 100644
+> --- a/drivers/ntb/ntb_transport.c
+> +++ b/drivers/ntb/ntb_transport.c
+> @@ -76,7 +76,7 @@ static unsigned long max_mw_size;
+>  module_param(max_mw_size, ulong, 0644);
+>  MODULE_PARM_DESC(max_mw_size, "Limit size of large memory windows");
+>
+> -static unsigned int transport_mtu = 0x401E;
+> +static unsigned int transport_mtu = 0x10000;
+>  module_param(transport_mtu, uint, 0644);
+>  MODULE_PARM_DESC(transport_mtu, "Maximum size of NTB transport packets");
+>
+> --
+> 2.4.0.rc0.43.gcf8a8c6
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
