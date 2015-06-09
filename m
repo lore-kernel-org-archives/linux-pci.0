@@ -1,40 +1,66 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1433513693.24429.55.camel@deneb.redhat.com>
-Subject: Re: [RFT v2 23/48] c6x, irq: Prepare for killing the first
- parameter 'irq' of irq_flow_handler_t
-From: Mark Salter <msalter@redhat.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Aurelien Jacquiot <a-jacquiot@ti.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-c6x-dev@linux-c6x.org
-Date: Fri, 05 Jun 2015 10:14:53 -0400
-In-Reply-To: <1433391238-19471-24-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-	 <1433391238-19471-24-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Date: Tue, 9 Jun 2015 11:53:28 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Allen Hubbe <Allen.Hubbe@emc.com>
+Cc: linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [PATCH v3 02/18] NTB: Add NTB hardware abstraction layer
+Message-ID: <20150609165328.GH23119@google.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+ <21347a93355f40d945cf9f565f95e790d9b3bda5.1433838377.git.Allen.Hubbe@emc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <21347a93355f40d945cf9f565f95e790d9b3bda5.1433838377.git.Allen.Hubbe@emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-06-04 at 12:13 +0800, Jiang Liu wrote:
-> Change irq flow handler to prepare for killing the first parameter 'irq'
-> of irq_flow_handler_t.
+On Tue, Jun 09, 2015 at 05:44:29AM -0400, Allen Hubbe wrote:
+> Abstract the ntb device behind a programming interface, so that it can
+> support different hardware.  Change the intel hardware driver to fit the
+> abstraction.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Expose the ntb hardware api to client drivers instead of tying it to
+> ntb_transport.  Make ntb_transport a client of the ntb hardware api.
+> 
+> Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
 > ---
->  arch/c6x/platforms/megamod-pic.c |    7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> It was pointed out in v1 that this one patch is over 200KB.  Please
+> accept my appologies for not breaking this down further.  The affected
+> components in this patch had interdependencies, which makes it difficult
+> to contain the changes.  This change separates the components, so future
+> changes can be better contained.
+>
+>  Documentation/ntb.txt               |   58 +
+>  MAINTAINERS                         |   14 +-
+>  drivers/net/ntb_netdev.c            |   58 +-
+>  drivers/ntb/Kconfig                 |   37 +-
+>  drivers/ntb/Makefile                |    4 +-
+>  drivers/ntb/hw/Kconfig              |    1 +
+>  drivers/ntb/hw/Makefile             |    1 +
+>  drivers/ntb/hw/intel/Kconfig        |    7 +
+>  drivers/ntb/hw/intel/Makefile       |    1 +
+>  drivers/ntb/hw/intel/ntb_hw_intel.c | 3077 +++++++++++++++++++----------------
+>  drivers/ntb/hw/intel/ntb_hw_intel.h |  607 ++++---
+>  drivers/ntb/ntb.c                   |  251 +++
+>  drivers/ntb/ntb_transport.c         |  944 ++++++-----
+>  include/linux/ntb.h                 |  984 +++++++++++
+>  include/linux/ntb_transport.h       |   25 +-
+>  15 files changed, 3870 insertions(+), 2199 deletions(-)
+>  create mode 100644 Documentation/ntb.txt
+>  create mode 100644 drivers/ntb/hw/Kconfig
+>  create mode 100644 drivers/ntb/hw/Makefile
+>  create mode 100644 drivers/ntb/hw/intel/Kconfig
+>  create mode 100644 drivers/ntb/hw/intel/Makefile
+>  create mode 100644 drivers/ntb/ntb.c
+>  create mode 100644 include/linux/ntb.h
 
-Acked-by: Mark Salter <msalter@redhat.com>
+I'm not really a reviewer (I'm only commenting on obvious English and
+spelling issues), so maybe the real reviewers can handle this.  But if I
+were reviewing the code, this patch would be far too large for me to make
+sense of.
 
+And it makes bisection and reversion significantly less useful.
 
+Bjorn
