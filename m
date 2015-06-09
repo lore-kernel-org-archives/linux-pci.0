@@ -1,133 +1,50 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5570447D.3020705@linaro.org>
-Date: Thu, 04 Jun 2015 20:28:45 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Tomasz Nowicki <tomasz.nowicki@linaro.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org> <20150526170817.GU1565@arm.com> <55657B02.5090805@linaro.org> <20150602133215.GC23650@red-moon> <55701A31.808@linaro.org> <20150604102253.GA31773@red-moon>
-In-Reply-To: <20150604102253.GA31773@red-moon>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v3 06/18] NTB: Differentiate transport link down messages
+Date: Tue,  9 Jun 2015 05:44:33 -0400
+Message-Id: <2fdb7781ae0734308e64e77c50de0dbbdb5cff4d.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年06月04日 18:22, Lorenzo Pieralisi wrote:
-> Hi Hanjun,
->
-> On Thu, Jun 04, 2015 at 10:28:17AM +0100, Hanjun Guo wrote:
->> Hi Lorenzo,
->>
->> On 2015???06???02??? 21:32, Lorenzo Pieralisi wrote:
->>> On Wed, May 27, 2015 at 09:06:26AM +0100, Tomasz Nowicki wrote:
->>>> On 26.05.2015 19:08, Will Deacon wrote:
->>>>> On Tue, May 26, 2015 at 01:49:18PM +0100, Hanjun Guo wrote:
->>>>>> From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
->>>>>>
->>>>>> ECAM standard and MCFG table are architecture independent and it makes
->>>>>> sense to share common code across all architectures. Both are going to
->>>>>> corresponding files - ecam.c and mcfg.c
->>>>>>
->>>>>> While we are here, rename pci_parse_mcfg to acpi_parse_mcfg.
->>>>>> We already have acpi_parse_mcfg prototype which is used nowhere.
->>>>>> At the same time, we need pci_parse_mcfg been global so acpi_parse_mcfg
->>>>>> can be used perfectly here.
->>>>>>
->>>>>> Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
->>>>>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->>>>>> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>>>>> ---
->>>>>>     arch/x86/Kconfig               |   3 +
->>>>>>     arch/x86/include/asm/pci_x86.h |  33 ------
->>>>>>     arch/x86/pci/acpi.c            |   1 +
->>>>>>     arch/x86/pci/mmconfig-shared.c | 244 +---------------------------------------
->>>>>>     arch/x86/pci/mmconfig_32.c     |   1 +
->>>>>>     arch/x86/pci/mmconfig_64.c     |   1 +
->>>>>>     arch/x86/pci/numachip.c        |   1 +
->>>>>>     drivers/acpi/Makefile          |   1 +
->>>>>>     drivers/acpi/mcfg.c            |  57 ++++++++++
->>>>>>     drivers/pci/Kconfig            |   7 ++
->>>>>>     drivers/pci/Makefile           |   5 +
->>>>>>     drivers/pci/ecam.c             | 245 +++++++++++++++++++++++++++++++++++++++++
->>>>>
->>>>> Why can't we make use of the ECAM implementation used by pci-host-generic
->>>>> and drivers/pci/access.c?
->>>>
->>>> We had that question when I had posted MMCFG patch set separately,
->>>> please see:
->>>> https://lkml.org/lkml/2015/3/11/492
->>>
->>> Yes, but the real question is, why do we need to have PCI config space
->>> up and running before a bus struct is even created ? I think the reason is
->>> the PCI configuration address space format (ACPI 6.0, Table 5-27, page
->>> 108):
->>>
->>> "PCI Configuration space addresses must be confined to devices on
->>> PCI Segment Group 0, bus 0. This restriction exists to accommodate
->>> access to fixed hardware prior to PCI bus enumeration".
->>>
->>> On HW reduced platforms I do not even think this is required at all,
->>> we have to look into this to avoid code duplication that might well
->>> turn out useless.
->>
->> This is only for the fixed hardware, which will be not available for
->> ARM64 (reduced hardware mode), but in Generic Hardware Programming
->> Model, we using OEM-provided ACPI Machine Language (AML) code to access
->> generic hardware registers, this will be available for reduced hardware
->> too.
->>
->> So in ACPI spec, it says: (ACPI 6.0 page 66, last paragraph)
->>
->> ACPI defines eight address spaces that may be accessed by generic
->> hardware implementations. These include:
->> * System I/O space
->> * System memory space
->> * PCI configuration space
->> * Embedded controller space
->> * System Management Bus (SMBus) space
->> * CMOS
->> * PCI BAR Target
->> * IPMI space
->>
->> So if any device using the PCI address space for control, such
->> as a system reset control device, its address space can be reside
->> in PCI configuration space (who can prevent a OEM do that crazy
->> thing? :) ), and it should be accessible before the PCI bus is
->> created.
->
-> Us, by changing attitude and questioning features whose usefulness
-> is questionable. I will look into this and raise the point, I am not
-> thrilled by the idea of adding another set of PCI accessor functions
-> and drivers because we have to access a register through PCI before
-> enumerating the bus (and on arm64 this is totally useless since
-> we are not meant to support fixed HW anyway). Maybe we can make acpica
-> code use a "special" stub (ACPI specific, PCI configuration space address
-> space has restrictions anyway), I have to review this set in its
-> entirety to see how to do that (and I would kindly ask you to do
-> it too, before saying it is not possible to implement it).
+The same message "qp %d: Link Down\n" was printed at two locations in
+ntb_transport.  Change the messages so they are distinct.
 
-I'm willing to do that, actually, if we don't need a mechanism to
-access PCI config space before the bus is created, the code can be
-simplified a lot.
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ drivers/ntb/ntb_transport.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks for your help and patient.
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index d9538e911df6..8d9b59f7fa07 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -658,7 +658,7 @@ static void ntb_qp_link_cleanup(struct ntb_transport_qp *qp)
+ 		return;
+ 	}
+ 
+-	dev_info(&pdev->dev, "qp %d: Link Down\n", qp->qp_num);
++	dev_info(&pdev->dev, "qp %d: Link Cleanup\n", qp->qp_num);
+ 	qp->link_is_up = false;
+ 
+ 	if (qp->event_handler)
+@@ -1470,7 +1470,7 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
+ 		return;
+ 
+ 	qp->link_is_up = false;
+-	dev_info(&pdev->dev, "qp %d: Link Down\n", qp->qp_num);
++	dev_info(&pdev->dev, "qp %d: Send Link Down\n", qp->qp_num);
+ 
+ 	for (i = 0; i < NTB_LINK_DOWN_TIMEOUT; i++) {
+ 		entry = ntb_list_rm(&qp->ntb_tx_free_q_lock, &qp->tx_free_q);
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
-Hanjun
