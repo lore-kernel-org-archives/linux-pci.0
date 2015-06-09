@@ -1,131 +1,65 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joerg Roedel <joro@8bytes.org>
-To: iommu@lists.linux-foundation.org
-Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
-	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
-	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
-	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
-Subject: [PATCH 17/17] iommu/vt-d: Remove update code for old ir-table
-Date: Fri,  5 Jun 2015 16:11:03 +0200
-Message-Id: <1433513463-19128-18-git-send-email-joro@8bytes.org>
-In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
+Subject: [PATCH v3 04/18] NTB: Enable link for Intel root port mode in probe
+Date: Tue,  9 Jun 2015 05:44:31 -0400
+Message-Id: <5ef61ff1b2b5ab0f49dded7056b90917237ef714.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
+From: Dave Jiang <dave.jiang@intel.com>
 
-The code to update the irq remapping table of the old kernel
-is not necessary anymore because we switch immidiatly to the
-new table after we copied the data over.
+Link training should be enabled in the driver probe for root port mode.
+We should not have to wait for transport to be loaded for this to
+happen.  Otherwise the ntb device will not show up on the transparent
+bridge side of the link.
 
-Tested-by: Baoquan He <bhe@redhat.com>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- drivers/iommu/intel_irq_remapping.c | 44 -------------------------------------
- include/linux/intel-iommu.h         |  2 --
- 2 files changed, 46 deletions(-)
+ drivers/ntb/hw/intel/ntb_hw_intel.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index 07a8e82..b49aa8c 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -22,7 +22,6 @@
- #include "irq_remapping.h"
+diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
+index 10ca18af4106..64ce690d9616 100644
+--- a/drivers/ntb/hw/intel/ntb_hw_intel.c
++++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
+@@ -1318,6 +1318,9 @@ static int snb_poll_link(struct intel_ntb_dev *ndev)
  
- static int iommu_load_old_irte(struct intel_iommu *iommu);
--static int __iommu_update_old_irte(struct intel_iommu *iommu, int index);
- static void iommu_check_pre_ir_status(struct intel_iommu *iommu);
- static void iommu_disable_irq_remapping(struct intel_iommu *iommu);
- 
-@@ -202,9 +201,6 @@ static int modify_irte(int irq, struct irte *irte_modified)
- 	set_64bit(&irte->low, irte_modified->low);
- 	set_64bit(&irte->high, irte_modified->high);
- 
--	if (iommu->pre_enabled_ir)
--		__iommu_update_old_irte(iommu, index);
--
- 	__iommu_flush_cache(iommu, irte, sizeof(*irte));
- 
- 	rc = qi_flush_iec(iommu, index, 0);
-@@ -266,9 +262,6 @@ static int clear_entries(struct irq_2_iommu *irq_iommu)
- 	bitmap_release_region(iommu->ir_table->bitmap, index,
- 			      irq_iommu->irte_mask);
- 
--	if (iommu->pre_enabled_ir)
--		__iommu_update_old_irte(iommu, -1);
--
- 	return qi_flush_iec(iommu, index, irq_iommu->irte_mask);
- }
- 
-@@ -1327,9 +1320,6 @@ static int iommu_load_old_irte(struct intel_iommu *iommu)
- 
- 	__iommu_flush_cache(iommu, iommu->ir_table->base, size);
- 
--	iommu->ir_table->base_old_phys = irt_phys;
--	iommu->ir_table->base_old_virt = old_ir_table;
--
- 	/*
- 	 * Now check the table for used entries and mark those as
- 	 * allocated in the bitmap
-@@ -1342,40 +1332,6 @@ static int iommu_load_old_irte(struct intel_iommu *iommu)
- 	return 0;
- }
- 
--static int __iommu_update_old_irte(struct intel_iommu *iommu, int index)
--{
--	int start;
--	unsigned long size;
--	void __iomem *to;
--void *from;
--
--	if ((!iommu)
--		|| (!iommu->ir_table)
--		|| (!iommu->ir_table->base)
--		|| (!iommu->ir_table->base_old_phys)
--		|| (!iommu->ir_table->base_old_virt))
--		return -1;
--
--	if (index < -1 || index >= INTR_REMAP_TABLE_ENTRIES)
--		return -1;
--
--	if (index == -1) {
--		start = 0;
--		size = INTR_REMAP_TABLE_ENTRIES * sizeof(struct irte);
--	} else {
--		start = index * sizeof(struct irte);
--		size = sizeof(struct irte);
--	}
--
--	to = iommu->ir_table->base_old_virt;
--	from = iommu->ir_table->base;
--	memcpy(to + start, from + start, size);
--
--	__iommu_flush_cache(iommu, to + start, size);
--
--	return 0;
--}
--
- static void iommu_check_pre_ir_status(struct intel_iommu *iommu)
+ static int snb_link_is_up(struct intel_ntb_dev *ndev)
  {
- 	u32 sts;
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index 5aa8834..9fcdd9a 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -302,8 +302,6 @@ struct q_inval {
- struct ir_table {
- 	struct irte *base;
- 	unsigned long *bitmap;
--	void __iomem *base_old_virt;
--	unsigned long base_old_phys;
- };
- #endif
++	if (ndev->ntb.topo == NTB_TOPO_SEC)
++		return 1;
++
+ 	return NTB_LNK_STA_ACTIVE(ndev->lnk_sta);
+ }
  
+@@ -1614,6 +1617,7 @@ static int snb_setup_b2b_mw(struct intel_ntb_dev *ndev,
+ static int snb_init_ntb(struct intel_ntb_dev *ndev)
+ {
+ 	int rc;
++	u32 ntb_ctl;
+ 
+ 	if (ndev->bar4_split)
+ 		ndev->mw_count = HSX_SPLIT_BAR_MW_COUNT;
+@@ -1630,6 +1634,12 @@ static int snb_init_ntb(struct intel_ntb_dev *ndev)
+ 			dev_err(ndev_dev(ndev), "NTB Primary config disabled\n");
+ 			return -EINVAL;
+ 		}
++
++		/* enable link to allow secondary side device to appear */
++		ntb_ctl = ioread32(ndev->self_mmio + ndev->reg->ntb_ctl);
++		ntb_ctl &= ~NTB_CTL_DISABLE;
++		iowrite32(ntb_ctl, ndev->self_mmio + ndev->reg->ntb_ctl);
++
+ 		/* use half the spads for the peer */
+ 		ndev->spad_count >>= 1;
+ 		ndev->self_reg = &snb_pri_reg;
 -- 
-1.9.1
+2.4.0.rc0.43.gcf8a8c6
 
