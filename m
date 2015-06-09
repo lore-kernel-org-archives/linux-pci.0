@@ -1,69 +1,171 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: [Patch v2 4/4] PCI, MSI: Optionally free legacy PCI IRQ when enabling MSI/MSI-X
-Date: Tue,  2 Jun 2015 10:49:19 +0800
-Message-Id: <1433213360-3700-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v3 13/18] NTB: Use NUMA memory and DMA chan in transport
+Date: Tue,  9 Jun 2015 05:44:40 -0400
+Message-Id: <405348e755bb4f78b6229f0d1ff2a347f0497505.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Once PCI MSI/MSI-X is enabled by the device driver, PCI device won't
-make use of legacy PCI IRQ until PCI MSI/MSI-X is disabled again.
-So optionally free legacy PCI IRQ when enabling MSI/MSI-X and reallocate
-when disabling MSI/MSI-X.
+Allocate memory and request the dma channel for the same numa node as
+the ntb device.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
 ---
- drivers/pci/msi.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/ntb/ntb_transport.c | 46 +++++++++++++++++++++++++++++++--------------
+ 1 file changed, 32 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c3e7dfcf9ff5..47cf72c669f0 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -686,6 +686,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	msi_set_enable(dev, 1);
- 	dev->msi_enabled = 1;
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 8ce0bf67ac20..dc14ec81c43e 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -346,6 +346,7 @@ int ntb_transport_register_client_dev(char *device_name)
+ {
+ 	struct ntb_transport_client_dev *client_dev;
+ 	struct ntb_transport_ctx *nt;
++	int node;
+ 	int rc, i = 0;
  
-+	pcibios_free_irq(dev);
- 	dev->irq = entry->irq;
- 	return 0;
- }
-@@ -813,9 +814,10 @@ static int msix_capability_init(struct pci_dev *dev,
- 	/* Set MSI-X enabled bits and unmask the function */
- 	pci_intx_for_msi(dev, 0);
- 	dev->msix_enabled = 1;
--
- 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ 	if (list_empty(&ntb_transport_list))
+@@ -354,8 +355,10 @@ int ntb_transport_register_client_dev(char *device_name)
+ 	list_for_each_entry(nt, &ntb_transport_list, entry) {
+ 		struct device *dev;
  
-+	pcibios_free_irq(dev);
+-		client_dev = kzalloc(sizeof(*client_dev),
+-				     GFP_KERNEL);
++		node = dev_to_node(&nt->ndev->dev);
 +
- 	return 0;
++		client_dev = kzalloc_node(sizeof(*client_dev),
++					  GFP_KERNEL, node);
+ 		if (!client_dev) {
+ 			rc = -ENOMEM;
+ 			goto err;
+@@ -953,6 +956,7 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 	struct ntb_transport_mw *mw;
+ 	unsigned int mw_count, qp_count;
+ 	u64 qp_bitmap;
++	int node;
+ 	int rc, i;
  
- out_avail:
-@@ -930,6 +932,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+ 	if (ntb_db_is_unsafe(ndev))
+@@ -962,7 +966,9 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 		dev_dbg(&ndev->dev,
+ 			"scratchpad is unsafe, proceed anyway...\n");
  
- 	/* Restore dev->irq to its default pin-assertion irq */
- 	dev->irq = desc->msi_attrib.default_irq;
-+	pcibios_alloc_irq(dev);
+-	nt = kzalloc(sizeof(*nt), GFP_KERNEL);
++	node = dev_to_node(&ndev->dev);
++
++	nt = kzalloc_node(sizeof(*nt), GFP_KERNEL, node);
+ 	if (!nt)
+ 		return -ENOMEM;
+ 
+@@ -972,7 +978,8 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 
+ 	nt->mw_count = mw_count;
+ 
+-	nt->mw_vec = kcalloc(mw_count, sizeof(*nt->mw_vec), GFP_KERNEL);
++	nt->mw_vec = kzalloc_node(mw_count * sizeof(*nt->mw_vec),
++				  GFP_KERNEL, node);
+ 	if (!nt->mw_vec) {
+ 		rc = -ENOMEM;
+ 		goto err;
+@@ -1012,7 +1019,8 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 	nt->qp_bitmap = qp_bitmap;
+ 	nt->qp_bitmap_free = qp_bitmap;
+ 
+-	nt->qp_vec = kcalloc(qp_count, sizeof(*nt->qp_vec), GFP_KERNEL);
++	nt->qp_vec = kzalloc_node(qp_count * sizeof(*nt->qp_vec),
++				  GFP_KERNEL, node);
+ 	if (!nt->qp_vec) {
+ 		rc = -ENOMEM;
+ 		goto err2;
+@@ -1512,6 +1520,11 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
+ 	ntb_qp_link_down_reset(qp);
  }
  
- void pci_disable_msi(struct pci_dev *dev)
-@@ -1030,6 +1033,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
- 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
- 	pci_intx_for_msi(dev, 1);
- 	dev->msix_enabled = 0;
-+	pcibios_alloc_irq(dev);
- }
++static bool ntb_dma_filter_fn(struct dma_chan *chan, void *node)
++{
++	return dev_to_node(&chan->dev->device) == (int)(unsigned long)node;
++}
++
+ /**
+  * ntb_transport_create_queue - Create a new NTB transport layer queue
+  * @rx_handler: receive callback function
+@@ -1537,12 +1550,16 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
+ 	struct ntb_transport_qp *qp;
+ 	u64 qp_bit;
+ 	unsigned int free_queue;
++	dma_cap_mask_t dma_mask;
++	int node;
+ 	int i;
  
- void pci_disable_msix(struct pci_dev *dev)
+ 	ndev = dev_ntb(client_dev->parent);
+ 	pdev = ndev->pdev;
+ 	nt = ndev->ctx;
+ 
++	node = dev_to_node(&ndev->dev);
++
+ 	free_queue = ffs(nt->qp_bitmap);
+ 	if (!free_queue)
+ 		goto err;
+@@ -1560,15 +1577,16 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
+ 	qp->tx_handler = handlers->tx_handler;
+ 	qp->event_handler = handlers->event_handler;
+ 
+-	dmaengine_get();
+-	qp->dma_chan = dma_find_channel(DMA_MEMCPY);
+-	if (!qp->dma_chan) {
+-		dmaengine_put();
++	dma_cap_zero(dma_mask);
++	dma_cap_set(DMA_MEMCPY, dma_mask);
++
++	qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
++					   (void *)(unsigned long)node);
++	if (!qp->dma_chan)
+ 		dev_info(&pdev->dev, "Unable to allocate DMA channel, using CPU instead\n");
+-	}
+ 
+ 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
+-		entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
++		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
+ 		if (!entry)
+ 			goto err1;
+ 
+@@ -1578,7 +1596,7 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
+ 	}
+ 
+ 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
+-		entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
++		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
+ 		if (!entry)
+ 			goto err2;
+ 
+@@ -1601,7 +1619,7 @@ err1:
+ 	while ((entry = ntb_list_rm(&qp->ntb_rx_free_q_lock, &qp->rx_free_q)))
+ 		kfree(entry);
+ 	if (qp->dma_chan)
+-		dmaengine_put();
++		dma_release_channel(qp->dma_chan);
+ 	nt->qp_bitmap_free |= qp_bit;
+ err:
+ 	return NULL;
+@@ -1638,7 +1656,7 @@ void ntb_transport_free_queue(struct ntb_transport_qp *qp)
+ 		 */
+ 		dma_sync_wait(chan, qp->last_cookie);
+ 		dmaengine_terminate_all(chan);
+-		dmaengine_put();
++		dma_release_channel(chan);
+ 	}
+ 
+ 	qp_bit = BIT_ULL(qp->qp_num);
 -- 
-1.7.10.4
+2.4.0.rc0.43.gcf8a8c6
 
