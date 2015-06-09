@@ -1,62 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:33940 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756814AbbFQRX4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jun 2015 13:23:56 -0400
-Message-ID: <5581AD29.2040406@gmail.com>
-Date: Wed, 17 Jun 2015 10:23:53 -0700
-From: Alexander Duyck <alexander.duyck@gmail.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38698 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752382AbbFIGNK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 02:13:10 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 9 Jun 2015 16:13:08 +1000
+Date: Tue, 9 Jun 2015 16:10:52 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	aik@ozlabs.ru, panto@antoniou-consulting.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v5 31/42] powerpc/pci: Move pcibios_find_pci_bus() around
+Message-ID: <20150609061052.GA387@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1433400131-18429-32-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20150605194730.GO3631@google.com>
 MIME-Version: 1.0
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH V3 0/2] pci: Provide a flag to access VPD through function
- 0
-References: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com> <051B68B4-3E77-4EB0-B9FE-8523631884A2@intel.com> <45099CC7-DDAB-41D9-AB74-5A81E2AAF64C@intel.com>
-In-Reply-To: <45099CC7-DDAB-41D9-AB74-5A81E2AAF64C@intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150605194730.GO3631@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/17/2015 09:29 AM, Rustad, Mark D wrote:
-> + Alex
+On Fri, Jun 05, 2015 at 02:47:30PM -0500, Bjorn Helgaas wrote:
+>"Move pcibios_find_pci_bus() from pSeries to generic powerpc code"?
 >
->> On Jun 5, 2015, at 2:59 PM, Rustad, Mark D <mark.d.rustad@intel.com> wrote:
->>
->>> On Jun 3, 2015, at 11:46 AM, Mark D Rustad <mark.d.rustad@intel.com> wrote:
->>>
->>> Many multi-function devices provide shared registers in extended
->>> config space for accessing VPD. The behavior of these registers
->>> means that the state must be tracked and access locked correctly
->>> for accesses not to hang or worse. One way to meet these needs is
->>> to always perform the accesses through function 0, thereby using
->>> the state tracking and mutex that already exists.
->>>
->>> To provide this behavior, add a dev_flags bit to indicate that this
->>> should be done. This bit can then be set for any non-zero function
->>> that needs to redirect such VPD access to function 0. Do not set
->>> this bit on the zero function or there will be an infinite recursion.
->>>
->>> The second patch uses this new flag to invoke this behavior on all
->>> multi-function Intel Ethernet devices.
->>>
->>> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
->>>
->>> ---
->>> Changes in V2:
->>> - Corrected a spelling error in a log message
->>> - Added checks to see that the referenced function 0 is reasonable
->>> Changes in V3:
->>> - Don't leak a device reference
->>> - Check that function 0 has VPD
->>> - Make a helper for the function 0 checks
->>> - Moved a multifunction check to the quirk patch
->> So does this series look acceptable now? I think I addressed the issues that Alex raised. Can these also be considered for -stable?
-> More than a week has passed without any comment. Is this going to be accepted or is there still an issue?
+>On Thu, Jun 04, 2015 at 04:42:00PM +1000, Gavin Shan wrote:
+>> The patch moves pcibios_find_pci_bus() to PPC kerenl directory so
+>
+>s/kerenl/kernel/
+>
 
-Yeah, this looks like it has addressed most of the corner cases so I am 
-good with it.
+Thanks. I'll fix it in next revision.
 
-Acked-by: Alexander Duyck <alexander.h.duyck@redhat.com>
+Thanks,
+Gavin
+
+>> that it can be reused by hotplug code for pSeries and PowerNV
+>> platform at the same time.
+>> 
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> ---
+>> v5:
+>>   * Derived from PATCH[v4 12/21]
+>> ---
+>>  arch/powerpc/kernel/pci-hotplug.c          | 36 ++++++++++++++++++++++++++++++
+>>  arch/powerpc/platforms/pseries/pci_dlpar.c | 32 --------------------------
+>>  2 files changed, 36 insertions(+), 32 deletions(-)
+>> 
+>> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+>> index ca392fc..1482bc1 100644
+>> --- a/arch/powerpc/kernel/pci-hotplug.c
+>> +++ b/arch/powerpc/kernel/pci-hotplug.c
+>> @@ -21,6 +21,42 @@
+>>  #include <asm/firmware.h>
+>>  #include <asm/eeh.h>
+>>  
+>> +static struct pci_bus *find_pci_bus(struct pci_bus *bus,
+>> +				    struct device_node *dn)
+>> +{
+>> +	struct pci_bus *tmp, *child = NULL;
+>> +	struct device_node *busdn;
+>> +
+>> +	busdn = pci_bus_to_OF_node(bus);
+>> +	if (busdn == dn)
+>> +		return bus;
+>> +
+>> +	list_for_each_entry(tmp, &bus->children, node) {
+>> +		child = find_pci_bus(tmp, dn);
+>> +		if (child)
+>> +			break;
+>> +	}
+>> +
+>> +	return child;
+>> +}
+>> +
+>> +/**
+>> + * pcibios_find_pci_bus - find PCI bus according to the given device node
+>> + * @dn: Device node
+>> + *
+>> + * Find the corresponding PCI bus according to the given device node.
+>> + */
+>> +struct pci_bus *pcibios_find_pci_bus(struct device_node *dn)
+>> +{
+>> +	struct pci_dn *pdn = PCI_DN(dn);
+>> +
+>> +	if (!pdn  || !pdn->phb || !pdn->phb->bus)
+>> +		return NULL;
+>> +
+>> +	return find_pci_bus(pdn->phb->bus, dn);
+>> +}
+>> +EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
+>> +
+>>  /**
+>>   * pcibios_release_device - release PCI device
+>>   * @dev: PCI device
+>> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
+>> index 5d4a3df..906dbaa 100644
+>> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
+>> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
+>> @@ -34,38 +34,6 @@
+>>  
+>>  #include "pseries.h"
+>>  
+>> -static struct pci_bus *
+>> -find_bus_among_children(struct pci_bus *bus,
+>> -                        struct device_node *dn)
+>> -{
+>> -	struct pci_bus *child = NULL;
+>> -	struct pci_bus *tmp;
+>> -	struct device_node *busdn;
+>> -
+>> -	busdn = pci_bus_to_OF_node(bus);
+>> -	if (busdn == dn)
+>> -		return bus;
+>> -
+>> -	list_for_each_entry(tmp, &bus->children, node) {
+>> -		child = find_bus_among_children(tmp, dn);
+>> -		if (child)
+>> -			break;
+>> -	};
+>> -	return child;
+>> -}
+>> -
+>> -struct pci_bus *
+>> -pcibios_find_pci_bus(struct device_node *dn)
+>> -{
+>> -	struct pci_dn *pdn = dn->data;
+>> -
+>> -	if (!pdn  || !pdn->phb || !pdn->phb->bus)
+>> -		return NULL;
+>> -
+>> -	return find_bus_among_children(pdn->phb->bus, dn);
+>> -}
+>> -EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
+>> -
+>>  struct pci_controller *init_phb_dynamic(struct device_node *dn)
+>>  {
+>>  	struct pci_controller *phb;
+>> -- 
+>> 2.1.0
+>> 
+>
+
