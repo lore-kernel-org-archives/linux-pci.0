@@ -1,102 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:64724 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753760AbbFBRFZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 13:05:25 -0400
-Subject: [PATCH 1/2] pci: Add dev_flags bit to access VPD through function 0
-From: Mark D Rustad <mark.d.rustad@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Tue, 02 Jun 2015 10:04:14 -0700
-Message-ID: <20150602170414.6252.48036.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150602165706.6252.76253.stgit@mdrustad-wks.jf.intel.com>
-References: <20150602165706.6252.76253.stgit@mdrustad-wks.jf.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailuogwhop.emc.com ([168.159.213.141]:36847 "EHLO
+	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752804AbbFIOrf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 10:47:35 -0400
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v3 12/18] NTB: Rate limit ntb_qp_link_work
+Date: Tue,  9 Jun 2015 05:44:39 -0400
+Message-Id: <d5916febc226f9b885869c430b670c6de05dd634.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
+References: <cover.1433838377.git.Allen.Hubbe@emc.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
-function 0 to provide VPD access on other functions. This solves
-concurrent access problems on many devices without changing the
-attributes exposed in sysfs. Never set this bit on funciton 0 or
-there will be an infinite recursion.
+When the ntb transport is connecting and waiting for the peer, the debug
+console receives lots of debug level messages about the remote qp link
+status being down.  Rate limit those messages.
 
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
 ---
- drivers/pci/access.c |   39 ++++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h  |    2 ++
- 2 files changed, 40 insertions(+), 1 deletion(-)
+ drivers/ntb/ntb_transport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d9b64a175990..e435c087c354 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -439,6 +439,40 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
- 	.release = pci_vpd_pci22_release,
- };
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 2efd1eae9a7c..8ce0bf67ac20 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -850,7 +850,7 @@ static void ntb_qp_link_work(struct work_struct *work)
  
-+static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-+			       void *arg)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	ssize_t ret;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+
-+	ret = pci_read_vpd(tdev, pos, count, arg);
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
-+static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
-+				const void *arg)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	ssize_t ret;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+
-+	ret = pci_write_vpd(tdev, pos, count, arg);
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
-+static const struct pci_vpd_ops pci_vpd_f0_ops = {
-+	.read = pci_vpd_f0_read,
-+	.write = pci_vpd_f0_write,
-+	.release = pci_vpd_pci22_release,
-+};
-+
- int pci_vpd_pci22_init(struct pci_dev *dev)
- {
- 	struct pci_vpd_pci22 *vpd;
-@@ -452,7 +486,10 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 		return -ENOMEM;
+ 	/* query remote spad for qp ready bits */
+ 	ntb_peer_spad_read(nt->ndev, QP_LINKS);
+-	dev_dbg(&pdev->dev, "Remote QP link status = %x\n", val);
++	dev_dbg_ratelimited(&pdev->dev, "Remote QP link status = %x\n", val);
  
- 	vpd->base.len = PCI_VPD_PCI22_SIZE;
--	vpd->base.ops = &pci_vpd_pci22_ops;
-+	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
-+		vpd->base.ops = &pci_vpd_f0_ops;
-+	else
-+		vpd->base.ops = &pci_vpd_pci22_ops;
- 	mutex_init(&vpd->lock);
- 	vpd->cap = cap;
- 	vpd->busy = false;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8dc4c6e..194df6d635e6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -180,6 +180,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
- 	/* Do not use PM reset even if device advertises NoSoftRst- */
- 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-+	/* Get VPD from function 0 VPD */
-+	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
- };
- 
- enum pci_irq_reroute_variant {
+ 	/* See if the remote side is up */
+ 	if (val & BIT(qp->qp_num)) {
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
