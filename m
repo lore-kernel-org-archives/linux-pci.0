@@ -1,102 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:34424 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752424AbbFRIHg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:07:36 -0400
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 18 Jun 2015 13:37:34 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 76BE8125804F
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:40:06 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I87SwB62455954
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:37:28 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I87CJX011702
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:37:12 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V8 05/10] powerpc/powernv: EEH device for VF
-Date: Thu, 18 Jun 2015 16:06:40 +0800
-Message-Id: <1434614805-19002-6-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: [Patch v3 0/4] Introduce a mechanism to allocate PCI IRQ on demand
+Date: Wed, 10 Jun 2015 16:54:57 +0800
+Message-Id: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VFs and their corresponding pci_dn instances are created and released
-dynamically as their PF's SRIOV capability is enabled and disabled.
-The patch creates and releases EEH devices for VFs when creating and
-releasing their pci_dn instances, which means EEH devices and pci_dn
-instances have same life cycle. Also, VF's EEH device is identified
-by (struct eeh_dev::physfn).
+Hi Bjorn,
+	I have verified that this patch set could be applied to the
+mainstream kernel without dependency on other patches, so could you
+please help to merge it?
 
-[gwshan: changelog and removed CONFIG_PCI_IOV]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h |    1 +
- arch/powerpc/kernel/pci_dn.c   |   12 ++++++++++++
- 2 files changed, 13 insertions(+)
+This patch set introduces a mechanism to allocate PCI IRQ on demand and
+free it when not used anymore by hooking pci_device_probe() and
+pci_device_remove().
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index a52db28..1b3614d 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -138,6 +138,7 @@ struct eeh_dev {
- 	struct pci_controller *phb;	/* Associated PHB		*/
- 	struct pci_dn *pdn;		/* Associated PCI device node	*/
- 	struct pci_dev *pdev;		/* Associated PCI device	*/
-+	struct pci_dev *physfn;		/* Associated PF PORT		*/
- 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
- };
- 
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index f771130..f0ddde7 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -180,7 +180,9 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- {
- #ifdef CONFIG_PCI_IOV
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pci_dn *parent, *pdn;
-+	struct eeh_dev *edev;
- 	int i;
- 
- 	/* Only support IOV for now */
-@@ -206,6 +208,9 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- 				 __func__, i);
- 			return NULL;
- 		}
-+		eeh_dev_init(pdn, hose);
-+		edev = pdn_to_eeh_dev(pdn);
-+		edev->physfn = pdev;
- 	}
- #endif /* CONFIG_PCI_IOV */
- 
-@@ -254,10 +259,17 @@ void remove_dev_pci_data(struct pci_dev *pdev)
- 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
- 		list_for_each_entry_safe(pdn, tmp,
- 			&parent->child_list, list) {
-+			struct eeh_dev *edev;
- 			if (pdn->busno != pci_iov_virtfn_bus(pdev, i) ||
- 			    pdn->devfn != pci_iov_virtfn_devfn(pdev, i))
- 				continue;
- 
-+			edev = pdn_to_eeh_dev(pdn);
-+			if (edev) {
-+				pdn->edev = NULL;
-+				kfree(edev);
-+			}
-+
- 			if (!list_empty(&pdn->list))
- 				list_del(&pdn->list);
- 
+It will be used to track IOAPIC pin usage on x86 so we could support
+IOAPIC hot-removal.
+
+The patch set passes Fengguang's 0day test suite.
+
+V2->V3:
+1) Change the default pcibios_alloc_irq() to always return 0, as
+   suggested by Bjorn.
+2) Refine comments.
+
+V1->V2:
+1) Refine pci_device_probe() to optimize for mainline code as suggested
+   by Bjorn
+2) Reorder patch set to put optional patch as the last (Patch 4)
+
+
+Jiang Liu (4):
+  PCI: Add hooks to allocate/free IRQ resources when binding/unbinding
+    driver
+  PCI, x86: Allocate PCI IRQ on demand and free it when not used
+    anymore
+  PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed
+  PCI, MSI: Free legacy PCI IRQ when enabling MSI/MSI-X
+
+ arch/x86/include/asm/pci_x86.h |    2 --
+ arch/x86/pci/common.c          |   20 +++++++++-----------
+ arch/x86/pci/intel_mid_pci.c   |    9 ++++++---
+ arch/x86/pci/irq.c             |   23 ++++-------------------
+ drivers/acpi/pci_irq.c         |   17 ++++-------------
+ drivers/pci/msi.c              |    6 +++++-
+ drivers/pci/pci-driver.c       |   26 ++++++++++++++++++++------
+ include/linux/pci.h            |   19 +++++++++++++++++++
+ 8 files changed, 67 insertions(+), 55 deletions(-)
+
 -- 
-1.7.9.5
+1.7.10.4
 
