@@ -1,60 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([122.248.162.6]:42703 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369AbbFRIHM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:07:12 -0400
-Received: from /spool/local
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 18 Jun 2015 13:37:09 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 692EC125804F
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:39:42 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I86rq39306622
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:53 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I86qD0009930
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:52 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V8 03/10] powerpc/pci: Remove VFs prior to PF
-Date: Thu, 18 Jun 2015 16:06:38 +0800
-Message-Id: <1434614805-19002-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Alessandro Rubini <rubini@unipv.it>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Tomasz Figa <tomasz.figa@gmail.com>,
+	Thomas Abraham <thomas.abraham@linaro.org>,
+	Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Barry Song <baohua@kernel.org>,
+	Viresh Kumar <viresh.linux@gmail.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Hongzhou Yang <hongzhou.yang@mediatek.com>,
+	Maoguang Meng <maoguang.meng@mediatek.com>,
+	Yingjoe Chen <yingjoe.chen@mediatek.com>,
+	Axel Lin <axel.lin@ingics.com>,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Stephen Boyd <sboyd@codeaurora.org>, Bin Shi <Bin.Shi@csr.com>,
+	Fan Wu <fwu@marvell.com>, Hans de Goede <hdegoede@redhat.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, Barry Song <Baohua.Song@csr.com>,
+	linux-gpio@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-mediatek@lists.infradead.org,
+	linux-rockchip@lists.infradead.org, kernel@stlinux.com,
+	linux-samsung-soc@vger.kernel.org, spear-devel@list.st.com
+Subject: Re: [RFT v2 44/48] genirq, pinctrl: Kill the first parameter 'irq' of irq_flow_handler_t
+Date: Wed, 10 Jun 2015 10:40:09 +0200
+Message-ID: <29876063.DDhUqa5fWz@diego>
+In-Reply-To: <1433391238-19471-45-git-send-email-jiang.liu@linux.intel.com>
+References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com> <1433391238-19471-45-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove") indicates,
-VFs, which might be hooked to same PCI bus as their PF should be removed
-before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
-cause kernel crash.
+Am Donnerstag, 4. Juni 2015, 12:13:54 schrieb Jiang Liu:
+> Now most IRQ flow handlers make no use of the first parameter 'irq'.
+> And for those who do make use of 'irq', we could easily get the irq
+> number through irq_desc->irq_data->irq. So kill the first parameter
+> 'irq' of irq_flow_handler_t.
+> 
+> To ease review, I have split the changes into several parts, though
+> they should be merge as one to support bisecting.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
 
-The patch applies the above pattern to PowerPC PCI hotplug path.
+>  drivers/pinctrl/pinctrl-rockchip.c            |    2 +-
 
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-hotplug.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 7ed85a6..98f84ed 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -50,7 +50,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
- 
- 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
- 		 pci_domain_nr(bus),  bus->number);
--	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
-+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
- 		pr_debug("   Removing %s...\n", pci_name(dev));
- 		pci_stop_and_remove_bus_device(dev);
- 	}
--- 
-1.7.9.5
+For Rockchip
+Acked-by: Heiko Stuebner <heiko@sntech.de>
 
