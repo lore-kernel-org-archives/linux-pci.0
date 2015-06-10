@@ -1,68 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5579BFD9.9040904@redhat.com>
-Date: Thu, 11 Jun 2015 13:05:29 -0400
-From: Jarod Wilson <jarod@redhat.com>
+Message-ID: <5578042D.9050407@hp.com>
+Date: Wed, 10 Jun 2015 17:32:29 +0800
+From: "Li, ZhenHua" <zhen-hual@hp.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org, Len Brown <lenb@kernel.org>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [Update][PATCH] PCIe / hotplug: Drop pointless ACPI-based "slot
- detection" check
-References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <1573807.HQlNd2BFYP@vostro.rjw.lan> <20150521161146.GE32152@google.com> <3372859.5Hat5UqSL7@vostro.rjw.lan>
-In-Reply-To: <3372859.5Hat5UqSL7@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Joerg Roedel <joro@8bytes.org>
+CC: David Woodhouse <dwmw2@infradead.org>, bhe@redhat.com,
+	tom.vaden@hp.com, rwright@hp.com, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	lisa.mitchell@hp.com, iommu@lists.linux-foundation.org,
+	doug.hatch@hp.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, billsumnerlinux@gmail.com, li.zhang6@hp.com,
+	dyoung@redhat.com, vgoyal@redhat.com,
+	"Li, ZhenHua" <zhen-hual@hp.com>
+Subject: Re: [PATCH v11 0/10] iommu/vt-d: Fix intel vt-d faults in kdump kernel
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com> <1433773583.2952.52.camel@infradead.org> <20150608152957.GW20384@8bytes.org> <1433778624.2952.82.camel@infradead.org> <20150608161315.GX20384@8bytes.org> <1433854550.19447.15.camel@infradead.org> <20150610092150.GZ20384@8bytes.org>
+In-Reply-To: <20150610092150.GZ20384@8bytes.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/21/2015 9:21 PM, Rafael J. Wysocki wrote:
-> On Thursday, May 21, 2015 11:11:46 AM Bjorn Helgaas wrote:
->> On Tue, May 19, 2015 at 03:27:58PM +0200, Rafael J. Wysocki wrote:
->>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>
->>> Jarod Wilson reports that the expresscard hotplug setup doesn't work
->>> on HP ZBook G2.  The problem turns out to be the ACPI-based "slot
->>> detection" code called from pciehp_probe() which tries to use some
->>> questionable heuristics based on what ACPI objects are present for
->>> the PCIe port device at hand to figure out whether or not to register
->>> a hotplug slot for that port.
->>>
->>> That code is used if there is at least one PCIe port having an ACPI
->>> device configuration object related to hotplug (such as _EJ0 or _RMV)
->>> and the Thunderbolt port on the affected machine has _RMV.  Of course,
->>> Thunderbolt and PCIe native hotplug need not be mutually exclusive
->>> (as they aren't on the machine in question), so that rule is simply
->>> incorrect.
->>>
->>> Moreover, the ACPI-based "slot detection" check does not add any
->>> value if pciehp_probe() is called at all and the service type of the
->>> device object it has been called for is PCIE_PORT_SERVICE_HP, because
->>> PCIe hotplug services are only registered if the _OSC handshake in
->>> acpi_pci_root_add() allows the kernel to control the PCIe native
->>> hotplug feature.  No more checks need to be carried out to decide
->>> whether or not to register a native PCIe hotlug slot in that case.
->>>
->>> For the above reasons, make pciehp_probe() check if it has been
->>> called for the right service type and drop the pointless ACPI-based
->>> "slot detection" check from it.  Also remove the entire code whose
->>> only user is that check (the entire pciehp_acpi.c file goes away
->>> as a result) and drop function headers related to it from the
->>> internal PCIeHP header file.
->>>
->>> Link: http://marc.info/?t=143163219300002&r=1&w=2
->>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=98581
->>> Reported-by: Jarod Wilson <jarod@redhat.com>
->>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 06/10/2015 05:21 PM, Joerg Roedel wrote:
+> On Tue, Jun 09, 2015 at 01:55:50PM +0100, David Woodhouse wrote:
+>> On Mon, 2015-06-08 at 18:13 +0200, Joerg Roedel wrote:
+>>> So I think we need to read out that bit when we find translation enabled
+>>> and if it is different from what we would set it to, we bail out of any
+>>> copying, disable translation and proceed as in a normal boot.
 >>
->> This is awesome!  Applied to pci/hotplug for v4.2, with Jarod's
->> reviewed/tested-by.
+>> Given that this is only for kdump and not the general case of kexec,
+>> that's probably tolerable. Of course we do still need to make it *not*
+>> broken for the case where DMA_RTADDR_RTT is set, as it is at the
+>> moment.
 >
-> Thanks!
+> Yes, I just sent a patch for this and will include it into my x86/vt-d
+> branch if not objections come in.
+>
+>> And I suspect if we're doing that, it might be simple enough to make it
+>> convert to/from the extended page tables. I don't think we want to
+>> preserve PASID tables; only the "second level" (i.e. traditional)
+>> translation. So we could happily pull the page table pointer out of
+>> either kind of context entry, and install it into either kind. I think
+>> there's a simple mapping of translation types too. I need to sort out
+>> the translation types when adding the real PASID support (imminently!)
+>> anyway.
+>
+> What happens when we take away the PASID tables from a device? Can it
+> also go into some failure state?
+> When doing this, we need at least setup the page request queue before we
+> copy over anything and change the root-entry. Then we can handle any
+> faults that are caused by this and tell the device to not try further.
+>
+>
+> 	Joerg
+>
+Is PASID part of new specs? Is there any plan to upgrade the driver to 
+support the latest vt-d specs?
 
-Looks like I didn't test enough. I can't explain WHY, but with this 
-applied, now thunderbolt hot unplug of a network adapter goes haywire, 
-where prior to the patch, it worked just fine. Still looking into it...
+Zhenhua
 
--- 
-Jarod Wilson
-jarod@redhat.com
