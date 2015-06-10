@@ -1,60 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 5 Jun 2015 12:04:21 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Subject: [GIT PULL] PCI fixes for v4.1
-Message-ID: <20150605170421.GM3631@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailuogwhop.emc.com ([168.159.213.141]:56557 "EHLO
+	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965320AbbFJOJV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 10:09:21 -0400
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v4 15/19] NTB: Use NUMA memory in Intel driver
+Date: Wed, 10 Jun 2015 05:08:20 -0400
+Message-Id: <799721f9614087d174524a59b12bad7bb5fc94ec.1433925092.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
+References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
+References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+Allocate memory for the NUMA node of the NTB device.
 
-Here's a MAINTAINERS update and two fixes for the bus sizing code that was
-updated by Wei Yang's powerpc SR-IOV support (this was merged via the
-powerpc tree during the v4.1 merge window).
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+---
+ drivers/ntb/hw/intel/ntb_hw_intel.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-Bjorn
+diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
+index 3448d5fbd003..4ac0b77ec788 100644
+--- a/drivers/ntb/hw/intel/ntb_hw_intel.c
++++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
+@@ -413,10 +413,12 @@ static int ndev_init_isr(struct intel_ntb_dev *ndev,
+ 			 int msix_shift, int total_shift)
+ {
+ 	struct pci_dev *pdev;
+-	int rc, i, msix_count;
++	int rc, i, msix_count, node;
+ 
+ 	pdev = ndev_pdev(ndev);
+ 
++	node = dev_to_node(&pdev->dev);
++
+ 	/* Mask all doorbell interrupts */
+ 	ndev->db_mask = ndev->db_valid_mask;
+ 	ndev->reg->db_iowrite(ndev->db_mask,
+@@ -425,11 +427,13 @@ static int ndev_init_isr(struct intel_ntb_dev *ndev,
+ 
+ 	/* Try to set up msix irq */
+ 
+-	ndev->vec = kcalloc(msix_max, sizeof(*ndev->vec), GFP_KERNEL);
++	ndev->vec = kzalloc_node(msix_max * sizeof(*ndev->vec),
++				 GFP_KERNEL, node);
+ 	if (!ndev->vec)
+ 		goto err_msix_vec_alloc;
+ 
+-	ndev->msix = kcalloc(msix_max, sizeof(*ndev->msix), GFP_KERNEL);
++	ndev->msix = kzalloc_node(msix_max * sizeof(*ndev->msix),
++				  GFP_KERNEL, node);
+ 	if (!ndev->msix)
+ 		goto err_msix_alloc;
+ 
+@@ -1960,10 +1964,12 @@ static int intel_ntb_pci_probe(struct pci_dev *pdev,
+ 			       const struct pci_device_id *id)
+ {
+ 	struct intel_ntb_dev *ndev;
+-	int rc;
++	int rc, node;
++
++	node = dev_to_node(&pdev->dev);
+ 
+ 	if (pdev_is_bwd(pdev)) {
+-		ndev = kzalloc(sizeof(*ndev), GFP_KERNEL);
++		ndev = kzalloc_node(sizeof(*ndev), GFP_KERNEL, node);
+ 		if (!ndev) {
+ 			rc = -ENOMEM;
+ 			goto err_ndev;
+@@ -1980,7 +1986,7 @@ static int intel_ntb_pci_probe(struct pci_dev *pdev,
+ 			goto err_init_dev;
+ 
+ 	} else if (pdev_is_snb(pdev)) {
+-		ndev = kzalloc(sizeof(*ndev), GFP_KERNEL);
++		ndev = kzalloc_node(sizeof(*ndev), GFP_KERNEL, node);
+ 		if (!ndev) {
+ 			rc = -ENOMEM;
+ 			goto err_ndev;
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
-
-The following changes since commit 5ebe6afaf0057ac3eaeb98defd5456894b446d22:
-
-  Linux 4.1-rc2 (2015-05-03 19:22:23 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.1-fixes-2
-
-for you to fetch changes up to 552bc94ebeeb189d0ac682dae95cf05e6b72d7fd:
-
-  PCI: Preserve resource size during alignment reordering (2015-06-01 17:56:32 -0500)
-
-----------------------------------------------------------------
-PCI updates for v4.1:
-
-  Resource management
-    - Fix IOV sorting by alignment (Wei Yang)
-    - Preserve resource size during alignment reordering (Yinghai Lu)
-
-  Miscellaneous
-    - MAINTAINERS: Add Pratyush for SPEAr13xx and DesignWare PCIe (Pratyush Anand)
-
-----------------------------------------------------------------
-Pratyush Anand (1):
-      MAINTAINERS: Add Pratyush Anand as SPEAr13xx and DesignWare PCIe maintainer
-
-Wei Yang (1):
-      PCI: Fix IOV resource sorting by alignment requirement
-
-Yinghai Lu (1):
-      PCI: Preserve resource size during alignment reordering
-
- MAINTAINERS             | 4 +++-
- drivers/pci/setup-bus.c | 9 ++++++---
- 2 files changed, 9 insertions(+), 4 deletions(-)
