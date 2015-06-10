@@ -1,240 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:38480 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755570AbbFORIS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2015 13:08:18 -0400
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org, pebolle@tiscali.nl,
-	haiyangz@microsoft.com, mebersol@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 1/6] drivers:hv: Modify vmbus to search for all MMIO ranges available
-Date: Mon, 15 Jun 2015 17:06:34 +0000
-Message-Id: <1434387999-1885-2-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1434387999-1885-1-git-send-email-jakeo@microsoft.com>
-References: <1434387999-1885-1-git-send-email-jakeo@microsoft.com>
+Received: from casper.infradead.org ([85.118.1.10]:59785 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965065AbbFJOKw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 10:10:52 -0400
+Message-ID: <1433945444.19447.62.camel@infradead.org>
+Subject: Re: [PATCH v11 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+From: David Woodhouse <dwmw2@infradead.org>
+To: "Li, ZhenHua" <zhen-hual@hp.com>
+Cc: Joerg Roedel <joro@8bytes.org>, bhe@redhat.com, tom.vaden@hp.com,
+	rwright@hp.com, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, linux-kernel@vger.kernel.org,
+	lisa.mitchell@hp.com, iommu@lists.linux-foundation.org,
+	doug.hatch@hp.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, billsumnerlinux@gmail.com, li.zhang6@hp.com,
+	dyoung@redhat.com, vgoyal@redhat.com
+Date: Wed, 10 Jun 2015 15:10:44 +0100
+In-Reply-To: <5578042D.9050407@hp.com>
+References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
+	 <1433773583.2952.52.camel@infradead.org>
+	 <20150608152957.GW20384@8bytes.org>
+	 <1433778624.2952.82.camel@infradead.org>
+	 <20150608161315.GX20384@8bytes.org>
+	 <1433854550.19447.15.camel@infradead.org>
+	 <20150610092150.GZ20384@8bytes.org> <5578042D.9050407@hp.com>
+Content-Type: multipart/signed; micalg="sha-1"; protocol="application/x-pkcs7-signature";
+	boundary="=-7/8X5SEO8LCLrxEO4YHr"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
 
-Before this patch, hv_vmbus would search the ACPI namespace above its
-device looking for a _CRS (current resources) object, and hunt through
-the list of resources in there looking for one that described memory-
-mapped I/O space above the 4GB line.  It then exported the result for
-use in the hyperv_fb (frame buffer) driver.
+--=-7/8X5SEO8LCLrxEO4YHr
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-With this patch, hv_vmbus looks for all usable MMIO ranges above 1GB
-and makes a list of them, with the highest range first in the list,
-as drivers which can allocate from that range should allocate from it.
+On Wed, 2015-06-10 at 17:32 +0800, Li, ZhenHua wrote:
+>=20
+> Is PASID part of new specs? Is there any plan to upgrade the driver to=
+=20
+> support the latest vt-d specs?
 
-Hyperv_fb is slightly modified to use this change.
+Yes, and yes. I'm currently working on the latter =E2=80=94 and the extende=
+d
+page table support in 4.1 is the precursor to that work.
 
-This change is necessary for supporting other Hyper-V related drivers,
-which might need MMIO space below 4GB.
+--=20
+dwmw2
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/vmbus_drv.c          | 105 ++++++++++++++++++++++++++++++++++------
- drivers/video/fbdev/hyperv_fb.c |   2 +-
- include/linux/hyperv.h          |   2 +-
- 3 files changed, 92 insertions(+), 17 deletions(-)
+--=-7/8X5SEO8LCLrxEO4YHr
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index c85235e..d0e8832 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -72,10 +72,7 @@ static struct notifier_block hyperv_panic_block = {
- 	.notifier_call = hyperv_panic_event,
- };
- 
--struct resource hyperv_mmio = {
--	.name  = "hyperv mmio",
--	.flags = IORESOURCE_MEM,
--};
-+struct resource *hyperv_mmio;
- EXPORT_SYMBOL_GPL(hyperv_mmio);
- 
- static int vmbus_exists(void)
-@@ -982,30 +979,105 @@ void vmbus_device_unregister(struct hv_device *device_obj)
- 
- 
- /*
-- * VMBUS is an acpi enumerated device. Get the the information we
-+ * VMBUS is an acpi enumerated device. Get the information we
-  * need from DSDT.
-  */
--
-+#define VTPM_BASE_ADDRESS 0xfed40000
- static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
- {
-+	resource_size_t start = 0;
-+	resource_size_t end = 0;
-+	struct resource *new_res;
-+	struct resource **old_res = &hyperv_mmio;
-+	struct resource **prev_res = NULL;
-+
- 	switch (res->type) {
- 	case ACPI_RESOURCE_TYPE_IRQ:
- 		irq = res->data.irq.interrupts[0];
-+		return AE_OK;
-+
-+	/*
-+	 * "Address" descriptors are for bus windows. Ignore
-+	 * "memory" descriptors, which are for registers on
-+	 * devices.
-+	 */
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+		start = res->data.address32.address.minimum;
-+		end = res->data.address32.address.maximum;
- 		break;
- 
- 	case ACPI_RESOURCE_TYPE_ADDRESS64:
--		hyperv_mmio.start = res->data.address64.address.minimum;
--		hyperv_mmio.end = res->data.address64.address.maximum;
-+		start = res->data.address64.address.minimum;
-+		end = res->data.address64.address.maximum;
- 		break;
-+
-+	default:
-+		/* Unused resource type */
-+		return AE_OK;
-+
- 	}
-+	/*
-+	 * Ignore ranges that are below 1MB, as they're not
-+	 * necessary or useful here.
-+	 */
-+	if (end < 0x100000)
-+		return AE_OK;
-+
-+	new_res = kzalloc(sizeof(*new_res), GFP_ATOMIC);
-+	if (!new_res)
-+		return AE_NO_MEMORY;
-+
-+	/* If this range overlaps the virtual TPM, truncate it. */
-+	if (end > VTPM_BASE_ADDRESS && start < VTPM_BASE_ADDRESS)
-+		end = VTPM_BASE_ADDRESS;
-+
-+	new_res->name = "hyperv mmio";
-+	new_res->flags = IORESOURCE_MEM;
-+	new_res->start = start;
-+	new_res->end = end;
-+
-+	do {
-+		if (!*old_res) {
-+			*old_res = new_res;
-+			break;
-+		}
-+
-+		if ((*old_res)->end < new_res->start) {
-+			new_res->sibling = *old_res;
-+			if (prev_res)
-+				(*prev_res)->sibling = new_res;
-+			*old_res = new_res;
-+			break;
-+		}
-+
-+		prev_res = old_res;
-+		old_res = &(*old_res)->sibling;
-+
-+	} while (1);
- 
- 	return AE_OK;
- }
- 
-+static int vmbus_acpi_remove(struct acpi_device *device)
-+{
-+	struct resource *cur_res;
-+	struct resource *next_res;
-+
-+	if (hyperv_mmio) {
-+		for (cur_res = hyperv_mmio; cur_res; cur_res = next_res) {
-+			next_res = cur_res->sibling;
-+			kfree(cur_res);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int vmbus_acpi_add(struct acpi_device *device)
- {
- 	acpi_status result;
- 	int ret_val = -ENODEV;
-+	struct acpi_device *ancestor;
- 
- 	hv_acpi_dev = device;
- 
-@@ -1015,23 +1087,25 @@ static int vmbus_acpi_add(struct acpi_device *device)
- 	if (ACPI_FAILURE(result))
- 		goto acpi_walk_err;
- 	/*
--	 * The parent of the vmbus acpi device (Gen2 firmware) is the VMOD that
--	 * has the mmio ranges. Get that.
-+	 * Some ancestor of the vmbus acpi device (Gen1 or Gen2
-+	 * firmware) is the VMOD that has the mmio ranges. Get that.
- 	 */
--	if (device->parent) {
--		result = acpi_walk_resources(device->parent->handle,
-+	for (ancestor = device->parent; ancestor; ancestor = ancestor->parent) {
-+		result = acpi_walk_resources(ancestor->handle,
- 					METHOD_NAME__CRS,
- 					vmbus_walk_resources, NULL);
- 
- 		if (ACPI_FAILURE(result))
--			goto acpi_walk_err;
--		if (hyperv_mmio.start && hyperv_mmio.end)
--			request_resource(&iomem_resource, &hyperv_mmio);
-+			continue;
-+		if (hyperv_mmio)
-+			break;
- 	}
- 	ret_val = 0;
- 
- acpi_walk_err:
- 	complete(&probe_event);
-+	if (ret_val)
-+		vmbus_acpi_remove(device);
- 	return ret_val;
- }
- 
-@@ -1047,6 +1121,7 @@ static struct acpi_driver vmbus_acpi_driver = {
- 	.ids = vmbus_acpi_device_ids,
- 	.ops = {
- 		.add = vmbus_acpi_add,
-+		.remove = vmbus_acpi_remove,
- 	},
- };
- 
-diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
-index 807ee22..b54ee1c 100644
---- a/drivers/video/fbdev/hyperv_fb.c
-+++ b/drivers/video/fbdev/hyperv_fb.c
-@@ -688,7 +688,7 @@ static int hvfb_getmem(struct fb_info *info)
- 	par->mem.name = KBUILD_MODNAME;
- 	par->mem.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
- 	if (gen2vm) {
--		ret = allocate_resource(&hyperv_mmio, &par->mem,
-+		ret = allocate_resource(hyperv_mmio, &par->mem,
- 					screen_fb_size,
- 					0, -1,
- 					screen_fb_size,
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 902c37a..21fa867 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1245,7 +1245,7 @@ void hv_vss_deinit(void);
- void hv_vss_onchannelcallback(void *);
- void hv_process_channel_removal(struct vmbus_channel *channel, u32 relid);
- 
--extern struct resource hyperv_mmio;
-+extern struct resource *hyperv_mmio;
- 
- /*
-  * Negotiated version with the Host.
--- 
-1.9.1
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIISjjCCBicw
+ggUPoAMCAQICAw3vNzANBgkqhkiG9w0BAQUFADCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
+YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
+ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
+MB4XDTE1MDUwNTA5NDM0MVoXDTE2MDUwNTA5NTMzNlowQjEcMBoGA1UEAwwTZHdtdzJAaW5mcmFk
+ZWFkLm9yZzEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcN
+AQEBBQADggEPADCCAQoCggEBAMkbm9kPbx1j/X4RVyf/pPKSYwelcco69TvnQQbKM8m8xkWjXJI1
+jpJ1jMaGUZGFToINMSZi7lZawUozudWbXSKy1SikENSTJHffsdRAIlsp+hR8vWvjsKUry6sEdqPG
+doa5RY7+N4WRusWZDYW/RRWE6i9EL9qV86CVPYqw22UBOUw4/j/HVGCV6TSB8yE5iEwhk/hUuzRr
+FZm1MJMR7mCS7BCR8Lr5jFY61lWpBiXNXIxLZCvDc26KR5L5tYX43iUVO3fzES1GRVoYnxxk2tmz
+fcsZG5vK+Trc9L8OZJfkYrEHH3+Iw41MQ0w/djVtYr1+HYldx0QmYXAtnhIj+UMCAwEAAaOCAtkw
+ggLVMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcD
+BDAdBgNVHQ4EFgQUszC96C3w5/2+d+atSr0IpT26YI4wHwYDVR0jBBgwFoAUU3Ltkpzg2ssBXHx+
+ljVO8tS4UYIwHgYDVR0RBBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzCCAUwGA1UdIASCAUMwggE/
+MIIBOwYLKwYBBAGBtTcBAgMwggEqMC4GCCsGAQUFBwIBFiJodHRwOi8vd3d3LnN0YXJ0c3NsLmNv
+bS9wb2xpY3kucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1
+dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0
+aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVpcmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9s
+aWN5LCByZWxpYW5jZSBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNl
+IG9mIHRoZSByZWx5aW5nIHBhcnR5IG9ibGlnYXRpb25zLjA2BgNVHR8ELzAtMCugKaAnhiVodHRw
+Oi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsG
+AQUFBzABhi1odHRwOi8vb2NzcC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYI
+KwYBBQUHMAKGNmh0dHA6Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50
+LmNhLmNydDAjBgNVHRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEF
+BQADggEBAHMQmxHHodpS85X8HRyxhvfkys7r+taCNOaNU9cxQu/cZ/6k5nS2qGNMzZ6jb7ueY/V7
+7p+4DW/9ZWODDTf4Fz00mh5SSVc20Bz7t+hhxwHd62PZgENh5i76Qq2tw48U8AsYo5damHby1epf
+neZafLpUkLLO7AGBJIiRVTevdvyXQ0qnixOmKMWyvrhSNGuVIKVdeqLP+102Dwf+dpFyw+j1hz28
+jEEKpHa+NR1b2kXuSPi/rMGhexwlJOh4tK8KQ6Ryr0rIN//NSbOgbyYZrzc/ZUWX9V5OA84ChFb2
+vkFl0OcYrttp/rhDBLITwffPxSZeoBh9H7zYzkbCXKL3BUIwggYnMIIFD6ADAgECAgMN7zcwDQYJ
+KoZIhvcNAQEFBQAwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYD
+VQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENv
+bSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTAeFw0xNTA1MDUwOTQzNDFa
+Fw0xNjA1MDUwOTUzMzZaMEIxHDAaBgNVBAMME2R3bXcyQGluZnJhZGVhZC5vcmcxIjAgBgkqhkiG
+9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQDJG5vZD28dY/1+EVcn/6TykmMHpXHKOvU750EGyjPJvMZFo1ySNY6SdYzGhlGRhU6CDTEmYu5W
+WsFKM7nVm10istUopBDUkyR337HUQCJbKfoUfL1r47ClK8urBHajxnaGuUWO/jeFkbrFmQ2Fv0UV
+hOovRC/alfOglT2KsNtlATlMOP4/x1Rglek0gfMhOYhMIZP4VLs0axWZtTCTEe5gkuwQkfC6+YxW
+OtZVqQYlzVyMS2Qrw3NuikeS+bWF+N4lFTt38xEtRkVaGJ8cZNrZs33LGRubyvk63PS/DmSX5GKx
+Bx9/iMONTENMP3Y1bWK9fh2JXcdEJmFwLZ4SI/lDAgMBAAGjggLZMIIC1TAJBgNVHRMEAjAAMAsG
+A1UdDwQEAwIEsDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwHQYDVR0OBBYEFLMwvegt
+8Of9vnfmrUq9CKU9umCOMB8GA1UdIwQYMBaAFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB4GA1UdEQQX
+MBWBE2R3bXcyQGluZnJhZGVhZC5vcmcwggFMBgNVHSAEggFDMIIBPzCCATsGCysGAQQBgbU3AQID
+MIIBKjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjCB9wYI
+KwYBBQUHAgIwgeowJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwAwIBARqBvlRo
+aXMgY2VydGlmaWNhdGUgd2FzIGlzc3VlZCBhY2NvcmRpbmcgdG8gdGhlIENsYXNzIDEgVmFsaWRh
+dGlvbiByZXF1aXJlbWVudHMgb2YgdGhlIFN0YXJ0Q29tIENBIHBvbGljeSwgcmVsaWFuY2Ugb25s
+eSBmb3IgdGhlIGludGVuZGVkIHB1cnBvc2UgaW4gY29tcGxpYW5jZSBvZiB0aGUgcmVseWluZyBw
+YXJ0eSBvYmxpZ2F0aW9ucy4wNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5zdGFydHNzbC5j
+b20vY3J0dTEtY3JsLmNybDCBjgYIKwYBBQUHAQEEgYEwfzA5BggrBgEFBQcwAYYtaHR0cDovL29j
+c3Auc3RhcnRzc2wuY29tL3N1Yi9jbGFzczEvY2xpZW50L2NhMEIGCCsGAQUFBzAChjZodHRwOi8v
+YWlhLnN0YXJ0c3NsLmNvbS9jZXJ0cy9zdWIuY2xhc3MxLmNsaWVudC5jYS5jcnQwIwYDVR0SBBww
+GoYYaHR0cDovL3d3dy5zdGFydHNzbC5jb20vMA0GCSqGSIb3DQEBBQUAA4IBAQBzEJsRx6HaUvOV
+/B0csYb35MrO6/rWgjTmjVPXMULv3Gf+pOZ0tqhjTM2eo2+7nmP1e+6fuA1v/WVjgw03+Bc9NJoe
+UklXNtAc+7foYccB3etj2YBDYeYu+kKtrcOPFPALGKOXWph28tXqX53mWny6VJCyzuwBgSSIkVU3
+r3b8l0NKp4sTpijFsr64UjRrlSClXXqiz/tdNg8H/naRcsPo9Yc9vIxBCqR2vjUdW9pF7kj4v6zB
+oXscJSToeLSvCkOkcq9KyDf/zUmzoG8mGa83P2VFl/VeTgPOAoRW9r5BZdDnGK7baf64QwSyE8H3
+z8UmXqAYfR+82M5Gwlyi9wVCMIIGNDCCBBygAwIBAgIBHjANBgkqhkiG9w0BAQUFADB9MQswCQYD
+VQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwg
+Q2VydGlmaWNhdGUgU2lnbmluZzEpMCcGA1UEAxMgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRo
+b3JpdHkwHhcNMDcxMDI0MjEwMTU1WhcNMTcxMDI0MjEwMTU1WjCBjDELMAkGA1UEBhMCSUwxFjAU
+BgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRl
+IFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUg
+Q2xpZW50IENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxwmDzM4t2BqxKaQuE6uW
+vooyg4ymiEGWVUet1G8SD+rqvyNH4QrvnEIaFHxOhESip7vMz39ScLpNLbL1QpOlPW/tFIzNHS3q
+d2XRNYG5Sv9RcGE+T4qbLtsjjJbi6sL7Ls/f/X9ftTyhxvxWkf8KW37iKrueKsxw2HqolH7GM6FX
+5UfNAwAu4ZifkpmZzU1slBhyWwaQPEPPZRsWoTb7q8hmgv6Nv3Hg9rmA1/VPBIOQ6SKRkHXG0Hhm
+q1dOFoAFI411+a/9nWm5rcVjGcIWZ2v/43Yksq60jExipA4l5uv9/+Hm33mbgmCszdj/Dthf13tg
+Av2O83hLJ0exTqfrlwIDAQABo4IBrTCCAakwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AQYwHQYDVR0OBBYEFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB8GA1UdIwQYMBaAFE4L7xqkQFulF2mH
+MMo0aEPQQa7yMGYGCCsGAQUFBwEBBFowWDAnBggrBgEFBQcwAYYbaHR0cDovL29jc3Auc3RhcnRz
+c2wuY29tL2NhMC0GCCsGAQUFBzAChiFodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9zZnNjYS5jcnQw
+WwYDVR0fBFQwUjAnoCWgI4YhaHR0cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3JsMCegJaAj
+hiFodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9zZnNjYS5jcmwwgYAGA1UdIAR5MHcwdQYLKwYBBAGB
+tTcBAgEwZjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjA0
+BggrBgEFBQcCARYoaHR0cDovL3d3dy5zdGFydHNzbC5jb20vaW50ZXJtZWRpYXRlLnBkZjANBgkq
+hkiG9w0BAQUFAAOCAgEACoMIfXirLAZcuGOMXq4cuSN3TaFx2H2GvD5VSy/6rV55BYHbWNaPeQn3
+oBSU8KgQZn/Kck1JxbLpAxVCNtsxeW1R87ifhsYZ0qjdrA9anrW2MAWCtosmAOT4OxK9QPoSjCMx
+M3HbkZCDJgnlE8jMopH21BbyAYr7b5EfGRQJNtgWcvqSXwKHnTutR08+Kkn0KAkXCzeQNLeA5LlY
+UzFyM7kPAp8pIRMQ+seHunmyG642S2+y/qHEdMuGIwpfz3eDF1PdctL04qYK/zu+Qg1Bw0RwgigV
+Zs/0c5HP2/e9DBHh7eSwtzYlk4AUr6yxLlcwSjOfOmKEQ/Q8tzh0IFiNu9IPuTGAPBn4CPxD0+Ru
+8T2wg8/s43R/PT3kd1OEqOJUl7q+h+r6fpvU0Fzxd2tC8Ga6fDEPme+1Nbi+03pVjuZQKbGwKJ66
+gEn06WqaxVZC+J8hh/jR0k9mST1iAZPNYulcNJ8tKmVtjYsv0L1TSm2+NwON58tO+pIVzu3DWwSE
+XSf+qkDavQam+QtEOZxLBXI++aMUEapSn+k3Lxm48ZCYfAWLb/Xj7F5JQMbZvCexglAbYR0kIHqW
+5DnsYSdMD/IplJMojx0NBrxJ3fN9dvX2Y6BIXRsF1du4qESm4/3CKuyUV7p9DW3mPlHTGLvYxnyK
+Qy7VFBkoLINszBrOUeIxggNvMIIDawIBATCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
+YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
+ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
+AgMN7zcwCQYFKw4DAhoFAKCCAa8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMTUwNjEwMTQxMDQ0WjAjBgkqhkiG9w0BCQQxFgQU0hz36O5m177/8aL2dFHuHlHDjx8w
+gaUGCSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0
+ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMT
+L1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMN7zcwgacG
+CyqGSIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
+LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMv
+U3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAw3vNzANBgkq
+hkiG9w0BAQEFAASCAQBcNlV9uA4IOa6iVMW2pzXEHu24NG59dgXuzAssBKpd/mOXGSqDgiw5Zs/L
+E91DZrgD4D2qDU6s6LN/mgO+t1i60oDKK6Amuamhmu3wYBNt/hk168d9Q2Heo/gvb0Pbc9oQ3teB
+c318TO9hrj6cH6zdBAda0b5rekKM1FhquK+63L6BRmgno0oL0wyfsBaBu7AcgdBZaAyyB45XEtGl
+CdtslohL+Tw5Ksw131moFNTeGSDDAi1RkHf7gwUmgwM6DpZraWKmsy2k4eQ6dCu2buWPJ1uUAzj9
+SFjdhn1u/BvN5M7qIRqBJhSxjBzhq5+gj3vHScIXk1vrxTagx/Ym7BkRAAAAAAAA
+
+
+--=-7/8X5SEO8LCLrxEO4YHr--
 
