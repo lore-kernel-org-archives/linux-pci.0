@@ -1,49 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 3 Jun 2015 18:53:24 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Michael Ellerman <mpe@ellerman.id.au>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Paul Mackerras <paulus@samba.org>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Tejun Heo <tj@kernel.org>, Joe Perches <joe@perches.com>,
-	linux-ia64@vger.kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	linux-pci@vger.kernel.org, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [v3,33/36] genirq: Use helper function to access
- irq_data->msi_desc
-In-Reply-To: <20150602034507.1BBCB1412F1@ozlabs.org>
-Message-ID: <alpine.DEB.2.11.1506031850340.31424@nanos>
-References: <20150602034507.1BBCB1412F1@ozlabs.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailuogwhop.emc.com ([168.159.213.141]:36023 "EHLO
+	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964926AbbFJOJD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 10:09:03 -0400
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v4 04/19] NTB: Read peer info from local SPAD in transport
+Date: Wed, 10 Jun 2015 05:08:09 -0400
+Message-Id: <a1f3452306a9a816974d944a091ae374466c78b6.1433925092.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
+References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
+References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2 Jun 2015, Michael Ellerman wrote:
-> Though I would point out we already have 16 irq_foo_get_bar() accessors?!
+From: Dave Jiang <dave.jiang@intel.com>
 
-Say thanks to the people who mindlessly fiddled in the core managed
-fields of irqdesc and irqdata. The hard to track down wreckage they
-caused me to enforce accessors.
+The transport was writing and then reading the peer scratch pad,
+essentially reading what it just wrote instead of exchanging any
+information with the peer.  The transport expects the peer values to be
+the same as the local values, so this issue was not obvious.
 
-The new accessors are to help migrating members of irq_data to a new
-data structure without breaking the world and some more.
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+---
+ drivers/ntb/ntb_transport.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Thanks,
-
-	tglx
-
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 9faf1c6029af..d9538e911df6 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -761,17 +761,17 @@ static void ntb_transport_link_work(struct work_struct *work)
+ 	ntb_peer_spad_write(ndev, VERSION, NTB_TRANSPORT_VERSION);
+ 
+ 	/* Query the remote side for its info */
+-	val = ntb_peer_spad_read(ndev, VERSION);
++	val = ntb_spad_read(ndev, VERSION);
+ 	dev_dbg(&pdev->dev, "Remote version = %d\n", val);
+ 	if (val != NTB_TRANSPORT_VERSION)
+ 		goto out;
+ 
+-	val = ntb_peer_spad_read(ndev, NUM_QPS);
++	val = ntb_spad_read(ndev, NUM_QPS);
+ 	dev_dbg(&pdev->dev, "Remote max number of qps = %d\n", val);
+ 	if (val != nt->qp_count)
+ 		goto out;
+ 
+-	val = ntb_peer_spad_read(ndev, NUM_MWS);
++	val = ntb_spad_read(ndev, NUM_MWS);
+ 	dev_dbg(&pdev->dev, "Remote number of mws = %d\n", val);
+ 	if (val != nt->mw_count)
+ 		goto out;
+@@ -779,10 +779,10 @@ static void ntb_transport_link_work(struct work_struct *work)
+ 	for (i = 0; i < nt->mw_count; i++) {
+ 		u64 val64;
+ 
+-		val = ntb_peer_spad_read(ndev, MW0_SZ_HIGH + (i * 2));
++		val = ntb_spad_read(ndev, MW0_SZ_HIGH + (i * 2));
+ 		val64 = (u64)val << 32;
+ 
+-		val = ntb_peer_spad_read(ndev, MW0_SZ_LOW + (i * 2));
++		val = ntb_spad_read(ndev, MW0_SZ_LOW + (i * 2));
+ 		val64 |= val;
+ 
+ 		dev_dbg(&pdev->dev, "Remote MW%d size = %#llx\n", i, val64);
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
