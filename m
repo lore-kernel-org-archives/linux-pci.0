@@ -1,60 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:59642 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752222AbbF1Owx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 28 Jun 2015 10:52:53 -0400
-Message-ID: <55900A20.5070407@users.sourceforge.net>
-Date: Sun, 28 Jun 2015 16:52:16 +0200
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com
-CC: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] PCI-iproc: Delete unnecessary checks before two function
- calls
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v4 06/19] NTB: Check the device ID to set errata flags
+Date: Wed, 10 Jun 2015 05:08:11 -0400
+Message-Id: <a89e1223bffe954995c932ae36d3ff76c5fc6297.1433925092.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
+References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
+References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 28 Jun 2015 16:42:04 +0200
+From: Dave Jiang <dave.jiang@intel.com>
 
-The functions phy_exit() and phy_power_off() test whether their argument
-is NULL and then return immediately.
-Thus the test around the calls is not needed.
+Set errata flags for the specific device IDs to which they apply,
+instead of the whole Xeon hardware class.
 
-This issue was detected by using the Coccinelle software.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- drivers/pci/host/pcie-iproc.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/ntb/hw/intel/ntb_hw_intel.c | 49 +++++++++++++++++++++++++++++++++----
+ 1 file changed, 44 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index d77481e..f875821 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -239,12 +239,9 @@ err_rm_root_bus:
- 	pci_remove_root_bus(bus);
+diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
+index 8ad4a6343d96..ff397fae9cf4 100644
+--- a/drivers/ntb/hw/intel/ntb_hw_intel.c
++++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
+@@ -1719,29 +1719,68 @@ static int snb_init_dev(struct intel_ntb_dev *ndev)
+ 	u8 ppd;
+ 	int rc, mem;
  
- err_power_off_phy:
--	if (pcie->phy)
--		phy_power_off(pcie->phy);
-+	phy_power_off(pcie->phy);
- err_exit_phy:
--	if (pcie->phy)
--		phy_exit(pcie->phy);
++	pdev = ndev_pdev(ndev);
++
++	switch (pdev->device) {
+ 	/* There is a Xeon hardware errata related to writes to SDOORBELL or
+ 	 * B2BDOORBELL in conjunction with inbound access to NTB MMIO Space,
+ 	 * which may hang the system.  To workaround this use the second memory
+ 	 * window to access the interrupt and scratch pad registers on the
+ 	 * remote system.
+ 	 */
+-	ndev->hwerr_flags |= NTB_HWERR_SDOORBELL_LOCKUP;
++	case PCI_DEVICE_ID_INTEL_NTB_SS_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
++		ndev->hwerr_flags |= NTB_HWERR_SDOORBELL_LOCKUP;
++		break;
++	}
+ 
++	switch (pdev->device) {
+ 	/* There is a hardware errata related to accessing any register in
+ 	 * SB01BASE in the presence of bidirectional traffic crossing the NTB.
+ 	 */
+-	ndev->hwerr_flags |= NTB_HWERR_SB01BASE_LOCKUP;
++	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
++		ndev->hwerr_flags |= NTB_HWERR_SB01BASE_LOCKUP;
++		break;
++	}
+ 
++	switch (pdev->device) {
+ 	/* HW Errata on bit 14 of b2bdoorbell register.  Writes will not be
+ 	 * mirrored to the remote system.  Shrink the number of bits by one,
+ 	 * since bit 14 is the last bit.
+ 	 */
+-	ndev->hwerr_flags |= NTB_HWERR_B2BDOORBELL_BIT14;
++	case PCI_DEVICE_ID_INTEL_NTB_SS_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_JSF:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_SNB:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
++	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
++	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
++		ndev->hwerr_flags |= NTB_HWERR_B2BDOORBELL_BIT14;
++		break;
++	}
+ 
+ 	ndev->reg = &snb_reg;
+ 
+-	pdev = ndev_pdev(ndev);
 -
-+	phy_exit(pcie->phy);
- 	return ret;
- }
- EXPORT_SYMBOL(iproc_pcie_setup);
+ 	rc = pci_read_config_byte(pdev, SNB_PPD_OFFSET, &ppd);
+ 	if (rc)
+ 		return -EIO;
 -- 
-2.4.4
+2.4.0.rc0.43.gcf8a8c6
 
