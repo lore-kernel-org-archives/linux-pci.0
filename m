@@ -1,103 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:42051 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457AbbFDGnk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:40 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:39 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 23/42] powerpc/powernv: Cleanup on pnv_pci_ioda2_release_dma_pe()
-Date: Thu,  4 Jun 2015 16:41:52 +1000
-Message-Id: <1433400131-18429-24-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: [Patch v3 4/4] PCI, MSI: Free legacy PCI IRQ when enabling MSI/MSI-X
+Date: Wed, 10 Jun 2015 16:55:01 +0800
+Message-Id: <1433926501-22956-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch applies cleanup on pnv_pci_ioda2_release_dma_pe():
+Once PCI MSI/MSI-X is enabled by the device driver, PCI device won't
+make use of legacy PCI IRQ until PCI MSI/MSI-X is disabled again.
+This patch enhances the PCI MSI core to call pcibios_free_irq() when
+enabling MSI/MSI-X and to call pcibios_alloc_irq() when disabling
+MSI/MSI-X. So legacy PCI IRQ will released when enabling MSI/MSI-X
+and reallocated when disabling MSI/MSI-X if pcibios_alloc_irq() and
+pcibios_free_irq() are implemented by arch specific PCI code.
 
-  * Rename it to pnv_pci_ioda2_release_pe_dma() to match the
-    function names used to release resources for one PE in the
-    subsequent patches.
-  * Remove the parameter of PCI device, which is used to figure
-    out device node. VFs don't have associated device nodes in
-    SRIOV case. For other cases, the device node can be figured
-    out from the PCI bus or device the PE was allocated for.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-v5:
-  * Newly introduced
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 26 +++++++++++++++++++-------
- 1 file changed, 19 insertions(+), 7 deletions(-)
+ drivers/pci/msi.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 3d5aec8d..2e31472 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -197,11 +197,11 @@ static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable)
- 		pe->tce_bypass_enabled = enable;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index c3e7dfcf9ff5..47cf72c669f0 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -686,6 +686,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	msi_set_enable(dev, 1);
+ 	dev->msi_enabled = 1;
+ 
++	pcibios_free_irq(dev);
+ 	dev->irq = entry->irq;
+ 	return 0;
+ }
+@@ -813,9 +814,10 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	/* Set MSI-X enabled bits and unmask the function */
+ 	pci_intx_for_msi(dev, 0);
+ 	dev->msix_enabled = 1;
+-
+ 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+ 
++	pcibios_free_irq(dev);
++
+ 	return 0;
+ 
+ out_avail:
+@@ -930,6 +932,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+ 
+ 	/* Restore dev->irq to its default pin-assertion irq */
+ 	dev->irq = desc->msi_attrib.default_irq;
++	pcibios_alloc_irq(dev);
  }
  
--static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev,
--					 struct pnv_ioda_pe *pe)
-+static void pnv_pci_ioda2_release_pe_dma(struct pnv_ioda_pe *pe)
- {
--	struct iommu_table    *tbl;
--	int64_t               rc;
-+	struct iommu_table *tbl;
-+	struct device_node *dn;
-+	int64_t rc;
- 
- 	tbl = pe->table_group.tables[0];
- 	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
-@@ -213,8 +213,20 @@ static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev,
- 		iommu_group_put(pe->table_group.group);
- 		BUG_ON(pe->table_group.group);
- 	}
-+
-+	if (pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL))
-+		dn = pci_bus_to_OF_node(pe->pbus);
-+	else if (pe->flags & PNV_IODA_PE_DEV)
-+		dn = pci_device_to_OF_node(pe->pdev);
-+#ifdef CONFIG_PCI_IOV
-+	else if (pe->flags & PNV_IODA_PE_VF)
-+		dn = pci_device_to_OF_node(pe->parent_dev);
-+#endif
-+	else
-+		dn = NULL;
-+
- 	pnv_pci_ioda2_table_free_pages(tbl);
--	iommu_free_table(tbl, of_node_full_name(dev->dev.of_node));
-+	iommu_free_table(tbl, of_node_full_name(dn));
+ void pci_disable_msi(struct pci_dev *dev)
+@@ -1030,6 +1033,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+ 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ 	pci_intx_for_msi(dev, 1);
+ 	dev->msix_enabled = 0;
++	pcibios_alloc_irq(dev);
  }
  
- static int pnv_ioda_set_one_peltv(struct pnv_phb *phb,
-@@ -1495,14 +1507,14 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 		if ((pe->flags & PNV_IODA_PE_MASTER) &&
- 		    (pe->flags & PNV_IODA_PE_VF)) {
- 			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
--				pnv_pci_ioda2_release_dma_pe(pdev, s);
-+				pnv_pci_ioda2_release_pe_dma(s);
- 				list_del(&s->list);
- 				pnv_ioda_deconfigure_pe(phb, s);
- 				pnv_ioda_free_pe(phb, s->pe_number);
- 			}
- 		}
- 
--		pnv_pci_ioda2_release_dma_pe(pdev, pe);
-+		pnv_pci_ioda2_release_pe_dma(pe);
- 
- 		/* Remove from list */
- 		mutex_lock(&phb->ioda.pe_list_mutex);
+ void pci_disable_msix(struct pci_dev *dev)
 -- 
-2.1.0
+1.7.10.4
 
