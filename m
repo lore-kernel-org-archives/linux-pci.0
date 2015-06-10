@@ -1,82 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:37678 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753037AbbFCIem (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Jun 2015 04:34:42 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <fabrice.gasnier@st.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v2 0/4] PCI: hisi: Add PCIe host support for Hisilicon Soc Hip05
-Date: Wed, 3 Jun 2015 16:35:38 +0800
-Message-ID: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5577A557.4030408@linaro.org>
+Date: Wed, 10 Jun 2015 10:47:51 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+To: Jagan Teki <jteki@openedev.com>
+CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-acpi@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	linaro-acpi@lists.linaro.org, Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 00/11] ARM64 PCI hostbridge init based on ACPI
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>	<1951882.p8DdrcurkC@vostro.rjw.lan>	<556540C7.6080301@linaro.org> <CAD6G_RQnm-y9eQdYGV89zzY-x90ESo6-APPVpY7eiJ=AJbg2rg@mail.gmail.com>
+In-Reply-To: <CAD6G_RQnm-y9eQdYGV89zzY-x90ESo6-APPVpY7eiJ=AJbg2rg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset adds PCIe host support for Hisilicon Soc Hip05. The PCIe hosts
-use PCIe IP core from Synopsys, So this driver is base on designware PCIe driver.
+Hi Jagan,
 
-Hip05 is an ARMv8 architecture Soc. It should be able to use ARM64 PCIe API in
-designeware PCIe driver.
+On 06/08/2015 08:05 PM, Jagan Teki wrote:
+> On 27 May 2015 at 09:27, Hanjun Guo <hanjun.guo@linaro.org> wrote:
+>> On 2015年05月27日 08:30, Rafael J. Wysocki wrote:
+>>>
+>>> On Tuesday, May 26, 2015 08:49:13 PM Hanjun Guo wrote:
+>>>>
+>>>> This patch set is introducing ARM64 PCI hostbridge init based on ACPI,
+>>>> which based on Jiang Liu's patch set "Consolidate ACPI PCI root common
+>>>> code into ACPI core":
+>>>>
+>>>> https://lkml.org/lkml/2015/5/14/98
+>>>
+>>>
+>>> I'll be regarding this patchset as an RFC until the one from Jiang Liu
+>>> goes in.
+>>
+>>
+>> Yes, please, Jiang Liu's patch set should go in first.
+>
+> Apart from picking all, I have skipped x86, ia64 changes from above
+> and Jiang Liu's
+> series with disabling MSI, but I'm observing my arm64 board isn't
+> booted from uefi.
 
-This patchset is based on v4.1-rc1.
+Do you boot with ACPI? There is no support for ACPI PCI for ARM64
+in mainline, which kernel do you use?
 
-Change from RFC v1:
-1. Add 1/4 patch by Arnd which removes align_resource callback in ARM
-   pcibios_align_resource.
-2. Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
-3. Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
-   spear13xx.
-4. Remove unnecessary parentheses of some macros in pcie-hisi.
-5. Use macro to replace some magic values.
-6. Merge two loops together and add some comments about it in context_config
-   function in pcie-hisi.
-7. Modify some value of items in pcie node example in binding document. 
+>
+> I'm suspecting pci-acpi changes were generic to specific pcie root
+> bridge controller,
+> but do I need to do any changes wrt pcie bridge? let me know if I miss
+> anything here.
 
-Change from RFC:
-1. delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
-   merge related operations into dw_pcie_host_init.
+ARM64 need special handling for IO port resources based on Jiang's patch
+set, we still working on it.
 
-Link of RFC v1:
-- http://www.spinics.net/lists/linux-pci/msg41305.html
-Link of RFC:
-- http://www.spinics.net/lists/linux-pci/msg40434.html
-
-Zhou Wang (4):
-  ARM/PCI: remove align_resource callback in pcibios_align_resource
-  PCI: designware: Add ARM64 support
-  PCI: hisi: Add PCIe host support for Hisilicon Soc Hip05
-  Documentation: DT: Add Hisilicon PCIe host binding
-
- .../devicetree/bindings/pci/hisilicon-pcie.txt     |  46 ++++
- arch/arm/kernel/bios32.c                           |   4 -
- drivers/pci/host/Kconfig                           |   5 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-dra7xx.c                      |   1 +
- drivers/pci/host/pci-exynos.c                      |   2 +-
- drivers/pci/host/pci-imx6.c                        |   2 +-
- drivers/pci/host/pci-keystone.c                    |   2 +-
- drivers/pci/host/pci-layerscape.c                  |   2 +-
- drivers/pci/host/pci-mvebu.c                       |  47 ++--
- drivers/pci/host/pcie-designware.c                 | 128 ++++------
- drivers/pci/host/pcie-hisi.c                       | 258 +++++++++++++++++++++
- drivers/pci/host/pcie-spear13xx.c                  |   2 +-
- drivers/pci/setup-res.c                            |  27 ++-
- include/linux/pci.h                                |   3 +
- 15 files changed, 421 insertions(+), 109 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- create mode 100644 drivers/pci/host/pcie-hisi.c
-
--- 
-1.9.1
-
+Thanks
+Hanjun
