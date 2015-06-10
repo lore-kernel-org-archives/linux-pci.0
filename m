@@ -1,80 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Anton Blanchard <anton@samba.org>,
-	Mahesh Salgaonkar <mahesh@linux.vnet.ibm.com>,
-	Christoph Lameter <cl@linux.com>, Tejun Heo <tj@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Subject: [Patch v3 24/36] powerpc, irq: Use access helper irq_data_get_affinity_mask()
-Date: Mon,  1 Jun 2015 16:05:33 +0800
-Message-Id: <1433145945-789-25-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH v4 17/19] NTB: Default to CPU memcpy for performance
+Date: Wed, 10 Jun 2015 05:08:22 -0400
+Message-Id: <a63c3518a82e193b06cfc6e3c51b26e8d3ba7840.1433925092.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
+References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
+References: <cover.1433925092.git.Allen.Hubbe@emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use access helper irq_data_get_affinity_mask() to hide implementation
-details of struct irq_desc.
+From: Dave Jiang <dave.jiang@intel.com>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Disable DMA usage by default, since the CPU provides much better
+performance with write combining.  Provide a module parameter to enable
+DMA usage when offloading the memcpy is preferred.
+
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
 ---
- arch/powerpc/kernel/irq.c           |    2 +-
- arch/powerpc/sysdev/xics/ics-opal.c |    2 +-
- arch/powerpc/sysdev/xics/ics-rtas.c |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/ntb/ntb_transport.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/arch/powerpc/kernel/irq.c b/arch/powerpc/kernel/irq.c
-index 45096033d37b..290559df1e8b 100644
---- a/arch/powerpc/kernel/irq.c
-+++ b/arch/powerpc/kernel/irq.c
-@@ -441,7 +441,7 @@ void migrate_irqs(void)
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index 7a765d3230d8..e07b056af3be 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -88,6 +88,10 @@ static unsigned int copy_bytes = 1024;
+ module_param(copy_bytes, uint, 0644);
+ MODULE_PARM_DESC(copy_bytes, "Threshold under which NTB will use the CPU to copy instead of DMA");
  
- 		chip = irq_data_get_irq_chip(data);
++static bool use_dma;
++module_param(use_dma, bool, 0644);
++MODULE_PARM_DESC(use_dma, "Use DMA engine to perform large data copy");
++
+ static struct dentry *nt_debugfs_dir;
  
--		cpumask_and(mask, data->affinity, map);
-+		cpumask_and(mask, irq_data_get_affinity_mask(data), map);
- 		if (cpumask_any(mask) >= nr_cpu_ids) {
- 			pr_warn("Breaking affinity for irq %i\n", irq);
- 			cpumask_copy(mask, map);
-diff --git a/arch/powerpc/sysdev/xics/ics-opal.c b/arch/powerpc/sysdev/xics/ics-opal.c
-index 68c7e5cc98e0..3996393c254d 100644
---- a/arch/powerpc/sysdev/xics/ics-opal.c
-+++ b/arch/powerpc/sysdev/xics/ics-opal.c
-@@ -54,7 +54,7 @@ static void ics_opal_unmask_irq(struct irq_data *d)
- 	if (hw_irq == XICS_IPI || hw_irq == XICS_IRQ_SPURIOUS)
- 		return;
+ struct ntb_queue_entry {
+@@ -1589,10 +1593,15 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
+ 	dma_cap_zero(dma_mask);
+ 	dma_cap_set(DMA_MEMCPY, dma_mask);
  
--	server = xics_get_irq_server(d->irq, d->affinity, 0);
-+	server = xics_get_irq_server(d->irq, irq_data_get_affinity_mask(d), 0);
- 	server = ics_opal_mangle_server(server);
+-	qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
+-					   (void *)(unsigned long)node);
+-	if (!qp->dma_chan)
+-		dev_info(&pdev->dev, "Unable to allocate DMA channel, using CPU instead\n");
++	if (use_dma) {
++		qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
++						   (void *)(unsigned long)node);
++		if (!qp->dma_chan)
++			dev_info(&pdev->dev, "Unable to allocate DMA channel\n");
++	} else {
++		qp->dma_chan = NULL;
++	}
++	dev_dbg(&pdev->dev, "Using %s memcpy\n", qp->dma_chan ? "DMA" : "CPU");
  
- 	rc = opal_set_xive(hw_irq, server, DEFAULT_PRIORITY);
-diff --git a/arch/powerpc/sysdev/xics/ics-rtas.c b/arch/powerpc/sysdev/xics/ics-rtas.c
-index 0af97deb83f3..e2665a9dfc0f 100644
---- a/arch/powerpc/sysdev/xics/ics-rtas.c
-+++ b/arch/powerpc/sysdev/xics/ics-rtas.c
-@@ -47,7 +47,7 @@ static void ics_rtas_unmask_irq(struct irq_data *d)
- 	if (hw_irq == XICS_IPI || hw_irq == XICS_IRQ_SPURIOUS)
- 		return;
- 
--	server = xics_get_irq_server(d->irq, d->affinity, 0);
-+	server = xics_get_irq_server(d->irq, irq_data_get_affinity_mask(d), 0);
- 
- 	call_status = rtas_call(ibm_set_xive, 3, 1, NULL, hw_irq, server,
- 				DEFAULT_PRIORITY);
+ 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
+ 		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
 -- 
-1.7.10.4
+2.4.0.rc0.43.gcf8a8c6
 
