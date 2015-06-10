@@ -1,50 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v3 06/18] NTB: Differentiate transport link down messages
-Date: Tue,  9 Jun 2015 05:44:33 -0400
-Message-Id: <2fdb7781ae0734308e64e77c50de0dbbdb5cff4d.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:36744 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932309AbbFJElX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 00:41:23 -0400
+Received: by pabqy3 with SMTP id qy3so26608470pab.3
+        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2015 21:41:22 -0700 (PDT)
+Message-ID: <5577BFE9.2040601@ozlabs.ru>
+Date: Wed, 10 Jun 2015 14:41:13 +1000
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+MIME-Version: 1.0
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+CC: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, bhelgaas@google.com,
+	panto@antoniou-consulting.com, robherring2@gmail.com,
+	grant.likely@linaro.org
+Subject: Re: [PATCH v5 11/42] powerpc/powernv: Increase PE# capacity
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com> <1433400131-18429-12-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1433400131-18429-12-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The same message "qp %d: Link Down\n" was printed at two locations in
-ntb_transport.  Change the messages so they are distinct.
+On 06/04/2015 04:41 PM, Gavin Shan wrote:
+> Each PHB maintains an array helping to translate RID (Request
+> ID) to PE# with the assumption that PE# takes 8 bits, indicating
+> that we can't have more than 256 PEs. However, pci_dn->pe_number
+> already had 4-bytes for the PE#.
+>
+> The patch extends the PE# capacity so that each of them will be
+> 4-bytes long. Then we can use IODA_INVALID_PE to check one entry
+> in phb->pe_rmap[] is valid or not.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+> v5:
+>    * Split from [PATCH v5 v4 06/21]
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 5 ++++-
+>   arch/powerpc/platforms/powernv/pci.h      | 5 ++---
+>   2 files changed, 6 insertions(+), 4 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 2087c5c..d8b0ef5 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -840,7 +840,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>
+>   	/* Clear the reverse map */
+>   	for (rid = pe->rid; rid < rid_end; rid++)
+> -		phb->ioda.pe_rmap[rid] = 0;
+> +		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
+>
+>   	/* Release from all parents PELT-V */
+>   	while (parent) {
+> @@ -3303,6 +3303,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   	if (prop32)
+>   		phb->ioda.reserved_pe = be32_to_cpup(prop32);
+>
+> +	/* Invalidate RID to PE# mapping */
+> +	memset(phb->ioda.pe_rmap, 0xff, sizeof(phb->ioda.pe_rmap));
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- drivers/ntb/ntb_transport.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index d9538e911df6..8d9b59f7fa07 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -658,7 +658,7 @@ static void ntb_qp_link_cleanup(struct ntb_transport_qp *qp)
- 		return;
- 	}
- 
--	dev_info(&pdev->dev, "qp %d: Link Down\n", qp->qp_num);
-+	dev_info(&pdev->dev, "qp %d: Link Cleanup\n", qp->qp_num);
- 	qp->link_is_up = false;
- 
- 	if (qp->event_handler)
-@@ -1470,7 +1470,7 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
- 		return;
- 
- 	qp->link_is_up = false;
--	dev_info(&pdev->dev, "qp %d: Link Down\n", qp->qp_num);
-+	dev_info(&pdev->dev, "qp %d: Send Link Down\n", qp->qp_num);
- 
- 	for (i = 0; i < NTB_LINK_DOWN_TIMEOUT; i++) {
- 		entry = ntb_list_rm(&qp->ntb_tx_free_q_lock, &qp->tx_free_q);
+Above you assign IODA_INVALID_PE in a loop and here you just do 0xff for 
+the entire array. Have a loop here too and assign IODA_INVALID_PE to every 
+entry:
+for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
+	phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
+
+
+
+> +
+>   	/* Parse 64-bit MMIO range */
+>   	pnv_ioda_parse_m64_window(phb);
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index 94ef1df..590f778 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -175,11 +175,10 @@ struct pnv_phb {
+>   			struct list_head	pe_list;
+>   			struct mutex            pe_list_mutex;
+>
+> -			/* Reverse map of PEs, will have to extend if
+> -			 * we are to support more than 256 PEs, indexed
+> +			/* Reverse map of PEs, indexed by
+>   			 * bus { bus, devfn }
+>   			 */
+> -			unsigned char		pe_rmap[0x10000];
+> +			int			pe_rmap[0x10000];
+
+
+Most time most of the array will be empty and it is 256K per PHB... I 
+understand we have quite a lot of RAM but still.
+
+
+>
+>   			/* Number of 32-bit DMA segments */
+>   			unsigned long		dma32_segcount;
+>
+
+
 -- 
-2.4.0.rc0.43.gcf8a8c6
-
+Alexey
