@@ -1,73 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: [Patch v3 4/4] PCI, MSI: Free legacy PCI IRQ when enabling MSI/MSI-X
-Date: Wed, 10 Jun 2015 16:55:01 +0800
-Message-Id: <1433926501-22956-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:60546 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933077AbbFJG4y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 02:56:54 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 10 Jun 2015 16:56:51 +1000
+Date: Wed, 10 Jun 2015 16:55:51 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Grant Likely <grant.likely@linaro.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <robherring2@gmail.com>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v4 19/21] drivers/of: Support adding sub-tree
+Message-ID: <20150610065551.GE10935@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <CAL_JsqLrBSB4y_0j+i=kXbDA08HO23JuYjJGHR9nhsPnMC_Zyg@mail.gmail.com>
+ <1430521038.7979.70.camel@kernel.crashing.org>
+ <A6DF99C6-7059-4670-86D0-6926861F0164@antoniou-consulting.com>
+ <1430774063.7979.139.camel@kernel.crashing.org>
+ <1431560124.20218.91.camel@kernel.crashing.org>
+ <CAL_JsqKqTa5eg3eOqx3bkeNdO_920WwDiRbQaxwWLEWpCypFmA@mail.gmail.com>
+ <1431564871.4160.8.camel@kernel.crashing.org>
+ <20150607075422.6ECE9C40A12@trevor.secretlab.ca>
+ <1433797073.4526.163.camel@kernel.crashing.org>
+ <CACxGe6uMijVvU_yK_Yk3GSABHjqxYAwY76WcOJcxAhoPcW02sQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACxGe6uMijVvU_yK_Yk3GSABHjqxYAwY76WcOJcxAhoPcW02sQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Once PCI MSI/MSI-X is enabled by the device driver, PCI device won't
-make use of legacy PCI IRQ until PCI MSI/MSI-X is disabled again.
-This patch enhances the PCI MSI core to call pcibios_free_irq() when
-enabling MSI/MSI-X and to call pcibios_alloc_irq() when disabling
-MSI/MSI-X. So legacy PCI IRQ will released when enabling MSI/MSI-X
-and reallocated when disabling MSI/MSI-X if pcibios_alloc_irq() and
-pcibios_free_irq() are implemented by arch specific PCI code.
+On Mon, Jun 08, 2015 at 10:34:13PM +0100, Grant Likely wrote:
+>On Mon, Jun 8, 2015 at 9:57 PM, Benjamin Herrenschmidt
+><benh@kernel.crashing.org> wrote:
+>> On Sun, 2015-06-07 at 08:54 +0100, Grant Likely wrote:
+>>> > IE. conceptually, what overlays do today is quite rooted around the idea
+>>> > of having a fixed "base" DT and some pre-compiled DTB overlays that
+>>> > get added/removed. The design completely ignore the idea of a FW that
+>>> > maintains a "live" tree which we want to keep in sync, which is what we
+>>> > want to do here, or what we could do with a "live" open firmware
+>>> > implementation.
+>>>
+>>> Right, which is exactly the reason for the changeset/overlay split.
+>>> Overlays assume a fixed base, and that overlays are kind of like plug-in
+>>> modules. changeset makes no such assumption.
+>>
+>> So you suggest we create a function that takes an fdt and an "anchor" as input,
+>> and expands that FDT below that anchor, but does so by using the changeset API
+>> under the hood ?
+>>
+>> Even that looks somewhat tricky (turn that bit of FDT into a pile of changeset
+>> actions), however, I can see how we could create a new function inside changeset
+>> to attach a subtree.
+>>
+>> Ie. of_attach_subtree() (which could have it's own reconfig action but we
+>> don't care that much yet), which takes an expanded subtree and an anchor, and
+>> calls of_attach_node() in effect for all nodes in there.
+>>
+>> We could then have a two pass mechanism in our hotplug code:
+>>
+>>  - Expand the bit of fdt into a separate tree
+>>  - Use of_attach_subtree to "add" that subtree to the main tree
+>>
+>> What do you think ?
+>
+>I like that.
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Thanks, Grant and Ben. Currently, I'm collecting more feedbacks for v5. So
+it's something I will address in v6.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c3e7dfcf9ff5..47cf72c669f0 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -686,6 +686,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
- 	msi_set_enable(dev, 1);
- 	dev->msi_enabled = 1;
- 
-+	pcibios_free_irq(dev);
- 	dev->irq = entry->irq;
- 	return 0;
- }
-@@ -813,9 +814,10 @@ static int msix_capability_init(struct pci_dev *dev,
- 	/* Set MSI-X enabled bits and unmask the function */
- 	pci_intx_for_msi(dev, 0);
- 	dev->msix_enabled = 1;
--
- 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
- 
-+	pcibios_free_irq(dev);
-+
- 	return 0;
- 
- out_avail:
-@@ -930,6 +932,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
- 
- 	/* Restore dev->irq to its default pin-assertion irq */
- 	dev->irq = desc->msi_attrib.default_irq;
-+	pcibios_alloc_irq(dev);
- }
- 
- void pci_disable_msi(struct pci_dev *dev)
-@@ -1030,6 +1033,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
- 	msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
- 	pci_intx_for_msi(dev, 1);
- 	dev->msix_enabled = 0;
-+	pcibios_alloc_irq(dev);
- }
- 
- void pci_disable_msix(struct pci_dev *dev)
--- 
-1.7.10.4
+Thanks,
+Gavin
+
+>g.
+>
 
