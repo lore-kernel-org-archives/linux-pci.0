@@ -1,125 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:30357 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751673AbbFCDoy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 23:44:54 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Feng Wu <feng.wu@intel.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Brian Gerst <brgerst@gmail.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Juergen Gross <jgross@suse.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, xen-devel@lists.xenproject.org
-Subject: [Patch v3 27/36] x86, irq: Use access helper irq_data_get_affinity_mask()
-Date: Wed,  3 Jun 2015 11:46:22 +0800
-Message-Id: <1433303201-27625-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <alpine.DEB.2.11.1506021714170.20347@nanos>
-References: <alpine.DEB.2.11.1506021714170.20347@nanos>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:56120 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932406AbbFJGW1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 02:22:27 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 10 Jun 2015 16:22:25 +1000
+Date: Wed, 10 Jun 2015 16:20:08 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	bhelgaas@google.com, panto@antoniou-consulting.com,
+	robherring2@gmail.com, grant.likely@linaro.org,
+	Daniel Axtens <dja@axtens.net>
+Subject: Re: [PATCH v5 12/42] powerpc/pci: Cleanup on pci_controller_ops
+Message-ID: <20150610062008.GA9875@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1433400131-18429-13-git-send-email-gwshan@linux.vnet.ibm.com>
+ <5577C08D.1050900@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5577C08D.1050900@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use access helper irq_data_get_affinity_mask() to hide implementation
-details of struct irq_desc.
+On Wed, Jun 10, 2015 at 02:43:57PM +1000, Alexey Kardashevskiy wrote:
+>On 06/04/2015 04:41 PM, Gavin Shan wrote:
+>>Each PHB maintains one instance of "struct pci_controller_ops",
+>>which includes various callbacks called by PCI subsystem. In the
+>>definition of this struct, some callbacks have explicit names for
+>>its arguments, but the left don't have.
+>>
+>>The patch removes all explicit names of the arguments to the
+>>callbacks in "struct pci_controller_ops" to keep the code look
+>>consistent.
+>
+>imho it is a bad idea. Self-documeted code gets less self-documented - how do
+>I know what "unsigned long" parameters are for without grepping?
+>
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
-Hi Thomas,
-	This version changes the patch to correctly support bisecting.
-Thanks!
-Gerry
----
- arch/x86/kernel/apic/io_apic.c   |    2 +-
- arch/x86/kernel/apic/vector.c    |    3 ++-
- arch/x86/kernel/irq.c            |    5 +++--
- drivers/xen/events/events_base.c |    4 ++--
- 4 files changed, 8 insertions(+), 6 deletions(-)
+Ok. I'll change the function definations to always have explicit
+argument names.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 845dc0df2002..09921de4210f 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2541,7 +2541,7 @@ void __init setup_ioapic_dest(void)
- 		 * Honour affinities which have been set in early boot
- 		 */
- 		if (!irqd_can_balance(idata) || irqd_affinity_was_set(idata))
--			mask = idata->affinity;
-+			mask = irq_data_get_affinity_mask(idata);
- 		else
- 			mask = apic->target_cpus();
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 9b62f690b0ff..7ad911ea4f56 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -496,7 +496,8 @@ static int apic_set_affinity(struct irq_data *irq_data,
- 	if (err) {
- 		struct irq_data *top = irq_get_irq_data(irq);
- 
--		if (assign_irq_vector(irq, data, top->affinity))
-+		if (assign_irq_vector(irq, data,
-+				      irq_data_get_affinity_mask(top)))
- 			pr_err("Failed to recover vector for irq %d\n", irq);
- 		return err;
- 	}
-diff --git a/arch/x86/kernel/irq.c b/arch/x86/kernel/irq.c
-index 7e10c8b4b318..37685e37550c 100644
---- a/arch/x86/kernel/irq.c
-+++ b/arch/x86/kernel/irq.c
-@@ -342,7 +342,8 @@ int check_irq_vectors_for_cpu_disable(void)
- 				continue;
- 
- 			data = irq_desc_get_irq_data(desc);
--			cpumask_copy(&affinity_new, data->affinity);
-+			cpumask_copy(&affinity_new,
-+				     irq_data_get_affinity_mask(data));
- 			cpumask_clear_cpu(this_cpu, &affinity_new);
- 
- 			/* Do not count inactive or per-cpu irqs. */
-@@ -420,7 +421,7 @@ void fixup_irqs(void)
- 		raw_spin_lock(&desc->lock);
- 
- 		data = irq_desc_get_irq_data(desc);
--		affinity = data->affinity;
-+		affinity = irq_data_get_affinity_mask(data);
- 		if (!irq_has_action(irq) || irqd_is_per_cpu(data) ||
- 		    cpumask_subset(affinity, cpu_online_mask)) {
- 			raw_spin_unlock(&desc->lock);
-diff --git a/drivers/xen/events/events_base.c b/drivers/xen/events/events_base.c
-index 2b8553bd8715..d00e0be8e9ea 100644
---- a/drivers/xen/events/events_base.c
-+++ b/drivers/xen/events/events_base.c
-@@ -336,7 +336,7 @@ static void bind_evtchn_to_cpu(unsigned int chn, unsigned int cpu)
- 
- 	BUG_ON(irq == -1);
- #ifdef CONFIG_SMP
--	cpumask_copy(irq_get_irq_data(irq)->affinity, cpumask_of(cpu));
-+	cpumask_copy(irq_get_affinity_mask(irq), cpumask_of(cpu));
- #endif
- 	xen_evtchn_port_bind_to_cpu(info, cpu);
- 
-@@ -373,7 +373,7 @@ static void xen_irq_init(unsigned irq)
- 	struct irq_info *info;
- #ifdef CONFIG_SMP
- 	/* By default all event channels notify CPU#0. */
--	cpumask_copy(irq_get_irq_data(irq)->affinity, cpumask_of(0));
-+	cpumask_copy(irq_get_affinity_mask(irq), cpumask_of(0));
- #endif
- 
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
--- 
-1.7.10.4
+>>
+>>Cc: Daniel Axtens <dja@axtens.net>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>v5:
+>>   * Newly introduced
+>>---
+>>  arch/powerpc/include/asm/pci-bridge.h | 8 ++++----
+>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+>>index 744884b..1252cd5 100644
+>>--- a/arch/powerpc/include/asm/pci-bridge.h
+>>+++ b/arch/powerpc/include/asm/pci-bridge.h
+>>@@ -18,8 +18,8 @@ struct device_node;
+>>   * PCI controller operations
+>>   */
+>>  struct pci_controller_ops {
+>>-	void		(*dma_dev_setup)(struct pci_dev *dev);
+>>-	void		(*dma_bus_setup)(struct pci_bus *bus);
+>>+	void		(*dma_dev_setup)(struct pci_dev *);
+>>+	void		(*dma_bus_setup)(struct pci_bus *);
+>>
+>>  	int		(*probe_mode)(struct pci_bus *);
+>>
+>>@@ -28,8 +28,8 @@ struct pci_controller_ops {
+>>  	bool		(*enable_device_hook)(struct pci_dev *);
+>>
+>>  	/* Called during PCI resource reassignment */
+>>-	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
+>>-	void		(*reset_secondary_bus)(struct pci_dev *dev);
+>>+	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long);
+>>+	void		(*reset_secondary_bus)(struct pci_dev *);
+>>  };
+>>
+>>  /*
+>>
+
+Thanks,
+Gavin
 
