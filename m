@@ -1,231 +1,213 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:36734 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751809AbbFSWVm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:21:42 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: arnd@arndb.de
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xen-devel@lists.xensource.com, linux-fbdev@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
-	david.vrabel@citrix.com, jbeulich@suse.com,
-	=?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>
-Subject: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
-Date: Fri, 19 Jun 2015 15:08:28 -0700
-Message-Id: <1434751712-24333-6-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mail-ig0-f196.google.com ([209.85.213.196]:35118 "EHLO
+	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544AbbFKUg7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jun 2015 16:36:59 -0400
 MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 11 Jun 2015 13:36:38 -0700
+Message-ID: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+Subject: RIP MTRR - status update for upcoming v4.2
+To: Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-media@vger.kernel.org,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Toshi Kani <toshi.kani@hp.com>, X86 ML <x86@kernel.org>,
+	Juergen Gross <jgross@suse.com>,
+	Dave Airlie <airlied@redhat.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	xen-devel@lists.xenproject.org, Julia Lawall <julia.lawall@lip6.fr>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+The series to bury direct MTRR use is almost all in and on its way to
+v4.2. As the pending series continue slowly to be merged I wanted to
+take the time to reiterate the justification for these changes in
+hopes it may help those still reviewing some of these patches which
+are pending and to help document all these changes. There are also
+some series which depend on symbols now exported through some other
+subsystem trees so coordination is needed there. In those cases we
+have the option there to sit and wait for the exported symbols to
+trickle in through v4.2 and later on v4.3 finalize the changes, or to
+let some of the depending changes to in through other subsystem trees.
+I don't consider the coordination required difficult to handle so
+would prefer to see the changes in for v4.2 to be able to put a nail
+on the MTRR coffin sooner rather than later and to also help get more
+testing out of this sooner rather than later. PAT is known to have
+errata for some CPUs so hearing reports of issues with PAT would be
+very valuable. I'll let maintainers decide on how that trickles
+through. To help with all this towards the end I provide a status of
+all the pending patches to get this work completed.
 
-PCI BARs tell us whether prefetching is safe, but they don't say anything
-about write combining (WC).  WC changes ordering rules and allows writes to
-be collapsed, so it's not safe in general to use it on a prefetchable
-region.
+Justification
+=========
 
-Add pci_iomap_wc() and pci_iomap_wc_range() so drivers can take advantage
-of write combining when they know it's safe.
+We want to bury direct use of MTRR code because:
 
-On architectures that don't fully support WC, e.g., x86 without PAT,
-drivers for legacy framebuffers may get some of the benefit by using
-arch_phys_wc_add() in addition to pci_iomap_wc().  But arch_phys_wc_add()
-is unreliable and should be avoided in general.  On x86, it uses MTRRs,
-which are limited in number and size, so the results will vary based on
-driver loading order.
+a) MTRR is x86 specific, this means all existing MTRR code is #idef'd
+out. PAT support for x86 was implemented using architecture agnostic
+APIs, this enables other architectures to provide support for a
+similar write-combining feature, and removes the nasty #idef eyesores.
+MTRR should be seen as a first step temporary architectural evolution
+to what PAT eventually became on x86.
 
-The goals of adding pci_iomap_wc() are to:
+b) We have a long term goal to change the default behavior of
+ioremap_nocache() and pci_mmap_page_range() to use PAT strong UC,
+right now we cannot do this, but after all drivers are converted (all
+these series I've been posting) we expect to be able to make the
+change. Making a change to strong UC on these two calls can only
+happen after a period of time of having Linux bake with all these
+changes merged and in place. How many kernels we will want Linux baked
+with all these transformations to arch_phys before making a change to
+ioremap_nocache() and pci_mmap_page_range() is up to x86 folks. There
+are other gains possible with this but I welcome others to chime in
+here with what gains we can expect from this.
 
-- Give drivers an architecture-independent way to use WC so they can stop
-  using interfaces like mtrr_add() (on x86, pci_iomap_wc() uses
-  PAT when available)
+c) MTRR acts on physical addresses and requires power-of-two
+alignment, on both the base used and size, this limits the flexibility
+for MTRR use. For a good example of its limitations refer to the
+patches which change the atyfb driver from using MTRR to PAT.
 
-- Move toward using _PAGE_CACHE_MODE_UC, not _PAGE_CACHE_MODE_UC_MINUS,
-  on x86 on ioremap_nocache() (see de33c442ed2a ("x86 PAT: fix
-  performance drop for glx, use UC minus for ioremap(), ioremap_nocache()
-  and pci_mmap_page_range()")
+d) MTRR is known to be unreliable, it can at times not work even on
+modern systems.
 
-Link: http://lkml.kernel.org/r/1426893517-2511-6-git-send-email-mcgrof@do-not-panic.com
-Original-posting: http://lkml.kernel.org/r/1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: venkatesh.pallipadi@intel.com
-Cc: Stefan Bader <stefan.bader@canonical.com>
-Cc: Ville Syrjälä <syrjala@sci.fi>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: konrad.wilk@oracle.com
-Cc: ville.syrjala@linux.intel.com
-Cc: david.vrabel@citrix.com
-Cc: jbeulich@suse.com
-Cc: Roger Pau Monné <roger.pau@citrix.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: xen-devel@lists.xensource.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- include/asm-generic/pci_iomap.h | 14 ++++++++++
- lib/pci_iomap.c                 | 61 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 75 insertions(+)
+e) There is a limit to how many MTRRs you can use on a system. If
+using a large number of devices with MTRR support you will quickly run
+out of MTRRs. This is why originally Andy Lutomirski ended up adding
+the arch_phys_wc_add() API, in order to take advantage of PAT which is
+*not* bound to the same limitations as MTRRs are.
 
-diff --git a/include/asm-generic/pci_iomap.h b/include/asm-generic/pci_iomap.h
-index 7389c87..b1e17fc 100644
---- a/include/asm-generic/pci_iomap.h
-+++ b/include/asm-generic/pci_iomap.h
-@@ -15,9 +15,13 @@ struct pci_dev;
- #ifdef CONFIG_PCI
- /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
- extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
-+extern void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max);
- extern void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
- 				     unsigned long offset,
- 				     unsigned long maxlen);
-+extern void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-+					unsigned long offset,
-+					unsigned long maxlen);
- /* Create a virtual mapping cookie for a port on a given PCI device.
-  * Do not call this directly, it exists to make it easier for architectures
-  * to override */
-@@ -34,12 +38,22 @@ static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned lon
- 	return NULL;
- }
- 
-+static inline void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max)
-+{
-+	return NULL;
-+}
- static inline void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
- 					    unsigned long offset,
- 					    unsigned long maxlen)
- {
- 	return NULL;
- }
-+static inline void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-+					       unsigned long offset,
-+					       unsigned long maxlen)
-+{
-+	return NULL;
-+}
- #endif
- 
- #endif /* __ASM_GENERIC_IO_H */
-diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
-index bcce5f1..9604dcb 100644
---- a/lib/pci_iomap.c
-+++ b/lib/pci_iomap.c
-@@ -52,6 +52,46 @@ void __iomem *pci_iomap_range(struct pci_dev *dev,
- EXPORT_SYMBOL(pci_iomap_range);
- 
- /**
-+ * pci_iomap_wc_range - create a virtual WC mapping cookie for a PCI BAR
-+ * @dev: PCI device that owns the BAR
-+ * @bar: BAR number
-+ * @offset: map memory at the given offset in BAR
-+ * @maxlen: max length of the memory to map
-+ *
-+ * Using this function you will get a __iomem address to your device BAR.
-+ * You can access it using ioread*() and iowrite*(). These functions hide
-+ * the details if this is a MMIO or PIO address space and will just do what
-+ * you expect from them in the correct way. When possible write combining
-+ * is used.
-+ *
-+ * @maxlen specifies the maximum length to map. If you want to get access to
-+ * the complete BAR from offset to the end, pass %0 here.
-+ * */
-+void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
-+				 int bar,
-+				 unsigned long offset,
-+				 unsigned long maxlen)
-+{
-+	resource_size_t start = pci_resource_start(dev, bar);
-+	resource_size_t len = pci_resource_len(dev, bar);
-+	unsigned long flags = pci_resource_flags(dev, bar);
-+
-+	if (len <= offset || !start)
-+		return NULL;
-+	len -= offset;
-+	start += offset;
-+	if (maxlen && len > maxlen)
-+		len = maxlen;
-+	if (flags & IORESOURCE_IO)
-+		return NULL;
-+	if (flags & IORESOURCE_MEM)
-+		return ioremap_wc(start, len);
-+	/* What? */
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(pci_iomap_wc_range);
-+
-+/**
-  * pci_iomap - create a virtual mapping cookie for a PCI BAR
-  * @dev: PCI device that owns the BAR
-  * @bar: BAR number
-@@ -70,4 +110,25 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
- 	return pci_iomap_range(dev, bar, 0, maxlen);
- }
- EXPORT_SYMBOL(pci_iomap);
-+
-+/**
-+ * pci_iomap_wc - create a virtual WC mapping cookie for a PCI BAR
-+ * @dev: PCI device that owns the BAR
-+ * @bar: BAR number
-+ * @maxlen: length of the memory to map
-+ *
-+ * Using this function you will get a __iomem address to your device BAR.
-+ * You can access it using ioread*() and iowrite*(). These functions hide
-+ * the details if this is a MMIO or PIO address space and will just do what
-+ * you expect from them in the correct way. When possible write combining
-+ * is used.
-+ *
-+ * @maxlen specifies the maximum length to map. If you want to get access to
-+ * the complete BAR without checking for its length first, pass %0 here.
-+ * */
-+void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long maxlen)
-+{
-+	return pci_iomap_wc_range(dev, bar, 0, maxlen);
-+}
-+EXPORT_SYMBOL_GPL(pci_iomap_wc);
- #endif /* CONFIG_PCI */
--- 
-2.3.2.209.gd67f9d5.dirty
+f) PAT has been available for quite a long time, since Pentium III
+(circa 1999) and newer, but having PAT enabled does not restrict use
+of MTRR and because of this some systems may end up then combining
+MTRR and PAT. I do not believe this wasn't an original highly expected
+wide use situation, it technically should work to combine both but
+there might be issues with interactions between both, exactly what
+issues can exist or have existed remains quite unclear as MTRR in and
+of itself has been known to be unreliable anyway. If possible its best
+to just be binary about this and only use MTRR if and only if
+necessary because of the other issues known with MTRR.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+g) Linux has support for Xen PV domains using PAT, this was introduced
+by Juergen via v3.19 via commit 47591df50512 ("xen: Support Xen
+pv-domains using PAT"). Since MTRR is old we don't want to add MTRR
+support into Xen on Linux, instead since Linux now supports PV domains
+with PAT we can take full advantage of write combining for PV domains
+on Xen provided all Linux drivers are converted to use PAT properly.a
+framebuffer folks's ACK
+
+Review of the changes
+================
+
+Most of the series has consisted of driver transformations using
+Coccinelle SmPL patches to transform existing code which access MTRR
+APIs directly to the architecture agnostic write-combining calls.
+Other patches extend bus subsystems to make available new
+write-combining architecture agnostic APIs. Other patches have
+consisted of extending architecture agnostic APIs to help work around
+old MTRR hacks -- this was perhaps the hardest task and took quite a
+bit of time and review as it required review of implications of all
+combinatorial possibilities with MTRR and PAT, which also got
+documented as part of the series. In the end it was also determined
+some drivers required substantial work to be able to work properly
+with PAT, the atyfb driver is an example driver which had the homework
+required done. Due to complexities and since the driver / hardware was
+ancient we decided to reach a compromise and require users of those
+drivers to boot with a kernel parameter to disable PAT, fortunately
+this was only required for two old device drivers:
+
+* ipath: the ipath device driver powers the old HTX bus cards that
+only work in AMD systems, while the newer IB/qib device driver powers
+all PCI-e cards. The ipath device driver is obsolete, hardware hard to
+find
+
+* ivtv: the hardware is really rare these days, and perhaps only some
+lost souls in some third world country are expected to be using this
+feature of the device driver.
+
+Pending RIP MTRR patches
+====================
+
+There are a few pending series so I wanted to provide a status update
+on those series.
+
+mtrr: bury MTRR - unexport mtrr_add() and mtrr_del()
+
+This is the nail on the MTRR coffin, it will prevent future direct
+access to MTRR code. This will not be posted until all of the below
+patches are in and merged. A possible next step here might be to
+consider separating PAT code from MTRR code and making PAT a first
+class citizen, enabling distributions to disable MTRR code in the
+future. I thought this was possible but for some reason I recently
+thought that there was one possible issue to make this happen. I
+suppose we won't know unless we try, unless of course someone already
+knows, Toshi?
+
+IB/ipath: use arch_phys_wc_add() and require PAT disabled
+IB/ipath: add counting for MTRR
+ivtv: use arch_phys_wc_add() and require PAT disabled
+
+This v7 series just posted addresses all drivers which cannot work
+with PAT, fortunately we end up with only 2! This series has all
+subsystem and driver maintainers ACKs, it was just posted with a few
+fixes with the intent to be merged through Boris' x86 tree as it
+depends on the newly exported pat_enabled() symbol.
+
+fusion: remove dead MTRR code
+
+This should go through Bottomley's tree, driver maintainer provided an
+ACKed, this is just pending integration into the SCSI subsystem tree.
+As a last resort my hope is that this can go through Andrew Morton's
+tree.
+
+video: fbdev: vesafb: use arch_phys_wc_add()
+video: fbdev: vesafb: add missing mtrr_del() for added MTRR
+video: fbdev: vesafb: only support MTRR_TYPE_WRCOMB
+
+A v4 series was posted, pending review / Integration through Tomis' tree
+
+video: fbdev: atyfb: use arch_phys_wc_add() and ioremap_wc()
+video: fbdev: atyfb: replace MTRR UC hole with strong UC
+video: fbdev: atyfb: clarify ioremap() base and length used
+video: fbdev: atyfb: move framebuffer length fudging to helper
+
+This provides a work around replacement for the direct MTRR use hack
+using the new ioremap_uc() API. This is pending review / ACK by the
+driver maintainer Ville Syrjälä, and the subsystem maintainer, Tomi.
+Since it relies on ioremap_uc(), which is merged through Boris' tree,
+this should go through Boris' tree *iff* we want it in for v4.2,
+otherwise this will have to wait for v4.3.
+
+video: fbdev: vt8623fb: use arch_phys_wc_add() and pci_iomap_wc()
+video: fbdev: s3fb: use arch_phys_wc_add() and pci_iomap_wc()
+video: fbdev: arkfb: use arch_phys_wc_add() and pci_iomap_wc()
+lib: devres: add pcim_iomap_wc() variants
+pci: add pci_iomap_wc() variants
+
+This has Tomi's ACK already for the driver specific changes, Bjorn
+asked for a Documentation guidance update for EXPORT_SYMBOL_GPL(),
+this is now merged via linux-next. This is pending consent from Tomi
+if it can go in through Bjorn's tree. It is also obviously pending a
+final ACK from Bjorn. The devres change would go in without any users,
+I leave this for Bjorn to decide but do note my concern of someone in
+the future adding a non EXPORT_SYMBOL_GPL() for this implementation.
+
+video: fbdev: gxt4500: use pci_ioremap_wc_bar() for framebuffer
+video: fbdev: kyrofb: use arch_phys_wc_add() and pci_ioremap_wc_bar()
+video: fbdev: i740fb: use arch_phys_wc_add() and pci_ioremap_wc_bar()
+pci: add pci_ioremap_wc_bar()
+
+This requires Tomi's Ack / review, and then obviously Bjorn's own ACK
+/ integration. Consent from Tomi of whether or not this can go through
+Bjorn's tree is also needed.
+
+ Luis
