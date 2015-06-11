@@ -1,122 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <558A698A.9000508@pr.hu>
-Date: Wed, 24 Jun 2015 10:25:46 +0200
-From: Boszormenyi Zoltan <zboszor@pr.hu>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:61315 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751183AbbFKLRZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jun 2015 07:17:25 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <rajatjain@juniper.net>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
+Date: Thu, 11 Jun 2015 19:12:14 +0800
+Message-ID: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@kernel.org>, Len Brown <lenb@kernel.org>
-CC: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [Bugfix v2] PCI, ACPI: Fix regressions caused by resource_size_t
- overflow with 32bit kernel
-References: <1435131817-28167-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1435131817-28167-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=iso-8859-2
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2015-06-24 09:43 keltezéssel, Jiang Liu írta:
-> Since commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
-> interfaces to simplify implementation"), x86 PCI ACPI host bridge driver
-> validates ACPI resources by first converting an ACPI resource to
-> a 'struct resource' structure and then applying checks against the
-> converted resource structure. The 'start' and 'end' fields in 'struct
-> resource' are defined to be type of resource_size_t, which may be 32 bits
-> or 64 bits depending on CONFIG_PHYS_ADDR_T_64BIT.
->
-> This may cause incorrect resource validation results with 32 bit kernels
-> because 64bit ACPI resource descriptors may get truncated when converting
-> to 32bit 'start' and 'end' fields in 'struct resource'. And eventually
-> affects PCI resource allocation subsystem and causes some PCI devices
-> unusable.
->
-> So enhance the ACPI resource parsing interfaces to ignore ACPI resource
-> descriptors with address/offset observe 4G when running in 32bit mode.
-> This reverts to the behavior before commit 593669c2ac0f.
->
-> This issue was triggered on a platform running 32bit kernel with an
-> ACPI resource descriptor with address range [0x400000000-0xfffffffff].
-> Please refer to https://lkml.org/lkml/2015/6/19/277 for more information.
->
-> Reported-by: Boszormenyi Zoltan <zboszor@pr.hu>
-> Fixes: 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces to simplify implementation")
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Cc: stable@vger.kernel.org # 4.0
-> ---
->
-> Hi Zoltan,
-> 	Could you please help to test this patch against the latest kernel?
-> Thanks!
-> Gerry
+Rajat Jain reported a deadlock when a hierarchical hot plug
+thread and aer recovery thread both run.
+https://lkml.org/lkml/2015/3/11/861
 
-I will, thanks.
+thread 1:
+pciehp_enable_slot()
+	pciehp_configure_device()
+		pci_bus_add_devices()
+			device_attach(dev)
+				device_lock(dev) //acquire device mutex successfully
+			...
+			pciehp_probe(dev)
+				__pci_hp_register()
+					pci_create_slot()
+						down_write(pci_bus_sem) //deadlock here
 
-Best regards,
-Zoltán
+thread 2:
+aer_isr_one_error()
+	aer_process_err_device()
+		do_recovery()
+			broadcast_error_message()
+				pci_walk_bus()
+					down_read(&pci_bus_sem) //acquire pci_bus_sem successfully
+						report_error_detected(dev)
+							device_lock(dev) // deadlock here
 
->
-> ---
->  drivers/acpi/resource.c |   24 +++++++++++++++---------
->  1 file changed, 15 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 8244f013f210..f1c966e05078 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -193,6 +193,7 @@ static bool acpi_decode_space(struct resource_win *win,
->  	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
->  	bool wp = addr->info.mem.write_protect;
->  	u64 len = attr->address_length;
-> +	u64 start, end, offset = 0;
->  	struct resource *res = &win->res;
->  
->  	/*
-> @@ -204,9 +205,6 @@ static bool acpi_decode_space(struct resource_win *win,
->  		pr_debug("ACPI: Invalid address space min_addr_fix %d, max_addr_fix %d, len %llx\n",
->  			 addr->min_address_fixed, addr->max_address_fixed, len);
->  
-> -	res->start = attr->minimum;
-> -	res->end = attr->maximum;
-> -
->  	/*
->  	 * For bridges that translate addresses across the bridge,
->  	 * translation_offset is the offset that must be added to the
-> @@ -214,12 +212,22 @@ static bool acpi_decode_space(struct resource_win *win,
->  	 * primary side. Non-bridge devices must list 0 for all Address
->  	 * Translation offset bits.
->  	 */
-> -	if (addr->producer_consumer == ACPI_PRODUCER) {
-> -		res->start += attr->translation_offset;
-> -		res->end += attr->translation_offset;
-> -	} else if (attr->translation_offset) {
-> +	if (addr->producer_consumer == ACPI_PRODUCER)
-> +		offset = attr->translation_offset;
-> +	else if (attr->translation_offset)
->  		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
->  			 attr->translation_offset);
-> +	start = attr->minimum + offset;
-> +	end = attr->maximum + offset;
-> +
-> +	win->offset = offset;
-> +	res->start = start;
-> +	res->end = end;
-> +	if (sizeof(resource_size_t) < sizeof(u64) &&
-> +	    (offset != win->offset || start != res->start || end != res->end)) {
-> +		pr_warn("acpi resource window ([%#llx-%#llx] ignored, not CPU addressable)\n",
-> +			attr->minimum, attr->maximum);
-> +		return false;
->  	}
->  
->  	switch (addr->resource_type) {
-> @@ -236,8 +244,6 @@ static bool acpi_decode_space(struct resource_win *win,
->  		return false;
->  	}
->  
-> -	win->offset = attr->translation_offset;
-> -
->  	if (addr->producer_consumer == ACPI_PRODUCER)
->  		res->flags |= IORESOURCE_WINDOW;
->  
+Now we use pci_bus_sem to protect pci_slot creation and destroy,
+it's unnecessary. We could introduce a new local mutex instead of
+pci_bus_sem to avoid the deadlock.
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/slot.c |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+index 396c200..feb08de 100644
+--- a/drivers/pci/slot.c
++++ b/drivers/pci/slot.c
+@@ -14,6 +14,7 @@
+ 
+ struct kset *pci_slots_kset;
+ EXPORT_SYMBOL_GPL(pci_slots_kset);
++static DEFINE_MUTEX(pci_slot_mutex);
+ 
+ static ssize_t pci_slot_attr_show(struct kobject *kobj,
+ 					struct attribute *attr, char *buf)
+@@ -195,7 +196,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
+ {
+ 	struct pci_slot *slot;
+ 	/*
+-	 * We already hold pci_bus_sem so don't worry
++	 * We already hold pci_slot_mutex so don't worry
+ 	 */
+ 	list_for_each_entry(slot, &parent->slots, list)
+ 		if (slot->number == slot_nr) {
+@@ -253,7 +254,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+ 	int err = 0;
+ 	char *slot_name = NULL;
+ 
+-	down_write(&pci_bus_sem);
++	mutex_lock(&pci_slot_mutex);
+ 
+ 	if (slot_nr == -1)
+ 		goto placeholder;
+@@ -310,7 +311,7 @@ placeholder:
+ 
+ out:
+ 	kfree(slot_name);
+-	up_write(&pci_bus_sem);
++	mutex_unlock(&pci_slot_mutex);
+ 	return slot;
+ err:
+ 	kfree(slot);
+@@ -332,9 +333,9 @@ void pci_destroy_slot(struct pci_slot *slot)
+ 	dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
+ 		slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
+ 
+-	down_write(&pci_bus_sem);
++	mutex_lock(&pci_slot_mutex);
+ 	kobject_put(&slot->kobj);
+-	up_write(&pci_bus_sem);
++	mutex_unlock(&pci_slot_mutex);
+ }
+ EXPORT_SYMBOL_GPL(pci_destroy_slot);
+ 
+-- 
+1.7.1
 
