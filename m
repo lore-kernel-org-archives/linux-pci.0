@@ -1,105 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from filtteri5.pp.htv.fi ([213.243.153.188]:57821 "EHLO
-	filtteri5.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241AbbFYXEr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2015 19:04:47 -0400
-Date: Fri, 26 Jun 2015 02:04:37 +0300
-From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: akpm@linux-foundation.org, bp@suse.de, mingo@elte.hu,
-	ville.syrjala@linux.intel.com, luto@amacapital.net,
-	tomi.valkeinen@ti.com, mst@redhat.com, benh@kernel.crashing.org,
-	linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, airlied@redhat.com,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Mathias Krause <minipli@googlemail.com>,
-	Andrzej Hajda <a.hajda@samsung.com>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Davidlohr Bueso <dbueso@suse.de>
-Subject: Re: [PATCH v5 1/3] video: fbdev: atyfb: clarify ioremap() base and
- length used
-Message-ID: <20150625230437.GA4362@sci.fi>
-References: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
- <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
+Received: from casper.infradead.org ([85.118.1.10]:41021 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391AbbFKPkR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jun 2015 11:40:17 -0400
+Message-ID: <1434037212.3907.82.camel@infradead.org>
+Subject: Re: [PATCH v10 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
+ kernel
+From: David Woodhouse <dwmw2@infradead.org>
+To: "Li, Zhen-Hua" <zhen-hual@hp.com>
+Cc: indou.takao@jp.fujitsu.com, bhe@redhat.com, joro@8bytes.org,
+	vgoyal@redhat.com, dyoung@redhat.com, tom.vaden@hp.com,
+	rwright@hp.com, linux-pci@vger.kernel.org,
+	kexec@lists.infradead.org, iommu@lists.linux-foundation.org,
+	lisa.mitchell@hp.com, linux-kernel@vger.kernel.org,
+	doug.hatch@hp.com, ishii.hironobu@jp.fujitsu.com,
+	bhelgaas@google.com, billsumnerlinux@gmail.com, li.zhang6@hp.com
+Date: Thu, 11 Jun 2015 16:40:12 +0100
+In-Reply-To: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+References: <1428655333-19504-1-git-send-email-zhen-hual@hp.com>
+Content-Type: multipart/signed; micalg="sha-1"; protocol="application/x-pkcs7-signature";
+	boundary="=-lDByxYIZC/Ch3KSraFDH"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 24, 2015 at 06:34:18PM -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> 
-> This has no functional changes, it just adjusts
-> the ioremap() call for the framebuffer to use
-> the same values we later use for the framebuffer,
-> this will make it easier to review the next change.
-> 
-> The size of the framebuffer varies but since this is
-> for PCI we *know* this defaults to 0x800000.
-> atyfb_setup_generic() is *only* used on PCI probe.
-> 
-> Cc: Toshi Kani <toshi.kani@hp.com>
-> Cc: Suresh Siddha <sbsiddha@gmail.com>
-> Cc: Ingo Molnar <mingo@elte.hu>
-> Cc: Linus Torvalds <torvalds@linux-foundation.org>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Juergen Gross <jgross@suse.com>
-> Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-> Cc: Andy Lutomirski <luto@amacapital.net>
-> Cc: Dave Airlie <airlied@redhat.com>
-> Cc: Antonino Daplas <adaplas@gmail.com>
-> Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-> Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-> Cc: Ville Syrjälä <syrjala@sci.fi>
-> Cc: Rob Clark <robdclark@gmail.com>
-> Cc: Mathias Krause <minipli@googlemail.com>
-> Cc: Andrzej Hajda <a.hajda@samsung.com>
-> Cc: Mel Gorman <mgorman@suse.de>
-> Cc: Vlastimil Babka <vbabka@suse.cz>
-> Cc: Borislav Petkov <bp@suse.de>
-> Cc: Davidlohr Bueso <dbueso@suse.de>
-> Cc: linux-fbdev@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-> ---
->  drivers/video/fbdev/aty/atyfb_base.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/video/fbdev/aty/atyfb_base.c b/drivers/video/fbdev/aty/atyfb_base.c
-> index 16936bb..8025624 100644
-> --- a/drivers/video/fbdev/aty/atyfb_base.c
-> +++ b/drivers/video/fbdev/aty/atyfb_base.c
-> @@ -3489,7 +3489,9 @@ static int atyfb_setup_generic(struct pci_dev *pdev, struct fb_info *info,
->  
->  	/* Map in frame buffer */
->  	info->fix.smem_start = addr;
-> -	info->screen_base = ioremap(addr, 0x800000);
-> +	info->fix.smem_len = 0x800000;
-> +
-> +	info->screen_base = ioremap(info->fix.smem_start, info->fix.smem_len);
 
-The framebuffer size isn't always 8MB. That's the size of the BAR. So
-this change isn't really correct. I suppose it doesn't hurt too much
-since smem_len gets overwritten later in aty_init().
+--=-lDByxYIZC/Ch3KSraFDH
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
->  	if (info->screen_base == NULL) {
->  		ret = -ENOMEM;
->  		goto atyfb_setup_generic_fail;
-> -- 
-> 2.3.2.209.gd67f9d5.dirty
-> 
+On Fri, 2015-04-10 at 16:42 +0800, Li, Zhen-Hua wrote:
+> This patchset is an update of Bill Sumner's patchset, implements a fix fo=
+r:
+> If a kernel boots with intel_iommu=3Don on a system that supports intel v=
+t-d,=20
+> when a panic happens, the kdump kernel will boot with these faults:
 
--- 
-Ville Syrjälä
-syrjala@sci.fi
-http://www.sci.fi/~syrjala/
+But, in the general case, it *does* boot.
+
+There are two cases where it doesn't actually boot, and those are the
+interesting ones.
+
+Firstly, a device just keeps generating faults and we die in an
+interrupt storm, reporting the same fault over and over again. That can
+actually happen without kdump/kexec and the correct fix for that is to
+have rate-limiting, disable fault reporting for the offending device
+after too many are seen, and then eventually to tie it in to the PCIe
+error handling as has been discussed elsewhere.
+
+Secondly, there are devices which do not correctly respond to a
+hardware reset. This is broken hardware, and if we really have to copy
+the old contexts from the crashed kernel to work around it then I'd
+like it to be on a blacklist basis =E2=80=94 we do it only for hardware whi=
+ch
+is *known* to be broken in this way.
+
+(There's also some cases where the device driver doesn't even *try* to
+reset the hardware and just assumes it'll find it in a sane state as
+the BIOS or a cleanly shut down kexec would have left it. In those
+cases of course we can just fix the driver).
+
+I don't much like the idea of doing this context copy for *all*
+hardware. That's masking hardware issues with reset that we really
+*ought* to be finding.
+
+I believe that most of the offending hardware is HP's; they like to do
+the most, erm, "interesting" things with odd hardware and RMRRs and
+stuff. So Zhen-Hua would you be able to provide the list of broken
+devices that HP has shipped, for the purpose of such a blacklist?
+
+I assume you've already contacted the hardware folks responsible and
+insisted that their devices are fixed to be resettable already, right?
+
+--=20
+dwmw2
+
+--=-lDByxYIZC/Ch3KSraFDH
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIISjjCCBicw
+ggUPoAMCAQICAw3vNzANBgkqhkiG9w0BAQUFADCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
+YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
+ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
+MB4XDTE1MDUwNTA5NDM0MVoXDTE2MDUwNTA5NTMzNlowQjEcMBoGA1UEAwwTZHdtdzJAaW5mcmFk
+ZWFkLm9yZzEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcN
+AQEBBQADggEPADCCAQoCggEBAMkbm9kPbx1j/X4RVyf/pPKSYwelcco69TvnQQbKM8m8xkWjXJI1
+jpJ1jMaGUZGFToINMSZi7lZawUozudWbXSKy1SikENSTJHffsdRAIlsp+hR8vWvjsKUry6sEdqPG
+doa5RY7+N4WRusWZDYW/RRWE6i9EL9qV86CVPYqw22UBOUw4/j/HVGCV6TSB8yE5iEwhk/hUuzRr
+FZm1MJMR7mCS7BCR8Lr5jFY61lWpBiXNXIxLZCvDc26KR5L5tYX43iUVO3fzES1GRVoYnxxk2tmz
+fcsZG5vK+Trc9L8OZJfkYrEHH3+Iw41MQ0w/djVtYr1+HYldx0QmYXAtnhIj+UMCAwEAAaOCAtkw
+ggLVMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcD
+BDAdBgNVHQ4EFgQUszC96C3w5/2+d+atSr0IpT26YI4wHwYDVR0jBBgwFoAUU3Ltkpzg2ssBXHx+
+ljVO8tS4UYIwHgYDVR0RBBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzCCAUwGA1UdIASCAUMwggE/
+MIIBOwYLKwYBBAGBtTcBAgMwggEqMC4GCCsGAQUFBwIBFiJodHRwOi8vd3d3LnN0YXJ0c3NsLmNv
+bS9wb2xpY3kucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1
+dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0
+aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVpcmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9s
+aWN5LCByZWxpYW5jZSBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNl
+IG9mIHRoZSByZWx5aW5nIHBhcnR5IG9ibGlnYXRpb25zLjA2BgNVHR8ELzAtMCugKaAnhiVodHRw
+Oi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsG
+AQUFBzABhi1odHRwOi8vb2NzcC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYI
+KwYBBQUHMAKGNmh0dHA6Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50
+LmNhLmNydDAjBgNVHRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEF
+BQADggEBAHMQmxHHodpS85X8HRyxhvfkys7r+taCNOaNU9cxQu/cZ/6k5nS2qGNMzZ6jb7ueY/V7
+7p+4DW/9ZWODDTf4Fz00mh5SSVc20Bz7t+hhxwHd62PZgENh5i76Qq2tw48U8AsYo5damHby1epf
+neZafLpUkLLO7AGBJIiRVTevdvyXQ0qnixOmKMWyvrhSNGuVIKVdeqLP+102Dwf+dpFyw+j1hz28
+jEEKpHa+NR1b2kXuSPi/rMGhexwlJOh4tK8KQ6Ryr0rIN//NSbOgbyYZrzc/ZUWX9V5OA84ChFb2
+vkFl0OcYrttp/rhDBLITwffPxSZeoBh9H7zYzkbCXKL3BUIwggYnMIIFD6ADAgECAgMN7zcwDQYJ
+KoZIhvcNAQEFBQAwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYD
+VQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENv
+bSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTAeFw0xNTA1MDUwOTQzNDFa
+Fw0xNjA1MDUwOTUzMzZaMEIxHDAaBgNVBAMME2R3bXcyQGluZnJhZGVhZC5vcmcxIjAgBgkqhkiG
+9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQDJG5vZD28dY/1+EVcn/6TykmMHpXHKOvU750EGyjPJvMZFo1ySNY6SdYzGhlGRhU6CDTEmYu5W
+WsFKM7nVm10istUopBDUkyR337HUQCJbKfoUfL1r47ClK8urBHajxnaGuUWO/jeFkbrFmQ2Fv0UV
+hOovRC/alfOglT2KsNtlATlMOP4/x1Rglek0gfMhOYhMIZP4VLs0axWZtTCTEe5gkuwQkfC6+YxW
+OtZVqQYlzVyMS2Qrw3NuikeS+bWF+N4lFTt38xEtRkVaGJ8cZNrZs33LGRubyvk63PS/DmSX5GKx
+Bx9/iMONTENMP3Y1bWK9fh2JXcdEJmFwLZ4SI/lDAgMBAAGjggLZMIIC1TAJBgNVHRMEAjAAMAsG
+A1UdDwQEAwIEsDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwHQYDVR0OBBYEFLMwvegt
+8Of9vnfmrUq9CKU9umCOMB8GA1UdIwQYMBaAFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB4GA1UdEQQX
+MBWBE2R3bXcyQGluZnJhZGVhZC5vcmcwggFMBgNVHSAEggFDMIIBPzCCATsGCysGAQQBgbU3AQID
+MIIBKjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjCB9wYI
+KwYBBQUHAgIwgeowJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwAwIBARqBvlRo
+aXMgY2VydGlmaWNhdGUgd2FzIGlzc3VlZCBhY2NvcmRpbmcgdG8gdGhlIENsYXNzIDEgVmFsaWRh
+dGlvbiByZXF1aXJlbWVudHMgb2YgdGhlIFN0YXJ0Q29tIENBIHBvbGljeSwgcmVsaWFuY2Ugb25s
+eSBmb3IgdGhlIGludGVuZGVkIHB1cnBvc2UgaW4gY29tcGxpYW5jZSBvZiB0aGUgcmVseWluZyBw
+YXJ0eSBvYmxpZ2F0aW9ucy4wNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5zdGFydHNzbC5j
+b20vY3J0dTEtY3JsLmNybDCBjgYIKwYBBQUHAQEEgYEwfzA5BggrBgEFBQcwAYYtaHR0cDovL29j
+c3Auc3RhcnRzc2wuY29tL3N1Yi9jbGFzczEvY2xpZW50L2NhMEIGCCsGAQUFBzAChjZodHRwOi8v
+YWlhLnN0YXJ0c3NsLmNvbS9jZXJ0cy9zdWIuY2xhc3MxLmNsaWVudC5jYS5jcnQwIwYDVR0SBBww
+GoYYaHR0cDovL3d3dy5zdGFydHNzbC5jb20vMA0GCSqGSIb3DQEBBQUAA4IBAQBzEJsRx6HaUvOV
+/B0csYb35MrO6/rWgjTmjVPXMULv3Gf+pOZ0tqhjTM2eo2+7nmP1e+6fuA1v/WVjgw03+Bc9NJoe
+UklXNtAc+7foYccB3etj2YBDYeYu+kKtrcOPFPALGKOXWph28tXqX53mWny6VJCyzuwBgSSIkVU3
+r3b8l0NKp4sTpijFsr64UjRrlSClXXqiz/tdNg8H/naRcsPo9Yc9vIxBCqR2vjUdW9pF7kj4v6zB
+oXscJSToeLSvCkOkcq9KyDf/zUmzoG8mGa83P2VFl/VeTgPOAoRW9r5BZdDnGK7baf64QwSyE8H3
+z8UmXqAYfR+82M5Gwlyi9wVCMIIGNDCCBBygAwIBAgIBHjANBgkqhkiG9w0BAQUFADB9MQswCQYD
+VQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwg
+Q2VydGlmaWNhdGUgU2lnbmluZzEpMCcGA1UEAxMgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRo
+b3JpdHkwHhcNMDcxMDI0MjEwMTU1WhcNMTcxMDI0MjEwMTU1WjCBjDELMAkGA1UEBhMCSUwxFjAU
+BgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRl
+IFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUg
+Q2xpZW50IENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxwmDzM4t2BqxKaQuE6uW
+vooyg4ymiEGWVUet1G8SD+rqvyNH4QrvnEIaFHxOhESip7vMz39ScLpNLbL1QpOlPW/tFIzNHS3q
+d2XRNYG5Sv9RcGE+T4qbLtsjjJbi6sL7Ls/f/X9ftTyhxvxWkf8KW37iKrueKsxw2HqolH7GM6FX
+5UfNAwAu4ZifkpmZzU1slBhyWwaQPEPPZRsWoTb7q8hmgv6Nv3Hg9rmA1/VPBIOQ6SKRkHXG0Hhm
+q1dOFoAFI411+a/9nWm5rcVjGcIWZ2v/43Yksq60jExipA4l5uv9/+Hm33mbgmCszdj/Dthf13tg
+Av2O83hLJ0exTqfrlwIDAQABo4IBrTCCAakwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AQYwHQYDVR0OBBYEFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB8GA1UdIwQYMBaAFE4L7xqkQFulF2mH
+MMo0aEPQQa7yMGYGCCsGAQUFBwEBBFowWDAnBggrBgEFBQcwAYYbaHR0cDovL29jc3Auc3RhcnRz
+c2wuY29tL2NhMC0GCCsGAQUFBzAChiFodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9zZnNjYS5jcnQw
+WwYDVR0fBFQwUjAnoCWgI4YhaHR0cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3JsMCegJaAj
+hiFodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9zZnNjYS5jcmwwgYAGA1UdIAR5MHcwdQYLKwYBBAGB
+tTcBAgEwZjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjA0
+BggrBgEFBQcCARYoaHR0cDovL3d3dy5zdGFydHNzbC5jb20vaW50ZXJtZWRpYXRlLnBkZjANBgkq
+hkiG9w0BAQUFAAOCAgEACoMIfXirLAZcuGOMXq4cuSN3TaFx2H2GvD5VSy/6rV55BYHbWNaPeQn3
+oBSU8KgQZn/Kck1JxbLpAxVCNtsxeW1R87ifhsYZ0qjdrA9anrW2MAWCtosmAOT4OxK9QPoSjCMx
+M3HbkZCDJgnlE8jMopH21BbyAYr7b5EfGRQJNtgWcvqSXwKHnTutR08+Kkn0KAkXCzeQNLeA5LlY
+UzFyM7kPAp8pIRMQ+seHunmyG642S2+y/qHEdMuGIwpfz3eDF1PdctL04qYK/zu+Qg1Bw0RwgigV
+Zs/0c5HP2/e9DBHh7eSwtzYlk4AUr6yxLlcwSjOfOmKEQ/Q8tzh0IFiNu9IPuTGAPBn4CPxD0+Ru
+8T2wg8/s43R/PT3kd1OEqOJUl7q+h+r6fpvU0Fzxd2tC8Ga6fDEPme+1Nbi+03pVjuZQKbGwKJ66
+gEn06WqaxVZC+J8hh/jR0k9mST1iAZPNYulcNJ8tKmVtjYsv0L1TSm2+NwON58tO+pIVzu3DWwSE
+XSf+qkDavQam+QtEOZxLBXI++aMUEapSn+k3Lxm48ZCYfAWLb/Xj7F5JQMbZvCexglAbYR0kIHqW
+5DnsYSdMD/IplJMojx0NBrxJ3fN9dvX2Y6BIXRsF1du4qESm4/3CKuyUV7p9DW3mPlHTGLvYxnyK
+Qy7VFBkoLINszBrOUeIxggNvMIIDawIBATCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
+YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
+ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
+AgMN7zcwCQYFKw4DAhoFAKCCAa8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMTUwNjExMTU0MDEyWjAjBgkqhkiG9w0BCQQxFgQU3CEkruMDwwhvSqfYMkT+3deHZ30w
+gaUGCSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0
+ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMT
+L1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMN7zcwgacG
+CyqGSIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
+LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMv
+U3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAw3vNzANBgkq
+hkiG9w0BAQEFAASCAQCdUbbEOxAO9B7Gt6SQPx3/IXbU1kO6kyBL2neXKU2yJJbix34s9HcyHYbK
+9s9KEi1l4Fw61ozNgpbYUuWRHlcH/cfOkWtQr/5jdn1eM+9toGCi42kgL1BU3MITfl0KtJnkUpRD
+5K4DJu/RnnkEGmwhw0XGu1zw+az8CYXyWFmPgTzhV+85gcLpcXWMkCFvH2PQxFV54pLnB9rgCCEm
+Yl5Ozp2Dj/MQMU7mBw6tS4vGefnQanYDLZDCreDQI0R5BjhHiceh2C9JGcXAeZmVToDGVh4ldmFM
+AD6uz4TTwGVzyCmimflus11qmcletfknQswv3be1AFRq+JpXtgU/j0OdAAAAAAAA
+
+
+--=-lDByxYIZC/Ch3KSraFDH--
+
