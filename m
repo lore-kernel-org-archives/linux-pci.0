@@ -1,67 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:35895 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755290AbbF0BQ3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jun 2015 21:16:29 -0400
-MIME-Version: 1.0
-In-Reply-To: <1435362871.26815.24.camel@kernel.crashing.org>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
- <1435189081.3790.24.camel@kernel.crashing.org> <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
- <6806026.xb91q6Ad7G@wuerfel> <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>
- <1435272718.3822.7.camel@kernel.crashing.org> <20150626193158.GJ3005@wotan.suse.de>
- <1435356258.26815.13.camel@kernel.crashing.org> <CAB=NE6XwczF6FYXV=RHyK=7ikVk_tGp+h9ouWPyORNENq4+=Kw@mail.gmail.com>
- <1435362871.26815.24.camel@kernel.crashing.org>
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Fri, 26 Jun 2015 18:16:08 -0700
-Message-ID: <CAB=NE6XrpUYBnu05NL2+Te2e5Kmc39DQWptRWRDMfGD9ygOWKw@mail.gmail.com>
-Subject: Re: [Xen-devel] [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-Cc: linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>, Ingo Molnar <mingo@elte.hu>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Casey Leedom <leedom@chelsio.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
-	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:15186 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754971AbbFKQba (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jun 2015 12:31:30 -0400
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	mebersol@microsoft.com, haiyangz@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH 0/6] Front-end driver for PCIe Pass-through on Hyper-V
+Date: Thu, 11 Jun 2015 16:22:21 +0000
+Message-Id: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 26, 2015 at 4:54 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Fri, 2015-06-26 at 15:41 -0700, Luis R. Rodriguez wrote:
->
->> > It wasn't nullified for the main user at the time, the fb. And I
->> > mentioned an IB adapter or two for which the code had been hand
->> tuned.
->>
->> This still means there could be some affected drivers when used on
->> powerpc, no?
->
-> Yes. In fact what about things like ARM who also have barriers in their
-> writel() ? Won't they also break WC ?
+From: Jake Oshins <jakeo@microsoft.com>
 
-Not sure if they have that write-combine notion on their CPUs /
-interconnects. Russel, Stefano, does ARM have write-combining ?
+This patch does some slight refactoring on the hv_vmbus driver and its
+dependents and then introduces a new paravirtual front-end driver for PCI
+which supports PCI Express devices passed through to a Linux guest running
+in a Hyper-V VM.
 
- Luis
+To support this front-end, several new mechanisms are introduced:
+
+1 - A common way of finding free memory-mapped I/O space in a Hyper-V VM, 
+    available to all Hyper-V-related drivers.
+
+2 - A way of handling PCI Message-Signaled Interrupt (MSI and MSI-X)
+    creation and formatting when Hyper-V is running.
+
+3 - A mapping function from Linux processor number to Hyper-V virtual
+    processor number, available to drivers, which is necessary for MSI(-X)
+    creation.
+
+The Hyper-V Frame Buffer driver is modified to use the MMIO space
+allocation function so that its allocations both don't collide with the
+PCI front end and so that the chosen range can come from any available
+part of MMIO space.
+
+Finally, the new PCI front-end driver is the last patch in the series.
+
+Jake Oshins (6):
+  drivers:hv: Modify vmbus to search for all MMIO ranges available
+  drivers:hv: Move MMIO range picking from hyper_fb.mod to hv_vmbus.mod
+  arch:x86:hv: Add mechanism for Hyper-V paravirt drivers to hook msi
+    message creation
+  drivers:hv: Export a function that maps Linux proc num onto Hyper-V
+    proc num
+  drivers:hv: Define the channel type for Hyper-V PCI Express
+    pass-through
+  drivers:pci:hv: New paravirtual PCI front-end for Hyper-V VMs
+
+ MAINTAINERS                     |    1 +
+ arch/x86/include/asm/mshyperv.h |    2 +
+ arch/x86/kernel/cpu/mshyperv.c  |   30 +
+ drivers/hv/vmbus_drv.c          |  208 +++-
+ drivers/pci/Kconfig             |    9 +
+ drivers/pci/host/Makefile       |    1 +
+ drivers/pci/host/hv_pcifront.c  | 2177 +++++++++++++++++++++++++++++++++++++++
+ drivers/video/fbdev/hyperv_fb.c |   46 +-
+ include/linux/hyperv.h          |   38 +-
+ 9 files changed, 2469 insertions(+), 43 deletions(-)
+ create mode 100644 drivers/pci/host/hv_pcifront.c
+
+-- 
+1.9.1
+
