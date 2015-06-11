@@ -1,211 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Joshua Thompson <funaho@jurai.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: [RFT v2 40/48] genirq, m68k: Kill the first parameter 'irq' of irq_flow_handler_t
-Date: Thu,  4 Jun 2015 12:13:50 +0800
-Message-Id: <1433391238-19471-41-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sauhun.de ([89.238.76.85]:56247 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754158AbbFKNHs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Jun 2015 09:07:48 -0400
+Date: Thu, 11 Jun 2015 22:07:35 +0900
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Wan ZongShun <Vincent.Wan@amd.com>
+Cc: ulf.hansson@linaro.org, linux-mmc@vger.kernel.org,
+	linux-i2c@vger.kernel.org, bp@alien8.de, jdelvare@suse.de,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mcuos.com@gmail.com
+Subject: Re: [PATCH V2 2/3] i2c-piix4: Use Macro for AMD CZ SMBus device ID
+Message-ID: <20150611130734.GA1510@katana>
+References: <1434024707-6245-1-git-send-email-Vincent.Wan@amd.com>
+ <1434024707-6245-2-git-send-email-Vincent.Wan@amd.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
+In-Reply-To: <1434024707-6245-2-git-send-email-Vincent.Wan@amd.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now most IRQ flow handlers make no use of the first parameter 'irq'.
-And for those who do make use of 'irq', we could easily get the irq
-number through irq_desc->irq_data->irq. So kill the first parameter
-'irq' of irq_flow_handler_t.
 
-To ease review, I have split the changes into several parts, though
-they should be merge as one to support bisecting.
+--YZ5djTAD1cGYuMQK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/m68k/amiga/amiints.c       |    8 ++++----
- arch/m68k/coldfire/intc-5272.c  |    4 ++--
- arch/m68k/include/asm/irq.h     |    3 +--
- arch/m68k/include/asm/mac_via.h |    2 +-
- arch/m68k/mac/baboon.c          |    2 +-
- arch/m68k/mac/oss.c             |    4 ++--
- arch/m68k/mac/psc.c             |    2 +-
- arch/m68k/mac/via.c             |    6 +++---
- 8 files changed, 15 insertions(+), 16 deletions(-)
+On Thu, Jun 11, 2015 at 08:11:46PM +0800, Wan ZongShun wrote:
+> Change AMD CZ SMBUS device ID from 0x790b to
+> use Macro definition
+>=20
+> Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
 
-diff --git a/arch/m68k/amiga/amiints.c b/arch/m68k/amiga/amiints.c
-index 47b5f90002ab..7ff739e94896 100644
---- a/arch/m68k/amiga/amiints.c
-+++ b/arch/m68k/amiga/amiints.c
-@@ -46,7 +46,7 @@ static struct irq_chip amiga_irq_chip = {
-  * The builtin Amiga hardware interrupt handlers.
-  */
- 
--static void ami_int1(unsigned int irq, struct irq_desc *desc)
-+static void ami_int1(struct irq_desc *desc)
- {
- 	unsigned short ints = amiga_custom.intreqr & amiga_custom.intenar;
- 
-@@ -69,7 +69,7 @@ static void ami_int1(unsigned int irq, struct irq_desc *desc)
- 	}
- }
- 
--static void ami_int3(unsigned int irq, struct irq_desc *desc)
-+static void ami_int3(struct irq_desc *desc)
- {
- 	unsigned short ints = amiga_custom.intreqr & amiga_custom.intenar;
- 
-@@ -92,7 +92,7 @@ static void ami_int3(unsigned int irq, struct irq_desc *desc)
- 	}
- }
- 
--static void ami_int4(unsigned int irq, struct irq_desc *desc)
-+static void ami_int4(struct irq_desc *desc)
- {
- 	unsigned short ints = amiga_custom.intreqr & amiga_custom.intenar;
- 
-@@ -121,7 +121,7 @@ static void ami_int4(unsigned int irq, struct irq_desc *desc)
- 	}
- }
- 
--static void ami_int5(unsigned int irq, struct irq_desc *desc)
-+static void ami_int5(struct irq_desc *desc)
- {
- 	unsigned short ints = amiga_custom.intreqr & amiga_custom.intenar;
- 
-diff --git a/arch/m68k/coldfire/intc-5272.c b/arch/m68k/coldfire/intc-5272.c
-index d1e2fbad327c..b0a19e207a63 100644
---- a/arch/m68k/coldfire/intc-5272.c
-+++ b/arch/m68k/coldfire/intc-5272.c
-@@ -143,10 +143,10 @@ static int intc_irq_set_type(struct irq_data *d, unsigned int type)
-  * We need to be careful with the masking/acking due to the side effects
-  * of masking an interrupt.
-  */
--static void intc_external_irq(unsigned int irq, struct irq_desc *desc)
-+static void intc_external_irq(struct irq_desc *desc)
- {
- 	irq_desc_get_chip(desc)->irq_ack(&desc->irq_data);
--	handle_simple_irq(irq, desc);
-+	handle_simple_irq(desc);
- }
- 
- static struct irq_chip intc_irq_chip = {
-diff --git a/arch/m68k/include/asm/irq.h b/arch/m68k/include/asm/irq.h
-index 81ca118d58af..a644f4a53b94 100644
---- a/arch/m68k/include/asm/irq.h
-+++ b/arch/m68k/include/asm/irq.h
-@@ -64,8 +64,7 @@ extern void m68k_setup_auto_interrupt(void (*handler)(unsigned int,
- 						      struct pt_regs *));
- extern void m68k_setup_user_interrupt(unsigned int vec, unsigned int cnt);
- extern void m68k_setup_irq_controller(struct irq_chip *,
--				      void (*handle)(unsigned int irq,
--						     struct irq_desc *desc),
-+				      void (*handle)(struct irq_desc *desc),
- 				      unsigned int irq, unsigned int cnt);
- 
- extern unsigned int irq_canonicalize(unsigned int irq);
-diff --git a/arch/m68k/include/asm/mac_via.h b/arch/m68k/include/asm/mac_via.h
-index fe3fc9ae1b69..53c632c85b03 100644
---- a/arch/m68k/include/asm/mac_via.h
-+++ b/arch/m68k/include/asm/mac_via.h
-@@ -261,7 +261,7 @@ extern void via_irq_enable(int);
- extern void via_irq_disable(int);
- extern void via_nubus_irq_startup(int irq);
- extern void via_nubus_irq_shutdown(int irq);
--extern void via1_irq(unsigned int irq, struct irq_desc *desc);
-+extern void via1_irq(struct irq_desc *desc);
- extern void via1_set_head(int);
- extern int via2_scsi_drq_pending(void);
- 
-diff --git a/arch/m68k/mac/baboon.c b/arch/m68k/mac/baboon.c
-index 3fe0e43d44f6..f6f7d42713ec 100644
---- a/arch/m68k/mac/baboon.c
-+++ b/arch/m68k/mac/baboon.c
-@@ -45,7 +45,7 @@ void __init baboon_init(void)
-  * Baboon interrupt handler. This works a lot like a VIA.
-  */
- 
--static void baboon_irq(unsigned int irq, struct irq_desc *desc)
-+static void baboon_irq(struct irq_desc *desc)
- {
- 	int irq_bit, irq_num;
- 	unsigned char events;
-diff --git a/arch/m68k/mac/oss.c b/arch/m68k/mac/oss.c
-index bb11dceed7ed..1fe868166a9c 100644
---- a/arch/m68k/mac/oss.c
-+++ b/arch/m68k/mac/oss.c
-@@ -63,7 +63,7 @@ void __init oss_nubus_init(void)
-  * Handle miscellaneous OSS interrupts.
-  */
- 
--static void oss_irq(unsigned int irq, struct irq_desc *desc)
-+static void oss_irq(struct irq_desc *desc)
- {
- 	int events = oss->irq_pending &
- 	             (OSS_IP_IOPSCC | OSS_IP_SCSI | OSS_IP_IOPISM);
-@@ -97,7 +97,7 @@ static void oss_irq(unsigned int irq, struct irq_desc *desc)
-  * Unlike the VIA/RBV this is on its own autovector interrupt level.
-  */
- 
--static void oss_nubus_irq(unsigned int irq, struct irq_desc *desc)
-+static void oss_nubus_irq(struct irq_desc *desc)
- {
- 	int events, irq_bit, i;
- 
-diff --git a/arch/m68k/mac/psc.c b/arch/m68k/mac/psc.c
-index ea7651a7908b..23ddaa07fa0e 100644
---- a/arch/m68k/mac/psc.c
-+++ b/arch/m68k/mac/psc.c
-@@ -113,7 +113,7 @@ void __init psc_init(void)
-  * PSC interrupt handler. It's a lot like the VIA interrupt handler.
-  */
- 
--static void psc_irq(unsigned int __irq, struct irq_desc *desc)
-+static void psc_irq(struct irq_desc *desc)
- {
- 	unsigned int irq = irq_desc_get_irq(desc);
- 	unsigned int offset = (unsigned int)irq_desc_get_handler_data(desc);
-diff --git a/arch/m68k/mac/via.c b/arch/m68k/mac/via.c
-index e198dec868e4..979ea8312db8 100644
---- a/arch/m68k/mac/via.c
-+++ b/arch/m68k/mac/via.c
-@@ -446,7 +446,7 @@ void via_nubus_irq_shutdown(int irq)
-  * via6522.c :-), disable/pending masks added.
-  */
- 
--void via1_irq(unsigned int irq, struct irq_desc *desc)
-+void via1_irq(struct irq_desc *desc)
- {
- 	int irq_num;
- 	unsigned char irq_bit, events;
-@@ -467,7 +467,7 @@ void via1_irq(unsigned int irq, struct irq_desc *desc)
- 	} while (events >= irq_bit);
- }
- 
--static void via2_irq(unsigned int irq, struct irq_desc *desc)
-+static void via2_irq(struct irq_desc *desc)
- {
- 	int irq_num;
- 	unsigned char irq_bit, events;
-@@ -493,7 +493,7 @@ static void via2_irq(unsigned int irq, struct irq_desc *desc)
-  * VIA2 dispatcher as a fast interrupt handler.
-  */
- 
--void via_nubus_irq(unsigned int irq, struct irq_desc *desc)
-+void via_nubus_irq(struct irq_desc *desc)
- {
- 	int slot_irq;
- 	unsigned char slot_bit, events;
--- 
-1.7.10.4
+I think it makes sense that this patch goes in via MMC. This I2C change
+is trivial, but for MMC there is more to handle. I don't expect
+conflicts. So:
 
+Acked-by: Wolfram Sang <wsa@the-dreams.de>
+
+> ---
+>  drivers/i2c/busses/i2c-piix4.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix=
+4.c
+> index 67cbec6..630bce6 100644
+> --- a/drivers/i2c/busses/i2c-piix4.c
+> +++ b/drivers/i2c/busses/i2c-piix4.c
+> @@ -245,7 +245,7 @@ static int piix4_setup_sb800(struct pci_dev *PIIX4_de=
+v,
+>  	     PIIX4_dev->device =3D=3D PCI_DEVICE_ID_AMD_HUDSON2_SMBUS &&
+>  	     PIIX4_dev->revision >=3D 0x41) ||
+>  	    (PIIX4_dev->vendor =3D=3D PCI_VENDOR_ID_AMD &&
+> -	     PIIX4_dev->device =3D=3D 0x790b &&
+> +	     PIIX4_dev->device =3D=3D PCI_DEVICE_ID_AMD_KERNCZ_SMBUS &&
+>  	     PIIX4_dev->revision >=3D 0x49))
+>  		smb_en =3D 0x00;
+>  	else
+> @@ -545,7 +545,7 @@ static const struct pci_device_id piix4_ids[] =3D {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x790b) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_KERNCZ_SMBUS) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+>  		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+> --=20
+> 1.9.1
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-i2c" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--YZ5djTAD1cGYuMQK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJVeYgWAAoJEBQN5MwUoCm2QvEP/jYI/5yGd3x2EmLzgg402dSa
+7eUCtoN/wDtLECdisx34ORQ8CTmD6QMXjv7/Uqtv191mS4RdFK6IFI6OpQcnLvdj
+ZS/7GSR7x7MG8lLeZkkzxvwhtlihWJILqZ8UZGWTRa3tO12V06P+dIH7icpF7MAS
+3bYveVKpgolPFCXKj6o19LZgkrBYkCP47Or2haX0BhoBMom4DaMy9fjUr171dqN8
+GzNbx/uAdQSTzVp5YTKHoXQ+31WFVRSxOPtbCuPN0b9qay4GZ4aV1R/V3RI8sUBt
+JTGRzbdf09nwa3KZudFSA2WXcRf+6Wr7sevU93SyMK6N5jcinlZBOwoKqMVTmUuK
+YLAqHpl3JPyiaEkJ5MVbMN+xgGFatl+2fFwhl6VxLFu2IdxYhbUKZomnwCRPjVHL
+K7Xue/PxZmh71cr6fnftomjYW8Ds/QiMfqA46/YuEnkjObvPMp2sQCU8uMeH06QT
+0wsQ1u7KU5Go1cDA9iuYGLIx0Jc06hPMCQpNQL8wZCJmJI82BJ78JyeRpRm+9Tk+
+R0G7m8g/0wFuhnMxqqiH2xbueYqNyrZXAKUGp7TQ0pmzdSUsozYlTS7CMcf2umma
+CzZevQqb1JO0lvTttRV1JJ3oKjRgB18nna+1lpGw0pea7nNcfFszylLJ4Pl+ZhHb
+hI6cE2Ab9ilMheG0Natq
+=WYym
+-----END PGP SIGNATURE-----
+
+--YZ5djTAD1cGYuMQK--
