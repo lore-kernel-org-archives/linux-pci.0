@@ -1,86 +1,221 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:45627 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752751AbbFRIG7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:06:59 -0400
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Thu, 18 Jun 2015 13:36:57 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 6C617125805A
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:39:29 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I86p7t15597728
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:51 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I86o1L027174
-	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:51 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V8 02/10] powerpc/pci: Cache VF index in pci_dn
-Date: Thu, 18 Jun 2015 16:06:37 +0800
-Message-Id: <1434614805-19002-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	mebersol@microsoft.com, haiyangz@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH 1/6] drivers:hv: Modify vmbus to search for all MMIO ranges available
+Date: Thu, 11 Jun 2015 16:22:22 +0000
+Message-Id: <1434039747-44535-2-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
+References: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch caches the VF index in pci_dn, which can be used to calculate
-VF's bus, device and function number. Those information helps to locate
-the VF's PCI device instance when doing hotplug during EEH recovery if
-necessary.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci_dn.c          |    4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/hv/vmbus_drv.c          | 105 ++++++++++++++++++++++++++++++++++------
+ drivers/video/fbdev/hyperv_fb.c |   2 +-
+ include/linux/hyperv.h          |   2 +-
+ 3 files changed, 92 insertions(+), 17 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 1811c44..c324882 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -196,6 +196,7 @@ struct pci_dn {
- #define IODA_INVALID_PE		(-1)
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
-+	int     vf_index;		/* VF index in the PF */
- #ifdef CONFIG_PCI_IOV
- 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
- 	u16     num_vfs;		/* number of VFs enabled*/
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index b3b4df9..f771130 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
- #ifdef CONFIG_PCI_IOV
- static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 					   struct pci_dev *pdev,
-+					   int vf_index,
- 					   int busno, int devfn)
- {
- 	struct pci_dn *pdn;
-@@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 	pdn->parent = parent;
- 	pdn->busno = busno;
- 	pdn->devfn = devfn;
-+	pdn->vf_index = vf_index;
- #ifdef CONFIG_PPC_POWERNV
- 	pdn->pe_number = IODA_INVALID_PE;
- #endif
-@@ -196,7 +198,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- 		return NULL;
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index c85235e..d0e8832 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -72,10 +72,7 @@ static struct notifier_block hyperv_panic_block = {
+ 	.notifier_call = hyperv_panic_event,
+ };
  
- 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
--		pdn = add_one_dev_pci_data(parent, NULL,
-+		pdn = add_one_dev_pci_data(parent, NULL, i,
- 					   pci_iov_virtfn_bus(pdev, i),
- 					   pci_iov_virtfn_devfn(pdev, i));
- 		if (!pdn) {
+-struct resource hyperv_mmio = {
+-	.name  = "hyperv mmio",
+-	.flags = IORESOURCE_MEM,
+-};
++struct resource *hyperv_mmio;
+ EXPORT_SYMBOL_GPL(hyperv_mmio);
+ 
+ static int vmbus_exists(void)
+@@ -982,30 +979,105 @@ void vmbus_device_unregister(struct hv_device *device_obj)
+ 
+ 
+ /*
+- * VMBUS is an acpi enumerated device. Get the the information we
++ * VMBUS is an acpi enumerated device. Get the information we
+  * need from DSDT.
+  */
+-
++#define VTPM_BASE_ADDRESS 0xfed40000
+ static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
+ {
++	resource_size_t start = 0;
++	resource_size_t end = 0;
++	struct resource *new_res;
++	struct resource **old_res = &hyperv_mmio;
++	struct resource **prev_res = NULL;
++
+ 	switch (res->type) {
+ 	case ACPI_RESOURCE_TYPE_IRQ:
+ 		irq = res->data.irq.interrupts[0];
++		return AE_OK;
++
++	/*
++	 * "Address" descriptors are for bus windows. Ignore
++	 * "memory" descriptors, which are for registers on
++	 * devices.
++	 */
++	case ACPI_RESOURCE_TYPE_ADDRESS32:
++		start = res->data.address32.address.minimum;
++		end = res->data.address32.address.maximum;
+ 		break;
+ 
+ 	case ACPI_RESOURCE_TYPE_ADDRESS64:
+-		hyperv_mmio.start = res->data.address64.address.minimum;
+-		hyperv_mmio.end = res->data.address64.address.maximum;
++		start = res->data.address64.address.minimum;
++		end = res->data.address64.address.maximum;
+ 		break;
++
++	default:
++		/* Unused resource type */
++		return AE_OK;
++
+ 	}
++	/*
++	 * Ignore ranges that are below 1MB, as they're not
++	 * necessary or useful here.
++	 */
++	if (end < 0x100000)
++		return AE_OK;
++
++	new_res = kzalloc(sizeof(*new_res), GFP_ATOMIC);
++	if (!new_res)
++		return AE_NO_MEMORY;
++
++	/* If this range overlaps the virtual TPM, truncate it. */
++	if (end > VTPM_BASE_ADDRESS && start < VTPM_BASE_ADDRESS)
++		end = VTPM_BASE_ADDRESS;
++
++	new_res->name = "hyperv mmio";
++	new_res->flags = IORESOURCE_MEM;
++	new_res->start = start;
++	new_res->end = end;
++
++	do {
++		if (!*old_res) {
++			*old_res = new_res;
++			break;
++		}
++
++		if ((*old_res)->end < new_res->start) {
++			new_res->sibling = *old_res;
++			if (prev_res)
++				(*prev_res)->sibling = new_res;
++			*old_res = new_res;
++			break;
++		}
++
++		prev_res = old_res;
++		old_res = &(*old_res)->sibling;
++
++	} while (1);
+ 
+ 	return AE_OK;
+ }
+ 
++static int vmbus_acpi_remove(struct acpi_device *device)
++{
++	struct resource *cur_res;
++	struct resource *next_res;
++
++	if (hyperv_mmio) {
++		for (cur_res = hyperv_mmio; cur_res; cur_res = next_res) {
++			next_res = cur_res->sibling;
++			kfree(cur_res);
++		}
++	}
++
++	return 0;
++}
++
+ static int vmbus_acpi_add(struct acpi_device *device)
+ {
+ 	acpi_status result;
+ 	int ret_val = -ENODEV;
++	struct acpi_device *ancestor;
+ 
+ 	hv_acpi_dev = device;
+ 
+@@ -1015,23 +1087,25 @@ static int vmbus_acpi_add(struct acpi_device *device)
+ 	if (ACPI_FAILURE(result))
+ 		goto acpi_walk_err;
+ 	/*
+-	 * The parent of the vmbus acpi device (Gen2 firmware) is the VMOD that
+-	 * has the mmio ranges. Get that.
++	 * Some ancestor of the vmbus acpi device (Gen1 or Gen2
++	 * firmware) is the VMOD that has the mmio ranges. Get that.
+ 	 */
+-	if (device->parent) {
+-		result = acpi_walk_resources(device->parent->handle,
++	for (ancestor = device->parent; ancestor; ancestor = ancestor->parent) {
++		result = acpi_walk_resources(ancestor->handle,
+ 					METHOD_NAME__CRS,
+ 					vmbus_walk_resources, NULL);
+ 
+ 		if (ACPI_FAILURE(result))
+-			goto acpi_walk_err;
+-		if (hyperv_mmio.start && hyperv_mmio.end)
+-			request_resource(&iomem_resource, &hyperv_mmio);
++			continue;
++		if (hyperv_mmio)
++			break;
+ 	}
+ 	ret_val = 0;
+ 
+ acpi_walk_err:
+ 	complete(&probe_event);
++	if (ret_val)
++		vmbus_acpi_remove(device);
+ 	return ret_val;
+ }
+ 
+@@ -1047,6 +1121,7 @@ static struct acpi_driver vmbus_acpi_driver = {
+ 	.ids = vmbus_acpi_device_ids,
+ 	.ops = {
+ 		.add = vmbus_acpi_add,
++		.remove = vmbus_acpi_remove,
+ 	},
+ };
+ 
+diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
+index 807ee22..b54ee1c 100644
+--- a/drivers/video/fbdev/hyperv_fb.c
++++ b/drivers/video/fbdev/hyperv_fb.c
+@@ -688,7 +688,7 @@ static int hvfb_getmem(struct fb_info *info)
+ 	par->mem.name = KBUILD_MODNAME;
+ 	par->mem.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+ 	if (gen2vm) {
+-		ret = allocate_resource(&hyperv_mmio, &par->mem,
++		ret = allocate_resource(hyperv_mmio, &par->mem,
+ 					screen_fb_size,
+ 					0, -1,
+ 					screen_fb_size,
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 902c37a..21fa867 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -1245,7 +1245,7 @@ void hv_vss_deinit(void);
+ void hv_vss_onchannelcallback(void *);
+ void hv_process_channel_removal(struct vmbus_channel *channel, u32 relid);
+ 
+-extern struct resource hyperv_mmio;
++extern struct resource *hyperv_mmio;
+ 
+ /*
+  * Negotiated version with the Host.
 -- 
-1.7.9.5
+1.9.1
 
