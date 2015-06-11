@@ -1,59 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:8886 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799AbbFSICM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 04:02:12 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH 2/3] PCI: Simplify pcie_poll_cmd()
-Date: Fri, 19 Jun 2015 15:57:45 +0800
-Message-ID: <1434700666-6346-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1434700666-6346-1-git-send-email-wangyijing@huawei.com>
-References: <1434700666-6346-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	mebersol@microsoft.com, haiyangz@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH 4/6] drivers:hv: Export a function that maps Linux proc num onto Hyper-V proc num
+Date: Thu, 11 Jun 2015 16:22:25 +0000
+Message-Id: <1434039747-44535-5-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
+References: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move first slot status read into while to simplify code.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/hotplug/pciehp_hpc.c |   14 +++++---------
- 1 files changed, 5 insertions(+), 9 deletions(-)
+ drivers/hv/vmbus_drv.c | 16 ++++++++++++++++
+ include/linux/hyperv.h |  2 ++
+ 2 files changed, 18 insertions(+)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 2913f7e..daf54be 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -109,21 +109,17 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
- 	u16 slot_status;
- 
--	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
--	if (slot_status & PCI_EXP_SLTSTA_CC) {
--		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
--					   PCI_EXP_SLTSTA_CC);
--		return 1;
--	}
--	while (timeout > 0) {
--		msleep(10);
--		timeout -= 10;
-+	while (true) {
- 		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
- 		if (slot_status & PCI_EXP_SLTSTA_CC) {
- 			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
- 						   PCI_EXP_SLTSTA_CC);
- 			return 1;
- 		}
-+		if (timeout < 0)
-+			break;
-+		msleep(10);
-+		timeout -= 10;
- 	}
- 	return 0;	/* timeout */
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 067a469..65e4eb6 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1158,6 +1158,22 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
  }
+ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+ 
++/**
++ * This function returns the mapping between the Linux processor
++ * number and
++ * the hypervisor's virtual processor number, useful in making
++ * hypercalls and such that talk about specific processors.
++ *
++ * @param procnum - in Linux terms
++ *
++ * @return int - in Hyper-V terms
++ */
++int vmbus_procnum_to_vpnum(int procnum)
++{
++	return hv_context.vp_index[procnum];
++}
++EXPORT_SYMBOL_GPL(vmbus_procnum_to_vpnum);
++
+ static int vmbus_acpi_add(struct acpi_device *device)
+ {
+ 	acpi_status result;
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index ffd98d7..6fec42d 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -987,6 +987,8 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			resource_size_t size, resource_size_t align,
+ 			bool fb_overlap_ok);
+ 
++int vmbus_procnum_to_vpnum(int procnum);
++
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
+  *
 -- 
-1.7.1
+1.9.1
 
