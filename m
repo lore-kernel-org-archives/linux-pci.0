@@ -1,105 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36744 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932309AbbFJElX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 00:41:23 -0400
-Received: by pabqy3 with SMTP id qy3so26608470pab.3
-        for <linux-pci@vger.kernel.org>; Tue, 09 Jun 2015 21:41:22 -0700 (PDT)
-Message-ID: <5577BFE9.2040601@ozlabs.ru>
-Date: Wed, 10 Jun 2015 14:41:13 +1000
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-MIME-Version: 1.0
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-CC: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org
-Subject: Re: [PATCH v5 11/42] powerpc/powernv: Increase PE# capacity
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com> <1433400131-18429-12-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-12-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1434064996.11808.64.camel@misato.fc.hp.com>
+Subject: Re: RIP MTRR - status update for upcoming v4.2
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
+	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
+	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?=
+	<ville.syrjala@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-media@vger.kernel.org,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Andy Lutomirski <luto@amacapital.net>, X86 ML <x86@kernel.org>,
+	Juergen Gross <jgross@suse.com>,
+	Dave Airlie <airlied@redhat.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	xen-devel@lists.xenproject.org, Julia Lawall <julia.lawall@lip6.fr>
+Date: Thu, 11 Jun 2015 17:23:16 -0600
+In-Reply-To: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/04/2015 04:41 PM, Gavin Shan wrote:
-> Each PHB maintains an array helping to translate RID (Request
-> ID) to PE# with the assumption that PE# takes 8 bits, indicating
-> that we can't have more than 256 PEs. However, pci_dn->pe_number
-> already had 4-bytes for the PE#.
->
-> The patch extends the PE# capacity so that each of them will be
-> 4-bytes long. Then we can use IODA_INVALID_PE to check one entry
-> in phb->pe_rmap[] is valid or not.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
-> v5:
->    * Split from [PATCH v5 v4 06/21]
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 5 ++++-
->   arch/powerpc/platforms/powernv/pci.h      | 5 ++---
->   2 files changed, 6 insertions(+), 4 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 2087c5c..d8b0ef5 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -840,7 +840,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
->
->   	/* Clear the reverse map */
->   	for (rid = pe->rid; rid < rid_end; rid++)
-> -		phb->ioda.pe_rmap[rid] = 0;
-> +		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
->
->   	/* Release from all parents PELT-V */
->   	while (parent) {
-> @@ -3303,6 +3303,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->   	if (prop32)
->   		phb->ioda.reserved_pe = be32_to_cpup(prop32);
->
-> +	/* Invalidate RID to PE# mapping */
-> +	memset(phb->ioda.pe_rmap, 0xff, sizeof(phb->ioda.pe_rmap));
+On Thu, 2015-06-11 at 13:36 -0700, Luis R. Rodriguez wrote:
+ :
+> Pending RIP MTRR patches
+> ====================
+> 
+> There are a few pending series so I wanted to provide a status update
+> on those series.
+> 
+> mtrr: bury MTRR - unexport mtrr_add() and mtrr_del()
+> 
+> This is the nail on the MTRR coffin, it will prevent future direct
+> access to MTRR code. This will not be posted until all of the below
+> patches are in and merged. A possible next step here might be to
+> consider separating PAT code from MTRR code and making PAT a first
+> class citizen, enabling distributions to disable MTRR code in the
+> future. I thought this was possible but for some reason I recently
+> thought that there was one possible issue to make this happen. I
+> suppose we won't know unless we try, unless of course someone already
+> knows, Toshi?
 
+There are two usages on MTRRs:
+ 1) MTRR entries set by firmware
+ 2) MTRR entries set by OS drivers
 
-Above you assign IODA_INVALID_PE in a loop and here you just do 0xff for 
-the entire array. Have a loop here too and assign IODA_INVALID_PE to every 
-entry:
-for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
-	phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
+We can obsolete 2), but we have no control over 1).  As UEFI firmwares
+also set this up, this usage will continue to stay.  So, we should not
+get rid of the MTRR code that looks up the MTRR entries, while we have
+no need to modify them.
 
+Such MTRR entries provide safe guard to /dev/mem, which allows
+privileged user to access a range that may require UC mapping while
+the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
+such a case.
 
+UEFI memory table has memory attribute, which describes cache types
+supported in physical memory ranges.  However, this information gets
+lost when it it is converted to e820 table.
 
-> +
->   	/* Parse 64-bit MMIO range */
->   	pnv_ioda_parse_m64_window(phb);
->
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 94ef1df..590f778 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -175,11 +175,10 @@ struct pnv_phb {
->   			struct list_head	pe_list;
->   			struct mutex            pe_list_mutex;
->
-> -			/* Reverse map of PEs, will have to extend if
-> -			 * we are to support more than 256 PEs, indexed
-> +			/* Reverse map of PEs, indexed by
->   			 * bus { bus, devfn }
->   			 */
-> -			unsigned char		pe_rmap[0x10000];
-> +			int			pe_rmap[0x10000];
+Thanks,
+-Toshi
 
-
-Most time most of the array will be empty and it is 256K per PHB... I 
-understand we have quite a lot of RAM but still.
-
-
->
->   			/* Number of 32-bit DMA segments */
->   			unsigned long		dma32_segcount;
->
-
-
--- 
-Alexey
