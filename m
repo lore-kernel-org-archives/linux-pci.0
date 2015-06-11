@@ -1,110 +1,53 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Anatolij Gustschin <agust@denx.de>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	cbe-oss-dev@lists.ozlabs.org
-Subject: [RFT v2 04/48] powerpc, irq: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
-Date: Thu,  4 Jun 2015 12:13:14 +0800
-Message-Id: <1433391238-19471-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 11 Jun 2015 10:47:26 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: jakeo@microsoft.com
+Cc: kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, mebersol@microsoft.com, haiyangz@microsoft.com
+Subject: Re: [PATCH 0/6] Front-end driver for PCIe Pass-through on Hyper-V
+Message-ID: <20150611174726.GD22639@kroah.com>
+References: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-already have a pointer to corresponding irq_desc.
+On Thu, Jun 11, 2015 at 04:22:21PM +0000, jakeo@microsoft.com wrote:
+> From: Jake Oshins <jakeo@microsoft.com>
+> 
+> This patch does some slight refactoring on the hv_vmbus driver and its
+> dependents and then introduces a new paravirtual front-end driver for PCI
+> which supports PCI Express devices passed through to a Linux guest running
+> in a Hyper-V VM.
+> 
+> To support this front-end, several new mechanisms are introduced:
+> 
+> 1 - A common way of finding free memory-mapped I/O space in a Hyper-V VM, 
+>     available to all Hyper-V-related drivers.
+> 
+> 2 - A way of handling PCI Message-Signaled Interrupt (MSI and MSI-X)
+>     creation and formatting when Hyper-V is running.
+> 
+> 3 - A mapping function from Linux processor number to Hyper-V virtual
+>     processor number, available to drivers, which is necessary for MSI(-X)
+>     creation.
+> 
+> The Hyper-V Frame Buffer driver is modified to use the MMIO space
+> allocation function so that its allocations both don't collide with the
+> PCI front end and so that the chosen range can come from any available
+> part of MMIO space.
+> 
+> Finally, the new PCI front-end driver is the last patch in the series.
 
-Note: this patch has been queued for 4.2 by Michael Ellerman <mpe@ellerman.id.au>
+All of this information needs to be in the patches themselves, they all
+do not have any changelog information in them at all, making them not
+acceptable at all.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/powerpc/platforms/52xx/mpc52xx_gpt.c     |    2 +-
- arch/powerpc/platforms/cell/axon_msi.c        |    2 +-
- arch/powerpc/platforms/embedded6xx/hlwd-pic.c |    2 +-
- arch/powerpc/sysdev/uic.c                     |    2 +-
- arch/powerpc/sysdev/xics/xics-common.c        |    2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
+Please fix all of this up and resend.
 
-diff --git a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
-index c949ca055712..63016621aff8 100644
---- a/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
-+++ b/arch/powerpc/platforms/52xx/mpc52xx_gpt.c
-@@ -193,7 +193,7 @@ static struct irq_chip mpc52xx_gpt_irq_chip = {
- 
- void mpc52xx_gpt_irq_cascade(unsigned int virq, struct irq_desc *desc)
- {
--	struct mpc52xx_gpt_priv *gpt = irq_get_handler_data(virq);
-+	struct mpc52xx_gpt_priv *gpt = irq_desc_get_handler_data(desc);
- 	int sub_virq;
- 	u32 status;
- 
-diff --git a/arch/powerpc/platforms/cell/axon_msi.c b/arch/powerpc/platforms/cell/axon_msi.c
-index 623bd961465a..817d0e6747ea 100644
---- a/arch/powerpc/platforms/cell/axon_msi.c
-+++ b/arch/powerpc/platforms/cell/axon_msi.c
-@@ -95,7 +95,7 @@ static void msic_dcr_write(struct axon_msic *msic, unsigned int dcr_n, u32 val)
- static void axon_msi_cascade(unsigned int irq, struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
--	struct axon_msic *msic = irq_get_handler_data(irq);
-+	struct axon_msic *msic = irq_desc_get_handler_data(desc);
- 	u32 write_offset, msi;
- 	int idx;
- 	int retry = 0;
-diff --git a/arch/powerpc/platforms/embedded6xx/hlwd-pic.c b/arch/powerpc/platforms/embedded6xx/hlwd-pic.c
-index c269caee58f9..9dd154d6f89a 100644
---- a/arch/powerpc/platforms/embedded6xx/hlwd-pic.c
-+++ b/arch/powerpc/platforms/embedded6xx/hlwd-pic.c
-@@ -124,7 +124,7 @@ static void hlwd_pic_irq_cascade(unsigned int cascade_virq,
- 				      struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
--	struct irq_domain *irq_domain = irq_get_handler_data(cascade_virq);
-+	struct irq_domain *irq_domain = irq_desc_get_handler_data(desc);
- 	unsigned int virq;
- 
- 	raw_spin_lock(&desc->lock);
-diff --git a/arch/powerpc/sysdev/uic.c b/arch/powerpc/sysdev/uic.c
-index 7c37157d4c24..e763fe215cf5 100644
---- a/arch/powerpc/sysdev/uic.c
-+++ b/arch/powerpc/sysdev/uic.c
-@@ -198,7 +198,7 @@ void uic_irq_cascade(unsigned int virq, struct irq_desc *desc)
- {
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	struct irq_data *idata = irq_desc_get_irq_data(desc);
--	struct uic *uic = irq_get_handler_data(virq);
-+	struct uic *uic = irq_desc_get_handler_data(desc);
- 	u32 msr;
- 	int src;
- 	int subvirq;
-diff --git a/arch/powerpc/sysdev/xics/xics-common.c b/arch/powerpc/sysdev/xics/xics-common.c
-index 878a54036a25..76be7b00dd80 100644
---- a/arch/powerpc/sysdev/xics/xics-common.c
-+++ b/arch/powerpc/sysdev/xics/xics-common.c
-@@ -227,7 +227,7 @@ void xics_migrate_irqs_away(void)
- 
- 		/* Locate interrupt server */
- 		server = -1;
--		ics = irq_get_chip_data(virq);
-+		ics = irq_desc_get_chip_data(desc);
- 		if (ics)
- 			server = ics->get_server(ics, irq);
- 		if (server < 0) {
--- 
-1.7.10.4
+thanks,
 
+greg k-h
