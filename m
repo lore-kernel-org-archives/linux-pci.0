@@ -1,160 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 11 Jun 2015 17:18:08 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v3 3/4] PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed
-Date: Wed, 10 Jun 2015 16:55:00 +0800
-Message-Id: <1433926501-22956-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch v5 4/6] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+Message-ID: <20150611161808.GE23914@red-moon>
+References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com>
+ <20150609161230.GC8591@red-moon>
+ <55771B27.1060509@linux.intel.com>
+ <20150610164821.GA18832@red-moon>
+ <55787191.6060400@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55787191.6060400@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add three helpers to manage pci_dev->irq and pci_dev->irq_managed,
-which helps to improve maintenance.
+Hi Gerry,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/pci/intel_mid_pci.c |    4 ++--
- arch/x86/pci/irq.c           |   10 ++++------
- drivers/acpi/pci_irq.c       |   10 ++++------
- include/linux/pci.h          |   17 +++++++++++++++++
- 4 files changed, 27 insertions(+), 14 deletions(-)
+On Wed, Jun 10, 2015 at 06:19:13PM +0100, Jiang Liu wrote:
+> On 2015/6/11 0:48, Lorenzo Pieralisi wrote:
+> > On Tue, Jun 09, 2015 at 05:58:15PM +0100, Jiang Liu wrote:
+> >> On 2015/6/10 0:12, Lorenzo Pieralisi wrote:
+> > 
+> > [...]
+> > 
+> >>>> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> >>>> +				     struct acpi_pci_root_ops *ops,
+> >>>> +				     struct acpi_pci_root_info *info,
+> >>>> +				     void *sysdata, int segment, int node)
+> >>>
+> >>> I do not think you need to pass segment and node, they clutter the
+> >>> function signature when you can retrieve them from root, I would
+> >>> make them local variables and use root->segment and acpi_get_node
+> >>> in the function body to retrieve them.
+> >> On x86, node and segment may be overridden under certain conditions.
+> >> For example, segment will always be 0 if 'pci_ignore_seg' is set.
+> > 
+> > Ok, so the question would be then why do you not override the value
+> > in root->segment then (actually, is it *correct* to leave the segment
+> > value in root-> unchanged even if it is overriden) ?
+> > 
+> > Anyway, node is just used for a printk, why do not you add segment and
+> > node to acpi_pci_root_info ? Just cosmetic stuff, trying to help you
+> > simplify the code, it is not easy to parse.
+> Hi Lorenzo,
+> 	I used the complex prototype to explicitly reminder callers
+> that you need to prepare all these information. If simpler interface
+> is preferred, we could pack all ops, sysdata, segment, node, root
+> into info, that there's will be only one parameter "info" left.
+> The drawback is that it will add several lines of code to each arch
+> using this interface. So prefer simpler interface or less lines of code?:)
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index fb7a1f96d80c..22aaefb4f1ca 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -211,7 +211,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	struct irq_alloc_info info;
- 	int polarity;
- 
--	if (dev->irq_managed && dev->irq > 0)
-+	if (pci_has_managed_irq(dev))
- 		return 0;
- 
- 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
-@@ -234,7 +234,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (dev->irq_managed && dev->irq > 0) {
-+	if (pci_has_managed_irq(dev)) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq_managed = 0;
- 		/*
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 72108f0b66b1..32e70343e6fd 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1202,7 +1202,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			struct pci_dev *temp_dev;
- 			int irq;
- 
--			if (dev->irq_managed && dev->irq > 0)
-+			if (pci_has_managed_irq(dev))
- 				return 0;
- 
- 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
-@@ -1230,8 +1230,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			}
- 			dev = temp_dev;
- 			if (irq >= 0) {
--				dev->irq_managed = 1;
--				dev->irq = irq;
-+				pci_set_managed_irq(dev, irq);
- 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
- 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
- 				return 0;
-@@ -1259,9 +1258,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
-+	if (io_apic_assign_pci_irqs && pci_has_managed_irq(dev)) {
- 		mp_unmap_irq(dev->irq);
--		dev->irq = 0;
--		dev->irq_managed = 0;
-+		pci_reset_managed_irq(dev);
- 	}
- }
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index e7f718d6918a..9d6343d02f7e 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -413,7 +413,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return 0;
- 	}
- 
--	if (dev->irq_managed && dev->irq > 0)
-+	if (pci_has_managed_irq(dev))
- 		return 0;
- 
- 	entry = acpi_pci_irq_lookup(dev, pin);
-@@ -458,8 +458,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		kfree(entry);
- 		return rc;
- 	}
--	dev->irq = rc;
--	dev->irq_managed = 1;
-+	pci_set_managed_irq(dev, rc);
- 
- 	if (link)
- 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
-@@ -482,7 +481,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	u8 pin;
- 
- 	pin = dev->pin;
--	if (!pin || !dev->irq_managed || dev->irq <= 0)
-+	if (!pin || !pci_has_managed_irq(dev))
- 		return;
- 
- 	entry = acpi_pci_irq_lookup(dev, pin);
-@@ -504,7 +503,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
- 	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
--		dev->irq_managed = 0;
--		dev->irq = 0;
-+		pci_reset_managed_irq(dev);
- 	}
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f50d16a04abc..4bc640eef76f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -958,6 +958,23 @@ static inline int pci_is_managed(struct pci_dev *pdev)
- 	return pdev->is_managed;
- }
- 
-+static inline void pci_set_managed_irq(struct pci_dev *pdev, unsigned int irq)
-+{
-+	pdev->irq = irq;
-+	pdev->irq_managed = 1;
-+}
-+
-+static inline void pci_reset_managed_irq(struct pci_dev *pdev)
-+{
-+	pdev->irq = 0;
-+	pdev->irq_managed = 0;
-+}
-+
-+static inline bool pci_has_managed_irq(struct pci_dev *pdev)
-+{
-+	return pdev->irq_managed && pdev->irq > 0;
-+}
-+
- void pci_disable_device(struct pci_dev *dev);
- 
- extern unsigned int pcibios_max_latency;
--- 
-1.7.10.4
+I was just referring to segment and node parameters, I think that having
+them in the parameters list is overkill and they can be encapsulated.
 
+With the changes discussed previously feel free to add my:
+
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
+> Thanks!
+> Gerry
+> 
+> > 
+> > Thanks,
+> > Lorenzo
+> > 
+> 
