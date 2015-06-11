@@ -1,69 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.emea.novell.com ([130.57.118.101]:38939 "EHLO
-	mail.emea.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885AbbFOGUR convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:17:4>);
-	Mon, 15 Jun 2015 02:20:17 -0400
-Message-Id: <557E8ABA02000078000849A8@mail.emea.novell.com>
-Date: Mon, 15 Jun 2015 07:20:10 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Andy Lutomirski" <luto@amacapital.net>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"Jej B" <James.Bottomley@hansenpartnership.com>,
-	"Toshi Kani" <toshi.kani@hp.com>, "X86 ML" <x86@kernel.org>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	<ville.syrjala@linux.intel.com>,
-	"Julia Lawall" <julia.lawall@lip6.fr>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"Dave Airlie" <airlied@redhat.com>, <syrjala@sci.fi>,
-	"Juergen Gross" <JGross@suse.com>,
-	"Luis Rodriguez" <Mcgrof@Suse.com>, "Borislav Petkov" <bp@suse.de>,
-	"Tomi Valkeinen" <tomi.valkeinen@ti.com>,
-	"linux-fbdev" <linux-fbdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	<linux-media@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
-References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
- <1434064996.11808.64.camel@misato.fc.hp.com>
- <557AAD910200007800084014@mail.emea.novell.com>
- <CALCETrXWZU2NZRZy7b74z54Tt5aKmTOmgMmf5WYG1OZtEmjw7A@mail.gmail.com>
-In-Reply-To: <CALCETrXWZU2NZRZy7b74z54Tt5aKmTOmgMmf5WYG1OZtEmjw7A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 11 Jun 2015 10:46:40 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: jakeo@microsoft.com
+Cc: kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, mebersol@microsoft.com, haiyangz@microsoft.com
+Subject: Re: [PATCH 6/6] drivers:pci:hv: New paravirtual PCI front-end for
+ Hyper-V VMs
+Message-ID: <20150611174640.GC22639@kroah.com>
+References: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
+ <1434039747-44535-7-git-send-email-jakeo@microsoft.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434039747-44535-7-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 13.06.15 at 01:15, <luto@amacapital.net> wrote:
-> On Jun 12, 2015 12:59 AM, "Jan Beulich" <JBeulich@suse.com> wrote:
->>
->> >>> On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
->> > There are two usages on MTRRs:
->> >  1) MTRR entries set by firmware
->> >  2) MTRR entries set by OS drivers
->> >
->> > We can obsolete 2), but we have no control over 1).  As UEFI firmwares
->> > also set this up, this usage will continue to stay.  So, we should not
->> > get rid of the MTRR code that looks up the MTRR entries, while we have
->> > no need to modify them.
->> >
->> > Such MTRR entries provide safe guard to /dev/mem, which allows
->> > privileged user to access a range that may require UC mapping while
->> > the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
->> > such a case.
->>
->> But it wouldn't be impossible to simply read the MTRRs upon boot,
->> store the information, disable MTRRs, and correctly use PAT to
->> achieve the same effect (i.e. the "blindly maps" part of course
->> would need fixing).
+On Thu, Jun 11, 2015 at 04:22:27PM +0000, jakeo@microsoft.com wrote:
+> From: Jake Oshins <jakeo@microsoft.com>
 > 
-> This may crash and burn badly when we call a UEFI function or an SMI
-> happens.  I think we should just leave the MTRRs alone.
+> drivers:pci:hv: Update MAINTAINERS
 
-I buy the SMI part, but UEFI runtime calls are being done on
-page tables we construct and control, so attributes could be kept
-correct without relying on MTRRs.
+Huh?
 
-Jan
+> 
+> drivers:pci:hv: New paravirtual PCI front-end for Hyper-V VMs
 
+What is this odd format?
+
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+
+No blank line?
+
+Come on, you all know better than this...
+
+greg k-h
