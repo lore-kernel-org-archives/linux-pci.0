@@ -1,94 +1,84 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Helge Deller <deller@gmx.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-parisc@vger.kernel.org
-Subject: [Patch v3 23/36] parisc, irq: Use access helper irq_data_get_affinity_mask()
-Date: Mon,  1 Jun 2015 16:05:32 +0800
-Message-Id: <1433145945-789-24-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <557A0268.9050308@redhat.com>
+Date: Thu, 11 Jun 2015 17:49:28 -0400
+From: Jarod Wilson <jarod@redhat.com>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [Update][PATCH] PCIe / hotplug: Drop pointless ACPI-based "slot
+ detection" check
+References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <5579BFD9.9040904@redhat.com> <5579F1B4.9000206@redhat.com> <1777389.skUOsvr7P3@vostro.rjw.lan>
+In-Reply-To: <1777389.skUOsvr7P3@vostro.rjw.lan>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use access helper irq_data_get_affinity_mask() to hide implementation
-details of struct irq_desc.
+On 6/11/2015 5:16 PM, Rafael J. Wysocki wrote:
+> On Thursday, June 11, 2015 04:38:12 PM Jarod Wilson wrote:
+>> On 6/11/2015 1:05 PM, Jarod Wilson wrote:
+>>> On 5/21/2015 9:21 PM, Rafael J. Wysocki wrote:
+>>>> On Thursday, May 21, 2015 11:11:46 AM Bjorn Helgaas wrote:
+>>>>> On Tue, May 19, 2015 at 03:27:58PM +0200, Rafael J. Wysocki wrote:
+>>>>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>>>>
+>>>>>> Jarod Wilson reports that the expresscard hotplug setup doesn't work
+>>>>>> on HP ZBook G2.  The problem turns out to be the ACPI-based "slot
+>>>>>> detection" code called from pciehp_probe() which tries to use some
+>>>>>> questionable heuristics based on what ACPI objects are present for
+>>>>>> the PCIe port device at hand to figure out whether or not to register
+>>>>>> a hotplug slot for that port.
+>>>>>>
+>>>>>> That code is used if there is at least one PCIe port having an ACPI
+>>>>>> device configuration object related to hotplug (such as _EJ0 or _RMV)
+>>>>>> and the Thunderbolt port on the affected machine has _RMV.  Of course,
+>>>>>> Thunderbolt and PCIe native hotplug need not be mutually exclusive
+>>>>>> (as they aren't on the machine in question), so that rule is simply
+>>>>>> incorrect.
+>>>>>>
+>>>>>> Moreover, the ACPI-based "slot detection" check does not add any
+>>>>>> value if pciehp_probe() is called at all and the service type of the
+>>>>>> device object it has been called for is PCIE_PORT_SERVICE_HP, because
+>>>>>> PCIe hotplug services are only registered if the _OSC handshake in
+>>>>>> acpi_pci_root_add() allows the kernel to control the PCIe native
+>>>>>> hotplug feature.  No more checks need to be carried out to decide
+>>>>>> whether or not to register a native PCIe hotlug slot in that case.
+>>>>>>
+>>>>>> For the above reasons, make pciehp_probe() check if it has been
+>>>>>> called for the right service type and drop the pointless ACPI-based
+>>>>>> "slot detection" check from it.  Also remove the entire code whose
+>>>>>> only user is that check (the entire pciehp_acpi.c file goes away
+>>>>>> as a result) and drop function headers related to it from the
+>>>>>> internal PCIeHP header file.
+>>>>>>
+>>>>>> Link: http://marc.info/?t=143163219300002&r=1&w=2
+>>>>>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=98581
+>>>>>> Reported-by: Jarod Wilson <jarod@redhat.com>
+>>>>>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>>>
+>>>>> This is awesome!  Applied to pci/hotplug for v4.2, with Jarod's
+>>>>> reviewed/tested-by.
+>>>>
+>>>> Thanks!
+>>>
+>>> Looks like I didn't test enough. I can't explain WHY, but with this
+>>> applied, now thunderbolt hot unplug of a network adapter goes haywire,
+>>> where prior to the patch, it worked just fine. Still looking into it...
+>>
+>> Filed bug, dmesg spew can be found in the bug.
+>>
+>> https://bugzilla.kernel.org/show_bug.cgi?id=99841
+>
+> If it worked for you previously, can you possibly try to re-create that
+> configuration and set of patches applied and retest then?
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/parisc/kernel/irq.c |   12 ++++++------
- drivers/parisc/iosapic.c |    2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+I tried the current Fedora 4.1-rc7 build first, everything was fine, 
+then patched in JUST the one patch, and it went belly up. I'll add some 
+extra debugging spew to a build both with and without the one patch, to 
+see what differences there are in devices pciehp is claiming and follow 
+up in the bug on your other info requests.
 
-diff --git a/arch/parisc/kernel/irq.c b/arch/parisc/kernel/irq.c
-index f3191db6e2e9..413ec3c3f9cc 100644
---- a/arch/parisc/kernel/irq.c
-+++ b/arch/parisc/kernel/irq.c
-@@ -131,7 +131,7 @@ static int cpu_set_affinity_irq(struct irq_data *d, const struct cpumask *dest,
- 	if (cpu_dest < 0)
- 		return -1;
- 
--	cpumask_copy(d->affinity, dest);
-+	cpumask_copy(irq_data_get_affinity_mask(d), dest);
- 
- 	return 0;
- }
-@@ -339,7 +339,7 @@ unsigned long txn_affinity_addr(unsigned int irq, int cpu)
- {
- #ifdef CONFIG_SMP
- 	struct irq_data *d = irq_get_irq_data(irq);
--	cpumask_copy(d->affinity, cpumask_of(cpu));
-+	cpumask_copy(irq_data_get_affinity_mask(d), cpumask_of(cpu));
- #endif
- 
- 	return per_cpu(cpu_data, cpu).txn_addr;
-@@ -508,7 +508,7 @@ void do_cpu_irq_mask(struct pt_regs *regs)
- 	unsigned long eirr_val;
- 	int irq, cpu = smp_processor_id();
- #ifdef CONFIG_SMP
--	struct irq_desc *desc;
-+	struct irq_data *irq_data;
- 	cpumask_t dest;
- #endif
- 
-@@ -522,9 +522,9 @@ void do_cpu_irq_mask(struct pt_regs *regs)
- 	irq = eirr_to_irq(eirr_val);
- 
- #ifdef CONFIG_SMP
--	desc = irq_to_desc(irq);
--	cpumask_copy(&dest, desc->irq_data.affinity);
--	if (irqd_is_per_cpu(&desc->irq_data) &&
-+	irq_data = irq_get_irq_data(irq);
-+	cpumask_copy(&dest, irq_data_get_affinity_mask(irq_data));
-+	if (irqd_is_per_cpu(irq_data) &&
- 	    !cpumask_test_cpu(smp_processor_id(), &dest)) {
- 		int cpu = cpumask_first(&dest);
- 
-diff --git a/drivers/parisc/iosapic.c b/drivers/parisc/iosapic.c
-index 9ee04b4b68bf..144c77dfe4b1 100644
---- a/drivers/parisc/iosapic.c
-+++ b/drivers/parisc/iosapic.c
-@@ -691,7 +691,7 @@ static int iosapic_set_affinity_irq(struct irq_data *d,
- 	if (dest_cpu < 0)
- 		return -1;
- 
--	cpumask_copy(d->affinity, cpumask_of(dest_cpu));
-+	cpumask_copy(irq_data_get_affinity_mask(d), cpumask_of(dest_cpu));
- 	vi->txn_addr = txn_affinity_addr(d->irq, dest_cpu);
- 
- 	spin_lock_irqsave(&iosapic_lock, flags);
 -- 
-1.7.10.4
-
+Jarod Wilson
+jarod@redhat.com
