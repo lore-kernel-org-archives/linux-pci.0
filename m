@@ -1,119 +1,268 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <556DE1B9.6020100@roeck-us.net>
-Date: Tue, 02 Jun 2015 10:02:49 -0700
-From: Guenter Roeck <linux@roeck-us.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:29456 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605AbbFKCxd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 22:53:33 -0400
+Message-ID: <5578F7BB.7080003@hisilicon.com>
+Date: Thu, 11 Jun 2015 10:51:39 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net> <20150527210447.GY32152@google.com> <20150602145510.GE23650@red-moon>
-In-Reply-To: <20150602145510.GE23650@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: James Morse <James.Morse@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"fabrice.gasnier@st.com" <fabrice.gasnier@st.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	"yuanzhichang@hisilicon.com" <yuanzhichang@hisilicon.com>,
+	"zhudacai@hisilicon.com" <zhudacai@hisilicon.com>,
+	"zhangjukuo@huawei.com" <zhangjukuo@huawei.com>,
+	"qiuzhenfa@hisilicon.com" <qiuzhenfa@hisilicon.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v2 2/4] PCI: designware: Add ARM64 support
+References: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com> <1433320542-49576-3-git-send-email-wangzhou1@hisilicon.com> <5570507F.4030704@arm.com> <557159B2.9090103@hisilicon.com> <20150609111507.GB20182@red-moon>
+In-Reply-To: <20150609111507.GB20182@red-moon>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/02/2015 07:55 AM, Lorenzo Pieralisi wrote:
-> Bjorn, Guenter,
->
-> On Wed, May 27, 2015 at 10:04:47PM +0100, Bjorn Helgaas wrote:
->> [+cc Lorenzo, Suravee, Will]
+On 2015/6/9 19:15, Lorenzo Pieralisi wrote:
+> On Fri, Jun 05, 2015 at 09:11:30AM +0100, Zhou Wang wrote:
+> 
+> [...]
+> 
+>>>> -int dw_pcie_host_init(struct pcie_port *pp)
+>>>> +int __init dw_pcie_host_init(struct pcie_port *pp)
+>>>>  {
+>>>>  	struct device_node *np = pp->dev->of_node;
+>>>>  	struct platform_device *pdev = to_platform_device(pp->dev);
+>>>>  	struct of_pci_range range;
+>>>>  	struct of_pci_range_parser parser;
+>>>> +	struct pci_bus *bus;
+>>>>  	struct resource *cfg_res;
+>>>> +	LIST_HEAD(res);
+>>>>  	u32 val, na, ns;
+>>>>  	const __be32 *addrp;
+>>>>  	int i, index, ret;
+>>>> @@ -502,15 +498,49 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>>>  	val |= PORT_LOGIC_SPEED_CHANGE;
+>>>>  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+>>>>  
+>>>> -#ifdef CONFIG_PCI_MSI
+>>>> -	dw_pcie_msi_chip.dev = pp->dev;
+>>>> -	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+>>>> +#ifdef CONFIG_ARM
+>>>> +	/*
+>>>> +	 * FIXME: we should really be able to use
+>>>> +	 * of_pci_get_host_bridge_resources on arm32 as well,
+>>>> +	 * but the conversion needs some more testing
+>>>> +	 */
+>>>> +	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+>>>> +		pci_ioremap_io(global_io_offset, pp->io_base);
+>>>> +		global_io_offset += SZ_64K;
+>>>> +		pci_add_resource_offset(&res, &pp->io,
+>>>> +					global_io_offset - pp->io_bus_addr);
+>>>> +	}
+>>>> +	pci_add_resource_offset(&res, &pp->mem,
+>>>> +				pp->mem.start - pp->mem_bus_addr);
+>>>> +	pci_add_resource(&res, &pp->busn);
+>>>
+>>> I don't think this #ifdef is necessary. In the spirit of 'the conversion
+>>> needs some more testing', I removed it leaving just the below arm64 code.
+>>>
+>>> This worked on my Freescale i.MX6 Quad SABRE Lite Board, I went as far as
+>>> scanning for wireless access points.
+>>>
 >>
->> I cc'd Lorenzo, Suravee, and Will because Lorenzo is working on calling
->> pci_read_bases() from the PCI core instead of from arch code, and there are
->> likely some dependencies between these two things.
->>
->> On Fri, May 22, 2015 at 05:52:16PM -0700, Guenter Roeck wrote:
->>> The PCI subsystem always assumes that I/O is supported on PCIe bridges
->>> and tries to assign an I/O window to each port even if that is not
->>> the case.
->>>
->>> This may result in messages such as
->>>
->>> pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
->>> 					get_res_add_size add_size 1000
->>> pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
->>> pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
->>>
->>> for each bridge port, even if a port or its parent does not support
->>> I/O in the first place.
->>>
->>> To avoid this message, check if a port supports I/O before trying to
->>> enable it. Also check if port's parent supports I/O, and only modify
->>> a port's I/O resource size if both the port and its parent support I/O.
->>>
->>> If IO is disabled after the initial port scan, the IO base and size
->>> registers are set to 0x00f0 to indicate that IO is disabled. A later
->>> rescan interprets this as "IO supported" and enables the IO range,
->>> even if the parent does not support IO. Handle this situation as well.
->>>
->>> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
->>> ---
->>>   drivers/pci/probe.c     | 14 ++++++++++++++
->>>   drivers/pci/setup-bus.c |  4 ++--
->>>   include/linux/pci.h     |  9 +++++++++
->>>   3 files changed, 25 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index 6675a7a1b9fc..f4944ef45148 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -354,6 +354,20 @@ static void pci_read_bridge_io(struct pci_bus *child)
->>>   	base = (io_base_lo & io_mask) << 8;
->>>   	limit = (io_limit_lo & io_mask) << 8;
->>>
->>> +	/* If necessary, check if the bridge supports an I/O aperture */
->>> +	if (!io_base_lo && !io_limit_lo) {
->>> +		u16 io;
->>> +
->>> +		if (!pci_parent_supports_io(child))
->>> +			return;
->>> +
->>> +		pci_write_config_word(dev, PCI_IO_BASE, 0xe0f0);
->>> +		pci_read_config_word(dev, PCI_IO_BASE, &io);
->>> +		pci_write_config_word(dev, PCI_IO_BASE, 0x0);
->>> +		if (!io)
->>> +			return;
->>> +	}
->>
->> I really like the idea of pushing this into pci_read_bridge_io().
->>
->> I wonder if we can do the same with pci_read_bridge_mmio_pref(), and
->> somehow get rid of pci_bridge_check_ranges() altogether?
->>
->> I think I looked at doing that a while back, and it seems like there was
->> some wrinkle, but I don't remember what it was.
+>> I think it depends on which kind of PCIe device you use, if we use a PCIe device
+>> with a I/O Bar, it may not work well without above code. But so far, I have not
+>> met a PCIe device which must work with a I/O Bar.
+> 
+> There are two problems here:
+> 
+> 1) the io_base address you get from of_pci_get_host_bridge_resources
+>    must be mapped using pci_remap_iospace. You are not doing this, so
+>    even if you had a PCIe card with I/O bar it would not work on arm64
+>    as the code stands. Remember that I/O space on arm/arm64 works as a
+>    memory access with offset from PCI_IOBASE and that's the value you get
+>    in the I/O resource. See:
+> 
+>    drivers/pci/host/pci-host-generic.c
+>    drivers/pci/host/pci-versatile.c
+>    drivers/pci/host/pci-xgene.c
+> 
+> 2) (1) above would sort out I/O space access for both arm and arm64 so,
+>    as James said, the #ifdef is useless.
+> 
+> I hope this makes things clearer.
+> 
+> Thanks,
+> Lorenzo
 >
 
-After looking into this some more, I think the wrinkle may be that
-pci_read_bridge_bases() and thus pci_read_bridge_io() isn't called
-on probe-only systems (if PCI_PROBE_ONLY is set). A secondary
-problem is that pci_read_bridge_io() does not enable a resource
-if it is explicitly disabled (base > limit), but the subsequent call
-to pci_bridge_check_ranges() unconditionally enables it.
+Hi Lorenzo,
 
-Not really sure how to address this; my current code checks IO support
-in both pci_read_bridge_io() and pci_bridge_check_ranges(). And since
-pci_read_bridge_io() is not always called, I don't see how it might
-be possible to get rid of pci_bridge_check_ranges(), or even the check
-for IO support in pci_bridge_check_ranges().
+Many thanks for your explanation. I have a better understanding now.
+So I think we could remove #ifdef and add pci_remap_iospace after
+of_pci_get_host_bridge_resources.
 
-> While at it, do you think it is reasonable to also claim the bridge
-> windows (resources) in the respective pci_read_bridge_* calls ?
->
-> Is there a reason why we don't/can't do it ? I noticed that on
-> PROBE_ONLY systems on ARM/ARM64 at the moment we do not claim
-> the bridge apertures and this is not correct, see below:
->
-> [5.980127] pcieport 0000:00:02.1: can't enable device: BAR 8
-> [mem 0xbff00000 - 0xbfffffff] not claimed
-> [5.988056] pcieport: probe of 0000:00:02.1 failed with error -22
->
-Is this when trying my patches or with the current upstream code ?
+Regards,
+Zhou
 
-Thanks,
-Guenter
+>>
+>>>> +#else
+>>>> +	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
+>>>
+>>> of_pci_get_host_bridge_resources expects &pp->io_base to be a
+>>> resource_size_t*, but &io_base is u64*. This generates a warning on arm
+>>> with the above change. Changing the the type in
+>>> drivers/pci/host/pcie-designware.h fixes this.
+>>>
+>>>
+>>> Thanks,
+>>>
+>>> James
+>>>
+>>
+>> OK, will modify this in next version.
+>>
+>> Best Regards and thanks again for your test,
+>> Zhou
+>>
+>>>> +	if (ret)
+>>>> +		return ret;
+>>>> +#endif
+>>>> +
+>>>> +	bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
+>>>> +			      pp, &res);
+>>>> +	if (!bus)
+>>>> +		return -ENOMEM;
+>>>> +
+>>>> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+>>>> +	bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
+>>>> +#else
+>>>> +	bus->msi = &dw_pcie_msi_chip;
+>>>>  #endif
+>>>>  
+>>>> -	dw_pci.nr_controllers = 1;
+>>>> -	dw_pci.private_data = (void **)&pp;
+>>>> +	pci_scan_child_bus(bus);
+>>>> +	if (pp->ops->scan_bus)
+>>>> +		pp->ops->scan_bus(pp);
+>>>>  
+>>>> -	pci_common_init_dev(pp->dev, &dw_pci);
+>>>> +#ifdef CONFIG_ARM
+>>>> +	/* support old dtbs that incorrectly describe IRQs */
+>>>> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+>>>> +#endif
+>>>> +
+>>>> +	pci_assign_unassigned_bus_resources(bus);
+>>>> +	pci_bus_add_devices(bus);
+>>>>  
+>>>>  	return 0;
+>>>>  }
+>>>> @@ -653,7 +683,7 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
+>>>>  static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>>>>  			int size, u32 *val)
+>>>>  {
+>>>> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+>>>> +	struct pcie_port *pp = bus->sysdata;
+>>>>  	int ret;
+>>>>  
+>>>>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
+>>>> @@ -677,7 +707,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>>>>  static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>>>>  			int where, int size, u32 val)
+>>>>  {
+>>>> -	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
+>>>> +	struct pcie_port *pp = bus->sysdata;
+>>>>  	int ret;
+>>>>  
+>>>>  	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
+>>>> @@ -701,64 +731,6 @@ static struct pci_ops dw_pcie_ops = {
+>>>>  	.write = dw_pcie_wr_conf,
+>>>>  };
+>>>>  
+>>>> -static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
+>>>> -{
+>>>> -	struct pcie_port *pp;
+>>>> -
+>>>> -	pp = sys_to_pcie(sys);
+>>>> -
+>>>> -	if (global_io_offset < SZ_1M && pp->io_size > 0) {
+>>>> -		sys->io_offset = global_io_offset - pp->io_bus_addr;
+>>>> -		pci_ioremap_io(global_io_offset, pp->io_base);
+>>>> -		global_io_offset += SZ_64K;
+>>>> -		pci_add_resource_offset(&sys->resources, &pp->io,
+>>>> -					sys->io_offset);
+>>>> -	}
+>>>> -
+>>>> -	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
+>>>> -	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
+>>>> -	pci_add_resource(&sys->resources, &pp->busn);
+>>>> -
+>>>> -	return 1;
+>>>> -}
+>>>> -
+>>>> -static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>>>> -{
+>>>> -	struct pci_bus *bus;
+>>>> -	struct pcie_port *pp = sys_to_pcie(sys);
+>>>> -
+>>>> -	pp->root_bus_nr = sys->busnr;
+>>>> -	bus = pci_create_root_bus(pp->dev, sys->busnr,
+>>>> -				  &dw_pcie_ops, sys, &sys->resources);
+>>>> -	if (!bus)
+>>>> -		return NULL;
+>>>> -
+>>>> -	pci_scan_child_bus(bus);
+>>>> -
+>>>> -	if (bus && pp->ops->scan_bus)
+>>>> -		pp->ops->scan_bus(pp);
+>>>> -
+>>>> -	return bus;
+>>>> -}
+>>>> -
+>>>> -static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>>>> -{
+>>>> -	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
+>>>> -	int irq;
+>>>> -
+>>>> -	irq = of_irq_parse_and_map_pci(dev, slot, pin);
+>>>> -	if (!irq)
+>>>> -		irq = pp->irq;
+>>>> -
+>>>> -	return irq;
+>>>> -}
+>>>> -
+>>>> -static struct hw_pci dw_pci = {
+>>>> -	.setup		= dw_pcie_setup,
+>>>> -	.scan		= dw_pcie_scan_bus,
+>>>> -	.map_irq	= dw_pcie_map_irq,
+>>>> -};
+>>>> -
+>>>>  void dw_pcie_setup_rc(struct pcie_port *pp)
+>>>>  {
+>>>>  	u32 val;
+>>>
+>>>
+>>> .
+>>>
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> .
+> 
+
 
