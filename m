@@ -1,96 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51701 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751433AbbFETIO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 15:08:14 -0400
-Date: Fri, 5 Jun 2015 15:07:58 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tina Ruchandani <ruchandani.tina@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, y2038@lists.linaro.org,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2] xen/pcifront: Remove usage of struct timeval
-Message-ID: <20150605190758.GF21113@l.oracle.com>
-References: <20150519060809.GA27777@tinar>
- <CAErSpo47yMfPREFOTCiL8Pa=xbqgsSWk90Ge=u2YeTkUgdFESQ@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo47yMfPREFOTCiL8Pa=xbqgsSWk90Ge=u2YeTkUgdFESQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <557AAD910200007800084014@mail.emea.novell.com>
+References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+ <1434064996.11808.64.camel@misato.fc.hp.com> <557AAD910200007800084014@mail.emea.novell.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 12 Jun 2015 16:15:00 -0700
+Message-ID: <CALCETrXWZU2NZRZy7b74z54Tt5aKmTOmgMmf5WYG1OZtEmjw7A@mail.gmail.com>
+Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
+To: Jan Beulich <JBeulich@suse.com>
+Cc: Juergen Gross <jgross@suse.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
+	Dave Airlie <airlied@redhat.com>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	X86 ML <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-media@vger.kernel.org, Luis Rodriguez <Mcgrof@suse.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>, Borislav Petkov <bp@suse.de>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ville.syrjala@linux.intel.com
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 20, 2015 at 08:16:24AM -0500, Bjorn Helgaas wrote:
-> On Tue, May 19, 2015 at 1:08 AM, Tina Ruchandani
-> <ruchandani.tina@gmail.com> wrote:
-> > struct timeval uses a 32-bit field for representing seconds,
-> > which will overflow in the year 2038 and beyond. This patch replaces
-> > struct timeval with 64-bit ktime_t which is 2038 safe.
-> > The patch is part of a larger effort to remove instances of
-> > 32-bit timekeeping variables (timeval, time_t and timespec)
-> > from the kernel.
+On Jun 12, 2015 12:59 AM, "Jan Beulich" <JBeulich@suse.com> wrote:
+>
+> >>> On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
+> > There are two usages on MTRRs:
+> >  1) MTRR entries set by firmware
+> >  2) MTRR entries set by OS drivers
 > >
-> > Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
-> > Suggested-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> This isn't PCI-related, so I expect Konrad, Boris, or David will merge this.
+> > We can obsolete 2), but we have no control over 1).  As UEFI firmwares
+> > also set this up, this usage will continue to stay.  So, we should not
+> > get rid of the MTRR code that looks up the MTRR entries, while we have
+> > no need to modify them.
+> >
+> > Such MTRR entries provide safe guard to /dev/mem, which allows
+> > privileged user to access a range that may require UC mapping while
+> > the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
+> > such a case.
+>
+> But it wouldn't be impossible to simply read the MTRRs upon boot,
+> store the information, disable MTRRs, and correctly use PAT to
+> achieve the same effect (i.e. the "blindly maps" part of course
+> would need fixing).
 
-OK. Thanks.
-> 
-> > --
-> > Changes in v2:
-> > - Use monotonic time (ktime_get_ns()) instead of real time
-> > since we only care about elapsed delta here.
-> > - Use macro ktime_get_ns() instead of getting ktime_t and
-> > converting it to ns.
-> > ---
-> >  drivers/pci/xen-pcifront.c | 8 +++-----
-> >  1 file changed, 3 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> > index 7cfd2db..c4796c8 100644
-> > --- a/drivers/pci/xen-pcifront.c
-> > +++ b/drivers/pci/xen-pcifront.c
-> > @@ -20,6 +20,7 @@
-> >  #include <linux/workqueue.h>
-> >  #include <linux/bitops.h>
-> >  #include <linux/time.h>
-> > +#include <linux/ktime.h>
-> >  #include <xen/platform_pci.h>
-> >
-> >  #include <asm/xen/swiotlb-xen.h>
-> > @@ -115,7 +116,6 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
-> >         evtchn_port_t port = pdev->evtchn;
-> >         unsigned irq = pdev->irq;
-> >         s64 ns, ns_timeout;
-> > -       struct timeval tv;
-> >
-> >         spin_lock_irqsave(&pdev->sh_info_lock, irq_flags);
-> >
-> > @@ -132,8 +132,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
-> >          * (in the latter case we end up continually re-executing poll() with a
-> >          * timeout in the past). 1s difference gives plenty of slack for error.
-> >          */
-> > -       do_gettimeofday(&tv);
-> > -       ns_timeout = timeval_to_ns(&tv) + 2 * (s64)NSEC_PER_SEC;
-> > +       ns_timeout = ktime_get_ns() + 2 * (s64)NSEC_PER_SEC;
-> >
-> >         xen_clear_irq_pending(irq);
-> >
-> > @@ -141,8 +140,7 @@ static int do_pci_op(struct pcifront_device *pdev, struct xen_pci_op *op)
-> >                         (unsigned long *)&pdev->sh_info->flags)) {
-> >                 xen_poll_irq_timeout(irq, jiffies + 3*HZ);
-> >                 xen_clear_irq_pending(irq);
-> > -               do_gettimeofday(&tv);
-> > -               ns = timeval_to_ns(&tv);
-> > +               ns = ktime_get_ns();
-> >                 if (ns > ns_timeout) {
-> >                         dev_err(&pdev->xdev->dev,
-> >                                 "pciback not responding!!!\n");
-> > --
-> > 2.2.0.rc0.207.ga3a616c
-> >
+This may crash and burn badly when we call a UEFI function or an SMI
+happens.  I think we should just leave the MTRRs alone.
+
+--Andy
