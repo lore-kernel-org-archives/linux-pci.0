@@ -1,56 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:2887 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753374AbbFIQpk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Jun 2015 12:45:40 -0400
-From: "Jiang, Dave" <dave.jiang@intel.com>
-To: "bhelgaas@google.com" <bhelgaas@google.com>
-CC: "Allen.Hubbe@emc.com" <Allen.Hubbe@emc.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1434127365.11808.85.camel@misato.fc.hp.com>
+Subject: Re: RIP MTRR - status update for upcoming v4.2
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
+	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
+	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?=
+	<ville.syrjala@linux.intel.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-media@vger.kernel.org,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jdmason@kudzu.us" <jdmason@kudzu.us>,
-	"linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>
-Subject: Re: [PATCH v3 18/18] NTB: Increase transport MTU to 64k from 16k
-Date: Tue, 9 Jun 2015 16:45:36 +0000
-Message-ID: <1433868335.38406.111.camel@intel.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-	 <aba15cd979bc3523c0289f4766b47d3f45f32c38.1433838377.git.Allen.Hubbe@emc.com>
-	 <CAErSpo7B8qP34ZObkzjZ-r7bCnG6A0KG3Rorw+TajP4XU43wFg@mail.gmail.com>
-In-Reply-To: <CAErSpo7B8qP34ZObkzjZ-r7bCnG6A0KG3Rorw+TajP4XU43wFg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	Andy Lutomirski <luto@amacapital.net>, X86 ML <x86@kernel.org>,
+	Juergen Gross <jgross@suse.com>,
+	Dave Airlie <airlied@redhat.com>,
+	xen-devel@lists.xenproject.org, Julia Lawall <julia.lawall@lip6.fr>
+Date: Fri, 12 Jun 2015 10:42:45 -0600
+In-Reply-To: <20150612005221.GD23057@wotan.suse.de>
+References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+	 <1434064996.11808.64.camel@misato.fc.hp.com>
+	 <20150612005221.GD23057@wotan.suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVHVlLCAyMDE1LTA2LTA5IGF0IDExOjA0IC0wNTAwLCAnQmpvcm4gSGVsZ2FhcycgdmlhIGxp
-bnV4LW50YiB3cm90ZToNCj4gT24gVHVlLCBKdW4gOSwgMjAxNSBhdCA0OjQ0IEFNLCBBbGxlbiBI
-dWJiZSA8QWxsZW4uSHViYmVAZW1jLmNvbT4gDQo+IHdyb3RlOg0KPiA+IEZyb206IERhdmUgSmlh
-bmcgPGRhdmUuamlhbmdAaW50ZWwuY29tPg0KPiA+IA0KPiA+IEJlbmNobWFya2luZyBzaG93ZWQg
-c2lnbmlmaWNhbnQgcGVyZm9ybWFuY2UgaW5jcmVhc2UgZ29pbmcgZnJvbSBNVFUgDQo+ID4gc2l6
-ZQ0KPiA+IG9mIDY0ayBmcm9tIDE2ay4gIENoYW5naW5nIHRoZSBkZWZhdWx0Lg0KPiANCj4gVGhp
-cyBjaGFuZ2Vsb2cgZG9lc24ndCBwYXJzZS4gIEkgdGhpbmsgeW91IG1lYW4gImdvaW5nIGZyb20g
-TVRVIHNpemUNCj4gMTZrIHRvIDY0ay4iDQoNClllcy4gU29ycnkgYWJvdXQgdGhlIGNvbmZ1c2lv
-bi4NCg0KPiANCj4gVGhlIG9yaWdpbmFsIHZhbHVlIHdhcyAweDQwMWUgKDE2ayArIDB4MWUpLCBh
-bmQgdGhlIG5ldyB2YWx1ZSBpcw0KPiBleGFjdGx5IDY0ay4gIFBsZWFzZSBpbmNsdWRlIGEgbm90
-ZSBhYm91dCB3aGF0IHRoYXQgZXh0cmEgMHgxZSB3YXMgDQo+IGZvcg0KPiBhbmQgd2h5IGl0IGlz
-bid0IG5lZWRlZCBpbiB0aGUgbmV3IHZhbHVlLg0KDQpKb24sIGNhbiB5b3UgY29tbWVudCBvbiB3
-aHkgdGhlcmUncyB0aGUgYWRkaXRpb25hbCAzMCBieXRlcyBvbiB0b3Agb2YNCjE2ayBpbiB0aGUg
-cHJldmlvdXMgdmFsdWU/IA0KDQo+IA0KPiA+IFNpZ25lZC1vZmYtYnk6IERhdmUgSmlhbmcgPGRh
-dmUuamlhbmdAaW50ZWwuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL250Yi9udGJfdHJhbnNw
-b3J0LmMgfCAyICstDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxl
-dGlvbigtKQ0KPiA+IA0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL250Yi9udGJfdHJhbnNwb3J0
-LmMgDQo+ID4gYi9kcml2ZXJzL250Yi9udGJfdHJhbnNwb3J0LmMNCj4gPiBpbmRleCBlYTIzN2Fl
-Y2EyOGMuLmM4N2JjMGNiZDYwNyAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL250Yi9udGJfdHJh
-bnNwb3J0LmMNCj4gPiArKysgYi9kcml2ZXJzL250Yi9udGJfdHJhbnNwb3J0LmMNCj4gPiBAQCAt
-NzYsNyArNzYsNyBAQCBzdGF0aWMgdW5zaWduZWQgbG9uZyBtYXhfbXdfc2l6ZTsNCj4gPiAgbW9k
-dWxlX3BhcmFtKG1heF9td19zaXplLCB1bG9uZywgMDY0NCk7DQo+ID4gIE1PRFVMRV9QQVJNX0RF
-U0MobWF4X213X3NpemUsICJMaW1pdCBzaXplIG9mIGxhcmdlIG1lbW9yeSANCj4gPiB3aW5kb3dz
-Iik7DQo+ID4gDQo+ID4gLXN0YXRpYyB1bnNpZ25lZCBpbnQgdHJhbnNwb3J0X210dSA9IDB4NDAx
-RTsNCj4gPiArc3RhdGljIHVuc2lnbmVkIGludCB0cmFuc3BvcnRfbXR1ID0gMHgxMDAwMDsNCj4g
-PiAgbW9kdWxlX3BhcmFtKHRyYW5zcG9ydF9tdHUsIHVpbnQsIDA2NDQpOw0KPiA+ICBNT0RVTEVf
-UEFSTV9ERVNDKHRyYW5zcG9ydF9tdHUsICJNYXhpbXVtIHNpemUgb2YgTlRCIHRyYW5zcG9ydCAN
-Cj4gPiBwYWNrZXRzIik7DQo+ID4gDQo+ID4gLS0NCj4gPiAyLjQuMC5yYzAuNDMuZ2NmOGE4YzYN
-Cj4gPiANCj4gPiAtLQ0KPiA+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRo
-ZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eA0KPiA+IC1wY2kiIGluDQo+ID4gdGhlIGJvZHkgb2Yg
-YSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gPiBNb3JlIG1ham9yZG9t
-byBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCj4g
+On Fri, 2015-06-12 at 02:52 +0200, Luis R. Rodriguez wrote:
+> On Thu, Jun 11, 2015 at 05:23:16PM -0600, Toshi Kani wrote:
+> > On Thu, 2015-06-11 at 13:36 -0700, Luis R. Rodriguez wrote:
+> >  :
+> > > Pending RIP MTRR patches
+> > > ====================
+> > > 
+> > > There are a few pending series so I wanted to provide a status update
+> > > on those series.
+> > > 
+> > > mtrr: bury MTRR - unexport mtrr_add() and mtrr_del()
+> > > 
+> > > This is the nail on the MTRR coffin, it will prevent future direct
+> > > access to MTRR code. This will not be posted until all of the below
+> > > patches are in and merged. A possible next step here might be to
+> > > consider separating PAT code from MTRR code and making PAT a first
+> > > class citizen, enabling distributions to disable MTRR code in the
+> > > future. I thought this was possible but for some reason I recently
+> > > thought that there was one possible issue to make this happen. I
+> > > suppose we won't know unless we try, unless of course someone already
+> > > knows, Toshi?
+> > 
+> > There are two usages on MTRRs:
+> >  1) MTRR entries set by firmware
+> >  2) MTRR entries set by OS drivers
+> > 
+> > We can obsolete 2), but we have no control over 1).  As UEFI firmwares
+> > also set this up, this usage will continue to stay.  So, we should not
+> > get rid of the MTRR code that looks up the MTRR entries, while we have
+> > no need to modify them.
+> > 
+> > Such MTRR entries provide safe guard to /dev/mem, which allows
+> > privileged user to access a range that may require UC mapping while
+> > the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
+> > such a case.
+> > 
+> > UEFI memory table has memory attribute, which describes cache types
+> > supported in physical memory ranges.  However, this information gets
+> > lost when it it is converted to e820 table.
+> 
+> Is there no way to modify CPU capability bits upon boot and kick UEFI
+> to re-evaluate ? In such UEFI cases what happens for instance when
+> Xen is used which does not support MTRR?
+
+EFI GetMemoryMap() is a boot service, and won't be available after
+ExitBootServices() is called.  But we should be able to keep the
+attribute information copied into some table if necessary.
+
+Xen provides virtual firmware on their guests, right?  If this firmware
+does not set up MTRRs today, then I do not think it needs to set up for
+UEFI, either.  Assuming the guest physical address is virtualized, it
+does not have to carry the same platform attribute & restriction.
+
+Thanks,
+-Toshi
+
+
