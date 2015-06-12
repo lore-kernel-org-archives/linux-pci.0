@@ -1,48 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:57130 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759317AbbFBREv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 13:04:51 -0400
-Subject: [PATCH 2/2] pci: Add VPD quirk for Intel Ethernet devices
-From: Mark D Rustad <mark.d.rustad@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Tue, 02 Jun 2015 10:04:19 -0700
-Message-ID: <20150602170419.6252.84014.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150602165706.6252.76253.stgit@mdrustad-wks.jf.intel.com>
-References: <20150602165706.6252.76253.stgit@mdrustad-wks.jf.intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 12 Jun 2015 22:35:05 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Julia Lawall <julia.lawall@lip6.fr>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of
+ irq_flow_handler_t
+In-Reply-To: <alpine.DEB.2.02.1506122224230.2010@localhost6.localdomain6>
+Message-ID: <alpine.DEB.2.11.1506122232510.3786@nanos>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com> <alpine.DEB.2.11.1505201750280.4225@nanos>
+ <alpine.DEB.2.10.1505202155420.2642@hadrien> <alpine.DEB.2.11.1505202209470.4225@nanos> <alpine.DEB.2.10.1505202215230.2642@hadrien> <alpine.DEB.2.11.1505202219290.4225@nanos> <alpine.DEB.2.02.1506122224230.2010@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This quirk sets the PCI_DEV_FLAGS_VPD_REF_F0 flag on all Intel
-Ethernet device functions other than function 0.
+On Fri, 12 Jun 2015, Julia Lawall wrote:
+> What is the status of this?  I am close to having a semantic patch that 
+> works.  The current version touches 133 files, but I haven't checked all 
+> of them.  This includes both the local functions and the generic ones, but 
+> not the cases where the name of the handler function is a local variable 
+> or arbitrary expression.  This occurs in around 30 files.
 
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
----
- drivers/pci/quirks.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+Jiang sent out a new patch series, but I'm really interested in doing
+a fully automated check. If conversion is possible for some of them,
+fine, but the checking part to find all the places where this needs to
+be applied is the most important to me.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c6dc1dfd25d5..9ddf6a533f4f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1903,6 +1903,15 @@ static void quirk_netmos(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
- 			 PCI_CLASS_COMMUNICATION_SERIAL, 8, quirk_netmos);
- 
-+static void quirk_f0_vpd_link(struct pci_dev *dev)
-+{
-+	if (!PCI_FUNC(dev->devfn))
-+		return;
-+	dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
-+}
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-+			      PCI_CLASS_NETWORK_ETHERNET, 8, quirk_f0_vpd_link);
-+
- static void quirk_e100_interrupt(struct pci_dev *dev)
- {
- 	u16 command, pmcsr;
+If you want, just send me that script and I'll give it a test ride.
 
+Thanks,
+
+	tglx
