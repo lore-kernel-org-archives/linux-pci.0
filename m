@@ -1,185 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:33273 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398AbbF3UWm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jun 2015 16:22:42 -0400
-Received: by wiwl6 with SMTP id l6so144078807wiw.0
-        for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 13:22:41 -0700 (PDT)
-From: Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH v5 39/42] drivers/of: Unflatten nodes equal or deeper
- than specified level
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-40-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	<1433400131-18429-40-git-send-email-gwshan@linux.vnet.ibm.com>
-Date: Tue, 30 Jun 2015 18:47:04 +0100
-Message-Id: <20150630174704.E1757C4059B@trevor.secretlab.ca>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1434128306.11808.97.camel@misato.fc.hp.com>
+Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
+From: Toshi Kani <toshi.kani@hp.com>
+To: Jan Beulich <JBeulich@suse.com>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
+	X86 ML <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	ville.syrjala@linux.intel.com, Julia Lawall <julia.lawall@lip6.fr>,
+	xen-devel@lists.xenproject.org, Dave Airlie <airlied@redhat.com>,
+	syrjala@sci.fi, Juergen Gross <JGross@suse.com>,
+	Luis Rodriguez <Mcgrof@Suse.com>, Borislav Petkov <bp@suse.de>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-media@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Fri, 12 Jun 2015 10:58:26 -0600
+In-Reply-To: <557AAD910200007800084014@mail.emea.novell.com>
+References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+	 <1434064996.11808.64.camel@misato.fc.hp.com>
+	 <557AAD910200007800084014@mail.emea.novell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu,  4 Jun 2015 16:42:08 +1000
-, Gavin Shan <gwshan@linux.vnet.ibm.com>
- wrote:
-> unflatten_dt_node() is called recursively to unflatten FDT nodes
-> with the assumption that FDT blob has only one root node, which
-> isn't true when the FDT blob represents device sub-tree. The
-> patch improves the function to supporting device sub-tree that
-> have multiple root nodes:
+On Fri, 2015-06-12 at 08:59 +0100, Jan Beulich wrote:
+> >>> On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
+> > There are two usages on MTRRs:
+> >  1) MTRR entries set by firmware
+> >  2) MTRR entries set by OS drivers
+> > 
+> > We can obsolete 2), but we have no control over 1).  As UEFI firmwares
+> > also set this up, this usage will continue to stay.  So, we should not
+> > get rid of the MTRR code that looks up the MTRR entries, while we have
+> > no need to modify them.
+> > 
+> > Such MTRR entries provide safe guard to /dev/mem, which allows
+> > privileged user to access a range that may require UC mapping while
+> > the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
+> > such a case.
 > 
->    * Rename original unflatten_dt_node() to __unflatten_dt_node().
->    * Wrapper unflatten_dt_node() calls __unflatten_dt_node() with
->      adjusted current node depth to 1 to avoid underflow.
+> But it wouldn't be impossible to simply read the MTRRs upon boot,
+> store the information, disable MTRRs, and correctly use PAT to
+> achieve the same effect (i.e. the "blindly maps" part of course
+> would need fixing).
+
+It could be done, but I do not see much benefit of doing it.  One of the
+reasons platform vendors set MTRRs is so that a system won't hit a
+machine check when an OS bug leads an access with a wrong cache type.  A
+machine check is hard to analyze and can be seen as a hardware issue by
+customers.  Emulating MTRRs with PAT won't protect from such a bug. 
+
+> > UEFI memory table has memory attribute, which describes cache types
+> > supported in physical memory ranges.  However, this information gets
+> > lost when it it is converted to e820 table.
 > 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
-> v5:
->   * Split from PATCH[v4 19/21]
->   * Fixed "line over 80 characters" from checkpatch.pl
-> ---
->  drivers/of/fdt.c | 56 ++++++++++++++++++++++++++++++++++++++------------------
->  1 file changed, 38 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-> index cde35c5d01..b87c157 100644
-> --- a/drivers/of/fdt.c
-> +++ b/drivers/of/fdt.c
-> @@ -28,6 +28,8 @@
->  #include <asm/setup.h>  /* for COMMAND_LINE_SIZE */
->  #include <asm/page.h>
->  
-> +static int cur_node_depth;
-> +
+> I'm afraid you rather don't want to trust that information, as
+> firmware vendors frequently screw it up.
 
-eeeek! We'll never be able to call this concurrently this way. That will
-create theoretical race conditions in the overlay code. (actually, you
-didn't introduce this problem, see below...)
+Could be, but we need to use firmware info when necessary...
 
->  /*
->   * of_fdt_limit_memory - limit the number of regions in the /memory node
->   * @limit: maximum entries
-> @@ -161,27 +163,26 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
->  }
->  
->  /**
-> - * unflatten_dt_node - Alloc and populate a device_node from the flat tree
-> + * __unflatten_dt_node - Alloc and populate a device_node from the flat tree
->   * @blob: The parent device tree blob
->   * @mem: Memory chunk to use for allocating device nodes and properties
->   * @p: pointer to node in flat tree
->   * @dad: Parent struct device_node
->   * @fpsize: Size of the node path up at the current depth.
->   */
-> -static void * unflatten_dt_node(void *blob,
-> -				void *mem,
-> -				int *poffset,
-> -				struct device_node *dad,
-> -				struct device_node **nodepp,
-> -				unsigned long fpsize,
-> -				bool dryrun)
-> +static void *__unflatten_dt_node(void *blob,
-> +				 void *mem,
-> +				 int *poffset,
-> +				 struct device_node *dad,
-> +				 struct device_node **nodepp,
-> +				 unsigned long fpsize,
-> +				 bool dryrun)
-
-nitpick: If you resist the temptation to reflow indentation, then the
-diffstat is smaller.
-
->  {
->  	const __be32 *p;
->  	struct device_node *np;
->  	struct property *pp, **prev_pp = NULL;
->  	const char *pathp;
->  	unsigned int l, allocl;
-> -	static int depth = 0;
-
-Hmmmm.. looks like the race condition is already there. Well that's no
-good. If you move *depth into the parameters to unflatten_dt_node(), then
-you can solve both problems at once without having to create a __
-version of the function. That will be a cleaner solution overall.
-
->  	int old_depth;
->  	int offset;
->  	int has_name = 0;
-> @@ -334,13 +335,19 @@ static void * unflatten_dt_node(void *blob,
->  			np->type = "<NULL>";
->  	}
->  
-> -	old_depth = depth;
-> -	*poffset = fdt_next_node(blob, *poffset, &depth);
-> -	if (depth < 0)
-> -		depth = 0;
-> -	while (*poffset > 0 && depth > old_depth)
-> -		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
-> -					fpsize, dryrun);
-> +	old_depth = cur_node_depth;
-> +	*poffset = fdt_next_node(blob, *poffset, &cur_node_depth);
-> +	while (*poffset > 0) {
-
-What is the reasoning here? Why change to looking for poffset > 0?
-
-> +		if (cur_node_depth < old_depth)
-> +			break;
-> +
-> +		if (cur_node_depth == old_depth)
-> +			mem = __unflatten_dt_node(blob, mem, poffset,
-> +						  dad, NULL, fpsize, dryrun);
-> +		else if (cur_node_depth > old_depth)
-> +			mem = __unflatten_dt_node(blob, mem, poffset,
-> +						  np, NULL, fpsize, dryrun);
-
-Ditto here, please describe the purpose of the new logic.
-
-> +	}
->  
->  	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
->  		pr_err("unflatten: error %d processing FDT\n", *poffset);
-> @@ -366,6 +373,18 @@ static void * unflatten_dt_node(void *blob,
->  	return mem;
->  }
->  
-> +static void *unflatten_dt_node(void *blob,
-> +			       void *mem,
-> +			       int *poffset,
-> +			       struct device_node *dad,
-> +			       struct device_node **nodepp,
-> +			       bool dryrun)
-> +{
-> +	cur_node_depth = 1;
-> +	return __unflatten_dt_node(blob, mem, poffset,
-> +				   dad, nodepp, 0, dryrun);
-> +}
-> +
->  /**
->   * __unflatten_device_tree - create tree of device_nodes from flat blob
->   *
-> @@ -405,7 +424,8 @@ static void __unflatten_device_tree(void *blob,
->  
->  	/* First pass, scan for size */
->  	start = 0;
-> -	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
-> +	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
-> +						NULL, NULL, true);
->  	size = ALIGN(size, 4);
->  
->  	pr_debug("  size is %lx, allocating...\n", size);
-> @@ -420,7 +440,7 @@ static void __unflatten_device_tree(void *blob,
->  
->  	/* Second pass, do actual unflattening */
->  	start = 0;
-> -	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
-> +	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
->  	if (be32_to_cpup(mem + size) != 0xdeadbeef)
->  		pr_warning("End of tree marker overwritten: %08x\n",
->  			   be32_to_cpup(mem + size));
-> -- 
-> 2.1.0
-> 
+Thanks,
+-Toshi
 
