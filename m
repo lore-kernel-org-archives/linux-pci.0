@@ -1,126 +1,135 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 24 Jun 2015 23:10:42 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Julia Lawall <julia.lawall@lip6.fr>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of
- irq_flow_handler_t
-In-Reply-To: <alpine.DEB.2.02.1506132240500.2020@localhost6.localdomain6>
-Message-ID: <alpine.DEB.2.11.1506242137070.4037@nanos>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com> <alpine.DEB.2.11.1505201750280.4225@nanos>
- <alpine.DEB.2.10.1506131059180.2486@hadrien> <alpine.DEB.2.11.1506131130490.3786@nanos> <alpine.DEB.2.10.1506131603151.2314@hadrien> <alpine.DEB.2.10.1506131652380.2314@hadrien> <557C5F29.7010301@linux.intel.com> <alpine.DEB.2.02.1506132214310.2020@localhost6.localdomain6>
- <alpine.DEB.2.11.1506132230450.3786@nanos> <alpine.DEB.2.02.1506132240500.2020@localhost6.localdomain6>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34418 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754594AbbFLSNU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 14:13:20 -0400
+Received: by oiax69 with SMTP id x69so5176152oia.1
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 11:13:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Reply-To: rajatxjain@gmail.com
+In-Reply-To: <557A9661.8030603@huawei.com>
+References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
+	<557A9661.8030603@huawei.com>
+Date: Fri, 12 Jun 2015 11:13:19 -0700
+Message-ID: <CAA93t1pD=fzAY3nQsi=JZ9a_NPcP-jOAW4jLkFy4fhzmhh1Sjg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
+From: Rajat Jain <rajatxjain@gmail.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatja@google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 13 Jun 2015, Julia Lawall wrote:
-> On Sat, 13 Jun 2015, Thomas Gleixner wrote:
-> 
-> > On Sat, 13 Jun 2015, Julia Lawall wrote:
-> > 
-> > > The following are the cases that require some manual attention, either 
-> > > because the handler is a local variable or because it is some other kind 
-> > > of expression.
-> > 
-> > yep, found it in the logs already and found a missing search expression:
-> > 
-> > |
-> > gpiochip_set_chained_irqchip@p(e1,e2,e3,\(lih\|ih\|eh\))
-> > 
-> > This is really impressive work!!!!
-> 
-> Thanks :)
-> 
-> I'll add the above pattern, but I guess you already have the results for 
-> that case.
+[+Guenter]
 
-Yes.
+Looks good to me. Unfortunately, I do not have the hardware anymore to
+test it :-(
 
-I did some more experiments and analyzed all functions which have the
-signature
-
-[static] void f(T irq, struct irq_desc *desc)
-
-where T is either 'unsigned int' or 'u32'
-
-That throws up a handful of false positives, but those are functions
-which are called from a real handler function, so we want to look at
-those anyway.
-
-Now where my cocci foo ends is when I try to match both types in the
-same rule, i.e. 
-
-@ fun exists @
-identifier hf,irq,desc;
-typedef u32;
-@@
-
-(
-void hf(unsigned irq, struct irq_desc *desc) { ... }
-|
-void hf(u32 irq, struct irq_desc *desc) { ... }
-)
-
-results in:
-Fatal error: exception Failure("minus: parse error: 
- = File "../cocci/find-pot-handler.cocci", line 7, column 5,  charpos = 63
-    around = 'hf', whole content = void hf(unsigned irq, struct irq_desc *desc) { ... }
-")
-
-I tried a couple of other variants, but finally gave up and ran a
-cocci script first which does s/u32/unsigned/ on those functions, but
-of course because I'm lazy I wanted to do everything in one go. :)
-
-Aside of that the ruleset you gave me works nicely except for that
-part:
-
-// no uses of the first parameter before the assignment
-@@
-identifier fun.hf,irq;
-expression e;
-type T;
-fresh identifier firq = "__" ## irq;
-position r.p,p1 != {s.p1,s1.p1};
-@@
-
-hf(T@p
-- irq
-+ firq
-  ,...) {
-  ... when != irq
-      when strict
-? irq@p1 = e
-  ... when any
-}
-
-That lacks a:
-
-+ unsigned int irq;
-
-and therefor missed to add the local variable 'unsigned int irq' in
-case the parameter is only used for local storage.
-
-That was simple enough to fix even for me :)
+Guenter: Do you have it, or know some body who has and wants to test this?
 
 Thanks,
 
-	tglx
+Rajat
 
+
+On Fri, Jun 12, 2015 at 1:20 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> rajatjain@juniper.net is not reachable now.
+>
+> So add CC: rajatxjain@gmail.com
+>
+> On 2015/6/11 19:12, Yijing Wang wrote:
+>> Rajat Jain reported a deadlock when a hierarchical hot plug
+>> thread and aer recovery thread both run.
+>> https://lkml.org/lkml/2015/3/11/861
+>>
+>> thread 1:
+>> pciehp_enable_slot()
+>>       pciehp_configure_device()
+>>               pci_bus_add_devices()
+>>                       device_attach(dev)
+>>                               device_lock(dev) //acquire device mutex successfully
+>>                       ...
+>>                       pciehp_probe(dev)
+>>                               __pci_hp_register()
+>>                                       pci_create_slot()
+>>                                               down_write(pci_bus_sem) //deadlock here
+>>
+>> thread 2:
+>> aer_isr_one_error()
+>>       aer_process_err_device()
+>>               do_recovery()
+>>                       broadcast_error_message()
+>>                               pci_walk_bus()
+>>                                       down_read(&pci_bus_sem) //acquire pci_bus_sem successfully
+>>                                               report_error_detected(dev)
+>>                                                       device_lock(dev) // deadlock here
+>>
+>> Now we use pci_bus_sem to protect pci_slot creation and destroy,
+>> it's unnecessary. We could introduce a new local mutex instead of
+>> pci_bus_sem to avoid the deadlock.
+>>
+>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>> ---
+>>  drivers/pci/slot.c |   11 ++++++-----
+>>  1 files changed, 6 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+>> index 396c200..feb08de 100644
+>> --- a/drivers/pci/slot.c
+>> +++ b/drivers/pci/slot.c
+>> @@ -14,6 +14,7 @@
+>>
+>>  struct kset *pci_slots_kset;
+>>  EXPORT_SYMBOL_GPL(pci_slots_kset);
+>> +static DEFINE_MUTEX(pci_slot_mutex);
+>>
+>>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
+>>                                       struct attribute *attr, char *buf)
+>> @@ -195,7 +196,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
+>>  {
+>>       struct pci_slot *slot;
+>>       /*
+>> -      * We already hold pci_bus_sem so don't worry
+>> +      * We already hold pci_slot_mutex so don't worry
+>>        */
+>>       list_for_each_entry(slot, &parent->slots, list)
+>>               if (slot->number == slot_nr) {
+>> @@ -253,7 +254,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>>       int err = 0;
+>>       char *slot_name = NULL;
+>>
+>> -     down_write(&pci_bus_sem);
+>> +     mutex_lock(&pci_slot_mutex);
+>>
+>>       if (slot_nr == -1)
+>>               goto placeholder;
+>> @@ -310,7 +311,7 @@ placeholder:
+>>
+>>  out:
+>>       kfree(slot_name);
+>> -     up_write(&pci_bus_sem);
+>> +     mutex_unlock(&pci_slot_mutex);
+>>       return slot;
+>>  err:
+>>       kfree(slot);
+>> @@ -332,9 +333,9 @@ void pci_destroy_slot(struct pci_slot *slot)
+>>       dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
+>>               slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
+>>
+>> -     down_write(&pci_bus_sem);
+>> +     mutex_lock(&pci_slot_mutex);
+>>       kobject_put(&slot->kobj);
+>> -     up_write(&pci_bus_sem);
+>> +     mutex_unlock(&pci_slot_mutex);
+>>  }
+>>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
+>>
+>>
+>
+>
+> --
+> Thanks!
+> Yijing
+>
