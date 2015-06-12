@@ -1,261 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:54973 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563AbbFDGnm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:43:42 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:43:39 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 34/42] powerpc/pci: Delay creating pci_dn
-Date: Thu,  4 Jun 2015 16:42:03 +1000
-Message-Id: <1433400131-18429-35-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-vn0-f52.google.com ([209.85.216.52]:33881 "EHLO
+	mail-vn0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752335AbbFLSBt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 14:01:49 -0400
+Received: by vnbg7 with SMTP id g7so7253398vnb.1
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 11:01:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <bug-99751-41252@https.bugzilla.kernel.org/>
+References: <bug-99751-41252@https.bugzilla.kernel.org/>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 12 Jun 2015 13:01:27 -0500
+Message-ID: <CAErSpo4ui+a4PRC8sWCzcSM1iWG7SHD_=x0Z9cj90-tgNKUvmw@mail.gmail.com>
+Subject: Fwd: [Bug 99751] New: Enormous resume delay, unless pcie_ports=compat
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Rajat Jain <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	Rafael Wysocki <rafael.j.wysocki@intel.com>,
+	Myron Stowe <mstowe@redhat.com>,
+	"Brown, Len" <len.brown@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_dn instances are allocated from memblock or bootmem when
-creating PCI controller (hoses) in setup_arch(). The PCI hotplug,
-which will be supported by proceeding patches, will release PCI
-device nodes and their corresponding pci_dn on unplugging event.
-The pci_dn instance memory chunks alloed from memblock or bootmem
-are hard to reused after being released.
+FYI.  There's more information and analysis, but no resolution yet, in
+the bugzilla.
 
-The patch delay creating pci_dn so that they can be allocated from
-slab. In turn, the memory chunks for them can be reused after being
-released without problem. The creation of eeh_dev instances, which
-depends on pci_dn, is delayed a bit as well.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
-v5:
-  * Derived from PATCH[v4 15/21]
-  * Dropped unrelated changes moving pci_dev_pdn_setup() around
----
- arch/powerpc/include/asm/ppc-pci.h     |  1 -
- arch/powerpc/kernel/eeh_dev.c          |  2 +-
- arch/powerpc/kernel/pci_dn.c           |  8 +++++--
- arch/powerpc/platforms/maple/pci.c     | 35 ++++++++++++++++++------------
- arch/powerpc/platforms/pasemi/pci.c    |  3 ---
- arch/powerpc/platforms/powermac/pci.c  | 39 +++++++++++++++++++++-------------
- arch/powerpc/platforms/powernv/pci.c   |  3 ---
- arch/powerpc/platforms/pseries/setup.c |  1 -
- 8 files changed, 52 insertions(+), 40 deletions(-)
+---------- Forwarded message ----------
+From:  <bugzilla-daemon@bugzilla.kernel.org>
+Date: Wed, Jun 10, 2015 at 11:25 AM
+Subject: [Bug 99751] New: Enormous resume delay, unless pcie_ports=compat
+To: bhelgaas@google.com
 
-diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-index 4122a86..7388316 100644
---- a/arch/powerpc/include/asm/ppc-pci.h
-+++ b/arch/powerpc/include/asm/ppc-pci.h
-@@ -40,7 +40,6 @@ void *traverse_pci_dn(struct pci_dn *root,
- 		      void *(*fn)(struct pci_dn *, void *),
- 		      void *data);
- 
--extern void pci_devs_phb_init(void);
- extern void pci_devs_phb_init_dynamic(struct pci_controller *phb);
- 
- /* From rtas_pci.h */
-diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
-index aabba94..f33ce5b 100644
---- a/arch/powerpc/kernel/eeh_dev.c
-+++ b/arch/powerpc/kernel/eeh_dev.c
-@@ -110,4 +110,4 @@ static int __init eeh_dev_phb_init(void)
- 	return 0;
- }
- 
--core_initcall(eeh_dev_phb_init);
-+core_initcall_sync(eeh_dev_phb_init);
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index 0469247..35554c2 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -288,7 +288,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
- 	struct device_node *parent;
- 	struct pci_dn *pdn;
- 
--	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
-+	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
- 	if (pdn == NULL)
- 		return NULL;
- 	dn->data = pdn;
-@@ -462,15 +462,19 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
-  * pci device found underneath.  This routine runs once,
-  * early in the boot sequence.
-  */
--void __init pci_devs_phb_init(void)
-+static int __init pci_devs_phb_init(void)
- {
- 	struct pci_controller *phb, *tmp;
- 
- 	/* This must be done first so the device nodes have valid pci info! */
- 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
- 		pci_devs_phb_init_dynamic(phb);
-+
-+	return 0;
- }
- 
-+core_initcall(pci_devs_phb_init);
-+
- static void pci_dev_pdn_setup(struct pci_dev *pdev)
- {
- 	struct pci_dn *pdn;
-diff --git a/arch/powerpc/platforms/maple/pci.c b/arch/powerpc/platforms/maple/pci.c
-index a923230..04a69a8 100644
---- a/arch/powerpc/platforms/maple/pci.c
-+++ b/arch/powerpc/platforms/maple/pci.c
-@@ -568,6 +568,26 @@ void maple_pci_irq_fixup(struct pci_dev *dev)
- 	DBG(" <- maple_pci_irq_fixup\n");
- }
- 
-+static int maple_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
-+	struct device_node *np, *child;
-+
-+	if (hose != u3_agp)
-+		return 0;
-+
-+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
-+	 * assume there is no P2P bridge on the AGP bus, which should be a
-+	 * safe assumptions hopefully.
-+	 */
-+	np = hose->dn;
-+	PCI_DN(np)->busno = 0xf0;
-+	for_each_child_of_node(np, child)
-+		PCI_DN(child)->busno = 0xf0;
-+
-+	return 0;
-+}
-+
- void __init maple_pci_init(void)
- {
- 	struct device_node *np, *root;
-@@ -605,20 +625,7 @@ void __init maple_pci_init(void)
- 	if (ht && maple_add_bridge(ht) != 0)
- 		of_node_put(ht);
- 
--	/* Setup the linkage between OF nodes and PHBs */ 
--	pci_devs_phb_init();
--
--	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
--	 * assume there is no P2P bridge on the AGP bus, which should be a
--	 * safe assumptions hopefully.
--	 */
--	if (u3_agp) {
--		struct device_node *np = u3_agp->dn;
--		PCI_DN(np)->busno = 0xf0;
--		for (np = np->child; np; np = np->sibling)
--			PCI_DN(np)->busno = 0xf0;
--	}
--
-+	ppc_md.pcibios_root_bridge_prepare = maple_pci_root_bridge_prepare;
- 	/* Tell pci.c to not change any resource allocations.  */
- 	pci_add_flags(PCI_PROBE_ONLY);
- }
-diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
-index f3a68a0..10c4e8f 100644
---- a/arch/powerpc/platforms/pasemi/pci.c
-+++ b/arch/powerpc/platforms/pasemi/pci.c
-@@ -229,9 +229,6 @@ void __init pas_pci_init(void)
- 			of_node_get(np);
- 
- 	of_node_put(root);
--
--	/* Setup the linkage between OF nodes and PHBs */
--	pci_devs_phb_init();
- }
- 
- void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
-diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
-index 59ab16f..368716f 100644
---- a/arch/powerpc/platforms/powermac/pci.c
-+++ b/arch/powerpc/platforms/powermac/pci.c
-@@ -878,6 +878,29 @@ void pmac_pci_irq_fixup(struct pci_dev *dev)
- #endif /* CONFIG_PPC32 */
- }
- 
-+#ifdef CONFIG_PPC64
-+static int pmac_pci_root_bridge_prepare(struct pci_hot_bridge *bridge)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
-+	struct device_node *np, *child;
-+
-+	if (hose != u3_agp)
-+		return 0;
-+
-+	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
-+	 * assume there is no P2P bridge on the AGP bus, which should be a
-+	 * safe assumptions for now. We should do something better in the
-+	 * future though
-+	 */
-+	np = hose->dn;
-+	PCI_DN(np)->busno = 0xf0;
-+	for_each_child_of_node(np, child)
-+		PCI_DN(child)->busno = 0xf0;
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PPC64 */
-+
- void __init pmac_pci_init(void)
- {
- 	struct device_node *np, *root;
-@@ -914,22 +937,8 @@ void __init pmac_pci_init(void)
- 	if (ht && pmac_add_bridge(ht) != 0)
- 		of_node_put(ht);
- 
--	/* Setup the linkage between OF nodes and PHBs */
--	pci_devs_phb_init();
--
--	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
--	 * assume there is no P2P bridge on the AGP bus, which should be a
--	 * safe assumptions for now. We should do something better in the
--	 * future though
--	 */
--	if (u3_agp) {
--		struct device_node *np = u3_agp->dn;
--		PCI_DN(np)->busno = 0xf0;
--		for (np = np->child; np; np = np->sibling)
--			PCI_DN(np)->busno = 0xf0;
--	}
- 	/* pmac_check_ht_link(); */
--
-+	ppc_md.pcibios_root_bridge_prepare = pmac_pci_root_bridge_prepare;
- #else /* CONFIG_PPC64 */
- 	init_p2pbridge();
- 	init_second_ohare();
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index c332ea7..9fd1c0d 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -949,9 +949,6 @@ void __init pnv_pci_init(void)
- 	for_each_compatible_node(np, NULL, "ibm,ioda2-phb")
- 		pnv_pci_init_ioda2_phb(np);
- 
--	/* Setup the linkage between OF nodes and PHBs */
--	pci_devs_phb_init();
--
- 	/* Configure IOMMU DMA hooks */
- 	set_pci_dma_ops(&dma_iommu_ops);
- 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index df6a704..5f80758 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -482,7 +482,6 @@ static void __init find_and_init_phbs(void)
- 	}
- 
- 	of_node_put(root);
--	pci_devs_phb_init();
- 
- 	/*
- 	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
--- 
-2.1.0
 
+https://bugzilla.kernel.org/show_bug.cgi?id=99751
+
+            Bug ID: 99751
+           Summary: Enormous resume delay, unless pcie_ports=compat
+           Product: Drivers
+           Version: 2.5
+    Kernel Version: 3.15 through 4.1rc5
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: PCI
+          Assignee: drivers_pci@kernel-bugs.osdl.org
+          Reporter: lenb@kernel.org
+        Regression: No
+
+Created attachment 179451
+  --> https://bugzilla.kernel.org/attachment.cgi?id=179451&action=edit
+lspci -vvv output
+
+On a Dell XPS11 laptop, pcieport 0000:00:1c.0 takes
+several seconds to resume from suspend.
+
+Booting with "pcie_ports=compat", or
+building with  CONFIG_HOTPLUG_PCI_PCIE=n
+makes this delay go away.
+
+I've tested Linux-3.14.44 and do not see this delay.
+I've tested Linux-3.15.0 and others up through 4.1-rc5
+and I do see this delay.  So I'll mark this as a regression.
+
+while I use analyze_suspend.py to trace resume,
+initcall_debug is sufficient to show this delay in dmesg,
+and I notice some additional PCI warnings there:
+
+[   55.897986] pciehp 0000:00:1c.0:pcie04: Link Training Error occurs
+[   55.897988] pciehp 0000:00:1c.0:pcie04: Failed to check link status
+[   55.897992] call 0000:00:1c.0+ returned 0 after 2197660 usecs
+
+(yes, that is 2.19 SECONDS -- where anything> 50ms for resume is considered
+slow)
+
+Unclear (to me) what pcie04 is...
+
+$ lspci
+00:00.0 Host bridge: Intel Corporation Haswell-ULT DRAM Controller (rev 0b)
+00:02.0 VGA compatible controller: Intel Corporation Device 0a1e (rev 0b)
+00:03.0 Audio device: Intel Corporation Haswell-ULT HD Audio Controller (rev
+0b)
+00:04.0 Signal processing controller: Intel Corporation Device 0a03 (rev 0b)
+00:14.0 USB controller: Intel Corporation 8 Series USB xHCI HC (rev 04)
+00:16.0 Communication controller: Intel Corporation 8 Series HECI #0 (rev 04)
+00:1b.0 Audio device: Intel Corporation 8 Series HD Audio Controller (rev 04)
+00:1c.0 PCI bridge: Intel Corporation 8 Series PCI Express Root Port 1 (rev e4)
+00:1c.1 PCI bridge: Intel Corporation 8 Series PCI Express Root Port 2 (rev e4)
+00:1c.3 PCI bridge: Intel Corporation 8 Series PCI Express Root Port 4 (rev e4)
+00:1d.0 USB controller: Intel Corporation 8 Series USB EHCI #1 (rev 04)
+00:1f.0 ISA bridge: Intel Corporation 8 Series LPC Controller (rev 04)
+00:1f.2 SATA controller: Intel Corporation 8 Series SATA Controller 1 [AHCI
+mode] (rev 04)
+00:1f.3 SMBus: Intel Corporation 8 Series SMBus Controller (rev 04)
+00:1f.6 Signal processing controller: Intel Corporation 8 Series Thermal (rev
+04)
+05:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd. RTS5249 PCI
+Express Card Reader (rev 01)
+07:00.0 Network controller: Intel Corporation Wireless 7260 (rev 6b)
+
+This 04 item appears under 1c.0 when I ask lspci about topology:
+$ lspci -tv
+-[0000:00]-+-00.0  Intel Corporation Haswell-ULT DRAM Controller
+           +-02.0  Intel Corporation Device 0a1e
+           +-03.0  Intel Corporation Haswell-ULT HD Audio Controller
+           +-04.0  Intel Corporation Device 0a03
+           +-14.0  Intel Corporation 8 Series USB xHCI HC
+           +-16.0  Intel Corporation 8 Series HECI #0
+           +-1b.0  Intel Corporation 8 Series HD Audio Controller
+           +-1c.0-[04]--
+           +-1c.1-[05]----00.0  Realtek Semiconductor Co., Ltd. RTS5249 PCI
+Express Card Reader
+           +-1c.3-[07]----00.0  Intel Corporation Wireless 7260
+           +-1d.0  Intel Corporation 8 Series USB EHCI #1
+           +-1f.0  Intel Corporation 8 Series LPC Controller
+           +-1f.2  Intel Corporation 8 Series SATA Controller 1 [AHCI mode]
+           +-1f.3  Intel Corporation 8 Series SMBus Controller
+           \-1f.6  Intel Corporation 8 Series Thermal
+
+--
+You are receiving this mail because:
+You are watching the assignee of the bug.
