@@ -1,561 +1,175 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org, linux-ia64@vger.kernel.org
-Subject: [Patch v4 2/8] ia64/PCI/ACPI: Use common ACPI resource parsing interface for host bridge
-Date: Tue,  2 Jun 2015 14:12:50 +0800
-Message-Id: <1433225576-8215-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:38504 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752215AbbFLUUM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 16:20:12 -0400
+Received: by igblz2 with SMTP id lz2so17728684igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 13:20:11 -0700 (PDT)
+Date: Fri, 12 Jun 2015 15:20:08 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: festevam@gmail.com, marex@denx.de, linux-pci@vger.kernel.org,
+	r65037@freescale.com, l.stach@pengutronix.de, tharvey@gateworks.com
+Subject: Re: [PATCH 1/1] pci-imx6: add speed change timeout message
+Message-ID: <20150612202008.GI23119@google.com>
+References: <1433543864-7252-1-git-send-email-troy.kisky@boundarydevices.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433543864-7252-1-git-send-email-troy.kisky@boundarydevices.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common ACPI resource parsing interface to parse ACPI resources for
-PCI host bridge, so we could share more code between IA64 and x86.
-Later we will consolidate arch specific implementations into ACPI core.
+Hi Troy,
 
-Tested-by: Tony Luck <tony.luck@intel.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- arch/ia64/pci/pci.c |  414 ++++++++++++++++++++++++---------------------------
- 1 file changed, 193 insertions(+), 221 deletions(-)
+On Fri, Jun 05, 2015 at 03:37:44PM -0700, Troy Kisky wrote:
+> Currently, the timeout is never detected as count
+> has a value of -1 if a timeout happens, but the code is checking
+> for 0. Also, this patch removes the unneeded final wait
+> if a timeout occurs.
+> 
+> Signed-off-by: Troy Kisky <troy.kisky@boundarydevices.com>
+> ---
+>  drivers/pci/host/pci-imx6.c | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index fdb9536..51be92c 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -398,20 +398,22 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
+>  	writel(tmp, pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
+>  
+>  	count = 200;
+> -	while (count--) {
+> +	while (1) {
+>  		tmp = readl(pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
+>  		/* Test if the speed change finished. */
+> -		if (!(tmp & PORT_LOGIC_SPEED_CHANGE))
+> +		if (!(tmp & PORT_LOGIC_SPEED_CHANGE)) {
+> +			/* Make sure link training is finished as well! */
+> +			ret = imx6_pcie_wait_for_link(pp);
+> +			break;
+> +		}
+> +		if (count-- == 0) {
+> +			dev_err(pp->dev, "Speed change timeout\n");
+> +			ret = -EINVAL;
+>  			break;
+> +		}
+>  		usleep_range(100, 1000);
+>  	}
+>  
+> -	/* Make sure link training is finished as well! */
+> -	if (count)
+> -		ret = imx6_pcie_wait_for_link(pp);
+> -	else
+> -		ret = -EINVAL;
+> -
+>  	if (ret) {
+>  		dev_err(pp->dev, "Failed to bring link up!\n");
+>  	} else {
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 7cc3be9fa7c6..d20db9e48014 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -115,29 +115,12 @@ struct pci_ops pci_root_ops = {
- 	.write = pci_write,
- };
- 
--/* Called by ACPI when it finds a new root bus.  */
--
--static struct pci_controller *alloc_pci_controller(int seg)
--{
--	struct pci_controller *controller;
--
--	controller = kzalloc(sizeof(*controller), GFP_KERNEL);
--	if (!controller)
--		return NULL;
--
--	controller->segment = seg;
--	return controller;
--}
--
- struct pci_root_info {
-+	struct pci_controller controller;
- 	struct acpi_device *bridge;
--	struct pci_controller *controller;
- 	struct list_head resources;
--	struct resource *res;
--	resource_size_t *res_offset;
--	unsigned int res_num;
- 	struct list_head io_resources;
--	char *name;
-+	char name[16];
- };
- 
- static unsigned int
-@@ -168,11 +151,11 @@ new_space (u64 phys_base, int sparse)
- 	return i;
+This looks fine functionally, but I propose the following slight
+rearrangement because I have another patch that makes all the
+"wait_for_link" timeout loops look similar, and this loop might as
+well be similar, too.
+
+Unrelated to your patch, but noticed while doing this: what's the magic
+constant 0x80 here?
+
++	tmp = readl(pp->dbi_base + 0x80);
+
+Is that correct?  Can we add a symbolic name for it?
+
+Bjorn
+
+
+commit 24533d23e8fa
+Author: Troy Kisky <troy.kisky@boundarydevices.com>
+Date:   Fri Jun 12 14:30:16 2015 -0500
+
+    PCI: imx6: Add speed change timeout message
+    
+    Currently, the timeout is never detected as count has a value of -1 if a
+    timeout happens, but the code is checking for 0.  Also, this patch removes
+    the unneeded final wait if a timeout occurs.
+    
+    [bhelgaas: reworked starting from http://lkml.kernel.org/r/1433543864-7252-1-git-send-email-troy.kisky@boundarydevices.com]
+    Signed-off-by: Troy Kisky <troy.kisky@boundarydevices.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index fdb9536..2bbd38d 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -352,6 +352,23 @@ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+ 	return 0;
  }
  
--static u64 add_io_space(struct pci_root_info *info,
--			struct acpi_resource_address64 *addr)
-+static int add_io_space(struct device *dev, struct pci_root_info *info,
-+			struct resource_entry *entry)
- {
- 	struct iospace_resource *iospace;
--	struct resource *resource;
-+	struct resource *resource, *res = entry->res;
- 	char *name;
- 	unsigned long base, min, max, base_port;
- 	unsigned int sparse = 0, space_nr, len;
-@@ -180,27 +163,24 @@ static u64 add_io_space(struct pci_root_info *info,
- 	len = strlen(info->name) + 32;
- 	iospace = kzalloc(sizeof(*iospace) + len, GFP_KERNEL);
- 	if (!iospace) {
--		dev_err(&info->bridge->dev,
--				"PCI: No memory for %s I/O port space\n",
--				info->name);
--		goto out;
-+		dev_err(dev, "PCI: No memory for %s I/O port space\n",
-+			info->name);
-+		return -ENOMEM;
- 	}
- 
--	name = (char *)(iospace + 1);
--
--	min = addr->address.minimum;
--	max = min + addr->address.address_length - 1;
--	if (addr->info.io.translation_type == ACPI_SPARSE_TRANSLATION)
-+	if (res->flags & IORESOURCE_IO_SPARSE)
- 		sparse = 1;
--
--	space_nr = new_space(addr->address.translation_offset, sparse);
-+	space_nr = new_space(entry->offset, sparse);
- 	if (space_nr == ~0)
- 		goto free_resource;
- 
-+	name = (char *)(iospace + 1);
-+	min = res->start - entry->offset;
-+	max = res->end - entry->offset;
- 	base = __pa(io_space[space_nr].mmio_base);
- 	base_port = IO_SPACE_BASE(space_nr);
- 	snprintf(name, len, "%s I/O Ports %08lx-%08lx", info->name,
--		base_port + min, base_port + max);
-+		 base_port + min, base_port + max);
- 
- 	/*
- 	 * The SDM guarantees the legacy 0-64K space is sparse, but if the
-@@ -216,153 +196,195 @@ static u64 add_io_space(struct pci_root_info *info,
- 	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
- 	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
- 	if (insert_resource(&iomem_resource, resource)) {
--		dev_err(&info->bridge->dev,
--				"can't allocate host bridge io space resource  %pR\n",
--				resource);
-+		dev_err(dev,
-+			"can't allocate host bridge io space resource  %pR\n",
-+			resource);
- 		goto free_resource;
- 	}
- 
-+	entry->offset = base_port;
-+	res->start = min + base_port;
-+	res->end = max + base_port;
- 	list_add_tail(&iospace->list, &info->io_resources);
--	return base_port;
++static int imx6_pcie_wait_for_speed_change(struct pcie_port *pp)
++{
++	uint32_t tmp;
++	unsigned int retries;
 +
-+	return 0;
- 
- free_resource:
- 	kfree(iospace);
--out:
--	return ~0;
-+	return -ENOSPC;
++	for (retries = 0; retries < 200; retries++)
++		tmp = readl(pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
++		/* Test if the speed change finished. */
++		if (!(tmp & PORT_LOGIC_SPEED_CHANGE))
++			return 0;
++		usleep_range(100, 1000);
++	}
++
++	dev_err(pp->dev, "Speed change timeout\n");
++	return -EINVAL;
 +}
 +
-+/*
-+ * An IO port or MMIO resource assigned to a PCI host bridge may be
-+ * consumed by the host bridge itself or available to its child
-+ * bus/devices. The ACPI specification defines a bit (Producer/Consumer)
-+ * to tell whether the resource is consumed by the host bridge itself,
-+ * but firmware hasn't used that bit consistently, so we can't rely on it.
-+ *
-+ * On x86 and IA64 platforms, all IO port and MMIO resources are assumed
-+ * to be available to child bus/devices except one special case:
-+ *     IO port [0xCF8-0xCFF] is consumed by the host bridge itself
-+ *     to access PCI configuration space.
-+ *
-+ * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
-+ */
-+static bool resource_is_pcicfg_ioport(struct resource *res)
-+{
-+	return (res->flags & IORESOURCE_IO) &&
-+		res->start == 0xCF8 && res->end == 0xCFF;
- }
- 
--static acpi_status resource_to_window(struct acpi_resource *resource,
--				      struct acpi_resource_address64 *addr)
-+static int
-+probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
-+		    int busnum, int domain)
+ static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
  {
--	acpi_status status;
+ 	struct pcie_port *pp = arg;
+@@ -363,7 +380,7 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	uint32_t tmp;
+-	int ret, count;
 +	int ret;
-+	struct list_head *list = &info->resources;
-+	struct resource_entry *entry, *tmp;
  
--	/*
--	 * We're only interested in _CRS descriptors that are
--	 *	- address space descriptors for memory or I/O space
--	 *	- non-zero size
--	 */
--	status = acpi_resource_to_address64(resource, addr);
--	if (ACPI_SUCCESS(status) &&
--	    (addr->resource_type == ACPI_MEMORY_RANGE ||
--	     addr->resource_type == ACPI_IO_RANGE) &&
--	    addr->address.address_length)
--		return AE_OK;
--
--	return AE_ERROR;
--}
--
--static acpi_status count_window(struct acpi_resource *resource, void *data)
--{
--	unsigned int *windows = (unsigned int *) data;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
--
--	status = resource_to_window(resource, &addr);
--	if (ACPI_SUCCESS(status))
--		(*windows)++;
--
--	return AE_OK;
--}
--
--static acpi_status add_window(struct acpi_resource *res, void *data)
--{
--	struct pci_root_info *info = data;
--	struct resource *resource;
--	struct acpi_resource_address64 addr;
--	acpi_status status;
--	unsigned long flags, offset = 0;
--	struct resource *root;
--
--	/* Return AE_OK for non-window resources to keep scanning for more */
--	status = resource_to_window(res, &addr);
--	if (!ACPI_SUCCESS(status))
--		return AE_OK;
--
--	if (addr.resource_type == ACPI_MEMORY_RANGE) {
--		flags = IORESOURCE_MEM;
--		root = &iomem_resource;
--		offset = addr.address.translation_offset;
--	} else if (addr.resource_type == ACPI_IO_RANGE) {
--		flags = IORESOURCE_IO;
--		root = &ioport_resource;
--		offset = add_io_space(info, &addr);
--		if (offset == ~0)
--			return AE_OK;
--	} else
--		return AE_OK;
--
--	resource = &info->res[info->res_num];
--	resource->name = info->name;
--	resource->flags = flags;
--	resource->start = addr.address.minimum + offset;
--	resource->end = resource->start + addr.address.address_length - 1;
--	info->res_offset[info->res_num] = offset;
--
--	if (insert_resource(root, resource)) {
--		dev_err(&info->bridge->dev,
--			"can't allocate host bridge window %pR\n",
--			resource);
--	} else {
--		if (offset)
--			dev_info(&info->bridge->dev, "host bridge window %pR "
--				 "(PCI address [%#llx-%#llx])\n",
--				 resource,
--				 resource->start - offset,
--				 resource->end - offset);
--		else
--			dev_info(&info->bridge->dev,
--				 "host bridge window %pR\n", resource);
--	}
--	/* HP's firmware has a hack to work around a Windows bug.
--	 * Ignore these tiny memory ranges */
--	if (!((resource->flags & IORESOURCE_MEM) &&
--	      (resource->end - resource->start < 16)))
--		pci_add_resource_offset(&info->resources, resource,
--					info->res_offset[info->res_num]);
-+	ret = acpi_dev_get_resources(device, list,
-+				     acpi_dev_filter_resource_type_cb,
-+				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
-+	if (ret < 0)
-+		dev_warn(&device->dev,
-+			 "failed to parse _CRS method, error code %d\n", ret);
-+	else if (ret == 0)
-+		dev_dbg(&device->dev,
-+			"no IO and memory resources present in _CRS\n");
-+	else
-+		resource_list_for_each_entry_safe(entry, tmp, list) {
-+			if ((entry->res->flags & IORESOURCE_DISABLED) ||
-+			    resource_is_pcicfg_ioport(entry->res))
-+				resource_list_destroy_entry(entry);
-+			else
-+				entry->res->name = info->name;
-+		}
- 
--	info->res_num++;
--	return AE_OK;
-+	return ret;
- }
- 
--static void free_pci_root_info_res(struct pci_root_info *info)
--{
--	struct iospace_resource *iospace, *tmp;
-+static void validate_resources(struct device *dev, struct list_head *resources,
-+			       unsigned long type)
-+{
-+	LIST_HEAD(list);
-+	struct resource *res1, *res2, *root = NULL;
-+	struct resource_entry *tmp, *entry, *entry2;
-+
-+	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
-+	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
-+
-+	list_splice_init(resources, &list);
-+	resource_list_for_each_entry_safe(entry, tmp, &list) {
-+		bool free = false;
-+		resource_size_t end;
-+
-+		res1 = entry->res;
-+		if (!(res1->flags & type))
-+			goto next;
-+
-+		/* Exclude non-addressable range or non-addressable portion */
-+		end = min(res1->end, root->end);
-+		if (end <= res1->start) {
-+			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
-+				 res1);
-+			free = true;
-+			goto next;
-+		} else if (res1->end != end) {
-+			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
-+				 res1, (unsigned long long)end + 1,
-+				 (unsigned long long)res1->end);
-+			res1->end = end;
-+		}
- 
--	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list)
--		kfree(iospace);
-+		resource_list_for_each_entry(entry2, resources) {
-+			res2 = entry2->res;
-+			if (!(res2->flags & type))
-+				continue;
-+
-+			/*
-+			 * I don't like throwing away windows because then
-+			 * our resources no longer match the ACPI _CRS, but
-+			 * the kernel resource tree doesn't allow overlaps.
-+			 */
-+			if (resource_overlaps(res1, res2)) {
-+				res2->start = min(res1->start, res2->start);
-+				res2->end = max(res1->end, res2->end);
-+				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
-+					 res2, res1);
-+				free = true;
-+				goto next;
-+			}
-+		}
- 
--	kfree(info->name);
--	kfree(info->res);
--	info->res = NULL;
--	kfree(info->res_offset);
--	info->res_offset = NULL;
--	info->res_num = 0;
--	kfree(info->controller);
--	info->controller = NULL;
-+next:
-+		resource_list_del(entry);
-+		if (free)
-+			resource_list_free_entry(entry);
-+		else
-+			resource_list_add_tail(entry, resources);
-+	}
-+}
-+
-+static void add_resources(struct pci_root_info *info, struct device *dev)
-+{
-+	struct resource_entry *entry, *tmp;
-+	struct resource *res, *conflict, *root = NULL;
-+	struct list_head *list = &info->resources;
-+
-+	validate_resources(dev, list, IORESOURCE_MEM);
-+	validate_resources(dev, list, IORESOURCE_IO);
-+
-+	resource_list_for_each_entry_safe(entry, tmp, list) {
-+		res = entry->res;
-+		if (res->flags & IORESOURCE_MEM) {
-+			root = &iomem_resource;
-+			/*
-+			 * HP's firmware has a hack to work around a Windows
-+			 * bug. Ignore these tiny memory ranges.
-+			 */
-+			if (resource_size(res) <= 16) {
-+				resource_list_destroy_entry(entry);
-+				continue;
-+			}
-+		} else if (res->flags & IORESOURCE_IO) {
-+			root = &ioport_resource;
-+			if (add_io_space(&info->bridge->dev, info, entry)) {
-+				resource_list_destroy_entry(entry);
-+				continue;
-+			}
-+		} else {
-+			BUG_ON(res);
-+		}
-+
-+		conflict = insert_resource_conflict(root, res);
-+		if (conflict) {
-+			dev_info(dev,
-+				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
-+				 res, conflict->name, conflict);
-+			resource_list_destroy_entry(entry);
-+		}
-+	}
- }
- 
- static void __release_pci_root_info(struct pci_root_info *info)
- {
--	int i;
- 	struct resource *res;
--	struct iospace_resource *iospace;
-+	struct iospace_resource *iospace, *tmp;
-+	struct resource_entry *entry, *tentry;
- 
--	list_for_each_entry(iospace, &info->io_resources, list)
-+	list_for_each_entry_safe(iospace, tmp, &info->io_resources, list) {
- 		release_resource(&iospace->res);
-+		kfree(iospace);
-+	}
- 
--	for (i = 0; i < info->res_num; i++) {
--		res = &info->res[i];
--
--		if (!res->parent)
--			continue;
--
--		if (!(res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
--			continue;
--
--		release_resource(res);
-+	resource_list_for_each_entry_safe(entry, tentry, &info->resources) {
-+		res = entry->res;
-+		if (res->parent &&
-+		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-+			release_resource(res);
-+		resource_list_destroy_entry(entry);
- 	}
- 
--	free_pci_root_info_res(info);
- 	kfree(info);
- }
- 
-@@ -373,99 +395,49 @@ static void release_pci_root_info(struct pci_host_bridge *bridge)
- 	__release_pci_root_info(info);
- }
- 
--static int
--probe_pci_root_info(struct pci_root_info *info, struct acpi_device *device,
--		int busnum, int domain)
--{
--	char *name;
--
--	name = kmalloc(16, GFP_KERNEL);
--	if (!name)
--		return -ENOMEM;
--
--	sprintf(name, "PCI Bus %04x:%02x", domain, busnum);
--	info->bridge = device;
--	info->name = name;
--
--	acpi_walk_resources(device->handle, METHOD_NAME__CRS, count_window,
--			&info->res_num);
--	if (info->res_num) {
--		info->res =
--			kzalloc_node(sizeof(*info->res) * info->res_num,
--				     GFP_KERNEL, info->controller->node);
--		if (!info->res) {
--			kfree(name);
--			return -ENOMEM;
--		}
--
--		info->res_offset =
--			kzalloc_node(sizeof(*info->res_offset) * info->res_num,
--					GFP_KERNEL, info->controller->node);
--		if (!info->res_offset) {
--			kfree(name);
--			kfree(info->res);
--			info->res = NULL;
--			return -ENOMEM;
--		}
--
--		info->res_num = 0;
--		acpi_walk_resources(device->handle, METHOD_NAME__CRS,
--			add_window, info);
--	} else
--		kfree(name);
--
--	return 0;
--}
--
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
- 	struct acpi_device *device = root->device;
- 	int domain = root->segment;
- 	int bus = root->secondary.start;
--	struct pci_controller *controller;
--	struct pci_root_info *info = NULL;
--	int busnum = root->secondary.start;
-+	struct pci_root_info *info;
- 	struct pci_bus *pbus;
- 	int ret;
- 
--	controller = alloc_pci_controller(domain);
--	if (!controller)
--		return NULL;
--
--	controller->companion = device;
--	controller->node = acpi_get_node(device->handle);
--
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
- 	if (!info) {
- 		dev_err(&device->dev,
--				"pci_bus %04x:%02x: ignored (out of memory)\n",
--				domain, busnum);
--		kfree(controller);
-+			"pci_bus %04x:%02x: ignored (out of memory)\n",
-+			domain, bus);
- 		return NULL;
- 	}
- 
--	info->controller = controller;
--	INIT_LIST_HEAD(&info->io_resources);
-+	info->controller.segment = domain;
-+	info->controller.companion = device;
-+	info->controller.node = acpi_get_node(device->handle);
-+	info->bridge = device;
- 	INIT_LIST_HEAD(&info->resources);
-+	INIT_LIST_HEAD(&info->io_resources);
-+	snprintf(info->name, sizeof(info->name),
-+		 "PCI Bus %04x:%02x", domain, bus);
- 
--	ret = probe_pci_root_info(info, device, busnum, domain);
--	if (ret) {
--		kfree(info->controller);
-+	ret = probe_pci_root_info(info, device, bus, domain);
-+	if (ret <= 0) {
- 		kfree(info);
- 		return NULL;
- 	}
--	/* insert busn resource at first */
-+	add_resources(info, &info->bridge->dev);
- 	pci_add_resource(&info->resources, &root->secondary);
-+
  	/*
- 	 * See arch/x86/pci/acpi.c.
- 	 * The desired pci bus might already be scanned in a quirk. We
- 	 * should handle the case here, but it appears that IA64 hasn't
- 	 * such quirk. So we just ignore the case now.
- 	 */
--	pbus = pci_create_root_bus(NULL, bus, &pci_root_ops, controller,
--				   &info->resources);
-+	pbus = pci_create_root_bus(NULL, bus, &pci_root_ops,
-+				   &info->controller, &info->resources);
- 	if (!pbus) {
--		pci_free_resource_list(&info->resources);
- 		__release_pci_root_info(info);
- 		return NULL;
+ 	 * Force Gen1 operation when starting the link.  In case the link is
+@@ -397,29 +414,22 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
+ 	tmp |= PORT_LOGIC_SPEED_CHANGE;
+ 	writel(tmp, pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
+ 
+-	count = 200;
+-	while (count--) {
+-		tmp = readl(pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
+-		/* Test if the speed change finished. */
+-		if (!(tmp & PORT_LOGIC_SPEED_CHANGE))
+-			break;
+-		usleep_range(100, 1000);
++	ret = imx6_pcie_wait_for_speed_change(pp);
++	if (ret) {
++		dev_err(pp->dev, "Failed to bring link up!\n");
++		return ret;
  	}
--- 
-1.7.10.4
-
+ 
+ 	/* Make sure link training is finished as well! */
+-	if (count)
+-		ret = imx6_pcie_wait_for_link(pp);
+-	else
+-		ret = -EINVAL;
+-
++	ret = imx6_pcie_wait_for_link(pp);
+ 	if (ret) {
+ 		dev_err(pp->dev, "Failed to bring link up!\n");
+-	} else {
+-		tmp = readl(pp->dbi_base + 0x80);
+-		dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
++		return ret;
+ 	}
+ 
+-	return ret;
++	tmp = readl(pp->dbi_base + 0x80);
++	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
++	return 0;
+ }
+ 
+ static void imx6_pcie_host_init(struct pcie_port *pp)
