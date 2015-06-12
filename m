@@ -1,163 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwhop.emc.com ([168.159.213.141]:56889 "EHLO
-	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753470AbbFIOrf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 10:47:35 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v3 09/18] NTB: Add parameters for Intel SNB B2B addresses
-Date: Tue,  9 Jun 2015 05:44:36 -0400
-Message-Id: <c3b1dd88bf0eb3c86f38fd11cc1b1735dd593a04.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:33265 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751362AbbFLXjc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 19:39:32 -0400
+Received: by iebgx4 with SMTP id gx4so32965581ieb.0
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 16:39:32 -0700 (PDT)
+Date: Fri, 12 Jun 2015 18:39:28 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: festevam@gmail.com, marex@denx.de, linux-pci@vger.kernel.org,
+	r65037@freescale.com, l.stach@pengutronix.de, tharvey@gateworks.com
+Subject: Re: [PATCH 1/1] pci-imx6: add speed change timeout message
+Message-ID: <20150612233928.GL23119@google.com>
+References: <1433543864-7252-1-git-send-email-troy.kisky@boundarydevices.com>
+ <20150612202008.GI23119@google.com>
+ <557B5C75.7040905@boundarydevices.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <557B5C75.7040905@boundarydevices.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add module parameters for the addresses to be used in b2b topology.
+On Fri, Jun 12, 2015 at 03:25:57PM -0700, Troy Kisky wrote:
+> On 6/12/2015 1:20 PM, Bjorn Helgaas wrote:
+> > Unrelated to your patch, but noticed while doing this: what's the magic
+> > constant 0x80 here?
+> > 
+> > +	tmp = readl(pp->dbi_base + 0x80);
+> > 
+> > Is that correct?  Can we add a symbolic name for it?
+> > 
+> > Bjorn
+> > 
+> 
+> The name in the manual for +x80 is
+> PCIE_RC_LCSR - Link Control and Status Register
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- Documentation/ntb.txt               | 10 +++++
- drivers/ntb/hw/intel/ntb_hw_intel.c | 77 ++++++++++++++++++++++++++++---------
- 2 files changed, 68 insertions(+), 19 deletions(-)
 
-diff --git a/Documentation/ntb.txt b/Documentation/ntb.txt
-index 725ba1e6c127..00a3f92832a5 100644
---- a/Documentation/ntb.txt
-+++ b/Documentation/ntb.txt
-@@ -56,3 +56,13 @@ Module Parameters:
- * b2b\_mw\_share - If the peer ntb is to be accessed via a memory window, and if
- 	the memory window is large enough, still allow the client to use the
- 	second half of the memory window for address translation to the peer.
-+* snb\_b2b\_usd\_bar2\_addr64 - If using B2B topology on Xeon hardware, use this
-+	64 bit address on the bus between the NTB devices for the window at
-+	BAR2, on the upstream side of the link.
-+* snb\_b2b\_usd\_bar4\_addr64 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_usd\_bar4\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_usd\_bar5\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar2\_addr64 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar4\_addr64 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar4\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar5\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
-index 3686ac1a3ee2..bef94a8bab96 100644
---- a/drivers/ntb/hw/intel/ntb_hw_intel.c
-+++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
-@@ -72,20 +72,6 @@ MODULE_AUTHOR("Intel Corporation");
- #define bar0_off(base, bar) ((base) + ((bar) << 2))
- #define bar2_off(base, bar) bar0_off(base, (bar) - 2)
- 
--static int b2b_mw_idx = -1;
--module_param(b2b_mw_idx, int, 0644);
--MODULE_PARM_DESC(b2b_mw_idx, "Use this mw idx to access the peer ntb.  A "
--		 "value of zero or positive starts from first mw idx, and a "
--		 "negative value starts from last mw idx.  Both sides MUST "
--		 "set the same value here!");
--
--static unsigned int b2b_mw_share;
--module_param(b2b_mw_share, uint, 0644);
--MODULE_PARM_DESC(b2b_mw_share, "If the b2b mw is large enough, configure the "
--		 "ntb so that the peer ntb only occupies the first half of "
--		 "the mw, so the second half can still be used as a mw.  Both "
--		 "sides MUST set the same value here!");
--
- static const struct intel_ntb_reg bwd_reg;
- static const struct intel_ntb_alt_reg bwd_pri_reg;
- static const struct intel_ntb_alt_reg bwd_sec_reg;
-@@ -98,14 +84,67 @@ static const struct intel_ntb_alt_reg snb_sec_reg;
- static const struct intel_ntb_alt_reg snb_b2b_reg;
- static const struct intel_ntb_xlat_reg snb_pri_xlat;
- static const struct intel_ntb_xlat_reg snb_sec_xlat;
--static const struct intel_b2b_addr snb_b2b_usd_addr;
--static const struct intel_b2b_addr snb_b2b_dsd_addr;
--
-+static struct intel_b2b_addr snb_b2b_usd_addr;
-+static struct intel_b2b_addr snb_b2b_dsd_addr;
- static const struct ntb_dev_ops intel_ntb_ops;
- 
- static const struct file_operations intel_ntb_debugfs_info;
- static struct dentry *debugfs_dir;
- 
-+static int b2b_mw_idx = -1;
-+module_param(b2b_mw_idx, int, 0644);
-+MODULE_PARM_DESC(b2b_mw_idx, "Use this mw idx to access the peer ntb.  A "
-+		 "value of zero or positive starts from first mw idx, and a "
-+		 "negative value starts from last mw idx.  Both sides MUST "
-+		 "set the same value here!");
-+
-+static unsigned int b2b_mw_share;
-+module_param(b2b_mw_share, uint, 0644);
-+MODULE_PARM_DESC(b2b_mw_share, "If the b2b mw is large enough, configure the "
-+		 "ntb so that the peer ntb only occupies the first half of "
-+		 "the mw, so the second half can still be used as a mw.  Both "
-+		 "sides MUST set the same value here!");
-+
-+module_param_named(snb_b2b_usd_bar2_addr64,
-+		   snb_b2b_usd_addr.bar2_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD BAR 2 64-bit address");
-+
-+module_param_named(snb_b2b_usd_bar4_addr64,
-+		   snb_b2b_usd_addr.bar4_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD BAR 4 64-bit address");
-+
-+module_param_named(snb_b2b_usd_bar4_addr32,
-+		   snb_b2b_usd_addr.bar4_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD split-BAR 4 32-bit address");
-+
-+module_param_named(snb_b2b_usd_bar5_addr32,
-+		   snb_b2b_usd_addr.bar5_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD split-BAR 5 32-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar2_addr64,
-+		   snb_b2b_dsd_addr.bar2_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD BAR 2 64-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar4_addr64,
-+		   snb_b2b_dsd_addr.bar4_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD BAR 4 64-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar4_addr32,
-+		   snb_b2b_dsd_addr.bar4_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD split-BAR 4 32-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar5_addr32,
-+		   snb_b2b_dsd_addr.bar5_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD split-BAR 5 32-bit address");
-+
- #ifndef ioread64
- #ifdef readq
- #define ioread64 readq
-@@ -2078,14 +2117,14 @@ static const struct intel_ntb_xlat_reg snb_sec_xlat = {
- 	.bar2_xlat		= SNB_SBAR23XLAT_OFFSET,
- };
- 
--static const struct intel_b2b_addr snb_b2b_usd_addr = {
-+static struct intel_b2b_addr snb_b2b_usd_addr = {
- 	.bar2_addr64		= SNB_B2B_BAR2_USD_ADDR64,
- 	.bar4_addr64		= SNB_B2B_BAR4_USD_ADDR64,
- 	.bar4_addr32		= SNB_B2B_BAR4_USD_ADDR32,
- 	.bar5_addr32		= SNB_B2B_BAR5_USD_ADDR32,
- };
- 
--static const struct intel_b2b_addr snb_b2b_dsd_addr = {
-+static struct intel_b2b_addr snb_b2b_dsd_addr = {
- 	.bar2_addr64		= SNB_B2B_BAR2_DSD_ADDR64,
- 	.bar4_addr64		= SNB_B2B_BAR4_DSD_ADDR64,
- 	.bar4_addr32		= SNB_B2B_BAR4_DSD_ADDR32,
--- 
-2.4.0.rc0.43.gcf8a8c6
+commit bc82467358d3793e1291e38cd01883e74e872eeb
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri Jun 12 17:27:43 2015 -0500
 
+    PCI: imx6: Add #define PCIE_RC_LCSR
+    
+    Define PCIE_RC_LCSR and use it instead of the bare offset "0x80."
+    No functional change.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index a032c01..57db1c1 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -47,6 +47,8 @@ struct imx6_pcie {
+ #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2	0x2
+ #define PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK	0xf
+ 
++#define PCIE_RC_LCSR				0x80
++
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET 0x700
+ #define PCIE_PL_PFLR (PL_OFFSET + 0x08)
+@@ -427,7 +429,7 @@ static int imx6_pcie_start_link(struct pcie_port *pp)
+ 		return ret;
+ 	}
+ 
+-	tmp = readl(pp->dbi_base + 0x80);
++	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
+ 	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
+ 	return 0;
+ }
