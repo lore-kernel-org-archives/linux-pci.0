@@ -1,59 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:38356 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbbFETig (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 15:38:36 -0400
-Received: by igblz2 with SMTP id lz2so22058510igb.1
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 12:38:35 -0700 (PDT)
-Date: Fri, 5 Jun 2015 14:38:31 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH] PCI: keep resource size during alignment reordering
-Message-ID: <20150605193831.GB20943@google.com>
-References: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1434106314.30003.199.camel@citrix.com>
+Subject: Re: [PATCH 1/1] PCI: X-Gene: Disable Configuration Request Retry
+ Status for X-Gene v1 PCIe
+From: Ian Campbell <ian.campbell@citrix.com>
+To: Duc Dang <dhdang@apm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>,
+	Marcin Juszkiewicz <mjuszkiewicz@redhat.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, <patches@apm.com>
+Date: Fri, 12 Jun 2015 11:51:54 +0100
+In-Reply-To: <1434053294-10962-1-git-send-email-dhdang@apm.com>
+References: <1434053294-10962-1-git-send-email-dhdang@apm.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432878000-10921-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 28, 2015 at 10:40:00PM -0700, Yinghai Lu wrote:
-> In d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing
-> and assigning"), it stores additional alignment in realloc_head and takes
-> this into consideration for assignment.
-> During update the resource before reordering, it does not calculate
-> resource end correctly.
+On Thu, 2015-06-11 at 13:08 -0700, Duc Dang wrote:
+> X-Gene v1 PCIe controller has a bug in Configuration Request Retry
+> Status (CRS) logic:
+>   When CPU tries to read Vendor ID and Device ID of not-existed
+>   remote device, the controller returns 0xFFFF0001 instead of
+>   0xFFFFFFFF; this will add significant delay in boot time as
+>   pci_bus_read_dev_vendor_id will wait for 60 seconds before
+>   giving up.
 > 
-> We need to keep the original resource size before updating start.
-> otherwise we will smaller size during updating end.
+> So for X-Gene v1 PCIe controllers, disable CRS capability
+> advertisement by clearing CRS Software Visibility bit before
+> returning the Root Capability value to the callers. This is done
+> by implementing X-Gene PCIe specific xgene_pcie_config_read32 for
+> CFG read accesses to replace the generic default pci_generic_config_read32
+> function.
 > 
-> Fixes: d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing and assigning")
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Signed-off-by: Duc Dang <dhdang@apm.com>
 
-I applied this with the following changelog, included here so search
-engines can find the original thread:
+Applied onto v4.1-rc7 and:
+Tested-by: Ian Campbell <ian.campbell@citrix.com>
+
+Thanks!
 
 
-PCI: Preserve resource size during alignment reordering
-
-In d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing
-and assigning"), we store additional alignment in realloc_head and take
-this into consideration for assignment.
-
-In __assign_resources_sorted(), we changed dev_res->res->start, then used
-resource_start() (which depends on res->start), so the recomputed res->end
-was completely bogus.  Even if we'd had the correct size, the end would
-have been off by one.
-
-Preserve the resource size when we adjust its alignment.
-
-[bhelgaas: changelog]
-Fixes: d74b9027a4da ("PCI: Consider additional PF's IOV BAR alignment in sizing and assigning")
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>
