@@ -1,232 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 9 Jun 2015 17:12:30 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch v5 4/6] PCI/ACPI: Consolidate common PCI host bridge code
- into ACPI core
-Message-ID: <20150609161230.GC8591@red-moon>
-References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
- <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:34926 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751128AbbFLUYA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 16:24:00 -0400
+Received: by iesa3 with SMTP id a3so31052118ies.2
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 13:23:59 -0700 (PDT)
+Subject: [PATCH] PCI: imx6: Use "u32", not "uint32_t"
+To: Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Marek Vasut <marex@denx.de>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Troy Kisky <troy.kisky@boundarydevices.com>
+Date: Fri, 12 Jun 2015 15:23:57 -0500
+Message-ID: <20150612202357.17586.99216.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 08, 2015 at 05:20:46PM +0100, Jiang Liu wrote:
+Use "u32", not "uint32_t", for consistency.  Use "tmp", not "temp", for
+consistency within the driver.
 
-[...]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-imx6.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-> +static int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
-> +{
-> +	int ret;
-> +	struct list_head *list = &info->resources;
-> +	struct acpi_device *device = info->bridge;
-> +	struct resource_entry *entry, *tmp;
-> +	unsigned long flags;
-> +
-> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 2bbd38d..a032c01 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -354,7 +354,7 @@ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+ 
+ static int imx6_pcie_wait_for_speed_change(struct pcie_port *pp)
+ {
+-	uint32_t tmp;
++	u32 tmp;
+ 	unsigned int retries;
+ 
+ 	for (retries = 0; retries < 200; retries++)
+@@ -379,7 +379,7 @@ static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
+ static int imx6_pcie_start_link(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+-	uint32_t tmp;
++	u32 tmp;
+ 	int ret;
+ 
+ 	/*
+@@ -450,19 +450,19 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 
+ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+ {
+-	uint32_t temp;
++	u32 tmp;
+ 
+-	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
+-	temp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+-		 PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+-	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
++	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &tmp);
++	tmp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
++		PHY_RX_OVRD_IN_LO_RX_PLL_EN);
++	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, tmp);
+ 
+ 	usleep_range(2000, 3000);
+ 
+-	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &temp);
+-	temp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN |
++	pcie_phy_read(pp->dbi_base, PHY_RX_OVRD_IN_LO, &tmp);
++	tmp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+ 		  PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+-	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, temp);
++	pcie_phy_write(pp->dbi_base, PHY_RX_OVRD_IN_LO, tmp);
+ }
+ 
+ static int imx6_pcie_link_up(struct pcie_port *pp)
 
-Is IORESOURCE_MEM_8AND16BIT required because of some pending patches
-that will change ACPI resource filtering ? It does not seem to make
-a difference in the mainline code, AFAICT.
-
-> +	ret = acpi_dev_get_resources(device, list,
-> +				     acpi_dev_filter_resource_type_cb,
-> +				     (void *)flags);
-> +	if (ret < 0)
-> +		dev_warn(&device->dev,
-> +			 "failed to parse _CRS method, error code %d\n", ret);
-> +	else if (ret == 0)
-> +		dev_dbg(&device->dev,
-> +			"no IO and memory resources present in _CRS\n");
-> +	else {
-> +		resource_list_for_each_entry_safe(entry, tmp, list) {
-> +			if (entry->res->flags & IORESOURCE_DISABLED)
-> +				resource_list_destroy_entry(entry);
-> +			else
-> +				entry->res->name = info->name;
-> +		}
-> +		acpi_pci_root_validate_resources(&device->dev, list,
-> +						 IORESOURCE_MEM);
-> +		acpi_pci_root_validate_resources(&device->dev, list,
-> +						 IORESOURCE_IO);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
-> +{
-> +	struct resource_entry *entry, *tmp;
-> +	struct resource *res, *conflict, *root = NULL;
-> +
-> +	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
-> +		res = entry->res;
-> +		if (res->flags & IORESOURCE_MEM)
-> +			root = &iomem_resource;
-> +		else if (res->flags & IORESOURCE_IO)
-> +			root = &ioport_resource;
-> +		else
-> +			continue;
-> +
-> +		conflict = insert_resource_conflict(root, res);
-> +		if (conflict) {
-> +			dev_info(&info->bridge->dev,
-> +				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
-> +				 res, conflict->name, conflict);
-> +			resource_list_destroy_entry(entry);
-> +		}
-> +	}
-> +}
-> +
-> +static void __acpi_pci_root_release_info(struct acpi_pci_root_info *info)
-> +{
-> +	struct resource *res;
-> +	struct resource_entry *entry, *tmp;
-> +
-> +	if (!info)
-> +		return;
-> +
-> +	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
-> +		res = entry->res;
-> +		if (res->parent &&
-> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-> +			release_resource(res);
-
-> +		resource_list_destroy_entry(entry);
-> +	}
-> +
-> +	info->ops->release_info(info);
-> +}
-> +
-> +static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
-> +{
-> +	struct resource *res;
-> +	struct resource_entry *entry;
-> +
-> +	resource_list_for_each_entry(entry, &bridge->windows) {
-> +		res = entry->res;
-> +		if (res->parent &&
-> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-> +			release_resource(res);
-> +	}
-
-It is a question: is this loop necessary given that we are already
-releasing resources in __acpi_pci_root_release_info() ?
-
-> +	__acpi_pci_root_release_info(bridge->release_data);
-> +}
-> +
-> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> +				     struct acpi_pci_root_ops *ops,
-> +				     struct acpi_pci_root_info *info,
-> +				     void *sysdata, int segment, int node)
-
-I do not think you need to pass segment and node, they clutter the
-function signature when you can retrieve them from root, I would
-make them local variables and use root->segment and acpi_get_node
-in the function body to retrieve them.
-
-> +{
-> +	int ret, busnum = root->secondary.start;
-> +	struct acpi_device *device = root->device;
-> +	struct pci_bus *bus;
-> +
-> +	info->root = root;
-> +	info->bridge = device;
-> +	info->ops = ops;
-> +	INIT_LIST_HEAD(&info->resources);
-> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
-> +		 segment, busnum);
-> +
-> +	if (ops->init_info && ops->init_info(info))
-> +		goto out_release_info;
-> +	ret = acpi_pci_probe_root_resources(info);
-> +	if (ops->prepare_resources)
-> +		ret = ops->prepare_resources(info, ret);
-
-You go through this ret passing song and dance because we may want to
-call prepare_resources even if acpi_pci_probe_root_resource failed (on
-x86), correct ? I will have a further look at x86 and ia64 if we
-can consolidate these ops function hooks even further.
-
-Thanks,
-Lorenzo
-
-> +	if (ret < 0)
-> +		goto out_release_info;
-> +	else if (ret > 0)
-> +		pci_acpi_root_add_resources(info);
-> +	pci_add_resource(&info->resources, &root->secondary);
-> +
-> +	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
-> +				  sysdata, &info->resources);
-> +	if (bus) {
-> +		pci_scan_child_bus(bus);
-> +		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
-> +					    acpi_pci_root_release_info, info);
-> +		if (node != NUMA_NO_NODE)
-> +			dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n",
-> +				   node);
-> +		return bus;
-> +	}
-> +
-> +out_release_info:
-> +	__acpi_pci_root_release_info(info);
-> +	return NULL;
-> +}
-> +
->  void __init acpi_pci_root_init(void)
->  {
->  	acpi_hest_init();
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index a965efa52152..a76cb6f24ca1 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -52,6 +52,29 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
->  	return ACPI_HANDLE(dev);
->  }
->  
-> +struct acpi_pci_root;
-> +struct acpi_pci_root_ops;
-> +
-> +struct acpi_pci_root_info {
-> +	struct acpi_pci_root		*root;
-> +	struct acpi_device		*bridge;
-> +	struct acpi_pci_root_ops	*ops;
-> +	struct list_head		resources;
-> +	char				name[16];
-> +};
-> +
-> +struct acpi_pci_root_ops {
-> +	struct pci_ops *pci_ops;
-> +	int (*init_info)(struct acpi_pci_root_info *info);
-> +	void (*release_info)(struct acpi_pci_root_info *info);
-> +	int (*prepare_resources)(struct acpi_pci_root_info *info, int status);
-> +};
-> +
-> +extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
-> +					    struct acpi_pci_root_ops *ops,
-> +					    struct acpi_pci_root_info *info,
-> +					    void *sd, int seg, int node);
-> +
->  void acpi_pci_add_bus(struct pci_bus *bus);
->  void acpi_pci_remove_bus(struct pci_bus *bus);
->  
-> -- 
-> 1.7.10.4
-> 
