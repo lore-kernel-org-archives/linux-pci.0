@@ -1,87 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48961 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752769AbbFBRs5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 13:48:57 -0400
-Message-ID: <556DEC80.70206@redhat.com>
-Date: Tue, 02 Jun 2015 10:48:48 -0700
-From: Alexander Duyck <alexander.h.duyck@redhat.com>
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:34880 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751854AbbFLSTm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 14:19:42 -0400
+Received: by igbzc4 with SMTP id zc4so17126117igb.0
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 11:19:42 -0700 (PDT)
 MIME-Version: 1.0
-To: Mark D Rustad <mark.d.rustad@intel.com>, bhelgaas@google.com
-CC: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Subject: Re: [Intel-wired-lan] [PATCH 1/2] pci: Add dev_flags bit to access
- VPD through function 0
-References: <20150602165706.6252.76253.stgit@mdrustad-wks.jf.intel.com> <20150602170414.6252.48036.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150602170414.6252.48036.stgit@mdrustad-wks.jf.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <CAA93t1pD=fzAY3nQsi=JZ9a_NPcP-jOAW4jLkFy4fhzmhh1Sjg@mail.gmail.com>
+References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
+	<557A9661.8030603@huawei.com>
+	<CAA93t1pD=fzAY3nQsi=JZ9a_NPcP-jOAW4jLkFy4fhzmhh1Sjg@mail.gmail.com>
+Date: Fri, 12 Jun 2015 11:19:41 -0700
+Message-ID: <CACK8Z6HMt+ZPKvtGZi9eUMz1_hO3P7jFAyUF69ETY70x-1LUeg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
+From: Rajat Jain <rajatja@google.com>
+To: Rajat Jain <rajatxjain@gmail.com>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	guenter.roeck@juniper.net,
+	Raghuraman Thirumalairajan <rthirumal@juniper.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/02/2015 10:04 AM, Mark D Rustad wrote:
-> Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
-> function 0 to provide VPD access on other functions. This solves
-> concurrent access problems on many devices without changing the
-> attributes exposed in sysfs. Never set this bit on funciton 0 or
-> there will be an infinite recursion.
+Actually forgot to add Guenter. Also +rthirumal.
+
+On Fri, Jun 12, 2015 at 11:13 AM, Rajat Jain <rajatxjain@gmail.com> wrote:
+> [+Guenter]
 >
-> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-> ---
->   drivers/pci/access.c |   39 ++++++++++++++++++++++++++++++++++++++-
->   include/linux/pci.h  |    2 ++
->   2 files changed, 40 insertions(+), 1 deletion(-)
+> Looks good to me. Unfortunately, I do not have the hardware anymore to
+> test it :-(
 >
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index d9b64a175990..e435c087c354 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -439,6 +439,40 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
->   	.release = pci_vpd_pci22_release,
->   };
->   
-> +static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-> +			       void *arg)
-> +{
-> +	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-> +	ssize_t ret;
-> +
-> +	if (!tdev)
-> +		return -ENODEV;
-> +
-> +	ret = pci_read_vpd(tdev, pos, count, arg);
-> +	pci_dev_put(tdev);
-> +	return ret;
-> +}
-> +
-> +static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
-> +				const void *arg)
-> +{
-> +	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-> +	ssize_t ret;
-> +
-> +	if (!tdev)
-> +		return -ENODEV;
-> +
-> +	ret = pci_write_vpd(tdev, pos, count, arg);
-> +	pci_dev_put(tdev);
-> +	return ret;
-> +}
-> +
-
-I'm pretty sure these could cause some serious errors if you direct 
-assign the device into a VM since you then end up with multiple devices 
-sharing a bus.  Also it would likely have side-effects on a LOM (Lan On 
-Motherboard) as it also shares the bus with multiple non-Ethernet devices.
-
-I believe you still need to add something like a check for 
-!pci_is_root_bus(dev->bus) before you attempt to grab function 0.  It 
-probably also wouldn't hurt to check the dev->multifunction bit before 
-running this code since it wouldn't make sense to go chasing down the 
-VPD on another function if the device doesn't have one.  You could 
-probably do that either as a part of this code, or perhaps put it in the 
-quirk.
-
-- Alex
-
-- Alex
-
+> Guenter: Do you have it, or know some body who has and wants to test/use this?
+>
+> Thanks,
+>
+> Rajat
+>
+>
+> On Fri, Jun 12, 2015 at 1:20 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> rajatjain@juniper.net is not reachable now.
+>>
+>> So add CC: rajatxjain@gmail.com
+>>
+>> On 2015/6/11 19:12, Yijing Wang wrote:
+>>> Rajat Jain reported a deadlock when a hierarchical hot plug
+>>> thread and aer recovery thread both run.
+>>> https://lkml.org/lkml/2015/3/11/861
+>>>
+>>> thread 1:
+>>> pciehp_enable_slot()
+>>>       pciehp_configure_device()
+>>>               pci_bus_add_devices()
+>>>                       device_attach(dev)
+>>>                               device_lock(dev) //acquire device mutex successfully
+>>>                       ...
+>>>                       pciehp_probe(dev)
+>>>                               __pci_hp_register()
+>>>                                       pci_create_slot()
+>>>                                               down_write(pci_bus_sem) //deadlock here
+>>>
+>>> thread 2:
+>>> aer_isr_one_error()
+>>>       aer_process_err_device()
+>>>               do_recovery()
+>>>                       broadcast_error_message()
+>>>                               pci_walk_bus()
+>>>                                       down_read(&pci_bus_sem) //acquire pci_bus_sem successfully
+>>>                                               report_error_detected(dev)
+>>>                                                       device_lock(dev) // deadlock here
+>>>
+>>> Now we use pci_bus_sem to protect pci_slot creation and destroy,
+>>> it's unnecessary. We could introduce a new local mutex instead of
+>>> pci_bus_sem to avoid the deadlock.
+>>>
+>>> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>>> ---
+>>>  drivers/pci/slot.c |   11 ++++++-----
+>>>  1 files changed, 6 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+>>> index 396c200..feb08de 100644
+>>> --- a/drivers/pci/slot.c
+>>> +++ b/drivers/pci/slot.c
+>>> @@ -14,6 +14,7 @@
+>>>
+>>>  struct kset *pci_slots_kset;
+>>>  EXPORT_SYMBOL_GPL(pci_slots_kset);
+>>> +static DEFINE_MUTEX(pci_slot_mutex);
+>>>
+>>>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
+>>>                                       struct attribute *attr, char *buf)
+>>> @@ -195,7 +196,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
+>>>  {
+>>>       struct pci_slot *slot;
+>>>       /*
+>>> -      * We already hold pci_bus_sem so don't worry
+>>> +      * We already hold pci_slot_mutex so don't worry
+>>>        */
+>>>       list_for_each_entry(slot, &parent->slots, list)
+>>>               if (slot->number == slot_nr) {
+>>> @@ -253,7 +254,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>>>       int err = 0;
+>>>       char *slot_name = NULL;
+>>>
+>>> -     down_write(&pci_bus_sem);
+>>> +     mutex_lock(&pci_slot_mutex);
+>>>
+>>>       if (slot_nr == -1)
+>>>               goto placeholder;
+>>> @@ -310,7 +311,7 @@ placeholder:
+>>>
+>>>  out:
+>>>       kfree(slot_name);
+>>> -     up_write(&pci_bus_sem);
+>>> +     mutex_unlock(&pci_slot_mutex);
+>>>       return slot;
+>>>  err:
+>>>       kfree(slot);
+>>> @@ -332,9 +333,9 @@ void pci_destroy_slot(struct pci_slot *slot)
+>>>       dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
+>>>               slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
+>>>
+>>> -     down_write(&pci_bus_sem);
+>>> +     mutex_lock(&pci_slot_mutex);
+>>>       kobject_put(&slot->kobj);
+>>> -     up_write(&pci_bus_sem);
+>>> +     mutex_unlock(&pci_slot_mutex);
+>>>  }
+>>>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
+>>>
+>>>
+>>
+>>
+>> --
+>> Thanks!
+>> Yijing
+>>
