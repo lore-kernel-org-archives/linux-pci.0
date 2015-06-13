@@ -1,67 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1433513800.24429.56.camel@deneb.redhat.com>
-Subject: Re: [RFT v2 43/48] genirq, arch: Kill the first parameter 'irq' of
- irq_flow_handler_t
-From: Mark Salter <msalter@redhat.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 13 Jun 2015 08:37:32 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Jan Beulich <JBeulich@suse.com>, Juergen Gross <jgross@suse.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
+	Dave Airlie <airlied@redhat.com>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	X86 ML <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Richard Henderson <rth@twiddle.net>,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-	Matt Turner <mattst88@gmail.com>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Hans-Christian Egtvedt <egtvedt@samfundet.no>,
-	Aurelien Jacquiot <a-jacquiot@ti.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Andreas Larsson <andreas@gaisler.com>,
-	Joe Perches <joe@perches.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-alpha@vger.kernel.org,
-	linux-c6x-dev@linux-c6x.org, sparclinux@vger.kernel.org
-Date: Fri, 05 Jun 2015 10:16:40 -0400
-In-Reply-To: <1433391238-19471-44-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-	 <1433391238-19471-44-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-media@vger.kernel.org, Luis Rodriguez <Mcgrof@suse.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Toshi Kani <toshi.kani@hp.com>, Borislav Petkov <bp@suse.de>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ville.syrjala@linux.intel.com
+Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
+Message-ID: <20150613063731.GB12612@gmail.com>
+References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+ <1434064996.11808.64.camel@misato.fc.hp.com>
+ <557AAD910200007800084014@mail.emea.novell.com>
+ <CALCETrXWZU2NZRZy7b74z54Tt5aKmTOmgMmf5WYG1OZtEmjw7A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALCETrXWZU2NZRZy7b74z54Tt5aKmTOmgMmf5WYG1OZtEmjw7A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-06-04 at 12:13 +0800, Jiang Liu wrote:
-> Now most IRQ flow handlers make no use of the first parameter 'irq'.
-> And for those who do make use of 'irq', we could easily get the irq
-> number through irq_desc->irq_data->irq. So kill the first parameter
-> 'irq' of irq_flow_handler_t.
+
+* Andy Lutomirski <luto@amacapital.net> wrote:
+
+> On Jun 12, 2015 12:59 AM, "Jan Beulich" <JBeulich@suse.com> wrote:
+> >
+> > >>> On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
+> > > There are two usages on MTRRs:
+> > >  1) MTRR entries set by firmware
+> > >  2) MTRR entries set by OS drivers
+> > >
+> > > We can obsolete 2), but we have no control over 1).  As UEFI firmwares
+> > > also set this up, this usage will continue to stay.  So, we should not
+> > > get rid of the MTRR code that looks up the MTRR entries, while we have
+> > > no need to modify them.
+> > >
+> > > Such MTRR entries provide safe guard to /dev/mem, which allows privileged 
+> > > user to access a range that may require UC mapping while the /dev/mem driver 
+> > > blindly maps it with WB.  MTRRs converts WB to UC in such a case.
+> >
+> > But it wouldn't be impossible to simply read the MTRRs upon boot, store the 
+> > information, disable MTRRs, and correctly use PAT to achieve the same effect 
+> > (i.e. the "blindly maps" part of course would need fixing).
 > 
-> To ease review, I have split the changes into several parts, though
-> they should be merge as one to support bisecting.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Acked-by: Hans-Christian Egtvedt <egtvedt@samfundet.no>
-> ---
->  arch/alpha/kernel/irq.c             |    2 +-
->  arch/avr32/mach-at32ap/extint.c     |    2 +-
->  arch/avr32/mach-at32ap/pio.c        |    2 +-
->  arch/c6x/platforms/megamod-pic.c    |    2 +-
->  arch/sparc/kernel/leon_kernel.c     |    2 +-
->  arch/sparc/kernel/leon_pci_grpci1.c |    2 +-
->  arch/sparc/kernel/leon_pci_grpci2.c |    2 +-
->  arch/tile/kernel/pci_gx.c           |    4 ++--
->  arch/unicore32/kernel/irq.c         |    2 +-
->  9 files changed, 10 insertions(+), 10 deletions(-)
+> This may crash and burn badly when we call a UEFI function or an SMI happens.  I 
+> think we should just leave the MTRRs alone.
 
-For c6x:
+Not to mention suspend/resume, reboot and other goodies where the firmware might 
+pop up expecting intact MTRRs.
 
-Acked-by: Mark Salter <msalter@redhat.com>
+Btw., doesn't a lack of MTRRs imply UC? So is 'crash and burn' possible in most 
+cases? Isn't it just 'executes slower than before'?
 
+Thanks,
 
+	Ingo
