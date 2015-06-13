@@ -1,109 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: arnd@arndb.de
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xen-devel@lists.xensource.com, linux-fbdev@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>
-Subject: [PATCH v7 1/9] pci: add pci_ioremap_wc_bar()
-Date: Fri, 19 Jun 2015 15:08:24 -0700
-Message-Id: <1434751712-24333-2-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from exprod5og109.obsmtp.com ([64.18.0.188]:35392 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755378AbbFMAgO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 20:36:14 -0400
+Received: by pdjm12 with SMTP id m12so33038633pdj.3
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 17:36:14 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Ian Campbell <ian.campbell@citrix.com>,
+	Marcin Juszkiewicz <mjuszkiewicz@redhat.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v2 1/1] PCI: X-Gene: Disable Configuration Request Retry Status for X-Gene v1 PCIe
+Date: Fri, 12 Jun 2015 17:35:57 -0700
+Message-Id: <017c1ec8e3f43f86a947eaddb30c9389e0b1053b.1434154377.git.dhdang@apm.com>
+In-Reply-To: <CAErSpo5Oc_8ca4h7xYSkGPFE1vxWg1sy1rJRc0B=u9LrdOLY7g@mail.gmail.com>
+References: <CAErSpo5Oc_8ca4h7xYSkGPFE1vxWg1sy1rJRc0B=u9LrdOLY7g@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+X-Gene v1 PCIe controller has a bug in Configuration Request Retry
+Status (CRS) logic:
+  When CPU tries to read Vendor ID and Device ID of not-existed
+  remote device, the controller returns 0xFFFF0001 instead of
+  0xFFFFFFFF; this will add significant delay in boot time as
+  pci_bus_read_dev_vendor_id will wait for 60 seconds before
+  giving up.
 
-This lets drivers take advantage of PAT when available. This
-should help with the transition of converting video drivers over
-to ioremap_wc() to help with the goal of eventually using
-_PAGE_CACHE_UC over _PAGE_CACHE_UC_MINUS on x86 on
-ioremap_nocache() (de33c442e titled "x86 PAT: fix performance
-drop for glx, use UC minus for ioremap(), ioremap_nocache() and
-pci_mmap_page_range()")
+So for X-Gene v1 PCIe controllers, disable CRS capability
+advertisement by clearing CRS Software Visibility bit before
+returning the Root Capability value to the callers. This is done
+by implementing X-Gene PCIe specific xgene_pcie_config_read32 for
+CFG read accesses to replace the generic default pci_generic_config_read32
+function.
 
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Ville Syrjälä <syrjala@sci.fi>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+v2 changes:
+        Use pci_generic_config_read32 to implement xgene_pcie_config_read32
+
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Tested-by: Ian Campbell <ian.campbell@citrix.com>
+Tested-by: Marcin Juszkiewicz <mjuszkiewicz@redhat.com>
 ---
- drivers/pci/pci.c   | 14 ++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 15 insertions(+)
+ drivers/pci/host/pci-xgene.c | 43 ++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 42 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0008c95..fdae37b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -138,6 +138,20 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
- 	return ioremap_nocache(res->start, resource_size(res));
- }
- EXPORT_SYMBOL_GPL(pci_ioremap_bar);
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index e6c8864..7e3cf28 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -59,6 +59,12 @@
+ #define SZ_1T				(SZ_1G*1024ULL)
+ #define PIPE_PHY_RATE_RD(src)		((0xc000 & (u32)(src)) >> 0xe)
+ 
++#define ROOT_CAP_AND_CTRL		0x5C
 +
-+void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
++/* PCIe IP version */
++#define XGENE_PCIE_IP_VER_UNKN		0
++#define XGENE_PCIE_IP_VER_1		1
++
+ struct xgene_pcie_port {
+ 	struct device_node	*node;
+ 	struct device		*dev;
+@@ -67,6 +73,7 @@ struct xgene_pcie_port {
+ 	void __iomem		*cfg_base;
+ 	unsigned long		cfg_addr;
+ 	bool			link_up;
++	u32			version;
+ };
+ 
+ static inline u32 pcie_bar_low_val(u32 addr, u32 flags)
+@@ -140,9 +147,39 @@ static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 	return xgene_pcie_get_cfg_base(bus) + offset;
+ }
+ 
++int xgene_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
++			      int where, int size, u32 *val)
 +{
++	struct xgene_pcie_port *port = bus->sysdata;
++
++	if (pci_generic_config_read32(bus, devfn, where & ~0x3, 4, val) !=
++	    PCIBIOS_SUCCESSFUL)
++		return PCIBIOS_DEVICE_NOT_FOUND;
 +	/*
-+	 * Make sure the BAR is actually a memory resource, not an IO resource
++	 * X-Gene v1 PCIe controller has a bug in Configuration Request
++	 * Retry Status (CRS) logic:
++	 *  When CPU tries to read Vendor ID and Device ID of not-existed
++	 *  remote device, the controller returns 0xFFFF0001 instead of
++	 *  0xFFFFFFFF; this will add significant delay in boot time as
++	 *  pci_bus_read_dev_vendor_id will wait for 60 seconds before
++	 *  giving up.
++	 * So for X-Gene v1 PCIe controllers, disable CRS capability
++	 * advertisement by clearing CRS Software Visibility bit before
++	 * returning the Root Capability value to the callers.
 +	 */
-+	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM)) {
-+		WARN_ON(1);
-+		return NULL;
-+	}
-+	return ioremap_wc(pci_resource_start(pdev, bar),
-+			  pci_resource_len(pdev, bar));
++	if (pci_is_root_bus(bus) && (port->version == XGENE_PCIE_IP_VER_1) &&
++	    ((where & ~0x3) == ROOT_CAP_AND_CTRL))
++		*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
++
++	if (size <= 2)
++		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
 +}
-+EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
- #endif
++
+ static struct pci_ops xgene_pcie_ops = {
+ 	.map_bus = xgene_pcie_map_bus,
+-	.read = pci_generic_config_read32,
++	.read = xgene_pcie_config_read32,
+ 	.write = pci_generic_config_write32,
+ };
  
- #define PCI_FIND_CAP_TTL	48
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c0dd4ab..1193975 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1657,6 +1657,7 @@ static inline void pci_mmcfg_late_init(void) { }
- int pci_ext_cfg_avail(void);
+@@ -500,6 +537,10 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 	port->node = of_node_get(pdev->dev.of_node);
+ 	port->dev = &pdev->dev;
  
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
-+void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
- int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
++	port->version = XGENE_PCIE_IP_VER_UNKN;
++	if (of_device_is_compatible(port->node, "apm,xgene-pcie"))
++		port->version = XGENE_PCIE_IP_VER_1;
++
+ 	ret = xgene_pcie_map_reg(port, pdev);
+ 	if (ret)
+ 		return ret;
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.9.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-Please read the FAQ at  http://www.tux.org/lkml/
