@@ -1,40 +1,50 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 0/2] x86/PCI: enable pci=use_crs for more machines
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Takashi Iwai <tiwai@suse.de>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	dayer3@gmail.com, "H. Peter Anvin" <hpa@zytor.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>
-Date: Tue, 16 Jun 2015 11:55:36 -0500
-Message-ID: <20150616165033.9306.78046.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Sat, 13 Jun 2015 22:32:51 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Julia Lawall <julia.lawall@lip6.fr>
+cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of
+ irq_flow_handler_t
+In-Reply-To: <alpine.DEB.2.02.1506132214310.2020@localhost6.localdomain6>
+Message-ID: <alpine.DEB.2.11.1506132230450.3786@nanos>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com> <alpine.DEB.2.11.1505201750280.4225@nanos>
+ <alpine.DEB.2.10.1506131059180.2486@hadrien> <alpine.DEB.2.11.1506131130490.3786@nanos> <alpine.DEB.2.10.1506131603151.2314@hadrien> <alpine.DEB.2.10.1506131652380.2314@hadrien> <557C5F29.7010301@linux.intel.com>
+ <alpine.DEB.2.02.1506132214310.2020@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have a few reports of sound devices not working because the BIOS didn't
-assign space for the device and the PCI core put it at an address that
-doesn't work.
+On Sat, 13 Jun 2015, Julia Lawall wrote:
 
-The Foxconn system has two PCI host bridges, and without the information
-from _CRS, the PCI core assigns space under the wrong bridge.
+> The following are the cases that require some manual attention, either 
+> because the handler is a local variable or because it is some other kind 
+> of expression.
 
-We also have reports from pre-2008 systems (where we normally ignore _CRS)
-that support more than 32 physical address bits.  After d56dbf5bab8c ("PCI:
-Allocate 64-bit BARs above 4G when possible"), we prefer to use that high
-space when we can, but it seems the host bridge doesn't respond to it.
+yep, found it in the logs already and found a missing search expression:
 
-_CRS tells us how to avoid both problems, so these patches enable it for
-these cases.
+|
+gpiochip_set_chained_irqchip@p(e1,e2,e3,\(lih\|ih\|eh\))
 
----
+This is really impressive work!!!!
 
-Bjorn Helgaas (2):
-      x86/PCI: Use host bridge _CRS info on Foxconn K8M890-8237A
-      x86/PCI: Use host bridge _CRS info on systems with >32 bit addressing
+Thanks
 
-
- arch/x86/pci/acpi.c |   17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+	tglx
+ 
