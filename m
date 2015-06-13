@@ -1,160 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58990 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751690AbbFBWbc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 18:31:32 -0400
-Message-ID: <556E2EC3.2080500@redhat.com>
-Date: Tue, 02 Jun 2015 18:31:31 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sat, 13 Jun 2015 23:42:45 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Thomas Gleixner <tglx@linutronix.de>
+cc: Julia Lawall <julia.lawall@lip6.fr>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Borislav Petkov <bp@alien8.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Kevin Cernekee <cernekee@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org
+Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of
+ irq_flow_handler_t
+In-Reply-To: <alpine.DEB.2.11.1506132230450.3786@nanos>
+Message-ID: <alpine.DEB.2.02.1506132337110.2020@localhost6.localdomain6>
+References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com> <alpine.DEB.2.11.1505201750280.4225@nanos>
+ <alpine.DEB.2.10.1506131059180.2486@hadrien> <alpine.DEB.2.11.1506131130490.3786@nanos> <alpine.DEB.2.10.1506131603151.2314@hadrien> <alpine.DEB.2.10.1506131652380.2314@hadrien> <557C5F29.7010301@linux.intel.com> <alpine.DEB.2.02.1506132214310.2020@localhost6.localdomain6>
+ <alpine.DEB.2.11.1506132230450.3786@nanos>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Linux PCI <linux-pci@vger.kernel.org>,
-	Myron Stowe <mstowe@redhat.com>
-Subject: Re: Initial APCI root bus discovery vs. rescan
-References: <5563B21A.8080504@redhat.com> <20150526160716.GM32152@google.com> <556DEDCA.1040808@redhat.com> <20150602204433.GK3631@google.com>
-In-Reply-To: <20150602204433.GK3631@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/02/2015 04:44 PM, Bjorn Helgaas wrote:
-> On Tue, Jun 02, 2015 at 01:54:18PM -0400, Prarit Bhargava wrote:
->> On 05/26/2015 12:07 PM, Bjorn Helgaas wrote:
-> 
->> ...
->> [    1.546925] pci_bus 0000:00: root bus resource [bus 00-3e]
->> [    1.552397] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7 window]
->> [    1.559165] pci_bus 0000:00: root bus resource [io  0x0d00-0xffff window]
->> [    1.565934] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
->> [    1.573398] pci_bus 0000:00: root bus resource [mem 0x000d0000-0x000d3fff window]
->> [    1.580861] pci_bus 0000:00: root bus resource [mem 0x000d4000-0x000d7fff window]
->> [    1.588322] pci_bus 0000:00: root bus resource [mem 0x000d8000-0x000dbfff window]
->> [    1.595784] pci_bus 0000:00: root bus resource [mem 0x000dc000-0x000dffff window]
->> [    1.603246] pci_bus 0000:00: root bus resource [mem 0x000e0000-0x000e3fff window]
->> [    1.610707] pci_bus 0000:00: root bus resource [mem 0x000e4000-0x000e7fff window]
->> [    1.618170] pci_bus 0000:00: root bus resource [mem 0xb0000000-0xfeafffff window]
-> 
->> [    1.637470] pci 0000:00:16.3: [8086:1e3d] type 00 class 0x070002
->> [    1.637486] pci 0000:00:16.3: reg 0x10: [io  0x70a0-0x70a7]
->> [    1.637495] pci 0000:00:16.3: reg 0x14: [mem 0xb1580000-0xb1580fff]
-> 
->> [    2.961417] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
->> [    2.988543] 00:04: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
->> [    3.016847] serial8250: ttyS2 at I/O 0x3e8 (irq = 4, base_baud = 115200) is a
->> 16550A
->> [    3.045264] 0000:00:16.3: ttyS1 at I/O 0x70a0 (irq = 19, base_baud = 115200)
->> is a 16550A
-> 
->>> In this scenario, I assume the serial port device remains powered all the
->>> time, even while it is logically removed from the system, so when we
->>> re-enumerate and find the device, I would think its BARs would still
->>> contain whatever they had before, and since they are still valid, we should
->>> still use them.
->>
->> Nope.  The device should go down as ttyS1 is not active.
-> 
-> I'm talking about the 00:16.3 PCI device.  I doubt there's anything that
-> would remove power from it when you do the "echo 1 > remove".  Of course,
-> Linux will forget about it, and 00:16.3 shouldn't show up in lspci output,
-> but from the device's point of view, nothing has really changed.  When we
-> rescan, we should find it just as we left it (it's possible we'd clear bits
-> in the PCI_COMMAND register or something, but I'm not sure we even do
-> that, and I'm pretty sure we don't clear out the BARs).
-> 
->>> So I think my expectation is the same as yours, and I don't know why it
->>> doesn't work that way.  I assume the device actually *works* with the new
->>> resources, so it's not really broken in that sense, but it does bother me
->>> if we're changing something when we don't need to change it.
->>
->> Yep ... I think it's broken.  Here's what I'm doing to down then rescan
->> the device.
->>
->> [root@intel-chiefriver-04 ~]# cd /sys/devices/pci0000\:00/0000\:00\:16.3
->> [root@intel-chiefriver-04 0000:00:16.3]# echo 1 > remove
->> [root@intel-chiefriver-04 0000:00:16.3]# lspci | grep 16.3
->> [root@intel-chiefriver-04 0000:00:16.3]# cd ../pci_bus/0000\:00/
->> [root@intel-chiefriver-04 0000:00]# echo 1 > rescan
-> 
-> The /sys/devices/pci0000:00/0000:00:16.3/ directory should disappear when
-> you remove the device.  In this case you were *inside* the directory when
-> you did the remove, so your shell is holding a reference to it.  But if you
-> do this:
-> 
->     # cd /sys/devices/pci0000:00
->     # echo 1 > 0000:00:16.3/remove
->     # ls
-> 
-> you should not see the 0000:00:16.3 directory any more.
-> 
->> and the console contains
->>
->> [  353.212980] pci 0000:00:16.3: [8086:1e3d] type 00 class 0x070002
->> [  353.231163] pci 0000:00:16.3: BAR 1: assigned [mem 0xb1520000-0xb1520fff]
->> [  353.237937] pci 0000:00:16.3: BAR 0: assigned [io  0x1018-0x101f]
-> 
-> There should be some more output here.  I usually boot with
-> "ignore_loglevel" to make sure I see everything.
-> 
-> The first line looks like it's from pci_setup_device().  The "BAR x:
-> assigned" lines look like they're from pci_assign_resource().  But there
-> should be "reg 0x%x: %pR\n" lines from __pci_read_base() in the middle.
-> Those would show us what we actually got from the device BARs.
+The semantic patch below considers the problem from another point of view, 
+to find functions that may have a handler as an argument.  The results 
+that are different than those considered already are as follows:
 
-Hmm ... I'm booting with ignore_loglevel (that's my default FWIW) and didn't see
-those printks.  I'm going to definitely debug that...
+arch/x86/platform/uv/uv_irq.c:106 irq_domain_set_info
+	has a possible handler in argument 6
+arch/sparc/kernel/leon_pci_grpci2.c:815 leon_update_virq_handling
+	has a possible handler in argument 2
+arch/sparc/kernel/leon_kernel.c:79 leon_build_device_irq
+	has a possible handler in argument 2
+arch/arm/mach-omap2/prm_common.c:331 irq_alloc_generic_chip
+	has a possible handler in argument 5
+arch/mips/cavium-octeon/octeon-irq.c:1231 octeon_irq_set_ciu_mapping
+	has a possible handler in argument 6
+arch/blackfin/mach-common/ints-priority.c:805 bfin_set_irq_handler
+	has a possible handler in argument 2
+arch/m68k/q40/q40ints.c:84 m68k_setup_irq_controller
+	has a possible handler in argument 2
+drivers/gpio/gpio-pcf857x.c:362 gpiochip_irqchip_add
+	has a possible handler in argument 4
 
-> 
-> Can you check /proc/iomem and /proc/ioports before you remove it, after you
-> remove it, and a third time after you do the rescan (I guess it's hung
-> after the rescan, so you probably can't do that)?  I wonder if we forget to
-> remove the original resources when we remove it, and then we reassign them
-> after the rescan because we think they're still in use.
+The semantic patch looks for a function that has as argument a function 
+that has arguments of type (unsigned int irq, struct irq_desc *desc) and a 
+void return type.  It also looks for functions that have as argument a 
+bunch of known irq handlers.
 
-Yep, tried this already -- the mem and io regions are definitely released by the
-serial driver.
+julia
 
-> 
->> and the system is hung.  The addresses are clearly different here and I'll
->> debug further.  
-> 
-> Even if we change the 00:16.3 BARs, I wouldn't think the system would
-> hang unless we actually try to *use* those new addresses.
-> 
-> And ... I guess the next thing we *should* see is the serial driver
-> claiming this device again, and it would read some of the serial port
-> registers.  I bet if you added instrumentation to pciserial_init_one(),
-> you'd see output until you get into pciserial_init_ports().
-> 
 
-Yeah, was just about to do that :)  I'm going to see if we get into the serial
-driver at all.
+@initialize:ocaml@
+@@
+let tbl = Hashtbl.create 101
+let ln = Str.regexp "linux-next/" (* update as appropriate *)
 
-> The new addresses don't *look* like they should conflict with anything, but
-> maybe they do.  I think we just need to figure out why we can't use the
-> original addresses, and my first guess is that we don't release those
-> resources correctly.
-> 
->> The one odd thing is that the ttyS1 device is not removed from
->> /sys/ during the remove.  It's almost as if it is left around as a place holder
->> for 16.3 if it should be reinserted, and I have a feeling that may lead to the
->> system hang.
-> 
-> I'm not exactly sure what you're saying here.  Are you saying there's a
-> /sys/.../ttyS1 that still exists after the remove?  Or do you mean that
-> /sys/.../0000:00:16.3 still exists after the remove?  
+let _ =
+  List.iter (function x -> Hashtbl.add tbl x ())
+    [("__irq_set_handler",2);("irq_set_handler",2);
+      ("irq_set_chained_handler",2);("irq_alloc_generic_chip",4);
+      ("irq_alloc_domain_generic_chips",5);("irq_set_chip_and_handler_name",3);
+      ("irq_set_chip_and_handler",3);("__irq_set_handler_locked",2);
+      ("__irq_set_chip_handler_name_locked",3);("__irq_set_preflow_handler",2);
+      ("gpiochip_set_chained_irqchip",4)]
 
-/sys/...ttyS1 exists after the remove.  That has me scratching my head -- AFAICT
-nothing is using ttyS1 on the system and I'm focusing in on the remove code as
-you point out below.
+let update g f n p =
+  let n = n + 1 in
+  let entry = (g,n) in
+  try let _ = Hashtbl.find tbl entry in ()
+  with Not_found ->
+    begin
+      Hashtbl.add tbl entry ();
+      let p = List.hd p in
+      Printf.printf "%s:%d %s\n\thas a possible handler in argument %d\n"
+	(List.nth (Str.split ln p.file) 1) p.line g
+	n
+    end
 
-P.
+@possible_handler@
+identifier f,irq,desc;
+@@
 
-> 
-> If the former, maybe there's something wrong with the remove path in the
-> serial driver.  If the latter, that seems wrong unless there something like
-> a shell holding a reference to the directory.
-> 
-> Bjorn
-> 
-> 
+void f(unsigned int irq, struct irq_desc *desc) { ... }
 
+@call@
+identifier g,possible_handler.f;
+expression list[n] es;
+position p;
+@@
+
+g(es,f@p,...)
+
+@script:ocaml@
+p << call.p;
+f << possible_handler.f;
+g << call.g;
+n << call.n;
+@@
+
+update g f n p
+
+@call2@
+identifier g,f;
+expression list[n] es;
+position p;
+symbol handle_level_irq,handle_simple_irq,handle_edge_irq,
+       handle_fasteoi_irq,handle_percpu_irq;
+@@
+
+g(es,\(handle_level_irq@f@p\|handle_simple_irq@f@p\|handle_edge_irq@f@p\|
+       handle_fasteoi_irq@f@p\|handle_percpu_irq@f@p\),...)
+
+@script:ocaml@
+p << call2.p;
+f << call2.f;
+g << call2.g;
+n << call2.n;
+@@
+
+update g f n p
