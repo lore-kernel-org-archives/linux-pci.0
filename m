@@ -1,105 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:33921 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752361AbbFCC25 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jun 2015 22:28:57 -0400
-Message-ID: <556E6667.1020000@gmail.com>
-Date: Tue, 02 Jun 2015 19:28:55 -0700
-From: Alexander Duyck <alexander.duyck@gmail.com>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:50388 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbbFMBsL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 21:48:11 -0400
+Date: Fri, 12 Jun 2015 18:47:55 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Simon Horman <horms@verge.net.au>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [RFC/RFT PATCH v2] PCI: move pci_read_bridge_bases to the
+ generic PCI layer
+Message-ID: <20150613014755.GA29649@roeck-us.net>
+References: <1433840506-20083-1-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-To: Mark D Rustad <mark.d.rustad@intel.com>, bhelgaas@google.com
-CC: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Subject: Re: [Intel-wired-lan] [PATCH V2 1/2] pci: Add dev_flags bit to access
- VPD through function 0
-References: <20150603000645.71269.26134.stgit@mdrustad-wks.jf.intel.com> <20150603001011.71269.79857.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150603001011.71269.79857.stgit@mdrustad-wks.jf.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433840506-20083-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/02/2015 05:10 PM, Mark D Rustad wrote:
-> Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
-> function 0 to provide VPD access on other functions. This solves
-> concurrent access problems on many devices without changing the
-> attributes exposed in sysfs. Never set this bit on function 0 or
-> there will be an infinite recursion.
->
-> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-> ---
-> Changes in V2:
-> - Corrected spelling in log message
-> - Added checks to see that the referenced function 0 is reasonable
-> ---
->   drivers/pci/access.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
->   1 file changed, 47 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index d9b64a175990..74634d4868a2 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -439,6 +439,40 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
->   	.release = pci_vpd_pci22_release,
->   };
->   
-> +static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-> +			       void *arg)
-> +{
-> +	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-> +	ssize_t ret;
-> +
-> +	if (!tdev)
-> +		return -ENODEV;
-> +
-> +	ret = pci_read_vpd(tdev, pos, count, arg);
-> +	pci_dev_put(tdev);
-> +	return ret;
-> +}
-> +
-> +static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
-> +				const void *arg)
-> +{
-> +	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-> +	ssize_t ret;
-> +
-> +	if (!tdev)
-> +		return -ENODEV;
-> +
-> +	ret = pci_write_vpd(tdev, pos, count, arg);
-> +	pci_dev_put(tdev);
-> +	return ret;
-> +}
-> +
-> +static const struct pci_vpd_ops pci_vpd_f0_ops = {
-> +	.read = pci_vpd_f0_read,
-> +	.write = pci_vpd_f0_write,
-> +	.release = pci_vpd_pci22_release,
-> +};
-> +
->   int pci_vpd_pci22_init(struct pci_dev *dev)
->   {
->   	struct pci_vpd_pci22 *vpd;
-> @@ -447,12 +481,24 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
->   	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
->   	if (!cap)
->   		return -ENODEV;
-> +	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
-> +		struct pci_dev *tdev;
-> +
-> +		tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-> +		if (!tdev || !dev->multifunction || !tdev->multifunction ||
-> +		    dev->class != tdev->class || dev->vendor != tdev->vendor ||
-> +		    dev->device != tdev->device)
-> +			return -ENODEV;
-> +	}
+On Tue, Jun 09, 2015 at 10:01:45AM +0100, Lorenzo Pieralisi wrote:
+> When a PCI bus is scanned, upon PCI bridge detection the kernel
+> has to read the bridge registers to set-up its resources so that
+> the PCI resource hierarchy can be validated properly.
+> 
+> Most if not all architectures read PCI bridge registers in the
+> pcibios_fixup_bus hook, that is called by the PCI generic layer
+> whenever a PCI bus is scanned.
+> 
+> Since pci_read_bridge_bases is an arch agnostic operation (and it
+> is carried out on all architectures) it can be moved to the generic
+> PCI layer in order to consolidate code and remove the respective
+> calls from the architectures back-ends.
+> 
+> The PCI_PROBE_ONLY flag is not checked before calling
+> pci_read_bridge_buses in the generic layer since reading the bridge
+> bases is not related to resources assignment; this implies that it
+> can be carried out safely on PCI_PROBE_ONLY systems too and should
+> not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
+> flag before reading the bridge bases.
+> 
+> In order to validate the resource hierarchy as soon as the resources
+> themselves are probed (ie read from the bridge), this patch also adds
+> code to pci_read_bridge_bases that claims the bridge resources, so that
+> they are validated and inserted in the resource hierarchy as soon as
+> the bridge bases are probed.
+> 
 
-You can probably combine the dev->multifunction check with the dev_flags 
-check.  After all you don't need this workaround if the device is not 
-multifunction.  It might even make more sense to move the multifunction 
-check to the quirk in patch 2/2.
+Hi Lorenzo,
 
-I also believe this leaks a reference to the device.  You should be 
-calling pci_dev_put(tdev) if tdev is not NULL.  As such you probably 
-need to split up the !tdev and the rest of the checks.
+on one of our systems, I see a lot of messages with your patch applied.
 
-- Alex
+bart kernel: pci 0000:b0:00.0: can't claim BAR 7 [io 0x0000-0x0fff]: no compatible bridge window
+bart kernel: pci 0000:b0:00.0: can't claim BAR 8 [mem 0x94000000-0x941fffff]: no compatible bridge window
+bart kernel: pci 0000:b1:03.0: can't claim BAR 7 [io 0x0000-0x0fff]: no compatible bridge window
+bart kernel: pci 0000:b1:03.0: can't claim BAR 8 [mem 0x95800000-0x959fffff]: no compatible bridge window
+
+and so on. The final IO memory assignment is the same, though,
+before and after your patch.
+
+      95800000-95bfffff : PCI Bus 0000:b0
+        95800000-959fffff : PCI Bus 0000:b1
+	  95800000-959fffff : PCI Bus 0000:b2
+	95a00000-95a3ffff : 0000:b0:00.0
+
+
+Does that have any relevance or is it just nuisance messages ?
+
+Thanks,
+Guenter
