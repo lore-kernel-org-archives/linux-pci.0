@@ -1,122 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22527 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932212AbbFAIIS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Jun 2015 04:08:18 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Feng Wu <feng.wu@intel.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Brian Gerst <brgerst@gmail.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Juergen Gross <jgross@suse.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Ingo Molnar <mingo@kernel.org>, xen-devel@lists.xenproject.org
-Subject: [Patch v3 27/36] x86, irq: Use access helper irq_data_get_affinity_mask()
-Date: Mon,  1 Jun 2015 16:05:36 +0800
-Message-Id: <1433145945-789-28-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-yh0-f45.google.com ([209.85.213.45]:33335 "EHLO
+	mail-yh0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339AbbFNTSY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Jun 2015 15:18:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <1433320542-49576-3-git-send-email-wangzhou1@hisilicon.com>
+References: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com>
+	<1433320542-49576-3-git-send-email-wangzhou1@hisilicon.com>
+Date: Mon, 15 Jun 2015 00:48:23 +0530
+Message-ID: <CAHM4w1nfaUMgY4PfhG4Aar962=m8XndHeHJG1yP04KjL=67xaQ@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] PCI: designware: Add ARM64 support
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>, fabrice.gasnier@st.com,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Zhichang Yuan <yuanzhichang@hisilicon.com>,
+	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use access helper irq_data_get_affinity_mask() to hide implementation
-details of struct irq_desc.
+Hi Zhou Wang,
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/kernel/apic/io_apic.c   |    2 +-
- arch/x86/kernel/apic/vector.c    |    5 ++---
- arch/x86/kernel/irq.c            |    5 +++--
- drivers/xen/events/events_base.c |    4 ++--
- 4 files changed, 8 insertions(+), 8 deletions(-)
+Thanks for unifying arm and arm64 code.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 845dc0df2002..09921de4210f 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2541,7 +2541,7 @@ void __init setup_ioapic_dest(void)
- 		 * Honour affinities which have been set in early boot
- 		 */
- 		if (!irqd_can_balance(idata) || irqd_affinity_was_set(idata))
--			mask = idata->affinity;
-+			mask = irq_data_get_affinity_mask(idata);
- 		else
- 			mask = apic->target_cpus();
- 
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 9b62f690b0ff..dfa3a5f5b3d3 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -494,9 +494,8 @@ static int apic_set_affinity(struct irq_data *irq_data,
- 
- 	err = assign_irq_vector(irq, data, dest);
- 	if (err) {
--		struct irq_data *top = irq_get_irq_data(irq);
--
--		if (assign_irq_vector(irq, data, top->affinity))
-+		if (assign_irq_vector(irq, data,
-+				      irq_data_get_affinity_mask(irq_data)))
- 			pr_err("Failed to recover vector for irq %d\n", irq);
- 		return err;
- 	}
-diff --git a/arch/x86/kernel/irq.c b/arch/x86/kernel/irq.c
-index 7e10c8b4b318..37685e37550c 100644
---- a/arch/x86/kernel/irq.c
-+++ b/arch/x86/kernel/irq.c
-@@ -342,7 +342,8 @@ int check_irq_vectors_for_cpu_disable(void)
- 				continue;
- 
- 			data = irq_desc_get_irq_data(desc);
--			cpumask_copy(&affinity_new, data->affinity);
-+			cpumask_copy(&affinity_new,
-+				     irq_data_get_affinity_mask(data));
- 			cpumask_clear_cpu(this_cpu, &affinity_new);
- 
- 			/* Do not count inactive or per-cpu irqs. */
-@@ -420,7 +421,7 @@ void fixup_irqs(void)
- 		raw_spin_lock(&desc->lock);
- 
- 		data = irq_desc_get_irq_data(desc);
--		affinity = data->affinity;
-+		affinity = irq_data_get_affinity_mask(data);
- 		if (!irq_has_action(irq) || irqd_is_per_cpu(data) ||
- 		    cpumask_subset(affinity, cpu_online_mask)) {
- 			raw_spin_unlock(&desc->lock);
-diff --git a/drivers/xen/events/events_base.c b/drivers/xen/events/events_base.c
-index 2b8553bd8715..d00e0be8e9ea 100644
---- a/drivers/xen/events/events_base.c
-+++ b/drivers/xen/events/events_base.c
-@@ -336,7 +336,7 @@ static void bind_evtchn_to_cpu(unsigned int chn, unsigned int cpu)
- 
- 	BUG_ON(irq == -1);
- #ifdef CONFIG_SMP
--	cpumask_copy(irq_get_irq_data(irq)->affinity, cpumask_of(cpu));
-+	cpumask_copy(irq_get_affinity_mask(irq), cpumask_of(cpu));
- #endif
- 	xen_evtchn_port_bind_to_cpu(info, cpu);
- 
-@@ -373,7 +373,7 @@ static void xen_irq_init(unsigned irq)
- 	struct irq_info *info;
- #ifdef CONFIG_SMP
- 	/* By default all event channels notify CPU#0. */
--	cpumask_copy(irq_get_irq_data(irq)->affinity, cpumask_of(0));
-+	cpumask_copy(irq_get_affinity_mask(irq), cpumask_of(0));
- #endif
- 
- 	info = kzalloc(sizeof(*info), GFP_KERNEL);
--- 
-1.7.10.4
+On Wed, Jun 3, 2015 at 2:05 PM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+>
+> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
+> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+> move related operations to dw_pcie_host_init. Also set pp->root_bus_nr = 0 in
+> each PCIe host driver which is based on pcie-designware.
+>
+> I am not very clear about I/O resource management:
 
+Following discussion may help to understand it, specially in the
+context of designware.
+
+http://marc.info/?l=linux-pci&m=138621989417562&w=2
+
+
+> >       if (global_io_offset < SZ_1M && pp->io_size > 0) {
+> >               pci_ioremap_io(global_io_offset, pp->io_base);
+> >               global_io_offset += SZ_64K;
+> >               pci_add_resource_offset(&res, &pp->io,
+> >                                       global_io_offset - pp->io_bus_addr);
+> >       }
+> so just move steps in dw_pcie_setup to dw_pcie_host_init.
+>
+> I have compiled the driver with multi_v7_defconfig. However, I don't have
+> ARM32 PCIe related board to do test. It will be appreciated if someone could
+> help to test it.
+>
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+> Tested-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+> ---
+>  drivers/pci/host/pci-dra7xx.c      |   1 +
+>  drivers/pci/host/pci-exynos.c      |   2 +-
+>  drivers/pci/host/pci-imx6.c        |   2 +-
+>  drivers/pci/host/pci-keystone.c    |   2 +-
+>  drivers/pci/host/pci-layerscape.c  |   2 +-
+>  drivers/pci/host/pcie-designware.c | 128 +++++++++++++++----------------------
+>  drivers/pci/host/pcie-spear13xx.c  |   2 +-
+>  7 files changed, 56 insertions(+), 83 deletions(-)
+>
+
+[...]
+
+> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> index 4a6e62f..5c7a9c4 100644
+> --- a/drivers/pci/host/pci-layerscape.c
+> +++ b/drivers/pci/host/pci-layerscape.c
+> @@ -101,7 +101,7 @@ static int ls_add_pcie_port(struct ls_pcie *pcie)
+>         pp = &pcie->pp;
+>         pp->dev = pcie->dev;
+>         pp->dbi_base = pcie->dbi;
+> -       pp->root_bus_nr = -1;
+> +       pp->root_bus_nr = 0;
+
+similar change for pcie-spear13xx.c should be needed as well.
+
+>         pp->ops = &ls_pcie_host_ops;
+>
+>         ret = dw_pcie_host_init(pp);
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 2e9f84f..b3f0ac7 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+
+[...]
+
+> -#ifdef CONFIG_PCI_MSI
+> -       dw_pcie_msi_chip.dev = pp->dev;
+> -       dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+> +#ifdef CONFIG_ARM
+> +       /*
+> +        * FIXME: we should really be able to use
+> +        * of_pci_get_host_bridge_resources on arm32 as well,
+> +        * but the conversion needs some more testing
+> +        */
+> +       if (global_io_offset < SZ_1M && pp->io_size > 0) {
+> +               pci_ioremap_io(global_io_offset, pp->io_base);
+> +               global_io_offset += SZ_64K;
+> +               pci_add_resource_offset(&res, &pp->io,
+> +                                       global_io_offset - pp->io_bus_addr);
+> +       }
+> +       pci_add_resource_offset(&res, &pp->mem,
+> +                               pp->mem.start - pp->mem_bus_addr);
+> +       pci_add_resource(&res, &pp->busn);
+> +#else
+> +       ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
+> +       if (ret)
+> +               return ret;
+> +#endif
+> +
+> +       bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
+> +                             pp, &res);
+> +       if (!bus)
+> +               return -ENOMEM;
+> +
+> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+> +       bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
+> +#else
+> +       bus->msi = &dw_pcie_msi_chip;
+>  #endif
+>
+> -       dw_pci.nr_controllers = 1;
+> -       dw_pci.private_data = (void **)&pp;
+> +       pci_scan_child_bus(bus);
+> +       if (pp->ops->scan_bus)
+> +               pp->ops->scan_bus(pp);
+>
+> -       pci_common_init_dev(pp->dev, &dw_pci);
+> +#ifdef CONFIG_ARM
+> +       /* support old dtbs that incorrectly describe IRQs */
+> +       pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> +#endif
+> +
+> +       pci_assign_unassigned_bus_resources(bus);
+> +       pci_bus_add_devices(bus);
+
+As James and Lorenzo has suggested, of_pci_get_host_bridge_resources should
+work for ARM as well. I would suggest to move that just after cfg
+resource parsing and
+then to remove following piece of code.
+for_each_of_pci_range(&parser, &range) {
+...
+}
+ret = of_pci_parse_bus_range(np, &pp->busn);
+
+Then you can have a loop like
+
+         list_for_each_entry(entry, &res, node) {
+                 struct resource *res_temp = entry->res;
+                 if (resource_type(res_temp) == IORESOURCE_IO) {
+                 } else if (resource_type(res_temp) == IORESOURCE_MEM) {
+                }
+         }
+
+where you can fill, xx_size, xx_bus_addr, xx_mod_base etc.
+You can also remove global_io_offset variable.
+
+~Pratyush
