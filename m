@@ -1,193 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:37899 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754065AbbFBABk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jun 2015 20:01:40 -0400
-Received: by igbjd9 with SMTP id jd9so74712354igb.1
-        for <linux-pci@vger.kernel.org>; Mon, 01 Jun 2015 17:01:39 -0700 (PDT)
-Date: Mon, 1 Jun 2015 19:01:36 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH V7 08/10] powerpc/powernv: Support PCI config restore for
- VFs
-Message-ID: <20150602000136.GH3631@google.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-9-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432032612-21701-9-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org, pebolle@tiscali.nl,
+	haiyangz@microsoft.com, mebersol@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 4/6] drivers:hv: Export a function that maps Linux proc num onto Hyper-V proc num
+Date: Mon, 15 Jun 2015 17:06:37 +0000
+Message-Id: <1434387999-1885-5-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1434387999-1885-1-git-send-email-jakeo@microsoft.com>
+References: <1434387999-1885-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 19, 2015 at 06:50:10PM +0800, Wei Yang wrote:
-> After PE reset, OPAL API opal_pci_reinit() is called on all devices
-> contained in the PE to reinitialize them. However, VFs can't be seen
-> from skiboot firmware. We have to implement the functions, similar
-> those in skiboot firmware, to reinitialize VFs after reset on PE
-> for VFs.
-> 
-> [gwshan: changelog and code refactoring]
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/include/asm/pci-bridge.h        |    1 +
->  arch/powerpc/platforms/powernv/eeh-powernv.c |   70 +++++++++++++++++++++++++-
->  arch/powerpc/platforms/powernv/pci.c         |   18 +++++++
->  3 files changed, 88 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index c324882..ad60263 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -206,6 +206,7 @@ struct pci_dn {
->  #define IODA_INVALID_M64        (-1)
->  	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
->  #endif /* CONFIG_PCI_IOV */
-> +	int	mps;
->  #endif
->  	struct list_head child_list;
->  	struct list_head list;
-> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> index 7af3c1e..33deb78 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> @@ -1612,6 +1612,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
->  	return ret;
->  }
->  
-> +static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
-> +{
-> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-> +	u32 devctl, cmd, cap2, aer_capctl;
-> +	int old_mps;
-> +
-> +	/* Restore MPS */
-> +	if (edev->pcie_cap) {
-> +		old_mps = (ffs(pdn->mps) - 8) << 5;
-> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-> +				     2, &devctl);
-> +		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-> +		devctl |= old_mps;
-> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-> +				      2, devctl);
-> +	}
-> +
-> +	/* Disable Completion Timeout */
-> +	if (edev->pcie_cap) {
-> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
-> +				     4, &cap2);
-> +		if (cap2 & 0x10) {
-> +			eeh_ops->read_config(pdn,
-> +					edev->pcie_cap + PCI_EXP_DEVCTL2,
-> +					4, &cap2);
-> +			cap2 |= 0x10;
-> +			eeh_ops->write_config(pdn,
-> +					edev->pcie_cap + PCI_EXP_DEVCTL2,
-> +					4, cap2);
-> +		}
-> +	}
-> +
-> +	/* Enable SERR and parity checking */
-> +	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
-> +	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-> +	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
-> +
-> +	/* Enable report various errors */
-> +	if (edev->pcie_cap) {
-> +		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-> +				2, &devctl);
-> +		devctl &= ~PCI_EXP_DEVCTL_CERE;
-> +		devctl |= (PCI_EXP_DEVCTL_NFERE |
-> +			   PCI_EXP_DEVCTL_FERE |
-> +			   PCI_EXP_DEVCTL_URRE);
-> +		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-> +				2, devctl);
-> +	}
-> +
-> +	/* Enable ECRC generation and check */
-> +	if (edev->pcie_cap && edev->aer_cap) {
-> +		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-> +				4, &aer_capctl);
-> +		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-> +		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
-> +				4, aer_capctl);
-> +	}
+From: Jake Oshins <jakeo@microsoft.com>
 
-Where is all this stuff set up the first time?  It'd be nice if we could
-use the same path that did it the first time.
+This patch exports a function which maps Linux processor number onto Hyper-V
+virtual processor number.  This is necessary in order to map message-
+signaled interrupts (MSIs) into a VM, as the hypervisor needs to know the
+right target VP.
 
-Are we setting up a PF or a VF here?  The function is called
-pnv_eeh_restore_vf_config(), but it's called when "edev->physfn", so it's a
-little confusing.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 16 ++++++++++++++++
+ include/linux/hyperv.h |  2 ++
+ 2 files changed, 18 insertions(+)
 
-> +
-> +	return 0;
-> +}
-> +
->  static int pnv_eeh_restore_config(struct pci_dn *pdn)
->  {
->  	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-> @@ -1622,7 +1683,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
->  		return -EEXIST;
->  
->  	phb = edev->phb->private_data;
-> -	ret = opal_pci_reinit(phb->opal_id,
-> +	/*
-> +	 * We have to restore the PCI config space after reset since the
-> +	 * firmware can't see SRIOV VFs.
-> +	 */
-> +	if (edev->physfn)
-> +		ret = pnv_eeh_restore_vf_config(pdn);
-> +	else
-> +		ret = opal_pci_reinit(phb->opal_id,
->  			      OPAL_REINIT_PCI_DEV, edev->config_addr);
->  	if (ret) {
->  		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
-> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-> index bca2aeb..10bc8c3 100644
-> --- a/arch/powerpc/platforms/powernv/pci.c
-> +++ b/arch/powerpc/platforms/powernv/pci.c
-> @@ -729,6 +729,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
->  }
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
->  
-> +#ifdef CONFIG_PCI_IOV
-> +static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
-> +{
-> +	struct pci_dn *pdn = pci_get_pdn(pdev);
-> +	int parent_mps;
-> +
-> +	if (!pdev->is_virtfn)
-> +		return;
-> +
-> +	/* Synchronize MPS for VF and PF */
-> +	parent_mps = pcie_get_mps(pdev->physfn);
-> +	if ((128 << pdev->pcie_mpss) >= parent_mps)
-> +		pcie_set_mps(pdev, parent_mps);
-> +	pdn->mps = pcie_get_mps(pdev);
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 067a469..65e4eb6 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1158,6 +1158,22 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ }
+ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+ 
++/**
++ * This function returns the mapping between the Linux processor
++ * number and
++ * the hypervisor's virtual processor number, useful in making
++ * hypercalls and such that talk about specific processors.
++ *
++ * @param procnum - in Linux terms
++ *
++ * @return int - in Hyper-V terms
++ */
++int vmbus_procnum_to_vpnum(int procnum)
++{
++	return hv_context.vp_index[procnum];
++}
++EXPORT_SYMBOL_GPL(vmbus_procnum_to_vpnum);
++
+ static int vmbus_acpi_add(struct acpi_device *device)
+ {
+ 	acpi_status result;
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index ffd98d7..6fec42d 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -987,6 +987,8 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			resource_size_t size, resource_size_t align,
+ 			bool fb_overlap_ok);
+ 
++int vmbus_procnum_to_vpnum(int procnum);
++
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
+  *
+-- 
+1.9.1
 
-Same comment as before -- I don't like this usage of fixups.  Would it work
-to do this in pcibios_add_device()?
-
-I assume you need this to happen when you hot-remove and hot-add a VF
-during EEH recovery?  Where does this happen in the normal hotplug path,
-e.g., pciehp, and can you do it in a corresponding place for EEH hotplug?
-
-
-> +#endif /* CONFIG_PCI_IOV */
-> +
->  void __init pnv_pci_init(void)
->  {
->  	struct device_node *np;
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
