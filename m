@@ -1,78 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:59083 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423014AbbFEOLM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Jun 2015 10:11:12 -0400
-From: Joerg Roedel <joro@8bytes.org>
-To: iommu@lists.linux-foundation.org
-Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
-	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
-	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
-	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
-Subject: [PATCH 01/17] iommu/vt-d: Fix compile error when CONFIG_INTEL_IOMMU=n
-Date: Fri,  5 Jun 2015 16:10:47 +0200
-Message-Id: <1433513463-19128-2-git-send-email-joro@8bytes.org>
-In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17743 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753288AbbFOPtf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2015 11:49:35 -0400
+From: William Davis <wdavis@nvidia.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"David S. Miller" <davem@davemloft.net>
+CC: Terence Ripperda <TRipperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Mark Hounschell <markh@compro.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"Jonathan Corbet" <corbet@lwn.net>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v3 0/7] IOMMU/DMA map_resource support for peer-to-peer
+Date: Mon, 15 Jun 2015 15:49:32 +0000
+Message-ID: <236342dcc57b448b98c3a2b61a8ab23a@DRHQMAIL106.nvidia.com>
+References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
 
-The patches for the Intel IOMMU driver to fix issues with
-kdump introduced a compile error with:
+> From: Will Davis <wdavis@nvidia.com>
+> 
+> Hi,
+> 
+> This is the third version of a patchset to add the DMA APIs necessary to
+> map and unmap a struct resource to and from a PCI device's IOVA domain.
+> This allows a PCI device to access a peer device's BAR resource when a
+> hardware IOMMU is enabled.
+> 
 
-CONFIG_DMAR_TABLE=y
-CONFIG_INTEL_IOMMU=n
-CONFIG_IRQ_REMAP=y
+Bjorn, Dave, do you have any remaining concerns with this patch series?
 
-The error manifests as:
+> Thanks,
+> Will
+> 
+> Changelog:
+> 
+> v3:
+> - changed dma_map_resource() to BUG() if the map_resource DMA op is not
+>   provided, instead of returning 0
+> - updated documentation to remove requirement to check for 0 return value
+>   as an error
+> - remove const keyword from struct dma_map_ops in new DMA APIs for
+>   consistency with other APIs
+> 
+> v2: http://www.spinics.net/lists/linux-pci/msg41192.html
+> - added documentation for the new DMA APIs
+> - fixed physical-to-bus address conversion in the nommu implementation
+> 
+> v1: http://www.spinics.net/lists/linux-pci/msg40747.html
+> 
+> Will Davis (7):
+>   dma-debug: add checking for map/unmap_resource
+>   DMA-API: Introduce dma_(un)map_resource
+>   dma-mapping: pci: add pci_(un)map_resource
+>   DMA-API: Add dma_(un)map_resource() documentation
+>   iommu/amd: Implement (un)map_resource
+>   iommu/vt-d: implement (un)map_resource
+>   x86: add pci-nommu implementation of map_resource
+> 
+>  Documentation/DMA-API-HOWTO.txt          | 36 ++++++++++++++-
+>  Documentation/DMA-API.txt                | 31 ++++++++++---
+>  arch/x86/kernel/pci-nommu.c              | 32 ++++++++++++++
+>  drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++--
+> ----
+>  drivers/iommu/intel-iommu.c              | 18 ++++++++
+>  include/asm-generic/dma-mapping-broken.h |  9 ++++  include/asm-
+> generic/dma-mapping-common.h | 34 ++++++++++++++
+>  include/asm-generic/pci-dma-compat.h     | 14 ++++++
+>  include/linux/dma-debug.h                | 20 +++++++++
+>  include/linux/dma-mapping.h              |  7 +++
+>  lib/dma-debug.c                          | 47 ++++++++++++++++++++
+>  11 files changed, 304 insertions(+), 20 deletions(-)
+> 
+> --
+> 2.4.0
 
-drivers/iommu/intel_irq_remapping.c: In function ‘modify_irte’:
-drivers/iommu/intel_irq_remapping.c:149:11: error: ‘struct
-intel_iommu’ has no member named ‘pre_enabled_ir’
-  if (iommu->pre_enabled_ir)
-
-Fix this by moving the declaration of the pre_enabled_ir
-under #ifdef CONFIG_IRQ_REMAPPING instead of
-CONFIG_INTEL_IOMMU.
-
-Reported-by: Jim Davis <jim.epost@gmail.com>
-Cc: Zhen-Hua Li <zhen-hual@hp.com>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
----
- include/linux/intel-iommu.h | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/intel-iommu.h b/include/linux/intel-iommu.h
-index d7a0b5d..a81ceee 100644
---- a/include/linux/intel-iommu.h
-+++ b/include/linux/intel-iommu.h
-@@ -344,8 +344,6 @@ struct intel_iommu {
- 
- 	/* whether translation is enabled prior to OS*/
- 	u8		pre_enabled_trans;
--	/* whether interrupt remapping is enabled prior to OS*/
--	u8		pre_enabled_ir;
- 
- 	void __iomem	*root_entry_old_virt; /* mapped from old root entry */
- 	unsigned long	root_entry_old_phys; /* root entry in old kernel */
-@@ -357,6 +355,9 @@ struct intel_iommu {
- 
- #ifdef CONFIG_IRQ_REMAP
- 	struct ir_table *ir_table;	/* Interrupt remapping info */
-+
-+	/* whether interrupt remapping is enabled prior to OS*/
-+	u8		pre_enabled_ir;
- #endif
- 	struct device	*iommu_dev; /* IOMMU-sysfs device */
- 	int		node;
--- 
-1.9.1
+--
+nvpublic
 
