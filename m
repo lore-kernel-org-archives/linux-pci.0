@@ -1,199 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from exprod5og102.obsmtp.com ([64.18.0.143]:33053 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754863AbbFLWKn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jun 2015 18:10:43 -0400
-Received: by oigz2 with SMTP id z2so29331417oig.1
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jun 2015 15:10:42 -0700 (PDT)
+Received: from mail-bn1bon0117.outbound.protection.outlook.com ([157.56.111.117]:61168
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756125AbbFOKAt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Jun 2015 06:00:49 -0400
+From: Zhu Richard <Richard.Zhu@freescale.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+CC: Marek Vasut <marex@denx.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Troy Kisky <troy.kisky@boundarydevices.com>
+Subject: RE: [PATCH] PCI: imx6: Use "u32", not "uint32_t"
+Date: Mon, 15 Jun 2015 09:28:23 +0000
+Message-ID: <DM2PR0301MB086229F4742DB3020E66EDFAF7B80@DM2PR0301MB0862.namprd03.prod.outlook.com>
+References: <20150612202357.17586.99216.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150612202357.17586.99216.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20150612215900.GK23119@google.com>
-References: <1434053294-10962-1-git-send-email-dhdang@apm.com> <20150612215900.GK23119@google.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Fri, 12 Jun 2015 15:10:11 -0700
-Message-ID: <CADaLNDn77GqA6E3XPbgJkZzVUjQtDg6=cO_yQk6aFCdu+g5V9Q@mail.gmail.com>
-Subject: Re: [PATCH 1/1] PCI: X-Gene: Disable Configuration Request Retry
- Status for X-Gene v1 PCIe
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linux-kernel@vger.kernel.org,
-	Ian Campbell <ian.campbell@citrix.com>,
-	Marcin Juszkiewicz <mjuszkiewicz@redhat.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Fri, Jun 12, 2015 at 2:59 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Hi Duc,
->
-> On Thu, Jun 11, 2015 at 01:08:14PM -0700, Duc Dang wrote:
->> X-Gene v1 PCIe controller has a bug in Configuration Request Retry
->> Status (CRS) logic:
->>   When CPU tries to read Vendor ID and Device ID of not-existed
->>   remote device, the controller returns 0xFFFF0001 instead of
->>   0xFFFFFFFF; this will add significant delay in boot time as
->>   pci_bus_read_dev_vendor_id will wait for 60 seconds before
->>   giving up.
->
-> OK, help me understand how this works.  I think this is related to the
-> problem I reported where if the slot is empty, "lspci" doesn't show
-> anything, not even the Root Port leading to the slot.
->
-> I think this happens because when we try to read the Root Port's config
-> space,
->
->   - the slot below the Root Port is empty
->   - the Root Port's link is down
->   - xgene_pcie_map_bus() returns NULL because !port->link_up
->   - pci_generic_config_read32() returns PCIBIOS_DEVICE_NOT_FOUND
->
-> so it looks like the Root Port itself doesn't exist.
->
-> I proposed to change xgene_pcie_map_bus() so it didn't check whether the
-> link was up.  That change makes reads of the Root Port's config space work.
->
-> After we learn the Root Port exists, the PCI core enumerates devices below
-> the Root Port, e.g., on bus 01.  X-Gene advertises that it supports CRS, so
-> we enable it.  When we try to read the Vendor ID of 01:00.0, there's no
-> response from the device (because the slot is empty), and the Root Complex
-> should complete the read by fabricating data of all ones, i.e., 0xFFFFFFFF.
-> But apparently X-Gene supplies 0xFFFF0001 instead, which means "there's a
-> device here, but it's not ready yet," so the PCI core retries the read for
-> 60 seconds before timing out.
->
-> This patch is basically a quirk that keeps X-Gene from advertising CRS
-> support, so the PCI core won't enable CRS.  In the example above, I guess
-> that means the Root Complex will supply 0xFFFFFFFF and the core will see
-> that the slot is empty.
->
-> But this patch leaves the "!port->link_up" test in xgene_pcie_map_bus().
-> Doesn't that mean the core will still not discover the Root Port when the
-> slot is empty?
->
-> It seems to me that you would want both the xgene_pcie_map_bus() change and
-> this patch.  The first would fix the problem that we don't enumerate Root
-> Ports leading to empty slots, and the second would fix the problem that we
-> enable CRS and timeout when enumerating below those Root Ports.
->
-Yes, you are right. I plan to send a follow up patch after this one to
-remove the port->link_up check in xgene_pcie_map_bus and make root
-port discoverable even when the slot is empty. I can combine this
-follow up patch with this one if you feel OK with it.
-
-> One more question below:
->
->> So for X-Gene v1 PCIe controllers, disable CRS capability
->> advertisement by clearing CRS Software Visibility bit before
->> returning the Root Capability value to the callers. This is done
->> by implementing X-Gene PCIe specific xgene_pcie_config_read32 for
->> CFG read accesses to replace the generic default pci_generic_config_read32
->> function.
->>
->> Signed-off-by: Duc Dang <dhdang@apm.com>
->> ---
->>  drivers/pci/host/pci-xgene.c | 48 +++++++++++++++++++++++++++++++++++++++++++-
->>  1 file changed, 47 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
->> index ee082c0..741a253 100644
->> --- a/drivers/pci/host/pci-xgene.c
->> +++ b/drivers/pci/host/pci-xgene.c
->> @@ -59,6 +59,12 @@
->>  #define SZ_1T                                (SZ_1G*1024ULL)
->>  #define PIPE_PHY_RATE_RD(src)                ((0xc000 & (u32)(src)) >> 0xe)
->>
->> +#define ROOT_CAP_AND_CTRL            0x5C
->> +
->> +/* PCIe IP version */
->> +#define XGENE_PCIE_IP_VER_UNKN               0
->> +#define XGENE_PCIE_IP_VER_1          1
->> +
->>  struct xgene_pcie_port {
->>       struct device_node      *node;
->>       struct device           *dev;
->> @@ -67,6 +73,7 @@ struct xgene_pcie_port {
->>       void __iomem            *cfg_base;
->>       unsigned long           cfg_addr;
->>       bool                    link_up;
->> +     u32                     version;
->>  };
->>
->>  static inline u32 pcie_bar_low_val(u32 addr, u32 flags)
->> @@ -140,9 +147,44 @@ static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
->>       return xgene_pcie_get_cfg_base(bus) + offset;
->>  }
->>
->> +int xgene_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
->> +                           int where, int size, u32 *val)
->> +{
->> +     void __iomem *addr;
->> +     struct xgene_pcie_port *port = bus->sysdata;
->> +
->> +     addr = bus->ops->map_bus(bus, devfn, where & ~0x3);
->> +     if (!addr) {
->> +             *val = ~0;
->> +             return PCIBIOS_DEVICE_NOT_FOUND;
->> +     }
->> +
->> +     *val = readl(addr);
->
-> Can't you just call pci_generic_config_read32() directly instead of
-> duplicating its code here?
->
-
-Yes, I will replace above code with:
-
-pci_generic_config_read32(bus, devfn, where & ~0x3, 4, *val)
-
-to read 4 bytes to *val;
-
->> +     /*
->> +      * X-Gene v1 PCIe controller has a bug in Configuration Request
->> +      * Retry Status (CRS) logic:
->> +      *  When CPU tries to read Vendor ID and Device ID of not-existed
->> +      *  remote device, the controller returns 0xFFFF0001 instead of
->> +      *  0xFFFFFFFF; this will add significant delay in boot time as
->> +      *  pci_bus_read_dev_vendor_id will wait for 60 seconds before
->> +      *  giving up.
->> +      * So for X-Gene v1 PCIe controllers, disable CRS capability
->> +      * advertisement by clearing CRS Software Visibility bit before
->> +      * returning the Root Capability value to the callers.
->> +      */
->> +     if (pci_is_root_bus(bus) && (port->version == XGENE_PCIE_IP_VER_1) &&
->> +         ((where & ~0x3) == ROOT_CAP_AND_CTRL))
->> +             *val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
->> +
->> +     if (size <= 2)
->> +             *val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
->> +
->> +     return PCIBIOS_SUCCESSFUL;
->> +}
->> +
->>  static struct pci_ops xgene_pcie_ops = {
->>       .map_bus = xgene_pcie_map_bus,
->> -     .read = pci_generic_config_read32,
->> +     .read = xgene_pcie_config_read32,
->>       .write = pci_generic_config_write32,
->>  };
->>
->> @@ -483,6 +525,10 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
->>       port->node = of_node_get(pdev->dev.of_node);
->>       port->dev = &pdev->dev;
->>
->> +     port->version = XGENE_PCIE_IP_VER_UNKN;
->> +     if (of_device_is_compatible(port->node, "apm,xgene-pcie"))
->> +             port->version = XGENE_PCIE_IP_VER_1;
->> +
->>       ret = xgene_pcie_map_reg(port, pdev);
->>       if (ret)
->>               return ret;
->> --
->> 1.9.1
->>
-
--- 
-Regards,
-Duc Dang.
+DQpUaGFua3MsIHRvIGxldCBpdCBjb25zaXN0ZW5jZS4NCg0KQWNrZWQtYnk6IFJpY2hhcmQgWmh1
+IDxSaWNoYXJkLlpodUBmcmVlc2NhbGUuY29tPg0KDQpGcmVlc2NhbGUgTGludXggQlNQIHRlYW0N
+CkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0N
+CkZyb206IEJqb3JuIEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXSANClNlbnQ6
+IFNhdHVyZGF5LCBKdW5lIDEzLCAyMDE1IDQ6MjQgQU0NClRvOiBaaHUgUmljaGFyZC1SNjUwMzc7
+IEx1Y2FzIFN0YWNoDQpDYzogTWFyZWsgVmFzdXQ7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
+IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgVHJveSBLaXNreQ0KU3ViamVj
+dDogW1BBVENIXSBQQ0k6IGlteDY6IFVzZSAidTMyIiwgbm90ICJ1aW50MzJfdCINCg0KVXNlICJ1
+MzIiLCBub3QgInVpbnQzMl90IiwgZm9yIGNvbnNpc3RlbmN5LiAgVXNlICJ0bXAiLCBub3QgInRl
+bXAiLCBmb3IgY29uc2lzdGVuY3kgd2l0aGluIHRoZSBkcml2ZXIuDQoNClNpZ25lZC1vZmYtYnk6
+IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQotLS0NCiBkcml2ZXJzL3BjaS9o
+b3N0L3BjaS1pbXg2LmMgfCAgIDIwICsrKysrKysrKystLS0tLS0tLS0tDQogMSBmaWxlIGNoYW5n
+ZWQsIDEwIGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9wY2kvaG9zdC9wY2ktaW14Ni5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14Ni5jIGlu
+ZGV4IDJiYmQzOGQuLmEwMzJjMDEgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1p
+bXg2LmMNCisrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYw0KQEAgLTM1NCw3ICszNTQs
+NyBAQCBzdGF0aWMgaW50IGlteDZfcGNpZV93YWl0X2Zvcl9saW5rKHN0cnVjdCBwY2llX3BvcnQg
+KnBwKQ0KIA0KIHN0YXRpYyBpbnQgaW14Nl9wY2llX3dhaXRfZm9yX3NwZWVkX2NoYW5nZShzdHJ1
+Y3QgcGNpZV9wb3J0ICpwcCkgIHsNCi0JdWludDMyX3QgdG1wOw0KKwl1MzIgdG1wOw0KIAl1bnNp
+Z25lZCBpbnQgcmV0cmllczsNCiANCiAJZm9yIChyZXRyaWVzID0gMDsgcmV0cmllcyA8IDIwMDsg
+cmV0cmllcysrKSBAQCAtMzc5LDcgKzM3OSw3IEBAIHN0YXRpYyBpcnFyZXR1cm5fdCBpbXg2X3Bj
+aWVfbXNpX2hhbmRsZXIoaW50IGlycSwgdm9pZCAqYXJnKSAgc3RhdGljIGludCBpbXg2X3BjaWVf
+c3RhcnRfbGluayhzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkgIHsNCiAJc3RydWN0IGlteDZfcGNpZSAq
+aW14Nl9wY2llID0gdG9faW14Nl9wY2llKHBwKTsNCi0JdWludDMyX3QgdG1wOw0KKwl1MzIgdG1w
+Ow0KIAlpbnQgcmV0Ow0KIA0KIAkvKg0KQEAgLTQ1MCwxOSArNDUwLDE5IEBAIHN0YXRpYyB2b2lk
+IGlteDZfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApDQogDQogc3RhdGljIHZv
+aWQgaW14Nl9wY2llX3Jlc2V0X3BoeShzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkgIHsNCi0JdWludDMy
+X3QgdGVtcDsNCisJdTMyIHRtcDsNCiANCi0JcGNpZV9waHlfcmVhZChwcC0+ZGJpX2Jhc2UsIFBI
+WV9SWF9PVlJEX0lOX0xPLCAmdGVtcCk7DQotCXRlbXAgfD0gKFBIWV9SWF9PVlJEX0lOX0xPX1JY
+X0RBVEFfRU4gfA0KLQkJIFBIWV9SWF9PVlJEX0lOX0xPX1JYX1BMTF9FTik7DQotCXBjaWVfcGh5
+X3dyaXRlKHBwLT5kYmlfYmFzZSwgUEhZX1JYX09WUkRfSU5fTE8sIHRlbXApOw0KKwlwY2llX3Bo
+eV9yZWFkKHBwLT5kYmlfYmFzZSwgUEhZX1JYX09WUkRfSU5fTE8sICZ0bXApOw0KKwl0bXAgfD0g
+KFBIWV9SWF9PVlJEX0lOX0xPX1JYX0RBVEFfRU4gfA0KKwkJUEhZX1JYX09WUkRfSU5fTE9fUlhf
+UExMX0VOKTsNCisJcGNpZV9waHlfd3JpdGUocHAtPmRiaV9iYXNlLCBQSFlfUlhfT1ZSRF9JTl9M
+TywgdG1wKTsNCiANCiAJdXNsZWVwX3JhbmdlKDIwMDAsIDMwMDApOw0KIA0KLQlwY2llX3BoeV9y
+ZWFkKHBwLT5kYmlfYmFzZSwgUEhZX1JYX09WUkRfSU5fTE8sICZ0ZW1wKTsNCi0JdGVtcCAmPSB+
+KFBIWV9SWF9PVlJEX0lOX0xPX1JYX0RBVEFfRU4gfA0KKwlwY2llX3BoeV9yZWFkKHBwLT5kYmlf
+YmFzZSwgUEhZX1JYX09WUkRfSU5fTE8sICZ0bXApOw0KKwl0bXAgJj0gfihQSFlfUlhfT1ZSRF9J
+Tl9MT19SWF9EQVRBX0VOIHwNCiAJCSAgUEhZX1JYX09WUkRfSU5fTE9fUlhfUExMX0VOKTsNCi0J
+cGNpZV9waHlfd3JpdGUocHAtPmRiaV9iYXNlLCBQSFlfUlhfT1ZSRF9JTl9MTywgdGVtcCk7DQor
+CXBjaWVfcGh5X3dyaXRlKHBwLT5kYmlfYmFzZSwgUEhZX1JYX09WUkRfSU5fTE8sIHRtcCk7DQog
+fQ0KIA0KIHN0YXRpYyBpbnQgaW14Nl9wY2llX2xpbmtfdXAoc3RydWN0IHBjaWVfcG9ydCAqcHAp
+DQoNCg==
