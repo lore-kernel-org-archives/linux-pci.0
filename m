@@ -1,85 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <556D512E.9020209@huawei.com>
-Date: Tue, 2 Jun 2015 14:46:06 +0800
-From: Hanjun Guo <guohanjun@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:46541 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093AbbFOAkb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Jun 2015 20:40:31 -0400
+Message-ID: <557E1EF9.7040607@huawei.com>
+Date: Mon, 15 Jun 2015 08:40:25 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>
-CC: Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch v4 0/8] Consolidate ACPI PCI root common code into ACPI
- core
-References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
+To: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
+ deadlock
+References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com> <557A9661.8030603@huawei.com> <CAA93t1ooSY2keDigmUPpO7LzvT12YwQjpxH0b1xA508LL+VWdg@mail.gmail.com> <20150612182013.GA4455@svl-evodev-groeck.juniper.net>
+In-Reply-To: <20150612182013.GA4455@svl-evodev-groeck.juniper.net>
 Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/2 14:12, Jiang Liu wrote:
-> This patch set consolidates common code to support ACPI PCI root on x86
-> and IA64 platforms into ACPI core, to reproduce duplicated code and
-> simplify maintenance. And a patch set based on this to support ACPI based
-> PCIe host bridge on ARM64 has been posted at:
+On 2015/6/13 2:20, Guenter Roeck wrote:
+> On Fri, Jun 12, 2015 at 11:12:35AM -0700, Rajat Jain wrote:
+>> [+Guenter]
+>>
+>> Looks good to me. Unfortunately, I do not have the hardware anymore to test
+>> it :-(
+>>
+>> Guenter: Do you have it, or know some body who has and wants to test this?
+>>
+> I'll dig up the patch and test it.
 
-https://lkml.org/lkml/2015/5/26/207
+Rajat, Guenter, thanks for your help.
 
-And yes, it works on ARM64 too with legacy interrupts (INT#A/B/C/D) with ACPI _PRT
-method (MSI is in developing).
+Thanks!
+Yijing.
 
-Thanks
-Hanjun
+> 
+> Guenter
+> 
+> 
 
->
-> It's based on latest mainstream kernel. It passes Fengguang's 0day test
-> suite and has been tested on two IA64 platforms and one x86 platform.
->
-> V3->V4:
-> 1) Add patch[05/08] support solve building issue on ARM64
-> 2) Solve an implicitly pointer cast issue.
-> 3) Rebase to latest mainstream kernel
->
-> V2->V3:
-> 1. Move memory allocation/free from ACPI core into arch
-> 2. Kill the field 'segment' in struct pci_root_info on x86
->
-> Thanks!
-> Gerry
->
-> Hanjun Guo (1):
->   ARM64 / PCI: introduce struct pci_controller for ACPI
->
-> Jiang Liu (7):
->   ACPI/PCI: Enhance ACPI core to support sparse IO space
->   ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
->     bridge
->   ia64/PCI: Use common struct resource_entry to replace struct
->     iospace_resource
->   x86/PCI: Rename struct pci_sysdata as struct pci_controller
->   PCI/ACPI: Consolidate common PCI host bridge code into ACPI core
->   x86/PCI/ACPI: Use common interface to support PCI host bridge
->   ia64/PCI/ACPI: Use common interface to support PCI host bridge
->
->  arch/arm64/include/asm/pci.h  |   10 ++
->  arch/ia64/include/asm/pci.h   |    5 -
->  arch/ia64/pci/pci.c           |  364 +++++++++++------------------------------
->  arch/x86/include/asm/pci.h    |   13 +-
->  arch/x86/include/asm/pci_64.h |    4 +-
->  arch/x86/pci/acpi.c           |  295 ++++++++++-----------------------
->  arch/x86/pci/common.c         |    2 +-
->  drivers/acpi/pci_root.c       |  200 ++++++++++++++++++++++
->  drivers/acpi/resource.c       |    9 +-
->  include/linux/ioport.h        |    1 +
->  include/linux/pci-acpi.h      |   23 +++
->  11 files changed, 432 insertions(+), 494 deletions(-)
->
 
+-- 
+Thanks!
+Yijing
 
