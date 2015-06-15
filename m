@@ -1,161 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Rob Herring <robh@kernel.org>
-To: Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org, arm@kernel.org,
-	Rob Herring <robh@kernel.org>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: [PATCH 10/15] PCI: kill off set_irq_flags usage
-Date: Tue,  9 Jun 2015 13:26:36 -0500
-Message-Id: <1433874401-27161-11-git-send-email-robh@kernel.org>
-In-Reply-To: <1433874401-27161-1-git-send-email-robh@kernel.org>
-References: <1433874401-27161-1-git-send-email-robh@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.emea.novell.com ([130.57.118.101]:38939 "EHLO
+	mail.emea.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbbFOGUR convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-pci@vger.kernel.org:17:4>);
+	Mon, 15 Jun 2015 02:20:17 -0400
+Message-Id: <557E8ABA02000078000849A8@mail.emea.novell.com>
+Date: Mon, 15 Jun 2015 07:20:10 +0100
+From: "Jan Beulich" <JBeulich@suse.com>
+To: "Andy Lutomirski" <luto@amacapital.net>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"Jej B" <James.Bottomley@hansenpartnership.com>,
+	"Toshi Kani" <toshi.kani@hp.com>, "X86 ML" <x86@kernel.org>,
+	"Andrew Morton" <akpm@linux-foundation.org>,
+	<ville.syrjala@linux.intel.com>,
+	"Julia Lawall" <julia.lawall@lip6.fr>,
+	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+	"Dave Airlie" <airlied@redhat.com>, <syrjala@sci.fi>,
+	"Juergen Gross" <JGross@suse.com>,
+	"Luis Rodriguez" <Mcgrof@Suse.com>, "Borislav Petkov" <bp@suse.de>,
+	"Tomi Valkeinen" <tomi.valkeinen@ti.com>,
+	"linux-fbdev" <linux-fbdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	<linux-media@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
+References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+ <1434064996.11808.64.camel@misato.fc.hp.com>
+ <557AAD910200007800084014@mail.emea.novell.com>
+ <CALCETrXWZU2NZRZy7b74z54Tt5aKmTOmgMmf5WYG1OZtEmjw7A@mail.gmail.com>
+In-Reply-To: <CALCETrXWZU2NZRZy7b74z54Tt5aKmTOmgMmf5WYG1OZtEmjw7A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-set_irq_flags is ARM specific with custom flags which have genirq
-equivalents. Convert drivers to use the genirq interfaces directly, so we
-can kill off set_irq_flags. The translation of flags is as follows:
+>>> On 13.06.15 at 01:15, <luto@amacapital.net> wrote:
+> On Jun 12, 2015 12:59 AM, "Jan Beulich" <JBeulich@suse.com> wrote:
+>>
+>> >>> On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
+>> > There are two usages on MTRRs:
+>> >  1) MTRR entries set by firmware
+>> >  2) MTRR entries set by OS drivers
+>> >
+>> > We can obsolete 2), but we have no control over 1).  As UEFI firmwares
+>> > also set this up, this usage will continue to stay.  So, we should not
+>> > get rid of the MTRR code that looks up the MTRR entries, while we have
+>> > no need to modify them.
+>> >
+>> > Such MTRR entries provide safe guard to /dev/mem, which allows
+>> > privileged user to access a range that may require UC mapping while
+>> > the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
+>> > such a case.
+>>
+>> But it wouldn't be impossible to simply read the MTRRs upon boot,
+>> store the information, disable MTRRs, and correctly use PAT to
+>> achieve the same effect (i.e. the "blindly maps" part of course
+>> would need fixing).
+> 
+> This may crash and burn badly when we call a UEFI function or an SMI
+> happens.  I think we should just leave the MTRRs alone.
 
-IRQF_VALID -> !IRQ_NOREQUEST
-IRQF_PROBE -> !IRQ_NOPROBE
-IRQF_NOAUTOEN -> IRQ_NOAUTOEN
+I buy the SMI part, but UEFI runtime calls are being done on
+page tables we construct and control, so attributes could be kept
+correct without relying on MTRRs.
 
-For IRQs managed by an irqdomain, the irqdomain core code handles clearing
-and setting IRQ_NOREQUEST already, so there is no need to do this in
-.map() functions and we can simply remove the set_irq_flags calls. Some
-users also set IRQ_NOPROBE and this has been maintained although it is not
-clear that is really needed. There appears to be a great deal of blind
-copy and paste of this code.
-
-Signed-off-by: Rob Herring <robh@kernel.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Alexandre Courbot <gnurou@gmail.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-Cc: linux-omap@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-tegra@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
----
- drivers/pci/host/pci-dra7xx.c      | 1 -
- drivers/pci/host/pci-keystone-dw.c | 2 --
- drivers/pci/host/pci-tegra.c       | 1 -
- drivers/pci/host/pcie-designware.c | 1 -
- drivers/pci/host/pcie-rcar.c       | 1 -
- drivers/pci/host/pcie-xilinx.c     | 2 --
- 6 files changed, 8 deletions(-)
-
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 2d57e19..94cbc4d 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -160,7 +160,6 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- {
- 	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
- 	irq_set_chip_data(irq, domain->host_data);
--	set_irq_flags(irq, IRQF_VALID);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index f34892e..f1d0749 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -196,7 +196,6 @@ static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
- 	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
- 				 handle_level_irq);
- 	irq_set_chip_data(irq, domain->host_data);
--	set_irq_flags(irq, IRQF_VALID);
- 
- 	return 0;
- }
-@@ -277,7 +276,6 @@ static int ks_dw_pcie_init_legacy_irq_map(struct irq_domain *d,
- 	irq_set_chip_and_handler(irq, &ks_dw_pcie_legacy_irq_chip,
- 				 handle_level_irq);
- 	irq_set_chip_data(irq, d->host_data);
--	set_irq_flags(irq, IRQF_VALID);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 00e9272..36bd700 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1263,7 +1263,6 @@ static int tegra_msi_map(struct irq_domain *domain, unsigned int irq,
- {
- 	irq_set_chip_and_handler(irq, &tegra_msi_irq_chip, handle_simple_irq);
- 	irq_set_chip_data(irq, domain->host_data);
--	set_irq_flags(irq, IRQF_VALID);
- 
- 	tegra_cpuidle_pcie_irqs_in_use();
- 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 2e9f84f..5caa94d 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -333,7 +333,6 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
- {
- 	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
- 	irq_set_chip_data(irq, domain->host_data);
--	set_irq_flags(irq, IRQF_VALID);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index c086210..7678fe0 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -664,7 +664,6 @@ static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
- {
- 	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
- 	irq_set_chip_data(irq, domain->host_data);
--	set_irq_flags(irq, IRQF_VALID);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index f1a06a0..72015119 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -338,7 +338,6 @@ static int xilinx_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
- {
- 	irq_set_chip_and_handler(irq, &xilinx_msi_irq_chip, handle_simple_irq);
- 	irq_set_chip_data(irq, domain->host_data);
--	set_irq_flags(irq, IRQF_VALID);
- 
- 	return 0;
- }
-@@ -377,7 +376,6 @@ static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- {
- 	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
- 	irq_set_chip_data(irq, domain->host_data);
--	set_irq_flags(irq, IRQF_VALID);
- 
- 	return 0;
- }
--- 
-2.1.0
+Jan
 
