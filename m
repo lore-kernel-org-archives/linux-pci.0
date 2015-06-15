@@ -1,69 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	James Hogan <james.hogan@imgtec.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-metag@vger.kernel.org
-Subject: [Patch v3 20/36] metag, irq: Use access helper irq_data_get_affinity_mask()
-Date: Mon,  1 Jun 2015 16:05:29 +0800
-Message-Id: <1433145945-789-21-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 15 Jun 2015 12:50:27 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: jakeo@microsoft.com
+Cc: kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, pebolle@tiscali.nl,
+	haiyangz@microsoft.com, mebersol@microsoft.com
+Subject: Re: [PATCH v2 6/6] drivers:pci:hv: New paravirtual PCI front-end for
+ Hyper-V VMs
+Message-ID: <20150615195027.GA5257@kroah.com>
+References: <1434387999-1885-1-git-send-email-jakeo@microsoft.com>
+ <1434387999-1885-7-git-send-email-jakeo@microsoft.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434387999-1885-7-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use access helper irq_data_get_affinity_mask() to hide implementation
-details of struct irq_desc.
+On Mon, Jun 15, 2015 at 05:06:39PM +0000, jakeo@microsoft.com wrote:
+> From: Jake Oshins <jakeo@microsoft.com>
+> 
+> This patch supplies a new driver, hv_pcifront, which exposes new root PCI
+> buses.  When a Hyper-V VM running Linux is offered a paravirtual PCI bus
+> in order to expose a device passed through on that bus, this drver
+> registers a new bus with the PCI driver.  This new bus is bus "zero"
+> within a new PCI domain.  This is done so that there's no overlap between
+> the emulated, or fully virtualized, PCI that may be in the VM and a real
+> PCIe device that will be exposed.
+> 
+> This PCI front-end only supports PCIe devices which do not use I/O BARs and
+> which do not need a legacy INTx# interrupt (relying on MSI or MSI-X).
+> Multifunction devices are supported, but devices with Type 1 or Type 2
+> config headers are not supported.  (These are bridges to other PCI buses.)
+> 
+> The content of this patch differs from the one sent previously in that it
+> incorporates feedback related to unused code (which has been removed) and
+> GPL license (which has been updated.)  It also removes Kconfig lines that
+> had been copied from the Xen PCI front-end entry, but which shouldn't be
+> used here.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/metag/kernel/irq.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/arch/metag/kernel/irq.c b/arch/metag/kernel/irq.c
-index 4f8f1f87ef11..a336094a7a6c 100644
---- a/arch/metag/kernel/irq.c
-+++ b/arch/metag/kernel/irq.c
-@@ -270,23 +270,25 @@ void migrate_irqs(void)
- 
- 	for_each_active_irq(i) {
- 		struct irq_data *data = irq_get_irq_data(i);
-+		struct cpumask *mask;
- 		unsigned int newcpu;
- 
- 		if (irqd_is_per_cpu(data))
- 			continue;
- 
--		if (!cpumask_test_cpu(cpu, data->affinity))
-+		mask = irq_data_get_affinity_mask(data);
-+		if (!cpumask_test_cpu(cpu, mask))
- 			continue;
- 
--		newcpu = cpumask_any_and(data->affinity, cpu_online_mask);
-+		newcpu = cpumask_any_and(mask, cpu_online_mask);
- 
- 		if (newcpu >= nr_cpu_ids) {
- 			pr_info_ratelimited("IRQ%u no longer affine to CPU%u\n",
- 					    i, cpu);
- 
--			cpumask_setall(data->affinity);
-+			cpumask_setall(mask);
- 		}
--		irq_set_affinity(i, data->affinity);
-+		irq_set_affinity(i, mask);
- 	}
- }
- #endif /* CONFIG_HOTPLUG_CPU */
--- 
-1.7.10.4
+This paragraph goes below the --- line, we don't need it in the
+changelog :(
 
