@@ -1,98 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <556FF820.5070405@linaro.org>
-Date: Thu, 04 Jun 2015 15:02:56 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>, Al Stone <ahs3@redhat.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>
-CC: Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Mark Salter <msalter@redhat.com>
-Subject: Re: [Patch v4 0/8] Consolidate ACPI PCI root common code into ACPI
- core
-References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com> <556F6332.2040501@redhat.com> <556FAFEF.6040802@linux.intel.com> <556FF0AD.6000901@linaro.org> <556FF32B.9010900@linux.intel.com>
-In-Reply-To: <556FF32B.9010900@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org, pebolle@tiscali.nl,
+	haiyangz@microsoft.com, mebersol@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 0/6] hv: Front-end driver for PCIe Pass-through on Hyper-V
+Date: Mon, 15 Jun 2015 17:06:33 +0000
+Message-Id: <1434387999-1885-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015年06月04日 14:41, Jiang Liu wrote:
-> On 2015/6/4 14:31, Hanjun Guo wrote:
->> Hi Jiang,
->>
->> On 2015年06月04日 09:54, Jiang Liu wrote:
->>> On 2015/6/4 4:27, Al Stone wrote:
->>>> On 06/02/2015 12:12 AM, Jiang Liu wrote:
->>>>> This patch set consolidates common code to support ACPI PCI root on x86
->>>>> and IA64 platforms into ACPI core, to reproduce duplicated code and
->>>>> simplify maintenance. And a patch set based on this to support ACPI
->>>>> based
->>>>> PCIe host bridge on ARM64 has been posted at:
->>>>
->>>> Link is missing (or it's a typo of some flavor).
->>> HI Al,
->>>      Sorry, I missed the link. It has been posted at:
->>> https://lkml.org/lkml/2015/5/26/207
->>
->> I failed to get io resources for PCI hostbridge  when I was testing PCI
->> on ARM64 QEMU, I debugged this for quite a while, and finally found out
->> that ACPI resource parsing for IO is not suitable for ARM64, because io
->> space for x86 is 64K, but 16M for ARM64.
->>
->> This issue is only found when the firmware representing the io resource
->> using the type ACPI_RESOURCE_TYPE_ADDRESS32, so the io address will
->> greater than 64k.
->>
->> In drivers/acpi/resource.c:
->>
->> static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->>                                        u8 io_decode, u8 translation_type)
->> {
->>          res->flags = IORESOURCE_IO;
->>
->> [...]
->>
->>          if (res->end >= 0x10003)
->>                  res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
->>
->> [...]
->> }
->>
->> so the code will filter out res->end >= 0x10003, and in my case, it will
->> more than 64K, so we can't get the IO resources.
->>
->> I got a question, why we use if (res->end >= 0x10003) here?
->> I mean 64k will be 0x10000, and in that case, we should use
->> if (res->end >= 0x10000) here, not 0x10003, any history behind that?
->
-> Hi Hanjun,
-> This is a special tricky for x86. You may read a dword(four bytes) from
-> IO port 0xffff, so the effective io port space is 0x10003 bytes.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Thanks for the explanation, how about add a patch to comment on it?
-if it's ok to you and will improve the code readability, I can prepare
-one.
+This patch does some slight refactoring on the hv_vmbus driver and its
+dependents and then introduces a new paravirtual front-end driver for PCI
+which supports PCI Express devices passed through to a Linux guest running
+in a Hyper-V VM.
 
->
->>
->> This is not the problem of this patch set, but need updating
->> the core ACPI resource parsing code, I'm working on that. I'm
->> just wondering there is no special IO space on IA64, how this works
->> on IA64?
-> There is special handling for IO port on IA64. IA64 io ports are
-> actually memory-mapped, and there may be multiple 64K IO port spaces.
-> For example, each PCI domain may have its own 64k memory-mapped
-> IO space.
+To support this front-end, several new mechanisms are introduced:
 
-That's the case for ARM64 too, I will review the IA64 code for
-reference, great thanks for the help and explanation :)
+1 - A common way of finding free memory-mapped I/O space in a Hyper-V VM, 
+    available to all Hyper-V-related drivers.
 
-Thanks
-Hanjun
+2 - A way of handling PCI Message-Signaled Interrupt (MSI and MSI-X)
+    creation and formatting when Hyper-V is running.
+
+3 - A mapping function from Linux processor number to Hyper-V virtual
+    processor number, available to drivers, which is necessary for MSI(-X)
+    creation.
+
+The Hyper-V Frame Buffer driver is modified to use the MMIO space
+allocation function so that its allocations both don't collide with the
+PCI front end and so that the chosen range can come from any available
+part of MMIO space.
+
+Finally, the new PCI front-end driver is the last patch in the series.
+
+This patch series incorporates feedback from Greg K-H and Paul Bolle, and
+it differs from the the first version in that it:
+
+- Removes code that has no callers
+- Updates the MODULE_LICENSE macro
+- Provides explanations in each of the patches
+- Fixes the Kconfig so that the defaults and depends are reasonable
+
+Jake Oshins (6):
+  drivers:hv: Modify vmbus to search for all MMIO ranges available
+  drivers:hv: Move MMIO range picking from hyper_fb.mod to hv_vmbus.mod
+  arch:x86:hv: Add mechanism for Hyper-V paravirt drivers to hook msi
+    message creation
+  drivers:hv: Export a function that maps Linux proc num onto Hyper-V
+    proc num
+  drivers:hv: Define the channel type for Hyper-V PCI Express
+    pass-through
+  drivers:pci:hv: New paravirtual PCI front-end for Hyper-V VMs
+
+ MAINTAINERS                     |    1 +
+ arch/x86/include/asm/mshyperv.h |    2 +
+ arch/x86/kernel/cpu/mshyperv.c  |   30 +
+ drivers/hv/vmbus_drv.c          |  208 +++-
+ drivers/pci/Kconfig             |    7 +
+ drivers/pci/host/Makefile       |    1 +
+ drivers/pci/host/hv_pcifront.c  | 1984 +++++++++++++++++++++++++++++++++++++++
+ drivers/video/fbdev/hyperv_fb.c |   46 +-
+ include/linux/hyperv.h          |   20 +-
+ 9 files changed, 2256 insertions(+), 43 deletions(-)
+ create mode 100644 drivers/pci/host/hv_pcifront.c
+
+-- 
+1.9.1
+
