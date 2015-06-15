@@ -1,38 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Sat, 13 Jun 2015 10:27:16 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Thomas Gleixner <tglx@linutronix.de>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of
- irq_flow_handler_t
-In-Reply-To: <alpine.DEB.2.11.1505201750280.4225@nanos>
-Message-ID: <alpine.DEB.2.10.1506131026330.2341@hadrien>
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com>
- <alpine.DEB.2.11.1505201750280.4225@nanos>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 15 Jun 2015 14:27:57 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: Wan ZongShun <Vincent.Wan@amd.com>
+Cc: <ulf.hansson@linaro.org>, <linux-mmc@vger.kernel.org>,
+	<linux-i2c@vger.kernel.org>, <bp@alien8.de>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<mcuos.com@gmail.com>
+Subject: Re: [PATCH V2 2/3] i2c-piix4: Use Macro for AMD CZ SMBus device ID
+Message-ID: <20150615142757.0142351c@endymion.delvare>
+In-Reply-To: <1434024707-6245-2-git-send-email-Vincent.Wan@amd.com>
+References: <1434024707-6245-1-git-send-email-Vincent.Wan@amd.com>
+	<1434024707-6245-2-git-send-email-Vincent.Wan@amd.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->     unsigned irq = irq_desc_get_irq(desc);
+On Thu, 11 Jun 2015 20:11:46 +0800, Wan ZongShun wrote:
+> Change AMD CZ SMBUS device ID from 0x790b to
+> use Macro definition
+> 
+> Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
+> ---
+>  drivers/i2c/busses/i2c-piix4.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
+> index 67cbec6..630bce6 100644
+> --- a/drivers/i2c/busses/i2c-piix4.c
+> +++ b/drivers/i2c/busses/i2c-piix4.c
+> @@ -245,7 +245,7 @@ static int piix4_setup_sb800(struct pci_dev *PIIX4_dev,
+>  	     PIIX4_dev->device == PCI_DEVICE_ID_AMD_HUDSON2_SMBUS &&
+>  	     PIIX4_dev->revision >= 0x41) ||
+>  	    (PIIX4_dev->vendor == PCI_VENDOR_ID_AMD &&
+> -	     PIIX4_dev->device == 0x790b &&
+> +	     PIIX4_dev->device == PCI_DEVICE_ID_AMD_KERNCZ_SMBUS &&
+>  	     PIIX4_dev->revision >= 0x49))
+>  		smb_en = 0x00;
+>  	else
+> @@ -545,7 +545,7 @@ static const struct pci_device_id piix4_ids[] = {
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
+> -	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x790b) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_KERNCZ_SMBUS) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+>  		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
 
-Actually, I put the wrong name for this in my semantic patch.  I will send
-a new version and new results shortly.
+Probably too late but anyway:
 
-julia
+Acked-by: Jean Delvare <jdelvare@suse.de>
+
+-- 
+Jean Delvare
+SUSE L3 Support
