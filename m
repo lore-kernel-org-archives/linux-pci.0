@@ -1,75 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:36403 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655AbbFDGoy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 02:44:54 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 4 Jun 2015 16:44:52 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, bhelgaas@google.com, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v5 14/42] powerpc/powernv: Allocate PE# in deasending order
-Date: Thu,  4 Jun 2015 16:41:43 +1000
-Message-Id: <1433400131-18429-15-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 2/2] x86/PCI: Use host bridge _CRS info on systems with >32
+ bit addressing
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Takashi Iwai <tiwai@suse.de>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	dayer3@gmail.com, "H. Peter Anvin" <hpa@zytor.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 16 Jun 2015 11:55:50 -0500
+Message-ID: <20150616165550.9306.58789.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150616165033.9306.78046.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150616165033.9306.78046.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The available PE#, represented by a bitmap in the PHB, is allocated
-in asending order. It conflicts with the fact that M64 segments are
-assigned in same order. In order to avoid the conflict, the patch
-allocates PE# in deasending order.
+We enable _CRS on all systems from 2008 and later.  On older systems, we
+ignore _CRS and assume the whole physical address space (excluding RAM and
+other devices) is available for PCI devices, but on systems that support
+physical address spaces larger than 4GB, it's doubtful that the area above
+4GB is really available for PCI.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
-v5:
-  * Split from [PATCH v5 v4 06/21]
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+After d56dbf5bab8c ("PCI: Allocate 64-bit BARs above 4G when possible"), we
+try to use that space above 4GB *first*, so we're more likely to put a
+device there.
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index d8b0ef5..0d6539a 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -152,18 +152,23 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
- 
- static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+Several people have reported sound problems related to putting a device
+above 4GB.  This could happen with any device; I assume it's more likely
+for sound devices because the BIOS is more likely to leave them unassigned.
+
+Keep _CRS enabled even on pre-2008 systems if they support physical address
+space larger than 4GB.
+
+Fixes: d56dbf5bab8c ("PCI: Allocate 64-bit BARs above 4G when possible")
+Reported-by: dayer <dayer3@gmail.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=99221
+Link: https://bugzilla.opensuse.org/show_bug.cgi?id=907092
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index d8e2258..2ae7ce2 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -132,8 +132,10 @@ void __init pci_acpi_crs_quirks(void)
  {
--	unsigned long pe;
-+	unsigned long pe_no;
-+	unsigned long limit = phb->ioda.total_pe - 1;
+ 	int year;
  
- 	do {
--		pe = find_next_zero_bit(phb->ioda.pe_alloc,
--					phb->ioda.total_pe, 0);
--		if (pe >= phb->ioda.total_pe)
-+		pe_no = find_next_zero_bit(phb->ioda.pe_alloc,
-+					   phb->ioda.total_pe, limit);
-+		if (pe_no < phb->ioda.total_pe &&
-+		    !test_and_set_bit(pe_no, phb->ioda.pe_alloc))
-+			break;
-+
-+		if (--limit >= phb->ioda.total_pe)
- 			return IODA_INVALID_PE;
--	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
-+	} while (1);
+-	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year < 2008)
+-		pci_use_crs = false;
++	if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) && year < 2008) {
++		if (iomem_resource.end <= 0xffffffff)
++			pci_use_crs = false;
++	}
  
--	phb->ioda.pe_array[pe].phb = phb;
--	phb->ioda.pe_array[pe].pe_number = pe;
--	return pe;
-+	phb->ioda.pe_array[pe_no].phb = phb;
-+	phb->ioda.pe_array[pe_no].pe_number = pe_no;
-+	return pe_no;
- }
+ 	dmi_check_system(pci_crs_quirks);
  
- static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
--- 
-2.1.0
 
