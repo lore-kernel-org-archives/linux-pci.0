@@ -1,159 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48996 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752948AbbFAWDA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Jun 2015 18:03:00 -0400
-Message-ID: <1433196179.5794.159.camel@redhat.com>
-Subject: Re: [PATCH RFC 2/4] PCI: pciehp: Wait for hotplug command
- completion lazily
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, "Jan C. Nordholz" <jckn@gmx.net>,
-	Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>,
-	Rajat Jain <rajatxjain@gmail.com>, linux-pci@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
-Date: Mon, 01 Jun 2015 16:02:59 -0600
-In-Reply-To: <20150601214322.GA3631@google.com>
-References: <20140614210740.15202.84719.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	 <20140614212126.15202.66060.stgit@bhelgaas-glaptop.roam.corp.google.com>
-	 <1432939534.5794.56.camel@redhat.com> <20150601214322.GA3631@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yk0-f176.google.com ([209.85.160.176]:35846 "EHLO
+	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753134AbbFPNWr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jun 2015 09:22:47 -0400
+Received: by ykdr198 with SMTP id r198so12991649ykd.3
+        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2015 06:22:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150616085024.GA1230@richard>
+References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150601234645.GF3631@google.com> <20150603033142.GA22584@richard>
+ <20150603051023.GA26652@gwshan> <20150603154638.GL3631@google.com> <20150616085024.GA1230@richard>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 16 Jun 2015 08:22:26 -0500
+Message-ID: <CAErSpo7uqjQTN0NZyFcjoKMa4THyBwwEAtP29GDmL67WyWC0FQ@mail.gmail.com>
+Subject: Re: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2015-06-01 at 16:43 -0500, Bjorn Helgaas wrote:
-> On Fri, May 29, 2015 at 04:45:34PM -0600, Alex Williamson wrote:
-> > 
-> > Sorry, I'm digging up and old patch here and this RFC was the only copy
-> > I could find in my mailbox.
-> > 
-> > On Sat, 2014-06-14 at 15:21 -0600, Bjorn Helgaas wrote:
-> > > Previously we issued a hotplug command and waited for it to complete.  But
-> > > there's no need to wait until we're ready to issue the *next* command.  The
-> > > next command will probably be much later, so the first one may have already
-> > > completed and we may not have to actually wait at all.
-> > 
-> > I'm seeing a regression as a result of this patch.  Consider the
-> > following function:
-> > 
-> > int pciehp_reset_slot(struct slot *slot, int probe)
-> > {
-> > 	...
-> > 	pcie_write_cmd(ctrl, 0, ctrl_mask);
-> > 	...
-> > 	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
-> > 
-> > Our command write is clearing bits that control whether the slot has
-> > presence detection and link layer state change enabled.  These are the
-> > things that we're trying to clear to prevent a secondary bus reset from
-> > turning into a surprise hotplug.  If we don't wait for the command to
-> > complete, what state are when in as we initiate the secondary bus reset?
-> > On my system, it's like we never issued the write command at all, the
-> > previous behavior where the hotplug controller detects the link down as
-> > a surprise hotplug returns.  So I'm afraid we do need to wait until
-> > we're ready to issue the *next* command, because it's our only
-> > indication that the current command has completed.
-> 
-> I think that's a bug.  If we do something that depends on a command
-> completion, we'll have to wait for it.
-> 
-> > pciehp_set_attention_status
-> > pciehp_green_led_on
-> > pciehp_green_led_off
-> > pciehp_green_led_blink
-> > pciehp_power_on_slot
-> > pciehp_power_off_slot
-> > pcie_enable_notification
-> > pcie_disable_notification
-> > 
-> > The slot power ones concern me the same as the reset issue.  In the 'on'
-> > case, we immediately call link enable, so the slot better have
-> > acknowledged the power on command.  In the 'off' case, it seems pretty
-> > bad to complete the 'off' function, but we don't know if the slot is
-> > actually off yet.  
-> 
-> I agree.
-> 
-> > For notifications, I can imagine that the caller of
-> > those functions is going to want on or off at the completion of those
-> > functions, not some in-between state.  
-> 
-> These control interrupt generation by the hotplug controller in the switch.
-> When disabling interrupt generation, I think we should wait for completion
-> before we call free_irq(); waiting should prevent spurious interrupts.
-> When enabling interrupt generation, we've already hooked up the ISR before
-> we enable interrupt generation, so I don't see a need to wait.
-> 
-> > Even in the case of the LED
-> > functions, where do we want the error to occur, at the time the command
-> > is issued, or maybe some time in the future when the next unrelated
-> > command comes through.
-> 
-> The only error here is the "Timeout on hotplug command" message, and we
-> don't do anything other than print the message, so I'm not too worried
-> about this one.
-> 
-> > So, rather than posting a new patch adding a flush everywhere that it
-> > seems a little scary, should we consider scrapping this patch altogether
-> > as unsafe?  We need to wait, not only to issue the next command, but to
-> > have any sort of acknowledgment that the current command has completed.
-> 
-> I definitely screwed up by assuming that completion was only useful for
-> pacing writes to the command register.  I think lazy checking is fine for
-> command pacing, but we certainly need to know about completions for other
-> things, too.
-> 
-> If we added calls to pcie_wait_cmd() in these places:
-> 
->   pciehp_power_on_slot
->   pciehp_power_off_slot
->   pcie_disable_notification
->   pciehp_reset_slot
-> 
-> do you think that would be enough?
+On Tue, Jun 16, 2015 at 3:50 AM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Wed, Jun 03, 2015 at 10:46:38AM -0500, Bjorn Helgaas wrote:
+>>On Wed, Jun 03, 2015 at 03:10:23PM +1000, Gavin Shan wrote:
+>>> It's correct. "The following operations" refers to eeh_add_device_late()
+>>> and eeh_sysfs_add_device(). The former one requires the resources for
+>>> one particular PCI device (VF here) are finalized (assigned). eeh_sysfs_add_device()
+>>> will fail if the sysfs entry for the PCI device isn't populated yet.
+>>
+>>eeh_add_device_late() contains several things that read config space:
+>>eeh_save_bars() caches the entire config header, and
+>>eeh_addr_cache_insert_dev() looks at the device resources (which are
+>>determined by BARs in config space).  I think this is an error-prone
+>>approach.  I think it would be simpler and safer for you to capture what
+>>you need in your PCI config accessors.
+>>
+>>eeh_add_device_late() also contains code to deal with an EEH cache that
+>>"might not be removed correctly because of unbalanced kref to the device
+>>during unplug time."  That's unrelated to this patch series, but it sounds
+>>... like a hacky workaround for some bug in the unplug path.
+>>
+>>> >>> +        eeh_add_device_early(pdn);
+>>> >>> +        eeh_add_device_late(pdev);
+>>> >>> +        eeh_sysfs_add_device(pdev);
+>>> >>> +}
+>>> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
+>>> >>
+>>> >>Ugh.  This is powerpc code, but I don't like using fixups as a hook like
+>>> >>this.  There is a pcibios_add_device() -- could this be done there?
+>>> >>
+>>> >
+>>> >I don't like it neither :-) But looks we can't put it in the
+>>> >pcibios_add_device().
+>>> >
+>>> >>If not, what happens after pcibios_add_device() that is required for this
+>>> >>code?  Maybe we need a pcibios_bus_add_device() hook?
+>>> >
+>>> >The pnv_eeh_vf_final_fixup() will try to create sysfs for VFs. This requires
+>>> >the VF sysfs(kobj) is initialized properly. If we put these into
+>>> >pcibios_add_device(), the eeh_sysfs_add_device() would fail.
+>>> >
+>>> >Below is the call flow for your reference:
+>>> >
+>>> >pci_device_add()
+>>> >    pcibios_add_device()
+>>> >    device_add()                <--- kobj initialized here
+>>> >
+>>>
+>>> We can put it into pcibios_bus_add_device(), but we don't it currently. If
+>>> Bjorn agree to add pcibios_bus_add_device(), I'm fine to move the block code
+>>> there.
+>>
+>>I think I'm OK with adding a pcibios_bus_add_device().  I think that would
+>>be better than using the fixup mechanism for this.
+>>
+>
+> Hi, Bjorn, Gavin,
+>
+> Been working on some bug recently, just got a chance to this one.
+>
+> Would you mind giving me some hint, where you suggest to put the
+> pcibios_bus_add_device()?
 
-I think that would solve the problem, but the API becomes very difficult
-to use correctly if the programmer just needs to know that a
-pcie_wait_cmd() is necessary following a pcie_write_cmd() if you really
-want to be sure it's synchronous.  pcie_write_cmd() should probably
-incorporate the "safe" behavior and some new _nowait version should
-handle the special cases where we don't need to wait
+I would expect it to be called from pci_bus_add_device().
 
-> > > Because of hardware errata, some controllers generate command completion
-> > > events for some commands but not others.  In the case of Intel CF118 (see
-> > > spec update reference), the controller indicates command completion only
-> > > for Slot Control writes that change the value of the following bits:
-> > > 
-> > >   Power Controller Control
-> > >   Power Indicator Control
-> > >   Attention Indicator Control
-> > >   Electromechanical Interlock Control
-> > > 
-> > > Changes to other bits, e.g., the interrupt enable bits, do not cause the
-> > > Command Completed bit to be set.  Controllers from AMD and Nvidia are
-> > > reported to have similar errata.
-> > > 
-> > > These errata cause timeouts when pcie_enable_notification() enables
-> > > interrupts.  Previously that timeout occurred at boot-time.  With this
-> > > change, the timeout occurs later, when we change the state of the slot
-> > > power, indicators, or interlock.  This speeds up boot but causes a timeout
-> > > at the first hotplug event on the slot.  Subsequent events don't timeout
-> > > because only the first (boot-time) hotplug command updates Slot Control
-> > > without touching the power/indicator/interlock controls.
-> > 
-> > It sounds like we need some sort of completion mask to handle devices
-> > like this, instead of effectively removing the write-barrier for the
-> > general case.  Thanks,
-> 
-> You mean some quirk-based solution, where we know certain devices don't
-> indicate command completion for certain events?  That seems hard because I
-> think there are many devices that have this erratum.  It was difficult to
-> extract this out of Intel, and I'm pretty sure other vendors have the same
-> issue.
-
-Yeah, I was thinking of a bitmap where we could quirk non-completion of
-devices, but maybe it's not worth it.  Thanks,
-
-Alex
-
+Bjorn
