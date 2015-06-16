@@ -1,93 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vn0-f46.google.com ([209.85.216.46]:38192 "EHLO
-	mail-vn0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752559AbbFUOEO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 21 Jun 2015 10:04:14 -0400
-Received: by vnbf1 with SMTP id f1so3995076vnb.5
-        for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2015 07:04:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55869329.4040908@pr.hu>
-References: <55841815.5000701@pr.hu> <558419B2.7010703@pr.hu>
- <55841D48.8080809@pr.hu> <12950452.K8inU2UIYe@vostro.rjw.lan> <55869329.4040908@pr.hu>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:36467 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753987AbbFPQzq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jun 2015 12:55:46 -0400
+Received: by igbiq7 with SMTP id iq7so47469751igb.1
+        for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2015 09:55:45 -0700 (PDT)
+Subject: [PATCH 1/2] x86/PCI: Use host bridge _CRS info on Foxconn
+ K8M890-8237A
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sun, 21 Jun 2015 09:03:53 -0500
-Message-ID: <CAErSpo4W9N+vtqNM=b24Temh16JHHT4ANk_NwUxjPysMGcJVfA@mail.gmail.com>
-Subject: Re: ACPI regression? Was Re: Ethernet chip disappeared from lspci
-To: Boszormenyi Zoltan <zboszor@pr.hu>
-Cc: Andreas Mohr <andi@lisas.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: Takashi Iwai <tiwai@suse.de>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	dayer3@gmail.com, "H. Peter Anvin" <hpa@zytor.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 16 Jun 2015 11:55:43 -0500
+Message-ID: <20150616165543.9306.88230.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150616165033.9306.78046.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150616165033.9306.78046.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+The Foxconn K8M890-8237A has two PCI host bridges, and we can't assign
+resources correctly without the information from _CRS that tells us which
+address ranges are claimed by which bridge.  In the bugs mentioned below,
+we incorrectly assign a sound card address (this example is from 1033299):
 
-Hi Boszormenyi,
+  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7f])
+  pci_root PNP0A08:00: host bridge window [mem 0x80000000-0xbfefffff] (ignored)
+  pci_root PNP0A08:00: host bridge window [mem 0xc0000000-0xdfffffff] (ignored)
+  pci_root PNP0A08:00: host bridge window [mem 0xf0000000-0xfebfffff] (ignored)
+  ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-ff])
+  pci_root PNP0A08:01: host bridge window [mem 0xbff00000-0xbfffffff] (ignored)
+  pci 0000:80:01.0: [1106:3288] type 0 class 0x000403
+  pci 0000:80:01.0: reg 10: [mem 0xbfffc000-0xbfffffff 64bit]
+  pci 0000:80:01.0: address space collision: [mem 0xbfffc000-0xbfffffff 64bit] conflicts with PCI Bus #00 [mem 0x80000000-0xfcffffffff]
+  pci 0000:80:01.0: BAR 0: assigned [mem 0xfd00000000-0xfd00003fff 64bit]
+  BUG: unable to handle kernel paging request at ffffc90000378000
+  IP: [<ffffffffa0345f63>] azx_create+0x37c/0x822 [snd_hda_intel]
 
-On Sun, Jun 21, 2015 at 5:34 AM, Boszormenyi Zoltan <zboszor@pr.hu> wrote:
-> Hi,
->
-> please, cc me, I am not subscribed to lkml.
->
->> Hi,
->>
->> [lkml.org still broken --> no accurate mail header info possible...]
->>
->> Just to ask the obvious:
->> I assume using /sys/bus/pci/rescan does not help once it's broken?
->> (since the machine comes up empty at initial-boot scan, too)
->
-> I will try it, too, but I am not sure it would work.
->
-> Currently I can't test it because the last time I completely discharged
-> the battery. I also disconnected it to be able to get the realtek chip back
-> immediately for faster testing. Now, that I have reconnected the battery,
-> I need to wait for it to be charged somewhat to be able to reproduce
-> losing the network chip.
->
->> Also, you could try diffing lspci -vvxxx -s.... output
->> of working vs. "distorting" kernel version - perhaps some register setup
->> has been changed (e.g. due to power management improvements or some such),
->> which may encourage the card
->> to get a problematic/corrupt state.
->
-> I attached a tarball that contains lspci -vvxxx for
-> - all devices / only the network chip
-> - before / after "modprobe r8169"
-> - for all 3 kernel versions tested.
->
-> I figured out that if I type the modprobe and lspci in the same command line,
-> I can get diagnostics out of the machine, after all.
->
-> It's not just the Realtek chip that has changed parameters.
->
-> (Vague idea) I noticed that some devices have changed like this:
->
-> -       Memory behind bridge: 80000000-801fffff
-> -       Prefetchable memory behind bridge: 0000000080200000-00000000803fffff
-> +       Memory behind bridge: ff000000-ff1fffff
-> +       Prefetchable memory behind bridge: 00000000ff200000-00000000ff3fffff
->
-> Can't this cause a problem? E.g. programming the bridge with an address range
-> that the bridge doesn't actually support?
+Turn on pci=use_crs automatically for this system.
 
-This worked in v3.18.16, but not in v4.0.5 or v4.1.0-rc8.  You
-attached a v4.1.0-rc8 dmesg log earlier.  Would you mind collecting a
-v3.18.16 dmesg log, so we can compare them?
+Link: https://bugs.launchpad.net/ubuntu/+source/alsa-driver/+bug/931368
+Link: https://bugs.launchpad.net/ubuntu/+source/alsa-driver/+bug/1033299
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/acpi.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-These (from the v4.1.0-rc8 dmesg) look wrong, but I'll have to look at
-the code to see what might be going on:
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index e469598..d8e2258 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -81,6 +81,17 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
+ 			DMI_MATCH(DMI_BIOS_VENDOR, "Phoenix Technologies, LTD"),
+ 		},
+ 	},
++	/* https://bugs.launchpad.net/ubuntu/+source/alsa-driver/+bug/931368 */
++	/* https://bugs.launchpad.net/ubuntu/+source/alsa-driver/+bug/1033299 */
++	{
++		.callback = set_use_crs,
++		.ident = "Foxconn K8M890-8237A",
++		.matches = {
++			DMI_MATCH(DMI_BOARD_VENDOR, "Foxconn"),
++			DMI_MATCH(DMI_BOARD_NAME, "K8M890-8237A"),
++			DMI_MATCH(DMI_BIOS_VENDOR, "Phoenix Technologies, LTD"),
++		},
++	},
+ 
+ 	/* Now for the blacklist.. */
+ 
 
-  acpi PNP0A08:00: host bridge window expanded to [mem
-0x00000000-0xffffffff window]; [mem 0x00000000-0xffffffff window]
-ignored
-  pci 0000:00:1c.1: can't claim BAR 15 [mem 0xfdf00000-0xfdffffff
-64bit pref]: address conflict with PCI Bus 0000:00 [mem
-0xf0000000-0xfed8ffff window]
-
-Bjorn
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
