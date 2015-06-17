@@ -1,32 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
-Subject: RE: [PATCH v3 09/18] NTB: Add parameters for Intel SNB B2B addresses
-Date: Tue, 9 Jun 2015 16:59:57 +0000
-Message-ID: <40F65EF2B5E2254199711F58E3ACB84D830FEEF3@MX104CL02.corp.emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
- <c3b1dd88bf0eb3c86f38fd11cc1b1735dd593a04.1433838377.git.Allen.Hubbe@emc.com>
- <20150609164217.GE23119@google.com>
-In-Reply-To: <20150609164217.GE23119@google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:53249 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755224AbbFQGGR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Jun 2015 02:06:17 -0400
+Message-ID: <55810E42.4080500@ti.com>
+Date: Wed, 17 Jun 2015 09:05:54 +0300
+From: Tomi Valkeinen <tomi.valkeinen@ti.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+To: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "Michael S. Tsirkin" <mst@redhat.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Borislav Petkov <bp@suse.de>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"cocci@systeme.lip6.fr" <cocci@systeme.lip6.fr>,
+	Andy Lutomirski <luto@amacapital.net>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [Cocci] [PATCH v3 0/4] pci: add and use pci_ioremap_wc_bar()
+References: <1429647634-17169-1-git-send-email-mcgrof@do-not-panic.com> <CAB=NE6VYvd-Au58QRJprCquuvJkY9NYe1x8FmbW7qAhVrVE=QQ@mail.gmail.com> <20150519175310.GH23057@wotan.suse.de> <CAB=NE6UsMMoPhkKof+VN7ZUCd81VxrwP9nqHDUj5Lr3DJLm3bA@mail.gmail.com> <CAB=NE6UdW2d6zO1hYbTnPcoZWt8+Yg5KdWE_bdqAuR_ysey_+A@mail.gmail.com> <557FCD1A.4020105@ti.com> <20150616190504.GH11147@wotan.suse.de>
+In-Reply-To: <20150616190504.GH11147@wotan.suse.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature";
+	boundary="bHKNgDXgGvhid6M81pc8ijc6i5GvW6h73"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IE9uIFR1
-ZSwgSnVuIDA5LCAyMDE1IGF0IDA1OjQ0OjM2QU0gLTA0MDAsIEFsbGVuIEh1YmJlIHdyb3RlOg0K
-PiA+IEFkZCBtb2R1bGUgcGFyYW1ldGVycyBmb3IgdGhlIGFkZHJlc3NlcyB0byBiZSB1c2VkIGlu
-IGIyYiB0b3BvbG9neS4NCj4gDQo+IFdoYXQgZG9lcyAiYjJiIiBtZWFuPw0KDQpJbiB0aGlzIGNh
-c2UgaXQgbWVhbnMgYmFjay10by1iYWNrLCByZWZlcnJpbmcgdG8gdGhlIHRvcG9sb2d5IGNvbm5l
-Y3RpbmcgdGhlIG50YiBkZXZpY2VzLiAgVGhlcmUgYXJlIHR3byBudGIgZGV2aWNlcyBjb25uZWN0
-ZWQgdG8gZWFjaCBvdGhlciwgc2Vjb25kYXJ5IHNpZGUgdG8gc2Vjb25kYXJ5IHNpZGUsIG9yIGJh
-Y2stdG8tYmFjay4NCg0KVGhlIHRlcm1pbm9sb2d5IGlzIG5vdCBlbnRpcmVseSB1bmFtYmlndW91
-cywgdW5mb3J0dW5hdGVseS4gIEluIHRoZSBnbG9zc2FyeSBvZiBhbiBJbnRlbCBkb2MsIGl0IGlz
-IGRlZmluZWQgYXMgYWJvdmUsIGFzIGJhY2stdG8tYmFjay4gIFBMWCBkb2Vzbid0IGV2ZXIgdXNl
-IHRoZSB0ZXJtIGIyYiB0aGF0IEkgY291bGQgZmluZCwgYnV0IGl0IHVzZXMgdGhlIHRlcm0gYmFj
-ay10by1iYWNrIGluc3RlYWQgcmVmZXJyaW5nIHRvIHRoZSB0d28gaW50ZXJuYWwgZW5kcG9pbnRz
-IG9mIG9uZSBudGIgZGV2aWNlLg0K
+--bHKNgDXgGvhid6M81pc8ijc6i5GvW6h73
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
+
+Hi Luis,
+
+On 16/06/15 22:05, Luis R. Rodriguez wrote:
+
+> Can the fbdev parts go through Bjorn's tree? We last discussed if the s=
+eries
+> was important to be fully merged or not by v4.2 and I recentlty provide=
+d a
+> long winded review of the entire series to help maintainers pick and ch=
+oose
+> and decide [1].
+>=20
+> Based on this can the fbdev patches from both of these series go throug=
+h Bjorn's tree?
+
+Yes, they can go through Bjorn's tree if there are no non-trivial
+conflicts with the main fbdev stuff. linux-next should contain all the
+fbdev patches going for 4.2.
+
+ Tomi
+
+
+--bHKNgDXgGvhid6M81pc8ijc6i5GvW6h73
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJVgQ5CAAoJEPo9qoy8lh71Gs8P/0GkgK8a+Dj9rYw4YtmRKYRo
+dyM8OCUPY3JvFLf3h/TZUe9jJpsHkAq2dzSuBYKGPPjNvqi26t/oCfb8crLqUpTO
+QQ1g8lmqD7VsoqicVuwLET42J2O9Q0v9LU9Mk8SHuU+2MS2qsKoVRqyrcA0OyJ2f
+F4XnpnRWfm25FwvxqhBlQmf3Qk3/0la6f+Nd//l5UyKw8fcPPajDp47vnrTTSJu9
+n0y+nj8X0xw/onG/K3ywRmAmnspbEIGW/Z2kdxBPKwh+drDbCia+Zeyuc7VAJQwq
+Ym9qNr13HcSpUn5hcv8mnrMqomEA51uvPyDv+cma8f38vmf5/eZ9lT93RfiRSuWW
+q16JrbBsJer/dmomw+5U0V0iyFMgjZBq4AAuRJfgwIgzs1g156LwnxS3iQpNgwYR
+R+38c2dgV+ssJ/TKMTPSwTbFUoqQWYu+kkrpmXyb6Fl6BArr1Mb1x6+0Sydmgjy5
+nAF++5jnEgbiRSJ1xMsohvdraTB4q90XYRyYoJ9pXU3RYZY75IX0vld+8MwvhfgS
+AS2DfYC503mRko/T0ffGRwbqG5lINRhM22euCfCwZe8kOB2IOPKMp6RcrfjXbd05
++/9hTj+3pScHwXmCjLgkGq3Xc/c6IOu5qTr6ssSP41Ij6Vos9AFQPfkV8I32ePV1
+GbXnKC2IETXlEEi1s5yb
+=HAX8
+-----END PGP SIGNATURE-----
+
+--bHKNgDXgGvhid6M81pc8ijc6i5GvW6h73--
