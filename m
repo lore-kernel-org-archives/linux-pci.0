@@ -1,92 +1,39 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Jakub Sitnicki <jsitnicki@gmail.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Patch v5 1/6] ACPI/PCI: Enhance ACPI core to support sparse IO space
-Date: Tue,  9 Jun 2015 00:20:43 +0800
-Message-Id: <1433780448-18636-2-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:42690 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758076AbbFQTFS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Jun 2015 15:05:18 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH 0/2] x86: intel-mid-pci: fix to get eMMC detected
+Date: Wed, 17 Jun 2015 22:03:48 +0300
+Message-Id: <1434567830-237840-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhance ACPI resource parsing interfaces to support sparse IO space,
-which will be used to share common code between x86 and IA64 later.
+On Intel Edison we have a nice implementation of x86 platform without legacy
+PIC and with specific PCI. There are devices which are not using interrupt by
+some reasons, but have them as IRQ0 in the PCI configuration. Suprisingly the
+first eMMC host controller is the actual user for IRQ0. Since we have serial
+driver implemented that enumerates unused serial IP (one of four) which has
+IRQ0 assigned we, in case it gets it first by pci_enable_device(), lost a
+possibility to probe eMMC. 
 
-Tested-by: Tony Luck <tony.luck@intel.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- drivers/acpi/resource.c |    9 ++++++---
- include/linux/ioport.h  |    1 +
- 2 files changed, 7 insertions(+), 3 deletions(-)
+So, this series provides a workaround (patch 2) and small fix of error code
+(patch 1).
 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 8244f013f210..fdcc73dad2c1 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
- EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
- 
- static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
--				      u8 io_decode)
-+				      u8 io_decode, u8 translation_type)
- {
- 	res->flags = IORESOURCE_IO;
- 
-@@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
-+	if (translation_type == ACPI_SPARSE_TRANSLATION)
-+		res->flags |= IORESOURCE_IO_SPARSE;
- }
- 
- static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
-@@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
- {
- 	res->start = start;
- 	res->end = start + len - 1;
--	acpi_dev_ioresource_flags(res, len, io_decode);
-+	acpi_dev_ioresource_flags(res, len, io_decode, 0);
- }
- 
- /**
-@@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
- 		acpi_dev_memresource_flags(res, len, wp);
- 		break;
- 	case ACPI_IO_RANGE:
--		acpi_dev_ioresource_flags(res, len, iodec);
-+		acpi_dev_ioresource_flags(res, len, iodec,
-+					  addr->info.io.translation_type);
- 		break;
- 	case ACPI_BUS_NUMBER_RANGE:
- 		res->flags = IORESOURCE_BUS;
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 388e3ae94f7a..24bea087e7af 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -94,6 +94,7 @@ struct resource {
- /* PnP I/O specific bits (IORESOURCE_BITS) */
- #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
- #define IORESOURCE_IO_FIXED		(1<<1)
-+#define IORESOURCE_IO_SPARSE		(1<<2)
- 
- /* PCI ROM control bits (IORESOURCE_BITS) */
- #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
+I wonder if this can go to v4.2. What do you think?
+
+Andy Shevchenko (2):
+  x86: intel_mid_pci: propagate actual return code
+  x86: intel_mid_pci: work around for IRQ0 assignment
+
+ arch/x86/pci/intel_mid_pci.c | 27 ++++++++++++++++++++++++---
+ 1 file changed, 24 insertions(+), 3 deletions(-)
+
 -- 
-1.7.10.4
+2.1.4
 
