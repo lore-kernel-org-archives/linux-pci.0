@@ -1,91 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:17743 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753288AbbFOPtf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2015 11:49:35 -0400
-From: William Davis <wdavis@nvidia.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"David S. Miller" <davem@davemloft.net>
-CC: Terence Ripperda <TRipperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	"Jonathan Corbet" <corbet@lwn.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v3 0/7] IOMMU/DMA map_resource support for peer-to-peer
-Date: Mon, 15 Jun 2015 15:49:32 +0000
-Message-ID: <236342dcc57b448b98c3a2b61a8ab23a@DRHQMAIL106.nvidia.com>
-References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150618180103.GA23809@roeck-us.net>
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+ <20150527210447.GY32152@google.com> <20150528022332.GA23724@roeck-us.net>
+ <20150528124112.GJ10210@google.com> <20150618180103.GA23809@roeck-us.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 18 Jun 2015 14:51:52 -0500
+Message-ID: <CAErSpo5f4cf7cYZ1WxUQd7soEvNWCHowdNnHTbfGmKh16Vdsrg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Will Deacon <will.deacon@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Jun 18, 2015 at 1:01 PM, Guenter Roeck <linux@roeck-us.net> wrote:
+> On Thu, May 28, 2015 at 07:41:12AM -0500, Bjorn Helgaas wrote:
+>>
+>> > > I'd like res->flags to reflect the capabilities of the hardware, not
+>> > > whether the window is currently enabled.
+>> > >
+>> > Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
+>> > purpose, or could that cause conflicts elsewhere ?
+>>
+>> Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
+>> below a host bridge that doesn't support I/O space.
+>>
+> I integrated Lorenzo's patch and tried to get this working.
+>
+> Problem is that the use of a resource is widely checked with "!res->flags"
+> throughout the code. That would have to be changed to something like
+> "(!res->flags || (res->flags & IORESOURCE_DISABLED))" whereever it is used.
+>
+> I tried going with "!res->flags" instead, but have not been able to get it
+> to work realiably; it is just very difficult to distinguish if "!res->flags"
+> means that the resource has not yet been assigned or if it means that it is not
+> supported.
+>
+> The correct approach, in my opinion, would be to go with IORESOURCE_DISABLED
+> and make the necessary changes whereever needed. Effectively this means to
+> replace the "!res->flags" check with something like pci_res_used() [ pick
+> your preferred name ] and define it as
+>
+> #define pci_res_used(res) ((res)->flags && !((res)->flags & IORESOURCE_DISABLED))
 
-> From: Will Davis <wdavis@nvidia.com>
-> 
-> Hi,
-> 
-> This is the third version of a patchset to add the DMA APIs necessary to
-> map and unmap a struct resource to and from a PCI device's IOVA domain.
-> This allows a PCI device to access a peer device's BAR resource when a
-> hardware IOMMU is enabled.
-> 
+I think that makes sense.  Maybe "res_valid()"?  It's not really
+PCI-specific, and "used" is a little ambiguous.  So is "valid", I
+admit.
 
-Bjorn, Dave, do you have any remaining concerns with this patch series?
-
-> Thanks,
-> Will
-> 
-> Changelog:
-> 
-> v3:
-> - changed dma_map_resource() to BUG() if the map_resource DMA op is not
->   provided, instead of returning 0
-> - updated documentation to remove requirement to check for 0 return value
->   as an error
-> - remove const keyword from struct dma_map_ops in new DMA APIs for
->   consistency with other APIs
-> 
-> v2: http://www.spinics.net/lists/linux-pci/msg41192.html
-> - added documentation for the new DMA APIs
-> - fixed physical-to-bus address conversion in the nommu implementation
-> 
-> v1: http://www.spinics.net/lists/linux-pci/msg40747.html
-> 
-> Will Davis (7):
->   dma-debug: add checking for map/unmap_resource
->   DMA-API: Introduce dma_(un)map_resource
->   dma-mapping: pci: add pci_(un)map_resource
->   DMA-API: Add dma_(un)map_resource() documentation
->   iommu/amd: Implement (un)map_resource
->   iommu/vt-d: implement (un)map_resource
->   x86: add pci-nommu implementation of map_resource
-> 
->  Documentation/DMA-API-HOWTO.txt          | 36 ++++++++++++++-
->  Documentation/DMA-API.txt                | 31 ++++++++++---
->  arch/x86/kernel/pci-nommu.c              | 32 ++++++++++++++
->  drivers/iommu/amd_iommu.c                | 76 ++++++++++++++++++++++++++--
-> ----
->  drivers/iommu/intel-iommu.c              | 18 ++++++++
->  include/asm-generic/dma-mapping-broken.h |  9 ++++  include/asm-
-> generic/dma-mapping-common.h | 34 ++++++++++++++
->  include/asm-generic/pci-dma-compat.h     | 14 ++++++
->  include/linux/dma-debug.h                | 20 +++++++++
->  include/linux/dma-mapping.h              |  7 +++
->  lib/dma-debug.c                          | 47 ++++++++++++++++++++
->  11 files changed, 304 insertions(+), 20 deletions(-)
-> 
-> --
-> 2.4.0
-
---
-nvpublic
-
+Bjorn
