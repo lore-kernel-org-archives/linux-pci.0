@@ -1,87 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36585 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbbFSWTa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:19:30 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: arnd@arndb.de
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xen-devel@lists.xensource.com, linux-fbdev@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>
-Subject: [PATCH v7 4/9] video: fbdev: gxt4500: use pci_ioremap_wc_bar() for framebuffer
-Date: Fri, 19 Jun 2015 15:08:27 -0700
-Message-Id: <1434751712-24333-5-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from e28smtp06.in.ibm.com ([122.248.162.6]:42703 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369AbbFRIHM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:07:12 -0400
+Received: from /spool/local
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 18 Jun 2015 13:37:09 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 692EC125804F
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:39:42 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I86rq39306622
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:53 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I86qD0009930
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:52 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V8 03/10] powerpc/pci: Remove VFs prior to PF
+Date: Thu, 18 Jun 2015 16:06:38 +0800
+Message-Id: <1434614805-19002-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove") indicates,
+VFs, which might be hooked to same PCI bus as their PF should be removed
+before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
+cause kernel crash.
 
-The driver doesn't use mtrr_add() or arch_phys_wc_add() but
-since we know the framebuffer is isolated already on an
-ioremap() we can take advantage of write combining for
-performance where possible.
+The patch applies the above pattern to PowerPC PCI hotplug path.
 
-In this case there are a few motivations for this:
-
-a) Take advantage of PAT when available
-
-b) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
-
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Rob Clark <robdclark@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+[gwshan: changelog]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/video/fbdev/gxt4500.c | 2 +-
+ arch/powerpc/kernel/pci-hotplug.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/video/fbdev/gxt4500.c b/drivers/video/fbdev/gxt4500.c
-index 135d78a..f19133a 100644
---- a/drivers/video/fbdev/gxt4500.c
-+++ b/drivers/video/fbdev/gxt4500.c
-@@ -662,7 +662,7 @@ static int gxt4500_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7ed85a6..98f84ed 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -50,7 +50,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
  
- 	info->fix.smem_start = fb_phys;
- 	info->fix.smem_len = pci_resource_len(pdev, 1);
--	info->screen_base = pci_ioremap_bar(pdev, 1);
-+	info->screen_base = pci_ioremap_wc_bar(pdev, 1);
- 	if (!info->screen_base) {
- 		dev_err(&pdev->dev, "gxt4500: cannot map framebuffer\n");
- 		goto err_unmap_regs;
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		pr_debug("   Removing %s...\n", pci_name(dev));
+ 		pci_stop_and_remove_bus_device(dev);
+ 	}
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.7.9.5
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
