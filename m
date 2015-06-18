@@ -1,107 +1,161 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:33255 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932239AbbFPIv1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jun 2015 04:51:27 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Tue, 16 Jun 2015 18:51:25 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id A77F43578055
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2015 18:51:22 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5G8pE5L31129778
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2015 18:51:23 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5G8onKw011841
-	for <linux-pci@vger.kernel.org>; Tue, 16 Jun 2015 18:50:50 +1000
-Date: Tue, 16 Jun 2015 16:50:24 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
-Message-ID: <20150616085024.GA1230@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150601234645.GF3631@google.com>
- <20150603033142.GA22584@richard>
- <20150603051023.GA26652@gwshan>
- <20150603154638.GL3631@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150603154638.GL3631@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150618175553.GF7710@google.com>
+References: <CAErSpo5Oc_8ca4h7xYSkGPFE1vxWg1sy1rJRc0B=u9LrdOLY7g@mail.gmail.com>
+ <017c1ec8e3f43f86a947eaddb30c9389e0b1053b.1434154377.git.dhdang@apm.com> <20150618175553.GF7710@google.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Thu, 18 Jun 2015 11:11:39 -0700
+Message-ID: <CADaLNDmPGo-xkrtx4YsyMn3+ba1hBPQ1i3fr4CmoKb_0Yk2=eg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/1] PCI: X-Gene: Disable Configuration Request Retry
+ Status for X-Gene v1 PCIe
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	linux-kernel@vger.kernel.org,
+	Ian Campbell <ian.campbell@citrix.com>,
+	Marcin Juszkiewicz <mjuszkiewicz@redhat.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 03, 2015 at 10:46:38AM -0500, Bjorn Helgaas wrote:
->On Wed, Jun 03, 2015 at 03:10:23PM +1000, Gavin Shan wrote:
->> It's correct. "The following operations" refers to eeh_add_device_late()
->> and eeh_sysfs_add_device(). The former one requires the resources for
->> one particular PCI device (VF here) are finalized (assigned). eeh_sysfs_add_device()
->> will fail if the sysfs entry for the PCI device isn't populated yet.
+On Thu, Jun 18, 2015 at 10:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jun 12, 2015 at 05:35:57PM -0700, Duc Dang wrote:
+>> X-Gene v1 PCIe controller has a bug in Configuration Request Retry
+>> Status (CRS) logic:
+>>   When CPU tries to read Vendor ID and Device ID of not-existed
+>>   remote device, the controller returns 0xFFFF0001 instead of
+>>   0xFFFFFFFF; this will add significant delay in boot time as
+>>   pci_bus_read_dev_vendor_id will wait for 60 seconds before
+>>   giving up.
+>>
+>> So for X-Gene v1 PCIe controllers, disable CRS capability
+>> advertisement by clearing CRS Software Visibility bit before
+>> returning the Root Capability value to the callers. This is done
+>> by implementing X-Gene PCIe specific xgene_pcie_config_read32 for
+>> CFG read accesses to replace the generic default pci_generic_config_read32
+>> function.
+>>
+>> v2 changes:
+>>         Use pci_generic_config_read32 to implement xgene_pcie_config_read32
+>>
+>> Signed-off-by: Duc Dang <dhdang@apm.com>
+>> Tested-by: Ian Campbell <ian.campbell@citrix.com>
+>> Tested-by: Marcin Juszkiewicz <mjuszkiewicz@redhat.com>
 >
->eeh_add_device_late() contains several things that read config space:
->eeh_save_bars() caches the entire config header, and
->eeh_addr_cache_insert_dev() looks at the device resources (which are
->determined by BARs in config space).  I think this is an error-prone
->approach.  I think it would be simpler and safer for you to capture what
->you need in your PCI config accessors.
->
->eeh_add_device_late() also contains code to deal with an EEH cache that
->"might not be removed correctly because of unbalanced kref to the device
->during unplug time."  That's unrelated to this patch series, but it sounds
->... like a hacky workaround for some bug in the unplug path.
->
->> >>> +	eeh_add_device_early(pdn);
->> >>> +	eeh_add_device_late(pdev);
->> >>> +	eeh_sysfs_add_device(pdev);
->> >>> +}
->> >>> +DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, pnv_eeh_vf_final_fixup);
->> >>
->> >>Ugh.  This is powerpc code, but I don't like using fixups as a hook like
->> >>this.  There is a pcibios_add_device() -- could this be done there?
->> >>
->> >
->> >I don't like it neither :-) But looks we can't put it in the
->> >pcibios_add_device().
->> >
->> >>If not, what happens after pcibios_add_device() that is required for this
->> >>code?  Maybe we need a pcibios_bus_add_device() hook?
->> >
->> >The pnv_eeh_vf_final_fixup() will try to create sysfs for VFs. This requires
->> >the VF sysfs(kobj) is initialized properly. If we put these into
->> >pcibios_add_device(), the eeh_sysfs_add_device() would fail.
->> >
->> >Below is the call flow for your reference:
->> >
->> >pci_device_add()
->> >    pcibios_add_device()
->> >    device_add()                <--- kobj initialized here
->> >
->> 
->> We can put it into pcibios_bus_add_device(), but we don't it currently. If
->> Bjorn agree to add pcibios_bus_add_device(), I'm fine to move the block code
->> there.
->
->I think I'm OK with adding a pcibios_bus_add_device().  I think that would
->be better than using the fixup mechanism for this.
->
+> I'd like to merge this (as amended below) for v4.2.  But I'm looking for an
+> ack from Tanmay, and I'm still waiting for the second patch to remove the
+> link_up test.
 
-Hi, Bjorn, Gavin,
+I will send you the second patch to remove the link_up test shortly.
 
-Been working on some bug recently, just got a chance to this one.
+>
+> Bjorn
+>
+>
+> commit 49ac8c566d7a37f9f295e1fd4fbdd96517f22d55
+> Author: Duc Dang <dhdang@apm.com>
+> Date:   Fri Jun 12 17:35:57 2015 -0700
+>
+>     PCI: xgene: Disable Configuration Request Retry Status for v1 silicon
+>
+>     When a CPU reads the Vendor and Device ID of a non-existent device, the
+>     controller should fabricate return data of 0xFFFFFFFF.  Configuration
+>     Request Retry Status (CRS) is not applicable in this case because the
+>     device doesn't exist at all.
+>
+>     The X-Gene v1 PCIe controller has a bug in the CRS logic such that when CRS
+>     is enabled, it fabricates return data of 0xFFFF0001 for this case, which
+>     means "the device exists but is not ready."  That causes the PCI core to
+>     retry the read until it times out after 60 seconds.
+>
+>     Disable CRS capability advertisement by clearing the CRS Software
+>     Visibility bit in the Root Capabilities Register.
+>
+>     [bhelgaas: changelog and comment]
+>     Tested-by: Ian Campbell <ian.campbell@citrix.com>
+>     Tested-by: Marcin Juszkiewicz <mjuszkiewicz@redhat.com>
+>     Signed-off-by: Duc Dang <dhdang@apm.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index 3e5a636..70af714 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -59,6 +59,12 @@
+>  #define SZ_1T                          (SZ_1G*1024ULL)
+>  #define PIPE_PHY_RATE_RD(src)          ((0xc000 & (u32)(src)) >> 0xe)
+>
+> +#define ROOT_CAP_AND_CTRL              0x5C
+> +
+> +/* PCIe IP version */
+> +#define XGENE_PCIE_IP_VER_UNKN         0
+> +#define XGENE_PCIE_IP_VER_1            1
+> +
+>  struct xgene_pcie_port {
+>         struct device_node      *node;
+>         struct device           *dev;
+> @@ -67,6 +73,7 @@ struct xgene_pcie_port {
+>         void __iomem            *cfg_base;
+>         unsigned long           cfg_addr;
+>         bool                    link_up;
+> +       u32                     version;
+>  };
+>
+>  static inline u32 pcie_bar_low_val(u32 addr, u32 flags)
+> @@ -140,9 +147,37 @@ static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+>         return xgene_pcie_get_cfg_base(bus) + offset;
+>  }
+>
+> +static int xgene_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+> +                                   int where, int size, u32 *val)
+> +{
+> +       struct xgene_pcie_port *port = bus->sysdata;
+> +
+> +       if (pci_generic_config_read32(bus, devfn, where & ~0x3, 4, val) !=
+> +           PCIBIOS_SUCCESSFUL)
+> +               return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +       /*
+> +        * The v1 controller has a bug in its Configuration Request
+> +        * Retry Status (CRS) logic: when CRS is enabled and we read the
+> +        * Vendor and Device ID of a non-existent device, the controller
+> +        * fabricates return data of 0xFFFF0001 ("device exists but is not
+> +        * ready") instead of 0xFFFFFFFF ("device does not exist").  This
+> +        * causes the PCI core to retry the read until it times out.
+> +        * Avoid this by not claiming to support CRS.
+> +        */
+> +       if (pci_is_root_bus(bus) && (port->version == XGENE_PCIE_IP_VER_1) &&
+> +           ((where & ~0x3) == ROOT_CAP_AND_CTRL))
+> +               *val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
+> +
+> +       if (size <= 2)
+> +               *val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
+> +
+> +       return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+>  static struct pci_ops xgene_pcie_ops = {
+>         .map_bus = xgene_pcie_map_bus,
+> -       .read = pci_generic_config_read32,
+> +       .read = xgene_pcie_config_read32,
+>         .write = pci_generic_config_write32,
+>  };
+>
+> @@ -500,6 +535,10 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+>         port->node = of_node_get(pdev->dev.of_node);
+>         port->dev = &pdev->dev;
+>
+> +       port->version = XGENE_PCIE_IP_VER_UNKN;
+> +       if (of_device_is_compatible(port->node, "apm,xgene-pcie"))
+> +               port->version = XGENE_PCIE_IP_VER_1;
+> +
+>         ret = xgene_pcie_map_reg(port, pdev);
+>         if (ret)
+>                 return ret;
 
-Would you mind giving me some hint, where you suggest to put the
-pcibios_bus_add_device()?
 
->Bjorn
 
 -- 
-Richard Yang
-Help you, Help me
-
+Regards,
+Duc Dang.
