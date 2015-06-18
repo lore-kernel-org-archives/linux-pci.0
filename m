@@ -1,53 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <556F1A22.7050400@roeck-us.net>
-Date: Wed, 03 Jun 2015 08:15:46 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net> <20150527210447.GY32152@google.com> <20150602145510.GE23650@red-moon> <556DE1B9.6020100@roeck-us.net> <CAErSpo4WyQqc+En6hAB9B63sszKc8B93FiycwaDG42tecSB9Mg@mail.gmail.com>
-In-Reply-To: <CAErSpo4WyQqc+En6hAB9B63sszKc8B93FiycwaDG42tecSB9Mg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:38313 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752424AbbFRIHs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:07:48 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 18 Jun 2015 18:07:46 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id F01022BB004D
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:07:42 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I87WbH51642466
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:07:40 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I879OJ026958
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:07:10 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V8 04/10] powerpc/eeh: Cache only BARs, not windows or IOV BARs
+Date: Thu, 18 Jun 2015 16:06:39 +0800
+Message-Id: <1434614805-19002-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+EEH address cache, which helps to locate the PCI device according to
+the given (physical) MMIO address, didn't cover PCI bridges. Also, it
+shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
+should be returned.
 
-On 06/02/2015 12:58 PM, Bjorn Helgaas wrote:
-> On Tue, Jun 2, 2015 at 12:02 PM, Guenter Roeck <linux@roeck-us.net> wrote:
-[ ... ]
->>>>
->>>> I wonder if we can do the same with pci_read_bridge_mmio_pref(), and
->>>> somehow get rid of pci_bridge_check_ranges() altogether?
->>>>
->>>> I think I looked at doing that a while back, and it seems like there was
->>>> some wrinkle, but I don't remember what it was.
->>
->> After looking into this some more, I think the wrinkle may be that
->> pci_read_bridge_bases() and thus pci_read_bridge_io() isn't called
->> on probe-only systems (if PCI_PROBE_ONLY is set). A secondary
->> problem is that pci_read_bridge_io() does not enable a resource
->> if it is explicitly disabled (base > limit), but the subsequent call
->> to pci_bridge_check_ranges() unconditionally enables it.
->
-> I haven't researched this, but it sounds wrong that we skip
-> pci_read_bridge_bases() if PCI_PROBE_ONLY is set.  I think
-> PCI_PROBE_ONLY should mean "look, but don't touch."  So I think we
-> should always look at the bridge windows, and my advice is to see if
-> it looks reasonable to change this aspect of PCI_PROBE_ONLY.
->
+Also, by doing so, it removes the type check in
+eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
 
-Looks like Lorenzo's patch is going to take care of that problem.
+The patch restricts the address cache to cover first 7 BARs for the
+above purposes.
 
-How about the second problem mentioned above ? One option might be to
-keep pci_bridge_check_ranges() but only use it to _enable_ the various
-ranges (and maybe rename it accordingly) ?
+[gwshan: changelog]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/eeh_cache.c |    6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Thanks,
-Guenter
+diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
+index eeabeab..7b30487 100644
+--- a/arch/powerpc/kernel/eeh_cache.c
++++ b/arch/powerpc/kernel/eeh_cache.c
+@@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
+ 	}
+ 
+ 	/* Walk resources on this device, poke them into the tree */
+-	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
++	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+ 		unsigned long start = pci_resource_start(dev,i);
+ 		unsigned long end = pci_resource_end(dev,i);
+ 		unsigned int flags = pci_resource_flags(dev,i);
+@@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
+ {
+ 	unsigned long flags;
+ 
+-	/* Ignore PCI bridges */
+-	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
+-		return;
+-
+ 	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
+ 	__eeh_addr_cache_insert_dev(dev);
+ 	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
+-- 
+1.7.9.5
 
