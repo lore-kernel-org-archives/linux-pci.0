@@ -1,109 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vn0-f43.google.com ([209.85.216.43]:34352 "EHLO
-	mail-vn0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbbFSW64 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:58:56 -0400
-Received: by vnbf62 with SMTP id f62so805611vnb.1
-        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 15:58:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150619224230.14626.82853.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150619224230.14626.82853.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:38276 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755900AbbFRQMr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 12:12:47 -0400
+Received: by igblz2 with SMTP id lz2so63165546igb.1
+        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 09:12:46 -0700 (PDT)
+Subject: [PATCH 2/4] PCI: pciehp: Make queue_interrupt_event() void
+To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 19 Jun 2015 17:58:35 -0500
-Message-ID: <CAErSpo7+7srrTFvMQizTBkqQGE93sh1dugoB7W3keOmVtA4wDQ@mail.gmail.com>
-Subject: Re: [PATCH 2/6] PCI: Fix generic NCR 53c810 class code quirk
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Matthew Wilcox <willy@linux.intel.com>
-Cc: "x86@kernel.org" <x86@kernel.org>, Felipe Balbi <balbi@ti.com>,
-	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
-	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
-	Jason Chang <jason.chang@amd.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: Rajat Jain <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org
+Date: Thu, 18 Jun 2015 11:12:45 -0500
+Message-ID: <20150618161245.32739.87037.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[-cc Dexuan Cui <dexuan.cui@intel.com>, matthew@wil.cx (bounced)]
-[+to willy@linux.intel.com]
+Nobody looks at the return value from queue_interrupt_event(), so errors
+were silently ignored.  Convert it to a "void" function and note the error
+in the dmesg log.
 
-Might want to clean up MAINTAINERS, Matthew :)
+No functional change except the new message.
 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c |   13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-On Fri, Jun 19, 2015 at 5:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> In the generic quirk fixup_rev1_53c810(), added by a5312e28c195 ("[PATCH]
-> PCI: NCR 53c810 quirk"), we assigned "class = PCI_CLASS_STORAGE_SCSI".  But
-> PCI_CLASS_STORAGE_SCSI is only the two-byte base class/sub-class and needs
-> to be shifted to make space for the low-order interface byte.
->
-> Furthermore, we had a similar quirk, pci_fixup_ncr53c810(), for arch/x86,
-> which assigned class correctly.  The arch code is linked before the PCI
-> core, so arch quirks run before generic quirks.  Therefore, on x86, the x86
-> arch quirk ran first, and the generic quirk did nothing because it saw that
-> dev->class was already set.  But on other arches, the generic quirk set the
-> wrong class code.
->
-> Fix the generic quirk to set the correct class code and remove the
-> now-unnecessary x86-specific quirk.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Matthew Wilcox <matthew@wil.cx>
-> ---
->  arch/x86/pci/fixup.c |   13 -------------
->  drivers/pci/quirks.c |   14 +++++++++-----
->  2 files changed, 9 insertions(+), 18 deletions(-)
->
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index 9a2b710..e585655 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -62,19 +62,6 @@ static void pci_fixup_umc_ide(struct pci_dev *d)
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_UMC, PCI_DEVICE_ID_UMC_UM8886BF, pci_fixup_umc_ide);
->
-> -static void pci_fixup_ncr53c810(struct pci_dev *d)
-> -{
-> -       /*
-> -        * NCR 53C810 returns class code 0 (at least on some systems).
-> -        * Fix class to be PCI_CLASS_STORAGE_SCSI
-> -        */
-> -       if (!d->class) {
-> -               dev_warn(&d->dev, "Fixing NCR 53C810 class code\n");
-> -               d->class = PCI_CLASS_STORAGE_SCSI << 8;
-> -       }
-> -}
-> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NCR, PCI_DEVICE_ID_NCR_53C810, pci_fixup_ncr53c810);
-> -
->  static void pci_fixup_latency(struct pci_dev *d)
->  {
->         /*
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 2dab425..64177a6 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -1997,14 +1997,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1508, quirk_disable_aspm_l0s);
->
->  static void fixup_rev1_53c810(struct pci_dev *dev)
->  {
-> -       /* rev 1 ncr53c810 chips don't set the class at all which means
-> +       u32 class = dev->class;
-> +
-> +       /*
-> +        * rev 1 ncr53c810 chips don't set the class at all which means
->          * they don't get their resources remapped. Fix that here.
->          */
-> +       if (class)
-> +               return;
->
-> -       if (dev->class == PCI_CLASS_NOT_DEFINED) {
-> -               dev_info(&dev->dev, "NCR 53c810 rev 1 detected; setting PCI class\n");
-> -               dev->class = PCI_CLASS_STORAGE_SCSI;
-> -       }
-> +       dev->class = PCI_CLASS_STORAGE_SCSI << 8;
-> +       dev_info(&dev->dev, "NCR 53c810 rev 1 PCI class overridden (%#08x -> %#08x)\n",
-> +                class, dev->class);
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NCR, PCI_DEVICE_ID_NCR_53C810, fixup_rev1_53c810);
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 4bdaf62..1086041 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -37,21 +37,20 @@
+ 
+ static void interrupt_event_handler(struct work_struct *work);
+ 
+-static int queue_interrupt_event(struct slot *p_slot, u32 event_type)
++static void queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ {
+ 	struct event_info *info;
+ 
+ 	info = kmalloc(sizeof(*info), GFP_ATOMIC);
+-	if (!info)
+-		return -ENOMEM;
++	if (!info) {
++		ctrl_err(p_slot->ctrl, "dropped event %d (ENOMEM)\n", event_type);
++		return;
++	}
+ 
++	INIT_WORK(&info->work, interrupt_event_handler);
+ 	info->event_type = event_type;
+ 	info->p_slot = p_slot;
+-	INIT_WORK(&info->work, interrupt_event_handler);
+-
+ 	queue_work(p_slot->wq, &info->work);
+-
+-	return 0;
+ }
+ 
+ u8 pciehp_handle_attention_button(struct slot *p_slot)
+
