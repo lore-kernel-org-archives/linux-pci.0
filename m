@@ -1,54 +1,33 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: [Patch v2 0/4] Introduce a mechanism to allocate PCI IRQ on demand
-Date: Tue,  2 Jun 2015 10:49:15 +0800
-Message-Id: <1433213360-3700-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:35258 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900AbbFRS2E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 14:28:04 -0400
+MIME-Version: 1.0
+In-Reply-To: <20150618161258.32739.29646.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<20150618161258.32739.29646.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Thu, 18 Jun 2015 11:28:03 -0700
+Message-ID: <CAE9FiQXRC8edE73tRMF231fcodzEhQKkzNor7cyCMjPrC_xtog@mail.gmail.com>
+Subject: Re: [PATCH 4/4] PCI: pciehp: Inline the "handle event" functions into
+ the ISR
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatja@google.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set introduces a mechanism to allocate PCI IRQ on demand and
-free it when not used anymore by hooking pci_device_probe() and
-pci_device_remove().
+On Thu, Jun 18, 2015 at 9:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> The pciehp_handle_*() functions (pciehp_handle_attention_button(), etc.)
+> only contain a line or two of useful code, so it's clumsy to put
+> them in separate functions.  All they so is add an event to a work queue,
+> and it's clearer to see that directly in the ISR.
 
-It will be used to track IOAPIC pin usage on x86 so we could support
-IOAPIC hot-removal.
+Yes. That make the code more readable.
 
-The patch set passes Fengguang's 0day test suite.
+For all 4 patches:
 
-V1->V2:
-1) Refine pci_device_probe() to optimize for mainline code as suggested
-   by Bjorn
-2) Reorder patch set to put optional patch as the last (Patch 4)
-
-Thanks!
-Gerry
-
-
-Jiang Liu (4):
-  PCI: Add hooks to allocate/free IRQ resources when binding/unbinding
-    driver
-  PCI, x86: Allocate PCI IRQ on demand and free it when not used
-    anymore
-  PCI: Introduce helpers to manage pci_dev->irq and
-    pci_dev->irq_managed
-  PCI, MSI: Optionally free legacy PCI IRQ when enabling MSI/MSI-X
-
- arch/x86/include/asm/pci_x86.h |    2 --
- arch/x86/pci/common.c          |   20 +++++++++-----------
- arch/x86/pci/intel_mid_pci.c   |    9 ++++++---
- arch/x86/pci/irq.c             |   23 ++++-------------------
- drivers/acpi/pci_irq.c         |   17 ++++-------------
- drivers/pci/msi.c              |    6 +++++-
- drivers/pci/pci-driver.c       |   26 ++++++++++++++++++++------
- include/linux/pci.h            |   19 +++++++++++++++++++
- 8 files changed, 67 insertions(+), 55 deletions(-)
-
--- 
-1.7.10.4
-
+Acked-by: Yinghai Lu <yinghai@kernel.org>
