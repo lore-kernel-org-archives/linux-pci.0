@@ -1,144 +1,140 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v3 04/36] genirq: Introduce helper function irq_data_get_node()
-Date: Mon,  1 Jun 2015 16:05:13 +0800
-Message-Id: <1433145945-789-5-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:53975 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752241AbbFRIGx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:06:53 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 18 Jun 2015 13:36:50 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 26F54E004C
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:40:19 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I86moJ8978820
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:48 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I78vXY020219
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 12:38:57 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V8 00/10] VF EEH on Power8
+Date: Thu, 18 Jun 2015 16:06:35 +0800
+Message-Id: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce helper function irq_data_get_node() and friends to hide
-struct irq_data implementation details.
+This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+VF edev and VF PE and handle them properly.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- include/linux/irq.h    |    5 +++++
- kernel/irq/internals.h |    5 +++++
- kernel/irq/irqdesc.c   |    8 +-------
- kernel/irq/irqdomain.c |    3 ++-
- kernel/irq/manage.c    |    2 +-
- kernel/irq/proc.c      |    2 +-
- 6 files changed, 15 insertions(+), 10 deletions(-)
+Different from the Bus PE, VF PE just contain one VF. This introduces the
+difference of EEH error handling on a VF PE. Generally, it has several
+differences.
 
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index 3c7fbe44edae..b3b82a5344c8 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -640,6 +640,11 @@ static inline u32 irq_get_trigger_type(unsigned int irq)
- 	return d ? irqd_get_trigger_type(d) : 0;
- }
- 
-+static inline int irq_data_get_node(struct irq_data *d)
-+{
-+	return d->node;
-+}
-+
- unsigned int arch_dynirq_lower_bound(unsigned int from);
- 
- int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
-diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index a1ed80d11800..4834ee828c41 100644
---- a/kernel/irq/internals.h
-+++ b/kernel/irq/internals.h
-@@ -197,6 +197,11 @@ static inline void kstat_incr_irqs_this_cpu(unsigned int irq, struct irq_desc *d
- 	__this_cpu_inc(kstat.irqs_sum);
- }
- 
-+static inline int irq_desc_get_node(struct irq_desc *desc)
-+{
-+	return irq_data_get_node(&desc->irq_data);
-+}
-+
- #ifdef CONFIG_PM_SLEEP
- bool irq_pm_check_wakeup(struct irq_desc *desc);
- void irq_pm_install_action(struct irq_desc *desc, struct irqaction *action);
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index eac1aac906ea..b18d3f1d73d9 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -59,16 +59,10 @@ static void desc_smp_init(struct irq_desc *desc, int node)
- #endif
- }
- 
--static inline int desc_node(struct irq_desc *desc)
--{
--	return desc->irq_data.node;
--}
--
- #else
- static inline int
- alloc_masks(struct irq_desc *desc, gfp_t gfp, int node) { return 0; }
- static inline void desc_smp_init(struct irq_desc *desc, int node) { }
--static inline int desc_node(struct irq_desc *desc) { return 0; }
- #endif
- 
- static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
-@@ -300,7 +294,7 @@ static void free_desc(unsigned int irq)
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&desc->lock, flags);
--	desc_set_defaults(irq, desc, desc_node(desc), NULL);
-+	desc_set_defaults(irq, desc, irq_desc_get_node(desc), NULL);
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
- }
- 
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 3552b8750efd..1b06dfed4574 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -830,7 +830,8 @@ static struct irq_data *irq_domain_insert_irq_data(struct irq_domain *domain,
- {
- 	struct irq_data *irq_data;
- 
--	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL, child->node);
-+	irq_data = kzalloc_node(sizeof(*irq_data), GFP_KERNEL,
-+				irq_data_get_node(child));
- 	if (irq_data) {
- 		child->parent_data = irq_data;
- 		irq_data->irq = child->irq;
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index b1c7e8f46bfb..f9744853b656 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -363,7 +363,7 @@ static int
- setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
- {
- 	struct cpumask *set = irq_default_affinity;
--	int node = desc->irq_data.node;
-+	int node = irq_desc_get_node(desc);
- 
- 	/* Excludes PER_CPU and NO_BALANCE interrupts */
- 	if (!irq_can_set_affinity(irq))
-diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
-index df2f4642d1e7..0e97c142ce40 100644
---- a/kernel/irq/proc.c
-+++ b/kernel/irq/proc.c
-@@ -241,7 +241,7 @@ static int irq_node_proc_show(struct seq_file *m, void *v)
- {
- 	struct irq_desc *desc = irq_to_desc((long) m->private);
- 
--	seq_printf(m, "%d\n", desc->irq_data.node);
-+	seq_printf(m, "%d\n", irq_desc_get_node(desc));
- 	return 0;
- }
- 
+First, the VF's removal and re-enumerate rely on its PF. VF has a tight
+relationship between its PF. This is not proper to enumerate a VF by usual
+scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
+set.
+
+Second, the reset/restore of a VF is done in kernel space. FW is not aware of
+the VF, this means the usual reset function done in FW will not work. One of
+the patch will imitate the reset/restore function in kernel space.
+
+Third, the VF may be removed during the PF's error_detected function. In this
+case, the original error_detected->slot_reset->resume sequence is not proper
+to those removed VFs, since they are re-created by PF in a fresh state. A flag
+in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
+track whether this device needs to be reset or not.
+
+This has been tested both on host and in guest on Power8 with latest kernel
+version.
+
+v8:
+   * fix on checking the return value of pnv_eeh_do_flr()
+   * introduced a weak function pcibios_bus_add_device() to create PE for VFs
+   * rebase it on v4.1-rc8
+v7:
+   * fix compile error when PCI_IOV is not set
+v6:
+   * code / commit log refactor by Gavin
+v5:
+   * remove the compound field, iterate on Master VF PE instead
+   * some code refine on PCI config restore and reset on VF
+     the wait time for assert and deassert
+     PCI device address format
+     check on edev->pcie_cap and edev->aer_cap before access them
+v4:
+   * refine the change logs, comment and code style
+   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
+     CONFIG_PCI_IOV macro
+   * reorder patch 5/6 to make the logic more reasonable
+   * remove remove_dev_pci_data()
+   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
+     remove related CONFIG_PCI_IOV macro
+   * add the option for VF reset
+   * fix the pnv_eeh_cfg_blocked() logic
+   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
+     pnv_eeh_vf_restore_config()
+   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
+   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
+     to arch/powerpc/platforms/powernv/pci.c
+   * add a field compound in pnv_ioda_pe to link compound PEs
+   * handle compound PE for VF PEs
+v3:
+   * add back vf_index in pci_dn to track the VF's index
+   * rename ppdev in eeh_dev to physfn for consistency
+   * move edev->physfn assignment before dev->dev.archdata.edev is set
+   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
+   * more clear and detail in commit log and comment in code
+   * merge eeh_rmv_virt_device() with eeh_rmv_device()
+   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
+     pnv_eeh_cfg_blocked()
+   * move the vf reset/restore logic into its own patch, two patches are
+     created.
+     powerpc/powernv: Support PCI config restore for VFs
+     powerpc/powernv: Support EEH reset for VFs
+   * simplify the vf reset logic
+v2:
+   * add prefix pci_iov_ to virtfn_add/virtfn_remove
+   * use EEH_DEV_VF as a flag for a VF's eeh_dev
+   * use eeh_dev instead of edev in change log
+   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
+   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
+     well initialized
+   * do FLR to reset a VF PE
+   * imitate the restore function in FW for VF
+   * remove the reverse order patch, since it is still under discussion
+
+Wei Yang (10):
+  PCI/IOV: Rename and export virtfn_add/virtfn_remove
+  powerpc/pci: Cache VF index in pci_dn
+  powerpc/pci: Remove VFs prior to PF
+  powerpc/eeh: Cache only BARs, not windows or IOV BARs
+  powerpc/powernv: EEH device for VF
+  powerpc/eeh: Create PE for VFs
+  powerpc/powernv: Support EEH reset for VF PE
+  powerpc/powernv: Support PCI config restore for VFs
+  powerpc/eeh: Support error recovery for VF PE
+  powerpc/powernv: compound PE for VFs
+
+ arch/powerpc/include/asm/eeh.h               |    4 +
+ arch/powerpc/include/asm/pci-bridge.h        |    2 +
+ arch/powerpc/kernel/eeh.c                    |    8 +
+ arch/powerpc/kernel/eeh_cache.c              |    6 +-
+ arch/powerpc/kernel/eeh_driver.c             |  100 +++++++++---
+ arch/powerpc/kernel/eeh_pe.c                 |   13 +-
+ arch/powerpc/kernel/pci-hotplug.c            |    2 +-
+ arch/powerpc/kernel/pci_dn.c                 |   16 +-
+ arch/powerpc/platforms/powernv/eeh-powernv.c |  220 +++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci-ioda.c    |   46 +++++-
+ arch/powerpc/platforms/powernv/pci.c         |   35 +++-
+ drivers/pci/bus.c                            |    2 +
+ drivers/pci/iov.c                            |   10 +-
+ include/linux/pci.h                          |    8 +
+ 14 files changed, 427 insertions(+), 45 deletions(-)
+
 -- 
-1.7.10.4
+1.7.9.5
 
