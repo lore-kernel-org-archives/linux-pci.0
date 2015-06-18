@@ -1,110 +1,238 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwhop.emc.com ([168.159.213.141]:56822 "EHLO
-	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933016AbbFIOpa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 10:45:30 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
-Subject: [PATCH v3 05/18] NTB: Check the device ID to set errata flags
-Date: Tue,  9 Jun 2015 05:44:32 -0400
-Message-Id: <530e415992e4c4e23831bfbdf7b25cca1811378d.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 4/4] PCI: pciehp: Inline the "handle event" functions into
+ the ISR
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org
+Date: Thu, 18 Jun 2015 11:12:58 -0500
+Message-ID: <20150618161258.32739.29646.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dave Jiang <dave.jiang@intel.com>
+The pciehp_handle_*() functions (pciehp_handle_attention_button(), etc.)
+only contain a line or two of useful code, so it's clumsy to put
+them in separate functions.  All they so is add an event to a work queue,
+and it's clearer to see that directly in the ISR.
 
-Set errata flags for the specific device IDs to which they apply,
-instead of the whole xeon hardware class.
+Inline them directly into pcie_isr().  No functional change.
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/ntb/hw/intel/ntb_hw_intel.c | 49 +++++++++++++++++++++++++++++++++----
- 1 file changed, 44 insertions(+), 5 deletions(-)
+ drivers/pci/hotplug/pciehp.h      |    6 --
+ drivers/pci/hotplug/pciehp_ctrl.c |  105 -------------------------------------
+ drivers/pci/hotplug/pciehp_hpc.c  |   39 +++++++++++---
+ 3 files changed, 32 insertions(+), 118 deletions(-)
 
-diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
-index 64ce690d9616..3686ac1a3ee2 100644
---- a/drivers/ntb/hw/intel/ntb_hw_intel.c
-+++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
-@@ -1719,29 +1719,68 @@ static int snb_init_dev(struct intel_ntb_dev *ndev)
- 	u8 ppd;
- 	int rc, mem;
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index ce4d12c..57cd132 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -132,11 +132,7 @@ struct controller {
  
-+	pdev = ndev_pdev(ndev);
-+
-+	switch (pdev->device) {
- 	/* There is a Xeon hardware errata related to writes to SDOORBELL or
- 	 * B2BDOORBELL in conjunction with inbound access to NTB MMIO Space,
- 	 * which may hang the system.  To workaround this use the second memory
- 	 * window to access the interrupt and scratch pad registers on the
- 	 * remote system.
- 	 */
--	ndev->hwerr_flags |= NTB_HWERR_SDOORBELL_LOCKUP;
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
-+		ndev->hwerr_flags |= NTB_HWERR_SDOORBELL_LOCKUP;
-+		break;
-+	}
+ int pciehp_sysfs_enable_slot(struct slot *slot);
+ int pciehp_sysfs_disable_slot(struct slot *slot);
+-u8 pciehp_handle_attention_button(struct slot *p_slot);
+-u8 pciehp_handle_switch_change(struct slot *p_slot);
+-u8 pciehp_handle_presence_change(struct slot *p_slot);
+-u8 pciehp_handle_power_fault(struct slot *p_slot);
+-void pciehp_handle_linkstate_change(struct slot *p_slot);
++void pciehp_queue_interrupt_event(struct slot *slot, u32 event_type);
+ int pciehp_configure_device(struct slot *p_slot);
+ int pciehp_unconfigure_device(struct slot *p_slot);
+ void pciehp_queue_pushbutton_work(struct work_struct *work);
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 7ed37dc..f379612 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -37,7 +37,7 @@
  
-+	switch (pdev->device) {
- 	/* There is a hardware errata related to accessing any register in
- 	 * SB01BASE in the presence of bidirectional traffic crossing the NTB.
- 	 */
--	ndev->hwerr_flags |= NTB_HWERR_SB01BASE_LOCKUP;
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
-+		ndev->hwerr_flags |= NTB_HWERR_SB01BASE_LOCKUP;
-+		break;
-+	}
+ static void interrupt_event_handler(struct work_struct *work);
  
-+	switch (pdev->device) {
- 	/* HW Errata on bit 14 of b2bdoorbell register.  Writes will not be
- 	 * mirrored to the remote system.  Shrink the number of bits by one,
- 	 * since bit 14 is the last bit.
- 	 */
--	ndev->hwerr_flags |= NTB_HWERR_B2BDOORBELL_BIT14;
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_JSF:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_SNB:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_IVT:
-+	case PCI_DEVICE_ID_INTEL_NTB_SS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_PS_HSX:
-+	case PCI_DEVICE_ID_INTEL_NTB_B2B_HSX:
-+		ndev->hwerr_flags |= NTB_HWERR_B2BDOORBELL_BIT14;
-+		break;
-+	}
+-static void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
++void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ {
+ 	struct event_info *info;
  
- 	ndev->reg = &snb_reg;
+@@ -53,109 +53,6 @@ static void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ 	queue_work(p_slot->wq, &info->work);
+ }
  
--	pdev = ndev_pdev(ndev);
+-u8 pciehp_handle_attention_button(struct slot *p_slot)
+-{
+-	u32 event_type;
+-	struct controller *ctrl = p_slot->ctrl;
 -
- 	rc = pci_read_config_byte(pdev, SNB_PPD_OFFSET, &ppd);
- 	if (rc)
- 		return -EIO;
--- 
-2.4.0.rc0.43.gcf8a8c6
+-	/*
+-	 *  Button pressed - See if need to TAKE ACTION!!!
+-	 */
+-	ctrl_info(ctrl, "Button pressed on Slot(%s)\n", slot_name(p_slot));
+-	event_type = INT_BUTTON_PRESS;
+-
+-	pciehp_queue_interrupt_event(p_slot, event_type);
+-
+-	return 0;
+-}
+-
+-u8 pciehp_handle_switch_change(struct slot *p_slot)
+-{
+-	u8 getstatus;
+-	u32 event_type;
+-	struct controller *ctrl = p_slot->ctrl;
+-
+-	pciehp_get_latch_status(p_slot, &getstatus);
+-	if (getstatus) {
+-		/*
+-		 * Switch opened
+-		 */
+-		ctrl_info(ctrl, "Latch open on Slot(%s)\n", slot_name(p_slot));
+-		event_type = INT_SWITCH_OPEN;
+-	} else {
+-		/*
+-		 *  Switch closed
+-		 */
+-		ctrl_info(ctrl, "Latch close on Slot(%s)\n", slot_name(p_slot));
+-		event_type = INT_SWITCH_CLOSE;
+-	}
+-
+-	pciehp_queue_interrupt_event(p_slot, event_type);
+-
+-	return 1;
+-}
+-
+-u8 pciehp_handle_presence_change(struct slot *p_slot)
+-{
+-	u32 event_type;
+-	u8 presence_save;
+-	struct controller *ctrl = p_slot->ctrl;
+-
+-	/* Switch is open, assume a presence change
+-	 * Save the presence state
+-	 */
+-	pciehp_get_adapter_status(p_slot, &presence_save);
+-	if (presence_save) {
+-		/*
+-		 * Card Present
+-		 */
+-		ctrl_info(ctrl, "Card present on Slot(%s)\n", slot_name(p_slot));
+-		event_type = INT_PRESENCE_ON;
+-	} else {
+-		/*
+-		 * Not Present
+-		 */
+-		ctrl_info(ctrl, "Card not present on Slot(%s)\n",
+-			  slot_name(p_slot));
+-		event_type = INT_PRESENCE_OFF;
+-	}
+-
+-	pciehp_queue_interrupt_event(p_slot, event_type);
+-
+-	return 1;
+-}
+-
+-u8 pciehp_handle_power_fault(struct slot *p_slot)
+-{
+-	u32 event_type;
+-	struct controller *ctrl = p_slot->ctrl;
+-
+-	ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(p_slot));
+-	event_type = INT_POWER_FAULT;
+-	ctrl_info(ctrl, "Power fault bit %x set\n", 0);
+-	pciehp_queue_interrupt_event(p_slot, event_type);
+-
+-	return 1;
+-}
+-
+-void pciehp_handle_linkstate_change(struct slot *p_slot)
+-{
+-	u32 event_type;
+-	struct controller *ctrl = p_slot->ctrl;
+-
+-	if (pciehp_check_link_active(ctrl)) {
+-		ctrl_info(ctrl, "slot(%s): Link Up event\n",
+-			  slot_name(p_slot));
+-		event_type = INT_LINK_UP;
+-	} else {
+-		ctrl_info(ctrl, "slot(%s): Link Down event\n",
+-			  slot_name(p_slot));
+-		event_type = INT_LINK_DOWN;
+-	}
+-
+-	pciehp_queue_interrupt_event(p_slot, event_type);
+-}
+-
+ /* The following routines constitute the bulk of the
+    hotplug controller logic
+  */
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index e9daaa3..2913f7e 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -535,6 +535,8 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	struct pci_dev *dev;
+ 	struct slot *slot = ctrl->slot;
+ 	u16 detected, intr_loc;
++	u8 open, present;
++	bool link;
+ 
+ 	/*
+ 	 * In order to guarantee that all interrupt events are
+@@ -580,25 +582,44 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 		return IRQ_HANDLED;
+ 
+ 	/* Check MRL Sensor Changed */
+-	if (intr_loc & PCI_EXP_SLTSTA_MRLSC)
+-		pciehp_handle_switch_change(slot);
++	if (intr_loc & PCI_EXP_SLTSTA_MRLSC) {
++		pciehp_get_latch_status(slot, &open);
++		ctrl_info(ctrl, "Latch %s on Slot(%s)\n",
++			  open ? "open" : "close", slot_name(slot));
++		pciehp_queue_interrupt_event(slot, open ? INT_SWITCH_OPEN :
++					     INT_SWITCH_CLOSE);
++	}
+ 
+ 	/* Check Attention Button Pressed */
+-	if (intr_loc & PCI_EXP_SLTSTA_ABP)
+-		pciehp_handle_attention_button(slot);
++	if (intr_loc & PCI_EXP_SLTSTA_ABP) {
++		ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
++			  slot_name(slot));
++		pciehp_queue_interrupt_event(slot, INT_BUTTON_PRESS);
++	}
+ 
+ 	/* Check Presence Detect Changed */
+-	if (intr_loc & PCI_EXP_SLTSTA_PDC)
+-		pciehp_handle_presence_change(slot);
++	if (intr_loc & PCI_EXP_SLTSTA_PDC) {
++		pciehp_get_adapter_status(slot, &present);
++		ctrl_info(ctrl, "Card %spresent on Slot(%s)\n",
++			  present ? "" : "not ", slot_name(slot));
++		pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
++					     INT_PRESENCE_OFF);
++	}
+ 
+ 	/* Check Power Fault Detected */
+ 	if ((intr_loc & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
+ 		ctrl->power_fault_detected = 1;
+-		pciehp_handle_power_fault(slot);
++		ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(slot));
++		pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
+ 	}
+ 
+-	if (intr_loc & PCI_EXP_SLTSTA_DLLSC)
+-		pciehp_handle_linkstate_change(slot);
++	if (intr_loc & PCI_EXP_SLTSTA_DLLSC) {
++		link = pciehp_check_link_active(ctrl);
++		ctrl_info(ctrl, "slot(%s): Link %s event\n",
++			  slot_name(slot), link ? "Up" : "Down");
++		pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
++					     INT_LINK_DOWN);
++	}
+ 
+ 	return IRQ_HANDLED;
+ }
 
