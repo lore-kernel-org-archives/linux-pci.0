@@ -1,29 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwdur.emc.com ([128.221.224.79]:29062 "EHLO
-	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460AbbFIQnb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 12:43:31 -0400
-From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
-Subject: RE: [PATCH v3 02/18] NTB: Add NTB hardware abstraction layer
-Date: Tue, 9 Jun 2015 16:43:06 +0000
-Message-ID: <40F65EF2B5E2254199711F58E3ACB84D830FEE4F@MX104CL02.corp.emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
- <21347a93355f40d945cf9f565f95e790d9b3bda5.1433838377.git.Allen.Hubbe@emc.com>
- <20150609162346.GC23119@google.com>
-In-Reply-To: <20150609162346.GC23119@google.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mout.gmx.net ([212.227.15.18]:50255 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753561AbbFRJKi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Jun 2015 05:10:38 -0400
+Message-ID: <55828B19.5070608@gmx.ch>
+Date: Thu, 18 Jun 2015 11:10:49 +0200
+From: =?UTF-8?Q?David_M=c3=bcller?= <dave.mueller@gmx.ch>
 MIME-Version: 1.0
+To: Lucas Stach <l.stach@pengutronix.de>
+CC: linux-pci@vger.kernel.org, Richard Zhu <Richard.Zhu@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] ARM: imx6: Fix non-working MSI interrupts if PCIe
+ switch is attached
+References: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch> <1434616169.3061.5.camel@pengutronix.de>
+In-Reply-To: <1434616169.3061.5.camel@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFRoZXNl
-IHJlZmVyIHRvIEVuZ2xpc2ggdGV4dCB1c2FnZSAoZG9jLCBjb21tZW50cywgS2NvbmZpZyBoZWxw
-KSwgbm90IEMNCj4gY29kZToNCj4gDQo+ICAgcy9udGIvTlRCLyAoZXhjZXB0IHdoZXJlIGl0IHJl
-ZmVycyBkaXJlY3RseSB0byB0aGUgZHJpdmVyKQ0KPiAgIHMvcGNpL1BDSS8NCj4gICBzL1BDSS1F
-L1BDSWUvDQo+ICAgcy9hcGkvQVBJLw0KPiAgIHMvaW50ZWwvSW50ZWwvDQoNClRoYW5rcy4gIEkg
-d2lsbCBtYWtlIHRoZSBjb3JyZWN0aW9ucy4NCg==
+Lucas Stach wrote:
+> I need more explanation for this one. MSI interrupts were certainly
+> working fine even with a PCIe switchin between some time back. I think I
+> personally tested things with 3.19.
+> 
+> In the bug report you mention that the MSI_ADDR registers are
+> overwritten. Where does the write come from and why is it done?
+
+I don't know. I just instrumented the driver with code to dump the
+MSI_ADDR registers and noticed that they were programmed with the
+correct value once, but at a later point in time, the value is gone.
+
+Perhaps it's a some kind of partial HW reset of the PCIe host?
+
+I'm working with a rev 1.2 silicon of the i.MX6Q.
+
