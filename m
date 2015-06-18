@@ -1,49 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5488 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753381AbbFCULD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Jun 2015 16:11:03 -0400
-Date: Wed, 3 Jun 2015 20:10:54 +0000 (UTC)
-From: Keith Busch <keith.busch@intel.com>
-To: Keith Busch <keith.busch@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-cc: Pavilion Storage <storagepavilion@gmail.com>,
-	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: Problems writing to intel P3700 NVMe drive
-In-Reply-To: <alpine.LNX.2.00.1505282059400.15930@localhost.lm.intel.com>
-Message-ID: <alpine.LNX.2.00.1506032000570.15930@localhost.lm.intel.com>
-References: <CAFMq3wEyk9PMbD8Cgn5trJyDjaOKpMzR-TNzbx0zXN=Mms573Q@mail.gmail.com> <00c601d098cd$41255e30$c3701a90$@storageio.com> <CAFMq3wE7PzKs=dYxxUhFsHeTkR0CT8mh6NVfrk-9mKxdisoDTg@mail.gmail.com> <00cd01d098d1$94047010$bc0d5030$@storageio.com>
- <CAFMq3wEa=kxznE77oFdg03QBHqszmH5-Vvmmm9pW1nkPUZi_Og@mail.gmail.com> <CA+At7pWf6Ge3pc7=aeiqz=iWxtYJSPVdM_W2XW9pL4d22q432Q@mail.gmail.com> <000a01d098ee$b52ce0c0$1f86a240$@storageio.com> <CAFMq3wH67yMqWGcde77kiyWJ6_ieZjVyhc8L-oq1e_b4x5mS7w@mail.gmail.com>
- <alpine.LNX.2.00.1505282059400.15930@localhost.lm.intel.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:45627 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751AbbFRIG7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:06:59 -0400
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 18 Jun 2015 13:36:57 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 6C617125805A
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:39:29 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I86p7t15597728
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:51 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I86o1L027174
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:51 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V8 02/10] powerpc/pci: Cache VF index in pci_dn
+Date: Thu, 18 Jun 2015 16:06:37 +0800
+Message-Id: <1434614805-19002-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+cc the pci list
+The patch caches the VF index in pci_dn, which can be used to calculate
+VF's bus, device and function number. Those information helps to locate
+the VF's PCI device instance when doing hotplug during EEH recovery if
+necessary.
 
-Hi Bjorn,
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h |    1 +
+ arch/powerpc/kernel/pci_dn.c          |    4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-A while back, there were a few proposals on changing the pci driver's
-default MPS tuning from the existing do-nothing policy to something
-safe so end-users don't need to remember kernel parameters as described
-below. Is this still active, or can we kick that back to life if not?
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 1811c44..c324882 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -196,6 +196,7 @@ struct pci_dn {
+ #define IODA_INVALID_PE		(-1)
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
++	int     vf_index;		/* VF index in the PF */
+ #ifdef CONFIG_PCI_IOV
+ 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+ 	u16     num_vfs;		/* number of VFs enabled*/
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index b3b4df9..f771130 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
+ #ifdef CONFIG_PCI_IOV
+ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ 					   struct pci_dev *pdev,
++					   int vf_index,
+ 					   int busno, int devfn)
+ {
+ 	struct pci_dn *pdn;
+@@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ 	pdn->parent = parent;
+ 	pdn->busno = busno;
+ 	pdn->devfn = devfn;
++	pdn->vf_index = vf_index;
+ #ifdef CONFIG_PPC_POWERNV
+ 	pdn->pe_number = IODA_INVALID_PE;
+ #endif
+@@ -196,7 +198,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+ 		return NULL;
+ 
+ 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+-		pdn = add_one_dev_pci_data(parent, NULL,
++		pdn = add_one_dev_pci_data(parent, NULL, i,
+ 					   pci_iov_virtfn_bus(pdev, i),
+ 					   pci_iov_virtfn_devfn(pdev, i));
+ 		if (!pdn) {
+-- 
+1.7.9.5
 
-Thanks,
-Keith
-
-On Thu, 28 May 2015, Keith Busch wrote:
-> Perhaps not a desirable/permanent solution, but for everyone's benefit,
-> we can work-around the problem with kernel parameter:
->
->  pci=pcie_bus_safe
->
-> Using 'pcie_bus_perf' instead may also work, though your original
-> solution of just using x86 sounded perfectly reasonable to me. :)
->
-> On Thu, 28 May 2015, Pavilion Storage wrote:
->> Thanks to Keith Busch for the providing the clues.
->> The problem was that the PCIe MPSS on the drive and the CPU root
->> complex did not match and that caused a problem. Setting it to a
->> common value fixed the problem.
->> Kishore
