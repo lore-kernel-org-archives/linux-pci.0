@@ -1,47 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <55757E65.5030401@linux.intel.com>
-Date: Mon, 08 Jun 2015 19:37:09 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yh0-f41.google.com ([209.85.213.41]:32915 "EHLO
+	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbbFRW6L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 18:58:11 -0400
+Received: by yhpn97 with SMTP id n97so66821129yhp.0
+        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 15:58:10 -0700 (PDT)
 MIME-Version: 1.0
-To: Vinod Koul <vinod.koul@intel.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Steve Longerbeam <slongerbeam@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [RFT v2 11/48] ipu: Use irq_desc_get_xxx() to avoid redundant
- lookup of irq_desc
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com> <1433391238-19471-12-git-send-email-jiang.liu@linux.intel.com> <20150608111658.GL28601@localhost>
-In-Reply-To: <20150608111658.GL28601@localhost>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1434665458-28354-1-git-send-email-dhdang@apm.com>
+References: <1434665458-28354-1-git-send-email-dhdang@apm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 18 Jun 2015 17:57:50 -0500
+Message-ID: <CAErSpo6fn++u3uyE+Z-h9T6qmy30f2eyuO4929a=_xShhHHeDQ@mail.gmail.com>
+Subject: Re: [PATCH 1/1] pci: xgene: Fix compilation warning
+To: Duc Dang <dhdang@apm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>, patches <patches@apm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/8 19:16, Vinod Koul wrote:
-> On Thu, Jun 04, 2015 at 12:13:21PM +0800, Jiang Liu wrote:
->> Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
->> already have a pointer to corresponding irq_desc.
->>
->> Do the same thing to avoid pattern "irq_get_chip_data(data->irq)".
-> 
-> And I am missing the context, it is a bad practice to send some part of the
-> series without giving context. Is this dependent on something else...?
-This patch set touches too many files, so I didn't send the cover letter
-to all maintainers. The whole patch set is to simplify core irq
-interfaces by killing the 'irq' parameter. Please refer to
-lkml.org/lkml/2015/6/4/113
+On Thu, Jun 18, 2015 at 5:10 PM, Duc Dang <dhdang@apm.com> wrote:
+> commit 979595bcb8da ("PCI: xgene: Allow config access to Root Port even
+> when link is down") removes the port->link_up check, which makes 'port'
+> become unused variable. This patch remove struct xgene_pcie_port *port
+> declaration to avoid compilation warning.
+>
+> Signed-off-by: Duc Dang <dhdang@apm.com>
+> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 
-And it may depends on preceding patches in tip/x86/apic branch, so it
-would be safer to handle the patch set altogether.
-Thanks!
-Gerry
+I folded this fix into the original patch and updated my branch.  Thanks!
+
+> ---
+>  drivers/pci/host/pci-xgene.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index 3684126..105fd83 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -137,8 +137,6 @@ static bool xgene_pcie_hide_rc_bars(struct pci_bus *bus, int offset)
+>  static void __iomem *xgene_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+>                               int offset)
+>  {
+> -       struct xgene_pcie_port *port = bus->sysdata;
+> -
+>         if ((pci_is_root_bus(bus) && devfn != 0) ||
+>             xgene_pcie_hide_rc_bars(bus, offset))
+>                 return NULL;
+> --
+> 1.9.1
+>
