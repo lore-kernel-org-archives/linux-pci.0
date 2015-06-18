@@ -1,116 +1,287 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:59145 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751568AbbFZIA1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jun 2015 04:00:27 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	patches@apm.com, linux-kernel@vger.kernel.org,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH 1/1] pci: xgene: Enable huge outbound bar support
-Date: Fri, 26 Jun 2015 09:59:44 +0200
-Message-ID: <1692416.bxUuWm82Pk@wuerfel>
-In-Reply-To: <1435280756-24455-1-git-send-email-dhdang@apm.com>
-References: <1435280756-24455-1-git-send-email-dhdang@apm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:48938 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753555AbbFRIIv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:08:51 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 18 Jun 2015 18:08:49 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id A3392357804F
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:08:47 +1000 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I88dQC51839150
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:08:47 +1000
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I88EMx028550
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 18:08:15 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V8 09/10] powerpc/eeh: Support error recovery for VF PE
+Date: Thu, 18 Jun 2015 16:06:44 +0800
+Message-Id: <1434614805-19002-10-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 25 June 2015 18:05:56 Duc Dang wrote:
-> X-Gene PCIe controllers support huge outbound BARs (with size upto
-> 64GB). This patch configures additional 1 outbound BAR for X-Gene
-> PCIe controllers with size larger than 4GB. This is required to
-> support devices that request huge outbound memory (nVidia K40 as an
-> example)
-> 
-> Signed-off-by: Duc Dang <dhdang@apm.com>
-> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-> ---
->  arch/arm64/boot/dts/apm/apm-storm.dtsi | 33 +++++++++++++++++++--------------
->  drivers/pci/host/pci-xgene.c           |  6 +++++-
->  2 files changed, 24 insertions(+), 15 deletions(-)
+Different from PCI bus dependent PE, PE for VFs doesn't have the
+primary bus, on which the PCI hotplug is implemented. The patch
+supports error recovery, especially the PCI hotplug for VF's PE.
+The hotplug on VF's PE is implemented based on VFs, instead of
+PCI bus any more.
 
-It seems you do multiple things here:
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h   |    1 +
+ arch/powerpc/kernel/eeh.c        |    8 +++
+ arch/powerpc/kernel/eeh_driver.c |  100 ++++++++++++++++++++++++++++++--------
+ arch/powerpc/kernel/eeh_pe.c     |    3 +-
+ 4 files changed, 90 insertions(+), 22 deletions(-)
 
-- add an entry in the ranges
-- move the config space
-- fix driver to handle multiple memory ranges
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 3d64cf3..d24382c 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -140,6 +140,7 @@ struct eeh_dev {
+ 	struct pci_controller *phb;	/* Associated PHB		*/
+ 	struct pci_dn *pdn;		/* Associated PCI device node	*/
+ 	struct pci_dev *pdev;		/* Associated PCI device	*/
++	int    in_error;		/* Error flag for eeh_dev	*/
+ 	struct pci_dev *physfn;		/* Associated PF PORT		*/
+ 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
+ };
+diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
+index 9ee61d1..1207547 100644
+--- a/arch/powerpc/kernel/eeh.c
++++ b/arch/powerpc/kernel/eeh.c
+@@ -1229,6 +1229,14 @@ void eeh_remove_device(struct pci_dev *dev)
+ 	 * from the parent PE during the BAR resotre.
+ 	 */
+ 	edev->pdev = NULL;
++
++	/*
++	 * The flag "in_error" is used to trace EEH devices for VFs
++	 * in error state or not. It's set in eeh_report_error(). If
++	 * it's not set, eeh_report_{reset,resume}() won't be called
++	 * for the VF EEH device.
++	 */
++	edev->in_error = 0;
+ 	dev->dev.archdata.edev = NULL;
+ 	if (!(edev->pe->state & EEH_PE_KEEP))
+ 		eeh_rmv_from_parent_pe(edev);
+diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+index 24768ff..63a2c33 100644
+--- a/arch/powerpc/kernel/eeh_driver.c
++++ b/arch/powerpc/kernel/eeh_driver.c
+@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
+ 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
+ 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
+ 
++	edev->in_error = 1;
+ 	eeh_pcid_put(dev);
+ 	return NULL;
+ }
+@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
+ 
+ 	if (!driver->err_handler ||
+ 	    !driver->err_handler->slot_reset ||
+-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
++	    (edev->mode & EEH_DEV_NO_HANDLER) ||
++	    (!edev->in_error)) {
+ 		eeh_pcid_put(dev);
+ 		return NULL;
+ 	}
+@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
+ 
+ 	if (!driver->err_handler ||
+ 	    !driver->err_handler->resume ||
+-	    (edev->mode & EEH_DEV_NO_HANDLER)) {
++	    (edev->mode & EEH_DEV_NO_HANDLER) ||
++	    (!edev->in_error)) {
+ 		edev->mode &= ~EEH_DEV_NO_HANDLER;
+-		eeh_pcid_put(dev);
+-		return NULL;
++		goto out;
+ 	}
+ 
+ 	driver->err_handler->resume(dev);
+ 
++out:
++	edev->in_error = 0;
+ 	eeh_pcid_put(dev);
+ 	return NULL;
+ }
+@@ -386,12 +390,38 @@ static void *eeh_report_failure(void *data, void *userdata)
+ 	return NULL;
+ }
+ 
++static void *eeh_add_virt_device(void *data, void *userdata)
++{
++	struct pci_driver *driver;
++	struct eeh_dev *edev = (struct eeh_dev *)data;
++	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
++	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
++
++	if (!(edev->physfn)) {
++		pr_warn("%s: EEH dev %04x:%02x:%02x.%01x not for VF\n",
++			__func__, edev->phb->global_number, pdn->busno,
++			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
++		return NULL;
++	}
++
++	driver = eeh_pcid_get(dev);
++	if (driver) {
++		eeh_pcid_put(dev);
++		if (driver->err_handler)
++			return NULL;
++	}
++
++	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
++	return NULL;
++}
++
+ static void *eeh_rmv_device(void *data, void *userdata)
+ {
+ 	struct pci_driver *driver;
+ 	struct eeh_dev *edev = (struct eeh_dev *)data;
+ 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
+ 	int *removed = (int *)userdata;
++	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
+ 
+ 	/*
+ 	 * Actually, we should remove the PCI bridges as well.
+@@ -416,7 +446,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 	driver = eeh_pcid_get(dev);
+ 	if (driver) {
+ 		eeh_pcid_put(dev);
+-		if (driver->err_handler)
++		if (removed && driver->err_handler)
+ 			return NULL;
+ 	}
+ 
+@@ -425,11 +455,23 @@ static void *eeh_rmv_device(void *data, void *userdata)
+ 		 pci_name(dev));
+ 	edev->bus = dev->bus;
+ 	edev->mode |= EEH_DEV_DISCONNECTED;
+-	(*removed)++;
++	if (removed)
++		(*removed)++;
+ 
+-	pci_lock_rescan_remove();
+-	pci_stop_and_remove_bus_device(dev);
+-	pci_unlock_rescan_remove();
++	if (edev->physfn) {
++		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
++		edev->pdev = NULL;
++
++		/*
++		 * We have to set the VF PE number to invalid one, which is
++		 * required to plug the VF successfully.
++		 */
++		pdn->pe_number = IODA_INVALID_PE;
++	} else {
++		pci_lock_rescan_remove();
++		pci_stop_and_remove_bus_device(dev);
++		pci_unlock_rescan_remove();
++	}
+ 
+ 	return NULL;
+ }
+@@ -548,6 +590,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
+ 	struct timeval tstamp;
+ 	int cnt, rc, removed = 0;
++	struct eeh_dev *edev;
+ 
+ 	/* pcibios will clear the counter; save the value */
+ 	cnt = pe->freeze_count;
+@@ -561,12 +604,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 	 */
+ 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+ 	if (bus) {
+-		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(bus);
+-		pci_unlock_rescan_remove();
+-	} else if (frozen_bus) {
++		if (pe->type & EEH_PE_VF)
++			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
++		else {
++			pci_lock_rescan_remove();
++			pcibios_remove_pci_devices(bus);
++			pci_unlock_rescan_remove();
++		}
++	} else if (frozen_bus)
+ 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
+-	}
+ 
+ 	/*
+ 	 * Reset the pci controller. (Asserts RST#; resets config space).
+@@ -607,14 +653,22 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
+ 		 * PE. We should disconnect it so the binding can be
+ 		 * rebuilt when adding PCI devices.
+ 		 */
++		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(bus);
++		if (pe->type & EEH_PE_VF)
++			eeh_add_virt_device(edev, NULL);
++		else
++			pcibios_add_pci_devices(bus);
+ 	} else if (frozen_bus && removed) {
+ 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
+ 		ssleep(5);
+ 
++		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
+ 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
+-		pcibios_add_pci_devices(frozen_bus);
++		if (pe->type & EEH_PE_VF)
++			eeh_add_virt_device(edev, NULL);
++		else
++			pcibios_add_pci_devices(frozen_bus);
+ 	}
+ 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
+ 
+@@ -792,11 +846,15 @@ perm_error:
+ 	 * the their PCI config any more.
+ 	 */
+ 	if (frozen_bus) {
+-		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+-
+-		pci_lock_rescan_remove();
+-		pcibios_remove_pci_devices(frozen_bus);
+-		pci_unlock_rescan_remove();
++		if (pe->type & EEH_PE_VF) {
++			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
++			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
++		} else {
++			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
++			pci_lock_rescan_remove();
++			pcibios_remove_pci_devices(frozen_bus);
++			pci_unlock_rescan_remove();
++		}
+ 	}
+ }
+ 
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index 260a701..5cde950 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -914,7 +914,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
+ 	if (pe->type & EEH_PE_PHB) {
+ 		bus = pe->phb->bus;
+ 	} else if (pe->type & EEH_PE_BUS ||
+-		   pe->type & EEH_PE_DEVICE) {
++		   pe->type & EEH_PE_DEVICE ||
++		   pe->type & EEH_PE_VF) {
+ 		if (pe->bus) {
+ 			bus = pe->bus;
+ 			goto out;
+-- 
+1.7.9.5
 
-but your description only mentions the first one. Please submit separate
-patches for these and explain for each patch why it is required, so we can
-pick them up into the arm-soc and pci git repositories separately, and make
-sure that each patch works by itself to guarantee we don't get incompatible
-binding changes.
-
-> diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-> index d8f3a1c..039206b 100644
-> --- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
-> +++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
-> @@ -404,10 +404,11 @@
->  			#size-cells = <2>;
->  			#address-cells = <3>;
->  			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
-> -				0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
-> +				0xe0 0x00000000 0x0 0x00040000>; /* PCI config space */
->  			reg-names = "csr", "cfg";
->  			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
-> -				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
-> +				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000   /* mem */
-> +				  0x02000000 0x10 0x00000000 0xf0 0x00000000 0x10 0x00000000>; /* mem */
->  			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
->  				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
->  			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-
-What is the reason for picking the 0x10.00000000 address? We normally try
-to use an identity mapping (mem_offset=0) on the bus, or fall back to starting
-at zero (mem_offset=cpu_offset), but you use seemingly random mem_offset values.
-
-Could you get the same effect by extending the 0x80000000 mapping to a length
-of 58GB (just before the start of the second window)?
-
-Can you configure one of the two windows as prefetchable for improved performance?
-
-I also notice that the 0x80000000-0xffffffff bus range is list both in
-ranges and dma-ranges. Does that mean that devices on this host cannot
-access MMIO ranges of other devices, or should you exclude this range from
-the dma-ranges property?
-
-Style-wise, it would be nice to submit an extra patch that groups entries
-in the ranges and reg lists like
-
-			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000>, /* io */
-				 <0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>, /* mem */
-				 <0x02000000 0x10 0x00000000 0xf0 0x00000000 0x10 0x00000000>; /* mem */
-
-but that is just a cosmetic change and should be kept separate.
-
-> @@ -321,8 +322,11 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
->  				return ret;
->  			break;
->  		case IORESOURCE_MEM:
-> -			xgene_pcie_setup_ob_reg(port, res, OMR1BARL, res->start,
-> +			xgene_pcie_setup_ob_reg(port, res,
-> +						OMR1BARL + (omr_idx * 0x18),
-> +						res->start,
->  						res->start - window->offset);
-> +			omr_idx++;
->  			break;
->  		case IORESOURCE_BUS:
->  			break;
-
-Can you describe what happens when you boot an older kernel with the new
-dt file, or vice versa? Will that simply ignore the first ranges entries
-and use only the last one, or does it break in interesting ways?
-
-	Arnd
