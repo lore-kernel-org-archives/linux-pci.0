@@ -1,78 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:33070 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752155AbbFSQKF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 12:10:05 -0400
-Received: by igbqq3 with SMTP id qq3so19551475igb.0
-        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 09:10:05 -0700 (PDT)
-Date: Fri, 19 Jun 2015 11:10:01 -0500
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:34664 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756197AbbFRQmW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 12:42:22 -0400
+Received: by igboe5 with SMTP id oe5so23207338igb.1
+        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 09:42:22 -0700 (PDT)
+Date: Thu, 18 Jun 2015 11:42:18 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [Patch v3 0/4] Introduce a mechanism to allocate PCI IRQ on
- demand
-Message-ID: <20150619161001.GJ7710@google.com>
-References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-pci@vger.kernel.org, gabriele.paoloni@huawei.com,
+	yuanzhichang@hisilicon.com, zhangjukuo@huawei.com,
+	liguozhu@hisilicon.com, Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH] PCI: designware: set PORT_LOGIC_SPEED_CHANGE before
+ linkup
+Message-ID: <20150618164218.GD7710@google.com>
+References: <1433211273-226508-1-git-send-email-wangzhou1@hisilicon.com>
+ <20150602193707.GJ3631@google.com>
+ <5571825E.2090800@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <5571825E.2090800@hisilicon.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 10, 2015 at 04:54:57PM +0800, Jiang Liu wrote:
-> Hi Bjorn,
-> 	I have verified that this patch set could be applied to the
-> mainstream kernel without dependency on other patches, so could you
-> please help to merge it?
+On Fri, Jun 05, 2015 at 07:05:02PM +0800, Zhou Wang wrote:
+> On 2015/6/3 3:37, Bjorn Helgaas wrote:
+> > [+cc Richard, Lucas for imx6 questions below]
+> > 
+> > On Tue, Jun 02, 2015 at 10:14:33AM +0800, Zhou Wang wrote:
+> >> When connected some PCIe3.0 cards(e.g. LSI 2208 PCIe-RAID card, Mellanox IB card),
+> >> It will appear link unstable which will lead reading/writing fail.
+> >>
+> >> Here just move the setting of PORT_LOGIC_SPEED_CHANGE bit before starting
+> >> building link. After doing this, it will work fine with above PCIe3.0 card.
+> >>
+> >> This patch is based on v4.1-rc4
+> >>
+> >> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+> >> ---
+> >>  drivers/pci/host/pcie-designware.c | 8 ++++----
+> >>  1 file changed, 4 insertions(+), 4 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> >> index 2e9f84f..64ebc51 100644
+> >> --- a/drivers/pci/host/pcie-designware.c
+> >> +++ b/drivers/pci/host/pcie-designware.c
+> >> @@ -498,10 +498,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >>  	/* program correct class for RC */
+> >>  	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+> >>  
+> >> -	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> >> -	val |= PORT_LOGIC_SPEED_CHANGE;
+> >> -	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> >> -
+> >>  #ifdef CONFIG_PCI_MSI
+> >>  	dw_pcie_msi_chip.dev = pp->dev;
+> >>  	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+> >> @@ -797,6 +793,10 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+> >>  	}
+> >>  	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
+> >>  
+> >> +	dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, &val);
+> >> +	val |= PORT_LOGIC_SPEED_CHANGE;
+> >> +	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
+> > 
+> > It makes sense to me to do this at the same place we do the other write to
+> > PCIE_LINK_WIDTH_SPEED_CONTROL.
+> > 
+> > 1) Can this be combined with the previous write, so we only need a single
+> >    write to PCIE_LINK_WIDTH_SPEED_CONTROL, e.g., something like this?
+> > 
+> >     switch (pp->lanes) {
+> >     case 1:
+> >         val |= PORT_LOGIC_LINK_WIDTH_1_LANES;
+> >         ...
+> >     }
+> >     val |= PORT_LOGIC_SPEED_CHANGE;
+> >     dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
+> > 
+> 
+> I think it is OK to put them together.
+> 
+> > 2) imx6_pcie_start_link() also writes PCIE_LINK_WIDTH_SPEED_CONTROL.  It
+> >    has a loop to wait for the speed change to finish.  Does
+> >    dw_pcie_setup_rc() need a similar loop?
+> 
+> imx6 has a loop there to make sure link is stable, because enumeration will start
+> soon. Also in other drivers which are based on pcie-designware, we should check
+> if speed change is done before enumeration. In pcie-designware, now it does not
+> make this check.
+> 
+> Maybe we may not move PORT_LOGIC_SPEED_CHANGE set, but add a loop check after it
+> to make sure the link is stable. Then related same setting in imx6 can be deleted.
+> 
+> I wonder if other PCIe hosts which is based on DW have met the same problem?
+> 
+> > 
+> > 3) Since you are moving the PORT_LOGIC_SPEED_CHANGE write from
+> >    dw_pcie_host_init() to dw_pcie_setup_rc(), it will now happen before
+> >    imx6_pcie_start_link().  Does that mean we can remove the write from
+> >    imx6_pcie_start_link() completely?
+> > 
+> 
+> I think so.
 
-I already acked these and said I was willing to merge them and that I was
-hoping for an ack from Thomas.
+Ping?  I'm dropping this for now since nobody acked it and we never quite
+resolved the questions.
 
-Any thoughts, Thomas?
+But it seems like something is broken and needs to be fixed, so please
+post an updated version.
 
-> This patch set introduces a mechanism to allocate PCI IRQ on demand and
-> free it when not used anymore by hooking pci_device_probe() and
-> pci_device_remove().
-> 
-> It will be used to track IOAPIC pin usage on x86 so we could support
-> IOAPIC hot-removal.
-> 
-> The patch set passes Fengguang's 0day test suite.
-> 
-> V2->V3:
-> 1) Change the default pcibios_alloc_irq() to always return 0, as
->    suggested by Bjorn.
-> 2) Refine comments.
-> 
-> V1->V2:
-> 1) Refine pci_device_probe() to optimize for mainline code as suggested
->    by Bjorn
-> 2) Reorder patch set to put optional patch as the last (Patch 4)
+> >>  	/* setup RC BARs */
+> >>  	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
+> >>  	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_1);
+> >> -- 
+> >> 1.9.1
+> >>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > .
+> > 
 > 
 > 
-> Jiang Liu (4):
->   PCI: Add hooks to allocate/free IRQ resources when binding/unbinding
->     driver
->   PCI, x86: Allocate PCI IRQ on demand and free it when not used
->     anymore
->   PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed
->   PCI, MSI: Free legacy PCI IRQ when enabling MSI/MSI-X
-> 
->  arch/x86/include/asm/pci_x86.h |    2 --
->  arch/x86/pci/common.c          |   20 +++++++++-----------
->  arch/x86/pci/intel_mid_pci.c   |    9 ++++++---
->  arch/x86/pci/irq.c             |   23 ++++-------------------
->  drivers/acpi/pci_irq.c         |   17 ++++-------------
->  drivers/pci/msi.c              |    6 +++++-
->  drivers/pci/pci-driver.c       |   26 ++++++++++++++++++++------
->  include/linux/pci.h            |   19 +++++++++++++++++++
->  8 files changed, 67 insertions(+), 55 deletions(-)
-> 
-> -- 
-> 1.7.10.4
-> 
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
