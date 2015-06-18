@@ -1,181 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:35881 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762AbbFDVuB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 17:50:01 -0400
-Received: by obbqz1 with SMTP id qz1so23846362obb.3
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 14:50:00 -0700 (PDT)
-Subject: [PATCH 5/7] PCI: Remove unnecessary #includes of <asm/pci.h>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 3/4] PCI: pciehp: Rename queue_interrupt_event() to
+ pciehp_queue_interrupt_event()
 To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, x86@kernel.org,
-	linux-alpha@vger.kernel.org
-Date: Thu, 04 Jun 2015 16:49:57 -0500
-Message-ID: <20150604214957.2399.66129.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: Rajat Jain <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>,
+	linux-kernel@vger.kernel.org
+Date: Thu, 18 Jun 2015 11:12:51 -0500
+Message-ID: <20150618161251.32739.37707.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In include/linux/pci.h, we already #include <asm/pci.h>, so we don't need
-to include <asm/pci.h> directly.
+Rename queue_interrupt_event() to pciehp_queue_interrupt_event() so we can
+make it extern and call it from pcie_isr().
 
-Remove the unnecessary includes.  All the files here already include
-<linux/pci.h>.
+No functional change.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-alpha@vger.kernel.org
-CC: linux-mips@linux-mips.org
-CC: linuxppc-dev@lists.ozlabs.org
-CC: linux-sh@vger.kernel.org
-CC: x86@kernel.org
 ---
- arch/alpha/kernel/core_irongate.c |    1 -
- arch/alpha/kernel/sys_eiger.c     |    1 -
- arch/alpha/kernel/sys_nautilus.c  |    1 -
- arch/mips/pci/fixup-cobalt.c      |    1 -
- arch/mips/pci/ops-mace.c          |    1 -
- arch/mips/pci/pci-lantiq.c        |    1 -
- arch/powerpc/kernel/prom.c        |    1 -
- arch/powerpc/kernel/prom_init.c   |    1 -
- arch/sh/drivers/pci/ops-sh5.c     |    1 -
- arch/sh/drivers/pci/pci-sh5.c     |    1 -
- arch/x86/kernel/x86_init.c        |    1 -
- 11 files changed, 11 deletions(-)
+ drivers/pci/hotplug/pciehp_ctrl.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/arch/alpha/kernel/core_irongate.c b/arch/alpha/kernel/core_irongate.c
-index 00096df..83d0a35 100644
---- a/arch/alpha/kernel/core_irongate.c
-+++ b/arch/alpha/kernel/core_irongate.c
-@@ -22,7 +22,6 @@
- #include <linux/bootmem.h>
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 1086041..7ed37dc 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -37,7 +37,7 @@
  
- #include <asm/ptrace.h>
--#include <asm/pci.h>
- #include <asm/cacheflush.h>
- #include <asm/tlbflush.h>
+ static void interrupt_event_handler(struct work_struct *work);
  
-diff --git a/arch/alpha/kernel/sys_eiger.c b/arch/alpha/kernel/sys_eiger.c
-index 79d69d7..15f4208 100644
---- a/arch/alpha/kernel/sys_eiger.c
-+++ b/arch/alpha/kernel/sys_eiger.c
-@@ -22,7 +22,6 @@
- #include <asm/irq.h>
- #include <asm/mmu_context.h>
- #include <asm/io.h>
--#include <asm/pci.h>
- #include <asm/pgtable.h>
- #include <asm/core_tsunami.h>
- #include <asm/hwrpb.h>
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 700686d..2cfaa0e 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -39,7 +39,6 @@
- #include <asm/irq.h>
- #include <asm/mmu_context.h>
- #include <asm/io.h>
--#include <asm/pci.h>
- #include <asm/pgtable.h>
- #include <asm/core_irongate.h>
- #include <asm/hwrpb.h>
-diff --git a/arch/mips/pci/fixup-cobalt.c b/arch/mips/pci/fixup-cobalt.c
-index a138e8e..b3ab593 100644
---- a/arch/mips/pci/fixup-cobalt.c
-+++ b/arch/mips/pci/fixup-cobalt.c
-@@ -13,7 +13,6 @@
- #include <linux/kernel.h>
- #include <linux/init.h>
+-static void queue_interrupt_event(struct slot *p_slot, u32 event_type)
++static void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
+ {
+ 	struct event_info *info;
  
--#include <asm/pci.h>
- #include <asm/io.h>
- #include <asm/gt64120.h>
+@@ -64,7 +64,7 @@ u8 pciehp_handle_attention_button(struct slot *p_slot)
+ 	ctrl_info(ctrl, "Button pressed on Slot(%s)\n", slot_name(p_slot));
+ 	event_type = INT_BUTTON_PRESS;
  
-diff --git a/arch/mips/pci/ops-mace.c b/arch/mips/pci/ops-mace.c
-index 6b5821f..951d807 100644
---- a/arch/mips/pci/ops-mace.c
-+++ b/arch/mips/pci/ops-mace.c
-@@ -8,7 +8,6 @@
- #include <linux/kernel.h>
- #include <linux/pci.h>
- #include <linux/types.h>
--#include <asm/pci.h>
- #include <asm/ip32/mace.h>
+-	queue_interrupt_event(p_slot, event_type);
++	pciehp_queue_interrupt_event(p_slot, event_type);
  
- #if 0
-diff --git a/arch/mips/pci/pci-lantiq.c b/arch/mips/pci/pci-lantiq.c
-index 8b117e6..c5347d9 100644
---- a/arch/mips/pci/pci-lantiq.c
-+++ b/arch/mips/pci/pci-lantiq.c
-@@ -20,7 +20,6 @@
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
+ 	return 0;
+ }
+@@ -90,7 +90,7 @@ u8 pciehp_handle_switch_change(struct slot *p_slot)
+ 		event_type = INT_SWITCH_CLOSE;
+ 	}
  
--#include <asm/pci.h>
- #include <asm/gpio.h>
- #include <asm/addrspace.h>
+-	queue_interrupt_event(p_slot, event_type);
++	pciehp_queue_interrupt_event(p_slot, event_type);
  
-diff --git a/arch/powerpc/kernel/prom.c b/arch/powerpc/kernel/prom.c
-index 308c5e1..00fdea2 100644
---- a/arch/powerpc/kernel/prom.c
-+++ b/arch/powerpc/kernel/prom.c
-@@ -46,7 +46,6 @@
- #include <asm/mmu.h>
- #include <asm/paca.h>
- #include <asm/pgtable.h>
--#include <asm/pci.h>
- #include <asm/iommu.h>
- #include <asm/btext.h>
- #include <asm/sections.h>
-diff --git a/arch/powerpc/kernel/prom_init.c b/arch/powerpc/kernel/prom_init.c
-index fd1fe4c..fcca807 100644
---- a/arch/powerpc/kernel/prom_init.c
-+++ b/arch/powerpc/kernel/prom_init.c
-@@ -37,7 +37,6 @@
- #include <asm/smp.h>
- #include <asm/mmu.h>
- #include <asm/pgtable.h>
--#include <asm/pci.h>
- #include <asm/iommu.h>
- #include <asm/btext.h>
- #include <asm/sections.h>
-diff --git a/arch/sh/drivers/pci/ops-sh5.c b/arch/sh/drivers/pci/ops-sh5.c
-index 4ce95a0..4536194 100644
---- a/arch/sh/drivers/pci/ops-sh5.c
-+++ b/arch/sh/drivers/pci/ops-sh5.c
-@@ -18,7 +18,6 @@
- #include <linux/delay.h>
- #include <linux/types.h>
- #include <linux/irq.h>
--#include <asm/pci.h>
- #include <asm/io.h>
- #include "pci-sh5.h"
+ 	return 1;
+ }
+@@ -120,7 +120,7 @@ u8 pciehp_handle_presence_change(struct slot *p_slot)
+ 		event_type = INT_PRESENCE_OFF;
+ 	}
  
-diff --git a/arch/sh/drivers/pci/pci-sh5.c b/arch/sh/drivers/pci/pci-sh5.c
-index 16c1e72..8229114 100644
---- a/arch/sh/drivers/pci/pci-sh5.c
-+++ b/arch/sh/drivers/pci/pci-sh5.c
-@@ -20,7 +20,6 @@
- #include <linux/types.h>
- #include <linux/irq.h>
- #include <cpu/irq.h>
--#include <asm/pci.h>
- #include <asm/io.h>
- #include "pci-sh5.h"
+-	queue_interrupt_event(p_slot, event_type);
++	pciehp_queue_interrupt_event(p_slot, event_type);
  
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 234b072..eed5625 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -11,7 +11,6 @@
- #include <asm/bios_ebda.h>
- #include <asm/paravirt.h>
- #include <asm/pci_x86.h>
--#include <asm/pci.h>
- #include <asm/mpspec.h>
- #include <asm/setup.h>
- #include <asm/apic.h>
+ 	return 1;
+ }
+@@ -133,7 +133,7 @@ u8 pciehp_handle_power_fault(struct slot *p_slot)
+ 	ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(p_slot));
+ 	event_type = INT_POWER_FAULT;
+ 	ctrl_info(ctrl, "Power fault bit %x set\n", 0);
+-	queue_interrupt_event(p_slot, event_type);
++	pciehp_queue_interrupt_event(p_slot, event_type);
+ 
+ 	return 1;
+ }
+@@ -153,7 +153,7 @@ void pciehp_handle_linkstate_change(struct slot *p_slot)
+ 		event_type = INT_LINK_DOWN;
+ 	}
+ 
+-	queue_interrupt_event(p_slot, event_type);
++	pciehp_queue_interrupt_event(p_slot, event_type);
+ }
+ 
+ /* The following routines constitute the bulk of the
 
