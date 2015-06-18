@@ -1,58 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwhop.emc.com ([168.159.213.141]:58777 "EHLO
-	mailuogwhop.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbbF2Ouk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 10:50:40 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH 5/9] NTB: Fix oops in debugfs when transport is half-up
-Date: Mon, 29 Jun 2015 10:50:01 -0400
-Message-Id: <dc46fafa9893ffa92dad1a95fda17627dfff8c8a.1435587291.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
-References: <cover.1435587291.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
-References: <cover.1435587291.git.Allen.Hubbe@emc.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 18 Jun 2015 16:12:52 -0500
+Message-ID: <CAErSpo55Ek+G3BxBMYBqsqFZRVR7ZrLboNW8bCJWZmnFw8JgLQ@mail.gmail.com>
+Subject: Re: [PATCH 0/4] PCI: pciehp cleanup
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: Rajat Jain <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dave Jiang <dave.jiang@intel.com>
+On Thu, Jun 18, 2015 at 11:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> These patches don't *do* anything except get rid of some overly verbose
+> debug logging and a bunch of boilerplate code by inlining trivial things.
+>
+> Unless I made a mistake, this should not change the way anything works at
+> all, although I did change some of the message text.
+>
+> ---
+>
+> Bjorn Helgaas (4):
+>       PCI: pciehp: Clean up debug logging
+>       PCI: pciehp: Make queue_interrupt_event() void
+>       PCI: pciehp: Rename queue_interrupt_event() to pciehp_queue_interrupt_event()
+>       PCI: pciehp: Inline the "handle event" functions into the ISR
+>
+>
+>  drivers/pci/hotplug/pciehp.h      |    6 -
+>  drivers/pci/hotplug/pciehp_core.c |   37 +--------
+>  drivers/pci/hotplug/pciehp_ctrl.c |  154 +++----------------------------------
+>  drivers/pci/hotplug/pciehp_hpc.c  |   89 +++++++++------------
+>  4 files changed, 53 insertions(+), 233 deletions(-)
 
-When the remote side is not up, we do not have all the context for the
-transport, and that causes NULL ptr access. Have the debugfs reads check
-to see if transport is up before we make access.
+I applied these to pci/hotplug for v4.2 with acks/reviewed-by from
+Rajat and Yinghai.  Thanks for taking a look!
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
----
- drivers/ntb/ntb_transport.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index 30d8b52421ec..1764bb2fd265 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -438,13 +438,17 @@ static ssize_t debugfs_read(struct file *filp, char __user *ubuf, size_t count,
- 	char *buf;
- 	ssize_t ret, out_offset, out_count;
- 
-+	qp = filp->private_data;
-+
-+	if (!qp || !qp->link_is_up)
-+		return 0;
-+
- 	out_count = 1000;
- 
- 	buf = kmalloc(out_count, GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
- 
--	qp = filp->private_data;
- 	out_offset = 0;
- 	out_offset += snprintf(buf + out_offset, out_count - out_offset,
- 			       "NTB QP stats\n");
--- 
-2.4.0.rc0.43.gcf8a8c6
-
+Bjorn
