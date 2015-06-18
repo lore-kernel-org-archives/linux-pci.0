@@ -1,77 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:45332 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751028AbbFSQX5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Jun 2015 12:23:57 -0400
-Date: Fri, 19 Jun 2015 17:24:13 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-Message-ID: <20150619162413.GA21533@red-moon>
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
- <20150527210447.GY32152@google.com>
- <20150528022332.GA23724@roeck-us.net>
- <20150528124112.GJ10210@google.com>
- <20150618180103.GA23809@roeck-us.net>
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:36130 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756132AbbFRULE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 16:11:04 -0400
+Received: by yhan67 with SMTP id n67so64140879yha.3
+        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:11:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150618180103.GA23809@roeck-us.net>
+In-Reply-To: <CAL_Jsq+5820W8N1Pbmv8JXzz7mH_H89HhtjXK_FAYbWAwBd8Ng@mail.gmail.com>
+References: <1433874401-27161-1-git-send-email-robh@kernel.org>
+ <1433874401-27161-11-git-send-email-robh@kernel.org> <20150618165954.GE7710@google.com>
+ <CAL_Jsq+5820W8N1Pbmv8JXzz7mH_H89HhtjXK_FAYbWAwBd8Ng@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 18 Jun 2015 15:10:43 -0500
+Message-ID: <CAErSpo6VWA-kxESd4VVrf9zLoy19JcFWKFCvnzCCNPe64bzkXA@mail.gmail.com>
+Subject: Re: [PATCH 10/15] PCI: kill off set_irq_flags usage
+To: Rob Herring <robh@kernel.org>
+Cc: Russell King <linux@arm.linux.org.uk>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"arm@kernel.org" <arm@kernel.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?Q?S=C3=B6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+	linux-omap <linux-omap@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	SH-Linux <linux-sh@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Guenter,
+On Thu, Jun 18, 2015 at 3:08 PM, Rob Herring <robh@kernel.org> wrote:
+> On Thu, Jun 18, 2015 at 11:59 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Tue, Jun 09, 2015 at 01:26:36PM -0500, Rob Herring wrote:
+>>> set_irq_flags is ARM specific with custom flags which have genirq
+>>> equivalents. Convert drivers to use the genirq interfaces directly, so we
+>>> can kill off set_irq_flags. The translation of flags is as follows:
+>>>
+>>> IRQF_VALID -> !IRQ_NOREQUEST
+>>> IRQF_PROBE -> !IRQ_NOPROBE
+>>> IRQF_NOAUTOEN -> IRQ_NOAUTOEN
+>>>
+>>> For IRQs managed by an irqdomain, the irqdomain core code handles clearing
+>>> and setting IRQ_NOREQUEST already, so there is no need to do this in
+>>> .map() functions and we can simply remove the set_irq_flags calls. Some
+>>> users also set IRQ_NOPROBE and this has been maintained although it is not
+>>> clear that is really needed. There appears to be a great deal of blind
+>>> copy and paste of this code.
+>>>
+>>> Signed-off-by: Rob Herring <robh@kernel.org>
+>>> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: Murali Karicheri <m-karicheri2@ti.com>
+>>> Cc: Thierry Reding <thierry.reding@gmail.com>
+>>> Cc: Stephen Warren <swarren@wwwdotorg.org>
+>>> Cc: Alexandre Courbot <gnurou@gmail.com>
+>>> Cc: Jingoo Han <jingoohan1@gmail.com>
+>>> Cc: Pratyush Anand <pratyush.anand@gmail.com>
+>>> Cc: Simon Horman <horms@verge.net.au>
+>>> Cc: Michal Simek <michal.simek@xilinx.com>
+>>> Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+>>> Cc: linux-omap@vger.kernel.org
+>>> Cc: linux-pci@vger.kernel.org
+>>> Cc: linux-arm-kernel@lists.infradead.org
+>>> Cc: linux-tegra@vger.kernel.org
+>>> Cc: linux-sh@vger.kernel.org
+>>
+>> This is the only part of the series on linux-pci, so I assume this will be
+>> merged by somebody else along with the rest.
+>
+> I copied you on the intro, but all the lists and all the maintainers
+> was too long to cc. Being late in the cycle I didn't really intend for
+> this to be for 4.2, but you can pick up this patch if you want to as
+> it doesn't have any dependencies. If you don't, then I will submit the
+> whole series for 4.3.
 
-On Thu, Jun 18, 2015 at 07:01:03PM +0100, Guenter Roeck wrote:
-> On Thu, May 28, 2015 at 07:41:12AM -0500, Bjorn Helgaas wrote:
-> > 
-> > > > I'd like res->flags to reflect the capabilities of the hardware, not
-> > > > whether the window is currently enabled.
-> > > > 
-> > > Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
-> > > purpose, or could that cause conflicts elsewhere ?
-> > 
-> > Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
-> > below a host bridge that doesn't support I/O space.
-> > 
-> I integrated Lorenzo's patch and tried to get this working.
+OK, why don't you just include this with the rest of the series, since
+I assume the whole series is related even if there's no actual
+dependency.
 
-Thanks. How do you want to proceed with this ? Are you taking my patch
-and post it along with your updated series ? We need to extend test
-coverage to platforms we could not test on, as you know my series
-affects all archs but SPARC (I mean it should *not* affect them, this
-has to be tested though, I do not have the HW needed, your coverage
-for x86 and PowerPC is great but I do not think it can be deemed
-sufficient).
-
-Please let me know, thanks !
-
-Lorenzo
-
-> Problem is that the use of a resource is widely checked with "!res->flags"
-> throughout the code. That would have to be changed to something like
-> "(!res->flags || (res->flags & IORESOURCE_DISABLED))" whereever it is used.
-> 
-> I tried going with "!res->flags" instead, but have not been able to get it
-> to work realiably; it is just very difficult to distinguish if "!res->flags"
-> means that the resource has not yet been assigned or if it means that it is not
-> supported.
-> 
-> The correct approach, in my opinion, would be to go with IORESOURCE_DISABLED
-> and make the necessary changes whereever needed. Effectively this means to
-> replace the "!res->flags" check with something like pci_res_used() [ pick
-> your preferred name ] and define it as
-> 
-> #define pci_res_used(res) ((res)->flags && !((res)->flags & IORESOURCE_DISABLED))
-> 
-> Is that the right direction ?
-> 
-> Thanks,
-> Guenter
-> 
---
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+Bjorn
