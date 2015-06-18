@@ -1,178 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:35572 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754557AbbFRQ77 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 12:59:59 -0400
-Received: by iefd2 with SMTP id d2so2396218ief.2
-        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 09:59:58 -0700 (PDT)
-Date: Thu, 18 Jun 2015 11:59:54 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	arm@kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: Re: [PATCH 10/15] PCI: kill off set_irq_flags usage
-Message-ID: <20150618165954.GE7710@google.com>
-References: <1433874401-27161-1-git-send-email-robh@kernel.org>
- <1433874401-27161-11-git-send-email-robh@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1433874401-27161-11-git-send-email-robh@kernel.org>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:39291 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753257AbbFRIIL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:08:11 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 18 Jun 2015 13:38:09 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 292CA1258056
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:40:43 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I880bZ49873044
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:38:01 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I87v2j015362
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:37:58 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V8 08/10] powerpc/powernv: Support PCI config restore for VFs
+Date: Thu, 18 Jun 2015 16:06:43 +0800
+Message-Id: <1434614805-19002-9-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 09, 2015 at 01:26:36PM -0500, Rob Herring wrote:
-> set_irq_flags is ARM specific with custom flags which have genirq
-> equivalents. Convert drivers to use the genirq interfaces directly, so we
-> can kill off set_irq_flags. The translation of flags is as follows:
-> 
-> IRQF_VALID -> !IRQ_NOREQUEST
-> IRQF_PROBE -> !IRQ_NOPROBE
-> IRQF_NOAUTOEN -> IRQ_NOAUTOEN
-> 
-> For IRQs managed by an irqdomain, the irqdomain core code handles clearing
-> and setting IRQ_NOREQUEST already, so there is no need to do this in
-> .map() functions and we can simply remove the set_irq_flags calls. Some
-> users also set IRQ_NOPROBE and this has been maintained although it is not
-> clear that is really needed. There appears to be a great deal of blind
-> copy and paste of this code.
-> 
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Murali Karicheri <m-karicheri2@ti.com>
-> Cc: Thierry Reding <thierry.reding@gmail.com>
-> Cc: Stephen Warren <swarren@wwwdotorg.org>
-> Cc: Alexandre Courbot <gnurou@gmail.com>
-> Cc: Jingoo Han <jingoohan1@gmail.com>
-> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> Cc: Simon Horman <horms@verge.net.au>
-> Cc: Michal Simek <michal.simek@xilinx.com>
-> Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-> Cc: linux-omap@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-tegra@vger.kernel.org
-> Cc: linux-sh@vger.kernel.org
+After PE reset, OPAL API opal_pci_reinit() is called on all devices
+contained in the PE to reinitialize them. However, VFs can't be seen
+from skiboot firmware. We have to implement the functions, similar
+those in skiboot firmware, to reinitialize VFs after reset on PE
+for VFs.
 
-This is the only part of the series on linux-pci, so I assume this will be
-merged by somebody else along with the rest.
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h        |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   70 +++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.c         |   18 +++++++
+ 3 files changed, 88 insertions(+), 1 deletion(-)
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index c324882..ad60263 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -206,6 +206,7 @@ struct pci_dn {
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+ #endif /* CONFIG_PCI_IOV */
++	int	mps;
+ #endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index fe1d1e5..4a5adae 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1612,6 +1612,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
+ }
+ 
++static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 devctl, cmd, cap2, aer_capctl;
++	int old_mps;
++
++	/* Restore MPS */
++	if (edev->pcie_cap) {
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++	}
++
++	/* Disable Completion Timeout */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				     4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, cap2);
++		}
++	}
++
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, aer_capctl);
++	}
++
++	return 0;
++}
++
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -1622,7 +1683,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 		return -EEXIST;
+ 
+ 	phb = edev->phb->private_data;
+-	ret = opal_pci_reinit(phb->opal_id,
++	/*
++	 * We have to restore the PCI config space after reset since the
++	 * firmware can't see SRIOV VFs.
++	 */
++	if (edev->physfn)
++		ret = pnv_eeh_restore_vf_config(pdn);
++	else
++		ret = opal_pci_reinit(phb->opal_id,
+ 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+ 	if (ret) {
+ 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index bca2aeb..10bc8c3 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -729,6 +729,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	int parent_mps;
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/* Synchronize MPS for VF and PF */
++	parent_mps = pcie_get_mps(pdev->physfn);
++	if ((128 << pdev->pcie_mpss) >= parent_mps)
++		pcie_set_mps(pdev, parent_mps);
++	pdn->mps = pcie_get_mps(pdev);
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
++#endif /* CONFIG_PCI_IOV */
++
+ void __init pnv_pci_init(void)
+ {
+ 	struct device_node *np;
+-- 
+1.7.9.5
 
-> ---
->  drivers/pci/host/pci-dra7xx.c      | 1 -
->  drivers/pci/host/pci-keystone-dw.c | 2 --
->  drivers/pci/host/pci-tegra.c       | 1 -
->  drivers/pci/host/pcie-designware.c | 1 -
->  drivers/pci/host/pcie-rcar.c       | 1 -
->  drivers/pci/host/pcie-xilinx.c     | 2 --
->  6 files changed, 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 2d57e19..94cbc4d 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -160,7 +160,6 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
->  
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-> index f34892e..f1d0749 100644
-> --- a/drivers/pci/host/pci-keystone-dw.c
-> +++ b/drivers/pci/host/pci-keystone-dw.c
-> @@ -196,7 +196,6 @@ static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
->  	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
->  				 handle_level_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
->  
->  	return 0;
->  }
-> @@ -277,7 +276,6 @@ static int ks_dw_pcie_init_legacy_irq_map(struct irq_domain *d,
->  	irq_set_chip_and_handler(irq, &ks_dw_pcie_legacy_irq_chip,
->  				 handle_level_irq);
->  	irq_set_chip_data(irq, d->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
->  
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 00e9272..36bd700 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -1263,7 +1263,6 @@ static int tegra_msi_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &tegra_msi_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
->  
->  	tegra_cpuidle_pcie_irqs_in_use();
->  
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 2e9f84f..5caa94d 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -333,7 +333,6 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
->  
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index c086210..7678fe0 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -664,7 +664,6 @@ static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
->  
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index f1a06a0..72015119 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -338,7 +338,6 @@ static int xilinx_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &xilinx_msi_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
->  
->  	return 0;
->  }
-> @@ -377,7 +376,6 @@ static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
->  
->  	return 0;
->  }
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
