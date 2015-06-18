@@ -1,43 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:64849 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753288AbbFRH6O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Jun 2015 03:58:14 -0400
-From: =?UTF-8?q?David=20M=C3=BCller?= <dave.mueller@gmx.ch>
-To: linux-pci@vger.kernel.org
-Cc: Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] ARM: imx6: Fix "BUG: scheduling while atomic" if PCIe switch is attached
-Date: Thu, 18 Jun 2015 09:56:54 +0200
-Message-Id: <1434614214-2085-1-git-send-email-dave.mueller@gmx.ch>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rajat Jain <rajatja@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/4] PCI: pciehp: Clean up debug logging
+Date: Thu, 18 Jun 2015 23:52:49 +0200
+Message-ID: <1650350.VG8hpWuxzd@vostro.rjw.lan>
+In-Reply-To: <CAErSpo5-ny8xjb=KgETZMAoiNMQykYC2iMG8iw03UQnjtLeG8g@mail.gmail.com>
+References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com> <CACK8Z6Gh=rLS_tBdx-xyr-RwtTFtnkUD=A5ibJyy6SrE5jAZbw@mail.gmail.com> <CAErSpo5-ny8xjb=KgETZMAoiNMQykYC2iMG8iw03UQnjtLeG8g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This problem has already been reported as 
-https://bugzilla.kernel.org/show_bug.cgi?id=100031
+On Thursday, June 18, 2015 04:22:53 PM Bjorn Helgaas wrote:
+> [+cc Rafael]
+> 
+> On Thu, Jun 18, 2015 at 1:08 PM, Rajat Jain <rajatja@google.com> wrote:
+> > On Thu, Jun 18, 2015 at 11:01 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> On Thu, Jun 18, 2015 at 12:27 PM, Rajat Jain <rajatja@google.com> wrote:
+> >>> Hi,
+> >>>
+> >>> On Thu, Jun 18, 2015 at 9:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >>>> The pciehp debug logging is overly verbose and often redundant.  Almost all
+> >>>> of the information printed by dbg_ctrl() is also printed by the normal PCI
+> >>>> core enumeration code and by pcie_init().
+> >>>>
+> >>>> Remove the redundant debug info.
+> >>>>
+> >>>> When claiming a pciehp bridge, we print the slot characteristics, e.g.,
+> >>>>
+> >>>>   Slot #6 AttnBtn- AttnInd- PwrInd- PwrCtrl- MRL- Interlock- NoCompl+ LLActRep+
+> >>>>
+> >>>> Add the Hot-Plug Capable and Hot-Plug Surprise bits to this information,
+> >>>
+> >>> If the slot is not hotplug capable. then pciehp wouldn't claim it in
+> >>> the first place.
+> >>>
+> >>> So printing of "hotplug capable" may really not be needed..
+> >>
+> >> Yes, I did think about that, and you're right that it probably isn't
+> >> needed.  But the criteria for claiming a slot and deciding whether
+> >> acpiphp or pciehp should manage it are not 100% clear yet, so I
+> >> figured it wouldn't hurt to be a bit more transparent.
+> >
+> > Sounds right.
+> >
+> > Reviewed-by : Rajat Jain <rajatja@google.com>
+> >
+> > Side note: To clarify when and why the slot was claimed by pciehp or
+> > acpihp, do you think we need some mumbling / logging in
+> > acpi_pci_detect_ejectable() or pciehp_acpi_slot_detection_check()?
+> 
+> Maybe so (but I haven't added anything).
+> 
+> My intuition is that acpiphp and pciehp are not really symmetric.  I
+> think pciehp should claim PCIe downstream ports (Root Ports and
+> Downstream Ports) when _OSC has granted us control.
+> 
+> But it doesn't seem like acpiphp should decide whether to claim
+> certain devices based on whether they have _ADR, _EJ0, _RMV, etc.
 
-Signed-off-by: David Müller <dave.mueller@gmx.ch>
----
- drivers/pci/host/pci-imx6.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But it doesn't do that, does it?
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index fdb9536..c63691c 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -489,7 +489,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
- 		 * Wait a little bit, then re-check if the link finished
- 		 * the training.
- 		 */
--		usleep_range(1000, 2000);
-+		mdelay(20);
- 	}
- 	/*
- 	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
--- 
-1.8.4
+> Shouldn't it just be integrated with the ACPI core so  it can field
+> notifications from the platform, no matter what methods are present,
+> and even if pciehp has claimed a bridge in that scope?
+
+That's how it is implemented today AFAICS.
+
+Thanks,
+Rafael
 
