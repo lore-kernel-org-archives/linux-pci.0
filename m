@@ -1,175 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwdur.emc.com ([128.221.224.79]:55966 "EHLO
-	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965316AbbFJOJQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Jun 2015 10:09:16 -0400
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v4 14/19] NTB: Use NUMA memory and DMA chan in transport
-Date: Wed, 10 Jun 2015 05:08:19 -0400
-Message-Id: <71dc91735cc89d01d4b5298556da0c8b5f9d0173.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:9998 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753704AbbFRMGm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 08:06:42 -0400
+Message-ID: <5582B43F.4090303@huawei.com>
+Date: Thu, 18 Jun 2015 20:06:23 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rajat Jain <rajatxjain@gmail.com>, PCI <linux-pci@vger.kernel.org>
+Subject: pciehp command complete timeout issue
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allocate memory and request the DMA channel for the same NUMA node as
-the NTB device.
+When I tried to unbind pciehp driver on a pcie root port(bound pciehp driver),
+a lot timeout warning appeared.
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- drivers/ntb/ntb_transport.c | 46 +++++++++++++++++++++++++++++++--------------
- 1 file changed, 32 insertions(+), 14 deletions(-)
+The first timeout value is 102387672 msec :(
+I debug and found that when pciehp complete pcie_enable_notification(), there was no command complete interrupt
+be triggered, so cmd_busy always be set, and once another command post, a very long timeout warning noised.
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index 8ce0bf67ac20..dc14ec81c43e 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -346,6 +346,7 @@ int ntb_transport_register_client_dev(char *device_name)
- {
- 	struct ntb_transport_client_dev *client_dev;
- 	struct ntb_transport_ctx *nt;
-+	int node;
- 	int rc, i = 0;
- 
- 	if (list_empty(&ntb_transport_list))
-@@ -354,8 +355,10 @@ int ntb_transport_register_client_dev(char *device_name)
- 	list_for_each_entry(nt, &ntb_transport_list, entry) {
- 		struct device *dev;
- 
--		client_dev = kzalloc(sizeof(*client_dev),
--				     GFP_KERNEL);
-+		node = dev_to_node(&nt->ndev->dev);
-+
-+		client_dev = kzalloc_node(sizeof(*client_dev),
-+					  GFP_KERNEL, node);
- 		if (!client_dev) {
- 			rc = -ENOMEM;
- 			goto err;
-@@ -953,6 +956,7 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 	struct ntb_transport_mw *mw;
- 	unsigned int mw_count, qp_count;
- 	u64 qp_bitmap;
-+	int node;
- 	int rc, i;
- 
- 	if (ntb_db_is_unsafe(ndev))
-@@ -962,7 +966,9 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 		dev_dbg(&ndev->dev,
- 			"scratchpad is unsafe, proceed anyway...\n");
- 
--	nt = kzalloc(sizeof(*nt), GFP_KERNEL);
-+	node = dev_to_node(&ndev->dev);
-+
-+	nt = kzalloc_node(sizeof(*nt), GFP_KERNEL, node);
- 	if (!nt)
- 		return -ENOMEM;
- 
-@@ -972,7 +978,8 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 
- 	nt->mw_count = mw_count;
- 
--	nt->mw_vec = kcalloc(mw_count, sizeof(*nt->mw_vec), GFP_KERNEL);
-+	nt->mw_vec = kzalloc_node(mw_count * sizeof(*nt->mw_vec),
-+				  GFP_KERNEL, node);
- 	if (!nt->mw_vec) {
- 		rc = -ENOMEM;
- 		goto err;
-@@ -1012,7 +1019,8 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 	nt->qp_bitmap = qp_bitmap;
- 	nt->qp_bitmap_free = qp_bitmap;
- 
--	nt->qp_vec = kcalloc(qp_count, sizeof(*nt->qp_vec), GFP_KERNEL);
-+	nt->qp_vec = kzalloc_node(qp_count * sizeof(*nt->qp_vec),
-+				  GFP_KERNEL, node);
- 	if (!nt->qp_vec) {
- 		rc = -ENOMEM;
- 		goto err2;
-@@ -1512,6 +1520,11 @@ static void ntb_send_link_down(struct ntb_transport_qp *qp)
- 	ntb_qp_link_down_reset(qp);
- }
- 
-+static bool ntb_dma_filter_fn(struct dma_chan *chan, void *node)
-+{
-+	return dev_to_node(&chan->dev->device) == (int)(unsigned long)node;
-+}
-+
- /**
-  * ntb_transport_create_queue - Create a new NTB transport layer queue
-  * @rx_handler: receive callback function
-@@ -1537,12 +1550,16 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
- 	struct ntb_transport_qp *qp;
- 	u64 qp_bit;
- 	unsigned int free_queue;
-+	dma_cap_mask_t dma_mask;
-+	int node;
- 	int i;
- 
- 	ndev = dev_ntb(client_dev->parent);
- 	pdev = ndev->pdev;
- 	nt = ndev->ctx;
- 
-+	node = dev_to_node(&ndev->dev);
-+
- 	free_queue = ffs(nt->qp_bitmap);
- 	if (!free_queue)
- 		goto err;
-@@ -1560,15 +1577,16 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
- 	qp->tx_handler = handlers->tx_handler;
- 	qp->event_handler = handlers->event_handler;
- 
--	dmaengine_get();
--	qp->dma_chan = dma_find_channel(DMA_MEMCPY);
--	if (!qp->dma_chan) {
--		dmaengine_put();
-+	dma_cap_zero(dma_mask);
-+	dma_cap_set(DMA_MEMCPY, dma_mask);
-+
-+	qp->dma_chan = dma_request_channel(dma_mask, ntb_dma_filter_fn,
-+					   (void *)(unsigned long)node);
-+	if (!qp->dma_chan)
- 		dev_info(&pdev->dev, "Unable to allocate DMA channel, using CPU instead\n");
--	}
- 
- 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
--		entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
-+		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
- 		if (!entry)
- 			goto err1;
- 
-@@ -1578,7 +1596,7 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
- 	}
- 
- 	for (i = 0; i < NTB_QP_DEF_NUM_ENTRIES; i++) {
--		entry = kzalloc(sizeof(*entry), GFP_ATOMIC);
-+		entry = kzalloc_node(sizeof(*entry), GFP_ATOMIC, node);
- 		if (!entry)
- 			goto err2;
- 
-@@ -1601,7 +1619,7 @@ err1:
- 	while ((entry = ntb_list_rm(&qp->ntb_rx_free_q_lock, &qp->rx_free_q)))
- 		kfree(entry);
- 	if (qp->dma_chan)
--		dmaengine_put();
-+		dma_release_channel(qp->dma_chan);
- 	nt->qp_bitmap_free |= qp_bit;
- err:
- 	return NULL;
-@@ -1638,7 +1656,7 @@ void ntb_transport_free_queue(struct ntb_transport_qp *qp)
- 		 */
- 		dma_sync_wait(chan, qp->last_cookie);
- 		dmaengine_terminate_all(chan);
--		dmaengine_put();
-+		dma_release_channel(chan);
- 	}
- 
- 	qp_bit = BIT_ULL(qp->qp_num);
+
+ +-[0000:40]-+-00.0-[41]--
+ |           +-01.0-[42-43]--+-00.0  Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection
+ |           |               \-00.1  Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection
+ |           +-03.0-[44-45]--+-00.0  Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection
+ |           |               \-00.1  Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection
+
+[root@hulk slots]# ls
+0  0-1  0-2  0-3  0-4  0-5  1  10  11  12  13  14  15  16  2  3  4  5  6  7  8  9
+[root@hulk slots]# cat 6/address
+0000:44:00
+[root@hulk slots]#
+
+[root@hulk pciehp]# echo 0000:40:03.0:pcie04 > unbind
+[root@hulk pciehp]#
+
+...
+[102413.749632] pciehp 0000:40:03.0:pcie04: unloading service driver pciehp
+[102413.749638] pciehp_remove dev 0000:40:03.0, cmd_busy 1
+[102413.754929] pcie_disable_notification: ctrl cmd busy 1
+[102413.765903] pciehp 0000:40:03.0:pcie04: Timeout on hotplug command 0x11f1 (issued 102387672 msec ago)
+[102413.775171] pcie_do_write_cmd: dev 0000:40:03.0, cmd_busy set to 1
+[102415.377950] pciehp 0000:40:03.0:pcie04: Timeout on hotplug command 0x01c0 (issued 1600 msec ago)
+...
+
 -- 
-2.4.0.rc0.43.gcf8a8c6
+Thanks!
+Yijing
 
