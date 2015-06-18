@@ -1,63 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 24 Jun 2015 00:05:39 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC 3/4] arm64: Do not call enable PCI resources when specify
- PCI_PROBE_ONLY
-Message-ID: <20150623230539.GK7557@n2100.arm.linux.org.uk>
-References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1411937610-22125-4-git-send-email-suravee.suthikulpanit@amd.com>
- <CAErSpo6SngcV6_Ew0DOjW+xTw8y6j3UmwdPw1x-tk_AB=mapaQ@mail.gmail.com>
- <1435098868.3996.11.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435098868.3996.11.camel@kernel.crashing.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:46464 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753290AbbFRI3a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:29:30 -0400
+Message-ID: <1434616169.3061.5.camel@pengutronix.de>
+Subject: Re: [PATCH] ARM: imx6: Fix non-working MSI interrupts if PCIe
+ switch is attached
+From: Lucas Stach <l.stach@pengutronix.de>
+To: David =?ISO-8859-1?Q?M=FCller?= <dave.mueller@gmx.ch>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <Richard.Zhu@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Date: Thu, 18 Jun 2015 10:29:29 +0200
+In-Reply-To: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch>
+References: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 24, 2015 at 08:34:28AM +1000, Benjamin Herrenschmidt wrote:
-> On Mon, 2014-09-29 at 12:17 -0600, Bjorn Helgaas wrote:
-> > This seems like more than necessary, but I don't know all the history.
-> > In particular, I don't know why PCI_PROBE_ONLY should make a
-> > difference to things like claiming resources.
+Am Donnerstag, den 18.06.2015, 09:59 +0200 schrieb David Müller:
+> This problem has already been reported as 
+> https://bugzilla.kernel.org/show_bug.cgi?id=100051
 > 
-> It shouldn't ... we created that option on ppc originally to avoid
-> allocation/reallocation of resources. If they are bad, leave them bad,
-> but it was never a question of disabling all these other things.
+
+I need more explanation for this one. MSI interrupts were certainly
+working fine even with a PCIe switchin between some time back. I think I
+personally tested things with 3.19.
+
+In the bug report you mention that the MSI_ADDR registers are
+overwritten. Where does the write come from and why is it done?
+
+Regards,
+Lucas
+
+> Signed-off-by: David Müller <dave.mueller@gmx.ch>
+> ---
+>  drivers/pci/host/pci-imx6.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> (Ok, the MRSS/MPS is debatable, but why not plumb the parent pointers
-> and why not claim ? That doesn't make sense to me).
-
-You could look back over the history of arch/arm/kernel/bios32.c and
-see that it was introduced by Will Deacon when he stripped out the
-ARM version in favour of the generic version, and was found to be
-necessary then.
-
-I think the question has to be asked (based upon what Ben's saying)
-and what's identified in these commits as a failure case
-(pci_enable_resource failing when PCI_PROBE_ONLY is enabled) -
-why is the PCI core creating per-device resources which do not have
-parents.
-
-I've no idea on that; the only ARM boxes I have use the kernel's PCI
-allocation, I don't have these boxes which want to use PCI_PROBE_ONLY
-so it's something I have zero knowledge of.
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index c63691c..53f8dea 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -433,9 +433,6 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+>  	dw_pcie_setup_rc(pp);
+>  
+>  	imx6_pcie_start_link(pp);
+> -
+> -	if (IS_ENABLED(CONFIG_PCI_MSI))
+> -		dw_pcie_msi_init(pp);
+>  }
+>  
+>  static void imx6_pcie_reset_phy(struct pcie_port *pp)
+> @@ -550,6 +547,9 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+>  		return ret;
+>  	}
+>  
+> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> +		dw_pcie_msi_init(pp);
+> +
+>  	return 0;
+>  }
+>  
 
 -- 
-FTTC broadband for 0.8mile line: currently at 10.5Mbps down 400kbps up
-according to speedtest.net.
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
