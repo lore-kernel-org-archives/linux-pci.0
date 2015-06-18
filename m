@@ -1,67 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6Vx97T2PhYnqANopvqn1Qptv4DO8deb9=Lqe9iQQx04Kg@mail.gmail.com>
-References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
- <1432163293-20965-2-git-send-email-mcgrof@do-not-panic.com>
- <20150521223321.GG32152@google.com> <20150522002341.GM23057@wotan.suse.de>
- <20150526174008.GN32152@google.com> <20150527200402.GS23057@wotan.suse.de>
- <CAB=NE6Xyd-THK2385W7VfS358PSJfkfHRnjoZRJWP_LFrzOWJA@mail.gmail.com>
- <CAB=NE6Ut4QNmumYJku=At9QC==kAMzFZP-ANHWd3EWKY-tKHBA@mail.gmail.com>
- <CAErSpo4sHA-f83X1nW2QdLT9GdubFXCQ7UEJmSfFc5GBjj8FSA@mail.gmail.com> <CAB=NE6Vx97T2PhYnqANopvqn1Qptv4DO8deb9=Lqe9iQQx04Kg@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 19 Jun 2015 16:18:04 -0500
-Message-ID: <CAErSpo7CNH1WpgqJCEU8EtxiFNp_PiQ3cBwnKiWQpUaD-fd4YA@mail.gmail.com>
-Subject: Re: [PATCH v6 1/4] pci: add pci_iomap_wc() variants
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Ingo Molnar <mingo@elte.hu>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Dave Airlie <airlied@linux.ie>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Andi Kleen <andi@firstfloor.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:54005 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643AbbFRIGz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:06:55 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Thu, 18 Jun 2015 13:36:53 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 20D5AE0059
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:40:21 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5I86oCD43515996
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:50 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5I86nva027084
+	for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 13:36:49 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V8 01/10] PCI/IOV: Rename and export virtfn_add/virtfn_remove
+Date: Thu, 18 Jun 2015 16:06:36 +0800
+Message-Id: <1434614805-19002-2-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1434614805-19002-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 19, 2015 at 4:06 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
+During EEH recovery, hotplug is applied to the devices which don't
+have drivers or their drivers don't support EEH. However, the hotplug,
+which was implemented based on PCI bus, can't be applied to VF directly.
 
-> I hope to have provided a bit of new information to help you
-> reconsider this series to go through you but since you seem to be fine
-> for this to go through another tree and since I failed to notice that
-> I should also get Arnd's Ack I am in hopes this might be able to go
-> through Arnd's tree if not through you. Please let me know, in case I
-> have to resubmit to Arnd.
+The patch renames virtn_{add,remove}() and exports them so that they
+can be used in PCI hotplug during EEH recovery.
 
-If you want to have Arnd merge it, that's fine with me.
+[gwshan: changelog]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/iov.c   |   10 +++++-----
+ include/linux/pci.h |    8 ++++++++
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
-Bjorn
---
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-Please read the FAQ at  http://www.tux.org/lkml/
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..cc941dd 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -108,7 +108,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
+ }
+ 
+-static int virtfn_add(struct pci_dev *dev, int id, int reset)
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
+ {
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -183,7 +183,7 @@ failed:
+ 	return rc;
+ }
+ 
+-static void virtfn_remove(struct pci_dev *dev, int id, int reset)
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
+ {
+ 	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
+@@ -320,7 +320,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	}
+ 
+ 	for (i = 0; i < initial; i++) {
+-		rc = virtfn_add(dev, i, 0);
++		rc = pci_iov_virtfn_add(dev, i, 0);
+ 		if (rc)
+ 			goto failed;
+ 	}
+@@ -332,7 +332,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 
+ failed:
+ 	for (j = 0; j < i; j++)
+-		virtfn_remove(dev, j, 0);
++		pci_iov_virtfn_remove(dev, j, 0);
+ 
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+@@ -361,7 +361,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		return;
+ 
+ 	for (i = 0; i < iov->num_VFs; i++)
+-		virtfn_remove(dev, i, 0);
++		pci_iov_virtfn_remove(dev, i, 0);
+ 
+ 	pcibios_sriov_disable(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 353db8d..06aa5dd 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1679,6 +1679,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+ 
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
++int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset);
++void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+@@ -1696,6 +1698,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
++static inline int pci_iov_virtfn_add(struct pci_dev *dev, int id, int reset)
++{
++	return -ENOSYS;
++}
++static inline void pci_iov_virtfn_remove(struct pci_dev *dev, int id, int reset)
++{ }
+ static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
+ static inline int pci_vfs_assigned(struct pci_dev *dev)
+ { return 0; }
+-- 
+1.7.9.5
+
