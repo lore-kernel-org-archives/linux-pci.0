@@ -1,52 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:33461 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753195AbbFDWBx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Jun 2015 18:01:53 -0400
-Received: by oiww2 with SMTP id w2so41068154oiw.0
-        for <linux-pci@vger.kernel.org>; Thu, 04 Jun 2015 15:01:53 -0700 (PDT)
-Subject: [PATCH 2/5] PCI: dra7xx: Use dw_pcie_link_up() consistently
+Received: from mout.gmx.net ([212.227.17.22]:54226 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753368AbbFRH7L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Jun 2015 03:59:11 -0400
+From: =?UTF-8?q?David=20M=C3=BCller?= <dave.mueller@gmx.ch>
 To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Date: Thu, 04 Jun 2015 17:01:51 -0500
-Message-ID: <20150604220151.4377.38040.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150604220144.4377.40573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] ARM: imx6: Fix non-working MSI interrupts if PCIe switch is attached
+Date: Thu, 18 Jun 2015 09:59:07 +0200
+Message-Id: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We already use dw_pcie_link_up() once in dra7xx_pcie_establish_link(), but
-we duplicate its code later.  Use dw_pcie_link_up() for consistency.  No
-functional change.
+This problem has already been reported as 
+https://bugzilla.kernel.org/show_bug.cgi?id=100051
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: David Müller <dave.mueller@gmx.ch>
 ---
- drivers/pci/host/pci-dra7xx.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/pci/host/pci-imx6.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 2d57e19..e3d15d7 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -107,8 +107,7 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index c63691c..53f8dea 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -433,9 +433,6 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 	dw_pcie_setup_rc(pp);
  
- 	while (retries--) {
--		reg = dra7xx_pcie_readl(dra7xx,	PCIECTRL_DRA7XX_CONF_PHY_CS);
--		if (reg & LINK_UP)
-+		if (dw_pcie_link_up(pp))
- 			break;
- 		usleep_range(10, 20);
+ 	imx6_pcie_start_link(pp);
+-
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		dw_pcie_msi_init(pp);
+ }
+ 
+ static void imx6_pcie_reset_phy(struct pcie_port *pp)
+@@ -550,6 +547,9 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 		return ret;
  	}
+ 
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dw_pcie_msi_init(pp);
++
+ 	return 0;
+ }
+ 
+-- 
+1.8.4
 
