@@ -1,137 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:36041 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753640AbbFIGJP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jun 2015 02:09:15 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 9 Jun 2015 16:09:13 +1000
-Date: Tue, 9 Jun 2015 16:08:12 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	aik@ozlabs.ru, panto@antoniou-consulting.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-Subject: Re: [PATCH v5 42/42] pci/hotplug: PowerPC PowerNV PCI hotplug driver
-Message-ID: <20150609060812.GA30787@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1433400131-18429-43-git-send-email-gwshan@linux.vnet.ibm.com>
- <20150605201110.GP3631@google.com>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:35235 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752607AbbFSWKr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:10:47 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: arnd@arndb.de
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xen-devel@lists.xensource.com, linux-fbdev@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v7 0/9] pci: add pci_iomap_wc() and pci_ioremap_wc_bar()
+Date: Fri, 19 Jun 2015 15:08:23 -0700
+Message-Id: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150605201110.GP3631@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 05, 2015 at 03:11:10PM -0500, Bjorn Helgaas wrote:
->On Thu, Jun 04, 2015 at 04:42:11PM +1000, Gavin Shan wrote:
->> The patch intends to add standalone driver to support PCI hotplug
->> for PowerPC PowerNV platform, which runs on top of skiboot firmware.
->> The firmware identified hotpluggable slots and marked their device
->> tree node with proper "ibm,slot-pluggable" and "ibm,reset-by-firmware".
->> The driver simply scans device-tree to create/register PCI hotplug slot
->> accordingly.
->> 
->> If the skiboot firmware doesn't support slot status retrieval, the PCI
->> slot device node shouldn't have property "ibm,reset-by-firmware". In
->> that case, none of valid PCI slots will be detected from device tree.
->> The skiboot firmware doesn't export the capability to access attention
->> LEDs yet and it's something for TBD.
->> 
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->
->Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
->But I do have a few comments (my ack is valid whether you do anything with
->them or not):
->
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Thanks for your review, Bjorn.
+Arnd,
 
->> +static void slot_power_off_handler(struct powernv_php_slot *slot)
->> +{
->> +	int ret;
->> +
->> +	/* Release the firmware data for the child device nodes */
->> +	remove_child_pdn(slot->dn);
->> +
->> +	/*
->> +	 * Release the child device nodes. If the sub-tree was
->> +	 * built with the help of overlay, we just need revert
->> +	 * the changes introduced by the overlay
->> +	 */
->> +	if (slot->overlay_id >= 0) {
->> +		ret = of_overlay_destroy(slot->overlay_id);
->> +		if (ret)
->> +			pr_warn("%s: Error %d destroying overlay %d\n",
->> +				__func__, ret, slot->overlay_id);
->
->For this and similar messages: isn't there a device you can use with
->dev_warn() here?  I think a device name would be much better than a
->function name.
->
+After a long-winded conversation with Bjorn over use of
+EXPORT_SYMBOL_GPL() instead of EXPORT_SYMBOL() he's noted he'd
+be OK if this goes through you as an alternative. This series
+goes unmodified from the last posted v6 series, I am just
+reposting and addressing this to you now in hopes you might
+be comfortable with my use of EXPORT_SYMBOL_GPL() on new
+PAT interfaces. I use EXPORT_SYMBOL_GPL() for new PAT symbols,
+this parallels Ingo's stated preference as "we don't want
+proprietary modules mucking around with new code PAT interfaces,
+we only want modules we can analyze and fix in detail" [1].
+Other than this Bjorn seemed comfortable with the series and
+even had provided an Ack to the series, the EXPORT_SYMBOL_GPL()
+thing was the ony thing he was not comfortable with, and also
+that of the devres change going in with no users yet.
 
-There is PCI bus referred (struct powernv_php_slot::bus), but it's
-not always valid. So I'll add one more field "struct pci_dev *pdev"
-which is initialized to the parent PCI device of the slot, then print
-those messages with dev_warn().
+Tomi has already Ack'd the framebuffer driver specific changes
+and is comfortable with the driver changes to go through the
+tree that the depending symbols depend on.
 
->> +scan:
->> +	switch (presence) {
->> +	case POWERNV_PHP_SLOT_PRESENT:
->> +		if (rescan) {
->> +			pci_lock_rescan_remove();
->> +			pcibios_add_pci_devices(slot->bus);
->
->You didn't add this, but "pcibios_add_pci_devices" doesn't seem like the
->right name.  "pcibios" generally refers to an arch-specific hook that's
->called by the generic PCI core.  In this case, pcibios_add_pci_devices()
->contains powerpc-specific code, and it's only called from powerpc code, so
->I think using "pcibios_" in the name is a bit misleading.
->
+I typically had submitted two series for these patches but since
+the patches are all related and now already Acked I've bundled
+them together and rebased them on top of today's linux-next tree.
+This series is part of a larger effort to help avoid direct use
+of MTRR code and instead replace it with more generic PAT
+interfaces, I posted a full description of the entire series
+recently [2].
 
-Ben already suggested some better names in another reply. I'll pick
-it if you agree: pci_add_pci_devices().
+Please let me know if there are any issues.
 
->> +	/* Remove all devices behind the slot */
->> +	pci_lock_rescan_remove();
->> +	pcibios_remove_pci_devices(slot->bus);
->
->Same comment for pcibios_remove_pci_devices().  It would be better if the
->name didn't suggest that this was part of the pcibios_ interface between
->the PCI core and the arch code, because it's not.
->
+[0] http://lkml.kernel.org/r/CAErSpo7CNH1WpgqJCEU8EtxiFNp_PiQ3cBwnKiWQpUaD-fd4YA@mail.gmail.com
+[1] http://article.gmane.org/gmane.linux.kernel.mm/129104
+[2] http://lkml.kernel.org/r/CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com
 
-According to Ben's suggestion in another reply, it would be pci_remove_pci_devices()
-if you agree :-)
+Luis R. Rodriguez (9):
+  pci: add pci_ioremap_wc_bar()
+  video: fbdev: i740fb: use arch_phys_wc_add() and pci_ioremap_wc_bar()
+  video: fbdev: kyrofb: use arch_phys_wc_add() and pci_ioremap_wc_bar()
+  video: fbdev: gxt4500: use pci_ioremap_wc_bar() for framebuffer
+  PCI: Add pci_iomap_wc() variants
+  lib: devres: add pcim_iomap_wc() variants
+  video: fbdev: arkfb: use arch_phys_wc_add() and pci_iomap_wc()
+  video: fbdev: s3fb: use arch_phys_wc_add() and pci_iomap_wc()
+  video: fbdev: vt8623fb: use arch_phys_wc_add() and pci_iomap_wc()
 
->> +	/* Slot indentifier */
->
->s/indentifier/identifier/
->
+ drivers/pci/pci.c                | 14 ++++++++
+ drivers/video/fbdev/arkfb.c      | 36 +++----------------
+ drivers/video/fbdev/gxt4500.c    |  2 +-
+ drivers/video/fbdev/i740fb.c     | 35 ++++--------------
+ drivers/video/fbdev/kyro/fbdev.c | 33 ++++++-----------
+ drivers/video/fbdev/s3fb.c       | 35 ++++--------------
+ drivers/video/fbdev/vt8623fb.c   | 31 ++++------------
+ include/asm-generic/pci_iomap.h  | 14 ++++++++
+ include/linux/pci.h              |  3 ++
+ include/video/kyro.h             |  4 +--
+ lib/devres.c                     | 78 ++++++++++++++++++++++++++++++++++++++++
+ lib/pci_iomap.c                  | 61 +++++++++++++++++++++++++++++++
+ 12 files changed, 206 insertions(+), 140 deletions(-)
 
-Thanks for pointing it out. I'll fix it up in next revision.
+-- 
+2.3.2.209.gd67f9d5.dirty
 
->> +	if (!php_slot_get_id(dn, &id))
->> +		return NULL;
->> +
->
->> +	/* PCI bus */
->> +	bus = pcibios_find_pci_bus(dn);
->
->And pcibios_find_pci_bus() (it's also powerpc-specific).
->
-
-I'll pick Ben's suggested name if you agree: of_pci_node_to_bus().
-
-Thanks,
-Gavin
-
-
->Bjorn
->
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
