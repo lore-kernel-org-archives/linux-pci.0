@@ -1,161 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9738 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753973AbbFDEWf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Jun 2015 00:22:35 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Lee Jones <lee.jones@linaro.org>,
-	Kumar Gala <galak@codeaurora.org>,
-	Andy Gross <agross@codeaurora.org>,
-	David Brown <davidb@codeaurora.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-soc@vger.kernel.org
-Subject: [RFT v2 47/48] genirq, mfd: Kill the first parameter 'irq' of irq_flow_handler_t
-Date: Thu,  4 Jun 2015 12:13:57 +0800
-Message-Id: <1433391238-19471-48-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:36052 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754436AbbFSRMx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 13:12:53 -0400
+Received: by oigb199 with SMTP id b199so42832018oig.3
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 10:12:52 -0700 (PDT)
+Date: Fri, 19 Jun 2015 12:12:49 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/3] PCI: Use usleep_range() instead of msleep() for
+ better accuracy
+Message-ID: <20150619171249.GK7710@google.com>
+References: <1434700666-6346-1-git-send-email-wangyijing@huawei.com>
+ <1434700666-6346-4-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434700666-6346-4-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now most IRQ flow handlers make no use of the first parameter 'irq'.
-And for those who do make use of 'irq', we could easily get the irq
-number through irq_desc->irq_data->irq. So kill the first parameter
-'irq' of irq_flow_handler_t.
+On Fri, Jun 19, 2015 at 03:57:46PM +0800, Yijing Wang wrote:
+> Msleep < 20ms can sleep for up to 20ms, see
+> Documentation/timers/timers-howto.txt, so we could
+> use usleep_range instead.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index daf54be..4553728 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -118,7 +118,7 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
+>  		}
+>  		if (timeout < 0)
+>  			break;
+> -		msleep(10);
+> +		usleep_range(10000, 11000);
 
-To ease review, I have split the changes into several parts, though
-they should be merge as one to support bisecting.
+timers-howto.txt also says to use msleep for 10ms+ delays, so the guidance
+is a bit ambiguous.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Lee Jones <lee.jones@linaro.org>
----
- drivers/mfd/asic3.c        |    2 +-
- drivers/mfd/ezx-pcap.c     |    2 +-
- drivers/mfd/htc-egpio.c    |    2 +-
- drivers/mfd/jz4740-adc.c   |    2 +-
- drivers/mfd/pm8921-core.c  |    2 +-
- drivers/mfd/t7l66xb.c      |    2 +-
- drivers/mfd/tc6393xb.c     |    2 +-
- drivers/mfd/ucb1x00-core.c |    2 +-
- 8 files changed, 8 insertions(+), 8 deletions(-)
+This particular delay does not need to be precise, and if we delay 20ms
+instead of 10ms (1/50th of a second vs 1/100th of a second), I don't think
+it makes any difference at all.
 
-diff --git a/drivers/mfd/asic3.c b/drivers/mfd/asic3.c
-index 977bd3a3eed0..6bf17842a3e4 100644
---- a/drivers/mfd/asic3.c
-+++ b/drivers/mfd/asic3.c
-@@ -138,7 +138,7 @@ static void asic3_irq_flip_edge(struct asic3 *asic,
- 	spin_unlock_irqrestore(&asic->lock, flags);
- }
- 
--static void asic3_irq_demux(unsigned int irq, struct irq_desc *desc)
-+static void asic3_irq_demux(struct irq_desc *desc)
- {
- 	struct asic3 *asic = irq_desc_get_handler_data(desc);
- 	struct irq_data *data = irq_desc_get_irq_data(desc);
-diff --git a/drivers/mfd/ezx-pcap.c b/drivers/mfd/ezx-pcap.c
-index e5f4ffaa5414..ab83124d75f7 100644
---- a/drivers/mfd/ezx-pcap.c
-+++ b/drivers/mfd/ezx-pcap.c
-@@ -205,7 +205,7 @@ static void pcap_isr_work(struct work_struct *work)
- 	} while (gpio_get_value(pdata->gpio));
- }
- 
--static void pcap_irq_handler(unsigned int irq, struct irq_desc *desc)
-+static void pcap_irq_handler(struct irq_desc *desc)
- {
- 	struct pcap_chip *pcap = irq_desc_get_handler_data(desc);
- 
-diff --git a/drivers/mfd/htc-egpio.c b/drivers/mfd/htc-egpio.c
-index 49f39feca784..8a3264e35403 100644
---- a/drivers/mfd/htc-egpio.c
-+++ b/drivers/mfd/htc-egpio.c
-@@ -98,7 +98,7 @@ static struct irq_chip egpio_muxed_chip = {
- 	.irq_unmask	= egpio_unmask,
- };
- 
--static void egpio_handler(unsigned int irq, struct irq_desc *desc)
-+static void egpio_handler(struct irq_desc *desc)
- {
- 	struct egpio_info *ei = irq_desc_get_handler_data(desc);
- 	int irqpin;
-diff --git a/drivers/mfd/jz4740-adc.c b/drivers/mfd/jz4740-adc.c
-index b31c54e4ecb2..ec1cd2297ea4 100644
---- a/drivers/mfd/jz4740-adc.c
-+++ b/drivers/mfd/jz4740-adc.c
-@@ -65,7 +65,7 @@ struct jz4740_adc {
- 	spinlock_t lock;
- };
- 
--static void jz4740_adc_irq_demux(unsigned int irq, struct irq_desc *desc)
-+static void jz4740_adc_irq_demux(struct irq_desc *desc)
- {
- 	struct irq_chip_generic *gc = irq_desc_get_handler_data(desc);
- 	uint8_t status;
-diff --git a/drivers/mfd/pm8921-core.c b/drivers/mfd/pm8921-core.c
-index 5a92646a2ccb..87dd27e49a8b 100644
---- a/drivers/mfd/pm8921-core.c
-+++ b/drivers/mfd/pm8921-core.c
-@@ -156,7 +156,7 @@ static int pm8xxx_irq_master_handler(struct pm_irq_chip *chip, int master)
- 	return ret;
- }
- 
--static void pm8xxx_irq_handler(unsigned int irq, struct irq_desc *desc)
-+static void pm8xxx_irq_handler(struct irq_desc *desc)
- {
- 	struct pm_irq_chip *chip = irq_desc_get_handler_data(desc);
- 	struct irq_chip *irq_chip = irq_desc_get_chip(desc);
-diff --git a/drivers/mfd/t7l66xb.c b/drivers/mfd/t7l66xb.c
-index b752ca2be549..55ade59303b1 100644
---- a/drivers/mfd/t7l66xb.c
-+++ b/drivers/mfd/t7l66xb.c
-@@ -185,7 +185,7 @@ static struct mfd_cell t7l66xb_cells[] = {
- /*--------------------------------------------------------------------------*/
- 
- /* Handle the T7L66XB interrupt mux */
--static void t7l66xb_irq(unsigned int irq, struct irq_desc *desc)
-+static void t7l66xb_irq(struct irq_desc *desc)
- {
- 	struct t7l66xb *t7l66xb = irq_desc_get_handler_data(desc);
- 	unsigned int isr;
-diff --git a/drivers/mfd/tc6393xb.c b/drivers/mfd/tc6393xb.c
-index d21253a51cff..e22722cd667c 100644
---- a/drivers/mfd/tc6393xb.c
-+++ b/drivers/mfd/tc6393xb.c
-@@ -523,7 +523,7 @@ static int tc6393xb_register_gpio(struct tc6393xb *tc6393xb, int gpio_base)
- /*--------------------------------------------------------------------------*/
- 
- static void
--tc6393xb_irq(unsigned int irq, struct irq_desc *desc)
-+tc6393xb_irq(struct irq_desc *desc)
- {
- 	struct tc6393xb *tc6393xb = irq_desc_get_handler_data(desc);
- 	unsigned int isr;
-diff --git a/drivers/mfd/ucb1x00-core.c b/drivers/mfd/ucb1x00-core.c
-index 08ce1dad4167..2f8f922a34de 100644
---- a/drivers/mfd/ucb1x00-core.c
-+++ b/drivers/mfd/ucb1x00-core.c
-@@ -282,7 +282,7 @@ void ucb1x00_adc_disable(struct ucb1x00 *ucb)
-  * SIBCLK to talk to the chip.  We leave the clock running until
-  * we have finished processing all interrupts from the chip.
-  */
--static void ucb1x00_irq(unsigned int irq, struct irq_desc *desc)
-+static void ucb1x00_irq(struct irq_desc *desc)
- {
- 	struct ucb1x00 *ucb = irq_desc_get_handler_data(desc);
- 	unsigned int isr, i;
--- 
-1.7.10.4
+If we *did* make a change here, I think we should use a range of at least
+10ms.  There's no need to tighten the wakeup time to the 1ms window between
+10ms and 11ms.  Any time in the range of 10ms to 50ms would probably be
+fine.
 
+But I don't think a change here is necessary, and it does make it a bit
+harder to analyze the code because we have some things in microseconds and
+others in milliseconds.
+
+>  		timeout -= 10;
+>  	}
+>  	return 0;	/* timeout */
+> -- 
+> 1.7.1
+> 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
