@@ -1,37 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <5591560A.8080107@linux.intel.com>
-Date: Mon, 29 Jun 2015 22:28:26 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:8886 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753799AbbFSICM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 04:02:12 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH 2/3] PCI: Simplify pcie_poll_cmd()
+Date: Fri, 19 Jun 2015 15:57:45 +0800
+Message-ID: <1434700666-6346-3-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1434700666-6346-1-git-send-email-wangyijing@huawei.com>
+References: <1434700666-6346-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-To: Boszormenyi Zoltan <zboszor@pr.hu>, Ingo Molnar <mingo@kernel.org>
-CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Len Brown <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [Bugfix v3] PCI, ACPI: Fix regressions caused by resource_size_t
- overflow with 32-bit kernel
-References: <20150624094916.GA5696@gmail.com> <1435141065-28536-1-git-send-email-jiang.liu@linux.intel.com> <20150624101843.GA8924@gmail.com> <559107F2.3080701@pr.hu>
-In-Reply-To: <559107F2.3080701@pr.hu>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/29 16:55, Boszormenyi Zoltan wrote:
-> 2015-06-24 12:18 keltezéssel, Ingo Molnar írta:
->> * Jiang Liu <jiang.liu@linux.intel.com> wrote:
->>
->> Also note the indentation, that helps readability.
->>
->> Thanks,
->>
->> 	Ingo
-> 
-> So, will there be a v4 with a commit message satisfactory to Ingo
-> that will be part of 4.0.7/4.1.1 and 4.2?
+Move first slot status read into while to simplify code.
 
-Hi Zoltan,
-	I'm waiting for a few days to see if there will be other
-comments, and will send out v4 then.
-Thanks!
-Gerry
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c |   14 +++++---------
+ 1 files changed, 5 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 2913f7e..daf54be 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -109,21 +109,17 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 slot_status;
+ 
+-	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+-	if (slot_status & PCI_EXP_SLTSTA_CC) {
+-		pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+-					   PCI_EXP_SLTSTA_CC);
+-		return 1;
+-	}
+-	while (timeout > 0) {
+-		msleep(10);
+-		timeout -= 10;
++	while (true) {
+ 		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+ 		if (slot_status & PCI_EXP_SLTSTA_CC) {
+ 			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+ 						   PCI_EXP_SLTSTA_CC);
+ 			return 1;
+ 		}
++		if (timeout < 0)
++			break;
++		msleep(10);
++		timeout -= 10;
+ 	}
+ 	return 0;	/* timeout */
+ }
+-- 
+1.7.1
+
