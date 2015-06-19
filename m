@@ -1,83 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 16 Jun 2015 10:55:07 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Subject: Re: [RFC/RFT PATCH v2] PCI: move pci_read_bridge_bases to the
- generic PCI layer
-Message-ID: <20150616095507.GB24710@red-moon>
-References: <1433840506-20083-1-git-send-email-lorenzo.pieralisi@arm.com>
- <5579E74A.3000808@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:36798 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643AbbFSWmq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:42:46 -0400
+Received: by iecrd14 with SMTP id rd14so83684058iec.3
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 15:42:46 -0700 (PDT)
+Subject: [PATCH 4/6] PCI: Fix Intel generic reset quirk class code check
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dexuan Cui <dexuan.cui@intel.com>, Matthew Wilcox <matthew@wil.cx>,
+	x86@kernel.org, Felipe Balbi <balbi@ti.com>,
+	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
+	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Jason Chang <jason.chang@amd.com>
+Date: Fri, 19 Jun 2015 17:42:43 -0500
+Message-ID: <20150619224243.14626.59367.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5579E74A.3000808@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 11, 2015 at 08:53:46PM +0100, Suravee Suthikulanit wrote:
-> For ARM64 PROBE_ONLY and non-PROBE_ONLY modes:
-> 
-> Reviewed and Tested-by: Suravee Suthikulpanit
-> <Suravee.Suthikulpanit@amd.com>
+We checked for "dev->class == PCI_CLASS_SERIAL_USB", but dev->class
+contains the entire three-byte base class/sub-class/interface, while
+PCI_CLASS_SERIAL_USB is only the two-byte base class/sub-class.
 
-Thank you !
+This error meant that we used the Intel device-specific reset on devices
+with class code 0x000c03 instead of those with class code 0x0c03xx.
+0x000c03 is a reserved value in the 0x00 backwards compatibility base class
+and shouldn't match any devices, so I think reset_intel_generic_dev()
+always failed.
 
-> Please see minor comments below.
+Shift dev->class to discard the interface byte before comparing with
+PCI_CLASS_SERIAL_USB.
 
-[...]
+Fixes: aeb30016fec3 ("PCI: add Intel USB specific reset method")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Dexuan Cui <dexuan.cui@intel.com>
+CC: Yu Zhao <yu.zhao@intel.com>
+---
+ drivers/pci/quirks.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > +static void pci_claim_bridge_resources(struct pci_bus *bus)
-> > +{
-> > +     struct pci_dev *dev = bus->self;
-> > +     int idx;
-> > +
-> > +     for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
-> > +             struct resource *r = &dev->resource[idx];
-> > +
-> > +             if (!r->flags || r->parent)
-> > +                     continue;
-> > +
-> > +             pci_claim_bridge_resource(dev, idx);
-> > +     }
-> > +}
-> > +
-> 
-> Nitpicking: Since pci_claim_bridge_resources() is small, and only called
-> once from pci_read_brdige_bases(), should we just put the loop inside
-> the function?
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 8bc60c2..356a401 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3358,7 +3358,7 @@ static int reset_intel_generic_dev(struct pci_dev *dev, int probe)
+ 	int pos;
+ 
+ 	/* only implement PCI_CLASS_SERIAL_USB at present */
+-	if (dev->class == PCI_CLASS_SERIAL_USB) {
++	if ((dev->class >> 8) == PCI_CLASS_SERIAL_USB) {
+ 		pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
+ 		if (!pos)
+ 			return -ENOTTY;
 
-I think it is ok to add a function for it, I am not fussed either
-way I am more concerned by testing the patch on archs I do not have
-access to.
-
-Thank you,
-Lorenzo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
