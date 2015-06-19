@@ -1,164 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Len Brown <lenb@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [Patch v3 2/4] PCI, x86: Allocate PCI IRQ on demand and free it when not used anymore
-Date: Wed, 10 Jun 2015 16:54:59 +0800
-Message-Id: <1433926501-22956-3-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:36518 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752795AbbFSWmZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:42:25 -0400
+Received: by igbiq7 with SMTP id iq7so23932480igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 15:42:25 -0700 (PDT)
+Subject: [PATCH 1/6] PCI: Use PCI_CLASS_SERIAL_USB instead of bare number
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dexuan Cui <dexuan.cui@intel.com>, Matthew Wilcox <matthew@wil.cx>,
+	x86@kernel.org, Felipe Balbi <balbi@ti.com>,
+	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
+	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Jason Chang <jason.chang@amd.com>
+Date: Fri, 19 Jun 2015 17:42:23 -0500
+Message-ID: <20150619224223.14626.20847.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To support IOAPIC hotplug, we need to correctly manage IOAPIC pin usage,
-which is to allocate IRQs on demand and free them when not used anymore.
-So use pcibios_alloc_irq() and pcibios_free_irq() to dynamically allocate
-and free PCI IRQs.
+be6646bfbaec ("PCI: Prevent xHCI driver from claiming AMD Nolan USB3 DRD
+device") added a quirk to override the PCI class code of the AMD Nolan
+device.
 
-Also remove obseleted code mp_should_keep_irq().
+Use PCI_CLASS_SERIAL_USB instead of a bare number to improve greppability.
+Also add a log message about what we're doing.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+No functional change except the new message.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Huang Rui <ray.huang@amd.com>
+CC: Jason Chang <jason.chang@amd.com>
+CC: Felipe Balbi <balbi@ti.com>
 ---
- arch/x86/include/asm/pci_x86.h |    2 --
- arch/x86/pci/common.c          |   20 +++++++++-----------
- arch/x86/pci/intel_mid_pci.c   |    7 +++++--
- arch/x86/pci/irq.c             |   15 +--------------
- drivers/acpi/pci_irq.c         |    9 +--------
- 5 files changed, 16 insertions(+), 37 deletions(-)
+ drivers/pci/quirks.c |   10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 164e3f8d3c3d..fa1195dae425 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -93,8 +93,6 @@ extern raw_spinlock_t pci_config_lock;
- extern int (*pcibios_enable_irq)(struct pci_dev *dev);
- extern void (*pcibios_disable_irq)(struct pci_dev *dev);
- 
--extern bool mp_should_keep_irq(struct device *dev);
--
- struct pci_raw_ops {
- 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
- 						int reg, int len, u32 *val);
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 8fd6f44aee83..dc78a4a9a466 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -673,24 +673,22 @@ int pcibios_add_device(struct pci_dev *dev)
- 	return 0;
- }
- 
--int pcibios_enable_device(struct pci_dev *dev, int mask)
-+int pcibios_alloc_irq(struct pci_dev *dev)
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index cbe0351..2dab425 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -424,10 +424,12 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_
+  */
+ static void quirk_amd_nl_class(struct pci_dev *pdev)
  {
--	int err;
--
--	if ((err = pci_enable_resources(dev, mask)) < 0)
--		return err;
--
--	if (!pci_dev_msi_enabled(dev))
--		return pcibios_enable_irq(dev);
--	return 0;
-+	return pcibios_enable_irq(dev);
- }
- 
--void pcibios_disable_device (struct pci_dev *dev)
-+void pcibios_free_irq(struct pci_dev *dev)
- {
--	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
-+	if (pcibios_disable_irq)
- 		pcibios_disable_irq(dev);
- }
- 
-+int pcibios_enable_device(struct pci_dev *dev, int mask)
-+{
-+	return pci_enable_resources(dev, mask);
-+}
+-	/*
+-	 * Use 'USB Device' (0x0c03fe) instead of PCI header provided
+-	 */
+-	pdev->class = 0x0c03fe;
++	u32 class = pdev->class;
 +
- int pci_ext_cfg_avail(void)
- {
- 	if (raw_pci_ext_ops)
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 27062303c881..fb7a1f96d80c 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -234,10 +234,13 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
--	    dev->irq > 0) {
-+	if (dev->irq_managed && dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq_managed = 0;
-+		/*
-+		 * Don't reset dev->irq here, otherwise
-+		 * intel_mid_pci_irq_enable() will fail on next call.
-+		 */
- 	}
++	/* Use "USB Device (not host controller)" class */
++	pdev->class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe;
++	dev_info(&pdev->dev, "PCI class overridden (%#08x -> %#08x) so dwc3 driver can claim this instead of xhci\n",
++		 class, pdev->class);
  }
- 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 9bd115484745..72108f0b66b1 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1257,22 +1257,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 	return 0;
- }
- 
--bool mp_should_keep_irq(struct device *dev)
--{
--	if (dev->power.is_prepared)
--		return true;
--#ifdef CONFIG_PM
--	if (dev->power.runtime_status == RPM_SUSPENDING)
--		return true;
--#endif
--
--	return false;
--}
--
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
--	    dev->irq_managed && dev->irq) {
-+	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
- 		dev->irq_managed = 0;
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index b1def411c0b8..e7f718d6918a 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -485,14 +485,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
- 
--	/* Keep IOAPIC pin configuration when suspending */
--	if (dev->dev.power.is_prepared)
--		return;
--#ifdef	CONFIG_PM
--	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
--		return;
--#endif
--
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry)
- 		return;
-@@ -513,5 +505,6 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
- 		dev->irq_managed = 0;
-+		dev->irq = 0;
- 	}
- }
--- 
-1.7.10.4
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
+ 		quirk_amd_nl_class);
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
