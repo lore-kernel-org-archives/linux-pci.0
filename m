@@ -1,224 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: bp@suse.de
-Cc: mingo@kernel.org, arnd@arndb.de, bhelgaas@google.com,
-	luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	venkatesh.pallipadi@intel.com,
-	Stefan Bader <stefan.bader@canonical.com>,
-	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Davidlohr Bueso <dbueso@suse.de>, konrad.wilk@oracle.com,
-	ville.syrjala@linux.intel.com, david.vrabel@citrix.com,
-	jbeulich@suse.com,
-	=?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>
-Subject: [PATCH v8 5/9] PCI: Add pci_iomap_wc() variants
-Date: Wed, 24 Jun 2015 18:22:18 -0700
-Message-Id: <1435195342-26879-6-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:36673 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756743AbbFSWOD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:14:03 -0400
+Received: by iecrd14 with SMTP id rd14so83385181iec.3
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 15:14:02 -0700 (PDT)
+Date: Fri, 19 Jun 2015 17:13:59 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Add PCI ID and quirk for Intersil/Techwell TW686[4589]
+ AV capture cards.
+Message-ID: <20150619221359.GN7710@google.com>
+References: <m3vbekruuo.fsf@t19.piap.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <m3vbekruuo.fsf@t19.piap.pl>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Fri, Jun 19, 2015 at 10:00:15AM +0200, Krzysztof Hałasa wrote:
+> Intersil/Techwell TW686[4589]-based video capture cards have an empty
+> (zero) class code. Fix it.
+> 
+> Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
 
-PCI BARs tell us whether prefetching is safe, but they don't say anything
-about write combining (WC).  WC changes ordering rules and allows writes to
-be collapsed, so it's not safe in general to use it on a prefetchable
-region.
+Applied to pci/misc for v4.2, with minor tweak as below to use
+PCI_CLASS_MULTIMEDIA_OTHER instead of a bare number.  Let me know
+if you see any issues with this.  Thanks!
 
-Add pci_iomap_wc() and pci_iomap_wc_range() so drivers can take advantage
-of write combining when they know it's safe.
 
-On architectures that don't fully support WC, e.g., x86 without PAT,
-drivers for legacy framebuffers may get some of the benefit by using
-arch_phys_wc_add() in addition to pci_iomap_wc().  But arch_phys_wc_add()
-is unreliable and should be avoided in general.  On x86, it uses MTRRs,
-which are limited in number and size, so the results will vary based on
-driver loading order.
+commit c1aa4f19cb8f7974126f2da74a35ae4ca1e60017
+Author: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>
+Date:   Fri Jun 19 10:00:15 2015 +0200
 
-The goals of adding pci_iomap_wc() are to:
+    PCI: Add quirk for Intersil/Techwell TW686[4589] AV capture cards
+    
+    Intersil/Techwell TW686[4589]-based video capture cards have an empty
+    (zero) class code.  Fix it.
+    
+    Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-- Give drivers an architecture-independent way to use WC so they can stop
-  using interfaces like mtrr_add() (on x86, pci_iomap_wc() uses
-  PAT when available)
-
-- Move toward using _PAGE_CACHE_MODE_UC, not _PAGE_CACHE_MODE_UC_MINUS,
-  on x86 on ioremap_nocache() (see de33c442ed2a ("x86 PAT: fix
-  performance drop for glx, use UC minus for ioremap(), ioremap_nocache()
-  and pci_mmap_page_range()")
-
-Link: http://lkml.kernel.org/r/1426893517-2511-6-git-send-email-mcgrof@do-not-panic.com
-Original-posting: http://lkml.kernel.org/r/1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: venkatesh.pallipadi@intel.com
-Cc: Stefan Bader <stefan.bader@canonical.com>
-Cc: Ville Syrjälä <syrjala@sci.fi>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: konrad.wilk@oracle.com
-Cc: ville.syrjala@linux.intel.com
-Cc: david.vrabel@citrix.com
-Cc: jbeulich@suse.com
-Cc: Roger Pau Monné <roger.pau@citrix.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: xen-devel@lists.xensource.com
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- include/asm-generic/pci_iomap.h | 14 ++++++++++
- lib/pci_iomap.c                 | 61 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 75 insertions(+)
-
-diff --git a/include/asm-generic/pci_iomap.h b/include/asm-generic/pci_iomap.h
-index 7389c87..b1e17fc 100644
---- a/include/asm-generic/pci_iomap.h
-+++ b/include/asm-generic/pci_iomap.h
-@@ -15,9 +15,13 @@ struct pci_dev;
- #ifdef CONFIG_PCI
- /* Create a virtual mapping cookie for a PCI BAR (memory or IO) */
- extern void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long max);
-+extern void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max);
- extern void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
- 				     unsigned long offset,
- 				     unsigned long maxlen);
-+extern void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-+					unsigned long offset,
-+					unsigned long maxlen);
- /* Create a virtual mapping cookie for a port on a given PCI device.
-  * Do not call this directly, it exists to make it easier for architectures
-  * to override */
-@@ -34,12 +38,22 @@ static inline void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned lon
- 	return NULL;
- }
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 54fa458..cbe0351 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3671,6 +3671,28 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+ DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
  
-+static inline void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long max)
+ /*
++ * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
++ * class code.  Fix it.
++ */
++static void quirk_tw686x_class(struct pci_dev *pdev)
 +{
-+	return NULL;
-+}
- static inline void __iomem *pci_iomap_range(struct pci_dev *dev, int bar,
- 					    unsigned long offset,
- 					    unsigned long maxlen)
- {
- 	return NULL;
- }
-+static inline void __iomem *pci_iomap_wc_range(struct pci_dev *dev, int bar,
-+					       unsigned long offset,
-+					       unsigned long maxlen)
-+{
-+	return NULL;
-+}
- #endif
- 
- #endif /* __ASM_GENERIC_IO_H */
-diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
-index bcce5f1..9604dcb 100644
---- a/lib/pci_iomap.c
-+++ b/lib/pci_iomap.c
-@@ -52,6 +52,46 @@ void __iomem *pci_iomap_range(struct pci_dev *dev,
- EXPORT_SYMBOL(pci_iomap_range);
- 
- /**
-+ * pci_iomap_wc_range - create a virtual WC mapping cookie for a PCI BAR
-+ * @dev: PCI device that owns the BAR
-+ * @bar: BAR number
-+ * @offset: map memory at the given offset in BAR
-+ * @maxlen: max length of the memory to map
-+ *
-+ * Using this function you will get a __iomem address to your device BAR.
-+ * You can access it using ioread*() and iowrite*(). These functions hide
-+ * the details if this is a MMIO or PIO address space and will just do what
-+ * you expect from them in the correct way. When possible write combining
-+ * is used.
-+ *
-+ * @maxlen specifies the maximum length to map. If you want to get access to
-+ * the complete BAR from offset to the end, pass %0 here.
-+ * */
-+void __iomem *pci_iomap_wc_range(struct pci_dev *dev,
-+				 int bar,
-+				 unsigned long offset,
-+				 unsigned long maxlen)
-+{
-+	resource_size_t start = pci_resource_start(dev, bar);
-+	resource_size_t len = pci_resource_len(dev, bar);
-+	unsigned long flags = pci_resource_flags(dev, bar);
++	u32 class = pdev->class;
 +
-+	if (len <= offset || !start)
-+		return NULL;
-+	len -= offset;
-+	start += offset;
-+	if (maxlen && len > maxlen)
-+		len = maxlen;
-+	if (flags & IORESOURCE_IO)
-+		return NULL;
-+	if (flags & IORESOURCE_MEM)
-+		return ioremap_wc(start, len);
-+	/* What? */
-+	return NULL;
++	/* Use "Multimedia controller" class */
++	pdev->class = (PCI_CLASS_MULTIMEDIA_OTHER << 8) | 0x01;
++	dev_info(&pdev->dev, "TW686x PCI class overridden (%#08x -> %#08x)\n",
++		 class, pdev->class);
 +}
-+EXPORT_SYMBOL_GPL(pci_iomap_wc_range);
++DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6864, PCI_CLASS_NOT_DEFINED, 0,
++			      quirk_tw686x_class);
++DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6865, PCI_CLASS_NOT_DEFINED, 0,
++			      quirk_tw686x_class);
++DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6868, PCI_CLASS_NOT_DEFINED, 0,
++			      quirk_tw686x_class);
++DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6869, PCI_CLASS_NOT_DEFINED, 0,
++			      quirk_tw686x_class);
 +
-+/**
-  * pci_iomap - create a virtual mapping cookie for a PCI BAR
-  * @dev: PCI device that owns the BAR
-  * @bar: BAR number
-@@ -70,4 +110,25 @@ void __iomem *pci_iomap(struct pci_dev *dev, int bar, unsigned long maxlen)
- 	return pci_iomap_range(dev, bar, 0, maxlen);
- }
- EXPORT_SYMBOL(pci_iomap);
-+
-+/**
-+ * pci_iomap_wc - create a virtual WC mapping cookie for a PCI BAR
-+ * @dev: PCI device that owns the BAR
-+ * @bar: BAR number
-+ * @maxlen: length of the memory to map
-+ *
-+ * Using this function you will get a __iomem address to your device BAR.
-+ * You can access it using ioread*() and iowrite*(). These functions hide
-+ * the details if this is a MMIO or PIO address space and will just do what
-+ * you expect from them in the correct way. When possible write combining
-+ * is used.
-+ *
-+ * @maxlen specifies the maximum length to map. If you want to get access to
-+ * the complete BAR without checking for its length first, pass %0 here.
-+ * */
-+void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long maxlen)
-+{
-+	return pci_iomap_wc_range(dev, bar, 0, maxlen);
-+}
-+EXPORT_SYMBOL_GPL(pci_iomap_wc);
- #endif /* CONFIG_PCI */
--- 
-2.3.2.209.gd67f9d5.dirty
++/*
+  * AMD has indicated that the devices below do not support peer-to-peer
+  * in any system where they are found in the southbridge with an AMD
+  * IOMMU in the system.  Multifunction devices that do not support
 
+> 
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3662,6 +3662,26 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+>  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+>  
+>  /*
+> + * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
+> + * class code. Fix it.
+> + */
+> +
+> +static void quirk_tw686x_class(struct pci_dev *pdev)
+> +{
+> +	/* Use "Multimedia controller" class */
+> +	pdev->class = 0x048001;
+> +	dev_info(&pdev->dev, "TW686x PCI class workaround enabled\n");
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6864, PCI_CLASS_NOT_DEFINED, 0,
+> +			      quirk_tw686x_class);
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6865, PCI_CLASS_NOT_DEFINED, 0,
+> +			      quirk_tw686x_class);
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6868, PCI_CLASS_NOT_DEFINED, 0,
+> +			      quirk_tw686x_class);
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6869, PCI_CLASS_NOT_DEFINED, 0,
+> +			      quirk_tw686x_class);
+> +
+> +/*
+>   * AMD has indicated that the devices below do not support peer-to-peer
+>   * in any system where they are found in the southbridge with an AMD
+>   * IOMMU in the system.  Multifunction devices that do not support
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
