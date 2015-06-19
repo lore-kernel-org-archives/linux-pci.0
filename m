@@ -1,38 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 11 Jun 2015 10:46:40 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: jakeo@microsoft.com
-Cc: kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, mebersol@microsoft.com, haiyangz@microsoft.com
-Subject: Re: [PATCH 6/6] drivers:pci:hv: New paravirtual PCI front-end for
- Hyper-V VMs
-Message-ID: <20150611174640.GC22639@kroah.com>
-References: <1434039747-44535-1-git-send-email-jakeo@microsoft.com>
- <1434039747-44535-7-git-send-email-jakeo@microsoft.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yh0-f47.google.com ([209.85.213.47]:34680 "EHLO
+	mail-yh0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751731AbbFSHsv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 03:48:51 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1434039747-44535-7-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <8520D5D51A55D047800579B094147198C79891@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <8520D5D51A55D047800579B094147198C79891@XAP-PVEXMBX01.xlnx.xilinx.com>
+Date: Fri, 19 Jun 2015 13:18:50 +0530
+Message-ID: <CAHM4w1mWk7XWD0po-O4ozA_+JS0a3o-Q7dOQd-2DkgrhkoFWTw@mail.gmail.com>
+Subject: Re: PCIe patch for ARM64
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 11, 2015 at 04:22:27PM +0000, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> drivers:pci:hv: Update MAINTAINERS
+On Fri, Jun 19, 2015 at 11:20 AM, Bharat Kumar Gogada
+<bharat.kumar.gogada@xilinx.com> wrote:
+> Hi
+>
+> I am developing PCIe root port driver for Xilinx device. We have used following patch for ARM64 bit support "https://lkml.org/lkml/2014/7/3/764". The link explains it as temporary patch and main line will be updated soon with those changes. We have not seen the changes till now. Can you let us know when we can expect the changes in mainline? We are planning to push our drivers to mainline.
 
-Huh?
+Please have a look to the latest kernel and try to see what is
+available for ARM64 PCIe.
 
-> 
-> drivers:pci:hv: New paravirtual PCI front-end for Hyper-V VMs
+You may see drivers/pci/host/pci-xgene.c as reference.
 
-What is this odd format?
+I see that there is already a driver for xilinx PCIe controller with
+ARM platform.
+drivers/pci/host/pcie-xilinx.c
 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+If it is the same device on ARM64, then you need to take similar
+approach what is being discussed
+for designware on ARM64.
 
-No blank line?
+http://marc.info/?l=devicetree&m=143394380815743&w=2
 
-Come on, you all know better than this...
-
-greg k-h
+~Pratyush
