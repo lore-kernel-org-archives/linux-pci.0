@@ -1,65 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:52868 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757AbbFRUx0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 16:53:26 -0400
-Date: Thu, 18 Jun 2015 13:53:23 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-Message-ID: <20150618205323.GA527@roeck-us.net>
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
- <20150527210447.GY32152@google.com>
- <20150528022332.GA23724@roeck-us.net>
- <20150528124112.GJ10210@google.com>
- <20150618180103.GA23809@roeck-us.net>
- <CAErSpo5f4cf7cYZ1WxUQd7soEvNWCHowdNnHTbfGmKh16Vdsrg@mail.gmail.com>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:34620 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752643AbbFSWmj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:42:39 -0400
+Received: by iebmu5 with SMTP id mu5so83620076ieb.1
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 15:42:38 -0700 (PDT)
+Subject: [PATCH 3/6] PCI: Fix TI816X class code quirk
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dexuan Cui <dexuan.cui@intel.com>, Matthew Wilcox <matthew@wil.cx>,
+	x86@kernel.org, Felipe Balbi <balbi@ti.com>,
+	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
+	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Jason Chang <jason.chang@amd.com>
+Date: Fri, 19 Jun 2015 17:42:36 -0500
+Message-ID: <20150619224236.14626.87980.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5f4cf7cYZ1WxUQd7soEvNWCHowdNnHTbfGmKh16Vdsrg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 18, 2015 at 02:51:52PM -0500, Bjorn Helgaas wrote:
-> On Thu, Jun 18, 2015 at 1:01 PM, Guenter Roeck <linux@roeck-us.net> wrote:
-> > On Thu, May 28, 2015 at 07:41:12AM -0500, Bjorn Helgaas wrote:
-> >>
-> >> > > I'd like res->flags to reflect the capabilities of the hardware, not
-> >> > > whether the window is currently enabled.
-> >> > >
-> >> > Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
-> >> > purpose, or could that cause conflicts elsewhere ?
-> >>
-> >> Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
-> >> below a host bridge that doesn't support I/O space.
-> >>
-> > I integrated Lorenzo's patch and tried to get this working.
-> >
-> > Problem is that the use of a resource is widely checked with "!res->flags"
-> > throughout the code. That would have to be changed to something like
-> > "(!res->flags || (res->flags & IORESOURCE_DISABLED))" whereever it is used.
-> >
-> > I tried going with "!res->flags" instead, but have not been able to get it
-> > to work realiably; it is just very difficult to distinguish if "!res->flags"
-> > means that the resource has not yet been assigned or if it means that it is not
-> > supported.
-> >
-> > The correct approach, in my opinion, would be to go with IORESOURCE_DISABLED
-> > and make the necessary changes whereever needed. Effectively this means to
-> > replace the "!res->flags" check with something like pci_res_used() [ pick
-> > your preferred name ] and define it as
-> >
-> > #define pci_res_used(res) ((res)->flags && !((res)->flags & IORESOURCE_DISABLED))
-> 
-> I think that makes sense.  Maybe "res_valid()"?  It's not really
-> PCI-specific, and "used" is a little ambiguous.  So is "valid", I
-> admit.
-> 
-res_valid() sounds good to me. It is also nice and short.
+In fixup_ti816x_class(), we assigned "class = PCI_CLASS_MULTIMEDIA_VIDEO".
+But PCI_CLASS_MULTIMEDIA_VIDEO is only the two-byte base class/sub-class
+and needs to be shifted to make space for the low-order interface byte.
 
-Guenter
+Shift PCI_CLASS_MULTIMEDIA_VIDEO to set the correct class code.
+
+Fixes: 63c4408074cb ("PCI: Add quirk for setting valid class for TI816X Endpoint")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Hemant Pedanekar <hemantp@ti.com>
+---
+ drivers/pci/quirks.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 64177a6..8bc60c2 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2844,12 +2844,15 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3c28, vtd_mask_spec_errors);
+ 
+ static void fixup_ti816x_class(struct pci_dev *dev)
+ {
++	u32 class = dev->class;
++
+ 	/* TI 816x devices do not have class code set when in PCIe boot mode */
+-	dev_info(&dev->dev, "Setting PCI class for 816x PCIe device\n");
+-	dev->class = PCI_CLASS_MULTIMEDIA_VIDEO;
++	dev->class = PCI_CLASS_MULTIMEDIA_VIDEO << 8;
++	dev_info(&dev->dev, "PCI class overridden (%#08x -> %#08x)\n",
++		 class, dev->class);
+ }
+ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_TI, 0xb800,
+-				 PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
++			      PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
+ 
+ /* Some PCIe devices do not work reliably with the claimed maximum
+  * payload size supported.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
