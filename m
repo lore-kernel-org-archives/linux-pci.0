@@ -1,142 +1,196 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:59213 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423040AbbFEOLS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Jun 2015 10:11:18 -0400
-From: Joerg Roedel <joro@8bytes.org>
-To: iommu@lists.linux-foundation.org
-Cc: zhen-hual@hp.com, bhe@redhat.com, dwmw2@infradead.org,
-	vgoyal@redhat.com, dyoung@redhat.com, alex.williamson@redhat.com,
-	ddutile@redhat.com, ishii.hironobu@jp.fujitsu.com,
-	indou.takao@jp.fujitsu.com, bhelgaas@google.com, doug.hatch@hp.com,
-	jerry.hoemann@hp.com, tom.vaden@hp.com, li.zhang6@hp.com,
-	lisa.mitchell@hp.com, billsumnerlinux@gmail.com, rwright@hp.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	kexec@lists.infradead.org, joro@8bytes.org, jroedel@suse.de
-Subject: [PATCH 11/17] iommu/vt-d: Move QI initialization to intel_setup_irq_remapping
-Date: Fri,  5 Jun 2015 16:10:57 +0200
-Message-Id: <1433513463-19128-12-git-send-email-joro@8bytes.org>
-In-Reply-To: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-References: <1433513463-19128-1-git-send-email-joro@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: arnd@arndb.de
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xen-devel@lists.xensource.com, linux-fbdev@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	venkatesh.pallipadi@intel.com,
+	Stefan Bader <stefan.bader@canonical.com>,
+	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
+	konrad.wilk@oracle.com, ville.syrjala@linux.intel.com,
+	david.vrabel@citrix.com, jbeulich@suse.com,
+	=?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>
+Subject: [PATCH v7 6/9] lib: devres: add pcim_iomap_wc() variants
+Date: Fri, 19 Jun 2015 15:08:29 -0700
+Message-Id: <1434751712-24333-7-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-This function needs a working QI later when kdump recovery
-is moved to this function.
+Now that we have pci_iomap_wc() add the respective devres helpers.
 
-Tested-by: Baoquan He <bhe@redhat.com>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
+Cc: Toshi Kani <toshi.kani@hp.com>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Antonino Daplas <adaplas@gmail.com>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: venkatesh.pallipadi@intel.com
+Cc: Stefan Bader <stefan.bader@canonical.com>
+Cc: Ville Syrjälä <syrjala@sci.fi>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Davidlohr Bueso <dbueso@suse.de>
+Cc: konrad.wilk@oracle.com
+Cc: ville.syrjala@linux.intel.com
+Cc: david.vrabel@citrix.com
+Cc: jbeulich@suse.com
+Cc: Roger Pau Monné <roger.pau@citrix.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: xen-devel@lists.xensource.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
 ---
- drivers/iommu/intel_irq_remapping.c | 63 ++++++++++---------------------------
- 1 file changed, 16 insertions(+), 47 deletions(-)
+ include/linux/pci.h |  2 ++
+ lib/devres.c        | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 80 insertions(+)
 
-diff --git a/drivers/iommu/intel_irq_remapping.c b/drivers/iommu/intel_irq_remapping.c
-index d22518d..70e4955 100644
---- a/drivers/iommu/intel_irq_remapping.c
-+++ b/drivers/iommu/intel_irq_remapping.c
-@@ -519,6 +519,19 @@ static int intel_setup_irq_remapping(struct intel_iommu *iommu)
- 	ir_table->base = page_address(pages);
- 	ir_table->bitmap = bitmap;
- 	iommu->ir_table = ir_table;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1193975..5ff15c1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1609,9 +1609,11 @@ static inline void pci_dev_specific_enable_acs(struct pci_dev *dev) { }
+ #endif
+ 
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen);
++void __iomem *pcim_iomap_wc(struct pci_dev *pdev, int bar, unsigned long maxlen);
+ void pcim_iounmap(struct pci_dev *pdev, void __iomem *addr);
+ void __iomem * const *pcim_iomap_table(struct pci_dev *pdev);
+ int pcim_iomap_regions(struct pci_dev *pdev, int mask, const char *name);
++int pcim_iomap_wc_regions(struct pci_dev *pdev, int mask, const char *name);
+ int pcim_iomap_regions_request_all(struct pci_dev *pdev, int mask,
+ 				   const char *name);
+ void pcim_iounmap_regions(struct pci_dev *pdev, int mask);
+diff --git a/lib/devres.c b/lib/devres.c
+index fbe2aac..d59a2b9 100644
+--- a/lib/devres.c
++++ b/lib/devres.c
+@@ -304,6 +304,30 @@ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen)
+ EXPORT_SYMBOL(pcim_iomap);
+ 
+ /**
++ * pcim_iomap_wc - Managed pcim_iomap_wc()
++ * @pdev: PCI device to iomap for
++ * @bar: BAR to iomap
++ * @maxlen: Maximum length of iomap
++ *
++ * Managed pci_iomap_wc().  Map is automatically unmapped on driver
++ * detach.
++ */
++void __iomem *pcim_iomap_wc(struct pci_dev *pdev, int bar, unsigned long maxlen)
++{
++	void __iomem **tbl;
 +
-+	if (!iommu->qi) {
-+		/*
-+		 * Clear previous faults.
-+		 */
-+		dmar_fault(-1, iommu);
-+		dmar_disable_qi(iommu);
-+		if (dmar_enable_qi(iommu)) {
-+			pr_err("Failed to enable queued invalidation\n");
-+			goto out_free_pages;
-+		}
++	BUG_ON(bar >= PCIM_IOMAP_MAX);
++
++	tbl = (void __iomem **)pcim_iomap_table(pdev);
++	if (!tbl || tbl[bar])	/* duplicate mappings not allowed */
++		return NULL;
++
++	tbl[bar] = pci_iomap_wc(pdev, bar, maxlen);
++	return tbl[bar];
++}
++EXPORT_SYMBOL_GPL(pcim_iomap_wc);
++
++/**
+  * pcim_iounmap - Managed pci_iounmap()
+  * @pdev: PCI device to iounmap for
+  * @addr: Address to unmap
+@@ -383,6 +407,60 @@ int pcim_iomap_regions(struct pci_dev *pdev, int mask, const char *name)
+ EXPORT_SYMBOL(pcim_iomap_regions);
+ 
+ /**
++ * pcim_iomap_wc_regions - Request and iomap PCI BARs with write-combining
++ * @pdev: PCI device to map IO resources for
++ * @mask: Mask of BARs to request and iomap
++ * @name: Name used when requesting regions
++ *
++ * Request and iomap regions specified by @mask with a preference for
++ * write-combining.
++ */
++int pcim_iomap_wc_regions(struct pci_dev *pdev, int mask, const char *name)
++{
++	void __iomem * const *iomap;
++	int i, rc;
++
++	iomap = pcim_iomap_table(pdev);
++	if (!iomap)
++		return -ENOMEM;
++
++	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
++		unsigned long len;
++
++		if (!(mask & (1 << i)))
++			continue;
++
++		rc = -EINVAL;
++		len = pci_resource_len(pdev, i);
++		if (!len)
++			goto err_inval;
++
++		rc = pci_request_region(pdev, i, name);
++		if (rc)
++			goto err_inval;
++
++		rc = -ENOMEM;
++		if (!pcim_iomap_wc(pdev, i, 0))
++			goto err_region;
 +	}
 +
- 	return 0;
- 
- out_free_pages:
-@@ -655,18 +668,6 @@ static int __init intel_enable_irq_remapping(void)
- 	}
- 
- 	for_each_iommu(iommu, drhd) {
--		/*
--		 * If the queued invalidation is already initialized,
--		 * shouldn't disable it.
--		 */
--		if (iommu->qi)
--			continue;
--
--		/*
--		 * Clear previous faults.
--		 */
--		dmar_fault(-1, iommu);
--
- 		iommu_check_pre_ir_status(iommu);
- 
- 		if (!is_kdump_kernel() && iommu->pre_enabled_ir) {
-@@ -675,8 +676,6 @@ static int __init intel_enable_irq_remapping(void)
- 			pr_warn("IRQ remapping was enabled on %s but we are not in kdump mode\n",
- 				iommu->name);
- 		}
--
--		dmar_disable_qi(iommu);
- 	}
- 
- 	/*
-@@ -693,20 +692,6 @@ static int __init intel_enable_irq_remapping(void)
- 		pr_info("Queued invalidation will be enabled to support x2apic and Intr-remapping.\n");
- 
- 	/*
--	 * Enable queued invalidation for all the DRHD's.
--	 */
--	for_each_iommu(iommu, drhd) {
--		int ret = dmar_enable_qi(iommu);
--
--		if (ret) {
--			printk(KERN_ERR "DRHD %Lx: failed to enable queued, "
--			       " invalidation, ecap %Lx, ret %d\n",
--			       drhd->reg_base_addr, iommu->ecap, ret);
--			goto error;
--		}
--	}
--
--	/*
- 	 * Setup Interrupt-remapping for all the DRHD's now.
- 	 */
- 	for_each_iommu(iommu, drhd) {
-@@ -1270,28 +1255,12 @@ static int dmar_ir_add(struct dmar_drhd_unit *dmaru, struct intel_iommu *iommu)
- 	/* Setup Interrupt-remapping now. */
- 	ret = intel_setup_irq_remapping(iommu);
- 	if (ret) {
--		pr_err("DRHD %Lx: failed to allocate resource\n",
-+		pr_err("DRHD %Lx: failed to setup IRQ remapping\n",
- 		       iommu->reg_phys);
--		ir_remove_ioapic_hpet_scope(iommu);
--		return ret;
--	}
--
--	if (!iommu->qi) {
--		/* Clear previous faults. */
--		dmar_fault(-1, iommu);
--		iommu_disable_irq_remapping(iommu);
--		dmar_disable_qi(iommu);
--	}
--
--	/* Enable queued invalidation */
--	ret = dmar_enable_qi(iommu);
--	if (!ret) {
--		iommu_set_irq_remapping(iommu, eim);
--	} else {
--		pr_err("DRHD %Lx: failed to enable queued invalidation, ecap %Lx, ret %d\n",
--		       iommu->reg_phys, iommu->ecap, ret);
- 		intel_teardown_irq_remapping(iommu);
- 		ir_remove_ioapic_hpet_scope(iommu);
-+	} else {
-+		iommu_set_irq_remapping(iommu, eim);
- 	}
- 
- 	return ret;
++	return 0;
++
++ err_region:
++	pci_release_region(pdev, i);
++ err_inval:
++	while (--i >= 0) {
++		if (!(mask & (1 << i)))
++			continue;
++		pcim_iounmap(pdev, iomap[i]);
++		pci_release_region(pdev, i);
++	}
++
++	return rc;
++}
++EXPORT_SYMBOL_GPL(pcim_iomap_wc_regions);
++
++/**
+  * pcim_iomap_regions_request_all - Request all BARs and iomap specified ones
+  * @pdev: PCI device to map IO resources for
+  * @mask: Mask of BARs to iomap
 -- 
-1.9.1
+2.3.2.209.gd67f9d5.dirty
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+Please read the FAQ at  http://www.tux.org/lkml/
