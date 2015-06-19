@@ -1,48 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:36292 "EHLO mga03.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:29491 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751905AbbFCAKS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 20:10:18 -0400
-Subject: [PATCH V2 2/2] pci: Add VPD quirk for Intel Ethernet devices
-From: Mark D Rustad <mark.d.rustad@intel.com>
+	id S1751829AbbFSGQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 19 Jun 2015 02:16:03 -0400
+Date: Fri, 19 Jun 2015 11:52:46 +0530
+From: Srinidhi Kasagar <srinidhi.kasagar@intel.com>
 To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Tue, 02 Jun 2015 17:10:17 -0700
-Message-ID: <20150603001017.71269.13528.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150603000645.71269.26134.stgit@mdrustad-wks.jf.intel.com>
-References: <20150603000645.71269.26134.stgit@mdrustad-wks.jf.intel.com>
+Cc: linux-pci@vger.kernel.org, rafael.j.wysocki@intel.com,
+	srinidhi.kasagar@intel.com
+Subject: [PATCH] PCI: Remove 10ms d3_delay restriction for Cherrytrail
+Message-ID: <20150619062238.GA13267@intel-desktop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This quirk sets the PCI_DEV_FLAGS_VPD_REF_F0 flag on all Intel
-Ethernet device functions other than function 0.
+Just like Haswell, Intel Atom Cherrytrail also do not need
+the default 10ms d3_delay imposed by the PCI specification.
 
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Signed-off-by: Srinidhi Kasagar <srinidhi.kasagar@intel.com>
 ---
- drivers/pci/quirks.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/pci/quirks.c |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c6dc1dfd25d5..9ddf6a533f4f 100644
+index c6dc1dfd25d5..9f1cf197119d 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -1903,6 +1903,15 @@ static void quirk_netmos(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
- 			 PCI_CLASS_COMMUNICATION_SERIAL, 8, quirk_netmos);
- 
-+static void quirk_f0_vpd_link(struct pci_dev *dev)
-+{
-+	if (!PCI_FUNC(dev->devfn))
-+		return;
-+	dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
-+}
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-+			      PCI_CLASS_NETWORK_ETHERNET, 8, quirk_f0_vpd_link);
-+
- static void quirk_e100_interrupt(struct pci_dev *dev)
- {
- 	u16 command, pmcsr;
-
+@@ -3037,7 +3037,16 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c26, quirk_remove_d3_delay);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c4e, quirk_remove_d3_delay);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c02, quirk_remove_d3_delay);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c22, quirk_remove_d3_delay);
+-
++/* Even few Cherrytrail devices do not need 10ms d3_delay */
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2280, quirk_remove_d3_delay);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b0, quirk_remove_d3_delay);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b8, quirk_remove_d3_delay);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22d8, quirk_remove_d3_delay);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22dc, quirk_remove_d3_delay);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b5, quirk_remove_d3_delay);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b7, quirk_remove_d3_delay);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2298, quirk_remove_d3_delay);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x229c, quirk_remove_d3_delay);
+ /*
+  * Some devices may pass our check in pci_intx_mask_supported if
+  * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
+-- 
+1.7.9.5
