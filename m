@@ -1,89 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:34788 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597AbbFEHHc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 03:07:32 -0400
-Received: by wgv5 with SMTP id 5so49517067wgv.1
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 00:07:31 -0700 (PDT)
-Message-ID: <55714AB1.9050306@monstr.eu>
-Date: Fri, 05 Jun 2015 09:07:29 +0200
-From: Michal Simek <monstr@monstr.eu>
-Reply-To: monstr@monstr.eu
+Received: from foss.arm.com ([217.140.101.70]:45332 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751028AbbFSQX5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 19 Jun 2015 12:23:57 -0400
+Date: Fri, 19 Jun 2015 17:24:13 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+Message-ID: <20150619162413.GA21533@red-moon>
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+ <20150527210447.GY32152@google.com>
+ <20150528022332.GA23724@roeck-us.net>
+ <20150528124112.GJ10210@google.com>
+ <20150618180103.GA23809@roeck-us.net>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/7] microblaze/PCI: Remove unnecessary pci_bus_find_capability()
- declaration
-References: <20150604214614.2399.5142.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150604214936.2399.94190.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150604214936.2399.94190.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="wa6DEjNB307lh7uLImNFHe97Vg0fjqwTe"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150618180103.GA23809@roeck-us.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---wa6DEjNB307lh7uLImNFHe97Vg0fjqwTe
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Hi Guenter,
 
-On 06/04/2015 11:49 PM, Bjorn Helgaas wrote:
-> pci_bus_find_capability() is declared in include/linux/pci.h.
->=20
-> Remove the pci_bus_find_capability() declaration from
-> arch/microblaze/include/asm/pci.h.
->=20
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Michal Simek <monstr@monstr.eu>
-> ---
->  arch/microblaze/include/asm/pci.h |    3 ---
->  1 file changed, 3 deletions(-)
->=20
-> diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/includ=
-e/asm/pci.h
-> index b6b5b3c..541400d 100644
-> --- a/arch/microblaze/include/asm/pci.h
-> +++ b/arch/microblaze/include/asm/pci.h
-> @@ -102,9 +102,6 @@ extern void pcibios_finish_adding_to_bus(struct pci=
-_bus *bus);
-> =20
->  extern void pcibios_resource_survey(void);
-> =20
-> -extern int pci_bus_find_capability(struct pci_bus *bus,
-> -						unsigned int devfn, int cap);
-> -
->  struct file;
->  extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
->  					 unsigned long pfn,
->=20
+On Thu, Jun 18, 2015 at 07:01:03PM +0100, Guenter Roeck wrote:
+> On Thu, May 28, 2015 at 07:41:12AM -0500, Bjorn Helgaas wrote:
+> > 
+> > > > I'd like res->flags to reflect the capabilities of the hardware, not
+> > > > whether the window is currently enabled.
+> > > > 
+> > > Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
+> > > purpose, or could that cause conflicts elsewhere ?
+> > 
+> > Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
+> > below a host bridge that doesn't support I/O space.
+> > 
+> I integrated Lorenzo's patch and tried to get this working.
 
+Thanks. How do you want to proceed with this ? Are you taking my patch
+and post it along with your updated series ? We need to extend test
+coverage to platforms we could not test on, as you know my series
+affects all archs but SPARC (I mean it should *not* affect them, this
+has to be tested though, I do not have the HW needed, your coverage
+for x86 and PowerPC is great but I do not think it can be deemed
+sufficient).
 
-Reviewed-by: Michal Simek <michal.simek@xilinx.com>
+Please let me know, thanks !
 
-Bjorn: Do you want me to take this via Microblaze tree?
+Lorenzo
 
-Thanks,
-Michal
-
---=20
-Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
-Maintainer of Linux kernel - Xilinx Zynq ARM architecture
-Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
-
-
-
---wa6DEjNB307lh7uLImNFHe97Vg0fjqwTe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.14 (GNU/Linux)
-
-iEYEARECAAYFAlVxSrEACgkQykllyylKDCH8FgCfRsVeXyetlnxbZblxCOFbkSdX
-Bj4AnjcK7SoHU8tJyXYZZbDHGFPeriI9
-=cGGd
------END PGP SIGNATURE-----
-
---wa6DEjNB307lh7uLImNFHe97Vg0fjqwTe--
+> Problem is that the use of a resource is widely checked with "!res->flags"
+> throughout the code. That would have to be changed to something like
+> "(!res->flags || (res->flags & IORESOURCE_DISABLED))" whereever it is used.
+> 
+> I tried going with "!res->flags" instead, but have not been able to get it
+> to work realiably; it is just very difficult to distinguish if "!res->flags"
+> means that the resource has not yet been assigned or if it means that it is not
+> supported.
+> 
+> The correct approach, in my opinion, would be to go with IORESOURCE_DISABLED
+> and make the necessary changes whereever needed. Effectively this means to
+> replace the "!res->flags" check with something like pci_res_used() [ pick
+> your preferred name ] and define it as
+> 
+> #define pci_res_used(res) ((res)->flags && !((res)->flags & IORESOURCE_DISABLED))
+> 
+> Is that the right direction ?
+> 
+> Thanks,
+> Guenter
+> 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
