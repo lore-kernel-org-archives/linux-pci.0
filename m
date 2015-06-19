@@ -1,74 +1,213 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1435194764.3790.33.camel@kernel.crashing.org>
-Subject: Re: [Xen-devel] [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?=
-	<ville.syrjala@linux.intel.com>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Davidlohr Bueso <dbueso@suse.de>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>, Ingo Molnar <mingo@elte.hu>,
-	Borislav Petkov <bp@suse.de>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Antonino Daplas <adaplas@gmail.com>,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: arnd@arndb.de
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xen-devel@lists.xensource.com, linux-fbdev@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Rob Clark <robdclark@gmail.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
 	Suresh Siddha <sbsiddha@gmail.com>,
-	Stefan Bader <stefan.bader@canonical.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@elte.hu>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Vlastimil Babka <vbabka@suse.cz>,
 	Juergen Gross <jgross@suse.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
 	Andy Lutomirski <luto@amacapital.net>,
-	David Vrabel <david.vrabel@citrix.com>,
-	venkatesh.pallipadi@intel.com,
-	Roger Pau =?ISO-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
-Date: Thu, 25 Jun 2015 11:12:44 +1000
-In-Reply-To: <CAB=NE6VTHL1pGVMAkThx07wHNEPAGToJg5Ns_YEd6U1edb8__g@mail.gmail.com>
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>
+Subject: [PATCH v7 9/9] video: fbdev: vt8623fb: use arch_phys_wc_add() and pci_iomap_wc()
+Date: Fri, 19 Jun 2015 15:08:32 -0700
+Message-Id: <1434751712-24333-10-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
 References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1434751712-24333-6-git-send-email-mcgrof@do-not-panic.com>
-	 <1435099343.3996.13.camel@kernel.crashing.org>
-	 <20150624163821.GF11147@wotan.suse.de>
-	 <1435183509.3790.14.camel@kernel.crashing.org>
-	 <CAB=NE6X0ySW=1udE3LCbo_eCjMfdrOMrceGsPvBZbDW+N-pLTw@mail.gmail.com>
-	 <1435189081.3790.24.camel@kernel.crashing.org>
-	 <20150625000803.GH11147@wotan.suse.de>
-	 <1435193521.3790.26.camel@kernel.crashing.org>
-	 <CAB=NE6VTHL1pGVMAkThx07wHNEPAGToJg5Ns_YEd6U1edb8__g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-06-24 at 17:58 -0700, Luis R. Rodriguez wrote:
-> On Wed, Jun 24, 2015 at 5:52 PM, Benjamin Herrenschmidt
-> <benh@kernel.crashing.org> wrote:
-> > On Thu, 2015-06-25 at 02:08 +0200, Luis R. Rodriguez wrote:
-> >>
-> >> OK thanks I'll proceed with these patches then.
-> >>
-> >> > As for user mappings,
-> >>
-> >> Which APIs were you considering in this regard BTW?
-> >
-> > mmap of the generic /sys/bus/pci/.../resource*
-> 
-> Like? Got a demo patch in mind ? :)
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Nope. I was just thinking out loud. Today I have yet to see a problem
-with what we do so ...
+This driver uses the same area for MTRR as for the ioremap().
+Convert the driver from using the x86 specific MTRR code to
+the architecture agnostic arch_phys_wc_add(). arch_phys_wc_add()
+will avoid MTRR if write-combining is available, in order to
+take advantage of that also ensure the ioremap'd area is requested
+as write-combining.
 
-Cheers,
-Ben.
+There are a few motivations for this:
 
+a) Take advantage of PAT when available
 
+b) Help bury MTRR code away, MTRR is architecture specific and on
+   x86 its replaced by PAT
+
+c) Help with the goal of eventually using _PAGE_CACHE_UC over
+   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+   de33c442e titled "x86 PAT: fix performance drop for glx,
+   use UC minus for ioremap(), ioremap_nocache() and
+   pci_mmap_page_range()")
+
+The conversion done is expressed by the following Coccinelle
+SmPL patch, it additionally required manual intervention to
+address all the #ifdery and removal of redundant things which
+arch_phys_wc_add() already addresses such as verbose message
+about when MTRR fails and doing nothing when we didn't get
+an MTRR.
+
+@ mtrr_found @
+expression index, base, size;
+@@
+
+-index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
++index = arch_phys_wc_add(base, size);
+
+@ mtrr_rm depends on mtrr_found @
+expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
+@@
+
+-mtrr_del(index, base, size);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_zero_arg depends on mtrr_found @
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, 0, 0);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_fb_info depends on mtrr_found @
+struct fb_info *info;
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
++arch_phys_wc_del(index);
+
+@ ioremap_replace_nocache depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap_nocache(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+@ ioremap_replace_default depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+Generated-by: Coccinelle SmPL
+Cc: Rob Clark <robdclark@gmail.com>
+Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Antonino Daplas <adaplas@gmail.com>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/video/fbdev/vt8623fb.c | 31 ++++++-------------------------
+ 1 file changed, 6 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/video/fbdev/vt8623fb.c b/drivers/video/fbdev/vt8623fb.c
+index ea7f056..60f24828 100644
+--- a/drivers/video/fbdev/vt8623fb.c
++++ b/drivers/video/fbdev/vt8623fb.c
+@@ -26,13 +26,9 @@
+ #include <linux/console.h> /* Why should fb driver call console functions? because console_lock() */
+ #include <video/vga.h>
+ 
+-#ifdef CONFIG_MTRR
+-#include <asm/mtrr.h>
+-#endif
+-
+ struct vt8623fb_info {
+ 	char __iomem *mmio_base;
+-	int mtrr_reg;
++	int wc_cookie;
+ 	struct vgastate state;
+ 	struct mutex open_lock;
+ 	unsigned int ref_count;
+@@ -99,10 +95,7 @@ static struct svga_timing_regs vt8623_timing_regs     = {
+ /* Module parameters */
+ 
+ static char *mode_option = "640x480-8@60";
+-
+-#ifdef CONFIG_MTRR
+ static int mtrr = 1;
+-#endif
+ 
+ MODULE_AUTHOR("(c) 2006 Ondrej Zajicek <santiago@crfreenet.org>");
+ MODULE_LICENSE("GPL");
+@@ -112,11 +105,8 @@ module_param(mode_option, charp, 0644);
+ MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
+ module_param_named(mode, mode_option, charp, 0);
+ MODULE_PARM_DESC(mode, "Default video mode e.g. '648x480-8@60' (deprecated)");
+-
+-#ifdef CONFIG_MTRR
+ module_param(mtrr, int, 0444);
+ MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
+-#endif
+ 
+ 
+ /* ------------------------------------------------------------------------- */
+@@ -710,7 +700,7 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	info->fix.mmio_len = pci_resource_len(dev, 1);
+ 
+ 	/* Map physical IO memory address into kernel space */
+-	info->screen_base = pci_iomap(dev, 0, 0);
++	info->screen_base = pci_iomap_wc(dev, 0, 0);
+ 	if (! info->screen_base) {
+ 		rc = -ENOMEM;
+ 		dev_err(info->device, "iomap for framebuffer failed\n");
+@@ -781,12 +771,9 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	/* Record a reference to the driver data */
+ 	pci_set_drvdata(dev, info);
+ 
+-#ifdef CONFIG_MTRR
+-	if (mtrr) {
+-		par->mtrr_reg = -1;
+-		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
+-	}
+-#endif
++	if (mtrr)
++		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
++						  info->fix.smem_len);
+ 
+ 	return 0;
+ 
+@@ -816,13 +803,7 @@ static void vt8623_pci_remove(struct pci_dev *dev)
+ 	if (info) {
+ 		struct vt8623fb_info *par = info->par;
+ 
+-#ifdef CONFIG_MTRR
+-		if (par->mtrr_reg >= 0) {
+-			mtrr_del(par->mtrr_reg, 0, 0);
+-			par->mtrr_reg = -1;
+-		}
+-#endif
+-
++		arch_phys_wc_del(par->wc_cookie);
+ 		unregister_framebuffer(info);
+ 		fb_dealloc_cmap(&info->cmap);
+ 
+-- 
+2.3.2.209.gd67f9d5.dirty
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+Please read the FAQ at  http://www.tux.org/lkml/
