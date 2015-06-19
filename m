@@ -1,82 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:21275 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753261AbbFDEQp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Jun 2015 00:16:45 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: [RFT v2 27/48] sh, irq: Prepare for killing the first parameter 'irq' of irq_flow_handler_t
-Date: Thu,  4 Jun 2015 12:13:37 +0800
-Message-Id: <1433391238-19471-28-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-vn0-f53.google.com ([209.85.216.53]:44027 "EHLO
+	mail-vn0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752049AbbFSXHM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 19:07:12 -0400
+Received: by vnbf1 with SMTP id f1so820146vnb.10
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 16:07:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150619224243.14626.59367.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150619224243.14626.59367.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 19 Jun 2015 18:06:52 -0500
+Message-ID: <CAErSpo6JtrMS9wvF8KHfVank+iLzP9BqvE9xZo_he_3w-+zA3Q@mail.gmail.com>
+Subject: Re: [PATCH 4/6] PCI: Fix Intel generic reset quirk class code check
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc: "x86@kernel.org" <x86@kernel.org>, Felipe Balbi <balbi@ti.com>,
+	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
+	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
+	Jason Chang <jason.chang@amd.com>,
+	Mathias Nyman <mathias.nyman@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change irq flow handlers to prepare for killing the first parameter 'irq'
-of irq_flow_handler_t.
+[-cc Dexuan, Matthew (bounced)]
+[+cc Mathias, since MAINTAINERS mentions USB, Intel, and you in one entry :)]
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/sh/boards/mach-se/7722/irq.c |    2 +-
- arch/sh/boards/mach-se/7724/irq.c |    2 +-
- drivers/sh/intc/virq.c            |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+On Fri, Jun 19, 2015 at 5:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> We checked for "dev->class == PCI_CLASS_SERIAL_USB", but dev->class
+> contains the entire three-byte base class/sub-class/interface, while
+> PCI_CLASS_SERIAL_USB is only the two-byte base class/sub-class.
+>
+> This error meant that we used the Intel device-specific reset on devices
+> with class code 0x000c03 instead of those with class code 0x0c03xx.
+> 0x000c03 is a reserved value in the 0x00 backwards compatibility base class
+> and shouldn't match any devices, so I think reset_intel_generic_dev()
+> always failed.
+>
+> Shift dev->class to discard the interface byte before comparing with
+> PCI_CLASS_SERIAL_USB.
+>
+> Fixes: aeb30016fec3 ("PCI: add Intel USB specific reset method")
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Dexuan Cui <dexuan.cui@intel.com>
+> CC: Yu Zhao <yu.zhao@intel.com>
+> ---
+>  drivers/pci/quirks.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 8bc60c2..356a401 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3358,7 +3358,7 @@ static int reset_intel_generic_dev(struct pci_dev *dev, int probe)
+>         int pos;
+>
+>         /* only implement PCI_CLASS_SERIAL_USB at present */
+> -       if (dev->class == PCI_CLASS_SERIAL_USB) {
+> +       if ((dev->class >> 8) == PCI_CLASS_SERIAL_USB) {
 
-diff --git a/arch/sh/boards/mach-se/7722/irq.c b/arch/sh/boards/mach-se/7722/irq.c
-index 00e699232621..60aebd14ccf8 100644
---- a/arch/sh/boards/mach-se/7722/irq.c
-+++ b/arch/sh/boards/mach-se/7722/irq.c
-@@ -30,7 +30,7 @@ struct irq_domain *se7722_irq_domain;
- 
- static void se7722_irq_demux(unsigned int irq, struct irq_desc *desc)
- {
--	struct irq_data *data = irq_get_irq_data(irq);
-+	struct irq_data *data = irq_desc_get_irq_data(desc);
- 	struct irq_chip *chip = irq_data_get_irq_chip(data);
- 	unsigned long mask;
- 	int bit;
-diff --git a/arch/sh/boards/mach-se/7724/irq.c b/arch/sh/boards/mach-se/7724/irq.c
-index 5d1d3ec9a6cd..5feb246f642d 100644
---- a/arch/sh/boards/mach-se/7724/irq.c
-+++ b/arch/sh/boards/mach-se/7724/irq.c
-@@ -94,7 +94,7 @@ static struct irq_chip se7724_irq_chip __read_mostly = {
- 
- static void se7724_irq_demux(unsigned int irq, struct irq_desc *desc)
- {
--	struct fpga_irq set = get_fpga_irq(irq);
-+	struct fpga_irq set = get_fpga_irq(irq_desc_get_irq(desc));
- 	unsigned short intv = __raw_readw(set.sraddr);
- 	unsigned int ext_irq = set.base;
- 
-diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
-index bb7e745d4266..8704873e8186 100644
---- a/drivers/sh/intc/virq.c
-+++ b/drivers/sh/intc/virq.c
-@@ -114,7 +114,7 @@ static void intc_virq_handler(unsigned int irq, struct irq_desc *desc)
- 	struct irq_data *data = irq_desc_get_irq_data(desc);
- 	struct irq_chip *chip = irq_data_get_irq_chip(data);
- 	struct intc_virq_list *entry, *vlist = irq_data_get_irq_handler_data(data);
--	struct intc_desc_int *d = get_intc_desc(irq);
-+	struct intc_desc_int *d = get_intc_desc(irq_desc_get_irq(desc));
- 
- 	chip->irq_mask_ack(data);
- 
--- 
-1.7.10.4
+I'm a little bit concerned about this change because it *looks* like
+this has always been broken, but I assume it was tested and somebody
+would have noticed.
 
+>                 pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
+>                 if (!pos)
+>                         return -ENOTTY;
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
