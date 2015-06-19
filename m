@@ -1,41 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f47.google.com ([209.85.213.47]:34680 "EHLO
-	mail-yh0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731AbbFSHsv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 03:48:51 -0400
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:33848 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753182AbbFSWmx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:42:53 -0400
+Received: by igboe5 with SMTP id oe5so26599804igb.1
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 15:42:53 -0700 (PDT)
+Subject: [PATCH 5/6] PCI: Simplify reset_intel_generic_dev()
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dexuan Cui <dexuan.cui@intel.com>, Matthew Wilcox <matthew@wil.cx>,
+	x86@kernel.org, Felipe Balbi <balbi@ti.com>,
+	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
+	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Jason Chang <jason.chang@amd.com>
+Date: Fri, 19 Jun 2015 17:42:51 -0500
+Message-ID: <20150619224251.14626.51652.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198C79891@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <8520D5D51A55D047800579B094147198C79891@XAP-PVEXMBX01.xlnx.xilinx.com>
-Date: Fri, 19 Jun 2015 13:18:50 +0530
-Message-ID: <CAHM4w1mWk7XWD0po-O4ozA_+JS0a3o-Q7dOQd-2DkgrhkoFWTw@mail.gmail.com>
-Subject: Re: PCIe patch for ARM64
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 19, 2015 at 11:20 AM, Bharat Kumar Gogada
-<bharat.kumar.gogada@xilinx.com> wrote:
-> Hi
->
-> I am developing PCIe root port driver for Xilinx device. We have used following patch for ARM64 bit support "https://lkml.org/lkml/2014/7/3/764". The link explains it as temporary patch and main line will be updated soon with those changes. We have not seen the changes till now. Can you let us know when we can expect the changes in mainline? We are planning to push our drivers to mainline.
+Restructure reset_intel_generic_dev() slightly to return early for non-USB
+devices.  That makes the body of the function non-indented.
 
-Please have a look to the latest kernel and try to see what is
-available for ARM64 PCIe.
+No functional change.
 
-You may see drivers/pci/host/pci-xgene.c as reference.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Dexuan Cui <dexuan.cui@intel.com>
+CC: Yu Zhao <yu.zhao@intel.com>
+---
+ drivers/pci/quirks.c |   23 +++++++++++------------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
 
-I see that there is already a driver for xilinx PCIe controller with
-ARM platform.
-drivers/pci/host/pcie-xilinx.c
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 356a401..ed2763b2 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3358,21 +3358,20 @@ static int reset_intel_generic_dev(struct pci_dev *dev, int probe)
+ 	int pos;
+ 
+ 	/* only implement PCI_CLASS_SERIAL_USB at present */
+-	if ((dev->class >> 8) == PCI_CLASS_SERIAL_USB) {
+-		pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
+-		if (!pos)
+-			return -ENOTTY;
+-
+-		if (probe)
+-			return 0;
++	if ((dev->class >> 8) != PCI_CLASS_SERIAL_USB)
++		return -ENOTTY;
+ 
+-		pci_write_config_byte(dev, pos + 0x4, 1);
+-		msleep(100);
++	pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
++	if (!pos)
++		return -ENOTTY;
+ 
++	if (probe)
+ 		return 0;
+-	} else {
+-		return -ENOTTY;
+-	}
++
++	pci_write_config_byte(dev, pos + 0x4, 1);
++	msleep(100);
++
++	return 0;
+ }
+ 
+ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
 
-If it is the same device on ARM64, then you need to take similar
-approach what is being discussed
-for designware on ARM64.
-
-http://marc.info/?l=devicetree&m=143394380815743&w=2
-
-~Pratyush
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
