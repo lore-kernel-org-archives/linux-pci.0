@@ -1,159 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v4 10/19] NTB: Add parameters for Intel SNB B2B addresses
-Date: Wed, 10 Jun 2015 05:08:15 -0400
-Message-Id: <3a9a0aa9066748dcaf21da955ac6361ca3b6d280.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6Vx97T2PhYnqANopvqn1Qptv4DO8deb9=Lqe9iQQx04Kg@mail.gmail.com>
+References: <1432163293-20965-1-git-send-email-mcgrof@do-not-panic.com>
+ <1432163293-20965-2-git-send-email-mcgrof@do-not-panic.com>
+ <20150521223321.GG32152@google.com> <20150522002341.GM23057@wotan.suse.de>
+ <20150526174008.GN32152@google.com> <20150527200402.GS23057@wotan.suse.de>
+ <CAB=NE6Xyd-THK2385W7VfS358PSJfkfHRnjoZRJWP_LFrzOWJA@mail.gmail.com>
+ <CAB=NE6Ut4QNmumYJku=At9QC==kAMzFZP-ANHWd3EWKY-tKHBA@mail.gmail.com>
+ <CAErSpo4sHA-f83X1nW2QdLT9GdubFXCQ7UEJmSfFc5GBjj8FSA@mail.gmail.com> <CAB=NE6Vx97T2PhYnqANopvqn1Qptv4DO8deb9=Lqe9iQQx04Kg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 19 Jun 2015 16:18:04 -0500
+Message-ID: <CAErSpo7CNH1WpgqJCEU8EtxiFNp_PiQ3cBwnKiWQpUaD-fd4YA@mail.gmail.com>
+Subject: Re: [PATCH v6 1/4] pci: add pci_iomap_wc() variants
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Ingo Molnar <mingo@elte.hu>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Dave Airlie <airlied@linux.ie>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	venkatesh.pallipadi@intel.com,
+	Stefan Bader <stefan.bader@canonical.com>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <jbeulich@suse.com>,
+	=?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Andi Kleen <andi@firstfloor.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add module parameters for the addresses to be used in B2B topology.
+On Fri, Jun 19, 2015 at 4:06 PM, Luis R. Rodriguez
+<mcgrof@do-not-panic.com> wrote:
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- Documentation/ntb.txt               | 10 +++++
- drivers/ntb/hw/intel/ntb_hw_intel.c | 77 ++++++++++++++++++++++++++++---------
- 2 files changed, 68 insertions(+), 19 deletions(-)
+> I hope to have provided a bit of new information to help you
+> reconsider this series to go through you but since you seem to be fine
+> for this to go through another tree and since I failed to notice that
+> I should also get Arnd's Ack I am in hopes this might be able to go
+> through Arnd's tree if not through you. Please let me know, in case I
+> have to resubmit to Arnd.
 
-diff --git a/Documentation/ntb.txt b/Documentation/ntb.txt
-index 725ba1e6c127..00a3f92832a5 100644
---- a/Documentation/ntb.txt
-+++ b/Documentation/ntb.txt
-@@ -56,3 +56,13 @@ Module Parameters:
- * b2b\_mw\_share - If the peer ntb is to be accessed via a memory window, and if
- 	the memory window is large enough, still allow the client to use the
- 	second half of the memory window for address translation to the peer.
-+* snb\_b2b\_usd\_bar2\_addr64 - If using B2B topology on Xeon hardware, use this
-+	64 bit address on the bus between the NTB devices for the window at
-+	BAR2, on the upstream side of the link.
-+* snb\_b2b\_usd\_bar4\_addr64 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_usd\_bar4\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_usd\_bar5\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar2\_addr64 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar4\_addr64 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar4\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-+* snb\_b2b\_dsd\_bar5\_addr32 - See *snb\_b2b\_bar2\_addr64*.
-diff --git a/drivers/ntb/hw/intel/ntb_hw_intel.c b/drivers/ntb/hw/intel/ntb_hw_intel.c
-index ff397fae9cf4..3448d5fbd003 100644
---- a/drivers/ntb/hw/intel/ntb_hw_intel.c
-+++ b/drivers/ntb/hw/intel/ntb_hw_intel.c
-@@ -72,20 +72,6 @@ MODULE_AUTHOR("Intel Corporation");
- #define bar0_off(base, bar) ((base) + ((bar) << 2))
- #define bar2_off(base, bar) bar0_off(base, (bar) - 2)
- 
--static int b2b_mw_idx = -1;
--module_param(b2b_mw_idx, int, 0644);
--MODULE_PARM_DESC(b2b_mw_idx, "Use this mw idx to access the peer ntb.  A "
--		 "value of zero or positive starts from first mw idx, and a "
--		 "negative value starts from last mw idx.  Both sides MUST "
--		 "set the same value here!");
--
--static unsigned int b2b_mw_share;
--module_param(b2b_mw_share, uint, 0644);
--MODULE_PARM_DESC(b2b_mw_share, "If the b2b mw is large enough, configure the "
--		 "ntb so that the peer ntb only occupies the first half of "
--		 "the mw, so the second half can still be used as a mw.  Both "
--		 "sides MUST set the same value here!");
--
- static const struct intel_ntb_reg bwd_reg;
- static const struct intel_ntb_alt_reg bwd_pri_reg;
- static const struct intel_ntb_alt_reg bwd_sec_reg;
-@@ -98,14 +84,67 @@ static const struct intel_ntb_alt_reg snb_sec_reg;
- static const struct intel_ntb_alt_reg snb_b2b_reg;
- static const struct intel_ntb_xlat_reg snb_pri_xlat;
- static const struct intel_ntb_xlat_reg snb_sec_xlat;
--static const struct intel_b2b_addr snb_b2b_usd_addr;
--static const struct intel_b2b_addr snb_b2b_dsd_addr;
--
-+static struct intel_b2b_addr snb_b2b_usd_addr;
-+static struct intel_b2b_addr snb_b2b_dsd_addr;
- static const struct ntb_dev_ops intel_ntb_ops;
- 
- static const struct file_operations intel_ntb_debugfs_info;
- static struct dentry *debugfs_dir;
- 
-+static int b2b_mw_idx = -1;
-+module_param(b2b_mw_idx, int, 0644);
-+MODULE_PARM_DESC(b2b_mw_idx, "Use this mw idx to access the peer ntb.  A "
-+		 "value of zero or positive starts from first mw idx, and a "
-+		 "negative value starts from last mw idx.  Both sides MUST "
-+		 "set the same value here!");
-+
-+static unsigned int b2b_mw_share;
-+module_param(b2b_mw_share, uint, 0644);
-+MODULE_PARM_DESC(b2b_mw_share, "If the b2b mw is large enough, configure the "
-+		 "ntb so that the peer ntb only occupies the first half of "
-+		 "the mw, so the second half can still be used as a mw.  Both "
-+		 "sides MUST set the same value here!");
-+
-+module_param_named(snb_b2b_usd_bar2_addr64,
-+		   snb_b2b_usd_addr.bar2_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD BAR 2 64-bit address");
-+
-+module_param_named(snb_b2b_usd_bar4_addr64,
-+		   snb_b2b_usd_addr.bar4_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD BAR 4 64-bit address");
-+
-+module_param_named(snb_b2b_usd_bar4_addr32,
-+		   snb_b2b_usd_addr.bar4_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD split-BAR 4 32-bit address");
-+
-+module_param_named(snb_b2b_usd_bar5_addr32,
-+		   snb_b2b_usd_addr.bar5_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_usd_bar2_addr64,
-+		 "SNB B2B USD split-BAR 5 32-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar2_addr64,
-+		   snb_b2b_dsd_addr.bar2_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD BAR 2 64-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar4_addr64,
-+		   snb_b2b_dsd_addr.bar4_addr64, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD BAR 4 64-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar4_addr32,
-+		   snb_b2b_dsd_addr.bar4_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD split-BAR 4 32-bit address");
-+
-+module_param_named(snb_b2b_dsd_bar5_addr32,
-+		   snb_b2b_dsd_addr.bar5_addr32, ullong, 0644);
-+MODULE_PARM_DESC(snb_b2b_dsd_bar2_addr64,
-+		 "SNB B2B DSD split-BAR 5 32-bit address");
-+
- #ifndef ioread64
- #ifdef readq
- #define ioread64 readq
-@@ -2078,14 +2117,14 @@ static const struct intel_ntb_xlat_reg snb_sec_xlat = {
- 	.bar2_xlat		= SNB_SBAR23XLAT_OFFSET,
- };
- 
--static const struct intel_b2b_addr snb_b2b_usd_addr = {
-+static struct intel_b2b_addr snb_b2b_usd_addr = {
- 	.bar2_addr64		= SNB_B2B_BAR2_USD_ADDR64,
- 	.bar4_addr64		= SNB_B2B_BAR4_USD_ADDR64,
- 	.bar4_addr32		= SNB_B2B_BAR4_USD_ADDR32,
- 	.bar5_addr32		= SNB_B2B_BAR5_USD_ADDR32,
- };
- 
--static const struct intel_b2b_addr snb_b2b_dsd_addr = {
-+static struct intel_b2b_addr snb_b2b_dsd_addr = {
- 	.bar2_addr64		= SNB_B2B_BAR2_DSD_ADDR64,
- 	.bar4_addr64		= SNB_B2B_BAR4_DSD_ADDR64,
- 	.bar4_addr32		= SNB_B2B_BAR4_DSD_ADDR32,
--- 
-2.4.0.rc0.43.gcf8a8c6
+If you want to have Arnd merge it, that's fine with me.
 
+Bjorn
+--
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+Please read the FAQ at  http://www.tux.org/lkml/
