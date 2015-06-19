@@ -1,74 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:54993 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751904AbbFCDl0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jun 2015 23:41:26 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 3 Jun 2015 13:41:24 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 7E94F3578052
-	for <linux-pci@vger.kernel.org>; Wed,  3 Jun 2015 13:41:21 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t533dwYo20250814
-	for <linux-pci@vger.kernel.org>; Wed, 3 Jun 2015 13:40:06 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t533dXZA000638
-	for <linux-pci@vger.kernel.org>; Wed, 3 Jun 2015 13:39:33 +1000
-Date: Wed, 3 Jun 2015 11:39:15 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, gwshan@linux.vnet.ibm.com
-Subject: Re: [PATCH V7 06/10] powerpc/eeh: Create PE for VFs
-Message-ID: <20150603033915.GB22584@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1431999312-10517-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1432032612-21701-7-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150601234958.GG3631@google.com>
+Received: from mail-vn0-f43.google.com ([209.85.216.43]:34352 "EHLO
+	mail-vn0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752049AbbFSW64 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 18:58:56 -0400
+Received: by vnbf62 with SMTP id f62so805611vnb.1
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 15:58:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150601234958.GG3631@google.com>
+In-Reply-To: <20150619224230.14626.82853.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150619224230.14626.82853.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 19 Jun 2015 17:58:35 -0500
+Message-ID: <CAErSpo7+7srrTFvMQizTBkqQGE93sh1dugoB7W3keOmVtA4wDQ@mail.gmail.com>
+Subject: Re: [PATCH 2/6] PCI: Fix generic NCR 53c810 class code quirk
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Matthew Wilcox <willy@linux.intel.com>
+Cc: "x86@kernel.org" <x86@kernel.org>, Felipe Balbi <balbi@ti.com>,
+	Yu Zhao <yu.zhao@intel.com>, Huang Rui <ray.huang@amd.com>,
+	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
+	Jason Chang <jason.chang@amd.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 01, 2015 at 06:49:58PM -0500, Bjorn Helgaas wrote:
->On Tue, May 19, 2015 at 06:50:08PM +0800, Wei Yang wrote:
->> Current EEH recovery code works with the assumption: the PE has primary
->> bus. Unfortunately, that's not true to VF PEs, which generally contains
+[-cc Dexuan Cui <dexuan.cui@intel.com>, matthew@wil.cx (bounced)]
+[+to willy@linux.intel.com]
+
+Might want to clean up MAINTAINERS, Matthew :)
+
+
+On Fri, Jun 19, 2015 at 5:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> In the generic quirk fixup_rev1_53c810(), added by a5312e28c195 ("[PATCH]
+> PCI: NCR 53c810 quirk"), we assigned "class = PCI_CLASS_STORAGE_SCSI".  But
+> PCI_CLASS_STORAGE_SCSI is only the two-byte base class/sub-class and needs
+> to be shifted to make space for the low-order interface byte.
 >
->"Primary bus" normally means the bus on the upstream side of a PCI bridge.
->But a PE is not a bridge, so I don't know what it means here.
+> Furthermore, we had a similar quirk, pci_fixup_ncr53c810(), for arch/x86,
+> which assigned class correctly.  The arch code is linked before the PCI
+> core, so arch quirks run before generic quirks.  Therefore, on x86, the x86
+> arch quirk ran first, and the generic quirk did nothing because it saw that
+> dev->class was already set.  But on other arches, the generic quirk set the
+> wrong class code.
 >
-
-Before VF PE introduced, a PE is a "Bus PE" which contains a pci bus. Yes, the
-"primary bus" may be a little confusing, since this may refer to the upstream
-side of a PCI bridge. I think the log here tries to emphasize the Bus PE
-contains a whole pci bus.
-
->s/not true to VF PEs/not true for VF PEs/
-
-Thanks, changed
-
+> Fix the generic quirk to set the correct class code and remove the
+> now-unnecessary x86-specific quirk.
 >
->> one or multiple VFs (for VF group case). The patch creates PEs for VFs
->> at PCI final fixup time. Those PEs for VFs are indentified with newly
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Matthew Wilcox <matthew@wil.cx>
+> ---
+>  arch/x86/pci/fixup.c |   13 -------------
+>  drivers/pci/quirks.c |   14 +++++++++-----
+>  2 files changed, 9 insertions(+), 18 deletions(-)
 >
->s/indentified/identified/
-
-Thanks, changed
-
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 9a2b710..e585655 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -62,19 +62,6 @@ static void pci_fixup_umc_ide(struct pci_dev *d)
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_UMC, PCI_DEVICE_ID_UMC_UM8886BF, pci_fixup_umc_ide);
 >
->> introduced flag EEH_PE_VF so that we handle them differently during
->> EEH recovery.
->_______________________________________________
->Linuxppc-dev mailing list
->Linuxppc-dev@lists.ozlabs.org
->https://lists.ozlabs.org/listinfo/linuxppc-dev
-
--- 
-Richard Yang
-Help you, Help me
-
+> -static void pci_fixup_ncr53c810(struct pci_dev *d)
+> -{
+> -       /*
+> -        * NCR 53C810 returns class code 0 (at least on some systems).
+> -        * Fix class to be PCI_CLASS_STORAGE_SCSI
+> -        */
+> -       if (!d->class) {
+> -               dev_warn(&d->dev, "Fixing NCR 53C810 class code\n");
+> -               d->class = PCI_CLASS_STORAGE_SCSI << 8;
+> -       }
+> -}
+> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NCR, PCI_DEVICE_ID_NCR_53C810, pci_fixup_ncr53c810);
+> -
+>  static void pci_fixup_latency(struct pci_dev *d)
+>  {
+>         /*
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 2dab425..64177a6 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -1997,14 +1997,18 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1508, quirk_disable_aspm_l0s);
+>
+>  static void fixup_rev1_53c810(struct pci_dev *dev)
+>  {
+> -       /* rev 1 ncr53c810 chips don't set the class at all which means
+> +       u32 class = dev->class;
+> +
+> +       /*
+> +        * rev 1 ncr53c810 chips don't set the class at all which means
+>          * they don't get their resources remapped. Fix that here.
+>          */
+> +       if (class)
+> +               return;
+>
+> -       if (dev->class == PCI_CLASS_NOT_DEFINED) {
+> -               dev_info(&dev->dev, "NCR 53c810 rev 1 detected; setting PCI class\n");
+> -               dev->class = PCI_CLASS_STORAGE_SCSI;
+> -       }
+> +       dev->class = PCI_CLASS_STORAGE_SCSI << 8;
+> +       dev_info(&dev->dev, "NCR 53c810 rev 1 PCI class overridden (%#08x -> %#08x)\n",
+> +                class, dev->class);
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NCR, PCI_DEVICE_ID_NCR_53C810, fixup_rev1_53c810);
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
