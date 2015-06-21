@@ -1,113 +1,91 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <5586FAAB.3050303@linux.intel.com>
+Date: Mon, 22 Jun 2015 01:55:55 +0800
 From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"David S. Miller" <davem@davemloft.net>,
-	bob picco <bpicco@meloft.net>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Andreas Larsson <andreas@gaisler.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, sparclinux@vger.kernel.org
-Subject: [Patch v3 26/36] sparc, irq: Use access helper irq_data_get_affinity_mask()
-Date: Mon,  1 Jun 2015 16:05:35 +0800
-Message-Id: <1433145945-789-27-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Boszormenyi Zoltan <zboszor@pr.hu>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Andreas Mohr <andi@lisas.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: ACPI regression? Was Re: Ethernet chip disappeared from lspci
+References: <55841815.5000701@pr.hu> <558419B2.7010703@pr.hu> <55841D48.8080809@pr.hu> <12950452.K8inU2UIYe@vostro.rjw.lan> <55869329.4040908@pr.hu> <CAErSpo4W9N+vtqNM=b24Temh16JHHT4ANk_NwUxjPysMGcJVfA@mail.gmail.com> <5586C7E2.9070902@pr.hu> <5586F371.2040100@linux.intel.com>
+In-Reply-To: <5586F371.2040100@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use access helper irq_data_get_affinity_mask() to hide implementation
-details of struct irq_desc.
+On 2015/6/22 1:25, Jiang Liu wrote:
+[...]
+>>>> -       Memory behind bridge: 80000000-801fffff
+>>>> -       Prefetchable memory behind bridge: 0000000080200000-00000000803fffff
+>>>> +       Memory behind bridge: ff000000-ff1fffff
+>>>> +       Prefetchable memory behind bridge: 00000000ff200000-00000000ff3fffff
+>>>>
+>>>> Can't this cause a problem? E.g. programming the bridge with an address range
+>>>> that the bridge doesn't actually support?
+>>> This worked in v3.18.16, but not in v4.0.5 or v4.1.0-rc8.  You
+>>> attached a v4.1.0-rc8 dmesg log earlier.  Would you mind collecting a
+>>> v3.18.16 dmesg log, so we can compare them?
+>>
+>> I collected all 3 for you to compare them, compressed, attached.
+>>
+>> BTW, I browsed git log and found 2ea3d266bab3b497238113b20136f7c3f69ad9c0
+>> as suspicious. I will try the 4.0/4.1 kernels with this one reverted.
+>>
+>>>
+>>> These (from the v4.1.0-rc8 dmesg) look wrong, but I'll have to look at
+>>> the code to see what might be going on:
+>>>
+>>>   acpi PNP0A08:00: host bridge window expanded to [mem
+>>> 0x00000000-0xffffffff window]; [mem 0x00000000-0xffffffff window]
+>>> ignored
+>>>   pci 0000:00:1c.1: can't claim BAR 15 [mem 0xfdf00000-0xfdffffff
+>>> 64bit pref]: address conflict with PCI Bus 0000:00 [mem
+>>> 0xf0000000-0xfed8ffff window]
+>>>
+>>> Bjorn
+> Hi Bjorn and Boszormenyi,
+> 	From the 3.18 kernel, we got a message:
+> [    0.126248] acpi PNP0A08:00: host bridge window
+> [0x400000000-0xfffffffff] (ignored, not CPU addressable)
+> 	And from 4.1.-rc8, we got another message:
+> [    0.127051] acpi PNP0A08:00: host bridge window expanded to [mem
+> 0x00000000-0xffffffff window]; [mem 0x00000000-0xffffffff window] ignored
+> 
+> That smells like a 32bit overflow or 64bit cut-off issue.
+Hi Bjorn and Boszormenyi,
+	With v3.18.6, it uses u64 to compare resource ranges. We changed to use
+resource_size_t with recent changes, and resource_size_t
+may be u32 or u64 depending on configuration. So resource range
+[0x400000000-0xfffffffff] may have been cut-off as
+[0x00000000-0xffffffff], thus cause the trouble.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/sparc/kernel/irq_64.c      |   12 +++++++-----
- arch/sparc/kernel/leon_kernel.c |    6 +++---
- 2 files changed, 10 insertions(+), 8 deletions(-)
+Hi Boszormenyi,
+	Could you please help to try following test patch?
+against v4.1-rc8?
+Thanks!
+Gerry
+-------------------------------------------------------------------
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 8244f013f210..d7b8c392c420 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -206,6 +206,11 @@ static bool acpi_decode_space(struct resource_win *win,
 
-diff --git a/arch/sparc/kernel/irq_64.c b/arch/sparc/kernel/irq_64.c
-index 5130f6e3e68e..e22416ce56ea 100644
---- a/arch/sparc/kernel/irq_64.c
-+++ b/arch/sparc/kernel/irq_64.c
-@@ -377,7 +377,8 @@ static void sun4u_irq_enable(struct irq_data *data)
- 		unsigned long cpuid, imap, val;
- 		unsigned int tid;
- 
--		cpuid = irq_choose_cpu(data->irq, data->affinity);
-+		cpuid = irq_choose_cpu(data->irq,
-+				       irq_data_get_affinity_mask(data));
- 		imap = handler_data->imap;
- 
- 		tid = sun4u_compute_tid(imap, cpuid);
-@@ -449,7 +450,8 @@ static void sun4u_irq_eoi(struct irq_data *data)
- 
- static void sun4v_irq_enable(struct irq_data *data)
- {
--	unsigned long cpuid = irq_choose_cpu(data->irq, data->affinity);
-+	unsigned long cpuid = irq_choose_cpu(data->irq,
-+					     irq_data_get_affinity_mask(data));
- 	unsigned int ino = irq_data_to_sysino(data);
- 	int err;
- 
-@@ -511,7 +513,7 @@ static void sun4v_virq_enable(struct irq_data *data)
- 	unsigned long cpuid;
- 	int err;
- 
--	cpuid = irq_choose_cpu(data->irq, data->affinity);
-+	cpuid = irq_choose_cpu(data->irq, irq_data_get_affinity_mask(data));
- 
- 	err = sun4v_vintr_set_target(dev_handle, dev_ino, cpuid);
- 	if (err != HV_EOK)
-@@ -884,8 +886,8 @@ void fixup_irqs(void)
- 		if (desc->action && !irqd_is_per_cpu(data)) {
- 			if (data->chip->irq_set_affinity)
- 				data->chip->irq_set_affinity(data,
--							     data->affinity,
--							     false);
-+					irq_data_get_affinity_mask(data),
-+					false);
- 		}
- 		raw_spin_unlock_irqrestore(&desc->lock, flags);
- 	}
-diff --git a/arch/sparc/kernel/leon_kernel.c b/arch/sparc/kernel/leon_kernel.c
-index 9bbb8f2bbfcc..0299f052a2ef 100644
---- a/arch/sparc/kernel/leon_kernel.c
-+++ b/arch/sparc/kernel/leon_kernel.c
-@@ -126,7 +126,7 @@ static int leon_set_affinity(struct irq_data *data, const struct cpumask *dest,
- 	int oldcpu, newcpu;
- 
- 	mask = (unsigned long)data->chip_data;
--	oldcpu = irq_choose_cpu(data->affinity);
-+	oldcpu = irq_choose_cpu(irq_data_get_affinity_mask(data));
- 	newcpu = irq_choose_cpu(dest);
- 
- 	if (oldcpu == newcpu)
-@@ -149,7 +149,7 @@ static void leon_unmask_irq(struct irq_data *data)
- 	int cpu;
- 
- 	mask = (unsigned long)data->chip_data;
--	cpu = irq_choose_cpu(data->affinity);
-+	cpu = irq_choose_cpu(irq_data_get_affinity_mask(data));
- 	spin_lock_irqsave(&leon_irq_lock, flags);
- 	oldmask = LEON3_BYPASS_LOAD_PA(LEON_IMASK(cpu));
- 	LEON3_BYPASS_STORE_PA(LEON_IMASK(cpu), (oldmask | mask));
-@@ -162,7 +162,7 @@ static void leon_mask_irq(struct irq_data *data)
- 	int cpu;
- 
- 	mask = (unsigned long)data->chip_data;
--	cpu = irq_choose_cpu(data->affinity);
-+	cpu = irq_choose_cpu(irq_data_get_affinity_mask(data));
- 	spin_lock_irqsave(&leon_irq_lock, flags);
- 	oldmask = LEON3_BYPASS_LOAD_PA(LEON_IMASK(cpu));
- 	LEON3_BYPASS_STORE_PA(LEON_IMASK(cpu), (oldmask & ~mask));
--- 
-1.7.10.4
+        res->start = attr->minimum;
+        res->end = attr->maximum;
++       if (res->start != attr->minimum || res->end != attr->maximum) {
++               pr_warn("resource window ([%#llx-%#llx] ignored, not CPU
+addressable)\n",
++                       attr->minimum, attr->maximum);
++               return false;
++       }
 
+        /*
+         * For bridges that translate addresses across the bridge,
+-----------------------------------------------------------------------------
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
