@@ -1,180 +1,93 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>, Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: [RFT v2 19/48] genirq: Change prototypes of register_irq_proc() and friends
-Date: Thu,  4 Jun 2015 12:13:29 +0800
-Message-Id: <1433391238-19471-20-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vn0-f46.google.com ([209.85.216.46]:38192 "EHLO
+	mail-vn0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752559AbbFUOEO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 21 Jun 2015 10:04:14 -0400
+Received: by vnbf1 with SMTP id f1so3995076vnb.5
+        for <linux-pci@vger.kernel.org>; Sun, 21 Jun 2015 07:04:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <55869329.4040908@pr.hu>
+References: <55841815.5000701@pr.hu> <558419B2.7010703@pr.hu>
+ <55841D48.8080809@pr.hu> <12950452.K8inU2UIYe@vostro.rjw.lan> <55869329.4040908@pr.hu>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sun, 21 Jun 2015 09:03:53 -0500
+Message-ID: <CAErSpo4W9N+vtqNM=b24Temh16JHHT4ANk_NwUxjPysMGcJVfA@mail.gmail.com>
+Subject: Re: ACPI regression? Was Re: Ethernet chip disappeared from lspci
+To: Boszormenyi Zoltan <zboszor@pr.hu>
+Cc: Andreas Mohr <andi@lisas.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change prototypes of register_irq_proc() and friends, so we either
-passing 'irq' or 'irq_desc', but not both.
+[+cc linux-pci]
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- kernel/irq/internals.h |   18 ++++++++++--------
- kernel/irq/irqdesc.c   |    2 +-
- kernel/irq/manage.c    |    8 ++++----
- kernel/irq/proc.c      |   16 ++++++++--------
- 4 files changed, 23 insertions(+), 21 deletions(-)
+Hi Boszormenyi,
 
-diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
-index 3d274e2fe605..ed0388b754fa 100644
---- a/kernel/irq/internals.h
-+++ b/kernel/irq/internals.h
-@@ -94,16 +94,18 @@ bool irq_wait_for_poll(struct irq_desc *desc);
- void __irq_wake_thread(struct irq_desc *desc, struct irqaction *action);
- 
- #ifdef CONFIG_PROC_FS
--extern void register_irq_proc(unsigned int irq, struct irq_desc *desc);
--extern void unregister_irq_proc(unsigned int irq, struct irq_desc *desc);
--extern void register_handler_proc(unsigned int irq, struct irqaction *action);
--extern void unregister_handler_proc(unsigned int irq, struct irqaction *action);
-+extern void register_irq_proc(struct irq_desc *desc);
-+extern void unregister_irq_proc(struct irq_desc *desc);
-+extern void register_handler_proc(struct irq_desc *desc,
-+				  struct irqaction *action);
-+extern void unregister_handler_proc(struct irq_desc *desc,
-+				    struct irqaction *action);
- #else
--static inline void register_irq_proc(unsigned int irq, struct irq_desc *desc) { }
--static inline void unregister_irq_proc(unsigned int irq, struct irq_desc *desc) { }
--static inline void register_handler_proc(unsigned int irq,
-+static inline void register_irq_proc(struct irq_desc *desc) { }
-+static inline void unregister_irq_proc(struct irq_desc *desc) { }
-+static inline void register_handler_proc(struct irq_desc *desc,
- 					 struct irqaction *action) { }
--static inline void unregister_handler_proc(unsigned int irq,
-+static inline void unregister_handler_proc(struct irq_desc *desc,
- 					   struct irqaction *action) { }
- #endif
- 
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 500e6fd11d78..969f7e252846 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -175,7 +175,7 @@ static void free_desc(unsigned int irq)
- {
- 	struct irq_desc *desc = irq_to_desc(irq);
- 
--	unregister_irq_proc(irq, desc);
-+	unregister_irq_proc(desc);
- 
- 	/*
- 	 * sparse_irq_lock protects also show_interrupts() and
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index 32567d4d7031..e478a0f25bd6 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -1293,9 +1293,9 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
- 	if (new->thread)
- 		wake_up_process(new->thread);
- 
--	register_irq_proc(irq, desc);
-+	register_irq_proc(desc);
- 	new->dir = NULL;
--	register_handler_proc(irq, new);
-+	register_handler_proc(desc, new);
- 	free_cpumask_var(mask);
- 
- 	return 0;
-@@ -1405,7 +1405,7 @@ static struct irqaction *__free_irq(unsigned int irq, void *dev_id)
- 
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
- 
--	unregister_handler_proc(irq, action);
-+	unregister_handler_proc(desc, action);
- 
- 	/* Make sure it's not being used on another CPU: */
- 	synchronize_irq(irq);
-@@ -1712,7 +1712,7 @@ static struct irqaction *__free_percpu_irq(unsigned int irq, void __percpu *dev_
- 
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
- 
--	unregister_handler_proc(irq, action);
-+	unregister_handler_proc(desc, action);
- 
- 	module_put(desc->owner);
- 	return action;
-diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
-index e3a8c9577ba6..3e2514b47367 100644
---- a/kernel/irq/proc.c
-+++ b/kernel/irq/proc.c
-@@ -301,13 +301,12 @@ static int name_unique(unsigned int irq, struct irqaction *new_action)
- 	return ret;
- }
- 
--void register_handler_proc(unsigned int irq, struct irqaction *action)
-+void register_handler_proc(struct irq_desc *desc, struct irqaction *action)
- {
- 	char name [MAX_NAMELEN];
--	struct irq_desc *desc = irq_to_desc(irq);
- 
- 	if (!desc->dir || action->dir || !action->name ||
--					!name_unique(irq, action))
-+	    !name_unique(irq_desc_get_irq(desc), action))
- 		return;
- 
- 	memset(name, 0, MAX_NAMELEN);
-@@ -321,9 +320,10 @@ void register_handler_proc(unsigned int irq, struct irqaction *action)
- 
- #define MAX_NAMELEN 10
- 
--void register_irq_proc(unsigned int irq, struct irq_desc *desc)
-+void register_irq_proc(struct irq_desc *desc)
- {
- 	char name [MAX_NAMELEN];
-+	unsigned int irq = irq_desc_get_irq(desc);
- 
- 	if (!root_irq_dir || (desc->irq_data.chip == &no_irq_chip) || desc->dir)
- 		return;
-@@ -357,7 +357,7 @@ void register_irq_proc(unsigned int irq, struct irq_desc *desc)
- 			 &irq_spurious_proc_fops, (void *)(long)irq);
- }
- 
--void unregister_irq_proc(unsigned int irq, struct irq_desc *desc)
-+void unregister_irq_proc(struct irq_desc *desc)
- {
- 	char name [MAX_NAMELEN];
- 
-@@ -372,13 +372,13 @@ void unregister_irq_proc(unsigned int irq, struct irq_desc *desc)
- 	remove_proc_entry("spurious", desc->dir);
- 
- 	memset(name, 0, MAX_NAMELEN);
--	sprintf(name, "%u", irq);
-+	sprintf(name, "%u", irq_desc_get_irq(desc));
- 	remove_proc_entry(name, root_irq_dir);
- }
- 
- #undef MAX_NAMELEN
- 
--void unregister_handler_proc(unsigned int irq, struct irqaction *action)
-+void unregister_handler_proc(struct irq_desc *desc, struct irqaction *action)
- {
- 	proc_remove(action->dir);
- }
-@@ -410,7 +410,7 @@ void init_irq_proc(void)
- 		if (!desc)
- 			continue;
- 
--		register_irq_proc(irq, desc);
-+		register_irq_proc(desc);
- 	}
- }
- 
--- 
-1.7.10.4
+On Sun, Jun 21, 2015 at 5:34 AM, Boszormenyi Zoltan <zboszor@pr.hu> wrote:
+> Hi,
+>
+> please, cc me, I am not subscribed to lkml.
+>
+>> Hi,
+>>
+>> [lkml.org still broken --> no accurate mail header info possible...]
+>>
+>> Just to ask the obvious:
+>> I assume using /sys/bus/pci/rescan does not help once it's broken?
+>> (since the machine comes up empty at initial-boot scan, too)
+>
+> I will try it, too, but I am not sure it would work.
+>
+> Currently I can't test it because the last time I completely discharged
+> the battery. I also disconnected it to be able to get the realtek chip back
+> immediately for faster testing. Now, that I have reconnected the battery,
+> I need to wait for it to be charged somewhat to be able to reproduce
+> losing the network chip.
+>
+>> Also, you could try diffing lspci -vvxxx -s.... output
+>> of working vs. "distorting" kernel version - perhaps some register setup
+>> has been changed (e.g. due to power management improvements or some such),
+>> which may encourage the card
+>> to get a problematic/corrupt state.
+>
+> I attached a tarball that contains lspci -vvxxx for
+> - all devices / only the network chip
+> - before / after "modprobe r8169"
+> - for all 3 kernel versions tested.
+>
+> I figured out that if I type the modprobe and lspci in the same command line,
+> I can get diagnostics out of the machine, after all.
+>
+> It's not just the Realtek chip that has changed parameters.
+>
+> (Vague idea) I noticed that some devices have changed like this:
+>
+> -       Memory behind bridge: 80000000-801fffff
+> -       Prefetchable memory behind bridge: 0000000080200000-00000000803fffff
+> +       Memory behind bridge: ff000000-ff1fffff
+> +       Prefetchable memory behind bridge: 00000000ff200000-00000000ff3fffff
+>
+> Can't this cause a problem? E.g. programming the bridge with an address range
+> that the bridge doesn't actually support?
 
+This worked in v3.18.16, but not in v4.0.5 or v4.1.0-rc8.  You
+attached a v4.1.0-rc8 dmesg log earlier.  Would you mind collecting a
+v3.18.16 dmesg log, so we can compare them?
+
+These (from the v4.1.0-rc8 dmesg) look wrong, but I'll have to look at
+the code to see what might be going on:
+
+  acpi PNP0A08:00: host bridge window expanded to [mem
+0x00000000-0xffffffff window]; [mem 0x00000000-0xffffffff window]
+ignored
+  pci 0000:00:1c.1: can't claim BAR 15 [mem 0xfdf00000-0xfdffffff
+64bit pref]: address conflict with PCI Bus 0000:00 [mem
+0xf0000000-0xfed8ffff window]
+
+Bjorn
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
