@@ -1,84 +1,97 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <557A0268.9050308@redhat.com>
-Date: Thu, 11 Jun 2015 17:49:28 -0400
-From: Jarod Wilson <jarod@redhat.com>
+Message-ID: <5586DA43.7050600@pr.hu>
+Date: Sun, 21 Jun 2015 17:37:39 +0200
+From: Boszormenyi Zoltan <zboszor@pr.hu>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [Update][PATCH] PCIe / hotplug: Drop pointless ACPI-based "slot
- detection" check
-References: <1431632038-39917-1-git-send-email-jarod@redhat.com> <5579BFD9.9040904@redhat.com> <5579F1B4.9000206@redhat.com> <1777389.skUOsvr7P3@vostro.rjw.lan>
-In-Reply-To: <1777389.skUOsvr7P3@vostro.rjw.lan>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Andreas Mohr <andi@lisas.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: ACPI regression? Was Re: Ethernet chip disappeared from lspci
+References: <55841815.5000701@pr.hu> <558419B2.7010703@pr.hu> <55841D48.8080809@pr.hu> <12950452.K8inU2UIYe@vostro.rjw.lan> <55869329.4040908@pr.hu> <CAErSpo4W9N+vtqNM=b24Temh16JHHT4ANk_NwUxjPysMGcJVfA@mail.gmail.com> <5586C7E2.9070902@pr.hu>
+In-Reply-To: <5586C7E2.9070902@pr.hu>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/11/2015 5:16 PM, Rafael J. Wysocki wrote:
-> On Thursday, June 11, 2015 04:38:12 PM Jarod Wilson wrote:
->> On 6/11/2015 1:05 PM, Jarod Wilson wrote:
->>> On 5/21/2015 9:21 PM, Rafael J. Wysocki wrote:
->>>> On Thursday, May 21, 2015 11:11:46 AM Bjorn Helgaas wrote:
->>>>> On Tue, May 19, 2015 at 03:27:58PM +0200, Rafael J. Wysocki wrote:
->>>>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>>>>
->>>>>> Jarod Wilson reports that the expresscard hotplug setup doesn't work
->>>>>> on HP ZBook G2.  The problem turns out to be the ACPI-based "slot
->>>>>> detection" code called from pciehp_probe() which tries to use some
->>>>>> questionable heuristics based on what ACPI objects are present for
->>>>>> the PCIe port device at hand to figure out whether or not to register
->>>>>> a hotplug slot for that port.
->>>>>>
->>>>>> That code is used if there is at least one PCIe port having an ACPI
->>>>>> device configuration object related to hotplug (such as _EJ0 or _RMV)
->>>>>> and the Thunderbolt port on the affected machine has _RMV.  Of course,
->>>>>> Thunderbolt and PCIe native hotplug need not be mutually exclusive
->>>>>> (as they aren't on the machine in question), so that rule is simply
->>>>>> incorrect.
->>>>>>
->>>>>> Moreover, the ACPI-based "slot detection" check does not add any
->>>>>> value if pciehp_probe() is called at all and the service type of the
->>>>>> device object it has been called for is PCIE_PORT_SERVICE_HP, because
->>>>>> PCIe hotplug services are only registered if the _OSC handshake in
->>>>>> acpi_pci_root_add() allows the kernel to control the PCIe native
->>>>>> hotplug feature.  No more checks need to be carried out to decide
->>>>>> whether or not to register a native PCIe hotlug slot in that case.
->>>>>>
->>>>>> For the above reasons, make pciehp_probe() check if it has been
->>>>>> called for the right service type and drop the pointless ACPI-based
->>>>>> "slot detection" check from it.  Also remove the entire code whose
->>>>>> only user is that check (the entire pciehp_acpi.c file goes away
->>>>>> as a result) and drop function headers related to it from the
->>>>>> internal PCIeHP header file.
->>>>>>
->>>>>> Link: http://marc.info/?t=143163219300002&r=1&w=2
->>>>>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=98581
->>>>>> Reported-by: Jarod Wilson <jarod@redhat.com>
->>>>>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>>>
->>>>> This is awesome!  Applied to pci/hotplug for v4.2, with Jarod's
->>>>> reviewed/tested-by.
->>>>
->>>> Thanks!
+2015-06-21 16:19 keltezéssel, Boszormenyi Zoltan írta:
+> 2015-06-21 16:03 keltezéssel, Bjorn Helgaas írta:
+>> [+cc linux-pci]
+>>
+>> Hi Boszormenyi,
+>>
+>> On Sun, Jun 21, 2015 at 5:34 AM, Boszormenyi Zoltan <zboszor@pr.hu> wrote:
+>>> Hi,
 >>>
->>> Looks like I didn't test enough. I can't explain WHY, but with this
->>> applied, now thunderbolt hot unplug of a network adapter goes haywire,
->>> where prior to the patch, it worked just fine. Still looking into it...
->>
->> Filed bug, dmesg spew can be found in the bug.
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=99841
+>>> please, cc me, I am not subscribed to lkml.
+>>>
+>>>> Hi,
+>>>>
+>>>> [lkml.org still broken --> no accurate mail header info possible...]
+>>>>
+>>>> Just to ask the obvious:
+>>>> I assume using /sys/bus/pci/rescan does not help once it's broken?
+>>>> (since the machine comes up empty at initial-boot scan, too)
+>>> I will try it, too, but I am not sure it would work.
+>>>
+>>> Currently I can't test it because the last time I completely discharged
+>>> the battery. I also disconnected it to be able to get the realtek chip back
+>>> immediately for faster testing. Now, that I have reconnected the battery,
+>>> I need to wait for it to be charged somewhat to be able to reproduce
+>>> losing the network chip.
+>>>
+>>>> Also, you could try diffing lspci -vvxxx -s.... output
+>>>> of working vs. "distorting" kernel version - perhaps some register setup
+>>>> has been changed (e.g. due to power management improvements or some such),
+>>>> which may encourage the card
+>>>> to get a problematic/corrupt state.
+>>> I attached a tarball that contains lspci -vvxxx for
+>>> - all devices / only the network chip
+>>> - before / after "modprobe r8169"
+>>> - for all 3 kernel versions tested.
+>>>
+>>> I figured out that if I type the modprobe and lspci in the same command line,
+>>> I can get diagnostics out of the machine, after all.
+>>>
+>>> It's not just the Realtek chip that has changed parameters.
+>>>
+>>> (Vague idea) I noticed that some devices have changed like this:
+>>>
+>>> -       Memory behind bridge: 80000000-801fffff
+>>> -       Prefetchable memory behind bridge: 0000000080200000-00000000803fffff
+>>> +       Memory behind bridge: ff000000-ff1fffff
+>>> +       Prefetchable memory behind bridge: 00000000ff200000-00000000ff3fffff
+>>>
+>>> Can't this cause a problem? E.g. programming the bridge with an address range
+>>> that the bridge doesn't actually support?
+>> This worked in v3.18.16, but not in v4.0.5 or v4.1.0-rc8.  You
+>> attached a v4.1.0-rc8 dmesg log earlier.  Would you mind collecting a
+>> v3.18.16 dmesg log, so we can compare them?
+> I collected all 3 for you to compare them, compressed, attached.
 >
-> If it worked for you previously, can you possibly try to re-create that
-> configuration and set of patches applied and retest then?
+> BTW, I browsed git log and found 2ea3d266bab3b497238113b20136f7c3f69ad9c0
+> as suspicious. I will try the 4.0/4.1 kernels with this one reverted.
 
-I tried the current Fedora 4.1-rc7 build first, everything was fine, 
-then patched in JUST the one patch, and it went belly up. I'll add some 
-extra debugging spew to a build both with and without the one patch, to 
-see what differences there are in devices pciehp is claiming and follow 
-up in the bug on your other info requests.
+Reverting this one didn't help.
 
--- 
-Jarod Wilson
-jarod@redhat.com
+>
+>> These (from the v4.1.0-rc8 dmesg) look wrong, but I'll have to look at
+>> the code to see what might be going on:
+>>
+>>   acpi PNP0A08:00: host bridge window expanded to [mem
+>> 0x00000000-0xffffffff window]; [mem 0x00000000-0xffffffff window]
+>> ignored
+>>   pci 0000:00:1c.1: can't claim BAR 15 [mem 0xfdf00000-0xfdffffff
+>> 64bit pref]: address conflict with PCI Bus 0000:00 [mem
+>> 0xf0000000-0xfed8ffff window]
+>>
+>> Bjorn
+>>
+> Thanks,
+> Zoltán Böszörményi
+>
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
