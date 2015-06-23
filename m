@@ -1,102 +1,58 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
+Date: Tue, 23 Jun 2015 09:35:30 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-am33-list@redhat.com
-Subject: [Patch v3 22/36] mn10300, irq: Use access helper irq_data_get_affinity_mask()
-Date: Mon,  1 Jun 2015 16:05:31 +0800
-Message-Id: <1433145945-789-23-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com>
+	Boszormenyi Zoltan <zboszor@pr.hu>,
+	Len Brown <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: Re: [Patch v1] PCI, ACPI: Fix regressions caused by resource_size_t
+ overflow with 32bit kernel
+Message-ID: <20150623073530.GA21872@gmail.com>
+References: <55871787.5080504@pr.hu>
+ <1435032732-26160-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1435032732-26160-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use access helper irq_data_get_affinity_mask() to hide implementation
-details of struct irq_desc.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/mn10300/kernel/cevt-mn10300.c |    2 +-
- arch/mn10300/kernel/irq.c          |   13 +++++++------
- 2 files changed, 8 insertions(+), 7 deletions(-)
+* Jiang Liu <jiang.liu@linux.intel.com> wrote:
 
-diff --git a/arch/mn10300/kernel/cevt-mn10300.c b/arch/mn10300/kernel/cevt-mn10300.c
-index 60f64ca1752a..326677d4a3b2 100644
---- a/arch/mn10300/kernel/cevt-mn10300.c
-+++ b/arch/mn10300/kernel/cevt-mn10300.c
-@@ -123,7 +123,7 @@ int __init init_clockevents(void)
- 	{
- 		struct irq_data *data;
- 		data = irq_get_irq_data(cd->irq);
--		cpumask_copy(data->affinity, cpumask_of(cpu));
-+		cpumask_copy(irq_data_get_affinity_mask(data), cpumask_of(cpu));
- 		iact->flags |= IRQF_NOBALANCING;
- 	}
- #endif
-diff --git a/arch/mn10300/kernel/irq.c b/arch/mn10300/kernel/irq.c
-index 480de70f4059..c716437baa2c 100644
---- a/arch/mn10300/kernel/irq.c
-+++ b/arch/mn10300/kernel/irq.c
-@@ -87,7 +87,8 @@ static void mn10300_cpupic_mask_ack(struct irq_data *d)
- 		tmp2 = GxICR(irq);
- 
- 		irq_affinity_online[irq] =
--			cpumask_any_and(d->affinity, cpu_online_mask);
-+			cpumask_any_and(irq_data_get_affinity_mask(d),
-+					cpu_online_mask);
- 		CROSS_GxICR(irq, irq_affinity_online[irq]) =
- 			(tmp & (GxICR_LEVEL | GxICR_ENABLE)) | GxICR_DETECT;
- 		tmp = CROSS_GxICR(irq, irq_affinity_online[irq]);
-@@ -124,7 +125,7 @@ static void mn10300_cpupic_unmask_clear(struct irq_data *d)
- 	} else {
- 		tmp = GxICR(irq);
- 
--		irq_affinity_online[irq] = cpumask_any_and(d->affinity,
-+		irq_affinity_online[irq] = cpumask_any_and(irq_data_get_affinity_mask(d),
- 							   cpu_online_mask);
- 		CROSS_GxICR(irq, irq_affinity_online[irq]) = (tmp & GxICR_LEVEL) | GxICR_ENABLE | GxICR_DETECT;
- 		tmp = CROSS_GxICR(irq, irq_affinity_online[irq]);
-@@ -316,15 +317,16 @@ void migrate_irqs(void)
- 	self = smp_processor_id();
- 	for (irq = 0; irq < NR_IRQS; irq++) {
- 		struct irq_data *data = irq_get_irq_data(irq);
-+		struct cpumask *mask = irq_data_get_affinity_mask(data);
- 
- 		if (irqd_is_per_cpu(data))
- 			continue;
- 
--		if (cpumask_test_cpu(self, data->affinity) &&
-+		if (cpumask_test_cpu(self, mask) &&
- 		    !cpumask_intersects(&irq_affinity[irq], cpu_online_mask)) {
- 			int cpu_id;
- 			cpu_id = cpumask_first(cpu_online_mask);
--			cpumask_set_cpu(cpu_id, data->affinity);
-+			cpumask_set_cpu(cpu_id, mask);
- 		}
- 		/* We need to operate irq_affinity_online atomically. */
- 		arch_local_cli_save(flags);
-@@ -335,8 +337,7 @@ void migrate_irqs(void)
- 			GxICR(irq) = x & GxICR_LEVEL;
- 			tmp = GxICR(irq);
- 
--			new = cpumask_any_and(data->affinity,
--					      cpu_online_mask);
-+			new = cpumask_any_and(mask, cpu_online_mask);
- 			irq_affinity_online[irq] = new;
- 
- 			CROSS_GxICR(irq, new) =
--- 
-1.7.10.4
+> The data type resource_size_t may be 32 bits or 64 bits depending on
+> CONFIG_PHYS_ADDR_T_64BIT. So reject ACPI resource descriptors which
+> will cause resource_size_t overflow with 32bit kernel
+> 
+> This issue was triggered on a platform running 32bit kernel with an
+> ACPI resource descriptor with address range [0x400000000-0xfffffffff].
+> Please refer to https://lkml.org/lkml/2015/6/19/277 for more information.
+> 
+> Reported-by: Boszormenyi Zoltan <zboszor@pr.hu>
+> Fixes: 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces to simplify implementation")
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: stable@vger.kernel.org # 4.0
 
+Yeah, so please use the customary changelog style we use in the kernel:
+
+  " Current code does (A), this causes problem (B) when doing (C).
+
+    In that case the user notices (D).
+
+    We can improve this doing (E), because now the user will experience (F),
+    which is more desirable."
+
+Please fill in A-F accordingly.
+
+In particular your changelog is missing 'B' and 'D': what exactly is a 
+'resource_size_t overflow' and what does the user notice from it?
+
+Your changelog is also missing 'F'.
+
+Thanks,
+
+    Ingo
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
