@@ -1,67 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <556D4D61.8080509@huawei.com>
-Date: Tue, 2 Jun 2015 14:29:53 +0800
-From: Hanjun Guo <guohanjun@huawei.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, <x86@kernel.org>
-CC: Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [Patch v3 6/7] x86/PCI/ACPI: Use common interface to support
- PCI host bridge
-References: <1431593803-5213-1-git-send-email-jiang.liu@linux.intel.com> <1431593803-5213-7-git-send-email-jiang.liu@linux.intel.com> <555F355E.7060706@linaro.org> <556D45A3.9070708@linux.intel.com>
-In-Reply-To: <556D45A3.9070708@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:51922 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752275AbbFWWdU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Jun 2015 18:33:20 -0400
+Message-ID: <1435098734.3996.5.camel@kernel.crashing.org>
+Subject: Re: [RFC 3/4] arm64: Do not call enable PCI resources when specify
+ PCI_PROBE_ONLY
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: suravee.suthikulpanit@amd.com
+Cc: will.deacon@arm.com, liviu.dudau@arm.com, marc.zyngier@arm.com,
+	mark.rutland@arm.com, catalin.marinas@arm.com,
+	jason@lakedaemon.net, tglx@linutronix.de, robh+dt@kernel.org,
+	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, devicetree@vger.kernel.org
+Date: Wed, 24 Jun 2015 08:32:14 +1000
+In-Reply-To: <1411937610-22125-4-git-send-email-suravee.suthikulpanit@amd.com>
+References: <1411937610-22125-1-git-send-email-suravee.suthikulpanit@amd.com>
+	 <1411937610-22125-4-git-send-email-suravee.suthikulpanit@amd.com>
 Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/2 13:56, Jiang Liu wrote:
-> On 2015/5/22 21:55, Hanjun Guo wrote:
->> On 2015年05月14日 16:56, Jiang Liu wrote:
->>> Use common interface to simplify ACPI PCI host bridge implementation.
->>>
->>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>> ---
->>>   arch/x86/pci/acpi.c |  292
->>> +++++++++++++++------------------------------------
->>>   1 file changed, 85 insertions(+), 207 deletions(-)
->>>
->> [...]
->>> -static void release_pci_root_info(struct pci_host_bridge *bridge)
->>> +static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
->>>   {
->>> -    struct resource *res;
->>> -    struct resource_entry *entry;
->>> -    struct pci_root_info *info = bridge->release_data;
->>> -
->>> -    resource_list_for_each_entry(entry, &bridge->windows) {
->>> -        res = entry->res;
->>> -        if (res->parent &&
->>> -            (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
->>> -            release_resource(res);
->>> -    }
->>> -
->>> -    teardown_mcfg_map(info);
->>> -    kfree(info);
->>> +    teardown_mcfg_map(ci);
->>> +    kfree(ci);
->> Implicit pointer cast? I think add a comment here that %p of ci
->> is same as %p of info would be helpful for review and easy understood.
-> Good point, will change as:
-> 	kfree(container_of(ci, struct pci_root_info, common));
+On Sun, 2014-09-28 at 15:53 -0500, suravee.suthikulpanit@amd.com wrote:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> 
+> When specify PCI_PROBE_ONLY, the resource parent does not get assigned.
+> Therefore, pci_enable_resources() return error saying that
+> "BAR x not claimed".
+> 
+> Note: This same logic is also used in the arch/arm/kernel/bios32.c
 
-This way is better :)
+This looks broken. Why don't you assign the resource parent ?
 
-Thanks
-Hanjun
+> Cc: Liviu Dudau <Liviu.Dudau@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> ---
+>  arch/arm64/kernel/pci.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index ce5836c..7fd4d2b 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -68,3 +68,11 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>  	bus->domain_nr = domain;
+>  }
+>  #endif
+> +
+> +int pcibios_enable_device(struct pci_dev *dev, int mask)
+> +{
+> +	if (pci_has_flag(PCI_PROBE_ONLY))
+> +		return 0;
+> +
+> +	return pci_enable_resources(dev, mask);
+> +}
+
 
