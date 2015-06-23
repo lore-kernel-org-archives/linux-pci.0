@@ -1,62 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36235 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751389AbbFEUSi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Jun 2015 16:18:38 -0400
-Message-ID: <1433535495.4526.107.camel@kernel.crashing.org>
-Subject: Re: [PATCH v5 42/42] pci/hotplug: PowerPC PowerNV PCI hotplug driver
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Received: from mail-bn1on0135.outbound.protection.outlook.com ([157.56.110.135]:29870
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932284AbbFWCIP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Jun 2015 22:08:15 -0400
+Date: Tue, 23 Jun 2015 10:07:15 +0800
+From: Huang Rui <ray.huang@amd.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, aik@ozlabs.ru,
-	panto@antoniou-consulting.com, robherring2@gmail.com,
-	grant.likely@linaro.org
-Date: Sat, 06 Jun 2015 06:18:15 +1000
-In-Reply-To: <20150605201110.GP3631@google.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <1433400131-18429-43-git-send-email-gwshan@linux.vnet.ibm.com>
-	 <20150605201110.GP3631@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dexuan Cui <dexuan.cui@intel.com>,
+	Matthew Wilcox <matthew@wil.cx>,
+	"x86@kernel.org" <x86@kernel.org>, Felipe Balbi <balbi@ti.com>,
+	Yu Zhao <yu.zhao@intel.com>,
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	"Chang, Jason" <Jason.Chang@amd.com>
+Subject: Re: [PATCH 1/6] PCI: Use PCI_CLASS_SERIAL_USB instead of bare number
+Message-ID: <20150623020710.GA6956@hr-slim.amd.com>
+References: <20150619223325.14626.66402.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150619224223.14626.20847.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20150619224223.14626.20847.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2015-06-05 at 15:11 -0500, Bjorn Helgaas wrote:
-
-> You didn't add this, but "pcibios_add_pci_devices" doesn't seem like the
-> right name.  "pcibios" generally refers to an arch-specific hook that's
-> called by the generic PCI core.  In this case, pcibios_add_pci_devices()
-> contains powerpc-specific code, and it's only called from powerpc code, so
-> I think using "pcibios_" in the name is a bit misleading.
-
-Maybe but just calling it pci_add_* makes it easy to confuse with a core
-function and ppc_add_* is gross :-)
-
-> > +	/* Remove all devices behind the slot */
-> > +	pci_lock_rescan_remove();
-> > +	pcibios_remove_pci_devices(slot->bus);
+On Sat, Jun 20, 2015 at 06:42:23AM +0800, Bjorn Helgaas wrote:
+> be6646bfbaec ("PCI: Prevent xHCI driver from claiming AMD Nolan USB3 DRD
+> device") added a quirk to override the PCI class code of the AMD Nolan
+> device.
 > 
-> Same comment for pcibios_remove_pci_devices().  It would be better if the
-> name didn't suggest that this was part of the pcibios_ interface between
-> the PCI core and the arch code, because it's not.
+> Use PCI_CLASS_SERIAL_USB instead of a bare number to improve greppability.
+> Also add a log message about what we're doing.
 > 
-> > +	/* Slot indentifier */
+> No functional change except the new message.
 > 
-> s/indentifier/identifier/
-> 
-> > +	if (!php_slot_get_id(dn, &id))
-> > +		return NULL;
-> > +
-> 
-> > +	/* PCI bus */
-> > +	bus = pcibios_find_pci_bus(dn);
-> 
-> And pcibios_find_pci_bus() (it's also powerpc-specific).
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Huang Rui <ray.huang@amd.com>
+> CC: Jason Chang <jason.chang@amd.com>
+> CC: Felipe Balbi <balbi@ti.com>
 
-This one could actually move to of_pci.c and be generic, something like
-of_pci_node_to_bus()
+Looks good for me.
 
-Ben.
-
-
+Acked-by: Huang Rui <ray.huang@amd.com>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
