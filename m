@@ -1,120 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18457 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:55298 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752250AbbFCAKM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 20:10:12 -0400
-Subject: [PATCH V2 1/2] pci: Add dev_flags bit to access VPD through
- function 0
-From: Mark D Rustad <mark.d.rustad@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Tue, 02 Jun 2015 17:10:11 -0700
-Message-ID: <20150603001011.71269.79857.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150603000645.71269.26134.stgit@mdrustad-wks.jf.intel.com>
-References: <20150603000645.71269.26134.stgit@mdrustad-wks.jf.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1750787AbbFXHmA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Jun 2015 03:42:00 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@kernel.org>,
+	Boszormenyi Zoltan <zboszor@pr.hu>, Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: [Bugfix v2] PCI, ACPI: Fix regressions caused by resource_size_t overflow with 32bit kernel
+Date: Wed, 24 Jun 2015 15:43:37 +0800
+Message-Id: <1435131817-28167-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
-function 0 to provide VPD access on other functions. This solves
-concurrent access problems on many devices without changing the
-attributes exposed in sysfs. Never set this bit on function 0 or
-there will be an infinite recursion.
+Since commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
+interfaces to simplify implementation"), x86 PCI ACPI host bridge driver
+validates ACPI resources by first converting an ACPI resource to
+a 'struct resource' structure and then applying checks against the
+converted resource structure. The 'start' and 'end' fields in 'struct
+resource' are defined to be type of resource_size_t, which may be 32 bits
+or 64 bits depending on CONFIG_PHYS_ADDR_T_64BIT.
 
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
----
-Changes in V2:
-- Corrected spelling in log message
-- Added checks to see that the referenced function 0 is reasonable
----
- drivers/pci/access.c |   48 +++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 47 insertions(+), 1 deletion(-)
+This may cause incorrect resource validation results with 32 bit kernels
+because 64bit ACPI resource descriptors may get truncated when converting
+to 32bit 'start' and 'end' fields in 'struct resource'. And eventually
+affects PCI resource allocation subsystem and causes some PCI devices
+unusable.
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d9b64a175990..74634d4868a2 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -439,6 +439,40 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
- 	.release = pci_vpd_pci22_release,
- };
+So enhance the ACPI resource parsing interfaces to ignore ACPI resource
+descriptors with address/offset observe 4G when running in 32bit mode.
+This reverts to the behavior before commit 593669c2ac0f.
+
+This issue was triggered on a platform running 32bit kernel with an
+ACPI resource descriptor with address range [0x400000000-0xfffffffff].
+Please refer to https://lkml.org/lkml/2015/6/19/277 for more information.
+
+Reported-by: Boszormenyi Zoltan <zboszor@pr.hu>
+Fixes: 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces to simplify implementation")
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: stable@vger.kernel.org # 4.0
+---
+
+Hi Zoltan,
+	Could you please help to test this patch against the latest kernel?
+Thanks!
+Gerry
+
+---
+ drivers/acpi/resource.c |   24 +++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index 8244f013f210..f1c966e05078 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -193,6 +193,7 @@ static bool acpi_decode_space(struct resource_win *win,
+ 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
+ 	bool wp = addr->info.mem.write_protect;
+ 	u64 len = attr->address_length;
++	u64 start, end, offset = 0;
+ 	struct resource *res = &win->res;
  
-+static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-+			       void *arg)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	ssize_t ret;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+
-+	ret = pci_read_vpd(tdev, pos, count, arg);
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
-+static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
-+				const void *arg)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	ssize_t ret;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+
-+	ret = pci_write_vpd(tdev, pos, count, arg);
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
-+static const struct pci_vpd_ops pci_vpd_f0_ops = {
-+	.read = pci_vpd_f0_read,
-+	.write = pci_vpd_f0_write,
-+	.release = pci_vpd_pci22_release,
-+};
-+
- int pci_vpd_pci22_init(struct pci_dev *dev)
- {
- 	struct pci_vpd_pci22 *vpd;
-@@ -447,12 +481,24 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
- 	if (!cap)
- 		return -ENODEV;
-+	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
-+		struct pci_dev *tdev;
-+
-+		tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+		if (!tdev || !dev->multifunction || !tdev->multifunction ||
-+		    dev->class != tdev->class || dev->vendor != tdev->vendor ||
-+		    dev->device != tdev->device)
-+			return -ENODEV;
-+	}
- 	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
- 	if (!vpd)
- 		return -ENOMEM;
+ 	/*
+@@ -204,9 +205,6 @@ static bool acpi_decode_space(struct resource_win *win,
+ 		pr_debug("ACPI: Invalid address space min_addr_fix %d, max_addr_fix %d, len %llx\n",
+ 			 addr->min_address_fixed, addr->max_address_fixed, len);
  
- 	vpd->base.len = PCI_VPD_PCI22_SIZE;
--	vpd->base.ops = &pci_vpd_pci22_ops;
-+	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
-+		vpd->base.ops = &pci_vpd_f0_ops;
-+	else
-+		vpd->base.ops = &pci_vpd_pci22_ops;
- 	mutex_init(&vpd->lock);
- 	vpd->cap = cap;
- 	vpd->busy = false;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 353db8dc4c6e..194df6d635e6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -180,6 +180,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
- 	/* Do not use PM reset even if device advertises NoSoftRst- */
- 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-+	/* Get VPD from function 0 VPD */
-+	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
- };
+-	res->start = attr->minimum;
+-	res->end = attr->maximum;
+-
+ 	/*
+ 	 * For bridges that translate addresses across the bridge,
+ 	 * translation_offset is the offset that must be added to the
+@@ -214,12 +212,22 @@ static bool acpi_decode_space(struct resource_win *win,
+ 	 * primary side. Non-bridge devices must list 0 for all Address
+ 	 * Translation offset bits.
+ 	 */
+-	if (addr->producer_consumer == ACPI_PRODUCER) {
+-		res->start += attr->translation_offset;
+-		res->end += attr->translation_offset;
+-	} else if (attr->translation_offset) {
++	if (addr->producer_consumer == ACPI_PRODUCER)
++		offset = attr->translation_offset;
++	else if (attr->translation_offset)
+ 		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
+ 			 attr->translation_offset);
++	start = attr->minimum + offset;
++	end = attr->maximum + offset;
++
++	win->offset = offset;
++	res->start = start;
++	res->end = end;
++	if (sizeof(resource_size_t) < sizeof(u64) &&
++	    (offset != win->offset || start != res->start || end != res->end)) {
++		pr_warn("acpi resource window ([%#llx-%#llx] ignored, not CPU addressable)\n",
++			attr->minimum, attr->maximum);
++		return false;
+ 	}
  
- enum pci_irq_reroute_variant {
+ 	switch (addr->resource_type) {
+@@ -236,8 +244,6 @@ static bool acpi_decode_space(struct resource_win *win,
+ 		return false;
+ 	}
+ 
+-	win->offset = attr->translation_offset;
+-
+ 	if (addr->producer_consumer == ACPI_PRODUCER)
+ 		res->flags |= IORESOURCE_WINDOW;
+ 
+-- 
+1.7.10.4
 
