@@ -1,146 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:1812 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752524AbbFDEOO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Jun 2015 00:14:14 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org
-Subject: [RFT v2 10/48] irqchip: Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc
-Date: Thu,  4 Jun 2015 12:13:20 +0800
-Message-Id: <1433391238-19471-11-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:62616 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933761AbbFXBrh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jun 2015 21:47:37 -0400
+Message-ID: <558A0C35.5000708@huawei.com>
+Date: Wed, 24 Jun 2015 09:47:33 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 0/3] Trivial pci hotplug changes
+References: <1434700666-6346-1-git-send-email-wangyijing@huawei.com> <20150619171417.GL7710@google.com>
+In-Reply-To: <20150619171417.GL7710@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use irq_desc_get_xxx() to avoid redundant lookup of irq_desc while we
-already have a pointer to corresponding irq_desc.
+On 2015/6/20 1:14, Bjorn Helgaas wrote:
+> On Fri, Jun 19, 2015 at 03:57:43PM +0800, Yijing Wang wrote:
+>>
+>> Yijing Wang (3):
+>>   PCI: Use "slot" and "pci_slot" for struct hotplug_slot and struct
+>>     pci_slot
+>>   PCI: Simplify pcie_poll_cmd()
+>>   PCI: Use usleep_range() instead of msleep() for better accuracy
+> 
+> I applied the first two to pci/hotplug for v4.2, thanks!
+> 
+> I dropped the third, as explained in my response to it.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/irqchip/exynos-combiner.c   |    4 ++--
- drivers/irqchip/irq-armada-370-xp.c |    2 +-
- drivers/irqchip/irq-dw-apb-ictl.c   |    4 ++--
- drivers/irqchip/irq-gic.c           |    4 ++--
- drivers/irqchip/irq-orion.c         |    2 +-
- drivers/irqchip/irq-sunxi-nmi.c     |    2 +-
- drivers/irqchip/spear-shirq.c       |    2 +-
- 7 files changed, 10 insertions(+), 10 deletions(-)
+Thanks!
 
-diff --git a/drivers/irqchip/exynos-combiner.c b/drivers/irqchip/exynos-combiner.c
-index 5945223b73fa..039ceb46fcc0 100644
---- a/drivers/irqchip/exynos-combiner.c
-+++ b/drivers/irqchip/exynos-combiner.c
-@@ -62,8 +62,8 @@ static void combiner_unmask_irq(struct irq_data *data)
- 
- static void combiner_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
- {
--	struct combiner_chip_data *chip_data = irq_get_handler_data(irq);
--	struct irq_chip *chip = irq_get_chip(irq);
-+	struct combiner_chip_data *chip_data = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	unsigned int cascade_irq, combiner_irq;
- 	unsigned long status;
- 
-diff --git a/drivers/irqchip/irq-armada-370-xp.c b/drivers/irqchip/irq-armada-370-xp.c
-index daccc8bdbb42..40b5fe99a1d5 100644
---- a/drivers/irqchip/irq-armada-370-xp.c
-+++ b/drivers/irqchip/irq-armada-370-xp.c
-@@ -451,7 +451,7 @@ static void armada_370_xp_handle_msi_irq(struct pt_regs *r, bool b) {}
- static void armada_370_xp_mpic_handle_cascade_irq(unsigned int irq,
- 						  struct irq_desc *desc)
- {
--	struct irq_chip *chip = irq_get_chip(irq);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	unsigned long irqmap, irqn, irqsrc, cpuid;
- 	unsigned int cascade_irq;
- 
-diff --git a/drivers/irqchip/irq-dw-apb-ictl.c b/drivers/irqchip/irq-dw-apb-ictl.c
-index 53bb7326a60a..cddcd3b75f00 100644
---- a/drivers/irqchip/irq-dw-apb-ictl.c
-+++ b/drivers/irqchip/irq-dw-apb-ictl.c
-@@ -28,8 +28,8 @@
- 
- static void dw_apb_ictl_handler(unsigned int irq, struct irq_desc *desc)
- {
--	struct irq_chip *chip = irq_get_chip(irq);
--	struct irq_chip_generic *gc = irq_get_handler_data(irq);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct irq_chip_generic *gc = irq_desc_get_handler_data(desc);
- 	struct irq_domain *d = gc->private;
- 	u32 stat;
- 	int n;
-diff --git a/drivers/irqchip/irq-gic.c b/drivers/irqchip/irq-gic.c
-index 01999d74bd3a..6c8a5a7fb4a0 100644
---- a/drivers/irqchip/irq-gic.c
-+++ b/drivers/irqchip/irq-gic.c
-@@ -288,8 +288,8 @@ static void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
- 
- static void gic_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
- {
--	struct gic_chip_data *chip_data = irq_get_handler_data(irq);
--	struct irq_chip *chip = irq_get_chip(irq);
-+	struct gic_chip_data *chip_data = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	unsigned int cascade_irq, gic_irq;
- 	unsigned long status;
- 
-diff --git a/drivers/irqchip/irq-orion.c b/drivers/irqchip/irq-orion.c
-index ad0c0f6f1d65..58e034db0e7c 100644
---- a/drivers/irqchip/irq-orion.c
-+++ b/drivers/irqchip/irq-orion.c
-@@ -109,7 +109,7 @@ IRQCHIP_DECLARE(orion_intc, "marvell,orion-intc", orion_irq_init);
- 
- static void orion_bridge_irq_handler(unsigned int irq, struct irq_desc *desc)
- {
--	struct irq_domain *d = irq_get_handler_data(irq);
-+	struct irq_domain *d = irq_desc_get_handler_data(desc);
- 
- 	struct irq_chip_generic *gc = irq_get_domain_generic_chip(d, 0);
- 	u32 stat = readl_relaxed(gc->reg_base + ORION_BRIDGE_IRQ_CAUSE) &
-diff --git a/drivers/irqchip/irq-sunxi-nmi.c b/drivers/irqchip/irq-sunxi-nmi.c
-index 4a9ce5b50c5b..2eaa9d9df241 100644
---- a/drivers/irqchip/irq-sunxi-nmi.c
-+++ b/drivers/irqchip/irq-sunxi-nmi.c
-@@ -61,7 +61,7 @@ static inline u32 sunxi_sc_nmi_read(struct irq_chip_generic *gc, u32 off)
- static void sunxi_sc_nmi_handle_irq(unsigned int irq, struct irq_desc *desc)
- {
- 	struct irq_domain *domain = irq_desc_get_handler_data(desc);
--	struct irq_chip *chip = irq_get_chip(irq);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	unsigned int virq = irq_find_mapping(domain, 0);
- 
- 	chained_irq_enter(chip, desc);
-diff --git a/drivers/irqchip/spear-shirq.c b/drivers/irqchip/spear-shirq.c
-index 9c145a7cb056..fb68ee9c0424 100644
---- a/drivers/irqchip/spear-shirq.c
-+++ b/drivers/irqchip/spear-shirq.c
-@@ -185,7 +185,7 @@ static struct spear_shirq *spear320_shirq_blocks[] = {
- 
- static void shirq_handler(unsigned irq, struct irq_desc *desc)
- {
--	struct spear_shirq *shirq = irq_get_handler_data(irq);
-+	struct spear_shirq *shirq = irq_desc_get_handler_data(desc);
- 	u32 pend;
- 
- 	pend = readl(shirq->base + shirq->status_reg) & shirq->mask;
+> 
+> Bjorn
+> 
+> 
+
+
 -- 
-1.7.10.4
+Thanks!
+Yijing
 
