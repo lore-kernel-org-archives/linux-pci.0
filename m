@@ -1,51 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:38169 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754696AbbFCSr0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Jun 2015 14:47:26 -0400
-Subject: [PATCH V3 2/2] pci: Add VPD quirk for Intel Ethernet devices
-From: Mark D Rustad <mark.d.rustad@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Wed, 03 Jun 2015 11:47:04 -0700
-Message-ID: <20150603184704.109080.37608.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
-References: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <558A698A.9000508@pr.hu>
+Date: Wed, 24 Jun 2015 10:25:46 +0200
+From: Boszormenyi Zoltan <zboszor@pr.hu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@kernel.org>, Len Brown <lenb@kernel.org>
+CC: LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: Re: [Bugfix v2] PCI, ACPI: Fix regressions caused by resource_size_t
+ overflow with 32bit kernel
+References: <1435131817-28167-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1435131817-28167-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=iso-8859-2
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This quirk sets the PCI_DEV_FLAGS_VPD_REF_F0 flag on all Intel
-Ethernet device functions other than function 0.
+2015-06-24 09:43 keltezéssel, Jiang Liu írta:
+> Since commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource
+> interfaces to simplify implementation"), x86 PCI ACPI host bridge driver
+> validates ACPI resources by first converting an ACPI resource to
+> a 'struct resource' structure and then applying checks against the
+> converted resource structure. The 'start' and 'end' fields in 'struct
+> resource' are defined to be type of resource_size_t, which may be 32 bits
+> or 64 bits depending on CONFIG_PHYS_ADDR_T_64BIT.
+>
+> This may cause incorrect resource validation results with 32 bit kernels
+> because 64bit ACPI resource descriptors may get truncated when converting
+> to 32bit 'start' and 'end' fields in 'struct resource'. And eventually
+> affects PCI resource allocation subsystem and causes some PCI devices
+> unusable.
+>
+> So enhance the ACPI resource parsing interfaces to ignore ACPI resource
+> descriptors with address/offset observe 4G when running in 32bit mode.
+> This reverts to the behavior before commit 593669c2ac0f.
+>
+> This issue was triggered on a platform running 32bit kernel with an
+> ACPI resource descriptor with address range [0x400000000-0xfffffffff].
+> Please refer to https://lkml.org/lkml/2015/6/19/277 for more information.
+>
+> Reported-by: Boszormenyi Zoltan <zboszor@pr.hu>
+> Fixes: 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces to simplify implementation")
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: stable@vger.kernel.org # 4.0
+> ---
+>
+> Hi Zoltan,
+> 	Could you please help to test this patch against the latest kernel?
+> Thanks!
+> Gerry
 
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
----
-Changes in V3:
-- Added a multifunction device check
----
- drivers/pci/quirks.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+I will, thanks.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c6dc1dfd25d5..1d6d848b66f9 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1903,6 +1903,15 @@ static void quirk_netmos(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
- 			 PCI_CLASS_COMMUNICATION_SERIAL, 8, quirk_netmos);
- 
-+static void quirk_f0_vpd_link(struct pci_dev *dev)
-+{
-+	if (!dev->multifunction || !PCI_FUNC(dev->devfn))
-+		return;
-+	dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
-+}
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-+			      PCI_CLASS_NETWORK_ETHERNET, 8, quirk_f0_vpd_link);
-+
- static void quirk_e100_interrupt(struct pci_dev *dev)
- {
- 	u16 command, pmcsr;
+Best regards,
+Zoltán
+
+>
+> ---
+>  drivers/acpi/resource.c |   24 +++++++++++++++---------
+>  1 file changed, 15 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 8244f013f210..f1c966e05078 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -193,6 +193,7 @@ static bool acpi_decode_space(struct resource_win *win,
+>  	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
+>  	bool wp = addr->info.mem.write_protect;
+>  	u64 len = attr->address_length;
+> +	u64 start, end, offset = 0;
+>  	struct resource *res = &win->res;
+>  
+>  	/*
+> @@ -204,9 +205,6 @@ static bool acpi_decode_space(struct resource_win *win,
+>  		pr_debug("ACPI: Invalid address space min_addr_fix %d, max_addr_fix %d, len %llx\n",
+>  			 addr->min_address_fixed, addr->max_address_fixed, len);
+>  
+> -	res->start = attr->minimum;
+> -	res->end = attr->maximum;
+> -
+>  	/*
+>  	 * For bridges that translate addresses across the bridge,
+>  	 * translation_offset is the offset that must be added to the
+> @@ -214,12 +212,22 @@ static bool acpi_decode_space(struct resource_win *win,
+>  	 * primary side. Non-bridge devices must list 0 for all Address
+>  	 * Translation offset bits.
+>  	 */
+> -	if (addr->producer_consumer == ACPI_PRODUCER) {
+> -		res->start += attr->translation_offset;
+> -		res->end += attr->translation_offset;
+> -	} else if (attr->translation_offset) {
+> +	if (addr->producer_consumer == ACPI_PRODUCER)
+> +		offset = attr->translation_offset;
+> +	else if (attr->translation_offset)
+>  		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
+>  			 attr->translation_offset);
+> +	start = attr->minimum + offset;
+> +	end = attr->maximum + offset;
+> +
+> +	win->offset = offset;
+> +	res->start = start;
+> +	res->end = end;
+> +	if (sizeof(resource_size_t) < sizeof(u64) &&
+> +	    (offset != win->offset || start != res->start || end != res->end)) {
+> +		pr_warn("acpi resource window ([%#llx-%#llx] ignored, not CPU addressable)\n",
+> +			attr->minimum, attr->maximum);
+> +		return false;
+>  	}
+>  
+>  	switch (addr->resource_type) {
+> @@ -236,8 +244,6 @@ static bool acpi_decode_space(struct resource_win *win,
+>  		return false;
+>  	}
+>  
+> -	win->offset = attr->translation_offset;
+> -
+>  	if (addr->producer_consumer == ACPI_PRODUCER)
+>  		res->flags |= IORESOURCE_WINDOW;
+>  
 
