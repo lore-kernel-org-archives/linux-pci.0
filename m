@@ -1,213 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: arnd@arndb.de
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xen-devel@lists.xensource.com, linux-fbdev@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>
-Subject: [PATCH v7 9/9] video: fbdev: vt8623fb: use arch_phys_wc_add() and pci_iomap_wc()
-Date: Fri, 19 Jun 2015 15:08:32 -0700
-Message-Id: <1434751712-24333-10-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail7.pr.hu ([87.242.0.7]:57583 "EHLO mail7.pr.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751698AbbFXJ2T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Jun 2015 05:28:19 -0400
+Message-ID: <558A7824.3090900@pr.hu>
+Date: Wed, 24 Jun 2015 11:28:04 +0200
+From: Boszormenyi Zoltan <zboszor@pr.hu>
+MIME-Version: 1.0
+To: Ingo Molnar <mingo@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+CC: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: Re: [Bugfix v2] PCI, ACPI: Fix regressions caused by resource_size_t
+ overflow with 32bit kernel
+References: <1435131817-28167-1-git-send-email-jiang.liu@linux.intel.com> <20150624083019.GA26672@gmail.com>
+In-Reply-To: <20150624083019.GA26672@gmail.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+2015-06-24 10:30 keltezéssel, Ingo Molnar írta:
+> * Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>
+>> Since commit 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces to 
+>> simplify implementation"), x86 PCI ACPI host bridge driver validates ACPI 
+>> resources by first converting an ACPI resource to a 'struct resource' structure 
+>> and then applying checks against the converted resource structure. The 'start' 
+>> and 'end' fields in 'struct resource' are defined to be type of resource_size_t, 
+>> which may be 32 bits or 64 bits depending on CONFIG_PHYS_ADDR_T_64BIT.
+>>
+>> This may cause incorrect resource validation results with 32 bit kernels because 
+>> 64bit ACPI resource descriptors may get truncated when converting to 32bit 
+>> 'start' and 'end' fields in 'struct resource'. And eventually affects PCI 
+>> resource allocation subsystem and causes some PCI devices unusable.
+> s/causes some PCI devices unusuable.
+>   makes some PCI devices unusuable.
+>
+> Also, this description is still pretty vague. What exactly happened? Did some PCI 
+> devices not show up during bootup? Or did they hang? Or did something else happen?
 
-This driver uses the same area for MTRR as for the ioremap().
-Convert the driver from using the x86 specific MTRR code to
-the architecture agnostic arch_phys_wc_add(). arch_phys_wc_add()
-will avoid MTRR if write-combining is available, in order to
-take advantage of that also ensure the ioremap'd area is requested
-as write-combining.
+There's a reference mail URL in the description, but here it is in full glory.
 
-There are a few motivations for this:
+The machine in question started behaving like being drunk without this fix
+with 4.0.5 and 4.1.0-rc8 and 4.1.0-final. 3.18.16 was good.
 
-a) Take advantage of PAT when available
+There's a Realtek RTL8111/8168/8411 (PCI ID 10ec:8168, Subsystem ID 1565:230e)
+network chip on the mainboard. After the r8169 driver loaded, the IRQs in
+the machine went berserk. Keyboard keypressed arrived with considerable
+latency and duplicated, so no real work was possible. The machine responded
+to the power button but didn't actually power down. It just stuck at the powering
+down message. I had to press the power button for 4 seconds to power it down.
 
-b) Help bury MTRR code away, MTRR is architecture specific and on
-   x86 its replaced by PAT
+The computer is a POS machine with a big battery inside. Because of this,
+either ACPI or the Realtek chip kept the bad state and after rebooting, the
+network chip didn't even show up in lspci. Not even the PXE ROM announced
+itself during boot. I had to disconnect the battery to beat some sense back
+to the computer.
 
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
+Without the patch I was able to get debugging info out of the machine in this
+bad state with:
 
-The conversion done is expressed by the following Coccinelle
-SmPL patch, it additionally required manual intervention to
-address all the #ifdery and removal of redundant things which
-arch_phys_wc_add() already addresses such as verbose message
-about when MTRR fails and doing nothing when we didn't get
-an MTRR.
+# modprobe r8169 ; sleep 10 ; dmesg >dmesg.log ; lspci -vvxxx >lspci.log ; \
+    sync ; sync ; sync ; poweroff
 
-@ mtrr_found @
-expression index, base, size;
-@@
+all in the same command line. Entering commands manually after a single
+"modprobe r8169" was impossible. That revealed that the #2 PCIe port
+(the one that the Realtek chip is attached to) changed this way:
 
--index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
-+index = arch_phys_wc_add(base, size);
-
-@ mtrr_rm depends on mtrr_found @
-expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
-@@
-
--mtrr_del(index, base, size);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_zero_arg depends on mtrr_found @
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, 0, 0);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_fb_info depends on mtrr_found @
-struct fb_info *info;
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
-+arch_phys_wc_del(index);
-
-@ ioremap_replace_nocache depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap_nocache(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-@ ioremap_replace_default depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-Generated-by: Coccinelle SmPL
-Cc: Rob Clark <robdclark@gmail.com>
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- drivers/video/fbdev/vt8623fb.c | 31 ++++++-------------------------
- 1 file changed, 6 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/video/fbdev/vt8623fb.c b/drivers/video/fbdev/vt8623fb.c
-index ea7f056..60f24828 100644
---- a/drivers/video/fbdev/vt8623fb.c
-+++ b/drivers/video/fbdev/vt8623fb.c
-@@ -26,13 +26,9 @@
- #include <linux/console.h> /* Why should fb driver call console functions? because console_lock() */
- #include <video/vga.h>
+@@ -211,7 +211,7 @@
  
--#ifdef CONFIG_MTRR
--#include <asm/mtrr.h>
--#endif
--
- struct vt8623fb_info {
- 	char __iomem *mmio_base;
--	int mtrr_reg;
-+	int wc_cookie;
- 	struct vgastate state;
- 	struct mutex open_lock;
- 	unsigned int ref_count;
-@@ -99,10 +95,7 @@ static struct svga_timing_regs vt8623_timing_regs     = {
- /* Module parameters */
- 
- static char *mode_option = "640x480-8@60";
--
--#ifdef CONFIG_MTRR
- static int mtrr = 1;
--#endif
- 
- MODULE_AUTHOR("(c) 2006 Ondrej Zajicek <santiago@crfreenet.org>");
- MODULE_LICENSE("GPL");
-@@ -112,11 +105,8 @@ module_param(mode_option, charp, 0644);
- MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
- module_param_named(mode, mode_option, charp, 0);
- MODULE_PARM_DESC(mode, "Default video mode e.g. '648x480-8@60' (deprecated)");
--
--#ifdef CONFIG_MTRR
- module_param(mtrr, int, 0444);
- MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
--#endif
- 
- 
- /* ------------------------------------------------------------------------- */
-@@ -710,7 +700,7 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	info->fix.mmio_len = pci_resource_len(dev, 1);
- 
- 	/* Map physical IO memory address into kernel space */
--	info->screen_base = pci_iomap(dev, 0, 0);
-+	info->screen_base = pci_iomap_wc(dev, 0, 0);
- 	if (! info->screen_base) {
- 		rc = -ENOMEM;
- 		dev_err(info->device, "iomap for framebuffer failed\n");
-@@ -781,12 +771,9 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	/* Record a reference to the driver data */
- 	pci_set_drvdata(dev, info);
- 
--#ifdef CONFIG_MTRR
--	if (mtrr) {
--		par->mtrr_reg = -1;
--		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
--	}
--#endif
-+	if (mtrr)
-+		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
-+						  info->fix.smem_len);
- 
- 	return 0;
- 
-@@ -816,13 +803,7 @@ static void vt8623_pci_remove(struct pci_dev *dev)
- 	if (info) {
- 		struct vt8623fb_info *par = info->par;
- 
--#ifdef CONFIG_MTRR
--		if (par->mtrr_reg >= 0) {
--			mtrr_del(par->mtrr_reg, 0, 0);
--			par->mtrr_reg = -1;
--		}
--#endif
--
-+		arch_phys_wc_del(par->wc_cookie);
- 		unregister_framebuffer(info);
- 		fb_dealloc_cmap(&info->cmap);
- 
--- 
-2.3.2.209.gd67f9d5.dirty
+ 00:1c.1 PCI bridge: Intel Corporation NM10/ICH7 Family PCI Express Port 2 (rev 02)
+(prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping-
+SERR+ FastB2B- DisINTx+
+-       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort-
+>SERR- <PERR- INTx-
++       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort-
+>SERR+ <PERR- INTx-
+        Latency: 0, Cache Line Size: 32 bytes
+        Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
+        I/O behind bridge: 0000e000-0000efff
+@@ -226,7 +226,7 @@
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+-               DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
++               DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #2, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s
+<256ns, L1 <4us
+                        ClockPM- Surprise- LLActRep+ BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk+
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-Please read the FAQ at  http://www.tux.org/lkml/
+The "uncorrectable error" seems to have pushed it or the device behind it
+to a disabled state after reboot and this state was kept because of the battery.
+
+Also, with the 32-bit wraparound caused that every device in the system
+was reprogrammed to use a different memory address range.
+
+With the fix, the behavior of the machine was restored to how 3.18.16 worked,
+i.e. the memory range that is over 4GB is ignored again, and lspci -vvxxx shows
+that everything is at the same memory window as they were with 3.18.16.
+
+Unrelated to this fix, but I also had an adventure with r8168 (downloaded from
+Realtek and compiled from source) vs r8169. Most likely caused by switching
+between r8168 and r8169, the network chip was programmed with a bad
+MAC address (ff:fc:6d:11:28:ff, the real one is 00:0c:6d:11:28:77) which made
+the network started acting weirdly. While the machine was pingable and it was
+able to ping others, real networking like the ssh login prompt never appeared,
+traceroute took ages, etc. That was also solved by disconnecting the battery
+and powering down completely and returning to r8169 with the kernel patched
+with a preliminary version of this patch.
+
+>
+> This is _by far_ the most important part of the changelog and determines whether a 
+> patch gets backported or not. Why does a usable regression description have to be 
+> coaxed out of you like pulling teeth??
+
+The commit description by Jiang Liu has the URL for initial mail where
+I reported the symptoms I experienced. If you thing the above summary is
+not too long for a commit message, then feel free to use it, edited
+in any way you like.
+
+Best regards,
+Zoltán
+
+>
+>> So enhance the ACPI resource parsing interfaces to ignore ACPI resource 
+>> descriptors with address/offset observe 4G when running in 32bit mode. This 
+>> reverts to the behavior before commit 593669c2ac0f.
+>>
+>> This issue was triggered on a platform running 32bit kernel with an ACPI 
+>> resource descriptor with address range [0x400000000-0xfffffffff]. Please refer 
+>> to https://lkml.org/lkml/2015/6/19/277 for more information.
+> s/32bit/32-bit
+> s/64bit/64-bit
+> s/32 bit/32-bit
+> s/64 bit/64-bit
+>
+> Thanks,
+>
+>     Ingo
+>
+>
+
