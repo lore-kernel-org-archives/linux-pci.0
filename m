@@ -1,67 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:36052 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754436AbbFSRMx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Jun 2015 13:12:53 -0400
-Received: by oigb199 with SMTP id b199so42832018oig.3
-        for <linux-pci@vger.kernel.org>; Fri, 19 Jun 2015 10:12:52 -0700 (PDT)
-Date: Fri, 19 Jun 2015 12:12:49 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: Use usleep_range() instead of msleep() for
- better accuracy
-Message-ID: <20150619171249.GK7710@google.com>
-References: <1434700666-6346-1-git-send-email-wangyijing@huawei.com>
- <1434700666-6346-4-git-send-email-wangyijing@huawei.com>
+Received: from cantor2.suse.de ([195.135.220.15]:58824 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752354AbbFYPks (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Jun 2015 11:40:48 -0400
+Date: Thu, 25 Jun 2015 17:40:31 +0200
+From: Borislav Petkov <bp@suse.de>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: mingo@kernel.org, arnd@arndb.de, bhelgaas@google.com,
+	luto@amacapital.net, akpm@linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
+	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
+	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	Ville =?utf-8?B?U3lyasOkbMOk?= <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Davidlohr Bueso <dbueso@suse.de>, konrad.wilk@oracle.com,
+	ville.syrjala@linux.intel.com, david.vrabel@citrix.com,
+	jbeulich@suse.com,
+	Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>
+Subject: Re: [PATCH v8 6/9] lib: devres: add pcim_iomap_wc() variants
+Message-ID: <20150625154031.GB4898@pd.tnic>
+References: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
+ <1435195342-26879-7-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1434700666-6346-4-git-send-email-wangyijing@huawei.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1435195342-26879-7-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 19, 2015 at 03:57:46PM +0800, Yijing Wang wrote:
-> Msleep < 20ms can sleep for up to 20ms, see
-> Documentation/timers/timers-howto.txt, so we could
-> use usleep_range instead.
+On Wed, Jun 24, 2015 at 06:22:19PM -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
 > 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index daf54be..4553728 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -118,7 +118,7 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
->  		}
->  		if (timeout < 0)
->  			break;
-> -		msleep(10);
-> +		usleep_range(10000, 11000);
+> Now that we have pci_iomap_wc() add the respective
+> devres helpers. These go unexported for now but
+> note that should they later be exported this
+> must go with EXPORT_SYMBOL_GPL().
 
-timers-howto.txt also says to use msleep for 10ms+ delays, so the guidance
-is a bit ambiguous.
+Do I see it correctly, those are not used in this patchset?
 
-This particular delay does not need to be precise, and if we delay 20ms
-instead of 10ms (1/50th of a second vs 1/100th of a second), I don't think
-it makes any difference at all.
+If so, then let's keep this patch in the bag and pick it up only when
+those functions have users.
 
-If we *did* make a change here, I think we should use a range of at least
-10ms.  There's no need to tighten the wakeup time to the 1ms window between
-10ms and 11ms.  Any time in the range of 10ms to 50ms would probably be
-fine.
+-- 
+Regards/Gruss,
+    Boris.
 
-But I don't think a change here is necessary, and it does make it a bit
-harder to analyze the code because we have some things in microseconds and
-others in milliseconds.
-
->  		timeout -= 10;
->  	}
->  	return 0;	/* timeout */
-> -- 
-> 1.7.1
-> 
+ECO tip #101: Trim your mails when you reply.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-pci" in
