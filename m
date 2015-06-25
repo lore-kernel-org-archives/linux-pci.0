@@ -1,49 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29491 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751829AbbFSGQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Jun 2015 02:16:03 -0400
-Date: Fri, 19 Jun 2015 11:52:46 +0530
-From: Srinidhi Kasagar <srinidhi.kasagar@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, rafael.j.wysocki@intel.com,
-	srinidhi.kasagar@intel.com
-Subject: [PATCH] PCI: Remove 10ms d3_delay restriction for Cherrytrail
-Message-ID: <20150619062238.GA13267@intel-desktop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1435194764.3790.33.camel@kernel.crashing.org>
+Subject: Re: [Xen-devel] [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	Jan Beulich <jbeulich@suse.com>,
+	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?=
+	<ville.syrjala@linux.intel.com>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Davidlohr Bueso <dbueso@suse.de>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Mel Gorman <mgorman@suse.de>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>, Ingo Molnar <mingo@elte.hu>,
+	Borislav Petkov <bp@suse.de>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Juergen Gross <jgross@suse.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	David Vrabel <david.vrabel@citrix.com>,
+	venkatesh.pallipadi@intel.com,
+	Roger Pau =?ISO-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
+Date: Thu, 25 Jun 2015 11:12:44 +1000
+In-Reply-To: <CAB=NE6VTHL1pGVMAkThx07wHNEPAGToJg5Ns_YEd6U1edb8__g@mail.gmail.com>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1434751712-24333-6-git-send-email-mcgrof@do-not-panic.com>
+	 <1435099343.3996.13.camel@kernel.crashing.org>
+	 <20150624163821.GF11147@wotan.suse.de>
+	 <1435183509.3790.14.camel@kernel.crashing.org>
+	 <CAB=NE6X0ySW=1udE3LCbo_eCjMfdrOMrceGsPvBZbDW+N-pLTw@mail.gmail.com>
+	 <1435189081.3790.24.camel@kernel.crashing.org>
+	 <20150625000803.GH11147@wotan.suse.de>
+	 <1435193521.3790.26.camel@kernel.crashing.org>
+	 <CAB=NE6VTHL1pGVMAkThx07wHNEPAGToJg5Ns_YEd6U1edb8__g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just like Haswell, Intel Atom Cherrytrail also do not need
-the default 10ms d3_delay imposed by the PCI specification.
+On Wed, 2015-06-24 at 17:58 -0700, Luis R. Rodriguez wrote:
+> On Wed, Jun 24, 2015 at 5:52 PM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+> > On Thu, 2015-06-25 at 02:08 +0200, Luis R. Rodriguez wrote:
+> >>
+> >> OK thanks I'll proceed with these patches then.
+> >>
+> >> > As for user mappings,
+> >>
+> >> Which APIs were you considering in this regard BTW?
+> >
+> > mmap of the generic /sys/bus/pci/.../resource*
+> 
+> Like? Got a demo patch in mind ? :)
 
-Signed-off-by: Srinidhi Kasagar <srinidhi.kasagar@intel.com>
----
- drivers/pci/quirks.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+Nope. I was just thinking out loud. Today I have yet to see a problem
+with what we do so ...
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c6dc1dfd25d5..9f1cf197119d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3037,7 +3037,16 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c26, quirk_remove_d3_delay);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c4e, quirk_remove_d3_delay);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c02, quirk_remove_d3_delay);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c22, quirk_remove_d3_delay);
--
-+/* Even few Cherrytrail devices do not need 10ms d3_delay */
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2280, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b0, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b8, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22d8, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22dc, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b5, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b7, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2298, quirk_remove_d3_delay);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x229c, quirk_remove_d3_delay);
- /*
-  * Some devices may pass our check in pci_intx_mask_supported if
-  * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
--- 
-1.7.9.5
+Cheers,
+Ben.
+
+
