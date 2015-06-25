@@ -1,109 +1,108 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 3 Jun 2015 11:07:26 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-Message-ID: <20150603180726.GA6115@roeck-us.net>
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
- <20150527210447.GY32152@google.com>
- <20150602145510.GE23650@red-moon>
- <556DE1B9.6020100@roeck-us.net>
- <20150603103235.GC27917@red-moon>
- <556F1958.5050003@roeck-us.net>
- <20150603165535.GB11928@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:30466 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754055AbbFYBSN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2015 21:18:13 -0400
+Message-ID: <558B56CC.8080808@huawei.com>
+Date: Thu, 25 Jun 2015 09:18:04 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150603165535.GB11928@red-moon>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rajat Jain <rajatxjain@gmail.com>, PCI <linux-pci@vger.kernel.org>
+Subject: Re: pciehp command complete timeout issue
+References: <5582B43F.4090303@huawei.com> <20150624230534.GQ7710@google.com>
+In-Reply-To: <20150624230534.GQ7710@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 03, 2015 at 05:55:35PM +0100, Lorenzo Pieralisi wrote:
-> On Wed, Jun 03, 2015 at 04:12:24PM +0100, Guenter Roeck wrote:
+On 2015/6/25 7:05, Bjorn Helgaas wrote:
+> On Thu, Jun 18, 2015 at 08:06:23PM +0800, Yijing Wang wrote:
+>> When I tried to unbind pciehp driver on a pcie root port(bound pciehp driver),
+>> a lot timeout warning appeared.
+>>
+>> The first timeout value is 102387672 msec :(
+>> I debug and found that when pciehp complete pcie_enable_notification(), there was no command complete interrupt
+>> be triggered, so cmd_busy always be set, and once another command post, a very long timeout warning noised.
+>>
+>>
+>>  +-[0000:40]-+-00.0-[41]--
+>>  |           +-01.0-[42-43]--+-00.0  Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection
+>>  |           |               \-00.1  Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection
+>>  |           +-03.0-[44-45]--+-00.0  Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection
+>>  |           |               \-00.1  Intel Corporation 82599ES 10-Gigabit SFI/SFP+ Network Connection
+>>
+>> [root@hulk slots]# ls
+>> 0  0-1  0-2  0-3  0-4  0-5  1  10  11  12  13  14  15  16  2  3  4  5  6  7  8  9
+>> [root@hulk slots]# cat 6/address
+>> 0000:44:00
+>> [root@hulk slots]#
+>>
+>> [root@hulk pciehp]# echo 0000:40:03.0:pcie04 > unbind
+>> [root@hulk pciehp]#
+>>
+>> ...
+>> [102413.749632] pciehp 0000:40:03.0:pcie04: unloading service driver pciehp
+>> [102413.749638] pciehp_remove dev 0000:40:03.0, cmd_busy 1
+>> [102413.754929] pcie_disable_notification: ctrl cmd busy 1
+>> [102413.765903] pciehp 0000:40:03.0:pcie04: Timeout on hotplug command 0x11f1 (issued 102387672 msec ago)
 > 
-> [...]
+> The fact that you got this timeout message means the controller did
+> not set the "No Command Completed Support" bit, right?  If we had
+> NO_CMD_CMPL(ctrl), pcie_wait_cmd() becomes a no-op, and we would
+> never print any timeout message.
 > 
-> > >> After looking into this some more, I think the wrinkle may be that
-> > >> pci_read_bridge_bases() and thus pci_read_bridge_io() isn't called
-> > >> on probe-only systems (if PCI_PROBE_ONLY is set). A secondary
-> > >
-> > > That's what we would like to change :)
-> > >
-> > > https://lkml.org/lkml/2015/5/21/359
-> > 
-> > Yes, that should help. I had a brief look last night and concluded
-> > that this would require changes all over the place, which your patch
-> > pretty much confirms. Glad that you are tackling it - changes all over
-> > the place spell trouble and would probably require more time than I have
-> > available to spend on the problem.
+> Since the "No Command Completed Support" bit is NOT set, we expect
+> to get an interrupt after every command completes.
 > 
-> Eh, trouble did not even start because we have just tested it on ARM/ARM64
-> systems (that's all I can do no sign of testing on any other arch), so I do
-> not expect it will be merged quickly, it will take me time to get all the
-> required acks.
+> This sounds like the Intel CF118 erratum mentioned just above that timeout
+> message:
 > 
-> I should be able to send a v2 beginning of next week.
+>          * Controllers with errata like Intel CF118 don't generate
+>          * completion notifications unless the power/indicator/interlock
+>          * control bits are changed.  On such controllers, we'll emit this
+>          * timeout message when we wait for completion of commands that
+>          * don't change those bits, e.g., commands that merely enable
+>          * interrupts.
 > 
-Ok.
+> So to me, this sounds like pciehp is working correctly.  What did you
+> expect to happen instead?
 
-> > >> problem is that pci_read_bridge_io() does not enable a resource
-> > >> if it is explicitly disabled (base > limit), but the subsequent call
-> > >> to pci_bridge_check_ranges() unconditionally enables it.
-> > >>
-> > >> Not really sure how to address this; my current code checks IO support
-> > >> in both pci_read_bridge_io() and pci_bridge_check_ranges(). And since
-> > >> pci_read_bridge_io() is not always called, I don't see how it might
-> > >> be possible to get rid of pci_bridge_check_ranges(), or even the check
-> > >> for IO support in pci_bridge_check_ranges().
-> > >>
-> > >>> While at it, do you think it is reasonable to also claim the bridge
-> > >>> windows (resources) in the respective pci_read_bridge_* calls ?
-> > >>>
-> > >>> Is there a reason why we don't/can't do it ? I noticed that on
-> > >>> PROBE_ONLY systems on ARM/ARM64 at the moment we do not claim
-> > >>> the bridge apertures and this is not correct, see below:
-> > >>>
-> > >>> [5.980127] pcieport 0000:00:02.1: can't enable device: BAR 8
-> > >>> [mem 0xbff00000 - 0xbfffffff] not claimed
-> > >>> [5.988056] pcieport: probe of 0000:00:02.1 failed with error -22
-> > >>>
-> > >> Is this when trying my patches or with the current upstream code ?
-> > >
-> > > It is upstream code with a couple of ARM64 related patches not yet
-> > > merged. Still, it shows an issue that must be tackled.
-> > >
-> > > It is not caused by your patches but it can be solved by them.
-> > > On PROBE_ONLY systems, all resources must be claimed (since they
-> > > are not reassigned, hence not claimed by the code that reassigns them),
-> > > otherwise we can't enable a device resources (ie pcibios_enable_device
-> > > calls pci_enable_resources that fails, since resources are not claimed).
-> > >
-> > > That's why we are suggesting claiming the bridge apertures as soon
-> > > as they are read from the base registers, even on PROBE_ONLY systems.
-> > >
-> > > I think that's the only approach Bjorn would accept, otherwise
-> > > we will have to fiddle with PROBE_ONLY on ARM64, and either avoid calling
-> > > pci_enable_resources or avoid checking if a resource is claimed in
-> > > pci_enable_resources, neither solution seems sane to me.
-> > >
-> > 
-> > Looks like I'll need one of those arm64 systems at some point ;-).
-> > 
-> > Where is your patch in respect to acceptance ? Would it make sense to
-> > merge it into my code and base my patch(es) on it, or do you expect
-> > major changes which would make that difficult ?
-> 
-> I have a tweak to v1, I will post v2 next week and copy you in.
+I think if we could warn the timeout messages when the timeout is reached, not be detected in
+next command write, it would be better.
+
+Something like:
+
+Write A command
+trigger a timeout delay work event
+interrupt coming (clean the cmd_busy, cancel the timeout delay work event)
+timeout delay event work (detect whether the cmd_busy is still set, if yes, warn the timeout message)
+..
+
+But this is just my personal 3 seconds idea, it may make code more complex, I am not sure it's worth doing.
 
 Thanks!
+Yijing.
 
-> Acceptance, I think it received review only from ARM guys/platforms
-> so we are still far from merging it.
+
 > 
-I should be able to test it on powerpc (p2020/p5020) and x86.
+>> [102413.775171] pcie_do_write_cmd: dev 0000:40:03.0, cmd_busy set to 1
+>> [102415.377950] pciehp 0000:40:03.0:pcie04: Timeout on hotplug command 0x01c0 (issued 1600 msec ago)
+>> ...
+>>
+>> -- 
+>> Thanks!
+>> Yijing
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
-Guenter
+
+-- 
+Thanks!
+Yijing
+
