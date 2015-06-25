@@ -1,85 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:33874 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751550AbbFETog (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 15:44:36 -0400
-Received: by igbhj9 with SMTP id hj9so23102005igb.1
-        for <linux-pci@vger.kernel.org>; Fri, 05 Jun 2015 12:44:36 -0700 (PDT)
-Date: Fri, 5 Jun 2015 14:44:32 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	aik@ozlabs.ru, panto@antoniou-consulting.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-Subject: Re: [PATCH v5 01/42] PCI: Add pcibios_setup_bridge()
-Message-ID: <20150605194432.GN3631@google.com>
-References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1433400131-18429-2-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from stargate.chelsio.com ([67.207.112.58]:15243 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752453AbbFYVlV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2015 17:41:21 -0400
+From: Casey Leedom <leedom@chelsio.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Juergen Gross <jgross@suse.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	"Thomas Gleixner" <tglx@linutronix.de>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	"Dave Airlie" <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	Ville =?ISO-8859-1?Q?Syrj=E4l=E4? = <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	=?iso-8859-1?Q?Ville_Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Jan Beulich" <jbeulich@suse.com>,
+	=?iso-8859-1?Q?Roger_Pau_Monn=E9?= <roger.pau@citrix.com>
+Subject: RE: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+Date: Thu, 25 Jun 2015 21:40:12 +0000
+Message-ID: <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+ <1435189081.3790.24.camel@kernel.crashing.org>
+ <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>,<6806026.xb91q6Ad7G@wuerfel>
+In-Reply-To: <6806026.xb91q6Ad7G@wuerfel>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433400131-18429-2-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 04, 2015 at 04:41:30PM +1000, Gavin Shan wrote:
-> Currently, PowerPC PowerNV platform utilizes ppc_md.pcibios_fixup(),
-> which is called for once after PCI probing and resource assignment
-> are completed, to allocate platform required resources for PCI devices:
-> PE#, IO and MMIO mapping, DMA address translation (TCE) table etc.
-> Obviously, it's not hotplug friendly.
-> 
-> The patch adds weak function pcibios_setup_bridge(), which is called
-> by pci_setup_bridge(). PowerPC PowerNV platform will reuse the function
-> to assign above platform required resources to newly added PCI devices,
-> in order to support PCI hotplug in subsequent patches.
-> 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+| From: Arnd Bergmann [arnd@arndb.de]
+| Sent: Thursday, June 25, 2015 1:44 PM
+| 
+| On Thursday 25 June 2015 15:01:56 Casey Leedom wrote:
+| >
+| >   Is there a reference I can read on this so I can understand
+| > when and where we can use the __raw_*() APIs?  Can these
+| > Raw Read/Write operations be reordered with respect to
+| > each other or are the use of the various flavors of SYNC
+| > instructions just to maintain order between Cached Memory
+| > Accesses and I/O Instructions?
+| 
+| The interpretation is not consistent across architectures.
+| 
+| My best description would be that the __raw_*() accessors should
+| only be used for accessing RAM areas that are known to have no
+| side-effects and can be read in any size (8-bit to 64-bit wide),
+| any alignment, and do not have a specific endianess.
+| 
+| If you are dealing with MMIO registers that have a fixed endianess
+| and size, the correct accessor would be readl_relaxed(), which
+| is like readl() but lacks the barriers on certain architectures.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Ah, thanks.  I see now that the __raw_*() APIs don't do any of the
+Endian Swizzling.  Unfortunately the *_relaxed() APIs on PowerPC
+are just defined as the normal *() routines.  From
+arch/powerpc/include/asm/io.h:
 
-> ---
-> v5:
->   * Corrected subject as Bjorn suggested
->   * pci_setup_bridge() calls pcibios_setup_bridge() and __pci_setup_bridge()
-> ---
->  drivers/pci/setup-bus.c | 5 +++++
->  include/linux/pci.h     | 1 +
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 4fd0cac..623dee3 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -693,11 +693,16 @@ static void __pci_setup_bridge(struct pci_bus *bus, unsigned long type)
->  	pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, bus->bridge_ctl);
->  }
->  
-> +void __weak pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
-> +{
-> +}
-> +
->  void pci_setup_bridge(struct pci_bus *bus)
->  {
->  	unsigned long type = IORESOURCE_IO | IORESOURCE_MEM |
->  				  IORESOURCE_PREFETCH;
->  
-> +	pcibios_setup_bridge(bus, type);
->  	__pci_setup_bridge(bus, type);
->  }
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 94bacfa..5aacd0a 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -811,6 +811,7 @@ void pci_stop_and_remove_bus_device_locked(struct pci_dev *dev);
->  void pci_stop_root_bus(struct pci_bus *bus);
->  void pci_remove_root_bus(struct pci_bus *bus);
->  void pci_setup_cardbus(struct pci_bus *bus);
-> +void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type);
->  void pci_sort_breadthfirst(void);
->  #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
->  #define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
-> -- 
-> 2.1.0
-> 
+    /*
+     * We don't do relaxed operations yet, at least not with this semantic
+     */
+    #define readb_relaxed(addr)     readb(addr)
+    #define readw_relaxed(addr)     readw(addr)
+    #define readl_relaxed(addr)     readl(addr)
+    #define readq_relaxed(addr)     readq(addr)
+    #define writeb_relaxed(v, addr) writeb(v, addr)
+    #define writew_relaxed(v, addr) writew(v, addr)
+    #define writel_relaxed(v, addr) writel(v, addr)
+    #define writeq_relaxed(v, addr) writeq(v, addr)
+
+    (And in fact, this is true for most of the architectures.)
+
+So we could go ahead and use these but for now there wouldn't be
+any effect.
+
+Hhmmm, so what do PowerPC Drivers do when they want to take
+advantage of Write Combining?  Do their own Endian Swizzling
+with the __raw_*() APIs?
+
+Casey
