@@ -1,178 +1,136 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1433773583.2952.52.camel@infradead.org>
-Subject: Re: [PATCH v11 0/10] iommu/vt-d: Fix intel vt-d faults in kdump
- kernel
-From: David Woodhouse <dwmw2@infradead.org>
-To: "Li, Zhen-Hua" <zhen-hual@hp.com>
-Cc: indou.takao@jp.fujitsu.com, bhe@redhat.com, joro@8bytes.org,
-	vgoyal@redhat.com, dyoung@redhat.com,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, kexec@lists.infradead.org,
-	alex.williamson@redhat.com, ddutile@redhat.com,
-	ishii.hironobu@jp.fujitsu.com, bhelgaas@google.com,
-	doug.hatch@hp.com, jerry.hoemann@hp.com, tom.vaden@hp.com,
-	li.zhang6@hp.com, lisa.mitchell@hp.com, billsumnerlinux@gmail.com,
-	rwright@hp.com
-Date: Mon, 08 Jun 2015 15:26:23 +0100
-In-Reply-To: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-References: <1431337974-545-1-git-send-email-zhen-hual@hp.com>
-Content-Type: multipart/signed; micalg="sha-1"; protocol="application/x-pkcs7-signature";
-	boundary="=-siEst4SHcAKD8uC4iZY8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:33550 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbbFYBgc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jun 2015 21:36:32 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: akpm@linux-foundation.org
+Cc: bp@suse.de, mingo@elte.hu, syrjala@sci.fi,
+	ville.syrjala@linux.intel.com, luto@amacapital.net,
+	tomi.valkeinen@ti.com, mst@redhat.com, benh@kernel.crashing.org,
+	linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, airlied@redhat.com,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v5 0/3] atyfb: address MTRR corner case
+Date: Wed, 24 Jun 2015 18:34:17 -0700
+Message-Id: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
---=-siEst4SHcAKD8uC4iZY8
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Andrew,
 
-On Mon, 2015-05-11 at 17:52 +0800, Li, Zhen-Hua wrote:
-> To fix this problem, we modifies the behaviors of the intel vt-d in the=
-=20
-> crashdump kernel:
->=20
-> For DMA Remapping:
-> 1. To accept the vt-d hardware in an active state,
-> 2. Do not disable and re-enable the translation, keep it enabled.
-> 3. Use the old root entry table, do not rewrite the RTA register.
-> 4. Malloc and use new context entry table, copy data from the old ones th=
-at
->    used by the old kernel.
+Forgive me for the TL;DR, I'm afraid I need to be crystal clear on this
+patchset as its the most complex in the entire series. The skinny is that this
+patchset addresses a complex work around with APIs now merged upstream going in
+for v4.2, the driver maintainer hasn't followed up with the driver changes for
+over a month and no one else has provided Acks for these device driver
+changes [0]. We have a few options:
 
-There are some interesting corner cases to handle here.
+0) Sit and wait for a driver maintainer to review this
+1) Merge this as-is and hope for reports
+2) go with the nopat requirement as with the ivtv and ipath driver
 
-Firstly, you don't seem to handle the case of extended root/context
-tables (where ecap_ecs is set). You need to preserve the DMA_RTADDR_RT
-bit in the Root Table Address register, surely?
+I'd prefer to merge this as is, and only if reports come back with
+issues should we then consider 2) as we'd then have at least a well
+documented work effort required for this transformation. This device
+driver is also old, so I don't expect much reports anyway.
 
-I think we also need to cope with inheriting page tables from a kernel
-that *doesn't* use extended page tables, even on hardware that supports
-it. Which means the use of extended page tables in the new kernel would
-need to be contingent on something *other* than the pure hardware
-capabilities.
+----
 
-> 5. Keep using the old page tables before driver is loaded.
-> 6. After device driver is loaded, when it issues the first dma_map comman=
-d,=20
->    free the dmar_domain structure for this device, and generate a new one=
-, so=20
->    that the device can be assigned a new and empty page table.=20
+The TL;DR:
 
-What if there were RMRRs for this device? Don't we need to ensure that
-those are present in the "new and empty page table" when we take it
-over?
+As part of the long haul effort to rid the world of direct MTRR use [1] we've
+have had to also work on alternative solutions which can co-exist with PAT
+interfaces. Most of the transformation of device drivers to use PAT was fairly
+easy (TM): so long as ioremap_wc() was used we could then convert over the
+drivers using mtrr_add() over to the arch-agnostic and PAT-aware (ignored when
+PAT is enabled) arch_phys_wc_add(). This was typically easy to do, for instance
+in cases where a full PCI BAR was used for MMIO registers and another PCI BAR
+was used with write-combining effects desirable. In some cases we just needed
+new WC apis for some buses. This was the case for most modern devices, but a
+few old devices had a combined set of MMIO registers and the write-combined
+area mixed. In such situations even when using MTRR one had to figure out
+creative solutions to make things work, specially considering MTRRs were
+limited and they had size constraints: an MTRR base and size must be
+a power of two.
 
---=20
-David Woodhouse                            Open Source Technology Centre
-David.Woodhouse@intel.com                              Intel Corporation
+The good news is that on Linux there were only three device drivers in total
+that we ended up with radical issue with when converting them over to PAT
+interfaces. One was with the ivtv media device driver, another was the
+infiniband ipath device driver. The other one was the framebuffer atyfb
+device driver that this series addresses. For both ivtv and ipath we've
+decided to simply require users of those devices to boot with the nopat
+kernel parameter because both devices drivers are ancient and the work
+required to fully convert to PAT interfaces is significant (in the ipath case)
+or nearly almost impossible (ivtv). For details please refer to the respective
+and now upstream commits:
 
---=-siEst4SHcAKD8uC4iZY8
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
+7ea402d x86/mm/pat, drivers/infiniband/ipath: Use arch_phys_wc_add() and require PAT disabled
+1bf1735 x86/mm/pat, drivers/media/ivtv: Use arch_phys_wc_add() and require PAT disabled
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIISjjCCBicw
-ggUPoAMCAQICAw3vNzANBgkqhkiG9w0BAQUFADCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
-YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
-ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
-MB4XDTE1MDUwNTA5NDM0MVoXDTE2MDUwNTA5NTMzNlowQjEcMBoGA1UEAwwTZHdtdzJAaW5mcmFk
-ZWFkLm9yZzEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcN
-AQEBBQADggEPADCCAQoCggEBAMkbm9kPbx1j/X4RVyf/pPKSYwelcco69TvnQQbKM8m8xkWjXJI1
-jpJ1jMaGUZGFToINMSZi7lZawUozudWbXSKy1SikENSTJHffsdRAIlsp+hR8vWvjsKUry6sEdqPG
-doa5RY7+N4WRusWZDYW/RRWE6i9EL9qV86CVPYqw22UBOUw4/j/HVGCV6TSB8yE5iEwhk/hUuzRr
-FZm1MJMR7mCS7BCR8Lr5jFY61lWpBiXNXIxLZCvDc26KR5L5tYX43iUVO3fzES1GRVoYnxxk2tmz
-fcsZG5vK+Trc9L8OZJfkYrEHH3+Iw41MQ0w/djVtYr1+HYldx0QmYXAtnhIj+UMCAwEAAaOCAtkw
-ggLVMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcD
-BDAdBgNVHQ4EFgQUszC96C3w5/2+d+atSr0IpT26YI4wHwYDVR0jBBgwFoAUU3Ltkpzg2ssBXHx+
-ljVO8tS4UYIwHgYDVR0RBBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzCCAUwGA1UdIASCAUMwggE/
-MIIBOwYLKwYBBAGBtTcBAgMwggEqMC4GCCsGAQUFBwIBFiJodHRwOi8vd3d3LnN0YXJ0c3NsLmNv
-bS9wb2xpY3kucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1
-dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0
-aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVpcmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9s
-aWN5LCByZWxpYW5jZSBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNl
-IG9mIHRoZSByZWx5aW5nIHBhcnR5IG9ibGlnYXRpb25zLjA2BgNVHR8ELzAtMCugKaAnhiVodHRw
-Oi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsG
-AQUFBzABhi1odHRwOi8vb2NzcC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYI
-KwYBBQUHMAKGNmh0dHA6Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50
-LmNhLmNydDAjBgNVHRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEF
-BQADggEBAHMQmxHHodpS85X8HRyxhvfkys7r+taCNOaNU9cxQu/cZ/6k5nS2qGNMzZ6jb7ueY/V7
-7p+4DW/9ZWODDTf4Fz00mh5SSVc20Bz7t+hhxwHd62PZgENh5i76Qq2tw48U8AsYo5damHby1epf
-neZafLpUkLLO7AGBJIiRVTevdvyXQ0qnixOmKMWyvrhSNGuVIKVdeqLP+102Dwf+dpFyw+j1hz28
-jEEKpHa+NR1b2kXuSPi/rMGhexwlJOh4tK8KQ6Ryr0rIN//NSbOgbyYZrzc/ZUWX9V5OA84ChFb2
-vkFl0OcYrttp/rhDBLITwffPxSZeoBh9H7zYzkbCXKL3BUIwggYnMIIFD6ADAgECAgMN7zcwDQYJ
-KoZIhvcNAQEFBQAwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYD
-VQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENv
-bSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTAeFw0xNTA1MDUwOTQzNDFa
-Fw0xNjA1MDUwOTUzMzZaMEIxHDAaBgNVBAMME2R3bXcyQGluZnJhZGVhZC5vcmcxIjAgBgkqhkiG
-9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
-AQDJG5vZD28dY/1+EVcn/6TykmMHpXHKOvU750EGyjPJvMZFo1ySNY6SdYzGhlGRhU6CDTEmYu5W
-WsFKM7nVm10istUopBDUkyR337HUQCJbKfoUfL1r47ClK8urBHajxnaGuUWO/jeFkbrFmQ2Fv0UV
-hOovRC/alfOglT2KsNtlATlMOP4/x1Rglek0gfMhOYhMIZP4VLs0axWZtTCTEe5gkuwQkfC6+YxW
-OtZVqQYlzVyMS2Qrw3NuikeS+bWF+N4lFTt38xEtRkVaGJ8cZNrZs33LGRubyvk63PS/DmSX5GKx
-Bx9/iMONTENMP3Y1bWK9fh2JXcdEJmFwLZ4SI/lDAgMBAAGjggLZMIIC1TAJBgNVHRMEAjAAMAsG
-A1UdDwQEAwIEsDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwHQYDVR0OBBYEFLMwvegt
-8Of9vnfmrUq9CKU9umCOMB8GA1UdIwQYMBaAFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB4GA1UdEQQX
-MBWBE2R3bXcyQGluZnJhZGVhZC5vcmcwggFMBgNVHSAEggFDMIIBPzCCATsGCysGAQQBgbU3AQID
-MIIBKjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjCB9wYI
-KwYBBQUHAgIwgeowJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwAwIBARqBvlRo
-aXMgY2VydGlmaWNhdGUgd2FzIGlzc3VlZCBhY2NvcmRpbmcgdG8gdGhlIENsYXNzIDEgVmFsaWRh
-dGlvbiByZXF1aXJlbWVudHMgb2YgdGhlIFN0YXJ0Q29tIENBIHBvbGljeSwgcmVsaWFuY2Ugb25s
-eSBmb3IgdGhlIGludGVuZGVkIHB1cnBvc2UgaW4gY29tcGxpYW5jZSBvZiB0aGUgcmVseWluZyBw
-YXJ0eSBvYmxpZ2F0aW9ucy4wNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5zdGFydHNzbC5j
-b20vY3J0dTEtY3JsLmNybDCBjgYIKwYBBQUHAQEEgYEwfzA5BggrBgEFBQcwAYYtaHR0cDovL29j
-c3Auc3RhcnRzc2wuY29tL3N1Yi9jbGFzczEvY2xpZW50L2NhMEIGCCsGAQUFBzAChjZodHRwOi8v
-YWlhLnN0YXJ0c3NsLmNvbS9jZXJ0cy9zdWIuY2xhc3MxLmNsaWVudC5jYS5jcnQwIwYDVR0SBBww
-GoYYaHR0cDovL3d3dy5zdGFydHNzbC5jb20vMA0GCSqGSIb3DQEBBQUAA4IBAQBzEJsRx6HaUvOV
-/B0csYb35MrO6/rWgjTmjVPXMULv3Gf+pOZ0tqhjTM2eo2+7nmP1e+6fuA1v/WVjgw03+Bc9NJoe
-UklXNtAc+7foYccB3etj2YBDYeYu+kKtrcOPFPALGKOXWph28tXqX53mWny6VJCyzuwBgSSIkVU3
-r3b8l0NKp4sTpijFsr64UjRrlSClXXqiz/tdNg8H/naRcsPo9Yc9vIxBCqR2vjUdW9pF7kj4v6zB
-oXscJSToeLSvCkOkcq9KyDf/zUmzoG8mGa83P2VFl/VeTgPOAoRW9r5BZdDnGK7baf64QwSyE8H3
-z8UmXqAYfR+82M5Gwlyi9wVCMIIGNDCCBBygAwIBAgIBHjANBgkqhkiG9w0BAQUFADB9MQswCQYD
-VQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwg
-Q2VydGlmaWNhdGUgU2lnbmluZzEpMCcGA1UEAxMgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRo
-b3JpdHkwHhcNMDcxMDI0MjEwMTU1WhcNMTcxMDI0MjEwMTU1WjCBjDELMAkGA1UEBhMCSUwxFjAU
-BgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRl
-IFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUg
-Q2xpZW50IENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxwmDzM4t2BqxKaQuE6uW
-vooyg4ymiEGWVUet1G8SD+rqvyNH4QrvnEIaFHxOhESip7vMz39ScLpNLbL1QpOlPW/tFIzNHS3q
-d2XRNYG5Sv9RcGE+T4qbLtsjjJbi6sL7Ls/f/X9ftTyhxvxWkf8KW37iKrueKsxw2HqolH7GM6FX
-5UfNAwAu4ZifkpmZzU1slBhyWwaQPEPPZRsWoTb7q8hmgv6Nv3Hg9rmA1/VPBIOQ6SKRkHXG0Hhm
-q1dOFoAFI411+a/9nWm5rcVjGcIWZ2v/43Yksq60jExipA4l5uv9/+Hm33mbgmCszdj/Dthf13tg
-Av2O83hLJ0exTqfrlwIDAQABo4IBrTCCAakwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
-AQYwHQYDVR0OBBYEFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB8GA1UdIwQYMBaAFE4L7xqkQFulF2mH
-MMo0aEPQQa7yMGYGCCsGAQUFBwEBBFowWDAnBggrBgEFBQcwAYYbaHR0cDovL29jc3Auc3RhcnRz
-c2wuY29tL2NhMC0GCCsGAQUFBzAChiFodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9zZnNjYS5jcnQw
-WwYDVR0fBFQwUjAnoCWgI4YhaHR0cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3JsMCegJaAj
-hiFodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9zZnNjYS5jcmwwgYAGA1UdIAR5MHcwdQYLKwYBBAGB
-tTcBAgEwZjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjA0
-BggrBgEFBQcCARYoaHR0cDovL3d3dy5zdGFydHNzbC5jb20vaW50ZXJtZWRpYXRlLnBkZjANBgkq
-hkiG9w0BAQUFAAOCAgEACoMIfXirLAZcuGOMXq4cuSN3TaFx2H2GvD5VSy/6rV55BYHbWNaPeQn3
-oBSU8KgQZn/Kck1JxbLpAxVCNtsxeW1R87ifhsYZ0qjdrA9anrW2MAWCtosmAOT4OxK9QPoSjCMx
-M3HbkZCDJgnlE8jMopH21BbyAYr7b5EfGRQJNtgWcvqSXwKHnTutR08+Kkn0KAkXCzeQNLeA5LlY
-UzFyM7kPAp8pIRMQ+seHunmyG642S2+y/qHEdMuGIwpfz3eDF1PdctL04qYK/zu+Qg1Bw0RwgigV
-Zs/0c5HP2/e9DBHh7eSwtzYlk4AUr6yxLlcwSjOfOmKEQ/Q8tzh0IFiNu9IPuTGAPBn4CPxD0+Ru
-8T2wg8/s43R/PT3kd1OEqOJUl7q+h+r6fpvU0Fzxd2tC8Ga6fDEPme+1Nbi+03pVjuZQKbGwKJ66
-gEn06WqaxVZC+J8hh/jR0k9mST1iAZPNYulcNJ8tKmVtjYsv0L1TSm2+NwON58tO+pIVzu3DWwSE
-XSf+qkDavQam+QtEOZxLBXI++aMUEapSn+k3Lxm48ZCYfAWLb/Xj7F5JQMbZvCexglAbYR0kIHqW
-5DnsYSdMD/IplJMojx0NBrxJ3fN9dvX2Y6BIXRsF1du4qESm4/3CKuyUV7p9DW3mPlHTGLvYxnyK
-Qy7VFBkoLINszBrOUeIxggNvMIIDawIBATCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
-YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
-ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
-AgMN7zcwCQYFKw4DAhoFAKCCAa8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMTUwNjA4MTQyNjIzWjAjBgkqhkiG9w0BCQQxFgQU0JN70TiGsDavGm5sOTLZiQlkbSAw
-gaUGCSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0
-ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMT
-L1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMN7zcwgacG
-CyqGSIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
-LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMv
-U3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAw3vNzANBgkq
-hkiG9w0BAQEFAASCAQCrKA23aRn0wDGy5hrpFEHKVuUtXjGxn3yY6EiPTYVxsQn2ile7O8qHM/bs
-Ok2i+iP/h/i5VlP/jWPIxR8CdX0iwec5Ga8qP69bed3dal6cN2k9mHJsakIGeR18yjzR4GeaqC/R
-3lUbOzYhZLPTNpdLp8XG2CWSkIpoQE5yOCmIQnOHbV4AYMXpRJZf59TYR0nwqcU+dRm1+nL+LHa0
-yI8Mt3D8YVAp+sPEFdRE2WjOa+9RYZB69w/maXldu+FrKuATuYmOjTSHLNoMTaYkJ2kuFy59EZd6
-/2YrGRkyq8JO4CachEpignuXEEJHkVTaRiFyyUZ57/YehLdMB1KrCpsEAAAAAAAA
+To demo exactly how much effort would have been required I decided to venture
+into atyfb and try to fix that device driver first, considering it had the
+worst case situation to address as it used size hackery and MTRR combinations
+of different types. In order to accomplish this we needed to map out all
+possible combinatorial effects of PAT page entries with write-combining, and
+page attributes (PAT, PCD, PWT) with write-combining effects for non-PAT
+systems. We did this not only for atyfb's sake but also for any other possible
+future driver which might meet these same needs. We needed to take this a bit
+more seriously given that our long term goal was also to change the default
+behaviour of ioremap_nocache() to use strong UC instead of UC-, we needed
+to take this into consideration when converting drivers over. The documentation
+table for all these possible combinatorial entries is now upstream:
 
+2f9e897 x86/mm/mtrr, pat: Document Write Combining MTRR type effects on PAT / non-PAT pages
 
---=-siEst4SHcAKD8uC4iZY8--
+Of importance to this patch set is this table:
+
+----------------------------------------------------------------------
+MTRR Non-PAT   PAT    Linux ioremap value        Effective memory type
+----------------------------------------------------------------------
+                                                  Non-PAT |  PAT
+     PAT
+     |PCD
+     ||PWT
+     |||
+WC   000      WB      _PAGE_CACHE_MODE_WB            WC   |   WC
+WC   001      WC      _PAGE_CACHE_MODE_WC            WC*  |   WC
+WC   010      UC-     _PAGE_CACHE_MODE_UC_MINUS      WC*  |   UC
+WC   011      UC      _PAGE_CACHE_MODE_UC            UC   |   UC
+----------------------------------------------------------------------
+
+In the atyfb case it used to use two MTRR calls, a large WC MTRR followed by a
+UC MTRR "hole" call for the MMIO registers. This was done this way on atyfb
+because of the offset and size of the framebuffer area would only work well
+this way, otherwise you'd also have to try a series of small MTRR calls and you
+might end up running out of MTRRs. For non-PAT systems we take advantage of the
+above map to protect an MMIO region with 011 page attributes (this maps to
+strong UC for PAT systems) so that if a large MTRR is issued that encompasses
+the MMIO region, the MMIO region remains with an effective UC type, while the
+desired wc area would have an effective memory type of WC as its region would
+have been mapped with ioremap_wc(). This makes use of the newly introduced
+ioremap_uc() as otherwise if we would have used ioremap_nocache() we would
+not get the UC effective memeory type. This also let us remove the only UC MTRR
+call from the kernel :) after this then we'd only have WC MTRR calls in effect
+on non-PAT systems on Linux. The more complex patch then is patch 2 which does
+most of the magic.
+
+[0] http://lkml.kernel.org/r/CAB=NE6Xy1UGAqZ8CsVc+JzKqsxREaXBYK+1GjZKN8d2FG8xqJg@mail.gmail.com
+[1] http://lkml.kernel.org/r/CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com
+
+Luis R. Rodriguez (3):
+  video: fbdev: atyfb: clarify ioremap() base and length used
+  video: fbdev: atyfb: replace MTRR UC hole with strong UC
+  video: fbdev: atyfb: use arch_phys_wc_add() and ioremap_wc()
+
+ drivers/video/fbdev/aty/atyfb.h      |  5 +--
+ drivers/video/fbdev/aty/atyfb_base.c | 74 +++++++++++-------------------------
+ 2 files changed, 24 insertions(+), 55 deletions(-)
+
+-- 
+2.3.2.209.gd67f9d5.dirty
 
