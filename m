@@ -1,70 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:46464 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753290AbbFRI3a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 04:29:30 -0400
-Message-ID: <1434616169.3061.5.camel@pengutronix.de>
-Subject: Re: [PATCH] ARM: imx6: Fix non-working MSI interrupts if PCIe
- switch is attached
-From: Lucas Stach <l.stach@pengutronix.de>
-To: David =?ISO-8859-1?Q?M=FCller?= <dave.mueller@gmx.ch>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Date: Thu, 18 Jun 2015 10:29:29 +0200
-In-Reply-To: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch>
-References: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from filtteri1.pp.htv.fi ([213.243.153.184]:51087 "EHLO
+	filtteri1.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751557AbbFYXRG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2015 19:17:06 -0400
+Date: Fri, 26 Jun 2015 02:11:03 +0300
+From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Borislav Petkov <bp@suse.de>, Ingo Molnar <mingo@elte.hu>,
+	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
+	<ville.syrjala@linux.intel.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@redhat.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Rob Clark <robdclark@gmail.com>,
+	Mathias Krause <minipli@googlemail.com>,
+	Andrzej Hajda <a.hajda@samsung.com>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Davidlohr Bueso <dbueso@suse.de>
+Subject: Re: [PATCH v5 1/3] video: fbdev: atyfb: clarify ioremap() base and
+ length used
+Message-ID: <20150625231103.GB4362@sci.fi>
+References: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
+ <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
+ <20150625230437.GA4362@sci.fi>
+ <CAB=NE6V0HGCkpYFghUyyk=+St-494Y8e9PEakF9F7cEB8vpKvA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAB=NE6V0HGCkpYFghUyyk=+St-494Y8e9PEakF9F7cEB8vpKvA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 18.06.2015, 09:59 +0200 schrieb David MÃ¼ller:
-> This problem has already been reported as 
-> https://bugzilla.kernel.org/show_bug.cgi?id=100051
+On Thu, Jun 25, 2015 at 04:06:45PM -0700, Luis R. Rodriguez wrote:
+> On Thu, Jun 25, 2015 at 4:04 PM, Ville Syrjälä <syrjala@sci.fi> wrote:
+> > it doesn't hurt too much
+> > since smem_len gets overwritten later in aty_init().
 > 
+> That's the idea, we set it with a default as it will be overwritten
+> later anyway.
 
-I need more explanation for this one. MSI interrupts were certainly
-working fine even with a PCIe switchin between some time back. I think I
-personally tested things with 3.19.
-
-In the bug report you mention that the MSI_ADDR registers are
-overwritten. Where does the write come from and why is it done?
-
-Regards,
-Lucas
-
-> Signed-off-by: David MÃ¼ller <dave.mueller@gmx.ch>
-> ---
->  drivers/pci/host/pci-imx6.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index c63691c..53f8dea 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -433,9 +433,6 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
->  	dw_pcie_setup_rc(pp);
->  
->  	imx6_pcie_start_link(pp);
-> -
-> -	if (IS_ENABLED(CONFIG_PCI_MSI))
-> -		dw_pcie_msi_init(pp);
->  }
->  
->  static void imx6_pcie_reset_phy(struct pcie_port *pp)
-> @@ -550,6 +547,9 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->  		return ret;
->  	}
->  
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		dw_pcie_msi_init(pp);
-> +
->  	return 0;
->  }
->  
+Maybe toss in a comment? Otherwise it's a bit dishonest and might give
+someone the impression that all PCI cards really have 8MB of memory.
 
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+Ville Syrjälä
+syrjala@sci.fi
+http://www.sci.fi/~syrjala/
