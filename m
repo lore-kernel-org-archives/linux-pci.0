@@ -1,97 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:59401 "EHLO foss.arm.com"
+Received: from gate.crashing.org ([63.228.1.57]:52039 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751981AbbFZJAx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Jun 2015 05:00:53 -0400
-Message-ID: <558D14C0.6030001@arm.com>
-Date: Fri, 26 Jun 2015 10:00:48 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: "Chalamarla, Tirumalesh" <Tirumalesh.Chalamarla@caviumnetworks.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Sunil Goutham <sgoutham@cavium.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+	id S1751426AbbFYWy2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Jun 2015 18:54:28 -0400
+Message-ID: <1435272718.3822.7.camel@kernel.crashing.org>
+Subject: Re: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Casey Leedom <leedom@chelsio.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Juergen Gross <jgross@suse.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Tirumalesh Chalamarla <tchalamarla@cavium.com>,
-	Robert Richter <rrichter@cavium.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 2/6] GICv3: Add ITS entry to THUNDER dts
-References: <1411573068-12952-1-git-send-email-rric@kernel.org> <1411573068-12952-3-git-send-email-rric@kernel.org> <9184A2BB-2852-4B73-B964-881A1491EEA8@caviumnetworks.com>
-In-Reply-To: <9184A2BB-2852-4B73-B964-881A1491EEA8@caviumnetworks.com>
-Content-Type: text/plain; charset=windows-1252
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	<ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <jbeulich@suse.com>,
+	Roger Pau =?ISO-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
+Date: Fri, 26 Jun 2015 08:51:58 +1000
+In-Reply-To: <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1435189081.3790.24.camel@kernel.crashing.org>
+	 <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
+	 ,<6806026.xb91q6Ad7G@wuerfel>
+	 <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 26/06/15 00:19, Chalamarla, Tirumalesh wrote:
-> Hi Marc,
-> 
-> Any feed back on this. 
-> Do you want me to submit this as a separate patch?so that it is easy for getting acceptance. 
+On Thu, 2015-06-25 at 21:40 +0000, Casey Leedom wrote:
+> Hhmmm, so what do PowerPC Drivers do when they want to take
+> advantage of Write Combining?  Do their own Endian Swizzling
+> with the __raw_*() APIs?
 
-It looks good to me, so you can add my Acked-by on it.
+Yeah either, we need to fix our relaxed implementation (patch
+welcome :-)
 
-I think you should repost it and get it merged through arm-soc.
-
-Thanks,
-
-	M.
-
-> Thanks,
-> Tirumalesh. 
-> 
->> On Sep 24, 2014, at 8:37 AM, Robert Richter <rric@kernel.org> wrote:
->>
->> From: Tirumalesh Chalamarla <tchalamarla@cavium.com>
->>
->> The PCIe host controller uses MSIs provided by GICv3 ITS. Enable it on
->> Thunder SoCs by adding an entry to DT.
->>
->> Signed-off-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
->> Signed-off-by: Robert Richter <rrichter@cavium.com>
->> ---
->> arch/arm64/boot/dts/thunder-88xx.dtsi | 9 +++++++++
->> 1 file changed, 9 insertions(+)
->>
->> diff --git a/arch/arm64/boot/dts/thunder-88xx.dtsi b/arch/arm64/boot/dts/thunder-88xx.dtsi
->> index d8c0bdc51882..9cb7cf94284a 100644
->> --- a/arch/arm64/boot/dts/thunder-88xx.dtsi
->> +++ b/arch/arm64/boot/dts/thunder-88xx.dtsi
->> @@ -376,10 +376,19 @@
->> 		gic0: interrupt-controller@8010,00000000 {
->> 			compatible = "arm,gic-v3";
->> 			#interrupt-cells = <3>;
->> +			#address-cells = <2>;
->> +			#size-cells = <2>;
->> +			ranges;
->> 			interrupt-controller;
->> 			reg = <0x8010 0x00000000 0x0 0x010000>, /* GICD */
->> 			      <0x8010 0x80000000 0x0 0x600000>; /* GICR */
->> 			interrupts = <1 9 0xf04>;
->> +
->> +			its: gic-its@8010,00020000 {
->> +				compatible = "arm,gic-v3-its";
->> +				msi-controller;
->> +				reg = <0x8010 0x20000 0x0 0x200000>;
->> +			};
->> 		};
->>
->> 		uaa0: serial@87e0,24000000 {
->> -- 
->> 2.1.0
->>
-> 
+Cheers,
+Ben.
 
 
--- 
-Jazz is not dead. It just smells funny...
