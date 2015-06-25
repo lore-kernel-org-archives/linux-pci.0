@@ -1,243 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:56918 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751019AbbFYL1O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Jun 2015 07:27:14 -0400
+Date: Thu, 25 Jun 2015 12:27:33 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+Message-ID: <20150625112733.GA9733@red-moon>
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+ <20150527210447.GY32152@google.com>
+ <20150602145510.GE23650@red-moon>
+ <1435099588.3996.14.camel@kernel.crashing.org>
+ <CAErSpo6AziA5GXEi6AizW2WP6oLVMd1p57pWunDNBQeVXxp1nw@mail.gmail.com>
+ <1435101283.3996.17.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <20150618161258.32739.29646.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20150618161258.32739.29646.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Date: Thu, 18 Jun 2015 11:02:39 -0700
-Message-ID: <CACK8Z6Gw3dM1a+kmyBbs1i7FJW-uvfE7NAGLir+ku1ExK9+Qfg@mail.gmail.com>
-Subject: Re: [PATCH 4/4] PCI: pciehp: Inline the "handle event" functions into
- the ISR
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1435101283.3996.17.camel@kernel.crashing.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ok to add:
-Reviewed-by: Rajat Jain <rajatja@google.com>
+On Wed, Jun 24, 2015 at 12:14:43AM +0100, Benjamin Herrenschmidt wrote:
+> On Tue, 2015-06-23 at 18:02 -0500, Bjorn Helgaas wrote:
+> > On Tue, Jun 23, 2015 at 5:46 PM, Benjamin Herrenschmidt
+> > <benh@kernel.crashing.org> wrote:
+> > > On Tue, 2015-06-02 at 15:55 +0100, Lorenzo Pieralisi wrote:
+> > >> While at it, do you think it is reasonable to also claim the bridge
+> > >> windows (resources) in the respective pci_read_bridge_* calls ?
+> > >
+> > > No, don't claim in read. There's a clear distinction between gathering
+> > > resources and claiming them, and we need to keep that.
+> > >
+> > > Some fixups might happen in between the two for example.
+> > 
+> > Are there any existing fixups like that?  Concrete examples would help
+> > figure out the best way forward.
+> 
+> Not off the top of my mind, it's been a long time since I wrote the
+> resource claiming stuff in arch/powerpc but it does make me nervous. We
+> collect resources when probing and we claim in the survey, those have
+> been historically very distinct steps.
 
-On Thu, Jun 18, 2015 at 9:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> The pciehp_handle_*() functions (pciehp_handle_attention_button(), etc.)
-> only contain a line or two of useful code, so it's clumsy to put
-> them in separate functions.  All they so is add an event to a work queue,
-> and it's clearer to see that directly in the ISR.
->
-> Inline them directly into pcie_isr().  No functional change.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/hotplug/pciehp.h      |    6 --
->  drivers/pci/hotplug/pciehp_ctrl.c |  105 -------------------------------------
->  drivers/pci/hotplug/pciehp_hpc.c  |   39 +++++++++++---
->  3 files changed, 32 insertions(+), 118 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index ce4d12c..57cd132 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -132,11 +132,7 @@ struct controller {
->
->  int pciehp_sysfs_enable_slot(struct slot *slot);
->  int pciehp_sysfs_disable_slot(struct slot *slot);
-> -u8 pciehp_handle_attention_button(struct slot *p_slot);
-> -u8 pciehp_handle_switch_change(struct slot *p_slot);
-> -u8 pciehp_handle_presence_change(struct slot *p_slot);
-> -u8 pciehp_handle_power_fault(struct slot *p_slot);
-> -void pciehp_handle_linkstate_change(struct slot *p_slot);
-> +void pciehp_queue_interrupt_event(struct slot *slot, u32 event_type);
->  int pciehp_configure_device(struct slot *p_slot);
->  int pciehp_unconfigure_device(struct slot *p_slot);
->  void pciehp_queue_pushbutton_work(struct work_struct *work);
-> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-> index 7ed37dc..f379612 100644
-> --- a/drivers/pci/hotplug/pciehp_ctrl.c
-> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
-> @@ -37,7 +37,7 @@
->
->  static void interrupt_event_handler(struct work_struct *work);
->
-> -static void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
-> +void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
->  {
->         struct event_info *info;
->
-> @@ -53,109 +53,6 @@ static void pciehp_queue_interrupt_event(struct slot *p_slot, u32 event_type)
->         queue_work(p_slot->wq, &info->work);
->  }
->
-> -u8 pciehp_handle_attention_button(struct slot *p_slot)
-> -{
-> -       u32 event_type;
-> -       struct controller *ctrl = p_slot->ctrl;
-> -
-> -       /*
-> -        *  Button pressed - See if need to TAKE ACTION!!!
-> -        */
-> -       ctrl_info(ctrl, "Button pressed on Slot(%s)\n", slot_name(p_slot));
-> -       event_type = INT_BUTTON_PRESS;
-> -
-> -       pciehp_queue_interrupt_event(p_slot, event_type);
-> -
-> -       return 0;
-> -}
-> -
-> -u8 pciehp_handle_switch_change(struct slot *p_slot)
-> -{
-> -       u8 getstatus;
-> -       u32 event_type;
-> -       struct controller *ctrl = p_slot->ctrl;
-> -
-> -       pciehp_get_latch_status(p_slot, &getstatus);
-> -       if (getstatus) {
-> -               /*
-> -                * Switch opened
-> -                */
-> -               ctrl_info(ctrl, "Latch open on Slot(%s)\n", slot_name(p_slot));
-> -               event_type = INT_SWITCH_OPEN;
-> -       } else {
-> -               /*
-> -                *  Switch closed
-> -                */
-> -               ctrl_info(ctrl, "Latch close on Slot(%s)\n", slot_name(p_slot));
-> -               event_type = INT_SWITCH_CLOSE;
-> -       }
-> -
-> -       pciehp_queue_interrupt_event(p_slot, event_type);
-> -
-> -       return 1;
-> -}
-> -
-> -u8 pciehp_handle_presence_change(struct slot *p_slot)
-> -{
-> -       u32 event_type;
-> -       u8 presence_save;
-> -       struct controller *ctrl = p_slot->ctrl;
-> -
-> -       /* Switch is open, assume a presence change
-> -        * Save the presence state
-> -        */
-> -       pciehp_get_adapter_status(p_slot, &presence_save);
-> -       if (presence_save) {
-> -               /*
-> -                * Card Present
-> -                */
-> -               ctrl_info(ctrl, "Card present on Slot(%s)\n", slot_name(p_slot));
-> -               event_type = INT_PRESENCE_ON;
-> -       } else {
-> -               /*
-> -                * Not Present
-> -                */
-> -               ctrl_info(ctrl, "Card not present on Slot(%s)\n",
-> -                         slot_name(p_slot));
-> -               event_type = INT_PRESENCE_OFF;
-> -       }
-> -
-> -       pciehp_queue_interrupt_event(p_slot, event_type);
-> -
-> -       return 1;
-> -}
-> -
-> -u8 pciehp_handle_power_fault(struct slot *p_slot)
-> -{
-> -       u32 event_type;
-> -       struct controller *ctrl = p_slot->ctrl;
-> -
-> -       ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(p_slot));
-> -       event_type = INT_POWER_FAULT;
-> -       ctrl_info(ctrl, "Power fault bit %x set\n", 0);
-> -       pciehp_queue_interrupt_event(p_slot, event_type);
-> -
-> -       return 1;
-> -}
-> -
-> -void pciehp_handle_linkstate_change(struct slot *p_slot)
-> -{
-> -       u32 event_type;
-> -       struct controller *ctrl = p_slot->ctrl;
-> -
-> -       if (pciehp_check_link_active(ctrl)) {
-> -               ctrl_info(ctrl, "slot(%s): Link Up event\n",
-> -                         slot_name(p_slot));
-> -               event_type = INT_LINK_UP;
-> -       } else {
-> -               ctrl_info(ctrl, "slot(%s): Link Down event\n",
-> -                         slot_name(p_slot));
-> -               event_type = INT_LINK_DOWN;
-> -       }
-> -
-> -       pciehp_queue_interrupt_event(p_slot, event_type);
-> -}
-> -
->  /* The following routines constitute the bulk of the
->     hotplug controller logic
->   */
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index e9daaa3..2913f7e 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -535,6 +535,8 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
->         struct pci_dev *dev;
->         struct slot *slot = ctrl->slot;
->         u16 detected, intr_loc;
-> +       u8 open, present;
-> +       bool link;
->
->         /*
->          * In order to guarantee that all interrupt events are
-> @@ -580,25 +582,44 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
->                 return IRQ_HANDLED;
->
->         /* Check MRL Sensor Changed */
-> -       if (intr_loc & PCI_EXP_SLTSTA_MRLSC)
-> -               pciehp_handle_switch_change(slot);
-> +       if (intr_loc & PCI_EXP_SLTSTA_MRLSC) {
-> +               pciehp_get_latch_status(slot, &open);
-> +               ctrl_info(ctrl, "Latch %s on Slot(%s)\n",
-> +                         open ? "open" : "close", slot_name(slot));
-> +               pciehp_queue_interrupt_event(slot, open ? INT_SWITCH_OPEN :
-> +                                            INT_SWITCH_CLOSE);
-> +       }
->
->         /* Check Attention Button Pressed */
-> -       if (intr_loc & PCI_EXP_SLTSTA_ABP)
-> -               pciehp_handle_attention_button(slot);
-> +       if (intr_loc & PCI_EXP_SLTSTA_ABP) {
-> +               ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
-> +                         slot_name(slot));
-> +               pciehp_queue_interrupt_event(slot, INT_BUTTON_PRESS);
-> +       }
->
->         /* Check Presence Detect Changed */
-> -       if (intr_loc & PCI_EXP_SLTSTA_PDC)
-> -               pciehp_handle_presence_change(slot);
-> +       if (intr_loc & PCI_EXP_SLTSTA_PDC) {
-> +               pciehp_get_adapter_status(slot, &present);
-> +               ctrl_info(ctrl, "Card %spresent on Slot(%s)\n",
-> +                         present ? "" : "not ", slot_name(slot));
-> +               pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
-> +                                            INT_PRESENCE_OFF);
-> +       }
->
->         /* Check Power Fault Detected */
->         if ((intr_loc & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
->                 ctrl->power_fault_detected = 1;
-> -               pciehp_handle_power_fault(slot);
-> +               ctrl_err(ctrl, "Power fault on slot %s\n", slot_name(slot));
-> +               pciehp_queue_interrupt_event(slot, INT_POWER_FAULT);
->         }
->
-> -       if (intr_loc & PCI_EXP_SLTSTA_DLLSC)
-> -               pciehp_handle_linkstate_change(slot);
-> +       if (intr_loc & PCI_EXP_SLTSTA_DLLSC) {
-> +               link = pciehp_check_link_active(ctrl);
-> +               ctrl_info(ctrl, "slot(%s): Link %s event\n",
-> +                         slot_name(slot), link ? "Up" : "Down");
-> +               pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
-> +                                            INT_LINK_DOWN);
-> +       }
->
->         return IRQ_HANDLED;
->  }
->
+Yes, that makes me nervous too, that's why I posted my patch as an
+RFC/RFT, I think there is little debate in moving
+pci_read_bridge_bases() to core PCI, claiming the resources is a
+different question though, and I can't have the overall picture
+since it _seems_ arch specific (I know Bjorn does not agree with
+this though - it might be due to platform specific quirks) even if
+it should not.
+
+> > Most arches call pci_read_bridge_bases() from pcibios_fixup_bus().  I
+> > think that's a poor place to do it because it's code that normally
+> > doesn't have to be arch-specific.  Resource claiming is also usually
+> > done from arch code, and it shouldn't be arch-specific either.
+> 
+> Claiming as in putting in the resource tree etc... is different from
+> actually reading the values from the HW and is traditionally done much
+> later, no ?
+> 
+> > If we move both the read and claim into generic code, then we might
+> > need to make sure there's a fixup phase in between or something.
+> 
+> Well, then there's a more general argument to be made as to whether we
+> want the claiming to be "merged" as part of the probing/reading I
+> suppose...
+
+On PROBE_ONLY systems (that are the systems I really wanted to cover
+by claiming as soon as pci_read_bridge_bases() is executed) I think
+we all agree that merging the claiming/reading is sane (but I also
+think that Bjorn is not happy with that :), I mean it should not
+be PROBE_ONLY dependent).
+
+> Then there's also the case where everything gets fully reassigned, like
+> powernv, where the "read" phase is really only about sizing device
+> BARs...
+
+Exactly, there claiming right after reading should not be a problem
+either. How do you want me to proceed ? Should I make bridge resources
+claiming in PCI core PROBE_ONLY ? Or move it to ARM specific hooks ?
+
+I will certainly move pci_read_bridge_bases() to core code since this
+changes nothing to current behaviour and must be consolidated
+regardless.
+
+Thoughts appreciated.
+
+Thanks,
+Lorenzo
