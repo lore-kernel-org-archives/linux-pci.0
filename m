@@ -1,45 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Hubbe, Allen" <Allen.Hubbe@emc.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>
-Subject: RE: [PATCH v3 02/18] NTB: Add NTB hardware abstraction layer
-Date: Tue, 9 Jun 2015 17:32:01 +0000
-Message-ID: <40F65EF2B5E2254199711F58E3ACB84D830FFF99@MX104CL02.corp.emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
- <21347a93355f40d945cf9f565f95e790d9b3bda5.1433838377.git.Allen.Hubbe@emc.com>
- <20150609165328.GH23119@google.com>
-In-Reply-To: <20150609165328.GH23119@google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from filtteri5.pp.htv.fi ([213.243.153.188]:57821 "EHLO
+	filtteri5.pp.htv.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241AbbFYXEr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Jun 2015 19:04:47 -0400
+Date: Fri, 26 Jun 2015 02:04:37 +0300
+From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: akpm@linux-foundation.org, bp@suse.de, mingo@elte.hu,
+	ville.syrjala@linux.intel.com, luto@amacapital.net,
+	tomi.valkeinen@ti.com, mst@redhat.com, benh@kernel.crashing.org,
+	linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, airlied@redhat.com,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Rob Clark <robdclark@gmail.com>,
+	Mathias Krause <minipli@googlemail.com>,
+	Andrzej Hajda <a.hajda@samsung.com>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Davidlohr Bueso <dbueso@suse.de>
+Subject: Re: [PATCH v5 1/3] video: fbdev: atyfb: clarify ioremap() base and
+ length used
+Message-ID: <20150625230437.GA4362@sci.fi>
+References: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
+ <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4gSXQg
-d2FzIHBvaW50ZWQgb3V0IGluIHYxIHRoYXQgdGhpcyBvbmUgcGF0Y2ggaXMgb3ZlciAyMDBLQi4g
-IFBsZWFzZQ0KPiA+IGFjY2VwdCBteSBhcHBvbG9naWVzIGZvciBub3QgYnJlYWtpbmcgdGhpcyBk
-b3duIGZ1cnRoZXIuICBUaGUgYWZmZWN0ZWQNCj4gPiBjb21wb25lbnRzIGluIHRoaXMgcGF0Y2gg
-aGFkIGludGVyZGVwZW5kZW5jaWVzLCB3aGljaCBtYWtlcyBpdA0KPiBkaWZmaWN1bHQNCj4gPiB0
-byBjb250YWluIHRoZSBjaGFuZ2VzLiAgVGhpcyBjaGFuZ2Ugc2VwYXJhdGVzIHRoZSBjb21wb25l
-bnRzLCBzbw0KPiBmdXR1cmUNCj4gPiBjaGFuZ2VzIGNhbiBiZSBiZXR0ZXIgY29udGFpbmVkLg0K
-PiA+DQouLi4NCj4gDQo+IEknbSBub3QgcmVhbGx5IGEgcmV2aWV3ZXIgKEknbSBvbmx5IGNvbW1l
-bnRpbmcgb24gb2J2aW91cyBFbmdsaXNoIGFuZA0KPiBzcGVsbGluZyBpc3N1ZXMpLCBzbyBtYXli
-ZSB0aGUgcmVhbCByZXZpZXdlcnMgY2FuIGhhbmRsZSB0aGlzLiAgQnV0IGlmIEkNCj4gd2VyZSBy
-ZXZpZXdpbmcgdGhlIGNvZGUsIHRoaXMgcGF0Y2ggd291bGQgYmUgZmFyIHRvbyBsYXJnZSBmb3Ig
-bWUgdG8NCj4gbWFrZQ0KPiBzZW5zZSBvZi4NCj4gDQo+IEFuZCBpdCBtYWtlcyBiaXNlY3Rpb24g
-YW5kIHJldmVyc2lvbiBzaWduaWZpY2FudGx5IGxlc3MgdXNlZnVsLg0KPiANCj4gQmpvcm4NCg0K
-SSdtIG5vdCBoYXBweSBhYm91dCBpdCBlaXRoZXIuICBJIGRpZCBtYWtlIGEgZmV3IGF0dGVtcHRz
-IHRvIHNwbGl0IHRoaXMsIHNvIEkgY2FuIHNheSBhdCBsZWFzdCB0aGF0IGl0IHdpbGwgbm90IGJl
-IGVhc3kuDQoNCkkgcmVhbGx5IGNhbid0IGNoYW5nZSBudGJfdHJhbnNwb3J0IGFuZCBudGJfaHdf
-aW50ZWwgc2VwYXJhdGVseS4gIFRoZXkgY2FsbCBlYWNoIG90aGVyLCBzbyBzcGxpdHRpbmcgb25l
-IGRyaXZlciB0byB1c2UgdGhlIGFic3RyYWN0aW9uIGxheWVyIHJlcXVpcmVzIHRoZSBvdGhlciBk
-cml2ZXIgdG8gY2hhbmdlIGF0IHRoZSBzYW1lIHRpbWUsIG9yIHRoZSBvdGhlciBkcml2ZXIgYnJl
-YWtzLiAgVW5mb3J0dW5hdGVseSwgc3BsaXR0aW5nIHRoZXNlIGRyaXZlcnMgaXMgdGhlIGxhcmdl
-IGJ1bGsgb2YgdGhlIHBhdGNoLg0KDQpJIGFsc28gdHJpZWQgdG8ganVzdCBhZGQgbnRiLmgsIG50
-Yi5jIHNlcGFyYXRlbHksIGJlZm9yZSBzcGxpdGluZyBudGJfaHdfaW50ZWwgYW5kIG50Yl90cmFu
-c3BvcnQuICBJIGZvcmdldCBleGFjdGx5IHdoeSBJIGJhY2tlZCBvdXQgb2YgdGhhdCBjaGFuZ2Ug
-YSBjb3VwbGUgd2Vla3MgYWdvLiAgSSB0aGluayBpdCBoYXMgc29tZXRoaW5nIHRvIGRvIHdpdGgg
-dGhlIHdvbmt5IG1ha2UgdGFyZ2V0cyBpbiBkcml2ZXJzL250YiBhZnRlciB0aGUgZmlyc3QgcGF0
-Y2guICBJJ2xsIHRyeSBvbmNlIGFnYWluIHRvIHNwbGl0IGl0IHRoaXMgd2F5Lg0K
+On Wed, Jun 24, 2015 at 06:34:18PM -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
+> 
+> This has no functional changes, it just adjusts
+> the ioremap() call for the framebuffer to use
+> the same values we later use for the framebuffer,
+> this will make it easier to review the next change.
+> 
+> The size of the framebuffer varies but since this is
+> for PCI we *know* this defaults to 0x800000.
+> atyfb_setup_generic() is *only* used on PCI probe.
+> 
+> Cc: Toshi Kani <toshi.kani@hp.com>
+> Cc: Suresh Siddha <sbsiddha@gmail.com>
+> Cc: Ingo Molnar <mingo@elte.hu>
+> Cc: Linus Torvalds <torvalds@linux-foundation.org>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Juergen Gross <jgross@suse.com>
+> Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+> Cc: Andy Lutomirski <luto@amacapital.net>
+> Cc: Dave Airlie <airlied@redhat.com>
+> Cc: Antonino Daplas <adaplas@gmail.com>
+> Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+> Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
+> Cc: Ville Syrjälä <syrjala@sci.fi>
+> Cc: Rob Clark <robdclark@gmail.com>
+> Cc: Mathias Krause <minipli@googlemail.com>
+> Cc: Andrzej Hajda <a.hajda@samsung.com>
+> Cc: Mel Gorman <mgorman@suse.de>
+> Cc: Vlastimil Babka <vbabka@suse.cz>
+> Cc: Borislav Petkov <bp@suse.de>
+> Cc: Davidlohr Bueso <dbueso@suse.de>
+> Cc: linux-fbdev@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+> ---
+>  drivers/video/fbdev/aty/atyfb_base.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/video/fbdev/aty/atyfb_base.c b/drivers/video/fbdev/aty/atyfb_base.c
+> index 16936bb..8025624 100644
+> --- a/drivers/video/fbdev/aty/atyfb_base.c
+> +++ b/drivers/video/fbdev/aty/atyfb_base.c
+> @@ -3489,7 +3489,9 @@ static int atyfb_setup_generic(struct pci_dev *pdev, struct fb_info *info,
+>  
+>  	/* Map in frame buffer */
+>  	info->fix.smem_start = addr;
+> -	info->screen_base = ioremap(addr, 0x800000);
+> +	info->fix.smem_len = 0x800000;
+> +
+> +	info->screen_base = ioremap(info->fix.smem_start, info->fix.smem_len);
+
+The framebuffer size isn't always 8MB. That's the size of the BAR. So
+this change isn't really correct. I suppose it doesn't hurt too much
+since smem_len gets overwritten later in aty_init().
+
+>  	if (info->screen_base == NULL) {
+>  		ret = -ENOMEM;
+>  		goto atyfb_setup_generic_fail;
+> -- 
+> 2.3.2.209.gd67f9d5.dirty
+> 
+
+-- 
+Ville Syrjälä
+syrjala@sci.fi
+http://www.sci.fi/~syrjala/
