@@ -1,65 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.emea.novell.com ([130.57.118.101]:39026 "EHLO
-	mail.emea.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751163AbbFLH7v convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-pci@vger.kernel.org:17:4>);
-	Fri, 12 Jun 2015 03:59:51 -0400
-Message-Id: <557AAD910200007800084014@mail.emea.novell.com>
-Date: Fri, 12 Jun 2015 08:59:45 +0100
-From: "Jan Beulich" <JBeulich@suse.com>
-To: "Toshi Kani" <toshi.kani@hp.com>
-Cc: "Andy Lutomirski" <luto@amacapital.net>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"Jej B" <James.Bottomley@hansenpartnership.com>,
-	"X86 ML" <x86@kernel.org>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	<ville.syrjala@linux.intel.com>,
-	"Julia Lawall" <julia.lawall@lip6.fr>,
-	<xen-devel@lists.xenproject.org>,
-	"Dave Airlie" <airlied@redhat.com>, <syrjala@sci.fi>,
-	"Juergen Gross" <JGross@suse.com>,
-	"Luis Rodriguez" <Mcgrof@Suse.com>, "Borislav Petkov" <bp@suse.de>,
-	"Tomi Valkeinen" <tomi.valkeinen@ti.com>,
-	"linux-fbdev" <linux-fbdev@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 25 Jun 2015 02:08:03 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Juergen Gross <jgross@suse.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	<linux-media@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
-References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
- <1434064996.11808.64.camel@misato.fc.hp.com>
-In-Reply-To: <1434064996.11808.64.camel@misato.fc.hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	venkatesh.pallipadi@intel.com,
+	Stefan Bader <stefan.bader@canonical.com>,
+	Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Borislav Petkov <bp@suse.de>, Davidlohr Bueso <dbueso@suse.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
+	<ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <jbeulich@suse.com>,
+	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
+Subject: Re: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+Message-ID: <20150625000803.GH11147@wotan.suse.de>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+ <1434751712-24333-6-git-send-email-mcgrof@do-not-panic.com>
+ <1435099343.3996.13.camel@kernel.crashing.org>
+ <20150624163821.GF11147@wotan.suse.de>
+ <1435183509.3790.14.camel@kernel.crashing.org>
+ <CAB=NE6X0ySW=1udE3LCbo_eCjMfdrOMrceGsPvBZbDW+N-pLTw@mail.gmail.com>
+ <1435189081.3790.24.camel@kernel.crashing.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1435189081.3790.24.camel@kernel.crashing.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
-> There are two usages on MTRRs:
->  1) MTRR entries set by firmware
->  2) MTRR entries set by OS drivers
+On Thu, Jun 25, 2015 at 09:38:01AM +1000, Benjamin Herrenschmidt wrote:
+> On Wed, 2015-06-24 at 15:29 -0700, Luis R. Rodriguez wrote:
 > 
-> We can obsolete 2), but we have no control over 1).  As UEFI firmwares
-> also set this up, this usage will continue to stay.  So, we should not
-> get rid of the MTRR code that looks up the MTRR entries, while we have
-> no need to modify them.
+> > Nope but at least what made me squint at this being a possible
+> > "feature" was that in practice when reviewing all of the kernels
+> > pending device drivers using MTRR (potential write-combine candidates)
+> > I encountered a slew of them which had the architectural unfortunate
+> > practice of combining PCI bars for MMIO and their respective
+> > write-combined desirable area (framebuffer for video, PIO buffers for
+> > infiniband, etc). Now, to me that read more as a practice for old
+> > school devices when such things were likely still being evaluated,
+> > more modern devices seem to adhere to sticking a full PCI bar with
+> > write-combining or not. Did you not encounter such mismatch splits on
+> > powerpc ? Was such possibility addressed?
 > 
-> Such MTRR entries provide safe guard to /dev/mem, which allows
-> privileged user to access a range that may require UC mapping while
-> the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
-> such a case.
+> Yes, I remember we dealt with some networking (or maybe IB) stuff back
+> in the day. We dealt with it by using a WC mapping and explicit barriers
+> to prevent combine when not wanted.
+> 
+> It is to be noted that on powerpc at least, writel() and co will never
+> combine due to the memory barriers in them. Only "normal" stores (or
+> __raw_writel) will.
+> 
+> On Intel things I different I assume...
 
-But it wouldn't be impossible to simply read the MTRRs upon boot,
-store the information, disable MTRRs, and correctly use PAT to
-achieve the same effect (i.e. the "blindly maps" part of course
-would need fixing).
+And the people who really know seem to be eaten by volcanoes or not have time.
 
-> UEFI memory table has memory attribute, which describes cache types
-> supported in physical memory ranges.  However, this information gets
-> lost when it it is converted to e820 table.
+> The problem I see is that architectures can provide widely different
+> mechanisms and semantics in those areas and it's hard to define a
+> generic driver interface.
 
-I'm afraid you rather don't want to trust that information, as
-firmware vendors frequently screw it up.
+Provided asm generic helpers are defined this should work though. The question
+is just if there is enough motivation. Doesn't sound like it or as you note
+maybe for userspace there might be. My position is that if it was too late for
+PCIE or if this was too ambigious for PCIE perhaps the next generation bus
+archicture or ammendments (I have no clue if this would would be possible) will
+make this part of future device negotiation clear and fully expected, not a
+wonderful side effect.
 
-Jan
+> > If what you are implying here is applicable to the x86 world I'm all
+> > for enabling this as we'd have less code to maintain but I'll note
+> > that getting a clarification alone on that prefetchable !=
+> > write-combining was in and of itself hard, I'd be surprised if we
+> > could get full architectural buy-in to this as an immediate automatic
+> > feature.
+> 
+> I'm happy not to make it automatic for kernel space.
 
+OK thanks I'll proceed with these patches then.
+
+> As for user mappings,
+
+Which APIs were you considering in this regard BTW?
+
+> maybe the right thing to do is to let us do what we do by
+> default with a quirk that can set a flag in pci_dev to disable that
+> behaviour (maybe on a per BAR basis ?).
+
+That might mean it could restrict userspace WC to require devices
+to have WC parts on a full PCI BAR. Although this is restrictive
+having reviewed most WC uses in the kernel I'd think this would be
+a fair compromise to make, but again, if things are still murky
+perhaps best we kiss this idea good bye for now and hope for it
+to come in on future buses or ammendments (if that's even possible?).
+
+> I think the common case is that WC works.
+
+If WC does not I will note one hack which migh be worth mentioning -- just for
+the record, this was devised as a shortcoming of a device where they failed to
+split things properly and that *without* WC performance suffered quite a bit so
+they made one full PCI BAR WC and as a work around this:
+
+http://lkml.kernel.org/r/20150416041837.GA5712@hykim-PC
+
+That is for registers that needed it:
+
+write; wmb;
+
+Then if they wanted to wait till the NIC has seen the write, they did:
+
+write; wmb; read;
+
+  Luis
