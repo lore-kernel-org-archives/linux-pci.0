@@ -1,67 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yh0-f47.google.com ([209.85.213.47]:36643 "EHLO
-	mail-yh0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755327AbbFQQoV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jun 2015 12:44:21 -0400
-Received: by yhan67 with SMTP id n67so37811770yha.3
-        for <linux-pci@vger.kernel.org>; Wed, 17 Jun 2015 09:44:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <45099CC7-DDAB-41D9-AB74-5A81E2AAF64C@intel.com>
-References: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
- <051B68B4-3E77-4EB0-B9FE-8523631884A2@intel.com> <45099CC7-DDAB-41D9-AB74-5A81E2AAF64C@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 17 Jun 2015 11:44:01 -0500
-Message-ID: <CAErSpo7e-QtQQTj2yh_jG07vqU1j1YBez_9wrcrzOQs7+eDFng@mail.gmail.com>
-Subject: Re: [PATCH V3 0/2] pci: Provide a flag to access VPD through function 0
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1435356048.26815.9.camel@kernel.crashing.org>
+Subject: Re: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Casey Leedom <leedom@chelsio.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Juergen Gross <jgross@suse.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	"ville.syrjala@linux.intel.com" <ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <jbeulich@suse.com>,
+	Roger Pau =?ISO-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
+Date: Sat, 27 Jun 2015 08:00:48 +1000
+In-Reply-To: <4985EFDD773FCB459EF7915D2A3621ADC03621@nice.asicdesigners.com>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1435189081.3790.24.camel@kernel.crashing.org>
+	 <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
+	 ,<6806026.xb91q6Ad7G@wuerfel>
+	 <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>
+	 ,<1435284123.3822.24.camel@kernel.crashing.org>
+	 <4985EFDD773FCB459EF7915D2A3621ADC03621@nice.asicdesigners.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 17, 2015 at 11:29 AM, Rustad, Mark D
-<mark.d.rustad@intel.com> wrote:
-> + Alex
->
->> On Jun 5, 2015, at 2:59 PM, Rustad, Mark D <mark.d.rustad@intel.com> wrote:
->>
->>> On Jun 3, 2015, at 11:46 AM, Mark D Rustad <mark.d.rustad@intel.com> wrote:
->>>
->>> Many multi-function devices provide shared registers in extended
->>> config space for accessing VPD. The behavior of these registers
->>> means that the state must be tracked and access locked correctly
->>> for accesses not to hang or worse. One way to meet these needs is
->>> to always perform the accesses through function 0, thereby using
->>> the state tracking and mutex that already exists.
->>>
->>> To provide this behavior, add a dev_flags bit to indicate that this
->>> should be done. This bit can then be set for any non-zero function
->>> that needs to redirect such VPD access to function 0. Do not set
->>> this bit on the zero function or there will be an infinite recursion.
->>>
->>> The second patch uses this new flag to invoke this behavior on all
->>> multi-function Intel Ethernet devices.
->>>
->>> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
->>>
->>> ---
->>> Changes in V2:
->>> - Corrected a spelling error in a log message
->>> - Added checks to see that the referenced function 0 is reasonable
->>> Changes in V3:
->>> - Don't leak a device reference
->>> - Check that function 0 has VPD
->>> - Make a helper for the function 0 checks
->>> - Moved a multifunction check to the quirk patch
->>
->> So does this series look acceptable now? I think I addressed the issues that Alex raised. Can these also be considered for -stable?
->
-> More than a week has passed without any comment. Is this going to be accepted or is there still an issue?
+On Fri, 2015-06-26 at 16:24 +0000, Casey Leedom wrote:
+>   Thanks for looking into this Ben.  As it stands now, it seems as
+> if Write Combined mappings simply aren't supported and/or all
+> driver writers trying to utilize Write Combined mappings have to
+> "hand roll" their own solutions which really isn't supportable.
+> 
+>   One thing that might be considered is simply to treat the desire
+> to utilize the Write Combining hardware as a separate issue and
+> develop writel_wc(), writeq_wc(), etc.  Those could be defined
+> as legal only for Write Combined Mappings and would "do the
+> right thing" for each architecture.  
 
-Sorry, Mark, I've just been busy with other issues and haven't had a
-chance to look at this yet.
+The question then is what is "the right thing". In the powerpc case,
+we'll have a non-garded mapping, which means we also get no ordering
+between load and stores.
 
-Bjorn
+> The initial implementations
+> could simply be writel(), writeq(), etc. till each architecture'si
+> ssues were investigated and understood.
+> 
+>   Additionally, it would be very useful to have some sort of
+> predicate which could be used to determine if an architecture
+> supported Write Combining.  Our drivers would use this to
+> eliminate a wasteful attempt to use write combining on those
+> architectures where it didn't work.
+> 
+> Casey
+> 
+> ________________________________________
+> From: Benjamin Herrenschmidt [benh@kernel.crashing.org]
+> Sent: Thursday, June 25, 2015 7:02 PM
+> To: Casey Leedom
+> Cc: Arnd Bergmann; Luis R. Rodriguez; Michael S. Tsirkin; Bjorn Helgaas; Toshi Kani; Andy Lutomirski; Juergen Gross; Tomi Valkeinen; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; xen-devel@lists.xensource.com; linux-fbdev; Suresh Siddha; Ingo Molnar; Thomas Gleixner; Daniel Vetter; Dave Airlie; Antonino Daplas; Jean-Christophe Plagniol-Villard; Dave Hansen; venkatesh.pallipadi@intel.com; Stefan Bader; ville.syrjala@linux.intel.com; David Vrabel; Jan Beulich; Roger Pau Monné
+> Subject: Re: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+> 
+> On Thu, 2015-06-25 at 21:40 +0000, Casey Leedom wrote:
+> >
+> > Ah, thanks.  I see now that the __raw_*() APIs don't do any of the
+> > Endian Swizzling.  Unfortunately the *_relaxed() APIs on PowerPC
+> > are just defined as the normal *() routines.  From
+> > arch/powerpc/include/asm/io.h:
+> >
+> >     /*
+> >      * We don't do relaxed operations yet, at least not with this
+> > semantic
+> >      */
+> 
+> Yes so I was looking at this but there are some difficulties.
+> Architecturally, even with I=1 G=1 mappings (normal ioremap), we have no
+> guarantee of ordering of load vs. store unless I misunderstood
+> something. I think all current implementations provide some of that but
+> without barriers in the accessors, we aren't architecturally correct.
+> 
+> However, having those barriers will cause issues with G=0 (write
+> combine). It's unclear whether eieio() will provide the required
+> ordering for I=1 G=0 mappings and it will probably break write combine.
+> 
+> I'm looking into it with our HW guys and will try to come up with a
+> solution for power, but it doesn't help that our memory model conflates
+> write combining with other relaxations and that all our barriers also
+> prevent write combine.
+> 
+> Maybe we can bias the relaxed accessors toward write, by having no
+> barriers in it, and putting extra ones in reads.
+> 
+> Cheers,
+> Ben.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
