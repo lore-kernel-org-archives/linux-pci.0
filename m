@@ -1,63 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:35764 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756900AbbFRSI7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jun 2015 14:08:59 -0400
-Received: by igbzc4 with SMTP id zc4so1180890igb.0
-        for <linux-pci@vger.kernel.org>; Thu, 18 Jun 2015 11:08:59 -0700 (PDT)
+Received: from stargate.chelsio.com ([67.207.112.58]:13254 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752235AbbFZQZW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jun 2015 12:25:22 -0400
+From: Casey Leedom <leedom@chelsio.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Juergen Gross <jgross@suse.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	"Ingo Molnar" <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	"ville.syrjala@linux.intel.com" <ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	"Jan Beulich" <jbeulich@suse.com>,
+	=?iso-8859-1?Q?Roger_Pau_Monn=E9?= <roger.pau@citrix.com>
+Subject: RE: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+Date: Fri, 26 Jun 2015 16:24:27 +0000
+Message-ID: <4985EFDD773FCB459EF7915D2A3621ADC03621@nice.asicdesigners.com>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1435189081.3790.24.camel@kernel.crashing.org>
+	 <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
+	 ,<6806026.xb91q6Ad7G@wuerfel>
+	 <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>,<1435284123.3822.24.camel@kernel.crashing.org>
+In-Reply-To: <1435284123.3822.24.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo6BCtM8zJS=yNTNTugXW--8PpuRhod2GAydZj38tCo+-w@mail.gmail.com>
-References: <20150618161207.32739.62577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20150618161238.32739.42666.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<CACK8Z6E_bobMhP1_0Y87R20DMfDa881LVmswZpM=YqQEZC2+=Q@mail.gmail.com>
-	<CAErSpo6BCtM8zJS=yNTNTugXW--8PpuRhod2GAydZj38tCo+-w@mail.gmail.com>
-Date: Thu, 18 Jun 2015 11:08:59 -0700
-Message-ID: <CACK8Z6Gh=rLS_tBdx-xyr-RwtTFtnkUD=A5ibJyy6SrE5jAZbw@mail.gmail.com>
-Subject: Re: [PATCH 1/4] PCI: pciehp: Clean up debug logging
-From: Rajat Jain <rajatja@google.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 18, 2015 at 11:01 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Jun 18, 2015 at 12:27 PM, Rajat Jain <rajatja@google.com> wrote:
->> Hi,
->>
->> On Thu, Jun 18, 2015 at 9:12 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> The pciehp debug logging is overly verbose and often redundant.  Almost all
->>> of the information printed by dbg_ctrl() is also printed by the normal PCI
->>> core enumeration code and by pcie_init().
->>>
->>> Remove the redundant debug info.
->>>
->>> When claiming a pciehp bridge, we print the slot characteristics, e.g.,
->>>
->>>   Slot #6 AttnBtn- AttnInd- PwrInd- PwrCtrl- MRL- Interlock- NoCompl+ LLActRep+
->>>
->>> Add the Hot-Plug Capable and Hot-Plug Surprise bits to this information,
->>
->> If the slot is not hotplug capable. then pciehp wouldn't claim it in
->> the first place.
->>
->> So printing of "hotplug capable" may really not be needed..
+  Thanks for looking into this Ben.  As it stands now, it seems as
+if Write Combined mappings simply aren't supported and/or all
+driver writers trying to utilize Write Combined mappings have to
+"hand roll" their own solutions which really isn't supportable.
+
+  One thing that might be considered is simply to treat the desire
+to utilize the Write Combining hardware as a separate issue and
+develop writel_wc(), writeq_wc(), etc.  Those could be defined
+as legal only for Write Combined Mappings and would "do the
+right thing" for each architecture.  The initial implementations
+could simply be writel(), writeq(), etc. till each architecture'si
+ssues were investigated and understood.
+
+  Additionally, it would be very useful to have some sort of
+predicate which could be used to determine if an architecture
+supported Write Combining.  Our drivers would use this to
+eliminate a wasteful attempt to use write combining on those
+architectures where it didn't work.
+
+Casey
+
+________________________________________
+From: Benjamin Herrenschmidt [benh@kernel.crashing.org]
+Sent: Thursday, June 25, 2015 7:02 PM
+To: Casey Leedom
+Cc: Arnd Bergmann; Luis R. Rodriguez; Michael S. Tsirkin; Bjorn Helgaas; Toshi Kani; Andy Lutomirski; Juergen Gross; Tomi Valkeinen; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; xen-devel@lists.xensource.com; linux-fbdev; Suresh Siddha; Ingo Molnar; Thomas Gleixner; Daniel Vetter; Dave Airlie; Antonino Daplas; Jean-Christophe Plagniol-Villard; Dave Hansen; venkatesh.pallipadi@intel.com; Stefan Bader; ville.syrjala@linux.intel.com; David Vrabel; Jan Beulich; Roger Pau Monné
+Subject: Re: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+
+On Thu, 2015-06-25 at 21:40 +0000, Casey Leedom wrote:
 >
-> Yes, I did think about that, and you're right that it probably isn't
-> needed.  But the criteria for claiming a slot and deciding whether
-> acpiphp or pciehp should manage it are not 100% clear yet, so I
-> figured it wouldn't hurt to be a bit more transparent.
-
-Sounds right.
-
-Reviewed-by : Rajat Jain <rajatja@google.com>
-
-Side note: To clarify when and why the slot was claimed by pciehp or
-acpihp, do you think we need some mumbling / logging in
-acpi_pci_detect_ejectable() or pciehp_acpi_slot_detection_check()?
-
-
+> Ah, thanks.  I see now that the __raw_*() APIs don't do any of the
+> Endian Swizzling.  Unfortunately the *_relaxed() APIs on PowerPC
+> are just defined as the normal *() routines.  From
+> arch/powerpc/include/asm/io.h:
 >
-> Bjorn
+>     /*
+>      * We don't do relaxed operations yet, at least not with this
+> semantic
+>      */
+
+Yes so I was looking at this but there are some difficulties.
+Architecturally, even with I=1 G=1 mappings (normal ioremap), we have no
+guarantee of ordering of load vs. store unless I misunderstood
+something. I think all current implementations provide some of that but
+without barriers in the accessors, we aren't architecturally correct.
+
+However, having those barriers will cause issues with G=0 (write
+combine). It's unclear whether eieio() will provide the required
+ordering for I=1 G=0 mappings and it will probably break write combine.
+
+I'm looking into it with our HW guys and will try to come up with a
+solution for power, but it doesn't help that our memory model conflates
+write combining with other relaxations and that all our barriers also
+prevent write combine.
+
+Maybe we can bias the relaxed accessors toward write, by having no
+barriers in it, and putting extra ones in reads.
+
+Cheers,
+Ben.
+
