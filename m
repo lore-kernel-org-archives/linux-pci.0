@@ -1,68 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.187]:60198 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753131AbbFZUnt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jun 2015 16:43:49 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Duc Dang <dhdang@apm.com>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Steven Miao <realmz6@gmail.com>,
-	Christoph Lameter <cl@linux.com>,
-	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	adi-buildroot-devel@lists.sourceforge.net
-Subject: [RFT v2 22/48] blackfin, irq: Prepare for killing the first parameter 'irq' of irq_flow_handler_t
-Date: Thu,  4 Jun 2015 12:13:32 +0800
-Message-Id: <1433391238-19471-23-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Will Deacon <will.deacon@arm.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	patches <patches@apm.com>, linux-kernel@vger.kernel.org,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH 1/1] pci: xgene: Enable huge outbound bar support
+Date: Fri, 26 Jun 2015 22:43:32 +0200
+Message-ID: <1674778.6xGik39Z0J@wuerfel>
+In-Reply-To: <46305464.n5SOjGAhJb@wuerfel>
+References: <1435280756-24455-1-git-send-email-dhdang@apm.com> <CADaLNDkck5TaG48sjF9y1wrXTzUeVkYOsXw7Dm8a629KqBafFg@mail.gmail.com> <46305464.n5SOjGAhJb@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change irq flow handler to prepare for killing the first parameter 'irq'
-of irq_flow_handler_t.
+On Friday 26 June 2015 22:35:08 Arnd Bergmann wrote:
+> > >
+> > > Can you configure one of the two windows as prefetchable for improved performance?
+> > >
+> > The new huge window will be prefetchable.
+> 
+> The DT marks it as non-prefetchable, so the kernel will now try to allocate
+> space for non-prefetchable BARs from this area, which is a bug. If the second
+> memory window is always prefetchable, you have to mark it accordingly in DT,
+> to prevent it from being used for normal 64 bit BARs.
 
-Seems ipipe.c is never used at all, and it may fail to compile if it's
-used.
+Forget what I wrote here, I just remembered that 64-bit BARs are by definition
+prefetchable. You should still mark the range accordingly in DT for correct
+operation, but it won't be used for non-prefetchable 64-bit BARs if you don't
+because they do not exist.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/blackfin/kernel/ipipe.c              |    2 +-
- arch/blackfin/mach-common/ints-priority.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/arch/blackfin/kernel/ipipe.c b/arch/blackfin/kernel/ipipe.c
-index f657b38163e3..6007a1375c5b 100644
---- a/arch/blackfin/kernel/ipipe.c
-+++ b/arch/blackfin/kernel/ipipe.c
-@@ -56,7 +56,7 @@ EXPORT_SYMBOL(__ipipe_irq_lvmask);
- 
- static void __ipipe_ack_irq(unsigned irq, struct irq_desc *desc)
- {
--	desc->ipipe_ack(irq, desc);
-+	desc->ipipe_ack(irq_desc_get_irq(desc), desc);
- }
- 
- /*
-diff --git a/arch/blackfin/mach-common/ints-priority.c b/arch/blackfin/mach-common/ints-priority.c
-index 332a434b4669..4e3155e5aa20 100644
---- a/arch/blackfin/mach-common/ints-priority.c
-+++ b/arch/blackfin/mach-common/ints-priority.c
-@@ -830,7 +830,7 @@ void bfin_demux_gpio_irq(unsigned int inta_irq,
- {
- 	unsigned int irq;
- 
--	switch (inta_irq) {
-+	switch (irq_desc_get_irq(desc)) {
- #if defined(BF537_FAMILY)
- 	case IRQ_PF_INTA_PG_INTA:
- 		bfin_demux_gpio_block(IRQ_PF0);
--- 
-1.7.10.4
-
+	Arnd
