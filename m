@@ -1,80 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:34198 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755669AbbFOJzB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jun 2015 05:55:01 -0400
-Received: by qgf75 with SMTP id 75so24867644qgf.1
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jun 2015 02:55:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150611130734.GA1510@katana>
-References: <1434024707-6245-1-git-send-email-Vincent.Wan@amd.com>
-	<1434024707-6245-2-git-send-email-Vincent.Wan@amd.com>
-	<20150611130734.GA1510@katana>
-Date: Mon, 15 Jun 2015 11:55:00 +0200
-Message-ID: <CAPDyKFopmbRr1LsDvPe01PUDgMcYC5ExyqZGdPn_cRaWUZg5rg@mail.gmail.com>
-Subject: Re: [PATCH V2 2/3] i2c-piix4: Use Macro for AMD CZ SMBus device ID
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: Wan ZongShun <Vincent.Wan@amd.com>
-Cc: linux-mmc <linux-mmc@vger.kernel.org>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	"linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
-	bp@alien8.de, Jean Delvare <jdelvare@suse.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
+Received: from gate.crashing.org ([63.228.1.57]:52440 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752184AbbF0ASP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Jun 2015 20:18:15 -0400
+Message-ID: <1435362871.26815.24.camel@kernel.crashing.org>
+Subject: Re: [Xen-devel] [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Dave Airlie <airlied@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Antonino Daplas <adaplas@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Roger Pau =?ISO-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	ZongShun Wan <mcuos.com@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	ville.syrjala@linux.intel.com,
+	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Casey Leedom <leedom@chelsio.com>,
+	Juergen Gross <jgross@suse.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	Arnd Bergmann <arnd@arndb.de>, Jan Beulich <jbeulich@suse.com>
+Date: Sat, 27 Jun 2015 09:54:31 +1000
+In-Reply-To: <CAB=NE6XwczF6FYXV=RHyK=7ikVk_tGp+h9ouWPyORNENq4+=Kw@mail.gmail.com>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+	 <1435189081.3790.24.camel@kernel.crashing.org>
+	 <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
+	 <6806026.xb91q6Ad7G@wuerfel>
+	 <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>
+	 <1435272718.3822.7.camel@kernel.crashing.org>
+	 <20150626193158.GJ3005@wotan.suse.de>
+	 <1435356258.26815.13.camel@kernel.crashing.org>
+	 <CAB=NE6XwczF6FYXV=RHyK=7ikVk_tGp+h9ouWPyORNENq4+=Kw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11 June 2015 at 15:07, Wolfram Sang <wsa@the-dreams.de> wrote:
-> On Thu, Jun 11, 2015 at 08:11:46PM +0800, Wan ZongShun wrote:
->> Change AMD CZ SMBUS device ID from 0x790b to
->> use Macro definition
->>
->> Signed-off-by: Wan ZongShun <Vincent.Wan@amd.com>
->
-> I think it makes sense that this patch goes in via MMC. This I2C change
-> is trivial, but for MMC there is more to handle. I don't expect
-> conflicts. So:
->
-> Acked-by: Wolfram Sang <wsa@the-dreams.de>
+On Fri, 2015-06-26 at 15:41 -0700, Luis R. Rodriguez wrote:
 
-Thanks, applied!
+> > It wasn't nullified for the main user at the time, the fb. And I
+> > mentioned an IB adapter or two for which the code had been hand
+> tuned.
+> 
+> This still means there could be some affected drivers when used on
+> powerpc, no?
 
-Kind regards
-Uffe
+Yes. In fact what about things like ARM who also have barriers in their
+writel() ? Won't they also break WC ?
 
->
->> ---
->>  drivers/i2c/busses/i2c-piix4.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
->> index 67cbec6..630bce6 100644
->> --- a/drivers/i2c/busses/i2c-piix4.c
->> +++ b/drivers/i2c/busses/i2c-piix4.c
->> @@ -245,7 +245,7 @@ static int piix4_setup_sb800(struct pci_dev *PIIX4_dev,
->>            PIIX4_dev->device == PCI_DEVICE_ID_AMD_HUDSON2_SMBUS &&
->>            PIIX4_dev->revision >= 0x41) ||
->>           (PIIX4_dev->vendor == PCI_VENDOR_ID_AMD &&
->> -          PIIX4_dev->device == 0x790b &&
->> +          PIIX4_dev->device == PCI_DEVICE_ID_AMD_KERNCZ_SMBUS &&
->>            PIIX4_dev->revision >= 0x49))
->>               smb_en = 0x00;
->>       else
->> @@ -545,7 +545,7 @@ static const struct pci_device_id piix4_ids[] = {
->>       { PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
->>       { PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
->>       { PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
->> -     { PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x790b) },
->> +     { PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_KERNCZ_SMBUS) },
->>       { PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
->>                    PCI_DEVICE_ID_SERVERWORKS_OSB4) },
->>       { PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
->> --
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-i2c" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm trying to work with the architect and designers here to figure out
+exactly where we stand and what we can do. As spelled out by our
+architecture, things don't look great, because basically, we only have
+attribute bit (garded) which when not set implies both WC and out of
+order (& prefetch), and unclear barrier semantics in that case as well.
+
+I *think* we might be able to settle with something along the lines of
+"writel_relaxed() will allow combine on a WC mapping" but how I'm going
+to get there is TBD.
+
+It would be interesting to clarify the semantics of using the relaxed
+accessors in combination with WC anyway. I wouldn't mind if the
+definition involved also relaxing general ordering :-) It would
+definitely make my life easier.
+
+Cheers,
+Ben.
+
+
