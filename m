@@ -1,121 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:38216 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195AbbFELJy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Jun 2015 07:09:54 -0400
-Message-ID: <5571825E.2090800@hisilicon.com>
-Date: Fri, 5 Jun 2015 19:05:02 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:59145 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751568AbbFZIA1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jun 2015 04:00:27 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Will Deacon <will.deacon@arm.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	patches@apm.com, linux-kernel@vger.kernel.org,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH 1/1] pci: xgene: Enable huge outbound bar support
+Date: Fri, 26 Jun 2015 09:59:44 +0200
+Message-ID: <1692416.bxUuWm82Pk@wuerfel>
+In-Reply-To: <1435280756-24455-1-git-send-email-dhdang@apm.com>
+References: <1435280756-24455-1-git-send-email-dhdang@apm.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	<linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<yuanzhichang@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<liguozhu@hisilicon.com>, Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH] PCI: designware: set PORT_LOGIC_SPEED_CHANGE before linkup
-References: <1433211273-226508-1-git-send-email-wangzhou1@hisilicon.com> <20150602193707.GJ3631@google.com>
-In-Reply-To: <20150602193707.GJ3631@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/3 3:37, Bjorn Helgaas wrote:
-> [+cc Richard, Lucas for imx6 questions below]
+On Thursday 25 June 2015 18:05:56 Duc Dang wrote:
+> X-Gene PCIe controllers support huge outbound BARs (with size upto
+> 64GB). This patch configures additional 1 outbound BAR for X-Gene
+> PCIe controllers with size larger than 4GB. This is required to
+> support devices that request huge outbound memory (nVidia K40 as an
+> example)
 > 
-> On Tue, Jun 02, 2015 at 10:14:33AM +0800, Zhou Wang wrote:
->> When connected some PCIe3.0 cards(e.g. LSI 2208 PCIe-RAID card, Mellanox IB card),
->> It will appear link unstable which will lead reading/writing fail.
->>
->> Here just move the setting of PORT_LOGIC_SPEED_CHANGE bit before starting
->> building link. After doing this, it will work fine with above PCIe3.0 card.
->>
->> This patch is based on v4.1-rc4
->>
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->> ---
->>  drivers/pci/host/pcie-designware.c | 8 ++++----
->>  1 file changed, 4 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index 2e9f84f..64ebc51 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -498,10 +498,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>  	/* program correct class for RC */
->>  	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
->>  
->> -	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
->> -	val |= PORT_LOGIC_SPEED_CHANGE;
->> -	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
->> -
->>  #ifdef CONFIG_PCI_MSI
->>  	dw_pcie_msi_chip.dev = pp->dev;
->>  	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
->> @@ -797,6 +793,10 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>  	}
->>  	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
->>  
->> +	dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, &val);
->> +	val |= PORT_LOGIC_SPEED_CHANGE;
->> +	dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
-> 
-> It makes sense to me to do this at the same place we do the other write to
-> PCIE_LINK_WIDTH_SPEED_CONTROL.
-> 
-> 1) Can this be combined with the previous write, so we only need a single
->    write to PCIE_LINK_WIDTH_SPEED_CONTROL, e.g., something like this?
-> 
->     switch (pp->lanes) {
->     case 1:
->         val |= PORT_LOGIC_LINK_WIDTH_1_LANES;
->         ...
->     }
->     val |= PORT_LOGIC_SPEED_CHANGE;
->     dw_pcie_writel_rc(pp, val, PCIE_LINK_WIDTH_SPEED_CONTROL);
-> 
+> Signed-off-by: Duc Dang <dhdang@apm.com>
+> Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+> ---
+>  arch/arm64/boot/dts/apm/apm-storm.dtsi | 33 +++++++++++++++++++--------------
+>  drivers/pci/host/pci-xgene.c           |  6 +++++-
+>  2 files changed, 24 insertions(+), 15 deletions(-)
 
-I think it is OK to put them together.
+It seems you do multiple things here:
 
-> 2) imx6_pcie_start_link() also writes PCIE_LINK_WIDTH_SPEED_CONTROL.  It
->    has a loop to wait for the speed change to finish.  Does
->    dw_pcie_setup_rc() need a similar loop?
+- add an entry in the ranges
+- move the config space
+- fix driver to handle multiple memory ranges
 
-imx6 has a loop there to make sure link is stable, because enumeration will start
-soon. Also in other drivers which are based on pcie-designware, we should check
-if speed change is done before enumeration. In pcie-designware, now it does not
-make this check.
+but your description only mentions the first one. Please submit separate
+patches for these and explain for each patch why it is required, so we can
+pick them up into the arm-soc and pci git repositories separately, and make
+sure that each patch works by itself to guarantee we don't get incompatible
+binding changes.
 
-Maybe we may not move PORT_LOGIC_SPEED_CHANGE set, but add a loop check after it
-to make sure the link is stable. Then related same setting in imx6 can be deleted.
+> diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+> index d8f3a1c..039206b 100644
+> --- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
+> +++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+> @@ -404,10 +404,11 @@
+>  			#size-cells = <2>;
+>  			#address-cells = <3>;
+>  			reg = < 0x00 0x1f2b0000 0x0 0x00010000   /* Controller registers */
+> -				0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
+> +				0xe0 0x00000000 0x0 0x00040000>; /* PCI config space */
+>  			reg-names = "csr", "cfg";
+>  			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
+> -				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
+> +				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000   /* mem */
+> +				  0x02000000 0x10 0x00000000 0xf0 0x00000000 0x10 0x00000000>; /* mem */
+>  			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
+>  				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
+>  			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
 
-I wonder if other PCIe hosts which is based on DW have met the same problem?
+What is the reason for picking the 0x10.00000000 address? We normally try
+to use an identity mapping (mem_offset=0) on the bus, or fall back to starting
+at zero (mem_offset=cpu_offset), but you use seemingly random mem_offset values.
 
-> 
-> 3) Since you are moving the PORT_LOGIC_SPEED_CHANGE write from
->    dw_pcie_host_init() to dw_pcie_setup_rc(), it will now happen before
->    imx6_pcie_start_link().  Does that mean we can remove the write from
->    imx6_pcie_start_link() completely?
-> 
+Could you get the same effect by extending the 0x80000000 mapping to a length
+of 58GB (just before the start of the second window)?
 
-I think so.
+Can you configure one of the two windows as prefetchable for improved performance?
 
-Best Regards,
-Zhou
+I also notice that the 0x80000000-0xffffffff bus range is list both in
+ranges and dma-ranges. Does that mean that devices on this host cannot
+access MMIO ranges of other devices, or should you exclude this range from
+the dma-ranges property?
 
->>  	/* setup RC BARs */
->>  	dw_pcie_writel_rc(pp, 0x00000004, PCI_BASE_ADDRESS_0);
->>  	dw_pcie_writel_rc(pp, 0x00000000, PCI_BASE_ADDRESS_1);
->> -- 
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+Style-wise, it would be nice to submit an extra patch that groups entries
+in the ranges and reg lists like
 
+			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000>, /* io */
+				 <0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>, /* mem */
+				 <0x02000000 0x10 0x00000000 0xf0 0x00000000 0x10 0x00000000>; /* mem */
 
+but that is just a cosmetic change and should be kept separate.
+
+> @@ -321,8 +322,11 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
+>  				return ret;
+>  			break;
+>  		case IORESOURCE_MEM:
+> -			xgene_pcie_setup_ob_reg(port, res, OMR1BARL, res->start,
+> +			xgene_pcie_setup_ob_reg(port, res,
+> +						OMR1BARL + (omr_idx * 0x18),
+> +						res->start,
+>  						res->start - window->offset);
+> +			omr_idx++;
+>  			break;
+>  		case IORESOURCE_BUS:
+>  			break;
+
+Can you describe what happens when you boot an older kernel with the new
+dt file, or vice versa? Will that simply ignore the first ranges entries
+and use only the last one, or does it break in interesting ways?
+
+	Arnd
