@@ -1,42 +1,44 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v4 08/19] NTB: Do not advance transport RX on link down
-Date: Wed, 10 Jun 2015 05:08:13 -0400
-Message-Id: <9bd941c6bdf4e540f44b02bb0b0eeb1d031bedf5.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433925092.git.Allen.Hubbe@emc.com>
-References: <cover.1433925092.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:1045 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752821AbbF0DGB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jun 2015 23:06:01 -0400
+Message-ID: <558E1300.6020600@huawei.com>
+Date: Sat, 27 Jun 2015 11:05:36 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Guenter Roeck <groeck@juniper.net>,
+	Rajat Jain <rajatxjain@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
+ deadlock
+References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com> <557A9661.8030603@huawei.com> <CAA93t1ooSY2keDigmUPpO7LzvT12YwQjpxH0b1xA508LL+VWdg@mail.gmail.com> <20150612182013.GA4455@svl-evodev-groeck.juniper.net>
+In-Reply-To: <20150612182013.GA4455@svl-evodev-groeck.juniper.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On link down, don't advance RX index to the next entry.  The next entry
-should never be valid after receiving the link down flag.
+On 2015/6/13 2:20, Guenter Roeck wrote:
+> On Fri, Jun 12, 2015 at 11:12:35AM -0700, Rajat Jain wrote:
+>> [+Guenter]
+>>
+>> Looks good to me. Unfortunately, I do not have the hardware anymore to test
+>> it :-(
+>>
+>> Guenter: Do you have it, or know some body who has and wants to test this?
+>>
+> I'll dig up the patch and test it.
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- drivers/ntb/ntb_transport.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Hi Guenter, any update ?
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index 8d9b59f7fa07..0f86b60a0c0e 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -1212,8 +1212,7 @@ static int ntb_process_rxc(struct ntb_transport_qp *qp)
- 		dev_dbg(&qp->ndev->pdev->dev, "link down flag set\n");
- 		ntb_qp_link_down(qp);
- 		hdr->flags = 0;
--		iowrite32(qp->rx_index, &qp->rx_info->entry);
--		return 0;
-+		return -EAGAIN;
- 	}
- 
- 	if (hdr->ver != (u32)qp->rx_pkts) {
+> 
+> Guenter
+> 
+> 
+
+
 -- 
-2.4.0.rc0.43.gcf8a8c6
+Thanks!
+Yijing
 
