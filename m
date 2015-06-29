@@ -1,77 +1,44 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <556C4451.50503@cogentembedded.com>
-Date: Mon, 01 Jun 2015 14:38:57 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Simon Horman <horms@verge.net.au>,
-	Magnus Damm <magnus.damm@gmail.com>
-CC: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: Re: [Patch v3 11/36] sh, irq: Use helper irq_data_get_irq_handler_data()
- to hide irq_desc details
-References: <1433145945-789-1-git-send-email-jiang.liu@linux.intel.com> <1433145945-789-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433145945-789-12-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH 8/9] NTB: Make the transport list in order of discovery
+Date: Mon, 29 Jun 2015 10:50:04 -0400
+Message-Id: <984e3923609c92e80045e86ea00d7f18225f74b7.1435587291.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
+References: <cover.1435587291.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
+References: <cover.1435587291.git.Allen.Hubbe@emc.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+From: Dave Jiang <dave.jiang@intel.com>
 
-On 6/1/2015 11:05 AM, Jiang Liu wrote:
+The list should be added from the bottom and not the top in order to
+ensure the transport is provided in the same order to clients as ntb
+devices are discovered.
 
-> Use helper function irq_data_get_irq_handler_data() to hide irq_desc
-> implementation details.
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+---
+ drivers/ntb/ntb_transport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-    I'm only seeing calls to irq_{get|set}_handler_data() below...
-
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->   drivers/sh/intc/virq.c |   12 +++++++-----
->   1 file changed, 7 insertions(+), 5 deletions(-)
-
-> diff --git a/drivers/sh/intc/virq.c b/drivers/sh/intc/virq.c
-> index f30ac9354ff2..bc0601cf0f8f 100644
-> --- a/drivers/sh/intc/virq.c
-> +++ b/drivers/sh/intc/virq.c
-> @@ -83,12 +83,11 @@ EXPORT_SYMBOL_GPL(intc_irq_lookup);
->
->   static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
->   {
-> -	struct intc_virq_list **last, *entry;
-> -	struct irq_data *data = irq_get_irq_data(irq);
-> +	struct intc_virq_list *entry;
-> +	struct intc_virq_list **last = NULL;
->
->   	/* scan for duplicates */
-> -	last = (struct intc_virq_list **)&data->handler_data;
-> -	for_each_virq(entry, data->handler_data) {
-> +	for_each_virq(entry, irq_get_handler_data(irq)) {
->   		if (entry->irq == virq)
->   			return 0;
->   		last = &entry->next;
-> @@ -102,7 +101,10 @@ static int add_virq_to_pirq(unsigned int irq, unsigned int virq)
->
->   	entry->irq = virq;
->
-> -	*last = entry;
-> +	if (last)
-> +		*last = entry;
-> +	else
-> +		irq_set_handler_data(irq, entry);
->
->   	return 0;
->   }
-
-WBR, Sergei
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index a040a4ee6f33..713be97be95f 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -296,7 +296,7 @@ static LIST_HEAD(ntb_transport_list);
+ 
+ static int ntb_bus_init(struct ntb_transport_ctx *nt)
+ {
+-	list_add(&nt->entry, &ntb_transport_list);
++	list_add_tail(&nt->entry, &ntb_transport_list);
+ 	return 0;
+ }
+ 
+-- 
+2.4.0.rc0.43.gcf8a8c6
 
