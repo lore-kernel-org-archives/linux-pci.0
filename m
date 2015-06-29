@@ -1,430 +1,386 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	"lenb @ kernel . org" <lenb@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [Patch v4 7/8] x86/PCI/ACPI: Use common interface to support PCI host bridge
-Date: Tue,  2 Jun 2015 14:12:55 +0800
-Message-Id: <1433225576-8215-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433225576-8215-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailuogwdur.emc.com ([128.221.224.79]:52580 "EHLO
+	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752629AbbF2Ouj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 10:50:39 -0400
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH 1/9] NTB: Fix ntb_transport out-of-order RX update
+Date: Mon, 29 Jun 2015 10:49:57 -0400
+Message-Id: <453fd81fb650346a957476a94d57dfc0ccc6b2b9.1435587291.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
+References: <cover.1435587291.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
+References: <cover.1435587291.git.Allen.Hubbe@emc.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common interface to simplify ACPI PCI host bridge implementation.
+It was possible for a synchronous update of the RX index in the error
+case to get ahead of the asynchronous RX index update in the normal
+case.  Change the RX processing to preserve an RX completion order.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+There were two error cases.  First, if a buffer is not present to
+receive data, there would be no queue entry to preserve the RX
+completion order.  Instead of dropping the RX frame, leave the RX frame
+in the ring.  Schedule RX processing when RX entries are enqueued, in
+case there are RX frames waiting in the ring to be received.
+
+Second, if a buffer is too small to receive data, drop the frame in the
+ring, mark the RX entry as done, and indicate the error in the RX entry
+length.  Check for a negative length in the receive callback in
+ntb_netdev, and count occurances as rx_length_errors.
+
+Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
 ---
- arch/x86/pci/acpi.c |  292 +++++++++++++++------------------------------------
- 1 file changed, 85 insertions(+), 207 deletions(-)
+ drivers/net/ntb_netdev.c    |   7 ++
+ drivers/ntb/ntb_transport.c | 168 ++++++++++++++++++++++++++------------------
+ 2 files changed, 106 insertions(+), 69 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index a46fff030c09..58877e810d51 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -4,16 +4,14 @@
- #include <linux/irq.h>
- #include <linux/dmi.h>
- #include <linux/slab.h>
-+#include <linux/pci-acpi.h>
- #include <asm/numa.h>
- #include <asm/pci_x86.h>
+diff --git a/drivers/net/ntb_netdev.c b/drivers/net/ntb_netdev.c
+index 3cc316cb7e6b..5f1ee7c05f68 100644
+--- a/drivers/net/ntb_netdev.c
++++ b/drivers/net/ntb_netdev.c
+@@ -102,6 +102,12 @@ static void ntb_netdev_rx_handler(struct ntb_transport_qp *qp, void *qp_data,
  
- struct pci_root_info {
--	struct acpi_device *bridge;
--	char name[16];
--	struct pci_controller sd;
-+	struct acpi_pci_root_info common;
- #ifdef	CONFIG_PCI_MMCONFIG
- 	bool mcfg_added;
--	u16 segment;
- 	u8 start_bus;
- 	u8 end_bus;
- #endif
-@@ -165,14 +163,17 @@ static int check_segment(u16 seg, struct device *dev, char *estr)
- 	return 0;
- }
+ 	netdev_dbg(ndev, "%s: %d byte payload received\n", __func__, len);
  
--static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
--			  u8 end, phys_addr_t addr)
-+static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- {
- 	int result;
--	struct device *dev = &info->bridge->dev;
-+	struct pci_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+	struct device *dev = &ci->bridge->dev;
-+	int seg = ci->controller.segment;
- 
--	info->start_bus = start;
--	info->end_bus = end;
-+	info = container_of(ci, struct pci_root_info, common);
-+	info->start_bus = (u8)root->secondary.start;
-+	info->end_bus = (u8)root->secondary.end;
- 	info->mcfg_added = false;
- 
- 	/* return success if MMCFG is not in use */
-@@ -182,7 +183,8 @@ static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
- 	if (!(pci_probe & PCI_PROBE_MMCONF))
- 		return check_segment(seg, dev, "MMCONFIG is disabled,");
- 
--	result = pci_mmconfig_insert(dev, seg, start, end, addr);
-+	result = pci_mmconfig_insert(dev, seg, info->start_bus, info->end_bus,
-+				     root->mcfg_addr);
- 	if (result == 0) {
- 		/* enable MMCFG if it hasn't been enabled yet */
- 		if (raw_pci_ext_ops == NULL)
-@@ -195,134 +197,59 @@ static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
- 	return 0;
- }
- 
--static void teardown_mcfg_map(struct pci_root_info *info)
-+static void teardown_mcfg_map(struct acpi_pci_root_info *ci)
- {
-+	struct pci_root_info *info;
-+
-+	info = container_of(ci, struct pci_root_info, common);
- 	if (info->mcfg_added) {
--		pci_mmconfig_delete(info->segment, info->start_bus,
--				    info->end_bus);
-+		pci_mmconfig_delete(ci->controller.segment,
-+				    info->start_bus, info->end_bus);
- 		info->mcfg_added = false;
- 	}
- }
- #else
--static int setup_mcfg_map(struct pci_root_info *info,
--				    u16 seg, u8 start, u8 end,
--				    phys_addr_t addr)
-+static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- {
- 	return 0;
- }
--static void teardown_mcfg_map(struct pci_root_info *info)
-+
-+static void teardown_mcfg_map(struct acpi_pci_root_info *ci)
- {
- }
- #endif
- 
--static void validate_resources(struct device *dev, struct list_head *crs_res,
--			       unsigned long type)
-+static int pci_acpi_root_get_node(struct acpi_pci_root *root)
- {
--	LIST_HEAD(list);
--	struct resource *res1, *res2, *root = NULL;
--	struct resource_entry *tmp, *entry, *entry2;
--
--	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
--	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
--
--	list_splice_init(crs_res, &list);
--	resource_list_for_each_entry_safe(entry, tmp, &list) {
--		bool free = false;
--		resource_size_t end;
--
--		res1 = entry->res;
--		if (!(res1->flags & type))
--			goto next;
--
--		/* Exclude non-addressable range or non-addressable portion */
--		end = min(res1->end, root->end);
--		if (end <= res1->start) {
--			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
--				 res1);
--			free = true;
--			goto next;
--		} else if (res1->end != end) {
--			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
--				 res1, (unsigned long long)end + 1,
--				 (unsigned long long)res1->end);
--			res1->end = end;
--		}
--
--		resource_list_for_each_entry(entry2, crs_res) {
--			res2 = entry2->res;
--			if (!(res2->flags & type))
--				continue;
--
--			/*
--			 * I don't like throwing away windows because then
--			 * our resources no longer match the ACPI _CRS, but
--			 * the kernel resource tree doesn't allow overlaps.
--			 */
--			if (resource_overlaps(res1, res2)) {
--				res2->start = min(res1->start, res2->start);
--				res2->end = max(res1->end, res2->end);
--				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
--					 res2, res1);
--				free = true;
--				goto next;
--			}
--		}
--
--next:
--		resource_list_del(entry);
--		if (free)
--			resource_list_free_entry(entry);
--		else
--			resource_list_add_tail(entry, crs_res);
-+	int busnum = root->secondary.start;
-+	struct acpi_device *device = root->device;
-+	int node = acpi_get_node(device->handle);
-+
-+	if (node == NUMA_NO_NODE) {
-+		node = x86_pci_root_bus_node(busnum);
-+		if (node != 0 && node != NUMA_NO_NODE)
-+			dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from hardware (may be inconsistent with ACPI node numbers)\n",
-+				node);
- 	}
-+	if (node != NUMA_NO_NODE && !node_online(node))
-+		node = NUMA_NO_NODE;
-+
-+	return node;
- }
- 
--static void add_resources(struct pci_root_info *info,
--			  struct list_head *resources,
--			  struct list_head *crs_res)
-+static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
- {
--	struct resource_entry *entry, *tmp;
--	struct resource *res, *conflict, *root = NULL;
--
--	validate_resources(&info->bridge->dev, crs_res, IORESOURCE_MEM);
--	validate_resources(&info->bridge->dev, crs_res, IORESOURCE_IO);
--
--	resource_list_for_each_entry_safe(entry, tmp, crs_res) {
--		res = entry->res;
--		if (res->flags & IORESOURCE_MEM)
--			root = &iomem_resource;
--		else if (res->flags & IORESOURCE_IO)
--			root = &ioport_resource;
--		else
--			BUG_ON(res);
--
--		conflict = insert_resource_conflict(root, res);
--		if (conflict) {
--			dev_info(&info->bridge->dev,
--				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
--				 res, conflict->name, conflict);
--			resource_list_destroy_entry(entry);
--		}
--	}
-+	ci->controller.node = pci_acpi_root_get_node(ci->root);
-+	if (pci_ignore_seg)
-+		ci->controller.segment = 0;
- 
--	list_splice_tail(crs_res, resources);
-+	return setup_mcfg_map(ci);
- }
- 
--static void release_pci_root_info(struct pci_host_bridge *bridge)
-+static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
- {
--	struct resource *res;
--	struct resource_entry *entry;
--	struct pci_root_info *info = bridge->release_data;
--
--	resource_list_for_each_entry(entry, &bridge->windows) {
--		res = entry->res;
--		if (res->parent &&
--		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
--			release_resource(res);
--	}
--
--	teardown_mcfg_map(info);
--	kfree(info);
-+	teardown_mcfg_map(ci);
-+	kfree(container_of(ci, struct pci_root_info, common));
- }
- 
- /*
-@@ -345,47 +272,43 @@ static bool resource_is_pcicfg_ioport(struct resource *res)
- 		res->start == 0xCF8 && res->end == 0xCFF;
- }
- 
--static void probe_pci_root_info(struct pci_root_info *info,
--				struct acpi_device *device,
--				int busnum, int domain,
--				struct list_head *list)
-+static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci,
-+					   int status)
- {
--	int ret;
-+	struct acpi_device *device = ci->bridge;
-+	int busnum = ci->root->secondary.start;
- 	struct resource_entry *entry, *tmp;
- 
--	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
--	info->bridge = device;
--	ret = acpi_dev_get_resources(device, list,
--				     acpi_dev_filter_resource_type_cb,
--				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
--	if (ret < 0)
--		dev_warn(&device->dev,
--			 "failed to parse _CRS method, error code %d\n", ret);
--	else if (ret == 0)
--		dev_dbg(&device->dev,
--			"no IO and memory resources present in _CRS\n");
--	else
--		resource_list_for_each_entry_safe(entry, tmp, list) {
--			if ((entry->res->flags & IORESOURCE_DISABLED) ||
--			    resource_is_pcicfg_ioport(entry->res))
-+	if (pci_use_crs) {
-+		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
-+			if (resource_is_pcicfg_ioport(entry->res))
- 				resource_list_destroy_entry(entry);
--			else
--				entry->res->name = info->name;
--		}
-+		return status;
++	if (len < 0) {
++		ndev->stats.rx_errors++;
++		ndev->stats.rx_length_errors++;
++		goto enqueue_again;
 +	}
 +
-+	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-+		dev_printk(KERN_DEBUG, &device->dev,
-+			   "host bridge window %pR (ignored)\n", entry->res);
-+		resource_list_destroy_entry(entry);
-+	}
-+	x86_pci_root_bus_resources(busnum, &ci->resources);
-+
-+	return 0;
+ 	skb_put(skb, len);
+ 	skb->protocol = eth_type_trans(skb, ndev);
+ 	skb->ip_summed = CHECKSUM_NONE;
+@@ -121,6 +127,7 @@ static void ntb_netdev_rx_handler(struct ntb_transport_qp *qp, void *qp_data,
+ 		return;
+ 	}
+ 
++enqueue_again:
+ 	rc = ntb_transport_rx_enqueue(qp, skb, skb->data, ndev->mtu + ETH_HLEN);
+ 	if (rc) {
+ 		dev_kfree_skb(skb);
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index efe3ad4122f2..b87578fb91d6 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -142,10 +142,10 @@ struct ntb_transport_qp {
+ 
+ 	void (*rx_handler)(struct ntb_transport_qp *qp, void *qp_data,
+ 			   void *data, int len);
++	struct list_head rx_post_q;
+ 	struct list_head rx_pend_q;
+ 	struct list_head rx_free_q;
+-	spinlock_t ntb_rx_pend_q_lock;
+-	spinlock_t ntb_rx_free_q_lock;
++	spinlock_t ntb_rx_q_lock;
+ 	void *rx_buff;
+ 	unsigned int rx_index;
+ 	unsigned int rx_max_entry;
+@@ -534,6 +534,27 @@ out:
+ 	return entry;
  }
  
-+static struct acpi_pci_root_ops acpi_pci_root_ops = {
-+	.pci_ops = &pci_root_ops,
-+	.init_info = pci_acpi_root_init_info,
-+	.release_info = pci_acpi_root_release_info,
-+	.prepare_resources = pci_acpi_root_prepare_resources,
-+};
++static struct ntb_queue_entry *ntb_list_mv(spinlock_t *lock,
++					   struct list_head *list,
++					   struct list_head *to_list)
++{
++	struct ntb_queue_entry *entry;
++	unsigned long flags;
 +
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
++	spin_lock_irqsave(lock, flags);
++
++	if (list_empty(list)) {
++		entry = NULL;
++	} else {
++		entry = list_first_entry(list, struct ntb_queue_entry, entry);
++		list_move(&entry->entry, to_list);
++	}
++
++	spin_unlock_irqrestore(lock, flags);
++
++	return entry;
++}
++
+ static int ntb_transport_setup_qp_mw(struct ntb_transport_ctx *nt,
+ 				     unsigned int qp_num)
  {
--	struct acpi_device *device = root->device;
--	struct pci_root_info *info;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
--	struct resource_entry *res_entry;
--	LIST_HEAD(crs_res);
--	LIST_HEAD(resources);
-+	int node = pci_acpi_root_get_node(root);
- 	struct pci_bus *bus;
--	struct pci_controller *sd;
--	int node;
+@@ -941,10 +962,10 @@ static int ntb_transport_init_queue(struct ntb_transport_ctx *nt,
+ 	INIT_DELAYED_WORK(&qp->link_work, ntb_qp_link_work);
+ 	INIT_WORK(&qp->link_cleanup, ntb_qp_link_cleanup_work);
  
- 	if (pci_ignore_seg)
- 		domain = 0;
-@@ -397,72 +320,30 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+-	spin_lock_init(&qp->ntb_rx_pend_q_lock);
+-	spin_lock_init(&qp->ntb_rx_free_q_lock);
++	spin_lock_init(&qp->ntb_rx_q_lock);
+ 	spin_lock_init(&qp->ntb_tx_free_q_lock);
+ 
++	INIT_LIST_HEAD(&qp->rx_post_q);
+ 	INIT_LIST_HEAD(&qp->rx_pend_q);
+ 	INIT_LIST_HEAD(&qp->rx_free_q);
+ 	INIT_LIST_HEAD(&qp->tx_free_q);
+@@ -1107,22 +1128,47 @@ static void ntb_transport_free(struct ntb_client *self, struct ntb_dev *ndev)
+ 	kfree(nt);
+ }
+ 
+-static void ntb_rx_copy_callback(void *data)
++static void ntb_complete_rxc(struct ntb_transport_qp *qp)
+ {
+-	struct ntb_queue_entry *entry = data;
+-	struct ntb_transport_qp *qp = entry->qp;
+-	void *cb_data = entry->cb_data;
+-	unsigned int len = entry->len;
+-	struct ntb_payload_header *hdr = entry->rx_hdr;
++	struct ntb_queue_entry *entry;
++	void *cb_data;
++	unsigned int len;
++	unsigned long irqflags;
++
++	spin_lock_irqsave(&qp->ntb_rx_q_lock, irqflags);
++
++	while (!list_empty(&qp->rx_post_q)) {
++		entry = list_first_entry(&qp->rx_post_q,
++					 struct ntb_queue_entry, entry);
++		if (!(entry->flags & DESC_DONE_FLAG))
++			break;
++
++		entry->rx_hdr->flags = 0;
++		iowrite32(entry->index, &qp->rx_info->entry);
++
++		cb_data = entry->cb_data;
++		len = entry->len;
++
++		list_move_tail(&entry->entry, &qp->rx_free_q);
+ 
+-	hdr->flags = 0;
++		spin_unlock_irqrestore(&qp->ntb_rx_q_lock, irqflags);
+ 
+-	iowrite32(entry->index, &qp->rx_info->entry);
++		if (qp->rx_handler && qp->client_ready)
++			qp->rx_handler(qp, qp->cb_data, cb_data, len);
+ 
+-	ntb_list_add(&qp->ntb_rx_free_q_lock, &entry->entry, &qp->rx_free_q);
++		spin_lock_irqsave(&qp->ntb_rx_q_lock, irqflags);
++	}
+ 
+-	if (qp->rx_handler && qp->client_ready)
+-		qp->rx_handler(qp, qp->cb_data, cb_data, len);
++	spin_unlock_irqrestore(&qp->ntb_rx_q_lock, irqflags);
++}
++
++static void ntb_rx_copy_callback(void *data)
++{
++	struct ntb_queue_entry *entry = data;
++
++	entry->flags |= DESC_DONE_FLAG;
++
++	ntb_complete_rxc(entry->qp);
+ }
+ 
+ static void ntb_memcpy_rx(struct ntb_queue_entry *entry, void *offset)
+@@ -1138,19 +1184,18 @@ static void ntb_memcpy_rx(struct ntb_queue_entry *entry, void *offset)
+ 	ntb_rx_copy_callback(entry);
+ }
+ 
+-static void ntb_async_rx(struct ntb_queue_entry *entry, void *offset,
+-			 size_t len)
++static void ntb_async_rx(struct ntb_queue_entry *entry, void *offset)
+ {
+ 	struct dma_async_tx_descriptor *txd;
+ 	struct ntb_transport_qp *qp = entry->qp;
+ 	struct dma_chan *chan = qp->dma_chan;
+ 	struct dma_device *device;
+-	size_t pay_off, buff_off;
++	size_t pay_off, buff_off, len;
+ 	struct dmaengine_unmap_data *unmap;
+ 	dma_cookie_t cookie;
+ 	void *buf = entry->buf;
+ 
+-	entry->len = len;
++	len = entry->len;
+ 
+ 	if (!chan)
+ 		goto err;
+@@ -1226,7 +1271,6 @@ static int ntb_process_rxc(struct ntb_transport_qp *qp)
+ 	struct ntb_payload_header *hdr;
+ 	struct ntb_queue_entry *entry;
+ 	void *offset;
+-	int rc;
+ 
+ 	offset = qp->rx_buff + qp->rx_max_frame * qp->rx_index;
+ 	hdr = offset + qp->rx_max_frame - sizeof(struct ntb_payload_header);
+@@ -1255,65 +1299,43 @@ static int ntb_process_rxc(struct ntb_transport_qp *qp)
+ 		return -EIO;
+ 	}
+ 
+-	entry = ntb_list_rm(&qp->ntb_rx_pend_q_lock, &qp->rx_pend_q);
++	entry = ntb_list_mv(&qp->ntb_rx_q_lock, &qp->rx_pend_q, &qp->rx_post_q);
+ 	if (!entry) {
+ 		dev_dbg(&qp->ndev->pdev->dev, "no receive buffer\n");
+ 		qp->rx_err_no_buf++;
+-
+-		rc = -ENOMEM;
+-		goto err;
++		return -EAGAIN;
+ 	}
+ 
++	entry->rx_hdr = hdr;
++	entry->index = qp->rx_index;
++
+ 	if (hdr->len > entry->len) {
+ 		dev_dbg(&qp->ndev->pdev->dev,
+ 			"receive buffer overflow! Wanted %d got %d\n",
+ 			hdr->len, entry->len);
+ 		qp->rx_err_oflow++;
+ 
+-		rc = -EIO;
+-		goto err;
+-	}
++		entry->len = -EIO;
++		entry->flags |= DESC_DONE_FLAG;
+ 
+-	dev_dbg(&qp->ndev->pdev->dev,
+-		"RX OK index %u ver %u size %d into buf size %d\n",
+-		qp->rx_index, hdr->ver, hdr->len, entry->len);
++		ntb_complete_rxc(qp);
++	} else {
++		dev_dbg(&qp->ndev->pdev->dev,
++			"RX OK index %u ver %u size %d into buf size %d\n",
++			qp->rx_index, hdr->ver, hdr->len, entry->len);
+ 
+-	qp->rx_bytes += hdr->len;
+-	qp->rx_pkts++;
++		qp->rx_bytes += hdr->len;
++		qp->rx_pkts++;
+ 
+-	entry->index = qp->rx_index;
+-	entry->rx_hdr = hdr;
++		entry->len = hdr->len;
+ 
+-	ntb_async_rx(entry, offset, hdr->len);
++		ntb_async_rx(entry, offset);
++	}
+ 
+ 	qp->rx_index++;
+ 	qp->rx_index %= qp->rx_max_entry;
+ 
+ 	return 0;
+-
+-err:
+-	/* FIXME: if this syncrhonous update of the rx_index gets ahead of
+-	 * asyncrhonous ntb_rx_copy_callback of previous entry, there are three
+-	 * scenarios:
+-	 *
+-	 * 1) The peer might miss this update, but observe the update
+-	 * from the memcpy completion callback.  In this case, the buffer will
+-	 * not be freed on the peer to be reused for a different packet.  The
+-	 * successful rx of a later packet would clear the condition, but the
+-	 * condition could persist if several rx fail in a row.
+-	 *
+-	 * 2) The peer may observe this update before the asyncrhonous copy of
+-	 * prior packets is completed.  The peer may overwrite the buffers of
+-	 * the prior packets before they are copied.
+-	 *
+-	 * 3) Both: the peer may observe the update, and then observe the index
+-	 * decrement by the asynchronous completion callback.  Who knows what
+-	 * badness that will cause.
+-	 */
+-	hdr->flags = 0;
+-	iowrite32(qp->rx_index, &qp->rx_info->entry);
+-
+-	return rc;
+ }
+ 
+ static void ntb_transport_rxc_db(unsigned long data)
+@@ -1333,7 +1355,7 @@ static void ntb_transport_rxc_db(unsigned long data)
+ 			break;
+ 	}
+ 
+-	if (qp->dma_chan)
++	if (i && qp->dma_chan)
+ 		dma_async_issue_pending(qp->dma_chan);
+ 
+ 	if (i == qp->rx_max_entry) {
+@@ -1609,7 +1631,7 @@ ntb_transport_create_queue(void *data, struct device *client_dev,
+ 			goto err1;
+ 
+ 		entry->qp = qp;
+-		ntb_list_add(&qp->ntb_rx_free_q_lock, &entry->entry,
++		ntb_list_add(&qp->ntb_rx_q_lock, &entry->entry,
+ 			     &qp->rx_free_q);
+ 	}
+ 
+@@ -1634,7 +1656,7 @@ err2:
+ 	while ((entry = ntb_list_rm(&qp->ntb_tx_free_q_lock, &qp->tx_free_q)))
+ 		kfree(entry);
+ err1:
+-	while ((entry = ntb_list_rm(&qp->ntb_rx_free_q_lock, &qp->rx_free_q)))
++	while ((entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_free_q)))
+ 		kfree(entry);
+ 	if (qp->dma_chan)
+ 		dma_release_channel(qp->dma_chan);
+@@ -1689,11 +1711,16 @@ void ntb_transport_free_queue(struct ntb_transport_qp *qp)
+ 	qp->tx_handler = NULL;
+ 	qp->event_handler = NULL;
+ 
+-	while ((entry = ntb_list_rm(&qp->ntb_rx_free_q_lock, &qp->rx_free_q)))
++	while ((entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_free_q)))
+ 		kfree(entry);
+ 
+-	while ((entry = ntb_list_rm(&qp->ntb_rx_pend_q_lock, &qp->rx_pend_q))) {
+-		dev_warn(&pdev->dev, "Freeing item from a non-empty queue\n");
++	while ((entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_pend_q))) {
++		dev_warn(&pdev->dev, "Freeing item from non-empty rx_pend_q\n");
++		kfree(entry);
++	}
++
++	while ((entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_post_q))) {
++		dev_warn(&pdev->dev, "Freeing item from non-empty rx_post_q\n");
+ 		kfree(entry);
+ 	}
+ 
+@@ -1724,14 +1751,14 @@ void *ntb_transport_rx_remove(struct ntb_transport_qp *qp, unsigned int *len)
+ 	if (!qp || qp->client_ready)
  		return NULL;
- 	}
  
--	node = acpi_get_node(device->handle);
--	if (node == NUMA_NO_NODE) {
--		node = x86_pci_root_bus_node(busnum);
--		if (node != 0 && node != NUMA_NO_NODE)
--			dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from hardware (may be inconsistent with ACPI node numbers)\n",
--				node);
--	}
--
--	if (node != NUMA_NO_NODE && !node_online(node))
--		node = NUMA_NO_NODE;
--
--	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
--	if (!info) {
--		printk(KERN_WARNING "pci_bus %04x:%02x: "
--		       "ignored (out of memory)\n", domain, busnum);
--		return NULL;
--	}
--
--	sd = &info->sd;
--	sd->segment = domain;
--	sd->node = node;
--	sd->companion = device;
--
- 	bus = pci_find_bus(domain, busnum);
- 	if (bus) {
- 		/*
- 		 * If the desired bus has been scanned already, replace
- 		 * its bus->sysdata.
- 		 */
--		memcpy(bus->sysdata, sd, sizeof(*sd));
--		kfree(info);
-+		struct pci_controller sd = {
-+			.segment = domain,
-+			.node = node,
-+			.companion = root->device
-+		};
-+
-+		memcpy(bus->sysdata, &sd, sizeof(sd));
- 	} else {
--		/* insert busn res at first */
--		pci_add_resource(&resources,  &root->secondary);
-+		struct pci_root_info *info;
+-	entry = ntb_list_rm(&qp->ntb_rx_pend_q_lock, &qp->rx_pend_q);
++	entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_pend_q);
+ 	if (!entry)
+ 		return NULL;
  
--		/*
--		 * _CRS with no apertures is normal, so only fall back to
--		 * defaults or native bridge info if we're ignoring _CRS.
--		 */
--		probe_pci_root_info(info, device, busnum, domain, &crs_res);
--		if (pci_use_crs) {
--			add_resources(info, &resources, &crs_res);
--		} else {
--			resource_list_for_each_entry(res_entry, &crs_res)
--				dev_printk(KERN_DEBUG, &device->dev,
--					   "host bridge window %pR (ignored)\n",
--					   res_entry->res);
--			resource_list_free(&crs_res);
--			x86_pci_root_bus_resources(busnum, &resources);
--		}
--
--		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
--				    (u8)root->secondary.end, root->mcfg_addr))
--			bus = pci_create_root_bus(NULL, busnum, &pci_root_ops,
--						  sd, &resources);
--
--		if (bus) {
--			pci_scan_child_bus(bus);
--			pci_set_host_bridge_release(
--				to_pci_host_bridge(bus->bridge),
--				release_pci_root_info, info);
--		} else {
--			resource_list_free(&resources);
--			teardown_mcfg_map(info);
--			kfree(info);
--		}
-+		info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
-+		if (!info)
-+			dev_err(&root->device->dev,
-+				"pci_bus %04x:%02x: ignored (out of memory)\n",
-+				domain, busnum);
-+		else
-+			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
-+						   &info->common);
- 	}
+ 	buf = entry->cb_data;
+ 	*len = entry->len;
  
- 	/* After the PCI-E bus has been walked and all devices discovered,
-@@ -474,9 +355,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 			pcie_bus_configure_settings(child);
- 	}
+-	ntb_list_add(&qp->ntb_rx_free_q_lock, &entry->entry, &qp->rx_free_q);
++	ntb_list_add(&qp->ntb_rx_q_lock, &entry->entry, &qp->rx_free_q);
  
--	if (bus && node != NUMA_NO_NODE)
--		dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n", node);
--
- 	return bus;
+ 	return buf;
  }
+@@ -1757,15 +1784,18 @@ int ntb_transport_rx_enqueue(struct ntb_transport_qp *qp, void *cb, void *data,
+ 	if (!qp)
+ 		return -EINVAL;
  
+-	entry = ntb_list_rm(&qp->ntb_rx_free_q_lock, &qp->rx_free_q);
++	entry = ntb_list_rm(&qp->ntb_rx_q_lock, &qp->rx_free_q);
+ 	if (!entry)
+ 		return -ENOMEM;
+ 
+ 	entry->cb_data = cb;
+ 	entry->buf = data;
+ 	entry->len = len;
++	entry->flags = 0;
++
++	ntb_list_add(&qp->ntb_rx_q_lock, &entry->entry, &qp->rx_pend_q);
+ 
+-	ntb_list_add(&qp->ntb_rx_pend_q_lock, &entry->entry, &qp->rx_pend_q);
++	tasklet_schedule(&qp->rxc_db_work);
+ 
+ 	return 0;
+ }
 -- 
-1.7.10.4
+2.4.0.rc0.43.gcf8a8c6
 
