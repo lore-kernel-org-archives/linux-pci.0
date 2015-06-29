@@ -1,74 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	bhelgaas@google.com, linux-pci@vger.kernel.org, pebolle@tiscali.nl,
-	haiyangz@microsoft.com, mebersol@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 0/6] hv: Front-end driver for PCIe Pass-through on Hyper-V
-Date: Mon, 15 Jun 2015 17:06:33 +0000
-Message-Id: <1434387999-1885-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailuogwdur.emc.com ([128.221.224.79]:48096 "EHLO
+	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752746AbbF2P3o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 11:29:44 -0400
+From: Allen Hubbe <Allen.Hubbe@emc.com>
+To: linux-ntb@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Allen Hubbe <Allen.Hubbe@emc.com>
+Subject: [PATCH 4/9] NTB: ntb_netdev not covering all receive errors
+Date: Mon, 29 Jun 2015 11:28:53 -0400
+Message-Id: <b102ae0f0209cfcd03f90b554857ce76d054ce5a.1435587291.git.Allen.Hubbe@emc.com>
+In-Reply-To: <b9741f90ecfa33e97d8a6690ed357fd64f683b06.1435587291.git.Allen.Hubbe@emc.com>
+References: <b9741f90ecfa33e97d8a6690ed357fd64f683b06.1435587291.git.Allen.Hubbe@emc.com>
+In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
+References: <cover.1435587291.git.Allen.Hubbe@emc.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+From: Dave Jiang <dave.jiang@intel.com>
 
-This patch does some slight refactoring on the hv_vmbus driver and its
-dependents and then introduces a new paravirtual front-end driver for PCI
-which supports PCI Express devices passed through to a Linux guest running
-in a Hyper-V VM.
+ntb_netdev is allowing the link to come up even when -ENOMEM is returned
+from ntb_transport_rx_enqueue.  Fix to cover all possible errors.
 
-To support this front-end, several new mechanisms are introduced:
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+---
+ drivers/net/ntb_netdev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-1 - A common way of finding free memory-mapped I/O space in a Hyper-V VM, 
-    available to all Hyper-V-related drivers.
-
-2 - A way of handling PCI Message-Signaled Interrupt (MSI and MSI-X)
-    creation and formatting when Hyper-V is running.
-
-3 - A mapping function from Linux processor number to Hyper-V virtual
-    processor number, available to drivers, which is necessary for MSI(-X)
-    creation.
-
-The Hyper-V Frame Buffer driver is modified to use the MMIO space
-allocation function so that its allocations both don't collide with the
-PCI front end and so that the chosen range can come from any available
-part of MMIO space.
-
-Finally, the new PCI front-end driver is the last patch in the series.
-
-This patch series incorporates feedback from Greg K-H and Paul Bolle, and
-it differs from the the first version in that it:
-
-- Removes code that has no callers
-- Updates the MODULE_LICENSE macro
-- Provides explanations in each of the patches
-- Fixes the Kconfig so that the defaults and depends are reasonable
-
-Jake Oshins (6):
-  drivers:hv: Modify vmbus to search for all MMIO ranges available
-  drivers:hv: Move MMIO range picking from hyper_fb.mod to hv_vmbus.mod
-  arch:x86:hv: Add mechanism for Hyper-V paravirt drivers to hook msi
-    message creation
-  drivers:hv: Export a function that maps Linux proc num onto Hyper-V
-    proc num
-  drivers:hv: Define the channel type for Hyper-V PCI Express
-    pass-through
-  drivers:pci:hv: New paravirtual PCI front-end for Hyper-V VMs
-
- MAINTAINERS                     |    1 +
- arch/x86/include/asm/mshyperv.h |    2 +
- arch/x86/kernel/cpu/mshyperv.c  |   30 +
- drivers/hv/vmbus_drv.c          |  208 +++-
- drivers/pci/Kconfig             |    7 +
- drivers/pci/host/Makefile       |    1 +
- drivers/pci/host/hv_pcifront.c  | 1984 +++++++++++++++++++++++++++++++++++++++
- drivers/video/fbdev/hyperv_fb.c |   46 +-
- include/linux/hyperv.h          |   20 +-
- 9 files changed, 2256 insertions(+), 43 deletions(-)
- create mode 100644 drivers/pci/host/hv_pcifront.c
-
+diff --git a/drivers/net/ntb_netdev.c b/drivers/net/ntb_netdev.c
+index 7a0aeac00c24..4d4d4f19049d 100644
+--- a/drivers/net/ntb_netdev.c
++++ b/drivers/net/ntb_netdev.c
+@@ -257,7 +257,7 @@ static int ntb_netdev_open(struct net_device *ndev)
+ 
+ 		rc = ntb_transport_rx_enqueue(dev->qp, skb, skb->data,
+ 					      ndev->mtu + ETH_HLEN);
+-		if (rc == -EINVAL) {
++		if (rc) {
+ 			dev_kfree_skb(skb);
+ 			goto err;
+ 		}
 -- 
-1.9.1
+2.4.0.rc0.43.gcf8a8c6
 
