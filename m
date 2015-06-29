@@ -1,43 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:62616 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933761AbbFXBrh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Jun 2015 21:47:37 -0400
-Message-ID: <558A0C35.5000708@huawei.com>
-Date: Wed, 24 Jun 2015 09:47:33 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Bugfix v3] PCI, ACPI: Fix regressions caused by resource_size_t
+ overflow with 32-bit kernel
+To: Ingo Molnar <mingo@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+References: <20150624094916.GA5696@gmail.com>
+ <1435141065-28536-1-git-send-email-jiang.liu@linux.intel.com>
+ <20150624101843.GA8924@gmail.com>
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Len Brown <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+From: Boszormenyi Zoltan <zboszor@pr.hu>
+Message-ID: <559107F2.3080701@pr.hu>
+Date: Mon, 29 Jun 2015 10:55:14 +0200
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 0/3] Trivial pci hotplug changes
-References: <1434700666-6346-1-git-send-email-wangyijing@huawei.com> <20150619171417.GL7710@google.com>
-In-Reply-To: <20150619171417.GL7710@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150624101843.GA8924@gmail.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/20 1:14, Bjorn Helgaas wrote:
-> On Fri, Jun 19, 2015 at 03:57:43PM +0800, Yijing Wang wrote:
+2015-06-24 12:18 keltezéssel, Ingo Molnar írta:
+> * Jiang Liu <jiang.liu@linux.intel.com> wrote:
+>
+>> A regression report from Boszormenyi Zoltan <zboszor@pr.hu>:
+>> There's a Realtek RTL8111/8168/8411 (PCI ID 10ec:8168, Subsystem ID 1565:230e)
+>> network chip on the mainboard. After the r8169 driver loaded, the IRQs in
+>> the machine went berserk. Keyboard keypressed arrived with considerable
+>> latency and duplicated, so no real work was possible. The machine responded
+>> to the power button but didn't actually power down. It just stuck at the
+>> powering down message. I had to press the power button for 4 seconds to power
+>> it down.
 >>
->> Yijing Wang (3):
->>   PCI: Use "slot" and "pci_slot" for struct hotplug_slot and struct
->>     pci_slot
->>   PCI: Simplify pcie_poll_cmd()
->>   PCI: Use usleep_range() instead of msleep() for better accuracy
-> 
-> I applied the first two to pci/hotplug for v4.2, thanks!
-> 
-> I dropped the third, as explained in my response to it.
+>> The computer is a POS machine with a big battery inside. Because of this,
+>> either ACPI or the Realtek chip kept the bad state and after rebooting, the
+>> network chip didn't even show up in lspci. Not even the PXE ROM announced
+>> itself during boot. I had to disconnect the battery to beat some sense back
+>> to the computer.
+>>
+>> The regression happens with 4.0.5, 4.1.0-rc8 and 4.1.0-final. 3.18.16 was
+>> good.
+> So please put this into quotes, like:
+>
+> ===============
+> Zoltan Boszormenyi reported this regression:
+>
+>   "There's a Realtek RTL8111/8168/8411 (PCI ID 10ec:8168, Subsystem ID 1565:230e)
+>    network chip on the mainboard. After the r8169 driver loaded, the IRQs in
+>    the machine went berserk. Keyboard keypressed arrived with considerable
+>    latency and duplicated, so no real work was possible. The machine responded
+>    to the power button but didn't actually power down. It just stuck at the
+>    powering down message. I had to press the power button for 4 seconds to power
+>    it down.
+>  
+>    The computer is a POS machine with a big battery inside. Because of this,
+>    either ACPI or the Realtek chip kept the bad state and after rebooting, the
+>    network chip didn't even show up in lspci. Not even the PXE ROM announced
+>    itself during boot. I had to disconnect the battery to beat some sense back
+>    to the computer.
+>  
+>    The regression happens with 4.0.5, 4.1.0-rc8 and 4.1.0-final. 3.18.16 was
+>    good."
+>
+> ...
+> ===============
+>
+> Also note the indentation, that helps readability.
+>
+> Thanks,
+>
+> 	Ingo
 
-Thanks!
+So, will there be a v4 with a commit message satisfactory to Ingo
+that will be part of 4.0.7/4.1.1 and 4.2?
 
-> 
-> Bjorn
-> 
-> 
-
-
--- 
-Thanks!
-Yijing
+Best regards,
+Zoltán
 
