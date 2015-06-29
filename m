@@ -1,45 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <557C5F29.7010301@linux.intel.com>
-Date: Sun, 14 Jun 2015 00:49:45 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Julia Lawall <julia.lawall@lip6.fr>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Kevin Cernekee <cernekee@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org
-Subject: Re: [RFC v1 14/25] genirq: Kill the first parameter 'irq' of irq_flow_handler_t
-References: <1432116013-25902-1-git-send-email-jiang.liu@linux.intel.com> <1432116013-25902-15-git-send-email-jiang.liu@linux.intel.com> <alpine.DEB.2.11.1505201724260.4225@nanos> <555CA834.7080807@linux.intel.com> <alpine.DEB.2.11.1505201750280.4225@nanos> <alpine.DEB.2.10.1506131059180.2486@hadrien> <alpine.DEB.2.11.1506131130490.3786@nanos> <alpine.DEB.2.10.1506131603151.2314@hadrien> <alpine.DEB.2.10.1506131652380.2314@hadrien>
-In-Reply-To: <alpine.DEB.2.10.1506131652380.2314@hadrien>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
+ output? [BKO63661]
+From: Jean Delvare <jdelvare@suse.de>
+To: Kashyap Desai <kashyap.desai@avagotech.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Robin H. Johnson" <robbat2@gentoo.org>,
+	Adam Radford <aradford@gmail.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Sumit Saxena <sumit.saxena@avagotech.com>,
+	Uday Lingala <uday.lingala@avagotech.com>,
+	"PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>
+In-Reply-To: <9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
+References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
+	 <CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
+	 <robbat2-20140712T215640-831385120Z@orbis-terrarum.net>
+	 <20150429172832.GB7888@google.com> <20150528122443.GI10210@google.com>
+	 <9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 29 Jun 2015 15:25:20 +0200
+Message-ID: <1435584320.4646.53.camel@chaos.site>
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/13 22:53, Julia Lawall wrote:
-> Better formatted diff.
-Great thanks to you, Julia!
-It seems really attractively, I will try to figure out
-whether I have caught all the cases.
+Hi Kashyap,
 
-BTW, a new version of these patch set has been posted at:
-http://comments.gmane.org/gmane.linux.kernel.pci/42320
+Thanks for the patch. May I ask what tree it was based on? Linus'
+latest? I am trying to apply it to the SLES 11 SP3 and SLES 12 kernel
+trees (based on kernel v3.0 + a bunch of backports and v3.12
+respectively) but your patch fails to apply in both cases. I'll try
+harder but I don't know anything about the megaraid_sas code so I really
+don't know where I'm going.
 
-I have also push the new version to github in case you need
-to access it:
- https://github.com/jiangliu/linux.git irq:irqdesc_v2
+Does your patch depend on any other that may not be present in the SLES
+11 SP3 and SLES 12 kernels?
 
-Thanks!
-Gerry
+Thanks,
+Jean
+
+Le Thursday 28 May 2015 à 19:05 +0530, Kashyap Desai a écrit :
+> Bjorn/Robin,
+> 
+> Apologies for delay. Here is one quick suggestion as we have seen similar
+> issue (not exactly similar, but high probably to have same issue) while
+> controller is configured on VM as pass-through and VM reboot abruptly.
+> In that particular issue, driver interact with FW which may  require chip
+> reset to bring controller to operation state.
+> 
+> Relevant patch was submitted for only Older controller as it was only seen
+> for few MegaRaid controller. Below patch already try to do chip reset, but
+> only for limited controllers...I have attached one more patch which does
+> chip reset from driver load time for Thunderbolt/Invader/Fury etc. (In
+> your case you have Thunderbolt controller, so attached patch is required.)
+> 
+> http://www.spinics.net/lists/linux-scsi/msg67288.html
+> 
+> Please post the result with attached patch.
+> 
+> Thanks, Kashyap
+
+
