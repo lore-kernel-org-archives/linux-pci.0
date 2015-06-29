@@ -1,80 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62066 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759664AbbFBSPQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Jun 2015 14:15:16 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alexander Duyck <alexander.h.duyck@redhat.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH 1/2] pci: Add dev_flags bit to access
- VPD through function 0
-Date: Tue, 2 Jun 2015 18:15:14 +0000
-Message-ID: <CCF4C06B-1029-4341-B5AE-846C834DD747@intel.com>
-References: <20150602165706.6252.76253.stgit@mdrustad-wks.jf.intel.com>
- <20150602170414.6252.48036.stgit@mdrustad-wks.jf.intel.com>
- <556DEC80.70206@redhat.com>
-In-Reply-To: <556DEC80.70206@redhat.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_E85B156B-4084-42DB-AC89-B61AD227E479";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58279 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752770AbbF2QpQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 12:45:16 -0400
+Message-ID: <5591761A.9000607@broadcom.com>
+Date: Mon, 29 Jun 2015 09:45:14 -0700
+From: Ray Jui <rjui@broadcom.com>
 MIME-Version: 1.0
+To: SF Markus Elfring <elfring@users.sourceforge.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	<kernel-janitors@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH] PCI-iproc: Delete unnecessary checks before two function
+ calls
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net> <55900A20.5070407@users.sourceforge.net>
+In-Reply-To: <55900A20.5070407@users.sourceforge.net>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_E85B156B-4084-42DB-AC89-B61AD227E479
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=windows-1252
+Hi Markus,
 
-> On Jun 2, 2015, at 10:48 AM, Alexander Duyck =
-<alexander.h.duyck@redhat.com> wrote:
->=20
-> I'm pretty sure these could cause some serious errors if you direct =
-assign the device into a VM since you then end up with multiple devices =
-sharing a bus.  Also it would likely have side-effects on a LOM (Lan On =
-Motherboard) as it also shares the bus with multiple non-Ethernet =
-devices.
->=20
-> I believe you still need to add something like a check for =
-!pci_is_root_bus(dev->bus) before you attempt to grab function 0.  It =
-probably also wouldn't hurt to check the dev->multifunction bit before =
-running this code since it wouldn't make sense to go chasing down the =
-VPD on another function if the device doesn't have one.  You could =
-probably do that either as a part of this code, or perhaps put it in the =
-quirk.
+On 6/28/2015 7:52 AM, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sun, 28 Jun 2015 16:42:04 +0200
+> 
+> The functions phy_exit() and phy_power_off() test whether their argument
+> is NULL and then return immediately.
+> Thus the test around the calls is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/pci/host/pcie-iproc.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index d77481e..f875821 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -239,12 +239,9 @@ err_rm_root_bus:
+>  	pci_remove_root_bus(bus);
+>  
+>  err_power_off_phy:
+> -	if (pcie->phy)
+> -		phy_power_off(pcie->phy);
+> +	phy_power_off(pcie->phy);
+>  err_exit_phy:
+> -	if (pcie->phy)
+> -		phy_exit(pcie->phy);
+> -
+> +	phy_exit(pcie->phy);
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(iproc_pcie_setup);
+> 
 
-I'll look into those. I think you are right about more checks being =
-needed. Thanks for the comments.
+Thanks for catching this. Could you please help to make similar changes
+to both phy_init and phy_power_on calls in the driver, to make it
+consistent?
 
---
-Mark Rustad, Networking Division, Intel Corporation
+Thanks,
 
-
---Apple-Mail=_E85B156B-4084-42DB-AC89-B61AD227E479
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJVbfKyAAoJEDwO/+eO4+5uS1EP/0iz43K4T06SNaevlhCtbIJE
-Hs15bymg8LzlrmiB7fPnNG0UCEBm7ZRxYPHQk3XHlhDa9NzbmDSd/9AkFWQfJD7v
-o5ldapmrw0mMPrNwSiAGQe786JwVaY7OWholffaYPCoH0tvHEE1u6i+Y0XgijiZO
-uCngOplCqcVOF/ZQSZZFgL0J2tjYVtgjozN/N1gY9kb5qhGqGBrq2Y8KHQnGgWQo
-Gv1In08cOyqVc92PuVgRR8Yt/WiUZy319LuTpJLCaCHszYr6OB5PRrrtKwBHiHbE
-34CPrw9wyezz9D8Q96OYSKazEm8TiavsQxMs/TchwEl9oRStAELvEDXVzWbVLV1e
-n3mc2g7G0qcJVFsd9tRe++5C8pZslqGW2tMrmM7ZdYErK9iW63qWyleJ+YsHnSFd
-HVKidcMytR5K+FWosYO478J1VvTDKmpFAH2XQduByqskYZIJrWaGBWfPO3ort4F5
-T38w8+ZPPOvOTtVOpwfBnlKMhlrF3U/PVKmJDl9WwHyDqD1NZuX9IbHmy071vb9T
-t8KJ976ADLUCuQSouSTmZRCc3HErDYaJ8qCi4c1Edh6dWiMH9j77WwypNk/QvChy
-Mr+/uYifPsI5IX+K8421bWueC4U7SawVXZC++PeRJ38jK7PDy+peljN9vNKxT5j7
-d5t53styxL54g7GsKmMg
-=h75D
------END PGP SIGNATURE-----
-
---Apple-Mail=_E85B156B-4084-42DB-AC89-B61AD227E479--
+Ray
