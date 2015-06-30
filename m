@@ -1,41 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH 6/9] NTB: Schedule to receive on QP link up
-Date: Mon, 29 Jun 2015 10:50:02 -0400
-Message-Id: <9d5704c1ad72160b8fda8d761cd7b923f10916bf.1435587291.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
-References: <cover.1435587291.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1435587291.git.Allen.Hubbe@emc.com>
-References: <cover.1435587291.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:55803 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752873AbbF3VrV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 30 Jun 2015 17:47:21 -0400
+Message-ID: <1435700814.1475.15.camel@kernel.crashing.org>
+Subject: Re: [PATCH v5 40/42] drivers/of: Allow to specify root node in
+ of_fdt_unflatten_tree()
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Grant Likely <grant.likely@linaro.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, bhelgaas@google.com, aik@ozlabs.ru,
+	panto@antoniou-consulting.com, robherring2@gmail.com
+Date: Wed, 01 Jul 2015 07:46:54 +1000
+In-Reply-To: <20150630180652.198E2C4063C@trevor.secretlab.ca>
+References: <1433400131-18429-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <1433400131-18429-41-git-send-email-gwshan@linux.vnet.ibm.com>
+	 <20150630180652.198E2C4063C@trevor.secretlab.ca>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Schedule to receive on QP link up, to make sure that the doorbell is
-properly cleared for interrupts.
+On Tue, 2015-06-30 at 19:06 +0100, Grant Likely wrote:
+> It may be time to dump the special allocation of fdt.c entirely and
+> treat all nodes the same way, with name and properties all allocated
+> with normal kmallocs.... Investigation is needed to figure out if this
+> is feasible.
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
----
- drivers/ntb/ntb_transport.c | 2 ++
- 1 file changed, 2 insertions(+)
+kmalloc isn't available early enough
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index 1764bb2fd265..a040a4ee6f33 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -901,6 +901,8 @@ static void ntb_qp_link_work(struct work_struct *work)
- 
- 		if (qp->event_handler)
- 			qp->event_handler(qp->cb_data, qp->link_is_up);
-+
-+		tasklet_schedule(&qp->rxc_db_work);
- 	} else if (nt->link_is_up)
- 		schedule_delayed_work(&qp->link_work,
- 				      msecs_to_jiffies(NTB_LINK_DOWN_TIMEOUT));
--- 
-2.4.0.rc0.43.gcf8a8c6
+Cheers,
+Ben.
+
 
