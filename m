@@ -1,65 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:10585 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655AbbF0Dht (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Jun 2015 23:37:49 -0400
-Message-ID: <558E1A84.207@huawei.com>
-Date: Sat, 27 Jun 2015 11:37:40 +0800
-From: Yijing Wang <wangyijing@huawei.com>
-MIME-Version: 1.0
-To: Guenter Roeck <groeck@juniper.net>
-CC: Rajat Jain <rajatxjain@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
- deadlock
-References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com> <557A9661.8030603@huawei.com> <CAA93t1ooSY2keDigmUPpO7LzvT12YwQjpxH0b1xA508LL+VWdg@mail.gmail.com> <20150612182013.GA4455@svl-evodev-groeck.juniper.net> <558E1300.6020600@huawei.com> <20150627031945.GA27813@svl-evodev-groeck.juniper.net>
-In-Reply-To: <20150627031945.GA27813@svl-evodev-groeck.juniper.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:56730 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752513AbbF3BQy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 21:16:54 -0400
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 30 Jun 2015 06:46:51 +0530
+Received: from d28relay01.in.ibm.com (d28relay01.in.ibm.com [9.184.220.58])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id A658CE004C
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 06:50:29 +0530 (IST)
+Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
+	by d28relay01.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5U1GmTM60424374
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 06:46:48 +0530
+Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
+	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5U1Gl0W022630
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 06:46:48 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V2 0/4] PCI: code clean up on pci configuration space
+Date: Tue, 30 Jun 2015 09:16:40 +0800
+Message-Id: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/27 11:19, Guenter Roeck wrote:
-> On Sat, Jun 27, 2015 at 11:05:36AM +0800, Yijing Wang wrote:
->> On 2015/6/13 2:20, Guenter Roeck wrote:
->>> On Fri, Jun 12, 2015 at 11:12:35AM -0700, Rajat Jain wrote:
->>>> [+Guenter]
->>>>
->>>> Looks good to me. Unfortunately, I do not have the hardware anymore to test
->>>> it :-(
->>>>
->>>> Guenter: Do you have it, or know some body who has and wants to test this?
->>>>
->>> I'll dig up the patch and test it.
->>
->> Hi Guenter, any update ?
->>
-> I merged your patch into our images. I have not seen a single failure since
-> then.
-> 
-> At the same time, we tried to reproduce the problem Rajat had reported
-> originally. Unfortunately we have not been able to reproduce it. I don't know
-> if that is bad luck, if we did something wrong (most likely), or if something
-> else changed in the infrastructure since Rajat did his tests.
-> 
-> Either case, I would appreciate if this patch could find its way upstream.
-> I don't feel comfortable to enable AER without it. Feel free to add
-> 
-> Tested-by: Guenter Roeck <groeck@juniper.net>
+This series is a clean up in the pci subsystem when accessing the pci
+configuration space.
 
-OK, thanks for your help test.
+The first one is to re-use the PCI_FIND_CAP_TTL to limit the times iterating
+in pci configuration space.
 
-Thanks!
-Yijing.
+The next three are to use the exact type to access the pci cap and pcie ext
+cap.
 
-> 
-> Thanks,
-> Guenter
-> 
-> 
+Tested on x86 and powerpc on top of v4.1.
 
+The original thread could be referenced in below link:
+http://comments.gmane.org/gmane.linux.kernel.pci/35931
+
+---
+v1->v2:
+   * define PCI_FIND_CAP_TTL in drivers/pci/pci.h instead of
+     include/linux/pci.h
+   * split the change for return position check from second one, and make the
+     forth patch
+
+Wei Yang (4):
+  PCI: move PCI_FIND_CAP_TTL to pci.h and use it in quirks
+  PCI: use u8 to represent pci configuration space pos and cap
+  PCI: use u16 to represent pci express extended capabilities pos and
+    cap
+  PCI: consolidate return value check for pci_find_(ext_)capability
+
+ drivers/pci/iov.c    |    2 +-
+ drivers/pci/pci.c    |   68 +++++++++++++++++++++++++-------------------------
+ drivers/pci/pci.h    |    2 ++
+ drivers/pci/probe.c  |   10 ++++----
+ drivers/pci/quirks.c |   19 +++++++-------
+ include/linux/pci.h  |   26 +++++++++----------
+ 6 files changed, 65 insertions(+), 62 deletions(-)
 
 -- 
-Thanks!
-Yijing
+1.7.9.5
 
