@@ -1,387 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Allen Hubbe <Allen.Hubbe@emc.com>
-To: linux-ntb@googlegroups.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <Allen.Hubbe@emc.com>
-Subject: [PATCH v3 10/18] NTB: Add ping pong test client
-Date: Tue,  9 Jun 2015 05:44:37 -0400
-Message-Id: <cddd037d59bbc737e487a58ad459c4fb4b63f7da.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-In-Reply-To: <cover.1433838377.git.Allen.Hubbe@emc.com>
-References: <cover.1433838377.git.Allen.Hubbe@emc.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:33036 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752033AbbF3SXQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 30 Jun 2015 14:23:16 -0400
+Received: by pacws9 with SMTP id ws9so9419797pac.0
+        for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 11:23:15 -0700 (PDT)
+From: Duc Dang <dhdang@apm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Will Deacon <will.deacon@arm.com>,
+	"David S. Miller" <davem@davemloft.net>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v2 1/2] arm64: dts: Add 1 more window with large size for X-Gene PCIe nodes
+Date: Tue, 30 Jun 2015 11:22:27 -0700
+Message-Id: <410796b8709b370be29909aa2f68e59566c63481.1435688121.git.dhdang@apm.com>
+In-Reply-To: <cover.1435688121.git.dhdang@apm.com>
+References: <cover.1435688121.git.dhdang@apm.com>
+In-Reply-To: <cover.1435688121.git.dhdang@apm.com>
+References: <46305464.n5SOjGAhJb@wuerfel> <cover.1435688121.git.dhdang@apm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a simple ping pong driver that exercises the scratchpads and
-doorbells of the ntb hardware.  This driver may be used to test that
-your ntb hardware and drivers are functioning at a basic level.
+This patch adds 1 additional window with large size (up to 64GB) for
+X-Gene PCIe nodes to support devices that require huge BAR.
 
-Signed-off-by: Allen Hubbe <Allen.Hubbe@emc.com>
+Signed-off-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
 ---
- Documentation/ntb.txt           |  27 +++++
- MAINTAINERS                     |   1 +
- drivers/ntb/Kconfig             |   2 +
- drivers/ntb/Makefile            |   2 +-
- drivers/ntb/test/Kconfig        |   8 ++
- drivers/ntb/test/Makefile       |   1 +
- drivers/ntb/test/ntb_pingpong.c | 250 ++++++++++++++++++++++++++++++++++++++++
- 7 files changed, 290 insertions(+), 1 deletion(-)
- create mode 100644 drivers/ntb/test/Kconfig
- create mode 100644 drivers/ntb/test/Makefile
- create mode 100644 drivers/ntb/test/ntb_pingpong.c
+ arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/Documentation/ntb.txt b/Documentation/ntb.txt
-index 00a3f92832a5..e5d1591478ca 100644
---- a/Documentation/ntb.txt
-+++ b/Documentation/ntb.txt
-@@ -37,6 +37,33 @@ Transport queue pair.  Network data is copied between socket buffers and the
- Transport queue pair buffer.  The Transport client may be used for other things
- besides Netdev, however no other applications have yet been written.
- 
-+### NTB Ping Pong Test Client (ntb\_pingpong)
-+
-+The Ping Pong test client serves as a demonstration to exercise the doorbell
-+and scratchpad registers of NTB hardware, and as an example simple NTB client.
-+Ping Pong enables the link when started, waits for the NTB link to come up, and
-+then proceeds to read and write the doorbell scratchpad registers of the NTB.
-+The peers interrupt each other using a bit mask of doorbell bits, which is
-+shifted by one in each round, to test the behavior of multiple doorbell bits
-+and interrupt vectors.  The Ping Pong driver also reads the first local
-+scratchpad, and writes the value plus one to the first peer scratchpad, each
-+round before writing the peer doorbell register.
-+
-+Module Parameters:
-+
-+* unsafe - Some hardware has known issues with scratchpad and doorbell
-+	registers.  By default, Ping Pong will not attempt to exercise such
-+	hardware.  You may override this behavior at your own risk by setting
-+	unsafe=1.
-+* delay\_ms - Specify the delay between receiving a doorbell
-+	interrupt event and setting the peer doorbell register for the next
-+	round.
-+* init\_db - Specify the doorbell bits to start new series of rounds.  A new
-+	series begins once all the doorbell bits have been shifted out of
-+	range.
-+* dyndbg - It is suggested to specify dyndbg=+p when loading this module, and
-+	then to observe debugging output on the console.
-+
- ## NTB Hardware Drivers
- 
- NTB hardware drivers should register devices with the NTB core driver.  After
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1a09fd12b6d2..69dad8e01d80 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6987,6 +6987,7 @@ T:	git git://github.com/jonmason/ntb.git
- F:	drivers/ntb/
- F:	drivers/net/ntb_netdev.c
- F:	drivers/ntb/ntb.c
-+F:	drivers/ntb/ntb_pingpong.c
- F:	drivers/ntb/ntb_transport.c
- F:	include/linux/ntb.h
- F:	include/linux/ntb_transport.h
-diff --git a/drivers/ntb/Kconfig b/drivers/ntb/Kconfig
-index 53b042429673..95944e52fa36 100644
---- a/drivers/ntb/Kconfig
-+++ b/drivers/ntb/Kconfig
-@@ -14,6 +14,8 @@ if NTB
- 
- source "drivers/ntb/hw/Kconfig"
- 
-+source "drivers/ntb/test/Kconfig"
-+
- config NTB_TRANSPORT
- 	tristate "NTB Transport Client"
- 	help
-diff --git a/drivers/ntb/Makefile b/drivers/ntb/Makefile
-index 671c4e696410..c2d298278e78 100644
---- a/drivers/ntb/Makefile
-+++ b/drivers/ntb/Makefile
-@@ -1,3 +1,3 @@
--obj-y += hw/
-+obj-y += hw/ test/
- obj-$(CONFIG_NTB) += ntb.o
- obj-$(CONFIG_NTB_TRANSPORT) += ntb_transport.o
-diff --git a/drivers/ntb/test/Kconfig b/drivers/ntb/test/Kconfig
-new file mode 100644
-index 000000000000..72d255d220c8
---- /dev/null
-+++ b/drivers/ntb/test/Kconfig
-@@ -0,0 +1,8 @@
-+config NTB_PINGPONG
-+	tristate "NTB Ping Pong Test Client"
-+	help
-+	 This is a simple ping pong driver that exercises the scratchpads and
-+	 doorbells of the ntb hardware.  This driver may be used to test that
-+	 your ntb hardware and drivers are functioning at a basic level.
-+
-+	 If unsure, say N.
-diff --git a/drivers/ntb/test/Makefile b/drivers/ntb/test/Makefile
-new file mode 100644
-index 000000000000..b32309307771
---- /dev/null
-+++ b/drivers/ntb/test/Makefile
-@@ -0,0 +1 @@
-+obj-$(CONFIG_NTB_PINGPONG) += ntb_pingpong.o
-diff --git a/drivers/ntb/test/ntb_pingpong.c b/drivers/ntb/test/ntb_pingpong.c
-new file mode 100644
-index 000000000000..fe1600566981
---- /dev/null
-+++ b/drivers/ntb/test/ntb_pingpong.c
-@@ -0,0 +1,250 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ *   redistributing this file, you may do so under either license.
-+ *
-+ *   GPL LICENSE SUMMARY
-+ *
-+ *   Copyright (C) 2015 EMC Corporation. All Rights Reserved.
-+ *
-+ *   This program is free software; you can redistribute it and/or modify
-+ *   it under the terms of version 2 of the GNU General Public License as
-+ *   published by the Free Software Foundation.
-+ *
-+ *   This program is distributed in the hope that it will be useful, but
-+ *   WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ *   General Public License for more details.
-+ *
-+ *   BSD LICENSE
-+ *
-+ *   Copyright (C) 2015 EMC Corporation. All Rights Reserved.
-+ *
-+ *   Redistribution and use in source and binary forms, with or without
-+ *   modification, are permitted provided that the following conditions
-+ *   are met:
-+ *
-+ *     * Redistributions of source code must retain the above copyright
-+ *       notice, this list of conditions and the following disclaimer.
-+ *     * Redistributions in binary form must reproduce the above copy
-+ *       notice, this list of conditions and the following disclaimer in
-+ *       the documentation and/or other materials provided with the
-+ *       distribution.
-+ *     * Neither the name of Intel Corporation nor the names of its
-+ *       contributors may be used to endorse or promote products derived
-+ *       from this software without specific prior written permission.
-+ *
-+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ *
-+ * PCIe NTB Pingpong Linux driver
-+ *
-+ * Contact Information:
-+ * Allen Hubbe <Allen.Hubbe@emc.com>
-+ */
-+
-+/* Note: load this module with option 'dyndbg=+p' */
-+
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+
-+#include <linux/dma-mapping.h>
-+#include <linux/pci.h>
-+#include <linux/slab.h>
-+#include <linux/spinlock.h>
-+
-+#include <linux/ntb.h>
-+
-+#define DRIVER_NAME			"ntb_pingpong"
-+#define DRIVER_DESCRIPTION		"PCIe NTB Simple Pingpong Client"
-+
-+#define DRIVER_LICENSE			"Dual BSD/GPL"
-+#define DRIVER_VERSION			"1.0"
-+#define DRIVER_RELDATE			"24 March 2015"
-+#define DRIVER_AUTHOR			"Allen Hubbe <Allen.Hubbe@emc.com>"
-+
-+MODULE_LICENSE(DRIVER_LICENSE);
-+MODULE_VERSION(DRIVER_VERSION);
-+MODULE_AUTHOR(DRIVER_AUTHOR);
-+MODULE_DESCRIPTION(DRIVER_DESCRIPTION);
-+
-+static unsigned int unsafe;
-+module_param(unsafe, uint, 0644);
-+MODULE_PARM_DESC(unsafe, "Run even though ntb operations may be unsafe");
-+
-+static unsigned int delay_ms = 1000;
-+module_param(delay_ms, uint, 0644);
-+MODULE_PARM_DESC(delay_ms, "Milliseconds to delay the response to peer");
-+
-+static unsigned long db_init = 0x7;
-+module_param(db_init, ulong, 0644);
-+MODULE_PARM_DESC(delay_ms, "Initial doorbell bits to ring on the peer");
-+
-+struct pp_ctx {
-+	struct ntb_dev			*ntb;
-+	u64				db_bits;
-+	/* synchronize access to db_bits by ping and pong */
-+	spinlock_t			db_lock;
-+	struct timer_list		db_timer;
-+	unsigned long			db_delay;
-+};
-+
-+static void pp_ping(unsigned long ctx)
-+{
-+	struct pp_ctx *pp = (void *)ctx;
-+	unsigned long irqflags;
-+	u64 db_bits, db_mask;
-+	u32 spad_rd, spad_wr;
-+
-+	spin_lock_irqsave(&pp->db_lock, irqflags);
-+	{
-+		db_mask = ntb_db_valid_mask(pp->ntb);
-+		db_bits = ntb_db_read(pp->ntb);
-+
-+		if (db_bits) {
-+			dev_dbg(&pp->ntb->dev,
-+				"Masked pongs %#llx\n",
-+				db_bits);
-+			ntb_db_clear(pp->ntb, db_bits);
-+		}
-+
-+		db_bits = ((pp->db_bits | db_bits) << 1) & db_mask;
-+
-+		if (!db_bits)
-+			db_bits = db_init;
-+
-+		spad_rd = ntb_spad_read(pp->ntb, 0);
-+		spad_wr = spad_rd + 1;
-+
-+		dev_dbg(&pp->ntb->dev,
-+			"Ping bits %#llx read %#x write %#x\n",
-+			db_bits, spad_rd, spad_wr);
-+
-+		ntb_peer_spad_write(pp->ntb, 0, spad_wr);
-+		ntb_peer_db_set(pp->ntb, db_bits);
-+		ntb_db_clear_mask(pp->ntb, db_mask);
-+
-+		pp->db_bits = 0;
-+	}
-+	spin_unlock_irqrestore(&pp->db_lock, irqflags);
-+}
-+
-+static void pp_link_event(void *ctx)
-+{
-+	struct pp_ctx *pp = ctx;
-+
-+	if (ntb_link_is_up(pp->ntb, NULL, NULL) == 1) {
-+		dev_dbg(&pp->ntb->dev, "link is up\n");
-+		pp_ping((unsigned long)pp);
-+	} else {
-+		dev_dbg(&pp->ntb->dev, "link is down\n");
-+		del_timer(&pp->db_timer);
-+	}
-+}
-+
-+static void pp_db_event(void *ctx, int vec)
-+{
-+	struct pp_ctx *pp = ctx;
-+	u64 db_bits, db_mask;
-+	unsigned long irqflags;
-+
-+	spin_lock_irqsave(&pp->db_lock, irqflags);
-+	{
-+		db_mask = ntb_db_vector_mask(pp->ntb, vec);
-+		db_bits = db_mask & ntb_db_read(pp->ntb);
-+		ntb_db_set_mask(pp->ntb, db_mask);
-+		ntb_db_clear(pp->ntb, db_bits);
-+
-+		pp->db_bits |= db_bits;
-+
-+		mod_timer(&pp->db_timer, jiffies + pp->db_delay);
-+
-+		dev_dbg(&pp->ntb->dev,
-+			"Pong vec %d bits %#llx\n",
-+			vec, db_bits);
-+	}
-+	spin_unlock_irqrestore(&pp->db_lock, irqflags);
-+}
-+
-+static const struct ntb_ctx_ops pp_ops = {
-+	.link_event = pp_link_event,
-+	.db_event = pp_db_event,
-+};
-+
-+static int pp_probe(struct ntb_client *client,
-+		    struct ntb_dev *ntb)
-+{
-+	struct pp_ctx *pp;
-+	int rc;
-+
-+	if (ntb_db_is_unsafe(ntb)) {
-+		dev_dbg(&ntb->dev, "doorbell is unsafe\n");
-+		if (!unsafe) {
-+			rc = -EINVAL;
-+			goto err_pp;
-+		}
-+	}
-+
-+	if (ntb_spad_is_unsafe(ntb)) {
-+		dev_dbg(&ntb->dev, "scratchpad is unsafe\n");
-+		if (!unsafe) {
-+			rc = -EINVAL;
-+			goto err_pp;
-+		}
-+	}
-+
-+	pp = kmalloc(sizeof(*pp), GFP_KERNEL);
-+	if (!pp) {
-+		rc = -ENOMEM;
-+		goto err_pp;
-+	}
-+
-+	pp->ntb = ntb;
-+	pp->db_bits = 0;
-+	spin_lock_init(&pp->db_lock);
-+	setup_timer(&pp->db_timer, pp_ping, (unsigned long)pp);
-+	pp->db_delay = msecs_to_jiffies(delay_ms);
-+
-+	rc = ntb_set_ctx(ntb, pp, &pp_ops);
-+	if (rc)
-+		goto err_ctx;
-+
-+	ntb_link_enable(ntb, NTB_SPEED_AUTO, NTB_WIDTH_AUTO);
-+	ntb_link_event(ntb);
-+
-+	return 0;
-+
-+err_ctx:
-+	kfree(pp);
-+err_pp:
-+	return rc;
-+}
-+
-+static void pp_remove(struct ntb_client *client,
-+		      struct ntb_dev *ntb)
-+{
-+	struct pp_ctx *pp = ntb->ctx;
-+
-+	ntb_clear_ctx(ntb);
-+	del_timer_sync(&pp->db_timer);
-+	ntb_link_disable(ntb);
-+
-+	kfree(pp);
-+}
-+
-+static struct ntb_client pp_client = {
-+	.ops = {
-+		.probe = pp_probe,
-+		.remove = pp_remove,
-+	},
-+};
-+module_ntb_client(pp_client);
+diff --git a/arch/arm64/boot/dts/apm/apm-storm.dtsi b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+index d8f3a1c..80a8050 100644
+--- a/arch/arm64/boot/dts/apm/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-storm.dtsi
+@@ -407,7 +407,8 @@
+ 				0xe0 0xd0000000 0x0 0x00040000>; /* PCI config space */
+ 			reg-names = "csr", "cfg";
+ 			ranges = <0x01000000 0x00 0x00000000 0xe0 0x10000000 0x00 0x00010000   /* io */
+-				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000>; /* mem */
++				  0x02000000 0x00 0x80000000 0xe1 0x80000000 0x00 0x80000000   /* mem */
++				  0x43000000 0xf0 0x00000000 0xf0 0x00000000 0x10 0x00000000>; /* mem */
+ 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
+ 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
+ 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+@@ -430,8 +431,9 @@
+ 			reg = < 0x00 0x1f2c0000 0x0 0x00010000   /* Controller registers */
+ 				0xd0 0xd0000000 0x0 0x00040000>; /* PCI config space */
+ 			reg-names = "csr", "cfg";
+-			ranges = <0x01000000 0x0 0x00000000 0xd0 0x10000000 0x00 0x00010000   /* io  */
+-				  0x02000000 0x0 0x80000000 0xd1 0x80000000 0x00 0x80000000>; /* mem */
++			ranges = <0x01000000 0x00 0x00000000 0xd0 0x10000000 0x00 0x00010000   /* io  */
++				  0x02000000 0x00 0x80000000 0xd1 0x80000000 0x00 0x80000000   /* mem */
++				  0x43000000 0xd8 0x00000000 0xd8 0x00000000 0x08 0x00000000>; /* mem */
+ 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
+ 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
+ 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+@@ -454,8 +456,9 @@
+ 			reg =  < 0x00 0x1f2d0000 0x0 0x00010000   /* Controller registers */
+ 				 0x90 0xd0000000 0x0 0x00040000>; /* PCI config space */
+ 			reg-names = "csr", "cfg";
+-			ranges = <0x01000000 0x0 0x00000000 0x90 0x10000000 0x0 0x00010000   /* io  */
+-				  0x02000000 0x0 0x80000000 0x91 0x80000000 0x0 0x80000000>; /* mem */
++			ranges = <0x01000000 0x00 0x00000000 0x90 0x10000000 0x00 0x00010000   /* io  */
++				  0x02000000 0x00 0x80000000 0x91 0x80000000 0x00 0x80000000   /* mem */
++				  0x43000000 0x94 0x00000000 0x94 0x00000000 0x04 0x00000000>; /* mem */
+ 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
+ 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
+ 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+@@ -478,8 +481,9 @@
+ 			reg = < 0x00 0x1f500000 0x0 0x00010000   /* Controller registers */
+ 				0xa0 0xd0000000 0x0 0x00040000>; /* PCI config space */
+ 			reg-names = "csr", "cfg";
+-			ranges = <0x01000000 0x0 0x00000000 0xa0 0x10000000 0x0 0x00010000   /* io   */
+-				  0x02000000 0x0 0x80000000 0xa1 0x80000000 0x0 0x80000000>; /* mem  */
++			ranges = <0x01000000 0x00 0x00000000 0xa0 0x10000000 0x00 0x00010000   /* io  */
++				  0x02000000 0x00 0x80000000 0xa1 0x80000000 0x00 0x80000000   /* mem */
++				  0x43000000 0xb0 0x00000000 0xb0 0x00000000 0x10 0x00000000>; /* mem */
+ 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
+ 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
+ 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+@@ -502,8 +506,9 @@
+ 			reg = < 0x00 0x1f510000 0x0 0x00010000   /* Controller registers */
+ 				0xc0 0xd0000000 0x0 0x00200000>; /* PCI config space */
+ 			reg-names = "csr", "cfg";
+-			ranges = <0x01000000 0x0 0x00000000 0xc0 0x10000000 0x0 0x00010000   /* io  */
+-				  0x02000000 0x0 0x80000000 0xc1 0x80000000 0x0 0x80000000>; /* mem */
++			ranges = <0x01000000 0x00 0x00000000 0xc0 0x10000000 0x00 0x00010000   /* io  */
++				  0x02000000 0x00 0x80000000 0xc1 0x80000000 0x00 0x80000000   /* mem */
++				  0x43000000 0xc8 0x00000000 0xc8 0x00000000 0x08 0x00000000>; /* mem */
+ 			dma-ranges = <0x42000000 0x80 0x00000000 0x80 0x00000000 0x00 0x80000000
+ 				      0x42000000 0x00 0x00000000 0x00 0x00000000 0x80 0x00000000>;
+ 			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
 -- 
-2.4.0.rc0.43.gcf8a8c6
+1.9.1
 
