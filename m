@@ -1,87 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Borislav Petkov <bp@alien8.de>,
-	Anatolij Gustschin <agust@denx.de>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Scott Wood <scottwood@freescale.com>,
-	Kumar Gala <galak@kernel.crashing.org>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Tony Luck <tony.luck@intel.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	cbe-oss-dev@lists.ozlabs.org
-Subject: [RFT v2 26/48] powerpc, irq: Prepare for killing the first parameter 'irq' of irq_flow_handler_t
-Date: Thu,  4 Jun 2015 12:13:36 +0800
-Message-Id: <1433391238-19471-27-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1433391238-19471-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:43285 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752638AbbF3BSH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jun 2015 21:18:07 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Tue, 30 Jun 2015 11:18:05 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 2838C3578048
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 11:18:02 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t5U1HqQx58196154
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 11:18:01 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t5U1HTPv024636
+	for <linux-pci@vger.kernel.org>; Tue, 30 Jun 2015 11:17:29 +1000
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org, bhelgaas@google.com
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V2 4/4] PCI: consolidate return value check for pci_find_(ext_)capability
+Date: Tue, 30 Jun 2015 09:16:44 +0800
+Message-Id: <1435627004-6029-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Change irq flow handler to prepare for killing the first parameter 'irq'
-of irq_flow_handler_t.
+The return value of the pci_find_(ext_)capability is the position of this
+Cap.  After previous two patches clean up, the position returned is an
+unsigned value. Only 0 indicates the Cap is not presented.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+This patch consolidates the form of check from (pos <= 0)to (!pos).
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 ---
- arch/powerpc/platforms/512x/mpc5121_ads_cpld.c  |    4 +++-
- arch/powerpc/platforms/85xx/socrates_fpga_pic.c |    2 +-
- arch/powerpc/platforms/cell/interrupt.c         |    3 ++-
- 3 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/pci/pci.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c b/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
-index ca3a062ed1b9..4411ed51803e 100644
---- a/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
-+++ b/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
-@@ -105,8 +105,10 @@ cpld_pic_get_irq(int offset, u8 ignore, u8 __iomem *statusp,
- }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4bd3a0c..e1282aa 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -971,7 +971,7 @@ static int pci_save_pcix_state(struct pci_dev *dev)
+ 	struct pci_cap_saved_state *save_state;
  
- static void
--cpld_pic_cascade(unsigned int irq, struct irq_desc *desc)
-+cpld_pic_cascade(unsigned int __irq, struct irq_desc *desc)
- {
-+	unsigned int irq;
-+
- 	irq = cpld_pic_get_irq(0, PCI_IGNORE, &cpld_regs->pci_status,
- 		&cpld_regs->pci_mask);
- 	if (irq != NO_IRQ) {
-diff --git a/arch/powerpc/platforms/85xx/socrates_fpga_pic.c b/arch/powerpc/platforms/85xx/socrates_fpga_pic.c
-index 55a9682b9529..5153e58654f7 100644
---- a/arch/powerpc/platforms/85xx/socrates_fpga_pic.c
-+++ b/arch/powerpc/platforms/85xx/socrates_fpga_pic.c
-@@ -100,7 +100,7 @@ void socrates_fpga_pic_cascade(unsigned int irq, struct irq_desc *desc)
- 	 * See if we actually have an interrupt, call generic handling code if
- 	 * we do.
- 	 */
--	cascade_irq = socrates_fpga_pic_get_irq(irq);
-+	cascade_irq = socrates_fpga_pic_get_irq(irq_desc_get_irq(desc));
+ 	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
+-	if (pos <= 0)
++	if (!pos)
+ 		return 0;
  
- 	if (cascade_irq != NO_IRQ)
- 		generic_handle_irq(cascade_irq);
-diff --git a/arch/powerpc/platforms/cell/interrupt.c b/arch/powerpc/platforms/cell/interrupt.c
-index 3af8324c122e..e2dd6c9d3a78 100644
---- a/arch/powerpc/platforms/cell/interrupt.c
-+++ b/arch/powerpc/platforms/cell/interrupt.c
-@@ -99,8 +99,9 @@ static void iic_ioexc_eoi(struct irq_data *d)
- {
- }
+ 	save_state = pci_find_saved_cap(dev, PCI_CAP_ID_PCIX);
+@@ -995,7 +995,7 @@ static void pci_restore_pcix_state(struct pci_dev *dev)
  
--static void iic_ioexc_cascade(unsigned int irq, struct irq_desc *desc)
-+static void iic_ioexc_cascade(unsigned int __irq, struct irq_desc *desc)
- {
-+	unsigned int irq = irq_desc_get_irq(desc);
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	struct cbe_iic_regs __iomem *node_iic =
- 		(void __iomem *)irq_desc_get_handler_data(desc);
+ 	save_state = pci_find_saved_cap(dev, PCI_CAP_ID_PCIX);
+ 	pos = pci_find_capability(dev, PCI_CAP_ID_PCIX);
+-	if (!save_state || pos <= 0)
++	if (!save_state || !pos)
+ 		return;
+ 	cap = (u16 *)&save_state->cap.data[0];
+ 
+@@ -2159,7 +2159,7 @@ static int _pci_add_cap_save_buffer(struct pci_dev *dev, u16 cap,
+ 	else
+ 		pos = pci_find_capability(dev, cap);
+ 
+-	if (pos <= 0)
++	if (!pos)
+ 		return 0;
+ 
+ 	save_state = kzalloc(sizeof(*save_state) + size, GFP_KERNEL);
 -- 
-1.7.10.4
+1.7.9.5
 
