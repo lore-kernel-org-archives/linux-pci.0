@@ -1,156 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45027 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277AbbGNWsE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:48:04 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:58478 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090AbbGAJhs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 05:37:48 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 24/49] PCI: Better support for two alt_size
-Date: Tue, 14 Jul 2015 15:46:55 -0700
-Message-Id: <1436914040-13206-25-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
+	James Morse <james.morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v3 5/5] MAINTAINERS: Add pcie-hisi maintainer
+Date: Wed, 1 Jul 2015 17:43:37 +0800
+Message-ID: <1435743817-19083-6-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Need to put aligned with max align before not aligned.
-
-For example:
-alt align/size: 8M/9M, 4M/8M
-before this patch we have 8M/20M.
-After this patch we will have 8M/17M.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 ---
- drivers/pci/setup-bus.c | 80 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 78 insertions(+), 2 deletions(-)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index bf28f32..8999ead 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -58,6 +58,20 @@ static inline bool is_before(resource_size_t align1, resource_size_t size1,
- 	return false;
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index d8afd29..3f083d0 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7594,6 +7594,13 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
  
-+static inline bool is_before_alt(resource_size_t align, resource_size_t size1,
-+			     resource_size_t size2)
-+{
-+	resource_size_t size1_left, size2_left;
++PCIE DRIVER FOR HISILICON
++M:	Zhou Wang <wangzhou1@hisilicon.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++F:	drivers/pci/host/pcie-hisi.c
 +
-+	/*  aligned is before not aligned */
-+	size1_left = size1 & (align - 1);
-+	size2_left = size2 & (align - 1);
-+	if (!size1_left && size2_left)
-+		return true;
-+
-+	return false;
-+}
-+
- struct pci_dev_resource {
- 	struct list_head list;
- 	struct resource *res;
-@@ -307,6 +321,42 @@ static void __sort_resources(struct list_head *head)
- 	}
- }
- 
-+static void __sort_resources_alt(struct list_head *head)
-+{
-+	struct pci_dev_resource *res1, *tmp_res, *res2;
-+	resource_size_t align = 0;
-+
-+
-+	__sort_resources(head);
-+
-+	/* get max align at first */
-+	list_for_each_entry(res1, head, list) {
-+		resource_size_t align1;
-+
-+		align1 = pci_resource_alignment(res1->dev, res1->res);
-+		if (align1 > align)
-+			align = align1;
-+	}
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		resource_size_t size1, size2;
-+
-+		size1 = resource_size(res1->res);
-+
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			size2 = resource_size(res2->res);
-+			if (is_before_alt(align, size1, size2)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- /**
-  * reassign_resources_sorted() - satisfy any additional resource requests
-  *
-@@ -673,7 +723,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
- 		res->end = res->start + alt_res->alt_size - 1;
- 	}
- 
--	__sort_resources(head);
-+	__sort_resources_alt(head);
- 	/* Satisfy the alt resource requests */
- 	assign_requested_resources_sorted(head, &local_alt_fail_head);
- 
-@@ -1267,6 +1317,32 @@ static void __sort_align_test(struct list_head *head)
- 	}
- }
- 
-+static void __sort_align_test_alt(struct list_head *head)
-+{
-+	struct align_test_res *res1, *tmp_res, *res2;
-+	resource_size_t align = 0;
-+
-+	__sort_align_test(head);
-+
-+	/* get max align at first */
-+	list_for_each_entry(res1, head, list)
-+		if (res1->align > align)
-+			align = res1->align;
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			if (is_before_alt(align, res1->size, res2->size)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- static bool is_align_size_good(struct list_head *head,
- 			resource_size_t min_align, resource_size_t size,
- 			resource_size_t start)
-@@ -1352,7 +1428,7 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
- 	if (count <= 1)
- 		goto out;
- 
--	__sort_align_test(head);
-+	__sort_align_test_alt(head);
- 
- 	tmp = max(size, max_align);
- 	order = __fls(count);
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-1.8.4.5
+1.9.1
 
