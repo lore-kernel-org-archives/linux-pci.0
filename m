@@ -1,122 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:53780 "EHLO hauke-m.de"
+Received: from cantor2.suse.de ([195.135.220.15]:55619 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753364AbbGOVwO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 17:52:14 -0400
-Message-ID: <55A6D60C.6000405@hauke-m.de>
-Date: Wed, 15 Jul 2015 23:52:12 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Ray Jui <rjui@broadcom.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] PCI: iproc: enable arm64 support for iProc PCIe
-References: <1436935343-4437-1-git-send-email-rjui@broadcom.com> <1436935343-4437-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1436935343-4437-2-git-send-email-rjui@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+	id S1751170AbbGAJUM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Jul 2015 05:20:12 -0400
+Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
+ output? [BKO63661]
+From: Jean Delvare <jdelvare@suse.de>
+To: Kashyap Desai <kashyap.desai@avagotech.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Robin H. Johnson" <robbat2@gentoo.org>,
+	Adam Radford <aradford@gmail.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Sumit Saxena <sumit.saxena@avagotech.com>,
+	Uday Lingala <uday.lingala@avagotech.com>,
+	"PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>
+In-Reply-To: <12176d8f15f49359898726ccede592bd@mail.gmail.com>
+References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
+	 <CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
+	 <robbat2-20140712T215640-831385120Z@orbis-terrarum.net>
+	 <20150429172832.GB7888@google.com> <20150528122443.GI10210@google.com>
+	 <9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
+	 <1435584320.4646.53.camel@chaos.site>
+	 <12176d8f15f49359898726ccede592bd@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Jul 2015 11:20:07 +0200
+Message-ID: <1435742407.22803.34.camel@chaos.site>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/15/2015 06:42 AM, Ray Jui wrote:
-> This patch enables arm64 support to the iProc PCIe driver
-> 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> Reviewed-by: Scott Branden <sbranden@broadcom.com>
-> ---
->  drivers/pci/host/pcie-iproc.c |   15 ++++-----------
->  drivers/pci/host/pcie-iproc.h |    8 ++++++--
->  2 files changed, 10 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index d77481e..8a556d5 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -58,11 +58,6 @@
->  #define SYS_RC_INTX_EN               0x330
->  #define SYS_RC_INTX_MASK             0xf
->  
-> -static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
-> -{
-> -	return sys->private_data;
-> -}
-> -
->  /**
->   * Note access to the configuration registers are protected at the higher layer
->   * by 'pci_lock' in drivers/pci/access.c
-> @@ -71,8 +66,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
->  					    unsigned int devfn,
->  					    int where)
->  {
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct iproc_pcie *pcie = sys_to_pcie(sys);
-> +	struct iproc_pcie *pcie = bus->sysdata;
->  	unsigned slot = PCI_SLOT(devfn);
->  	unsigned fn = PCI_FUNC(devfn);
->  	unsigned busno = bus->number;
-> @@ -208,10 +202,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  
->  	iproc_pcie_reset(pcie);
->  
-> -	pcie->sysdata.private_data = pcie;
-> -
-> -	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
-> -				  &pcie->sysdata, res);
-> +	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, pcie, res);
->  	if (!bus) {
->  		dev_err(pcie->dev, "unable to create PCI root bus\n");
->  		ret = -ENOMEM;
-> @@ -229,7 +220,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  
->  	pci_scan_child_bus(bus);
->  	pci_assign_unassigned_bus_resources(bus);
-> +#ifdef CONFIG_ARM
->  	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
-> +#endif
->  	pci_bus_add_devices(bus);
->  
->  	return 0;
-> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-> index ba0a108..0ee9673 100644
-> --- a/drivers/pci/host/pcie-iproc.h
-> +++ b/drivers/pci/host/pcie-iproc.h
-> @@ -18,18 +18,22 @@
->  
->  /**
->   * iProc PCIe device
-> + * @sysdata: Per PCI controller data. This needs to be kept at the beginning of
-> + * struct iproc_pcie, to enable support of both ARM32 and ARM64 platforms with
-> + * minimal changes in the iProc PCIe core driver
->   * @dev: pointer to device data structure
->   * @base: PCIe host controller I/O register base
->   * @resources: linked list of all PCI resources
-> - * @sysdata: Per PCI controller data
->   * @root_bus: pointer to root bus
->   * @phy: optional PHY device that controls the Serdes
->   * @irqs: interrupt IDs
->   */
->  struct iproc_pcie {
-> +#ifdef CONFIG_ARM
-> +	struct pci_sys_data sysdata;
-> +#endif
+Hi Kashyap,
 
-This looks for me like a dirty hack. Why is the PCIe controller
-interface between ARM and ARM64 different?
+I finally managed to backport your patch to the SLES 12 kernel :-) I'll
+build a test kernel for the customer and have them test it. I'll let you
+know if I need your help later for the SLES 11 SP3 kernel backport -
+thanks for the offer!
 
-I do not know if this patch is the right place to fix it but I think we
-should come up with a PCI controller interface which works on all archs,
-as we see here some drivers are shared between different archs.
+Jean
 
->  	struct device *dev;
->  	void __iomem *base;
-> -	struct pci_sys_data sysdata;
->  	struct pci_bus *root_bus;
->  	struct phy *phy;
->  	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
+Le Tuesday 30 June 2015 à 16:03 +0530, Kashyap Desai a écrit :
+> Jean,
 > 
+> Patch is available at below repo -
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git - b for-next
+> 
+> Commit id -
+> 6431f5d7c6025f8b007af06ea090de308f7e6881
+> 
+> If you share megaraid_sas driver code of your tree, I can provide patch for
+> you.
+> 
+> ` Kashyap
+> 
+> > -----Original Message-----
+> > From: Jean Delvare [mailto:jdelvare@suse.de]
+> > Sent: Monday, June 29, 2015 6:55 PM
+> > To: Kashyap Desai
+> > Cc: Bjorn Helgaas; Robin H. Johnson; Adam Radford; Neela Syam Kolli;
+> > linux-
+> > scsi@vger.kernel.org; arkadiusz.bubala@open-e.com; Matthew Garrett; Sumit
+> > Saxena; Uday Lingala; PDL,MEGARAIDLINUX; linux-pci@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; Myron Stowe
+> > Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
+> > output? [BKO63661]
+> >
+> > Hi Kashyap,
+> >
+> > Thanks for the patch. May I ask what tree it was based on? Linus'
+> > latest? I am trying to apply it to the SLES 11 SP3 and SLES 12 kernel
+> > trees (based
+> > on kernel v3.0 + a bunch of backports and v3.12
+> > respectively) but your patch fails to apply in both cases. I'll try harder
+> > but I don't
+> > know anything about the megaraid_sas code so I really don't know where I'm
+> > going.
+> >
+> > Does your patch depend on any other that may not be present in the SLES
+> > 11 SP3 and SLES 12 kernels?
+> >
+> > Thanks,
+> > Jean
+> >
+> > Le Thursday 28 May 2015 à 19:05 +0530, Kashyap Desai a écrit :
+> > > Bjorn/Robin,
+> > >
+> > > Apologies for delay. Here is one quick suggestion as we have seen
+> > > similar issue (not exactly similar, but high probably to have same
+> > > issue) while controller is configured on VM as pass-through and VM
+> > > reboot
+> > abruptly.
+> > > In that particular issue, driver interact with FW which may  require
+> > > chip reset to bring controller to operation state.
+> > >
+> > > Relevant patch was submitted for only Older controller as it was only
+> > > seen for few MegaRaid controller. Below patch already try to do chip
+> > > reset, but only for limited controllers...I have attached one more
+> > > patch which does chip reset from driver load time for
+> > > Thunderbolt/Invader/Fury etc. (In your case you have Thunderbolt
+> > > controller, so attached patch is required.)
+> > >
+> > > http://www.spinics.net/lists/linux-scsi/msg67288.html
+> > >
+> > > Please post the result with attached patch.
+> > >
+> > > Thanks, Kashyap
+
 
