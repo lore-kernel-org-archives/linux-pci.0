@@ -1,120 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:58456 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752130AbbGAJhq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 05:37:46 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v3 00/15] Introducing per-device MSI domain
-Date: Tue,  7 Jul 2015 18:17:50 +0100
-Message-Id: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
+	James Morse <james.morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v3 4/5] Documentation: DT: Add Hisilicon PCIe host binding
+Date: Wed, 1 Jul 2015 17:43:36 +0800
+Message-ID: <1435743817-19083-5-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Picking up this series again after sleeping on it for too long,
- hopefully still relevant]
+This patch adds related DTS binding document for Hisilicon PCIe host driver.
 
-MSI-like interrupts are starting to creep out of the PCI world, and
-can now be seen into a number of "platform"-type busses. The
-introduction of the MSI domains feature in v3.19 recognised that fact,
-and started providing a way to implement this.
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
 
-Another problem we have to solve is to identify which MSI domain a
-device is "connected" to. Currently, PCI gets away with a mixture of
-arch-specific callbacks, and a msi_controller structure that can
-optionally carry a pointer to an MSI domain. As we add new bus types
-and start dealing with topologies that do not map to what PCI does,
-this doesn't scale anymore.
-
-This patch series tries to address some of it by providing a basic
-link between 'struct device' and an MSI domain. It also adds :
-
-- a way to "tag" domains according to the "type" of interrupt it
-  provides (PCI/MSI, platform MSI...), allowing a driver for a piece
-  of HW identified by its device_node to provide several IRQ domains
-
-- (yet another) way for PCI to propagate the domain pointer through
-  the PCI device hierarchy, providing a method for OF to kick-start
-  the propagation process, and finally allowing the PCI/MSI layer to
-  use that information
-
-- a similar way to hook an MSI domain to a platform device.
-
-Hopefully this can serve as a model to implement support for different
-but types.
-
-Additionally, the last few patches use all the above to remove any
-trace of the msi_controller structure from the three MSI controllers
-we use on arm64, so that they solely rely on the above infrastructure,
-leading to some interesting improvements. We take this opportunity to
-also kill the domain pointer from the msi_controller structure.
-
-My hope is to eventually kill msi_controller entirely, and only rely
-on the msi_domain contained in the device structure (any help
-welcomed).
-
-This has been tested on arm64 with GICv2m (AMD Seattle) and GICv3 ITS
-(FVP model).
-
-Patches are on top of 4.2-rc1 and available at:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/msi_domain
-
-As always, comments most welcome.
-
-Marc Zyngier (15):
-  genirq: irqdomain: Allow irq domain aliasing
-  PCI: MSI: Register irq domain with specific token
-  device core: Introduce per-device MSI domain pointer
-  PCI/MSI: Add hooks to populate the msi_domain field
-  PCI/MSI: of: Add support for OF-provided msi_domain
-  PCI/MSI: of: Allow msi_domain lookup using the host bridge node
-  PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
-  platform: of: Assign MSI domain to platform device
-  irqchip: gicv3-its: Split PCI/MSI code from the core ITS driver
-  irqchip: gicv3-its: Register irq domain with platform MSI token
-  irqchip: GICv2m: Get rid of struct msi_controller
-  irqchip: gicv3-its: Get rid of struct msi_controller
-  irqchip: gicv3-its: Make the PCI/MSI code standalone
-  PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
-  PCI/MSI: Drop domain field from msi_controller
-
- arch/powerpc/platforms/512x/mpc5121_ads_cpld.c   |   3 +-
- arch/powerpc/platforms/cell/interrupt.c          |   3 +-
- arch/powerpc/platforms/embedded6xx/flipper-pic.c |   3 +-
- arch/powerpc/platforms/powermac/pic.c            |   3 +-
- arch/powerpc/platforms/powernv/opal-irqchip.c    |   3 +-
- arch/powerpc/platforms/ps3/interrupt.c           |   3 +-
- arch/powerpc/sysdev/ehv_pic.c                    |   3 +-
- arch/powerpc/sysdev/i8259.c                      |   3 +-
- arch/powerpc/sysdev/ipic.c                       |   3 +-
- arch/powerpc/sysdev/mpic.c                       |   3 +-
- arch/powerpc/sysdev/qe_lib/qe_ic.c               |   3 +-
- arch/powerpc/sysdev/xics/xics-common.c           |   3 +-
- drivers/irqchip/Makefile                         |   2 +-
- drivers/irqchip/irq-gic-v2m.c                    |  27 ++---
- drivers/irqchip/irq-gic-v3-its-pci-msi.c         | 135 +++++++++++++++++++++++
- drivers/irqchip/irq-gic-v3-its.c                 | 130 ++++------------------
- drivers/of/irq.c                                 |  16 +++
- drivers/of/platform.c                            |   1 +
- drivers/pci/host/pci-xgene-msi.c                 |  41 +++----
- drivers/pci/msi.c                                |  11 +-
- drivers/pci/of.c                                 |  24 ++++
- drivers/pci/probe.c                              |  31 ++++++
- include/linux/device.h                           |  20 ++++
- include/linux/irqchip/arm-gic-v3.h               |   3 +
- include/linux/irqdomain.h                        |  25 ++++-
- include/linux/msi.h                              |   3 -
- include/linux/of_irq.h                           |   1 +
- include/linux/pci.h                              |   3 +
- kernel/irq/irqdomain.c                           |  18 ++-
- 29 files changed, 350 insertions(+), 177 deletions(-)
- create mode 100644 drivers/irqchip/irq-gic-v3-its-pci-msi.c
-
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+new file mode 100644
+index 0000000..6c9b827
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -0,0 +1,46 @@
++Hisilicon PCIe host bridge DT description
++
++Hisilicon PCIe host controller is based on Designware PCI core.
++It shares common functions with PCIe Designware core driver and inherits
++common properties defined in
++Documentation/devicetree/bindings/pci/designware-pci.txt.
++
++Additional properties are described here:
++
++Required properties:
++- compatible: Should contain "hisilicon,hip05-pcie".
++- reg: Should contain rc_dbi, subctrl, config registers location and length.
++- reg-names: Must include the following entries:
++  "rc_dbi": controller configuration registers;
++  "subctrl": whole PCIe hosts configuration registers;
++  "config": PCIe configuration space registers.
++- msi-parent: Should be its_pcie which is an its receiving MSI interrupts.
++- port-id: Should be 0, 1, 2 or 3.
++
++Optional properties:
++- status: Either "ok" or "disabled".
++- dma-coherent: Present if dma operations are coherent.
++
++Example:
++	pcie@0xb0080000 {
++		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
++		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
++		      <0x220 0x00000000 0 0x2000>;
++		reg-names = "rc_dbi", "subctrl", "config";
++		bus-range = <0  15>;
++		msi-parent = <&its_pcie>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		dma-coherent;
++		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
++		num-lanes = <8>;
++		port-id = <1>;
++		#interrupts-cells = <1>;
++		interrupts-map-mask = <0xf800 0 0 7>;
++		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
++				  0x0 0 0 2 &mbigen_pcie 2 11
++				  0x0 0 0 3 &mbigen_pcie 3 12
++				  0x0 0 0 4 &mbigen_pcie 4 13>;
++		status = "ok";
++	};
 -- 
-2.1.4
+1.9.1
 
