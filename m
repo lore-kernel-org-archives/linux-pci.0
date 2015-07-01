@@ -1,161 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:35906 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751293AbbGAQGM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 12:06:12 -0400
+Received: by iecvh10 with SMTP id vh10so37950605iec.3
+        for <linux-pci@vger.kernel.org>; Wed, 01 Jul 2015 09:06:11 -0700 (PDT)
+Date: Wed, 1 Jul 2015 11:06:06 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: wdavis@nvidia.com
+Cc: Joerg Roedel <joro@8bytes.org>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Mark Hounschell <markh@compro.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 3/7] dma-mapping: pci: add pci_(un)map_resource
+Message-ID: <20150701160606.GA13409@google.com>
+References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
+ <1432919686-32306-4-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <1438036941-27210-2-git-send-email-rjui@broadcom.com>
-References: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
-	<1438036941-27210-2-git-send-email-rjui@broadcom.com>
-Date: Tue, 28 Jul 2015 15:24:00 +0200
-Message-ID: <CAOesGMh2Dz2HWpAg0Yh71QYfnAyMRae929p=mqGmopGdrVWgxQ@mail.gmail.com>
-Subject: Re: [PATCH v5 1/4] PCI: iproc: enable arm64 support for iProc PCIe
-From: Olof Johansson <olof@lixom.net>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Broadcom Kernel Feedback List
-	<bcm-kernel-feedback-list@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"arm@kernel.org" <arm@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1432919686-32306-4-git-send-email-wdavis@nvidia.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ray,
-
-I get the following when building an allmodconfig on arm64:
-
-drivers/pci/host/pcie-iproc-bcma.c: In function 'iproc_pcie_bcma_map_irq':
-drivers/pci/host/pcie-iproc-bcma.c:37:31: error: dereferencing pointer
-to incomplete type
-  struct iproc_pcie *pcie = sys->private_data;
-                               ^
-
-Should be easy for you to reproduce, please send incremental fix.
-
-
--Olof
-
-
-On Tue, Jul 28, 2015 at 12:42 AM, Ray Jui <rjui@broadcom.com> wrote:
-> PCI: iproc: Add arm64 support
->
-> Add arm64 support to the iProc PCIe driver.
->
-> Note that on arm32, bus->sysdata points to the arm32-specific
-> pci_sys_data struct, and pci_sys_data.private_data contains the
-> iproc_pcie pointer. For arm64, there's nothing corresponding to
-> pci_sys_data, so we keep the iproc_pcie pointer directly in
-> bus->sysdata.
->
-> In addition, arm64 does IRQ mapping in pcibios_add_device(), so it
-> doesn't need pci_fixup_irqs() as arm32 does.
->
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Reviewed-by: Scott Branden <sbranden@broadcom.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On Fri, May 29, 2015 at 12:14:42PM -0500, wdavis@nvidia.com wrote:
+> From: Will Davis <wdavis@nvidia.com>
+> 
+> Simply route these through to the new dma_(un)map_resource APIs.
+> 
+> Signed-off-by: Will Davis <wdavis@nvidia.com>
+> Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+> Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 > ---
->  drivers/pci/host/pcie-iproc.c |   27 ++++++++++++++++++++-------
->  drivers/pci/host/pcie-iproc.h |    4 +++-
->  2 files changed, 23 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index d77481e..ba087b5 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -58,9 +58,17 @@
->  #define SYS_RC_INTX_EN               0x330
->  #define SYS_RC_INTX_MASK             0xf
->
-> -static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
-> +static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
->  {
-> -       return sys->private_data;
-> +       struct iproc_pcie *pcie;
-> +#ifdef CONFIG_ARM
-> +       struct pci_sys_data *sys = bus->sysdata;
-> +
-> +       pcie = sys->private_data;
-> +#else
-> +       pcie = bus->sysdata;
-> +#endif
-> +       return pcie;
+>  include/asm-generic/pci-dma-compat.h | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
+> index c110843..ac4a4ad 100644
+> --- a/include/asm-generic/pci-dma-compat.h
+> +++ b/include/asm-generic/pci-dma-compat.h
+> @@ -61,6 +61,20 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
+>  	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
 >  }
->
->  /**
-> @@ -71,8 +79,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
->                                             unsigned int devfn,
->                                             int where)
->  {
-> -       struct pci_sys_data *sys = bus->sysdata;
-> -       struct iproc_pcie *pcie = sys_to_pcie(sys);
-> +       struct iproc_pcie *pcie = iproc_data(bus);
->         unsigned slot = PCI_SLOT(devfn);
->         unsigned fn = PCI_FUNC(devfn);
->         unsigned busno = bus->number;
-> @@ -186,6 +193,7 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
->  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  {
->         int ret;
-> +       void *sysdata;
->         struct pci_bus *bus;
->
->         if (!pcie || !pcie->dev || !pcie->base)
-> @@ -208,10 +216,13 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->
->         iproc_pcie_reset(pcie);
->
-> +#ifdef CONFIG_ARM
->         pcie->sysdata.private_data = pcie;
-> -
-> -       bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
-> -                                 &pcie->sysdata, res);
-> +       sysdata = &pcie->sysdata;
-> +#else
-> +       sysdata = pcie;
-> +#endif
-> +       bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, sysdata, res);
->         if (!bus) {
->                 dev_err(pcie->dev, "unable to create PCI root bus\n");
->                 ret = -ENOMEM;
-> @@ -229,7 +240,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->
->         pci_scan_child_bus(bus);
->         pci_assign_unassigned_bus_resources(bus);
-> +#ifdef CONFIG_ARM
->         pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
-> +#endif
->         pci_bus_add_devices(bus);
->
->         return 0;
-> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-> index ba0a108..c9e4c10 100644
-> --- a/drivers/pci/host/pcie-iproc.h
-> +++ b/drivers/pci/host/pcie-iproc.h
-> @@ -21,7 +21,7 @@
->   * @dev: pointer to device data structure
->   * @base: PCIe host controller I/O register base
->   * @resources: linked list of all PCI resources
-> - * @sysdata: Per PCI controller data
-> + * @sysdata: Per PCI controller data (ARM-specific)
->   * @root_bus: pointer to root bus
->   * @phy: optional PHY device that controls the Serdes
->   * @irqs: interrupt IDs
-> @@ -29,7 +29,9 @@
->  struct iproc_pcie {
->         struct device *dev;
->         void __iomem *base;
-> +#ifdef CONFIG_ARM
->         struct pci_sys_data sysdata;
-> +#endif
->         struct pci_bus *root_bus;
->         struct phy *phy;
->         int irqs[IPROC_PCIE_MAX_NUM_IRQS];
-> --
-> 1.7.9.5
->
+>  
+> +static inline dma_addr_t
+> +pci_map_resource(struct pci_dev *hwdev, struct resource *resource,
+> +		 unsigned long offset, size_t size, int direction)
+
+After 3a9ad0b4fdcd ("PCI: Add pci_bus_addr_t"), which will appear in
+v4.2-rc1, there is a pci_bus_addr_t, and I think you need that instead
+of dma_addr_t.
+
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd
+
+> +{
+> +	return dma_map_resource(hwdev == NULL ? NULL : &hwdev->dev, resource, offset, size, (enum dma_data_direction)direction);
+> +}
+> +
+> +static inline void
+> +pci_unmap_resource(struct pci_dev *hwdev, dma_addr_t dma_address, size_t size,
+> +		   int direction)
+> +{
+> +	dma_unmap_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
+> +}
+> +
+>  static inline int
+>  pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
+>  	   int nents, int direction)
+> -- 
+> 2.4.0
+> 
