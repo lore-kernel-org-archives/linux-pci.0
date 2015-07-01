@@ -1,154 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 03/51] PCI: Use correct align for optional only resources during sorting
-Date: Mon, 27 Jul 2015 16:29:21 -0700
-Message-Id: <1438039809-24957-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:12199 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbbGAQs2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 12:48:28 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: James Morse <james.morse@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	"Arnd Bergmann" <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
+	"kishon@ti.com" <kishon@ti.com>,
+	"xobs@kosagi.com" <xobs@kosagi.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v3 2/5] PCI: designware: Add ARM64 support
+Date: Wed, 1 Jul 2015 16:47:51 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D4E6A2@lhreml503-mbs>
+References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
+ <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs>
+ <5593F899.6050306@arm.com>
+In-Reply-To: <5593F899.6050306@arm.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During sorting before assign, we only put resource with non-zero align
-in the sorted list, so for optional resources that must size is 0 and only
-have addon parts, we need to have correct align.
-
-While treating SRIOV as optional resources, we always read alignment for
-SRIOV bars, so they are ok.
-Hotplug bridge resources are using STARTALIGN so it is ok when size is 0
-if we have correct start for them.
-
-Later we want to treat the ROM BAR as optional resource, and it has
-have SIZEALIGN, we need to find a way to get align for them.
-
-We can use addon resource align instead in that case, and it will
-be ok for SRIOV path and hotplug bridge resource path.
-
-Sorted list will contain must resource align/size to 0/0 to hold spot for
-optional resources.
-
-We need to pass realloc_head from sizing stage to sorting stage, and
-get entry from realloc list and calculate align from the entry.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 50 ++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 43 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 247d8fe..27cb0f0 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -145,9 +145,43 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	return dev_res->min_align;
- }
- 
-+static resource_size_t __pci_resource_alignment(
-+				struct pci_dev *dev,
-+				struct resource *r,
-+				struct list_head *realloc_head)
-+{
-+	resource_size_t r_align = pci_resource_alignment(dev, r);
-+	resource_size_t orig_start, orig_end;
-+	struct pci_dev_resource *dev_res;
-+
-+	if (r_align || !realloc_head)
-+		return r_align;
-+
-+	dev_res = res_to_dev_res(realloc_head, r);
-+	if (!dev_res || !dev_res->add_size)
-+		return r_align;
-+
-+	orig_start = r->start;
-+	orig_end = r->end;
-+	r->end += dev_res->add_size;
-+	if ((r->flags & IORESOURCE_STARTALIGN)) {
-+		resource_size_t r_size = resource_size(r);
-+		resource_size_t add_align = dev_res->min_align;
-+
-+		r->start = add_align;
-+		r->end = add_align + r_size - 1;
-+	}
-+	r_align = pci_resource_alignment(dev, r);
-+	r->start = orig_start;
-+	r->end = orig_end;
-+
-+	return r_align;
-+}
- 
- /* Sort resources by alignment */
--static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
-+static void pdev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
-+				 struct list_head *head)
- {
- 	int i;
- 
-@@ -165,7 +199,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		if (!(r->flags) || r->parent)
- 			continue;
- 
--		r_align = pci_resource_alignment(dev, r);
-+		r_align = __pci_resource_alignment(dev, r, realloc_head);
- 		if (!r_align) {
- 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
- 				 i, r);
-@@ -183,8 +217,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		list_for_each_entry(dev_res, head, list) {
- 			resource_size_t align;
- 
--			align = pci_resource_alignment(dev_res->dev,
--							 dev_res->res);
-+			align = __pci_resource_alignment(dev_res->dev,
-+							 dev_res->res,
-+							 realloc_head);
- 
- 			if (r_align > align) {
- 				n = &dev_res->list;
-@@ -197,6 +232,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- }
- 
- static void __dev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
- 	u16 class = dev->class >> 8;
-@@ -213,7 +249,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
- 			return;
- 	}
- 
--	pdev_sort_resources(dev, head);
-+	pdev_sort_resources(dev, realloc_head, head);
- }
- 
- static inline void reset_resource(struct resource *res)
-@@ -501,7 +537,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
- {
- 	LIST_HEAD(head);
- 
--	__dev_sort_resources(dev, &head);
-+	__dev_sort_resources(dev, add_head, &head);
- 	__assign_resources_sorted(&head, add_head, fail_head);
- 
- }
-@@ -514,7 +550,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
- 	LIST_HEAD(head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list)
--		__dev_sort_resources(dev, &head);
-+		__dev_sort_resources(dev, realloc_head, &head);
- 
- 	__assign_resources_sorted(&head, realloc_head, fail_head);
- }
--- 
-1.8.4.5
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdl
+ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmdd
+IE9uIEJlaGFsZiBPZiBKYW1lcyBNb3JzZQ0KPiBTZW50OiBXZWRuZXNkYXksIEp1bHkgMDEsIDIw
+MTUgMzoyNyBQTQ0KPiBUbzogR2FicmllbGUgUGFvbG9uaTsgV2FuZ3pob3UgKEIpOyBCam9ybiBI
+ZWxnYWFzOyBKaW5nb28gSGFuOyBQcmF0eXVzaA0KPiBBbmFuZDsgQXJuZCBCZXJnbWFubjsgTGl2
+aXUgRHVkYXU7IGtpc2hvbkB0aS5jb207IHhvYnNAa29zYWdpLmNvbTsgbS0NCj4ga2FyaWNoZXJp
+MkB0aS5jb207IE1pbmdodWFuLkxpYW5AZnJlZXNjYWxlLmNvbQ0KPiBDYzogbGludXgtcGNpQHZn
+ZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiBk
+ZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdq
+dWt1bzsNCj4gcWl1emhlbmZhOyBMaWd1b3podSAoS2VubmV0aCkNCj4gU3ViamVjdDogUmU6IFtQ
+QVRDSCB2MyAyLzVdIFBDSTogZGVzaWdud2FyZTogQWRkIEFSTTY0IHN1cHBvcnQNCj4gDQo+IFpo
+b3UgV2FuZyB3cm90ZToNCj4gPiBJIHRlc3RlZCB0aGlzIHBhdGNoIG9uIEQwMiBib2FyZCBvZiBI
+aXNpbGljb24uIEl0IHdvcmtzIHdlbGwuDQo+ID4gSSBoYXZlIGNvbXBpbGVkIHRoZSBkcml2ZXIg
+d2l0aCBtdWx0aV92N19kZWZjb25maWcuIEhvd2V2ZXIsIEkgZG9uJ3QNCj4gPiBoYXZlDQo+ID4g
+QVJNMzIgUENJZSByZWxhdGVkIGJvYXJkIHRvIGRvIHRlc3QuIEl0IHdpbGwgYmUgYXBwcmVjaWF0
+ZWQgaWYNCj4gc29tZW9uZQ0KPiA+IGNvdWxkDQo+ID4gaGVscCB0byB0ZXN0IGl0Lg0KPiA+DQo+
+ID4gU2lnbmVkLW9mZi1ieTogWmhvdSBXYW5nIDx3YW5nemhvdTFAaGlzaWxpY29uLmNvbT4NCj4g
+PiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPg0KPiA+IFNpZ25l
+ZC1vZmYtYnk6IEdhYnJpZWxlIFBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4N
+Cj4gPiBUZXN0ZWQtYnk6IEZhYnJpY2UgR2FzbmllciA8ZmFicmljZS5nYXNuaWVyQHN0LmNvbT4N
+Cj4gPiBUZXN0ZWQtYnk6IEphbWVzIE1vcnNlIDxqYW1lcy5tb3JzZUBhcm0uY29tPg0KPiANCj4g
+VGVzdHMgb24gdGhpcyBuZXcgc2VyaWVzLCB1c2luZyB0aGUgc2FtZSBpLk1YIDZRdWFkIGJvYXJk
+LCBhcmUgbm90DQo+IHdvcmtpbmcuDQo+IA0KPiBUaGUgbmV0d29yayBjYXJkIGlzIG5vIGxvbmdl
+ciBkZXRlY3RlZCwgYW5kIEkgZ2V0IGEgbG9ja3VwIHdoZW4NCj4gcmVtb3ZpbmcNCj4gdGhlIHJv
+b3QgYnJpZGdlIGFuZCByZXNjYW5uaW5nLg0KPiANCj4gUGFydGlhbCBkbWVzZyBvdXRwdXQgYmVs
+b3cuIFNpZ25pZmljYW50bHksIHRoZSBsaW5lczoNCj4gPiBbICAgIDAuMTUyMTI4XSBQQ0kgaG9z
+dCBicmlkZ2UgL3NvYy9wY2llQDB4MDEwMDAwMDAgcmFuZ2VzOg0KPiA+IFsgICAgMC4xNTIxNDJd
+ICAgTm8gYnVzIHJhbmdlIGZvdW5kIGZvciAvc29jL3BjaWVAMHgwMTAwMDAwMCwgdXNpbmcNCj4g
+W2J1cw0KPiAwMC1mZl0NCj4gYXJlIG5ldy4NCj4gDQo+IEJvdGggc2VyaWVzIGFyZSBhcHBsaWVk
+IHRvIHY0LjEsIHVzZSB0aGUgc2FtZSAuY29uZmlnIGZpbGUsIGFuZCB0aGUNCj4gc2FtZSBkdGIu
+DQo+IEkgd2lsbCBpbnZlc3RpZ2F0ZSBmdXJ0aGVyLg0KPiANCj4gKFJlLXRlc3RpbmcgdjIgd29y
+a3MsIHNvIHRoaXMgaXNuJ3QgYW4gaW50ZXJpbSBoYXJkd2FyZSBmYWlsdXJlKQ0KDQpUaGlzIGlz
+IGEgYml0IHdlaXJkLi4uLg0KDQpQYXRjaCAyLzUgaXMgdGhlIG9ubHkgb25lIHRoYXQgYWZmZWN0
+IHBsYXRmb3JtcyBkaWZmZXJlbnQgZnJvbSBIaXNpbGljb24NCg0KVGhlIG9ubHkgZGlmZmVyZW5j
+ZSBiZXR3ZWVuIFYzIHBhdGNoWzIvNV0gYW5kIHYyIHBhdGNoWzIvNF0gaXMNCg0KKioqKioqKioq
+KioqKg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWtleXN0b25lLWR3LmMgYi9k
+cml2ZXJzL3BjaS9ob3N0L3BjaS1rZXlzdG9uZS1kdy5jDQppbmRleCBmMzQ4OTJlLi5iMWU0MTM1
+IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2kta2V5c3RvbmUtZHcuYw0KKysrIGIv
+ZHJpdmVycy9wY2kvaG9zdC9wY2kta2V5c3RvbmUtZHcuYw0KQEAgLTMyNyw3ICszMjcsNyBAQCBz
+dGF0aWMgdm9pZCBrc19kd19wY2llX2NsZWFyX2RiaV9tb2RlKHZvaWQgX19pb21lbSAqcmVnX3Zp
+cnQpDQogdm9pZCBrc19kd19wY2llX3NldHVwX3JjX2FwcF9yZWdzKHN0cnVjdCBrZXlzdG9uZV9w
+Y2llICprc19wY2llKQ0KIHsNCiAJc3RydWN0IHBjaWVfcG9ydCAqcHAgPSAma3NfcGNpZS0+cHA7
+DQotCXUzMiBzdGFydCA9IHBwLT5tZW0uc3RhcnQsIGVuZCA9IHBwLT5tZW0uZW5kOw0KKwl1MzIg
+c3RhcnQgPSBwcC0+bWVtLT5zdGFydCwgZW5kID0gcHAtPm1lbS0+ZW5kOw0KIAlpbnQgaSwgdHJf
+c2l6ZTsNCiANCiAJLyogRGlzYWJsZSBCQVJzIGZvciBpbmJvdW5kIGFjY2VzcyAqLw0KKioqKioq
+KioqKioqKioNClRoYXQgaXMgcHJlc2VudCBpbiB2MyBidXQgbm90IGluIHYyLiBBbmQgaXQgc2hv
+dWxkIGFmZmVjdCBrZXlzdG9uZSBvbmx5Li4uLnNvIHVzaW5nIHBhdGNoIHYzIG9uIHRoZSBzYW1l
+IGJyYW5jaCB3aGVyZSB5b3UgYXBwbGllZCBwYXRjaCB2MiBJIHdvdWxkIGV4cGVjdCB0aGUgc2Ft
+ZSByZXN1bHRzLi4uDQoNCj4gDQo+IFRoYW5rcywNCj4gDQo+IEphbWVzDQo+IA0KPiANCj4gDQo+
+IHJvb3RAbG9jYWxob3N0On4jIGRtZXNnIHwgZ3JlcCAtaSBwY2kNCj4gWyAgICAwLjEyNjE4NF0g
+UENJOiBDTFMgMCBieXRlcywgZGVmYXVsdCA2NA0KPiBbICAgIDAuMTUyMTI4XSBQQ0kgaG9zdCBi
+cmlkZ2UgL3NvYy9wY2llQDB4MDEwMDAwMDAgcmFuZ2VzOg0KPiBbICAgIDAuMTUyMTQyXSAgIE5v
+IGJ1cyByYW5nZSBmb3VuZCBmb3IgL3NvYy9wY2llQDB4MDEwMDAwMDAsIHVzaW5nDQo+IFtidXMg
+MDAtZmZdDQo+IFsgICAgMC4xNTQxODNdIGlteDZxLXBjaWUgMWZmYzAwMC5wY2llOiBQQ0kgaG9z
+dCBicmlkZ2UgdG8gYnVzIDAwMDA6MDANCj4gWyAgICAwLjE1NDIwMV0gcGNpX2J1cyAwMDAwOjAw
+OiByb290IGJ1cyByZXNvdXJjZSBbYnVzIDAwLWZmXQ0KPiBbICAgIDAuMTU0MjE1XSBwY2lfYnVz
+IDAwMDA6MDA6IHJvb3QgYnVzIHJlc291cmNlIFs/Pz8NCj4gMHgwMWYwMDAwMC0weDAxZjdmZmZm
+IGZsYWdzIDB4MF0NCj4gWyAgICAwLjE1NDIyOF0gcGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyBy
+ZXNvdXJjZSBbaW8gIDB4MDAwMC0weGZmZmZdDQo+IFsgICAgMC4xNTQyNzBdIHBjaV9idXMgMDAw
+MDowMDogcm9vdCBidXMgcmVzb3VyY2UgW21lbSAweDAxMDAwMDAwLQ0KPiAweDAxZWZmZmZmXQ0K
+PiBbICAgIDAuMTU0MzA2XSBwY2kgMDAwMDowMDowMC4wOiBbMTZjMzphYmNkXSB0eXBlIDAxIGNs
+YXNzIDB4MDYwNDAwDQo+IFsgICAgMC4xNTQzMzNdIHBjaSAwMDAwOjAwOjAwLjA6IHJlZyAweDEw
+OiBbbWVtIDB4MDAwMDAwMDAtMHgwMDBmZmZmZl0NCj4gWyAgICAwLjE1NDM1Ml0gcGNpIDAwMDA6
+MDA6MDAuMDogcmVnIDB4Mzg6IFttZW0gMHgwMDAwMDAwMC0weDAwMDBmZmZmDQo+IHByZWZdDQo+
+IFsgICAgMC4xNTQzNzddIHBjaSAwMDAwOjAwOjAwLjA6IElPTU1VIGlzIGN1cnJlbnRseSBub3Qg
+c3VwcG9ydGVkIGZvcg0KPiBQQ0kNCj4gWyAgICAwLjE1NDQyOV0gcGNpIDAwMDA6MDA6MDAuMDog
+c3VwcG9ydHMgRDENCj4gWyAgICAwLjE1NDQ0MF0gcGNpIDAwMDA6MDA6MDAuMDogUE1FIyBzdXBw
+b3J0ZWQgZnJvbSBEMCBEMSBEM2hvdCBEM2NvbGQNCj4gWyAgICAwLjE1NDY4M10gUENJOiBidXMw
+OiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMgZGlzYWJsZWQNCj4gWyAgICAwLjE1NDgwNl0g
+UENJOiBidXMxOiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMgZW5hYmxlZA0KPiBbICAgIDAu
+MTU0ODg0XSBwY2kgMDAwMDowMDowMC4wOiBCQVIgMDogYXNzaWduZWQgW21lbSAweDAxMDAwMDAw
+LQ0KPiAweDAxMGZmZmZmXQ0KPiBbICAgIDAuMTU0OTAzXSBwY2kgMDAwMDowMDowMC4wOiBCQVIg
+NjogYXNzaWduZWQgW21lbSAweDAxMTAwMDAwLQ0KPiAweDAxMTBmZmZmDQo+IHByZWZdDQo+IFsg
+ICAgMC4xNTQ5MTddIHBjaSAwMDAwOjAwOjAwLjA6IFBDSSBicmlkZ2UgdG8gW2J1cyAwMV0NCj4g
+WyAgICAwLjE1NTE0NV0gcGNpZXBvcnQgMDAwMDowMDowMC4wOiBTaWduYWxpbmcgUE1FIHRocm91
+Z2ggUENJZSBQTUUNCj4gaW50ZXJydXB0DQo+IFsgICAgMC4xNTUxNjFdIHBjaWVfcG1lIDAwMDA6
+MDA6MDAuMDpwY2llMDE6IHNlcnZpY2UgZHJpdmVyIHBjaWVfcG1lDQo+IGxvYWRlZA0KPiBbICAg
+IDAuMTU1Mjc5XSBhZXIgMDAwMDowMDowMC4wOnBjaWUwMjogc2VydmljZSBkcml2ZXIgYWVyIGxv
+YWRlZA0KPiBbICAgIDEuMTg4ODQwXSBlaGNpLXBjaTogRUhDSSBQQ0kgcGxhdGZvcm0gZHJpdmVy
+DQo+IFsgICAgMS4yMzI1MThdIG9oY2ktcGNpOiBPSENJIFBDSSBwbGF0Zm9ybSBkcml2ZXINCj4g
+DQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1
+bnN1YnNjcmliZSBsaW51eC1wY2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
+cmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92
+Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
