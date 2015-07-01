@@ -1,304 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:35313 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753024AbbGTNrJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 09:47:09 -0400
-Received: by igr7 with SMTP id 7so13806683igr.0
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 06:47:09 -0700 (PDT)
-Date: Mon, 20 Jul 2015 08:47:04 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>
-Cc: Gregor Dick <gdick@solarflare.com>
-Subject: Re: [PATCH 1/8] PCI: Allocate ATS struct during enumeration
-Message-ID: <20150720134704.GA16841@google.com>
-References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150717213152.18379.50159.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from foss.arm.com ([217.140.101.70]:46564 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751008AbbGARcy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 1 Jul 2015 13:32:54 -0400
+Message-ID: <55942441.3050705@arm.com>
+Date: Wed, 01 Jul 2015 18:32:49 +0100
+From: James Morse <james.morse@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150717213152.18379.50159.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"kishon@ti.com" <kishon@ti.com>,
+	"xobs@kosagi.com" <xobs@kosagi.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v3 2/5] PCI: designware: Add ARM64 support
+References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com> <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs> <5593F899.6050306@arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E6A2@lhreml503-mbs>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D4E6A2@lhreml503-mbs>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 17, 2015 at 04:31:52PM -0500, Bjorn Helgaas wrote:
-> Previously, we allocated pci_ats structures when an IOMMU driver called
-> pci_enable_ats().  An SR-IOV VF shares the STU setting with its PF, so when
-> enabling ATS on the VF, we allocated a pci_ats struct for the PF if it
-> didn't already have one.  We held the sriov->lock to serialize threads
-> concurrently enabling ATS on several VFS so only one would allocate the PF
-> pci_ats.
-> 
-> Gregor reported a deadlock here:
-> 
->   pci_enable_sriov
->     sriov_enable
->       virtfn_add
->         mutex_lock(dev->sriov->lock)      # acquire sriov->lock
->         pci_device_add
->           device_add
->             BUS_NOTIFY_ADD_DEVICE notifier chain
->             iommu_bus_notifier
->               amd_iommu_add_device        # iommu_ops.add_device
->                 init_iommu_group
->                   iommu_group_get_for_dev
->                     iommu_group_add_device
->                       __iommu_attach_device
->                         amd_iommu_attach_device  # iommu_ops.attach_device
->                           attach_device
->                             pci_enable_ats
->                               mutex_lock(dev->sriov->lock) # deadlock
-> 
-> There's no reason to delay allocating the pci_ats struct, and if we
-> allocate it for each device at enumeration-time, there's no need for
-> locking in pci_enable_ats().
-> 
-> Allocate pci_ats struct during enumeration, when we initialize other
-> capabilities.
-> 
-> Note that this implementation requires ATS to be enabled on the PF first,
-> before on any of the VFs because the PF controls the STU for all the VFs.
-> 
-> Link: http://permalink.gmane.org/gmane.linux.kernel.iommu/9433
-> Reported-by: Gregor Dick <gdick@solarflare.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/ats.c       |   81 +++++++++++++++--------------------------------
->  drivers/pci/probe.c     |    3 ++
->  drivers/pci/remove.c    |    1 +
->  include/linux/pci-ats.h |    1 -
->  include/linux/pci.h     |    9 +++++
->  5 files changed, 38 insertions(+), 57 deletions(-)
-> 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index a8099d4..923759f 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -17,7 +17,7 @@
->  
->  #include "pci.h"
->  
-> -static int ats_alloc_one(struct pci_dev *dev, int ps)
-> +static void ats_alloc_one(struct pci_dev *dev)
->  {
->  	int pos;
->  	u16 cap;
-> @@ -25,20 +25,17 @@ static int ats_alloc_one(struct pci_dev *dev, int ps)
->  
->  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
->  	if (!pos)
-> -		return -ENODEV;
-> +		return;
->  
->  	ats = kzalloc(sizeof(*ats), GFP_KERNEL);
->  	if (!ats)
-> -		return -ENOMEM;
-> +		return;
->  
->  	ats->pos = pos;
-> -	ats->stu = ps;
->  	pci_read_config_word(dev, pos + PCI_ATS_CAP, &cap);
->  	ats->qdep = PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) :
->  					    PCI_ATS_MAX_QDEP;
->  	dev->ats = ats;
-> -
-> -	return 0;
->  }
->  
->  static void ats_free_one(struct pci_dev *dev)
-> @@ -47,6 +44,16 @@ static void ats_free_one(struct pci_dev *dev)
->  	dev->ats = NULL;
->  }
->  
-> +void pci_ats_init(struct pci_dev *dev)
-> +{
-> +	ats_alloc_one(dev);
-> +}
-> +
-> +void pci_ats_free(struct pci_dev *dev)
-> +{
-> +	ats_free_one(dev);
-> +}
-> +
->  /**
->   * pci_enable_ats - enable the ATS capability
->   * @dev: the PCI device
-> @@ -56,43 +63,29 @@ static void ats_free_one(struct pci_dev *dev)
->   */
->  int pci_enable_ats(struct pci_dev *dev, int ps)
->  {
-> -	int rc;
->  	u16 ctrl;
->  
->  	BUG_ON(dev->ats && dev->ats->is_enabled);
->  
-> -	if (ps < PCI_ATS_MIN_STU)
-> +	if (!dev->ats)
->  		return -EINVAL;
->  
-> -	if (dev->is_physfn || dev->is_virtfn) {
-> -		struct pci_dev *pdev = dev->is_physfn ? dev : dev->physfn;
-> -
-> -		mutex_lock(&pdev->sriov->lock);
-> -		if (pdev->ats)
-> -			rc = pdev->ats->stu == ps ? 0 : -EINVAL;
-> -		else
-> -			rc = ats_alloc_one(pdev, ps);
-> +	if (ps < PCI_ATS_MIN_STU)
-> +		return -EINVAL;
->  
-> -		if (!rc)
-> -			pdev->ats->ref_cnt++;
-> -		mutex_unlock(&pdev->sriov->lock);
-> -		if (rc)
-> -			return rc;
-> -	}
-> +	ctrl = PCI_ATS_CTRL_ENABLE;
-> +	if (dev->is_virtfn) {
-> +		struct pci_dev *pdev = dev->physfn;
->  
-> -	if (!dev->is_physfn) {
-> -		rc = ats_alloc_one(dev, ps);
-> -		if (rc)
-> -			return rc;
-> +		if (pdev->ats->stu != ps)
-> +			return -EINVAL;
-> +	} else {
-> +		dev->ats->stu = ps;
-> +		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
->  	}
+Gabriele Paoloni wrote:
+>> Both series are applied to v4.1, use the same .config file, and the
+>> same dtb.
+>> I will investigate further.
+>>
+>> (Re-testing v2 works, so this isn't an interim hardware failure)
+>
+> This is a bit weird....
+>
+> Patch 2/5 is the only one that affect platforms different from Hisilicon
+>
+> The only difference between V3 patch[2/5] and v2 patch[2/4] is
 
-I forgot to mention in the changelog that this changes the semantics of
-pci_enable_ats(): previously, you could enable ATS on a VF before enabling
-it on a PF.  The first call on either a PF or VF established the STU, and
-subsequent calls for related VFs or PF would fail if they tried to use a
-different STU.  If you disabled ATS on all the PF/VFs, you could start over
-with a different STU.
+Between v3:2/5 and your replacement for v2:2/4, which arrived after I had
+tested the v2 series. As the patch has been replaced with a different one -
+neither 'tested-by' is true any more.
 
-With this patch, you have to enable ATS on a PF first, before enabling it
-on any of its VFs.  The VFs must use the same STU as the PF.  And there's
-no way to change the STU unless the device is removed and re-enumerated.
+It looks like the BAR containing the bridge window is not being assigned,
+so no devices on bus 1 are discovered.
 
-I think this is sufficient for current usage, but let me know if it's not.
+I will send the full v2 and v3 dmesg output separately.
 
-> -
-> -	ctrl = PCI_ATS_CTRL_ENABLE;
-> -	if (!dev->is_virtfn)
-> -		ctrl |= PCI_ATS_CTRL_STU(ps - PCI_ATS_MIN_STU);
->  	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl);
->  
->  	dev->ats->is_enabled = 1;
-> -
->  	return 0;
->  }
->  EXPORT_SYMBOL_GPL(pci_enable_ats);
-> @@ -112,19 +105,6 @@ void pci_disable_ats(struct pci_dev *dev)
->  	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl);
->  
->  	dev->ats->is_enabled = 0;
-> -
-> -	if (dev->is_physfn || dev->is_virtfn) {
-> -		struct pci_dev *pdev = dev->is_physfn ? dev : dev->physfn;
-> -
-> -		mutex_lock(&pdev->sriov->lock);
-> -		pdev->ats->ref_cnt--;
-> -		if (!pdev->ats->ref_cnt)
-> -			ats_free_one(pdev);
-> -		mutex_unlock(&pdev->sriov->lock);
-> -	}
-> -
-> -	if (!dev->is_physfn)
-> -		ats_free_one(dev);
->  }
->  EXPORT_SYMBOL_GPL(pci_disable_ats);
->  
-> @@ -140,7 +120,6 @@ void pci_restore_ats_state(struct pci_dev *dev)
->  	ctrl = PCI_ATS_CTRL_ENABLE;
->  	if (!dev->is_virtfn)
->  		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
-> -
->  	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl);
->  }
->  EXPORT_SYMBOL_GPL(pci_restore_ats_state);
-> @@ -159,23 +138,13 @@ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
->   */
->  int pci_ats_queue_depth(struct pci_dev *dev)
->  {
-> -	int pos;
-> -	u16 cap;
-> -
->  	if (dev->is_virtfn)
->  		return 0;
->  
->  	if (dev->ats)
->  		return dev->ats->qdep;
->  
-> -	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
-> -	if (!pos)
-> -		return -ENODEV;
-> -
-> -	pci_read_config_word(dev, pos + PCI_ATS_CAP, &cap);
-> -
-> -	return PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) :
-> -				       PCI_ATS_MAX_QDEP;
-> +	return -ENODEV;
->  }
->  EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
->  
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cefd636..c206398 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1540,6 +1540,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	/* Single Root I/O Virtualization */
->  	pci_iov_init(dev);
->  
-> +	/* Address Translation Services */
-> +	pci_ats_init(dev);
-> +
->  	/* Enable ACS P2P upstream forwarding */
->  	pci_enable_acs(dev);
->  }
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 8a280e9..27617b8 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -26,6 +26,7 @@ static void pci_stop_dev(struct pci_dev *dev)
->  		dev->is_added = 0;
->  	}
->  
-> +	pci_ats_free(dev);
->  	if (dev->bus->self)
->  		pcie_aspm_exit_link_state(dev);
->  }
-> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-> index 7203178..d2e8170 100644
-> --- a/include/linux/pci-ats.h
-> +++ b/include/linux/pci-ats.h
-> @@ -8,7 +8,6 @@ struct pci_ats {
->  	int pos;        /* capability position */
->  	int stu;        /* Smallest Translation Unit */
->  	int qdep;       /* Invalidate Queue Depth */
-> -	int ref_cnt;    /* Physical Function reference count */
->  	unsigned int is_enabled:1;      /* Enable bit is set */
->  };
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8a0321a..5c277f1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1294,6 +1294,15 @@ int  ht_create_irq(struct pci_dev *dev, int idx);
->  void ht_destroy_irq(unsigned int irq);
->  #endif /* CONFIG_HT_IRQ */
->  
-> +#ifdef CONFIG_PCI_ATS
-> +/* Address Translation Service */
-> +void pci_ats_init(struct pci_dev *dev);
-> +void pci_ats_free(struct pci_dev *dev);
-> +#else
-> +static inline void pci_ats_init(struct pci_dev *) { }
-> +static inline void pci_ats_free(struct pci_dev *) { }
-> +#endif
-> +
->  void pci_cfg_access_lock(struct pci_dev *dev);
->  bool pci_cfg_access_trylock(struct pci_dev *dev);
->  void pci_cfg_access_unlock(struct pci_dev *dev);
-> 
+
+Thanks,
+
+James
+
