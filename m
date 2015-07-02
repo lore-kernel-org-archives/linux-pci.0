@@ -1,91 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:35176 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884AbbG3Gpt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 02:45:49 -0400
-Received: by pdrg1 with SMTP id g1so19297418pdr.2
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 23:45:49 -0700 (PDT)
-References: <1438169598-24490-1-git-send-email-lorenzo.pieralisi@arm.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1438169598-24490-1-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <256F19A7-C8DB-4744-9E08-70D8EE6BCE6D@gmail.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from foss.arm.com ([217.140.101.70]:50546 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753237AbbGBRkh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jul 2015 13:40:37 -0400
+Message-ID: <55957790.9060802@arm.com>
+Date: Thu, 02 Jul 2015 18:40:32 +0100
+From: James Morse <james.morse@arm.com>
+MIME-Version: 1.0
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	James Morse <james.morse@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jayachandran C <jchandra@broadcom.com>,
+	Jingoo Han <jg1.han@samsung.com>,
 	Pratyush Anand <pratyush.anand@gmail.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Simon Horman <horms@verge.net.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>
-From: Jingoo Han <jingoohan1@gmail.com>
-Subject: Re: [PATCH v4 1/2] ARM: PCI: bios32: replace panic with WARN messages on failures
-Date: Thu, 30 Jul 2015 15:45:42 +0900
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"kishon@ti.com" <kishon@ti.com>,
+	"xobs@kosagi.com" <xobs@kosagi.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v3 2/5] PCI: designware: Add ARM64 support
+References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com> <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs> <5593F899.6050306@arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E6A2@lhreml503-mbs> <55942441.3050705@arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4EC38@lhreml503-mbs>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D4EC38@lhreml503-mbs>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015. 7. 29., at PM 8:33, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+On 02/07/15 08:24, Gabriele Paoloni wrote:
+>> It looks like the BAR containing the bridge window is not being assigned,
+>> so no devices on bus 1 are discovered.
 > 
-> In the ARM PCI bios32 layer, failures to dynamically allocate pci_sys_data
-> for a PCI bus, or a PCI bus scan failure have to be considered serious
-> warnings but they should not trigger a system panic so that at least the
-> system is given a chance to be debugged.
-> 
-> This patch replaces the panic statements with WARN() messages to
-> improve error reporting in the ARM PCI bios32 layer.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Marc Zyngier <marc.zyngier@arm.com>
+> Can you confirm the dtsi you are using..."imx6qdl.dtsi" ?
 
-Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
+Yes, that looks right.
 
-Best regards,
-Jingoo Han
+The on-disk file was 'imx6q-sabrelite.dtb' when I received the board, I
+replaced it with the one from the v4.1 kernel tree.
 
-> ---
-> arch/arm/kernel/bios32.c | 10 ++++++----
-> 1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index fcbbbb1..a5c782c 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -459,8 +459,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
-> 
->    for (nr = busnr = 0; nr < hw->nr_controllers; nr++) {
->        sys = kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL);
-> -        if (!sys)
-> -            panic("PCI: unable to allocate sys data!");
-> +        if (WARN(!sys, "PCI: unable to allocate sys data!"))
-> +            break;
-> 
-> #ifdef CONFIG_PCI_MSI
->        sys->msi_ctrl = hw->msi_ctrl;
-> @@ -489,8 +489,10 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->                sys->bus = pci_scan_root_bus(parent, sys->busnr,
->                        hw->ops, sys, &sys->resources);
-> 
-> -            if (!sys->bus)
-> -                panic("PCI: unable to scan bus!");
-> +            if (WARN(!sys->bus, "PCI: unable to scan bus!")) {
-> +                kfree(sys);
-> +                break;
-> +            }
-> 
->            busnr = sys->bus->busn_res.end + 1;
-> 
-> -- 
-> 2.2.1
-> 
+Decompiled from /sys/firmware/fdt (to eliminate bootloader trickery), the
+pcie section reads:
+pcie@0x01000000 {
+	compatible = "fsl,imx6q-pcie", "snps,dw-pcie";
+	reg = <0x1ffc000 0x4000 0x1f00000 0x80000>;
+	reg-names = "dbi", "config";
+	#address-cells = <0x3>;
+	#size-cells = <0x2>;
+	device_type = "pci";
+	ranges = <0x800 0x0 0x1f00000 0x1f00000 0x0 0x80000 0x81000000 0x0 0x0
+0x1f80000 0x0 0x10000 0x82000000 0x0 0x1000000 0x1000000 0x0 0xf00000>;
+	num-lanes = <0x1>;
+	interrupts = <0x0 0x78 0x4>;
+	interrupt-names = "msi";
+	#interrupt-cells = <0x1>;
+	interrupt-map-mask = <0x0 0x0 0x0 0x7>;
+	interrupt-map = <0x0 0x0 0x0 0x1 0x1 0x0 0x7b 0x4 0x0 0x0 0x0 0x2 0x1 0x0
+0x7a 0x4 0x0 0x0 0x0 0x3 0x1 0x0 0x79 0x4 0x0 0x0 0x0 0x4 0x1 0x0 0x78 0x4>;
+	clocks = <0x3 0x90 0x3 0xce 0x3 0xbd>;
+	clock-names = "pcie", "pcie_bus", "pcie_phy";
+	status = "okay";
+};
+
+
+
+James
