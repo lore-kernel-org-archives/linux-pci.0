@@ -1,135 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:36958 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110AbbGUUaX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 16:30:23 -0400
-Received: by igbpg9 with SMTP id pg9so116914448igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 13:30:23 -0700 (PDT)
-Date: Tue, 21 Jul 2015 15:30:18 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/4] PCI: iproc: enable arm64 support for iProc PCIe
-Message-ID: <20150721203018.GH21967@google.com>
-References: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
- <1437021563-29139-2-git-send-email-rjui@broadcom.com>
+Received: from cantor2.suse.de ([195.135.220.15]:60519 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754155AbbGBStK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jul 2015 14:49:10 -0400
+Date: Thu, 2 Jul 2015 20:49:04 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Casey Leedom <leedom@chelsio.com>, Arnd Bergmann <arnd@arndb.de>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Juergen Gross <jgross@suse.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	"ville.syrjala@linux.intel.com" <ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <jbeulich@suse.com>,
+	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
+Subject: Re: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+Message-ID: <20150702184904.GA7021@wotan.suse.de>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
+ <1435189081.3790.24.camel@kernel.crashing.org>
+ <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
+ <6806026.xb91q6Ad7G@wuerfel>
+ <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>
+ <1435284123.3822.24.camel@kernel.crashing.org>
+ <4985EFDD773FCB459EF7915D2A3621ADC03621@nice.asicdesigners.com>
+ <1435356048.26815.9.camel@kernel.crashing.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437021563-29139-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1435356048.26815.9.camel@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 15, 2015 at 09:39:20PM -0700, Ray Jui wrote:
-> This patch enables arm64 support to the iProc PCIe driver
+On Sat, Jun 27, 2015 at 08:00:48AM +1000, Benjamin Herrenschmidt wrote:
+> On Fri, 2015-06-26 at 16:24 +0000, Casey Leedom wrote:
+> >   Thanks for looking into this Ben.  As it stands now, it seems as
+> > if Write Combined mappings simply aren't supported and/or all
+> > driver writers trying to utilize Write Combined mappings have to
+> > "hand roll" their own solutions which really isn't supportable.
+> > 
+> >   One thing that might be considered is simply to treat the desire
+> > to utilize the Write Combining hardware as a separate issue and
+> > develop writel_wc(), writeq_wc(), etc.
 
-This needs a little more explanation: ARM has a common struct pci_sys_data
-but ARM64 does not, and ARM needs pci_fixup_irqs() but ARM64 does not (why
-not?), ARM uses the common pci_sys_data for the PCI sysdata while ARM64
-uses a driver-specific sysdata, etc.
+That seems rather sloppy and cumbersome, its best to just provide the
+infrastructure for initial mapping for an area and let the hardware do it for
+you. With the current design drivers would just use regular read/write on all
+areas and the only thing that will set them apart will be the mapping.  With
+what you propose we'd end up having to shift a whole bunch of reads/writes for
+just the purpose of adding WC to an area that didn't have wc before. That's
+a waste of code and time.
 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> Reviewed-by: Scott Branden <sbranden@broadcom.com>
-> ---
->  drivers/pci/host/pcie-iproc.c |   15 ++++-----------
->  drivers/pci/host/pcie-iproc.h |    8 ++++++--
->  2 files changed, 10 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index d77481e..8a556d5 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -58,11 +58,6 @@
->  #define SYS_RC_INTX_EN               0x330
->  #define SYS_RC_INTX_MASK             0xf
->  
-> -static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
-> -{
-> -	return sys->private_data;
-> -}
-> -
->  /**
->   * Note access to the configuration registers are protected at the higher layer
->   * by 'pci_lock' in drivers/pci/access.c
-> @@ -71,8 +66,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
->  					    unsigned int devfn,
->  					    int where)
->  {
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct iproc_pcie *pcie = sys_to_pcie(sys);
-> +	struct iproc_pcie *pcie = bus->sysdata;
->  	unsigned slot = PCI_SLOT(devfn);
->  	unsigned fn = PCI_FUNC(devfn);
->  	unsigned busno = bus->number;
-> @@ -208,10 +202,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  
->  	iproc_pcie_reset(pcie);
->  
-> -	pcie->sysdata.private_data = pcie;
-> -
-> -	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
-> -				  &pcie->sysdata, res);
-> +	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, pcie, res);
->  	if (!bus) {
->  		dev_err(pcie->dev, "unable to create PCI root bus\n");
->  		ret = -ENOMEM;
-> @@ -229,7 +220,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  
->  	pci_scan_child_bus(bus);
->  	pci_assign_unassigned_bus_resources(bus);
-> +#ifdef CONFIG_ARM
->  	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
-> +#endif
->  	pci_bus_add_devices(bus);
->  
->  	return 0;
-> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-> index ba0a108..0ee9673 100644
-> --- a/drivers/pci/host/pcie-iproc.h
-> +++ b/drivers/pci/host/pcie-iproc.h
-> @@ -18,18 +18,22 @@
->  
->  /**
->   * iProc PCIe device
-> + * @sysdata: Per PCI controller data. This needs to be kept at the beginning of
-> + * struct iproc_pcie, to enable support of both ARM32 and ARM64 platforms with
-> + * minimal changes in the iProc PCIe core driver
->   * @dev: pointer to device data structure
->   * @base: PCIe host controller I/O register base
->   * @resources: linked list of all PCI resources
-> - * @sysdata: Per PCI controller data
->   * @root_bus: pointer to root bus
->   * @phy: optional PHY device that controls the Serdes
->   * @irqs: interrupt IDs
->   */
->  struct iproc_pcie {
-> +#ifdef CONFIG_ARM
-> +	struct pci_sys_data sysdata;
-> +#endif
+> > Those could be defined
+> > as legal only for Write Combined Mappings and would "do the
+> > right thing" for each architecture.  
 
-I'm OK with adding #ifdefs to make this work on both ARM and ARM64.  We can
-at least see the ifdefs and know what needs to be fixed.  I'm a little more
-hesitant about adding code that depends on the position of sysdata within
-struct iproc_pcie.  I'd rather have something ugly and robust that cries
-out for fixing than something minimal and fragile.
+Yuck.
 
-I see that your v1 patch added #ifdef CONFIG_ARM around sysdata at its
-original location below, and you mentioned that you took Arnd's advice to
-move sysdata to the beginning of the structure, but I don't see Arnd's
-email on the list.
+> The question then is what is "the right thing". In the powerpc case,
+> we'll have a non-garded mapping, which means we also get no ordering
+> between load and stores.
 
->  	struct device *dev;
->  	void __iomem *base;
-> -	struct pci_sys_data sysdata;
->  	struct pci_bus *root_bus;
->  	struct phy *phy;
->  	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
-> -- 
-> 1.7.9.5
-> 
+I don't follow, you *ordering* between load and stores for WC? We should
+not need that for WC, its why WC is used for only very specific things
+such as framebuffer and PIO (which BTw I still don't quite get all this
+use case for infiniband to be honest, and I will note I do see some
+proprietary hardware extensions like bursts but nothing covering all
+this in a general doc, I think I think it all just has to do that this
+is a hardware hack in reality, which we sell as a feature).
+
+  Luis
