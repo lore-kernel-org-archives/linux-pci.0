@@ -1,51 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH 2/6] arm: mach-socfpga: enable pci support
-Date: Tue, 28 Jul 2015 18:45:41 +0800
-Message-ID: <1438080345-7233-3-git-send-email-lftan@altera.com>
-In-Reply-To: <1438080345-7233-1-git-send-email-lftan@altera.com>
-References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:34492 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753511AbbGBXXr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2015 19:23:47 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150626073028.GA14776@pd.tnic>
+References: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
+ <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
+ <20150625230437.GA4362@sci.fi> <CAB=NE6V0HGCkpYFghUyyk=+St-494Y8e9PEakF9F7cEB8vpKvA@mail.gmail.com>
+ <20150625231103.GB4362@sci.fi> <20150626010927.GI3005@wotan.suse.de> <20150626073028.GA14776@pd.tnic>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Thu, 2 Jul 2015 16:23:26 -0700
+Message-ID: <CAB=NE6Uac5x4+fr9d7OymaKS9nG=Da3h+qW7Ni0o0XGOSagEdg@mail.gmail.com>
+Subject: Re: [PATCH v5 1/3] video: fbdev: atyfb: clarify ioremap() base and
+ length used
+To: Borislav Petkov <bp@suse.de>
+Cc: =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@redhat.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Rob Clark <robdclark@gmail.com>,
+	Mathias Krause <minipli@googlemail.com>,
+	Andrzej Hajda <a.hajda@samsung.com>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Davidlohr Bueso <dbueso@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable CONFIG_ARCH_SUPPORT_MSI and CONFIG_PCI in SOCFPGA platform.
+On Fri, Jun 26, 2015 at 12:30 AM, Borislav Petkov <bp@suse.de> wrote:
+> On Fri, Jun 26, 2015 at 03:09:27AM +0200, Luis R. Rodriguez wrote:
+>> Sure, mind this as a follow up patch if its too late?
+>
+> No need, you can send me an updated one - I'll replace it.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- arch/arm/mach-socfpga/Kconfig | 2 ++
- 1 file changed, 2 insertions(+)
+Will do!
 
-diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-socfpga/Kconfig
-index 90efdeb..7ff4576 100644
---- a/arch/arm/mach-socfpga/Kconfig
-+++ b/arch/arm/mach-socfpga/Kconfig
-@@ -1,6 +1,7 @@
- menuconfig ARCH_SOCFPGA
- 	bool "Altera SOCFPGA family" if ARCH_MULTI_V7
- 	select ARCH_SUPPORTS_BIG_ENDIAN
-+	select ARCH_SUPPORTS_MSI
- 	select ARM_AMBA
- 	select ARM_GIC
- 	select CACHE_L2X0
-@@ -9,6 +10,7 @@ menuconfig ARCH_SOCFPGA
- 	select HAVE_ARM_SCU
- 	select HAVE_ARM_TWD if SMP
- 	select MFD_SYSCON
-+	select PCI
- 
- if ARCH_SOCFPGA
- config SOCFPGA_SUSPEND
--- 
-1.8.2.1
-
+  Luis
