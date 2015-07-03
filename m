@@ -1,113 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dfwrgout.huawei.com ([206.16.17.72]:4132 "EHLO
-	dfwrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981AbbG0Ktq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 06:49:46 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v4] PCI: Store PCIe bus address in struct of_pci_range
-Date: Mon, 27 Jul 2015 10:41:34 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D6DCBB@lhreml503-mbs>
-References: <1437574937-135566-1-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1437574937-135566-1-git-send-email-gabriele.paoloni@huawei.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+Received: from stargate.chelsio.com ([67.207.112.58]:19683 "EHLO
+	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753624AbbGCAQp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 2 Jul 2015 20:16:45 -0400
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2098\))
+Subject: Re: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
+From: Casey Leedom <leedom@chelsio.com>
+In-Reply-To: <20150702184904.GA7021@wotan.suse.de>
+Date: Thu, 2 Jul 2015 17:14:06 -0700
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Juergen Gross <jgross@suse.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Ingo Molnar <mingo@elte.hu>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
+	Stefan Bader <stefan.bader@canonical.com>,
+	"ville.syrjala@linux.intel.com" <ville.syrjala@linux.intel.com>,
+	David Vrabel <david.vrabel@citrix.com>,
+	Jan Beulich <jbeulich@suse.com>,
+	=?utf-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>
+Message-Id: <6530C037-E976-42B0-B719-4171657E45A9@chelsio.com>
+References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com> <1435189081.3790.24.camel@kernel.crashing.org> <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com> <6806026.xb91q6Ad7G@wuerfel> <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com> <1435284123.3822.24.camel@kernel.crashing.org> <4985EFDD773FCB459EF7915D2A3621ADC03621@nice.asicdesigners.com> <1435356048.26815.9.camel@kernel.crashing.org> <20150702184904.GA7021@wotan.suse.de>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-U2VudCAiW1BBVENIIHY1XSBQQ0k6IFN0b3JlIFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0IG9m
-X3BjaV9yYW5nZSIgd2l0aCBSb2IgSGVycmluZyBhY2sNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KPiBGcm9tOiBHYWJyaWVsZSBQYW9sb25pDQo+IFNlbnQ6IFdlZG5lc2RheSwgSnVs
-eSAyMiwgMjAxNSAzOjIyIFBNDQo+IFRvOiBHYWJyaWVsZSBQYW9sb25pOyBhcm5kQGFybmRiLmRl
-OyBsb3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tOw0KPiBXYW5nemhvdSAoQik7IGJoZWxnYWFzQGdv
-b2dsZS5jb207IHJvYmgrZHRAa2VybmVsLm9yZzsNCj4gamFtZXMubW9yc2VAYXJtLmNvbTsgTGl2
-aXUuRHVkYXVAYXJtLmNvbQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgt
-YXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiBkZXZpY2V0cmVlQHZnZXIua2VybmVs
-Lm9yZzsgWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsNCj4gcWl1emhlbmZhOyBM
-aWd1b3podSAoS2VubmV0aCkNCj4gU3ViamVjdDogW1BBVENIIHY0XSBQQ0k6IFN0b3JlIFBDSWUg
-YnVzIGFkZHJlc3MgaW4gc3RydWN0IG9mX3BjaV9yYW5nZQ0KPiANCj4gRnJvbTogZ2FicmllbGUg
-cGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiANCj4gICAgIFRoaXMgcGF0
-Y2ggaXMgbmVlZGVkIHBvcnQgUENJZSBkZXNpZ253YXJlIHRvIG5ldyBEVCBwYXJzaW5nIEFQSQ0K
-PiAgICAgQXMgZGlzY3Vzc2VkIGluDQo+ICAgICBodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9w
-aXBlcm1haWwvbGludXgtYXJtLWtlcm5lbC8yMDE1LQ0KPiBKYW51YXJ5LzMxNzc0My5odG1sDQo+
-ICAgICBpbiBkZXNpZ253YXJlIHdlIGhhdmUgYSBwcm9ibGVtIGFzIHRoZSBQQ0kgYWRkcmVzc2Vz
-IGluIHRoZSBQQ0llDQo+IGNvbnRyb2xsZXINCj4gICAgIGFkZHJlc3Mgc3BhY2UgYXJlIHJlcXVp
-cmVkIGluIG9yZGVyIHRvIHBlcmZvcm0gY29ycmVjdCBIVyBvcGVyYXRpb24uDQo+IA0KPiAgICAg
-SW4gb3JkZXIgdG8gc29sdmUgdGhpcyBwcm9ibGVtIGNvbW1pdA0KPiAgICAgZjRjNTVjNWEzICJQ
-Q0k6IGRlc2lnbndhcmU6IFByb2dyYW0gQVRVIHdpdGggdW50cmFuc2xhdGVkIGFkZHJlc3MiDQo+
-ICAgICBhZGRlZCBjb2RlIHRvIHJlYWQgdGhlIFBDSWUgY29udHJvbGxlciBzdGFydCBhZGRyZXNz
-IGRpcmVjdGx5IGZyb20NCj4gdGhlDQo+ICAgICBEVCByYW5nZXMuDQo+IA0KPiAgICAgSW4gdGhl
-IG5ldyBEVCBwYXJzaW5nIEFQSSBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcygpIGhp
-ZGVzDQo+IHRoZQ0KPiAgICAgRFQgcGFyc2VyIGZyb20gdGhlIGhvc3QgY29udHJvbGxlciBkcml2
-ZXJzLCBzbyBpdCBpcyBub3QgcG9zc2libGUNCj4gICAgIGZvciBkcml2ZXJzIHRvIHBhcnNlIHZh
-bHVlcyBkaXJlY3RseSBmcm9tIHRoZSBEVC4NCj4gDQo+ICAgICBJbiBodHRwOi8vd3d3LnNwaW5p
-Y3MubmV0L2xpc3RzL2xpbnV4LXBjaS9tc2c0MjU0MC5odG1sIHdlIGFscmVhZHkNCj4gdHJpZWQN
-Cj4gICAgIHRvIHVzZSB0aGUgbmV3IERUIHBhcnNpbmcgQVBJIGJ1dCB0aGVyZSBpcyBhIGJ1ZyAo
-b2J2aW91c2x5KSBpbg0KPiBzZXR0aW5nDQo+ICAgICB0aGUgPCo+X21vZF9iYXNlIGFkZHJlc3Nl
-cw0KPiAgICAgQXBwbHlpbmcgdGhpcyBwYXRjaCB3ZSBjYW4gZWFzaWx5IHNldCAiPCo+X21vZF9i
-YXNlID0gd2luLQ0KPiA+X19yZXMuc3RhcnQiDQo+IA0KPiAgICAgVGhpcyBwYXRjaCBhZGRzIGEg
-bmV3IGZpZWxkIGluICJzdHJ1Y3Qgb2ZfcGNpX3JhbmdlIiB0byBzdG9yZSB0aGUNCj4gICAgIHBj
-aSBidXMgc3RhcnQgYWRkcmVzczsgaXQgZmlsbHMgdGhlIGZpZWxkIGluDQo+IG9mX3BjaV9yYW5n
-ZV9wYXJzZXJfb25lKCk7DQo+ICAgICBpbiBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNl
-cygpIGl0IHJldHJpZXZlcyB0aGUgcmVzb3VyY2UNCj4gZW50cnkNCj4gICAgIGFmdGVyIGl0IGlz
-IGNyZWF0ZWQgYW5kIGFkZGVkIHRvIHRoZSByZXNvdXJjZSBsaXN0IGFuZCB1c2VzDQo+ICAgICBl
-bnRyeS0+X19yZXMuc3RhcnQgdG8gc3RvcmUgdGhlIHBjaSBjb250cm9sbGVyIGFkZHJlc3MNCj4g
-DQo+ICAgICB0aGUgcGF0Y2ggaXMgYmFzZWQgb24gNC4yLXJjMQ0KPiANCj4gICAgIFNpZ25lZC1v
-ZmYtYnk6IEdhYnJpZWxlIFBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4NCj4g
-ICAgIEFja2VkLWJ5OiBMaXZpdSBEdWRhdSA8TGl2aXUuRHVkYXVAYXJtLmNvbT4NCj4gLS0tDQo+
-ICBkcml2ZXJzL29mL2FkZHJlc3MuYyAgICAgICB8IDIgKysNCj4gIGRyaXZlcnMvb2Yvb2ZfcGNp
-LmMgICAgICAgIHwgNCArKysrDQo+ICBpbmNsdWRlL2xpbnV4L29mX2FkZHJlc3MuaCB8IDEgKw0K
-PiAgMyBmaWxlcyBjaGFuZ2VkLCA3IGluc2VydGlvbnMoKykNCj4gDQo+IGRpZmYgLS1naXQgYS9k
-cml2ZXJzL29mL2FkZHJlc3MuYyBiL2RyaXZlcnMvb2YvYWRkcmVzcy5jDQo+IGluZGV4IDhiZmRh
-NmEuLjIzYTU3OTMgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvb2YvYWRkcmVzcy5jDQo+ICsrKyBi
-L2RyaXZlcnMvb2YvYWRkcmVzcy5jDQo+IEBAIC0yNTMsNiArMjUzLDcgQEAgc3RydWN0IG9mX3Bj
-aV9yYW5nZSAqb2ZfcGNpX3JhbmdlX3BhcnNlcl9vbmUoc3RydWN0DQo+IG9mX3BjaV9yYW5nZV9w
-YXJzZXIgKnBhcnNlciwNCj4gIAkJCQkJCXN0cnVjdCBvZl9wY2lfcmFuZ2UgKnJhbmdlKQ0KPiAg
-ew0KPiAgCWNvbnN0IGludCBuYSA9IDMsIG5zID0gMjsNCj4gKwljb25zdCBpbnQgcF9ucyA9IG9m
-X25fc2l6ZV9jZWxscyhwYXJzZXItPm5vZGUpOw0KPiANCj4gIAlpZiAoIXJhbmdlKQ0KPiAgCQly
-ZXR1cm4gTlVMTDsNCj4gQEAgLTI2NSw2ICsyNjYsNyBAQCBzdHJ1Y3Qgb2ZfcGNpX3JhbmdlICpv
-Zl9wY2lfcmFuZ2VfcGFyc2VyX29uZShzdHJ1Y3QNCj4gb2ZfcGNpX3JhbmdlX3BhcnNlciAqcGFy
-c2VyLA0KPiAgCXJhbmdlLT5wY2lfYWRkciA9IG9mX3JlYWRfbnVtYmVyKHBhcnNlci0+cmFuZ2Ug
-KyAxLCBucyk7DQo+ICAJcmFuZ2UtPmNwdV9hZGRyID0gb2ZfdHJhbnNsYXRlX2FkZHJlc3MocGFy
-c2VyLT5ub2RlLA0KPiAgCQkJCXBhcnNlci0+cmFuZ2UgKyBuYSk7DQo+ICsJcmFuZ2UtPmJ1c19h
-ZGRyID0gb2ZfcmVhZF9udW1iZXIocGFyc2VyLT5yYW5nZSArIG5hLCBwX25zKTsNCj4gIAlyYW5n
-ZS0+c2l6ZSA9IG9mX3JlYWRfbnVtYmVyKHBhcnNlci0+cmFuZ2UgKyBwYXJzZXItPnBuYSArIG5h
-LA0KPiBucyk7DQo+IA0KPiAgCXBhcnNlci0+cmFuZ2UgKz0gcGFyc2VyLT5ucDsNCj4gZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvb2Yvb2ZfcGNpLmMgYi9kcml2ZXJzL29mL29mX3BjaS5jDQo+IGluZGV4
-IDU3NTFkYzUuLmZlNTcwMzAgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvb2Yvb2ZfcGNpLmMNCj4g
-KysrIGIvZHJpdmVycy9vZi9vZl9wY2kuYw0KPiBAQCAtMTk4LDYgKzE5OCw3IEBAIGludCBvZl9w
-Y2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcyhzdHJ1Y3QNCj4gZGV2aWNlX25vZGUgKmRldiwN
-Cj4gDQo+ICAJcHJfZGVidWcoIlBhcnNpbmcgcmFuZ2VzIHByb3BlcnR5Li4uXG4iKTsNCj4gIAlm
-b3JfZWFjaF9vZl9wY2lfcmFuZ2UoJnBhcnNlciwgJnJhbmdlKSB7DQo+ICsJCXN0cnVjdCByZXNv
-dXJjZV9lbnRyeSAqZW50cnk7DQo+ICAJCS8qIFJlYWQgbmV4dCByYW5nZXMgZWxlbWVudCAqLw0K
-PiAgCQlpZiAoKHJhbmdlLmZsYWdzICYgSU9SRVNPVVJDRV9UWVBFX0JJVFMpID09IElPUkVTT1VS
-Q0VfSU8pDQo+ICAJCQlzbnByaW50ZihyYW5nZV90eXBlLCA0LCAiIElPIik7DQo+IEBAIC0yNDAs
-NiArMjQxLDkgQEAgaW50IG9mX3BjaV9nZXRfaG9zdF9icmlkZ2VfcmVzb3VyY2VzKHN0cnVjdA0K
-PiBkZXZpY2Vfbm9kZSAqZGV2LA0KPiAgCQl9DQo+IA0KPiAgCQlwY2lfYWRkX3Jlc291cmNlX29m
-ZnNldChyZXNvdXJjZXMsIHJlcywJcmVzLT5zdGFydCAtDQo+IHJhbmdlLnBjaV9hZGRyKTsNCj4g
-KwkJZW50cnkgPSBsaXN0X2xhc3RfZW50cnkocmVzb3VyY2VzLCBzdHJ1Y3QgcmVzb3VyY2VfZW50
-cnksDQo+IG5vZGUpOw0KPiArCQkvKiB3ZSBhcmUgdXNpbmcgX19yZXMgZm9yIHN0b3JpbmcgdGhl
-IFBDSSBjb250cm9sbGVyDQo+IGFkZHJlc3MgKi8NCj4gKwkJZW50cnktPl9fcmVzLnN0YXJ0ID0g
-cmFuZ2UuYnVzX2FkZHI7DQo+ICAJfQ0KPiANCj4gIAlyZXR1cm4gMDsNCj4gZGlmZiAtLWdpdCBh
-L2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5oIGIvaW5jbHVkZS9saW51eC9vZl9hZGRyZXNzLmgN
-Cj4gaW5kZXggZDg4ZTgxYi4uODY1Zjk2ZSAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9saW51eC9v
-Zl9hZGRyZXNzLmgNCj4gKysrIGIvaW5jbHVkZS9saW51eC9vZl9hZGRyZXNzLmgNCj4gQEAgLTE2
-LDYgKzE2LDcgQEAgc3RydWN0IG9mX3BjaV9yYW5nZSB7DQo+ICAJdTMyIHBjaV9zcGFjZTsNCj4g
-IAl1NjQgcGNpX2FkZHI7DQo+ICAJdTY0IGNwdV9hZGRyOw0KPiArCXU2NCBidXNfYWRkcjsNCj4g
-IAl1NjQgc2l6ZTsNCj4gIAl1MzIgZmxhZ3M7DQo+ICB9Ow0KPiAtLQ0KPiAxLjkuMQ0KDQo=
+
+> On Jul 2, 2015, at 11:49 AM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> 
+> On Sat, Jun 27, 2015 at 08:00:48AM +1000, Benjamin Herrenschmidt wrote:
+>> On Fri, 2015-06-26 at 16:24 +0000, Casey Leedom wrote:
+>>>  Thanks for looking into this Ben.  As it stands now, it seems as
+>>> if Write Combined mappings simply aren't supported and/or all
+>>> driver writers trying to utilize Write Combined mappings have to
+>>> "hand roll" their own solutions which really isn't supportable.
+>>> 
+>>>  One thing that might be considered is simply to treat the desire
+>>> to utilize the Write Combining hardware as a separate issue and
+>>> develop writel_wc(), writeq_wc(), etc.
+> 
+> That seems rather sloppy and cumbersome, its best to just provide the
+> infrastructure for initial mapping for an area and let the hardware do it for
+> you. With the current design drivers would just use regular read/write on all
+> areas and the only thing that will set them apart will be the mapping.  With
+> what you propose we'd end up having to shift a whole bunch of reads/writes for
+> just the purpose of adding WC to an area that didn't have wc before. That's
+> a waste of code and time.
+> 
+>>> Those could be defined
+>>> as legal only for Write Combined Mappings and would "do the
+>>> right thing" for each architecture.  
+> 
+> Yuck.
+
+  Yeah, probably.  But it sounds like from Ben’s response, we should really use write_relaxed() as an already existing API for this.  But most of the architectures just define this as writel() so some work would need to be done to get it to work.
+
+>> The question then is what is "the right thing". In the powerpc case,
+>> we'll have a non-garded mapping, which means we also get no ordering
+>> between load and stores.
+> 
+> I don't follow, you *ordering* between load and stores for WC? We should
+> not need that for WC, its why WC is used for only very specific things
+> such as framebuffer and PIO (which BTw I still don't quite get all this
+> use case for infiniband to be honest, and I will note I do see some
+> proprietary hardware extensions like bursts but nothing covering all
+> this in a general doc, I think I think it all just has to do that this
+> is a hardware hack in reality, which we sell as a feature).
+
+  I was talking about the work that our drivers (cxgb4, cxgb4vf, etc.) do to ensure correct ordering between writes to memory and I/O space.  For instance, issuing a wmb() between writes to a DMA buffer and the write to a register telling the hardware that the data is available.  This isn’t necessary on the Strongly Ordered Intel architectures but is necessary on other architectures.
+
+Casey
