@@ -1,57 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38742 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752825AbbGOMR0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 08:17:26 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, <linux-omap@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v4 12/19] irqchip: gicv3-its: Register irq domain with NEXUS token
-Date: Wed, 15 Jul 2015 13:16:46 +0100
-Message-Id: <1436962613-17359-13-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	<kishon@ti.com>
+CC: <nsekhar@ti.com>
+Subject: [PATCH 3/3] PCI: host: pci-dra7xx: add pm support to pci dra7xx
+Date: Fri, 3 Jul 2015 16:33:45 +0530
+Message-ID: <1435921425-15121-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1435921425-15121-1-git-send-email-kishon@ti.com>
+References: <1435921425-15121-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we can distinguish between multiple domains carrying the
-same device_node, tag the raw ITS domain with DOMAIN_BUS_NEXUS.
-This will allow MSI providers built on top of the raw ITS domain
-to identify it.
+Add PM support to pci-dra7xx so that PCI clocks can be disabled
+during suspend and enabled back during resume without affecting
+PCI functionality.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/irqchip/irq-gic-v3-its.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/host/pci-dra7xx.c |   74 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 7c01fe4..3f95826 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -1407,13 +1407,14 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index d8b6d66..1f5c039 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -433,6 +433,79 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
+ 	return 0;
+ }
  
- 	if (of_property_read_bool(its->msi_chip.of_node, "msi-controller")) {
--		its->domain = irq_domain_add_tree(NULL, &its_domain_ops, its);
-+		its->domain = irq_domain_add_tree(node, &its_domain_ops, its);
- 		if (!its->domain) {
- 			err = -ENOMEM;
- 			goto out_free_tables;
- 		}
++#ifdef CONFIG_PM_SLEEP
++static int dra7xx_pcie_suspend(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	struct pcie_port *pp = &dra7xx->pp;
++
++	dw_pcie_suspend_rc(pp);
++
++	return 0;
++}
++
++static int dra7xx_pcie_resume(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	struct pcie_port *pp = &dra7xx->pp;
++
++	dw_pcie_resume_rc(pp);
++
++	return 0;
++}
++static int dra7xx_pcie_suspend_noirq(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	int count = dra7xx->phy_count;
++
++	while (count--) {
++		phy_power_off(dra7xx->phy[count]);
++		phy_exit(dra7xx->phy[count]);
++	}
++
++	return 0;
++}
++static int dra7xx_pcie_resume_noirq(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	int phy_count = dra7xx->phy_count;
++	int ret;
++	int i;
++
++	for (i = 0; i < phy_count; i++) {
++		ret = phy_init(dra7xx->phy[i]);
++		if (ret < 0)
++			goto err_phy;
++
++		ret = phy_power_on(dra7xx->phy[i]);
++		if (ret < 0) {
++			phy_exit(dra7xx->phy[i]);
++			goto err_phy;
++		}
++	}
++
++	return 0;
++
++err_phy:
++	while (--i >= 0) {
++		phy_power_off(dra7xx->phy[i]);
++		phy_exit(dra7xx->phy[i]);
++	}
++
++	return ret;
++}
++
++static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
++	.suspend_noirq = dra7xx_pcie_suspend_noirq,
++	.suspend = dra7xx_pcie_suspend,
++	.resume_noirq = dra7xx_pcie_resume_noirq,
++	.resume = dra7xx_pcie_resume,
++};
++#define DEV_PM_OPS	(&dra7xx_pcie_pm_ops)
++#else
++#define DEV_PM_OPS	NULL
++#endif
++
+ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ 	{ .compatible = "ti,dra7-pcie", },
+ 	{},
+@@ -444,6 +517,7 @@ static struct platform_driver dra7xx_pcie_driver = {
+ 	.driver = {
+ 		.name	= "dra7-pcie",
+ 		.of_match_table = of_dra7xx_pcie_match,
++		.pm	= DEV_PM_OPS,
+ 	},
+ };
  
- 		its->domain->parent = parent;
-+		its->domain->bus_token = DOMAIN_BUS_NEXUS_MSI;
- 
- 		its->msi_chip.domain = its_pci_msi_alloc_domain(node,
- 								its->domain);
 -- 
-2.1.4
+1.7.9.5
 
