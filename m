@@ -1,154 +1,395 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v5 13/19] irqchip: gicv3-its: Get rid of struct msi_controller
-Date: Thu, 23 Jul 2015 10:26:32 +0100
-Message-Id: <1437643598-19795-14-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
-References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, g5983969@trbvm.com,
+	Roland Dreier <roland@purestorage.com>
+Subject: [PATCH] ACPI / PNP: Reserve ACPI resources at the fs_initcall_sync stage
+Date: Sat, 04 Jul 2015 03:09:03 +0200
+Message-ID: <5042629.WJWA6bekh1@vostro.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The GICv3 ITS only uses the msi_controller structure as a way
-to match the host bridge with its MSI HW, and thus the msi_domain.
-But now that we can directly associate an msi_domain with a device,
-there is no use keeping this msi_controller around.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Just remove all traces of msi_controller from the driver.
+This effectively reverts the following three commits:
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+ 7bc10388ccdd ACPI / resources: free memory on error in add_region_before()
+ 0f1b414d1907 ACPI / PNP: Avoid conflicting resource reservations
+ b9a5e5e18fbf ACPI / init: Fix the ordering of acpi_reserve_resources()
+
+(commit b9a5e5e18fbf introduced regressions some of which, but not
+all, were addressed by commit 0f1b414d1907 and commit 7bc10388ccdd
+was a fixup on top of the latter) and causes ACPI fixed hardware
+resources to be reserved at the fs_initcall_sync stage of system
+initialization.
+
+The story is as follows.  First, a boot regression was reported due
+to an apparent resource reservation ordering change after a commit
+that shouldn't lead to such changes.  Investigation led to the
+conclusion that the problem happened because acpi_reserve_resources()
+was executed at the device_initcall() stage of system initialization
+which wasn't strictly ordered with respect to driver initialization
+(and with respect to the initialization of the pcieport driver in
+particular), so a random change causing the device initcalls to be
+run in a different order might break things.
+
+The response to that was to attempt to run acpi_reserve_resources()
+as soon as we knew that ACPI would be in use (commit b9a5e5e18fbf).
+However, that turned out to be too early, because it caused resource
+reservations made by the PNP system driver to fail on at least one
+system and that failure was addressed by commit 0f1b414d1907.
+
+That fix still turned out to be insufficient, though, because
+calling acpi_reserve_resources() before the fs_initcall stage of
+system initialization caused a boot regression to happen on the
+eCAFE EC-800-H20G/S netbook.  That meant that we only could call
+acpi_reserve_resources() at the fs_initcall initialization stage
+or later, but then we might just as well call it after the PNP
+initalization in which case commit 0f1b414d1907 wouldn't be
+necessary any more.
+
+For this reason, the changes made by commit 0f1b414d1907 are reverted
+(along with a memory leak fixup on top of that commit), the changes
+made by commit b9a5e5e18fbf that went too far are reverted too and
+acpi_reserve_resources() is changed into fs_initcall_sync, which
+will cause it to be executed after the PNP subsystem initialization
+(which is an fs_initcall) and before device initcalls (including
+the pcieport driver initialization) which should avoid the initial
+issue.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=100581
+Link: http://marc.info/?t=143092384600002&r=1&w=2
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=99831
+Link: http://marc.info/?t=143389402600001&r=1&w=2
+Fixes: b9a5e5e18fbf "ACPI / init: Fix the ordering of acpi_reserve_resources()"
+Reported-by: Roland Dreier <roland@purestorage.com>
+Reported-by-and-tested-by: <g5983969@trbvm.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/irqchip/irq-gic-v3-its.c | 38 ++++++++++++++++----------------------
- 1 file changed, 16 insertions(+), 22 deletions(-)
+ drivers/acpi/osl.c      |   12 ++-
+ drivers/acpi/resource.c |  162 ------------------------------------------------
+ drivers/pnp/system.c    |   35 ++--------
+ include/linux/acpi.h    |   10 --
+ 4 files changed, 18 insertions(+), 201 deletions(-)
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 760467d..ca8b1cc 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -54,13 +54,12 @@ struct its_collection {
+Index: linux-pm/drivers/acpi/resource.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/resource.c
++++ linux-pm/drivers/acpi/resource.c
+@@ -26,7 +26,6 @@
+ #include <linux/device.h>
+ #include <linux/export.h>
+ #include <linux/ioport.h>
+-#include <linux/list.h>
+ #include <linux/slab.h>
  
- /*
-  * The ITS structure - contains most of the infrastructure, with the
-- * msi_controller, the command queue, the collections, and the list of
-- * devices writing to it.
-+ * top-level MSI domain, the command queue, the collections, and the
-+ * list of devices writing to it.
-  */
- struct its_node {
- 	raw_spinlock_t		lock;
- 	struct list_head	entry;
--	struct msi_controller	msi_chip;
- 	struct irq_domain	*domain;
- 	void __iomem		*base;
- 	unsigned long		phys_base;
-@@ -776,7 +775,7 @@ static void its_free_tables(struct its_node *its)
- 	}
+ #ifdef CONFIG_X86
+@@ -622,164 +621,3 @@ int acpi_dev_filter_resource_type(struct
+ 	return (type & types) ? 0 : 1;
+ }
+ EXPORT_SYMBOL_GPL(acpi_dev_filter_resource_type);
+-
+-struct reserved_region {
+-	struct list_head node;
+-	u64 start;
+-	u64 end;
+-};
+-
+-static LIST_HEAD(reserved_io_regions);
+-static LIST_HEAD(reserved_mem_regions);
+-
+-static int request_range(u64 start, u64 end, u8 space_id, unsigned long flags,
+-			 char *desc)
+-{
+-	unsigned int length = end - start + 1;
+-	struct resource *res;
+-
+-	res = space_id == ACPI_ADR_SPACE_SYSTEM_IO ?
+-		request_region(start, length, desc) :
+-		request_mem_region(start, length, desc);
+-	if (!res)
+-		return -EIO;
+-
+-	res->flags &= ~flags;
+-	return 0;
+-}
+-
+-static int add_region_before(u64 start, u64 end, u8 space_id,
+-			     unsigned long flags, char *desc,
+-			     struct list_head *head)
+-{
+-	struct reserved_region *reg;
+-	int error;
+-
+-	reg = kmalloc(sizeof(*reg), GFP_KERNEL);
+-	if (!reg)
+-		return -ENOMEM;
+-
+-	error = request_range(start, end, space_id, flags, desc);
+-	if (error) {
+-		kfree(reg);
+-		return error;
+-	}
+-
+-	reg->start = start;
+-	reg->end = end;
+-	list_add_tail(&reg->node, head);
+-	return 0;
+-}
+-
+-/**
+- * acpi_reserve_region - Reserve an I/O or memory region as a system resource.
+- * @start: Starting address of the region.
+- * @length: Length of the region.
+- * @space_id: Identifier of address space to reserve the region from.
+- * @flags: Resource flags to clear for the region after requesting it.
+- * @desc: Region description (for messages).
+- *
+- * Reserve an I/O or memory region as a system resource to prevent others from
+- * using it.  If the new region overlaps with one of the regions (in the given
+- * address space) already reserved by this routine, only the non-overlapping
+- * parts of it will be reserved.
+- *
+- * Returned is either 0 (success) or a negative error code indicating a resource
+- * reservation problem.  It is the code of the first encountered error, but the
+- * routine doesn't abort until it has attempted to request all of the parts of
+- * the new region that don't overlap with other regions reserved previously.
+- *
+- * The resources requested by this routine are never released.
+- */
+-int acpi_reserve_region(u64 start, unsigned int length, u8 space_id,
+-			unsigned long flags, char *desc)
+-{
+-	struct list_head *regions;
+-	struct reserved_region *reg;
+-	u64 end = start + length - 1;
+-	int ret = 0, error = 0;
+-
+-	if (space_id == ACPI_ADR_SPACE_SYSTEM_IO)
+-		regions = &reserved_io_regions;
+-	else if (space_id == ACPI_ADR_SPACE_SYSTEM_MEMORY)
+-		regions = &reserved_mem_regions;
+-	else
+-		return -EINVAL;
+-
+-	if (list_empty(regions))
+-		return add_region_before(start, end, space_id, flags, desc, regions);
+-
+-	list_for_each_entry(reg, regions, node)
+-		if (reg->start == end + 1) {
+-			/* The new region can be prepended to this one. */
+-			ret = request_range(start, end, space_id, flags, desc);
+-			if (!ret)
+-				reg->start = start;
+-
+-			return ret;
+-		} else if (reg->start > end) {
+-			/* No overlap.  Add the new region here and get out. */
+-			return add_region_before(start, end, space_id, flags,
+-						 desc, &reg->node);
+-		} else if (reg->end == start - 1) {
+-			goto combine;
+-		} else if (reg->end >= start) {
+-			goto overlap;
+-		}
+-
+-	/* The new region goes after the last existing one. */
+-	return add_region_before(start, end, space_id, flags, desc, regions);
+-
+- overlap:
+-	/*
+-	 * The new region overlaps an existing one.
+-	 *
+-	 * The head part of the new region immediately preceding the existing
+-	 * overlapping one can be combined with it right away.
+-	 */
+-	if (reg->start > start) {
+-		error = request_range(start, reg->start - 1, space_id, flags, desc);
+-		if (error)
+-			ret = error;
+-		else
+-			reg->start = start;
+-	}
+-
+- combine:
+-	/*
+-	 * The new region is adjacent to an existing one.  If it extends beyond
+-	 * that region all the way to the next one, it is possible to combine
+-	 * all three of them.
+-	 */
+-	while (reg->end < end) {
+-		struct reserved_region *next = NULL;
+-		u64 a = reg->end + 1, b = end;
+-
+-		if (!list_is_last(&reg->node, regions)) {
+-			next = list_next_entry(reg, node);
+-			if (next->start <= end)
+-				b = next->start - 1;
+-		}
+-		error = request_range(a, b, space_id, flags, desc);
+-		if (!error) {
+-			if (next && next->start == b + 1) {
+-				reg->end = next->end;
+-				list_del(&next->node);
+-				kfree(next);
+-			} else {
+-				reg->end = end;
+-				break;
+-			}
+-		} else if (next) {
+-			if (!ret)
+-				ret = error;
+-
+-			reg = next;
+-		} else {
+-			break;
+-		}
+-	}
+-
+-	return ret ? ret : error;
+-}
+-EXPORT_SYMBOL_GPL(acpi_reserve_region);
+Index: linux-pm/drivers/acpi/osl.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/osl.c
++++ linux-pm/drivers/acpi/osl.c
+@@ -175,10 +175,14 @@ static void __init acpi_request_region (
+ 	if (!addr || !length)
+ 		return;
+ 
+-	acpi_reserve_region(addr, length, gas->space_id, 0, desc);
++	/* Resources are never freed */
++	if (gas->space_id == ACPI_ADR_SPACE_SYSTEM_IO)
++		request_region(addr, length, desc);
++	else if (gas->space_id == ACPI_ADR_SPACE_SYSTEM_MEMORY)
++		request_mem_region(addr, length, desc);
  }
  
--static int its_alloc_tables(struct its_node *its)
-+static int its_alloc_tables(const char *node_name, struct its_node *its)
+-static void __init acpi_reserve_resources(void)
++static int __init acpi_reserve_resources(void)
  {
- 	int err;
- 	int i;
-@@ -819,7 +818,7 @@ static int its_alloc_tables(struct its_node *its)
- 			if (order >= MAX_ORDER) {
- 				order = MAX_ORDER - 1;
- 				pr_warn("%s: Device Table too large, reduce its page order to %u\n",
--					its->msi_chip.of_node->full_name, order);
-+					node_name, order);
- 			}
- 		}
+ 	acpi_request_region(&acpi_gbl_FADT.xpm1a_event_block, acpi_gbl_FADT.pm1_event_length,
+ 		"ACPI PM1a_EVT_BLK");
+@@ -207,7 +211,10 @@ static void __init acpi_reserve_resource
+ 	if (!(acpi_gbl_FADT.gpe1_block_length & 0x1))
+ 		acpi_request_region(&acpi_gbl_FADT.xgpe1_block,
+ 			       acpi_gbl_FADT.gpe1_block_length, "ACPI GPE1_BLK");
++
++	return 0;
+ }
++fs_initcall_sync(acpi_reserve_resources);
  
-@@ -889,7 +888,7 @@ retry_baser:
+ void acpi_os_printf(const char *fmt, ...)
+ {
+@@ -1862,7 +1869,6 @@ acpi_status __init acpi_os_initialize(vo
  
- 		if (val != tmp) {
- 			pr_err("ITS: %s: GITS_BASER%d doesn't stick: %lx %lx\n",
--			       its->msi_chip.of_node->full_name, i,
-+			       node_name, i,
- 			       (unsigned long) val, (unsigned long) tmp);
- 			err = -ENXIO;
- 			goto out_free;
-@@ -1317,6 +1316,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	struct resource res;
- 	struct its_node *its;
- 	void __iomem *its_base;
-+	struct irq_domain *inner_domain = NULL;
- 	u32 val;
- 	u64 baser, tmp;
- 	int err;
-@@ -1360,7 +1360,6 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	INIT_LIST_HEAD(&its->its_device_list);
- 	its->base = its_base;
- 	its->phys_base = res.start;
--	its->msi_chip.of_node = node;
- 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
+ acpi_status __init acpi_os_initialize1(void)
+ {
+-	acpi_reserve_resources();
+ 	kacpid_wq = alloc_workqueue("kacpid", 0, 1);
+ 	kacpi_notify_wq = alloc_workqueue("kacpi_notify", 0, 1);
+ 	kacpi_hotplug_wq = alloc_ordered_workqueue("kacpi_hotplug", 0);
+Index: linux-pm/drivers/pnp/system.c
+===================================================================
+--- linux-pm.orig/drivers/pnp/system.c
++++ linux-pm/drivers/pnp/system.c
+@@ -7,7 +7,6 @@
+  *	Bjorn Helgaas <bjorn.helgaas@hp.com>
+  */
  
- 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
-@@ -1370,7 +1369,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	}
- 	its->cmd_write = its->cmd_base;
+-#include <linux/acpi.h>
+ #include <linux/pnp.h>
+ #include <linux/device.h>
+ #include <linux/init.h>
+@@ -23,41 +22,25 @@ static const struct pnp_device_id pnp_de
+ 	{"", 0}
+ };
  
--	err = its_alloc_tables(its);
-+	err = its_alloc_tables(node->full_name, its);
- 	if (err)
- 		goto out_free_cmd;
- 
-@@ -1406,26 +1405,21 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	writeq_relaxed(0, its->base + GITS_CWRITER);
- 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
- 
--	if (of_property_read_bool(its->msi_chip.of_node, "msi-controller")) {
--		its->domain = irq_domain_add_tree(node, &its_domain_ops, its);
--		if (!its->domain) {
-+	if (of_property_read_bool(node, "msi-controller")) {
-+		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
-+		if (!inner_domain) {
- 			err = -ENOMEM;
- 			goto out_free_tables;
- 		}
- 
--		its->domain->parent = parent;
--		its->domain->bus_token = DOMAIN_BUS_NEXUS;
-+		inner_domain->parent = parent;
-+		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
- 
--		its->msi_chip.domain = its_pci_msi_alloc_domain(node,
--								its->domain);
--		if (!its->msi_chip.domain) {
-+		its->domain = its_pci_msi_alloc_domain(node, inner_domain);
-+		if (!its->domain) {
- 			err = -ENOMEM;
- 			goto out_free_domains;
- 		}
+-#ifdef CONFIG_ACPI
+-static bool __reserve_range(u64 start, unsigned int length, bool io, char *desc)
+-{
+-	u8 space_id = io ? ACPI_ADR_SPACE_SYSTEM_IO : ACPI_ADR_SPACE_SYSTEM_MEMORY;
+-	return !acpi_reserve_region(start, length, space_id, IORESOURCE_BUSY, desc);
+-}
+-#else
+-static bool __reserve_range(u64 start, unsigned int length, bool io, char *desc)
+-{
+-	struct resource *res;
 -
--		err = of_pci_msi_chip_add(&its->msi_chip);
--		if (err)
--			goto out_free_domains;
- 	}
+-	res = io ? request_region(start, length, desc) :
+-		request_mem_region(start, length, desc);
+-	if (res) {
+-		res->flags &= ~IORESOURCE_BUSY;
+-		return true;
+-	}
+-	return false;
+-}
+-#endif
+-
+ static void reserve_range(struct pnp_dev *dev, struct resource *r, int port)
+ {
+ 	char *regionid;
+ 	const char *pnpid = dev_name(&dev->dev);
+ 	resource_size_t start = r->start, end = r->end;
+-	bool reserved;
++	struct resource *res;
  
- 	spin_lock(&its_lock);
-@@ -1435,10 +1429,10 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	regionid = kmalloc(16, GFP_KERNEL);
+ 	if (!regionid)
+ 		return;
+ 
+ 	snprintf(regionid, 16, "pnp %s", pnpid);
+-	reserved = __reserve_range(start, end - start + 1, !!port, regionid);
+-	if (!reserved)
++	if (port)
++		res = request_region(start, end - start + 1, regionid);
++	else
++		res = request_mem_region(start, end - start + 1, regionid);
++	if (res)
++		res->flags &= ~IORESOURCE_BUSY;
++	else
+ 		kfree(regionid);
+ 
+ 	/*
+@@ -66,7 +49,7 @@ static void reserve_range(struct pnp_dev
+ 	 * have double reservations.
+ 	 */
+ 	dev_info(&dev->dev, "%pR %s reserved\n", r,
+-		 reserved ? "has been" : "could not be");
++		 res ? "has been" : "could not be");
+ }
+ 
+ static void reserve_resources_of_dev(struct pnp_dev *dev)
+Index: linux-pm/include/linux/acpi.h
+===================================================================
+--- linux-pm.orig/include/linux/acpi.h
++++ linux-pm/include/linux/acpi.h
+@@ -309,9 +309,6 @@ int acpi_check_region(resource_size_t st
+ 
+ int acpi_resources_are_enforced(void);
+ 
+-int acpi_reserve_region(u64 start, unsigned int length, u8 space_id,
+-			unsigned long flags, char *desc);
+-
+ #ifdef CONFIG_HIBERNATION
+ void __init acpi_no_s4_hw_signature(void);
+ #endif
+@@ -507,13 +504,6 @@ static inline int acpi_check_region(reso
  	return 0;
+ }
  
- out_free_domains:
--	if (its->msi_chip.domain)
--		irq_domain_remove(its->msi_chip.domain);
- 	if (its->domain)
- 		irq_domain_remove(its->domain);
-+	if (inner_domain)
-+		irq_domain_remove(inner_domain);
- out_free_tables:
- 	its_free_tables(its);
- out_free_cmd:
--- 
-2.1.4
+-static inline int acpi_reserve_region(u64 start, unsigned int length,
+-				      u8 space_id, unsigned long flags,
+-				      char *desc)
+-{
+-	return -ENXIO;
+-}
+-
+ struct acpi_table_header;
+ static inline int acpi_table_parse(char *id,
+ 				int (*handler)(struct acpi_table_header *))
 
