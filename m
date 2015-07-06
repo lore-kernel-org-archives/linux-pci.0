@@ -1,61 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:34107 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755955AbbGFX3N (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:29:13 -0400
-Received: by obbkm3 with SMTP id km3so117528920obb.1
-        for <linux-pci@vger.kernel.org>; Mon, 06 Jul 2015 16:29:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <cover.1435688121.git.dhdang@apm.com>
-References: <46305464.n5SOjGAhJb@wuerfel> <cover.1435688121.git.dhdang@apm.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Mon, 6 Jul 2015 16:28:43 -0700
-Message-ID: <CADaLNDmpkdHT7B1fSEu9qtoVcj4ookvxh=BA4EUCvG=pp80s=A@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] pci: xgene: Add multiple memory ranges support
+Received: from aserp1040.oracle.com ([141.146.126.69]:49574 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756229AbbGFXku (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:40:50 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	patches <patches@apm.com>, Duc Dang <dhdang@apm.com>
-Content-Type: text/plain; charset=UTF-8
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 10/36] PCI: Add debug printout during releasing partial must/optinal assigned resources
+Date: Mon,  6 Jul 2015 16:39:00 -0700
+Message-Id: <1436225966-27247-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 30, 2015 at 11:22 AM, Duc Dang <dhdang@apm.com> wrote:
-> This patch set adds 1 large (up to 64GB) memory window for each PCIe
-> controller nodes in X-Gene device tree and fix PCIe controller driver
-> to handle multiple memory ranges correctly. These changes are required
-> to support PCIe devices that has huge BAR.
->
-> v2 changes:
->         1. Separate device-tree changes and driver changes into different
->         patches
->         2. Explicitly define new large window as 64-bit prefetchable in dts
->         3. Use IORESOURCE_PREFETCH flag to determine which PCIe controller
->         register to be used to configure the memory ranges.
->
->  arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
->  drivers/pci/host/pci-xgene.c           | 12 ++++++++++--
->  2 files changed, 24 insertions(+), 11 deletions(-)
+We try to assign must+optional at first, and we only accept the result if
+all resources get allocated. Otherwise will release them, and try to
+assign must and expand to optional.
 
-Hi Arnd, Bjorn,
+We have to do that to make sure any must has priority than any optional
+addon.
 
-Do you have additional comment on this v2 patch set?
+When that happens, we only print out "assigned" info, that is
+confusing as it looks like same range is assigned to two peer
+resources at the same time.
 
->
-> --
-> 1.9.1
->
+Add printout for releasing so we have whole picture in debug messages.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 405eb1d..62dd8b7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -516,9 +516,17 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+-	list_for_each_entry(dev_res, head, list)
+-		if (dev_res->res->parent)
+-			release_resource(dev_res->res);
++	list_for_each_entry(dev_res, head, list) {
++		struct resource *res = dev_res->res;
++
++		if (res->parent) {
++			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++				   "BAR %d: released %pR\n",
++				   (int)(res - &dev_res->dev->resource[0]),
++				   res);
++			release_resource(res);
++		}
++	}
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+ 		struct resource *res = save_res->res;
 -- 
-Regards,
-Duc Dang.
+1.8.4.5
+
