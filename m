@@ -1,35 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:32839 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbbGNTo6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:44:58 -0400
-Received: by oige126 with SMTP id e126so13885378oig.0
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 12:44:58 -0700 (PDT)
-Subject: [PATCH 0/2] PCI: Comment and PCIe capability accessor fixes
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Date: Tue, 14 Jul 2015 14:44:55 -0500
-Message-ID: <20150714193757.13471.77973.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 31/36] PCI: Get new realloc size for bridge for last try
+Date: Mon,  6 Jul 2015 16:39:21 -0700
+Message-Id: <1436225966-27247-32-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These are a trivial comment fix and an almost as trivial accessor fix.
+Current realloc path would not shrink bridge resource through
+pbus_size_mem() checking with the old size.
 
-Arcanum for the day: when the PCIe spec says "Downstream Port," it means
-both Root Ports and Switch Downstream Ports.
+That cause problem: when "must+optional" resource allocation fails,
+the cached bridge resource size will prevent "must" resource to get
+allocated smaller resource.
 
+Clear the old resource size for last try or third and later try.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Tested-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
+ drivers/pci/setup-bus.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-Bjorn Helgaas (2):
-      PCI: Fix pcie_port_device_resume() comment
-      PCI: Add pcie_downstream_port() (true for Root and Switch Downstream Ports)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 5b2944a..4959f72 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2277,8 +2277,15 @@ again:
+ 		res->start = fail_res->start;
+ 		res->end = fail_res->end;
+ 		res->flags = fail_res->flags;
+-		if (fail_res->dev->subordinate)
++		if (fail_res->dev->subordinate) {
+ 			res->flags = 0;
++			/* last or third times and later */
++			if (tried_times + 1 == pci_try_num ||
++			    tried_times + 1 > 2) {
++				res->start = 0;
++				res->end = res->start - 1;
++			}
++		}
+ 	}
+ 	free_list(&fail_head);
+ 
+@@ -2352,8 +2359,12 @@ again:
+ 		res->start = fail_res->start;
+ 		res->end = fail_res->end;
+ 		res->flags = fail_res->flags;
+-		if (fail_res->dev->subordinate)
++		if (fail_res->dev->subordinate) {
+ 			res->flags = 0;
++			/* last time */
++			res->start = 0;
++			res->end = res->start - 1;
++		}
+ 	}
+ 	free_list(&fail_head);
+ 
+-- 
+1.8.4.5
 
-
- drivers/pci/access.c            |   23 +++++++++++++----------
- drivers/pci/pcie/portdrv_core.c |    2 +-
- 2 files changed, 14 insertions(+), 11 deletions(-)
