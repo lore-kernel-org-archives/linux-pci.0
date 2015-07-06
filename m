@@ -1,158 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44877 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055AbbGNWrx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:47:53 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 03/49] PCI: Use correct align for optional only resources during sorting
-Date: Tue, 14 Jul 2015 15:46:34 -0700
-Message-Id: <1436914040-13206-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>, <stable@vger.kernel.org>
+Subject: [PATCH 26/36] sparc/PCI: Add mem64 resource parsing for root bus
+Date: Mon,  6 Jul 2015 16:39:16 -0700
+Message-Id: <1436225966-27247-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During sorting before assign, we only put resource with non-zero align
-in the sorted list, so for optional resources that must size is 0 and only
-have addon parts, we need to have correct align.
+Found "no compatible bridge window" warning in boot log from T5-8.
 
-While treating SRIOV as optional resources, we always read alignment for
-SRIOV bars, so they are ok.
-Hotplug bridge resources are using STARTALIGN so it is ok when size is 0
-if we have correct start for them.
+pci 0000:00:01.0: can't claim BAR 15 [mem 0x100000000-0x4afffffff pref]: no compatible bridge window
 
-Later we want to treat the ROM BAR as optional resource, and it has
-have SIZEALIGN, we need to find a way to get align for them.
+That resource is above 4G, but does not get offset correctly as
+root bus only report io and mem32.
 
-We can use addon resource align instead in that case, and it will
-be ok for SRIOV path and hotplug bridge resource path.
+pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [bus 00-77]
 
-Sorted list will contain must resource align/size to 0/0 to hold spot for
-optional resources.
+Add mem64 handling in pci_common for sparc, so we can have 64bit resource
+registered for root bus at first.
 
-We need to pass realloc_head from sizing stage to sorting stage, and
-get entry from realloc list and calculate align from the entry.
+After patch, will have:
+pci_sun4v f02dbcfc: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x804000000000-0x80400fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x800000000000-0x80007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [mem 0x800100000000-0x8007ffffffff] (bus address [0x100000000-0x7ffffffff])
+pci_bus 0000:00: root bus resource [bus 00-77]
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
+Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: <stable@vger.kernel.org> #3.19
 ---
- drivers/pci/setup-bus.c | 50 ++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 43 insertions(+), 7 deletions(-)
+ arch/sparc/kernel/pci.c        |  7 ++++++-
+ arch/sparc/kernel/pci_common.c | 15 +++++++++++++--
+ arch/sparc/kernel/pci_impl.h   |  1 +
+ 3 files changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 247d8fe..27cb0f0 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -145,9 +145,43 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	return dev_res->min_align;
- }
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index c928bc6..bfd0b70 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -185,8 +185,10 @@ static unsigned long pci_parse_of_flags(u32 addr0)
  
-+static resource_size_t __pci_resource_alignment(
-+				struct pci_dev *dev,
-+				struct resource *r,
-+				struct list_head *realloc_head)
-+{
-+	resource_size_t r_align = pci_resource_alignment(dev, r);
-+	resource_size_t orig_start, orig_end;
-+	struct pci_dev_resource *dev_res;
-+
-+	if (r_align || !realloc_head)
-+		return r_align;
-+
-+	dev_res = res_to_dev_res(realloc_head, r);
-+	if (!dev_res || !dev_res->add_size)
-+		return r_align;
-+
-+	orig_start = r->start;
-+	orig_end = r->end;
-+	r->end += dev_res->add_size;
-+	if ((r->flags & IORESOURCE_STARTALIGN)) {
-+		resource_size_t r_size = resource_size(r);
-+		resource_size_t add_align = dev_res->min_align;
-+
-+		r->start = add_align;
-+		r->end = add_align + r_size - 1;
-+	}
-+	r_align = pci_resource_alignment(dev, r);
-+	r->start = orig_start;
-+	r->end = orig_end;
-+
-+	return r_align;
-+}
- 
- /* Sort resources by alignment */
--static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
-+static void pdev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
-+				 struct list_head *head)
- {
- 	int i;
- 
-@@ -165,7 +199,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		if (!(r->flags) || r->parent)
- 			continue;
- 
--		r_align = pci_resource_alignment(dev, r);
-+		r_align = __pci_resource_alignment(dev, r, realloc_head);
- 		if (!r_align) {
- 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
- 				 i, r);
-@@ -183,8 +217,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		list_for_each_entry(dev_res, head, list) {
- 			resource_size_t align;
- 
--			align = pci_resource_alignment(dev_res->dev,
--							 dev_res->res);
-+			align = __pci_resource_alignment(dev_res->dev,
-+							 dev_res->res,
-+							 realloc_head);
- 
- 			if (r_align > align) {
- 				n = &dev_res->list;
-@@ -197,6 +232,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- }
- 
- static void __dev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
- 	u16 class = dev->class >> 8;
-@@ -213,7 +249,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
- 			return;
+ 	if (addr0 & 0x02000000) {
+ 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
+-		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
++		if (addr0 & 0x01000000)
++			flags |= IORESOURCE_MEM_64
++				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		if (addr0 & 0x40000000)
+ 			flags |= IORESOURCE_PREFETCH
+ 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
+@@ -660,6 +662,9 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				pbm->io_space.start);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+ 				pbm->mem_space.start);
++	if (pbm->mem64_space.flags)
++		pci_add_resource_offset(&resources, &pbm->mem64_space,
++					pbm->mem_space.start);
+ 	pbm->busn.start = pbm->pci_first_busno;
+ 	pbm->busn.end	= pbm->pci_last_busno;
+ 	pbm->busn.flags	= IORESOURCE_BUS;
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 944a065..a859a86 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -406,6 +406,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
  	}
  
--	pdev_sort_resources(dev, head);
-+	pdev_sort_resources(dev, realloc_head, head);
- }
+ 	num_pbm_ranges = i / sizeof(*pbm_ranges);
++	memset(&pbm->mem64_space, 0, sizeof(struct resource));
  
- static inline void reset_resource(struct resource *res)
-@@ -501,7 +537,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
- {
- 	LIST_HEAD(head);
+ 	for (i = 0; i < num_pbm_ranges; i++) {
+ 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
+@@ -451,7 +452,11 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			break;
  
--	__dev_sort_resources(dev, &head);
-+	__dev_sort_resources(dev, add_head, &head);
- 	__assign_resources_sorted(&head, add_head, fail_head);
+ 		case 3:
+-			/* XXX 64-bit MEM handling XXX */
++			/* 64-bit MEM handling */
++			pbm->mem64_space.start = a;
++			pbm->mem64_space.end = a + size - 1UL;
++			pbm->mem64_space.flags = IORESOURCE_MEM;
++			break;
  
- }
-@@ -514,7 +550,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
- 	LIST_HEAD(head);
+ 		default:
+ 			break;
+@@ -465,15 +470,21 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 		prom_halt();
+ 	}
  
- 	list_for_each_entry(dev, &bus->devices, bus_list)
--		__dev_sort_resources(dev, &head);
-+		__dev_sort_resources(dev, realloc_head, &head);
+-	printk("%s: PCI IO[%llx] MEM[%llx]\n",
++	printk("%s: PCI IO[%llx] MEM[%llx]",
+ 	       pbm->name,
+ 	       pbm->io_space.start,
+ 	       pbm->mem_space.start);
++	if (pbm->mem64_space.flags)
++		printk(" MEM64[%llx]",
++		       pbm->mem64_space.start);
++	printk("\n");
  
- 	__assign_resources_sorted(&head, realloc_head, fail_head);
- }
+ 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
+ 
+ 	request_resource(&ioport_resource, &pbm->io_space);
+ 	request_resource(&iomem_resource, &pbm->mem_space);
++	if (pbm->mem64_space.flags)
++		request_resource(&iomem_resource, &pbm->mem64_space);
+ 
+ 	pci_register_legacy_regions(&pbm->io_space,
+ 				    &pbm->mem_space);
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 75803c7..37222ca 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -97,6 +97,7 @@ struct pci_pbm_info {
+ 	/* PBM I/O and Memory space resources. */
+ 	struct resource			io_space;
+ 	struct resource			mem_space;
++	struct resource			mem64_space;
+ 	struct resource			busn;
+ 
+ 	/* Base of PCI Config space, can be per-PBM or shared. */
 -- 
 1.8.4.5
 
