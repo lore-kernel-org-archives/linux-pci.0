@@ -1,110 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:59111 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932405AbbG1Nqv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 09:46:51 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:17254 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756193AbbGFXkq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:40:46 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
-Subject: [PATCH v6 08/19] platform: of: Assign MSI domain to platform device
-Date: Tue, 28 Jul 2015 14:46:15 +0100
-Message-Id: <1438091186-10244-9-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
-References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 06/36] PCI: Reorder resources list for must/optional resources
+Date: Mon,  6 Jul 2015 16:38:56 -0700
+Message-Id: <1436225966-27247-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As for PCI, we're able to populate the msi_domain field at probe time,
-provided that the device tree has an "msi-parent" property.
+After we update size and alignment for must+optional resource, we
+reorder them with new alignment.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+For SIZEALIGN type resource, after add back add_size, the alignment
+get changed, so need to do the sorting like STARTALIGN type resources.
+
+Also we need to reorder the sorting back after we restore
+resource to must only when must+optional fail to allocate for all.
+
+So move out the reordering code from the loop to separated function,
+and call it two times accordingly.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/of/irq.c          | 21 +++++++++++++++++++++
- drivers/of/platform.c     |  1 +
- include/linux/irqdomain.h |  1 +
- include/linux/of_irq.h    |  1 +
- 4 files changed, 24 insertions(+)
+ drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 37 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index 3cf7a01..2956d72 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -18,6 +18,7 @@
-  * driver.
-  */
- 
-+#include <linux/device.h>
- #include <linux/errno.h>
- #include <linux/list.h>
- #include <linux/module.h>
-@@ -576,3 +577,23 @@ err:
- 		kfree(desc);
- 	}
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d13f55c..81f6bc4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -282,6 +282,31 @@ static inline void reset_resource(struct resource *res)
+ 	res->flags = 0;
  }
-+
-+/**
-+ * of_msi_configure - Set the msi_domain field of a device
-+ * @dev: device structure to associate with an MSI irq domain
-+ * @np: device node for that device
-+ */
-+void of_msi_configure(struct device *dev, struct device_node *np)
+ 
++static void __sort_resources(struct list_head *head)
 +{
-+	struct device_node *msi_np;
-+	struct irq_domain *d;
++	struct pci_dev_resource *res1, *tmp_res, *res2;
 +
-+	msi_np = of_parse_phandle(np, "msi-parent", 0);
-+	if (!msi_np)
-+		return;
++	list_for_each_entry_safe(res1, tmp_res, head, list) {
++		resource_size_t align1, size1, align2, size2;
 +
-+	d = irq_find_matching_host(msi_np, DOMAIN_BUS_PLATFORM_MSI);
-+	if (!d)
-+		d = irq_find_host(msi_np);
-+	dev_set_msi_domain(dev, d);
++		align1 = pci_resource_alignment(res1->dev, res1->res);
++		size1 = resource_size(res1->res);
++
++		/* reorder it */
++		list_for_each_entry(res2, head, list) {
++			if (res2 == res1)
++				break;
++
++			align2 = pci_resource_alignment(res2->dev, res2->res);
++			size2 = resource_size(res2->res);
++			if (is_before(align1, size1, align2, size2)) {
++				list_move_tail(&res1->list, &res2->list);
++				break;
++			}
++		}
++	}
 +}
-diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-index ddf8e42..8a002d6 100644
---- a/drivers/of/platform.c
-+++ b/drivers/of/platform.c
-@@ -184,6 +184,7 @@ static struct platform_device *of_platform_device_create_pdata(
- 	dev->dev.bus = &platform_bus_type;
- 	dev->dev.platform_data = platform_data;
- 	of_dma_configure(&dev->dev, dev->dev.of_node);
-+	of_msi_configure(&dev->dev, dev->dev.of_node);
- 
- 	if (of_device_add(dev) != 0) {
- 		of_dma_deconfigure(&dev->dev);
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 25e9e66..b4a74f7 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -55,6 +55,7 @@ struct irq_data;
- enum irq_domain_bus_token {
- 	DOMAIN_BUS_ANY		= 0,
- 	DOMAIN_BUS_PCI_MSI,
-+	DOMAIN_BUS_PLATFORM_MSI,
- };
- 
++
  /**
-diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
-index d884929..4bcbd58 100644
---- a/include/linux/of_irq.h
-+++ b/include/linux/of_irq.h
-@@ -74,6 +74,7 @@ static inline int of_irq_to_resource_table(struct device_node *dev,
-  */
- extern unsigned int irq_of_parse_and_map(struct device_node *node, int index);
- extern struct device_node *of_irq_find_parent(struct device_node *child);
-+extern void of_msi_configure(struct device *dev, struct device_node *np);
+  * reassign_resources_sorted() - satisfy any additional resource requests
+  *
+@@ -444,9 +469,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
++	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+-	resource_size_t add_align, align;
++	resource_size_t add_align;
  
- #else /* !CONFIG_OF */
- static inline unsigned int irq_of_parse_and_map(struct device_node *dev,
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -461,47 +486,32 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++	list_for_each_entry(dev_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+-		 * Here just fix the additional alignment for bridge
++		 * 1. bridge resource with IORESOURCE_STARTALIGN
++		 *    need to update start to change alignment
++		 * 2. resource with IORESOURCE_SIZEALIGN
++		 *    update size above already change alignment.
+ 		 */
+ 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+ 		add_align = get_res_add_align(realloc_head, dev_res->res);
+ 
+-		/*
+-		 * The "head" list is sorted by the alignment to make sure
+-		 * resources with bigger alignment will be assigned first.
+-		 * After we change the alignment of a dev_res in "head" list,
+-		 * we need to reorder the list by alignment to make it
+-		 * consistent.
+-		 */
+-		if (add_align > dev_res->res->start) {
++		if (add_align) {
+ 			resource_size_t r_size = resource_size(dev_res->res);
+ 
+ 			dev_res->res->start = add_align;
+ 			dev_res->res->end = add_align + r_size - 1;
+-
+-			list_for_each_entry(dev_res2, head, list) {
+-				align = pci_resource_alignment(dev_res2->dev,
+-							       dev_res2->res);
+-				if (add_align > align) {
+-					list_move_tail(&dev_res->list,
+-						       &dev_res2->list);
+-					break;
+-				}
+-			}
+                }
+-
+ 	}
+ 
++	__sort_resources(head);
++
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -543,6 +553,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	free_list(&save_head);
+ 
++	__sort_resources(head);
++
+ requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
 -- 
-2.1.4
+1.8.4.5
 
