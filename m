@@ -2,91 +2,65 @@ Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 01/51] PCI: Cleanup res_to_dev_res() printout for addon resources
-Date: Mon, 27 Jul 2015 16:29:19 -0700
-Message-Id: <1438039809-24957-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH 23/36] PCI: Add has_mem64 for host_bridge
+Date: Mon,  6 Jul 2015 16:39:13 -0700
+Message-Id: <1436225966-27247-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now get_res_add_size and get_res_add_align all have same printout
-from res_to_dev_res(), and it is confusing.
-
-Move out debug messages printout from res_to_dev_res(),
-and later we will reuse res_to_dev_res() in other functions.
+On system that does not support mmio64 above 4g, will not set that.
+We will use that info next two following patches:
+1. Don't treat non-pref mmio64 as pref mmio, so will not put
+   it under bridge's pref range when rescan the devices
+2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
+ drivers/pci/probe.c | 9 +++++++++
+ include/linux/pci.h | 1 +
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 508cc56..f0fa705 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -104,19 +104,9 @@ static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
- {
- 	struct pci_dev_resource *dev_res;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 010d8d9..14bdbca 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2051,6 +2051,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
+ 	}
  
--	list_for_each_entry(dev_res, head, list) {
--		if (dev_res->res == res) {
--			int idx = res - &dev_res->dev->resource[0];
--
--			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
--				 idx, dev_res->res,
--				 (unsigned long long)dev_res->add_size,
--				 (unsigned long long)dev_res->min_align);
--
-+	list_for_each_entry(dev_res, head, list)
-+		if (dev_res->res == res)
- 			return dev_res;
--		}
--	}
- 
- 	return NULL;
- }
-@@ -127,7 +117,15 @@ static resource_size_t get_res_add_size(struct list_head *head,
- 	struct pci_dev_resource *dev_res;
- 
- 	dev_res = res_to_dev_res(head, res);
--	return dev_res ? dev_res->add_size : 0;
-+	if (!dev_res || !dev_res->add_size)
-+		return 0;
++	resource_list_for_each_entry(window, &bridge->windows) {
++		res = window->res;
++		if (resource_type(res) == IORESOURCE_MEM &&
++		    (res->end - window->offset) > 0xffffffff) {
++			bridge->has_mem64 = 1;
++			break;
++		}
++	}
 +
-+	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
-+		   "BAR %d: %pR get_res_add_size add_size   %llx\n",
-+		   (int)(res - &dev_res->dev->resource[0]),
-+		   res, (unsigned long long)dev_res->add_size);
-+
-+	return dev_res->add_size;
- }
+ 	down_write(&pci_bus_sem);
+ 	list_add_tail(&b->node, &pci_root_buses);
+ 	up_write(&pci_bus_sem);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 33ef25f..0771b37 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -409,6 +409,7 @@ struct pci_host_bridge {
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
++	unsigned int has_mem64:1;
+ };
  
- static resource_size_t get_res_add_align(struct list_head *head,
-@@ -136,7 +134,15 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	struct pci_dev_resource *dev_res;
- 
- 	dev_res = res_to_dev_res(head, res);
--	return dev_res ? dev_res->min_align : 0;
-+	if (!dev_res || !dev_res->min_align)
-+		return 0;
-+
-+	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
-+		   "BAR %d: %pR get_res_add_align min_align %llx\n",
-+		   (int)(res - &dev_res->dev->resource[0]),
-+		   res, (unsigned long long)dev_res->min_align);
-+
-+	return dev_res->min_align;
- }
- 
- 
+ #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
 -- 
 1.8.4.5
 
