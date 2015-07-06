@@ -1,38 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 3/3] x86/pci/intel_mid_pci: fix a sparse warning
-Date: Wed, 29 Jul 2015 12:16:49 +0300
-Message-Id: <1438161409-4671-4-git-send-email-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <1438161409-4671-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1438161409-4671-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49901 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756383AbbGFXlv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:41:51 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 24/36] PCI: Only treat non-pef mmio64 as pref if host-bridge has_mem64
+Date: Mon,  6 Jul 2015 16:39:14 -0700
+Message-Id: <1436225966-27247-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes the following sparse warning.
-arch/x86/pci/intel_mid_pci.c:265:16: warning: symbol 'intel_mid_pci_ops' was not declared. Should it be static?
+If host bridge does not have mmio64 above 4G, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/intel_mid_pci.c | 2 +-
+ drivers/pci/setup-bus.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 3361f0a..b096da5 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -263,7 +263,7 @@ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- 	}
- }
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index ab7bafe..e8e9029 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1010,7 +1010,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
+ {
+ 	if (pci_is_root_bus(bus))
+-		return true;
++		return to_pci_host_bridge(bus->bridge)->has_mem64;
  
--struct pci_ops intel_mid_pci_ops = {
-+static struct pci_ops intel_mid_pci_ops = {
- 	.read = pci_read,
- 	.write = pci_write,
- };
+ 	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
+ 			   IORESOURCE_MEM_64))
 -- 
-2.4.6
+1.8.4.5
 
