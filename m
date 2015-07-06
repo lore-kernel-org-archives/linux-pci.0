@@ -1,110 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:31259 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755353AbbGGAkt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 20:40:49 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 26/51] PCI: Don't add too much optional size for hotplug bridge io
-Date: Mon, 27 Jul 2015 16:29:44 -0700
-Message-Id: <1438039809-24957-27-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 07/36] PCI: Remove duplicated code for resource sorting
+Date: Mon,  6 Jul 2015 16:38:57 -0700
+Message-Id: <1436225966-27247-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as patch for mmio (PCI: Don't add too much optional size for hotplug
-bridge mmio), and this one is addressing io port.
+Now __sort_resources, and pdev_sort_resources all have sorting
+code.
 
-It will compare must+optional with min_sum_size to get smaller
-optional size.
+We can use __sort_resources calling and remove related code in
+pdev_sort_resources.
+As we are going to call __sort_resources several places, so choose to
+keep __sort_resources instead.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ drivers/pci/setup-bus.c | 22 +++-------------------
+ 1 file changed, 3 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 2679ccc..b44921e 100644
+index 81f6bc4..a7dbf54 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1189,7 +1189,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  *
-  * @bus : the bus
-  * @min_size : the minimum io window that must to be allocated
-- * @add_size : additional optional io window
-  * @realloc_head : track the additional io window on this list
-  *
-  * Sizing the IO windows of the PCI-PCI bridge is trivial,
-@@ -1198,9 +1197,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  * We must be careful with the ISA aliasing though.
-  */
- static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
--		resource_size_t add_size, struct list_head *realloc_head)
-+			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
-+	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
-@@ -1210,6 +1211,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	if (!b_res)
- 		return;
+@@ -210,9 +210,8 @@ static void pdev_sort_resources(struct pci_dev *dev,
  
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-@@ -1239,10 +1245,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 		struct resource *r;
+-		struct pci_dev_resource *dev_res, *tmp;
++		struct pci_dev_resource *tmp;
+ 		resource_size_t r_align;
+-		struct list_head *n;
  
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_iosize(size, min_size, add_size + size1,
-+	sum_add_size = children_add_size + size + size1;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
-+	size1 = !realloc_head ? size0 :
-+		calculate_iosize(size, min_size, sum_add_size - size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1794,7 +1801,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t min_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, min_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
+ 		r = &dev->resource[i];
  
-@@ -1827,13 +1834,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	case PCI_CLASS_BRIDGE_PCI:
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
--			additional_io_size  = pci_hotplug_io_size;
-+			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
--		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
--			     additional_io_size, realloc_head);
-+		pbus_size_io(bus, min_io_size, realloc_head);
+@@ -235,22 +234,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 		tmp->res = r;
+ 		tmp->dev = dev;
  
- 		/*
- 		 * If there's a 64-bit prefetchable MMIO window, compute
+-		/* fallback is smallest one or list is empty*/
+-		n = head;
+-		list_for_each_entry(dev_res, head, list) {
+-			resource_size_t align;
+-
+-			align = __pci_resource_alignment(dev_res->dev,
+-							 dev_res->res,
+-							 realloc_head);
+-
+-			if (r_align > align) {
+-				n = &dev_res->list;
+-				break;
+-			}
+-		}
+-		/* Insert it just before n*/
+-		list_add_tail(&tmp->list, n);
++		list_add_tail(&tmp->list, head);
+ 	}
+ }
+ 
+@@ -553,9 +537,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	free_list(&save_head);
+ 
++requested_and_reassign:
+ 	__sort_resources(head);
+ 
+-requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
+ 
 -- 
 1.8.4.5
 
