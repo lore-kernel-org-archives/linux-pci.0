@@ -1,122 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:12199 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936AbbGAQs2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 12:48:28 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: James Morse <james.morse@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	"Arnd Bergmann" <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	"kishon@ti.com" <kishon@ti.com>,
-	"xobs@kosagi.com" <xobs@kosagi.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v3 2/5] PCI: designware: Add ARM64 support
-Date: Wed, 1 Jul 2015 16:47:51 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D4E6A2@lhreml503-mbs>
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
- <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs>
- <5593F899.6050306@arm.com>
-In-Reply-To: <5593F899.6050306@arm.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [PATCH 12/36] PCI: Separate realloc list checking after allocation
+Date: Mon,  6 Jul 2015 16:39:02 -0700
+Message-Id: <1436225966-27247-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdl
-ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmdd
-IE9uIEJlaGFsZiBPZiBKYW1lcyBNb3JzZQ0KPiBTZW50OiBXZWRuZXNkYXksIEp1bHkgMDEsIDIw
-MTUgMzoyNyBQTQ0KPiBUbzogR2FicmllbGUgUGFvbG9uaTsgV2FuZ3pob3UgKEIpOyBCam9ybiBI
-ZWxnYWFzOyBKaW5nb28gSGFuOyBQcmF0eXVzaA0KPiBBbmFuZDsgQXJuZCBCZXJnbWFubjsgTGl2
-aXUgRHVkYXU7IGtpc2hvbkB0aS5jb207IHhvYnNAa29zYWdpLmNvbTsgbS0NCj4ga2FyaWNoZXJp
-MkB0aS5jb207IE1pbmdodWFuLkxpYW5AZnJlZXNjYWxlLmNvbQ0KPiBDYzogbGludXgtcGNpQHZn
-ZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiBk
-ZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdq
-dWt1bzsNCj4gcWl1emhlbmZhOyBMaWd1b3podSAoS2VubmV0aCkNCj4gU3ViamVjdDogUmU6IFtQ
-QVRDSCB2MyAyLzVdIFBDSTogZGVzaWdud2FyZTogQWRkIEFSTTY0IHN1cHBvcnQNCj4gDQo+IFpo
-b3UgV2FuZyB3cm90ZToNCj4gPiBJIHRlc3RlZCB0aGlzIHBhdGNoIG9uIEQwMiBib2FyZCBvZiBI
-aXNpbGljb24uIEl0IHdvcmtzIHdlbGwuDQo+ID4gSSBoYXZlIGNvbXBpbGVkIHRoZSBkcml2ZXIg
-d2l0aCBtdWx0aV92N19kZWZjb25maWcuIEhvd2V2ZXIsIEkgZG9uJ3QNCj4gPiBoYXZlDQo+ID4g
-QVJNMzIgUENJZSByZWxhdGVkIGJvYXJkIHRvIGRvIHRlc3QuIEl0IHdpbGwgYmUgYXBwcmVjaWF0
-ZWQgaWYNCj4gc29tZW9uZQ0KPiA+IGNvdWxkDQo+ID4gaGVscCB0byB0ZXN0IGl0Lg0KPiA+DQo+
-ID4gU2lnbmVkLW9mZi1ieTogWmhvdSBXYW5nIDx3YW5nemhvdTFAaGlzaWxpY29uLmNvbT4NCj4g
-PiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPg0KPiA+IFNpZ25l
-ZC1vZmYtYnk6IEdhYnJpZWxlIFBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4N
-Cj4gPiBUZXN0ZWQtYnk6IEZhYnJpY2UgR2FzbmllciA8ZmFicmljZS5nYXNuaWVyQHN0LmNvbT4N
-Cj4gPiBUZXN0ZWQtYnk6IEphbWVzIE1vcnNlIDxqYW1lcy5tb3JzZUBhcm0uY29tPg0KPiANCj4g
-VGVzdHMgb24gdGhpcyBuZXcgc2VyaWVzLCB1c2luZyB0aGUgc2FtZSBpLk1YIDZRdWFkIGJvYXJk
-LCBhcmUgbm90DQo+IHdvcmtpbmcuDQo+IA0KPiBUaGUgbmV0d29yayBjYXJkIGlzIG5vIGxvbmdl
-ciBkZXRlY3RlZCwgYW5kIEkgZ2V0IGEgbG9ja3VwIHdoZW4NCj4gcmVtb3ZpbmcNCj4gdGhlIHJv
-b3QgYnJpZGdlIGFuZCByZXNjYW5uaW5nLg0KPiANCj4gUGFydGlhbCBkbWVzZyBvdXRwdXQgYmVs
-b3cuIFNpZ25pZmljYW50bHksIHRoZSBsaW5lczoNCj4gPiBbICAgIDAuMTUyMTI4XSBQQ0kgaG9z
-dCBicmlkZ2UgL3NvYy9wY2llQDB4MDEwMDAwMDAgcmFuZ2VzOg0KPiA+IFsgICAgMC4xNTIxNDJd
-ICAgTm8gYnVzIHJhbmdlIGZvdW5kIGZvciAvc29jL3BjaWVAMHgwMTAwMDAwMCwgdXNpbmcNCj4g
-W2J1cw0KPiAwMC1mZl0NCj4gYXJlIG5ldy4NCj4gDQo+IEJvdGggc2VyaWVzIGFyZSBhcHBsaWVk
-IHRvIHY0LjEsIHVzZSB0aGUgc2FtZSAuY29uZmlnIGZpbGUsIGFuZCB0aGUNCj4gc2FtZSBkdGIu
-DQo+IEkgd2lsbCBpbnZlc3RpZ2F0ZSBmdXJ0aGVyLg0KPiANCj4gKFJlLXRlc3RpbmcgdjIgd29y
-a3MsIHNvIHRoaXMgaXNuJ3QgYW4gaW50ZXJpbSBoYXJkd2FyZSBmYWlsdXJlKQ0KDQpUaGlzIGlz
-IGEgYml0IHdlaXJkLi4uLg0KDQpQYXRjaCAyLzUgaXMgdGhlIG9ubHkgb25lIHRoYXQgYWZmZWN0
-IHBsYXRmb3JtcyBkaWZmZXJlbnQgZnJvbSBIaXNpbGljb24NCg0KVGhlIG9ubHkgZGlmZmVyZW5j
-ZSBiZXR3ZWVuIFYzIHBhdGNoWzIvNV0gYW5kIHYyIHBhdGNoWzIvNF0gaXMNCg0KKioqKioqKioq
-KioqKg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWtleXN0b25lLWR3LmMgYi9k
-cml2ZXJzL3BjaS9ob3N0L3BjaS1rZXlzdG9uZS1kdy5jDQppbmRleCBmMzQ4OTJlLi5iMWU0MTM1
-IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2kta2V5c3RvbmUtZHcuYw0KKysrIGIv
-ZHJpdmVycy9wY2kvaG9zdC9wY2kta2V5c3RvbmUtZHcuYw0KQEAgLTMyNyw3ICszMjcsNyBAQCBz
-dGF0aWMgdm9pZCBrc19kd19wY2llX2NsZWFyX2RiaV9tb2RlKHZvaWQgX19pb21lbSAqcmVnX3Zp
-cnQpDQogdm9pZCBrc19kd19wY2llX3NldHVwX3JjX2FwcF9yZWdzKHN0cnVjdCBrZXlzdG9uZV9w
-Y2llICprc19wY2llKQ0KIHsNCiAJc3RydWN0IHBjaWVfcG9ydCAqcHAgPSAma3NfcGNpZS0+cHA7
-DQotCXUzMiBzdGFydCA9IHBwLT5tZW0uc3RhcnQsIGVuZCA9IHBwLT5tZW0uZW5kOw0KKwl1MzIg
-c3RhcnQgPSBwcC0+bWVtLT5zdGFydCwgZW5kID0gcHAtPm1lbS0+ZW5kOw0KIAlpbnQgaSwgdHJf
-c2l6ZTsNCiANCiAJLyogRGlzYWJsZSBCQVJzIGZvciBpbmJvdW5kIGFjY2VzcyAqLw0KKioqKioq
-KioqKioqKioNClRoYXQgaXMgcHJlc2VudCBpbiB2MyBidXQgbm90IGluIHYyLiBBbmQgaXQgc2hv
-dWxkIGFmZmVjdCBrZXlzdG9uZSBvbmx5Li4uLnNvIHVzaW5nIHBhdGNoIHYzIG9uIHRoZSBzYW1l
-IGJyYW5jaCB3aGVyZSB5b3UgYXBwbGllZCBwYXRjaCB2MiBJIHdvdWxkIGV4cGVjdCB0aGUgc2Ft
-ZSByZXN1bHRzLi4uDQoNCj4gDQo+IFRoYW5rcywNCj4gDQo+IEphbWVzDQo+IA0KPiANCj4gDQo+
-IHJvb3RAbG9jYWxob3N0On4jIGRtZXNnIHwgZ3JlcCAtaSBwY2kNCj4gWyAgICAwLjEyNjE4NF0g
-UENJOiBDTFMgMCBieXRlcywgZGVmYXVsdCA2NA0KPiBbICAgIDAuMTUyMTI4XSBQQ0kgaG9zdCBi
-cmlkZ2UgL3NvYy9wY2llQDB4MDEwMDAwMDAgcmFuZ2VzOg0KPiBbICAgIDAuMTUyMTQyXSAgIE5v
-IGJ1cyByYW5nZSBmb3VuZCBmb3IgL3NvYy9wY2llQDB4MDEwMDAwMDAsIHVzaW5nDQo+IFtidXMg
-MDAtZmZdDQo+IFsgICAgMC4xNTQxODNdIGlteDZxLXBjaWUgMWZmYzAwMC5wY2llOiBQQ0kgaG9z
-dCBicmlkZ2UgdG8gYnVzIDAwMDA6MDANCj4gWyAgICAwLjE1NDIwMV0gcGNpX2J1cyAwMDAwOjAw
-OiByb290IGJ1cyByZXNvdXJjZSBbYnVzIDAwLWZmXQ0KPiBbICAgIDAuMTU0MjE1XSBwY2lfYnVz
-IDAwMDA6MDA6IHJvb3QgYnVzIHJlc291cmNlIFs/Pz8NCj4gMHgwMWYwMDAwMC0weDAxZjdmZmZm
-IGZsYWdzIDB4MF0NCj4gWyAgICAwLjE1NDIyOF0gcGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyBy
-ZXNvdXJjZSBbaW8gIDB4MDAwMC0weGZmZmZdDQo+IFsgICAgMC4xNTQyNzBdIHBjaV9idXMgMDAw
-MDowMDogcm9vdCBidXMgcmVzb3VyY2UgW21lbSAweDAxMDAwMDAwLQ0KPiAweDAxZWZmZmZmXQ0K
-PiBbICAgIDAuMTU0MzA2XSBwY2kgMDAwMDowMDowMC4wOiBbMTZjMzphYmNkXSB0eXBlIDAxIGNs
-YXNzIDB4MDYwNDAwDQo+IFsgICAgMC4xNTQzMzNdIHBjaSAwMDAwOjAwOjAwLjA6IHJlZyAweDEw
-OiBbbWVtIDB4MDAwMDAwMDAtMHgwMDBmZmZmZl0NCj4gWyAgICAwLjE1NDM1Ml0gcGNpIDAwMDA6
-MDA6MDAuMDogcmVnIDB4Mzg6IFttZW0gMHgwMDAwMDAwMC0weDAwMDBmZmZmDQo+IHByZWZdDQo+
-IFsgICAgMC4xNTQzNzddIHBjaSAwMDAwOjAwOjAwLjA6IElPTU1VIGlzIGN1cnJlbnRseSBub3Qg
-c3VwcG9ydGVkIGZvcg0KPiBQQ0kNCj4gWyAgICAwLjE1NDQyOV0gcGNpIDAwMDA6MDA6MDAuMDog
-c3VwcG9ydHMgRDENCj4gWyAgICAwLjE1NDQ0MF0gcGNpIDAwMDA6MDA6MDAuMDogUE1FIyBzdXBw
-b3J0ZWQgZnJvbSBEMCBEMSBEM2hvdCBEM2NvbGQNCj4gWyAgICAwLjE1NDY4M10gUENJOiBidXMw
-OiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMgZGlzYWJsZWQNCj4gWyAgICAwLjE1NDgwNl0g
-UENJOiBidXMxOiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMgZW5hYmxlZA0KPiBbICAgIDAu
-MTU0ODg0XSBwY2kgMDAwMDowMDowMC4wOiBCQVIgMDogYXNzaWduZWQgW21lbSAweDAxMDAwMDAw
-LQ0KPiAweDAxMGZmZmZmXQ0KPiBbICAgIDAuMTU0OTAzXSBwY2kgMDAwMDowMDowMC4wOiBCQVIg
-NjogYXNzaWduZWQgW21lbSAweDAxMTAwMDAwLQ0KPiAweDAxMTBmZmZmDQo+IHByZWZdDQo+IFsg
-ICAgMC4xNTQ5MTddIHBjaSAwMDAwOjAwOjAwLjA6IFBDSSBicmlkZ2UgdG8gW2J1cyAwMV0NCj4g
-WyAgICAwLjE1NTE0NV0gcGNpZXBvcnQgMDAwMDowMDowMC4wOiBTaWduYWxpbmcgUE1FIHRocm91
-Z2ggUENJZSBQTUUNCj4gaW50ZXJydXB0DQo+IFsgICAgMC4xNTUxNjFdIHBjaWVfcG1lIDAwMDA6
-MDA6MDAuMDpwY2llMDE6IHNlcnZpY2UgZHJpdmVyIHBjaWVfcG1lDQo+IGxvYWRlZA0KPiBbICAg
-IDAuMTU1Mjc5XSBhZXIgMDAwMDowMDowMC4wOnBjaWUwMjogc2VydmljZSBkcml2ZXIgYWVyIGxv
-YWRlZA0KPiBbICAgIDEuMTg4ODQwXSBlaGNpLXBjaTogRUhDSSBQQ0kgcGxhdGZvcm0gZHJpdmVy
-DQo+IFsgICAgMS4yMzI1MThdIG9oY2ktcGNpOiBPSENJIFBDSSBwbGF0Zm9ybSBkcml2ZXINCj4g
-DQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1
-bnN1YnNjcmliZSBsaW51eC1wY2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
-cmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92
-Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+We check the realloc list, as list must be empty after allocation.
+
+Separate the realloc list checking to another function.
+
+Add checking that is missed in acpiphp driver.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
+---
+ drivers/pci/hotplug/acpiphp_glue.c |  1 +
+ drivers/pci/pci.h                  |  1 +
+ drivers/pci/setup-bus.c            | 11 ++++++++---
+ 3 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index ff53856..134caee 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 		}
+ 	}
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
++	__pci_bus_check_realloc(&add_list);
+ 
+ 	acpiphp_sanitize_bus(bus);
+ 	pcie_bus_configure_settings(bus);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4ff0ff1..2b83977 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -235,6 +235,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
+ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *realloc_head,
+ 				struct list_head *fail_head);
++void __pci_bus_check_realloc(struct list_head *realloc_head);
+ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
+ 
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 51085a8..ed5f632 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -345,6 +345,11 @@ out:
+ 	}
+ }
+ 
++void __pci_bus_check_realloc(struct list_head *realloc_head)
++{
++	BUG_ON(!list_empty(realloc_head));
++}
++
+ /**
+  * assign_requested_resources_sorted() - satisfy resource requests
+  *
+@@ -1856,7 +1861,7 @@ again:
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+-		BUG_ON(!list_empty(add_list));
++		__pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	/* any device complain? */
+@@ -1931,7 +1936,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	BUG_ON(!list_empty(&add_list));
++	__pci_bus_check_realloc(&add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+@@ -1990,6 +1995,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 							 &add_list);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+-	BUG_ON(!list_empty(&add_list));
++	__pci_bus_check_realloc(&add_list);
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+-- 
+1.8.4.5
+
