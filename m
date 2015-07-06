@@ -1,145 +1,91 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-mips@linux-mips.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:17667 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756538AbbGFXmF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:42:05 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
-	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH part3 v12 05/10] powerpc/PCI: Rename pcibios_root_bridge_prepare() to pcibios_root_bus_prepare()
-Date: Mon, 20 Jul 2015 20:01:13 +0800
-Message-ID: <1437393678-4077-6-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
-References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 22/36] PCI: Only treat non-pef mmio64 as pref if all bridges has MEM_64
+Date: Mon,  6 Jul 2015 16:39:12 -0700
+Message-Id: <1436225966-27247-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pcibios_root_bridge_prepare() in powerpc set root bus
-speed, it's not the preparation for pci host bridge.
-For better separation of host bridge and root bus creation,
-It's need to rename it to another weak function.
+If any bridge up to root only have 32bit pref mmio, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+We need to move pci_bridge_check_ranges calling early.
+for parent bridges pref mmio BAR may not allocated by BIOS, res flags
+is still 0, we need to have it correct set before we check them for
+child device resources.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/powerpc/include/asm/machdep.h       |    2 +-
- arch/powerpc/kernel/pci-common.c         |    6 +++---
- arch/powerpc/platforms/pseries/pci.c     |    2 +-
- arch/powerpc/platforms/pseries/pseries.h |    2 +-
- arch/powerpc/platforms/pseries/setup.c   |    2 +-
- drivers/pci/probe.c                      |    9 +++++++++
- 6 files changed, 16 insertions(+), 7 deletions(-)
+ drivers/pci/setup-bus.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 952579f..dbd5e8b 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -100,7 +100,7 @@ struct machdep_calls {
- 	/* Called after allocating resources */
- 	void		(*pcibios_fixup)(void);
- 	void		(*pci_irq_fixup)(struct pci_dev *dev);
--	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
-+	int		(*pcibios_root_bus_prepare)(struct pci_host_bridge
- 				*bridge);
- 
- 	/* To setup PHBs when using automatic OF platform driver for PCI */
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index df7f018..3e398c8 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -782,10 +782,10 @@ int pci_proc_domain(struct pci_bus *bus)
- 	return 1;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 63472e29..ab7bafe 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1007,6 +1007,18 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
  }
  
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-+int pcibios_root_bus_prepare(struct pci_host_bridge *bridge)
- {
--	if (ppc_md.pcibios_root_bridge_prepare)
--		return ppc_md.pcibios_root_bridge_prepare(bridge);
-+	if (ppc_md.pcibios_root_bus_prepare)
-+		return ppc_md.pcibios_root_bus_prepare(bridge);
- 
- 	return 0;
- }
-diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
-index fe16a50..885f9ff 100644
---- a/arch/powerpc/platforms/pseries/pci.c
-+++ b/arch/powerpc/platforms/pseries/pci.c
-@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
- 			 fixup_winbond_82c105);
- 
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
-+int pseries_root_bus_prepare(struct pci_host_bridge *bridge)
- {
- 	struct device_node *dn, *pdn;
- 	struct pci_bus *bus;
-diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
-index 8411c27..41310dc 100644
---- a/arch/powerpc/platforms/pseries/pseries.h
-+++ b/arch/powerpc/platforms/pseries/pseries.h
-@@ -75,7 +75,7 @@ static inline int dlpar_memory(struct pseries_hp_errorlog *hp_elog)
- 
- /* PCI root bridge prepare function override for pseries */
- struct pci_host_bridge;
--int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
-+int pseries_root_bus_prepare(struct pci_host_bridge *bridge);
- 
- extern struct pci_controller_ops pseries_pci_controller_ops;
- 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index df6a704..2815309 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -537,7 +537,7 @@ static void __init pSeries_setup_arch(void)
- 		ppc_md.enable_pmcs = power4_enable_pmcs;
- 	}
- 
--	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
-+	ppc_md.pcibios_root_bus_prepare = pseries_root_bus_prepare;
- 
- 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
- 		long rc;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b49deb8..0eba126 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1919,6 +1919,11 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	return 0;
- }
- 
-+int __weak pcibios_root_bus_prepare(struct pci_host_bridge *bridge)
++static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
 +{
-+	return 0;
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
++			   IORESOURCE_MEM_64))
++		return false;
++
++	return pci_up_path_over_pref_mem64(bus->parent);
 +}
 +
- void __weak pcibios_add_bus(struct pci_bus *bus)
+ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 				 struct resource *res)
  {
- }
-@@ -1984,6 +1989,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
- 	b->dev.class = &pcibus_class;
- 	b->dev.parent = b->bridge;
- 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
-+	error = pcibios_root_bus_prepare(bridge);
-+	if (error)
-+		goto class_dev_reg_err;
+@@ -1015,7 +1027,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 
+ 	if ((res->flags & IORESOURCE_MEM) &&
+ 	    (res->flags & IORESOURCE_MEM_64) &&
+-	    dev->on_all_pcie_path)
++	    dev->on_all_pcie_path &&
++	    pci_up_path_over_pref_mem64(dev->bus))
+ 		return res->flags | IORESOURCE_PREFETCH;
+ 
+ 	return res->flags;
+@@ -1760,6 +1773,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	struct resource *b_res;
+ 	int ret;
+ 
++	if (!pci_is_root_bus(bus) &&
++	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
++		pci_bridge_check_ranges(bus);
 +
- 	error = device_register(&b->dev);
- 	if (error)
- 		goto class_dev_reg_err;
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+ 		if (!b)
+@@ -1787,7 +1804,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		break;
+ 
+ 	case PCI_CLASS_BRIDGE_PCI:
+-		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+ 			additional_mem_size = pci_hotplug_mem_size;
 -- 
-1.7.1
+1.8.4.5
 
