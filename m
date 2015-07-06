@@ -1,130 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:23530 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933841AbbGVLLn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 07:11:43 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: "arnd@arndb.de" <arnd@arndb.de>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	James Morse <James.Morse@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v2]   PCI: Store PCIe bus address in struct of_pci_range
-Date: Wed, 22 Jul 2015 11:11:19 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D66544@lhreml503-mbx>
-References: <1436870799-207766-1-git-send-email-gabriele.paoloni@huawei.com>
- <20150722104619.GE14923@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20150722104619.GE14923@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 17/36] PCI: Add support for more than two alt_size under same bridge
+Date: Mon,  6 Jul 2015 16:39:07 -0700
+Message-Id: <1436225966-27247-18-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-TWFueSBUaGFua3MgTGl2aXUNCg0KSSBhbSBnb2luZyB0byBzZW5kIG91dCB2MyBiYXNlIG9uIHlv
-dXIgc3VnZ2VzdGlvbnMNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBs
-aW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiBvd25l
-ckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBMaXZpdSBEdWRhdQ0KPiBTZW50OiBXZWRu
-ZXNkYXksIEp1bHkgMjIsIDIwMTUgMTE6NDYgQU0NCj4gVG86IEdhYnJpZWxlIFBhb2xvbmkNCj4g
-Q2M6IGFybmRAYXJuZGIuZGU7IExvcmVuem8gUGllcmFsaXNpOyBXYW5nemhvdSAoQik7IGJoZWxn
-YWFzQGdvb2dsZS5jb207DQo+IHJvYmgrZHRAa2VybmVsLm9yZzsgSmFtZXMgTW9yc2U7IGxpbnV4
-LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS0NCj4ga2VybmVsQGxpc3RzLmluZnJhZGVh
-ZC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBZdWFuemhpY2hhbmc7DQo+IFpodWRh
-Y2FpOyB6aGFuZ2p1a3VvOyBxaXV6aGVuZmE7IExpZ3Vvemh1IChLZW5uZXRoKQ0KPiBTdWJqZWN0
-OiBSZTogW1BBVENIIHYyXSBQQ0k6IFN0b3JlIFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0DQo+
-IG9mX3BjaV9yYW5nZQ0KPiANCj4gSGkgR2FicmllbGUsDQo+IA0KPiBPbiBUdWUsIEp1bCAxNCwg
-MjAxNSBhdCAxMTo0NjozOUFNICswMTAwLCBHYWJyaWVsZSBQYW9sb25pIHdyb3RlOg0KPiA+IEZy
-b206IGdhYnJpZWxlIHBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4NCj4gPg0K
-PiA+ICAgICBUaGlzIHBhdGNoIGlzIG5lZWRlZCBwb3J0IFBDSWUgZGVzaWdud2FyZSB0byBuZXcg
-RFQgcGFyc2luZyBBUEkNCj4gPiAgICAgQXMgZGlzY3Vzc2VkIGluDQo+ID4gICAgIGh0dHA6Ly9s
-aXN0cy5pbmZyYWRlYWQub3JnL3BpcGVybWFpbC9saW51eC1hcm0ta2VybmVsLzIwMTUtDQo+IEph
-bnVhcnkvMzE3NzQzLmh0bWwNCj4gPiAgICAgaW4gZGVzaWdud2FyZSB3ZSBoYXZlIGEgcHJvYmxl
-bSBhcyB0aGUgUENJIGFkZHJlc3NlcyBpbiB0aGUgUENJZQ0KPiBjb250cm9sbGVyDQo+ID4gICAg
-IGFkZHJlc3Mgc3BhY2UgYXJlIHJlcXVpcmVkIGluIG9yZGVyIHRvIHBlcmZvcm0gY29ycmVjdCBI
-Vw0KPiBvcGVyYXRpb24uDQo+ID4NCj4gPiAgICAgSW4gb3JkZXIgdG8gc29sdmUgdGhpcyBwcm9i
-bGVtIGNvbW1pdA0KPiA+ICAgICBmNGM1NWM1YTMgIlBDSTogZGVzaWdud2FyZTogUHJvZ3JhbSBB
-VFUgd2l0aCB1bnRyYW5zbGF0ZWQNCj4gYWRkcmVzcyINCj4gPiAgICAgYWRkZWQgY29kZSB0byBy
-ZWFkIHRoZSBQQ0llIGNvbnRyb2xsZXIgc3RhcnQgYWRkcmVzcyBkaXJlY3RseQ0KPiBmcm9tIHRo
-ZQ0KPiA+ICAgICBEVCByYW5nZXMuDQo+ID4NCj4gPiAgICAgSW4gdGhlIG5ldyBEVCBwYXJzaW5n
-IEFQSSBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcygpDQo+IGhpZGVzIHRoZQ0KPiA+
-ICAgICBEVCBwYXJzZXIgZnJvbSB0aGUgaG9zdCBjb250cm9sbGVyIGRyaXZlcnMsIHNvIGl0IGlz
-IG5vdCBwb3NzaWJsZQ0KPiA+ICAgICBmb3IgZHJpdmVycyB0byBwYXJzZSB2YWx1ZXMgZGlyZWN0
-bHkgZnJvbSB0aGUgRFQuDQo+ID4NCj4gPiAgICAgSW4gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9s
-aXN0cy9saW51eC1wY2kvbXNnNDI1NDAuaHRtbCB3ZQ0KPiBhbHJlYWR5IHRyaWVkDQo+ID4gICAg
-IHRvIHVzZSB0aGUgbmV3IERUIHBhcnNpbmcgQVBJIGJ1dCB0aGVyZSBpcyBhIGJ1ZyAob2J2aW91
-c2x5KSBpbg0KPiBzZXR0aW5nDQo+ID4gICAgIHRoZSA8Kj5fbW9kX2Jhc2UgYWRkcmVzc2VzDQo+
-ID4gICAgIEFwcGx5aW5nIHRoaXMgcGF0Y2ggd2UgY2FuIGVhc2lseSBzZXQgIjwqPl9tb2RfYmFz
-ZSA9IHdpbi0NCj4gPl9fcmVzLnN0YXJ0Ig0KPiA+DQo+ID4gICAgIFRoaXMgcGF0Y2ggYWRkcyBh
-IG5ldyBmaWVsZCBpbiAic3RydWN0IG9mX3BjaV9yYW5nZSIgdG8gc3RvcmUgdGhlDQo+ID4gICAg
-IHBjaSBidXMgc3RhcnQgYWRkcmVzczsgaXQgZmlsbHMgdGhlIGZpZWxkIGluDQo+IG9mX3BjaV9y
-YW5nZV9wYXJzZXJfb25lKCk7DQo+ID4gICAgIGluIG9mX3BjaV9nZXRfaG9zdF9icmlkZ2VfcmVz
-b3VyY2VzKCkgaXQgcmV0cmlldmVzIHRoZSByZXNvdXJjZQ0KPiBlbnRyeQ0KPiA+ICAgICBhZnRl
-ciBpdCBpcyBjcmVhdGVkIGFuZCBhZGRlZCB0byB0aGUgcmVzb3VyY2UgbGlzdCBhbmQgdXNlcw0K
-PiA+ICAgICBlbnRyeS0+X19yZXMuc3RhcnQgdG8gc3RvcmUgdGhlIHBjaSBjb250cm9sbGVyIGFk
-ZHJlc3MNCj4gPg0KPiA+ICAgICB0aGUgcGF0Y2ggaXMgYmFzZWQgb24gNC4yLXJjMQ0KPiA+DQo+
-ID4gICAgIFNpZ25lZC1vZmYtYnk6IEdhYnJpZWxlIFBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlA
-aHVhd2VpLmNvbT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9vZi9hZGRyZXNzLmMgICAgICAgfCAy
-ICsrDQo+ID4gIGRyaXZlcnMvb2Yvb2ZfcGNpLmMgICAgICAgIHwgNCArKysrDQo+ID4gIGluY2x1
-ZGUvbGludXgvb2ZfYWRkcmVzcy5oIHwgMSArDQo+ID4gIDMgZmlsZXMgY2hhbmdlZCwgNyBpbnNl
-cnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9vZi9hZGRyZXNzLmMgYi9k
-cml2ZXJzL29mL2FkZHJlc3MuYw0KPiA+IGluZGV4IDhiZmRhNmEuLjIzYTU3OTMgMTAwNjQ0DQo+
-ID4gLS0tIGEvZHJpdmVycy9vZi9hZGRyZXNzLmMNCj4gPiArKysgYi9kcml2ZXJzL29mL2FkZHJl
-c3MuYw0KPiA+IEBAIC0yNTMsNiArMjUzLDcgQEAgc3RydWN0IG9mX3BjaV9yYW5nZQ0KPiAqb2Zf
-cGNpX3JhbmdlX3BhcnNlcl9vbmUoc3RydWN0IG9mX3BjaV9yYW5nZV9wYXJzZXIgKnBhcnNlciwN
-Cj4gPiAgCQkJCQkJc3RydWN0IG9mX3BjaV9yYW5nZSAqcmFuZ2UpDQo+ID4gIHsNCj4gPiAgCWNv
-bnN0IGludCBuYSA9IDMsIG5zID0gMjsNCj4gPiArCWNvbnN0IGludCBwX25zID0gb2Zfbl9zaXpl
-X2NlbGxzKHBhcnNlci0+bm9kZSk7DQo+ID4NCj4gPiAgCWlmICghcmFuZ2UpDQo+ID4gIAkJcmV0
-dXJuIE5VTEw7DQo+ID4gQEAgLTI2NSw2ICsyNjYsNyBAQCBzdHJ1Y3Qgb2ZfcGNpX3JhbmdlDQo+
-ICpvZl9wY2lfcmFuZ2VfcGFyc2VyX29uZShzdHJ1Y3Qgb2ZfcGNpX3JhbmdlX3BhcnNlciAqcGFy
-c2VyLA0KPiA+ICAJcmFuZ2UtPnBjaV9hZGRyID0gb2ZfcmVhZF9udW1iZXIocGFyc2VyLT5yYW5n
-ZSArIDEsIG5zKTsNCj4gPiAgCXJhbmdlLT5jcHVfYWRkciA9IG9mX3RyYW5zbGF0ZV9hZGRyZXNz
-KHBhcnNlci0+bm9kZSwNCj4gPiAgCQkJCXBhcnNlci0+cmFuZ2UgKyBuYSk7DQo+ID4gKwlyYW5n
-ZS0+YnVzX2FkZHIgPSBvZl9yZWFkX251bWJlcihwYXJzZXItPnJhbmdlICsgbmEsIHBfbnMpOw0K
-PiA+ICAJcmFuZ2UtPnNpemUgPSBvZl9yZWFkX251bWJlcihwYXJzZXItPnJhbmdlICsgcGFyc2Vy
-LT5wbmEgKyBuYSwNCj4gbnMpOw0KPiA+DQo+ID4gIAlwYXJzZXItPnJhbmdlICs9IHBhcnNlci0+
-bnA7DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvb2Yvb2ZfcGNpLmMgYi9kcml2ZXJzL29mL29m
-X3BjaS5jDQo+ID4gaW5kZXggNTc1MWRjNS4uYjE3MWQwMiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2
-ZXJzL29mL29mX3BjaS5jDQo+ID4gKysrIGIvZHJpdmVycy9vZi9vZl9wY2kuYw0KPiA+IEBAIC0x
-OTgsNiArMTk4LDcgQEAgaW50IG9mX3BjaV9nZXRfaG9zdF9icmlkZ2VfcmVzb3VyY2VzKHN0cnVj
-dA0KPiBkZXZpY2Vfbm9kZSAqZGV2LA0KPiA+DQo+ID4gIAlwcl9kZWJ1ZygiUGFyc2luZyByYW5n
-ZXMgcHJvcGVydHkuLi5cbiIpOw0KPiA+ICAJZm9yX2VhY2hfb2ZfcGNpX3JhbmdlKCZwYXJzZXIs
-ICZyYW5nZSkgew0KPiA+ICsJCXN0cnVjdCByZXNvdXJjZV9lbnRyeSAqZW50cnk7DQo+ID4gIAkJ
-LyogUmVhZCBuZXh0IHJhbmdlcyBlbGVtZW50ICovDQo+ID4gIAkJaWYgKChyYW5nZS5mbGFncyAm
-IElPUkVTT1VSQ0VfVFlQRV9CSVRTKSA9PSBJT1JFU09VUkNFX0lPKQ0KPiA+ICAJCQlzbnByaW50
-ZihyYW5nZV90eXBlLCA0LCAiIElPIik7DQo+ID4gQEAgLTI0MCw2ICsyNDEsOSBAQCBpbnQgb2Zf
-cGNpX2dldF9ob3N0X2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0DQo+IGRldmljZV9ub2RlICpkZXYs
-DQo+ID4gIAkJfQ0KPiA+DQo+ID4gIAkJcGNpX2FkZF9yZXNvdXJjZV9vZmZzZXQocmVzb3VyY2Vz
-LCByZXMsCXJlcy0+c3RhcnQgLQ0KPiByYW5nZS5wY2lfYWRkcik7DQo+ID4gKwkJZW50cnkgPSBs
-aXN0X2xhc3RfZW50cnkocmVzb3VyY2VzLCBzdHJ1Y3QgcmVzb3VyY2VfZW50cnksDQo+IG5vZGUp
-Ow0KPiA+ICsJCS8qd2UgYXJlIHVzaW5nIF9fcmVzIGZvciBzdG9yaW5nIHRoZSBQQ0kgY29udHJv
-bGxlcg0KPiBhZGRyZXNzKi8NCj4gDQo+IE1pbm9yIG5pdCwgcGxlYXNlIGFkZCBzcGFjZXMgYXJv
-dW5kIHRoZSBiZWdpbm5pbmcgYW5kIGVuZCBvZiBjb21tZW50DQo+IG1hcmtlcnMuDQoNClN1cmUg
-bm8gcHJvYnMuDQoNCj4gDQo+ID4gKwkJZW50cnktPl9fcmVzLnN0YXJ0ID0gcmFuZ2UuYnVzX2Fk
-ZHI7DQo+ID4gIAl9DQo+ID4NCj4gPiAgCXJldHVybiAwOw0KPiA+IGRpZmYgLS1naXQgYS9pbmNs
-dWRlL2xpbnV4L29mX2FkZHJlc3MuaCBiL2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5oDQo+ID4g
-aW5kZXggZDg4ZTgxYi4uODY1Zjk2ZSAxMDA2NDQNCj4gPiAtLS0gYS9pbmNsdWRlL2xpbnV4L29m
-X2FkZHJlc3MuaA0KPiA+ICsrKyBiL2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5oDQo+ID4gQEAg
-LTE2LDYgKzE2LDcgQEAgc3RydWN0IG9mX3BjaV9yYW5nZSB7DQo+ID4gIAl1MzIgcGNpX3NwYWNl
-Ow0KPiA+ICAJdTY0IHBjaV9hZGRyOw0KPiA+ICAJdTY0IGNwdV9hZGRyOw0KPiA+ICsJdTY0IGJ1
-c19hZGRyOw0KPiA+ICAJdTY0IHNpemU7DQo+ID4gIAl1MzIgZmxhZ3M7DQo+ID4gIH07DQo+ID4g
-LS0NCj4gPiAxLjkuMQ0KPiA+DQo+IA0KPiBUaGlzIHRvdWNoZXMgY29kZSBJIGhhdmUgcHJldmlv
-dXNseSBhZGRlZCwgc28gSSBndWVzcyB5b3UgbmVlZDoNCj4gDQo+IEFja2VkLWJ5OiBMaXZpdSBE
-dWRhdSA8TGl2aXUuRHVkYXVAYXJtLmNvbT4NCg0KU3VyZSBJIHdpbGwgYWRkIGl0Lg0KDQo+IA0K
-PiBCZXN0IHJlZ2FyZHMsDQo+IExpdml1DQo+IA0KPiAtLQ0KPiA9PT09PT09PT09PT09PT09PT09
-PQ0KPiB8IEkgd291bGQgbGlrZSB0byB8DQo+IHwgZml4IHRoZSB3b3JsZCwgIHwNCj4gfCBidXQg
-dGhleSdyZSBub3QgfA0KPiB8IGdpdmluZyBtZSB0aGUgICB8DQo+ICBcIHNvdXJjZSBjb2RlISAg
-Lw0KPiAgIC0tLS0tLS0tLS0tLS0tLQ0KPiAgICAgwq9cXyjjg4QpXy/Crw0KPiANCj4gLS0NCj4g
-VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJl
-IGxpbnV4LXBjaSIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2Vy
-Lmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVs
-Lm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
+Need to increase size to make sure it could fit all alt entries.
+
+In the patch, we first select one big size, and then keep reducing
+the size and retrying to get the minimum value for alt_size.
+
+Example:
+two bridges: one have 8M/8M, and 1M/1M children res.
+	     one have 4M/4M, and 1M/1M children res.
+
+Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
+Before this patch, parent bridge alt_align/alt_size is 8M/14M
+that is wrong.
+With this patch	parent bridge alt_align/alt_size: 8M/17M.
+
+At same time, child bridges must align/size: 4M/12M, 2M/6M.
+and prarent bridge must align/size: 4M/20M.
+
+So at last, we use 8M/17M as parent bridge alt_align/alt_size.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 53 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c0090d4..9427baa 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1304,6 +1304,47 @@ out:
+ 	return good_align;
+ }
+ 
++static resource_size_t calculate_mem_alt_size(struct list_head *head,
++				resource_size_t max_align, resource_size_t size,
++				resource_size_t align_low)
++{
++	struct align_test_res *p;
++	resource_size_t tmp;
++	resource_size_t good_size, bad_size;
++	int count = 0, order;
++
++	good_size = ALIGN(size, align_low);
++
++	list_for_each_entry(p, head, list)
++		count++;
++
++	if (count <= 1)
++		goto out;
++
++	__sort_align_test(head);
++
++	tmp = max(size, max_align);
++	order = __fls(count);
++	if ((1ULL << order) < count)
++		order++;
++	good_size = ALIGN((tmp << order), align_low);
++	bad_size = ALIGN(size, align_low) - align_low;
++	size = good_size;
++	while (size > bad_size) {
++		/* check if align/size fit all entries */
++		if (is_align_size_good(head, max_align, size, 0))
++			good_size = size;
++		else
++			bad_size = size;
++
++		size = bad_size + ((good_size - bad_size) >> 1);
++		size = round_down(size, align_low);
++	}
++
++out:
++	return good_size;
++}
++
+ static inline bool is_optional(int i)
+ {
+ 
+@@ -1350,6 +1391,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	LIST_HEAD(align_test_alt_list);
+ 	resource_size_t alt_size = 0, alt_align = 0;
+ 	resource_size_t window_align;
+ 
+@@ -1418,6 +1460,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 				dev_res = res_to_dev_res(realloc_head, r);
+ 				if (dev_res && dev_res->alt_size) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						dev_res->alt_align,
++						dev_res->alt_size);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+@@ -1440,6 +1486,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			alt_align = max_align;
+ 			alt_size = calculate_memsize(size, min_size,
+ 						     0, window_align);
++		} else  {
++			/* need to increase size to fit more alt */
++			alt_align = max(alt_align, window_align);
++			alt_size = calculate_mem_alt_size(&align_test_alt_list,
++							  alt_align, alt_size,
++							  window_align);
+ 		}
+ 		/* must is better ? */
+ 		if (alt_size >= size0) {
+@@ -1447,6 +1499,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			alt_size = size0;
+ 		}
+ 	}
++	free_align_test_list(&align_test_alt_list);
+ 
+ 	if (sum_add_size == size)
+ 		sum_add_size = add_size;
+-- 
+1.8.4.5
+
