@@ -1,48 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:17346 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756282AbbGFXlG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:41:06 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Snowberg <eric.snowberg@oracle.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	sparclinux@vger.kernel.org
-Subject: [RFC Patch V1 07/12] sparc, PCI: Use helper functions to access fields in struct msi_desc
-Date: Thu,  9 Jul 2015 16:00:42 +0800
-Message-Id: <1436428847-8886-8-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 11/36] PCI: Simplify res reference using in __assign_resourcs_sorted
+Date: Mon,  6 Jul 2015 16:39:01 -0700
+Message-Id: <1436225966-27247-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use helper functions to access fields in struct msi_desc, so we could
-easily refine struct msi_desc later.
+Use res instead of dev_res->res.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/sparc/kernel/pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index c928bc64b4ba..048b406d9e02 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -918,7 +918,7 @@ int arch_setup_msi_irq(struct pci_dev *pdev, struct msi_desc *desc)
- void arch_teardown_msi_irq(unsigned int irq)
- {
- 	struct msi_desc *entry = irq_get_msi_desc(irq);
--	struct pci_dev *pdev = entry->dev;
-+	struct pci_dev *pdev = msi_desc_to_pci_dev(entry);
- 	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 62dd8b7..51085a8 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -448,6 +448,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+ 	resource_size_t add_align;
++	struct resource *res;
  
- 	if (pbm->teardown_msi_irq)
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -463,8 +464,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+-		dev_res->res->end += get_res_add_size(realloc_head,
+-							dev_res->res);
++		res = dev_res->res;
++		res->end += get_res_add_size(realloc_head, res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+@@ -473,16 +474,16 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		 * 2. resource with IORESOURCE_SIZEALIGN
+ 		 *    update size above already change alignment.
+ 		 */
+-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++		if (!(res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+-		add_align = get_res_add_align(realloc_head, dev_res->res);
++		add_align = get_res_add_align(realloc_head, res);
+ 
+ 		if (add_align) {
+-			resource_size_t r_size = resource_size(dev_res->res);
++			resource_size_t r_size = resource_size(res);
+ 
+-			dev_res->res->start = add_align;
+-			dev_res->res->end = add_align + r_size - 1;
++			res->start = add_align;
++			res->end = add_align + r_size - 1;
+                }
+ 	}
+ 
+@@ -504,21 +505,21 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	/* check failed type */
+ 	fail_type = pci_fail_res_type_mask(&local_fail_head);
+ 	/* remove not need to be released assigned res from head list etc */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list)
+-		if (dev_res->res->parent &&
+-		    !pci_need_to_release(fail_type, dev_res->res)) {
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++		res = dev_res->res;
++		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+-			remove_from_list(realloc_head, dev_res->res);
+-			remove_from_list(&save_head, dev_res->res);
++			remove_from_list(realloc_head, res);
++			remove_from_list(&save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
++	}
+ 
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list) {
+-		struct resource *res = dev_res->res;
+-
++		res = dev_res->res;
+ 		if (res->parent) {
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+ 				   "BAR %d: released %pR\n",
+@@ -529,8 +530,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+-		struct resource *res = save_res->res;
+-
++		res = save_res->res;
+ 		res->start = save_res->start;
+ 		res->end = save_res->end;
+ 		res->flags = save_res->flags;
 -- 
-1.7.10.4
+1.8.4.5
 
