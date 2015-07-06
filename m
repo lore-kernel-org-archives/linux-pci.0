@@ -1,158 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51169 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbbG0H1H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Jul 2015 03:27:07 -0400
-Message-ID: <55B5DD43.4080905@arm.com>
-Date: Mon, 27 Jul 2015 08:26:59 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: "Jayachandran C." <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	James Morse <James.Morse@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: Re: [PATCH v2 2/2] ARM: pci: kill pcibios_msi_controller
-References: <1437754383-8162-1-git-send-email-lorenzo.pieralisi@arm.com> <1437754383-8162-2-git-send-email-lorenzo.pieralisi@arm.com> <20150726152528.GB2357@jayachandranc.netlogicmicro.com> <20150726181646.GA9584@red-moon> <20150726184345.GA27049@jayachandranc.netlogicmicro.com>
-In-Reply-To: <20150726184345.GA27049@jayachandranc.netlogicmicro.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from aserp1040.oracle.com ([141.146.126.69]:49874 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756338AbbGFXlo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:41:44 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 25/36] PCI: Restore pref mmio allocation logic for hostbridge without mmio64
+Date: Mon,  6 Jul 2015 16:39:15 -0700
+Message-Id: <1436225966-27247-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 26/07/15 19:43, Jayachandran C. wrote:
-> On Sun, Jul 26, 2015 at 07:16:46PM +0100, Lorenzo Pieralisi wrote:
->> On Sun, Jul 26, 2015 at 04:25:29PM +0100, Jayachandran C. wrote:
->>> On Fri, Jul 24, 2015 at 05:13:03PM +0100, Lorenzo Pieralisi wrote:
->>>> On ARM PCI systems relying on the pcibios API to initialize PCI host
->>>> controllers, the pcibios_msi_controller weak callback is used to look-up
->>>> the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
->>>>
->>>> pci_sys_data is an ARM specific structure, which prevents using the
->>>> same mechanism (so same PCI host controller drivers) on ARM64 systems.
->>>>
->>>> Since the struct pci_bus already contains an msi_controller pointer and
->>>> the kernel already uses it to look-up the msi controller,
->>>> this patch converts ARM host controller and related pcibios/host bridges
->>>> initialization routines so that the msi_controller pointer look-up can be
->>>> carried out by PCI core code through the struct pci_bus msi pointer,
->>>> removing the need for the arch specific pcibios_msi_controller callback
->>>> and the related pci_sys_data msi_ctrl pointer.
->>>>
->>>> ARM is the only arch relying on the pcibios_msi_controller() weak
->>>> function, hence this patch removes the default weak implementation
->>>> from PCI core code since it becomes of no use.
->>>>
->>>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>>> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
->>>> Cc: Pratyush Anand <pratyush.anand@gmail.com>
->>>> Cc: Arnd Bergmann <arnd@arndb.de>
->>>> Cc: Jingoo Han <jingoohan1@gmail.com>
->>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>>> Cc: Simon Horman <horms@verge.net.au>
->>>> Cc: Russell King <linux@arm.linux.org.uk>
->>>> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
->>>> Cc: Thierry Reding <thierry.reding@gmail.com>
->>>> Cc: Michal Simek <michal.simek@xilinx.com>
->>>> Cc: Marc Zyngier <marc.zyngier@arm.com>
->>>> ---
->>>> v1->v2
->>>>
->>>> - Added patch to replace panic statements with WARN
->>>> - Removed unused pcibios_msi_controller() and pci_msi_controller() from
->>>>   core code
->>>> - Dropped RFT status
->>>>
->>>> v1: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/356028.html
->>>>
->>>>  arch/arm/include/asm/mach/pci.h    |  3 ---
->>>>  arch/arm/kernel/bios32.c           | 29 +++++++++++++----------------
->>>>  drivers/pci/host/pcie-designware.c |  9 +++++++--
->>>>  drivers/pci/host/pcie-xilinx.c     | 12 ++++++++++--
->>>>  drivers/pci/msi.c                  | 17 +----------------
->>>>  5 files changed, 31 insertions(+), 39 deletions(-)
->>>>
->>> [...]
->>>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->>>> index f66be86..0d20142 100644
->>>> --- a/drivers/pci/msi.c
->>>> +++ b/drivers/pci/msi.c
->>>> @@ -77,24 +77,9 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
->>>>  
->>>>  /* Arch hooks */
->>>>  
->>>> -struct msi_controller * __weak pcibios_msi_controller(struct pci_dev *dev)
->>>> -{
->>>> -	return NULL;
->>>> -}
->>>> -
->>>> -static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
->>>> -{
->>>> -	struct msi_controller *msi_ctrl = dev->bus->msi;
->>>> -
->>>> -	if (msi_ctrl)
->>>> -		return msi_ctrl;
->>>> -
->>>> -	return pcibios_msi_controller(dev);
->>>> -}
->>>> -
->>>>  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
->>>>  {
->>>> -	struct msi_controller *chip = pci_msi_controller(dev);
->>>> +	struct msi_controller *chip = dev->bus->msi;
->>>>  	int err;
->>>>  
->>>>  	if (!chip || !chip->setup_irq)
->>>
->>> Don't you have to go to the top level bus and get the ->msi pointer? Something
->>> like:
->>>
->>> 	for (bus = dev->bus; bus != NULL; bus = bus->parent)
->>> 		if (bus->msi)
->>> 			return bus->msi;
->>>
->>> I have not been following this closely, so I may have missed some patches.
->>
->> The msi pointer is initialized from parent to child in
->> pci_alloc_child_bus(), so PCI core does that for us,
->> that's my understanding.
->>
->> It works the same as sysdata pointer, which is why
->> pcibios_msi_controller works in the current kernel.
-> 
-> Thanks.
-> 
->> On a side note, are you able to prepare a new version
->> of your set to enable the PCI generic host on ARM64
->> (and remove pci_sys_data and related ifdef CONFIG_ARM
->> from it) ?
->>
->> We are not far from removing the pci_sys_data dependency,
->> if you can't prepare a new version of your series let me
->> know I can do it on your behalf.
-> 
-> I will post an updated patch with a minor fix. I will also
-> add a patch for parsing msi-parent and setting ->msi on
-> the root bus.
+>From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
+resources), we change the logic for pref mmio allocation:
+When bridge pref support mmio64, we will only put children pref
+that support mmio64 into it, and will put children pref mmio32
+into bridge's non-pref mmio32.
 
-That shouldn't be necessary if you base your series on this one:
+That could leave bridge pref bar not used when that pref bar is mmio64,
+and children res only has mmio32.
+Also could have allocation failure when non-pref mmio32 is not big
+enough space for those children pref mmio32.
 
-http://lwn.net/Articles/652151/
+That is not rational when the host bridge does not 64bit mmio above 4g
+at all.
 
-Patch 5 in this series does it for you as part of the core PCI code.
+The patch restore to old logic:
+when hostbridge does not have has_mem64 so put children pref mmio64 and
+pref mmio32 all under bridges pref bars.
 
-Thanks,
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c       |  4 +++-
+ drivers/pci/setup-bus.c | 13 +++++++++----
+ drivers/pci/setup-res.c |  9 ++++++---
+ 3 files changed, 18 insertions(+), 8 deletions(-)
 
-	M.
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6fbd3f2..b043bdf 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -202,8 +202,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ {
+ #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+ 	int rc;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
+ 
+-	if (res->flags & IORESOURCE_MEM_64) {
++	if (res->flags & mmio64) {
+ 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
+ 					       type_mask, alignf, alignf_data,
+ 					       &pci_high);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e8e9029..8f8b4c7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1821,7 +1821,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+ 		mask = IORESOURCE_MEM;
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		if (b_res[2].flags & IORESOURCE_MEM_64) {
++		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
++		    pci_find_host_bridge(bus)->has_mem64) {
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+@@ -1980,17 +1981,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 *	  io port.
+ 	 *     2. if there is non pref mmio assign fail, release bridge
+ 	 *	  nonpref mmio.
+-	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
++	 *     3. if there is pref mmio assign fail, and host bridge does
++	 *	  have 64bit mmio, release bridge pref mmio.
++	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
+ 	 *	  is 64bit, release bridge pref mmio.
+-	 *     4. if there is pref mmio assign fail, and bridge pref is
++	 *     5. if there is pref mmio assign fail, and bridge pref is
+ 	 *	  32bit mmio, release bridge pref mmio
+-	 *     5. if there is pref mmio assign fail, and bridge pref is not
++	 *     6. if there is pref mmio assign fail, and bridge pref is not
+ 	 *	  assigned, release bridge nonpref mmio.
+ 	 */
+ 	if (type & IORESOURCE_IO)
+ 		idx = 0;
+ 	else if (!(type & IORESOURCE_PREFETCH))
+ 		idx = 1;
++	else if (!pci_find_host_bridge(bus)->has_mem64)
++		idx = 2;
+ 	else if ((type & IORESOURCE_MEM_64) &&
+ 		 (b_res[2].flags & IORESOURCE_MEM_64))
+ 		idx = 2;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index b19aa5b..26aedde 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -205,6 +205,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	struct resource *res = dev->resource + resno;
+ 	resource_size_t min;
+ 	int ret;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
+ 
+ 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
+ 
+@@ -216,7 +218,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * things differently than they were sized, not everything will fit.
+ 	 */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+-				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
++				     IORESOURCE_PREFETCH | mmio64,
+ 				     pcibios_align_resource, dev);
+ 	if (ret == 0)
+ 		return 0;
+@@ -225,7 +227,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * If the prefetchable window is only 32 bits wide, we can put
+ 	 * 64-bit prefetchable resources in it.
+ 	 */
+-	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
++	if (mmio64 &&
++	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
+ 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 					     IORESOURCE_PREFETCH,
+@@ -240,7 +243,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * non-prefetchable, the first call already tried the only possibility
+ 	 * so we don't need to try again.
+ 	 */
+-	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
++	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+ 					     pcibios_align_resource, dev);
+ 
 -- 
-Jazz is not dead. It just smells funny...
+1.8.4.5
+
