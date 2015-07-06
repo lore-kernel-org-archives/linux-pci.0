@@ -1,51 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0074.outbound.protection.outlook.com ([157.56.110.74]:62272
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753551AbbG1LBq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 07:01:46 -0400
-From: Ley Foon Tan <lftan@altera.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:17782 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756580AbbGFXmT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:42:19 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH 1/6] arm: add msi.h to Kbuild
-Date: Tue, 28 Jul 2015 18:45:40 +0800
-Message-ID: <1438080345-7233-2-git-send-email-lftan@altera.com>
-In-Reply-To: <1438080345-7233-1-git-send-email-lftan@altera.com>
-References: <1438080345-7233-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 32/36] PCI: Don't release sibiling bridge resources during hotplug
+Date: Mon,  6 Jul 2015 16:39:22 -0700
+Message-Id: <1436225966-27247-33-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
-This to fix compilation error:
-"include/linux/msi.h:123:21: fatal error: asm/msi.h:
-No such file or directory"
+On hotplug path, we can not touch sibling bridges that is out
+side of the slot.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
+That could happen when BIOS does not assign some bridge BARs and
+later can not assign resource to them in first try.
+
+Check if fail dev is the parent bridge, then just use subordinate
+bus instead use parent bus.
+
+Reported-by: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/arm/include/asm/Kbuild | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/setup-bus.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm/include/asm/Kbuild b/arch/arm/include/asm/Kbuild
-index 83c5019..ddc2761 100644
---- a/arch/arm/include/asm/Kbuild
-+++ b/arch/arm/include/asm/Kbuild
-@@ -14,6 +14,7 @@ generic-y += local.h
- generic-y += local64.h
- generic-y += mcs_spinlock.h
- generic-y += msgbuf.h
-+generic-y += msi.h
- generic-y += param.h
- generic-y += parport.h
- generic-y += poll.h
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4959f72..82b7873 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2347,10 +2347,16 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
+ 	 */
+-	list_for_each_entry(fail_res, &fail_head, list)
+-		pci_bus_release_bridge_resources(fail_res->dev->bus,
++	list_for_each_entry(fail_res, &fail_head, list) {
++		struct pci_bus *bus = fail_res->dev->bus;
++
++		if (fail_res->dev == bridge)
++			bus = bridge->subordinate;
++
++		pci_bus_release_bridge_resources(bus,
+ 						 fail_res->flags & type_mask,
+ 						 whole_subtree);
++	}
+ 
+ 	/* restore size and flags */
+ 	list_for_each_entry(fail_res, &fail_head, list) {
 -- 
-1.8.2.1
+1.8.4.5
 
