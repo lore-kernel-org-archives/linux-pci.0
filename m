@@ -1,114 +1,254 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38775 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752760AbbGOMRf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 08:17:35 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:17252 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756183AbbGFXkq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:40:46 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v4 16/19] irqchip: GICv2m: Get rid of struct msi_controller
-Date: Wed, 15 Jul 2015 13:16:50 +0100
-Message-Id: <1436962613-17359-17-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 05/36] PCI: Optimize bus align/size calculation for optional during sizing
+Date: Mon,  6 Jul 2015 16:38:55 -0700
+Message-Id: <1436225966-27247-6-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-GICv2m only uses the msi_controller structure as a way to match
-the host bridge with its MSI HW, and thus the msi_domain.
+Current add_align always use max align, that make must+optional
+to get allocated more than needed in some cases.
 
-But now that we can directly associate an msi_domain with a device,
-there is no use keeping this msi_controller around.
+Now we have new calculate_mem_align, we could use it for add_align
+calculation.
 
-Just remove all traces of msi_controller from the driver. Also
-tag the inner (non-PCI) domain with DOMAIN_BUS_NEXUS.
+Need to create separated list for must+optional align/size info.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+After that we can get smaller add_align/size, we have more chance
+to make must+optional to get allocated.
+
+The result for bridge that have Intel 10g/40g card installed.
+
+ pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
+	to [bus 2a-31] calculate_mem for must
+ ===========BEGIN========================
+ align/size:
+   00800000/00800000
+   00800000/00800000
+   00800000/00800000
+   00800000/00800000
+   00008000/00008000
+   00008000/00008000
+   00008000/00008000
+   00008000/00008000
+ old min_align/min_size: 00400000/02400000
+     min_align/min_size: 00400000/02400000
+ ===========END========================
+
+ pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
+	to [bus 2a-31] calculate_mem for add
+ ===========BEGIN========================
+ align/size:
+   00800000/00800000
+   00800000/00800000
+   00800000/00800000
+   00800000/00800000
+   00010000/00200000
+   00010000/00200000
+   00010000/00200000
+   00010000/00200000
+   00008000/00008000
+   00008000/00008000
+   00008000/00008000
+   00008000/00008000
+   00004000/00080000
+   00004000/00080000
+   00004000/00080000
+   00004000/00080000
+ old min_align/min_size: 00800000/03000000
+     min_align/min_size: 00100000/02b00000
+ ===========END========================
+
+so must align/size: 0x400000/0x2400000, and
+ new must+optional align/size: 0x100000/0x2b00000, and it is better
+than old must+optional align/size: 0x800000/0x3000000
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/irqchip/irq-gic-v2m.c | 27 ++++++++++-----------------
- 1 file changed, 10 insertions(+), 17 deletions(-)
+ drivers/pci/setup-bus.c | 84 +++++++++++++++++++++++++++++++------------------
+ 1 file changed, 53 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-index fdf7065..ec9c376 100644
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -45,7 +45,6 @@
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 87cf431..d13f55c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -896,7 +896,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
  
- struct v2m_data {
- 	spinlock_t msi_cnt_lock;
--	struct msi_controller mchip;
- 	struct resource res;	/* GICv2m resource */
- 	void __iomem *base;	/* GICv2m virt address */
- 	u32 spi_start;		/* The SPI number that MSIs start */
-@@ -218,6 +217,7 @@ static int __init gicv2m_init_one(struct device_node *node,
+ static resource_size_t calculate_memsize(resource_size_t size,
+ 		resource_size_t min_size,
+-		resource_size_t size1,
+ 		resource_size_t old_size,
+ 		resource_size_t align)
  {
- 	int ret;
- 	struct v2m_data *v2m;
-+	struct irq_domain *inner_domain;
+@@ -906,7 +905,7 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 		old_size = 0;
+ 	if (size < old_size)
+ 		size = old_size;
+-	size = ALIGN(size + size1, align);
++	size = ALIGN(size, align);
+ 	return size;
+ }
  
- 	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
- 	if (!v2m) {
-@@ -261,19 +261,18 @@ static int __init gicv2m_init_one(struct device_node *node,
- 		goto err_iounmap;
- 	}
+@@ -1169,44 +1168,45 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+-	resource_size_t min_align, align, size, size0, size1;
+-	resource_size_t max_align = 0;
++	resource_size_t min_align = 0, min_add_align = 0;
++	resource_size_t max_align = 0, max_add_align = 0;
++	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
+ 	struct resource *b_res = find_free_bus_resource(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+-	resource_size_t children_add_size = 0;
+-	resource_size_t children_add_align = 0;
+-	resource_size_t add_align = 0;
+ 	LIST_HEAD(align_test_list);
++	LIST_HEAD(align_test_add_list);
  
--	v2m->domain = irq_domain_add_tree(NULL, &gicv2m_domain_ops, v2m);
--	if (!v2m->domain) {
-+	inner_domain = irq_domain_add_tree(node, &gicv2m_domain_ops, v2m);
-+	if (!inner_domain) {
- 		pr_err("Failed to create GICv2m domain\n");
- 		ret = -ENOMEM;
- 		goto err_free_bm;
- 	}
+ 	if (!b_res)
+ 		return -ENOSPC;
  
--	v2m->domain->parent = parent;
--	v2m->mchip.of_node = node;
--	v2m->mchip.domain = pci_msi_create_irq_domain(node,
--						      &gicv2m_msi_domain_info,
--						      v2m->domain);
--	if (!v2m->mchip.domain) {
-+	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
-+	inner_domain->parent = parent;
-+	v2m->domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
-+						inner_domain);
-+	if (!v2m->domain) {
- 		pr_err("Failed to create MSI domain\n");
- 		ret = -ENOMEM;
- 		goto err_free_domains;
-@@ -281,12 +280,6 @@ static int __init gicv2m_init_one(struct device_node *node,
- 
- 	spin_lock_init(&v2m->msi_cnt_lock);
- 
--	ret = of_pci_msi_chip_add(&v2m->mchip);
--	if (ret) {
--		pr_err("Failed to add msi_chip.\n");
--		goto err_free_domains;
--	}
+-	size = 0;
 -
- 	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
- 		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
- 		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
-@@ -294,10 +287,10 @@ static int __init gicv2m_init_one(struct device_node *node,
- 	return 0;
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
  
- err_free_domains:
--	if (v2m->mchip.domain)
--		irq_domain_remove(v2m->mchip.domain);
- 	if (v2m->domain)
- 		irq_domain_remove(v2m->domain);
-+	if (inner_domain)
-+		irq_domain_remove(inner_domain);
- err_free_bm:
- 	kfree(v2m->bm);
- err_iounmap:
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			resource_size_t r_size;
++			resource_size_t r_size, align;
+ 
+ 			if (r->parent || ((r->flags & mask) != type &&
+ 					  (r->flags & mask) != type2 &&
+ 					  (r->flags & mask) != type3))
+ 				continue;
++
+ 			r_size = resource_size(r);
++			align = pci_resource_alignment(dev, r);
+ #ifdef CONFIG_PCI_IOV
+ 			/* put SRIOV requested res to the optional list */
+ 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+ 					i <= PCI_IOV_RESOURCE_END) {
+-				add_align = max(pci_resource_alignment(dev, r), add_align);
++				add_to_align_test_list(&align_test_add_list,
++							align, r_size);
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+-				children_add_size += r_size;
++				sum_add_size += r_size;
++				if (align > max_add_align)
++					max_add_align = align;
+ 				continue;
+ 			}
+ #endif
+-			align = pci_resource_alignment(dev, r);
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
+@@ -1214,33 +1214,54 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				continue;
+ 			}
+ 
+-			if (r_size > 1)
++			if (r_size > 1) {
+ 				add_to_align_test_list(&align_test_list,
+ 							align, r_size);
+-			size += r_size;
+-			if (align > max_align)
+-				max_align = align;
++				size += r_size;
++				if (align > max_align)
++					max_align = align;
++			}
+ 
+ 			if (realloc_head) {
+-				children_add_size += get_res_add_size(realloc_head, r);
+-				children_add_align = get_res_add_align(realloc_head, r);
+-				add_align = max(add_align, children_add_align);
++				resource_size_t add_r_size, add_align;
++
++				add_r_size = get_res_add_size(realloc_head, r);
++				add_align = get_res_add_align(realloc_head, r);
++				/* no add on ? */
++				if (add_align < align)
++					add_align = align;
++				add_to_align_test_list(&align_test_add_list,
++							add_align,
++							r_size + add_r_size);
++				sum_add_size += r_size + add_r_size;
++				if (add_align > max_add_align)
++					max_add_align = add_align;
+ 			}
+ 		}
+ 	}
+ 
+ 	max_align = max(max_align, window_alignment(bus, b_res->flags));
+-	min_align = calculate_mem_align(&align_test_list, max_align, size,
+-					window_alignment(bus, b_res->flags));
+-	size0 = calculate_memsize(size, min_size, 0,
++	if (size || min_size) {
++		min_align = calculate_mem_align(&align_test_list, max_align,
++				 size, window_alignment(bus, b_res->flags));
++		size0 = calculate_memsize(size, min_size,
+ 				  resource_size(b_res), min_align);
++	}
+ 	free_align_test_list(&align_test_list);
+-	add_align = max(min_align, add_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_memsize(size, min_size, add_size,
+-				resource_size(b_res), add_align);
++
++	if (sum_add_size == size)
++		sum_add_size = add_size;
++	else if (add_size > sum_add_size - size)
++		sum_add_size = add_size + size;
++	if (sum_add_size > size && realloc_head) {
++		min_add_align = calculate_mem_align(&align_test_add_list,
++					max_add_align, sum_add_size,
++					window_alignment(bus, b_res->flags));
++		size1 = calculate_memsize(sum_add_size, min_size,
++				 resource_size(b_res), min_add_align);
++	}
++	free_align_test_list(&align_test_add_list);
++
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+@@ -1252,11 +1273,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
++		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
++				min_add_align);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long) (size1 - size0),
+-			   (unsigned long long) add_align);
++			   (unsigned long long) min_add_align);
+ 	}
+ 	return 0;
+ }
 -- 
-2.1.4
+1.8.4.5
 
