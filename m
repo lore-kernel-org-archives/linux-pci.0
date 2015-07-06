@@ -1,105 +1,143 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 8 Jul 2015 11:38:49 +0300
-From: Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Borislav Petkov <bp@suse.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
-	<ville.syrjala@linux.intel.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Dave Airlie <airlied@redhat.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Juergen Gross <jgross@suse.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Mathias Krause <minipli@googlemail.com>,
-	Andrzej Hajda <a.hajda@samsung.com>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Davidlohr Bueso <dbueso@suse.de>
-Subject: Re: [PATCH v5 1/3] video: fbdev: atyfb: clarify ioremap() base and
- length used
-Message-ID: <20150708083849.GB13710@sci.fi>
-References: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
- <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
- <20150625230437.GA4362@sci.fi>
- <CAB=NE6V0HGCkpYFghUyyk=+St-494Y8e9PEakF9F7cEB8vpKvA@mail.gmail.com>
- <20150625231103.GB4362@sci.fi>
- <20150626010927.GI3005@wotan.suse.de>
- <20150626073028.GA14776@pd.tnic>
- <CAB=NE6Uac5x4+fr9d7OymaKS9nG=Da3h+qW7Ni0o0XGOSagEdg@mail.gmail.com>
- <CAB=NE6UKnhx0PoJp_wHeZMnXxHLsd8snzu2bOj=VWde=Bo-hVg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAB=NE6UKnhx0PoJp_wHeZMnXxHLsd8snzu2bOj=VWde=Bo-hVg@mail.gmail.com>
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 03/36] PCI: Use correct align for optional only resources during sorting for resource allocation
+Date: Mon,  6 Jul 2015 16:38:53 -0700
+Message-Id: <1436225966-27247-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 07, 2015 at 05:24:57PM -0700, Luis R. Rodriguez wrote:
-> On Thu, Jul 2, 2015 at 4:23 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> > On Fri, Jun 26, 2015 at 12:30 AM, Borislav Petkov <bp@suse.de> wrote:
-> >> On Fri, Jun 26, 2015 at 03:09:27AM +0200, Luis R. Rodriguez wrote:
-> >>> Sure, mind this as a follow up patch if its too late?
-> >>
-> >> No need, you can send me an updated one - I'll replace it.
-> >
-> > Will do!
-> 
-> OK the commend I'm adding:
-> 
-> @@ -3489,6 +3489,15 @@ static int atyfb_setup_generic(struct pci_dev
-> *pdev, struct fb_info *info,
-> 
->         /* Map in frame buffer */
->         info->fix.smem_start = addr;
-> +
-> +       /*
-> +        * The framebuffer is not always 8 MiB that's just the size of the
-> +        * PCI BAR, this is later corrected for use with write-combining
-> +        * helpers with aty_fudge_framebuffer_len() which will adjust the
-> +        * framebuffer accordingly depending on the device.
+During sorting before assign, we only put resource with non-zero align
+in the sorted list, so for optional resources that must part is 0 and only
+have addon parts, we need to have correct align.
 
-That somehow gives me the impression that aty_fudge_framebuffer_len()
-changes smem_len to match the framebuffer size, which it does
-not.
+Use addon resource align instead in that case.
 
-Dunno, maybe something like this?
-/*
- * The framebuffer is not always 8 MiB that's just the size of the
- * PCI BAR. We temporarily abuse smem_len here to store the size
- * of the BAR. aty_init() will later correct it to match the actual
- * framebuffer size.
- *
- * On devices that don't have the auxiliary register aperture, the
- * registers are housed at the top end of the framebuffer PCI BAR.
- * aty_fudge_framebuffer_len() is used to reduce smem_len to not
- * overlap with the registers.
- */
+Sorted list will contain must res align/size to 0/0 to hold spot for
+optional resources.
 
-> We do this
-> +        * to match semantics over ioremap calls on framebuffer devices
-> +        * with with other drivers with the info->fix.smem_len.
-> +        */
->         info->fix.smem_len = 0x800000;
-> 
->         info->screen_base = ioremap(info->fix.smem_start, info->fix.smem_len);
-> 
-> Will respin.
-> 
->  Luis
+And later we will treat the ROM BAR as optional resource with this support.
 
+The patch will pass realloc_head from sizing stage to sorting stage, and
+get entry from realloc and calculate align from the entry.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 45 ++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 38 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 247d8fe..9f4c477 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -145,9 +145,38 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	return dev_res->min_align;
+ }
+ 
++static resource_size_t __pci_resource_alignment(
++				struct pci_dev *dev,
++				struct resource *r,
++				struct list_head *realloc_head)
++{
++	resource_size_t r_align = pci_resource_alignment(dev, r);
++	resource_size_t orig_start, orig_end;
++
++	if (r_align || !realloc_head)
++		return r_align;
++
++	orig_start = r->start;
++	orig_end = r->end;
++	r->end += get_res_add_size(realloc_head, r);
++	if ((r->flags & IORESOURCE_STARTALIGN)) {
++		resource_size_t r_size = resource_size(r);
++		resource_size_t add_align = get_res_add_align(realloc_head, r);
++
++		r->start = add_align;
++		r->end = add_align + r_size - 1;
++	}
++	r_align = pci_resource_alignment(dev, r);
++	r->start = orig_start;
++	r->end = orig_end;
++
++	return r_align;
++}
+ 
+ /* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
++static void pdev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
++				 struct list_head *head)
+ {
+ 	int i;
+ 
+@@ -165,7 +194,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		if (!(r->flags) || r->parent)
+ 			continue;
+ 
+-		r_align = pci_resource_alignment(dev, r);
++		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+ 				 i, r);
+@@ -183,8 +212,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		list_for_each_entry(dev_res, head, list) {
+ 			resource_size_t align;
+ 
+-			align = pci_resource_alignment(dev_res->dev,
+-							 dev_res->res);
++			align = __pci_resource_alignment(dev_res->dev,
++							 dev_res->res,
++							 realloc_head);
+ 
+ 			if (r_align > align) {
+ 				n = &dev_res->list;
+@@ -197,6 +227,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ }
+ 
+ static void __dev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+ 	u16 class = dev->class >> 8;
+@@ -213,7 +244,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
+ 
+-	pdev_sort_resources(dev, head);
++	pdev_sort_resources(dev, realloc_head, head);
+ }
+ 
+ static inline void reset_resource(struct resource *res)
+@@ -501,7 +532,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
+ 
+-	__dev_sort_resources(dev, &head);
++	__dev_sort_resources(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -514,7 +545,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, &head);
++		__dev_sort_resources(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
 -- 
-Ville Syrjälä
-syrjala@sci.fi
-http://www.sci.fi/~syrjala/
+1.8.4.5
+
