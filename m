@@ -1,204 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:2995 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751820AbbGVVyG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 17:54:06 -0400
-From: Will Davis <wdavis@nvidia.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:21488 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755815AbbGFX5t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:57:49 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	"Konrad Wilk" <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"Terence Ripperda" <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	"Jerome Glisse" <jglisse@redhat.com>
-Subject: [PATCH v4 08/12] iommu/amd: Implement (un)map_peer_resource
-Date: Wed, 22 Jul 2015 16:39:53 -0500
-Message-ID: <1437601197-6481-9-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
-References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 08/36] PCI: Rename pdev_sort_resources to pdev_check_resources
+Date: Mon,  6 Jul 2015 16:38:58 -0700
+Message-Id: <1436225966-27247-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Implement 'map_peer_resource' for the AMD IOMMU driver. Generalize the
-existing map_page implementation to operate on a physical address, and
-make both map_page and map_resource wrappers around that helper (and
-similarly, for unmap_page and unmap_resource).
+We don't do sorting in those functions, so change "sort" to "check"
+instead.
 
-This allows a device to map another's resource, to enable peer-to-peer
-transactions.
-
-This is guarded behind CONFIG_HAS_DMA_P2P, since the struct dma_map_ops
-members are as well.
-
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/iommu/amd_iommu.c | 99 ++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 86 insertions(+), 13 deletions(-)
+ drivers/pci/setup-bus.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index a57e9b7..adf9496 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -471,6 +471,10 @@ DECLARE_STATS_COUNTER(cnt_map_single);
- DECLARE_STATS_COUNTER(cnt_unmap_single);
- DECLARE_STATS_COUNTER(cnt_map_sg);
- DECLARE_STATS_COUNTER(cnt_unmap_sg);
-+#ifdef CONFIG_HAS_DMA_P2P
-+DECLARE_STATS_COUNTER(cnt_map_peer_resource);
-+DECLARE_STATS_COUNTER(cnt_unmap_peer_resource);
-+#endif
- DECLARE_STATS_COUNTER(cnt_alloc_coherent);
- DECLARE_STATS_COUNTER(cnt_free_coherent);
- DECLARE_STATS_COUNTER(cross_page);
-@@ -509,6 +513,10 @@ static void amd_iommu_stats_init(void)
- 	amd_iommu_stats_add(&cnt_unmap_single);
- 	amd_iommu_stats_add(&cnt_map_sg);
- 	amd_iommu_stats_add(&cnt_unmap_sg);
-+#ifdef CONFIG_HAS_DMA_P2P
-+	amd_iommu_stats_add(&cnt_map_peer_resource);
-+	amd_iommu_stats_add(&cnt_unmap_peer_resource);
-+#endif
- 	amd_iommu_stats_add(&cnt_alloc_coherent);
- 	amd_iommu_stats_add(&cnt_free_coherent);
- 	amd_iommu_stats_add(&cross_page);
-@@ -2585,20 +2593,16 @@ static void __unmap_single(struct dma_ops_domain *dma_dom,
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a7dbf54..e976aa2 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -201,8 +201,8 @@ static resource_size_t __pci_resource_alignment(
+ 	return r_align;
  }
  
- /*
-- * The exported map_single function for dma_ops.
-+ * Wrapper function that contains code common to mapping a physical address
-+ * range from a page or a resource.
-  */
--static dma_addr_t map_page(struct device *dev, struct page *page,
--			   unsigned long offset, size_t size,
--			   enum dma_data_direction dir,
--			   struct dma_attrs *attrs)
-+static dma_addr_t __map_phys(struct device *dev, phys_addr_t paddr,
-+			     size_t size, enum dma_data_direction dir)
+-/* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev,
++/* check resources and save to the list */
++static void pdev_check_resources(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
  {
- 	unsigned long flags;
- 	struct protection_domain *domain;
- 	dma_addr_t addr;
- 	u64 dma_mask;
--	phys_addr_t paddr = page_to_phys(page) + offset;
--
--	INC_STATS_COUNTER(cnt_map_single);
- 
- 	domain = get_domain(dev);
- 	if (PTR_ERR(domain) == -EINVAL)
-@@ -2624,16 +2628,15 @@ out:
+@@ -238,7 +238,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 	}
  }
  
- /*
-- * The exported unmap_single function for dma_ops.
-+ * Wrapper function that contains code common to unmapping a physical address
-+ * range from a page or a resource.
-  */
--static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
--		       enum dma_data_direction dir, struct dma_attrs *attrs)
-+static void __unmap_phys(struct device *dev, dma_addr_t dma_addr, size_t size,
-+			 enum dma_data_direction dir)
+-static void __dev_sort_resources(struct pci_dev *dev,
++static void __dev_check_resources(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
  {
- 	unsigned long flags;
- 	struct protection_domain *domain;
+@@ -256,7 +256,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
  
--	INC_STATS_COUNTER(cnt_unmap_single);
--
- 	domain = get_domain(dev);
- 	if (IS_ERR(domain))
- 		return;
-@@ -2707,6 +2710,72 @@ unmap:
+-	pdev_sort_resources(dev, realloc_head, head);
++	pdev_check_resources(dev, realloc_head, head);
  }
  
- /*
-+ * The exported map_single function for dma_ops.
-+ */
-+static dma_addr_t map_page(struct device *dev, struct page *page,
-+			   unsigned long offset, size_t size,
-+			   enum dma_data_direction dir,
-+			   struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_map_single);
-+
-+	return __map_phys(dev, page_to_phys(page) + offset, size, dir);
-+}
-+
-+/*
-+ * The exported unmap_single function for dma_ops.
-+ */
-+static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
-+		       enum dma_data_direction dir, struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_unmap_single);
-+
-+	__unmap_phys(dev, dma_addr, size, dir);
-+}
-+
-+#ifdef CONFIG_HAS_DMA_P2P
-+/*
-+ * The exported map_peer_resource function for dma_ops.
-+ */
-+static dma_peer_addr_t map_peer_resource(struct device *dev,
-+					 struct device *peer,
-+					 struct resource *res,
-+					 unsigned long offset,
-+					 size_t size,
-+					 enum dma_data_direction dir,
-+					 struct dma_attrs *attrs)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct pci_dev *ppeer = to_pci_dev(peer);
-+	struct pci_host_bridge *hbdev = pci_find_host_bridge(pdev->bus);
-+	struct pci_host_bridge *hbpeer = pci_find_host_bridge(ppeer->bus);
-+
-+	INC_STATS_COUNTER(cnt_map_peer_resource);
-+
-+	/*
-+	 * Disallow the peer-to-peer mapping if the devices do not share a host
-+	 * bridge.
-+	 */
-+	if (hbdev != hbpeer)
-+		return DMA_ERROR_CODE;
-+
-+	return __map_phys(dev, res->start + offset, size, dir);
-+}
-+
-+/*
-+ * The exported unmap_peer_resource function for dma_ops.
-+ */
-+static void unmap_peer_resource(struct device *dev, dma_peer_addr_t dma_addr,
-+				size_t size, enum dma_data_direction dir,
-+				struct dma_attrs *attrs)
-+{
-+	INC_STATS_COUNTER(cnt_unmap_peer_resource);
-+
-+	__unmap_phys(dev, dma_addr, size, dir);
-+}
-+#endif
-+
-+/*
-  * The exported map_sg function for dma_ops (handles scatter-gather
-  * lists).
-  */
-@@ -2852,6 +2921,10 @@ static struct dma_map_ops amd_iommu_dma_ops = {
- 	.unmap_page = unmap_page,
- 	.map_sg = map_sg,
- 	.unmap_sg = unmap_sg,
-+#ifdef CONFIG_HAS_DMA_P2P
-+	.map_peer_resource = map_peer_resource,
-+	.unmap_peer_resource = unmap_peer_resource,
-+#endif
- 	.dma_supported = amd_iommu_dma_supported,
- };
+ static inline void reset_resource(struct resource *res)
+@@ -556,7 +556,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
  
+-	__dev_sort_resources(dev, add_head, &head);
++	__dev_check_resources(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -569,7 +569,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, realloc_head, &head);
++		__dev_check_resources(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
 -- 
-2.4.6
+1.8.4.5
 
