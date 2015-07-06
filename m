@@ -1,158 +1,192 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:49980 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755216AbbGZS7X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 26 Jul 2015 14:59:23 -0400
-Date: Sun, 26 Jul 2015 20:00:03 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "Jayachandran C." <jchandra@broadcom.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	James Morse <James.Morse@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: Re: [PATCH v2 2/2] ARM: pci: kill pcibios_msi_controller
-Message-ID: <20150726190003.GA9733@red-moon>
-References: <1437754383-8162-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1437754383-8162-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20150726152528.GB2357@jayachandranc.netlogicmicro.com>
- <20150726181646.GA9584@red-moon>
- <20150726184345.GA27049@jayachandranc.netlogicmicro.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150726184345.GA27049@jayachandranc.netlogicmicro.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 20/36] resources: Make allocate_resource return just fit resource
+Date: Mon,  6 Jul 2015 16:39:10 -0700
+Message-Id: <1436225966-27247-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 26, 2015 at 07:43:46PM +0100, Jayachandran C. wrote:
-> On Sun, Jul 26, 2015 at 07:16:46PM +0100, Lorenzo Pieralisi wrote:
-> > On Sun, Jul 26, 2015 at 04:25:29PM +0100, Jayachandran C. wrote:
-> > > On Fri, Jul 24, 2015 at 05:13:03PM +0100, Lorenzo Pieralisi wrote:
-> > > > On ARM PCI systems relying on the pcibios API to initialize PCI host
-> > > > controllers, the pcibios_msi_controller weak callback is used to look-up
-> > > > the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
-> > > > 
-> > > > pci_sys_data is an ARM specific structure, which prevents using the
-> > > > same mechanism (so same PCI host controller drivers) on ARM64 systems.
-> > > > 
-> > > > Since the struct pci_bus already contains an msi_controller pointer and
-> > > > the kernel already uses it to look-up the msi controller,
-> > > > this patch converts ARM host controller and related pcibios/host bridges
-> > > > initialization routines so that the msi_controller pointer look-up can be
-> > > > carried out by PCI core code through the struct pci_bus msi pointer,
-> > > > removing the need for the arch specific pcibios_msi_controller callback
-> > > > and the related pci_sys_data msi_ctrl pointer.
-> > > > 
-> > > > ARM is the only arch relying on the pcibios_msi_controller() weak
-> > > > function, hence this patch removes the default weak implementation
-> > > > from PCI core code since it becomes of no use.
-> > > > 
-> > > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > > Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> > > > Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> > > > Cc: Arnd Bergmann <arnd@arndb.de>
-> > > > Cc: Jingoo Han <jingoohan1@gmail.com>
-> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Cc: Simon Horman <horms@verge.net.au>
-> > > > Cc: Russell King <linux@arm.linux.org.uk>
-> > > > Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > > > Cc: Thierry Reding <thierry.reding@gmail.com>
-> > > > Cc: Michal Simek <michal.simek@xilinx.com>
-> > > > Cc: Marc Zyngier <marc.zyngier@arm.com>
-> > > > ---
-> > > > v1->v2
-> > > > 
-> > > > - Added patch to replace panic statements with WARN
-> > > > - Removed unused pcibios_msi_controller() and pci_msi_controller() from
-> > > >   core code
-> > > > - Dropped RFT status
-> > > > 
-> > > > v1: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/356028.html
-> > > > 
-> > > >  arch/arm/include/asm/mach/pci.h    |  3 ---
-> > > >  arch/arm/kernel/bios32.c           | 29 +++++++++++++----------------
-> > > >  drivers/pci/host/pcie-designware.c |  9 +++++++--
-> > > >  drivers/pci/host/pcie-xilinx.c     | 12 ++++++++++--
-> > > >  drivers/pci/msi.c                  | 17 +----------------
-> > > >  5 files changed, 31 insertions(+), 39 deletions(-)
-> > > > 
-> > > [...]
-> > > > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > > > index f66be86..0d20142 100644
-> > > > --- a/drivers/pci/msi.c
-> > > > +++ b/drivers/pci/msi.c
-> > > > @@ -77,24 +77,9 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
-> > > >  
-> > > >  /* Arch hooks */
-> > > >  
-> > > > -struct msi_controller * __weak pcibios_msi_controller(struct pci_dev *dev)
-> > > > -{
-> > > > -	return NULL;
-> > > > -}
-> > > > -
-> > > > -static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
-> > > > -{
-> > > > -	struct msi_controller *msi_ctrl = dev->bus->msi;
-> > > > -
-> > > > -	if (msi_ctrl)
-> > > > -		return msi_ctrl;
-> > > > -
-> > > > -	return pcibios_msi_controller(dev);
-> > > > -}
-> > > > -
-> > > >  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-> > > >  {
-> > > > -	struct msi_controller *chip = pci_msi_controller(dev);
-> > > > +	struct msi_controller *chip = dev->bus->msi;
-> > > >  	int err;
-> > > >  
-> > > >  	if (!chip || !chip->setup_irq)
-> > > 
-> > > Don't you have to go to the top level bus and get the ->msi pointer? Something
-> > > like:
-> > > 
-> > > 	for (bus = dev->bus; bus != NULL; bus = bus->parent)
-> > > 		if (bus->msi)
-> > > 			return bus->msi;
-> > > 
-> > > I have not been following this closely, so I may have missed some patches.
-> > 
-> > The msi pointer is initialized from parent to child in
-> > pci_alloc_child_bus(), so PCI core does that for us,
-> > that's my understanding.
-> > 
-> > It works the same as sysdata pointer, which is why
-> > pcibios_msi_controller works in the current kernel.
-> 
-> Thanks.
-> 
-> > On a side note, are you able to prepare a new version
-> > of your set to enable the PCI generic host on ARM64
-> > (and remove pci_sys_data and related ifdef CONFIG_ARM
-> > from it) ?
-> > 
-> > We are not far from removing the pci_sys_data dependency,
-> > if you can't prepare a new version of your series let me
-> > know I can do it on your behalf.
-> 
-> I will post an updated patch with a minor fix. I will also
-> add a patch for parsing msi-parent and setting ->msi on
-> the root bus.
+Find all suitable empty slots and pick one just fit, so we could save
+the big slot for needed ones later when we have several pcie switches
+and some bridges get assigned bios and we need to assign others in kernel.
 
-There is no need for any msi parsing in the PCI generic host,
-Marc implemented mechanism for us in core code:
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 68 insertions(+), 13 deletions(-)
 
-https://lkml.org/lkml/2015/7/7/724
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 830cc11..c630ef1 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -48,6 +48,7 @@ struct resource_constraint {
+ 	resource_size_t (*alignf)(void *, const struct resource *,
+ 			resource_size_t, resource_size_t);
+ 	void *alignf_data;
++	bool fit;
+ };
+ 
+ static DEFINE_RWLOCK(resource_lock);
+@@ -554,12 +555,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
+  * alignment constraints
+  */
+ static int __find_resource(struct resource *root, struct resource *old,
+-			 struct resource *new,
++			 struct resource *new, struct resource *avail,
+ 			 resource_size_t  size,
+ 			 struct resource_constraint *constraint)
+ {
+ 	struct resource *this = root->child;
+-	struct resource tmp = *new, avail, alloc;
++	struct resource tmp = *new, availx, alloc;
++
++	if (!avail || avail == new)
++		avail = &availx;
+ 
+ 	tmp.start = root->start;
+ 	/*
+@@ -583,15 +587,16 @@ static int __find_resource(struct resource *root, struct resource *old,
+ 		arch_remove_reservations(&tmp);
+ 
+ 		/* Check for overflow after ALIGN() */
+-		avail.start = ALIGN(tmp.start, constraint->align);
+-		avail.end = tmp.end;
+-		avail.flags = new->flags & ~IORESOURCE_UNSET;
+-		if (avail.start >= tmp.start) {
+-			alloc.flags = avail.flags;
+-			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
++		avail->start = ALIGN(tmp.start, constraint->align);
++		avail->end = tmp.end;
++		avail->flags = new->flags & ~IORESOURCE_UNSET;
++		if (avail->start >= tmp.start) {
++			alloc.flags = avail->flags;
++			alloc.start = constraint->alignf(
++					constraint->alignf_data, avail,
+ 					size, constraint->align);
+ 			alloc.end = alloc.start + size - 1;
+-			if (resource_contains(&avail, &alloc)) {
++			if (resource_contains(avail, &alloc)) {
+ 				new->start = alloc.start;
+ 				new->end = alloc.end;
+ 				return 0;
+@@ -608,6 +613,11 @@ next:		if (!this || this->end == root->end)
+ 	return -EBUSY;
+ }
+ 
++struct good_resource {
++	struct list_head list;
++	struct resource avail;
++	struct resource new;
++};
+ /*
+  * Find empty slot in the resource tree given range and alignment.
+  */
+@@ -615,7 +625,49 @@ static int find_resource(struct resource *root, struct resource *new,
+ 			resource_size_t size,
+ 			struct resource_constraint  *constraint)
+ {
+-	return  __find_resource(root, NULL, new, size, constraint);
++	int ret = -1;
++	LIST_HEAD(head);
++	struct good_resource *good, *tmp;
++	resource_size_t avail_size = (resource_size_t)-1ULL;
++
++	if (!constraint->fit)
++		return __find_resource(root, NULL, new, NULL, size,
++					constraint);
++
++	/* find all suitable ones and add to the list */
++	for (;;) {
++		good = kzalloc(sizeof(*good), GFP_KERNEL);
++		if (!good)
++			break;
++
++		good->new.start = new->start;
++		good->new.end = new->end;
++		good->new.flags = new->flags;
++		ret = __find_resource(root, NULL, &good->new, &good->avail,
++					size, constraint);
++		if (ret || __request_resource(root, &good->avail)) {
++			ret = -EBUSY;
++			kfree(good);
++			break;
++		}
++
++		list_add(&good->list, &head);
++	}
++
++	/* pick up the smallest one and delete the list */
++	list_for_each_entry_safe(good, tmp, &head, list) {
++		if (resource_size(&good->avail) < avail_size) {
++			avail_size = resource_size(&good->avail);
++			new->start = good->new.start;
++			new->end = good->new.end;
++			ret = 0;
++		}
++		list_del(&good->list);
++		__release_resource(&good->avail);
++		kfree(good);
++	}
++
++	return ret;
+ }
+ 
+ /**
+@@ -636,7 +688,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
+ 
+-	if ((err = __find_resource(root, old, &new, newsize, constraint)))
++	err = __find_resource(root, old, &new, NULL, newsize, constraint);
++	if (err)
+ 		goto out;
+ 
+ 	if (resource_contains(&new, old)) {
+@@ -675,6 +728,7 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ * @fit: only allocate fit range.
+  *
+  * Caller need to hold resource_lock if needed.
+  */
+@@ -685,7 +739,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 						  const struct resource *,
+ 						  resource_size_t,
+ 						  resource_size_t),
+-				void *alignf_data)
++				void *alignf_data, bool fit)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -698,6 +752,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.align = align;
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
++	constraint.fit = fit;
+ 
+ 	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+@@ -738,7 +793,7 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 
+ 	write_lock(&resource_lock);
+ 	ret = __allocate_resource(root, new, size, min, max, align,
+-				   alignf, alignf_data);
++				   alignf, alignf_data, true);
+ 	write_unlock(&resource_lock);
+ 
+ 	return ret;
+-- 
+1.8.4.5
 
-Thanks,
-Lorenzo
