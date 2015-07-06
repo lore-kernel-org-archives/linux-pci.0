@@ -1,175 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:60305 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753226AbbGXDJZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 23:09:25 -0400
-Message-ID: <55B1AC63.1070204@roeck-us.net>
-Date: Thu, 23 Jul 2015 20:09:23 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
-References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
-In-Reply-To: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from userp1040.oracle.com ([156.151.31.81]:17056 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755823AbbGFXkR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:40:17 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 00/36] PCI: Resource allocation cleanup for v4.3
+Date: Mon,  6 Jul 2015 16:38:50 -0700
+Message-Id: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/07/2015 11:11 AM, Guenter Roeck wrote:
-> The PCI subsystem always assumes that I/O is supported on PCIe bridges
-> and tries to assign an I/O window to each child bus even if that is not
-> the case.
->
-> This may result in messages such as
->
-> pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
-> 					get_res_add_size add_size 1000
-> pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
-> pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
->
-> for each bridge port, even if a bus or its parent does not support
-> I/O in the first place.
->
-> To avoid this message, check if a bus supports I/O before trying to
-> enable it. Also check if the root bus has an IO window assigned;
-> if not, it does not make sense to try to assign one to any of its
-> child busses.
->
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> ---
-> v2: Use a new bus flag to indicate if IO is supported on a bus or not.
->      Using IORESOURCE_DISABLED in resource flags turned out to be futile,
->      since the term "!res->flags" is widely used to detect if a resource
->      window is enabled or not, and setting IORESOURCE_DISABLED would
->      affect all this code.
->
-> This patch depends on 'PCI: move pci_read_bridge_bases to the generic
-> PCI layer' by Lorenzo Pieralisi; without it, pci_read_bridge_io()
-> is not always called.
->
-> With this version of the patch, pci_bridge_check_ranges() still sets
-> IORESOURCE_IO. Moving this into pci_read_bridge_io() had undesirable
-> side effects and resulted in missing IO window assignments on one of
-> the x86 platforms I tested with. I'll have to explore this further.
->
+Hi,
 
-Hi Bjorn,
+After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
+to 64-bit resources), we have several reports on resource allocation
+failure, and we try to fix the problem with resource clip, and get
+more problems.
 
-any comments on this patch ? Is the new bus flag acceptable ?
+One is realloc fail with two graphics cards above 4G.
+One is from sparc that have problem with clip as we don't parse
+mem64 for it.
 
-Thanks,
-Guenter
+Other report is about pci remove/rescan does not work on some setup
+when BIOS tend to allocate small bus size.
 
->   drivers/pci/probe.c     | 46 ++++++++++++++++++++++++++++++++++++++++++++++
->   drivers/pci/setup-bus.c |  9 +--------
->   include/linux/pci.h     |  1 +
->   3 files changed, 48 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cefd636681b6..b21cba7aeb79 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -332,6 +332,35 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
->   	}
->   }
->
-> +static bool pci_bus_supports_io(struct pci_bus *bus)
-> +{
-> +	struct pci_dev *dev = bus->self;
-> +	u16 io;
-> +
-> +	pci_read_config_word(dev, PCI_IO_BASE, &io);
-> +	if (!io) {
-> +		pci_write_config_word(dev, PCI_IO_BASE, 0xe0f0);
-> +		pci_read_config_word(dev, PCI_IO_BASE, &io);
-> +		pci_write_config_word(dev, PCI_IO_BASE, 0x0);
-> +	}
-> +	return !!io;
-> +}
-> +
-> +static bool pci_root_has_io_resource(struct pci_bus *bus)
-> +{
-> +	struct resource *res;
-> +	int i;
-> +
-> +	while (bus->parent)
-> +		bus = bus->parent;
-> +
-> +	 pci_bus_for_each_resource(bus, res, i) {
-> +		if (res && (res->flags & IORESOURCE_IO))
-> +			return true;
-> +	 }
-> +	 return false;
-> +}
-> +
->   static void pci_read_bridge_io(struct pci_bus *child)
->   {
->   	struct pci_dev *dev = child->self;
-> @@ -340,6 +369,23 @@ static void pci_read_bridge_io(struct pci_bus *child)
->   	struct pci_bus_region region;
->   	struct resource *res;
->
-> +	if (child->bus_flags & PCI_BUS_FLAGS_NO_IO)
-> +		return;
-> +
-> +	if (!pci_bus_supports_io(child)) {
-> +		dev_printk(KERN_DEBUG, &dev->dev,
-> +			   "  bus does not support IO\n");
-> +		child->bus_flags |= PCI_BUS_FLAGS_NO_IO;
-> +		return;
-> +	}
-> +
-> +	if (!pci_root_has_io_resource(child)) {
-> +		dev_printk(KERN_DEBUG, &dev->dev,
-> +			   "  no IO window on root bus\n");
-> +		child->bus_flags |= PCI_BUS_FLAGS_NO_IO;
-> +		return;
-> +	}
-> +
->   	io_mask = PCI_IO_RANGE_MASK;
->   	io_granularity = 0x1000;
->   	if (dev->io_window_1k) {
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 508cc56130e3..c8c7eecadbfe 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -744,7 +744,6 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
->      base/limit registers must be read-only and read as 0. */
->   static void pci_bridge_check_ranges(struct pci_bus *bus)
->   {
-> -	u16 io;
->   	u32 pmem;
->   	struct pci_dev *bridge = bus->self;
->   	struct resource *b_res;
-> @@ -752,13 +751,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->   	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
->   	b_res[1].flags |= IORESOURCE_MEM;
->
-> -	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> -	if (!io) {
-> -		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
-> -		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> -		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-> -	}
-> -	if (io)
-> +	if (!(bus->bus_flags & PCI_BUS_FLAGS_NO_IO))
->   		b_res[0].flags |= IORESOURCE_IO;
->
->   	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8a0321a8fb59..b910ed04aa0b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -191,6 +191,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
->   enum pci_bus_flags {
->   	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
->   	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
-> +	PCI_BUS_FLAGS_NO_IO    = (__force pci_bus_flags_t) 4,
->   };
->
->   /* These values come from the PCI Express Spec */
->
+This patchset enhance resource allocation to address those problems.
+1. optimize bus mmio alignment calculation.
+2. optimize bus mmio optional alignment calculation.
+3. add support for alt size to prefer small bus size to small bus alignment.
+   when we have small resource window on parent bridges.
+4. treat ROM bar as optional resource.
+5. during allocation, will pick up just fit resource.
+6. parse MEM64 for sparc and other system with OF.
+7. treat non-pref mmio64 if parent bridges are all pcie.
+8. restore old pref allocation logic if hostbridge does not support mmio64 really.
+9. don't realloc resource if device firmware does not support bar change.
+10. add pci=assign_pref_bars to clear and assign pref bars.
+11. don't clear resource when allocation fails.
+
+I put latest copy at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-v4.3-next
+
+That is based on kind of v4.2-rc1 on 07/06/2015.
+
+Please give it a try on your setup.
+
+Thanks
+
+Yinghai
+
+
+Yinghai Lu (36):
+  PCI: Cleanup res_to_dev_res() printout for addon resources
+  PCI: Reuse res_to_dev_res in reassign_resources_sorted
+  PCI: Use correct align for optional only resources during sorting for resource allocation
+  PCI: Optimize bus align/size calculation during sizing
+  PCI: Optimize bus align/size calculation for optional during sizing
+  PCI: Reorder resources list for must/optional resources
+  PCI: Remove duplicated code for resource sorting
+  PCI: Rename pdev_sort_resources to pdev_check_resources
+  PCI: Treat ROM resource as optional during realloc
+  PCI: Add debug printout during releasing partial must/optinal assigned resources
+  PCI: Simplify res reference using in __assign_resourcs_sorted
+  PCI: Separate realloc list checking after allocation
+  PCI: Add __add_to_list()
+  PCI: Separate must_add assigning to another function
+  PCI: Bail out early if there is no addon
+  PCI: Add alt_size allocation support
+  PCI: Add support for more than two alt_size under same bridge
+  PCI: Better support for two alt_size
+  resources: Split out __allocate_resource()
+  resources: Make allocate_resource return just fit resource
+  PCI: Check pref compatible bit for mem64 resource of pcie device
+  PCI: Only treat non-pef mmio64 as pref if all bridges has MEM_64
+  PCI: Add has_mem64 for host_bridge
+  PCI: Only treat non-pef mmio64 as pref if host-bridge has_mem64
+  PCI: Restore pref mmio allocation logic for hostbridge without mmio64
+  sparc/PCI: Add mem64 resource parsing for root bus
+  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
+  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
+  of/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+  PCI: Treat optional as must in first try for bridge rescan
+  PCI: Get new realloc size for bridge for last try
+  PCI: Don't release sibiling bridge resources during hotplug
+  PCI: Don't release fixed resource for realloc
+  PCI: Set resource to FIXED for lsi devices
+  PCI, x86: Add pci=assign_pref_bars to re-allocate pref bars
+  PCI: Don't set flags to 0 when assign resource fail
+
+ arch/powerpc/kernel/pci_of_scan.c  |    4 +-
+ arch/sparc/kernel/of_device_32.c   |    5 +-
+ arch/sparc/kernel/of_device_64.c   |    5 +-
+ arch/sparc/kernel/pci.c            |    7 +-
+ arch/sparc/kernel/pci_common.c     |   15 +-
+ arch/sparc/kernel/pci_impl.h       |    1 +
+ arch/x86/include/asm/pci_x86.h     |    1 +
+ arch/x86/pci/common.c              |    3 +
+ arch/x86/pci/i386.c                |   56 +-
+ drivers/of/address.c               |    4 +-
+ drivers/pci/bus.c                  |    4 +-
+ drivers/pci/hotplug/acpiphp_glue.c |    1 +
+ drivers/pci/pci.c                  |    3 +-
+ drivers/pci/pci.h                  |    4 +
+ drivers/pci/probe.c                |   42 ++
+ drivers/pci/quirks.c               |   20 +
+ drivers/pci/setup-bus.c            | 1119 +++++++++++++++++++++++++++---------
+ drivers/pci/setup-res.c            |   24 +-
+ include/linux/ioport.h             |    2 +-
+ include/linux/pci.h                |    2 +
+ kernel/resource.c                  |  175 ++++--
+ 21 files changed, 1164 insertions(+), 333 deletions(-)
+
+-- 
+1.8.4.5
 
