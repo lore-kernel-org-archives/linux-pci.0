@@ -1,89 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:13593 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300AbbGVVyJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 17:54:09 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:37511 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758015AbbGGPPY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 11:15:24 -0400
+Received: by igau2 with SMTP id u2so39144622iga.0
+        for <linux-pci@vger.kernel.org>; Tue, 07 Jul 2015 08:15:22 -0700 (PDT)
+Date: Tue, 7 Jul 2015 10:15:17 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Mark Hounschell <markh@compro.net>
+Cc: wdavis@nvidia.com, joro@8bytes.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
+	konrad.wilk@oracle.com, Jonathan Corbet <corbet@lwn.net>,
 	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: [PATCH v4 12/12] x86: declare support for DMA P2P
-Date: Wed, 22 Jul 2015 16:39:57 -0500
-Message-ID: <1437601197-6481-13-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
-References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
+Message-ID: <20150707151517.GA14215@google.com>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+ <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
+ <20150519234300.GA31666@google.com>
+ <555C79E5.9040507@compro.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <555C79E5.9040507@compro.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use CONFIG_HAS_DMA_P2P to declare that we want the DMA peer resource APIs
-enabled on x86, and provide the requisite dma_peer_mapping_error()
-implementation.
+[+cc Alex]
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
----
- arch/x86/Kconfig                   |  1 +
- arch/x86/include/asm/dma-mapping.h | 18 ++++++++++++++++--
- 2 files changed, 17 insertions(+), 2 deletions(-)
+Hi Mark,
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 3dbb7e7..581d1ad 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -149,6 +149,7 @@ config X86
- 	select VIRT_TO_BUS
- 	select X86_DEV_DMA_OPS			if X86_64
- 	select X86_FEATURE_NAMES		if PROC_FS
-+	select HAS_DMA_P2P
- 
- config INSTRUCTION_DECODER
- 	def_bool y
-diff --git a/arch/x86/include/asm/dma-mapping.h b/arch/x86/include/asm/dma-mapping.h
-index 1f5b728..64472d8 100644
---- a/arch/x86/include/asm/dma-mapping.h
-+++ b/arch/x86/include/asm/dma-mapping.h
-@@ -44,16 +44,30 @@ static inline struct dma_map_ops *get_dma_ops(struct device *dev)
- #include <asm-generic/dma-mapping-common.h>
- 
- /* Make sure we keep the same behaviour */
--static inline int dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
-+static inline int dma_mapping_error_common(struct device *dev, u64 dma_addr)
- {
- 	struct dma_map_ops *ops = get_dma_ops(dev);
--	debug_dma_mapping_error(dev, dma_addr);
- 	if (ops->mapping_error)
- 		return ops->mapping_error(dev, dma_addr);
- 
- 	return (dma_addr == DMA_ERROR_CODE);
- }
- 
-+static inline int dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
-+{
-+	debug_dma_mapping_error(dev, dma_addr);
-+	return dma_mapping_error_common(dev, (u64)dma_addr);
-+}
-+
-+#ifdef CONFIG_HAS_DMA_P2P
-+static inline int dma_peer_mapping_error(struct device *dev,
-+					 dma_peer_addr_t dma_addr)
-+{
-+	debug_dma_peer_mapping_error(dev, dma_addr);
-+	return dma_mapping_error_common(dev, (u64)dma_addr);
-+}
-+#endif
-+
- #define dma_alloc_noncoherent(d, s, h, f) dma_alloc_coherent(d, s, h, f)
- #define dma_free_noncoherent(d, s, v, h) dma_free_coherent(d, s, v, h)
- 
--- 
-2.4.6
+On Wed, May 20, 2015 at 08:11:17AM -0400, Mark Hounschell wrote:
+> Most currently available hardware doesn't allow reads but will allow
+> writes on PCIe peer-to-peer transfers. All current AMD chipsets are
+> this way. I'm pretty sure all Intel chipsets are this way also. What
+> happens with reads is they are just dropped with no indication of
+> error other than the data will not be as expected. Supposedly the
+> PCIe spec does not even require any peer-to-peer support. Regular
+> PCI there is no problem and this API could be useful. However I
+> doubt seriously you will find a pure PCI motherboard that has an
+> IOMMU.
+> 
+> I don't understand the chipset manufactures reasoning for disabling
+> PCIe peer-to-peer reads. We would like to make PCIe versions of our
+> cards but their application requires  peer-to-peer reads and writes.
+> So we cannot develop PCIe versions of the cards.
 
+I'd like to understand this better.  Peer-to-peer between two devices
+below the same Root Port should work as long as ACS doesn't prevent
+it.  If we find an Intel or AMD IOMMU, I think we configure ACS to
+prevent direct peer-to-peer (see "pci_acs_enable"), but maybe it could
+still be done with the appropriate IOMMU support.  And if you boot
+with "iommu=off", we don't do that ACS configuration, so peer-to-peer
+should work.
+
+I suppose the problem is that peer-to-peer doesn't work between
+devices under different Root Ports or even devices under different
+Root Complexes?
+
+PCIe r3.0, sec 6.12.1.1, says Root Ports that support peer-to-peer
+traffic are required to implement ACS P2P Request Redirect, so if a
+Root Port doesn't implement RR, we can assume it doesn't support
+peer-to-peer.  But unfortunately the converse is not true: if a Root
+Port implements RR, that does *not* imply that it supports
+peer-to-peer traffic.  
+
+So I don't know how to discover whether peer-to-peer between Root
+Ports or Root Complexes is supported.  Maybe there's some clue in the
+IOMMU?  The Intel VT-d spec mentions it, but "peer" doesn't even
+appear in the AMD spec.
+
+And I'm curious about why writes sometimes work when reads do not.
+That sounds like maybe the hardware support is there, but we don't
+understand how to configure everything correctly.
+
+Can you give us the specifics of the topology you'd like to use, e.g.,
+lspci -vv of the path between the two devices?
+
+Bjorn
