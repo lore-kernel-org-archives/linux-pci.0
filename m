@@ -1,71 +1,77 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 21 Jul 2015 16:37:04 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
 	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v4 19/19] PCI/MSI: Drop domain field from msi_controller
-Message-ID: <20150721213704.GC3691@google.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
- <1436962613-17359-20-git-send-email-marc.zyngier@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436962613-17359-20-git-send-email-marc.zyngier@arm.com>
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v3 03/15] device core: Introduce per-device MSI domain pointer
+Date: Tue,  7 Jul 2015 18:17:53 +0100
+Message-Id: <1436289485-28230-4-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 15, 2015 at 01:16:53PM +0100, Marc Zyngier wrote:
-> The only three users of that field are not using the msi_controller
-> structure anymore, so drop it altogether.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+As MSI-type features are creeping into non-PCI devices, it is
+starting to make sense to give our struct device some form of
+support for this, by allowing a pointer to an MSI irq domain to
+be set/retrieved.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ include/linux/device.h | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-> ---
->  drivers/pci/msi.c   | 2 --
->  include/linux/msi.h | 3 ---
->  2 files changed, 5 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index c77fdaf..31bae50 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -42,8 +42,6 @@ static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
->  	struct irq_domain *domain = NULL;
->  
->  	domain = dev_get_msi_domain(&dev->dev);
-> -	if (!domain && dev->bus->msi)
-> -		domain = dev->bus->msi->domain;
->  	if (!domain)
->  		domain = arch_get_pci_msi_domain(dev);
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 5a31bf3..4421f2a 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -713,6 +713,7 @@ struct device_dma_parameters {
+  * 		along with subsystem-level and driver-level callbacks.
+  * @pins:	For device pin management.
+  *		See Documentation/pinctrl.txt for details.
++ * @msi_domain: The generic MSI domain this device is using.
+  * @numa_node:	NUMA node this device is close to.
+  * @dma_mask:	Dma mask (if dma'ble device).
+  * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
+@@ -773,6 +774,9 @@ struct device {
+ 	struct dev_pm_info	power;
+ 	struct dev_pm_domain	*pm_domain;
+ 
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	struct irq_domain	*msi_domain; /* MSI domain device uses */
++#endif
+ #ifdef CONFIG_PINCTRL
+ 	struct dev_pin_info	*pins;
+ #endif
+@@ -860,6 +864,22 @@ static inline void set_dev_node(struct device *dev, int node)
+ }
+ #endif
+ 
++static inline struct irq_domain *dev_get_msi_domain(const struct device *dev)
++{
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	return dev->msi_domain;
++#else
++	return NULL;
++#endif
++}
++
++static inline void dev_set_msi_domain(struct device *dev, struct irq_domain *d)
++{
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	dev->msi_domain = d;
++#endif
++}
++
+ static inline void *dev_get_drvdata(const struct device *dev)
+ {
+ 	return dev->driver_data;
+-- 
+2.1.4
 
-I guess this takes care of the "assignment inside if" question :)
-
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index b55cf63..e29c31f 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -124,9 +124,6 @@ struct msi_controller {
->  	struct device *dev;
->  	struct device_node *of_node;
->  	struct list_head list;
-> -#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-> -	struct irq_domain *domain;
-> -#endif
->  
->  	int (*setup_irq)(struct msi_controller *chip, struct pci_dev *dev,
->  			 struct msi_desc *desc);
-> -- 
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
