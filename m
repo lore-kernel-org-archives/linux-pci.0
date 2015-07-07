@@ -1,114 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51832 "EHLO foss.arm.com"
+Received: from foss.arm.com ([217.140.101.70]:36947 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752611AbbG0JkC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Jul 2015 05:40:02 -0400
-Date: Mon, 27 Jul 2015 10:40:46 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	James Morse <James.Morse@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Subject: Re: [PATCH v2 2/2] ARM: pci: kill pcibios_msi_controller
-Message-ID: <20150727094046.GB10308@red-moon>
-References: <1437754383-8162-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1437754383-8162-2-git-send-email-lorenzo.pieralisi@arm.com>
- <20150726185822.GB7557@n2100.arm.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150726185822.GB7557@n2100.arm.linux.org.uk>
+	id S932772AbbGGRS2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Jul 2015 13:18:28 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v3 04/15] PCI/MSI: Add hooks to populate the msi_domain field
+Date: Tue,  7 Jul 2015 18:17:54 +0100
+Message-Id: <1436289485-28230-5-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 26, 2015 at 07:58:22PM +0100, Russell King - ARM Linux wrote:
-> On Fri, Jul 24, 2015 at 05:13:03PM +0100, Lorenzo Pieralisi wrote:
-> > On ARM PCI systems relying on the pcibios API to initialize PCI host
-> > controllers, the pcibios_msi_controller weak callback is used to look-up
-> > the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
-> > 
-> > pci_sys_data is an ARM specific structure, which prevents using the
-> > same mechanism (so same PCI host controller drivers) on ARM64 systems.
-> > 
-> > Since the struct pci_bus already contains an msi_controller pointer and
-> > the kernel already uses it to look-up the msi controller,
-> > this patch converts ARM host controller and related pcibios/host bridges
-> > initialization routines so that the msi_controller pointer look-up can be
-> > carried out by PCI core code through the struct pci_bus msi pointer,
-> > removing the need for the arch specific pcibios_msi_controller callback
-> > and the related pci_sys_data msi_ctrl pointer.
-> > 
-> > ARM is the only arch relying on the pcibios_msi_controller() weak
-> > function, hence this patch removes the default weak implementation
-> > from PCI core code since it becomes of no use.
-> 
-> You don't mention the change from using pci_scan_root_bus() to using
-> pci_create_root_bus() here.
-> 
-> > -				sys->bus = pci_scan_root_bus(parent, sys->busnr,
-> > -						hw->ops, sys, &sys->resources);
-> > +			} else {
-> > +				sys->bus = pci_create_root_bus(parent,
-> > +							       sys->busnr,
-> > +							       hw->ops, sys,
-> > +							       &sys->resources);
-> 
-> By making this change, there is no nothing which will call
-> pci_bus_insert_busn_res().
+In order to be able to populate the device msi_domain field,
+add the necesary hooks to propagate the host bridge msi_domain
+across secondary busses to devices.
 
-Yes, you are correct I noticed that too (I guess all ARM bridges
-relying on pci_scan_root_bus do NOT initialize the BUS resource
-so they rely on pci_scan_root_bus, and related BUS resource insertion
-to function properly).
+So far, nobody populates the initial msi_domain.
 
-> What about the 18 users of the ->scan method, at least IOP13xx appears
-> to be MSI-enabled, though it's not clear whether it works with MSI.
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 31 insertions(+)
 
-I do not think IOP13xx is affected by this change so we should be fine on
-that side, I should have chased all msi_ctrl users in this series,
-but the point raised above needs tackling regardless.
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..376f6fa 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -661,6 +661,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+ 	}
+ }
+ 
++void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
++{
++}
++
++static void pci_set_bus_msi_domain(struct pci_bus *bus)
++{
++	struct pci_dev *bridge = bus->self;
++
++	if (!bridge)
++		pcibios_set_host_bridge_msi_domain(bus);
++	else
++		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
++}
++
+ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 					   struct pci_dev *bridge, int busnr)
+ {
+@@ -714,6 +728,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	bridge->subordinate = child;
+ 
+ add_dev:
++	pci_set_bus_msi_domain(child);
+ 	ret = device_register(&child->dev);
+ 	WARN_ON(ret < 0);
+ 
+@@ -1544,6 +1559,17 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
+ }
+ 
++static void pci_set_msi_domain(struct pci_dev *dev)
++{
++	/*
++	 * If no domain has been set through the pcibios callback,
++	 * inherit the default from the bus device.
++	 */
++	if (!dev_get_msi_domain(&dev->dev))
++		dev_set_msi_domain(&dev->dev,
++				   dev_get_msi_domain(&dev->bus->dev));
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1585,6 +1611,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	ret = pcibios_add_device(dev);
+ 	WARN_ON(ret < 0);
+ 
++	/* Setup MSI irq domain */
++	pci_set_msi_domain(dev);
++
+ 	/* Notifier could use PCI capabilities */
+ 	dev->match_driver = false;
+ 	ret = device_add(&dev->dev);
+@@ -1975,6 +2004,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
++	pci_set_bus_msi_domain(b);
+ 
+ 	if (!parent)
+ 		set_dev_node(b->bridge, pcibus_to_node(b));
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a..3622453 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1645,6 +1645,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
+ int pcibios_add_device(struct pci_dev *dev);
+ void pcibios_release_device(struct pci_dev *dev);
+ void pcibios_penalize_isa_irq(int irq, int active);
++void pcibios_set_host_bridge_msi_domain(struct pci_bus *bus);
+ 
+ #ifdef CONFIG_HIBERNATE_CALLBACKS
+ extern struct dev_pm_ops pcibios_pm_ops;
+-- 
+2.1.4
 
-> This doesn't seem to be a good approach.  Maybe having a version of
-> pci_scan_root_bus() which takes the MSI data as an argument would be
-> better than selectively copying pci_scan_root_bus() into the ARM code?
-
-I understand your point, let's try to find a fast way forward, we are
-stuck otherwise:
-
-1) I do not touch bios32 at all. I convert all host bridges that require
-   an msi pointer to use the scan pointer in struct hw_pci and basically
-   implement the change in bios32 in their scan method (I did that
-   already for the in tree host bridges that rely on the scan method
-   and require an msi pointer in pci_bus to function)
-2) I add pci_bus_insert_busn_res() in the bios32 code, therefore as you
-   said literally copying core code into bios32 (+ msi pointer
-   initialization), horrible, but I promise it will disappear as soon
-   as we are done converting all ARM PCI host to the new IRQ MSI domain
-   infrastructure, which do not require an msi pointer in the struct
-   pci_bus structure to be populated at all.
-3) I patch pci_scan_root_bus() to pass the MSI pointer. I think that
-   pcibios_msi_controller was added to avoid doing this, that
-   function has already 5 parameters and it is a treewide change,
-   I suspect Bjorn won't be happy about this at all.
-
-Those are the reasonable ideas I have in mind, I think (1) is the
-fastest (basically I _hope_ it should mean that I only have to patch
-drivers/pci/host/pcie-rcar.c) and I avoid patching ARM bios32.
-
-Comments very welcome before I proceed and I would appreciate some
-feedback from PCI host bridges platform maintainers too to find a way
-forward.
-
-Thanks,
-Lorenzo
