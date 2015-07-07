@@ -1,82 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:34626 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280AbbGWNM1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 09:12:27 -0400
-Received: by iebmu5 with SMTP id mu5so191375540ieb.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 06:12:26 -0700 (PDT)
-Date: Thu, 23 Jul 2015 08:12:21 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v5 05/19] PCI/MSI: of: Add support for OF-provided
- msi_domain
-Message-ID: <20150723131221.GS21967@google.com>
-References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
- <1437643598-19795-6-git-send-email-marc.zyngier@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kashyap Desai <kashyap.desai@avagotech.com>
+References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
+	<CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
+	<robbat2-20140712T215640-831385120Z@orbis-terrarum.net>	<20150429172832.GB7888@google.com>
+	<20150528122443.GI10210@google.com>	<9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
+ <20150707104426.3d7e8697@endymion.delvare>
+In-Reply-To: <20150707104426.3d7e8697@endymion.delvare>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437643598-19795-6-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Date: Tue, 7 Jul 2015 14:48:14 +0530
+Message-ID: <a2dbe3edaba57bb78f0c3e22d6068178@mail.gmail.com>
+Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
+ output? [BKO63661]
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Robin H. Johnson" <robbat2@gentoo.org>,
+	Adam Radford <aradford@gmail.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Sumit Saxena <sumit.saxena@avagotech.com>,
+	Uday Lingala <uday.lingala@avagotech.com>,
+	"PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 23, 2015 at 10:26:24AM +0100, Marc Zyngier wrote:
-> In order to populate the PCI host bridge msi_domain, use the
-> "msi-parent" attribute to lookup a corresponding irq domain.
-> If found, this is our MSI domain.
-> 
-> This gets plugged into the core PCI code.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> -----Original Message-----
+> From: Jean Delvare [mailto:jdelvare@suse.de]
+> Sent: Tuesday, July 07, 2015 2:14 PM
+> To: Kashyap Desai
+> Cc: Bjorn Helgaas; Robin H. Johnson; Adam Radford; Neela Syam Kolli;
+linux-
+> scsi@vger.kernel.org; arkadiusz.bubala@open-e.com; Matthew Garrett;
+Sumit
+> Saxena; Uday Lingala; PDL,MEGARAIDLINUX; linux-pci@vger.kernel.org;
+linux-
+> kernel@vger.kernel.org; Myron Stowe
+> Subject: Re: megaraid_sas: "FW in FAULT state!!", how to get more debug
+> output? [BKO63661]
+>
+> Hi Kashyap,
+>
+> On Thu, 28 May 2015 19:05:35 +0530, Kashyap Desai wrote:
+> > Bjorn/Robin,
+> >
+> > Apologies for delay. Here is one quick suggestion as we have seen
+> > similar issue (not exactly similar, but high probably to have same
+> > issue) while controller is configured on VM as pass-through and VM
+reboot
+> abruptly.
+> > In that particular issue, driver interact with FW which may  require
+> > chip reset to bring controller to operation state.
+> >
+> > Relevant patch was submitted for only Older controller as it was only
+> > seen for few MegaRaid controller. Below patch already try to do chip
+> > reset, but only for limited controllers...I have attached one more
+> > patch which does chip reset from driver load time for
+> > Thunderbolt/Invader/Fury etc. (In your case you have Thunderbolt
+> > controller, so attached patch is required.)
+> >
+> > http://www.spinics.net/lists/linux-scsi/msg67288.html
+> >
+> > Please post the result with attached patch.
+>
+> Good news! Customer tested your patch and said it fixed the problem :-)
+>
+> I am now in the process of backporting the patch to the SLES 11 SP3
+kernel for
+> further testing. I'll let you know how it goes. Thank you very much for
+your
+> assistance.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Thanks for confirmation. Whatever patch I submitted to you, we have added
+recently (as part of common interface approach to do chip reset at load
+time). We will be submitting that patch to mainline soon.
 
-> +struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
-> +{
-> +#ifdef CONFIG_IRQ_DOMAIN
-> +	struct device_node *np;
-> +	struct irq_domain *d;
-> +
-> +	if (!bus->dev.of_node)
-> +		return NULL;
-> +	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
-> +	if (!np)
-> +		return NULL;
-> +	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
-> +	if (!d)
-> +		d = irq_find_host(np);
-> +	return d;
-
-    d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
-    if (d)
-	    return d;
-
-    return irq_find_host(np);
-
-> +#else
-> +	return NULL;
-> +#endif
-
->  static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
->  {
-> +	struct irq_domain *d;
-> +
->  	/*
->  	 * Any firmware interface that can resolve the msi_domain
->  	 * should be called from here.
->  	 */
-> +	d = pci_host_bridge_of_msi_domain(bus);
->  
-> -	return NULL;
-> +	return d;
-
-No temporary needed (until there's another firmware interface):
-
-    return pci_host_bridge_of_msi_domain(bus);
+~ Kashyap
+>
+> --
+> Jean Delvare
+> SUSE L3 Support
