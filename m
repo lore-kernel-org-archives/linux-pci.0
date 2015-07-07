@@ -1,112 +1,226 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:42333 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753357AbbGYDPd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 23:15:33 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>, <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<liguozhu@hisilicon.com>
-Subject: [PATCH v5 1/5] ARM/PCI: remove align_resource in pci_sys_data
-Date: Sat, 25 Jul 2015 11:21:22 +0800
-Message-ID: <1437794486-21134-2-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from aserp1040.oracle.com ([141.146.126.69]:51304 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932802AbbGGUVH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 16:21:07 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Kees Cook <keescook@chromium.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Baoquan He <bhe@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 37/42] x86, boot, PCI: Export SETUP_PCI data via sysfs
+Date: Tue,  7 Jul 2015 13:20:23 -0700
+Message-Id: <1436300428-21163-38-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
+References: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+So we could let kexec-tools to rebuild SETUP_PCI and pass it to
+second kernel if needed.
 
-This patch is needed in order to unify the PCIe designware framework for ARM and
-ARM64 architectures. In the PCIe designware unification process we are calling
-pci_create_root_bus() passing a "sysdata" parameter that is the same for both
-ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
-cause a problem with the function pcibios_align_resource(); in fact this will
-cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
-"struct pcie_port*" pointer.
+Now kexec-tools already build SETUP_EFI and SETUP_E820EXT.
 
-This patch solves the issue by removing "align_resource" from "pci_sys_data"
-struct and defining a static global function pointer in "bios32.c"
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/arm/include/asm/mach/pci.h |  5 -----
- arch/arm/kernel/bios32.c        | 12 ++++++++----
- 2 files changed, 8 insertions(+), 9 deletions(-)
+ arch/x86/pci/common.c | 175 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 175 insertions(+)
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 28b9bb3..8a4e4de 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -58,11 +58,6 @@ struct pci_sys_data {
- 					/* IRQ mapping				*/
- 	int		(*map_irq)(const struct pci_dev *, u8, u8);
- 					/* Resource alignement requirements	*/
--	resource_size_t (*align_resource)(struct pci_dev *dev,
--					  const struct resource *res,
--					  resource_size_t start,
--					  resource_size_t size,
--					  resource_size_t align);
- 	void		*private_data;	/* platform controller private data	*/
- };
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 4d6b128..9112d92 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -656,6 +656,8 @@ void __init add_pci(u64 pa_data)
  
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index fcbbbb1..4cdc64d 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -17,6 +17,11 @@
- #include <asm/mach/pci.h>
- 
- static int debug_pci;
-+static resource_size_t (*align_resource)(struct pci_dev *dev,
-+		  const struct resource *res,
-+		  resource_size_t start,
-+		  resource_size_t size,
-+		  resource_size_t align) = NULL;
- 
- #ifdef CONFIG_PCI_MSI
- struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-@@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
--		sys->align_resource = hw->align_resource;
-+		align_resource = hw->align_resource;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
-@@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
- 	struct pci_dev *dev = data;
--	struct pci_sys_data *sys = dev->sysdata;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO && start & 0x300)
-@@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 
- 	start = (start + align - 1) & ~(align - 1);
- 
--	if (sys->align_resource)
--		return sys->align_resource(dev, res, start, size, align);
-+	if (align_resource)
-+		return align_resource(dev, res, start, size, align);
- 
- 	return start;
+ struct firmware_setup_pci_entry {
+ 	struct list_head list;
++	struct kobject kobj;
++	struct bin_attribute *rom_attr;
+ 	uint16_t vendor;
+ 	uint16_t devid;
+ 	uint64_t pcilen;
+@@ -777,6 +779,179 @@ int pcibios_add_device(struct pci_dev *dev)
+ 	return 0;
  }
+ 
++#ifdef CONFIG_SYSFS
++static inline struct firmware_setup_pci_entry *
++to_setup_pci_entry(struct kobject *kobj)
++{
++	return container_of(kobj, struct firmware_setup_pci_entry, kobj);
++}
++
++static ssize_t vendor_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
++			(unsigned long long)entry->vendor);
++}
++
++static ssize_t devid_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
++			(unsigned long long)entry->devid);
++}
++
++static ssize_t pcilen_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%llx\n",
++			(unsigned long long)entry->pcilen);
++}
++
++static ssize_t segment_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
++			(unsigned long long)entry->segment);
++}
++
++static ssize_t bus_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
++			(unsigned long long)entry->bus);
++}
++
++static ssize_t device_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
++			(unsigned long long)entry->device);
++}
++
++static ssize_t function_show(struct firmware_setup_pci_entry *entry, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "0x%1llx\n",
++			(unsigned long long)entry->function);
++}
++
++struct setup_pci_attribute {
++	struct attribute attr;
++	ssize_t (*show)(struct firmware_setup_pci_entry *entry, char *buf);
++};
++
++static inline struct setup_pci_attribute *to_setup_pci_attr(
++							struct attribute *attr)
++{
++	return container_of(attr, struct setup_pci_attribute, attr);
++}
++
++static ssize_t setup_pci_attr_show(struct kobject *kobj,
++				   struct attribute *attr, char *buf)
++{
++	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
++	struct setup_pci_attribute *setup_pci_attr = to_setup_pci_attr(attr);
++
++	return setup_pci_attr->show(entry, buf);
++}
++
++static struct setup_pci_attribute setup_pci_vendor_attr = __ATTR_RO(vendor);
++static struct setup_pci_attribute setup_pci_devid_attr = __ATTR_RO(devid);
++static struct setup_pci_attribute setup_pci_pcilen_attr = __ATTR_RO(pcilen);
++static struct setup_pci_attribute setup_pci_segment_attr = __ATTR_RO(segment);
++static struct setup_pci_attribute setup_pci_bus_attr = __ATTR_RO(bus);
++static struct setup_pci_attribute setup_pci_device_attr = __ATTR_RO(device);
++static struct setup_pci_attribute setup_pci_function_attr = __ATTR_RO(function);
++
++/*
++ * These are default attributes that are added for every memmap entry.
++ */
++static struct attribute *def_attrs[] = {
++	&setup_pci_vendor_attr.attr,
++	&setup_pci_devid_attr.attr,
++	&setup_pci_pcilen_attr.attr,
++	&setup_pci_segment_attr.attr,
++	&setup_pci_bus_attr.attr,
++	&setup_pci_device_attr.attr,
++	&setup_pci_function_attr.attr,
++	NULL
++};
++
++static const struct sysfs_ops setup_pci_attr_ops = {
++	.show = setup_pci_attr_show,
++};
++
++static struct kobj_type __refdata setup_pci_ktype = {
++	.sysfs_ops      = &setup_pci_attr_ops,
++	.default_attrs  = def_attrs,
++};
++
++static ssize_t setup_pci_rom_read(struct file *filp, struct kobject *kobj,
++				  struct bin_attribute *bin_attr, char *buf,
++				  loff_t off, size_t count)
++{
++	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
++
++	if (off >= entry->pcilen)
++		count = 0;
++	else {
++		unsigned char *rom = phys_to_virt(entry->romdata);
++
++		if (off + count > entry->pcilen)
++			count = entry->pcilen - off;
++
++		memcpy(buf, rom + off, count);
++	}
++
++	return count;
++}
++
++static int __init add_sysfs_fw_setup_pci_entry(
++					struct firmware_setup_pci_entry *entry)
++{
++	int retval = 0;
++	static int setup_pci_entries_nr;
++	static struct kset *setup_pci_kset;
++	struct bin_attribute *attr;
++
++	kobject_init(&entry->kobj, &setup_pci_ktype);
++
++	if (!setup_pci_kset) {
++		setup_pci_kset = kset_create_and_add("setup_pci", NULL,
++						     firmware_kobj);
++		if (!setup_pci_kset)
++			return -ENOMEM;
++	}
++
++	entry->kobj.kset = setup_pci_kset;
++	retval = kobject_add(&entry->kobj, NULL, "%d", setup_pci_entries_nr++);
++	if (retval) {
++		kobject_put(&entry->kobj);
++		return retval;
++	}
++
++	attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
++	if (!attr)
++		return -ENOMEM;
++
++	sysfs_bin_attr_init(attr);
++	attr->size = entry->pcilen;
++	attr->attr.name = "rom";
++	attr->attr.mode = S_IRUSR;
++	attr->read = setup_pci_rom_read;
++	retval = sysfs_create_bin_file(&entry->kobj, attr);
++	if (retval)
++		kfree(attr);
++	entry->rom_attr = attr;
++
++	return retval;
++}
++
++static int __init firmware_setup_pci_init(void)
++{
++	struct firmware_setup_pci_entry *entry;
++
++	list_for_each_entry(entry, &setup_pci_entries, list)
++		add_sysfs_fw_setup_pci_entry(entry);
++
++	return 0;
++}
++late_initcall(firmware_setup_pci_init);
++#endif
++
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+ 	int err;
 -- 
-1.9.1
+1.8.4.5
 
