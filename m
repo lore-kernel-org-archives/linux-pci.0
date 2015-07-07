@@ -1,75 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:40895 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755223AbbGZS6n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 26 Jul 2015 14:58:43 -0400
-Date: Sun, 26 Jul 2015 19:58:22 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	James Morse <james.morse@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Subject: Re: [PATCH v2 2/2] ARM: pci: kill pcibios_msi_controller
-Message-ID: <20150726185822.GB7557@n2100.arm.linux.org.uk>
-References: <1437754383-8162-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1437754383-8162-2-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from smtp88.iad3a.emailsrvr.com ([173.203.187.88]:41050 "EHLO
+	smtp88.iad3a.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932198AbbGGTRM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 15:17:12 -0400
+Message-ID: <559C25B6.5030101@compro.net>
+Date: Tue, 07 Jul 2015 15:17:10 -0400
+From: Mark Hounschell <markh@compro.net>
+Reply-To: markh@compro.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437754383-8162-2-git-send-email-lorenzo.pieralisi@arm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, wdavis@nvidia.com,
+	joro@8bytes.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, tripperda@nvidia.com,
+	jhubbard@nvidia.com, jglisse@redhat.com, konrad.wilk@oracle.com,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>	 <1431973504-5903-5-git-send-email-wdavis@nvidia.com>	 <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net>	 <20150707151517.GA14215@google.com> <559C08F3.7010103@compro.net> <1436290089.1391.95.camel@redhat.com>
+In-Reply-To: <1436290089.1391.95.camel@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 24, 2015 at 05:13:03PM +0100, Lorenzo Pieralisi wrote:
-> On ARM PCI systems relying on the pcibios API to initialize PCI host
-> controllers, the pcibios_msi_controller weak callback is used to look-up
-> the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
-> 
-> pci_sys_data is an ARM specific structure, which prevents using the
-> same mechanism (so same PCI host controller drivers) on ARM64 systems.
-> 
-> Since the struct pci_bus already contains an msi_controller pointer and
-> the kernel already uses it to look-up the msi controller,
-> this patch converts ARM host controller and related pcibios/host bridges
-> initialization routines so that the msi_controller pointer look-up can be
-> carried out by PCI core code through the struct pci_bus msi pointer,
-> removing the need for the arch specific pcibios_msi_controller callback
-> and the related pci_sys_data msi_ctrl pointer.
-> 
-> ARM is the only arch relying on the pcibios_msi_controller() weak
-> function, hence this patch removes the default weak implementation
-> from PCI core code since it becomes of no use.
+On 07/07/2015 01:28 PM, Alex Williamson wrote:
+> On Tue, 2015-07-07 at 13:14 -0400, Mark Hounschell wrote:
+>> Hi Bjorn.
+>>
+>> On 07/07/2015 11:15 AM, Bjorn Helgaas wrote:
+>>> [+cc Alex]
+>>>
+>>> Hi Mark,
+>>>
+>>> On Wed, May 20, 2015 at 08:11:17AM -0400, Mark Hounschell wrote:
+>>>> Most currently available hardware doesn't allow reads but will allow
+>>>> writes on PCIe peer-to-peer transfers. All current AMD chipsets are
+>>>> this way. I'm pretty sure all Intel chipsets are this way also. What
+>>>> happens with reads is they are just dropped with no indication of
+>>>> error other than the data will not be as expected. Supposedly the
+>>>> PCIe spec does not even require any peer-to-peer support. Regular
+>>>> PCI there is no problem and this API could be useful. However I
+>>>> doubt seriously you will find a pure PCI motherboard that has an
+>>>> IOMMU.
+>>>>
+>>>> I don't understand the chipset manufactures reasoning for disabling
+>>>> PCIe peer-to-peer reads. We would like to make PCIe versions of our
+>>>> cards but their application requires  peer-to-peer reads and writes.
+>>>> So we cannot develop PCIe versions of the cards.
+>>>
+>>> I'd like to understand this better.  Peer-to-peer between two devices
+>>> below the same Root Port should work as long as ACS doesn't prevent
+>>> it.  If we find an Intel or AMD IOMMU, I think we configure ACS to
+>>> prevent direct peer-to-peer (see "pci_acs_enable"), but maybe it could
+>>> still be done with the appropriate IOMMU support.  And if you boot
+>>> with "iommu=off", we don't do that ACS configuration, so peer-to-peer
+>>> should work.
+>>>
+>>> I suppose the problem is that peer-to-peer doesn't work between
+>>> devices under different Root Ports or even devices under different
+>>> Root Complexes?
+>>>
+>>> PCIe r3.0, sec 6.12.1.1, says Root Ports that support peer-to-peer
+>>> traffic are required to implement ACS P2P Request Redirect, so if a
+>>> Root Port doesn't implement RR, we can assume it doesn't support
+>>> peer-to-peer.  But unfortunately the converse is not true: if a Root
+>>> Port implements RR, that does *not* imply that it supports
+>>> peer-to-peer traffic.
+>>>
+>>> So I don't know how to discover whether peer-to-peer between Root
+>>> Ports or Root Complexes is supported.  Maybe there's some clue in the
+>>> IOMMU?  The Intel VT-d spec mentions it, but "peer" doesn't even
+>>> appear in the AMD spec.
+>>>
+>>> And I'm curious about why writes sometimes work when reads do not.
+>>> That sounds like maybe the hardware support is there, but we don't
+>>> understand how to configure everything correctly.
+>>>
+>>> Can you give us the specifics of the topology you'd like to use, e.g.,
+>>> lspci -vv of the path between the two devices?
+>>>
+>>
+>> First off, writes always work for me. Not just sometimes. Only reads
+>> NEVER do.
+>>
+>> Reading the AMD-990FX-990X-970-Register-Programming-Requirements-48693.pdf
+>> in section 2.5 "Enabling/Disabling Peer-to-Peer Traffic Access", it
+>> states specifically that
+>> only P2P memory writes are supported. This has been the case with older
+>> AMD chipset also. In one of the older chipset documents I read (I think
+>> the 770 series) , it said this was a security feature. Makes no sense to
+>> me.
+>>
+>> As for the topology I'd like to be able to use. This particular
+>> configuration (MB) has a single regular pci slot and the rest are pci-e.
+>> In two of those pci-e slots is a pci-e to pci expansion chassis
+>> interface card connected to a regular pci expansion rack. I am trying to
+>> to peer to peer between a regular pci card in one of those chassis to
+>> another regular pci card in the other chassis. In turn through the pci-e
+>> subsystem. Attached is the lcpci -vv output from this particular box.
+>> The cards that initiate the P2P are these:
+>>
+>> 04:04.0 Intelligent controller [0e80]: PLX Technology, Inc. Device 0480
+>> (rev 55)
+>> 04:05.0 Intelligent controller [0e80]: PLX Technology, Inc. Device 0480
+>> (rev 55)
+>> 04:06.0 Intelligent controller [0e80]: PLX Technology, Inc. Device 0480
+>> (rev 55)
+>> 04:07.0 Intelligent controller [0e80]: PLX Technology, Inc. Device 0480
+>> (rev 55)
+>>
+>> The card they need to P2P to and from is this one.
+>>
+>> 0a:05.0 Network controller: VMIC GE-IP PCI5565,PMC5565 Reflective Memory
+>> Node (rev 01)
+>>
+>> Like wise, reversing the chassis the initiator lives in from these cards.
+>>
+>> 0b:00.0 Unassigned class [ff00]: Compro Computer Services, Inc. Device
+>> 4710 (rev 41)
+>> 0c:00.0 Unassigned class [ff00]: Compro Computer Services, Inc. Device
+>> 4710 (rev 41)
+>> 0d:00.0 Unassigned class [ff00]: Compro Computer Services, Inc. Device
+>> 4710 (rev 41)
+>> 0e:00.0 Unassigned class [ff00]: Compro Computer Services, Inc. Device
+>> 0100 (rev 42)
+>>
+>> to this card
+>>
+>> 04:0a.0 Memory controller: Compro Computer Services, Inc. Device 4360
+>> (rev 4d)
+>>
+>> Again, I can go between both pci chassis as long as I am doing writes.
+>> Only reads do not work.
+>>
+>> I can send the AMD-990FX-990X-970-Register-Programming-Requirements if
+>> you would like. It's available for download on AMD web site. Let me know.
+>
+>
+> It would be interesting to know if this already works if you assign all
+> the endpoints to a QEMU/KVM VM with vfio-pci.  We make an attempt to map
+> the device MMIO BARs through the IOMMU, but as I said, I don't know how
+> to test it.  Does the register programming guide provide any indication
+> if there are any restrictions on p2p when bounced through the IOMMU?  So
+> long as the IOMMU does the translation and redirection, I don't see why
+> the rest of the topology would handle it differently than a DMA to
+> memory.  Thanks,
+>
 
-You don't mention the change from using pci_scan_root_bus() to using
-pci_create_root_bus() here.
+Hi Alex,
 
-> -				sys->bus = pci_scan_root_bus(parent, sys->busnr,
-> -						hw->ops, sys, &sys->resources);
-> +			} else {
-> +				sys->bus = pci_create_root_bus(parent,
-> +							       sys->busnr,
-> +							       hw->ops, sys,
-> +							       &sys->resources);
+Somehow I don't think "assigning all the endpoints to a QEMU/KVM VM with 
+vfio-pci" would be an easy thing for me to do. I have never used 
+QEMU/KVM VM and my particular application is already an emulation. Just 
+not an emulation that could use QEMU/KVM. It's an emulation of a totally 
+different arch, unknown to any VM. But what I do do, is basically "map 
+the device MMIO BARs through the IOMMU". Reads have never worked for me 
+even when there was no iommu available. One of the reasons I started 
+using the iommu was because I was "hoping" it would fix my long standing 
+problems with p2p reads through pcie. The other reason was, I no longer 
+had to do (buggie) DAC crap with my 32 bit pci cards.
 
-By making this change, there is no nothing which will call
-pci_bus_insert_busn_res().
+As far as the manual saying anything about p2p when the iommu is used, 
+it actually says nothing about p2p at all in the iommu section, nor the 
+iommu in the p2p section.
 
-What about the 18 users of the ->scan method, at least IOP13xx appears
-to be MSI-enabled, though it's not clear whether it works with MSI.
+Regards
+Mark
 
-This doesn't seem to be a good approach.  Maybe having a version of
-pci_scan_root_bus() which takes the MSI data as an argument would be
-better than selectively copying pci_scan_root_bus() into the ARM code?
-
--- 
-FTTC broadband for 0.8mile line: currently at 10.5Mbps down 400kbps up
-according to speedtest.net.
