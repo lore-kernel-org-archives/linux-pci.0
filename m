@@ -1,116 +1,141 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v4 04/19] PCI/MSI: Add hooks to populate the msi_domain field
-Date: Wed, 15 Jul 2015 13:16:38 +0100
-Message-Id: <1436962613-17359-5-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:50668 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751806AbbGGDoj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 23:44:39 -0400
+Message-ID: <559B4B0E.4060004@hisilicon.com>
+Date: Tue, 7 Jul 2015 11:44:14 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: James Morse <james.morse@arm.com>
+CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"kishon@ti.com" <kishon@ti.com>,
+	"xobs@kosagi.com" <xobs@kosagi.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v3 2/5] PCI: designware: Add ARM64 support
+References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com> <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs> <5593F899.6050306@arm.com>
+In-Reply-To: <5593F899.6050306@arm.com>
+Content-Type: text/plain; charset="gbk"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to be able to populate the device msi_domain field,
-add the necesary hooks to propagate the host bridge msi_domain
-across secondary busses to devices.
+On 2015/7/1 22:26, James Morse wrote:
+> Zhou Wang wrote:
+>> I tested this patch on D02 board of Hisilicon. It works well.
+>> I have compiled the driver with multi_v7_defconfig. However, I don't
+>> have
+>> ARM32 PCIe related board to do test. It will be appreciated if someone
+>> could
+>> help to test it.
+>>
+>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>> Tested-by: Fabrice Gasnier <fabrice.gasnier@st.com>
+>> Tested-by: James Morse <james.morse@arm.com>
+> 
+> Tests on this new series, using the same i.MX 6Quad board, are not working.
+> 
+> The network card is no longer detected, and I get a lockup when removing
+> the root bridge and rescanning.
+> 
+> Partial dmesg output below. Significantly, the lines:
+>> [    0.152128] PCI host bridge /soc/pcie@0x01000000 ranges:
+>> [    0.152142]   No bus range found for /soc/pcie@0x01000000, using [bus
+> 00-ff]
+> are new.
+> 
+> Both series are applied to v4.1, use the same .config file, and the same dtb.
+> I will investigate further.
+> 
+> (Re-testing v2 works, so this isn't an interim hardware failure)
+> 
+> Thanks,
+> 
+> James
+>
 
-So far, nobody populates the initial msi_domain.
+Hi James,
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 31 insertions(+)
+There are something wrong with v3 patch.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..376f6fa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -661,6 +661,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
- 	}
- }
- 
-+void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
-+{
-+}
-+
-+static void pci_set_bus_msi_domain(struct pci_bus *bus)
-+{
-+	struct pci_dev *bridge = bus->self;
-+
-+	if (!bridge)
-+		pcibios_set_host_bridge_msi_domain(bus);
-+	else
-+		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
-+}
-+
- static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 					   struct pci_dev *bridge, int busnr)
- {
-@@ -714,6 +728,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	bridge->subordinate = child;
- 
- add_dev:
-+	pci_set_bus_msi_domain(child);
- 	ret = device_register(&child->dev);
- 	WARN_ON(ret < 0);
- 
-@@ -1544,6 +1559,17 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);
- }
- 
-+static void pci_set_msi_domain(struct pci_dev *dev)
-+{
-+	/*
-+	 * If no domain has been set through the pcibios callback,
-+	 * inherit the default from the bus device.
-+	 */
-+	if (!dev_get_msi_domain(&dev->dev))
-+		dev_set_msi_domain(&dev->dev,
-+				   dev_get_msi_domain(&dev->bus->dev));
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
-@@ -1585,6 +1611,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	ret = pcibios_add_device(dev);
- 	WARN_ON(ret < 0);
- 
-+	/* Setup MSI irq domain */
-+	pci_set_msi_domain(dev);
-+
- 	/* Notifier could use PCI capabilities */
- 	dev->match_driver = false;
- 	ret = device_add(&dev->dev);
-@@ -1975,6 +2004,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-+	pci_set_bus_msi_domain(b);
- 
- 	if (!parent)
- 		set_dev_node(b->bridge, pcibus_to_node(b));
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index fbf245f..fe0825f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1644,6 +1644,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
- void pcibios_penalize_isa_irq(int irq, int active);
-+void pcibios_set_host_bridge_msi_domain(struct pci_bus *bus);
- 
- #ifdef CONFIG_HIBERNATE_CALLBACKS
- extern struct dev_pm_ops pcibios_pm_ops;
--- 
-2.1.4
+pp->io_mod_base = of_read_number(parser_range_end -
+		of_n_addr_cells(np) - 5 + na, ns);
+pp->mem_mod_base = of_read_number(parser_range_end -
+		of_n_addr_cells(np) - 5 + na, ns);
+pp->cfg0_mod_base = of_read_number(parser_range_end -
+		of_n_addr_cells(np) - 5 + na, ns);
+are wrong.
+
+The ranges item in your dts is:
+ranges = <0x800 0x0 0x1f00000 0x1f00000 0x0 0x80000
+	  0x81000000 0x0 0x0  0x1f80000 0x0 0x10000
+	  0x82000000 0x0 0x1000000 0x1000000 0x0 0xf00000>;
+parser_range_end points to the end of ranges(0xf00000) directly. In v2 patch,
+of_read_number is of_read_number(parser.range - parser.np + na, ns); parser.range
+points to the end of each line in ranges item.
+
+When I did test on D02 board with intel82599 card, I set ranges item as:
+ranges = <0x03000000 0 0xb0000000 0x220 0x00000000 0 0xf000000>;
+It is just one line. In this case, parser_range_end is same with parser.range.
+That is why it happened to work well on D02 board.
+
+very sorry to bother you about this problem.
+
+Thanks,
+Zhou
+
+> 
+> 
+> root@localhost:~# dmesg | grep -i pci
+> [    0.126184] PCI: CLS 0 bytes, default 64
+> [    0.152128] PCI host bridge /soc/pcie@0x01000000 ranges:
+> [    0.152142]   No bus range found for /soc/pcie@0x01000000, using [bus 00-ff]
+> [    0.154183] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+> [    0.154201] pci_bus 0000:00: root bus resource [bus 00-ff]
+> [    0.154215] pci_bus 0000:00: root bus resource [???
+> 0x01f00000-0x01f7ffff flags 0x0]
+> [    0.154228] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> [    0.154270] pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
+> [    0.154306] pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
+> [    0.154333] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
+> [    0.154352] pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
+> [    0.154377] pci 0000:00:00.0: IOMMU is currently not supported for PCI
+> [    0.154429] pci 0000:00:00.0: supports D1
+> [    0.154440] pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+> [    0.154683] PCI: bus0: Fast back to back transfers disabled
+> [    0.154806] PCI: bus1: Fast back to back transfers enabled
+> [    0.154884] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
+> [    0.154903] pci 0000:00:00.0: BAR 6: assigned [mem 0x01100000-0x0110ffff
+> pref]
+> [    0.154917] pci 0000:00:00.0: PCI bridge to [bus 01]
+> [    0.155145] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
+> [    0.155161] pcie_pme 0000:00:00.0:pcie01: service driver pcie_pme loaded
+> [    0.155279] aer 0000:00:00.0:pcie02: service driver aer loaded
+> [    1.188840] ehci-pci: EHCI PCI platform driver
+> [    1.232518] ohci-pci: OHCI PCI platform driver
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
+
 
