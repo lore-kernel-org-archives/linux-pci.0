@@ -1,109 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50830 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751607AbbGJMl6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Jul 2015 08:41:58 -0400
-Message-ID: <559FBD91.9070803@arm.com>
-Date: Fri, 10 Jul 2015 13:41:53 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:45989 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757176AbbGGPBu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 11:01:50 -0400
+Message-ID: <559BE9D9.4050407@roeck-us.net>
+Date: Tue, 07 Jul 2015 08:01:45 -0700
+From: Guenter Roeck <linux@roeck-us.net>
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Alexander Gordeev <agordeev@redhat.com>
-CC: Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC Patch V1 11/12] genirq, PCI: Reorginize struct msi_desc
- to prepare for support of generic MSI
-References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com> <1436428847-8886-12-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1436428847-8886-12-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net> <20150527210447.GY32152@google.com> <20150528022332.GA23724@roeck-us.net> <20150528124112.GJ10210@google.com> <20150618180103.GA23809@roeck-us.net> <20150619162413.GA21533@red-moon> <20150707144019.GH4379@red-moon>
+In-Reply-To: <20150707144019.GH4379@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gerry,
+Hi Lorenzo,
 
-On 09/07/15 09:00, Jiang Liu wrote:
-> Reorganize struct msi_desc so it could be reused by other MSI drivers.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  include/linux/msi.h |   41 +++++++++++++++++++++--------------------
->  1 file changed, 21 insertions(+), 20 deletions(-)
-> 
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index 5f77e231f515..f6845bc83774 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -19,29 +19,30 @@ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->  void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
->  
->  struct msi_desc {
-> -	struct {
-> -		__u8	is_msix	: 1;
-> -		__u8	multiple: 3;	/* log2 num of messages allocated */
-> -		__u8	multi_cap : 3;	/* log2 num of messages supported */
-> -		__u8	maskbit	: 1;	/* mask-pending bit supported ? */
-> -		__u8	is_64	: 1;	/* Address size: 0=32bit 1=64bit */
-> -		__u16	entry_nr;	/* specific enabled entry */
-> -		unsigned default_irq;	/* default pre-assigned irq */
-> -	} msi_attrib;
-> -
-> -	u32 masked;			/* mask bits */
-> -	unsigned int irq;
-> -	unsigned int nvec_used;		/* number of messages */
-> -	struct list_head list;
-> +	struct list_head		list;
-> +	unsigned int			irq;
-> +	unsigned int			nvec_used;	/* number of messages */
-> +	struct device *			dev;
-> +	struct msi_msg			msg;		/* Last set MSI message */
->  
->  	union {
-> -		void __iomem *mask_base;
-> -		u8 mask_pos;
-> +		struct {				/* For PCI MSI/MSI-X */
-> +			u32 masked;			/* mask bits */
-> +			struct {
-> +				__u8	is_msix	: 1;
-> +				__u8	multiple: 3;	/* log2 num of messages allocated */
-> +				__u8	multi_cap : 3;	/* log2 num of messages supported */
-> +				__u8	maskbit	: 1;	/* mask-pending bit supported ? */
-> +				__u8	is_64	: 1;	/* Address size: 0=32bit 1=64bit */
-> +				__u16	entry_nr;	/* specific enabled entry */
-> +				unsigned default_irq;	/* default pre-assigned irq */
-> +			} msi_attrib;
-> +			union {
-> +				u8	mask_pos;
-> +				void __iomem *mask_base;
-> +			};
-> +		};
+On 07/07/2015 07:40 AM, Lorenzo Pieralisi wrote:
+> On Fri, Jun 19, 2015 at 05:24:13PM +0100, Lorenzo Pieralisi wrote:
+>> Hi Guenter,
+>>
+>> On Thu, Jun 18, 2015 at 07:01:03PM +0100, Guenter Roeck wrote:
+>>> On Thu, May 28, 2015 at 07:41:12AM -0500, Bjorn Helgaas wrote:
+>>>>
+>>>>>> I'd like res->flags to reflect the capabilities of the hardware, not
+>>>>>> whether the window is currently enabled.
+>>>>>>
+>>>>> Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
+>>>>> purpose, or could that cause conflicts elsewhere ?
+>>>>
+>>>> Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
+>>>> below a host bridge that doesn't support I/O space.
+>>>>
+>>> I integrated Lorenzo's patch and tried to get this working.
+>>
+>> Thanks. How do you want to proceed with this ? Are you taking my patch
+>> and post it along with your updated series ? We need to extend test
+>> coverage to platforms we could not test on, as you know my series
+>> affects all archs but SPARC (I mean it should *not* affect them, this
+>> has to be tested though, I do not have the HW needed, your coverage
+>> for x86 and PowerPC is great but I do not think it can be deemed
+>> sufficient).
+>>
+>> Please let me know, thanks !
+>
+> Any comment on this ? I will have to remove the bridge resource claiming
+> from my patch according to Ben's concerns for PowerPC, which requires
+> a v3.
+>
+> How do you want me to go on with this ?
+>
 
-Is this union the location where you would expect some non-PCI MSI
-infrastructure to store their own data? If that's the case, maybe a
-small comment to that effect would be good, as it is not completely
-obvious from looking at the data structure.
+Can you send your v3 ?
 
->  	};
-> -	struct device *dev;
-> -
-> -	/* Last set MSI message */
-> -	struct msi_msg msg;
->  };
->  
->  /* Helpers to hide struct msi_desc implementation details */
-> 
+I didn't submit my latest version because I recalled Ben's objections,
+and I never got around asking you if you plan to send a new version
+of your patch.
+
+I had to drop the idea of using IORESOURCE_DISABLED; pretty much all
+kernel code uses the "!flags" test to identify unused resources.
+I tried to change that, but just could not get it to work.
+I ended up introducing a new bus flag instead, PCI_BUS_FLAGS_NO_IO,
+which works quite nicely since it propagates to child buses.
 
 Thanks,
+Guenter
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
