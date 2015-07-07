@@ -1,74 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:45160 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750751AbbGJLS0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Jul 2015 07:18:26 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1ZDWJy-0000sO-OU
-	for linux-pci@vger.kernel.org; Fri, 10 Jul 2015 13:18:23 +0200
-Received: from nsg-static-030.145.72.182.airtel.in ([nsg-static-030.145.72.182.airtel.in])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2015 13:18:22 +0200
-Received: from rgummal by nsg-static-030.145.72.182.airtel.in with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2015 13:18:22 +0200
-To: linux-pci@vger.kernel.org
-From: ravikiran gummaluri <rgummal@xilinx.com>
-Subject: Re: PCIe support for ARM64
-Date: Fri, 10 Jul 2015 11:18:10 +0000 (UTC)
-Message-ID: <loom.20150710T130734-815@post.gmane.org>
-References: <loom.20150619T074145-299@post.gmane.org> <CAErSpo52WYqB9hfNKo-ADrJF1LASUz5y9vWzsmp2FaCNc9WZfg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v3 14/15] PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
+Date: Tue,  7 Jul 2015 18:18:04 +0100
+Message-Id: <1436289485-28230-15-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas <at> google.com> writes:
+The XGene MSI driver only uses the msi_controller structure as
+a way to match the host bridge  with its MSI HW, and thus the
+msi_domain.
 
-> 
-> On Fri, Jun 19, 2015 at 12:43 AM, ravikiran gummaluri
-> <rgummal <at> xilinx.com> wrote:
-> > HI
-> >
-> > I am developing PCIe root port driver for Xilinx device. We have used
-> > following patch for ARM64 bit support
-> > "https://lkml.org/lkml/2014/7/3/764". The link explains it as temporary
-> > patch and main line will be updated soon with those changes. We have not
-> > seen the changes till now. Can you let us know when we can expect the
-> > changes in mainline? We are planning to push our drivers to mainline.
-> 
-> There is PCI support for ARM64 in mainline:
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?
-id=d1e6dc91b532
-> 
-> There is also a Xilinx driver already:
-> 
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/
-pci/host/pcie-xilinx.c
-> 
-> I don't know if your device is similar to the AXI device, but it would
-> be good if you can share or modify that driver instead of adding a new
-> one.
-> 
-> As with several other drivers, the current pcie-xilinx.c uses
-> pci_common_init_dev(), so it only works on ARM (not ARM64).  This is a
-> known issue, and people are working on making these drivers less
-> arch-specific.
-> 
-> Bjorn
-> 
+But now that we can directly associate an msi_domain with a device,
+there is no use keeping this msi_controller around.
 
-Thanks Bjorn. pcie-xilinx.c is AXI device. Now we are developing for 
-different device using pcie-xilinx.c as reference. When we trying to 
-compile our new driver with latest kernel we are getting compilation 
-problems for struct hw_pci and struct pci_sys_data for ARM64. These 
-structures are not defined in ARM64. The following patch has the structure 
-definitions "https://lkml.org/lkml/2014/7/3/764". We have used this patch 
-and able complete our development. Now for up streaming it we need this 
-patch in main line. From your discursion we understood that some work is 
-going on ARCH independent API and structure. When can we expect them in 
-mainline? 
+Just remove all traces of msi_controller from the driver.
 
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/host/pci-xgene-msi.c | 41 ++++++++++++++++------------------------
+ 1 file changed, 16 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+index 2d31d4d..ec5a14b 100644
+--- a/drivers/pci/host/pci-xgene-msi.c
++++ b/drivers/pci/host/pci-xgene-msi.c
+@@ -40,8 +40,8 @@ struct xgene_msi_group {
+ 
+ struct xgene_msi {
+ 	struct device_node	*node;
+-	struct msi_controller	mchip;
+-	struct irq_domain	*domain;
++	struct irq_domain	*inner_domain;
++	struct irq_domain	*msi_domain;
+ 	u64			msi_addr;
+ 	void __iomem		*msi_regs;
+ 	unsigned long		*bitmap;
+@@ -252,17 +252,17 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 
+ static int xgene_allocate_domains(struct xgene_msi *msi)
+ {
+-	msi->domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+-					    &msi_domain_ops, msi);
+-	if (!msi->domain)
++	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
++						  &msi_domain_ops, msi);
++	if (!msi->inner_domain)
+ 		return -ENOMEM;
+ 
+-	msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
+-						      &xgene_msi_domain_info,
+-						      msi->domain);
++	msi->msi_domain = pci_msi_create_irq_domain(msi->node,
++						    &xgene_msi_domain_info,
++						    msi->inner_domain);
+ 
+-	if (!msi->mchip.domain) {
+-		irq_domain_remove(msi->domain);
++	if (!msi->msi_domain) {
++		irq_domain_remove(msi->inner_domain);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -271,10 +271,10 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+ 
+ static void xgene_free_domains(struct xgene_msi *msi)
+ {
+-	if (msi->mchip.domain)
+-		irq_domain_remove(msi->mchip.domain);
+-	if (msi->domain)
+-		irq_domain_remove(msi->domain);
++	if (msi->msi_domain)
++		irq_domain_remove(msi->msi_domain);
++	if (msi->inner_domain)
++		irq_domain_remove(msi->inner_domain);
+ }
+ 
+ static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
+@@ -340,7 +340,7 @@ static void xgene_msi_isr(unsigned int irq, struct irq_desc *desc)
+ 			 * CPU0
+ 			 */
+ 			hw_irq = hwirq_to_canonical_hwirq(hw_irq);
+-			virq = irq_find_mapping(xgene_msi->domain, hw_irq);
++			virq = irq_find_mapping(xgene_msi->inner_domain, hw_irq);
+ 			WARN_ON(!virq);
+ 			if (virq != 0)
+ 				generic_handle_irq(virq);
+@@ -497,7 +497,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+ 		goto error;
+ 	}
+ 	xgene_msi->msi_addr = res->start;
+-
++	xgene_msi->node = pdev->dev.of_node;
+ 	xgene_msi->num_cpus = num_possible_cpus();
+ 
+ 	rc = xgene_msi_init_allocator(xgene_msi);
+@@ -561,19 +561,10 @@ static int xgene_msi_probe(struct platform_device *pdev)
+ 
+ 	cpu_notifier_register_done();
+ 
+-	xgene_msi->mchip.of_node = pdev->dev.of_node;
+-	rc = of_pci_msi_chip_add(&xgene_msi->mchip);
+-	if (rc) {
+-		dev_err(&pdev->dev, "failed to add MSI controller chip\n");
+-		goto error_notifier;
+-	}
+-
+ 	dev_info(&pdev->dev, "APM X-Gene PCIe MSI driver loaded\n");
+ 
+ 	return 0;
+ 
+-error_notifier:
+-	unregister_hotcpu_notifier(&xgene_msi_cpu_notifier);
+ error:
+ 	xgene_msi_remove(pdev);
+ 	return rc;
+-- 
+2.1.4
 
