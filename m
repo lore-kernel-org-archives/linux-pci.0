@@ -1,64 +1,80 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 11/51] PCI: Add debug printout during releasing partial assigned resources
-Date: Mon, 27 Jul 2015 16:29:29 -0700
-Message-Id: <1438039809-24957-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Date: Tue, 7 Jul 2015 15:40:19 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+Message-ID: <20150707144019.GH4379@red-moon>
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+ <20150527210447.GY32152@google.com>
+ <20150528022332.GA23724@roeck-us.net>
+ <20150528124112.GJ10210@google.com>
+ <20150618180103.GA23809@roeck-us.net>
+ <20150619162413.GA21533@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150619162413.GA21533@red-moon>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We try to assign must+optional at first, and we only accept the result if
-all resources get allocated. Otherwise will release assigned in the list,
-and try to assign must and expand to optional.
+On Fri, Jun 19, 2015 at 05:24:13PM +0100, Lorenzo Pieralisi wrote:
+> Hi Guenter,
+> 
+> On Thu, Jun 18, 2015 at 07:01:03PM +0100, Guenter Roeck wrote:
+> > On Thu, May 28, 2015 at 07:41:12AM -0500, Bjorn Helgaas wrote:
+> > > 
+> > > > > I'd like res->flags to reflect the capabilities of the hardware, not
+> > > > > whether the window is currently enabled.
+> > > > > 
+> > > > Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
+> > > > purpose, or could that cause conflicts elsewhere ?
+> > > 
+> > > Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
+> > > below a host bridge that doesn't support I/O space.
+> > > 
+> > I integrated Lorenzo's patch and tried to get this working.
+> 
+> Thanks. How do you want to proceed with this ? Are you taking my patch
+> and post it along with your updated series ? We need to extend test
+> coverage to platforms we could not test on, as you know my series
+> affects all archs but SPARC (I mean it should *not* affect them, this
+> has to be tested though, I do not have the HW needed, your coverage
+> for x86 and PowerPC is great but I do not think it can be deemed
+> sufficient).
+> 
+> Please let me know, thanks !
 
-We have to do that to make sure any must has priority than any optional
-addon.
+Any comment on this ? I will have to remove the bridge resource claiming
+from my patch according to Ben's concerns for PowerPC, which requires
+a v3.
 
-When that happens, we only print out "assigned" info, that is confusing
-as it looks like same range is assigned to two peer resources at the same
-time.
+How do you want me to go on with this ?
 
-Add printout for releasing so we have whole picture in debug messages.
+Thanks,
+Lorenzo
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 3abf249..6dff258 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -521,9 +521,17 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	free_list(&local_fail_head);
- 	/* Release assigned resource */
--	list_for_each_entry(dev_res, head, list)
--		if (dev_res->res->parent)
--			release_resource(dev_res->res);
-+	list_for_each_entry(dev_res, head, list) {
-+		struct resource *res = dev_res->res;
-+
-+		if (res->parent) {
-+			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
-+				   "BAR %d: released %pR\n",
-+				   (int)(res - &dev_res->dev->resource[0]),
-+				   res);
-+			release_resource(res);
-+		}
-+	}
- 	/* Restore start/end/flags from saved list */
- 	list_for_each_entry(save_res, &save_head, list) {
- 		struct resource *res = save_res->res;
--- 
-1.8.4.5
-
+> > Problem is that the use of a resource is widely checked with "!res->flags"
+> > throughout the code. That would have to be changed to something like
+> > "(!res->flags || (res->flags & IORESOURCE_DISABLED))" whereever it is used.
+> > 
+> > I tried going with "!res->flags" instead, but have not been able to get it
+> > to work realiably; it is just very difficult to distinguish if "!res->flags"
+> > means that the resource has not yet been assigned or if it means that it is not
+> > supported.
+> > 
+> > The correct approach, in my opinion, would be to go with IORESOURCE_DISABLED
+> > and make the necessary changes whereever needed. Effectively this means to
+> > replace the "!res->flags" check with something like pci_res_used() [ pick
+> > your preferred name ] and define it as
+> > 
+> > #define pci_res_used(res) ((res)->flags && !((res)->flags & IORESOURCE_DISABLED))
+> > 
+> > Is that the right direction ?
+> > 
+> > Thanks,
+> > Guenter
+> > 
