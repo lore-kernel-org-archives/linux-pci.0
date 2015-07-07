@@ -1,239 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 21 Jul 2015 13:09:19 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jordan Hargrave <jharg93@gmail.com>
-Cc: jdelvare@suse.de, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Jordan_Hargrave@dell.com
-Subject: Re: [PATCH] Add support for reading SMBIOS Slot number for PCI
- devices
-Message-ID: <20150721180919.GE21967@google.com>
-References: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53754 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757274AbbGGPlW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Jul 2015 11:41:22 -0400
+Message-ID: <1436283678.1391.50.camel@redhat.com>
+Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mark Hounschell <markh@compro.net>, wdavis@nvidia.com,
+	joro@8bytes.org, iommu@lists.linux-foundation.org,
+	linux-pci@vger.kernel.org, tripperda@nvidia.com,
+	jhubbard@nvidia.com, jglisse@redhat.com, konrad.wilk@oracle.com,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Tue, 07 Jul 2015 09:41:18 -0600
+In-Reply-To: <20150707151517.GA14215@google.com>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+	 <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
+	 <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net>
+	 <20150707151517.GA14215@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 10, 2015 at 05:02:46PM -0500, Jordan Hargrave wrote:
-> From: Jordan Hargrave <Jordan_Hargrave@dell.com>
+On Tue, 2015-07-07 at 10:15 -0500, Bjorn Helgaas wrote:
+> [+cc Alex]
 > 
-> There currently isn't an easy way to determine which PCI devices belong to
-> system slots.  This patch adds support to read SMBIOS Type 9 (System Slots).
+> Hi Mark,
 > 
-> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
-> ---
->  drivers/firmware/dmi_scan.c | 39 ++++++++++++++++++++
->  drivers/pci/pci-label.c     | 89 +++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/dmi.h         |  1 +
->  3 files changed, 129 insertions(+)
+> On Wed, May 20, 2015 at 08:11:17AM -0400, Mark Hounschell wrote:
+> > Most currently available hardware doesn't allow reads but will allow
+> > writes on PCIe peer-to-peer transfers. All current AMD chipsets are
+> > this way. I'm pretty sure all Intel chipsets are this way also. What
+> > happens with reads is they are just dropped with no indication of
+> > error other than the data will not be as expected. Supposedly the
+> > PCIe spec does not even require any peer-to-peer support. Regular
+> > PCI there is no problem and this API could be useful. However I
+> > doubt seriously you will find a pure PCI motherboard that has an
+> > IOMMU.
+> > 
+> > I don't understand the chipset manufactures reasoning for disabling
+> > PCIe peer-to-peer reads. We would like to make PCIe versions of our
+> > cards but their application requires  peer-to-peer reads and writes.
+> > So we cannot develop PCIe versions of the cards.
 > 
-> diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
-> index ac1ce4a..8f95897 100644
-> --- a/drivers/firmware/dmi_scan.c
-> +++ b/drivers/firmware/dmi_scan.c
-> @@ -356,6 +356,41 @@ static void __init dmi_save_extended_devices(const struct dmi_header *dm)
->  	dmi_save_one_device(*d & 0x7f, dmi_string_nosave(dm, *(d - 1)));
->  }
->  
-> +static void __init dmi_save_dev_slot(int instance, int segment, int bus, int devfn, const char *name)
-> +{
-> +	struct dmi_dev_onboard *slot;
-> +	
-> +	slot = dmi_alloc(sizeof(*slot) + strlen(name) + 1);
-> +	if (!slot) {
-> +		printk(KERN_ERR "dmi_save_system_slot: out of memory.\n");
+> I'd like to understand this better.  Peer-to-peer between two devices
+> below the same Root Port should work as long as ACS doesn't prevent
+> it.  If we find an Intel or AMD IOMMU, I think we configure ACS to
+> prevent direct peer-to-peer (see "pci_acs_enable"), but maybe it could
+> still be done with the appropriate IOMMU support.  And if you boot
+> with "iommu=off", we don't do that ACS configuration, so peer-to-peer
+> should work.
 
-You've got lots of data that might be useful in the printk: segment, bus,
-devfn, name.
+The assumption I work from in vfio is that peer-to-peer should be able
+to take a path through the IOMMU, that is from one endpoint, up through
+to the RC (with ACS enabled), be translated by the IOMMU and directed
+back downstream to the specified endpoint.  Whether that actually works
+for any/all transactions, I can't say, I don't know how to test it.
+It'd be interesting to know if this is a false assumption.
 
-> +		return;
-> +	}
-> +	slot->instance = instance;
-> +	slot->segment = segment;
-> +	slot->bus = bus;
-> +	slot->devfn = devfn;
-> +
-> +	strcpy((char *)&slot[1], name);
-> +	slot->dev.type = DMI_DEV_TYPE_SYSTEM_SLOT;
-> +	slot->dev.name = (char *)&slot[1];
-> +	slot->dev.device_data = slot;
-> +
-> +	list_add(&slot->dev.list, &dmi_devices);
-> +}
-> +
-> +
-> +static void __init dmi_save_system_slot(const struct dmi_header *dm)
-> +{
-> +	const char *name;
-> +	const u8 *d = (u8*)dm;
-> +	
-> +	if (dm->type == DMI_ENTRY_SYSTEM_SLOT && dm->length >= 0x11) {
-> +		name = dmi_string_nosave(dm, *(d + 0x04));
-> +		dmi_save_dev_slot(*(u16 *)(d + 0x09), *(u16 *)(d + 0xD), 
-> +				  *(d + 0xF), *(d + 0x10), name);
-> +	}
-> +}
-> +
->  static void __init count_mem_devices(const struct dmi_header *dm, void *v)
->  {
->  	if (dm->type != DMI_ENTRY_MEM_DEVICE)
-> @@ -437,6 +472,10 @@ static void __init dmi_decode(const struct dmi_header *dm, void *dummy)
->  		break;
->  	case 41:	/* Onboard Devices Extended Information */
->  		dmi_save_extended_devices(dm);
-> +		break;
-> +	case 9:         /* System Slots */
-> +		dmi_save_system_slot(dm);
-> +		break;
->  	}
->  }
->  
-> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-> index 024b5c1..38dfb45 100644
-> --- a/drivers/pci/pci-label.c
-> +++ b/drivers/pci/pci-label.c
-> @@ -125,14 +125,103 @@ static struct attribute_group smbios_attr_group = {
->  	.is_visible = smbios_instance_string_exist,
->  };
->  
-> +static int smbios_getslot(struct pci_dev *pdev)
-> +{
-> +	struct pci_dev *sdev;
-> +	struct dmi_dev_onboard *dslot;
-> +	const struct dmi_device *dmi;
-> +	u8 sub, sec, bus;
-> +
-> +	dmi = NULL;
-> +	if (pdev->is_virtfn) {
-> +		/* Get Physical device for SR-IOV */
-> +		pdev = pdev->physfn;
-> +	}
-
-Use pci_physfn().
-
-> +	bus = pdev->bus->number;
-> +	while ((dmi = dmi_find_device(DMI_DEV_TYPE_SYSTEM_SLOT, NULL, dmi)) != NULL) {
-
-This loop doesn't match my naive expectation of how we should find a slot.
-I expected something like:
-
-  - Look for DMI info that's an exact match for my D:B:D.F
-  - Walk bridges upstream towards the root, looking for a subtree that
-    includes pdev
-
-> +		sec = sub = -1;
-> +
-> +		dslot = dmi->device_data;
-> +		sdev = pci_get_domain_bus_and_slot(dslot->segment, dslot->bus, dslot->devfn);
-
-This acquires a reference on the dev returned, so you need to dispose of
-that somewhere.
-
-> +		if (sdev == NULL)
-> +			continue;
-> +
-> +		if (sdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +			pci_read_config_byte(sdev, PCI_SECONDARY_BUS, &sec);
-> +			pci_read_config_byte(sdev, PCI_SUBORDINATE_BUS, &sub);
-
-We should not have to read this out of config space; busn_res in struct
-pci_bus has this information already.
-
-> +			if (bus >= sec && bus <= sub) {
-> +				/* device is child of bridge */
-> +				return dslot->instance;
-
-If you have a slot name for 0000:00:00.0 and a device at 0001:00:00.0, this
-will erroneously associate the domain 0 name with the domain 1 device.
-
-> +			}
-> +		}
-> +		if (pci_domain_nr(sdev->bus) == pci_domain_nr(pdev->bus) &&
-> +		    sdev->bus->number == pdev->bus->number &&
-> +		    PCI_SLOT(sdev->devfn) == PCI_SLOT(pdev->devfn)) {
-> +			/* Match domain:bus:dev.  If PCIE root, only match function */
-
-The PCIe part of this comment doesn't seem to match the code.
-
-> +			if (PCI_FUNC(sdev->devfn) == PCI_FUNC(pdev->devfn) ||
-> +			    pci_pcie_type(sdev) != PCI_EXP_TYPE_ROOT_PORT) {
-> +				return dslot->instance;
-> +			}
-> +		}
-> +	}
-> +	return -ENODEV;
-> +}
-> + 
-> +static ssize_t smbiosslot_show(struct device *dev,
-> +			       struct device_attribute *attr, char *buf)
-> +{
-> + 	struct pci_dev *pdev;
-> +	int slot;
-> + 
-> + 	pdev = to_pci_dev(dev);
-> +	slot = smbios_getslot(pdev);
-> +	if (slot > 0) {
-> +		return scnprintf(buf, PAGE_SIZE, "%d\n", slot);
-> +	}
-> +	return 0;
-> +}
-> +
-> +static umode_t smbios_slot_exist(struct kobject *kobj, struct attribute *attr,
-> +				 int n)
-> +{
-> +	struct device *dev;
-> +	struct pci_dev *pdev;
-> +
-> +	dev = container_of(kobj, struct device, kobj);
-> +	pdev = to_pci_dev(dev);
-> +
-> +	return (smbios_getslot(pdev) > 0) ? S_IRUGO : 0;
-> +}
-> +
-> +static struct device_attribute smbios_attr_slot = {
-> +	.attr = {.name = "slot", .mode = 0444},
-> +	.show = smbiosslot_show,
-> +};
-> +
-> +static struct attribute *smbios_slot_attributes[] = {
-> +	&smbios_attr_slot.attr,
-> +	NULL,
-> +};
-> +
-> +static struct attribute_group smbios_slot_attr_group = {
-> +	.attrs = smbios_slot_attributes,
-> +	.is_visible = smbios_slot_exist,
-> +};
-> +
->  static int pci_create_smbiosname_file(struct pci_dev *pdev)
->  {
-> +	int rc;
-> +
-> +	rc = sysfs_create_group(&pdev->dev.kobj, &smbios_slot_attr_group);
-> +	if (rc != 0)
-> +		return rc;
->  	return sysfs_create_group(&pdev->dev.kobj, &smbios_attr_group);
->  }
->  
->  static void pci_remove_smbiosname_file(struct pci_dev *pdev)
->  {
->  	sysfs_remove_group(&pdev->dev.kobj, &smbios_attr_group);
-> +	sysfs_remove_group(&pdev->dev.kobj, &smbios_slot_attr_group);
->  }
->  #else
->  static inline int pci_create_smbiosname_file(struct pci_dev *pdev)
-> diff --git a/include/linux/dmi.h b/include/linux/dmi.h
-> index 5055ac3..09f42e7 100644
-> --- a/include/linux/dmi.h
-> +++ b/include/linux/dmi.h
-> @@ -22,6 +22,7 @@ enum dmi_device_type {
->  	DMI_DEV_TYPE_IPMI = -1,
->  	DMI_DEV_TYPE_OEM_STRING = -2,
->  	DMI_DEV_TYPE_DEV_ONBOARD = -3,
-> +	DMI_DEV_TYPE_SYSTEM_SLOT = -4,
->  };
->  
->  enum dmi_entry_type {
-> -- 
-> 1.8.3.1
+> I suppose the problem is that peer-to-peer doesn't work between
+> devices under different Root Ports or even devices under different
+> Root Complexes?
 > 
+> PCIe r3.0, sec 6.12.1.1, says Root Ports that support peer-to-peer
+> traffic are required to implement ACS P2P Request Redirect, so if a
+> Root Port doesn't implement RR, we can assume it doesn't support
+> peer-to-peer.  But unfortunately the converse is not true: if a Root
+> Port implements RR, that does *not* imply that it supports
+> peer-to-peer traffic.  
+
+ACS is a much overlooked part of the spec, afaict we can't assume
+anything about a root port that doesn't implement ACS, and most of them
+don't.  Thanks,
+
+Alex
+
+> So I don't know how to discover whether peer-to-peer between Root
+> Ports or Root Complexes is supported.  Maybe there's some clue in the
+> IOMMU?  The Intel VT-d spec mentions it, but "peer" doesn't even
+> appear in the AMD spec.
+> 
+> And I'm curious about why writes sometimes work when reads do not.
+> That sounds like maybe the hardware support is there, but we don't
+> understand how to configure everything correctly.
+> 
+> Can you give us the specifics of the topology you'd like to use, e.g.,
+> lspci -vv of the path between the two devices?
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
