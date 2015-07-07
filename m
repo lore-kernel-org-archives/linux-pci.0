@@ -1,157 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49763 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756382AbbGFXlY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:41:24 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 18/36] PCI: Better support for two alt_size
-Date: Mon,  6 Jul 2015 16:39:08 -0700
-Message-Id: <1436225966-27247-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v3 10/15] irqchip: gicv3-its: Register irq domain with platform MSI token
+Date: Tue,  7 Jul 2015 18:18:00 +0100
+Message-Id: <1436289485-28230-11-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Need to put aligned with max align before not aligned.
+Now that we can distinguish between multiple domains carrying the
+same device_node, tag the raw ITS domain with DOMAIN_BUS_PLATFORM_MSI.
 
-For example:
-alt align/size: 8M/9M, 4M/8M
-before this patch we have 8M/20M.
-After this patch we will have 8M/17M.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/setup-bus.c | 80 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 78 insertions(+), 2 deletions(-)
+ drivers/irqchip/irq-gic-v3-its.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9427baa..90dc096 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -58,6 +58,20 @@ static inline bool is_before(resource_size_t align1, resource_size_t size1,
- 	return false;
- }
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 7c01fe4..140224c 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -1407,13 +1407,14 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
  
-+static inline bool is_before_alt(resource_size_t align, resource_size_t size1,
-+			     resource_size_t size2)
-+{
-+	resource_size_t size1_left, size2_left;
-+
-+	/*  aligned is before not aligned */
-+	size1_left = size1 & (align - 1);
-+	size2_left = size2 & (align - 1);
-+	if (!size1_left && size2_left)
-+		return true;
-+
-+	return false;
-+}
-+
- struct pci_dev_resource {
- 	struct list_head list;
- 	struct resource *res;
-@@ -314,6 +328,42 @@ static void __sort_resources(struct list_head *head)
- 	}
- }
+ 	if (of_property_read_bool(its->msi_chip.of_node, "msi-controller")) {
+-		its->domain = irq_domain_add_tree(NULL, &its_domain_ops, its);
++		its->domain = irq_domain_add_tree(node, &its_domain_ops, its);
+ 		if (!its->domain) {
+ 			err = -ENOMEM;
+ 			goto out_free_tables;
+ 		}
  
-+static void __sort_resources_alt(struct list_head *head)
-+{
-+	struct pci_dev_resource *res1, *tmp_res, *res2;
-+	resource_size_t align = 0;
-+
-+
-+	__sort_resources(head);
-+
-+	/* get max align at first */
-+	list_for_each_entry(res1, head, list) {
-+		resource_size_t align1;
-+
-+		align1 = pci_resource_alignment(res1->dev, res1->res);
-+		if (align1 > align)
-+			align = align1;
-+	}
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		resource_size_t size1, size2;
-+
-+		size1 = resource_size(res1->res);
-+
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			size2 = resource_size(res2->res);
-+			if (is_before_alt(align, size1, size2)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- /**
-  * reassign_resources_sorted() - satisfy any additional resource requests
-  *
-@@ -641,7 +691,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
- 		res->end = res->start + alt_res->alt_size - 1;
- 	}
+ 		its->domain->parent = parent;
++		its->domain->bus_token = DOMAIN_BUS_PLATFORM_MSI;
  
--	__sort_resources(head);
-+	__sort_resources_alt(head);
- 	/* Satisfy the alt resource requests */
- 	assign_requested_resources_sorted(head, &local_alt_fail_head);
- 
-@@ -1236,6 +1286,32 @@ static void __sort_align_test(struct list_head *head)
- 	}
- }
- 
-+static void __sort_align_test_alt(struct list_head *head)
-+{
-+	struct align_test_res *res1, *tmp_res, *res2;
-+	resource_size_t align = 0;
-+
-+	__sort_align_test(head);
-+
-+	/* get max align at first */
-+	list_for_each_entry(res1, head, list)
-+		if (res1->align > align)
-+			align = res1->align;
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			if (is_before_alt(align, res1->size, res2->size)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- static bool is_align_size_good(struct list_head *head,
- 			resource_size_t min_align, resource_size_t size,
- 			resource_size_t start)
-@@ -1321,7 +1397,7 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
- 	if (count <= 1)
- 		goto out;
- 
--	__sort_align_test(head);
-+	__sort_align_test_alt(head);
- 
- 	tmp = max(size, max_align);
- 	order = __fls(count);
+ 		its->msi_chip.domain = its_pci_msi_alloc_domain(node,
+ 								its->domain);
 -- 
-1.8.4.5
+2.1.4
 
