@@ -1,93 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:57600 "EHLO mout2.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751358AbbG2R1p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jul 2015 13:27:45 -0400
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-To: Milan Broz <mbroz@redhat.com>, Ondrej Kozina <okozina@redhat.com>,
-	device-mapper development <dm-devel@redhat.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
- <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
- <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org>
- <20150728212441.GA25761@redhat.com> <55B87005.7010409@redhat.com>
- <55B8759B.8070400@redhat.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>, mpatocka@redhat.com,
-	Mike Snitzer <msnitzer@redhat.com>
-From: Andreas Hartmann <andihartmann@freenet.de>
-Message-ID: <55B90C25.8030502@maya.org>
-Date: Wed, 29 Jul 2015 19:23:49 +0200
-MIME-Version: 1.0
-In-Reply-To: <55B8759B.8070400@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:34005 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753112AbbGGQzP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 12:55:15 -0400
+Received: by wgfr2 with SMTP id r2so18522588wgf.1
+        for <linux-pci@vger.kernel.org>; Tue, 07 Jul 2015 09:55:13 -0700 (PDT)
+From: Russell Joyce <russell.joyce@york.ac.uk>
+To: bhelgaas@google.com, michal.simek@xilinx.com,
+	soren.brinkmann@xilinx.com, sthokal@xilinx.com,
+	jiang.liu@linux.intel.com, arnd@arndb.de, tglx@linutronix.de,
+	wangyijing@huawei.com, wsa@the-dreams.de, robh@kernel.org,
+	russell.joyce@york.ac.uk
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: xilinx: Add check for MSI interrupt flag before handling as INTx
+Date: Tue,  7 Jul 2015 17:54:19 +0100
+Message-Id: <1436288059-22925-1-git-send-email-russell.joyce@york.ac.uk>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/29/2015 at 08:41 AM Milan Broz wrote:
-> On 07/29/2015 08:17 AM, Ondrej Kozina wrote:
->> On 07/28/2015 11:24 PM, Mike Snitzer wrote:
->>>>
->>>> I am willing to do tests if you have any idea to be tested - I can
->>>> reproduce it quite easily.
->>>
->>> You can try disabling dm-crypt's parallelization by specifying these 2
->>> features: same_cpu_crypt submit_from_crypt_cpus
->>>
->>
->> Hi,
->>
->> please try adding follwoing cryptsetup perf. options while unlocking 
->> your LUKS containers: --perf-submit_from_crypt_cpus and 
->> --perf-same_cpu_crypt.
->>
->> Perhaps focus on SSD disk as previous unresolved report mentioned SSD too
+Occasionally both MSI and INTx bits in the interrupt decode register are
+set at once by the Xilinx AXI PCIe Bridge, so the MSI flag in the
+interrupt message should be checked to ensure that the correct handler is
+used.
 
-I'll next try to just boot from the rotational disk. If the problem
-doesn't show up here, it could be SSD related, too.
+If this check is not in place and the interrupt message type is MSI, the
+INTx handler will be used erroneously when both type bits are set.
+This will also be followed by a second read of the message FIFO, which can
+result in the function returning early and the interrupt decode register
+not being cleared if the FIFO is now empty.
 
-> 
-> Just you need to use cryptsetup 1.6.7 version (older versions do not have this options yet).
+Signed-off-by: Russell Joyce <russell.joyce@york.ac.uk>
+---
+ drivers/pci/host/pcie-xilinx.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-Thanks for this hint.
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index f1a06a0..dcb9b57 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -449,14 +449,17 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 			return IRQ_HANDLED;
+ 		}
+ 
+-		/* Clear interrupt FIFO register 1 */
+-		pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
+-			   XILINX_PCIE_REG_RPIFR1);
+-
+-		/* Handle INTx Interrupt */
+-		val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+-			XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
+-		generic_handle_irq(irq_find_mapping(port->irq_domain, val));
++		if (!(val & XILINX_PCIE_RPIFR1_MSI_INTR)) {
++			/* Clear interrupt FIFO register 1 */
++			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
++				   XILINX_PCIE_REG_RPIFR1);
++
++			/* Handle INTx Interrupt */
++			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
++				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
++			generic_handle_irq(irq_find_mapping(port->irq_domain,
++							    val));
++		}
+ 	}
+ 
+ 	if (status & XILINX_PCIE_INTR_MSI) {
+-- 
+2.1.4
 
-I compiled this version and applied it and verified it, if it's really
-in initrd. It was in initrd and the additional options where applied, too.
-
-But: nothing changed with enabled ncq - exactly same problem as before
-(w/ linux 3.19.8 + additional patches and Linux 4.1 - no difference in
-behavior).
-
-> Anyway, it seems strange that one patch triggers such a problem (leading to a conclusion
-> that the patch is wrong) but dm-crypt is know to reveal many problems in other systems
-> exactly this way...
-
-Maybe - maybe not.
-
-> The patches were tested on so many systems without problem that I really believe
-> the dmcrypt patch is just trigger for a bug elsewhere.
-
-I'm having another machine, which doesn't show the problem - but this
-machine can't be compared w/ the failing machine, because the other
-machine does have a totally different and easy setup (1 ssd crypted lvm
-and 3 or 4 logical filesystems - that's it) - and it's much slower :-).
-
-Here I'm  having: 3 disks (1 ssd, 2 x 3 TB rotational), 1 crypted SW
-Raid 1 w/ LVM on the rotational disks, another LVM on the ssd and 29 (!)
-logical volumes each with xfs and 8 CPU cores, which guarantee high
-degree of parallelism. I'm not sure if this is a "usual" setup which is
-tested heavily. The error always comes up while mounting the partitions
-on boot. Reducing the amount of mounted partitions reduced the amount of
-errors (AMD-Vi IO_PAGE_FAULTs).
-
-> 
-> Anyway, if we can find configuration which fails here, I would like to help to find
-> the core problem... Papering here just means it will break data later elsewhere.
-> 
-> Thanks for testing it!
-
-I hope we can find the problem.
-
-
-Regards,
-Andreas
