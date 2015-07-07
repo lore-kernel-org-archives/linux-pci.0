@@ -1,66 +1,154 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 23/36] PCI: Add has_mem64 for host_bridge
-Date: Mon,  6 Jul 2015 16:39:13 -0700
-Message-Id: <1436225966-27247-24-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+To: Kees Cook <keescook@chromium.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Baoquan He <bhe@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Matt Fleming <matt.fleming@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 33/42] x86, boot: Add add_pci handler for SETUP_PCI
+Date: Tue,  7 Jul 2015 13:20:19 -0700
+Message-Id: <1436300428-21163-34-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
+References: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On system that does not support mmio64 above 4g, will not set that.
-We will use that info next two following patches:
-1. Don't treat non-pref mmio64 as pref mmio, so will not put
-   it under bridge's pref range when rescan the devices
-2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
+Let it reserve setup_data, and keep it's own list.
 
+Also clear the hdr.setup_data, as all handler now handle or
+reserve setup_data locally already.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matt Fleming <matt.fleming@intel.com>
+Cc: linux-pci@vger.kernel.org
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c | 9 +++++++++
- include/linux/pci.h | 1 +
- 2 files changed, 10 insertions(+)
+ arch/x86/include/asm/pci.h |  2 ++
+ arch/x86/kernel/setup.c    |  8 ++++++++
+ arch/x86/pci/common.c      | 42 ++++++++++++++++++++++++++++--------------
+ 3 files changed, 38 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 010d8d9..14bdbca 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2051,6 +2051,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 	}
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4625943..7d2468c 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -80,8 +80,10 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
  
-+	resource_list_for_each_entry(window, &bridge->windows) {
-+		res = window->res;
-+		if (resource_type(res) == IORESOURCE_MEM &&
-+		    (res->end - window->offset) > 0xffffffff) {
-+			bridge->has_mem64 = 1;
+ #ifdef CONFIG_PCI
+ extern void early_quirks(void);
++void add_pci(u64 pa_data);
+ #else
+ static inline void early_quirks(void) { }
++static inline void add_pci(u64 pa_data) { }
+ #endif
+ 
+ extern void pci_iommu_alloc(void);
+diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+index a3b65f1..de0f830 100644
+--- a/arch/x86/kernel/setup.c
++++ b/arch/x86/kernel/setup.c
+@@ -440,6 +440,8 @@ static void __init parse_setup_data(void)
+ 		pa_next = data->next;
+ 		early_memunmap(data, sizeof(*data));
+ 
++		printk(KERN_DEBUG "setup_data type: %d @ %#010llx\n",
++				data_type, pa_data);
+ 		switch (data_type) {
+ 		case SETUP_E820_EXT:
+ 			parse_e820_ext(pa_data, data_len);
+@@ -447,14 +449,20 @@ static void __init parse_setup_data(void)
+ 		case SETUP_DTB:
+ 			add_dtb(pa_data);
+ 			break;
++		case SETUP_PCI:
++			add_pci(pa_data);
 +			break;
-+		}
-+	}
-+
- 	down_write(&pci_bus_sem);
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33ef25f..0771b37 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -409,6 +409,7 @@ struct pci_host_bridge {
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-+	unsigned int has_mem64:1;
- };
+ 		case SETUP_EFI:
+ 			parse_efi_setup(pa_data, data_len);
+ 			break;
+ 		default:
++			pr_warn("Unknown setup_data type: %d @ %#010llx ignored!\n",
++				data_type, pa_data);
+ 			break;
+ 		}
+ 		pa_data = pa_next;
+ 	}
++	boot_params.hdr.setup_data = 0; /* all done */
+ }
  
- #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
+ static void __init memblock_x86_reserve_range_setup_data(void)
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 8fd6f44..16ace12 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -9,6 +9,7 @@
+ #include <linux/pci-acpi.h>
+ #include <linux/ioport.h>
+ #include <linux/init.h>
++#include <linux/memblock.h>
+ #include <linux/dmi.h>
+ #include <linux/slab.h>
+ 
+@@ -641,31 +642,44 @@ unsigned int pcibios_assign_all_busses(void)
+ 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
+ }
+ 
++static u64 pci_setup_data;
++void __init add_pci(u64 pa_data)
++{
++	struct setup_data *data;
++
++	data = early_memremap(pa_data, sizeof(*data));
++	memblock_reserve(pa_data, sizeof(*data) + data->len);
++	data->next = pci_setup_data;
++	pci_setup_data = pa_data;
++	early_memunmap(data, sizeof(*data));
++}
++
+ int pcibios_add_device(struct pci_dev *dev)
+ {
+ 	struct setup_data *data;
+ 	struct pci_setup_rom *rom;
+ 	u64 pa_data;
+ 
+-	pa_data = boot_params.hdr.setup_data;
++	pa_data = pci_setup_data;
+ 	while (pa_data) {
+ 		data = ioremap(pa_data, sizeof(*rom));
+ 		if (!data)
+ 			return -ENOMEM;
+ 
+-		if (data->type == SETUP_PCI) {
+-			rom = (struct pci_setup_rom *)data;
+-
+-			if ((pci_domain_nr(dev->bus) == rom->segment) &&
+-			    (dev->bus->number == rom->bus) &&
+-			    (PCI_SLOT(dev->devfn) == rom->device) &&
+-			    (PCI_FUNC(dev->devfn) == rom->function) &&
+-			    (dev->vendor == rom->vendor) &&
+-			    (dev->device == rom->devid)) {
+-				dev->rom = pa_data +
+-				      offsetof(struct pci_setup_rom, romdata);
+-				dev->romlen = rom->pcilen;
+-			}
++		rom = (struct pci_setup_rom *)data;
++
++		if ((pci_domain_nr(dev->bus) == rom->segment) &&
++		    (dev->bus->number == rom->bus) &&
++		    (PCI_SLOT(dev->devfn) == rom->device) &&
++		    (PCI_FUNC(dev->devfn) == rom->function) &&
++		    (dev->vendor == rom->vendor) &&
++		    (dev->device == rom->devid)) {
++			dev->rom = pa_data +
++			      offsetof(struct pci_setup_rom, romdata);
++			dev->romlen = rom->pcilen;
++			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
++				   (unsigned long)dev->rom,
++				   (unsigned long)(dev->rom + dev->romlen - 1));
+ 		}
+ 		pa_data = data->next;
+ 		iounmap(data);
 -- 
 1.8.4.5
 
