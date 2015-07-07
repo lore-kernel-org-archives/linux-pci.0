@@ -1,219 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:32968 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753234AbbGIBy5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 21:54:57 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: mingo@kernel.org
-Cc: bp@suse.de, arnd@arndb.de, bhelgaas@google.com,
-	luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Juergen Gross <jgross@suse.com>,
-	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH v9 6/8] drivers/video/fbdev/arkfb.c: Use arch_phys_wc_add() and pci_iomap_wc()
-Date: Wed,  8 Jul 2015 18:54:17 -0700
-Message-Id: <1436406859-1280-7-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33777 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757692AbbGGQlf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 7 Jul 2015 12:41:35 -0400
+Message-ID: <1436287293.1391.74.camel@redhat.com>
+Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mark Hounschell <markh@compro.net>,
+	William Davis <wdavis@nvidia.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Tue, 07 Jul 2015 10:41:33 -0600
+In-Reply-To: <CAErSpo74X7ny_30L2uDWJ==vQJKq3KgFk8CPVsKuJ7=-DwNo3w@mail.gmail.com>
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
+	 <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
+	 <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net>
+	 <20150707151517.GA14215@google.com> <1436283678.1391.50.camel@redhat.com>
+	 <CAErSpo74X7ny_30L2uDWJ==vQJKq3KgFk8CPVsKuJ7=-DwNo3w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Tue, 2015-07-07 at 11:16 -0500, Bjorn Helgaas wrote:
+> On Tue, Jul 7, 2015 at 10:41 AM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > On Tue, 2015-07-07 at 10:15 -0500, Bjorn Helgaas wrote:
+> >> [+cc Alex]
+> >>
+> >> Hi Mark,
+> >>
+> >> On Wed, May 20, 2015 at 08:11:17AM -0400, Mark Hounschell wrote:
+> >> > Most currently available hardware doesn't allow reads but will allow
+> >> > writes on PCIe peer-to-peer transfers. All current AMD chipsets are
+> >> > this way. I'm pretty sure all Intel chipsets are this way also. What
+> >> > happens with reads is they are just dropped with no indication of
+> >> > error other than the data will not be as expected. Supposedly the
+> >> > PCIe spec does not even require any peer-to-peer support. Regular
+> >> > PCI there is no problem and this API could be useful. However I
+> >> > doubt seriously you will find a pure PCI motherboard that has an
+> >> > IOMMU.
+> >> >
+> >> > I don't understand the chipset manufactures reasoning for disabling
+> >> > PCIe peer-to-peer reads. We would like to make PCIe versions of our
+> >> > cards but their application requires  peer-to-peer reads and writes.
+> >> > So we cannot develop PCIe versions of the cards.
+> >>
+> >> I'd like to understand this better.  Peer-to-peer between two devices
+> >> below the same Root Port should work as long as ACS doesn't prevent
+> >> it.  If we find an Intel or AMD IOMMU, I think we configure ACS to
+> >> prevent direct peer-to-peer (see "pci_acs_enable"), but maybe it could
+> >> still be done with the appropriate IOMMU support.  And if you boot
+> >> with "iommu=off", we don't do that ACS configuration, so peer-to-peer
+> >> should work.
+> >
+> > The assumption I work from in vfio is that peer-to-peer should be able
+> > to take a path through the IOMMU, that is from one endpoint, up through
+> > to the RC (with ACS enabled), be translated by the IOMMU and directed
+> > back downstream to the specified endpoint.  Whether that actually works
+> > for any/all transactions, I can't say, I don't know how to test it.
+> > It'd be interesting to know if this is a false assumption.
+> 
+> That's what I assume as well.
+> 
+> >> I suppose the problem is that peer-to-peer doesn't work between
+> >> devices under different Root Ports or even devices under different
+> >> Root Complexes?
+> >>
+> >> PCIe r3.0, sec 6.12.1.1, says Root Ports that support peer-to-peer
+> >> traffic are required to implement ACS P2P Request Redirect, so if a
+> >> Root Port doesn't implement RR, we can assume it doesn't support
+> >> peer-to-peer.  But unfortunately the converse is not true: if a Root
+> >> Port implements RR, that does *not* imply that it supports
+> >> peer-to-peer traffic.
+> >
+> > ACS is a much overlooked part of the spec, afaict we can't assume
+> > anything about a root port that doesn't implement ACS, and most of them
+> > don't.
+> 
+> I think we can assume a Root Port that does not implement ACS P2P
+> Request Redirect does not support peer-to-peer traffic with other Root
+> Ports, right?  That's how I read sec 6.12.1.1.
 
-Convert the driver from using the x86-specific MTRR code to the
-architecture-agnostic arch_phys_wc_add(). It will avoid MTRRs if
-write-combining is available. In order to take advantage of that also
-ensure the ioremapped area is requested as write-combining.
+I think that means that *if* the device supports ACS and does not
+implement RR then it does not support peer-to-peer.  The assumption we
+make in IOMMU grouping is that if ACS is not supported at all, then the
+hardware is providing us with no indication for or against peer-to-peer
+and we therefore assume peer-to-peer is possible, but that's for
+isolation, not actually trying to make use of p2p.  It seems overly
+optimistic to assume the designers of a device that does not implement
+ACS evaluated the capability and determined it not to be necessary.
+Besides, ACS was only introduced in PCIe rev 2.
 
-There are a few motivations for this:
+> If we're trying to set up a peer-to-peer path between devices under
+> different Root ports, I think it would make sense to check the ACS
+> support somewhere in the pci_map_resource() path and fail if P2P RR is
+> not implemented.
 
-a) Take advantage of PAT when available.
+There are multiple options here:
 
-b) Help bury MTRR code away, MTRR is architecture-specific and on
-   x86 it is being replaced by PAT.
+1) No ACS
+2) ACS, no RR
+3) ACS, RR enabled
+4) ACS, RR disabled
 
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()").
+In case 1), we have no idea.  Cases 2) and 3) are really the same,
+neither does peer-to-peer and I think whether we can support any sort of
+peer-to-peer mapping depends on whether there's an IOMMU upstream that
+can do the redirect.  For case 4), possibly we can assume the redirect
+happens at the root port, but you'll never see this case if an IOMMU is
+present and enabled.  Thanks,
 
-The conversion done is expressed by the following Coccinelle
-SmPL patch, it additionally required manual intervention to
-address all the ifdeffery and removal of redundant things which
-arch_phys_wc_add() already addresses such as verbose message about
-when MTRR fails and doing nothing when we didn't get an MTRR.
-
-@ mtrr_found @
-expression index, base, size;
-@@
-
--index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
-+index = arch_phys_wc_add(base, size);
-
-@ mtrr_rm depends on mtrr_found @
-expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
-@@
-
--mtrr_del(index, base, size);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_zero_arg depends on mtrr_found @
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, 0, 0);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_fb_info depends on mtrr_found @
-struct fb_info *info;
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
-+arch_phys_wc_del(index);
-
-@ ioremap_replace_nocache depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap_nocache(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-@ ioremap_replace_default depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: benh@kernel.crashing.org
-Cc: bhelgaas@google.com
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: mst@redhat.com
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: toshi.kani@hp.com
-Link: http://lkml.kernel.org/r/1435195342-26879-8-git-send-email-mcgrof@do-not-panic.com
-Signed-off-by: Borislav Petkov <bp@suse.de>
----
- drivers/video/fbdev/arkfb.c | 36 +++++-------------------------------
- 1 file changed, 5 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/video/fbdev/arkfb.c b/drivers/video/fbdev/arkfb.c
-index b305a1e7cc76..6a317de7082c 100644
---- a/drivers/video/fbdev/arkfb.c
-+++ b/drivers/video/fbdev/arkfb.c
-@@ -26,13 +26,9 @@
- #include <linux/console.h> /* Why should fb driver call console functions? because console_lock() */
- #include <video/vga.h>
- 
--#ifdef CONFIG_MTRR
--#include <asm/mtrr.h>
--#endif
--
- struct arkfb_info {
- 	int mclk_freq;
--	int mtrr_reg;
-+	int wc_cookie;
- 
- 	struct dac_info *dac;
- 	struct vgastate state;
-@@ -102,10 +98,6 @@ static const struct svga_timing_regs ark_timing_regs     = {
- 
- static char *mode_option = "640x480-8@60";
- 
--#ifdef CONFIG_MTRR
--static int mtrr = 1;
--#endif
--
- MODULE_AUTHOR("(c) 2007 Ondrej Zajicek <santiago@crfreenet.org>");
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("fbdev driver for ARK 2000PV");
-@@ -115,11 +107,6 @@ MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
- module_param_named(mode, mode_option, charp, 0444);
- MODULE_PARM_DESC(mode, "Default video mode ('640x480-8@60', etc) (deprecated)");
- 
--#ifdef CONFIG_MTRR
--module_param(mtrr, int, 0444);
--MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
--#endif
--
- static int threshold = 4;
- 
- module_param(threshold, int, 0644);
-@@ -1002,7 +989,7 @@ static int ark_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	info->fix.smem_len = pci_resource_len(dev, 0);
- 
- 	/* Map physical IO memory address into kernel space */
--	info->screen_base = pci_iomap(dev, 0, 0);
-+	info->screen_base = pci_iomap_wc(dev, 0, 0);
- 	if (! info->screen_base) {
- 		rc = -ENOMEM;
- 		dev_err(info->device, "iomap for framebuffer failed\n");
-@@ -1057,14 +1044,8 @@ static int ark_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 
- 	/* Record a reference to the driver data */
- 	pci_set_drvdata(dev, info);
--
--#ifdef CONFIG_MTRR
--	if (mtrr) {
--		par->mtrr_reg = -1;
--		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
--	}
--#endif
--
-+	par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
-+					  info->fix.smem_len);
- 	return 0;
- 
- 	/* Error handling */
-@@ -1092,14 +1073,7 @@ static void ark_pci_remove(struct pci_dev *dev)
- 
- 	if (info) {
- 		struct arkfb_info *par = info->par;
--
--#ifdef CONFIG_MTRR
--		if (par->mtrr_reg >= 0) {
--			mtrr_del(par->mtrr_reg, 0, 0);
--			par->mtrr_reg = -1;
--		}
--#endif
--
-+		arch_phys_wc_del(par->wc_cookie);
- 		dac_release(par->dac);
- 		unregister_framebuffer(info);
- 		fb_dealloc_cmap(&info->cmap);
--- 
-2.3.2.209.gd67f9d5.dirty
+Alex
 
