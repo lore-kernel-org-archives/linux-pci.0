@@ -1,58 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 29/51] PCI: Allow optional only io resource must size to be 0
-Date: Mon, 27 Jul 2015 16:29:47 -0700
-Message-Id: <1438039809-24957-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <559CD763.50601@linux.intel.com>
+Date: Wed, 08 Jul 2015 15:55:15 +0800
+From: Jiang Liu <jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: Re: [Patch v3 0/4] Introduce a mechanism to allocate PCI IRQ on demand
+References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com> <20150619161001.GJ7710@google.com> <559CD1CF.3030601@linux.intel.com> <alpine.DEB.2.11.1507080939430.3916@nanos>
+In-Reply-To: <alpine.DEB.2.11.1507080939430.3916@nanos>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When there is no child device under the non hotplug bridge,
-We can use 0 for must size, and do not use old size as must size.
-
-When there is child device, size will not be 0.
-when the bridge is not hotplug, min_size will not be 0.
-So they will still honor the old size as must size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index aeed716..3a94617 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1242,8 +1242,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_size(size, min_size,
--			resource_size(b_res), min_align);
-+	if (size || min_size)
-+		size0 = calculate_size(size, min_size,
-+					resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
-@@ -1259,7 +1260,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		return;
- 	}
- 
--	b_res->start = min_align;
-+	b_res->start = size0 ? min_align : 0;
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--- 
-1.8.4.5
-
+On 2015/7/8 15:40, Thomas Gleixner wrote:
+> On Wed, 8 Jul 2015, Jiang Liu wrote:
+>> On 2015/6/20 0:10, Bjorn Helgaas wrote:
+>>> On Wed, Jun 10, 2015 at 04:54:57PM +0800, Jiang Liu wrote:
+>>>> Hi Bjorn,
+>>>> 	I have verified that this patch set could be applied to the
+>>>> mainstream kernel without dependency on other patches, so could you
+>>>> please help to merge it?
+>>>
+>>> I already acked these and said I was willing to merge them and that I was
+>>> hoping for an ack from Thomas.
+>>>
+>>> Any thoughts, Thomas?
+>>
+>> Hi Thomas,
+>> 	Any comments about this bugfix series?
+> 
+> How is these a bugfix series? It looks like preparation for ioapic
+> hotplug.
+> 
+> But other than that, Acked-by-me.
+Thanks! The IOAPIC hotplug driver has been merged into mainstream
+kernel, so treat them as bugfix:)
