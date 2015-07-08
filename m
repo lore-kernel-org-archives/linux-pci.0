@@ -1,63 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH 6/6] MAINTAINERS: Add Altera PCIe driver maintainer
-Date: Tue, 28 Jul 2015 18:45:45 +0800
-Message-ID: <1438080345-7233-7-git-send-email-lftan@altera.com>
-In-Reply-To: <1438080345-7233-1-git-send-email-lftan@altera.com>
-References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:36565 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757238AbbGHKsn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 06:48:43 -0400
+Date: Wed, 8 Jul 2015 12:48:34 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v3 09/15] irqchip: gicv3-its: Split PCI/MSI code from
+ the core ITS driver
+In-Reply-To: <1436289485-28230-10-git-send-email-marc.zyngier@arm.com>
+Message-ID: <alpine.DEB.2.11.1507081245120.5134@nanos>
+References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com> <1436289485-28230-10-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- MAINTAINERS | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+On Tue, 7 Jul 2015, Marc Zyngier wrote:
+> +static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+> +			       int nvec, msi_alloc_info_t *info)
+> +{
+> +	struct pci_dev *pdev;
+> +	struct its_pci_alias dev_alias;
+> +
+> +	if (!dev_is_pci(dev))
+> +		return -EINVAL;
+> +
+> +	pdev = to_pci_dev(dev);
+> +	dev_alias.pdev = pdev;
+> +	dev_alias.count = nvec;
+> +
+> +	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
+> +
+> +	return its_msi_prepare(domain, dev_alias.dev_id, dev_alias.count, info);
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fd60784..32f5287 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7759,6 +7759,14 @@ F:	include/linux/pci*
- F:	arch/x86/pci/
- F:	arch/x86/kernel/quirks.c
- 
-+PCI DRIVER FOR ALTERA PCIE IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
-+F:	drivers/pci/host/pcie-altera.c
-+
- PCI DRIVER FOR ARM VERSATILE PLATFORM
- M:	Rob Herring <robh@kernel.org>
- L:	linux-pci@vger.kernel.org
-@@ -7860,6 +7868,14 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*spear*
- 
-+PCI MSI DRIVER FOR ALTERA MSI IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-+F:	drivers/pci/host/pcie-altera-msi.c
-+
- PCI MSI DRIVER FOR APPLIEDMICRO XGENE
- M:	Duc Dang <dhdang@apm.com>
- L:	linux-pci@vger.kernel.org
--- 
-1.8.2.1
+I don't think you need its_msi_prepare() exposed to child
+drivers. Something like
 
+  domain->parent->ops->msi_prepare()
+
+should do the trick.
+
+Thanks,
+
+	tglx
