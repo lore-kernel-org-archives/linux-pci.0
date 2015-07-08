@@ -1,57 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastion.smtp.avagotech.com ([202.86.248.61]:50630 "EHLO
-	sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751316AbbGOGa5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 02:30:57 -0400
-Date: Tue, 14 Jul 2015 23:24:56 -0700
-From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-To: Yinghai Lu <yinghai@kernel.org>
-CC: <tpearson@raptorengineeringinc.com>,
-	James Bottomley <jejb@kernel.org>,
-	<martin.petersen@oracle.com>,
-	Linux-Scsi <linux-scsi@vger.kernel.org>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	<Sathya.Prakash@avagotech.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no
- memory I/O resources detected
-Message-ID: <20150715062456.GB19028@dhcp-135-24-192-118.lsi.com>
-References: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
- <CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <559D0342.2040805@arm.com>
+Date: Wed, 08 Jul 2015 12:02:26 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Thomas Gleixner <tglx@linutronix.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+Subject: Re: [PATCH v3 09/15] irqchip: gicv3-its: Split PCI/MSI code from
+ the core ITS driver
+References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com> <1436289485-28230-10-git-send-email-marc.zyngier@arm.com> <alpine.DEB.2.11.1507081245120.5134@nanos>
+In-Reply-To: <alpine.DEB.2.11.1507081245120.5134@nanos>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 14, 2015 at 10:36:58PM -0700, Yinghai Lu wrote:
-> On Tue, Jul 14, 2015 at 9:49 PM, Sreekanth Reddy
-> <sreekanth.reddy@avagotech.com> wrote:
-> > Driver crashes if the BIOS do not set up at least one
-> > memory I/O resource. This failure can happen if the device is too
-> > slow to respond during POST and is missed by the BIOS, but Linux
-> > then detects the device later in the boot process.
+On 08/07/15 11:48, Thomas Gleixner wrote:
+> On Tue, 7 Jul 2015, Marc Zyngier wrote:
+>> +static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+>> +			       int nvec, msi_alloc_info_t *info)
+>> +{
+>> +	struct pci_dev *pdev;
+>> +	struct its_pci_alias dev_alias;
+>> +
+>> +	if (!dev_is_pci(dev))
+>> +		return -EINVAL;
+>> +
+>> +	pdev = to_pci_dev(dev);
+>> +	dev_alias.pdev = pdev;
+>> +	dev_alias.count = nvec;
+>> +
+>> +	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
+>> +
+>> +	return its_msi_prepare(domain, dev_alias.dev_id, dev_alias.count, info);
 > 
-> But pci subsystem should assign resources to those unassigned BAR.
+> I don't think you need its_msi_prepare() exposed to child
+> drivers. Something like
 > 
-> Do you mean even kernel can not assign resource to them? or it takes so long for
-> mpt FW to get ready?
-
-This is not an issue from mpt FW.
-
-I have just kept the same description provide by Timothy in his
-initial patch.
-
-But I observe that their may be chance of getting "unable to handle
-kernel NULL pointer dereference" kernel panic if no Memory Resource
-available in the PCI subsystem. So agreed to the Timothy proposal of
-aborting the driver initialization if it doesn't detect any Memory
-resource instead of whole system get into panic state.
-
+>   domain->parent->ops->msi_prepare()
 > 
-> Thanks
-> 
-> Yinghai
+> should do the trick.
+
+Good point.
+
+I've so far conveniently avoided having an extra set of msi_domain_ops
+at the ITS level itself, but that is starting to look like a mistake.
+
+I'll work something out.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
