@@ -1,104 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1437035476.27428.24.camel@tiscali.nl>
-Subject: Re: [PATCH 5/5] PCI: Add host drivers for Cavium ThunderX
- processors.
-From: Paul Bolle <pebolle@tiscali.nl>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:33239 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932367AbbGHAZR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 20:25:17 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6Uac5x4+fr9d7OymaKS9nG=Da3h+qW7Ni0o0XGOSagEdg@mail.gmail.com>
+References: <1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com>
+ <1435196060-27350-2-git-send-email-mcgrof@do-not-panic.com>
+ <20150625230437.GA4362@sci.fi> <CAB=NE6V0HGCkpYFghUyyk=+St-494Y8e9PEakF9F7cEB8vpKvA@mail.gmail.com>
+ <20150625231103.GB4362@sci.fi> <20150626010927.GI3005@wotan.suse.de>
+ <20150626073028.GA14776@pd.tnic> <CAB=NE6Uac5x4+fr9d7OymaKS9nG=Da3h+qW7Ni0o0XGOSagEdg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Tue, 7 Jul 2015 17:24:57 -0700
+Message-ID: <CAB=NE6UKnhx0PoJp_wHeZMnXxHLsd8snzu2bOj=VWde=Bo-hVg@mail.gmail.com>
+Subject: Re: [PATCH v5 1/3] video: fbdev: atyfb: clarify ioremap() base and
+ length used
+To: Borislav Petkov <bp@suse.de>
+Cc: =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dave Airlie <airlied@redhat.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>,
-	David Daney <david.daney@cavium.com>
-Date: Thu, 16 Jul 2015 10:31:16 +0200
-In-Reply-To: <1436979285-8177-6-git-send-email-ddaney.cavm@gmail.com>
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
-	 <1436979285-8177-6-git-send-email-ddaney.cavm@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+	Juergen Gross <jgross@suse.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Rob Clark <robdclark@gmail.com>,
+	Mathias Krause <minipli@googlemail.com>,
+	Andrzej Hajda <a.hajda@samsung.com>,
+	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
+	Davidlohr Bueso <dbueso@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On wo, 2015-07-15 at 09:54 -0700, David Daney wrote:
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
+On Thu, Jul 2, 2015 at 4:23 PM, Luis R. Rodriguez <mcgrof@suse.com> wrote:
+> On Fri, Jun 26, 2015 at 12:30 AM, Borislav Petkov <bp@suse.de> wrote:
+>> On Fri, Jun 26, 2015 at 03:09:27AM +0200, Luis R. Rodriguez wrote:
+>>> Sure, mind this as a follow up patch if its too late?
+>>
+>> No need, you can send me an updated one - I'll replace it.
+>
+> Will do!
 
-> +config PCI_THUNDER_PEM
-> +	bool
+OK the commend I'm adding:
 
-Do you expect other symbols to select this symbol in the future? Because
-at this moment PCI_THUNDER_PEM is merely an alias for PCI_THUNDER.
+@@ -3489,6 +3489,15 @@ static int atyfb_setup_generic(struct pci_dev
+*pdev, struct fb_info *info,
 
-> +config PCI_THUNDER
-> +	bool "Thunder PCIe host controller"
-> +	depends on ARM64 || COMPILE_TEST
-> +	depends on OF_PCI
-> +	select PCI_MSI
-> +	select PCI_THUNDER_PEM
-> +	help
-> +	  Say Y here if you want internal PCI support on Thunder SoC.
+        /* Map in frame buffer */
+        info->fix.smem_start = addr;
++
++       /*
++        * The framebuffer is not always 8 MiB that's just the size of the
++        * PCI BAR, this is later corrected for use with write-combining
++        * helpers with aty_fudge_framebuffer_len() which will adjust the
++        * framebuffer accordingly depending on the device. We do this
++        * to match semantics over ioremap calls on framebuffer devices
++        * with with other drivers with the info->fix.smem_len.
++        */
+        info->fix.smem_len = 0x800000;
 
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
+        info->screen_base = ioremap(info->fix.smem_start, info->fix.smem_len);
 
-> +obj-$(CONFIG_PCI_THUNDER) += pcie-thunder.o
-> +obj-$(CONFIG_PCI_THUNDER_PEM) += pcie-thunder-pem.o
+Will respin.
 
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-thunder-pem.c
-
-> +#include <linux/module.h>
-
-> +MODULE_DEVICE_TABLE(pci, thunder_pem_pci_table);
-
-> +static int __init thunder_pcie_init(void)
-> +{
-> +	int ret;
-> +
-> +	ret = pci_register_driver(&thunder_pem_driver);
-> +
-> +	return ret;
-> +}
-> +module_init(thunder_pcie_init);
-> +
-> +static void __exit thunder_pcie_exit(void)
-> +{
-> +	pci_unregister_driver(&thunder_pem_driver);
-> +}
-> +module_exit(thunder_pcie_exit);
-
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-thunder.c
-
-> +#include <linux/module.h>
-
-> +MODULE_DEVICE_TABLE(of, thunder_pcie_of_match);
-> +
-> +static struct platform_driver thunder_pcie_driver = {
-> +	.driver = {
-> +		[...]
-> +		.owner = THIS_MODULE,
-> +		[...]
-> +};
-> +module_platform_driver(thunder_pcie_driver);
-
-> +MODULE_AUTHOR("Sunil Goutham");
-> +MODULE_DESCRIPTION("Cavium Thunder ECAM host controller driver");
-> +MODULE_LICENSE("GPL v2");
-
-This patch adds two bool Kconfig symbols and two files that can only be
-built-in if these symbols are set, right?
-
-But the code uses various constructs that are only useful for modular
-code (MODULE_DEVICE_TABLE, __exit, module_exit, THIS_MODULE, and the
-three MODULE_* macros) or have built-in alternatives (module_init and
-module_platform_driver).
-
-Was it your intention to make this code built-in or modular?
-
-Thanks,
-
-
-Paul Bolle
+ Luis
