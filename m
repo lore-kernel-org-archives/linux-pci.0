@@ -1,145 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:45581 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751299AbbGJAVJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jul 2015 20:21:09 -0400
-Date: Thu, 9 Jul 2015 20:19:37 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joe Perches <joe@perches.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Joerg Roedel <jroedel@suse.de>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Tony Luck <tony.luck@intel.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC Patch V1 09/12] genirq: Move msi_list from struct pci_dev
- to struct device
-Message-ID: <20150710001936.GD6957@windriver.com>
-References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
- <1436428847-8886-10-git-send-email-jiang.liu@linux.intel.com>
+Received: from www.linutronix.de ([62.245.132.108]:37253 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758703AbbGHMzJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 08:55:09 -0400
+Date: Wed, 8 Jul 2015 14:55:00 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	x86@kernel.org
+Subject: Re: [PATCH v2 1/3] x86/pci/intel_mid_pci: work around for IRQ0
+ assignment
+In-Reply-To: <1436354059-130135-2-git-send-email-andriy.shevchenko@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1507081453310.5134@nanos>
+References: <1436354059-130135-1-git-send-email-andriy.shevchenko@linux.intel.com> <1436354059-130135-2-git-send-email-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1436428847-8886-10-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[[RFC Patch V1 09/12] genirq: Move msi_list from struct pci_dev to struct device] On 09/07/2015 (Thu 16:00) Jiang Liu wrote:
+On Wed, 8 Jul 2015, Andy Shevchenko wrote:
+> A few devices on Intel Edison board (Intel Tangier) has IRQ0 as an IRQ line in
+> the PCI configuration. The actual one which is using that is a first eMMC host
+> controller.
 
-> Move msi_list from struct pci_dev into struct device, so we could support
-> non-PCI-device based generic MSI interrupts.
+You fail to explain that the other devices have a bogus PCI configuration.
 
-This is not just a simple move, as the new instances are within a
-Kconfig option.  I did not get the 0/12 so I don't know if this is
-expected, but the commit log here does not seem stand-alone enough
-to get through on its own merits; it needs more details.
+> In case we compile sdhci-pci as a module and leave serial driver built-in,
+> first serial device not in use and has IRQ0 assigned as well, the latter takes
+> the interrupt allocation.
 
-Paul.
---
-
+We are really not interested in the details of whats compiled in or
+not and which other device is acquiring the interrupt. What matters
+is: It's an init ordering problem.
+ 
+> The result of such behaviour is impossibility to
+> allocate the interrupt by sdhci-pci driver.
 > 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/base/core.c    |    3 +++
->  drivers/pci/msi.c      |    3 +--
->  include/linux/device.h |    4 ++++
->  include/linux/msi.h    |    2 +-
->  include/linux/pci.h    |    1 -
->  5 files changed, 9 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index dafae6d2f7ac..18e2a89aa138 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -662,6 +662,9 @@ void device_initialize(struct device *dev)
->  	INIT_LIST_HEAD(&dev->devres_head);
->  	device_pm_init(dev);
->  	set_dev_node(dev, -1);
-> +#ifdef CONFIG_GENERIC_MSI_IRQ
-> +	INIT_LIST_HEAD(&dev->msi_list);
-> +#endif
->  }
->  EXPORT_SYMBOL_GPL(device_initialize);
->  
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 6497608545e2..0050ad436718 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -900,7 +900,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
->  		return;
->  
->  	BUG_ON(list_empty(dev_to_msi_list(&dev->dev)));
-> -	desc = first_msi_entry(dev);
-> +	desc = first_pci_msi_entry(dev);
->  
->  	pci_msi_set_enable(dev, 0);
->  	pci_intx_for_msi(dev, 1);
-> @@ -1044,7 +1044,6 @@ EXPORT_SYMBOL(pci_msi_enabled);
->  
->  void pci_msi_init_pci_dev(struct pci_dev *dev)
+> This patch introduces a quirk inside intel_mid_pci_irq_enable() to avoid
+> described behaviour.
+
+That's pretty useless. You tell the reader that you add a quirk, which
+is hardly interesting because the subject line already talks about a
+workaround. You fail to tell WHAT the quirk is doing.
+
+Aside of that, starting a sentence in a changelog with "This patch" is
+silly. We already know that THIS is a patch.
+
+Let me rephrase the whole thing:
+
+"On Intel Tangier the MMC host controller is wired up to irq 0. But
+ several other devices have irq 0 associated as well due to a bogus
+ PCI configuration.
+
+ The first initialized driver will acquire irq 0 and make it
+ unavailable for other devices. If the sdhci driver is not the first
+ one it will fail to acquire the interrupt and therefor be non
+ functional.
+
+ Add a quirk to the pci irq enable function which denies irq 0 to
+ anything else than the MMC host controller driver on Tangier
+ platforms."
+
+Can you see the difference?
+ 
+> +#define PCI_DEVICE_ID_INTEL_MRFL_MMC	0x1190
+> +
+
+Please add defines at the top of the file, not just randomly in the
+middle of the code.
+
+>  static int intel_mid_pci_irq_enable(struct pci_dev *dev)
 >  {
-> -	INIT_LIST_HEAD(&dev->msi_list);
->  }
+>  	struct irq_alloc_info info;
+>  	int polarity;
+>  	int ret;
 >  
->  /**
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index 5a31bf3a4024..22227e7fe463 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -713,6 +713,7 @@ struct device_dma_parameters {
->   * 		along with subsystem-level and driver-level callbacks.
->   * @pins:	For device pin management.
->   *		See Documentation/pinctrl.txt for details.
-> + * @msi_list:	Hosts MSI descriptors
->   * @numa_node:	NUMA node this device is close to.
->   * @dma_mask:	Dma mask (if dma'ble device).
->   * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
-> @@ -776,6 +777,9 @@ struct device {
->  #ifdef CONFIG_PINCTRL
->  	struct dev_pin_info	*pins;
->  #endif
-> +#ifdef CONFIG_GENERIC_MSI_IRQ
-> +	struct list_head	msi_list;
-> +#endif
->  
->  #ifdef CONFIG_NUMA
->  	int		numa_node;	/* NUMA node this device is close to */
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index cfbd2afeaf64..57fe766a14bf 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -45,7 +45,7 @@ struct msi_desc {
->  
->  /* Helpers to hide struct msi_desc implementation details */
->  #define msi_desc_to_dev(desc)		(&(desc)->dev.dev)
-> -#define dev_to_msi_list(dev)		(&to_pci_dev((dev))->msi_list)
-> +#define dev_to_msi_list(dev)		(&(dev)->msi_list)
->  #define first_msi_entry(dev)		\
->  	list_first_entry(dev_to_msi_list((dev)), struct msi_desc, list)
->  #define for_each_msi_entry(desc, dev)	\
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8a0321a8fb59..fbf245f5eba7 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -366,7 +366,6 @@ struct pci_dev {
->  	struct bin_attribute *res_attr[DEVICE_COUNT_RESOURCE]; /* sysfs file for resources */
->  	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
->  #ifdef CONFIG_PCI_MSI
-> -	struct list_head msi_list;
->  	const struct attribute_group **msi_irq_groups;
->  #endif
->  	struct pci_vpd *vpd;
-> -- 
-> 1.7.10.4
-> 
+> -	if (dev->irq_managed && dev->irq > 0)
+> +	if (dev->irq_managed && dev->irq >= 0)
+>  		return 0;
+
+What's the point here? Can dev->irq_managed be set and dev->irq be < 0?
+
+> +	/* Special treatment for IRQ0 */
+> +	if (dev->irq == 0) {
+> +		switch (intel_mid_identify_cpu()) {
+> +		case INTEL_MID_CPU_CHIP_TANGIER:
+> +			/*
+> +			 * TNG has IRQ0 assigned to eMMC controller. This makes
+> +			 * it happy to get an interrupt.
+
+It's nice that you want to make the eMMC controller happy, but I doubt
+that the silicon actually cares.
+
+Please add a proper comment explaining the issue at hand.
+
+> +			 */
+> +			if (dev->device != PCI_DEVICE_ID_INTEL_MRFL_MMC)
+> +				return -EBUSY;
+> +			break;
+> +		default:
+> +			break;
+> +		}
+> +	}
+> +
+>  	/* Set IRQ polarity */
+>  	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+>  		polarity = 0; /* active high */
+
+So now we have:
+
+       if (dev->irq == 0) {
+       	     switch(intel_mid_identify_cpu()) {
+	     case INTEL_MID_CPU_CHIP_TANGIER:
+  	     ....
+       }
+
+and right after that:
+
+       if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+       	  ....
+
+That's just silly. Whats wrong with:
+
+       switch (intel_mid_identify_cpu()) {
+       case INTEL_MID_CPU_CHIP_TANGIER:
+       	    polarity = 0;
+	    if (dev->irq == 0) {
+	       ....
+	    }
+	    break;
+       default:
+            polarity = 1;
+       }
+
+Hmm?
+
+	tglx
