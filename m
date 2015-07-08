@@ -1,93 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46566 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754081AbbGNWxM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:53:12 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 42/49] PCI: Treat optional as must in first try for bridge rescan
-Date: Tue, 14 Jul 2015 15:47:13 -0700
-Message-Id: <1436914040-13206-43-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:39518 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934319AbbGHIh5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Jul 2015 04:37:57 -0400
+Date: Wed, 8 Jul 2015 09:38:26 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Will Deacon <Will.Deacon@arm.com>
+Subject: Re: [PATCH] PCI: Only enable IO window if supported
+Message-ID: <20150708083826.GA1912@red-moon>
+References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
+ <20150527210447.GY32152@google.com>
+ <20150602145510.GE23650@red-moon>
+ <1435099588.3996.14.camel@kernel.crashing.org>
+ <CAErSpo6AziA5GXEi6AizW2WP6oLVMd1p57pWunDNBQeVXxp1nw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo6AziA5GXEi6AizW2WP6oLVMd1p57pWunDNBQeVXxp1nw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For rescan bridge/bus that children are removed before, we should treat
-optional as must just like root bus the boot time in 19aa7ee432ce
-(PCI: make re-allocation try harder by reassigning ranges higher in
-the heirarchy).
+On Wed, Jun 24, 2015 at 12:02:14AM +0100, Bjorn Helgaas wrote:
+> On Tue, Jun 23, 2015 at 5:46 PM, Benjamin Herrenschmidt
+> <benh@kernel.crashing.org> wrote:
+> > On Tue, 2015-06-02 at 15:55 +0100, Lorenzo Pieralisi wrote:
+> >> While at it, do you think it is reasonable to also claim the bridge
+> >> windows (resources) in the respective pci_read_bridge_* calls ?
+> >
+> > No, don't claim in read. There's a clear distinction between gathering
+> > resources and claiming them, and we need to keep that.
+> >
+> > Some fixups might happen in between the two for example.
+> 
+> Are there any existing fixups like that?  Concrete examples would help
+> figure out the best way forward.
+> 
+> Most arches call pci_read_bridge_bases() from pcibios_fixup_bus().  I
+> think that's a poor place to do it because it's code that normally
+> doesn't have to be arch-specific.  Resource claiming is also usually
+> done from arch code, and it shouldn't be arch-specific either.
+> 
+> If we move both the read and claim into generic code, then we might
+> need to make sure there's a fixup phase in between or something.
 
-The reason: allocate must and expand to optional path do not
-put failed resource to fail list, so will lose must info before
-next try.
+Yes, that's where I am at the moment. On arm/arm64 PROBE_ONLY systems, if
+I can't claim bridge apertures upon pci_read_bridge_bases, I can't
+claim device resources in pcibios_add_device() since the bridge apertures
+have not been claimed at that point, hence resulting in failures.
 
-So we are using following way:
-1. First and following try before last try:
-   We don't keep realloc list so treat every optional as must.
-   allocate for must+optional and put failed in the fail list.
-   then size info (include must and optonal separatedly) will be kept
-   for next try.
-2. last try:
-   a: try to allocate must+optional to see if all get allocated.
-   b: try to allocate must then expand to optional.
+Given current code I see the following options:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+(1) Claim bridge resources in pci_read_bridge_bases()
+(2) Claim bridge resources in pcibios_add_device() (but that's horrible,
+    since it requires looking up device upstream bridge and claim its
+    resources)
+(3) Do not claim resources on PROBE_ONLY systems (that's what arm does at
+    present) and do not enable resources in pcibios_enable_device
+(4) Add an initcall to arm/arm64 that carries out a resource survey,
+    that's what's done on powerPC and also x86 it seems
+    (eg pcibios_init in arch/powerpc/kernel/pci_64.c)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f5b07d8..da0a259 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2350,25 +2350,34 @@ void __init pci_assign_unassigned_resources(void)
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- {
- 	struct pci_bus *parent = bridge->subordinate;
--	LIST_HEAD(add_list); /* list of resources that
-+	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
-+	struct list_head *add_list = NULL;
- 	int tried_times = 0;
- 	LIST_HEAD(fail_head);
- 	struct pci_dev_resource *fail_res;
- 	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-+	int pci_try_num = 2;
- 
- again:
--	__pci_bus_size_bridges(parent, &add_list);
--	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	__pci_bus_check_realloc(&add_list);
-+	/*
-+	 * last try will use add_list, otherwise will try good to have as
-+	 * must have, so can realloc parent bridge resource
-+	 */
-+	if (tried_times + 1 == pci_try_num)
-+		add_list = &realloc_head;
-+	__pci_bus_size_bridges(parent, add_list);
-+	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
-+	if (add_list)
-+		__pci_bus_check_realloc(add_list);
- 	tried_times++;
- 
- 	if (list_empty(&fail_head))
- 		goto enable_all;
- 
--	if (tried_times >= 2) {
-+	if (tried_times >= pci_try_num) {
- 		/* still fail, don't need to try more */
- 		free_list(&fail_head);
- 		goto enable_all;
--- 
-1.8.4.5
+Personally I think (1) is by far the cleanest solution, I understand
+Ben's concern but we need a way forward.
 
+I will have to revert to (3) unless we find another solution, I would
+like to make progress on this since it became a blocking issue.
+
+As I said before, I will move pci_read_bridge_bases() to generic code
+regardless.
+
+Comments appreciated.
+
+Thanks,
+Lorenzo
