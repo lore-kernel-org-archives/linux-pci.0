@@ -1,78 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36609 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932368AbbG0Xbr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:31:47 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v3 40/51] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
-Date: Mon, 27 Jul 2015 16:29:58 -0700
-Message-Id: <1438039809-24957-41-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 8 Jul 2015 09:40:53 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
+Subject: Re: [Patch v3 0/4] Introduce a mechanism to allocate PCI IRQ on
+ demand
+In-Reply-To: <559CD1CF.3030601@linux.intel.com>
+Message-ID: <alpine.DEB.2.11.1507080939430.3916@nanos>
+References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com> <20150619161001.GJ7710@google.com> <559CD1CF.3030601@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-parsing.
+On Wed, 8 Jul 2015, Jiang Liu wrote:
+> On 2015/6/20 0:10, Bjorn Helgaas wrote:
+> > On Wed, Jun 10, 2015 at 04:54:57PM +0800, Jiang Liu wrote:
+> >> Hi Bjorn,
+> >> 	I have verified that this patch set could be applied to the
+> >> mainstream kernel without dependency on other patches, so could you
+> >> please help to merge it?
+> > 
+> > I already acked these and said I was willing to merge them and that I was
+> > hoping for an ack from Thomas.
+> > 
+> > Any thoughts, Thomas?
+> 
+> Hi Thomas,
+> 	Any comments about this bugfix series?
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
----
- arch/sparc/kernel/of_device_32.c | 5 +++--
- arch/sparc/kernel/of_device_64.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+How is these a bugfix series? It looks like preparation for ioapic
+hotplug.
 
-diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
-index 185aa96..3e9f273 100644
---- a/arch/sparc/kernel/of_device_32.c
-+++ b/arch/sparc/kernel/of_device_32.c
-@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
-diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
-index 7bbdc26..defee61 100644
---- a/arch/sparc/kernel/of_device_64.c
-+++ b/arch/sparc/kernel/of_device_64.c
-@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
--- 
-1.8.4.5
+But other than that, Acked-by-me.
 
