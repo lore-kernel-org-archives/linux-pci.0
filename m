@@ -1,104 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36969 "EHLO foss.arm.com"
+Received: from mga11.intel.com ([192.55.52.93]:30312 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932401AbbGGRSg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jul 2015 13:18:36 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v3 08/15] platform: of: Assign MSI domain to platform device
-Date: Tue,  7 Jul 2015 18:17:58 +0100
-Message-Id: <1436289485-28230-9-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+	id S1758064AbbGHLOo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Jul 2015 07:14:44 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 2/3] x86/pci/intel_mid_pci: propagate actual return code
+Date: Wed,  8 Jul 2015 14:14:18 +0300
+Message-Id: <1436354059-130135-3-git-send-email-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <1436354059-130135-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1436354059-130135-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As for PCI, we're able to populate the msi_domain field at probe time,
-provided that the device tree has an "msi-parent" property.
+mp_map_gsi_to_irq() returns different codes if it fails.
+intel_mid_pci_irq_enable() hides this under -EBUSY. The patch replaces it by
+what is actually returned.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/of/irq.c          | 16 ++++++++++++++++
- drivers/of/platform.c     |  1 +
- include/linux/irqdomain.h |  1 +
- include/linux/of_irq.h    |  1 +
- 4 files changed, 19 insertions(+)
+ arch/x86/pci/intel_mid_pci.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index 3cf7a01..64392a6 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -18,6 +18,7 @@
-  * driver.
-  */
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 5d7f4afe..4739834 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -212,6 +212,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ {
+ 	struct irq_alloc_info info;
+ 	int polarity;
++	int ret;
  
-+#include <linux/device.h>
- #include <linux/errno.h>
- #include <linux/list.h>
- #include <linux/module.h>
-@@ -576,3 +577,18 @@ err:
- 		kfree(desc);
+ 	if (dev->irq_managed && dev->irq > 0)
+ 		return 0;
+@@ -232,6 +233,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 		}
  	}
- }
-+
-+void of_msi_configure(struct device *dev, struct device_node *np)
-+{
-+	struct device_node *msi_np;
-+	struct irq_domain *d;
-+
-+	msi_np = of_parse_phandle(np, "msi-parent", 0);
-+	if (!msi_np)
-+		return;
-+
-+	d = irq_find_matching_host(msi_np, DOMAIN_BUS_PLATFORM_MSI);
-+	if (!d)
-+		d = irq_find_host(msi_np);
-+	dev_set_msi_domain(dev, d);
-+}
-diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-index ddf8e42..8a002d6 100644
---- a/drivers/of/platform.c
-+++ b/drivers/of/platform.c
-@@ -184,6 +184,7 @@ static struct platform_device *of_platform_device_create_pdata(
- 	dev->dev.bus = &platform_bus_type;
- 	dev->dev.platform_data = platform_data;
- 	of_dma_configure(&dev->dev, dev->dev.of_node);
-+	of_msi_configure(&dev->dev, dev->dev.of_node);
  
- 	if (of_device_add(dev) != 0) {
- 		of_dma_deconfigure(&dev->dev);
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 25e9e66..b4a74f7 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -55,6 +55,7 @@ struct irq_data;
- enum irq_domain_bus_token {
- 	DOMAIN_BUS_ANY		= 0,
- 	DOMAIN_BUS_PCI_MSI,
-+	DOMAIN_BUS_PLATFORM_MSI,
- };
++	/* Set IRQ polarity */
+ 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+ 		polarity = 0; /* active high */
+ 	else
+@@ -242,8 +244,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	 * MRST only have IOAPIC, the PCI irq lines are 1:1 mapped to
+ 	 * IOAPIC RTE entries, so we just enable RTE for the device.
+ 	 */
+-	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC, &info) < 0)
+-		return -EBUSY;
++	ret = mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC, &info);
++	if (ret < 0)
++		return ret;
  
- /**
-diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
-index d884929..4bcbd58 100644
---- a/include/linux/of_irq.h
-+++ b/include/linux/of_irq.h
-@@ -74,6 +74,7 @@ static inline int of_irq_to_resource_table(struct device_node *dev,
-  */
- extern unsigned int irq_of_parse_and_map(struct device_node *node, int index);
- extern struct device_node *of_irq_find_parent(struct device_node *child);
-+extern void of_msi_configure(struct device *dev, struct device_node *np);
+ 	dev->irq_managed = 1;
  
- #else /* !CONFIG_OF */
- static inline unsigned int irq_of_parse_and_map(struct device_node *dev,
 -- 
 2.1.4
 
