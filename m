@@ -1,63 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:33673 "EHLO
-	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814AbbG2UV7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 16:21:59 -0400
-Received: by ioii16 with SMTP id i16so33412581ioi.0
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 13:21:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55B93507.6070101@roeck-us.net>
-References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
-	<20150729160903.GD31170@google.com>
-	<CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>
-	<55B92DA5.4030409@roeck-us.net>
-	<CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
-	<55B93507.6070101@roeck-us.net>
-Date: Wed, 29 Jul 2015 13:21:58 -0700
-Message-ID: <CAE9FiQWxMjJQBw6iQqtQxsBYG8-jxneia_8hrEm-JQH=6rCCTA@mail.gmail.com>
-Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
-From: Yinghai Lu <yinghai@kernel.org>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 1/3] x86/pci/intel_mid_pci: work around for IRQ0 assignment
+Date: Wed,  8 Jul 2015 14:14:17 +0300
+Message-Id: <1436354059-130135-2-git-send-email-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <1436354059-130135-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1436354059-130135-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 29, 2015 at 1:18 PM, Guenter Roeck <linux@roeck-us.net> wrote:
-> On 07/29/2015 12:53 PM, Yinghai Lu wrote:
->>
->> On Wed, Jul 29, 2015 at 12:46 PM, Guenter Roeck <linux@roeck-us.net>
->> wrote:
->>>
->>> On 07/29/2015 12:30 PM, Yinghai Lu wrote:
->>>
->>>>
->>>> so PCI_BUS_FLAGS_SUPPORTS_IO will never get set.
->>>>
->>>
->>> excellent catch. Unfortunately, I don't know how to make it
->>> work with the reversed flag. The idea here was that the flag
->>> propagates from parent to child. This makes sense for an
->>> "it doesn't work" flag to be inherited from the child,
->>> but not for an "it works" flag.
->>>
->>
->> also would be better if we can add has_ioport in hostbridge instead.
->> like has_mem64 in https://patchwork.ozlabs.org/patch/500926/
->> and use
->>
->> to_pci_host_bridge(bus->bridge)->has_ioport
->>
->> to replace pci_root_has_io_resource()
->>
->
-> Is there a function to get the root bus ? Otherwise I still need to
-> find the root bus first.
-host-bridge and rootbus is one to one mapping.
+A few devices on Intel Edison board (Intel Tangier) has IRQ0 as an IRQ line in
+the PCI configuration. The actual one which is using that is a first eMMC host
+controller.
 
-drivers/pci/host-bridge.c has related function.
+In case we compile sdhci-pci as a module and leave serial driver built-in,
+first serial device not in use and has IRQ0 assigned as well, the latter takes
+the interrupt allocation. The result of such behaviour is impossibility to
+allocate the interrupt by sdhci-pci driver.
 
+This patch introduces a quirk inside intel_mid_pci_irq_enable() to avoid
+described behaviour.
 
-Yinghai
+Fixes: 90b9aacf912a (serial: 8250_pci: add Intel Tangier support)
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/pci/intel_mid_pci.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 2706230..5d7f4afe 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -206,6 +206,8 @@ static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,
+ 			       where, size, value);
+ }
+ 
++#define PCI_DEVICE_ID_INTEL_MRFL_MMC	0x1190
++
+ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ {
+ 	struct irq_alloc_info info;
+@@ -214,6 +216,22 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	if (dev->irq_managed && dev->irq > 0)
+ 		return 0;
+ 
++	/* Special treatment for IRQ0 */
++	if (dev->irq == 0) {
++		switch (intel_mid_identify_cpu()) {
++		case INTEL_MID_CPU_CHIP_TANGIER:
++			/*
++			 * TNG has IRQ0 assigned to eMMC controller. This makes
++			 * it happy to get an interrupt.
++			 */
++			if (dev->device != PCI_DEVICE_ID_INTEL_MRFL_MMC)
++				return -EBUSY;
++			break;
++		default:
++			break;
++		}
++	}
++
+ 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
+ 		polarity = 0; /* active high */
+ 	else
+-- 
+2.1.4
+
