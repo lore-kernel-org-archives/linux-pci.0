@@ -1,127 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:56563 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753924AbbG1HRp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 03:17:45 -0400
-Message-ID: <55B72C7E.1020102@hisilicon.com>
-Date: Tue, 28 Jul 2015 15:17:18 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from smtp120.iad3a.emailsrvr.com ([173.203.187.120]:35296 "EHLO
+	smtp120.iad3a.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932629AbbGHQlC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 12:41:02 -0400
+Message-ID: <559D529B.3060804@compro.net>
+Date: Wed, 08 Jul 2015 12:40:59 -0400
+From: Mark Hounschell <markh@compro.net>
+Reply-To: markh@compro.net
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>, <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<liguozhu@hisilicon.com>
-Subject: Re: [PATCH v5 1/5] ARM/PCI: remove align_resource in pci_sys_data
-References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com> <1437794486-21134-2-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1437794486-21134-2-git-send-email-wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: wdavis@nvidia.com, joro@8bytes.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
+	konrad.wilk@oracle.com, Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com> <1431973504-5903-5-git-send-email-wdavis@nvidia.com> <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net> <20150707151517.GA14215@google.com> <559C08F3.7010103@compro.net> <20150708151132.GB14784@google.com>
+In-Reply-To: <20150708151132.GB14784@google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/7/25 11:21, Zhou Wang wrote:
-> From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> 
-> This patch is needed in order to unify the PCIe designware framework for ARM and
-> ARM64 architectures. In the PCIe designware unification process we are calling
-> pci_create_root_bus() passing a "sysdata" parameter that is the same for both
-> ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
-> cause a problem with the function pcibios_align_resource(); in fact this will
-> cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
-> "struct pcie_port*" pointer.
-> 
-> This patch solves the issue by removing "align_resource" from "pci_sys_data"
-> struct and defining a static global function pointer in "bios32.c"
-> 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+On 07/08/2015 11:11 AM, Bjorn Helgaas wrote:
+> [+cc Rafael]
+>
+> On Tue, Jul 07, 2015 at 01:14:27PM -0400, Mark Hounschell wrote:
+>> On 07/07/2015 11:15 AM, Bjorn Helgaas wrote:
+>>> On Wed, May 20, 2015 at 08:11:17AM -0400, Mark Hounschell wrote:
+>>>> Most currently available hardware doesn't allow reads but will allow
+>>>> writes on PCIe peer-to-peer transfers. All current AMD chipsets are
+>>>> this way. I'm pretty sure all Intel chipsets are this way also. What
+>>>> happens with reads is they are just dropped with no indication of
+>>>> error other than the data will not be as expected. Supposedly the
+>>>> PCIe spec does not even require any peer-to-peer support. Regular
+>>>> PCI there is no problem and this API could be useful. However I
+>>>> doubt seriously you will find a pure PCI motherboard that has an
+>>>> IOMMU.
+>>>>
+>>>> I don't understand the chipset manufactures reasoning for disabling
+>>>> PCIe peer-to-peer reads. We would like to make PCIe versions of our
+>>>> cards but their application requires  peer-to-peer reads and writes.
+>>>> So we cannot develop PCIe versions of the cards.
+>>>
+>>> I'd like to understand this better.  Peer-to-peer between two devices
+>>> below the same Root Port should work as long as ACS doesn't prevent
+>>> it.  If we find an Intel or AMD IOMMU, I think we configure ACS to
+>>> prevent direct peer-to-peer (see "pci_acs_enable"), but maybe it could
+>>> still be done with the appropriate IOMMU support.  And if you boot
+>>> with "iommu=off", we don't do that ACS configuration, so peer-to-peer
+>>> should work.
+>>>
+>>> I suppose the problem is that peer-to-peer doesn't work between
+>>> devices under different Root Ports or even devices under different
+>>> Root Complexes?
+>>>
+>>> PCIe r3.0, sec 6.12.1.1, says Root Ports that support peer-to-peer
+>>> traffic are required to implement ACS P2P Request Redirect, so if a
+>>> Root Port doesn't implement RR, we can assume it doesn't support
+>>> peer-to-peer.  But unfortunately the converse is not true: if a Root
+>>> Port implements RR, that does *not* imply that it supports
+>>> peer-to-peer traffic.
+>>>
+>>> So I don't know how to discover whether peer-to-peer between Root
+>>> Ports or Root Complexes is supported.  Maybe there's some clue in the
+>>> IOMMU?  The Intel VT-d spec mentions it, but "peer" doesn't even
+>>> appear in the AMD spec.
+>>>
+>>> And I'm curious about why writes sometimes work when reads do not.
+>>> That sounds like maybe the hardware support is there, but we don't
+>>> understand how to configure everything correctly.
+>>>
+>>> Can you give us the specifics of the topology you'd like to use, e.g.,
+>>> lspci -vv of the path between the two devices?
+>>
+>> First off, writes always work for me. Not just sometimes. Only reads
+>> NEVER do.
+>>
+>> Reading the AMD-990FX-990X-970-Register-Programming-Requirements-48693.pdf
+>> in section 2.5 "Enabling/Disabling Peer-to-Peer Traffic Access", it
+>> states specifically that
+>> only P2P memory writes are supported. This has been the case with
+>> older AMD chipset also. In one of the older chipset documents I read
+>> (I think the 770 series) , it said this was a security feature.
+>> Makes no sense to me.
+>>
+>> As for the topology I'd like to be able to use. This particular
+>> configuration (MB) has a single regular pci slot and the rest are
+>> pci-e. In two of those pci-e slots is a pci-e to pci expansion
+>> chassis interface card connected to a regular pci expansion rack. I
+>> am trying to to peer to peer between a regular pci card in one of
+>> those chassis to another regular pci card in the other chassis. In
+>> turn through the pci-e subsystem. Attached is the lcpci -vv output
+>> from this particular box. The cards that initiate the P2P are these:
+>>
+>> 04:04.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
+>> 0480 (rev 55)
+>> 04:05.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
+>> 0480 (rev 55)
+>> 04:06.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
+>> 0480 (rev 55)
+>> 04:07.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
+>> 0480 (rev 55)
+>>
+>> The card they need to P2P to and from is this one.
+>>
+>> 0a:05.0 Network controller: VMIC GE-IP PCI5565,PMC5565 Reflective
+>> Memory Node (rev 01)
+>
+> Peer-to-peer traffic initiated by 04:04.0 and targeted at 0a:05.0 has
+> to be routed up to Root Port 00:04.0, over to Root Port 00:0b.0, and
+> back down to 0a:05.0:
+>
+>    00:04.0: Root Port to [bus 02-05] Slot #4 ACS ReqRedir+
+>    02:00.0: PCIe-to-PCI bridge to [bus 03-05]
+>    03:04.0: PCI-to-PCI bridge to [bus 04-05]
+>    04:04.0: PLX intelligent controller
+>
+>    00:0b.0: Root Port to [bus 08-0e] Slot #11 ACS ReqRedir+
+>    00:0b.0:   bridge window [mem 0xd0000000-0xd84fffff]
+>    08:00.0: PCIe-to-PCI bridge to [bus 09-0e]
+>    08:00.0:   bridge window [mem 0xd0000000-0xd84fffff]
+>    09:04.0: PCI-to-PCI bridge to [bus 0a-0e]
+>    09:04.0:   bridge window [mem 0xd0000000-0xd84fffff]
+>    0a:05.0: VMIC GE-IP reflective memory node
+>    0a:05.0: BAR 3 [mem 0xd0000000-0xd7ffffff]
+>
+> Both Root Ports do support ACS, including P2P RR, but that doesn't
+> tell us anything about whether the Root Complex actually supports
+> peer-to-peer traffic between the Root Ports.  Per the AMD
+> 990FX/990X/970 spec, your hardware supports it for writes but not
+> reads.
+>
+> So your hardware is what it is, and a general-purpose interface should
+> probably not allow peer-to-peer at all unless we wanted to complicate
+> it by adding a read vs. write distinction.
+>
 
-Hi Arnd and Rob,
+Perhaps there are some AMD and/or Intel folks here that could influence 
+future products to support both reads and writes?
 
-What is your opinion about this patch? Gabriele adds a global pointer in bios32.c
-to store align_resource, so we could remove sys->align_resource in pcibios_align_resource.
-
-As Lorenzo mentioned in v4 series, this is a temporary solution before moving
-align_resource to host bridge structure.
-
-Any comments welcome.
-
-Thanks,
-Zhou
-
-> ---
->  arch/arm/include/asm/mach/pci.h |  5 -----
->  arch/arm/kernel/bios32.c        | 12 ++++++++----
->  2 files changed, 8 insertions(+), 9 deletions(-)
-> 
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> index 28b9bb3..8a4e4de 100644
-> --- a/arch/arm/include/asm/mach/pci.h
-> +++ b/arch/arm/include/asm/mach/pci.h
-> @@ -58,11 +58,6 @@ struct pci_sys_data {
->  					/* IRQ mapping				*/
->  	int		(*map_irq)(const struct pci_dev *, u8, u8);
->  					/* Resource alignement requirements	*/
-> -	resource_size_t (*align_resource)(struct pci_dev *dev,
-> -					  const struct resource *res,
-> -					  resource_size_t start,
-> -					  resource_size_t size,
-> -					  resource_size_t align);
->  	void		*private_data;	/* platform controller private data	*/
->  };
->  
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index fcbbbb1..4cdc64d 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -17,6 +17,11 @@
->  #include <asm/mach/pci.h>
->  
->  static int debug_pci;
-> +static resource_size_t (*align_resource)(struct pci_dev *dev,
-> +		  const struct resource *res,
-> +		  resource_size_t start,
-> +		  resource_size_t size,
-> +		  resource_size_t align) = NULL;
->  
->  #ifdef CONFIG_PCI_MSI
->  struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-> @@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  		sys->busnr   = busnr;
->  		sys->swizzle = hw->swizzle;
->  		sys->map_irq = hw->map_irq;
-> -		sys->align_resource = hw->align_resource;
-> +		align_resource = hw->align_resource;
->  		INIT_LIST_HEAD(&sys->resources);
->  
->  		if (hw->private_data)
-> @@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->  				resource_size_t size, resource_size_t align)
->  {
->  	struct pci_dev *dev = data;
-> -	struct pci_sys_data *sys = dev->sysdata;
->  	resource_size_t start = res->start;
->  
->  	if (res->flags & IORESOURCE_IO && start & 0x300)
-> @@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->  
->  	start = (start + align - 1) & ~(align - 1);
->  
-> -	if (sys->align_resource)
-> -		return sys->align_resource(dev, res, start, size, align);
-> +	if (align_resource)
-> +		return align_resource(dev, res, start, size, align);
->  
->  	return start;
->  }
-> 
-
-
+Mark
