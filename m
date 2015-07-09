@@ -1,144 +1,302 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:35512 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752727AbbG3D7Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 23:59:16 -0400
-Received: by igr7 with SMTP id 7so159443316igr.0
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 20:59:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150729202639.GA13239@google.com>
-References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
-	<20150729160903.GD31170@google.com>
-	<CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>
-	<55B92DA5.4030409@roeck-us.net>
-	<CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
-	<55B93151.8040608@roeck-us.net>
-	<20150729202639.GA13239@google.com>
-Date: Wed, 29 Jul 2015 20:59:16 -0700
-Message-ID: <CAE9FiQVmek758ZG2MfPCK5RsgUAfuD6zW5zHWQkid1POALnZSQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guenter Roeck <linux@roeck-us.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: multipart/mixed; boundary=047d7bd758a2207787051c0fba9c
+Received: from foss.arm.com ([217.140.101.70]:45485 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751261AbbGIK6x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jul 2015 06:58:53 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Simon Horman <horms@verge.net.au>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic PCI layer
+Date: Thu,  9 Jul 2015 11:59:16 +0100
+Message-Id: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---047d7bd758a2207787051c0fba9c
-Content-Type: text/plain; charset=UTF-8
+When a PCI bus is scanned, upon PCI bridge detection the kernel
+has to read the bridge registers to set-up its resources so that
+the PCI resource hierarchy can be validated properly.
 
-On Wed, Jul 29, 2015 at 1:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Wed, Jul 29, 2015 at 01:02:25PM -0700, Guenter Roeck wrote:
->> Bjorn, how do you want to handle the flag problem ?
->> Do you have an idea on how to make it work with
->> the reversed definition ?
->
-> I'll wait for the revised patch.  Sorry for screwing this up.
+Most if not all architectures read PCI bridge registers in the
+pcibios_fixup_bus hook, that is called by the PCI generic layer
+whenever a PCI bus is scanned.
 
-Please check attached updated version.
+Since pci_read_bridge_bases is an arch agnostic operation (and it
+is carried out on all architectures) it can be moved to the generic
+PCI layer in order to consolidate code and remove the respective
+calls from the architectures back-ends.
 
-Yinghai
+The PCI_PROBE_ONLY flag is not checked before calling
+pci_read_bridge_buses in the generic layer since reading the bridge
+bases is not related to resources assignment; this implies that it
+can be carried out safely on PCI_PROBE_ONLY systems too and should
+not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
+flag before reading the bridge bases.
 
---047d7bd758a2207787051c0fba9c
-Content-Type: text/x-patch; charset=US-ASCII; name="commit-4b59da5_x.patch"
-Content-Disposition: attachment; filename="commit-4b59da5_x.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_icpo901y0
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: James E.J. Bottomley <jejb@parisc-linux.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Henderson <rth@twiddle.net>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: David Howells <dhowells@redhat.com>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Michal Simek <monstr@monstr.eu>
+Cc: Chris Zankel <chris@zankel.net>
+---
+v2->v3:
 
-Y29tbWl0IDRiNTlkYTUyMWY3ZTBhZWRmZjc1YzJhYTkwYjZhNjUzNzI3Y2RmN2YKQXV0aG9yOiBH
-dWVudGVyIFJvZWNrIDxsaW51eEByb2Vjay11cy5uZXQ+CkRhdGU6ICAgVHVlIEp1bCA3IDExOjEx
-OjIwIDIwMTUgLTA3MDAKCiAgICBUaGUgUENJIHN1YnN5c3RlbSBhbHdheXMgYXNzdW1lcyB0aGF0
-IEkvTyBpcyBzdXBwb3J0ZWQgb24gUENJZSBicmlkZ2VzIGFuZAogICAgdHJpZXMgdG8gYXNzaWdu
-IGFuIEkvTyB3aW5kb3cgdG8gZWFjaCBjaGlsZCBidXMgZXZlbiBpZiB0aGF0IGlzIG5vdCB0aGUK
-ICAgIGNhc2UuCiAgICAKICAgIFRoaXMgbWF5IHJlc3VsdCBpbiBtZXNzYWdlcyBzdWNoIGFzOgog
-ICAgCiAgICAgIHBjaWVwb3J0IDAwMDA6MDI6MDAuMDogcmVzWzddPVtpbyAgMHgxMDAwLTB4MGZm
-Zl0gZ2V0X3Jlc19hZGRfc2l6ZSBhZGRfc2l6ZSAxMDAwCiAgICAgIHBjaWVwb3J0IDAwMDA6MDI6
-MDAuMDogQkFSIDc6IG5vIHNwYWNlIGZvciBbaW8gIHNpemUgMHgxMDAwXQogICAgICBwY2llcG9y
-dCAwMDAwOjAyOjAwLjA6IEJBUiA3OiBmYWlsZWQgdG8gYXNzaWduIFtpbyAgc2l6ZSAweDEwMDBd
-CiAgICAKICAgIGZvciBlYWNoIGJyaWRnZSBwb3J0LCBldmVuIGlmIGEgYnVzIG9yIGl0cyBwYXJl
-bnQgZG9lcyBub3Qgc3VwcG9ydCBJL08gaW4KICAgIHRoZSBmaXJzdCBwbGFjZS4KICAgIAogICAg
-VG8gYXZvaWQgdGhpcyBtZXNzYWdlLCBjaGVjayBpZiBhIGJ1cyBzdXBwb3J0cyBJL08gYmVmb3Jl
-IHRyeWluZyB0byBlbmFibGUKICAgIGl0LiAgQWxzbyBjaGVjayBpZiB0aGUgcm9vdCBidXMgaGFz
-IGFuIElPIHdpbmRvdyBhc3NpZ25lZDsgaWYgbm90LCBpdCBkb2VzCiAgICBub3QgbWFrZSBzZW5z
-ZSB0byB0cnkgdG8gYXNzaWduIG9uZSB0byBhbnkgb2YgaXRzIGNoaWxkIGJ1c3Nlcy4KICAgIAog
-ICAgW2JoZWxnYWFzOiByZXZlcnNlIHNlbnNlIG9mIG5ldyBwY2lfYnVzX2ZsYWdzX3QgdmFsdWVd
-CiAgICBbeWluZ2hhaTogc2ltcGxpZnkgcm9vdCBidXMgZmxhZyBjaGVjaywgZml4IGZsYWdzIGlu
-aXRpYWwgc2V0dGluZywgY2hhbmdlIHRvIGJvb2xdCiAgICBTaWduZWQtb2ZmLWJ5OiBHdWVudGVy
-IFJvZWNrIDxsaW51eEByb2Vjay11cy5uZXQ+CiAgICBTaWduZWQtb2ZmLWJ5OiBCam9ybiBIZWxn
-YWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPgogICAgQ0M6IExvcmVuem8gUGllcmFsaXNpIDxsb3Jl
-bnpvLnBpZXJhbGlzaUBhcm0uY29tPgoKLS0tCiBkcml2ZXJzL3BjaS9wcm9iZS5jICAgICB8ICAg
-NTEgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCiBkcml2
-ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgMTEgKystLS0tLS0tLQogaW5jbHVkZS9saW51eC9wY2ku
-aCAgICAgfCAgICAxIAogMyBmaWxlcyBjaGFuZ2VkLCA1NSBpbnNlcnRpb25zKCspLCA4IGRlbGV0
-aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wcm9iZS5jCj09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
-LS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3Byb2JlLmMKKysrIGxpbnV4LTIuNi9kcml2
-ZXJzL3BjaS9wcm9iZS5jCkBAIC0zMzIsNiArMzMyLDMyIEBAIHN0YXRpYyB2b2lkIHBjaV9yZWFk
-X2Jhc2VzKHN0cnVjdCBwY2lfZGUKIAl9CiB9CiAKK3N0YXRpYyBib29sIHBjaV9icmlkZ2Vfc3Vw
-cG9ydHNfaW8oc3RydWN0IHBjaV9kZXYgKmJyaWRnZSkKK3sKKwl1MTYgaW87CisKKwlwY2lfcmVh
-ZF9jb25maWdfd29yZChicmlkZ2UsIFBDSV9JT19CQVNFLCAmaW8pOworCWlmIChpbykKKwkJcmV0
-dXJuIHRydWU7CisKKwkvKiBJT19CQVNFL0xJTUlUIGlzIGVpdGhlciBoYXJkLXdpcmVkIHRvIHpl
-cm8gb3IgcHJvZ3JhbW1lZCB0byB6ZXJvICovCisJcGNpX3dyaXRlX2NvbmZpZ193b3JkKGJyaWRn
-ZSwgUENJX0lPX0JBU0UsIDB4ZTBmMCk7CisJcGNpX3JlYWRfY29uZmlnX3dvcmQoYnJpZGdlLCBQ
-Q0lfSU9fQkFTRSwgJmlvKTsKKwlwY2lfd3JpdGVfY29uZmlnX3dvcmQoYnJpZGdlLCBQQ0lfSU9f
-QkFTRSwgMHgwKTsKKwlpZiAoaW8pCisJCXJldHVybiB0cnVlOworCisJcmV0dXJuIGZhbHNlOwor
-fQorCitzdGF0aWMgYm9vbCBwY2lfcm9vdF9oYXNfaW9fcmVzb3VyY2Uoc3RydWN0IHBjaV9idXMg
-KmJ1cykKK3sKKwl3aGlsZSAoYnVzLT5wYXJlbnQpCisJCWJ1cyA9IGJ1cy0+cGFyZW50OworCisJ
-cmV0dXJuICEhKGJ1cy0+YnVzX2ZsYWdzICYgUENJX0JVU19GTEFHU19TVVBQT1JUU19JTyk7Cit9
-CisKIHN0YXRpYyB2b2lkIHBjaV9yZWFkX2JyaWRnZV9pbyhzdHJ1Y3QgcGNpX2J1cyAqY2hpbGQp
-CiB7CiAJc3RydWN0IHBjaV9kZXYgKmRldiA9IGNoaWxkLT5zZWxmOwpAQCAtMzQwLDYgKzM2Niwy
-MSBAQCBzdGF0aWMgdm9pZCBwY2lfcmVhZF9icmlkZ2VfaW8oc3RydWN0IHBjCiAJc3RydWN0IHBj
-aV9idXNfcmVnaW9uIHJlZ2lvbjsKIAlzdHJ1Y3QgcmVzb3VyY2UgKnJlczsKIAorCWlmICghKGNo
-aWxkLT5idXNfZmxhZ3MgJiBQQ0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPKSkKKwkJcmV0dXJuOwor
-CisJaWYgKCFwY2lfYnJpZGdlX3N1cHBvcnRzX2lvKGRldikpIHsKKwkJZGV2X3ByaW50ayhLRVJO
-X0RFQlVHLCAmZGV2LT5kZXYsICIgIG5vIEkvTyB3aW5kb3dcbiIpOworCQljaGlsZC0+YnVzX2Zs
-YWdzICY9IH5QQ0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPOworCQlyZXR1cm47CisJfQorCisJaWYg
-KCFwY2lfcm9vdF9oYXNfaW9fcmVzb3VyY2UoY2hpbGQpKSB7CisJCWRldl9wcmludGsoS0VSTl9E
-RUJVRywgJmRldi0+ZGV2LCAiICBubyBJL08gcmVzb3VyY2Ugb24gcm9vdCBidXNcbiIpOworCQlj
-aGlsZC0+YnVzX2ZsYWdzICY9IH5QQ0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPOworCQlyZXR1cm47
-CisJfQorCiAJaW9fbWFzayA9IFBDSV9JT19SQU5HRV9NQVNLOwogCWlvX2dyYW51bGFyaXR5ID0g
-MHgxMDAwOwogCWlmIChkZXYtPmlvX3dpbmRvd18xaykgewpAQCAtNDk2LDYgKzUzNyw3IEBAIHN0
-YXRpYyBzdHJ1Y3QgcGNpX2J1cyAqcGNpX2FsbG9jX2J1cyhzdHIKIAlJTklUX0xJU1RfSEVBRCgm
-Yi0+cmVzb3VyY2VzKTsKIAliLT5tYXhfYnVzX3NwZWVkID0gUENJX1NQRUVEX1VOS05PV047CiAJ
-Yi0+Y3VyX2J1c19zcGVlZCA9IFBDSV9TUEVFRF9VTktOT1dOOworCWItPmJ1c19mbGFncyB8PSBQ
-Q0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPOwogI2lmZGVmIENPTkZJR19QQ0lfRE9NQUlOU19HRU5F
-UklDCiAJaWYgKHBhcmVudCkKIAkJYi0+ZG9tYWluX25yID0gcGFyZW50LT5kb21haW5fbnI7CkBA
-IC0yMDU4LDYgKzIxMDAsMTUgQEAgaW50IHBjaV9idXNfaW5zZXJ0X2J1c25fcmVzKHN0cnVjdCBw
-Y2lfYgogCQlyZXMtPmZsYWdzIHw9IElPUkVTT1VSQ0VfUENJX0ZJWEVEOwogCX0KIAorCWItPmJ1
-c19mbGFncyAmPSB+UENJX0JVU19GTEFHU19TVVBQT1JUU19JTzsKKwlyZXNvdXJjZV9saXN0X2Zv
-cl9lYWNoX2VudHJ5KHdpbmRvdywgJmJyaWRnZS0+d2luZG93cykgeworCQlyZXMgPSB3aW5kb3ct
-PnJlczsKKwkJaWYgKHJlc291cmNlX3R5cGUocmVzKSA9PSBJT1JFU09VUkNFX0lPKSB7CisJCQli
-LT5idXNfZmxhZ3MgfD0gUENJX0JVU19GTEFHU19TVVBQT1JUU19JTzsKKwkJCWJyZWFrOworCQl9
-CisJfQorCiAJY29uZmxpY3QgPSByZXF1ZXN0X3Jlc291cmNlX2NvbmZsaWN0KHBhcmVudF9yZXMs
-IHJlcyk7CiAKIAlpZiAoY29uZmxpY3QpCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0
-dXAtYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAt
-YnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtNzQ0LDcgKzc0
-NCw2IEBAIGludCBwY2lfY2xhaW1fYnJpZGdlX3Jlc291cmNlKHN0cnVjdCBwY2kKICAgIGJhc2Uv
-bGltaXQgcmVnaXN0ZXJzIG11c3QgYmUgcmVhZC1vbmx5IGFuZCByZWFkIGFzIDAuICovCiBzdGF0
-aWMgdm9pZCBwY2lfYnJpZGdlX2NoZWNrX3JhbmdlcyhzdHJ1Y3QgcGNpX2J1cyAqYnVzKQogewot
-CXUxNiBpbzsKIAl1MzIgcG1lbTsKIAlzdHJ1Y3QgcGNpX2RldiAqYnJpZGdlID0gYnVzLT5zZWxm
-OwogCXN0cnVjdCByZXNvdXJjZSAqYl9yZXM7CkBAIC03NTIsMTQgKzc1MSwxMCBAQCBzdGF0aWMg
-dm9pZCBwY2lfYnJpZGdlX2NoZWNrX3JhbmdlcyhzdHJ1CiAJYl9yZXMgPSAmYnJpZGdlLT5yZXNv
-dXJjZVtQQ0lfQlJJREdFX1JFU09VUkNFU107CiAJYl9yZXNbMV0uZmxhZ3MgfD0gSU9SRVNPVVJD
-RV9NRU07CiAKLQlwY2lfcmVhZF9jb25maWdfd29yZChicmlkZ2UsIFBDSV9JT19CQVNFLCAmaW8p
-OwotCWlmICghaW8pIHsKLQkJcGNpX3dyaXRlX2NvbmZpZ193b3JkKGJyaWRnZSwgUENJX0lPX0JB
-U0UsIDB4ZTBmMCk7Ci0JCXBjaV9yZWFkX2NvbmZpZ193b3JkKGJyaWRnZSwgUENJX0lPX0JBU0Us
-ICZpbyk7Ci0JCXBjaV93cml0ZV9jb25maWdfd29yZChicmlkZ2UsIFBDSV9JT19CQVNFLCAweDAp
-OwotCX0KLQlpZiAoaW8pCisJaWYgKGJ1cy0+YnVzX2ZsYWdzICYgUENJX0JVU19GTEFHU19TVVBQ
-T1JUU19JTykKIAkJYl9yZXNbMF0uZmxhZ3MgfD0gSU9SRVNPVVJDRV9JTzsKKwllbHNlCisJCWJf
-cmVzWzBdLmZsYWdzICY9IH5JT1JFU09VUkNFX0lPOwogCiAJLyogIERFQ2NoaXAgMjEwNTAgcGFz
-cyAyIGVycmF0YTogdGhlIGJyaWRnZSBtYXkgbWlzcyBhbiBhZGRyZXNzCiAJICAgIGRpc2Nvbm5l
-Y3QgYm91bmRhcnkgYnkgb25lIFBDSSBkYXRhIHBoYXNlLgpJbmRleDogbGludXgtMi42L2luY2x1
-ZGUvbGludXgvcGNpLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvaW5jbHVkZS9saW51
-eC9wY2kuaAorKysgbGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKQEAgLTE5Myw2ICsxOTMs
-NyBAQCB0eXBlZGVmIHVuc2lnbmVkIHNob3J0IF9fYml0d2lzZSBwY2lfYnVzCiBlbnVtIHBjaV9i
-dXNfZmxhZ3MgewogCVBDSV9CVVNfRkxBR1NfTk9fTVNJICAgPSAoX19mb3JjZSBwY2lfYnVzX2Zs
-YWdzX3QpIDEsCiAJUENJX0JVU19GTEFHU19OT19NTVJCQyA9IChfX2ZvcmNlIHBjaV9idXNfZmxh
-Z3NfdCkgMiwKKwlQQ0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPID0gKF9fZm9yY2UgcGNpX2J1c19m
-bGFnc190KSA0LAogfTsKIAogLyogVGhlc2UgdmFsdWVzIGNvbWUgZnJvbSB0aGUgUENJIEV4cHJl
-c3MgU3BlYyAqLwo=
---047d7bd758a2207787051c0fba9c--
+- Dropped RFC status
+- Removed bridge resources claiming from pci_read_bridge_bases()
+
+v2: https://lkml.org/lkml/2015/6/9/187
+
+v1->v2:
+
+- Moved pci_read_bridge_bases call to pci_scan_bridge to read bases before
+  scanning devices
+- Added bridge resources claiming
+
+v1: https://lkml.org/lkml/2015/5/21/359
+
+ arch/alpha/kernel/pci.c          | 7 +------
+ arch/frv/mb93090-mb00/pci-vdk.c  | 2 --
+ arch/ia64/pci/pci.c              | 1 -
+ arch/microblaze/pci/pci-common.c | 9 +--------
+ arch/mips/pci/pci.c              | 6 ------
+ arch/mn10300/unit-asb2305/pci.c  | 1 -
+ arch/powerpc/kernel/pci-common.c | 8 +-------
+ arch/x86/pci/common.c            | 1 -
+ arch/xtensa/kernel/pci.c         | 4 ----
+ drivers/parisc/dino.c            | 3 ---
+ drivers/parisc/lba_pci.c         | 1 -
+ drivers/pci/probe.c              | 9 +++++++++
+ 12 files changed, 12 insertions(+), 40 deletions(-)
+
+diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
+index 82f738e..cded02c 100644
+--- a/arch/alpha/kernel/pci.c
++++ b/arch/alpha/kernel/pci.c
+@@ -242,12 +242,7 @@ pci_restore_srm_config(void)
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	struct pci_dev *dev = bus->self;
+-
+-	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+- 		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+- 		pci_read_bridge_bases(bus);
+-	} 
++	struct pci_dev *dev;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		pdev_save_srm_config(dev);
+diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
+index f211839..f9c86c4 100644
+--- a/arch/frv/mb93090-mb00/pci-vdk.c
++++ b/arch/frv/mb93090-mb00/pci-vdk.c
+@@ -294,8 +294,6 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ 	printk("### PCIBIOS_FIXUP_BUS(%d)\n",bus->number);
+ #endif
+ 
+-	pci_read_bridge_bases(bus);
+-
+ 	if (bus->number == 0) {
+ 		struct pci_dev *dev;
+ 		list_for_each_entry(dev, &bus->devices, bus_list) {
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 7cc3be9..563228b 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -534,7 +534,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
+ 	struct pci_dev *dev;
+ 
+ 	if (b->self) {
+-		pci_read_bridge_bases(b);
+ 		pcibios_fixup_bridge_resources(b->self);
+ 	}
+ 	list_for_each_entry(dev, &b->devices, bus_list)
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index ae838ed..6b8b752 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -863,14 +863,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	/* When called from the generic PCI probe, read PCI<->PCI bridge
+-	 * bases. This is -not- called when generating the PCI tree from
+-	 * the OF device-tree.
+-	 */
+-	if (bus->self != NULL)
+-		pci_read_bridge_bases(bus);
+-
+-	/* Now fixup the bus bus */
++	/* Fixup the bus */
+ 	pcibios_setup_bus_self(bus);
+ 
+ 	/* Now fixup devices on that bus */
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index b8a0bf5..c6996cf 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -311,12 +311,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	struct pci_dev *dev = bus->self;
+-
+-	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
+-	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
+-		pci_read_bridge_bases(bus);
+-	}
+ }
+ 
+ EXPORT_SYMBOL(PCIBIOS_MIN_IO);
+diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
+index 3dfe2d3..deaa893 100644
+--- a/arch/mn10300/unit-asb2305/pci.c
++++ b/arch/mn10300/unit-asb2305/pci.c
+@@ -324,7 +324,6 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ 	struct pci_dev *dev;
+ 
+ 	if (bus->self) {
+-		pci_read_bridge_bases(bus);
+ 		pcibios_fixup_bridge_resources(bus->self);
+ 	}
+ 
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index b9de34d..02c1d5d 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1044,13 +1044,7 @@ void pcibios_set_master(struct pci_dev *dev)
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	/* When called from the generic PCI probe, read PCI<->PCI bridge
+-	 * bases. This is -not- called when generating the PCI tree from
+-	 * the OF device-tree.
+-	 */
+-	pci_read_bridge_bases(bus);
+-
+-	/* Now fixup the bus bus */
++	/* Fixup the bus */
+ 	pcibios_setup_bus_self(bus);
+ 
+ 	/* Now fixup devices on that bus */
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 8fd6f44..3bff244 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -166,7 +166,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
+ {
+ 	struct pci_dev *dev;
+ 
+-	pci_read_bridge_bases(b);
+ 	list_for_each_entry(dev, &b->devices, bus_list)
+ 		pcibios_fixup_device_resources(dev);
+ }
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index b848cc3..d27b4dc 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -210,10 +210,6 @@ subsys_initcall(pcibios_init);
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	if (bus->parent) {
+-		/* This is a subordinate bridge */
+-		pci_read_bridge_bases(bus);
+-	}
+ }
+ 
+ void pcibios_set_master(struct pci_dev *dev)
+diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
+index a0580af..baec33c 100644
+--- a/drivers/parisc/dino.c
++++ b/drivers/parisc/dino.c
+@@ -560,9 +560,6 @@ dino_fixup_bus(struct pci_bus *bus)
+ 	} else if (bus->parent) {
+ 		int i;
+ 
+-		pci_read_bridge_bases(bus);
+-
+-
+ 		for(i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
+ 			if((bus->self->resource[i].flags & 
+ 			    (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
+diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
+index dceb9dd..901e1a3 100644
+--- a/drivers/parisc/lba_pci.c
++++ b/drivers/parisc/lba_pci.c
+@@ -693,7 +693,6 @@ lba_fixup_bus(struct pci_bus *bus)
+ 	if (bus->parent) {
+ 		int i;
+ 		/* PCI-PCI Bridge */
+-		pci_read_bridge_bases(bus);
+ 		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++)
+ 			pci_claim_bridge_resource(bus->self, i);
+ 	} else {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c80626f..de1c424 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -842,6 +842,11 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 			child->bridge_ctl = bctl;
+ 		}
+ 
++		/*
++		 * Read and initialize bridge resources.
++		 */
++		pci_read_bridge_bases(child);
++
+ 		cmax = pci_scan_child_bus(child);
+ 		if (cmax > subordinate)
+ 			dev_warn(&dev->dev, "bridge has subordinate %02x but max busn %02x\n",
+@@ -902,6 +907,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 
+ 		if (!is_cardbus) {
+ 			child->bridge_ctl = bctl;
++			/*
++			 * Read and initialize bridge resources.
++			 */
++			pci_read_bridge_bases(child);
+ 			max = pci_scan_child_bus(child);
+ 		} else {
+ 			/*
+-- 
+2.2.1
+
