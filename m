@@ -1,86 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54402 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755047AbbGTHye (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jul 2015 03:54:34 -0400
-Message-ID: <55ACA936.3060800@arm.com>
-Date: Mon, 20 Jul 2015 08:54:30 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: mingo@kernel.org
+Cc: bp@suse.de, arnd@arndb.de, bhelgaas@google.com,
+	luto@amacapital.net, akpm@linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
+	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
+	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v9 0/8] pci: add pci_iomap_wc() and pci_ioremap_wc_bar()
+Date: Wed,  8 Jul 2015 18:54:11 -0700
+Message-Id: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-To: "majun (F)" <majun258@huawei.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v4 09/19] drivers: base: Add MSI domain support for non-PCI
- devices
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com> <1436962613-17359-10-git-send-email-marc.zyngier@arm.com> <55AC5DF3.8090502@huawei.com>
-In-Reply-To: <55AC5DF3.8090502@huawei.com>
-Content-Type: text/plain; charset=gbk
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/07/15 03:33, majun (F) wrote:
-> 
-> 
-> ÔÚ 2015/7/15 20:16, Marc Zyngier Ð´µÀ:
->> With the msi_list and the msi_domain properties now being at the
->> generic device level, it is starting to be relatively easy to offer
->> a generic way of providing non-PCI MSIs.
->>
-> [...]
->> diff --git a/include/linux/msi.h b/include/linux/msi.h
->> index c10ec56..b55cf63 100644
->> --- a/include/linux/msi.h
->> +++ b/include/linux/msi.h
->> @@ -18,6 +18,11 @@ struct pci_dev;
->>  void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->>  void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
->>  
->> +typedef void (*irq_write_msi_msg_t)(struct msi_desc *desc,
->> +				    struct msi_msg *msg);
->> +
->> +struct platform_msi_priv_data;
->> +
->>  struct msi_desc {
->>  	struct list_head		list;
->>  	unsigned int			irq;
->> @@ -42,6 +47,10 @@ struct msi_desc {
->>  				void __iomem *mask_base;
->>  			};
->>  		};
->> +		struct {
->> +			struct platform_msi_priv_data *platform_msi_priv_data;
->> +			u16 msi_index;
->> +		};
->>  	};
->>  };
->>  
-> When I add this patch in linux 4.2.rc2, this part is rejected. So I added this part
-> myself. But there is compiling errors.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-[...]
+Ingo,
 
-Did you read this crucial part of the cover letter:
+Boris is on vacation, he picked up these patches on his bp#tip-mm tree [0]
+and they have baked there for a while now. That tree receives 0-day
+bot testing, but other than that its not clear what other tests were
+run on these patches. Boris modified the commit logs a bit, and made one
+optimizaiton to bail early on an PCI ioremap call when it should. These
+patches have no modifications from what is on Boris' tree and tip-mm branch.
 
-<quote>
-[...]
-Patches are on top of 4.2-rc2 and Jiang Liu's series, and available at:
+The 0 day build bot did find issues on Boris' tree but those are related
+to ioremap_uc() (already upstream) and its first use on atyfb (not
+upstream) -- I will be addressing a fix for that ioremap_uc() issue through
+another patch series prior to posting the final set for atyfb which makes
+use of ioremap_uc().
 
-git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git
-irq/npci-msi-v2
-</quote>
+No issues have been found with this series. Benh did note some possible issues
+with expectations with what is done for write-combining for PowerPC [1] but
+the issue is a rather general long standing issue with semantics of ioremap --
+in the case for ioremap_wc() on PowerPC benh notes that writel() will never
+write-combine as it uses too heavy barriers. Benh notes that although
+writel_relaxed() today is identical to writel() this can be changed. There are
+other general semantics issues with ioremap() variant calls -- we seem to have
+all gotten together to discuss all these issues on a thread where Dan Williams
+is proposing to "unify ioremap prototypes and macro aliases" [1], folks
+intersted on these issues or semantic concerns can drop in and chime there.
 
-Without Jiang Liu's series as a prerequisite, it is not surprising
-nothing applies, let alone compile...
+Let me know if these are OK or if there are any questions.
 
-	M.
+[0] http://lkml.kernel.org/r/20150625204703.GC4898@pd.tnic
+[1] http://lkml.kernel.org/r/20150707095012.GQ7021@wotan.suse.de
+
+Luis R. Rodriguez (8):
+  PCI: Add pci_ioremap_wc_bar()
+  drivers/video/fbdev/i740fb: Use arch_phys_wc_add() and
+    pci_ioremap_wc_bar()
+  drivers/video/fbdev/kyrofb: Use arch_phys_wc_add() and
+    pci_ioremap_wc_bar()
+  drivers/video/fbdev/gxt4500: Use pci_ioremap_wc_bar() to map
+    framebuffer
+  PCI: Add pci_iomap_wc() variants
+  drivers/video/fbdev/arkfb.c: Use arch_phys_wc_add() and pci_iomap_wc()
+  drivers/video/fbdev/s3fb: Use arch_phys_wc_add() and pci_iomap_wc()
+  drivers/video/fbdev/vt8623fb: Use arch_phys_wc_add() and
+    pci_iomap_wc()
+
+ drivers/pci/pci.c                | 14 +++++++++
+ drivers/video/fbdev/arkfb.c      | 36 +++-------------------
+ drivers/video/fbdev/gxt4500.c    |  2 +-
+ drivers/video/fbdev/i740fb.c     | 35 ++++-----------------
+ drivers/video/fbdev/kyro/fbdev.c | 33 +++++++-------------
+ drivers/video/fbdev/s3fb.c       | 35 ++++-----------------
+ drivers/video/fbdev/vt8623fb.c   | 31 ++++---------------
+ include/asm-generic/pci_iomap.h  | 14 +++++++++
+ include/linux/pci.h              |  1 +
+ include/video/kyro.h             |  4 +--
+ lib/pci_iomap.c                  | 66 ++++++++++++++++++++++++++++++++++++++++
+ 11 files changed, 131 insertions(+), 140 deletions(-)
+
 -- 
-Jazz is not dead. It just smells funny...
+2.3.2.209.gd67f9d5.dirty
+
