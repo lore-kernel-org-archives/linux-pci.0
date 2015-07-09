@@ -1,45 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:13661 "EHLO mga14.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:30996 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862AbbG2JQx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jul 2015 05:16:53 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 0/3] x86/pci/intel-mid-pci: fix to get eMMC detected
-Date: Wed, 29 Jul 2015 12:16:46 +0300
-Message-Id: <1438161409-4671-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	id S1750939AbbGIH7v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jul 2015 03:59:51 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	xen-devel@lists.xenproject.org
+Subject: [RFC Patch V1 05/12] x86, PCI: Use for_pci_msi_entry() to access MSI device list
+Date: Thu,  9 Jul 2015 16:00:40 +0800
+Message-Id: <1436428847-8886-6-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Intel Edison we have an interesting implementation of x86 platform without
-legacy PIC and with specific PCI. There are devices which are not using
-interrupt line 0, but have it assigned in the PCI configuration. By default
-first come gets it, though the first eMMC host controller is the actual user
-for IRQ0. 
+Use accessor for_pci_msi_entry() to access MSI device list, so we could
+easily move msi_list from struct pci_dev into struct device later.
 
-So, this series provides a quirk (patch 1) to resolve the issue, a small fix of
-error code (patch 2), and a sparse warning fix (patch 3).
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/xen.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Changelog v3:
-- address Thomas' comments
-- massage changelog (what Thomas proposed)
-
-Changelog v2:
-- rearrange patches 1 and 2 to provide fix first with Fixes: tag
-- append patch 3
-- rebase on top of recent linux-next
-
-Andy Shevchenko (3):
-  x86/pci/intel_mid_pci: work around for IRQ0 assignment
-  x86/pci/intel_mid_pci: propagate actual return code
-  x86/pci/intel_mid_pci: fix a sparse warning
-
- arch/x86/pci/intel_mid_pci.c | 32 +++++++++++++++++++++++++++-----
- 1 file changed, 27 insertions(+), 5 deletions(-)
-
+diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+index d22f4b5bbc04..ff31ab464213 100644
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -179,7 +179,7 @@ static int xen_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 	if (ret)
+ 		goto error;
+ 	i = 0;
+-	list_for_each_entry(msidesc, &dev->msi_list, list) {
++	for_each_pci_msi_entry(msidesc, dev) {
+ 		irq = xen_bind_pirq_msi_to_irq(dev, msidesc, v[i],
+ 					       (type == PCI_CAP_ID_MSI) ? nvec : 1,
+ 					       (type == PCI_CAP_ID_MSIX) ?
+@@ -230,7 +230,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
+ 
+-	list_for_each_entry(msidesc, &dev->msi_list, list) {
++	for_each_pci_msi_entry(msidesc, dev) {
+ 		__pci_read_msi_msg(msidesc, &msg);
+ 		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
+ 			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
+@@ -274,7 +274,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 	int ret = 0;
+ 	struct msi_desc *msidesc;
+ 
+-	list_for_each_entry(msidesc, &dev->msi_list, list) {
++	for_each_pci_msi_entry(msidesc, dev) {
+ 		struct physdev_map_pirq map_irq;
+ 		domid_t domid;
+ 
+@@ -386,7 +386,7 @@ static void xen_teardown_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *msidesc;
+ 
+-	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
++	msidesc = first_pci_msi_entry(dev);
+ 	if (msidesc->msi_attrib.is_msix)
+ 		xen_pci_frontend_disable_msix(dev);
+ 	else
 -- 
-2.4.6
+1.7.10.4
 
