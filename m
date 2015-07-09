@@ -1,413 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:28041 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754071AbbGVCe2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 22:34:28 -0400
-Message-ID: <55AF00EB.40602@hisilicon.com>
-Date: Wed, 22 Jul 2015 10:33:15 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<liguozhu@hisilicon.com>
-Subject: Re: [PATCH v4 3/5] PCI: hisi: Add PCIe host support for Hisilicon
- Soc Hip05
-References: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com> <1437461323-3531-4-git-send-email-wangzhou1@hisilicon.com> <20150721223724.GL21967@google.com>
-In-Reply-To: <20150721223724.GL21967@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Joerg Roedel <jroedel@suse.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFC Patch V1 09/12] genirq: Move msi_list from struct pci_dev to struct device
+Date: Thu,  9 Jul 2015 16:00:44 +0800
+Message-Id: <1436428847-8886-10-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/7/22 6:37, Bjorn Helgaas wrote:
-> Hi Zhou,
-> 
-> On Tue, Jul 21, 2015 at 02:48:41PM +0800, Zhou Wang wrote:
->> This patch adds PCIe host support for Hisilicon Soc Hip05.
->>
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->> ---
->>  drivers/pci/host/Kconfig     |   5 +
->>  drivers/pci/host/Makefile    |   1 +
->>  drivers/pci/host/pcie-hisi.c | 257 +++++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 263 insertions(+)
->>  create mode 100644 drivers/pci/host/pcie-hisi.c
->>
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index c132bdd..37f2075 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -145,4 +145,9 @@ config PCIE_IPROC_BCMA
->>  	  Say Y here if you want to use the Broadcom iProc PCIe controller
->>  	  through the BCMA bus interface
->>  
->> +config PCI_HISI
->> +	depends on OF && ARM64
->> +	bool "Hisilicon Soc HIP05 PCIe controller"
->> +	select PCIE_DW
-> 
-> Almost all the other DesignWare-based drivers select PCIEPORTBUS in
-> addition to PCIE_DW.  I'm not sure that's the best Kconfiggery (maybe we
-> should leave this up to the user), but it'd be nice if all the drivers at
-> least did this consistently.  So do you have a reason for doing it
-> differently?
->
+Move msi_list from struct pci_dev into struct device, so we could support
+non-PCI-device based generic MSI interrupts.
 
-Hi Bjorn,
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/base/core.c    |    3 +++
+ drivers/pci/msi.c      |    3 +--
+ include/linux/device.h |    4 ++++
+ include/linux/msi.h    |    2 +-
+ include/linux/pci.h    |    1 -
+ 5 files changed, 9 insertions(+), 4 deletions(-)
 
-I made a mistake there. PCIEPORTBUS should be selected as other DesignWare-based
-drivers did.
-
->>  endmenu
->> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
->> index 140d66f..ea1dbf2 100644
->> --- a/drivers/pci/host/Makefile
->> +++ b/drivers/pci/host/Makefile
->> @@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
->>  obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
->>  obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
->>  obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
->> +obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
->> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
->> new file mode 100644
->> index 0000000..9f2fac1
->> --- /dev/null
->> +++ b/drivers/pci/host/pcie-hisi.c
->> @@ -0,0 +1,257 @@
->> +/*
->> + * PCIe host controller driver for Hisilicon Hip05 SoCs
->> + *
->> + * Copyright (C) 2015 Hisilicon Co., Ltd. http://www.hisilicon.com
->> + *
->> + * Author: Zhou Wang <wangzhou1@hisilicon.com>
->> + *         Dacai Zhu <zhudacai@hisilicon.com>
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 as
->> + * published by the Free Software Foundation.
->> + */
->> +#include <linux/interrupt.h>
->> +#include <linux/irqdomain.h>
->> +#include <linux/module.h>
->> +#include <linux/of.h>
->> +#include <linux/of_pci.h>
->> +#include <linux/platform_device.h>
->> +
->> +#include "pcie-designware.h"
->> +
->> +#define PCIE_SUBCTRL_MODE_REG                           0x2800
->> +#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
->> +#define PCIE_SLV_DBI_MODE                               0x0
->> +#define PCIE_SLV_SYSCTRL_MODE                           0x1
->> +#define PCIE_SLV_CONTENT_MODE                           0x2
->> +#define PCIE_SLV_MSI_ASID                               0x10
->> +#define PCIE_LTSSM_LINKUP_STATE                         0x11
->> +#define PCIE_LTSSM_STATE_MASK                           0x3F
->> +#define PCIE_MSI_ASID_ENABLE                            (0x1 << 12)
->> +#define PCIE_MSI_ASID_VALUE                             (0x1 << 16)
->> +#define PCIE_MSI_TRANS_ENABLE                           (0x1 << 12)
->> +#define PCIE_MSI_TRANS_REG                              0x1c8
->> +#define PCIE_MSI_LOW_ADDRESS                            0x1b4
->> +#define PCIE_MSI_HIGH_ADDRESS                           0x1c4
->> +#define PCIE_MSI_ADDRESS_VAL                            0xb7010040
->> +
->> +#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
->> +
->> +struct hisi_pcie {
->> +	void __iomem *subctrl_base;
->> +	void __iomem *reg_base;
->> +	struct msi_controller *msi;
->> +	u32 port_id;
->> +	struct pcie_port pp;
->> +};
->> +
->> +static inline void hisi_pcie_subctrl_writel(struct hisi_pcie *pcie,
->> +					    u32 val, u32 reg)
->> +{
->> +	writel(val, pcie->subctrl_base + reg);
->> +}
->> +
->> +static inline u32 hisi_pcie_subctrl_readl(struct hisi_pcie *pcie, u32 reg)
->> +{
->> +	return readl(pcie->subctrl_base + reg);
->> +}
->> +
->> +static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
->> +					u32 val, u32 reg)
->> +{
->> +	writel(val, pcie->reg_base + reg);
->> +}
->> +
->> +static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
->> +{
->> +	return readl(pcie->reg_base + reg);
->> +}
->> +
->> +/*
->> + * Change mode to indicate the same reg_base to base of PCIe host configure
->> + * registers, base of RC configure space or base of vmid/asid context table
->> + */
->> +static void hisi_pcie_change_apb_mode(struct hisi_pcie *pcie, u32 mode)
->> +{
->> +	u32 val;
->> +	u32 bit_mask;
->> +	u32 bit_shift;
->> +	u32 port_id = pcie->port_id;
->> +	u32 reg = PCIE_SUBCTRL_MODE_REG + 0x100 * port_id;
->> +
->> +	if ((port_id == 1) || (port_id == 2)) {
->> +		bit_mask = 0xc;
->> +		bit_shift = 0x2;
->> +	} else {
->> +		bit_mask = 0x6;
->> +		bit_shift = 0x1;
->> +	}
->> +
->> +	val = hisi_pcie_subctrl_readl(pcie, reg);
->> +	val = (val & (~bit_mask)) | (mode << bit_shift);
->> +	hisi_pcie_subctrl_writel(pcie, val, reg);
->> +}
->> +
->> +/* Configure vmid/asid table in PCIe host */
->> +static void hisi_pcie_config_context(struct hisi_pcie *pcie)
->> +{
->> +	int i;
->> +
->> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
->> +
->> +	/*
->> +	 * init vmid and asid tables for all PCIes device as 0
-> 
-> s/PCIes device as/PCIe devices to/ ?
->
-
-Thanks, will modify this.
-
->> +	 * vmid table: 0 ~ 0x3ff, asid table: 0x400 ~ 0x7ff
->> +	 */
->> +	for (i = 0; i < 0x800; i++)
->> +		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
->> +
->> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
->> +
->> +	hisi_pcie_apb_writel(pcie, PCIE_MSI_ADDRESS_VAL, PCIE_MSI_LOW_ADDRESS);
->> +	hisi_pcie_apb_writel(pcie, 0x0, PCIE_MSI_HIGH_ADDRESS);
->> +	hisi_pcie_apb_writel(pcie, PCIE_MSI_ASID_ENABLE | PCIE_MSI_ASID_VALUE,
->> +			     PCIE_SLV_MSI_ASID);
->> +	hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, PCIE_MSI_TRANS_REG);
->> +
->> +	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
->> +}
->> +
->> +static int hisi_pcie_link_up(struct pcie_port *pp)
->> +{
->> +	u32 val;
->> +
-> 
-> Remove this extra blank line.
-> 
-
-Yes, will remove it. Thanks.
-
->> +	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
->> +
->> +	val = hisi_pcie_subctrl_readl(hisi_pcie, PCIE_SUBCTRL_SYS_STATE4_REG +
->> +				      0x100 * hisi_pcie->port_id);
->> +
->> +	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
->> +}
->> +
->> +static
->> +int hisi_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
->> +{
->> +	struct device_node *msi_node;
->> +	struct irq_domain *irq_domain;
->> +	struct device_node *np = pp->dev->of_node;
->> +
->> +	msi_node = of_parse_phandle(np, "msi-parent", 0);
->> +	if (!msi_node) {
->> +		pr_err("failed to find msi-parent\n");
-> 
-> Can you use dev_err() here (and below)?  A message like this that doesn't
-> have a hint about what device it's related to is not as useful as it could
-> be.
->
-
-Right, will use dev_err(). Thanks.
-
->> +		return -ENODEV;
->> +	}
->> +
->> +	irq_domain = irq_find_host(msi_node);
->> +	if (!irq_domain) {
->> +		pr_err("failed to find irq domain\n");
->> +		return -ENODEV;
->> +	}
->> +
->> +	pp->irq_domain = irq_domain;
->> +
->> +	return 0;
->> +}
->> +
->> +static struct pcie_host_ops hisi_pcie_host_ops = {
->> +	.link_up = hisi_pcie_link_up,
->> +	.msi_host_init = hisi_pcie_msi_host_init,
->> +};
->> +
->> +static int __init hisi_add_pcie_port(struct pcie_port *pp,
->> +				     struct platform_device *pdev)
->> +{
->> +	int ret;
->> +	u32 port_id;
->> +	struct resource busn;
->> +
-> 
-> Remove this extra blank line.
-
-Will remove it. Thanks.
-
-> 
->> +	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
->> +
->> +	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
->> +		dev_err(&pdev->dev, "failed to read port-id\n");
->> +		return -EINVAL;
->> +	}
->> +	if (port_id > 3) {
->> +		dev_err(&pdev->dev, "Invalid port-id\n");
-> 
-> Since you have the invalid port_id here, maybe you could include the
-> invalid value in the output?
->
-
-Right, will do like this. Thanks.
-
->> +		return -EINVAL;
->> +	}
->> +
->> +	hisi_pcie->port_id = port_id;
->> +
->> +	if (of_pci_parse_bus_range(pdev->dev.of_node, &busn)) {
->> +		dev_err(&pdev->dev, "failed to parse bus-ranges\n");
->> +		return -EINVAL;
->> +	}
->> +
->> +	pp->root_bus_nr = busn.start;
->> +	pp->ops = &hisi_pcie_host_ops;
->> +
->> +	hisi_pcie_config_context(hisi_pcie);
->> +
->> +	ret = dw_pcie_host_init(pp);
->> +	if (ret) {
->> +		dev_err(&pdev->dev, "failed to initialize host\n");
->> +		return ret;
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->> +static int __init hisi_pcie_probe(struct platform_device *pdev)
->> +{
->> +	struct hisi_pcie *hisi_pcie;
->> +	struct pcie_port *pp;
->> +	struct resource *reg;
->> +	struct resource *subctrl;
->> +	int ret;
->> +
->> +	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
->> +	if (!hisi_pcie)
->> +		return -ENOMEM;
->> +
->> +	pp = &hisi_pcie->pp;
->> +	pp->dev = &pdev->dev;
->> +
->> +	subctrl = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subctrl");
->> +	hisi_pcie->subctrl_base = devm_ioremap_nocache(&pdev->dev,
->> +					subctrl->start, resource_size(subctrl));
->> +	if (IS_ERR(hisi_pcie->subctrl_base)) {
->> +		dev_err(pp->dev, "cannot get subctrl base\n");
->> +		return PTR_ERR(hisi_pcie->subctrl_base);
->> +	}
->> +
->> +	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
->> +	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
->> +	if (IS_ERR(hisi_pcie->reg_base)) {
->> +		dev_err(pp->dev, "cannot get reg base\n");
-> 
-> Maybe this could include the actual resource name ("rc_dbi") as the message
-> above does?
->
-
-Will modify this message. Thanks.
-
->> +		return PTR_ERR(hisi_pcie->reg_base);
->> +	}
->> +
->> +	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
->> +
->> +	ret = hisi_add_pcie_port(pp, pdev);
->> +	if (ret < 0)
-> 
-> Seems like this return value check should be the same as the one above in 
-> hisi_add_pcie_port().  In both cases, the only possible returns are zero
-> (success) or a negative error number.  Using "if (ret)" here has the
-> advantage that below you could "return 0" and it would be crystal clear
-> that you're always returning success if you get that far.
-> 
-
-Got it, will do like this. Thanks for your suggestion.
-
->> +		return ret;
->> +
->> +	platform_set_drvdata(pdev, hisi_pcie);
->> +
->> +	return ret;
->> +}
->> +
->> +static const struct of_device_id hisi_pcie_of_match[] = {
->> +	{.compatible = "hisilicon,hip05-pcie",},
->> +	{},
->> +};
->> +
->> +MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
->> +
->> +static struct platform_driver hisi_pcie_driver = {
->> +	.probe  = hisi_pcie_probe,
->> +	.driver = {
->> +		   .name = "hisi-pcie",
->> +		   .owner = THIS_MODULE,
-> 
-> You can drop this ".owner =" initialization.  platform_driver_register()
-> supplies that automatically.
-> 
-
-Will drop it, Thanks.
-
-Best regards,
-Zhou
-
->> +		   .of_match_table = hisi_pcie_of_match,
->> +	},
->> +};
->> +
->> +module_platform_driver(hisi_pcie_driver);
->> -- 
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index dafae6d2f7ac..18e2a89aa138 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -662,6 +662,9 @@ void device_initialize(struct device *dev)
+ 	INIT_LIST_HEAD(&dev->devres_head);
+ 	device_pm_init(dev);
+ 	set_dev_node(dev, -1);
++#ifdef CONFIG_GENERIC_MSI_IRQ
++	INIT_LIST_HEAD(&dev->msi_list);
++#endif
+ }
+ EXPORT_SYMBOL_GPL(device_initialize);
+ 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 6497608545e2..0050ad436718 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -900,7 +900,7 @@ void pci_msi_shutdown(struct pci_dev *dev)
+ 		return;
+ 
+ 	BUG_ON(list_empty(dev_to_msi_list(&dev->dev)));
+-	desc = first_msi_entry(dev);
++	desc = first_pci_msi_entry(dev);
+ 
+ 	pci_msi_set_enable(dev, 0);
+ 	pci_intx_for_msi(dev, 1);
+@@ -1044,7 +1044,6 @@ EXPORT_SYMBOL(pci_msi_enabled);
+ 
+ void pci_msi_init_pci_dev(struct pci_dev *dev)
+ {
+-	INIT_LIST_HEAD(&dev->msi_list);
+ }
+ 
+ /**
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 5a31bf3a4024..22227e7fe463 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -713,6 +713,7 @@ struct device_dma_parameters {
+  * 		along with subsystem-level and driver-level callbacks.
+  * @pins:	For device pin management.
+  *		See Documentation/pinctrl.txt for details.
++ * @msi_list:	Hosts MSI descriptors
+  * @numa_node:	NUMA node this device is close to.
+  * @dma_mask:	Dma mask (if dma'ble device).
+  * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
+@@ -776,6 +777,9 @@ struct device {
+ #ifdef CONFIG_PINCTRL
+ 	struct dev_pin_info	*pins;
+ #endif
++#ifdef CONFIG_GENERIC_MSI_IRQ
++	struct list_head	msi_list;
++#endif
+ 
+ #ifdef CONFIG_NUMA
+ 	int		numa_node;	/* NUMA node this device is close to */
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index cfbd2afeaf64..57fe766a14bf 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -45,7 +45,7 @@ struct msi_desc {
+ 
+ /* Helpers to hide struct msi_desc implementation details */
+ #define msi_desc_to_dev(desc)		(&(desc)->dev.dev)
+-#define dev_to_msi_list(dev)		(&to_pci_dev((dev))->msi_list)
++#define dev_to_msi_list(dev)		(&(dev)->msi_list)
+ #define first_msi_entry(dev)		\
+ 	list_first_entry(dev_to_msi_list((dev)), struct msi_desc, list)
+ #define for_each_msi_entry(desc, dev)	\
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a8fb59..fbf245f5eba7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -366,7 +366,6 @@ struct pci_dev {
+ 	struct bin_attribute *res_attr[DEVICE_COUNT_RESOURCE]; /* sysfs file for resources */
+ 	struct bin_attribute *res_attr_wc[DEVICE_COUNT_RESOURCE]; /* sysfs file for WC mapping of resources */
+ #ifdef CONFIG_PCI_MSI
+-	struct list_head msi_list;
+ 	const struct attribute_group **msi_irq_groups;
+ #endif
+ 	struct pci_vpd *vpd;
+-- 
+1.7.10.4
 
