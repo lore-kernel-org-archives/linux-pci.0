@@ -1,147 +1,227 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38634 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752637AbbGOMRA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 08:17:00 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v4 00/19] Per-device MSI domain & platform MSI
-Date: Wed, 15 Jul 2015 13:16:34 +0100
-Message-Id: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:34311 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752933AbbGIByk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 21:54:40 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: mingo@kernel.org
+Cc: bp@suse.de, arnd@arndb.de, bhelgaas@google.com,
+	luto@amacapital.net, akpm@linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
+	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
+	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Benoit Taine <benoit.taine@lip6.fr>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Juergen Gross <jgross@suse.com>,
+	Rob Clark <robdclark@gmail.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH v9 2/8] drivers/video/fbdev/i740fb: Use arch_phys_wc_add() and pci_ioremap_wc_bar()
+Date: Wed,  8 Jul 2015 18:54:13 -0700
+Message-Id: <1436406859-1280-3-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MSI-like interrupts are starting to creep out of the PCI world, and
-can now be seen into a number of "platform"-type busses. The
-introduction of the MSI domains feature in v3.19 recognised that fact,
-and started providing a way to implement this.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Another step in this direction is Jiang Liu's msi_desc series:
+Convert the driver from using the x86-specific MTRR code to the
+architecture-agnostic arch_phys_wc_add(). It will avoid MTRR if
+write-combining is available, in order to take advantage of that also
+ensure the ioremapped area is requested as write-combining.
 
-https://github.com/jiangliu/linux.git msi_desc_v1
+There are a few motivations for this:
 
-which moves the msi_list from being specific to PCI devices into the
-generic device structure.
+a) Take advantage of PAT when available
 
-A problem we have to solve is to identify which MSI domain a device is
-"connected" to. Currently, PCI gets away with a mixture of
-arch-specific callbacks, and a msi_controller structure that can
-optionally carry a pointer to an MSI domain. As we add new bus types
-and start dealing with topologies that do not map to what PCI does,
-this doesn't scale anymore.
+b) Help bury MTRR code away, MTRR is architecture-specific and on
+   x86 it is being replaced by PAT.
 
-This patch series tries to address some of it by providing a basic
-link between 'struct device' and an MSI domain. It also adds :
+c) Help with the goal of eventually using _PAGE_CACHE_UC over
+   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+   de33c442e titled "x86 PAT: fix performance drop for glx,
+   use UC minus for ioremap(), ioremap_nocache() and
+   pci_mmap_page_range()")
 
-- a way to "tag" domains according to the "type" of interrupt it
-  provides (PCI/MSI, platform MSI...), allowing a driver for a piece
-  of HW identified by its device_node to provide several IRQ domains
+The conversion done is expressed by the following Coccinelle SmPL
+patch, it additionally required manual intervention to address all the
+ifdeffery and removal of redundant things which arch_phys_wc_add()
+already addresses such as verbose message about when MTRR fails and
+doing nothing when we didn't get an MTRR.
 
-- (yet another) way for PCI to propagate the domain pointer through
-  the PCI device hierarchy, providing a method for OF to kick-start
-  the propagation process, and finally allowing the PCI/MSI layer to
-  use that information
+@ mtrr_found @
+expression index, base, size;
+@@
 
-- a similar way to hook an MSI domain to a platform device.
+-index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
++index = arch_phys_wc_add(base, size);
 
-- a generic implementation of MSI for platform devices that can be
-  supported by interrupt controllers.
+@ mtrr_rm depends on mtrr_found @
+expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
+@@
 
-- support code for platform MSI for both GICv2m and GICv3 ITS.
+-mtrr_del(index, base, size);
++arch_phys_wc_del(index);
 
-This should make implementing MSI support in platform devices a
-relatively trivial task.
+@ mtrr_rm_zero_arg depends on mtrr_found @
+expression mtrr_found.index;
+@@
 
-Additionally, a few patches use most of the above to remove any trace
-of the msi_controller structure from the three MSI controllers that
-are currently in use on arm64, so that they solely rely on the above
-infrastructure, leading to some interesting improvements (also known
-as "gross hack prevention measures"). We also take this opportunity to
-kill the domain pointer from the msi_controller structure.
+-mtrr_del(index, 0, 0);
++arch_phys_wc_del(index);
 
-My hope is to eventually kill msi_controller entirely, and only rely
-on the msi_domain contained in the device structure (any help
-welcomed, as I already have cleaned up Tegra, and Lorenzo has scrubbed
-Designware).
+@ mtrr_rm_fb_info depends on mtrr_found @
+struct fb_info *info;
+expression mtrr_found.index;
+@@
 
-This has been tested on arm64 with GICv2m (AMD Seattle) and GICv3 ITS
-(FVP model), and use of platform MSI has been tested with the ARM
-SMMUv3.
+-mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
++arch_phys_wc_del(index);
 
-Patches are on top of 4.2-rc2 and Jiang Liu's series, and available
-at:
+@ ioremap_replace_nocache depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
 
-git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/npci-msi-v2
+-info->screen_base = ioremap_nocache(base, size);
++info->screen_base = ioremap_wc(base, size);
 
-As always, comments most welcome..
+@ ioremap_replace_default depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
 
-Marc Zyngier (19):
-  genirq: irqdomain: Allow irq domain aliasing
-  PCI: MSI: Register irq domain with specific token
-  device core: Introduce per-device MSI domain pointer
-  PCI/MSI: Add hooks to populate the msi_domain field
-  PCI/MSI: of: Add support for OF-provided msi_domain
-  PCI/MSI: of: Allow msi_domain lookup using the host bridge node
-  PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
-  platform: of: Assign MSI domain to platform device
-  drivers: base: Add MSI domain support for non-PCI devices
-  genirq: Add DOMAIN_BUS_NEXUS irqdomain property
-  irqchip: gicv3-its: Split PCI/MSI code from the core ITS driver
-  irqchip: gicv3-its: Register irq domain with NEXUS token
-  irqchip: gicv3-its: Get rid of struct msi_controller
-  irqchip: gicv3-its: Make the PCI/MSI code standalone
-  irqchip: gicv3-its: Add platform MSI support
-  irqchip: GICv2m: Get rid of struct msi_controller
-  irqchip: GICv2m: Add platform MSI support
-  PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
-  PCI/MSI: Drop domain field from msi_controller
+-info->screen_base = ioremap(base, size);
++info->screen_base = ioremap_wc(base, size);
 
- arch/powerpc/platforms/512x/mpc5121_ads_cpld.c   |   3 +-
- arch/powerpc/platforms/cell/interrupt.c          |   3 +-
- arch/powerpc/platforms/embedded6xx/flipper-pic.c |   3 +-
- arch/powerpc/platforms/powermac/pic.c            |   3 +-
- arch/powerpc/platforms/powernv/opal-irqchip.c    |   3 +-
- arch/powerpc/platforms/ps3/interrupt.c           |   3 +-
- arch/powerpc/sysdev/ehv_pic.c                    |   3 +-
- arch/powerpc/sysdev/i8259.c                      |   3 +-
- arch/powerpc/sysdev/ipic.c                       |   3 +-
- arch/powerpc/sysdev/mpic.c                       |   3 +-
- arch/powerpc/sysdev/qe_lib/qe_ic.c               |   3 +-
- arch/powerpc/sysdev/xics/xics-common.c           |   3 +-
- drivers/base/Makefile                            |   1 +
- drivers/base/platform-msi.c                      | 282 +++++++++++++++++++++++
- drivers/irqchip/Makefile                         |   2 +-
- drivers/irqchip/irq-gic-v2m.c                    |  52 +++--
- drivers/irqchip/irq-gic-v3-its-pci-msi.c         | 140 +++++++++++
- drivers/irqchip/irq-gic-v3-its-platform-msi.c    |  93 ++++++++
- drivers/irqchip/irq-gic-v3-its.c                 | 140 ++++-------
- drivers/of/irq.c                                 |  16 ++
- drivers/of/platform.c                            |   1 +
- drivers/pci/host/pci-xgene-msi.c                 |  41 ++--
- drivers/pci/msi.c                                |  11 +-
- drivers/pci/of.c                                 |  24 ++
- drivers/pci/probe.c                              |  31 +++
- include/linux/device.h                           |  20 ++
- include/linux/irqchip/arm-gic-v3.h               |   1 +
- include/linux/irqdomain.h                        |  26 ++-
- include/linux/msi.h                              |  18 +-
- include/linux/of_irq.h                           |   1 +
- include/linux/pci.h                              |   3 +
- kernel/irq/irqdomain.c                           |  18 +-
- 32 files changed, 785 insertions(+), 172 deletions(-)
- create mode 100644 drivers/base/platform-msi.c
- create mode 100644 drivers/irqchip/irq-gic-v3-its-pci-msi.c
- create mode 100644 drivers/irqchip/irq-gic-v3-its-platform-msi.c
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Antonino Daplas <adaplas@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: benh@kernel.crashing.org
+Cc: Benoit Taine <benoit.taine@lip6.fr>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: mst@redhat.com
+Cc: Rob Clark <robdclark@gmail.com>
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: toshi.kani@hp.com
+Link: http://lkml.kernel.org/r/1435195342-26879-3-git-send-email-mcgrof@do-not-panic.com
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ drivers/video/fbdev/i740fb.c | 35 ++++++-----------------------------
+ 1 file changed, 6 insertions(+), 29 deletions(-)
 
+diff --git a/drivers/video/fbdev/i740fb.c b/drivers/video/fbdev/i740fb.c
+index a2b4204b42bb..452e1163ad02 100644
+--- a/drivers/video/fbdev/i740fb.c
++++ b/drivers/video/fbdev/i740fb.c
+@@ -27,24 +27,15 @@
+ #include <linux/console.h>
+ #include <video/vga.h>
+ 
+-#ifdef CONFIG_MTRR
+-#include <asm/mtrr.h>
+-#endif
+-
+ #include "i740_reg.h"
+ 
+ static char *mode_option;
+-
+-#ifdef CONFIG_MTRR
+ static int mtrr = 1;
+-#endif
+ 
+ struct i740fb_par {
+ 	unsigned char __iomem *regs;
+ 	bool has_sgram;
+-#ifdef CONFIG_MTRR
+-	int mtrr_reg;
+-#endif
++	int wc_cookie;
+ 	bool ddc_registered;
+ 	struct i2c_adapter ddc_adapter;
+ 	struct i2c_algo_bit_data ddc_algo;
+@@ -1040,7 +1031,7 @@ static int i740fb_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+ 		goto err_request_regions;
+ 	}
+ 
+-	info->screen_base = pci_ioremap_bar(dev, 0);
++	info->screen_base = pci_ioremap_wc_bar(dev, 0);
+ 	if (!info->screen_base) {
+ 		dev_err(info->device, "error remapping base\n");
+ 		ret = -ENOMEM;
+@@ -1144,13 +1135,9 @@ static int i740fb_probe(struct pci_dev *dev, const struct pci_device_id *ent)
+ 
+ 	fb_info(info, "%s frame buffer device\n", info->fix.id);
+ 	pci_set_drvdata(dev, info);
+-#ifdef CONFIG_MTRR
+-	if (mtrr) {
+-		par->mtrr_reg = -1;
+-		par->mtrr_reg = mtrr_add(info->fix.smem_start,
+-				info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
+-	}
+-#endif
++	if (mtrr)
++		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
++						  info->fix.smem_len);
+ 	return 0;
+ 
+ err_reg_framebuffer:
+@@ -1177,13 +1164,7 @@ static void i740fb_remove(struct pci_dev *dev)
+ 
+ 	if (info) {
+ 		struct i740fb_par *par = info->par;
+-
+-#ifdef CONFIG_MTRR
+-		if (par->mtrr_reg >= 0) {
+-			mtrr_del(par->mtrr_reg, 0, 0);
+-			par->mtrr_reg = -1;
+-		}
+-#endif
++		arch_phys_wc_del(par->wc_cookie);
+ 		unregister_framebuffer(info);
+ 		fb_dealloc_cmap(&info->cmap);
+ 		if (par->ddc_registered)
+@@ -1287,10 +1268,8 @@ static int  __init i740fb_setup(char *options)
+ 	while ((opt = strsep(&options, ",")) != NULL) {
+ 		if (!*opt)
+ 			continue;
+-#ifdef CONFIG_MTRR
+ 		else if (!strncmp(opt, "mtrr:", 5))
+ 			mtrr = simple_strtoul(opt + 5, NULL, 0);
+-#endif
+ 		else
+ 			mode_option = opt;
+ 	}
+@@ -1327,7 +1306,5 @@ MODULE_DESCRIPTION("fbdev driver for Intel740");
+ module_param(mode_option, charp, 0444);
+ MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
+ 
+-#ifdef CONFIG_MTRR
+ module_param(mtrr, int, 0444);
+ MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
+-#endif
 -- 
-2.1.4
+2.3.2.209.gd67f9d5.dirty
 
