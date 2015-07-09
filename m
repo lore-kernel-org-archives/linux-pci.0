@@ -1,178 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:34762 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754400AbbGWRYs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 13:24:48 -0400
-Received: by obre1 with SMTP id e1so158979028obr.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 10:24:48 -0700 (PDT)
-Date: Thu, 23 Jul 2015 12:24:38 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jordan Hargrave <jharg93@gmail.com>
-Cc: Jean Delvare <jdelvare@suse.de>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Matthew Wilcox <matthew.r.wilcox@intel.com>
-Subject: Re: [PATCH] Add support for reading SMBIOS Slot number for PCI
- devices
-Message-ID: <20150723172438.GB21967@google.com>
-References: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
- <20150713093518.7e869d07@endymion.delvare>
- <CAC1AzdfFjPrfvg2iBYXY5JDKhbVH3LPQdh5LzyjMaBFSNDBi6Q@mail.gmail.com>
- <20150721165759.GD21967@google.com>
- <CAC1AzddX-HQe_UQ4C=ohyWDGjE=aed5+soDzjypQjjcqFfWTNA@mail.gmail.com>
- <20150722010950.GE3691@google.com>
- <CAC1AzdeY19ncJVhAOGS2J=tpa2VmnXv0CqO=AYDGY-fP=DiVCw@mail.gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:48306 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751582AbbGIAun (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 8 Jul 2015 20:50:43 -0400
+Message-ID: <559DC55E.9000805@intel.com>
+Date: Thu, 09 Jul 2015 02:50:38 +0200
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAC1AzdeY19ncJVhAOGS2J=tpa2VmnXv0CqO=AYDGY-fP=DiVCw@mail.gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Hounschell <markh@compro.net>
+CC: wdavis@nvidia.com, joro@8bytes.org,
+	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
+	konrad.wilk@oracle.com, Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
+References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com> <1431973504-5903-5-git-send-email-wdavis@nvidia.com> <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net> <20150707151517.GA14215@google.com> <559C08F3.7010103@compro.net> <20150708151132.GB14784@google.com>
+In-Reply-To: <20150708151132.GB14784@google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Matthew for PCIe-SSD perspective]
+On 7/8/2015 5:11 PM, Bjorn Helgaas wrote:
+> [+cc Rafael]
+>
+> On Tue, Jul 07, 2015 at 01:14:27PM -0400, Mark Hounschell wrote:
+>> On 07/07/2015 11:15 AM, Bjorn Helgaas wrote:
+>>> On Wed, May 20, 2015 at 08:11:17AM -0400, Mark Hounschell wrote:
+>>>> Most currently available hardware doesn't allow reads but will allow
+>>>> writes on PCIe peer-to-peer transfers. All current AMD chipsets are
+>>>> this way. I'm pretty sure all Intel chipsets are this way also. What
+>>>> happens with reads is they are just dropped with no indication of
+>>>> error other than the data will not be as expected. Supposedly the
+>>>> PCIe spec does not even require any peer-to-peer support. Regular
+>>>> PCI there is no problem and this API could be useful. However I
+>>>> doubt seriously you will find a pure PCI motherboard that has an
+>>>> IOMMU.
+>>>>
+>>>> I don't understand the chipset manufactures reasoning for disabling
+>>>> PCIe peer-to-peer reads. We would like to make PCIe versions of our
+>>>> cards but their application requires  peer-to-peer reads and writes.
+>>>> So we cannot develop PCIe versions of the cards.
+>>> I'd like to understand this better.  Peer-to-peer between two devices
+>>> below the same Root Port should work as long as ACS doesn't prevent
+>>> it.  If we find an Intel or AMD IOMMU, I think we configure ACS to
+>>> prevent direct peer-to-peer (see "pci_acs_enable"), but maybe it could
+>>> still be done with the appropriate IOMMU support.  And if you boot
+>>> with "iommu=off", we don't do that ACS configuration, so peer-to-peer
+>>> should work.
+>>>
+>>> I suppose the problem is that peer-to-peer doesn't work between
+>>> devices under different Root Ports or even devices under different
+>>> Root Complexes?
+>>>
+>>> PCIe r3.0, sec 6.12.1.1, says Root Ports that support peer-to-peer
+>>> traffic are required to implement ACS P2P Request Redirect, so if a
+>>> Root Port doesn't implement RR, we can assume it doesn't support
+>>> peer-to-peer.  But unfortunately the converse is not true: if a Root
+>>> Port implements RR, that does *not* imply that it supports
+>>> peer-to-peer traffic.
+>>>
+>>> So I don't know how to discover whether peer-to-peer between Root
+>>> Ports or Root Complexes is supported.  Maybe there's some clue in the
+>>> IOMMU?  The Intel VT-d spec mentions it, but "peer" doesn't even
+>>> appear in the AMD spec.
+>>>
+>>> And I'm curious about why writes sometimes work when reads do not.
+>>> That sounds like maybe the hardware support is there, but we don't
+>>> understand how to configure everything correctly.
+>>>
+>>> Can you give us the specifics of the topology you'd like to use, e.g.,
+>>> lspci -vv of the path between the two devices?
+>> First off, writes always work for me. Not just sometimes. Only reads
+>> NEVER do.
+>>
+>> Reading the AMD-990FX-990X-970-Register-Programming-Requirements-48693.pdf
+>> in section 2.5 "Enabling/Disabling Peer-to-Peer Traffic Access", it
+>> states specifically that
+>> only P2P memory writes are supported. This has been the case with
+>> older AMD chipset also. In one of the older chipset documents I read
+>> (I think the 770 series) , it said this was a security feature.
+>> Makes no sense to me.
+>>
+>> As for the topology I'd like to be able to use. This particular
+>> configuration (MB) has a single regular pci slot and the rest are
+>> pci-e. In two of those pci-e slots is a pci-e to pci expansion
+>> chassis interface card connected to a regular pci expansion rack. I
+>> am trying to to peer to peer between a regular pci card in one of
+>> those chassis to another regular pci card in the other chassis. In
+>> turn through the pci-e subsystem. Attached is the lcpci -vv output
+>> from this particular box. The cards that initiate the P2P are these:
+>>
+>> 04:04.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
+>> 0480 (rev 55)
+>> 04:05.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
+>> 0480 (rev 55)
+>> 04:06.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
+>> 0480 (rev 55)
+>> 04:07.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
+>> 0480 (rev 55)
+>>
+>> The card they need to P2P to and from is this one.
+>>
+>> 0a:05.0 Network controller: VMIC GE-IP PCI5565,PMC5565 Reflective
+>> Memory Node (rev 01)
+> Peer-to-peer traffic initiated by 04:04.0 and targeted at 0a:05.0 has
+> to be routed up to Root Port 00:04.0, over to Root Port 00:0b.0, and
+> back down to 0a:05.0:
+>
+>    00:04.0: Root Port to [bus 02-05] Slot #4 ACS ReqRedir+
+>    02:00.0: PCIe-to-PCI bridge to [bus 03-05]
+>    03:04.0: PCI-to-PCI bridge to [bus 04-05]
+>    04:04.0: PLX intelligent controller
+>
+>    00:0b.0: Root Port to [bus 08-0e] Slot #11 ACS ReqRedir+
+>    00:0b.0:   bridge window [mem 0xd0000000-0xd84fffff]
+>    08:00.0: PCIe-to-PCI bridge to [bus 09-0e]
+>    08:00.0:   bridge window [mem 0xd0000000-0xd84fffff]
+>    09:04.0: PCI-to-PCI bridge to [bus 0a-0e]
+>    09:04.0:   bridge window [mem 0xd0000000-0xd84fffff]
+>    0a:05.0: VMIC GE-IP reflective memory node
+>    0a:05.0: BAR 3 [mem 0xd0000000-0xd7ffffff]
+>
+> Both Root Ports do support ACS, including P2P RR, but that doesn't
+> tell us anything about whether the Root Complex actually supports
+> peer-to-peer traffic between the Root Ports.  Per the AMD
+> 990FX/990X/970 spec, your hardware supports it for writes but not
+> reads.
+>
+> So your hardware is what it is, and a general-purpose interface should
+> probably not allow peer-to-peer at all unless we wanted to complicate
+> it by adding a read vs. write distinction.
+>
+> My question is how we can figure that out without having to add a
+> blacklist or whitelist of specific platforms.  We haven't found
+> anything in the PCIe specs that tells us whether peer-to-peer is
+> supported between Root Ports.
+>
+> The ACPI _DMA method does mention peer-to-peer, and I don't think
+> Linux looks at _DMA at all.  But you should have a single PNP0A08
+> bridge that leads to bus 0000:00, with a _CRS that includes the
+> windows of all the Root Ports, and I don't see how a _DMA method would
+> help carve that up into separate bus address regions.
+>
+> Rafael, do you have any idea how we can discover peer-to-peer
+> capabilities of a platform?
 
-On Wed, Jul 22, 2015 at 03:07:46PM -0500, Jordan Hargrave wrote:
-> On Tue, Jul 21, 2015 at 8:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > On Tue, Jul 21, 2015 at 12:31:35PM -0500, Jordan Hargrave wrote:
-> >> On Tue, Jul 21, 2015 at 11:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> >> > On Mon, Jul 13, 2015 at 09:57:32AM -0500, Jordan Hargrave wrote:
-> >> >> On Mon, Jul 13, 2015 at 2:35 AM, Jean Delvare <jdelvare@suse.de> wrote:
-> >> >>
-> >> >> > Hi Jordan,
-> >> >> >
-> >> >> > On Fri, 10 Jul 2015 17:02:46 -0500, Jordan Hargrave wrote:
-> >> >> > > From: Jordan Hargrave <Jordan_Hargrave@dell.com>
-> >> >> > >
-> >> >> > > There currently isn't an easy way to determine which PCI devices belong
-> >> >> > to
-> >> >> > > system slots.  This patch adds support to read SMBIOS Type 9 (System
-> >> >> > Slots).
-> >> >> >
-> >> >> > I'm wondering, can't you use dmidecode or libsmbios to retrieve the
-> >> >> > same information?
-> >> >> >
-> >> >> > --
-> >> >> > Jean Delvare
-> >> >> > SUSE L3 Support
-> >> >> >
-> >> >>
-> >> >> You can but it's as not easy to determine the slot number for leaf devices
-> >> >> on bridges.  Eventually planning on using this for pulling slot number for
-> >> >> identifying network cards and disk numbering for systemd
-> >> >
-> >> > Can you outline the problems with using dmidecode or libsmbios?
-> >>
-> >> Neither dmidecode nor libsmbios report the slot number for devices
-> >> behind bridges in a slot.
-> >
-> > True, but it's straightforward to walk up the PCI tree in sysfs, e.g.,
-> > given a path like /sys/devices/pci0000:00/0000:00:1c.5/0000:03:00.0/, it's
-> > easy to see what the upstream bridges are.
-> >
-> It makes it more complicated I think. You have to check all functions
-> on all devices as well on the walk to the root.
-> 
-> Would it look something like this?
-> while (pdev) {
->   if (pdev->bus->number == dslot->bus && PCI_SLOT(pdev->devfn) ==
-> PCI_SLOT(dslot->devfn) &&
->      (pci_pcie_type(pdev) != PCI_ROOT_PORT || PCI_FUNC(pdev->devfn) ==
-> PCI_FUNC(dslot->devfn))
->     return dslot->instance;
->   if (!pdev->bus->parent)
->     break;
->   pdev = pdev->bus->parent->self;
-> }
-> 
-> >> I'm wanting to use this sysfs variable to
-> >> get slot numbers for systemd, so using libsmbios and dmidecode aren't
-> >> very useful.
-> >
-> > If you want this in systemd, I see why you wouldn't want a command like
-> > dmidecode.  Help me understand the problem with libsmbios.  Is it not
-> > useful because (a) systemd doesn't want to link with it, or (b) libsmbios
-> > doesn't have the right information, or (c) something else?
-> >
-> Linking with libsmbios would be a problem, and libsmbios doesn't have
-> this info anyway.
-> 
-> > It doesn't *look* like this is using any information that is only available
-> > in the kernel, so in principle it seems like this could be done in
-> > user-space.
-> >
-> 
-> I actually just got an email from someone who needs to determine the
-> card slot number in their driver... so I've added an external callable
-> 'pci_get_smbios_slot' function to enable this.
-> 
-> >> We already report the index for embedded devices in
-> >> pci-label.c, this code should have gone in at the same time.
-> >>
-> >> For example.  The SMBIOS entry for slot 3 is 40:00.0 There is a
-> >> quad-port NIC in the slot with a bridge at 40:00.0
-> >>
-> >> 42:00.0 Bridge (sec=43, sub=45)
-> >> 43:02.0 Bridge (sec=44, sub=44)
-> >> 43:04.0 Bridge (sec=45, sub=45)
-> >> 44:00.0 Ethernet
-> >> 44:00.1 Ethernet
-> >> 45:00.0 Ethernet
-> >> 45:00.1 Ethernet
-> >>
-> >> So dmidecode only returns the slot number for 42:00.0 but not any
-> >> child devices.  This code will provide a 'slot' sysfs variable that
-> >> reports '3' for all devices under and including the bridge.
-> >
-> > What if the card in slot 3 is an adapter leading to an external PCI
-> > chassis?  Wouldn't we then have a 'slot' file for every card in that
-> > chassis, all containing '3'?  This sounds confusing, although it is true
-> > that they all would be connected via the system board slot 3.
-> >
-> Yes that is correct.  Unless SMBIOS had a table of the second chassis.
-> 
-> > Also, we do have the /sys/bus/pci/slots/ hierarchy already.  If we do put
-> > something like this in the kernel, how would it relate to that hierarchy?
-> > Could this SMBIOS stuff be integrated into that somehow?
-> >
-> 
-> /sys/bus/pci/slots only map a slot to a single PCI device.  systemd
-> does use /sys/bus/pci/slots but it can't see the slot number on cards
-> with bridges as the actual slot number is a parent.  And that's not
-> easily to determine a parent device from the slots interface.  I'd
-> really like something generic here. I'm also looking for some method
-> for reporting bay/enclosure ID for PCIe-SSD devices.
-> 
-> > We have a bit of a hodge-podge of slot names already, and I'd like to
-> > simplify things if we can.
+No, I don't, sorry.
 
-We aren't really converging here yet.
+Rafael
 
-We need to figure out exactly what has to be done in the kernel because it
-can't be done in user-space.  So far, your patch *looks* like it could (in
-principle) be done in user-space, given a sysfs PCI hierarchy and the
-SMBIOS information.
-
-The goal ("determine which PCI devices belong to system slots") is
-definitely generic and useful.  We have quite a bit of slot stuff already
-in the kernel, and some is already exposed via sysfs, so if we're still
-missing what you need, it seems like the current code is off the rails
-somewhere and should be fixed.
-
-Can we explore what you need in a little more detail, with some concrete
-examples?  I heard:
-
-  - Systemd uses /sys/bus/pci/slots but gets the wrong slot information for
-    cards with bridges on them.  Can you give an example including all the
-    PCI devices involved and the related /sys/bus/pci/slots info so we can
-    see exactly what's wrong?
-
-  - A driver needs the card slot number.  A slot number seems like a user
-    interface thing, so I'm surprised that a driver would be concerned with
-    it.  And of course, SMBIOS is an arch-specific thing, so the driver
-    would have to be able to get along without the slot number anyway.
-
-  - PCIe-SSD bay/enclosure IDs.  Where would these IDs come from, and what
-    sort of reporting mechanism are you looking for?  How are these
-    structured?  Is there a separate PCIe device for every bay/enclosure
-    ID, so there would be a 1:1 mapping from PCIe device to ID?
-
-Bjorn
