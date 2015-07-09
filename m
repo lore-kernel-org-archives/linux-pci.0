@@ -1,139 +1,217 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:51315 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990AbbGXIBD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 04:01:03 -0400
-Message-ID: <1437724859.3071.40.camel@pengutronix.de>
-Subject: Re: [PATCH 1/4] PCI: imx6: Mark the msi cascade handler
- IRQF_NO_THREAD
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Kevin Hao <haokexin@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Richard Zhu <Richard.Zhu@freescale.com>
-Date: Fri, 24 Jul 2015 10:00:59 +0200
-In-Reply-To: <1437715776-2243-2-git-send-email-haokexin@gmail.com>
-References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
-	 <1437715776-2243-2-git-send-email-haokexin@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Vrabel <david.vrabel@citrix.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	xen-devel@lists.xenproject.org
+Subject: [RFC Patch V1 06/12] PCI: Use for_pci_msi_entry() to access MSI device list
+Date: Thu,  9 Jul 2015 16:00:41 +0800
+Message-Id: <1436428847-8886-7-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kevin,
+Use accessor for_pci_msi_entry() to access MSI device list, so we could easily
+move msi_list from struct pci_dev into struct device later.
 
-Am Freitag, den 24.07.2015, 13:29 +0800 schrieb Kevin Hao:
-> The cascade handler must run in hard interrupt context, otherwise
-> it will cause the following kernel warning if we force threading
-> of all the interrupt handlers via kernel command parameter
-> "threadirqs":
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/pci/msi.c          |   39 ++++++++++++++++++++-------------------
+ drivers/pci/xen-pcifront.c |    2 +-
+ 2 files changed, 21 insertions(+), 20 deletions(-)
 
-The change looks good, but there are a few other designware drivers that
-use the same logic to trigger the cascaded MSI handler. Can you please
-make sure to change them, too?
-
-Regards,
-Lucas
-
->    [ INFO: inconsistent lock state ]
->    4.2.0-rc3-next-20150723 #28 Not tainted
->    ---------------------------------
->    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
->    irq/21-mx6-pcie/62 [HC0[0]:SC0[2]:HE1:SE0] takes:
->     (&irq_desc_lock_class){?.-...}, at: [<80078d94>] handle_simple_irq+0x1c/0xc0
->    {IN-HARDIRQ-W} state was registered at:
->      [<8006aa70>] lock_acquire+0x74/0x94
->      [<807acc6c>] _raw_spin_lock+0x34/0x44
->      [<8007900c>] handle_fasteoi_irq+0x20/0x1b8
->      [<80075720>] generic_handle_irq+0x28/0x38
->      [<80075864>] __handle_domain_irq+0x6c/0xe0
->      [<80009558>] gic_handle_irq+0x28/0x68
->      [<80013b64>] __irq_svc+0x44/0x5c
->      [<807ad400>] _raw_spin_unlock_irq+0x30/0x34
->      [<8004cffc>] finish_task_switch+0xc0/0x218
->      [<807a7a10>] __schedule+0x248/0x6e0
->      [<807a7fac>] schedule+0x38/0x9c
->      [<807a8240>] schedule_preempt_disabled+0x10/0x14
->      [<80063f8c>] cpu_startup_entry+0xfc/0x1f8
->      [<8079f640>] rest_init+0x130/0x16c
->      [<80a55ca4>] start_kernel+0x374/0x3e8
->      [<1000807c>] 0x1000807c
->    irq event stamp: 16
->    hardirqs last  enabled at (15): [<807ad3fc>] _raw_spin_unlock_irq+0x2c/0x34
->    hardirqs last disabled at (14): [<807acd80>] _raw_spin_lock_irq+0x20/0x58
->    softirqs last  enabled at (0): [<800283d8>] copy_process.isra.58+0x3bc/0x1504
->    softirqs last disabled at (16): [<80076f08>] irq_forced_thread_fn+0x0/0x68
-> 
->    other info that might help us debug this:
->     Possible unsafe locking scenario:
-> 
->           CPU0
->           ----
->      lock(&irq_desc_lock_class);
->      <Interrupt>
->        lock(&irq_desc_lock_class);
-> 
->     *** DEADLOCK ***
-> 
->    no locks held by irq/21-mx6-pcie/62.
-> 
->    stack backtrace:
->    CPU: 0 PID: 62 Comm: irq/21-mx6-pcie Not tainted 4.2.0-rc3-next-20150723 #28
->    Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
->    Backtrace:
->    [<80012dc4>] (dump_backtrace) from [<80012f64>] (show_stack+0x18/0x1c)
->     r6:be3eeb78 r5:00000000 r4:00000000 r3:00000000
->    [<80012f4c>] (show_stack) from [<807a4b50>] (dump_stack+0x80/0x9c)
->    [<807a4ad0>] (dump_stack) from [<807a2efc>] (print_usage_bug+0x270/0x2e4)
->     r5:be3ee780 r4:80c579ec
->    [<807a2c8c>] (print_usage_bug) from [<8006874c>] (mark_lock+0x5b4/0x6e0)
->     r10:80c579ec r9:800678e0 r8:be3ee780 r7:00000000 r6:80c579ec r5:be3eeb78
->     r4:00000002
->    [<80068198>] (mark_lock) from [<80068f70>] (__lock_acquire+0x6f8/0x1e20)
->     r10:00000001 r9:be3eeb78 r8:be3ee780 r7:00000008 r6:000003f8 r5:be3ee780
->     r4:00000000
->    [<80068878>] (__lock_acquire) from [<8006aa70>] (lock_acquire+0x74/0x94)
->     r10:00000001 r9:00000001 r8:00000000 r7:00000001 r6:00000001 r5:60030013
->     r4:00000000
->    [<8006a9fc>] (lock_acquire) from [<807acc6c>] (_raw_spin_lock+0x34/0x44)
->     r6:0000012c r5:00000001 r4:be1f4d64
->    [<807acc38>] (_raw_spin_lock) from [<80078d94>] (handle_simple_irq+0x1c/0xc0)
->     r5:be1f4d64 r4:be1f4d00
->    [<80078d78>] (handle_simple_irq) from [<80075720>] (generic_handle_irq+0x28/0x38)
->     r5:be28ee20 r4:0000012c
->    [<800756f8>] (generic_handle_irq) from [<80321914>] (dw_handle_msi_irq+0x68/0x90)
->     r4:00000001 r3:00000002
->    [<803218ac>] (dw_handle_msi_irq) from [<8032265c>] (imx6_pcie_msi_handler+0x14/0x18)
->     r7:80076f08 r6:be39efc0 r5:be154000 r4:be39efc0
->    [<80322648>] (imx6_pcie_msi_handler) from [<80076f38>] (irq_forced_thread_fn+0x30/0x68)
->    [<80076f08>] (irq_forced_thread_fn) from [<80076cb4>] (irq_thread+0x14c/0x19c)
->     r6:be39efc0 r5:be154000 r4:be39efe0 r3:00000004
->    [<80076b68>] (irq_thread) from [<80047f80>] (kthread+0xdc/0xf8)
->     r10:00000000 r9:00000000 r8:00000000 r7:80076b68 r6:be39efc0 r5:be3a1000
->     r4:00000000
->    [<80047ea4>] (kthread) from [<8000fa38>] (ret_from_fork+0x14/0x3c)
->     r7:00000000 r6:00000000 r5:80047ea4 r4:be3a1000
-> 
-> Signed-off-by: Kevin Hao <haokexin@gmail.com>
-> ---
->  drivers/pci/host/pci-imx6.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 233a196c6e66..fd5eb2e34fc0 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -544,7 +544,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->  
->  		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
->  				       imx6_pcie_msi_handler,
-> -				       IRQF_SHARED, "mx6-pcie-msi", pp);
-> +				       IRQF_SHARED | IRQF_NO_THREAD,
-> +				       "mx6-pcie-msi", pp);
->  		if (ret) {
->  			dev_err(&pdev->dev, "failed to request MSI irq\n");
->  			return -ENODEV;
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 7b4c20c9f9ca..d09afa78d7a1 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -131,7 +131,7 @@ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ 	if (type == PCI_CAP_ID_MSI && nvec > 1)
+ 		return 1;
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list) {
++	for_each_pci_msi_entry(entry, dev) {
+ 		ret = arch_setup_msi_irq(dev, entry);
+ 		if (ret < 0)
+ 			return ret;
+@@ -151,7 +151,7 @@ void default_teardown_msi_irqs(struct pci_dev *dev)
+ 	int i;
+ 	struct msi_desc *entry;
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list)
++	for_each_pci_msi_entry(entry, dev)
+ 		if (entry->irq)
+ 			for (i = 0; i < entry->nvec_used; i++)
+ 				arch_teardown_msi_irq(entry->irq + i);
+@@ -168,7 +168,7 @@ static void default_restore_msi_irq(struct pci_dev *dev, int irq)
+ 
+ 	entry = NULL;
+ 	if (dev->msix_enabled) {
+-		list_for_each_entry(entry, &dev->msi_list, list) {
++		for_each_pci_msi_entry(entry, dev) {
+ 			if (irq == entry->irq)
+ 				break;
+ 		}
+@@ -282,7 +282,7 @@ void default_restore_msi_irqs(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list)
++	for_each_pci_msi_entry(entry, dev)
+ 		default_restore_msi_irq(dev, entry->irq);
+ }
+ 
+@@ -363,21 +363,22 @@ EXPORT_SYMBOL_GPL(pci_write_msi_msg);
+ 
+ static void free_msi_irqs(struct pci_dev *dev)
+ {
++	struct list_head *msi_list = dev_to_msi_list(&dev->dev);
+ 	struct msi_desc *entry, *tmp;
+ 	struct attribute **msi_attrs;
+ 	struct device_attribute *dev_attr;
+ 	int i, count = 0;
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list)
++	for_each_pci_msi_entry(entry, dev)
+ 		if (entry->irq)
+ 			for (i = 0; i < entry->nvec_used; i++)
+ 				BUG_ON(irq_has_action(entry->irq + i));
+ 
+ 	pci_msi_teardown_msi_irqs(dev);
+ 
+-	list_for_each_entry_safe(entry, tmp, &dev->msi_list, list) {
++	list_for_each_entry_safe(entry, tmp, msi_list, list) {
+ 		if (entry->msi_attrib.is_msix) {
+-			if (list_is_last(&entry->list, &dev->msi_list))
++			if (list_is_last(&entry->list, msi_list))
+ 				iounmap(entry->mask_base);
+ 		}
+ 
+@@ -448,7 +449,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 
+ 	if (!dev->msix_enabled)
+ 		return;
+-	BUG_ON(list_empty(&dev->msi_list));
++	BUG_ON(list_empty(dev_to_msi_list(&dev->dev)));
+ 
+ 	/* route the table */
+ 	pci_intx_for_msi(dev, 0);
+@@ -456,7 +457,7 @@ static void __pci_restore_msix_state(struct pci_dev *dev)
+ 				PCI_MSIX_FLAGS_ENABLE | PCI_MSIX_FLAGS_MASKALL);
+ 
+ 	arch_restore_msi_irqs(dev);
+-	list_for_each_entry(entry, &dev->msi_list, list)
++	for_each_pci_msi_entry(entry, dev)
+ 		msix_mask_irq(entry, entry->masked);
+ 
+ 	pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_MASKALL, 0);
+@@ -501,7 +502,7 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 	int count = 0;
+ 
+ 	/* Determine how many msi entries we have */
+-	list_for_each_entry(entry, &pdev->msi_list, list)
++	for_each_pci_msi_entry(entry, pdev)
+ 		++num_msi;
+ 	if (!num_msi)
+ 		return 0;
+@@ -510,7 +511,7 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
+ 	msi_attrs = kzalloc(sizeof(void *) * (num_msi + 1), GFP_KERNEL);
+ 	if (!msi_attrs)
+ 		return -ENOMEM;
+-	list_for_each_entry(entry, &pdev->msi_list, list) {
++	for_each_pci_msi_entry(entry, pdev) {
+ 		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
+ 		if (!msi_dev_attr)
+ 			goto error_attrs;
+@@ -599,7 +600,7 @@ static int msi_verify_entries(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list) {
++	for_each_pci_msi_entry(entry, dev) {
+ 		if (!dev->no_64bit_msi || !entry->msg.address_hi)
+ 			continue;
+ 		dev_err(&dev->dev, "Device has broken 64-bit MSI but arch"
+@@ -636,7 +637,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	mask = msi_mask(entry->msi_attrib.multi_cap);
+ 	msi_mask_irq(entry, mask, mask);
+ 
+-	list_add_tail(&entry->list, &dev->msi_list);
++	list_add_tail(&entry->list, dev_to_msi_list(&dev->dev));
+ 
+ 	/* Configure MSI capability structure */
+ 	ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
+@@ -713,7 +714,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 		entry->mask_base		= base;
+ 		entry->nvec_used		= 1;
+ 
+-		list_add_tail(&entry->list, &dev->msi_list);
++		list_add_tail(&entry->list, dev_to_msi_list(&dev->dev));
+ 	}
+ 
+ 	return 0;
+@@ -725,7 +726,7 @@ static void msix_program_entries(struct pci_dev *dev,
+ 	struct msi_desc *entry;
+ 	int i = 0;
+ 
+-	list_for_each_entry(entry, &dev->msi_list, list) {
++	for_each_pci_msi_entry(entry, dev) {
+ 		int offset = entries[i].entry * PCI_MSIX_ENTRY_SIZE +
+ 						PCI_MSIX_ENTRY_VECTOR_CTRL;
+ 
+@@ -806,7 +807,7 @@ out_avail:
+ 		struct msi_desc *entry;
+ 		int avail = 0;
+ 
+-		list_for_each_entry(entry, &dev->msi_list, list) {
++		for_each_pci_msi_entry(entry, dev) {
+ 			if (entry->irq != 0)
+ 				avail++;
+ 		}
+@@ -895,8 +896,8 @@ void pci_msi_shutdown(struct pci_dev *dev)
+ 	if (!pci_msi_enable || !dev || !dev->msi_enabled)
+ 		return;
+ 
+-	BUG_ON(list_empty(&dev->msi_list));
+-	desc = list_first_entry(&dev->msi_list, struct msi_desc, list);
++	BUG_ON(list_empty(dev_to_msi_list(&dev->dev)));
++	desc = first_msi_entry(dev);
+ 
+ 	pci_msi_set_enable(dev, 0);
+ 	pci_intx_for_msi(dev, 1);
+@@ -1001,7 +1002,7 @@ void pci_msix_shutdown(struct pci_dev *dev)
+ 		return;
+ 
+ 	/* Return the device with MSI-X masked as initial states */
+-	list_for_each_entry(entry, &dev->msi_list, list) {
++	for_each_pci_msi_entry(entry, dev) {
+ 		/* Keep cached states to be restored */
+ 		__pci_msix_desc_mask_irq(entry, 1);
+ 	}
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 8b7a900cd28b..c777b97207d5 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -265,7 +265,7 @@ static int pci_frontend_enable_msix(struct pci_dev *dev,
+ 	}
+ 
+ 	i = 0;
+-	list_for_each_entry(entry, &dev->msi_list, list) {
++	for_each_pci_msi_entry(entry, dev) {
+ 		op.msix_entries[i].entry = entry->msi_attrib.entry_nr;
+ 		/* Vector is useless at this point. */
+ 		op.msix_entries[i].vector = -1;
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.7.10.4
 
