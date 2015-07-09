@@ -1,105 +1,87 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [PATCH v2 13/49] PCI: Separate realloc list checking after allocation
-Date: Tue, 14 Jul 2015 15:46:44 -0700
-Message-Id: <1436914040-13206-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Alexander Gordeev <agordeev@redhat.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [RFC Patch V1 11/12] genirq, PCI: Reorginize struct msi_desc to prepare for support of generic MSI
+Date: Thu,  9 Jul 2015 16:00:46 +0800
+Message-Id: <1436428847-8886-12-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We check the realloc list, as list must be empty after allocation.
+Reorganize struct msi_desc so it could be reused by other MSI drivers.
 
-Separate the realloc list checking to another function.
-
-Add checking that is missed in acpiphp driver.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |  1 +
- drivers/pci/pci.h                  |  1 +
- drivers/pci/setup-bus.c            | 11 ++++++++---
- 3 files changed, 10 insertions(+), 3 deletions(-)
+ include/linux/msi.h |   41 +++++++++++++++++++++--------------------
+ 1 file changed, 21 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index ff53856..134caee 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 		}
- 	}
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	__pci_bus_check_realloc(&add_list);
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 5f77e231f515..f6845bc83774 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -19,29 +19,30 @@ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
  
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4ff0ff1..2b83977 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -235,6 +235,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head);
-+void __pci_bus_check_realloc(struct list_head *realloc_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
+ struct msi_desc {
+-	struct {
+-		__u8	is_msix	: 1;
+-		__u8	multiple: 3;	/* log2 num of messages allocated */
+-		__u8	multi_cap : 3;	/* log2 num of messages supported */
+-		__u8	maskbit	: 1;	/* mask-pending bit supported ? */
+-		__u8	is_64	: 1;	/* Address size: 0=32bit 1=64bit */
+-		__u16	entry_nr;	/* specific enabled entry */
+-		unsigned default_irq;	/* default pre-assigned irq */
+-	} msi_attrib;
+-
+-	u32 masked;			/* mask bits */
+-	unsigned int irq;
+-	unsigned int nvec_used;		/* number of messages */
+-	struct list_head list;
++	struct list_head		list;
++	unsigned int			irq;
++	unsigned int			nvec_used;	/* number of messages */
++	struct device *			dev;
++	struct msi_msg			msg;		/* Last set MSI message */
  
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 06664db..f30225c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -350,6 +350,11 @@ out:
- 	}
- }
+ 	union {
+-		void __iomem *mask_base;
+-		u8 mask_pos;
++		struct {				/* For PCI MSI/MSI-X */
++			u32 masked;			/* mask bits */
++			struct {
++				__u8	is_msix	: 1;
++				__u8	multiple: 3;	/* log2 num of messages allocated */
++				__u8	multi_cap : 3;	/* log2 num of messages supported */
++				__u8	maskbit	: 1;	/* mask-pending bit supported ? */
++				__u8	is_64	: 1;	/* Address size: 0=32bit 1=64bit */
++				__u16	entry_nr;	/* specific enabled entry */
++				unsigned default_irq;	/* default pre-assigned irq */
++			} msi_attrib;
++			union {
++				u8	mask_pos;
++				void __iomem *mask_base;
++			};
++		};
+ 	};
+-	struct device *dev;
+-
+-	/* Last set MSI message */
+-	struct msi_msg msg;
+ };
  
-+void __pci_bus_check_realloc(struct list_head *realloc_head)
-+{
-+	BUG_ON(!list_empty(realloc_head));
-+}
-+
- /**
-  * assign_requested_resources_sorted() - satisfy resource requests
-  *
-@@ -1861,7 +1866,7 @@ again:
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
--		BUG_ON(!list_empty(add_list));
-+		__pci_bus_check_realloc(add_list);
- 	tried_times++;
- 
- 	/* any device complain? */
-@@ -1936,7 +1941,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
- 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	BUG_ON(!list_empty(&add_list));
-+	__pci_bus_check_realloc(&add_list);
- 	tried_times++;
- 
- 	if (list_empty(&fail_head))
-@@ -1995,6 +2000,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 							 &add_list);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
--	BUG_ON(!list_empty(&add_list));
-+	__pci_bus_check_realloc(&add_list);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+ /* Helpers to hide struct msi_desc implementation details */
 -- 
-1.8.4.5
+1.7.10.4
 
