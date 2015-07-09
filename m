@@ -1,77 +1,221 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0081.outbound.protection.outlook.com ([207.46.100.81]:33952
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751207AbbGaK3j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jul 2015 06:29:39 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH v2 0/5] Altera PCIe host controller driver with MSI support
-Date: Fri, 31 Jul 2015 18:15:10 +0800
-Message-ID: <1438337715-22594-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:36541 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320AbbGIBzF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 21:55:05 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: mingo@kernel.org
+Cc: bp@suse.de, arnd@arndb.de, bhelgaas@google.com,
+	luto@amacapital.net, akpm@linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
+	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
+	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Juergen Gross <jgross@suse.com>,
+	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Rob Clark <robdclark@gmail.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH v9 8/8] drivers/video/fbdev/vt8623fb: Use arch_phys_wc_add() and pci_iomap_wc()
+Date: Wed,  8 Jul 2015 18:54:19 -0700
+Message-Id: <1436406859-1280-9-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the 2nd version of patch set to add support for Altera PCIe host
-controller with MSI feature on Altera FPGA device families. This patchset
-have resolved all comments in v1. Thanks everyone for reviewing.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-It is based on patch series from Marc Zyngier "Per-device MSI domain &
-platform MSI" [1] to get rid of struct msi_controller.
+This driver uses the same area for MTRR as for the ioremap().
 
-[1]: https://lkml.org/lkml/2015/7/23/172
+Convert the driver from using the x86-specific MTRR code to the
+architecture-agnostic arch_phys_wc_add(). It will avoid MTRRs if
+write-combining is available. In order to take advantage of that
+also ensure the ioremapped area is requested as write-combining.
 
-v1->v2 changes:
-- arm: socfpga: remove ununsed ARCH_SUPPORTS_MSI and PCI from Kconfig
-- pci: host: remove depends on OF from Kconfig
-- pci: host: remove depends PCIE_ALTERA from Kconfig
-- pci: host: change pcie-altera to tristate in Kconfig
-- pcie-altera: remove unnecessary newlines and .owner
-- pcie-altera: remove altera_pcie_map_irq
-- pcie-altera: remove dependency on hw_pci and use pci_scan_root_bus
-- pcie-altera-msi: change to use phys_addr_t
-- pcie-altera-msi: change to use irq_set_chained_handler
-- pcie-altera-msi: add inner_domain
-- pcie-altera-msi: add add MSI_FLAG_PCI_MSIX flag
-- pcie-altera-msi: return -EINVAL for altera_msi_set_affinity
-- pcie-altera-msi: return PTR_ERR() instead of -EADDRNOTAVAIL
-- change to use write_relaxed and read_relaxed
+There are a few motivations for this:
 
-History:
--------
-[v1]: https://lkml.org/lkml/2015/7/28/395
+a) Take advantage of PAT when available.
 
-Ley Foon Tan (5):
-  arm: add msi.h to Kbuild
-  pci:host: Add Altera PCIe host controller driver
-  pci: altera: Add Altera PCIe MSI driver
-  Documentation: dt-bindings: pci: altera pcie device tree binding
-  MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+b) Help bury MTRR code away, MTRR is architecture-specific and on
+   x86 it is being replaced by PAT.
 
- .../devicetree/bindings/pci/altera-pcie-msi.txt    |  27 ++
- .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
- MAINTAINERS                                        |  16 +
- arch/arm/include/asm/Kbuild                        |   1 +
- drivers/pci/host/Kconfig                           |  15 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pcie-altera-msi.c                 | 324 +++++++++++++
- drivers/pci/host/pcie-altera.c                     | 526 +++++++++++++++++++++
- 8 files changed, 960 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
- create mode 100644 drivers/pci/host/pcie-altera.c
+c) Help with the goal of eventually using _PAGE_CACHE_UC over
+   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+   de33c442e titled "x86 PAT: fix performance drop for glx,
+   use UC minus for ioremap(), ioremap_nocache() and
+   pci_mmap_page_range()").
 
+The conversion done is expressed by the following Coccinelle
+SmPL patch, it additionally required manual intervention to
+address all the ifdeffery and removal of redundant things which
+arch_phys_wc_add() already addresses such as verbose message about
+when MTRR fails and doing nothing when we didn't get an MTRR.
+
+@ mtrr_found @
+expression index, base, size;
+@@
+
+-index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
++index = arch_phys_wc_add(base, size);
+
+@ mtrr_rm depends on mtrr_found @
+expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
+@@
+
+-mtrr_del(index, base, size);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_zero_arg depends on mtrr_found @
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, 0, 0);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_fb_info depends on mtrr_found @
+struct fb_info *info;
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
++arch_phys_wc_del(index);
+
+@ ioremap_replace_nocache depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap_nocache(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+@ ioremap_replace_default depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Antonino Daplas <adaplas@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: benh@kernel.crashing.org
+Cc: bhelgaas@google.com
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: mst@redhat.com
+Cc: Rob Clark <robdclark@gmail.com>
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: toshi.kani@hp.com
+Link: http://lkml.kernel.org/r/1435195342-26879-10-git-send-email-mcgrof@do-not-panic.com
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ drivers/video/fbdev/vt8623fb.c | 31 ++++++-------------------------
+ 1 file changed, 6 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/video/fbdev/vt8623fb.c b/drivers/video/fbdev/vt8623fb.c
+index 8bac309c24b9..dd0f18e42d3e 100644
+--- a/drivers/video/fbdev/vt8623fb.c
++++ b/drivers/video/fbdev/vt8623fb.c
+@@ -26,13 +26,9 @@
+ #include <linux/console.h> /* Why should fb driver call console functions? because console_lock() */
+ #include <video/vga.h>
+ 
+-#ifdef CONFIG_MTRR
+-#include <asm/mtrr.h>
+-#endif
+-
+ struct vt8623fb_info {
+ 	char __iomem *mmio_base;
+-	int mtrr_reg;
++	int wc_cookie;
+ 	struct vgastate state;
+ 	struct mutex open_lock;
+ 	unsigned int ref_count;
+@@ -99,10 +95,7 @@ static struct svga_timing_regs vt8623_timing_regs     = {
+ /* Module parameters */
+ 
+ static char *mode_option = "640x480-8@60";
+-
+-#ifdef CONFIG_MTRR
+ static int mtrr = 1;
+-#endif
+ 
+ MODULE_AUTHOR("(c) 2006 Ondrej Zajicek <santiago@crfreenet.org>");
+ MODULE_LICENSE("GPL");
+@@ -112,11 +105,8 @@ module_param(mode_option, charp, 0644);
+ MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
+ module_param_named(mode, mode_option, charp, 0);
+ MODULE_PARM_DESC(mode, "Default video mode e.g. '648x480-8@60' (deprecated)");
+-
+-#ifdef CONFIG_MTRR
+ module_param(mtrr, int, 0444);
+ MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
+-#endif
+ 
+ 
+ /* ------------------------------------------------------------------------- */
+@@ -710,7 +700,7 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	info->fix.mmio_len = pci_resource_len(dev, 1);
+ 
+ 	/* Map physical IO memory address into kernel space */
+-	info->screen_base = pci_iomap(dev, 0, 0);
++	info->screen_base = pci_iomap_wc(dev, 0, 0);
+ 	if (! info->screen_base) {
+ 		rc = -ENOMEM;
+ 		dev_err(info->device, "iomap for framebuffer failed\n");
+@@ -781,12 +771,9 @@ static int vt8623_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	/* Record a reference to the driver data */
+ 	pci_set_drvdata(dev, info);
+ 
+-#ifdef CONFIG_MTRR
+-	if (mtrr) {
+-		par->mtrr_reg = -1;
+-		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
+-	}
+-#endif
++	if (mtrr)
++		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
++						  info->fix.smem_len);
+ 
+ 	return 0;
+ 
+@@ -816,13 +803,7 @@ static void vt8623_pci_remove(struct pci_dev *dev)
+ 	if (info) {
+ 		struct vt8623fb_info *par = info->par;
+ 
+-#ifdef CONFIG_MTRR
+-		if (par->mtrr_reg >= 0) {
+-			mtrr_del(par->mtrr_reg, 0, 0);
+-			par->mtrr_reg = -1;
+-		}
+-#endif
+-
++		arch_phys_wc_del(par->wc_cookie);
+ 		unregister_framebuffer(info);
+ 		fb_dealloc_cmap(&info->cmap);
+ 
 -- 
-1.8.2.1
+2.3.2.209.gd67f9d5.dirty
 
