@@ -1,82 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55B0F91A.7020206@ti.com>
-Date: Thu, 23 Jul 2015 10:24:26 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-MIME-Version: 1.0
-To: <linux@arm.linux.org.uk>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ARM/PCI: set MPS before pci_bus_add_devices()
-References: <1437514519-18545-1-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1437514519-18545-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:30996 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751884AbbGIH7s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 9 Jul 2015 03:59:48 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>, linux390@de.ibm.com
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-s390@vger.kernel.org
+Subject: [RFC Patch V1 04/12] s390/pci: Use for_pci_msi_entry() to access MSI device list
+Date: Thu,  9 Jul 2015 16:00:39 +0800
+Message-Id: <1436428847-8886-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/21/2015 05:35 PM, Murali Karicheri wrote:
-> The MPS configuration should be done *before* pci_bus_add_devices().
-> After pci_bus_add_devices(), drivers may be bound to devices, and
-> the PCI core shouldn't touch device configuration while a driver
-> owns the device.
->
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->   arch/arm/kernel/bios32.c | 19 +++++--------------
->   1 file changed, 5 insertions(+), 14 deletions(-)
->
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index fcbbbb1..17efde7 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -520,7 +520,8 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
->   	list_for_each_entry(sys, &head, node) {
->   		struct pci_bus *bus = sys->bus;
->
-> -		if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> +		if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-> +			struct pci_bus *child;
->   			/*
->   			 * Size the bridge windows.
->   			 */
-> @@ -530,25 +531,15 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
->   			 * Assign resources.
->   			 */
->   			pci_bus_assign_resources(bus);
-> -		}
->
-> +			list_for_each_entry(child, &bus->children, node)
-> +				pcie_bus_configure_settings(child);
-> +		}
->   		/*
->   		 * Tell drivers about devices found.
->   		 */
->   		pci_bus_add_devices(bus);
->   	}
-> -
-> -	list_for_each_entry(sys, &head, node) {
-> -		struct pci_bus *bus = sys->bus;
-> -
-> -		/* Configure PCI Express settings */
-> -		if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
-> -			struct pci_bus *child;
-> -
-> -			list_for_each_entry(child, &bus->children, node)
-> -				pcie_bus_configure_settings(child);
-> -		}
-> -	}
->   }
->
->   #ifndef CONFIG_PCI_HOST_ITE8152
->
-Bjorn,
+Use accessor for_pci_msi_entry() to access MSI device list, so we could
+easily move msi_list from struct pci_dev into struct device later.
 
-When you get a chance, please review this. We discussed this change in a 
-separate thread and agreed for a patch from me.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/s390/pci/pci.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks and regards
-
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 598f023cf8a6..34f162753403 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -414,7 +414,7 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ 
+ 	/* Request MSI interrupts */
+ 	hwirq = 0;
+-	list_for_each_entry(msi, &pdev->msi_list, list) {
++	for_each_pci_msi_entry(msi, pdev) {
+ 		rc = -EIO;
+ 		irq = irq_alloc_desc(0);	/* Alloc irq on node 0 */
+ 		if (irq < 0)
+@@ -440,7 +440,7 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+ 	return (msi_vecs == nvec) ? 0 : msi_vecs;
+ 
+ out_msi:
+-	list_for_each_entry(msi, &pdev->msi_list, list) {
++	for_each_pci_msi_entry(msi, pdev) {
+ 		if (hwirq-- == 0)
+ 			break;
+ 		irq_set_msi_desc(msi->irq, NULL);
+@@ -470,7 +470,7 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+ 		return;
+ 
+ 	/* Release MSI interrupts */
+-	list_for_each_entry(msi, &pdev->msi_list, list) {
++	for_each_pci_msi_entry(msi, pdev) {
+ 		if (msi->msi_attrib.is_msix)
+ 			__pci_msix_desc_mask_irq(msi, 1);
+ 		else
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+1.7.10.4
+
