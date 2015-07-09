@@ -1,104 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:34028 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754401AbbG0Wy6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 18:54:58 -0400
-Received: by igk11 with SMTP id 11so83015150igk.1
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2015 15:54:58 -0700 (PDT)
-Date: Mon, 27 Jul 2015 17:54:53 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Joerg Roedel <jroedel@suse.de>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org,
-	Gregor Dick <gdick@solarflare.com>
-Subject: Re: [PATCH v2 01/11] iommu/vt-d: Cache PCI ATS state and Invalidate
- Queue Depth
-Message-ID: <20150727225453.GB24401@google.com>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150721001357.28145.83631.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150727130810.GG27614@suse.de>
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:33213 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbbGILDP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jul 2015 07:03:15 -0400
+Received: by lbzd8 with SMTP id d8so27508492lbz.0
+        for <linux-pci@vger.kernel.org>; Thu, 09 Jul 2015 04:03:14 -0700 (PDT)
+Subject: Re: [RFC Patch V1 02/12] MIPS, PCI: Use for_pci_msi_entry() to access
+ MSI device list
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Ralf Baechle <ralf@linux-mips.org>
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+ <1436428847-8886-3-git-send-email-jiang.liu@linux.intel.com>
+Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-mips@linux-mips.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <559E54EE.7090504@cogentembedded.com>
+Date: Thu, 9 Jul 2015 14:03:10 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150727130810.GG27614@suse.de>
+In-Reply-To: <1436428847-8886-3-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg,
+Hello.
 
-Thanks for all your help reviewing this!
+On 7/9/2015 11:00 AM, Jiang Liu wrote:
 
-On Mon, Jul 27, 2015 at 03:08:10PM +0200, Joerg Roedel wrote:
-> On Mon, Jul 20, 2015 at 07:13:57PM -0500, Bjorn Helgaas wrote:
-> > We check the ATS state (enabled/disabled) and fetch the PCI ATS Invalidate
-> > Queue Depth in performance-sensitive paths.  It's easy to cache these,
-> > which removes dependencies on PCI.
-> > 
-> > Remember the ATS enabled state.  When enabling, read the queue depth once
-> > and cache it in the device_domain_info struct.  This is similar to what
-> > amd_iommu.c does.
-> > 
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  drivers/iommu/intel-iommu.c |   26 ++++++++++++++++----------
-> >  1 file changed, 16 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> > index a98a7b2..50832f1 100644
-> > --- a/drivers/iommu/intel-iommu.c
-> > +++ b/drivers/iommu/intel-iommu.c
-> > @@ -408,6 +408,10 @@ struct device_domain_info {
-> >  	struct list_head global; /* link to global list */
-> >  	u8 bus;			/* PCI bus number */
-> >  	u8 devfn;		/* PCI devfn number */
-> > +	struct {
-> > +		int enabled:1;
-> > +		u8 qdep;
-> > +	} ats;			/* ATS state */
-> >  	struct device *dev; /* it's NULL for PCIe-to-PCI bridge */
-> >  	struct intel_iommu *iommu; /* IOMMU used by this device */
-> >  	struct dmar_domain *domain; /* pointer to domain */
-> > @@ -1391,19 +1395,26 @@ iommu_support_dev_iotlb (struct dmar_domain *domain, struct intel_iommu *iommu,
-> >  
-> >  static void iommu_enable_dev_iotlb(struct device_domain_info *info)
-> >  {
-> > +	struct pci_dev *pdev;
-> > +
-> >  	if (!info || !dev_is_pci(info->dev))
-> >  		return;
-> >  
-> > -	pci_enable_ats(to_pci_dev(info->dev), VTD_PAGE_SHIFT);
-> > +	pdev = to_pci_dev(info->dev);
-> > +	if (pci_enable_ats(pdev, VTD_PAGE_SHIFT))
-> > +		return;
-> > +
-> > +	info->ats.enabled = 1;
-> > +	info->ats.qdep = pci_ats_queue_depth(pdev);
-> 
-> Hmm, this is a place where the relaxed error handling in
-> pci_enable_ats() can get problematic. 
+> Use accessor for_pci_msi_entry() to access MSI device list, so we could
 
-By "relaxed error handling," do you mean the fact that in v4.1,
-pci_enable_ats() has a BUG_ON(is_enabled), while now it merely
-returns -EINVAL?
+     Maybe for_each_pci_msi_entry()?
 
-(BTW, I did change it to add a WARN_ON and return -EBUSY as you suggested.)
+> easily move msi_list from struct pci_dev into struct device later.
 
-> If ATS is (by accident or a bug
-> elsewhere) already enabled an the function returns -EINVAL, the IOMMU
-> driver considers ATS disabled and doesn't flush the IO/TLBs of the
-> device. This can cause data corruption later on, so we should make sure
-> that info->ats.enabled is consistent with pdev->ats_enabled.
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>   arch/mips/pci/msi-octeon.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'm not quite sure I understand this.  In the patch above, we only set
-"info->ats.enabled = 1" if pci_enable_ats() has succeeded.  The amd_iommu.c
-code is similar.
+> diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
+> index cffaaf4aae3c..2a5bb849b10e 100644
+> --- a/arch/mips/pci/msi-octeon.c
+> +++ b/arch/mips/pci/msi-octeon.c
+> @@ -200,7 +200,7 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+>   	if (type == PCI_CAP_ID_MSI && nvec > 1)
+>   		return 1;
+>
+> -	list_for_each_entry(entry, &dev->msi_list, list) {
+> +	for_each_pci_msi_entry(entry, dev) {
+>   		ret = arch_setup_msi_irq(dev, entry);
+>   		if (ret < 0)
+>   			return ret;
 
-Are you concerned about the case where future code enables ATS before
-intel-iommu, the pci_enable_ats() in intel-iommu fails, intel-iommu
-believes ATS is disabled, intel-iommu calls iommu_flush_dev_iotlb(), but it
-doesn't flush the IOTLB?
+WBR, Sergei
 
-I guess I could make intel-iommu handle -EBUSY differently from -EINVAL.
-Would that help?  It seems sort of clumsy, but ...?
-
-Bjorn
