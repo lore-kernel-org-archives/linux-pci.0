@@ -1,61 +1,34 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Anton Blanchard <anton@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v2 40/49] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
-Date: Tue, 14 Jul 2015 15:47:11 -0700
-Message-Id: <1436914040-13206-41-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:40861 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753109AbbGIIAr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jul 2015 04:00:47 -0400
+Date: Thu, 09 Jul 2015 01:00:45 -0700 (PDT)
+Message-Id: <20150709.010045.1327001449508270216.davem@davemloft.net>
+To: jiang.liu@linux.intel.com
+Cc: bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
+	grant.likely@linaro.org, marc.zyngier@arm.com,
+	stuart.yoder@freescale.com, wangyijing@huawei.com, bp@alien8.de,
+	eric.snowberg@oracle.com, tony.luck@intel.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, sparclinux@vger.kernel.org
+Subject: Re: [RFC Patch V1 07/12] sparc, PCI: Use helper functions to
+ access fields in struct msi_desc
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1436428847-8886-8-git-send-email-jiang.liu@linux.intel.com>
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+	<1436428847-8886-8-git-send-email-jiang.liu@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-parsing.
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Date: Thu,  9 Jul 2015 16:00:42 +0800
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Anton Blanchard <anton@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci_of_scan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> Use helper functions to access fields in struct msi_desc, so we could
+> easily refine struct msi_desc later.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 42e02a2..f31bfd0 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
- 
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
--- 
-1.8.4.5
-
+Acked-by: David S. Miller <davem@davemloft.net>
