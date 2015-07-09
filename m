@@ -1,304 +1,234 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35894 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750789AbbG2Lci (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jul 2015 07:32:38 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	James Morse <james.morse@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Subject: [PATCH v4 2/2] ARM: pci: kill pcibios_msi_controller
-Date: Wed, 29 Jul 2015 12:33:18 +0100
-Message-Id: <1438169598-24490-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1438169598-24490-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1438169598-24490-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36628 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753274AbbGIBzB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 21:55:01 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: mingo@kernel.org
+Cc: bp@suse.de, arnd@arndb.de, bhelgaas@google.com,
+	luto@amacapital.net, akpm@linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
+	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
+	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Dave Airlie <airlied@redhat.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Juergen Gross <jgross@suse.com>,
+	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
+	Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH v9 7/8] drivers/video/fbdev/s3fb: Use arch_phys_wc_add() and pci_iomap_wc()
+Date: Wed,  8 Jul 2015 18:54:18 -0700
+Message-Id: <1436406859-1280-8-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM PCI systems relying on the pcibios API to initialize PCI host
-controllers, the pcibios_msi_controller weak callback is used to look-up
-the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-pci_sys_data is an ARM specific structure, which prevents using the
-same mechanism (so same PCI host controller drivers) on ARM64 systems.
+This driver uses the same area for MTRR as for the ioremap().
 
-Since the struct pci_bus already contains an msi_controller pointer and
-the kernel already uses it to look-up the msi controller,
-this patch converts ARM host controller and related pcibios/host bridges
-initialization routines so that the msi_controller pointer look-up can be
-carried out by PCI core code through the struct pci_bus msi pointer,
-removing the need for the arch specific pcibios_msi_controller callback
-and the related pci_sys_data msi_ctrl pointer.
+Convert the driver from using the x86-specific MTRR code to the
+architecture-agnostic arch_phys_wc_add(). It will avoid MTRRs if
+write-combining is available. In order to take advantage of that
+also ensure the ioremapped area is requested as write-combining.
 
-To simplify the conversion, this patch adds a new function in PCI
-core code (pci_scan_root_bus_msi()) that takes the msi_controller
-pointer as an additional parameter wrt pci_scan_root_bus() so that
-the msi controller pointer can be effectively propagated at probe time
-through the augmented API.
+There are a few motivations for this:
 
-The existing pci_scan_root_bus() API is made to rely on the newly
-introduced function, by passing a NULL msi pointer to it so
-that it can be used when no msi controller pointer passing is required
-without additional code (and API conversions) in the core PCI layer.
+a) Take advantage of PAT when available.
 
-ARM is the only arch relying on the pcibios_msi_controller() weak
-function, hence this patch also removes its default weak implementation
-from PCI core code since it becomes of no use.
+b) Help bury MTRR code away, MTRR is architecture-specific and on
+   x86 it is being replaced by PAT.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Suggested-by: Russell King <linux@arm.linux.org.uk>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
+c) Help with the goal of eventually using _PAGE_CACHE_UC over
+   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+   de33c442e titled "x86 PAT: fix performance drop for glx,
+   use UC minus for ioremap(), ioremap_nocache() and
+   pci_mmap_page_range()").
+
+The conversion done is expressed by the following Coccinelle
+SmPL patch, it additionally required manual intervention to
+address all the ifdeffery and removal of redundant things which
+arch_phys_wc_add() already addresses such as verbose message about
+when MTRR fails and doing nothing when we didn't get an MTRR.
+
+@ mtrr_found @
+expression index, base, size;
+@@
+
+-index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
++index = arch_phys_wc_add(base, size);
+
+@ mtrr_rm depends on mtrr_found @
+expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
+@@
+
+-mtrr_del(index, base, size);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_zero_arg depends on mtrr_found @
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, 0, 0);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_fb_info depends on mtrr_found @
+struct fb_info *info;
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
++arch_phys_wc_del(index);
+
+@ ioremap_replace_nocache depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap_nocache(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+@ ioremap_replace_default depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Antonino Daplas <adaplas@gmail.com>
 Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Simon Horman <horms@verge.net.au>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
+Cc: benh@kernel.crashing.org
+Cc: bhelgaas@google.com
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: mst@redhat.com
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: toshi.kani@hp.com
+Link: http://lkml.kernel.org/r/1435195342-26879-9-git-send-email-mcgrof@do-not-panic.com
+Signed-off-by: Borislav Petkov <bp@suse.de>
 ---
-v3->v4
+ drivers/video/fbdev/s3fb.c | 35 ++++++-----------------------------
+ 1 file changed, 6 insertions(+), 29 deletions(-)
 
-- Added conversion of designware and Xilinx PCI host controllers to
-  scan through pci_scan_root_bus_msi()
-
-v3: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/360020.html
-
-- Added pci_scan_root_bus_msi() in core PCI code and converted ARM bios32 to
-  use it
-
-v2: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359183.html
-
-v1->v2
-
-- Added patch to replace panic statements with WARN
-- Removed unused pcibios_msi_controller() and pci_msi_controller() from
-  core code
-- Dropped RFT status
-
-v1: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/356028.html
-
- arch/arm/include/asm/mach/pci.h    |  5 -----
- arch/arm/kernel/bios32.c           | 17 +++--------------
- drivers/pci/host/pcie-designware.c |  6 +++---
- drivers/pci/host/pcie-xilinx.c     |  5 ++---
- drivers/pci/msi.c                  | 17 +----------------
- drivers/pci/probe.c                | 15 +++++++++++++--
- include/linux/pci.h                |  4 ++++
- 7 files changed, 26 insertions(+), 43 deletions(-)
-
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 28b9bb3..8857d28 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -19,9 +19,7 @@ struct pci_bus;
- struct device;
+diff --git a/drivers/video/fbdev/s3fb.c b/drivers/video/fbdev/s3fb.c
+index f0ae61a37f04..13b109073c63 100644
+--- a/drivers/video/fbdev/s3fb.c
++++ b/drivers/video/fbdev/s3fb.c
+@@ -28,13 +28,9 @@
+ #include <linux/i2c.h>
+ #include <linux/i2c-algo-bit.h>
  
- struct hw_pci {
--#ifdef CONFIG_PCI_MSI
- 	struct msi_controller *msi_ctrl;
--#endif
- 	struct pci_ops	*ops;
- 	int		nr_controllers;
- 	void		**private_data;
-@@ -42,9 +40,6 @@ struct hw_pci {
-  * Per-controller structure
-  */
- struct pci_sys_data {
--#ifdef CONFIG_PCI_MSI
--	struct msi_controller *msi_ctrl;
--#endif
- 	struct list_head node;
- 	int		busnr;		/* primary bus number			*/
- 	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index a5c782c..1a20076 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -18,15 +18,6 @@
- 
- static int debug_pci;
- 
--#ifdef CONFIG_PCI_MSI
--struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
--{
--	struct pci_sys_data *sysdata = dev->bus->sysdata;
--
--	return sysdata->msi_ctrl;
--}
+-#ifdef CONFIG_MTRR
+-#include <asm/mtrr.h>
 -#endif
 -
- /*
-  * We can't use pci_get_device() here since we are
-  * called from interrupt context.
-@@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 		if (WARN(!sys, "PCI: unable to allocate sys data!"))
- 			break;
+ struct s3fb_info {
+ 	int chip, rev, mclk_freq;
+-	int mtrr_reg;
++	int wc_cookie;
+ 	struct vgastate state;
+ 	struct mutex open_lock;
+ 	unsigned int ref_count;
+@@ -154,11 +150,7 @@ static const struct svga_timing_regs s3_timing_regs     = {
  
--#ifdef CONFIG_PCI_MSI
--		sys->msi_ctrl = hw->msi_ctrl;
+ 
+ static char *mode_option;
+-
+-#ifdef CONFIG_MTRR
+ static int mtrr = 1;
 -#endif
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
-@@ -486,8 +474,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 			if (hw->scan)
- 				sys->bus = hw->scan(nr, sys);
- 			else
--				sys->bus = pci_scan_root_bus(parent, sys->busnr,
--						hw->ops, sys, &sys->resources);
-+				sys->bus = pci_scan_root_bus_msi(parent,
-+					sys->busnr, hw->ops, sys,
-+					&sys->resources, hw->msi_ctrl);
- 
- 			if (WARN(!sys->bus, "PCI: unable to scan bus!")) {
- 				kfree(sys);
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be..bd0aeec 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -526,7 +526,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- #ifdef CONFIG_PCI_MSI
- 	dw_pcie_msi_chip.dev = pp->dev;
--	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
- #endif
- 
- 	dw_pci.nr_controllers = 1;
-@@ -708,8 +707,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	struct pcie_port *pp = sys_to_pcie(sys);
- 
- 	pp->root_bus_nr = sys->busnr;
--	bus = pci_scan_root_bus(pp->dev, sys->busnr,
--				  &dw_pcie_ops, sys, &sys->resources);
-+	bus = pci_scan_root_bus_msi(pp->dev, sys->busnr, &dw_pcie_ops, sys,
-+				    &sys->resources, &dw_pcie_msi_chip);
-+
- 	if (!bus)
- 		return NULL;
- 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index f1a06a0..526807d 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -647,8 +647,8 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	struct pci_bus *bus;
- 
- 	port->root_busno = sys->busnr;
--	bus = pci_scan_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
--				sys, &sys->resources);
-+	bus = pci_scan_root_bus_msi(port->dev, sys->busnr, &xilinx_pcie_ops,
-+				sys, &sys->resources, &xilinx_pcie_msi_chip);
- 
- 	return bus;
- }
-@@ -847,7 +847,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 
- #ifdef CONFIG_PCI_MSI
- 	xilinx_pcie_msi_chip.dev = port->dev;
--	hw.msi_ctrl = &xilinx_pcie_msi_chip;
- #endif
- 	pci_common_init_dev(dev, &hw);
- 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index f66be86..0d20142 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -77,24 +77,9 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
- 
- /* Arch hooks */
- 
--struct msi_controller * __weak pcibios_msi_controller(struct pci_dev *dev)
--{
--	return NULL;
--}
 -
--static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
--{
--	struct msi_controller *msi_ctrl = dev->bus->msi;
+ static int fasttext = 1;
+ 
+ 
+@@ -170,11 +162,8 @@ module_param(mode_option, charp, 0444);
+ MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
+ module_param_named(mode, mode_option, charp, 0444);
+ MODULE_PARM_DESC(mode, "Default video mode ('640x480-8@60', etc) (deprecated)");
 -
--	if (msi_ctrl)
--		return msi_ctrl;
+-#ifdef CONFIG_MTRR
+ module_param(mtrr, int, 0444);
+ MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
+-#endif
+ 
+ module_param(fasttext, int, 0644);
+ MODULE_PARM_DESC(fasttext, "Enable S3 fast text mode (1=enable, 0=disable, default=1)");
+@@ -1168,7 +1157,7 @@ static int s3_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	info->fix.smem_len = pci_resource_len(dev, 0);
+ 
+ 	/* Map physical IO memory address into kernel space */
+-	info->screen_base = pci_iomap(dev, 0, 0);
++	info->screen_base = pci_iomap_wc(dev, 0, 0);
+ 	if (! info->screen_base) {
+ 		rc = -ENOMEM;
+ 		dev_err(info->device, "iomap for framebuffer failed\n");
+@@ -1365,12 +1354,9 @@ static int s3_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	/* Record a reference to the driver data */
+ 	pci_set_drvdata(dev, info);
+ 
+-#ifdef CONFIG_MTRR
+-	if (mtrr) {
+-		par->mtrr_reg = -1;
+-		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
+-	}
+-#endif
++	if (mtrr)
++		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
++						  info->fix.smem_len);
+ 
+ 	return 0;
+ 
+@@ -1405,14 +1391,7 @@ static void s3_pci_remove(struct pci_dev *dev)
+ 
+ 	if (info) {
+ 		par = info->par;
 -
--	return pcibios_msi_controller(dev);
--}
+-#ifdef CONFIG_MTRR
+-		if (par->mtrr_reg >= 0) {
+-			mtrr_del(par->mtrr_reg, 0, 0);
+-			par->mtrr_reg = -1;
+-		}
+-#endif
 -
- int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
- {
--	struct msi_controller *chip = pci_msi_controller(dev);
-+	struct msi_controller *chip = dev->bus->msi;
- 	int err;
++		arch_phys_wc_del(par->wc_cookie);
+ 		unregister_framebuffer(info);
+ 		fb_dealloc_cmap(&info->cmap);
  
- 	if (!chip || !chip->setup_irq)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..4915c6d 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2096,8 +2096,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- 			res, ret ? "can not be" : "is");
- }
+@@ -1551,10 +1530,8 @@ static int  __init s3fb_setup(char *options)
  
--struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
-+		struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources, struct msi_controller *msi)
- {
- 	struct resource_entry *window;
- 	bool found = false;
-@@ -2114,6 +2115,8 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 	if (!b)
- 		return NULL;
- 
-+	b->msi = msi;
-+
- 	if (!found) {
- 		dev_info(&b->dev,
- 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
-@@ -2128,6 +2131,14 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 
- 	return b;
- }
-+EXPORT_SYMBOL(pci_scan_root_bus_msi);
-+
-+struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-+		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+{
-+	return pci_scan_root_bus_msi(parent, bus, ops, sysdata, resources,
-+				     NULL);
-+}
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a..4d4f9d2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -787,6 +787,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
- int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
- void pci_bus_release_busn_res(struct pci_bus *b);
-+struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
-+				      struct pci_ops *ops, void *sysdata,
-+				      struct list_head *resources,
-+				      struct msi_controller *msi);
- struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
+ 		if (!*opt)
+ 			continue;
+-#ifdef CONFIG_MTRR
+ 		else if (!strncmp(opt, "mtrr:", 5))
+ 			mtrr = simple_strtoul(opt + 5, NULL, 0);
+-#endif
+ 		else if (!strncmp(opt, "fasttext:", 9))
+ 			fasttext = simple_strtoul(opt + 9, NULL, 0);
+ 		else
 -- 
-2.2.1
+2.3.2.209.gd67f9d5.dirty
 
