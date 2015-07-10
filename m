@@ -1,338 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36974 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932800AbbGGRSi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jul 2015 13:18:38 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v3 09/15] irqchip: gicv3-its: Split PCI/MSI code from the core ITS driver
-Date: Tue,  7 Jul 2015 18:17:59 +0100
-Message-Id: <1436289485-28230-10-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:22842 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752487AbbGJInM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 04:43:12 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <gabriele.paoloni@huawei.com>, <arnd@arndb.de>,
+	<lorenzo.pieralisi@arm.com>, <wangzhou1@hisilicon.com>,
+	<bhelgaas@google.com>, <robh+dt@kernel.org>, <james.morse@arm.com>,
+	<Liviu.Dudau@arm.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: [PATCH] Store PCIe controllers address in struct of_pci_range
+Date: Fri, 10 Jul 2015 16:48:19 +0800
+Message-ID: <1436518099-98633-1-git-send-email-gabriele.paoloni@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is becoming obvious that having the PCI/MSI code in the same
-file as the the core ITS code is giving people implementing non-PCI
-MSI support the wrong kind of idea.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-In order to make things a bit clearer, let's move the PCI/MSI code
-out to its own file. Hopefully it will make it clear that whoever
-thinks of hooking into the core ITS better have a very strong point.
+This patch is needed port PCIe designware to new DT parsing API
+As discussed in
+http://lists.infradead.org/pipermail/linux-arm-kernel/2015-January/317743.html
+in designware we have a problem as the PCI addresses in the PCIe controller
+address space are required in order to perform correct HW operation.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+In order to solve this problem commit
+f4c55c5a3f7f68c06cc559ed7af8b2d017cbb0a7 "PCI: designware:
+Program ATU with untranslated address" added code to read the PCIe
+controller start address directly from the DT ranges.
+
+In the new DT parsing API of_pci_get_host_bridge_resources() hides the
+DT parser from the host controller drivers, so it is not possible
+for drivers to parse values directly from the DT.
+
+In http://www.spinics.net/lists/linux-pci/msg42540.html we already tried
+to use the new DT parsing API but there is a bug (obviously) in setting
+the <*>_mod_base addresses
+Applying this patch we can easily set "<*>_mod_base = win->__res.start"
+
+This patch adds a new field in "struct of_pci_range" to store the
+pci controller start address; it fills the field in of_pci_range_parser_one();
+in of_pci_get_host_bridge_resources() it retrieve the resource entry
+after it is created and added to the resource list and uses
+entry->__res.start to store the pci controller address
+
+the patch is based on 4.2-rc1
+
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 ---
- drivers/irqchip/Makefile                 |   2 +-
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 105 +++++++++++++++++++++++++++++++
- drivers/irqchip/irq-gic-v3-its.c         |  93 ++++-----------------------
- include/linux/irqchip/arm-gic-v3.h       |   6 ++
- 4 files changed, 123 insertions(+), 83 deletions(-)
- create mode 100644 drivers/irqchip/irq-gic-v3-its-pci-msi.c
+ drivers/of/address.c               | 1 +
+ drivers/of/of_pci.c                | 4 ++++
+ drivers/pci/host/pcie-designware.c | 9 +++------
+ include/linux/of_address.h         | 1 +
+ 4 files changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/irqchip/Makefile b/drivers/irqchip/Makefile
-index b8d4e96..0d5f2a9 100644
---- a/drivers/irqchip/Makefile
-+++ b/drivers/irqchip/Makefile
-@@ -22,7 +22,7 @@ obj-$(CONFIG_ARCH_SPEAR3XX)		+= spear-shirq.o
- obj-$(CONFIG_ARM_GIC)			+= irq-gic.o irq-gic-common.o
- obj-$(CONFIG_ARM_GIC_V2M)		+= irq-gic-v2m.o
- obj-$(CONFIG_ARM_GIC_V3)		+= irq-gic-v3.o irq-gic-common.o
--obj-$(CONFIG_ARM_GIC_V3_ITS)		+= irq-gic-v3-its.o
-+obj-$(CONFIG_ARM_GIC_V3_ITS)		+= irq-gic-v3-its.o irq-gic-v3-its-pci-msi.o
- obj-$(CONFIG_ARM_NVIC)			+= irq-nvic.o
- obj-$(CONFIG_ARM_VIC)			+= irq-vic.o
- obj-$(CONFIG_ATMEL_AIC_IRQ)		+= irq-atmel-aic-common.o irq-atmel-aic.o
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-new file mode 100644
-index 0000000..7614721
---- /dev/null
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -0,0 +1,105 @@
-+/*
-+ * Copyright (C) 2013-2015 ARM Limited, All Rights Reserved.
-+ * Author: Marc Zyngier <marc.zyngier@arm.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/msi.h>
-+#include <linux/of.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_pci.h>
-+
-+#include <linux/irqchip/arm-gic-v3.h>
-+
-+static void its_mask_msi_irq(struct irq_data *d)
-+{
-+	pci_msi_mask_irq(d);
-+	irq_chip_mask_parent(d);
-+}
-+
-+static void its_unmask_msi_irq(struct irq_data *d)
-+{
-+	pci_msi_unmask_irq(d);
-+	irq_chip_unmask_parent(d);
-+}
-+
-+static struct irq_chip its_msi_irq_chip = {
-+	.name			= "ITS-MSI",
-+	.irq_unmask		= its_unmask_msi_irq,
-+	.irq_mask		= its_mask_msi_irq,
-+	.irq_eoi		= irq_chip_eoi_parent,
-+	.irq_write_msi_msg	= pci_msi_domain_write_msg,
-+};
-+
-+struct its_pci_alias {
-+	struct pci_dev	*pdev;
-+	u32		dev_id;
-+	u32		count;
-+};
-+
-+static int its_pci_msi_vec_count(struct pci_dev *pdev)
-+{
-+	int msi, msix;
-+
-+	msi = max(pci_msi_vec_count(pdev), 0);
-+	msix = max(pci_msix_vec_count(pdev), 0);
-+
-+	return max(msi, msix);
-+}
-+
-+static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
-+{
-+	struct its_pci_alias *dev_alias = data;
-+
-+	dev_alias->dev_id = alias;
-+	if (pdev != dev_alias->pdev)
-+		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
-+
-+	return 0;
-+}
-+
-+static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
-+			       int nvec, msi_alloc_info_t *info)
-+{
-+	struct pci_dev *pdev;
-+	struct its_pci_alias dev_alias;
-+
-+	if (!dev_is_pci(dev))
-+		return -EINVAL;
-+
-+	pdev = to_pci_dev(dev);
-+	dev_alias.pdev = pdev;
-+	dev_alias.count = nvec;
-+
-+	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
-+
-+	return its_msi_prepare(domain, dev_alias.dev_id, dev_alias.count, info);
-+}
-+
-+static struct msi_domain_ops its_pci_msi_ops = {
-+	.msi_prepare	= its_pci_msi_prepare,
-+};
-+
-+static struct msi_domain_info its_pci_msi_domain_info = {
-+	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-+		   MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX),
-+	.ops	= &its_pci_msi_ops,
-+	.chip	= &its_msi_irq_chip,
-+};
-+
-+struct irq_domain *its_pci_msi_alloc_domain(struct device_node *np,
-+					    struct irq_domain *parent)
-+{
-+	return pci_msi_create_irq_domain(np, &its_pci_msi_domain_info, parent);
-+}
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 1b7e155..7c01fe4 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -611,26 +611,6 @@ static struct irq_chip its_irq_chip = {
- 	.irq_compose_msi_msg	= its_irq_compose_msi_msg,
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 8bfda6a..52f9321 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -265,6 +265,7 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
+ 	range->pci_addr = of_read_number(parser->range + 1, ns);
+ 	range->cpu_addr = of_translate_address(parser->node,
+ 				parser->range + na);
++	range->pci_ctrl_addr = of_read_number(parser->range + na, ns);
+ 	range->size = of_read_number(parser->range + parser->pna + na, ns);
+ 
+ 	parser->range += parser->np;
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 5751dc5..2ccc749 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -198,6 +198,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 
+ 	pr_debug("Parsing ranges property...\n");
+ 	for_each_of_pci_range(&parser, &range) {
++		struct resource_entry *entry;
+ 		/* Read next ranges element */
+ 		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
+ 			snprintf(range_type, 4, " IO");
+@@ -240,6 +241,9 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 		}
+ 
+ 		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
++		entry = list_last_entry(resources, struct resource_entry, node);
++		/*we are using __res for storing the PCI controller address*/
++		entry->__res.start = range.pci_ctrl_addr;
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 69486be..106dae6 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -416,8 +416,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->io_base = range.cpu_addr;
+ 
+ 			/* Find the untranslated IO space address */
+-			pp->io_mod_base = of_read_number(parser.range -
+-							 parser.np + na, ns);
++			pp->io_mod_base = range.pci_ctrl_addr;
+ 		}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+@@ -426,8 +425,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->mem_bus_addr = range.pci_addr;
+ 
+ 			/* Find the untranslated MEM space address */
+-			pp->mem_mod_base = of_read_number(parser.range -
+-							  parser.np + na, ns);
++			pp->mem_mod_base = range.pci_ctrl_addr;
+ 		}
+ 		if (restype == 0) {
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+@@ -437,8 +435,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+ 
+ 			/* Find the untranslated configuration space address */
+-			pp->cfg0_mod_base = of_read_number(parser.range -
+-							   parser.np + na, ns);
++			pp->cfg0_mod_base = range.pci_ctrl_addr;
+ 			pp->cfg1_mod_base = pp->cfg0_mod_base +
+ 					    pp->cfg0_size;
+ 		}
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index d88e81b..55bb1ae 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -16,6 +16,7 @@ struct of_pci_range {
+ 	u32 pci_space;
+ 	u64 pci_addr;
+ 	u64 cpu_addr;
++	u64 pci_ctrl_addr;
+ 	u64 size;
+ 	u32 flags;
  };
- 
--static void its_mask_msi_irq(struct irq_data *d)
--{
--	pci_msi_mask_irq(d);
--	irq_chip_mask_parent(d);
--}
--
--static void its_unmask_msi_irq(struct irq_data *d)
--{
--	pci_msi_unmask_irq(d);
--	irq_chip_unmask_parent(d);
--}
--
--static struct irq_chip its_msi_irq_chip = {
--	.name			= "ITS-MSI",
--	.irq_unmask		= its_unmask_msi_irq,
--	.irq_mask		= its_mask_msi_irq,
--	.irq_eoi		= irq_chip_eoi_parent,
--	.irq_write_msi_msg	= pci_msi_domain_write_msg,
--};
--
- /*
-  * How we allocate LPIs:
-  *
-@@ -1173,85 +1153,34 @@ static int its_alloc_device_irq(struct its_device *dev, irq_hw_number_t *hwirq)
- 	return 0;
- }
- 
--struct its_pci_alias {
--	struct pci_dev	*pdev;
--	u32		dev_id;
--	u32		count;
--};
--
--static int its_pci_msi_vec_count(struct pci_dev *pdev)
--{
--	int msi, msix;
--
--	msi = max(pci_msi_vec_count(pdev), 0);
--	msix = max(pci_msix_vec_count(pdev), 0);
--
--	return max(msi, msix);
--}
--
--static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
-+int its_msi_prepare(struct irq_domain *domain, u32 dev_id,
-+		    int nvec, msi_alloc_info_t *info)
- {
--	struct its_pci_alias *dev_alias = data;
--
--	dev_alias->dev_id = alias;
--	if (pdev != dev_alias->pdev)
--		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
--
--	return 0;
--}
--
--static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
--			   int nvec, msi_alloc_info_t *info)
--{
--	struct pci_dev *pdev;
- 	struct its_node *its;
- 	struct its_device *its_dev;
--	struct its_pci_alias dev_alias;
--
--	if (!dev_is_pci(dev))
--		return -EINVAL;
--
--	pdev = to_pci_dev(dev);
--	dev_alias.pdev = pdev;
--	dev_alias.count = nvec;
- 
--	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
- 	its = domain->parent->host_data;
--
--	its_dev = its_find_device(its, dev_alias.dev_id);
-+	its_dev = its_find_device(its, dev_id);
- 	if (its_dev) {
- 		/*
- 		 * We already have seen this ID, probably through
- 		 * another alias (PCI bridge of some sort). No need to
- 		 * create the device.
- 		 */
--		dev_dbg(dev, "Reusing ITT for devID %x\n", dev_alias.dev_id);
-+		pr_debug("Reusing ITT for devID %x\n", dev_id);
- 		goto out;
- 	}
- 
--	its_dev = its_create_device(its, dev_alias.dev_id, dev_alias.count);
-+	its_dev = its_create_device(its, dev_id, nvec);
- 	if (!its_dev)
- 		return -ENOMEM;
- 
--	dev_dbg(&pdev->dev, "ITT %d entries, %d bits\n",
--		dev_alias.count, ilog2(dev_alias.count));
-+	pr_debug("ITT %d entries, %d bits\n", nvec, ilog2(nvec));
- out:
- 	info->scratchpad[0].ptr = its_dev;
--	info->scratchpad[1].ptr = dev;
- 	return 0;
- }
- 
--static struct msi_domain_ops its_pci_msi_ops = {
--	.msi_prepare	= its_msi_prepare,
--};
--
--static struct msi_domain_info its_pci_msi_domain_info = {
--	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--		   MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX),
--	.ops	= &its_pci_msi_ops,
--	.chip	= &its_msi_irq_chip,
--};
--
- static int its_irq_gic_domain_alloc(struct irq_domain *domain,
- 				    unsigned int virq,
- 				    irq_hw_number_t hwirq)
-@@ -1287,8 +1216,9 @@ static int its_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 
- 		irq_domain_set_hwirq_and_chip(domain, virq + i,
- 					      hwirq, &its_irq_chip, its_dev);
--		dev_dbg(info->scratchpad[1].ptr, "ID:%d pID:%d vID:%d\n",
--			(int)(hwirq - its_dev->lpi_base), (int)hwirq, virq + i);
-+		pr_debug("ID:%d pID:%d vID:%d\n",
-+			 (int)(hwirq - its_dev->lpi_base),
-+			 (int)hwirq, virq + i);
- 	}
- 
- 	return 0;
-@@ -1485,9 +1415,8 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 
- 		its->domain->parent = parent;
- 
--		its->msi_chip.domain = pci_msi_create_irq_domain(node,
--								 &its_pci_msi_domain_info,
--								 its->domain);
-+		its->msi_chip.domain = its_pci_msi_alloc_domain(node,
-+								its->domain);
- 		if (!its->msi_chip.domain) {
- 			err = -ENOMEM;
- 			goto out_free_domains;
-diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
-index ffbc034..d6149ba 100644
---- a/include/linux/irqchip/arm-gic-v3.h
-+++ b/include/linux/irqchip/arm-gic-v3.h
-@@ -360,6 +360,7 @@
- #ifndef __ASSEMBLY__
- 
- #include <linux/stringify.h>
-+#include <asm/msi.h>
- 
- /*
-  * We need a value to serve as a irq-type for LPIs. Choose one that will
-@@ -388,6 +389,11 @@ struct irq_domain;
- int its_cpu_init(void);
- int its_init(struct device_node *node, struct rdists *rdists,
- 	     struct irq_domain *domain);
-+int its_msi_prepare(struct irq_domain *domain, u32 dev_id,
-+		    int nvec, msi_alloc_info_t *info);
-+
-+struct irq_domain *its_pci_msi_alloc_domain(struct device_node *node,
-+					    struct irq_domain *parent);
- 
- #endif
- 
 -- 
-2.1.4
+1.9.1
 
