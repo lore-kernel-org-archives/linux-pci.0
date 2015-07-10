@@ -1,61 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>
-Subject: [RFC PATCH 1/1] iommu: Detach device from domain when removed from group
-Date: Tue, 28 Jul 2015 19:55:56 +0200
-Message-Id: <1438106156-51847-2-git-send-email-gerald.schaefer@de.ibm.com>
-In-Reply-To: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
-References: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:54035 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932406AbbGJOuy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Jul 2015 10:50:54 -0400
+Message-ID: <559FDBC8.1020403@ti.com>
+Date: Fri, 10 Jul 2015 20:20:48 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+MIME-Version: 1.0
+To: Grygorii Strashko <grygorii.strashko@ti.com>,
+	<bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <nsekhar@ti.com>
+Subject: Re: [PATCH 3/3] PCI: host: pci-dra7xx: add pm support to pci dra7xx
+References: <1435921425-15121-1-git-send-email-kishon@ti.com> <1435921425-15121-4-git-send-email-kishon@ti.com> <55967A3A.7000907@ti.com>
+In-Reply-To: <55967A3A.7000907@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a call to __iommu_detach_device() to the
-iommu_group_remove_device() function, which will trigger a missing
-detach_dev callback in (at least) the following scenario:
+Hi,
 
-When a user completes the VFIO_SET_IOMMU ioctl for a vfio-pci device,
-and the corresponding device is removed thereafter (before any other
-ioctl like VFIO_GROUP_GET_DEVICE_FD), then the detach_dev callback of
-the underlying IOMMU API is never called.
+On Friday 03 July 2015 05:34 PM, Grygorii Strashko wrote:
+> Hi Kishon,
+> 
+> On 07/03/2015 02:03 PM, Kishon Vijay Abraham I wrote:
+>> Add PM support to pci-dra7xx so that PCI clocks can be disabled
+>> during suspend and enabled back during resume without affecting
+>> PCI functionality.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>   drivers/pci/host/pci-dra7xx.c |   74 +++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 74 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+>> index d8b6d66..1f5c039 100644
+>> --- a/drivers/pci/host/pci-dra7xx.c
+>> +++ b/drivers/pci/host/pci-dra7xx.c
+>> @@ -433,6 +433,79 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
+>>   	return 0;
+>>   }
+>>
+>> +#ifdef CONFIG_PM_SLEEP
+> 
+> [...]
+> 
+>> +
+>> +static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
+>> +	.suspend_noirq = dra7xx_pcie_suspend_noirq,
+>> +	.suspend = dra7xx_pcie_suspend,
+>> +	.resume_noirq = dra7xx_pcie_resume_noirq,
+>> +	.resume = dra7xx_pcie_resume,
+> 
+> Could you use here SET_SYSTEM_SLEEP_PM_OPS()
+> and SET_NOIRQ_SYSTEM_SLEEP_PM_OPS() macro, pls?
 
-This also fixes an asymmetry with iommu_group_add_device() and
-iommu_group_remove_device(), where the former did an "attach_dev" but
-the latter did no "detach_dev".
+sure!
 
-Signed-off-by: Gerald Schaefer <gerald.schaefer@de.ibm.com>
----
- drivers/iommu/iommu.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index f286090..82ac8b3 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -447,6 +447,9 @@ rename:
- }
- EXPORT_SYMBOL_GPL(iommu_group_add_device);
- 
-+static void __iommu_detach_device(struct iommu_domain *domain,
-+				  struct device *dev);
-+
- /**
-  * iommu_group_remove_device - remove a device from it's current group
-  * @dev: device to be removed
-@@ -466,6 +469,8 @@ void iommu_group_remove_device(struct device *dev)
- 				     IOMMU_GROUP_NOTIFY_DEL_DEVICE, dev);
- 
- 	mutex_lock(&group->mutex);
-+	if (group->domain)
-+		__iommu_detach_device(group->domain, dev);
- 	list_for_each_entry(tmp_device, &group->devices, list) {
- 		if (tmp_device->dev == dev) {
- 			device = tmp_device;
--- 
-2.3.8
-
+Thanks
+Kishon
