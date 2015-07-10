@@ -1,72 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:35408 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754883AbbGYIZK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 Jul 2015 04:25:10 -0400
-Received: by pabkd10 with SMTP id kd10so25564481pab.2
-        for <linux-pci@vger.kernel.org>; Sat, 25 Jul 2015 01:25:09 -0700 (PDT)
-Message-ID: <55B347DC.2090104@linaro.org>
-Date: Sat, 25 Jul 2015 16:25:00 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from foss.arm.com ([217.140.101.70]:50998 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932214AbbGJNeZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Jul 2015 09:34:25 -0400
+Date: Fri, 10 Jul 2015 14:34:58 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v5 07/19] PCI/MSI: Let pci_msi_get_domain use struct device's
- msi_domain
-References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com> <1437643598-19795-8-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1437643598-19795-8-git-send-email-marc.zyngier@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Jason Cooper <jason@lakedaemon.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>
+Subject: Re: [PATCH v3 00/15] Introducing per-device MSI domain
+Message-ID: <20150710133458.GC11270@red-moon>
+References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+ <20150709135809.GA5223@red-moon>
+ <559E8699.4010007@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <559E8699.4010007@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/23/2015 05:26 PM, Marc Zyngier wrote:
-> Now that we can easily find which MSI domain a PCI device is
-> using, use dev_get_msi_domain as a way to retrieve the information.
->
-> The original code is still used as a fallback.
->
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->   drivers/pci/msi.c | 14 ++++++++------
->   1 file changed, 8 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index ef4ec6e..da3c607 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -39,14 +39,16 @@ struct irq_domain * __weak arch_get_pci_msi_domain(struct pci_dev *dev)
->
->   static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
->   {
-> -	struct irq_domain *domain = NULL;
-> +	struct irq_domain *domain;
-> +
-> +	domain = dev_get_msi_domain(&dev->dev);
-> +	if (domain)
-> +		return domain;
->
-> -	if (dev->bus->msi)
-> -		domain = dev->bus->msi->domain;
-> -	if (!domain)
-> -		domain = arch_get_pci_msi_domain(dev);
-> +	if (dev->bus->msi && (domain = dev->bus->msi->domain))
-> +		return domain;
->
-> -	return domain;
-> +	return arch_get_pci_msi_domain(dev);
->   }
->
->   static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+On Thu, Jul 09, 2015 at 03:35:05PM +0100, Marc Zyngier wrote:
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+[...]
 
-Thanks
-Hanjun
+> > BTW, is there a reason why _all_ arm host bridges rely on
+> > pcibios_msi_controller (so pci_sys_data) instead of initializing
+> > the struct pci_bus.msi pointer to carry out the MSI controller look-up ?
+> 
+> Probably an ordering issue - the bus may not be there yet. But ensuring
+> that the MSI domain is created early (before the bus is scanned) should
+> solve that problem nicely enough.
+
+Yes, I think the only reason is that, as sysdata, the msi controller
+pointer is propagated (in pci_alloc_child_bus()), with a tiny difference:
+sysdata can be passed to pci_scan_root_bus(), msi controller pointer
+can't (explicitly) at present.
+
+Since most of the ARM PCI host controllers have been converted to:
+
+- pci_create_root_bus()
+
+-> here we can init bus msi controller pointer
+
+- pci_scan_child_bus()
+
+we could get rid of pcibios_msi_controller on arm _now_ by just initializing
+the msi controller pointer in the struct pci_bus before
+pci_scan_child_bus() is called, unless I am missing something.
+
+I converted pcie-designware.c to stacked domains (and pci-keystone that
+relies on it, with its own quirks of course), I might take the step
+above as an intermediate step to have a common arm/arm64 generic host
+controller asap (ie for that getting rid of pcibios_msi_controller is
+mandatory, which requires converting all ARM host controllers to stacked
+domains, or taking the intermediate step above).
+
+Thanks,
+Lorenzo
