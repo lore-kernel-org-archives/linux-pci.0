@@ -1,137 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:9360 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752495AbbGVCBp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 22:01:45 -0400
-Message-ID: <55AEF93E.9040508@hisilicon.com>
-Date: Wed, 22 Jul 2015 10:00:30 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mail-yk0-f177.google.com ([209.85.160.177]:32961 "EHLO
+	mail-yk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933001AbbGJT4V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 15:56:21 -0400
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>, <linux-pci@vger.kernel.org>,
+In-Reply-To: <1436518099-98633-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1436518099-98633-1-git-send-email-gabriele.paoloni@huawei.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 10 Jul 2015 14:56:01 -0500
+Message-ID: <CAL_JsqJA9WEWK+ywv7ou+88U3cQ7z6GHDTDjxOxRC9X4_K88FQ@mail.gmail.com>
+Subject: Re: [PATCH] Store PCIe controllers address in struct of_pci_range
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	wangzhou1@hisilicon.com, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>, james.morse@arm.com,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<liguozhu@hisilicon.com>
-Subject: Re: [PATCH v4 1/5] ARM/PCI: remove align_resource in pci_sys_data
-References: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com> <1437461323-3531-2-git-send-email-wangzhou1@hisilicon.com> <20150721224406.GM21967@google.com>
-In-Reply-To: <20150721224406.GM21967@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	yuanzhichang@hisilicon.com, zhudacai@hisilicon.com,
+	zhangjukuo@huawei.com, qiuzhenfa@hisilicon.com,
+	liguozhu@hisilicon.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/7/22 6:44, Bjorn Helgaas wrote:
-> Hi Zhou & Gabriele,
-> 
-> On Tue, Jul 21, 2015 at 02:48:39PM +0800, Zhou Wang wrote:
->> This patch is needed in order to unify the PCIe designware framework for ARM and
->> ARM64 architectures. In the PCIe designware unification process we are calling
->> pci_create_root_bus() passing a "sysdata" parameter that is the same for both
->> ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
->> cause a problem with the function pcibios_align_resource(); in fact this will
->> cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
->> "struct pcie_port*" pointer.
->>
->> This patch solves the issue by removing "align_resource" from "pci_sys_data"
->> struct and defining a static global function pointer in "bios32.c"
->>
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni at huawei.com>
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> 
-> Can you fix up Gabriele's email address above (currently contains " at ")
-> and verify that this sign-off chain is accurate per section 11 of
-> Documentation/SubmittingPatches?  The above suggests to me that Gabriele
-> originally wrote this patch and Zhou is passing it along.  That might well
-> be true; I haven't followed the development, so I'm just double-checking.
+On Fri, Jul 10, 2015 at 3:48 AM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
 >
+> This patch is needed port PCIe designware to new DT parsing API
+> As discussed in
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-January/317743.html
+> in designware we have a problem as the PCI addresses in the PCIe controller
+> address space are required in order to perform correct HW operation.
+>
+> In order to solve this problem commit
+> f4c55c5a3f7f68c06cc559ed7af8b2d017cbb0a7 "PCI: designware:
 
-Hi Bjorn,
+Please abbreviate hashs to 12 characters.
 
-Sorry about above mistake. Will change it in next version.
+> Program ATU with untranslated address" added code to read the PCIe
+> controller start address directly from the DT ranges.
+>
+> In the new DT parsing API of_pci_get_host_bridge_resources() hides the
+> DT parser from the host controller drivers, so it is not possible
+> for drivers to parse values directly from the DT.
+>
+> In http://www.spinics.net/lists/linux-pci/msg42540.html we already tried
+> to use the new DT parsing API but there is a bug (obviously) in setting
+> the <*>_mod_base addresses
+> Applying this patch we can easily set "<*>_mod_base = win->__res.start"
+>
+> This patch adds a new field in "struct of_pci_range" to store the
+> pci controller start address; it fills the field in of_pci_range_parser_one();
+> in of_pci_get_host_bridge_resources() it retrieve the resource entry
+> after it is created and added to the resource list and uses
+> entry->__res.start to store the pci controller address
+>
+> the patch is based on 4.2-rc1
+>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> ---
+>  drivers/of/address.c               | 1 +
+>  drivers/of/of_pci.c                | 4 ++++
+>  drivers/pci/host/pcie-designware.c | 9 +++------
+>  include/linux/of_address.h         | 1 +
+>  4 files changed, 9 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 8bfda6a..52f9321 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -265,6 +265,7 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
+>         range->pci_addr = of_read_number(parser->range + 1, ns);
+>         range->cpu_addr = of_translate_address(parser->node,
+>                                 parser->range + na);
+> +       range->pci_ctrl_addr = of_read_number(parser->range + na, ns);
 
-Thanks for your reminding,
-Zhou
+This is wrong as the correct size to read is not "ns", but the parent
+bus #size-cells value.
 
->> ---
->>  arch/arm/include/asm/mach/pci.h |  5 -----
->>  arch/arm/kernel/bios32.c        | 12 ++++++++----
->>  2 files changed, 8 insertions(+), 9 deletions(-)
->>
->> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
->> index 28b9bb3..8a4e4de 100644
->> --- a/arch/arm/include/asm/mach/pci.h
->> +++ b/arch/arm/include/asm/mach/pci.h
->> @@ -58,11 +58,6 @@ struct pci_sys_data {
->>  					/* IRQ mapping				*/
->>  	int		(*map_irq)(const struct pci_dev *, u8, u8);
->>  					/* Resource alignement requirements	*/
->> -	resource_size_t (*align_resource)(struct pci_dev *dev,
->> -					  const struct resource *res,
->> -					  resource_size_t start,
->> -					  resource_size_t size,
->> -					  resource_size_t align);
->>  	void		*private_data;	/* platform controller private data	*/
->>  };
->>  
->> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
->> index fcbbbb1..4cdc64d 100644
->> --- a/arch/arm/kernel/bios32.c
->> +++ b/arch/arm/kernel/bios32.c
->> @@ -17,6 +17,11 @@
->>  #include <asm/mach/pci.h>
->>  
->>  static int debug_pci;
->> +static resource_size_t (*align_resource)(struct pci_dev *dev,
->> +		  const struct resource *res,
->> +		  resource_size_t start,
->> +		  resource_size_t size,
->> +		  resource_size_t align) = NULL;
->>  
->>  #ifdef CONFIG_PCI_MSI
->>  struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
->> @@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->>  		sys->busnr   = busnr;
->>  		sys->swizzle = hw->swizzle;
->>  		sys->map_irq = hw->map_irq;
->> -		sys->align_resource = hw->align_resource;
->> +		align_resource = hw->align_resource;
->>  		INIT_LIST_HEAD(&sys->resources);
->>  
->>  		if (hw->private_data)
->> @@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->>  				resource_size_t size, resource_size_t align)
->>  {
->>  	struct pci_dev *dev = data;
->> -	struct pci_sys_data *sys = dev->sysdata;
->>  	resource_size_t start = res->start;
->>  
->>  	if (res->flags & IORESOURCE_IO && start & 0x300)
->> @@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->>  
->>  	start = (start + align - 1) & ~(align - 1);
->>  
->> -	if (sys->align_resource)
->> -		return sys->align_resource(dev, res, start, size, align);
->> +	if (align_resource)
->> +		return align_resource(dev, res, start, size, align);
->>  
->>  	return start;
->>  }
->> -- 
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+I think "bus_addr" would be a better name. It is not the PCI
+controller's address (i.e. what is in reg prop). No "pci" because it
+has nothing to do with PCI bus addresses.
 
+In general, this seems fragile as the dt address ranges/translation
+may not align with the h/w ranges. For example, what if you have 2
+levels of translations and you happen to need it translated with just
+1 level of translation. That said, I don't really have a better
+suggestion and I guess we can deal with that case if needed later.
 
+>         range->size = of_read_number(parser->range + parser->pna + na, ns);
+>
+>         parser->range += parser->np;
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 5751dc5..2ccc749 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -198,6 +198,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>
+>         pr_debug("Parsing ranges property...\n");
+>         for_each_of_pci_range(&parser, &range) {
+> +               struct resource_entry *entry;
+>                 /* Read next ranges element */
+>                 if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
+>                         snprintf(range_type, 4, " IO");
+> @@ -240,6 +241,9 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>                 }
+>
+>                 pci_add_resource_offset(resources, res, res->start - range.pci_addr);
+> +               entry = list_last_entry(resources, struct resource_entry, node);
+> +               /*we are using __res for storing the PCI controller address*/
+> +               entry->__res.start = range.pci_ctrl_addr;
+
+You will use this in a follow-up patch? I'd like to see this just
+split into core changes and DW changes. This looks like you are making
+intermediate DW changes which will be removed in subsequent patches.
+
+Rob
