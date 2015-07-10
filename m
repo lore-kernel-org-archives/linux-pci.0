@@ -1,35 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50913 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750931AbbG0M5v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Jul 2015 08:57:51 -0400
-Date: Mon, 27 Jul 2015 14:57:43 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org,
-	Gregor Dick <gdick@solarflare.com>
-Subject: Re: [PATCH v2 10/11] PCI: Stop caching ATS Invalidate Queue Depth
-Message-ID: <20150727125743.GE27614@suse.de>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150721001511.28145.29144.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:33982 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932229AbbGJOQv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 10:16:51 -0400
+Received: by lbnk3 with SMTP id k3so93376216lbn.1
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2015 07:16:50 -0700 (PDT)
+From: Kashyap Desai <kashyap.desai@avagotech.com>
+References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
+	 <CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
+	 <robbat2-20140712T215640-831385120Z@orbis-terrarum.net>	 <20150429172832.GB7888@google.com>
+ <20150528122443.GI10210@google.com>	 <9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
+	 <20150707104426.3d7e8697@endymion.delvare>	 <a2dbe3edaba57bb78f0c3e22d6068178@mail.gmail.com>
+ <1436537115.4540.31.camel@chaos.site>
+In-Reply-To: <1436537115.4540.31.camel@chaos.site>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150721001511.28145.29144.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Fri, 10 Jul 2015 19:46:46 +0530
+Message-ID: <775bb7e5ecc09c3f042ca8e949b35e5f@mail.gmail.com>
+Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
+ output? [BKO63661]
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Robin H. Johnson" <robbat2@gentoo.org>,
+	Adam Radford <aradford@gmail.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Sumit Saxena <sumit.saxena@avagotech.com>,
+	Uday Lingala <uday.lingala@avagotech.com>,
+	"PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 20, 2015 at 07:15:11PM -0500, Bjorn Helgaas wrote:
-> Stop caching the Invalidate Queue Depth in struct pci_dev.
-> pci_ats_queue_depth() is typically called only once per device, and it
-> returns a fixed value per-device, so callers who need the value frequently
-> can cache it themselves.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/ats.c   |    9 ++++-----
->  include/linux/pci.h |    1 -
->  2 files changed, 4 insertions(+), 6 deletions(-)
+>
+> I am about to commit the patch that was successfully tested by the
+> customer on
+> SLES 12, but I'm a bit confused. The upstream patch you referred to is:
+>
+> https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?h=for-
+> next&id=6431f5d7c6025f8b007af06ea090de308f7e6881
+> [SCSI] megaraid_sas: megaraid_sas driver init fails in kdump kernel
+>
+> But the patch I used is the one you sent by e-mail on May 28th. It is
+> completely
+> different!
+>
+> So what am I supposed to do? Use the patch you sent (and that was tested
+> by
+> the customer) for SLES 11 SP3 and SLES 12? Or was it just for testing and
+> the
+> proper way of fixing the problem would be to backport the upstream commit?
 
-Reviewed-by: Joerg Roedel <jroedel@suse.de>
+You can use that patch as valid candidate for upstream submission. Some of
+the MR maintainer (Sumit Saxena) will send that patch. We are just
+organizing other patch series.
+Since SLES already ported patch without commit id, we are fine. I am just
+giving reference that patch which send via email will be send to upstream
+very soon along with other patch set.
 
+Thanks, Kashyap
+>
+> Please advise,
+> --
+> Jean Delvare
+> SUSE L3 Support
