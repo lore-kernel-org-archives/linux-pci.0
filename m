@@ -1,46 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:57976 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752141AbbG1Nyp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 09:54:45 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v4 0/3] dra7xx: Add PM support to PCIe
-Date: Tue, 28 Jul 2015 19:24:33 +0530
-Message-ID: <1438091676-21243-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <559FDB97.1090803@ti.com>
+References: <1435921425-15121-1-git-send-email-kishon@ti.com>
+	<1435921425-15121-3-git-send-email-kishon@ti.com>
+	<CAHM4w1m5gfFbKF6Up8YNQA8rK+avXuz8HZgtbj6pQAndSa_zBQ@mail.gmail.com>
+	<559FDB97.1090803@ti.com>
+Date: Fri, 10 Jul 2015 21:00:46 +0530
+Message-ID: <CAHM4w1mTCHNTAYG4c-9x9kMPjGevyngT4ixVinpuDPCwKtT0FA@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: host: pcie-designware: add support for suspend
+ and resume
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>, linux-omap@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, nsekhar@ti.com,
+	Tim Harvey <tharvey@gateworks.com>,
+	=?UTF-8?B?TWFyZWsgVmHFoXV0?= <marex@denx.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series adds PM support to pci-dra7xx so that PCI clocks can be disabled
-during suspend and enabled back during resume without affecting
-PCI functionality.
+Hi Kishon,
 
-Changes from v3:
-*) Fix compilation errors when individual patches are applied
+On Fri, Jul 10, 2015 at 8:19 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
 
-Changes from v2:
-*) Used SET_SYSTEM_SLEEP_PM_OPS and SET_NOIRQ_SYSTEM_SLEEP_PM_OPS for
-   populating PM ops.
+[...]
 
-Changes from v1:
-*) Moved resetting and setting of MSE bit to pci-dra7xx.
+>> Have you tested with a card having IO space memory as well.
+>
+> I don't have any cards with IO space memory. Do you have any suggestion for
+> cards with IO space memory?
 
-The comment to reset and set ISE is not done now since I don't have a card
-with IO space. Once I get to test that, I'll post a separate patch for
-handling that.
+Sorry, I never used it either :(
+IIRC, then Tim and Marek (in cc) had reported long back with some
+issues of IO transaction
+with SKY2 based card. They may let you know about exact card ID.
 
-Kishon Vijay Abraham I (3):
-  PCI: host: pci-dra7xx: Disable pm_runtime on get_sync failure
-  PCI: host: pci-dra7xx: add pm support to pci dra7xx
-  PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
-
- drivers/pci/host/pci-dra7xx.c |   94 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 93 insertions(+), 1 deletion(-)
-
--- 
-1.7.9.5
-
+~Pratyush
