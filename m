@@ -1,103 +1,207 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:33767 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753091AbbGQVcv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 17:32:51 -0400
-Received: by obbgp5 with SMTP id gp5so73126930obb.0
-        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 14:32:51 -0700 (PDT)
-Subject: [PATCH 8/8] PCI: Move ATS declarations to linux/pci.h so they're
- all together
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gregor Dick <gdick@solarflare.com>
-Date: Fri, 17 Jul 2015 16:32:47 -0500
-Message-ID: <20150717213247.18379.66315.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:35194 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454AbbGJWEd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 18:04:33 -0400
+From: Jordan Hargrave <jharg93@gmail.com>
+To: jdelvare@suse.de, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	jharg93@gmail.com, Jordan_Hargrave@dell.com
+Subject: [PATCH] Add support for reading SMBIOS Slot number for PCI devices
+Date: Fri, 10 Jul 2015 17:02:46 -0500
+Message-Id: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move ATS declarations to linux/pci.h so they're all in one place.
+From: Jordan Hargrave <Jordan_Hargrave@dell.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+There currently isn't an easy way to determine which PCI devices belong to
+system slots.  This patch adds support to read SMBIOS Type 9 (System Slots).
+
+Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
 ---
- include/linux/pci-ats.h |   41 -----------------------------------------
- include/linux/pci.h     |    8 ++++++++
- 2 files changed, 8 insertions(+), 41 deletions(-)
+ drivers/firmware/dmi_scan.c | 39 ++++++++++++++++++++
+ drivers/pci/pci-label.c     | 89 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/dmi.h         |  1 +
+ 3 files changed, 129 insertions(+)
 
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 5d81d47..57e0b82 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -3,47 +3,6 @@
+diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+index ac1ce4a..8f95897 100644
+--- a/drivers/firmware/dmi_scan.c
++++ b/drivers/firmware/dmi_scan.c
+@@ -356,6 +356,41 @@ static void __init dmi_save_extended_devices(const struct dmi_header *dm)
+ 	dmi_save_one_device(*d & 0x7f, dmi_string_nosave(dm, *(d - 1)));
+ }
  
- #include <linux/pci.h>
++static void __init dmi_save_dev_slot(int instance, int segment, int bus, int devfn, const char *name)
++{
++	struct dmi_dev_onboard *slot;
++	
++	slot = dmi_alloc(sizeof(*slot) + strlen(name) + 1);
++	if (!slot) {
++		printk(KERN_ERR "dmi_save_system_slot: out of memory.\n");
++		return;
++	}
++	slot->instance = instance;
++	slot->segment = segment;
++	slot->bus = bus;
++	slot->devfn = devfn;
++
++	strcpy((char *)&slot[1], name);
++	slot->dev.type = DMI_DEV_TYPE_SYSTEM_SLOT;
++	slot->dev.name = (char *)&slot[1];
++	slot->dev.device_data = slot;
++
++	list_add(&slot->dev.list, &dmi_devices);
++}
++
++
++static void __init dmi_save_system_slot(const struct dmi_header *dm)
++{
++	const char *name;
++	const u8 *d = (u8*)dm;
++	
++	if (dm->type == DMI_ENTRY_SYSTEM_SLOT && dm->length >= 0x11) {
++		name = dmi_string_nosave(dm, *(d + 0x04));
++		dmi_save_dev_slot(*(u16 *)(d + 0x09), *(u16 *)(d + 0xD), 
++				  *(d + 0xF), *(d + 0x10), name);
++	}
++}
++
+ static void __init count_mem_devices(const struct dmi_header *dm, void *v)
+ {
+ 	if (dm->type != DMI_ENTRY_MEM_DEVICE)
+@@ -437,6 +472,10 @@ static void __init dmi_decode(const struct dmi_header *dm, void *dummy)
+ 		break;
+ 	case 41:	/* Onboard Devices Extended Information */
+ 		dmi_save_extended_devices(dm);
++		break;
++	case 9:         /* System Slots */
++		dmi_save_system_slot(dm);
++		break;
+ 	}
+ }
  
--/* Address Translation Service */
--#ifdef CONFIG_PCI_ATS
--
--int pci_enable_ats(struct pci_dev *dev, int ps);
--void pci_disable_ats(struct pci_dev *dev);
--int pci_ats_queue_depth(struct pci_dev *dev);
--
--/**
-- * pci_ats_enabled - query the ATS status
-- * @dev: the PCI device
-- *
-- * Returns 1 if ATS capability is enabled, or 0 if not.
-- */
--static inline int pci_ats_enabled(struct pci_dev *dev)
--{
--	return dev->ats_cap && dev->ats_enabled;
--}
--
--#else /* CONFIG_PCI_ATS */
--
--static inline int pci_enable_ats(struct pci_dev *dev, int ps)
--{
--	return -ENODEV;
--}
--
--static inline void pci_disable_ats(struct pci_dev *dev)
--{
--}
--
--static inline int pci_ats_queue_depth(struct pci_dev *dev)
--{
--	return -ENODEV;
--}
--
--static inline int pci_ats_enabled(struct pci_dev *dev)
--{
--	return 0;
--}
--
--#endif /* CONFIG_PCI_ATS */
--
- #ifdef CONFIG_PCI_PRI
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 024b5c1..38dfb45 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -125,14 +125,103 @@ static struct attribute_group smbios_attr_group = {
+ 	.is_visible = smbios_instance_string_exist,
+ };
  
- int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1997853..744a5e9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1300,8 +1300,16 @@ void ht_destroy_irq(unsigned int irq);
- #ifdef CONFIG_PCI_ATS
- /* Address Translation Service */
- void pci_ats_init(struct pci_dev *dev);
-+int pci_enable_ats(struct pci_dev *dev, int ps);
-+void pci_disable_ats(struct pci_dev *dev);
-+int pci_ats_queue_depth(struct pci_dev *dev);
-+static inline int pci_ats_enabled(struct pci_dev *dev) { return dev->ats_enabled; }
++static int smbios_getslot(struct pci_dev *pdev)
++{
++	struct pci_dev *sdev;
++	struct dmi_dev_onboard *dslot;
++	const struct dmi_device *dmi;
++	u8 sub, sec, bus;
++
++	dmi = NULL;
++	if (pdev->is_virtfn) {
++		/* Get Physical device for SR-IOV */
++		pdev = pdev->physfn;
++	}
++	bus = pdev->bus->number;
++	while ((dmi = dmi_find_device(DMI_DEV_TYPE_SYSTEM_SLOT, NULL, dmi)) != NULL) {
++		sec = sub = -1;
++
++		dslot = dmi->device_data;
++		sdev = pci_get_domain_bus_and_slot(dslot->segment, dslot->bus, dslot->devfn);
++		if (sdev == NULL)
++			continue;
++
++		if (sdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++			pci_read_config_byte(sdev, PCI_SECONDARY_BUS, &sec);
++			pci_read_config_byte(sdev, PCI_SUBORDINATE_BUS, &sub);
++			if (bus >= sec && bus <= sub) {
++				/* device is child of bridge */
++				return dslot->instance;
++			}
++		}
++		if (pci_domain_nr(sdev->bus) == pci_domain_nr(pdev->bus) &&
++		    sdev->bus->number == pdev->bus->number &&
++		    PCI_SLOT(sdev->devfn) == PCI_SLOT(pdev->devfn)) {
++			/* Match domain:bus:dev.  If PCIE root, only match function */
++			if (PCI_FUNC(sdev->devfn) == PCI_FUNC(pdev->devfn) ||
++			    pci_pcie_type(sdev) != PCI_EXP_TYPE_ROOT_PORT) {
++				return dslot->instance;
++			}
++		}
++	}
++	return -ENODEV;
++}
++ 
++static ssize_t smbiosslot_show(struct device *dev,
++			       struct device_attribute *attr, char *buf)
++{
++ 	struct pci_dev *pdev;
++	int slot;
++ 
++ 	pdev = to_pci_dev(dev);
++	slot = smbios_getslot(pdev);
++	if (slot > 0) {
++		return scnprintf(buf, PAGE_SIZE, "%d\n", slot);
++	}
++	return 0;
++}
++
++static umode_t smbios_slot_exist(struct kobject *kobj, struct attribute *attr,
++				 int n)
++{
++	struct device *dev;
++	struct pci_dev *pdev;
++
++	dev = container_of(kobj, struct device, kobj);
++	pdev = to_pci_dev(dev);
++
++	return (smbios_getslot(pdev) > 0) ? S_IRUGO : 0;
++}
++
++static struct device_attribute smbios_attr_slot = {
++	.attr = {.name = "slot", .mode = 0444},
++	.show = smbiosslot_show,
++};
++
++static struct attribute *smbios_slot_attributes[] = {
++	&smbios_attr_slot.attr,
++	NULL,
++};
++
++static struct attribute_group smbios_slot_attr_group = {
++	.attrs = smbios_slot_attributes,
++	.is_visible = smbios_slot_exist,
++};
++
+ static int pci_create_smbiosname_file(struct pci_dev *pdev)
+ {
++	int rc;
++
++	rc = sysfs_create_group(&pdev->dev.kobj, &smbios_slot_attr_group);
++	if (rc != 0)
++		return rc;
+ 	return sysfs_create_group(&pdev->dev.kobj, &smbios_attr_group);
+ }
+ 
+ static void pci_remove_smbiosname_file(struct pci_dev *pdev)
+ {
+ 	sysfs_remove_group(&pdev->dev.kobj, &smbios_attr_group);
++	sysfs_remove_group(&pdev->dev.kobj, &smbios_slot_attr_group);
+ }
  #else
- static inline void pci_ats_init(struct pci_dev *) { }
-+static inline int pci_enable_ats(struct pci_dev *, int) { return -ENODEV; }
-+static inline void pci_disable_ats(struct pci_dev *) { }
-+static inline int pci_ats_queue_depth(struct pci_dev *) { return -ENODEV; }
-+static inline int pci_ats_enabled(struct pci_dev *dev) { return 0; }
- #endif
+ static inline int pci_create_smbiosname_file(struct pci_dev *pdev)
+diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+index 5055ac3..09f42e7 100644
+--- a/include/linux/dmi.h
++++ b/include/linux/dmi.h
+@@ -22,6 +22,7 @@ enum dmi_device_type {
+ 	DMI_DEV_TYPE_IPMI = -1,
+ 	DMI_DEV_TYPE_OEM_STRING = -2,
+ 	DMI_DEV_TYPE_DEV_ONBOARD = -3,
++	DMI_DEV_TYPE_SYSTEM_SLOT = -4,
+ };
  
- void pci_cfg_access_lock(struct pci_dev *dev);
+ enum dmi_entry_type {
+-- 
+1.8.3.1
 
