@@ -1,97 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jingoohan1@gmail.com>, <nsekhar@ti.com>
-CC: <kishon@ti.com>
-Subject: [PATCH v5 2/3] PCI: host: pci-dra7xx: add pm support to pci dra7xx
-Date: Fri, 31 Jul 2015 17:55:11 +0530
-Message-ID: <1438345512-28973-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1438345512-28973-1-git-send-email-kishon@ti.com>
-References: <1438345512-28973-1-git-send-email-kishon@ti.com>
+Message-ID: <559FC098.6080606@arm.com>
+Date: Fri, 10 Jul 2015 13:54:48 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Borislav Petkov <bp@alien8.de>
+CC: Tony Luck <tony.luck@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC Patch V1 00/12] Reorganize struct msi_desc to prepare for
+ support of generic MSI
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PM support to pci-dra7xx so that PCI clocks can be disabled
-during suspend and enabled back during resume without affecting
-PCI functionality.
+Hi Gerry,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/host/pci-dra7xx.c |   51 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+On 09/07/15 09:00, Jiang Liu wrote:
+> Recently Marc Zyngier <marc.zyngier@arm.com> has posted a patch set at
+> https://lkml.org/lkml/2015/7/7/712
+> to enhance PCI MSI code to support generic MSI.
+> 
+> This is a companion patch set to refine struct msi_desc and related data
+> structures to support generic MSI, and it would be better to combined with
+> Marc's patch set.  It's also requested by
+> Stuart Yoder <stuart.yoder@freescale.com>
+> 
+> It first introduces a helper function msi_desc_to_pci_sysdata(), and
+> convert current PCI drivers to use helper functions to access fields
+> in struct msi_desc.
+> Then it moves msi_list from struct pci_dev into struct device and
+> refines struct msi_desc.
+> At last it moves alloc_msi_entry() into kernel/irq/msi.c for reuse.
+> 
+> Currently msi_desc_to_pci_sysdata() and msi_desc_to_pci_dev() are
+> implemented as normal functions instead of inlines to avoid header file
+> inclusion issue. If inlined version is preferred for performance, we could
+> move all of first_pci_msi_entry, for_each_pci_msi_entry, msi_desc_to_pci_dev
+> and msi_desc_to_pci_sysdata from linxu/kernel/msi.h into linux/kernel/pci.h.
+> 
+> This patch set is based on v4.2-rc1 and passes 0day test suite. You
+> may access the code at:
+> https://github.com/jiangliu/linux.git msi_desc_v1
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index d8b6d66..08b999a 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -433,6 +433,56 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int dra7xx_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	int count = dra7xx->phy_count;
-+
-+	while (count--) {
-+		phy_power_off(dra7xx->phy[count]);
-+		phy_exit(dra7xx->phy[count]);
-+	}
-+
-+	return 0;
-+}
-+
-+static int dra7xx_pcie_resume_noirq(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	int phy_count = dra7xx->phy_count;
-+	int ret;
-+	int i;
-+
-+	for (i = 0; i < phy_count; i++) {
-+		ret = phy_init(dra7xx->phy[i]);
-+		if (ret < 0)
-+			goto err_phy;
-+
-+		ret = phy_power_on(dra7xx->phy[i]);
-+		if (ret < 0) {
-+			phy_exit(dra7xx->phy[i]);
-+			goto err_phy;
-+		}
-+	}
-+
-+	return 0;
-+
-+err_phy:
-+	while (--i >= 0) {
-+		phy_power_off(dra7xx->phy[i]);
-+		phy_exit(dra7xx->phy[i]);
-+	}
-+
-+	return ret;
-+}
-+#endif
-+
-+static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
-+				      dra7xx_pcie_resume_noirq)
-+};
-+
- static const struct of_device_id of_dra7xx_pcie_match[] = {
- 	{ .compatible = "ti,dra7-pcie", },
- 	{},
-@@ -444,6 +494,7 @@ static struct platform_driver dra7xx_pcie_driver = {
- 	.driver = {
- 		.name	= "dra7-pcie",
- 		.of_match_table = of_dra7xx_pcie_match,
-+		.pm	= &dra7xx_pcie_pm_ops,
- 	},
- };
- 
+Thanks a lot for doing this, it looks much helpful. I have a good look
+at it, and apart from a small nit I commented on, I'm very happy with
+this move.
+
+For the whole set:
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+
+Thanks,
+
+	M.
 -- 
-1.7.9.5
-
+Jazz is not dead. It just smells funny...
