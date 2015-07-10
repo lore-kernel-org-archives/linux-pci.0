@@ -1,104 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49568 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756212AbbGFXkt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:40:49 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 09/36] PCI: Treat ROM resource as optional during realloc
-Date: Mon,  6 Jul 2015 16:38:59 -0700
-Message-Id: <1436225966-27247-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: mingo@kernel.org
+Cc: bp@suse.de, tomi.valkeinen@ti.com, airlied@redhat.com,
+	arnd@arndb.de, dan.j.williams@intel.com, hch@lst.de,
+	luto@amacapital.net, hpa@zytor.com, tglx@linutronix.de,
+	geert@linux-m68k.org, ralf@linux-mips.org, hmh@hmh.eng.br,
+	ross.zwisler@linux.intel.com, akpm@linux-foundation.org,
+	jgross@suse.com, benh@kernel.crashing.org, mpe@ellerman.id.au,
+	tj@kernel.org, x86@kernel.org, mst@redhat.com, toshi.kani@hp.com,
+	stefan.bader@canonical.com, syrjala@sci.fi,
+	ville.syrjala@linux.intel.com, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org, linux-fbdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: [PATCH v6 0/4] atyfb: atyfb: address MTRR corner case
+Date: Thu,  9 Jul 2015 18:24:55 -0700
+Message-Id: <1436491499-3289-1-git-send-email-mcgrof@do-not-panic.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So will try to allocate them together with must-have ones, if can
-not assign them, could go with must-have one only, and just skip
-ROM resources.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
+Ingo,
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e976aa2..405eb1d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -367,18 +367,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		idx = res - &dev_res->dev->resource[0];
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
--			if (fail_head) {
--				/*
--				 * if the failed res is for ROM BAR, and it will
--				 * be enabled later, don't add it to the list
--				 */
--				if (!((idx == PCI_ROM_RESOURCE) &&
--				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
--					add_to_list(fail_head,
--						    dev_res->dev, res,
--						    0 /* don't care */,
--						    0 /* don't care */);
--			}
-+			if (fail_head)
-+				add_to_list(fail_head, dev_res->dev, res,
-+					    0 /* don't care */,
-+					    0 /* don't care */);
- 			reset_resource(res);
- 		}
- 	}
-@@ -1138,6 +1130,19 @@ out:
- 	return good_align;
- }
- 
-+static inline bool is_optional(int i)
-+{
-+
-+	if (i == PCI_ROM_RESOURCE)
-+		return true;
-+
-+#ifdef CONFIG_PCI_IOV
-+	if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
-+		return true;
-+#endif
-+
-+	return false;
-+}
- /**
-  * pbus_size_mem() - size the memory window of a given bus
-  *
-@@ -1189,10 +1194,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 			r_size = resource_size(r);
- 			align = pci_resource_alignment(dev, r);
--#ifdef CONFIG_PCI_IOV
--			/* put SRIOV requested res to the optional list */
--			if (realloc_head && i >= PCI_IOV_RESOURCES &&
--					i <= PCI_IOV_RESOURCE_END) {
-+			/* put SRIOV/ROM res to realloc list */
-+			if (realloc_head && is_optional(i)) {
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
-@@ -1202,7 +1205,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					max_add_align = align;
- 				continue;
- 			}
--#endif
-+
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
+Boris is on vacation so sending these through you. This v6 addresses one code
+comment update requested by Ville. Boris had picked up these patches on his
+tree and this series had gone through 0-day bot testing. The only issue it
+found was the lack of ioremap_uc() implementation on some architectures which
+have an IOMMU. There are two approaches to this issue, one is to go and define
+ioremap_uc() on all architectures, another is to provide a default for
+ioremap_uc() as architectures catch up. I've gone with the later approach [0],
+and so to ensure things won't build-break this patch series must also go
+through the same tree as the patch-fixes for ioremap_uc() for missing
+ioremap_uc() implementations go through. I intend on following up with
+implementing ioremap_uc() for other architectures but for that I need to get
+feedback from other architecture developers and that will take time.
+
+Tomi, the framebuffer maintainer had already expressed he was OK for this to go
+through you. The driver maintainer, Ville, has been Cc'd on all the series, but
+has only provided feedback for the comment request as I noted above. This
+series addresses the more complex work on the entire series I've been putting
+out and as such I've provided a TL;DR full review of what this series does in
+my previous v5 patch series, that can be looked at for more details if needed
+[1].
+
+This series depends on the patch which I recently posted to address compilation
+issue on architectures missing ioremap_uc() [0]. If that goes through then it
+should be safe to apply this series, otherwise we have to sit and wait until
+all architectures get ioremap_uc() properly defined.
+
+Please let me know if there are any questions.
+
+[0] http://lkml.kernel.org/r/1436488096-3165-1-git-send-email-mcgrof@do-not-panic.com
+[1] http://lkml.kernel.org/r/1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com
+
+Luis R. Rodriguez (4):
+  drivers/video/fbdev/atyfb: Carve out framebuffer length fudging into a
+    helper
+  drivers/video/fbdev/atyfb: Clarify ioremap() base and length used
+  drivers/video/fbdev/atyfb: Replace MTRR UC hole with strong UC
+  drivers/video/fbdev/atyfb: Use arch_phys_wc_add() and ioremap_wc()
+
+ drivers/video/fbdev/aty/atyfb.h      |   5 +-
+ drivers/video/fbdev/aty/atyfb_base.c | 109 ++++++++++++++++-------------------
+ 2 files changed, 51 insertions(+), 63 deletions(-)
+
 -- 
-1.8.4.5
+2.3.2.209.gd67f9d5.dirty
 
