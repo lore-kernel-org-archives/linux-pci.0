@@ -1,79 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:8726 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302AbbGVVyB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 17:54:01 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: [PATCH v4 02/12] linux/types.h: Add dma_peer_addr_t type
-Date: Wed, 22 Jul 2015 16:39:47 -0500
-Message-ID: <1437601197-6481-3-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
-References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from cantor2.suse.de ([195.135.220.15]:33640 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754602AbbGJOFT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 10 Jul 2015 10:05:19 -0400
+Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
+ output? [BKO63661]
+From: Jean Delvare <jdelvare@suse.de>
+To: Kashyap Desai <kashyap.desai@avagotech.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Robin H. Johnson" <robbat2@gentoo.org>,
+	Adam Radford <aradford@gmail.com>,
+	Neela Syam Kolli <megaraidlinux@lsi.com>,
+	linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com,
+	Matthew Garrett <matthew.garrett@nebula.com>,
+	Sumit Saxena <sumit.saxena@avagotech.com>,
+	Uday Lingala <uday.lingala@avagotech.com>,
+	"PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>
+In-Reply-To: <a2dbe3edaba57bb78f0c3e22d6068178@mail.gmail.com>
+References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
+	 <CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
+	 <robbat2-20140712T215640-831385120Z@orbis-terrarum.net>
+	 <20150429172832.GB7888@google.com> <20150528122443.GI10210@google.com>
+	 <9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
+	 <20150707104426.3d7e8697@endymion.delvare>
+	 <a2dbe3edaba57bb78f0c3e22d6068178@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 10 Jul 2015 16:05:15 +0200
+Message-ID: <1436537115.4540.31.camel@chaos.site>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms, a dma_addr_t is only 32 bits wide, but the bus addresses
-can be 64 bits wide. For peer-to-peer DMA, a device needs to use the full
-64-bit address. Therefore, introduce a DMA address type that is not
-constrained by the CPU DMA address size.
+Hi Kashyap,
 
-This is only needed for peer-to-peer DMA, so guard this definition with a
-CONFIG_HAS_DMA_P2P check.
+Le Tuesday 07 July 2015 à 14:48 +0530, Kashyap Desai a écrit :
+> > -----Original Message-----
+> > From: Jean Delvare [mailto:jdelvare@suse.de]
+> > Sent: Tuesday, July 07, 2015 2:14 PM
+> > To: Kashyap Desai
+> > Cc: Bjorn Helgaas; Robin H. Johnson; Adam Radford; Neela Syam Kolli;
+> linux-
+> > scsi@vger.kernel.org; arkadiusz.bubala@open-e.com; Matthew Garrett;
+> Sumit
+> > Saxena; Uday Lingala; PDL,MEGARAIDLINUX; linux-pci@vger.kernel.org;
+> linux-
+> > kernel@vger.kernel.org; Myron Stowe
+> > Subject: Re: megaraid_sas: "FW in FAULT state!!", how to get more debug
+> > output? [BKO63661]
+> >
+> > Hi Kashyap,
+> >
+> > On Thu, 28 May 2015 19:05:35 +0530, Kashyap Desai wrote:
+> > > Bjorn/Robin,
+> > >
+> > > Apologies for delay. Here is one quick suggestion as we have seen
+> > > similar issue (not exactly similar, but high probably to have same
+> > > issue) while controller is configured on VM as pass-through and VM
+> reboot
+> > abruptly.
+> > > In that particular issue, driver interact with FW which may  require
+> > > chip reset to bring controller to operation state.
+> > >
+> > > Relevant patch was submitted for only Older controller as it was only
+> > > seen for few MegaRaid controller. Below patch already try to do chip
+> > > reset, but only for limited controllers...I have attached one more
+> > > patch which does chip reset from driver load time for
+> > > Thunderbolt/Invader/Fury etc. (In your case you have Thunderbolt
+> > > controller, so attached patch is required.)
+> > >
+> > > http://www.spinics.net/lists/linux-scsi/msg67288.html
+> > >
+> > > Please post the result with attached patch.
+> >
+> > Good news! Customer tested your patch and said it fixed the problem :-)
+> >
+> > I am now in the process of backporting the patch to the SLES 11 SP3
+> > kernel for further testing. I'll let you know how it goes. Thank you
+> > very much for your assistance.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
----
- include/linux/types.h | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+For the record I was able to backport the patch by myself to SLES 11
+SP3, it's currently under testing by the customer.
 
-diff --git a/include/linux/types.h b/include/linux/types.h
-index 8715287..dd85173 100644
---- a/include/linux/types.h
-+++ b/include/linux/types.h
-@@ -140,13 +140,13 @@ typedef unsigned long blkcnt_t;
- #define pgoff_t unsigned long
- 
- /*
-- * A dma_addr_t can hold any valid DMA address, i.e., any address returned
-+ * A dma_addr_t can hold any valid DMA address, i.e., most addresses returned
-  * by the DMA API.
-  *
-  * If the DMA API only uses 32-bit addresses, dma_addr_t need only be 32
-  * bits wide.  Bus addresses, e.g., PCI BARs, may be wider than 32 bits,
-  * but drivers do memory-mapped I/O to ioremapped kernel virtual addresses,
-- * so they don't care about the size of the actual bus addresses.
-+ * so they don't care about the size of the actual bus addresses in most cases.
-  */
- #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
- typedef u64 dma_addr_t;
-@@ -154,6 +154,15 @@ typedef u64 dma_addr_t;
- typedef u32 dma_addr_t;
- #endif
- 
-+/*
-+ * Unlike dma_addr_t, a dma_peer_addr_t can hold any bus address for the
-+ * platform. Drivers should only need this for peer-to-peer use cases, where
-+ * the DMA target is also on the bus.
-+ */
-+#ifdef CONFIG_HAS_DMA_P2P
-+typedef u64 dma_peer_addr_t;
-+#endif
-+
- typedef unsigned __bitwise__ gfp_t;
- typedef unsigned __bitwise__ fmode_t;
- typedef unsigned __bitwise__ oom_flags_t;
+> Thanks for confirmation. Whatever patch I submitted to you, we have added
+> recently (as part of common interface approach to do chip reset at load
+> time). We will be submitting that patch to mainline soon.
+
+I am about to commit the patch that was successfully tested by the
+customer on SLES 12, but I'm a bit confused. The upstream patch you
+referred to is:
+
+https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?h=for-next&id=6431f5d7c6025f8b007af06ea090de308f7e6881
+[SCSI] megaraid_sas: megaraid_sas driver init fails in kdump kernel
+
+But the patch I used is the one you sent by e-mail on May 28th. It is
+completely different!
+
+So what am I supposed to do? Use the patch you sent (and that was tested
+by the customer) for SLES 11 SP3 and SLES 12? Or was it just for testing
+and the proper way of fixing the problem would be to backport the
+upstream commit?
+
+Please advise,
 -- 
-2.4.6
+Jean Delvare
+SUSE L3 Support
 
