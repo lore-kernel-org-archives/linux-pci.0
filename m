@@ -1,40 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f180.google.com ([209.85.160.180]:33395 "EHLO
+	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932606AbbGJUVk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 16:21:40 -0400
 MIME-Version: 1.0
-In-Reply-To: <559FDB97.1090803@ti.com>
-References: <1435921425-15121-1-git-send-email-kishon@ti.com>
-	<1435921425-15121-3-git-send-email-kishon@ti.com>
-	<CAHM4w1m5gfFbKF6Up8YNQA8rK+avXuz8HZgtbj6pQAndSa_zBQ@mail.gmail.com>
-	<559FDB97.1090803@ti.com>
-Date: Fri, 10 Jul 2015 21:00:46 +0530
-Message-ID: <CAHM4w1mTCHNTAYG4c-9x9kMPjGevyngT4ixVinpuDPCwKtT0FA@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: host: pcie-designware: add support for suspend
- and resume
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
+In-Reply-To: <1436225966-27247-30-git-send-email-yinghai@kernel.org>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org> <1436225966-27247-30-git-send-email-yinghai@kernel.org>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 10 Jul 2015 15:21:20 -0500
+Message-ID: <CAL_Jsq+P96KYuDWdYSd8-vj_FF_KL6dTW5BM5sqxQ3EmKYX1PA@mail.gmail.com>
+Subject: Re: [PATCH 29/36] of/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>, linux-omap@vger.kernel.org,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, nsekhar@ti.com,
-	Tim Harvey <tharvey@gateworks.com>,
-	=?UTF-8?B?TWFyZWsgVmHFoXV0?= <marex@denx.de>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
-
-On Fri, Jul 10, 2015 at 8:19 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-
-[...]
-
->> Have you tested with a card having IO space memory as well.
+On Mon, Jul 6, 2015 at 6:39 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> For device resource PREF bit setting under bridge 64-bit pref resource,
+> we need to make sure only set PREF for 64bit resource, so set
+> IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+> parsing.
 >
-> I don't have any cards with IO space memory. Do you have any suggestion for
-> cards with IO space memory?
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
 
-Sorry, I never used it either :(
-IIRC, then Tim and Marek (in cc) had reported long back with some
-issues of IO transaction
-with SKY2 based card. They may let you know about exact card ID.
+As the BZ says, we have several identical functions. Can we fix the
+drivers/of/address.c version and remove the Sparc versions. The only
+diff is the generic version converts from be32. I think that should be
+a nop for Sparc.
 
-~Pratyush
+Rob
+
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: devicetree@vger.kernel.org
+> ---
+>  drivers/of/address.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 8bfda6a..073125f 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -128,9 +128,11 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
+>                 flags |= IORESOURCE_IO;
+>                 break;
+>         case 0x02: /* 32 bits */
+> -       case 0x03: /* 64 bits */
+>                 flags |= IORESOURCE_MEM;
+>                 break;
+> +       case 0x03: /* 64 bits */
+> +               flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
+> +               break;
+>         }
+>         if (w & 0x40000000)
+>                 flags |= IORESOURCE_PREFETCH;
+> --
+> 1.8.4.5
+>
