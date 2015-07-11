@@ -1,153 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:48306 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751582AbbGIAun (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Jul 2015 20:50:43 -0400
-Message-ID: <559DC55E.9000805@intel.com>
-Date: Thu, 09 Jul 2015 02:50:38 +0200
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:33744 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751284AbbGKTuB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Jul 2015 15:50:01 -0400
+Received: by wgmn9 with SMTP id n9so17717553wgm.0
+        for <linux-pci@vger.kernel.org>; Sat, 11 Jul 2015 12:50:00 -0700 (PDT)
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Hounschell <markh@compro.net>
-CC: wdavis@nvidia.com, joro@8bytes.org,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	tripperda@nvidia.com, jhubbard@nvidia.com, jglisse@redhat.com,
-	konrad.wilk@oracle.com, Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com> <1431973504-5903-5-git-send-email-wdavis@nvidia.com> <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net> <20150707151517.GA14215@google.com> <559C08F3.7010103@compro.net> <20150708151132.GB14784@google.com>
-In-Reply-To: <20150708151132.GB14784@google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <C468F237-DBA2-4503-BA99-76CC1FC46999@intel.com>
+References: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
+ <051B68B4-3E77-4EB0-B9FE-8523631884A2@intel.com> <45099CC7-DDAB-41D9-AB74-5A81E2AAF64C@intel.com>
+ <CAErSpo7e-QtQQTj2yh_jG07vqU1j1YBez_9wrcrzOQs7+eDFng@mail.gmail.com>
+ <8CB0ECE7-CFE2-43CB-BA60-2E2E0A34D5D1@intel.com> <C468F237-DBA2-4503-BA99-76CC1FC46999@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 11 Jul 2015 14:49:40 -0500
+Message-ID: <CAErSpo5at=C78JbWEA6YKUNhV4vtUMjSiUKcWG0Ad7Gkg+i2VQ@mail.gmail.com>
+Subject: Re: [Intel-wired-lan] [PATCH V3 0/2] pci: Provide a flag to access
+ VPD through function 0
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/8/2015 5:11 PM, Bjorn Helgaas wrote:
-> [+cc Rafael]
->
-> On Tue, Jul 07, 2015 at 01:14:27PM -0400, Mark Hounschell wrote:
->> On 07/07/2015 11:15 AM, Bjorn Helgaas wrote:
->>> On Wed, May 20, 2015 at 08:11:17AM -0400, Mark Hounschell wrote:
->>>> Most currently available hardware doesn't allow reads but will allow
->>>> writes on PCIe peer-to-peer transfers. All current AMD chipsets are
->>>> this way. I'm pretty sure all Intel chipsets are this way also. What
->>>> happens with reads is they are just dropped with no indication of
->>>> error other than the data will not be as expected. Supposedly the
->>>> PCIe spec does not even require any peer-to-peer support. Regular
->>>> PCI there is no problem and this API could be useful. However I
->>>> doubt seriously you will find a pure PCI motherboard that has an
->>>> IOMMU.
->>>>
->>>> I don't understand the chipset manufactures reasoning for disabling
->>>> PCIe peer-to-peer reads. We would like to make PCIe versions of our
->>>> cards but their application requires  peer-to-peer reads and writes.
->>>> So we cannot develop PCIe versions of the cards.
->>> I'd like to understand this better.  Peer-to-peer between two devices
->>> below the same Root Port should work as long as ACS doesn't prevent
->>> it.  If we find an Intel or AMD IOMMU, I think we configure ACS to
->>> prevent direct peer-to-peer (see "pci_acs_enable"), but maybe it could
->>> still be done with the appropriate IOMMU support.  And if you boot
->>> with "iommu=off", we don't do that ACS configuration, so peer-to-peer
->>> should work.
->>>
->>> I suppose the problem is that peer-to-peer doesn't work between
->>> devices under different Root Ports or even devices under different
->>> Root Complexes?
->>>
->>> PCIe r3.0, sec 6.12.1.1, says Root Ports that support peer-to-peer
->>> traffic are required to implement ACS P2P Request Redirect, so if a
->>> Root Port doesn't implement RR, we can assume it doesn't support
->>> peer-to-peer.  But unfortunately the converse is not true: if a Root
->>> Port implements RR, that does *not* imply that it supports
->>> peer-to-peer traffic.
->>>
->>> So I don't know how to discover whether peer-to-peer between Root
->>> Ports or Root Complexes is supported.  Maybe there's some clue in the
->>> IOMMU?  The Intel VT-d spec mentions it, but "peer" doesn't even
->>> appear in the AMD spec.
->>>
->>> And I'm curious about why writes sometimes work when reads do not.
->>> That sounds like maybe the hardware support is there, but we don't
->>> understand how to configure everything correctly.
->>>
->>> Can you give us the specifics of the topology you'd like to use, e.g.,
->>> lspci -vv of the path between the two devices?
->> First off, writes always work for me. Not just sometimes. Only reads
->> NEVER do.
+On Mon, Jul 6, 2015 at 12:31 PM, Rustad, Mark D <mark.d.rustad@intel.com> wrote:
+>> On Jun 26, 2015, at 11:04 AM, Rustad, Mark D <mark.d.rustad@intel.com> wrote:
 >>
->> Reading the AMD-990FX-990X-970-Register-Programming-Requirements-48693.pdf
->> in section 2.5 "Enabling/Disabling Peer-to-Peer Traffic Access", it
->> states specifically that
->> only P2P memory writes are supported. This has been the case with
->> older AMD chipset also. In one of the older chipset documents I read
->> (I think the 770 series) , it said this was a security feature.
->> Makes no sense to me.
+>>> Sorry, Mark, I've just been busy with other issues and haven't had a
+>>> chance to look at this yet.
 >>
->> As for the topology I'd like to be able to use. This particular
->> configuration (MB) has a single regular pci slot and the rest are
->> pci-e. In two of those pci-e slots is a pci-e to pci expansion
->> chassis interface card connected to a regular pci expansion rack. I
->> am trying to to peer to peer between a regular pci card in one of
->> those chassis to another regular pci card in the other chassis. In
->> turn through the pci-e subsystem. Attached is the lcpci -vv output
->> from this particular box. The cards that initiate the P2P are these:
->>
->> 04:04.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
->> 0480 (rev 55)
->> 04:05.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
->> 0480 (rev 55)
->> 04:06.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
->> 0480 (rev 55)
->> 04:07.0 Intelligent controller [0e80]: PLX Technology, Inc. Device
->> 0480 (rev 55)
->>
->> The card they need to P2P to and from is this one.
->>
->> 0a:05.0 Network controller: VMIC GE-IP PCI5565,PMC5565 Reflective
->> Memory Node (rev 01)
-> Peer-to-peer traffic initiated by 04:04.0 and targeted at 0a:05.0 has
-> to be routed up to Root Port 00:04.0, over to Root Port 00:0b.0, and
-> back down to 0a:05.0:
+>> Is there any chance of this getting into this merge window?
 >
->    00:04.0: Root Port to [bus 02-05] Slot #4 ACS ReqRedir+
->    02:00.0: PCIe-to-PCI bridge to [bus 03-05]
->    03:04.0: PCI-to-PCI bridge to [bus 04-05]
->    04:04.0: PLX intelligent controller
->
->    00:0b.0: Root Port to [bus 08-0e] Slot #11 ACS ReqRedir+
->    00:0b.0:   bridge window [mem 0xd0000000-0xd84fffff]
->    08:00.0: PCIe-to-PCI bridge to [bus 09-0e]
->    08:00.0:   bridge window [mem 0xd0000000-0xd84fffff]
->    09:04.0: PCI-to-PCI bridge to [bus 0a-0e]
->    09:04.0:   bridge window [mem 0xd0000000-0xd84fffff]
->    0a:05.0: VMIC GE-IP reflective memory node
->    0a:05.0: BAR 3 [mem 0xd0000000-0xd7ffffff]
->
-> Both Root Ports do support ACS, including P2P RR, but that doesn't
-> tell us anything about whether the Root Complex actually supports
-> peer-to-peer traffic between the Root Ports.  Per the AMD
-> 990FX/990X/970 spec, your hardware supports it for writes but not
-> reads.
->
-> So your hardware is what it is, and a general-purpose interface should
-> probably not allow peer-to-peer at all unless we wanted to complicate
-> it by adding a read vs. write distinction.
->
-> My question is how we can figure that out without having to add a
-> blacklist or whitelist of specific platforms.  We haven't found
-> anything in the PCIe specs that tells us whether peer-to-peer is
-> supported between Root Ports.
->
-> The ACPI _DMA method does mention peer-to-peer, and I don't think
-> Linux looks at _DMA at all.  But you should have a single PNP0A08
-> bridge that leads to bus 0000:00, with a _CRS that includes the
-> windows of all the Root Ports, and I don't see how a _DMA method would
-> help carve that up into separate bus address regions.
->
-> Rafael, do you have any idea how we can discover peer-to-peer
-> capabilities of a platform?
+> Well, it has missed the merge window, but this really is a bug fix. These patches address problems that, under race conditions, can corrupt VPD data and under other conditions can cause hangs. In fact I would submit that the reason that the VPD operations have been made interruptible is directly related to hangs caused by the sharing of VPD capability registers between functions. You see, if one function ever performs a VPD write, any subsequent read on any other function that shares those registers will definitely hang.
 
-No, I don't, sorry.
+As a rule, after the merge window closes, I only merge fixes for
+things we broke during the merge window or drivers for brand-new
+things, where there's no chance of breaking something that used to
+work.
 
-Rafael
+It would be nice to have a description of what a user might see when
+tripping over this problem and maybe some pointers to problem reports.
+I see it fixes concurrent access problems, and I infer that it's
+related to sysfs.
 
+Feel free to add a stable tag when you post your patches.  I'll try to
+remember to add it when merging this.  When it's relevant, it's nice
+to include the SHA1 of the commit that introduced the bug.  But in
+this case, I think it's been there "forever."
+
+Bjorn
