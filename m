@@ -1,11 +1,23 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:35429 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752317AbbGKHad (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Jul 2015 03:30:33 -0400
 MIME-Version: 1.0
-In-Reply-To: <20150717015134.GA9087@richard>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-	<20150717015134.GA9087@richard>
-Date: Thu, 16 Jul 2015 20:59:09 -0700
-Message-ID: <CAE9FiQUbmgg1e_sSc5J8Coe8auvBpFFwx5D0myJOUeAN2NYwBQ@mail.gmail.com>
-Subject: Re: [PATCH v2 00/49] PCI: Resource allocation cleanup for v4.3
+In-Reply-To: <20150711000328.GA7498@richard>
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+	<1436225966-27247-37-git-send-email-yinghai@kernel.org>
+	<20150709033030.GA7079@richard>
+	<CAE9FiQVSK9kAg-qyASpb1AoHSwQbKK33eHhFmzUjoLOftK9M4w@mail.gmail.com>
+	<20150709060420.GA7465@richard>
+	<CAE9FiQWnzM4x_WFZ4rXQe9db4xxXtih6_jrJDe3c-R_Djmm8Hg@mail.gmail.com>
+	<20150710023014.GA16104@richard>
+	<CAE9FiQVaoFWk9A1vyqDgOu_eqWRcZkwrWRQ0CXpcAJ4VBOgwaQ@mail.gmail.com>
+	<CAE9FiQWiCZB0EvQ2RNujdD1-0pRO_izJrqBwExaK9Md1d5wCjw@mail.gmail.com>
+	<20150711000328.GA7498@richard>
+Date: Fri, 10 Jul 2015 17:42:10 -0700
+Message-ID: <CAE9FiQUS=NV4_2vuHN2j3N07sEaD2=XaYASDdCz+UQMSiqmqRQ@mail.gmail.com>
+Subject: Re: [PATCH 36/36] PCI: Don't set flags to 0 when assign resource fail
 From: Yinghai Lu <yinghai@kernel.org>
 To: Wei Yang <weiyang@linux.vnet.ibm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -16,19 +28,27 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 16, 2015 at 6:51 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> Yinghai,
->
-> Tested your latest for for-pci-v4.3-next branch, it works fine on my P8
-> machine.
+On Fri, Jul 10, 2015 at 5:03 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
+> On Thu, Jul 09, 2015 at 10:49:06PM -0700, Yinghai Lu wrote:
 
-Thanks for testing.
-
+> I have tested you latest branch with this one as the last commit:
 >
-> BTW, the SRIOV works fine too. Previously failure is based on my mistake, I
-> have disabled SRIOV :-(
+> ec94cc7 PCI: Don't set flags to 0 when assign resource fail
+>
+> My P8 machine boots up.
 
 Good.
+
+>
+> Another issue is the SRIOV couldn't be enabled, I am checking the reason.
+> This may not related to this patch series.
+
+wonder if could be related to :
+
+https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/patch/?id=c642f79dcd6becbb92741816e0b5e81f7664acc7
+PCI: Restore pref mmio allocation logic for hostbridge without mmio64
+
+Yinghai
