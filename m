@@ -1,77 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:34667 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996AbbGOB5F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 21:57:05 -0400
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:35184 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751248AbbGKUQk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 11 Jul 2015 16:16:40 -0400
+Received: by iecuq6 with SMTP id uq6so214662625iec.2
+        for <linux-pci@vger.kernel.org>; Sat, 11 Jul 2015 13:16:39 -0700 (PDT)
+Date: Sat, 11 Jul 2015 15:16:34 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: ravikiran gummaluri <rgummal@xilinx.com>
+Cc: linux-pci@vger.kernel.org,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Subject: Re: PCIe support for ARM64
+Message-ID: <20150711201634.GA24416@google.com>
+References: <loom.20150619T074145-299@post.gmane.org>
+ <CAErSpo52WYqB9hfNKo-ADrJF1LASUz5y9vWzsmp2FaCNc9WZfg@mail.gmail.com>
+ <loom.20150710T130734-815@post.gmane.org>
 MIME-Version: 1.0
-In-Reply-To: <20150714223537.GQ24416@google.com>
-References: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
-	<1436300428-21163-36-git-send-email-yinghai@kernel.org>
-	<20150714223537.GQ24416@google.com>
-Date: Tue, 14 Jul 2015 18:57:03 -0700
-Message-ID: <CAE9FiQWhFA3BCY0-oEUBrAU9SMycJZofpGQip3RQVt3UBAvwCw@mail.gmail.com>
-Subject: Re: [PATCH 35/42] x86, boot, PCI: Convert SETUP_PCI data to list
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kees Cook <keescook@chromium.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, Baoquan He <bhe@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <loom.20150710T130734-815@post.gmane.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 14, 2015 at 3:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
->> index 16ace12..32d4f21 100644
->> --- a/arch/x86/pci/common.c
->> +++ b/arch/x86/pci/common.c
->
->> +struct firmware_setup_pci_entry {
->> +     struct list_head list;
->> +     uint16_t vendor;
->> +     uint16_t devid;
->> +     uint64_t pcilen;
->
-> Is there a reason to use uint16_t and uint64_t instead of u16 and u64?
+[+cc Pratyush, Bharat]
 
-keep them same as arch/x86/include/asm/pci.h::pci_setup_rom.
+On Fri, Jul 10, 2015 at 11:18:10AM +0000, ravikiran gummaluri wrote:
+> Bjorn Helgaas <bhelgaas <at> google.com> writes:
+> 
+> > 
+> > On Fri, Jun 19, 2015 at 12:43 AM, ravikiran gummaluri
+> > <rgummal <at> xilinx.com> wrote:
+> > > HI
+> > >
+> > > I am developing PCIe root port driver for Xilinx device. We have used
+> > > following patch for ARM64 bit support
+> > > "https://lkml.org/lkml/2014/7/3/764". The link explains it as temporary
+> > > patch and main line will be updated soon with those changes. We have not
+> > > seen the changes till now. Can you let us know when we can expect the
+> > > changes in mainline? We are planning to push our drivers to mainline.
+> > 
+> > There is PCI support for ARM64 in mainline:
+> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?
+> id=d1e6dc91b532
+> > 
+> > There is also a Xilinx driver already:
+> > 
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/
+> pci/host/pcie-xilinx.c
+> > 
+> > I don't know if your device is similar to the AXI device, but it would
+> > be good if you can share or modify that driver instead of adding a new
+> > one.
+> > 
+> > As with several other drivers, the current pcie-xilinx.c uses
+> > pci_common_init_dev(), so it only works on ARM (not ARM64).  This is a
+> > known issue, and people are working on making these drivers less
+> > arch-specific.
+> > 
+> > Bjorn
+> > 
+> 
+> Thanks Bjorn. pcie-xilinx.c is AXI device. Now we are developing for 
+> different device using pcie-xilinx.c as reference. When we trying to 
+> compile our new driver with latest kernel we are getting compilation 
+> problems for struct hw_pci and struct pci_sys_data for ARM64. These 
+> structures are not defined in ARM64. The following patch has the structure 
+> definitions "https://lkml.org/lkml/2014/7/3/764". We have used this patch 
+> and able complete our development. Now for up streaming it we need this 
+> patch in main line. From your discursion we understood that some work is 
+> going on ARCH independent API and structure. When can we expect them in 
+> mainline? 
 
-and we have that from:
+Pratyush already answered this:
 
-commit dd5fc854de5fd37adfcef8a366cd21a55aa01d3d
-Author: Matthew Garrett <mjg@redhat.com>
-Date:   Wed Dec 5 14:33:26 2012 -0700
+    Please have a look to the latest kernel and try to see what is
+    available for ARM64 PCIe.
 
-    EFI: Stash ROMs if they're not in the PCI BAR
+    You may see drivers/pci/host/pci-xgene.c as reference.
 
-    EFI provides support for providing PCI ROMs via means other than the ROM
-    BAR. This support vanishes after we've exited boot services, so add support
-    for stashing copies of the ROMs in setup_data if they're not otherwise
-    available.
+    I see that there is already a driver for xilinx PCIe controller with
+    ARM platform.
+    drivers/pci/host/pcie-xilinx.c
 
-    Signed-off-by: Matthew Garrett <mjg@redhat.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Tested-by: Seth Forshee <seth.forshee@canonical.com>
+    If it is the same device on ARM64, then you need to take similar
+    approach what is being discussed
+    for designware on ARM64.
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 6e41b93..dba7805 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -171,4 +171,16 @@ cpumask_of_pcibus(const struct pci_bus *bus)
- }
- #endif
+    http://marc.info/?l=devicetree&m=143394380815743&w=2
 
-+struct pci_setup_rom {
-+       struct setup_data data;
-+       uint16_t vendor;
-+       uint16_t devid;
-+       uint64_t pcilen;
-+       unsigned long segment;
-+       unsigned long bus;
-+       unsigned long device;
-+       unsigned long function;
-+       uint8_t romdata[0];
-+};
-+
- #endif /* _ASM_X86_PCI_H */
+My advice is to adapt your driver so it works using the interfaces and
+structures in v4.2-rc1 and post that.  As Pratyush mentioned, the X-Gene
+driver should be a good place to start.
+
+There will likely be changes to the way we handle arch- and platform-
+specific data, but you don't need to wait for those to be completed.  When
+people make changes like that, it is always their responsibility to update
+all the code in the tree to match.  So once your code is in the tree, you
+don't have to worry about updating your driver to follow those changes.
+
+On the other hand, if you do wait for those changes to be completed, you
+never know when or if they ever will be done, and you'll have to do your
+own updates before posting your driver.
+
+Bjorn
