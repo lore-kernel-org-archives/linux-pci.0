@@ -1,151 +1,195 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46412 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751154AbbGIN5j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jul 2015 09:57:39 -0400
-Date: Thu, 9 Jul 2015 14:58:09 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>
-Subject: Re: [PATCH v3 00/15] Introducing per-device MSI domain
-Message-ID: <20150709135809.GA5223@red-moon>
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:34040 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092AbbGLOeV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 12 Jul 2015 10:34:21 -0400
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Rob Herring'" <robh@kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	"'Russell King'" <linux@arm.linux.org.uk>,
+	<linux-kernel@vger.kernel.org>, <arm@kernel.org>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	"'Murali Karicheri'" <m-karicheri2@ti.com>,
+	"'Thierry Reding'" <thierry.reding@gmail.com>,
+	"'Stephen Warren'" <swarren@wwwdotorg.org>,
+	"'Alexandre Courbot'" <gnurou@gmail.com>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Simon Horman'" <horms@verge.net.au>,
+	"'Michal Simek'" <michal.simek@xilinx.com>,
+	=?UTF-8?Q?'S=C3=B6ren_Brinkmann'?= <soren.brinkmann@xilinx.com>,
+	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-tegra@vger.kernel.org>, <linux-sh@vger.kernel.org>,
+	"'Jingoo Han'" <jingoohan1@gmail.com>
+References: <1436711211-18223-1-git-send-email-robh@kernel.org> <1436711211-18223-10-git-send-email-robh@kernel.org>
+In-Reply-To: <1436711211-18223-10-git-send-email-robh@kernel.org>
+Subject: Re: [PATCH v2 09/13] PCI: kill off set_irq_flags usage
+Date: Sun, 12 Jul 2015 23:34:10 +0900
+Message-ID: <000001d0bcaf$d6ab17a0$840146e0$@com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 07, 2015 at 06:17:50PM +0100, Marc Zyngier wrote:
-> [Picking up this series again after sleeping on it for too long,
->  hopefully still relevant]
+On Sunday, July 12, 2015 11:27 PM, Rob Herring wrote:
 > 
-> MSI-like interrupts are starting to creep out of the PCI world, and
-> can now be seen into a number of "platform"-type busses. The
-> introduction of the MSI domains feature in v3.19 recognised that fact,
-> and started providing a way to implement this.
+> set_irq_flags is ARM specific with custom flags which have genirq
+> equivalents. Convert drivers to use the genirq interfaces directly, so we
+> can kill off set_irq_flags. The translation of flags is as follows:
 > 
-> Another problem we have to solve is to identify which MSI domain a
-> device is "connected" to. Currently, PCI gets away with a mixture of
-> arch-specific callbacks, and a msi_controller structure that can
-> optionally carry a pointer to an MSI domain. As we add new bus types
-> and start dealing with topologies that do not map to what PCI does,
-> this doesn't scale anymore.
+> IRQF_VALID -> !IRQ_NOREQUEST
+> IRQF_PROBE -> !IRQ_NOPROBE
+> IRQF_NOAUTOEN -> IRQ_NOAUTOEN
 > 
-> This patch series tries to address some of it by providing a basic
-> link between 'struct device' and an MSI domain. It also adds :
+> For IRQs managed by an irqdomain, the irqdomain core code handles clearing
+> and setting IRQ_NOREQUEST already, so there is no need to do this in
+> .map() functions and we can simply remove the set_irq_flags calls. Some
+> users also set IRQ_NOPROBE and this has been maintained although it is not
+> clear that is really needed. There appears to be a great deal of blind
+> copy and paste of this code.
 > 
-> - a way to "tag" domains according to the "type" of interrupt it
->   provides (PCI/MSI, platform MSI...), allowing a driver for a piece
->   of HW identified by its device_node to provide several IRQ domains
-> 
-> - (yet another) way for PCI to propagate the domain pointer through
->   the PCI device hierarchy, providing a method for OF to kick-start
->   the propagation process, and finally allowing the PCI/MSI layer to
->   use that information
-> 
-> - a similar way to hook an MSI domain to a platform device.
-> 
-> Hopefully this can serve as a model to implement support for different
-> but types.
-> 
-> Additionally, the last few patches use all the above to remove any
-> trace of the msi_controller structure from the three MSI controllers
-> we use on arm64, so that they solely rely on the above infrastructure,
-> leading to some interesting improvements. We take this opportunity to
-> also kill the domain pointer from the msi_controller structure.
-> 
-> My hope is to eventually kill msi_controller entirely, and only rely
-> on the msi_domain contained in the device structure (any help
-> welcomed).
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Murali Karicheri <m-karicheri2@ti.com>
+> Cc: Thierry Reding <thierry.reding@gmail.com>
+> Cc: Stephen Warren <swarren@wwwdotorg.org>
+> Cc: Alexandre Courbot <gnurou@gmail.com>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
 
-And kill pcibios_msi_controller from arch/arm, which means we have
-to convert all arm platforms relying on pci_sys_data for the MSI look-up,
-I only have an iMX6 Sabrelite, so yes, help is welcome here.
+For pcie-designware.c,
 
-BTW, is there a reason why _all_ arm host bridges rely on
-pcibios_msi_controller (so pci_sys_data) instead of initializing
-the struct pci_bus.msi pointer to carry out the MSI controller look-up ?
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-I do not see any (and I want to get rid of pcibios_msi_controller on
-arm asap, if we can use the struct pci_bus.msi pointer patch that's
-trivial).
+I checked that "the irqdomain core code handles clearing and setting
+IRQ_NOREQUEST already", as you said. Thank you.
 
-I know that the way forward is by doing it through domains and this
-patchset, just asking (to understand why pcibios_msi_controller is
-even needed on arm at present).
+Best regards,
+Jingoo Han
 
-> This has been tested on arm64 with GICv2m (AMD Seattle) and GICv3 ITS
-> (FVP model).
-
-I tested it on arm64 AMD Seattle too, so FWIW:
-
-Tested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-> Patches are on top of 4.2-rc1 and available at:
+> Cc: Pratyush Anand <pratyush.anand@gmail.com>
+> Cc: Simon Horman <horms@verge.net.au>
+> Cc: Michal Simek <michal.simek@xilinx.com>
+> Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+> Cc: linux-omap@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-tegra@vger.kernel.org
+> Cc: linux-sh@vger.kernel.org
+> ---
+> v2:
+> - Add xgene which was added in v4.2
 > 
-> git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/msi_domain
+>  drivers/pci/host/pci-dra7xx.c      | 1 -
+>  drivers/pci/host/pci-keystone-dw.c | 2 --
+>  drivers/pci/host/pci-tegra.c       | 1 -
+>  drivers/pci/host/pci-xgene-msi.c   | 1 -
+>  drivers/pci/host/pcie-designware.c | 1 -
+>  drivers/pci/host/pcie-rcar.c       | 1 -
+>  drivers/pci/host/pcie-xilinx.c     | 2 --
+>  7 files changed, 9 deletions(-)
 > 
-> As always, comments most welcome.
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index 80db09e..1a0d124 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -155,7 +155,6 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+>  {
+>  	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+>  	irq_set_chip_data(irq, domain->host_data);
+> -	set_irq_flags(irq, IRQF_VALID);
 > 
-> Marc Zyngier (15):
->   genirq: irqdomain: Allow irq domain aliasing
->   PCI: MSI: Register irq domain with specific token
->   device core: Introduce per-device MSI domain pointer
->   PCI/MSI: Add hooks to populate the msi_domain field
->   PCI/MSI: of: Add support for OF-provided msi_domain
->   PCI/MSI: of: Allow msi_domain lookup using the host bridge node
->   PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
->   platform: of: Assign MSI domain to platform device
->   irqchip: gicv3-its: Split PCI/MSI code from the core ITS driver
->   irqchip: gicv3-its: Register irq domain with platform MSI token
->   irqchip: GICv2m: Get rid of struct msi_controller
->   irqchip: gicv3-its: Get rid of struct msi_controller
->   irqchip: gicv3-its: Make the PCI/MSI code standalone
->   PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
->   PCI/MSI: Drop domain field from msi_controller
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+> index f34892e..f1d0749 100644
+> --- a/drivers/pci/host/pci-keystone-dw.c
+> +++ b/drivers/pci/host/pci-keystone-dw.c
+> @@ -196,7 +196,6 @@ static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+>  	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
+>  				 handle_level_irq);
+>  	irq_set_chip_data(irq, domain->host_data);
+> -	set_irq_flags(irq, IRQF_VALID);
 > 
->  arch/powerpc/platforms/512x/mpc5121_ads_cpld.c   |   3 +-
->  arch/powerpc/platforms/cell/interrupt.c          |   3 +-
->  arch/powerpc/platforms/embedded6xx/flipper-pic.c |   3 +-
->  arch/powerpc/platforms/powermac/pic.c            |   3 +-
->  arch/powerpc/platforms/powernv/opal-irqchip.c    |   3 +-
->  arch/powerpc/platforms/ps3/interrupt.c           |   3 +-
->  arch/powerpc/sysdev/ehv_pic.c                    |   3 +-
->  arch/powerpc/sysdev/i8259.c                      |   3 +-
->  arch/powerpc/sysdev/ipic.c                       |   3 +-
->  arch/powerpc/sysdev/mpic.c                       |   3 +-
->  arch/powerpc/sysdev/qe_lib/qe_ic.c               |   3 +-
->  arch/powerpc/sysdev/xics/xics-common.c           |   3 +-
->  drivers/irqchip/Makefile                         |   2 +-
->  drivers/irqchip/irq-gic-v2m.c                    |  27 ++---
->  drivers/irqchip/irq-gic-v3-its-pci-msi.c         | 135 +++++++++++++++++++++++
->  drivers/irqchip/irq-gic-v3-its.c                 | 130 ++++------------------
->  drivers/of/irq.c                                 |  16 +++
->  drivers/of/platform.c                            |   1 +
->  drivers/pci/host/pci-xgene-msi.c                 |  41 +++----
->  drivers/pci/msi.c                                |  11 +-
->  drivers/pci/of.c                                 |  24 ++++
->  drivers/pci/probe.c                              |  31 ++++++
->  include/linux/device.h                           |  20 ++++
->  include/linux/irqchip/arm-gic-v3.h               |   3 +
->  include/linux/irqdomain.h                        |  25 ++++-
->  include/linux/msi.h                              |   3 -
->  include/linux/of_irq.h                           |   1 +
->  include/linux/pci.h                              |   3 +
->  kernel/irq/irqdomain.c                           |  18 ++-
->  29 files changed, 350 insertions(+), 177 deletions(-)
->  create mode 100644 drivers/irqchip/irq-gic-v3-its-pci-msi.c
+>  	return 0;
+>  }
+> @@ -277,7 +276,6 @@ static int ks_dw_pcie_init_legacy_irq_map(struct irq_domain *d,
+>  	irq_set_chip_and_handler(irq, &ks_dw_pcie_legacy_irq_chip,
+>  				 handle_level_irq);
+>  	irq_set_chip_data(irq, d->host_data);
+> -	set_irq_flags(irq, IRQF_VALID);
 > 
-> -- 
-> 2.1.4
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 10c0571..81df0c1 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -1248,7 +1248,6 @@ static int tegra_msi_map(struct irq_domain *domain, unsigned int irq,
+>  {
+>  	irq_set_chip_and_handler(irq, &tegra_msi_irq_chip, handle_simple_irq);
+>  	irq_set_chip_data(irq, domain->host_data);
+> -	set_irq_flags(irq, IRQF_VALID);
 > 
+>  	tegra_cpuidle_pcie_irqs_in_use();
+> 
+> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+> index 2d31d4d..8e559d1 100644
+> --- a/drivers/pci/host/pci-xgene-msi.c
+> +++ b/drivers/pci/host/pci-xgene-msi.c
+> @@ -223,7 +223,6 @@ static int xgene_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+>  	irq_domain_set_info(domain, virq, msi_irq,
+>  			    &xgene_msi_bottom_irq_chip, domain->host_data,
+>  			    handle_simple_irq, NULL, NULL);
+> -	set_irq_flags(virq, IRQF_VALID);
+> 
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 69486be..5c6b562 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -350,7 +350,6 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+>  {
+>  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+>  	irq_set_chip_data(irq, domain->host_data);
+> -	set_irq_flags(irq, IRQF_VALID);
+> 
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index c086210..7678fe0 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -664,7 +664,6 @@ static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
+>  {
+>  	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
+>  	irq_set_chip_data(irq, domain->host_data);
+> -	set_irq_flags(irq, IRQF_VALID);
+> 
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index f1a06a0..72015119 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -338,7 +338,6 @@ static int xilinx_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+>  {
+>  	irq_set_chip_and_handler(irq, &xilinx_msi_irq_chip, handle_simple_irq);
+>  	irq_set_chip_data(irq, domain->host_data);
+> -	set_irq_flags(irq, IRQF_VALID);
+> 
+>  	return 0;
+>  }
+> @@ -377,7 +376,6 @@ static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+>  {
+>  	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+>  	irq_set_chip_data(irq, domain->host_data);
+> -	set_irq_flags(irq, IRQF_VALID);
+> 
+>  	return 0;
+>  }
+> --
+> 2.1.0
+
+
