@@ -1,100 +1,175 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jingoohan1@gmail.com>, <nsekhar@ti.com>
-CC: <kishon@ti.com>
-Subject: [PATCH v5 3/3] PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
-Date: Fri, 31 Jul 2015 17:55:12 +0530
-Message-ID: <1438345512-28973-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1438345512-28973-1-git-send-email-kishon@ti.com>
-References: <1438345512-28973-1-git-send-email-kishon@ti.com>
+From: Rob Herring <robh@kernel.org>
+To: linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>
+Cc: linux-kernel@vger.kernel.org, arm@kernel.org,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: [PATCH v2 09/13] PCI: kill off set_irq_flags usage
+Date: Sun, 12 Jul 2015 09:26:47 -0500
+Message-Id: <1436711211-18223-10-git-send-email-robh@kernel.org>
+In-Reply-To: <1436711211-18223-1-git-send-email-robh@kernel.org>
+References: <1436711211-18223-1-git-send-email-robh@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DRA7xx require MSE bit to be cleared to set the master in
-standby mode. (In DRA7xx TRM_vE, section 24.9.4.5.2.2.1 PCIe
-Controller Master Standby Behavior advises to use the clearing
-of the local MSE bit to set the master in standby. Without this
-some of the clocks do not idle).
+set_irq_flags is ARM specific with custom flags which have genirq
+equivalents. Convert drivers to use the genirq interfaces directly, so we
+can kill off set_irq_flags. The translation of flags is as follows:
 
-Cleared the MSE bit on suspend and enabled it back on resume.
-Clearing MSE bit is required to get clocks to be idled after
-suspend.
+IRQF_VALID -> !IRQ_NOREQUEST
+IRQF_PROBE -> !IRQ_NOPROBE
+IRQF_NOAUTOEN -> IRQ_NOAUTOEN
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+For IRQs managed by an irqdomain, the irqdomain core code handles clearing
+and setting IRQ_NOREQUEST already, so there is no need to do this in
+.map() functions and we can simply remove the set_irq_flags calls. Some
+users also set IRQ_NOPROBE and this has been maintained although it is not
+clear that is really needed. There appears to be a great deal of blind
+copy and paste of this code.
+
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Alexandre Courbot <gnurou@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+Cc: linux-omap@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-tegra@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
 ---
- drivers/pci/host/pci-dra7xx.c |   40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+v2:
+- Add xgene which was added in v4.2
+
+ drivers/pci/host/pci-dra7xx.c      | 1 -
+ drivers/pci/host/pci-keystone-dw.c | 2 --
+ drivers/pci/host/pci-tegra.c       | 1 -
+ drivers/pci/host/pci-xgene-msi.c   | 1 -
+ drivers/pci/host/pcie-designware.c | 1 -
+ drivers/pci/host/pcie-rcar.c       | 1 -
+ drivers/pci/host/pcie-xilinx.c     | 2 --
+ 7 files changed, 9 deletions(-)
 
 diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 08b999a..3772aff 100644
+index 80db09e..1a0d124 100644
 --- a/drivers/pci/host/pci-dra7xx.c
 +++ b/drivers/pci/host/pci-dra7xx.c
-@@ -83,6 +83,17 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
- }
- 
-+static inline u32 dra7xx_pcie_readl_rc(struct pcie_port *pp, u32 offset)
-+{
-+	return readl(pp->dbi_base + offset);
-+}
-+
-+static inline void dra7xx_pcie_writel_rc(struct pcie_port *pp, u32 offset,
-+					 u32 value)
-+{
-+	writel(value, pp->dbi_base + offset);
-+}
-+
- static int dra7xx_pcie_link_up(struct pcie_port *pp)
+@@ -155,7 +155,6 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
  {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-@@ -434,6 +445,34 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
+ 	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
  }
- 
- #ifdef CONFIG_PM_SLEEP
-+static int dra7xx_pcie_suspend(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	struct pcie_port *pp = &dra7xx->pp;
-+	u32 val;
-+
-+	/* clear MSE */
-+	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
-+	val &= ~PCI_COMMAND_MEMORY;
-+	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
-+
-+	return 0;
-+}
-+
-+static int dra7xx_pcie_resume(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	struct pcie_port *pp = &dra7xx->pp;
-+	u32 val;
-+
-+	/* set MSE */
-+	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
-+	val |= PCI_COMMAND_MEMORY;
-+	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
-+
-+	return 0;
-+}
-+
- static int dra7xx_pcie_suspend_noirq(struct device *dev)
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index f34892e..f1d0749 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -196,7 +196,6 @@ static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+ 	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
+ 				 handle_level_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+@@ -277,7 +276,6 @@ static int ks_dw_pcie_init_legacy_irq_map(struct irq_domain *d,
+ 	irq_set_chip_and_handler(irq, &ks_dw_pcie_legacy_irq_chip,
+ 				 handle_level_irq);
+ 	irq_set_chip_data(irq, d->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 10c0571..81df0c1 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1248,7 +1248,6 @@ static int tegra_msi_map(struct irq_domain *domain, unsigned int irq,
  {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-@@ -479,6 +518,7 @@ err_phy:
- #endif
- 
- static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
-+	SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
- 	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
- 				      dra7xx_pcie_resume_noirq)
- };
--- 
-1.7.9.5
+ 	irq_set_chip_and_handler(irq, &tegra_msi_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	tegra_cpuidle_pcie_irqs_in_use();
+
+diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+index 2d31d4d..8e559d1 100644
+--- a/drivers/pci/host/pci-xgene-msi.c
++++ b/drivers/pci/host/pci-xgene-msi.c
+@@ -223,7 +223,6 @@ static int xgene_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 	irq_domain_set_info(domain, virq, msi_irq,
+ 			    &xgene_msi_bottom_irq_chip, domain->host_data,
+ 			    handle_simple_irq, NULL, NULL);
+-	set_irq_flags(virq, IRQF_VALID);
+
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 69486be..5c6b562 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -350,7 +350,6 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+ {
+ 	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index c086210..7678fe0 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -664,7 +664,6 @@ static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
+ {
+ 	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index f1a06a0..72015119 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -338,7 +338,6 @@ static int xilinx_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+ {
+ 	irq_set_chip_and_handler(irq, &xilinx_msi_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+@@ -377,7 +376,6 @@ static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ {
+ 	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+--
+2.1.0
 
