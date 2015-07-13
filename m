@@ -1,64 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:35534 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750982AbbGaIS4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2015 04:18:56 -0400
-References: <1437515651-20883-1-git-send-email-m-karicheri2@ti.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1437515651-20883-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <81A7634D-6946-45CB-9DFF-4FD728632D14@gmail.com>
-Cc: "<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
-	"<bhelgaas@google.com>" <bhelgaas@google.com>,
-	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
-	"<linux-kernel@vger.kernel.org>" <linux-kernel@vger.kernel.org>,
-	jingoohan1@gmail.com
-From: Jingoo Han <jingoohan1@gmail.com>
-Subject: Re: [Resend: PATCH] PCI: designware: fix the boot noise for missing *config* reg space
-Date: Fri, 31 Jul 2015 17:18:49 +0900
-To: Murali Karicheri <m-karicheri2@ti.com>
+Received: from mga01.intel.com ([192.55.52.88]:19999 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752670AbbGMSkD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 13 Jul 2015 14:40:03 -0400
+Subject: [PATCH V4 1/2] pci: Add dev_flags bit to access VPD through
+ function 0
+From: Mark D Rustad <mark.d.rustad@intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	netdev@vger.kernel.org
+Date: Mon, 13 Jul 2015 11:40:02 -0700
+Message-ID: <20150713184001.19985.64867.stgit@mdrustad-wks.jf.intel.com>
+In-Reply-To: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
+References: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015. 7. 22., at AM 6:54, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> 
-> Currently on Keystone SoCs, boot up log shows an unnecessary boot
-> noise as follows:-
-> 
-> [    0.365823] keystone-pcie 21021000.pcie: missing *config* reg space
-> 
-> Keystone uses older version of designware h/w that doesn't have ATU
-> support. So va_cfg0_base and va_cfg1_base are already set up in
-> ks_dw_pcie_host_init() before calling dw_pcie_host_init() and
-> they point to the remote config space address va (both same for Keystone).
-> So add a check to avoid this boot noise on Keystone.
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+From: Mark Rustad <mark.d.rustad@intel.com>
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
+function 0 to provide VPD access on other functions. This is for
+hardware devices that provide copies of the same VPD capability
+registers in multiple functions. Because the kernel expects that
+each function has its own registers, both the locking and the state
+tracking are affected by VPD accesses to different functions.
 
-Best regards,
-Jingoo Han
+On such devices for example, if a VPD write is performed on function
+0, *any* later attempt to read VPD from any other function of that
+device will hang. This has to do with how the kernel tracks the
+expected value of the F bit per function.
 
-> ---
-> - Resend with "PCI: designware" prefix in subject
-> drivers/pci/host/pcie-designware.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be..b48b8a2 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -388,7 +388,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->        addrp = of_get_address(np, index, NULL, NULL);
->        pp->cfg0_mod_base = of_read_number(addrp, ns);
->        pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
-> -    } else {
-> +    } else if (!pp->va_cfg0_base) {
->        dev_err(pp->dev, "missing *config* reg space\n");
->    }
-> 
-> -- 
-> 1.9.1
-> 
+Concurrent accesses to different functions of the same device can
+not only hang but also corrupt both read and write VPD data.
+
+When hangs occur, typically the error message:
+
+vpd r/w failed.  This is likely a firmware bug on this device.
+
+will be seen.
+
+Never set this bit on function 0 or there will be an infinite recursion.
+
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+---
+Changes in V2:
+- Corrected spelling in log message
+- Added checks to see that the referenced function 0 is reasonable
+Changes in V3:
+- Don't leak a device reference
+- Check that function 0 has VPD
+- Make a helper for the function 0 checks
+- Do multifunction check in the quirk
+Changes in V4:
+- Provide a much more detailed explanation in the commit log
+---
+ drivers/pci/access.c |   61 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/pci.h  |    2 ++
+ 2 files changed, 62 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index d9b64a175990..b965c12168b7 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -439,6 +439,56 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
+ 	.release = pci_vpd_pci22_release,
+ };
+ 
++static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
++			       void *arg)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
++	ssize_t ret;
++
++	if (!tdev)
++		return -ENODEV;
++
++	ret = pci_read_vpd(tdev, pos, count, arg);
++	pci_dev_put(tdev);
++	return ret;
++}
++
++static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
++				const void *arg)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
++	ssize_t ret;
++
++	if (!tdev)
++		return -ENODEV;
++
++	ret = pci_write_vpd(tdev, pos, count, arg);
++	pci_dev_put(tdev);
++	return ret;
++}
++
++static const struct pci_vpd_ops pci_vpd_f0_ops = {
++	.read = pci_vpd_f0_read,
++	.write = pci_vpd_f0_write,
++	.release = pci_vpd_pci22_release,
++};
++
++static int pci_vpd_f0_dev_check(struct pci_dev *dev)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
++	int ret = 0;
++
++	if (!tdev)
++		return -ENODEV;
++	if (!tdev->vpd || !tdev->multifunction ||
++	    dev->class != tdev->class || dev->vendor != tdev->vendor ||
++	    dev->device != tdev->device)
++		ret = -ENODEV;
++
++	pci_dev_put(tdev);
++	return ret;
++}
++
+ int pci_vpd_pci22_init(struct pci_dev *dev)
+ {
+ 	struct pci_vpd_pci22 *vpd;
+@@ -447,12 +497,21 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
+ 	if (!cap)
+ 		return -ENODEV;
++	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
++		int ret = pci_vpd_f0_dev_check(dev);
++
++		if (ret)
++			return ret;
++	}
+ 	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
+ 	if (!vpd)
+ 		return -ENOMEM;
+ 
+ 	vpd->base.len = PCI_VPD_PCI22_SIZE;
+-	vpd->base.ops = &pci_vpd_pci22_ops;
++	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
++		vpd->base.ops = &pci_vpd_f0_ops;
++	else
++		vpd->base.ops = &pci_vpd_pci22_ops;
+ 	mutex_init(&vpd->lock);
+ 	vpd->cap = cap;
+ 	vpd->busy = false;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a8fb59..8edb125db13a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -180,6 +180,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
+ 	/* Do not use PM reset even if device advertises NoSoftRst- */
+ 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
++	/* Get VPD from function 0 VPD */
++	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
+ };
+ 
+ enum pci_irq_reroute_variant {
+
