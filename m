@@ -1,143 +1,146 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 23 Jul 2015 08:17:08 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>, Duc Dang <dhdang@apm.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v5 18/19] PCI/MSI: pci-xgene-msi: Get rid of struct
- msi_controller
-Message-ID: <20150723131708.GV21967@google.com>
-References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
- <1437643598-19795-19-git-send-email-marc.zyngier@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:52354 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835AbbGMM7u (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2015 08:59:50 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Rob Herring <robherring2@gmail.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH] Store PCIe controllers address in struct of_pci_range
+Date: Mon, 13 Jul 2015 12:59:28 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D5CDED@lhreml503-mbs>
+References: <1436518099-98633-1-git-send-email-gabriele.paoloni@huawei.com>
+ <CAL_JsqJA9WEWK+ywv7ou+88U3cQ7z6GHDTDjxOxRC9X4_K88FQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437643598-19795-19-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Subject: "PCI/MSI: xgene: Get rid of ..."
-
-On Thu, Jul 23, 2015 at 10:26:37AM +0100, Marc Zyngier wrote:
-> The XGene MSI driver only uses the msi_controller structure as
-
-s/XGene/X-Gene/
-
-> a way to match the host bridge  with its MSI HW, and thus the
-> msi_domain.
-> 
-> But now that we can directly associate an msi_domain with a device,
-> there is no use keeping this msi_controller around.
-> 
-> Just remove all traces of msi_controller from the driver.
-> 
-> Tested-by: Duc Dang <dhdang@apm.com>
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  drivers/pci/host/pci-xgene-msi.c | 41 ++++++++++++++++------------------------
->  1 file changed, 16 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> index 2d31d4d..ec5a14b 100644
-> --- a/drivers/pci/host/pci-xgene-msi.c
-> +++ b/drivers/pci/host/pci-xgene-msi.c
-> @@ -40,8 +40,8 @@ struct xgene_msi_group {
->  
->  struct xgene_msi {
->  	struct device_node	*node;
-> -	struct msi_controller	mchip;
-> -	struct irq_domain	*domain;
-> +	struct irq_domain	*inner_domain;
-> +	struct irq_domain	*msi_domain;
->  	u64			msi_addr;
->  	void __iomem		*msi_regs;
->  	unsigned long		*bitmap;
-> @@ -252,17 +252,17 @@ static const struct irq_domain_ops msi_domain_ops = {
->  
->  static int xgene_allocate_domains(struct xgene_msi *msi)
->  {
-> -	msi->domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-> -					    &msi_domain_ops, msi);
-> -	if (!msi->domain)
-> +	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-> +						  &msi_domain_ops, msi);
-> +	if (!msi->inner_domain)
->  		return -ENOMEM;
->  
-> -	msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
-> -						      &xgene_msi_domain_info,
-> -						      msi->domain);
-> +	msi->msi_domain = pci_msi_create_irq_domain(msi->node,
-> +						    &xgene_msi_domain_info,
-> +						    msi->inner_domain);
->  
-> -	if (!msi->mchip.domain) {
-> -		irq_domain_remove(msi->domain);
-> +	if (!msi->msi_domain) {
-> +		irq_domain_remove(msi->inner_domain);
->  		return -ENOMEM;
->  	}
->  
-> @@ -271,10 +271,10 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->  
->  static void xgene_free_domains(struct xgene_msi *msi)
->  {
-> -	if (msi->mchip.domain)
-> -		irq_domain_remove(msi->mchip.domain);
-> -	if (msi->domain)
-> -		irq_domain_remove(msi->domain);
-> +	if (msi->msi_domain)
-> +		irq_domain_remove(msi->msi_domain);
-> +	if (msi->inner_domain)
-> +		irq_domain_remove(msi->inner_domain);
->  }
->  
->  static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
-> @@ -340,7 +340,7 @@ static void xgene_msi_isr(unsigned int irq, struct irq_desc *desc)
->  			 * CPU0
->  			 */
->  			hw_irq = hwirq_to_canonical_hwirq(hw_irq);
-> -			virq = irq_find_mapping(xgene_msi->domain, hw_irq);
-> +			virq = irq_find_mapping(xgene_msi->inner_domain, hw_irq);
->  			WARN_ON(!virq);
->  			if (virq != 0)
->  				generic_handle_irq(virq);
-> @@ -497,7 +497,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  		goto error;
->  	}
->  	xgene_msi->msi_addr = res->start;
-> -
-> +	xgene_msi->node = pdev->dev.of_node;
->  	xgene_msi->num_cpus = num_possible_cpus();
->  
->  	rc = xgene_msi_init_allocator(xgene_msi);
-> @@ -561,19 +561,10 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  
->  	cpu_notifier_register_done();
->  
-> -	xgene_msi->mchip.of_node = pdev->dev.of_node;
-> -	rc = of_pci_msi_chip_add(&xgene_msi->mchip);
-> -	if (rc) {
-> -		dev_err(&pdev->dev, "failed to add MSI controller chip\n");
-> -		goto error_notifier;
-> -	}
-> -
->  	dev_info(&pdev->dev, "APM X-Gene PCIe MSI driver loaded\n");
->  
->  	return 0;
->  
-> -error_notifier:
-> -	unregister_hotcpu_notifier(&xgene_msi_cpu_notifier);
->  error:
->  	xgene_msi_remove(pdev);
->  	return rc;
-> -- 
-> 2.1.4
-> 
+U29ycnkgSSBqdXN0IHJlYWxpemVkIEkgZm9yZ290IHRvIHJlcGx5IHRvIHRoZSBsYXN0IGl0ZW0N
+Cg0KR2FiDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogR2FicmllbGUg
+UGFvbG9uaQ0KPiBTZW50OiBNb25kYXksIEp1bHkgMTMsIDIwMTUgMTI6MDcgUE0NCj4gVG86ICdS
+b2IgSGVycmluZycNCj4gQ2M6IEFybmQgQmVyZ21hbm47IExvcmVuem8gUGllcmFsaXNpOyBXYW5n
+emhvdSAoQik7IEJqb3JuIEhlbGdhYXM7IFJvYg0KPiBIZXJyaW5nOyBqYW1lcy5tb3JzZUBhcm0u
+Y29tOyBMaXZpdSBEdWRhdTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gbGludXgtYXJt
+LWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsN
+Cj4gWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsgcWl1emhlbmZhOyBMaWd1b3po
+dSAoS2VubmV0aCkNCj4gU3ViamVjdDogUkU6IFtQQVRDSF0gU3RvcmUgUENJZSBjb250cm9sbGVy
+cyBhZGRyZXNzIGluIHN0cnVjdA0KPiBvZl9wY2lfcmFuZ2UNCj4gDQo+IEhpIFJvYg0KPiANCj4g
+TWFueSBUaGFua3MgZm9yIHlvdXIgcmV2aWV3DQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2Fn
+ZS0tLS0tDQo+ID4gRnJvbTogUm9iIEhlcnJpbmcgW21haWx0bzpyb2JoZXJyaW5nMkBnbWFpbC5j
+b21dDQo+ID4gU2VudDogRnJpZGF5LCBKdWx5IDEwLCAyMDE1IDg6NTYgUE0NCj4gPiBUbzogR2Fi
+cmllbGUgUGFvbG9uaQ0KPiA+IENjOiBBcm5kIEJlcmdtYW5uOyBMb3JlbnpvIFBpZXJhbGlzaTsg
+V2FuZ3pob3UgKEIpOyBCam9ybiBIZWxnYWFzOw0KPiBSb2INCj4gPiBIZXJyaW5nOyBqYW1lcy5t
+b3JzZUBhcm0uY29tOyBMaXZpdSBEdWRhdTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4g
+PiBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGRldmljZXRyZWVAdmdlci5r
+ZXJuZWwub3JnOw0KPiA+IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpo
+ZW5mYTsgTGlndW96aHUgKEtlbm5ldGgpDQo+ID4gU3ViamVjdDogUmU6IFtQQVRDSF0gU3RvcmUg
+UENJZSBjb250cm9sbGVycyBhZGRyZXNzIGluIHN0cnVjdA0KPiA+IG9mX3BjaV9yYW5nZQ0KPiA+
+DQo+ID4gT24gRnJpLCBKdWwgMTAsIDIwMTUgYXQgMzo0OCBBTSwgR2FicmllbGUgUGFvbG9uaQ0K
+PiA+IDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+IHdyb3RlOg0KPiA+ID4gRnJvbTogZ2Fi
+cmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiA+ID4NCj4gPiA+
+IFRoaXMgcGF0Y2ggaXMgbmVlZGVkIHBvcnQgUENJZSBkZXNpZ253YXJlIHRvIG5ldyBEVCBwYXJz
+aW5nIEFQSQ0KPiA+ID4gQXMgZGlzY3Vzc2VkIGluDQo+ID4gPiBodHRwOi8vbGlzdHMuaW5mcmFk
+ZWFkLm9yZy9waXBlcm1haWwvbGludXgtYXJtLWtlcm5lbC8yMDE1LQ0KPiA+IEphbnVhcnkvMzE3
+NzQzLmh0bWwNCj4gPiA+IGluIGRlc2lnbndhcmUgd2UgaGF2ZSBhIHByb2JsZW0gYXMgdGhlIFBD
+SSBhZGRyZXNzZXMgaW4gdGhlIFBDSWUNCj4gPiBjb250cm9sbGVyDQo+ID4gPiBhZGRyZXNzIHNw
+YWNlIGFyZSByZXF1aXJlZCBpbiBvcmRlciB0byBwZXJmb3JtIGNvcnJlY3QgSFcgb3BlcmF0aW9u
+Lg0KPiA+ID4NCj4gPiA+IEluIG9yZGVyIHRvIHNvbHZlIHRoaXMgcHJvYmxlbSBjb21taXQNCj4g
+PiA+IGY0YzU1YzVhM2Y3ZjY4YzA2Y2M1NTllZDdhZjhiMmQwMTdjYmIwYTcgIlBDSTogZGVzaWdu
+d2FyZToNCj4gPg0KPiA+IFBsZWFzZSBhYmJyZXZpYXRlIGhhc2hzIHRvIDEyIGNoYXJhY3RlcnMu
+DQo+IA0KPiBTdXJlLCB3aWxsIGRvLg0KPiANCj4gPg0KPiA+ID4gUHJvZ3JhbSBBVFUgd2l0aCB1
+bnRyYW5zbGF0ZWQgYWRkcmVzcyIgYWRkZWQgY29kZSB0byByZWFkIHRoZSBQQ0llDQo+ID4gPiBj
+b250cm9sbGVyIHN0YXJ0IGFkZHJlc3MgZGlyZWN0bHkgZnJvbSB0aGUgRFQgcmFuZ2VzLg0KPiA+
+ID4NCj4gPiA+IEluIHRoZSBuZXcgRFQgcGFyc2luZyBBUEkgb2ZfcGNpX2dldF9ob3N0X2JyaWRn
+ZV9yZXNvdXJjZXMoKSBoaWRlcw0KPiA+IHRoZQ0KPiA+ID4gRFQgcGFyc2VyIGZyb20gdGhlIGhv
+c3QgY29udHJvbGxlciBkcml2ZXJzLCBzbyBpdCBpcyBub3QgcG9zc2libGUNCj4gPiA+IGZvciBk
+cml2ZXJzIHRvIHBhcnNlIHZhbHVlcyBkaXJlY3RseSBmcm9tIHRoZSBEVC4NCj4gPiA+DQo+ID4g
+PiBJbiBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXBjaS9tc2c0MjU0MC5odG1s
+IHdlIGFscmVhZHkNCj4gPiB0cmllZA0KPiA+ID4gdG8gdXNlIHRoZSBuZXcgRFQgcGFyc2luZyBB
+UEkgYnV0IHRoZXJlIGlzIGEgYnVnIChvYnZpb3VzbHkpIGluDQo+ID4gc2V0dGluZw0KPiA+ID4g
+dGhlIDwqPl9tb2RfYmFzZSBhZGRyZXNzZXMNCj4gPiA+IEFwcGx5aW5nIHRoaXMgcGF0Y2ggd2Ug
+Y2FuIGVhc2lseSBzZXQgIjwqPl9tb2RfYmFzZSA9IHdpbi0NCj4gPiA+X19yZXMuc3RhcnQiDQo+
+ID4gPg0KPiA+ID4gVGhpcyBwYXRjaCBhZGRzIGEgbmV3IGZpZWxkIGluICJzdHJ1Y3Qgb2ZfcGNp
+X3JhbmdlIiB0byBzdG9yZSB0aGUNCj4gPiA+IHBjaSBjb250cm9sbGVyIHN0YXJ0IGFkZHJlc3M7
+IGl0IGZpbGxzIHRoZSBmaWVsZCBpbg0KPiA+IG9mX3BjaV9yYW5nZV9wYXJzZXJfb25lKCk7DQo+
+ID4gPiBpbiBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcygpIGl0IHJldHJpZXZlIHRo
+ZSByZXNvdXJjZQ0KPiBlbnRyeQ0KPiA+ID4gYWZ0ZXIgaXQgaXMgY3JlYXRlZCBhbmQgYWRkZWQg
+dG8gdGhlIHJlc291cmNlIGxpc3QgYW5kIHVzZXMNCj4gPiA+IGVudHJ5LT5fX3Jlcy5zdGFydCB0
+byBzdG9yZSB0aGUgcGNpIGNvbnRyb2xsZXIgYWRkcmVzcw0KPiA+ID4NCj4gPiA+IHRoZSBwYXRj
+aCBpcyBiYXNlZCBvbiA0LjItcmMxDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogR2Ficmll
+bGUgUGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiA+ID4gLS0tDQo+ID4g
+PiAgZHJpdmVycy9vZi9hZGRyZXNzLmMgICAgICAgICAgICAgICB8IDEgKw0KPiA+ID4gIGRyaXZl
+cnMvb2Yvb2ZfcGNpLmMgICAgICAgICAgICAgICAgfCA0ICsrKysNCj4gPiA+ICBkcml2ZXJzL3Bj
+aS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jIHwgOSArKystLS0tLS0NCj4gPiA+ICBpbmNsdWRlL2xp
+bnV4L29mX2FkZHJlc3MuaCAgICAgICAgIHwgMSArDQo+ID4gPiAgNCBmaWxlcyBjaGFuZ2VkLCA5
+IGluc2VydGlvbnMoKyksIDYgZGVsZXRpb25zKC0pDQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvb2YvYWRkcmVzcy5jIGIvZHJpdmVycy9vZi9hZGRyZXNzLmMNCj4gPiA+IGluZGV4
+IDhiZmRhNmEuLjUyZjkzMjEgMTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL29mL2FkZHJlc3Mu
+Yw0KPiA+ID4gKysrIGIvZHJpdmVycy9vZi9hZGRyZXNzLmMNCj4gPiA+IEBAIC0yNjUsNiArMjY1
+LDcgQEAgc3RydWN0IG9mX3BjaV9yYW5nZQ0KPiA+ICpvZl9wY2lfcmFuZ2VfcGFyc2VyX29uZShz
+dHJ1Y3Qgb2ZfcGNpX3JhbmdlX3BhcnNlciAqcGFyc2VyLA0KPiA+ID4gICAgICAgICByYW5nZS0+
+cGNpX2FkZHIgPSBvZl9yZWFkX251bWJlcihwYXJzZXItPnJhbmdlICsgMSwgbnMpOw0KPiA+ID4g
+ICAgICAgICByYW5nZS0+Y3B1X2FkZHIgPSBvZl90cmFuc2xhdGVfYWRkcmVzcyhwYXJzZXItPm5v
+ZGUsDQo+ID4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHBhcnNlci0+cmFuZ2Ug
+KyBuYSk7DQo+ID4gPiArICAgICAgIHJhbmdlLT5wY2lfY3RybF9hZGRyID0gb2ZfcmVhZF9udW1i
+ZXIocGFyc2VyLT5yYW5nZSArIG5hLA0KPiBucykgOw0KPiA+DQo+ID4gVGhpcyBpcyB3cm9uZyBh
+cyB0aGUgY29ycmVjdCBzaXplIHRvIHJlYWQgaXMgbm90ICJucyIsIGJ1dCB0aGUgcGFyZW50DQo+
+ID4gYnVzICNzaXplLWNlbGxzIHZhbHVlLg0KPiANCj4gT2sgSSB3aWxsIHJlcGxhY2UgIm5zIiB3
+aXRoICJvZl9uX3NpemVfY2VsbHMocGFyc2VyLT5ub2RlKSINCj4gDQo+ID4NCj4gPiBJIHRoaW5r
+ICJidXNfYWRkciIgd291bGQgYmUgYSBiZXR0ZXIgbmFtZS4gSXQgaXMgbm90IHRoZSBQQ0kNCj4g
+PiBjb250cm9sbGVyJ3MgYWRkcmVzcyAoaS5lLiB3aGF0IGlzIGluIHJlZyBwcm9wKS4gTm8gInBj
+aSIgYmVjYXVzZSBpdA0KPiA+IGhhcyBub3RoaW5nIHRvIGRvIHdpdGggUENJIGJ1cyBhZGRyZXNz
+ZXMuDQo+IA0KPiBPayBJIHdpbGwgY2hhbmdlIHRoZSBuYW1lDQo+IA0KPiA+DQo+ID4gSW4gZ2Vu
+ZXJhbCwgdGhpcyBzZWVtcyBmcmFnaWxlIGFzIHRoZSBkdCBhZGRyZXNzIHJhbmdlcy90cmFuc2xh
+dGlvbg0KPiA+IG1heSBub3QgYWxpZ24gd2l0aCB0aGUgaC93IHJhbmdlcy4gRm9yIGV4YW1wbGUs
+IHdoYXQgaWYgeW91IGhhdmUgMg0KPiA+IGxldmVscyBvZiB0cmFuc2xhdGlvbnMgYW5kIHlvdSBo
+YXBwZW4gdG8gbmVlZCBpdCB0cmFuc2xhdGVkIHdpdGgganVzdA0KPiA+IDEgbGV2ZWwgb2YgdHJh
+bnNsYXRpb24uIFRoYXQgc2FpZCwgSSBkb24ndCByZWFsbHkgaGF2ZSBhIGJldHRlcg0KPiA+IHN1
+Z2dlc3Rpb24gYW5kIEkgZ3Vlc3Mgd2UgY2FuIGRlYWwgd2l0aCB0aGF0IGNhc2UgaWYgbmVlZGVk
+IGxhdGVyLg0KPiANCj4gT2sgc28sIHdlJ2xsIGxlYXZlIGl0IGxpa2UgdGhpcyBmb3Igbm93DQo+
+IA0KPiA+DQo+ID4gPiAgICAgICAgIHJhbmdlLT5zaXplID0gb2ZfcmVhZF9udW1iZXIocGFyc2Vy
+LT5yYW5nZSArIHBhcnNlci0+cG5hICsNCj4gbmEsDQo+ID4gbnMpOw0KPiA+ID4NCj4gPiA+ICAg
+ICAgICAgcGFyc2VyLT5yYW5nZSArPSBwYXJzZXItPm5wOw0KPiA+ID4gZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvb2Yvb2ZfcGNpLmMgYi9kcml2ZXJzL29mL29mX3BjaS5jDQo+ID4gPiBpbmRleCA1NzUx
+ZGM1Li4yY2NjNzQ5IDEwMDY0NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9vZi9vZl9wY2kuYw0KPiA+
+ID4gKysrIGIvZHJpdmVycy9vZi9vZl9wY2kuYw0KPiA+ID4gQEAgLTE5OCw2ICsxOTgsNyBAQCBp
+bnQgb2ZfcGNpX2dldF9ob3N0X2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0DQo+ID4gZGV2aWNlX25v
+ZGUgKmRldiwNCj4gPiA+DQo+ID4gPiAgICAgICAgIHByX2RlYnVnKCJQYXJzaW5nIHJhbmdlcyBw
+cm9wZXJ0eS4uLlxuIik7DQo+ID4gPiAgICAgICAgIGZvcl9lYWNoX29mX3BjaV9yYW5nZSgmcGFy
+c2VyLCAmcmFuZ2UpIHsNCj4gPiA+ICsgICAgICAgICAgICAgICBzdHJ1Y3QgcmVzb3VyY2VfZW50
+cnkgKmVudHJ5Ow0KPiA+ID4gICAgICAgICAgICAgICAgIC8qIFJlYWQgbmV4dCByYW5nZXMgZWxl
+bWVudCAqLw0KPiA+ID4gICAgICAgICAgICAgICAgIGlmICgocmFuZ2UuZmxhZ3MgJiBJT1JFU09V
+UkNFX1RZUEVfQklUUykgPT0NCj4gPiBJT1JFU09VUkNFX0lPKQ0KPiA+ID4gICAgICAgICAgICAg
+ICAgICAgICAgICAgc25wcmludGYocmFuZ2VfdHlwZSwgNCwgIiBJTyIpOw0KPiA+ID4gQEAgLTI0
+MCw2ICsyNDEsOSBAQCBpbnQgb2ZfcGNpX2dldF9ob3N0X2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0
+DQo+ID4gZGV2aWNlX25vZGUgKmRldiwNCj4gPiA+ICAgICAgICAgICAgICAgICB9DQo+ID4gPg0K
+PiA+ID4gICAgICAgICAgICAgICAgIHBjaV9hZGRfcmVzb3VyY2Vfb2Zmc2V0KHJlc291cmNlcywg
+cmVzLCByZXMtPnN0YXJ0DQo+IC0NCj4gPiByYW5nZS5wY2lfYWRkcik7DQo+ID4gPiArICAgICAg
+ICAgICAgICAgZW50cnkgPSBsaXN0X2xhc3RfZW50cnkocmVzb3VyY2VzLCBzdHJ1Y3QNCj4gPiBy
+ZXNvdXJjZV9lbnRyeSwgbm9kZSk7DQo+ID4gPiArICAgICAgICAgICAgICAgLyp3ZSBhcmUgdXNp
+bmcgX19yZXMgZm9yIHN0b3JpbmcgdGhlIFBDSSBjb250cm9sbGVyDQo+ID4gYWRkcmVzcyovDQo+
+ID4gPiArICAgICAgICAgICAgICAgZW50cnktPl9fcmVzLnN0YXJ0ID0gcmFuZ2UucGNpX2N0cmxf
+YWRkcjsNCj4gPg0KPiA+IFlvdSB3aWxsIHVzZSB0aGlzIGluIGEgZm9sbG93LXVwIHBhdGNoPyBJ
+J2QgbGlrZSB0byBzZWUgdGhpcyBqdXN0DQo+ID4gc3BsaXQgaW50byBjb3JlIGNoYW5nZXMgYW5k
+IERXIGNoYW5nZXMuIFRoaXMgbG9va3MgbGlrZSB5b3UgYXJlDQo+IG1ha2luZw0KPiA+IGludGVy
+bWVkaWF0ZSBEVyBjaGFuZ2VzIHdoaWNoIHdpbGwgYmUgcmVtb3ZlZCBpbiBzdWJzZXF1ZW50IHBh
+dGNoZXMuDQoNCk9rIEkgd2lsbCBzcGxpdCBpdA0KDQpUaGUgY2hhbmdlcyBpbiAiZHJpdmVycy9w
+Y2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYyIgY2FuIGJlIHJlbW92ZWQgZnJvbSB0aGlzIHBhdGNo
+OyB3ZSBjYW4gbW9kaWZ5IGRpcmVjdGx5IA0KIltQQVRDSCB2MiAyLzRdIFBDSTogZGVzaWdud2Fy
+ZTogQWRkIEFSTTY0IHN1cHBvcnQiIGluIHYzIHBhdGNoc2V0DQoNCj4gPg0KPiA+IFJvYg0K
