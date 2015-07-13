@@ -1,65 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:36339 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753091AbbGQVcn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 17:32:43 -0400
-Received: by obnw1 with SMTP id w1so73164125obn.3
-        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 14:32:42 -0700 (PDT)
-Subject: [PATCH 7/8] PCI: Clean up ATS error handling
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gregor Dick <gdick@solarflare.com>
-Date: Fri, 17 Jul 2015 16:32:40 -0500
-Message-ID: <20150717213240.18379.42110.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAC1AzdfFjPrfvg2iBYXY5JDKhbVH3LPQdh5LzyjMaBFSNDBi6Q@mail.gmail.com>
+References: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
+	<20150713093518.7e869d07@endymion.delvare>
+	<CAC1AzdfFjPrfvg2iBYXY5JDKhbVH3LPQdh5LzyjMaBFSNDBi6Q@mail.gmail.com>
+Date: Mon, 13 Jul 2015 10:11:43 -0500
+Message-ID: <CAC1AzddMRd4qHXfFO=_rJ-p3R=4A5oBbE99zuSgWOq2EL8MrLg@mail.gmail.com>
+Subject: Re: [PATCH] Add support for reading SMBIOS Slot number for PCI devices
+From: Jordan Hargrave <jharg93@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>
+Content-Type: text/plain; charset=UTF-8
+To: unlisted-recipients:; (no To-header on input)
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's no need to BUG() if we enable ATS when it's already enabled.  We
-don't need to BUG() when disabling ATS on a device that doesn't support ATS
-or if it's already disabled.  If ATS is enabled, certainly we found an ATS
-capability in the past, so it should still be there now.
+On Mon, Jul 13, 2015 at 2:35 AM, Jean Delvare <jdelvare@suse.de> wrote:
+>
+> Hi Jordan,
+>
+ On Fri, 10 Jul 2015 17:02:46 -0500, Jordan Hargrave wrote:
+ > From: Jordan Hargrave <Jordan_Hargrave@dell.com>
+> >
+> > There currently isn't an easy way to determine which PCI devices belong
+> > to
+> > system slots.  This patch adds support to read SMBIOS Type 9 (System
+> > Slots).
+>
+> I'm wondering, can't you use dmidecode or libsmbios to retrieve the
+> same information?
+>
+> --
+> Jean Delvare
+> SUSE L3 Support
 
-Clean up these error paths.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/ats.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index c35de8e..9069126 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -43,8 +43,6 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
- {
- 	u16 ctrl;
- 
--	BUG_ON(dev->ats_cap && dev->ats_enabled);
--
- 	if (!dev->ats_cap)
- 		return -EINVAL;
- 
-@@ -74,7 +72,8 @@ void pci_disable_ats(struct pci_dev *dev)
- {
- 	u16 ctrl;
- 
--	BUG_ON(!dev->ats_cap || !dev->ats_enabled);
-+	if (!dev->ats_cap)
-+		return;
- 
- 	pci_read_config_word(dev, dev->ats_cap + PCI_ATS_CTRL, &ctrl);
- 	ctrl &= ~PCI_ATS_CTRL_ENABLE;
-@@ -90,8 +89,6 @@ void pci_restore_ats_state(struct pci_dev *dev)
- 
- 	if (!pci_ats_enabled(dev))
- 		return;
--	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS))
--		BUG();
- 
- 	ctrl = PCI_ATS_CTRL_ENABLE;
- 	if (!dev->is_virtfn)
-
+You can but it's as not easy to determine the slot number for leaf
+devices on bridges.  Eventually planning on using this for pulling
+slot number for identifying network cards and disk numbering for
+systemd
