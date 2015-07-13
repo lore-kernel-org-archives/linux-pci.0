@@ -1,69 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:35928 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751536AbbGMPtX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2015 11:49:23 -0400
-Received: by widjy10 with SMTP id jy10so73612201wid.1
-        for <linux-pci@vger.kernel.org>; Mon, 13 Jul 2015 08:49:22 -0700 (PDT)
+Received: from e06smtp14.uk.ibm.com ([195.75.94.110]:34168 "EHLO
+	e06smtp14.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031AbbGMMr3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2015 08:47:29 -0400
+Received: from /spool/local
+	by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <sebott@linux.vnet.ibm.com>;
+	Mon, 13 Jul 2015 13:47:27 +0100
+Date: Mon, 13 Jul 2015 14:47:17 +0200 (CEST)
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	linux390@de.ibm.com, Tony Luck <tony.luck@intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-s390@vger.kernel.org
+Subject: Re: [RFC Patch V1 04/12] s390/pci: Use for_pci_msi_entry() to access
+ MSI device list
+In-Reply-To: <1436428847-8886-5-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <alpine.LFD.2.11.1507131443460.1713@denkbrett>
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com> <1436428847-8886-5-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20150713181025-mutt-send-email-mst@redhat.com>
-References: <1435745608-21217-1-git-send-email-mst@redhat.com> <20150713181025-mutt-send-email-mst@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 13 Jul 2015 10:49:02 -0500
-Message-ID: <CAErSpo4cbj58VheRbQOJ3XnyBn_SvmUi9ZyFhRnPWhf8ciJ7jg@mail.gmail.com>
-Subject: Re: [PATCH] pci_regs: reintroduce PCI_MSIX_FLAGS_BIRMASK
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"Chen, Gong" <gong.chen@linux.intel.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 13, 2015 at 10:11 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
-> On Wed, Jul 01, 2015 at 12:14:10PM +0200, Michael S. Tsirkin wrote:
->> This partially reverts commit 09a2c73ddfc7f173237fc7209a65b34dd5bcb5ed.
->>     PCI: Remove unused PCI_MSIX_FLAGS_BIRMASK definition
->>
->> That commit dropped a symbol from an exported header claiming "no one
->> uses it". This isn't how Linux normally approaches userspace API though,
->> and in fact QEMU build fails if trying to use updated headers from linux
->> 3.12 and up.
->>
->> Sure, userspace can be fixed to use the new symbol, but the cost
->> of keeping the old one around is fairly low, too.
->>
->> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
->
-> Ping. Can this be included upstream please?
+On Thu, 9 Jul 2015, Jiang Liu wrote:
 
-Yes, I plan to merge it, and I'll mark it for stable.  This looks like
-a complete revert of 09a2c73ddfc7, not a partial revert.  Am I missing
-something?
+> Use accessor for_pci_msi_entry() to access MSI device list, so we could
+> easily move msi_list from struct pci_dev into struct device later.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 
-09a2c73ddfc7 appeared in v3.13 (not v3.12), so it wouldn't ordinarily
-be post-merge window material.  But it seems pretty safe, so I might
-put it in for v4.2 instead of waiting for v4.3.
+Acked-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
 
->> ---
->>  include/uapi/linux/pci_regs.h | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
->> index efe3443..66644ac 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -319,6 +319,7 @@
->>  #define PCI_MSIX_PBA         8       /* Pending Bit Array offset */
->>  #define  PCI_MSIX_PBA_BIR    0x00000007 /* BAR index */
->>  #define  PCI_MSIX_PBA_OFFSET 0xfffffff8 /* Offset into specified BAR */
->> +#define  PCI_MSIX_FLAGS_BIRMASK      PCI_MSIX_PBA_BIR /* deprecated */
->>  #define PCI_CAP_MSIX_SIZEOF  12      /* size of MSIX registers */
->>
->>  /* MSI-X Table entry format */
->> --
->> MST
+Regards,
+Sebastian
+
+> ---
+>  arch/s390/pci/pci.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index 598f023cf8a6..34f162753403 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -414,7 +414,7 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+> 
+>  	/* Request MSI interrupts */
+>  	hwirq = 0;
+> -	list_for_each_entry(msi, &pdev->msi_list, list) {
+> +	for_each_pci_msi_entry(msi, pdev) {
+>  		rc = -EIO;
+>  		irq = irq_alloc_desc(0);	/* Alloc irq on node 0 */
+>  		if (irq < 0)
+> @@ -440,7 +440,7 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>  	return (msi_vecs == nvec) ? 0 : msi_vecs;
+> 
+>  out_msi:
+> -	list_for_each_entry(msi, &pdev->msi_list, list) {
+> +	for_each_pci_msi_entry(msi, pdev) {
+>  		if (hwirq-- == 0)
+>  			break;
+>  		irq_set_msi_desc(msi->irq, NULL);
+> @@ -470,7 +470,7 @@ void arch_teardown_msi_irqs(struct pci_dev *pdev)
+>  		return;
+> 
+>  	/* Release MSI interrupts */
+> -	list_for_each_entry(msi, &pdev->msi_list, list) {
+> +	for_each_pci_msi_entry(msi, pdev) {
+>  		if (msi->msi_attrib.is_msix)
+>  			__pci_msix_desc_mask_irq(msi, 1);
+>  		else
+> -- 
+> 1.7.10.4
+> 
+> 
+
