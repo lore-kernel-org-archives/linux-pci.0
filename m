@@ -1,81 +1,161 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Jul 2015 15:07:33 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	xen-devel@lists.xenproject.org
-Subject: Re: [RFC Patch V1 05/12] x86, PCI: Use for_pci_msi_entry() to access
- MSI device list
-Message-ID: <20150709190733.GE21016@l.oracle.com>
-References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
- <1436428847-8886-6-git-send-email-jiang.liu@linux.intel.com>
+Message-ID: <55A56FBB.20203@broadcom.com>
+Date: Tue, 14 Jul 2015 13:23:23 -0700
+From: Ray Jui <rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436428847-8886-6-git-send-email-jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	SF Markus Elfring <elfring@users.sourceforge.net>
+CC: Scott Branden <sbranden@broadcom.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	<kernel-janitors@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"Julia Lawall" <julia.lawall@lip6.fr>
+Subject: Re: [PATCH] PCI-iproc: Delete unnecessary checks before two function
+ calls
+References: <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net> <55900A20.5070407@users.sourceforge.net> <20150714201059.GG24416@google.com>
+In-Reply-To: <20150714201059.GG24416@google.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 09, 2015 at 04:00:40PM +0800, Jiang Liu wrote:
-> Use accessor for_pci_msi_entry() to access MSI device list, so we could
-> easily move msi_list from struct pci_dev into struct device later.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Hi Bjorn,
 
-Looks pretty simple. Acked- by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
->  arch/x86/pci/xen.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+On 7/14/2015 1:10 PM, Bjorn Helgaas wrote:
+> On Sun, Jun 28, 2015 at 04:52:16PM +0200, SF Markus Elfring wrote:
+>> From: Markus Elfring <elfring@users.sourceforge.net>
+>> Date: Sun, 28 Jun 2015 16:42:04 +0200
+>>
+>> The functions phy_exit() and phy_power_off() test whether their argument
+>> is NULL and then return immediately.
+>> Thus the test around the calls is not needed.
+>>
+>> This issue was detected by using the Coccinelle software.
+>>
+>> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 > 
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index d22f4b5bbc04..ff31ab464213 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -179,7 +179,7 @@ static int xen_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  	if (ret)
->  		goto error;
->  	i = 0;
-> -	list_for_each_entry(msidesc, &dev->msi_list, list) {
-> +	for_each_pci_msi_entry(msidesc, dev) {
->  		irq = xen_bind_pirq_msi_to_irq(dev, msidesc, v[i],
->  					       (type == PCI_CAP_ID_MSI) ? nvec : 1,
->  					       (type == PCI_CAP_ID_MSIX) ?
-> @@ -230,7 +230,7 @@ static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  	if (type == PCI_CAP_ID_MSI && nvec > 1)
->  		return 1;
+> I haven't seen a followup to Ray's review, but in the interest of making
+> progress, I updated and applied the patch as appended.  I also reviewed
+> other phy_*() calls under drivers/pci, and they all look OK (with no
+> unnecessary tests for NULL).
+> 
+> This is on the pci/host-iproc branch for v4.3.
+> 
+
+Hmmm....I searched my mailbox but cannot find an email with this patch
+(while I remember I reviewed and commented on the initial version of
+this patch). It must have gone into some sub-folder or deleted by me by
+accident. My bad.
+
+Nevertheless,the current patch looks good to me!
+
+Thanks,
+
+Ray
+
+>> ---
+>>  drivers/pci/host/pcie-iproc.c | 7 ++-----
+>>  1 file changed, 2 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>> index d77481e..f875821 100644
+>> --- a/drivers/pci/host/pcie-iproc.c
+>> +++ b/drivers/pci/host/pcie-iproc.c
+>> @@ -239,12 +239,9 @@ err_rm_root_bus:
+>>  	pci_remove_root_bus(bus);
+>>  
+>>  err_power_off_phy:
+>> -	if (pcie->phy)
+>> -		phy_power_off(pcie->phy);
+>> +	phy_power_off(pcie->phy);
+>>  err_exit_phy:
+>> -	if (pcie->phy)
+>> -		phy_exit(pcie->phy);
+>> -
+>> +	phy_exit(pcie->phy);
+>>  	return ret;
+>>  }
+>>  EXPORT_SYMBOL(iproc_pcie_setup);
+>> -- 
+>> 2.4.4
+> 
+> commit 55b5e16332eb9ffc1cbaf975585f4521417ab427
+> Author: Markus Elfring <elfring@users.sourceforge.net>
+> Date:   Sun Jun 28 16:42:04 2015 +0200
+> 
+>     PCI: iproc: Delete unnecessary checks before phy calls
+>     
+>     The functions phy_exit() and phy_power_off() test whether their argument is
+>     NULL and then return immediately.  Thus the test around the calls is not
+>     needed.
+>     
+>     This issue was detected by using the Coccinelle software.
+>     
+>     [bhelgaas: also phy_init() and phy_power_on(), as Ray Jui suggested]
+>     [bhelgaas: also remove tests in iproc_pcie_remove()]
+>     Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index d77481e..9a00dca 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -191,19 +191,16 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  	if (!pcie || !pcie->dev || !pcie->base)
+>  		return -EINVAL;
 >  
-> -	list_for_each_entry(msidesc, &dev->msi_list, list) {
-> +	for_each_pci_msi_entry(msidesc, dev) {
->  		__pci_read_msi_msg(msidesc, &msg);
->  		pirq = MSI_ADDR_EXT_DEST_ID(msg.address_hi) |
->  			((msg.address_lo >> MSI_ADDR_DEST_ID_SHIFT) & 0xff);
-> @@ -274,7 +274,7 @@ static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  	int ret = 0;
->  	struct msi_desc *msidesc;
+> -	if (pcie->phy) {
+> -		ret = phy_init(pcie->phy);
+> -		if (ret) {
+> -			dev_err(pcie->dev, "unable to initialize PCIe PHY\n");
+> -			return ret;
+> -		}
+> -
+> -		ret = phy_power_on(pcie->phy);
+> -		if (ret) {
+> -			dev_err(pcie->dev, "unable to power on PCIe PHY\n");
+> -			goto err_exit_phy;
+> -		}
+> +	ret = phy_init(pcie->phy);
+> +	if (ret) {
+> +		dev_err(pcie->dev, "unable to initialize PCIe PHY\n");
+> +		return ret;
+> +	}
 >  
-> -	list_for_each_entry(msidesc, &dev->msi_list, list) {
-> +	for_each_pci_msi_entry(msidesc, dev) {
->  		struct physdev_map_pirq map_irq;
->  		domid_t domid;
+> +	ret = phy_power_on(pcie->phy);
+> +	if (ret) {
+> +		dev_err(pcie->dev, "unable to power on PCIe PHY\n");
+> +		goto err_exit_phy;
+>  	}
 >  
-> @@ -386,7 +386,7 @@ static void xen_teardown_msi_irqs(struct pci_dev *dev)
->  {
->  	struct msi_desc *msidesc;
+>  	iproc_pcie_reset(pcie);
+> @@ -239,12 +236,9 @@ err_rm_root_bus:
+>  	pci_remove_root_bus(bus);
 >  
-> -	msidesc = list_entry(dev->msi_list.next, struct msi_desc, list);
-> +	msidesc = first_pci_msi_entry(dev);
->  	if (msidesc->msi_attrib.is_msix)
->  		xen_pci_frontend_disable_msix(dev);
->  	else
-> -- 
-> 1.7.10.4
+>  err_power_off_phy:
+> -	if (pcie->phy)
+> -		phy_power_off(pcie->phy);
+> +	phy_power_off(pcie->phy);
+>  err_exit_phy:
+> -	if (pcie->phy)
+> -		phy_exit(pcie->phy);
+> -
+> +	phy_exit(pcie->phy);
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(iproc_pcie_setup);
+> @@ -254,10 +248,8 @@ int iproc_pcie_remove(struct iproc_pcie *pcie)
+>  	pci_stop_root_bus(pcie->root_bus);
+>  	pci_remove_root_bus(pcie->root_bus);
+>  
+> -	if (pcie->phy) {
+> -		phy_power_off(pcie->phy);
+> -		phy_exit(pcie->phy);
+> -	}
+> +	phy_power_off(pcie->phy);
+> +	phy_exit(pcie->phy);
+>  
+>  	return 0;
+>  }
 > 
