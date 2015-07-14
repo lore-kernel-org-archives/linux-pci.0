@@ -1,45 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39398 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750957AbbG2GRo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jul 2015 02:17:44 -0400
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-To: device-mapper development <dm-devel@redhat.com>,
-	Andreas Hartmann <andihartmann@freenet.de>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
- <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
- <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org>
- <20150728212441.GA25761@redhat.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>, mpatocka@redhat.com,
-	Milan Broz <mbroz@redhat.com>,
-	Mike Snitzer <msnitzer@redhat.com>
-From: Ondrej Kozina <okozina@redhat.com>
-Message-ID: <55B87005.7010409@redhat.com>
-Date: Wed, 29 Jul 2015 08:17:41 +0200
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:34706 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752050AbbGNWfl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:35:41 -0400
+Received: by oiab3 with SMTP id b3so16560622oia.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 15:35:41 -0700 (PDT)
+Date: Tue, 14 Jul 2015 17:35:37 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Kees Cook <keescook@chromium.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 35/42] x86, boot, PCI: Convert SETUP_PCI data to list
+Message-ID: <20150714223537.GQ24416@google.com>
+References: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
+ <1436300428-21163-36-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20150728212441.GA25761@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1436300428-21163-36-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/28/2015 11:24 PM, Mike Snitzer wrote:
->>
->> I am willing to do tests if you have any idea to be tested - I can
->> reproduce it quite easily.
->
-> You can try disabling dm-crypt's parallelization by specifying these 2
-> features: same_cpu_crypt submit_from_crypt_cpus
->
+On Tue, Jul 07, 2015 at 01:20:21PM -0700, Yinghai Lu wrote:
+> So we could avoid ioremap every time later.
 
-Hi,
+The changelog (not just the subject) should say what you're doing.
 
-please try adding follwoing cryptsetup perf. options while unlocking 
-your LUKS containers: --perf-submit_from_crypt_cpus and 
---perf-same_cpu_crypt.
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 16ace12..32d4f21 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
 
-Perhaps focus on SSD disk as previous unresolved report mentioned SSD too
+> +struct firmware_setup_pci_entry {
+> +	struct list_head list;
+> +	uint16_t vendor;
+> +	uint16_t devid;
+> +	uint64_t pcilen;
 
-Regards
-O.
+Is there a reason to use uint16_t and uint64_t instead of u16 and u64?
+
+> +	unsigned long segment;
+> +	unsigned long bus;
+> +	unsigned long device;
+> +	unsigned long function;
+> +	phys_addr_t romdata;
+> +};
