@@ -1,119 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36947 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932772AbbGGRS2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jul 2015 13:18:28 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v3 04/15] PCI/MSI: Add hooks to populate the msi_domain field
-Date: Tue,  7 Jul 2015 18:17:54 +0100
-Message-Id: <1436289485-28230-5-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 37/49] PCI: Restore pref mmio allocation logic for hostbridge without mmio64
+Date: Tue, 14 Jul 2015 15:47:08 -0700
+Message-Id: <1436914040-13206-38-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to be able to populate the device msi_domain field,
-add the necesary hooks to propagate the host bridge msi_domain
-across secondary busses to devices.
+>From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
+resources), we change the logic for pref mmio allocation:
+When bridge pref support mmio64, we will only put children pref
+that support mmio64 into it, and will put children pref mmio32
+into bridge's non-pref mmio32.
 
-So far, nobody populates the initial msi_domain.
+That could leave bridge pref bar not used when that pref bar is mmio64,
+and children res only has mmio32.
+Also could have allocation failure when non-pref mmio32 is not big
+enough space for those children pref mmio32.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+That is not rational when the host bridge does not 64bit mmio above 4g
+at all.
+
+The patch restore to old logic:
+when hostbridge does not have has_mem64 so put children pref mmio64 and
+pref mmio32 all under bridges pref bars.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 31 insertions(+)
+ drivers/pci/bus.c       |  4 +++-
+ drivers/pci/setup-bus.c | 13 +++++++++----
+ drivers/pci/setup-res.c |  9 ++++++---
+ 3 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..376f6fa 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -661,6 +661,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
- 	}
- }
- 
-+void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
-+{
-+}
-+
-+static void pci_set_bus_msi_domain(struct pci_bus *bus)
-+{
-+	struct pci_dev *bridge = bus->self;
-+
-+	if (!bridge)
-+		pcibios_set_host_bridge_msi_domain(bus);
-+	else
-+		dev_set_msi_domain(&bus->dev, dev_get_msi_domain(&bridge->dev));
-+}
-+
- static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 					   struct pci_dev *bridge, int busnr)
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6fbd3f2..b043bdf 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -202,8 +202,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
  {
-@@ -714,6 +728,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	bridge->subordinate = child;
+ #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+ 	int rc;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
  
- add_dev:
-+	pci_set_bus_msi_domain(child);
- 	ret = device_register(&child->dev);
- 	WARN_ON(ret < 0);
- 
-@@ -1544,6 +1559,17 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);
- }
- 
-+static void pci_set_msi_domain(struct pci_dev *dev)
-+{
-+	/*
-+	 * If no domain has been set through the pcibios callback,
-+	 * inherit the default from the bus device.
-+	 */
-+	if (!dev_get_msi_domain(&dev->dev))
-+		dev_set_msi_domain(&dev->dev,
-+				   dev_get_msi_domain(&dev->bus->dev));
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
+-	if (res->flags & IORESOURCE_MEM_64) {
++	if (res->flags & mmio64) {
+ 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
+ 					       type_mask, alignf, alignf_data,
+ 					       &pci_high);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 37d5a48..f5b07d8 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1876,7 +1876,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+ 		mask = IORESOURCE_MEM;
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		if (b_res[2].flags & IORESOURCE_MEM_64) {
++		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
++		    pci_find_host_bridge(bus)->has_mem64) {
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+@@ -2032,17 +2033,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 *	  io port.
+ 	 *     2. if there is non pref mmio assign fail, release bridge
+ 	 *	  nonpref mmio.
+-	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
++	 *     3. if there is pref mmio assign fail, and host bridge does
++	 *	  have 64bit mmio, release bridge pref mmio.
++	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
+ 	 *	  is 64bit, release bridge pref mmio.
+-	 *     4. if there is pref mmio assign fail, and bridge pref is
++	 *     5. if there is pref mmio assign fail, and bridge pref is
+ 	 *	  32bit mmio, release bridge pref mmio
+-	 *     5. if there is pref mmio assign fail, and bridge pref is not
++	 *     6. if there is pref mmio assign fail, and bridge pref is not
+ 	 *	  assigned, release bridge nonpref mmio.
+ 	 */
+ 	if (type & IORESOURCE_IO)
+ 		idx = 0;
+ 	else if (!(type & IORESOURCE_PREFETCH))
+ 		idx = 1;
++	else if (!pci_find_host_bridge(bus)->has_mem64)
++		idx = 2;
+ 	else if ((type & IORESOURCE_MEM_64) &&
+ 		 (b_res[2].flags & IORESOURCE_MEM_64))
+ 		idx = 2;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index b19aa5b..26aedde 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -205,6 +205,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	struct resource *res = dev->resource + resno;
+ 	resource_size_t min;
  	int ret;
-@@ -1585,6 +1611,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	ret = pcibios_add_device(dev);
- 	WARN_ON(ret < 0);
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
  
-+	/* Setup MSI irq domain */
-+	pci_set_msi_domain(dev);
-+
- 	/* Notifier could use PCI capabilities */
- 	dev->match_driver = false;
- 	ret = device_add(&dev->dev);
-@@ -1975,6 +2004,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	b->bridge = get_device(&bridge->dev);
- 	device_enable_async_suspend(b->bridge);
- 	pci_set_bus_of_node(b);
-+	pci_set_bus_msi_domain(b);
+ 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
  
- 	if (!parent)
- 		set_dev_node(b->bridge, pcibus_to_node(b));
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a..3622453 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1645,6 +1645,7 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev,
- int pcibios_add_device(struct pci_dev *dev);
- void pcibios_release_device(struct pci_dev *dev);
- void pcibios_penalize_isa_irq(int irq, int active);
-+void pcibios_set_host_bridge_msi_domain(struct pci_bus *bus);
+@@ -216,7 +218,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * things differently than they were sized, not everything will fit.
+ 	 */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+-				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
++				     IORESOURCE_PREFETCH | mmio64,
+ 				     pcibios_align_resource, dev);
+ 	if (ret == 0)
+ 		return 0;
+@@ -225,7 +227,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * If the prefetchable window is only 32 bits wide, we can put
+ 	 * 64-bit prefetchable resources in it.
+ 	 */
+-	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
++	if (mmio64 &&
++	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
+ 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 					     IORESOURCE_PREFETCH,
+@@ -240,7 +243,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * non-prefetchable, the first call already tried the only possibility
+ 	 * so we don't need to try again.
+ 	 */
+-	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
++	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+ 					     pcibios_align_resource, dev);
  
- #ifdef CONFIG_HIBERNATE_CALLBACKS
- extern struct dev_pm_ops pcibios_pm_ops;
 -- 
-2.1.4
+1.8.4.5
 
