@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:35061 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976AbbGNWrp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:47:45 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -8,175 +12,57 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 04/49] PCI: Optimize bus align/size calculation during sizing
-Date: Tue, 14 Jul 2015 15:46:35 -0700
-Message-Id: <1436914040-13206-5-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v2 07/49] PCI: Reorder resources list for must/optional resources
+Date: Tue, 14 Jul 2015 15:46:38 -0700
+Message-Id: <1436914040-13206-8-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
 References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code try to get align as small as possible and use that to
-align final size. But it does not handle resource that size is bigger
-than align in optimal way, kernel only use max align for them.
+After we update size and alignment for must+optional resource, we
+reorder them with new alignment, but this is only for STARTALIGN.
 
-For example:
- when we have resources with align/size: 1M/2M, 512M/512M,
-   bus resource min_align/size0 will be 512M/1024M,
-   but optimal value should be 256M/768M.
+For SIZEALIGN type resource, after add back add_size, the alignment
+get changed, so need to do the sorting like STARTALIGN type resources.
 
-For following cases that we have resource size that is bigger
-than resource alignment:
-1. SRIOV bar.
-2. PCI bridges with several bridges or devices as children.
+Also we need to reorder the sorting back after we restore
+resource to must only when must+optional fail to allocate for all.
 
-We can keep on trying to allocate children devices resources under range
-[half_align, half_align + aligned_size).
-If sucesses, we can use that half_align as new min_align.
+So move out the reordering code from the loop to separated function,
+and call it two times accordingly.
 
-After this patch, we get:
- align/size: 1M/2M, 2M/4M, 4M/8M, 8M/16M
- new min_align/min_size: 4M/32M, and old is 8M/32M
-
- align/size: 1M/2M, 2M/4M, 4M/8M
- new min_align/min_size: 2M/14M, and old is 4M/16M
-
- align/size: 1M/2M, 512M/512M
- new min_align/min_size: 256M/768M, and old is 512M/1024M
-
-The real result from one system with one pcie card that has
-four functions that support sriov:
- align/size:
-   00800000/00800000
-   00800000/00800000
-   00800000/00800000
-   00800000/00800000
-   00010000/00200000
-   00010000/00200000
-   00010000/00200000
-   00010000/00200000
-   00008000/00008000
-   00008000/00008000
-   00008000/00008000
-   00008000/00008000
-   00004000/00080000
-   00004000/00080000
-   00004000/00080000
-   00004000/00080000
- old min_align/min_size: 00400000/02c00000
-     min_align/min_size: 00100000/02b00000
-
-So align will be 1M instead of 4M.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 195 ++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 157 insertions(+), 38 deletions(-)
+ drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 37 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 27cb0f0..ecdf011 100644
+index 7346bbf..6f2d508 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -30,6 +30,34 @@
- 
- unsigned int pci_flags;
- 
-+static inline bool is_before(resource_size_t align1, resource_size_t size1,
-+			     resource_size_t align2, resource_size_t size2)
-+{
-+	resource_size_t size1_left, size2_left;
-+
-+	/* big align is before small align */
-+	if (align1 > align2)
-+		return true;
-+
-+	/*
-+	 * for same align:
-+	 *   aligned is before not aligned
-+	 *   for not aligned, big remainder is before small remainder
-+	 */
-+	if (align1 == align2) {
-+		size1_left = size1 & (align1 - 1);
-+		if (!size1_left)
-+			size1_left = align1;
-+		size2_left = size2 & (align2 - 1);
-+		if (!size2_left)
-+			size2_left = align2;
-+		if (size1_left > size2_left)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- struct pci_dev_resource {
- 	struct list_head list;
- 	struct resource *res;
-@@ -999,26 +1027,125 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	}
+@@ -287,6 +287,31 @@ static inline void reset_resource(struct resource *res)
+ 	res->flags = 0;
  }
  
--static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
--						  int max_order)
-+struct align_test_res {
-+	struct list_head list;
-+	struct resource res;
-+	resource_size_t size;
-+	resource_size_t align;
-+};
-+
-+static void free_align_test_list(struct list_head *head)
- {
--	resource_size_t align = 0;
--	resource_size_t min_align = 0;
--	int order;
-+	struct align_test_res *p, *tmp;
- 
--	for (order = 0; order <= max_order; order++) {
--		resource_size_t align1 = 1;
-+	list_for_each_entry_safe(p, tmp, head, list) {
-+		list_del(&p->list);
-+		kfree(p);
-+	}
-+}
- 
--		align1 <<= (order + 20);
-+static int add_to_align_test_list(struct list_head *head,
-+				  resource_size_t align, resource_size_t size)
++static void __sort_resources(struct list_head *head)
 +{
-+	struct align_test_res *tmp;
++	struct pci_dev_resource *res1, *tmp_res, *res2;
 +
-+	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
-+	if (!tmp)
-+		return -ENOMEM;
-+
-+	tmp->align = align;
-+	tmp->size = size;
-+
-+	list_add_tail(&tmp->list, head);
-+
-+	return 0;
-+}
-+
-+static void __sort_align_test(struct list_head *head)
-+{
-+	struct align_test_res *res1, *tmp_res, *res2;
- 
--		if (!align)
--			min_align = align1;
--		else if (ALIGN(align + min_align, min_align) < align1)
--			min_align = align1 >> 1;
--		align += aligns[order];
 +	list_for_each_entry_safe(res1, tmp_res, head, list) {
++		resource_size_t align1, size1, align2, size2;
++
++		align1 = pci_resource_alignment(res1->dev, res1->res);
++		size1 = resource_size(res1->res);
++
 +		/* reorder it */
 +		list_for_each_entry(res2, head, list) {
 +			if (res2 == res1)
 +				break;
 +
-+			if (is_before(res1->align, res1->size,
-+				      res2->align, res2->size)) {
++			align2 = pci_resource_alignment(res2->dev, res2->res);
++			size2 = resource_size(res2->res);
++			if (is_before(align1, size1, align2, size2)) {
 +				list_move_tail(&res1->list, &res2->list);
 +				break;
 +			}
@@ -184,152 +70,86 @@ index 27cb0f0..ecdf011 100644
 +	}
 +}
 +
-+static bool is_align_size_good(struct list_head *head,
-+			resource_size_t min_align, resource_size_t size,
-+			resource_size_t start)
-+{
-+	struct align_test_res *p;
-+	struct resource root;
-+
-+	memset(&root, 0, sizeof(root));
-+	root.start = start;
-+	root.end = start + size - 1;
-+
-+	list_for_each_entry(p, head, list)
-+		memset(&p->res, 0, sizeof(p->res));
-+
-+	list_for_each_entry(p, head, list)
-+		if (allocate_resource(&root, &p->res, p->size,
-+				0, (resource_size_t)-1ULL,
-+				p->align, NULL, NULL))
-+			return false;
-+
-+	return true;
-+}
-+
-+static resource_size_t calculate_mem_align(struct list_head *head,
-+				resource_size_t max_align, resource_size_t size,
-+				resource_size_t align_low)
-+{
-+	struct align_test_res *p;
-+	resource_size_t min_align, good_align, aligned_size, start;
-+	int count = 0;
-+
-+	if (max_align <= align_low) {
-+		good_align = align_low;
-+		goto out;
- 	}
- 
--	return min_align;
-+	good_align = max_align;
-+
-+	list_for_each_entry(p, head, list)
-+		count++;
-+
-+	if (count <= 1)
-+		goto out;
-+
-+	__sort_align_test(head);
-+
-+	do {
-+		/* check if we can use smaller align */
-+		min_align = good_align >> 1;
-+		aligned_size = ALIGN(size, min_align);
-+
-+		/* need to make sure every offset work */
-+		for (start = min_align; start < max_align; start += min_align) {
-+			/* checked already with last align ? */
-+			if (!(start & (good_align - 1)))
-+				continue;
-+
-+			if (!is_align_size_good(head, min_align, aligned_size,
-+					       start))
-+				goto out;
-+		}
-+		good_align = min_align;
-+	} while (min_align > align_low);
-+
-+out:
-+	return good_align;
- }
- 
  /**
-@@ -1048,19 +1175,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_align, align, size, size0, size1;
--	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
--	int order, max_order;
-+	resource_size_t max_align = 0;
- 	struct resource *b_res = find_free_bus_resource(bus,
- 					mask | IORESOURCE_PREFETCH, type);
- 	resource_size_t children_add_size = 0;
- 	resource_size_t children_add_align = 0;
- 	resource_size_t add_align = 0;
-+	LIST_HEAD(align_test_list);
+  * reassign_resources_sorted() - satisfy any additional resource requests
+  *
+@@ -449,9 +474,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
++	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+-	resource_size_t add_align, align;
++	resource_size_t add_align;
  
- 	if (!b_res)
- 		return -ENOSPC;
- 
--	memset(aligns, 0, sizeof(aligns));
--	max_order = 0;
- 	size = 0;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
-@@ -1086,29 +1211,20 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				continue;
- 			}
- #endif
--			/*
--			 * aligns[0] is for 1MB (since bridge memory
--			 * windows are always at least 1MB aligned), so
--			 * keep "order" from being negative for smaller
--			 * resources.
--			 */
- 			align = pci_resource_alignment(dev, r);
--			order = __ffs(align) - 20;
--			if (order < 0)
--				order = 0;
--			if (order >= ARRAY_SIZE(aligns)) {
-+			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
--					 i, r, (unsigned long long) align);
-+					i, r, (unsigned long long) align);
- 				r->flags = 0;
- 				continue;
- 			}
-+
-+			if (r_size > 1)
-+				add_to_align_test_list(&align_test_list,
-+							align, r_size);
- 			size += r_size;
--			/* Exclude ranges with size > align from
--			   calculation of the alignment. */
--			if (r_size == align)
--				aligns[order] += align;
--			if (order > max_order)
--				max_order = order;
-+			if (align > max_align)
-+				max_align = align;
- 
- 			if (realloc_head) {
- 				children_add_size += get_res_add_size(realloc_head, r);
-@@ -1118,9 +1234,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		}
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -466,47 +491,32 @@ static void __assign_resources_sorted(struct list_head *head,
  	}
  
--	min_align = calculate_mem_align(aligns, max_order);
--	min_align = max(min_align, window_alignment(bus, b_res->flags));
--	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
-+	max_align = max(max_align, window_alignment(bus, b_res->flags));
-+	min_align = calculate_mem_align(&align_test_list, max_align, size,
-+					window_alignment(bus, b_res->flags));
-+	size0 = calculate_memsize(size, min_size, 0,
-+				  resource_size(b_res), min_align);
-+	free_align_test_list(&align_test_list);
- 	add_align = max(min_align, add_align);
- 	if (children_add_size > add_size)
- 		add_size = children_add_size;
+ 	/* Update res in head list with add_size in realloc_head list */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++	list_for_each_entry(dev_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+-		 * Here just fix the additional alignment for bridge
++		 * 1. bridge resource with IORESOURCE_STARTALIGN
++		 *    need to update start to change alignment
++		 * 2. resource with IORESOURCE_SIZEALIGN
++		 *    update size above already change alignment.
+ 		 */
+ 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+ 		add_align = get_res_add_align(realloc_head, dev_res->res);
+ 
+-		/*
+-		 * The "head" list is sorted by the alignment to make sure
+-		 * resources with bigger alignment will be assigned first.
+-		 * After we change the alignment of a dev_res in "head" list,
+-		 * we need to reorder the list by alignment to make it
+-		 * consistent.
+-		 */
+-		if (add_align > dev_res->res->start) {
++		if (add_align) {
+ 			resource_size_t r_size = resource_size(dev_res->res);
+ 
+ 			dev_res->res->start = add_align;
+ 			dev_res->res->end = add_align + r_size - 1;
+-
+-			list_for_each_entry(dev_res2, head, list) {
+-				align = pci_resource_alignment(dev_res2->dev,
+-							       dev_res2->res);
+-				if (add_align > align) {
+-					list_move_tail(&dev_res->list,
+-						       &dev_res2->list);
+-					break;
+-				}
+-			}
+                }
+-
+ 	}
+ 
++	__sort_resources(head);
++
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -548,6 +558,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	free_list(&save_head);
+ 
++	__sort_resources(head);
++
+ requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
 -- 
 1.8.4.5
 
