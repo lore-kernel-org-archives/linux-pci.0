@@ -1,62 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>, <arm@kernel.org>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v5 3/4] arm64: Add Broadcom iProc family support
-Date: Mon, 27 Jul 2015 15:42:20 -0700
-Message-ID: <1438036941-27210-4-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
-References: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:34777 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752520AbbGNSdP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 14:33:15 -0400
+Received: by obre1 with SMTP id e1so11636585obr.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 11:33:14 -0700 (PDT)
+Date: Tue, 14 Jul 2015 13:33:09 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: David =?iso-8859-1?Q?M=FCller?= <dave.mueller@gmx.ch>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] ARM: imx6: Fix "BUG: scheduling while atomic" if PCIe
+ switch is attached
+Message-ID: <20150714183309.GB24416@google.com>
+References: <1434614214-2085-1-git-send-email-dave.mueller@gmx.ch>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1434614214-2085-1-git-send-email-dave.mueller@gmx.ch>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support to Broadcom's iProc family of arm64 based SoCs
-in the arm64 Kconfig and defconfig files
+On Thu, Jun 18, 2015 at 09:56:54AM +0200, David Müller wrote:
+> This problem has already been reported as 
+> https://bugzilla.kernel.org/show_bug.cgi?id=100031
+> 
+> Signed-off-by: David Müller <dave.mueller@gmx.ch>
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- arch/arm64/Kconfig.platforms |    5 +++++
- arch/arm64/configs/defconfig |    1 +
- 2 files changed, 6 insertions(+)
+Dropping for now, hoping for an update addressing the review comments.
 
-diff --git a/arch/arm64/Kconfig.platforms b/arch/arm64/Kconfig.platforms
-index f7e4327..e2deb18 100644
---- a/arch/arm64/Kconfig.platforms
-+++ b/arch/arm64/Kconfig.platforms
-@@ -1,5 +1,10 @@
- menu "Platform selection"
- 
-+config ARCH_BCM_IPROC
-+	bool "Broadcom iProc SoC Family"
-+	help
-+	  This enables support for Broadcom iProc based SoCs
-+
- config ARCH_EXYNOS
- 	bool
- 	help
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 506b466..913f121 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -31,6 +31,7 @@ CONFIG_MODULES=y
- CONFIG_MODULE_UNLOAD=y
- # CONFIG_BLK_DEV_BSG is not set
- # CONFIG_IOSCHED_DEADLINE is not set
-+CONFIG_ARCH_BCM_IPROC=y
- CONFIG_ARCH_EXYNOS7=y
- CONFIG_ARCH_FSL_LS2085A=y
- CONFIG_ARCH_HISI=y
--- 
-1.7.9.5
-
+> ---
+>  drivers/pci/host/pci-imx6.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index fdb9536..c63691c 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -489,7 +489,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+>  		 * Wait a little bit, then re-check if the link finished
+>  		 * the training.
+>  		 */
+> -		usleep_range(1000, 2000);
+> +		mdelay(20);
+>  	}
+>  	/*
+>  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+> -- 
+> 1.8.4
+> 
