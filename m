@@ -1,55 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:42149 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753147AbbGWOti (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 10:49:38 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:35065 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752112AbbGNWrp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:47:45 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Cc: linux-pci@vger.kernel.org, patchwork-lst@pengutronix.de
-Subject: [PATCH v2 1/2] PCI: allow MSI chip providers to implement their own multivector MSI setup
-Date: Thu, 23 Jul 2015 16:49:35 +0200
-Message-Id: <1437662976-27188-1-git-send-email-l.stach@pengutronix.de>
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 10/49] PCI: Treat ROM resource as optional during realloc
+Date: Tue, 14 Jul 2015 15:46:41 -0700
+Message-Id: <1436914040-13206-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/msi.c   | 3 +++
- include/linux/msi.h | 2 ++
- 2 files changed, 5 insertions(+)
+So will try to allocate them together with must-have ones, if can
+not assign them, could go with must-have one only, and just skip
+ROM resources.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index f66be868ad21..685a83c459c6 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -121,9 +121,12 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 37 ++++++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 292f2a5..3abf249 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -372,18 +372,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		idx = res - &dev_res->dev->resource[0];
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+-			if (fail_head) {
+-				/*
+-				 * if the failed res is for ROM BAR, and it will
+-				 * be enabled later, don't add it to the list
+-				 */
+-				if (!((idx == PCI_ROM_RESOURCE) &&
+-				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
+-					add_to_list(fail_head,
+-						    dev_res->dev, res,
+-						    0 /* don't care */,
+-						    0 /* don't care */);
+-			}
++			if (fail_head)
++				add_to_list(fail_head, dev_res->dev, res,
++					    0 /* don't care */,
++					    0 /* don't care */);
+ 			reset_resource(res);
+ 		}
+ 	}
+@@ -1143,6 +1135,19 @@ out:
+ 	return good_align;
+ }
  
- int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
-+	struct msi_controller *chip = pci_msi_controller(dev);
- 	struct msi_desc *entry;
- 	int ret;
++static inline bool is_optional(int i)
++{
++
++	if (i == PCI_ROM_RESOURCE)
++		return true;
++
++#ifdef CONFIG_PCI_IOV
++	if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
++		return true;
++#endif
++
++	return false;
++}
+ /**
+  * pbus_size_mem() - size the memory window of a given bus
+  *
+@@ -1199,10 +1204,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
  
-+	if (chip && chip->setup_irqs)
-+		return chip->setup_irqs(chip, dev, nvec, type);
- 	/*
- 	 * If an architecture wants to support multiple MSI, it needs to
- 	 * override arch_setup_msi_irqs()
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8ac4a68ffae2..50fefeb30236 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -114,6 +114,8 @@ struct msi_controller {
- 
- 	int (*setup_irq)(struct msi_controller *chip, struct pci_dev *dev,
- 			 struct msi_desc *desc);
-+	int (*setup_irqs)(struct msi_controller *chip, struct pci_dev *dev,
-+			  int nvec, int type);
- 	void (*teardown_irq)(struct msi_controller *chip, unsigned int irq);
- };
- 
+ 			r_size = resource_size(r);
+ 			align = pci_resource_alignment(dev, r);
+-#ifdef CONFIG_PCI_IOV
+-			/* put SRIOV requested res to the optional list */
+-			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+-					i <= PCI_IOV_RESOURCE_END) {
++			/* put SRIOV/ROM res to realloc list */
++			if (realloc_head && is_optional(i)) {
+ 				add_to_align_test_list(&align_test_add_list,
+ 							align, r_size);
+ 				r->end = r->start - 1;
+@@ -1212,7 +1215,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					max_add_align = align;
+ 				continue;
+ 			}
+-#endif
++
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
 -- 
-2.1.4
+1.8.4.5
 
