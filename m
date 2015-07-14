@@ -1,62 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:54035 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932406AbbGJOuy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Jul 2015 10:50:54 -0400
-Message-ID: <559FDBC8.1020403@ti.com>
-Date: Fri, 10 Jul 2015 20:20:48 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
-MIME-Version: 1.0
-To: Grygorii Strashko <grygorii.strashko@ti.com>,
-	<bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <nsekhar@ti.com>
-Subject: Re: [PATCH 3/3] PCI: host: pci-dra7xx: add pm support to pci dra7xx
-References: <1435921425-15121-1-git-send-email-kishon@ti.com> <1435921425-15121-4-git-send-email-kishon@ti.com> <55967A3A.7000907@ti.com>
-In-Reply-To: <55967A3A.7000907@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from aserp1040.oracle.com ([141.146.126.69]:45104 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753046AbbGNWsQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:48:16 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 30/49] PCI: Kill macro checking for bus io port sizing
+Date: Tue, 14 Jul 2015 15:47:01 -0700
+Message-Id: <1436914040-13206-31-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Use new generic version skip_isa_ioresource_align() instead.
 
-On Friday 03 July 2015 05:34 PM, Grygorii Strashko wrote:
-> Hi Kishon,
-> 
-> On 07/03/2015 02:03 PM, Kishon Vijay Abraham I wrote:
->> Add PM support to pci-dra7xx so that PCI clocks can be disabled
->> during suspend and enabled back during resume without affecting
->> PCI functionality.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>   drivers/pci/host/pci-dra7xx.c |   74 +++++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 74 insertions(+)
->>
->> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
->> index d8b6d66..1f5c039 100644
->> --- a/drivers/pci/host/pci-dra7xx.c
->> +++ b/drivers/pci/host/pci-dra7xx.c
->> @@ -433,6 +433,79 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
->>   	return 0;
->>   }
->>
->> +#ifdef CONFIG_PM_SLEEP
-> 
-> [...]
-> 
->> +
->> +static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
->> +	.suspend_noirq = dra7xx_pcie_suspend_noirq,
->> +	.suspend = dra7xx_pcie_suspend,
->> +	.resume_noirq = dra7xx_pcie_resume_noirq,
->> +	.resume = dra7xx_pcie_resume,
-> 
-> Could you use here SET_SYSTEM_SLEEP_PM_OPS()
-> and SET_NOIRQ_SYSTEM_SLEEP_PM_OPS() macro, pls?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-sure!
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9478e91..f3bb309 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1172,15 +1172,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
+ 	return 0;
+ }
+ 
+-static resource_size_t size_aligned_for_isa(resource_size_t size)
++static resource_size_t size_aligned_for_isa(resource_size_t size,
++					    struct pci_bus *bus)
+ {
+-	/*
+-	 * To be fixed in 2.5: we should have sort of HAVE_ISA
+-	 *  flag in the struct pci_bus.
+-	 */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
++	if (!skip_isa_ioresource_align(bus))
++		size = (size & 0xff) + ((size & ~0xffUL) << 2);
++
+ 	return size;
+ }
+ 
+@@ -1249,12 +1246,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		}
+ 	}
+ 
+-	size = size_aligned_for_isa(size);
++	size = size_aligned_for_isa(size, bus);
+ 	size += size1;
+ 	if (size || min_size)
+ 		size0 = calculate_size(size, min_size,
+ 					resource_size(b_res), min_align);
+-	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+-- 
+1.8.4.5
 
-Thanks
-Kishon
