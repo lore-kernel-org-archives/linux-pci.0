@@ -1,62 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46775 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753391AbbG1CFb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Jul 2015 22:05:31 -0400
-Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-To: Zhang Rui <rui.zhang@intel.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1438047747.1856.12.camel@rzhang1-mobl4>
-Cc: chuansheng.liu@intel.com, Tejun Heo <tj@kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	MyMailClone@t-online.de, mister.freeman@laposte.net,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-From: Aaron Lu <aaron.lu@intel.com>
-Message-ID: <55B6E3BD.6040101@intel.com>
-Date: Tue, 28 Jul 2015 10:06:53 +0800
-MIME-Version: 1.0
-In-Reply-To: <1438047747.1856.12.camel@rzhang1-mobl4>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 15/49] PCI: Cache window alignment value
+Date: Tue, 14 Jul 2015 15:46:46 -0700
+Message-Id: <1436914040-13206-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/28/2015 09:42 AM, Zhang Rui wrote:
-> From 57edba9c677e47354846db951014dc4d5b13ce54 Mon Sep 17 00:00:00 2001
-> From: Zhang Rui <rui.zhang@intel.com>
-> Date: Sun, 26 Jul 2015 14:15:36 +0800
-> Subject: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-> 
-> In https://bugzilla.kernel.org/show_bug.cgi?id=81551,
-> we found that Jmicron chip 361/363 is broken after resume if async noirq
-> (76569faa62 (PM / sleep: Asynchronous threads for resume_noirq)) is supported,
-> thus commit e6b7e41cdd (ata: Disabling the async PM for JMicron chip 363/361)
-> is introduced to fix this problem.
-> But then, we found that Jmicron chip 368 also has this problem, and it is decided
-> to disable the pm async feature for all the Jmicron chips.
-> 
-> But how to fix this was discussed in the mailing list for some time.
-> After some investigation, we believe that a proper fix is to disable
-> the async PM in PCI instead of ata driver, because, on this platform,
-> pci_resume_noirq() of IDE controller must happen after pci_resume_noirq()
-> of AHCI controller. But as .resume_noirq() of the pata_jmicron driver is
-> no-op, this suggests that it is the PCI common actions, aka,
-> pci_pm_default_resume_early(), have the dependency.
-> To fix this, using device_pm_wait_for_dev() in pata_jmicron driver can not
-> solve the dependency because pci_pm_default_resume_early() is invoked before
-> driver callback being invoked, plus, as it is the PCI common actions that
-> have the dependency, it is reasonable to fix it in PCI bus code,
-> rather than driver code.
-> 
-> This patch is made based on the patch from Liu Chuansheng at
-> https://lkml.org/lkml/2014/12/5/74
-> it reverts commit e6b7e41cdd ("ata: Disabling the async PM for JMicron
-> chip 363/361"), and introduces a PCI quirk to disable async PM for Jmicron
-> chips.
-> 
-> Reference: https://bugzilla.kernel.org/show_bug.cgi?id=81551
-> Tested-by: Jay <MyMailClone@t-online.de>
-> Tested-by: Barto <mister.freeman@laposte.net>
-> Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+There are several calling to window_alignment().
+And we will have more for alt_size support.
 
-Reviewed-by: Aaron Lu <aaron.lu@intel.com>
+Cache the value instead of keeping on getting it.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 57b5c09..1b5fbca 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1203,6 +1203,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	resource_size_t window_align;
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+@@ -1212,6 +1213,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		min_size = 0;
+ 	}
+ 
++	window_align = window_alignment(bus, b_res->flags);
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+@@ -1272,10 +1275,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		}
+ 	}
+ 
+-	max_align = max(max_align, window_alignment(bus, b_res->flags));
++	max_align = max(max_align, window_align);
+ 	if (size || min_size) {
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+-				 size, window_alignment(bus, b_res->flags));
++						size, window_align);
+ 		size0 = calculate_memsize(size, min_size,
+ 				  resource_size(b_res), min_align);
+ 	}
+@@ -1286,7 +1289,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+-					window_alignment(bus, b_res->flags));
++					window_align);
+ 		size1 = calculate_memsize(sum_add_size, min_size,
+ 				 resource_size(b_res), min_add_align);
+ 	}
+-- 
+1.8.4.5
+
