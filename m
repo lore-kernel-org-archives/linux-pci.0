@@ -1,121 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<kishon@ti.com>
-CC: <nsekhar@ti.com>
-Subject: [PATCH 3/3] PCI: host: pci-dra7xx: add pm support to pci dra7xx
-Date: Fri, 3 Jul 2015 16:33:45 +0530
-Message-ID: <1435921425-15121-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1435921425-15121-1-git-send-email-kishon@ti.com>
-References: <1435921425-15121-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:33010 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752827AbbGNSeH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 14:34:07 -0400
+Received: by obbgp5 with SMTP id gp5so11670783obb.0
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 11:34:06 -0700 (PDT)
+Date: Tue, 14 Jul 2015 13:34:02 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: David =?iso-8859-1?Q?M=FCller?= <dave.mueller@gmx.ch>
+Cc: linux-pci@vger.kernel.org, Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] ARM: imx6: Fix non-working MSI interrupts if PCIe switch
+ is attached
+Message-ID: <20150714183402.GC24416@google.com>
+References: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PM support to pci-dra7xx so that PCI clocks can be disabled
-during suspend and enabled back during resume without affecting
-PCI functionality.
+On Thu, Jun 18, 2015 at 09:59:07AM +0200, David Müller wrote:
+> This problem has already been reported as 
+> https://bugzilla.kernel.org/show_bug.cgi?id=100051
+> 
+> Signed-off-by: David Müller <dave.mueller@gmx.ch>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/host/pci-dra7xx.c |   74 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
+Dropping for now, hoping for a repost with more info.
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index d8b6d66..1f5c039 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -433,6 +433,79 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int dra7xx_pcie_suspend(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	struct pcie_port *pp = &dra7xx->pp;
-+
-+	dw_pcie_suspend_rc(pp);
-+
-+	return 0;
-+}
-+
-+static int dra7xx_pcie_resume(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	struct pcie_port *pp = &dra7xx->pp;
-+
-+	dw_pcie_resume_rc(pp);
-+
-+	return 0;
-+}
-+static int dra7xx_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	int count = dra7xx->phy_count;
-+
-+	while (count--) {
-+		phy_power_off(dra7xx->phy[count]);
-+		phy_exit(dra7xx->phy[count]);
-+	}
-+
-+	return 0;
-+}
-+static int dra7xx_pcie_resume_noirq(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	int phy_count = dra7xx->phy_count;
-+	int ret;
-+	int i;
-+
-+	for (i = 0; i < phy_count; i++) {
-+		ret = phy_init(dra7xx->phy[i]);
-+		if (ret < 0)
-+			goto err_phy;
-+
-+		ret = phy_power_on(dra7xx->phy[i]);
-+		if (ret < 0) {
-+			phy_exit(dra7xx->phy[i]);
-+			goto err_phy;
-+		}
-+	}
-+
-+	return 0;
-+
-+err_phy:
-+	while (--i >= 0) {
-+		phy_power_off(dra7xx->phy[i]);
-+		phy_exit(dra7xx->phy[i]);
-+	}
-+
-+	return ret;
-+}
-+
-+static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
-+	.suspend_noirq = dra7xx_pcie_suspend_noirq,
-+	.suspend = dra7xx_pcie_suspend,
-+	.resume_noirq = dra7xx_pcie_resume_noirq,
-+	.resume = dra7xx_pcie_resume,
-+};
-+#define DEV_PM_OPS	(&dra7xx_pcie_pm_ops)
-+#else
-+#define DEV_PM_OPS	NULL
-+#endif
-+
- static const struct of_device_id of_dra7xx_pcie_match[] = {
- 	{ .compatible = "ti,dra7-pcie", },
- 	{},
-@@ -444,6 +517,7 @@ static struct platform_driver dra7xx_pcie_driver = {
- 	.driver = {
- 		.name	= "dra7-pcie",
- 		.of_match_table = of_dra7xx_pcie_match,
-+		.pm	= DEV_PM_OPS,
- 	},
- };
- 
--- 
-1.7.9.5
-
+> ---
+>  drivers/pci/host/pci-imx6.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index c63691c..53f8dea 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -433,9 +433,6 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+>  	dw_pcie_setup_rc(pp);
+>  
+>  	imx6_pcie_start_link(pp);
+> -
+> -	if (IS_ENABLED(CONFIG_PCI_MSI))
+> -		dw_pcie_msi_init(pp);
+>  }
+>  
+>  static void imx6_pcie_reset_phy(struct pcie_port *pp)
+> @@ -550,6 +547,9 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+>  		return ret;
+>  	}
+>  
+> +	if (IS_ENABLED(CONFIG_PCI_MSI))
+> +		dw_pcie_msi_init(pp);
+> +
+>  	return 0;
+>  }
+>  
+> -- 
+> 1.8.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
