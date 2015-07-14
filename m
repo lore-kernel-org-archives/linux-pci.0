@@ -1,160 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19999 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752670AbbGMSkD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Jul 2015 14:40:03 -0400
-Subject: [PATCH V4 1/2] pci: Add dev_flags bit to access VPD through
- function 0
-From: Mark D Rustad <mark.d.rustad@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Mon, 13 Jul 2015 11:40:02 -0700
-Message-ID: <20150713184001.19985.64867.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
-References: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:35109 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752914AbbGNWrs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:47:48 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 12/49] PCI: Simplify res reference using in __assign_resourcs_sorted
+Date: Tue, 14 Jul 2015 15:46:43 -0700
+Message-Id: <1436914040-13206-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mark Rustad <mark.d.rustad@intel.com>
+Use res instead of dev_res->res.
 
-Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
-function 0 to provide VPD access on other functions. This is for
-hardware devices that provide copies of the same VPD capability
-registers in multiple functions. Because the kernel expects that
-each function has its own registers, both the locking and the state
-tracking are affected by VPD accesses to different functions.
-
-On such devices for example, if a VPD write is performed on function
-0, *any* later attempt to read VPD from any other function of that
-device will hang. This has to do with how the kernel tracks the
-expected value of the F bit per function.
-
-Concurrent accesses to different functions of the same device can
-not only hang but also corrupt both read and write VPD data.
-
-When hangs occur, typically the error message:
-
-vpd r/w failed.  This is likely a firmware bug on this device.
-
-will be seen.
-
-Never set this bit on function 0 or there will be an infinite recursion.
-
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
-Changes in V2:
-- Corrected spelling in log message
-- Added checks to see that the referenced function 0 is reasonable
-Changes in V3:
-- Don't leak a device reference
-- Check that function 0 has VPD
-- Make a helper for the function 0 checks
-- Do multifunction check in the quirk
-Changes in V4:
-- Provide a much more detailed explanation in the commit log
----
- drivers/pci/access.c |   61 +++++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h  |    2 ++
- 2 files changed, 62 insertions(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d9b64a175990..b965c12168b7 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -439,6 +439,56 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
- 	.release = pci_vpd_pci22_release,
- };
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6dff258..06664db 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -453,6 +453,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+ 	resource_size_t add_align;
++	struct resource *res;
  
-+static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-+			       void *arg)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	ssize_t ret;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+
-+	ret = pci_read_vpd(tdev, pos, count, arg);
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
-+static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
-+				const void *arg)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	ssize_t ret;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+
-+	ret = pci_write_vpd(tdev, pos, count, arg);
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
-+static const struct pci_vpd_ops pci_vpd_f0_ops = {
-+	.read = pci_vpd_f0_read,
-+	.write = pci_vpd_f0_write,
-+	.release = pci_vpd_pci22_release,
-+};
-+
-+static int pci_vpd_f0_dev_check(struct pci_dev *dev)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
-+	int ret = 0;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+	if (!tdev->vpd || !tdev->multifunction ||
-+	    dev->class != tdev->class || dev->vendor != tdev->vendor ||
-+	    dev->device != tdev->device)
-+		ret = -ENODEV;
-+
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
- int pci_vpd_pci22_init(struct pci_dev *dev)
- {
- 	struct pci_vpd_pci22 *vpd;
-@@ -447,12 +497,21 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
- 	if (!cap)
- 		return -ENODEV;
-+	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
-+		int ret = pci_vpd_f0_dev_check(dev);
-+
-+		if (ret)
-+			return ret;
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -468,8 +469,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+-		dev_res->res->end += get_res_add_size(realloc_head,
+-							dev_res->res);
++		res = dev_res->res;
++		res->end += get_res_add_size(realloc_head, res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+@@ -478,16 +479,16 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		 * 2. resource with IORESOURCE_SIZEALIGN
+ 		 *    update size above already change alignment.
+ 		 */
+-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++		if (!(res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+-		add_align = get_res_add_align(realloc_head, dev_res->res);
++		add_align = get_res_add_align(realloc_head, res);
+ 
+ 		if (add_align) {
+-			resource_size_t r_size = resource_size(dev_res->res);
++			resource_size_t r_size = resource_size(res);
+ 
+-			dev_res->res->start = add_align;
+-			dev_res->res->end = add_align + r_size - 1;
++			res->start = add_align;
++			res->end = add_align + r_size - 1;
+                }
+ 	}
+ 
+@@ -509,21 +510,21 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	/* check failed type */
+ 	fail_type = pci_fail_res_type_mask(&local_fail_head);
+ 	/* remove not need to be released assigned res from head list etc */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list)
+-		if (dev_res->res->parent &&
+-		    !pci_need_to_release(fail_type, dev_res->res)) {
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++		res = dev_res->res;
++		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+-			remove_from_list(realloc_head, dev_res->res);
+-			remove_from_list(&save_head, dev_res->res);
++			remove_from_list(realloc_head, res);
++			remove_from_list(&save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
 +	}
- 	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
- 	if (!vpd)
- 		return -ENOMEM;
  
- 	vpd->base.len = PCI_VPD_PCI22_SIZE;
--	vpd->base.ops = &pci_vpd_pci22_ops;
-+	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
-+		vpd->base.ops = &pci_vpd_f0_ops;
-+	else
-+		vpd->base.ops = &pci_vpd_pci22_ops;
- 	mutex_init(&vpd->lock);
- 	vpd->cap = cap;
- 	vpd->busy = false;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a8fb59..8edb125db13a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -180,6 +180,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
- 	/* Do not use PM reset even if device advertises NoSoftRst- */
- 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-+	/* Get VPD from function 0 VPD */
-+	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
- };
- 
- enum pci_irq_reroute_variant {
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list) {
+-		struct resource *res = dev_res->res;
+-
++		res = dev_res->res;
+ 		if (res->parent) {
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+ 				   "BAR %d: released %pR\n",
+@@ -534,8 +535,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+-		struct resource *res = save_res->res;
+-
++		res = save_res->res;
+ 		res->start = save_res->start;
+ 		res->end = save_res->end;
+ 		res->flags = save_res->flags;
+-- 
+1.8.4.5
 
