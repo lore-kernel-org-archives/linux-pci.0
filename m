@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:36777 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241AbbGNWw7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:52:59 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -8,175 +12,157 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 14/51] PCI: Add __add_to_list()
-Date: Mon, 27 Jul 2015 16:29:32 -0700
-Message-Id: <1438039809-24957-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v2 31/49] resources: Split out __allocate_resource()
+Date: Tue, 14 Jul 2015 15:47:02 -0700
+Message-Id: <1436914040-13206-32-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-to take alt_size, alt_align.
+It will not hold lock, so we could use it in other functions that
+hold the resource lock already.
 
-preparation patch for alt_size support.
-
+-v2: according to Linus, using "bool lock" as parameter
+     aka "conditionally take lock" is *wrong*.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Linus Torvalds <torvalds@linux-foundation.org>
 ---
- drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 31 insertions(+), 20 deletions(-)
+ kernel/resource.c | 70 +++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 50 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f30225c..57b5c09 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -66,6 +66,8 @@ struct pci_dev_resource {
- 	resource_size_t end;
- 	resource_size_t add_size;
- 	resource_size_t min_align;
-+	resource_size_t alt_size;
-+	resource_size_t alt_align;
- 	unsigned long flags;
- };
- 
-@@ -88,15 +90,16 @@ static void free_list(struct list_head *head)
-  * @add_size:	additional size to be optionally added
-  *              to the resource
-  */
--static int add_to_list(struct list_head *head,
-+static int __add_to_list(struct list_head *head,
- 		 struct pci_dev *dev, struct resource *res,
--		 resource_size_t add_size, resource_size_t min_align)
-+		 resource_size_t add_size, resource_size_t min_align,
-+		 resource_size_t alt_size, resource_size_t alt_align)
- {
- 	struct pci_dev_resource *tmp;
- 
- 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
- 	if (!tmp) {
--		pr_warn("add_to_list: kmalloc() failed!\n");
-+		pr_warn("__add_to_list: kmalloc() failed!\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -107,12 +110,20 @@ static int add_to_list(struct list_head *head,
- 	tmp->flags = res->flags;
- 	tmp->add_size = add_size;
- 	tmp->min_align = min_align;
-+	tmp->alt_size = alt_size;
-+	tmp->alt_align = alt_align;
- 
- 	list_add(&tmp->list, head);
- 
- 	return 0;
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 90552aa..830cc11 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -619,7 +619,7 @@ static int find_resource(struct resource *root, struct resource *new,
  }
  
-+static int add_to_list(struct list_head *head,
-+		 struct pci_dev *dev, struct resource *res)
+ /**
+- * reallocate_resource - allocate a slot in the resource tree given range & alignment.
++ * __reallocate_resource - allocate a slot in the resource tree given range & alignment.
+  *	The resource will be relocated if the new size cannot be reallocated in the
+  *	current location.
+  *
+@@ -628,7 +628,7 @@ static int find_resource(struct resource *root, struct resource *new,
+  * @newsize: new size of the resource descriptor
+  * @constraint: the size and alignment constraints to be met.
+  */
+-static int reallocate_resource(struct resource *root, struct resource *old,
++static int __reallocate_resource(struct resource *root, struct resource *old,
+ 			resource_size_t newsize,
+ 			struct resource_constraint  *constraint)
+ {
+@@ -636,8 +636,6 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
+ 
+-	write_lock(&resource_lock);
+-
+ 	if ((err = __find_resource(root, old, &new, newsize, constraint)))
+ 		goto out;
+ 
+@@ -662,14 +660,13 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+ 		BUG_ON(conflict);
+ 	}
+ out:
+-	write_unlock(&resource_lock);
+ 	return err;
+ }
+ 
+-
+ /**
+- * allocate_resource - allocate empty slot in the resource tree given range & alignment.
+- * 	The resource will be reallocated with a new size if it was already allocated
++ * __allocate_resource - allocate empty slot in the resource tree given range & alignment.
++ *	The resource will be reallocated with a new size if it was already
++ *	allocated
+  * @root: root resource descriptor
+  * @new: resource descriptor desired by caller
+  * @size: requested resource region size
+@@ -678,15 +675,17 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ *
++ * Caller need to hold resource_lock if needed.
+  */
+-int allocate_resource(struct resource *root, struct resource *new,
+-		      resource_size_t size, resource_size_t min,
+-		      resource_size_t max, resource_size_t align,
+-		      resource_size_t (*alignf)(void *,
+-						const struct resource *,
+-						resource_size_t,
+-						resource_size_t),
+-		      void *alignf_data)
++static int __allocate_resource(struct resource *root, struct resource *new,
++				resource_size_t size, resource_size_t min,
++				resource_size_t max, resource_size_t align,
++				resource_size_t (*alignf)(void *,
++						  const struct resource *,
++						  resource_size_t,
++						  resource_size_t),
++				void *alignf_data)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -700,20 +699,51 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
+ 
+-	if ( new->parent ) {
++	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+ 		   the new constraints */
+-		return reallocate_resource(root, new, size, &constraint);
++		return __reallocate_resource(root, new, size, &constraint);
+ 	}
+ 
+-	write_lock(&resource_lock);
+ 	err = find_resource(root, new, size, &constraint);
+ 	if (err >= 0 && __request_resource(root, new))
+ 		err = -EBUSY;
+-	write_unlock(&resource_lock);
++
+ 	return err;
+ }
+ 
++/**
++ * allocate_resource - allocate empty slot in the resource tree given range & alignment.
++ *	The resource will be reallocated with a new size if it was already
++ *	allocated
++ * @root: root resource descriptor
++ * @new: resource descriptor desired by caller
++ * @size: requested resource region size
++ * @min: minimum boundary to allocate
++ * @max: maximum boundary to allocate
++ * @align: alignment requested, in bytes
++ * @alignf: alignment function, optional, called if not NULL
++ * @alignf_data: arbitrary data to pass to the @alignf function
++ */
++int allocate_resource(struct resource *root, struct resource *new,
++		      resource_size_t size, resource_size_t min,
++		      resource_size_t max, resource_size_t align,
++		      resource_size_t (*alignf)(void *,
++						const struct resource *,
++						resource_size_t,
++						resource_size_t),
++		      void *alignf_data)
 +{
-+	return __add_to_list(head, dev, res, 0, 0, 0, 0);
++	int ret;
++
++	write_lock(&resource_lock);
++	ret = __allocate_resource(root, new, size, min, max, align,
++				   alignf, alignf_data);
++	write_unlock(&resource_lock);
++
++	return ret;
 +}
 +
- static void remove_from_list(struct list_head *head,
- 				 struct resource *res)
- {
-@@ -378,9 +389,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
--				add_to_list(fail_head, dev_res->dev, res,
--					    0 /* don't care */,
--					    0 /* don't care */);
-+				add_to_list(fail_head, dev_res->dev, res);
- 			reset_resource(res);
- 		}
- 	}
-@@ -466,7 +475,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ EXPORT_SYMBOL(allocate_resource);
  
- 	/* Save original start, end, flags etc at first */
- 	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
-+		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
- 			free_list(&save_head);
- 			goto requested_and_reassign;
- 		}
-@@ -1019,8 +1028,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0,
--			    min_align);
-+		__add_to_list(realloc_head, bus->self, b_res,
-+			      size1 - size0, min_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long)size1-size0);
-@@ -1222,7 +1231,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
--				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
-+				__add_to_list(realloc_head, dev, r,
-+					      r_size, align, 0, 0);
- 				sum_add_size += r_size;
- 				if (align > max_add_align)
- 					max_add_align = align;
-@@ -1293,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
--				min_add_align);
-+		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
-+				min_add_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long) (size1 - size0),
-@@ -1331,8 +1341,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[0].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
--				pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_1:
-@@ -1343,8 +1353,8 @@ handle_b_res_1:
- 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[1].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
--				 pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res + 1,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_2:
-@@ -1381,8 +1391,9 @@ handle_b_res_2:
- 				  IORESOURCE_STARTALIGN;
- 		if (realloc_head) {
- 			b_res[2].end -= pci_cardbus_mem_size;
--			add_to_list(realloc_head, bridge, b_res+2,
--				 pci_cardbus_mem_size, pci_cardbus_mem_size);
-+			__add_to_list(realloc_head, bridge, b_res + 2,
-+				pci_cardbus_mem_size, pci_cardbus_mem_size,
-+				0, 0);
- 		}
- 
- 		/* reduce that to half */
-@@ -1397,8 +1408,8 @@ handle_b_res_3:
- 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[3].end -= b_res_3_size;
--		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
--				 pci_cardbus_mem_size);
-+		__add_to_list(realloc_head, bridge, b_res + 3,
-+				b_res_3_size, pci_cardbus_mem_size, 0, 0);
- 	}
- 
- handle_done:
+ /**
 -- 
 1.8.4.5
 
