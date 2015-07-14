@@ -1,91 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:37424 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753847AbbGASbf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 14:31:35 -0400
-Received: by igblr2 with SMTP id lr2so40865375igb.0
-        for <linux-pci@vger.kernel.org>; Wed, 01 Jul 2015 11:31:34 -0700 (PDT)
-Date: Wed, 1 Jul 2015 13:31:27 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: wdavis@nvidia.com
-Cc: Joerg Roedel <joro@8bytes.org>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 3/7] dma-mapping: pci: add pci_(un)map_resource
-Message-ID: <20150701183127.GD13409@google.com>
-References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
- <1432919686-32306-4-git-send-email-wdavis@nvidia.com>
- <20150701160606.GA13409@google.com>
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:34513 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752125AbbGNTAs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:00:48 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150701160606.GA13409@google.com>
+In-Reply-To: <1436879588.1264.11.camel@intel.com>
+References: <1436879588.1264.11.camel@intel.com>
+Date: Tue, 14 Jul 2015 12:00:47 -0700
+Message-ID: <CAE9FiQUa_gK=NsUehCjKs=r7FfAqAj2J3aE_JXBRkPtBXkRSKg@mail.gmail.com>
+Subject: Re: [lkp] [PCI] c0d1a185278: EDAC sbridge: Couldn't enable 8086:6fa0
+From: Yinghai Lu <yinghai@kernel.org>
+To: Huang Ying <ying.huang@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKP ML <lkp@01.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 01, 2015 at 11:06:06AM -0500, Bjorn Helgaas wrote:
-> On Fri, May 29, 2015 at 12:14:42PM -0500, wdavis@nvidia.com wrote:
-> > From: Will Davis <wdavis@nvidia.com>
-> > 
-> > Simply route these through to the new dma_(un)map_resource APIs.
-> > 
-> > Signed-off-by: Will Davis <wdavis@nvidia.com>
-> > Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-> > Reviewed-by: John Hubbard <jhubbard@nvidia.com>
-> > ---
-> >  include/asm-generic/pci-dma-compat.h | 14 ++++++++++++++
-> >  1 file changed, 14 insertions(+)
-> > 
-> > diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
-> > index c110843..ac4a4ad 100644
-> > --- a/include/asm-generic/pci-dma-compat.h
-> > +++ b/include/asm-generic/pci-dma-compat.h
-> > @@ -61,6 +61,20 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
-> >  	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
-> >  }
-> >  
-> > +static inline dma_addr_t
-> > +pci_map_resource(struct pci_dev *hwdev, struct resource *resource,
-> > +		 unsigned long offset, size_t size, int direction)
-> 
-> After 3a9ad0b4fdcd ("PCI: Add pci_bus_addr_t"), which will appear in
-> v4.2-rc1, there is a pci_bus_addr_t, and I think you need that instead
-> of dma_addr_t.
-> 
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd
+On Tue, Jul 14, 2015 at 6:13 AM, Huang Ying <ying.huang@intel.com> wrote:
+> FYI, we noticed the below changes on
+>
+> git://internal_merge_and_test_tree revert-c0d1a18527806a3938e76a0e648cae690510b6a3-c0d1a18527806a3938e76a0e648cae690510b6a3
+> commit c0d1a18527806a3938e76a0e648cae690510b6a3 ("PCI: Don't set flags to 0 when assign resource fail")
+>
+>
+> [   30.350859] EDAC sbridge: Seeking for: PCI ID 8086:6fa0
+> [   30.350867] sbridge_edac 0000:ff:12.0: can't enable device: BAR 1 [mem size 0x00000010 disabled] not assigned
+> [   30.350867] EDAC sbridge: Couldn't enable 8086:6fa0
+> [   30.350901] EDAC sbridge: Some needed devices are missing
+> [   30.350904] EDAC sbridge: Couldn't find mci handler
+>
 
-This wasn't a very good response, sorry.  I don't think just
-changing dma_addr_t to pci_bus_addr_t is a good resolution.
+Hi Ying,
 
-Isn't there an implicit assumption here that either you're using an IOMMU
-driver that always returns bus addresses that fit in a dma_addr_t, or
-you're not using an IOMMU and dma_addr_t is big enough for any bus address?
+I updated the branch, it should fix the problem.
 
-What happens on a system with 64-bit PCI bus addresses, 32-bit dma_addr_t,
-and no IOMMU?  Would this return failure somehow?
+Can you test that again ?
 
-> > +{
-> > +	return dma_map_resource(hwdev == NULL ? NULL : &hwdev->dev, resource, offset, size, (enum dma_data_direction)direction);
-> > +}
-> > +
-> > +static inline void
-> > +pci_unmap_resource(struct pci_dev *hwdev, dma_addr_t dma_address, size_t size,
-> > +		   int direction)
-> > +{
-> > +	dma_unmap_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
-> > +}
-> > +
-> >  static inline int
-> >  pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
-> >  	   int nents, int direction)
-> > -- 
-> > 2.4.0
-> > 
+BTW, there should be BIOS problem with it.
+
+[    4.144987] pci 0000:ff:12.0: [8086:6fa0] type 00 class 0x088000
+[    4.151702] pci 0000:ff:12.0: reg 0x14: [mem 0x00000000-0x0000000f]
+[    4.158703] pci 0000:ff:12.0: reg 0x18: [mem 0x00000000-0x0000003f]
+[    4.165705] pci 0000:ff:12.0: reg 0x1c: [mem 0x00000000-0x0000000f]
+[    4.172706] pci 0000:ff:12.0: reg 0x20: [mem 0x00000000-0x0000003f]
+[    4.179708] pci 0000:ff:12.0: reg 0x24: [mem 0x00000000-0x0000000f]
+[    4.186739] pci 0000:ff:12.1: [8086:6f30] type 00 class 0x110100
+[    4.193493] pci 0000:ff:12.4: [8086:6f60] type 00 class 0x088000
+[    4.200208] pci 0000:ff:12.4: reg 0x14: [mem 0x00000000-0x0000000f]
+[    4.207210] pci 0000:ff:12.4: reg 0x18: [mem 0x00000000-0x0000003f]
+[    4.214212] pci 0000:ff:12.4: reg 0x1c: [mem 0x00000000-0x0000000f]
+[    4.221214] pci 0000:ff:12.4: reg 0x20: [mem 0x00000000-0x0000003f]
+[    4.228215] pci 0000:ff:12.4: reg 0x24: [mem 0x00000000-0x0000000f]
+
+but for bios 0xff, there is no _CRS mmio.
+
+
+also
+[    4.876484] pci 0000:7f:1e.3: [Firmware Bug]: reg 0x10: invalid BAR
+(can't size)
+so it has silicon problem ?
+
+Thanks
+
+Yinghai
