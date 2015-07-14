@@ -1,57 +1,186 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 24 Jul 2015 17:42:58 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Duc Dang <dhdang@apm.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: X-Gene: Unhandled fault: synchronous external abort in
- pci_generic_config_read32
-Message-ID: <20150724224258.GA23990@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:44956 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238AbbGNWr7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:47:59 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 14/49] PCI: Add __add_to_list()
+Date: Tue, 14 Jul 2015 15:46:45 -0700
+Message-Id: <1436914040-13206-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I regularly see faults like this on an APM X-Gene:
+to take alt_size, alt_align.
 
-  U-Boot 2013.04-mustang_sw_1.14.14 (Dec 16 2014 - 15:59:33)
-  CPU0: APM ARM 64-bit Potenza Rev B0 2400MHz PCP 2400MHz
-       32 KB ICACHE, 32 KB DCACHE
-       SOC 2000MHz IOBAXI 400MHz AXI 250MHz AHB 200MHz GFC 125MHz
-  ...
-  Unhandled fault: synchronous external abort (0x96000010) at 0xffffff8000110034
-  Internal error: : 96000010 [#1] SMP
-  Modules linked in:
-  CPU: 0 PID: 3723 Comm: ... 4.1.0-smp-DEV #3
-  Hardware name: APM X-Gene Mustang board (DT)
-  task: ffffffc7dc1a4140 ti: ffffffc7dc118000 task.ti: ffffffc7dc118000
-  PC is at pci_generic_config_read32+0x4c/0xb8
-  LR is at pci_generic_config_read32+0x40/0xb8
-  pc : [<ffffffc00033b90c>] lr : [<ffffffc00033b900>] pstate: 600001c5
-  ...
-  Call trace:
-  [<ffffffc00033b90c>] pci_generic_config_read32+0x4c/0xb8
-  [<ffffffc00033bf58>] pci_user_read_config_byte+0x60/0xc4
-  [<ffffffc0003496a8>] pci_read_config+0x15c/0x238
-  [<ffffffc0002393b4>] sysfs_kf_bin_read+0x68/0xa0
-  [<ffffffc00023896c>] kernfs_fop_read+0x9c/0x1ac
-  [<ffffffc0001c361c>] __vfs_read+0x44/0x128
-  [<ffffffc0001c3e28>] vfs_read+0x84/0x144
-  [<ffffffc0001c4764>] SyS_read+0x50/0xb0
+preparation patch for alt_size support.
 
-  # lspci
-  00:00.0 PCI bridge: Applied Micro Circuits Corp. Device e004 (rev 04)
-  01:00.0 Ethernet controller: Mellanox Technologies MT27520 Family
 
-I first saw this on an ancient kernel and thought it was likely specific to
-my environment, but I'm now using an almost unmodified v4.1 kernel and
-still seeing it.  Does anybody else see this?  The box does have a PCI card
-installed, but I haven't yet worked out what device's config space we're
-trying to read.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 31 insertions(+), 20 deletions(-)
 
-Is there anything I can do to debug this?  I'm not an arm64 guy, but my
-impression is that this is a page fault, and the address seems to be in the
-"cfg" area ioremapped by xgene_pcie_map_reg(), so I'm not sure this is
-really a PCI issue -- maybe that page mapping got trashed by somebody else?
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f30225c..57b5c09 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -66,6 +66,8 @@ struct pci_dev_resource {
+ 	resource_size_t end;
+ 	resource_size_t add_size;
+ 	resource_size_t min_align;
++	resource_size_t alt_size;
++	resource_size_t alt_align;
+ 	unsigned long flags;
+ };
+ 
+@@ -88,15 +90,16 @@ static void free_list(struct list_head *head)
+  * @add_size:	additional size to be optionally added
+  *              to the resource
+  */
+-static int add_to_list(struct list_head *head,
++static int __add_to_list(struct list_head *head,
+ 		 struct pci_dev *dev, struct resource *res,
+-		 resource_size_t add_size, resource_size_t min_align)
++		 resource_size_t add_size, resource_size_t min_align,
++		 resource_size_t alt_size, resource_size_t alt_align)
+ {
+ 	struct pci_dev_resource *tmp;
+ 
+ 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
+ 	if (!tmp) {
+-		pr_warn("add_to_list: kmalloc() failed!\n");
++		pr_warn("__add_to_list: kmalloc() failed!\n");
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -107,12 +110,20 @@ static int add_to_list(struct list_head *head,
+ 	tmp->flags = res->flags;
+ 	tmp->add_size = add_size;
+ 	tmp->min_align = min_align;
++	tmp->alt_size = alt_size;
++	tmp->alt_align = alt_align;
+ 
+ 	list_add(&tmp->list, head);
+ 
+ 	return 0;
+ }
+ 
++static int add_to_list(struct list_head *head,
++		 struct pci_dev *dev, struct resource *res)
++{
++	return __add_to_list(head, dev, res, 0, 0, 0, 0);
++}
++
+ static void remove_from_list(struct list_head *head,
+ 				 struct resource *res)
+ {
+@@ -378,9 +389,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head)
+-				add_to_list(fail_head, dev_res->dev, res,
+-					    0 /* don't care */,
+-					    0 /* don't care */);
++				add_to_list(fail_head, dev_res->dev, res);
+ 			reset_resource(res);
+ 		}
+ 	}
+@@ -466,7 +475,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Save original start, end, flags etc at first */
+ 	list_for_each_entry(dev_res, head, list) {
+-		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
++		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
+ 			free_list(&save_head);
+ 			goto requested_and_reassign;
+ 		}
+@@ -1019,8 +1028,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0,
+-			    min_align);
++		__add_to_list(realloc_head, bus->self, b_res,
++			      size1 - size0, min_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long)size1-size0);
+@@ -1222,7 +1231,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				add_to_align_test_list(&align_test_add_list,
+ 							align, r_size);
+ 				r->end = r->start - 1;
+-				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
++				__add_to_list(realloc_head, dev, r,
++					      r_size, align, 0, 0);
+ 				sum_add_size += r_size;
+ 				if (align > max_add_align)
+ 					max_add_align = align;
+@@ -1293,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
+-				min_add_align);
++		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
++				min_add_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long) (size1 - size0),
+@@ -1331,8 +1341,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[0].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
+-				pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_1:
+@@ -1343,8 +1353,8 @@ handle_b_res_1:
+ 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[1].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
+-				 pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res + 1,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_2:
+@@ -1381,8 +1391,9 @@ handle_b_res_2:
+ 				  IORESOURCE_STARTALIGN;
+ 		if (realloc_head) {
+ 			b_res[2].end -= pci_cardbus_mem_size;
+-			add_to_list(realloc_head, bridge, b_res+2,
+-				 pci_cardbus_mem_size, pci_cardbus_mem_size);
++			__add_to_list(realloc_head, bridge, b_res + 2,
++				pci_cardbus_mem_size, pci_cardbus_mem_size,
++				0, 0);
+ 		}
+ 
+ 		/* reduce that to half */
+@@ -1397,8 +1408,8 @@ handle_b_res_3:
+ 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[3].end -= b_res_3_size;
+-		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
+-				 pci_cardbus_mem_size);
++		__add_to_list(realloc_head, bridge, b_res + 3,
++				b_res_3_size, pci_cardbus_mem_size, 0, 0);
+ 	}
+ 
+ handle_done:
+-- 
+1.8.4.5
 
-Bjorn
