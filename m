@@ -1,96 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:43271 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751261AbbGIH7B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 9 Jul 2015 03:59:01 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Borislav Petkov <bp@alien8.de>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [RFC Patch V1 00/12] Reorganize struct msi_desc to prepare for support of generic MSI
-Date: Thu,  9 Jul 2015 16:00:35 +0800
-Message-Id: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:36442 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754281AbbGNULE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 16:11:04 -0400
+Received: by obnw1 with SMTP id w1so13217836obn.3
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 13:11:04 -0700 (PDT)
+Date: Tue, 14 Jul 2015 15:10:59 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH] PCI-iproc: Delete unnecessary checks before two function
+ calls
+Message-ID: <20150714201059.GG24416@google.com>
+References: <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net>
+ <55900A20.5070407@users.sourceforge.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55900A20.5070407@users.sourceforge.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Recently Marc Zyngier <marc.zyngier@arm.com> has posted a patch set at
-https://lkml.org/lkml/2015/7/7/712
-to enhance PCI MSI code to support generic MSI.
+On Sun, Jun 28, 2015 at 04:52:16PM +0200, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sun, 28 Jun 2015 16:42:04 +0200
+> 
+> The functions phy_exit() and phy_power_off() test whether their argument
+> is NULL and then return immediately.
+> Thus the test around the calls is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-This is a companion patch set to refine struct msi_desc and related data
-structures to support generic MSI, and it would be better to combined with
-Marc's patch set.  It's also requested by
-Stuart Yoder <stuart.yoder@freescale.com>
+I haven't seen a followup to Ray's review, but in the interest of making
+progress, I updated and applied the patch as appended.  I also reviewed
+other phy_*() calls under drivers/pci, and they all look OK (with no
+unnecessary tests for NULL).
 
-It first introduces a helper function msi_desc_to_pci_sysdata(), and
-convert current PCI drivers to use helper functions to access fields
-in struct msi_desc.
-Then it moves msi_list from struct pci_dev into struct device and
-refines struct msi_desc.
-At last it moves alloc_msi_entry() into kernel/irq/msi.c for reuse.
+This is on the pci/host-iproc branch for v4.3.
 
-Currently msi_desc_to_pci_sysdata() and msi_desc_to_pci_dev() are
-implemented as normal functions instead of inlines to avoid header file
-inclusion issue. If inlined version is preferred for performance, we could
-move all of first_pci_msi_entry, for_each_pci_msi_entry, msi_desc_to_pci_dev
-and msi_desc_to_pci_sysdata from linxu/kernel/msi.h into linux/kernel/pci.h.
+> ---
+>  drivers/pci/host/pcie-iproc.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index d77481e..f875821 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -239,12 +239,9 @@ err_rm_root_bus:
+>  	pci_remove_root_bus(bus);
+>  
+>  err_power_off_phy:
+> -	if (pcie->phy)
+> -		phy_power_off(pcie->phy);
+> +	phy_power_off(pcie->phy);
+>  err_exit_phy:
+> -	if (pcie->phy)
+> -		phy_exit(pcie->phy);
+> -
+> +	phy_exit(pcie->phy);
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(iproc_pcie_setup);
+> -- 
+> 2.4.4
 
-This patch set is based on v4.2-rc1 and passes 0day test suite. You
-may access the code at:
-https://github.com/jiangliu/linux.git msi_desc_v1
+commit 55b5e16332eb9ffc1cbaf975585f4521417ab427
+Author: Markus Elfring <elfring@users.sourceforge.net>
+Date:   Sun Jun 28 16:42:04 2015 +0200
 
-Thanks!
-Gerry
+    PCI: iproc: Delete unnecessary checks before phy calls
+    
+    The functions phy_exit() and phy_power_off() test whether their argument is
+    NULL and then return immediately.  Thus the test around the calls is not
+    needed.
+    
+    This issue was detected by using the Coccinelle software.
+    
+    [bhelgaas: also phy_init() and phy_power_on(), as Ray Jui suggested]
+    [bhelgaas: also remove tests in iproc_pcie_remove()]
+    Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Jiang Liu (12):
-  PCI: Add helper function msi_desc_to_pci_sysdata()
-  MIPS, PCI: Use for_pci_msi_entry() to access MSI device list
-  PowerPC, PCI: Use for_pci_msi_entry() to access MSI device list
-  s390/pci: Use for_pci_msi_entry() to access MSI device list
-  x86, PCI: Use for_pci_msi_entry() to access MSI device list
-  PCI: Use for_pci_msi_entry() to access MSI device list
-  sparc, PCI: Use helper functions to access fields in struct msi_desc
-  PCI: Use helper functions to access fields in struct msi_desc
-  genirq: Move msi_list from struct pci_dev to struct device
-  genirq, PCI: Store 'struct device *' instead 'struct pci_dev *' in
-    struct msi_desc
-  genirq, PCI: Reorginize struct msi_desc to prepare for support of
-    generic MSI
-  genirq, PCI: Move alloc_msi_entry() from PCI MSI code into generic
-    MSI code
-
- arch/mips/pci/msi-octeon.c             |    2 +-
- arch/powerpc/platforms/cell/axon_msi.c |    6 +--
- arch/powerpc/platforms/pasemi/msi.c    |    4 +-
- arch/powerpc/platforms/powernv/pci.c   |    4 +-
- arch/powerpc/platforms/pseries/msi.c   |    6 +--
- arch/powerpc/sysdev/fsl_msi.c          |    4 +-
- arch/powerpc/sysdev/mpic_u3msi.c       |    4 +-
- arch/powerpc/sysdev/ppc4xx_hsta_msi.c  |    4 +-
- arch/powerpc/sysdev/ppc4xx_msi.c       |    4 +-
- arch/s390/pci/pci.c                    |    6 +--
- arch/sparc/kernel/pci.c                |    2 +-
- arch/x86/pci/xen.c                     |    8 ++--
- drivers/base/core.c                    |    3 ++
- drivers/pci/host/pci-keystone-dw.c     |    6 +--
- drivers/pci/host/pcie-designware.c     |    4 +-
- drivers/pci/host/pcie-xilinx.c         |   12 ++---
- drivers/pci/msi.c                      |   82 +++++++++++++++++---------------
- drivers/pci/xen-pcifront.c             |    2 +-
- include/linux/device.h                 |    4 ++
- include/linux/msi.h                    |   55 +++++++++++----------
- include/linux/pci.h                    |    1 -
- kernel/irq/msi.c                       |   17 +++++++
- 22 files changed, 136 insertions(+), 104 deletions(-)
-
--- 
-1.7.10.4
-
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index d77481e..9a00dca 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -191,19 +191,16 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 	if (!pcie || !pcie->dev || !pcie->base)
+ 		return -EINVAL;
+ 
+-	if (pcie->phy) {
+-		ret = phy_init(pcie->phy);
+-		if (ret) {
+-			dev_err(pcie->dev, "unable to initialize PCIe PHY\n");
+-			return ret;
+-		}
+-
+-		ret = phy_power_on(pcie->phy);
+-		if (ret) {
+-			dev_err(pcie->dev, "unable to power on PCIe PHY\n");
+-			goto err_exit_phy;
+-		}
++	ret = phy_init(pcie->phy);
++	if (ret) {
++		dev_err(pcie->dev, "unable to initialize PCIe PHY\n");
++		return ret;
++	}
+ 
++	ret = phy_power_on(pcie->phy);
++	if (ret) {
++		dev_err(pcie->dev, "unable to power on PCIe PHY\n");
++		goto err_exit_phy;
+ 	}
+ 
+ 	iproc_pcie_reset(pcie);
+@@ -239,12 +236,9 @@ err_rm_root_bus:
+ 	pci_remove_root_bus(bus);
+ 
+ err_power_off_phy:
+-	if (pcie->phy)
+-		phy_power_off(pcie->phy);
++	phy_power_off(pcie->phy);
+ err_exit_phy:
+-	if (pcie->phy)
+-		phy_exit(pcie->phy);
+-
++	phy_exit(pcie->phy);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(iproc_pcie_setup);
+@@ -254,10 +248,8 @@ int iproc_pcie_remove(struct iproc_pcie *pcie)
+ 	pci_stop_root_bus(pcie->root_bus);
+ 	pci_remove_root_bus(pcie->root_bus);
+ 
+-	if (pcie->phy) {
+-		phy_power_off(pcie->phy);
+-		phy_exit(pcie->phy);
+-	}
++	phy_power_off(pcie->phy);
++	phy_exit(pcie->phy);
+ 
+ 	return 0;
+ }
