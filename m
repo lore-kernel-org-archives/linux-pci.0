@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36376 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932146AbbG0Xba (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:31:30 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -11,117 +7,55 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 27/51] PCI: Move ISA ioport align out of calculate_iosize
-Date: Mon, 27 Jul 2015 16:29:45 -0700
-Message-Id: <1438039809-24957-28-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Anton Blanchard <anton@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH v2 40/49] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
+Date: Tue, 14 Jul 2015 15:47:11 -0700
+Message-Id: <1436914040-13206-41-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we could unify calculate_iosize and calculate_memsize later.
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+parsing.
 
-when one bridge have several children devices, and every devices
-have several io port resources and resource size < 0x400.
-
-We need to check size, and add extra size to make sure bit8/9
-to be zero.
-
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: Anton Blanchard <anton@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
 ---
- drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
+ arch/powerpc/kernel/pci_of_scan.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b44921e..3db2838 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1126,11 +1126,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
--	/* To be fixed in 2.5: we should have sort of HAVE_ISA
--	   flag in the struct pci_bus. */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
- 	size = ALIGN(size + size1, align);
- 	if (size < old_size)
- 		size = old_size;
-@@ -1184,6 +1179,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
- 	return max(align, arch_align);
- }
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 42e02a2..f31bfd0 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
  
-+static resource_size_t size_aligned_for_isa(resource_size_t size)
-+{
-+	/*
-+	 * To be fixed in 2.5: we should have sort of HAVE_ISA
-+	 *  flag in the struct pci_bus.
-+	 */
-+#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
-+	size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+#endif
-+	return size;
-+}
-+
- /**
-  * pbus_size_io() - size the io window of a given bus
-  *
-@@ -1201,11 +1208,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_sum_size = 0;
--	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
--	resource_size_t children_add_size = 0;
-+	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
- 	resource_size_t min_align, align;
- 
- 	if (!b_res)
-@@ -1222,7 +1228,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
--			unsigned long r_size;
-+			unsigned long r_size, r_add_size;
- 
- 			if (r->parent || !(r->flags & IORESOURCE_IO))
- 				continue;
-@@ -1238,18 +1244,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			if (align > min_align)
- 				min_align = align;
- 
--			if (realloc_head)
--				children_add_size += get_res_add_size(realloc_head, r);
-+			if (realloc_head) {
-+				r_add_size = get_res_add_size(realloc_head, r);
-+				r_add_size += r_size;
-+				if (r_add_size < 0x400)
-+					/* Might be re-aligned for ISA */
-+					sum_add_size += r_add_size;
-+				else
-+					sum_add_size1 += r_add_size;
-+			}
- 		}
- 	}
- 
-+	size = size_aligned_for_isa(size);
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	sum_add_size = children_add_size + size + size1;
-+	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(size, min_size, sum_add_size - size,
-+		calculate_iosize(sum_add_size, min_size, 0,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
+ 	if (addr0 & 0x02000000) {
+ 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
+-		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
++		if (addr0 & 0x01000000)
++			flags |= IORESOURCE_MEM_64
++				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		if (addr0 & 0x40000000)
+ 			flags |= IORESOURCE_PREFETCH
+ 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
 -- 
 1.8.4.5
 
