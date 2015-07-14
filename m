@@ -2,134 +2,73 @@ Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 35/36] PCI, x86: Add pci=assign_pref_bars to re-allocate pref bars
-Date: Mon,  6 Jul 2015 16:39:25 -0700
-Message-Id: <1436225966-27247-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v2 39/49] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
+Date: Tue, 14 Jul 2015 15:47:10 -0700
+Message-Id: <1436914040-13206-40-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could reallocate pref mmio64 above 4G later.
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+parsing.
 
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
 ---
- arch/x86/include/asm/pci_x86.h |  1 +
- arch/x86/pci/common.c          |  3 +++
- arch/x86/pci/i386.c            | 56 ++++++++++++++++++++++++++----------------
- 3 files changed, 39 insertions(+), 21 deletions(-)
+ arch/sparc/kernel/of_device_32.c | 5 +++--
+ arch/sparc/kernel/of_device_64.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 164e3f8..0b41488 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -35,6 +35,7 @@ do {						\
- #define PCI_NOASSIGN_ROMS	0x80000
- #define PCI_ROOT_NO_CRS		0x100000
- #define PCI_NOASSIGN_BARS	0x200000
-+#define PCI_ASSIGN_PREF_BARS	0x400000
- 
- extern unsigned int pci_probe;
- extern unsigned long pirq_table_addr;
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 8fd6f44..ecdc62f 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -606,6 +606,9 @@ char *__init pcibios_setup(char *str)
- 	} else if (!strcmp(str, "assign-busses")) {
- 		pci_probe |= PCI_ASSIGN_ALL_BUSSES;
- 		return NULL;
-+	} else if (!strcmp(str, "assign_pref_bars")) {
-+		pci_probe |= PCI_ASSIGN_PREF_BARS;
-+		return NULL;
- 	} else if (!strcmp(str, "use_crs")) {
- 		pci_probe |= PCI_USE__CRS;
- 		return NULL;
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 0a9f2ca..d4718d4 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -216,16 +216,25 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 			continue;
- 		if (r->parent)	/* Already allocated */
- 			continue;
--		if (!r->start || pci_claim_bridge_resource(dev, idx) < 0) {
--			/*
--			 * Something is wrong with the region.
--			 * Invalidate the resource to prevent
--			 * child resource allocations in this
--			 * range.
--			 */
--			r->start = r->end = 0;
--			r->flags = 0;
--		}
-+
-+		if ((r->flags & IORESOURCE_PREFETCH) &&
-+		    (pci_probe & PCI_ASSIGN_PREF_BARS))
-+			goto clear;
-+
-+		if (!r->start)
-+			goto clear;
-+
-+		if (pci_claim_bridge_resource(dev, idx) == 0)
-+			continue;
-+
-+clear:
-+		/*
-+		 * Something is wrong with the region.
-+		 * Invalidate the resource to prevent
-+		 * child resource allocations in this range.
-+		 */
-+		r->start = r->end = 0;
-+		r->flags = 0;
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 185aa96..3e9f273 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
  	}
- }
- 
-@@ -271,21 +280,26 @@ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 			else
- 				disabled = !(command & PCI_COMMAND_MEMORY);
- 			if (pass == disabled) {
-+				if ((r->flags & IORESOURCE_PREFETCH) &&
-+				    (pci_probe & PCI_ASSIGN_PREF_BARS))
-+					goto clear;
-+
- 				dev_dbg(&dev->dev,
- 					"BAR %d: reserving %pr (d=%d, p=%d)\n",
- 					idx, r, disabled, pass);
--				if (pci_claim_resource(dev, idx) < 0) {
--					if (r->flags & IORESOURCE_PCI_FIXED) {
--						dev_info(&dev->dev, "BAR %d %pR is immovable\n",
--							 idx, r);
--					} else {
--						/* We'll assign a new address later */
--						pcibios_save_fw_addr(dev,
--								idx, r->start);
--						r->end -= r->start;
--						r->start = 0;
--					}
-+				if (pci_claim_resource(dev, idx) == 0)
-+					continue;
-+				if (r->flags & IORESOURCE_PCI_FIXED) {
-+					dev_info(&dev->dev, "BAR %d %pR is immovable\n",
-+						 idx, r);
-+					continue;
- 				}
-+
-+clear:
-+				/* We'll assign a new address later */
-+				pcibios_save_fw_addr(dev, idx, r->start);
-+				r->end -= r->start;
-+				r->start = 0;
- 			}
- 		}
- 	if (!pass) {
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index 7bbdc26..defee61 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
 -- 
 1.8.4.5
 
