@@ -1,57 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36958 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932776AbbGGRSc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jul 2015 13:18:32 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v3 06/15] PCI/MSI: of: Allow msi_domain lookup using the host bridge node
-Date: Tue,  7 Jul 2015 18:17:56 +0100
-Message-Id: <1436289485-28230-7-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:34182 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752301AbbGNTfM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:35:12 -0400
+Received: by obre1 with SMTP id e1so12683079obr.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 12:35:12 -0700 (PDT)
+Subject: [PATCH v2 5/5] PCI: Shift PCI_CLASS_NOT_DEFINED consistently with
+ other classes
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mathias Nyman <mathias.nyman@intel.com>, x86@kernel.org,
+	Felipe Balbi <balbi@ti.com>, Yu Zhao <yu.zhao@intel.com>,
+	Huang Rui <ray.huang@amd.com>,
+	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>
+Date: Tue, 14 Jul 2015 14:35:09 -0500
+Message-ID: <20150714193509.13224.80127.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150714193153.13224.40528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150714193153.13224.40528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A number of platforms do not need to use the msi-parent property,
-as the host bridge itself provides the MSI controller.
+The PCI class in dev->class is a three-byte value comprising a base class,
+sub-class, and interface type.  PCI_CLASS_NOT_DEFINED includes the base
+class and sub-class, but not the interface type, so it should be shifted to
+make space for the interface.  It happens that PCI_CLASS_NOT_DEFINED is
+zero, so it doesn't matter in the end, but we should still use it
+consistently with other class definitions.
 
-Allow this configuration by performing an irq domain lookup based
-on the host bridge node if it doesn't have a valid msi-parent property.
+Treat PCI_CLASS_NOT_DEFINED as a base class/sub-class value that should
+appear in bits 8-23 of dev->class.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/of.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/pci/probe.c  |    2 +-
+ drivers/pci/quirks.c |   10 +++++-----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 09df465..9d61cef 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -69,9 +69,14 @@ void pci_set_phb_of_msi_domain(struct pci_bus *bus)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..71bd520 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1268,7 +1268,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 	bad:
+ 		dev_err(&dev->dev, "ignoring class %#08x (doesn't match header type %02x)\n",
+ 			dev->class, dev->hdr_type);
+-		dev->class = PCI_CLASS_NOT_DEFINED;
++		dev->class = PCI_CLASS_NOT_DEFINED << 8;
+ 	}
  
- 	if (!bus->dev.of_node)
- 		return;
-+	/* Start looking for a phandle to an MSI controller. */
- 	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
-+	/*
-+	 * If we don't have an msi-parent property, look for a domain
-+	 * directly attached to the host bridge.
-+	 */
- 	if (!np)
--		return;
-+		np = bus->dev.of_node;
- 	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
- 	if (!d)
- 		d = irq_find_host(np);
--- 
-2.1.4
+ 	/* We found a fine healthy device, go go go... */
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 35f8d40..32cc9c8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2843,7 +2843,7 @@ static void fixup_ti816x_class(struct pci_dev *dev)
+ 		 class, dev->class);
+ }
+ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_TI, 0xb800,
+-			      PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
++			      PCI_CLASS_NOT_DEFINED, 8, fixup_ti816x_class);
+ 
+ /* Some PCIe devices do not work reliably with the claimed maximum
+  * payload size supported.
+@@ -3661,13 +3661,13 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
+ 	dev_info(&pdev->dev, "TW686x PCI class overridden (%#08x -> %#08x)\n",
+ 		 class, pdev->class);
+ }
+-DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6864, PCI_CLASS_NOT_DEFINED, 0,
++DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6864, PCI_CLASS_NOT_DEFINED, 8,
+ 			      quirk_tw686x_class);
+-DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6865, PCI_CLASS_NOT_DEFINED, 0,
++DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6865, PCI_CLASS_NOT_DEFINED, 8,
+ 			      quirk_tw686x_class);
+-DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6868, PCI_CLASS_NOT_DEFINED, 0,
++DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6868, PCI_CLASS_NOT_DEFINED, 8,
+ 			      quirk_tw686x_class);
+-DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6869, PCI_CLASS_NOT_DEFINED, 0,
++DECLARE_PCI_FIXUP_CLASS_EARLY(0x1797, 0x6869, PCI_CLASS_NOT_DEFINED, 8,
+ 			      quirk_tw686x_class);
+ 
+ /*
 
