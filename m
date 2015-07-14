@@ -1,226 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51304 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932802AbbGGUVH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 16:21:07 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Kees Cook <keescook@chromium.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, Baoquan He <bhe@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 37/42] x86, boot, PCI: Export SETUP_PCI data via sysfs
-Date: Tue,  7 Jul 2015 13:20:23 -0700
-Message-Id: <1436300428-21163-38-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
-References: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:32882 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751277AbbGNJOL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jul 2015 05:14:11 -0400
+Date: Tue, 14 Jul 2015 10:14:06 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Will Deacon <will.deacon@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>, linux-pci@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 3/4] arm64: Add Broadcom's North Star 2 support
+Message-ID: <20150714091406.GC13555@e104818-lin.cambridge.arm.com>
+References: <1436837955-26279-1-git-send-email-rjui@broadcom.com>
+ <1436837955-26279-4-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1436837955-26279-4-git-send-email-rjui@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we could let kexec-tools to rebuild SETUP_PCI and pass it to
-second kernel if needed.
+On Mon, Jul 13, 2015 at 06:39:14PM -0700, Ray Jui wrote:
+> This patch adds support to Broadcom's North Star 2 SoC in the arm64
+> Kconfig and defconfig files
+> 
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+> ---
+>  arch/arm64/Kconfig           |   12 ++++++++++++
+>  arch/arm64/configs/defconfig |    2 ++
+>  2 files changed, 14 insertions(+)
+> 
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index 318175f..6c5c279 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -162,6 +162,18 @@ source "kernel/Kconfig.freezer"
+>  
+>  menu "Platform selection"
+>  
+> +config ARCH_BCM_IPROC
+> +	bool
+> +	help
+> +	  This enables support for Broadcom iProc based SoCs
+> +
+> +config ARCH_BCM_NS2
+> +	bool "Broadcom North Start 2 (BCM5871X)"
+> +	select ARCH_BCM_IPROC
+> +	help
+> +	  This enables support for Broadcom NS2 (BCM5871X). NS2 is in
+> +	  the iProc family of SoCs based on the ARMv8 architecture
 
-Now kexec-tools already build SETUP_EFI and SETUP_E820EXT.
+Do you really need the second config option? Just leave the one covering
+the family as we do for most of the other family SoCs on arm64 (apart
+from ARCH_TEGRA_123_SOC which I plan to remove and use ARCH_TEGRA
+instead).
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/common.c | 175 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 175 insertions(+)
-
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 4d6b128..9112d92 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -656,6 +656,8 @@ void __init add_pci(u64 pa_data)
- 
- struct firmware_setup_pci_entry {
- 	struct list_head list;
-+	struct kobject kobj;
-+	struct bin_attribute *rom_attr;
- 	uint16_t vendor;
- 	uint16_t devid;
- 	uint64_t pcilen;
-@@ -777,6 +779,179 @@ int pcibios_add_device(struct pci_dev *dev)
- 	return 0;
- }
- 
-+#ifdef CONFIG_SYSFS
-+static inline struct firmware_setup_pci_entry *
-+to_setup_pci_entry(struct kobject *kobj)
-+{
-+	return container_of(kobj, struct firmware_setup_pci_entry, kobj);
-+}
-+
-+static ssize_t vendor_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
-+			(unsigned long long)entry->vendor);
-+}
-+
-+static ssize_t devid_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
-+			(unsigned long long)entry->devid);
-+}
-+
-+static ssize_t pcilen_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%llx\n",
-+			(unsigned long long)entry->pcilen);
-+}
-+
-+static ssize_t segment_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%04llx\n",
-+			(unsigned long long)entry->segment);
-+}
-+
-+static ssize_t bus_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
-+			(unsigned long long)entry->bus);
-+}
-+
-+static ssize_t device_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%02llx\n",
-+			(unsigned long long)entry->device);
-+}
-+
-+static ssize_t function_show(struct firmware_setup_pci_entry *entry, char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "0x%1llx\n",
-+			(unsigned long long)entry->function);
-+}
-+
-+struct setup_pci_attribute {
-+	struct attribute attr;
-+	ssize_t (*show)(struct firmware_setup_pci_entry *entry, char *buf);
-+};
-+
-+static inline struct setup_pci_attribute *to_setup_pci_attr(
-+							struct attribute *attr)
-+{
-+	return container_of(attr, struct setup_pci_attribute, attr);
-+}
-+
-+static ssize_t setup_pci_attr_show(struct kobject *kobj,
-+				   struct attribute *attr, char *buf)
-+{
-+	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
-+	struct setup_pci_attribute *setup_pci_attr = to_setup_pci_attr(attr);
-+
-+	return setup_pci_attr->show(entry, buf);
-+}
-+
-+static struct setup_pci_attribute setup_pci_vendor_attr = __ATTR_RO(vendor);
-+static struct setup_pci_attribute setup_pci_devid_attr = __ATTR_RO(devid);
-+static struct setup_pci_attribute setup_pci_pcilen_attr = __ATTR_RO(pcilen);
-+static struct setup_pci_attribute setup_pci_segment_attr = __ATTR_RO(segment);
-+static struct setup_pci_attribute setup_pci_bus_attr = __ATTR_RO(bus);
-+static struct setup_pci_attribute setup_pci_device_attr = __ATTR_RO(device);
-+static struct setup_pci_attribute setup_pci_function_attr = __ATTR_RO(function);
-+
-+/*
-+ * These are default attributes that are added for every memmap entry.
-+ */
-+static struct attribute *def_attrs[] = {
-+	&setup_pci_vendor_attr.attr,
-+	&setup_pci_devid_attr.attr,
-+	&setup_pci_pcilen_attr.attr,
-+	&setup_pci_segment_attr.attr,
-+	&setup_pci_bus_attr.attr,
-+	&setup_pci_device_attr.attr,
-+	&setup_pci_function_attr.attr,
-+	NULL
-+};
-+
-+static const struct sysfs_ops setup_pci_attr_ops = {
-+	.show = setup_pci_attr_show,
-+};
-+
-+static struct kobj_type __refdata setup_pci_ktype = {
-+	.sysfs_ops      = &setup_pci_attr_ops,
-+	.default_attrs  = def_attrs,
-+};
-+
-+static ssize_t setup_pci_rom_read(struct file *filp, struct kobject *kobj,
-+				  struct bin_attribute *bin_attr, char *buf,
-+				  loff_t off, size_t count)
-+{
-+	struct firmware_setup_pci_entry *entry = to_setup_pci_entry(kobj);
-+
-+	if (off >= entry->pcilen)
-+		count = 0;
-+	else {
-+		unsigned char *rom = phys_to_virt(entry->romdata);
-+
-+		if (off + count > entry->pcilen)
-+			count = entry->pcilen - off;
-+
-+		memcpy(buf, rom + off, count);
-+	}
-+
-+	return count;
-+}
-+
-+static int __init add_sysfs_fw_setup_pci_entry(
-+					struct firmware_setup_pci_entry *entry)
-+{
-+	int retval = 0;
-+	static int setup_pci_entries_nr;
-+	static struct kset *setup_pci_kset;
-+	struct bin_attribute *attr;
-+
-+	kobject_init(&entry->kobj, &setup_pci_ktype);
-+
-+	if (!setup_pci_kset) {
-+		setup_pci_kset = kset_create_and_add("setup_pci", NULL,
-+						     firmware_kobj);
-+		if (!setup_pci_kset)
-+			return -ENOMEM;
-+	}
-+
-+	entry->kobj.kset = setup_pci_kset;
-+	retval = kobject_add(&entry->kobj, NULL, "%d", setup_pci_entries_nr++);
-+	if (retval) {
-+		kobject_put(&entry->kobj);
-+		return retval;
-+	}
-+
-+	attr = kzalloc(sizeof(*attr), GFP_ATOMIC);
-+	if (!attr)
-+		return -ENOMEM;
-+
-+	sysfs_bin_attr_init(attr);
-+	attr->size = entry->pcilen;
-+	attr->attr.name = "rom";
-+	attr->attr.mode = S_IRUSR;
-+	attr->read = setup_pci_rom_read;
-+	retval = sysfs_create_bin_file(&entry->kobj, attr);
-+	if (retval)
-+		kfree(attr);
-+	entry->rom_attr = attr;
-+
-+	return retval;
-+}
-+
-+static int __init firmware_setup_pci_init(void)
-+{
-+	struct firmware_setup_pci_entry *entry;
-+
-+	list_for_each_entry(entry, &setup_pci_entries, list)
-+		add_sysfs_fw_setup_pci_entry(entry);
-+
-+	return 0;
-+}
-+late_initcall(firmware_setup_pci_init);
-+#endif
-+
- int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
- 	int err;
 -- 
-1.8.4.5
-
+Catalin
