@@ -1,84 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v2 3/3] PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
-Date: Fri, 24 Jul 2015 17:23:10 +0530
-Message-ID: <1437738790-11114-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1437738790-11114-1-git-send-email-kishon@ti.com>
-References: <1437738790-11114-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45627 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753284AbbGNWuG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:50:06 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 23/49] PCI: Add support for more than two alt_size under same bridge
+Date: Tue, 14 Jul 2015 15:46:54 -0700
+Message-Id: <1436914040-13206-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DRA7xx require MSE bit to be cleared to set the master in
-standby mode. (In DRA7xx TRM_vE, section 24.9.4.5.2.2.1 PCIe
-Controller Master Standby Behavior advises to use the clearing
-of the local MSE bit to set the master in standby. Without this
-some of the clocks do not idle).
+Need to increase size to make sure it could fit all alt entries.
 
-Cleared the MSE bit on suspend and enabled it back on resume.
-Clearing MSE bit is required to get clocks to be idled after
-suspend.
+In the patch, we first select one big size, and then keep reducing
+the size and retrying to get the minimum value for alt_size.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+Example:
+two bridges: one have 8M/8M, and 1M/1M children res.
+	     one have 4M/4M, and 1M/1M children res.
+
+Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
+Before this patch, parent bridge alt_align/alt_size is 8M/14M
+that is wrong.
+With this patch	parent bridge alt_align/alt_size: 8M/17M.
+
+At same time, child bridges must align/size: 4M/12M, 2M/6M.
+and prarent bridge must align/size: 4M/20M.
+
+So at last, we use 8M/17M as parent bridge alt_align/alt_size.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pci-dra7xx.c |   23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+ drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 54 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index d3ee2ef..7e798e8 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -83,6 +83,17 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9da8b23..bf28f32 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1335,6 +1335,47 @@ out:
+ 	return good_align;
  }
  
-+static inline u32 dra7xx_pcie_readl_rc(struct pcie_port *pp, u32 offset)
++static resource_size_t calculate_mem_alt_size(struct list_head *head,
++				resource_size_t max_align, resource_size_t size,
++				resource_size_t align_low)
 +{
-+	return readl(pp->dbi_base + offset);
++	struct align_test_res *p;
++	resource_size_t tmp;
++	resource_size_t good_size, bad_size;
++	int count = 0, order;
++
++	good_size = ALIGN(size, align_low);
++
++	list_for_each_entry(p, head, list)
++		count++;
++
++	if (count <= 1)
++		goto out;
++
++	__sort_align_test(head);
++
++	tmp = max(size, max_align);
++	order = __fls(count);
++	if ((1ULL << order) < count)
++		order++;
++	good_size = ALIGN((tmp << order), align_low);
++	bad_size = ALIGN(size, align_low) - align_low;
++	size = good_size;
++	while (size > bad_size) {
++		/* check if align/size fit all entries */
++		if (is_align_size_good(head, max_align, size, 0))
++			good_size = size;
++		else
++			bad_size = size;
++
++		size = bad_size + ((good_size - bad_size) >> 1);
++		size = round_down(size, align_low);
++	}
++
++out:
++	return good_size;
 +}
 +
-+static inline void dra7xx_pcie_writel_rc(struct pcie_port *pp, u32 offset,
-+					 u32 value)
-+{
-+	writel(value, pp->dbi_base + offset);
-+}
-+
- static int dra7xx_pcie_link_up(struct pcie_port *pp)
+ static inline bool is_optional(int i)
  {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-@@ -438,8 +449,12 @@ static int dra7xx_pcie_suspend(struct device *dev)
- {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
- 	struct pcie_port *pp = &dra7xx->pp;
-+	u32 val;
  
--	dw_pcie_suspend_rc(pp);
-+	/* clear MSE */
-+	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
-+	val &= ~PCI_COMMAND_MEMORY;
-+	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
+@@ -1381,6 +1422,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	LIST_HEAD(align_test_alt_list);
+ 	resource_size_t alt_size = 0, alt_align = 0;
+ 	resource_size_t window_align;
  
- 	return 0;
- }
-@@ -448,8 +463,12 @@ static int dra7xx_pcie_resume(struct device *dev)
- {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
- 	struct pcie_port *pp = &dra7xx->pp;
-+	u32 val;
+@@ -1454,10 +1496,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
  
--	dw_pcie_resume_rc(pp);
-+	/* clear MSE */
-+	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
-+	val |= PCI_COMMAND_MEMORY;
-+	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
+ 				dev_res = res_to_dev_res(realloc_head, r);
+ 				if (dev_res && dev_res->alt_size) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						dev_res->alt_align,
++						dev_res->alt_size);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+ 				} else if (r_size > 1) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						align, r_size);
+ 					alt_size += r_size;
+ 					if (alt_align < align)
+ 						alt_align = align;
+@@ -1477,14 +1526,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
  
- 	return 0;
- }
+ 	if (size0 && realloc_head) {
+ 		alt_align = max(alt_align, window_align);
+-		alt_size = calculate_memsize(alt_size, min_size,
+-					     0, window_align);
++		/* need to increase size to fit more alt */
++		alt_size = calculate_mem_alt_size(&align_test_alt_list,
++						  alt_align, alt_size,
++						  window_align);
+ 		/* must is better ? */
+ 		if (alt_size >= size0) {
+ 			alt_align = 0;
+ 			alt_size = 0;
+ 		}
+ 	}
++	free_align_test_list(&align_test_alt_list);
+ 
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
 -- 
-1.7.9.5
+1.8.4.5
 
