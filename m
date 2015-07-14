@@ -1,49 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:35108 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933098AbbGUVEg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 17:04:36 -0400
-Subject: Re: [PATCH v3 1/4] PCI: iproc: enable arm64 support for iProc PCIe
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
- <1437021563-29139-2-git-send-email-rjui@broadcom.com>
- <20150721203018.GH21967@google.com> <55AEB094.1090601@broadcom.com>
-CC: Catalin Marinas <catalin.marinas@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
 	Will Deacon <will.deacon@arm.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	<linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
 	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <55AEB3E1.6010405@broadcom.com>
-Date: Tue, 21 Jul 2015 14:04:33 -0700
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH 1/4] PCI: iproc: enable arm64 support for iProc PCIe
+Date: Mon, 13 Jul 2015 18:39:12 -0700
+Message-ID: <1436837955-26279-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1436837955-26279-1-git-send-email-rjui@broadcom.com>
+References: <1436837955-26279-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <55AEB094.1090601@broadcom.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch enables arm64 support to iProc PCIe driver by wrapping
+ARM 32-bit specific PCI APIs with CONFIG_ARM
 
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc.c |   12 ++++++++++++
+ drivers/pci/host/pcie-iproc.h |    2 ++
+ 2 files changed, 14 insertions(+)
 
-On 7/21/2015 1:50 PM, Ray Jui wrote:
-> 
-> 
-> On 7/21/2015 1:30 PM, Bjorn Helgaas wrote:
->> On Wed, Jul 15, 2015 at 09:39:20PM -0700, Ray Jui wrote:
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index d77481e..a76b4df 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -58,10 +58,12 @@
+ #define SYS_RC_INTX_EN               0x330
+ #define SYS_RC_INTX_MASK             0xf
+ 
++#ifdef CONFIG_ARM
+ static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
+ {
+ 	return sys->private_data;
+ }
++#endif
+ 
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+@@ -71,8 +73,12 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 					    unsigned int devfn,
+ 					    int where)
+ {
++#ifdef CONFIG_ARM
+ 	struct pci_sys_data *sys = bus->sysdata;
+ 	struct iproc_pcie *pcie = sys_to_pcie(sys);
++#else
++	struct iproc_pcie *pcie = bus->sysdata;
++#endif
+ 	unsigned slot = PCI_SLOT(devfn);
+ 	unsigned fn = PCI_FUNC(devfn);
+ 	unsigned busno = bus->number;
+@@ -208,10 +214,14 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 
+ 	iproc_pcie_reset(pcie);
+ 
++#ifdef CONFIG_ARM
+ 	pcie->sysdata.private_data = pcie;
+ 
+ 	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
+ 				  &pcie->sysdata, res);
++#else
++	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, pcie, res);
++#endif
+ 	if (!bus) {
+ 		dev_err(pcie->dev, "unable to create PCI root bus\n");
+ 		ret = -ENOMEM;
+@@ -229,7 +239,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
++#ifdef CONFIG_ARM
+ 	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
++#endif
+ 	pci_bus_add_devices(bus);
+ 
+ 	return 0;
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index ba0a108..12aaac4 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -29,7 +29,9 @@
+ struct iproc_pcie {
+ 	struct device *dev;
+ 	void __iomem *base;
++#ifdef CONFIG_ARM
+ 	struct pci_sys_data sysdata;
++#endif
+ 	struct pci_bus *root_bus;
+ 	struct phy *phy;
+ 	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
+-- 
+1.7.9.5
 
->> I see that your v1 patch added #ifdef CONFIG_ARM around sysdata at its
->> original location below, and you mentioned that you took Arnd's advice to
->> move sysdata to the beginning of the structure, but I don't see Arnd's
->> email on the list.
->>
-> 
-> Sorry maybe you need to elaborate here. Am I supposed to add Arnd's name
-> in the commit message? Other than that, Arnd is on this email thread.
-> 
-
-For your previous question: when Arnd replied, he only replied to me but
-did not reply to all, that's why you cannot find his email....
-
-Ray
