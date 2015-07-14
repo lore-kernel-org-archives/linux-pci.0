@@ -1,121 +1,127 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48203 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753283AbbGNW6C (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:58:02 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Alexander Gordeev <agordeev@redhat.com>
-Cc: Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [RFC Patch V1 12/12] genirq, PCI: Move alloc_msi_entry() from PCI MSI code into generic MSI code
-Date: Thu,  9 Jul 2015 16:00:47 +0800
-Message-Id: <1436428847-8886-13-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 26/49] PCI: Move ISA ioport align out of calculate_iosize
+Date: Tue, 14 Jul 2015 15:46:57 -0700
+Message-Id: <1436914040-13206-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move alloc_msi_entry() from PCI MSI code into generic MSI code, so it
-could be reused by other generic MSI drivers.
-Also introduce free_msi_entry() for completeness.
+So we could unify calculate_iosize and calculate_memsize later.
 
-This is suggested by Stuart Yoder <stuart.yoder@freescale.com>.
+when one bridge have several children devices, and every devices
+have several io port resources and resource size < 0x400.
 
-Signed-off-by: Stuart Yoder <stuart.yoder@freescale.com>
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+We need to check size, and add extra size to make sure bit8/9
+to be zero.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/msi.c   |   16 ++--------------
- include/linux/msi.h |    2 ++
- kernel/irq/msi.c    |   17 +++++++++++++++++
- 3 files changed, 21 insertions(+), 14 deletions(-)
+ drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 260c1653701d..373d96e06cbd 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -406,18 +406,6 @@ static void free_msi_irqs(struct pci_dev *dev)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index de55e07..9d5e550 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1126,11 +1126,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	/* To be fixed in 2.5: we should have sort of HAVE_ISA
+-	   flag in the struct pci_bus. */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
+ 	size = ALIGN(size + size1, align);
+ 	if (size < old_size)
+ 		size = old_size;
+@@ -1184,6 +1179,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+ 	return max(align, arch_align);
+ }
+ 
++static resource_size_t size_aligned_for_isa(resource_size_t size)
++{
++	/*
++	 * To be fixed in 2.5: we should have sort of HAVE_ISA
++	 *  flag in the struct pci_bus.
++	 */
++#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
++	size = (size & 0xff) + ((size & ~0xffUL) << 2);
++#endif
++	return size;
++}
++
+ /**
+  * pbus_size_io() - size the io window of a given bus
+  *
+@@ -1201,11 +1208,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_sum_size = 0;
+-	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+-	resource_size_t children_add_size = 0;
++	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
+ 	resource_size_t min_align, align;
+ 
+ 	if (!b_res)
+@@ -1222,7 +1228,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			unsigned long r_size;
++			unsigned long r_size, r_add_size;
+ 
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+ 				continue;
+@@ -1238,18 +1244,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			if (align > min_align)
+ 				min_align = align;
+ 
+-			if (realloc_head)
+-				children_add_size += get_res_add_size(realloc_head, r);
++			if (realloc_head) {
++				r_add_size = get_res_add_size(realloc_head, r);
++				r_add_size += r_size;
++				if (r_add_size < 0x400)
++					/* Might be re-aligned for ISA */
++					sum_add_size += r_add_size;
++				else
++					sum_add_size1 += r_add_size;
++			}
+ 		}
  	}
- }
  
--static struct msi_desc *alloc_msi_entry(struct pci_dev *dev)
--{
--	struct msi_desc *desc = kzalloc(sizeof(*desc), GFP_KERNEL);
--	if (!desc)
--		return NULL;
--
--	INIT_LIST_HEAD(&desc->list);
--	desc->dev = &dev->dev;
--
--	return desc;
--}
--
- static void pci_intx_for_msi(struct pci_dev *dev, int enable)
- {
- 	if (!(dev->dev_flags & PCI_DEV_FLAGS_MSI_INTX_DISABLE_BUG))
-@@ -572,7 +560,7 @@ static struct msi_desc *msi_setup_entry(struct pci_dev *dev, int nvec)
- 	struct msi_desc *entry;
- 
- 	/* MSI Entry Initialization */
--	entry = alloc_msi_entry(dev);
-+	entry = alloc_msi_entry(&dev->dev);
- 	if (!entry)
- 		return NULL;
- 
-@@ -700,7 +688,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 	int i;
- 
- 	for (i = 0; i < nvec; i++) {
--		entry = alloc_msi_entry(dev);
-+		entry = alloc_msi_entry(&dev->dev);
- 		if (!entry) {
- 			if (!i)
- 				iounmap(base);
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index f6845bc83774..c10ec5687efa 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -67,6 +67,8 @@ static inline void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
- }
- #endif /* CONFIG_PCI_MSI */
- 
-+struct msi_desc *alloc_msi_entry(struct device *dev);
-+void free_msi_entry(struct msi_desc *entry);
- void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg);
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 7bf1f1bbb7fa..7e6512b9dc1f 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -18,6 +18,23 @@
- /* Temparory solution for building, will be removed later */
- #include <linux/pci.h>
- 
-+struct msi_desc *alloc_msi_entry(struct device *dev)
-+{
-+	struct msi_desc *desc = kzalloc(sizeof(*desc), GFP_KERNEL);
-+	if (!desc)
-+		return NULL;
-+
-+	INIT_LIST_HEAD(&desc->list);
-+	desc->dev = dev;
-+
-+	return desc;
-+}
-+
-+void free_msi_entry(struct msi_desc *entry)
-+{
-+	kfree(entry);
-+}
-+
- void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	*msg = entry->msg;
++	size = size_aligned_for_isa(size);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	sum_add_size = children_add_size + size + size1;
++	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(size, min_size, sum_add_size - size,
++		calculate_iosize(sum_add_size, min_size, 0,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
 -- 
-1.7.10.4
+1.8.4.5
 
