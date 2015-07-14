@@ -1,64 +1,103 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 11/49] PCI: Add debug printout during releasing partial assigned resources
-Date: Tue, 14 Jul 2015 15:46:42 -0700
-Message-Id: <1436914040-13206-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:34122 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269AbbGNTpP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:45:15 -0400
+Received: by obre1 with SMTP id e1so12848927obr.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 12:45:14 -0700 (PDT)
+Subject: [PATCH 2/2] PCI: Add pcie_downstream_port() (true for Root and
+ Switch Downstream Ports)
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Date: Tue, 14 Jul 2015 14:45:11 -0500
+Message-ID: <20150714194511.13471.8395.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150714193757.13471.77973.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150714193757.13471.77973.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We try to assign must+optional at first, and we only accept the result if
-all resources get allocated. Otherwise will release assigned in the list,
-and try to assign must and expand to optional.
+As used in the PCIe spec, "Downstream Port" includes both Root Ports and
+Switch Downstream Ports.  We sometimes checked for PCI_EXP_TYPE_DOWNSTREAM
+when we should have checked for PCI_EXP_TYPE_ROOT_PORT or
+PCI_EXP_TYPE_DOWNSTREAM.
 
-We have to do that to make sure any must has priority than any optional
-addon.
+For a Root Port without a slot, the effect of this was that using
+pcie_capability_read_word() to read PCI_EXP_SLTSTA returned zero instead of
+showing the Presence Detect State bit hardwired to one as the PCIe Spec,
+r3.0, sec 7.8, requires.  (This read is completed in software because
+previous PCIe spec versions didn't require PCI_EXP_SLTSTA to exist at all.)
 
-When that happens, we only print out "assigned" info, that is confusing
-as it looks like same range is assigned to two peer resources at the same
-time.
+Nothing in the kernel currently depends on this (pciehp only reads
+PCI_EXP_SLTSTA on ports with slots), so this is a cleanup and not a
+functional change.
 
-Add printout for releasing so we have whole picture in debug messages.
+Add a pcie_downstream_port() helper function and use it.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/setup-bus.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ drivers/pci/access.c |   23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 3abf249..6dff258 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -521,9 +521,17 @@ static void __assign_resources_sorted(struct list_head *head,
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index d9b64a1..79f0102 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -531,6 +531,14 @@ static inline int pcie_cap_version(const struct pci_dev *dev)
+ 	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
+ }
  
- 	free_list(&local_fail_head);
- 	/* Release assigned resource */
--	list_for_each_entry(dev_res, head, list)
--		if (dev_res->res->parent)
--			release_resource(dev_res->res);
-+	list_for_each_entry(dev_res, head, list) {
-+		struct resource *res = dev_res->res;
++static bool pcie_downstream_port(constr struct pci_dev *dev)
++{
++	int type = pci_pcie_type(dev);
 +
-+		if (res->parent) {
-+			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
-+				   "BAR %d: released %pR\n",
-+				   (int)(res - &dev_res->dev->resource[0]),
-+				   res);
-+			release_resource(res);
-+		}
-+	}
- 	/* Restore start/end/flags from saved list */
- 	list_for_each_entry(save_res, &save_head, list) {
- 		struct resource *res = save_res->res;
--- 
-1.8.4.5
++	return type == PCI_EXP_TYPE_ROOT_PORT ||
++	       type == PCI_EXP_TYPE_DOWNSTREAM;
++}
++
+ bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+ {
+ 	int type = pci_pcie_type(dev);
+@@ -546,10 +554,7 @@ bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+ 
+ static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+ {
+-	int type = pci_pcie_type(dev);
+-
+-	return (type == PCI_EXP_TYPE_ROOT_PORT ||
+-		type == PCI_EXP_TYPE_DOWNSTREAM) &&
++	return pcie_downstream_port(dev) &&
+ 	       pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT;
+ }
+ 
+@@ -628,10 +633,9 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
+ 	 * State bit in the Slot Status register of Downstream Ports,
+ 	 * which must be hardwired to 1b.  (PCIe Base Spec 3.0, sec 7.8)
+ 	 */
+-	if (pci_is_pcie(dev) && pos == PCI_EXP_SLTSTA &&
+-		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
++	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
++	    pos == PCI_EXP_SLTSTA)
+ 		*val = PCI_EXP_SLTSTA_PDS;
+-	}
+ 
+ 	return 0;
+ }
+@@ -657,10 +661,9 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
+ 		return ret;
+ 	}
+ 
+-	if (pci_is_pcie(dev) && pos == PCI_EXP_SLTCTL &&
+-		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
++	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
++	    pos == PCI_EXP_SLTSTA)
+ 		*val = PCI_EXP_SLTSTA_PDS;
+-	}
+ 
+ 	return 0;
+ }
 
