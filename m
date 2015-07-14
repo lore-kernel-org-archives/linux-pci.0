@@ -1,39 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:33666 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbbGJCs2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jul 2015 22:48:28 -0400
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:34924 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900AbbGNTpH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:45:07 -0400
+Received: by obbop1 with SMTP id op1so12793340obb.2
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 12:45:06 -0700 (PDT)
+Subject: [PATCH 1/2] PCI: Fix pcie_port_device_resume() comment
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Myron Stowe <myron.stowe@redhat.com>,
+	Jiang Liu <jiang.liu@huawei.com>
+Date: Tue, 14 Jul 2015 14:45:03 -0500
+Message-ID: <20150714194503.13471.65928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150714193757.13471.77973.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150714193757.13471.77973.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20150710023014.GA16104@richard>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-	<1436225966-27247-37-git-send-email-yinghai@kernel.org>
-	<20150709033030.GA7079@richard>
-	<CAE9FiQVSK9kAg-qyASpb1AoHSwQbKK33eHhFmzUjoLOftK9M4w@mail.gmail.com>
-	<20150709060420.GA7465@richard>
-	<CAE9FiQWnzM4x_WFZ4rXQe9db4xxXtih6_jrJDe3c-R_Djmm8Hg@mail.gmail.com>
-	<20150710023014.GA16104@richard>
-Date: Thu, 9 Jul 2015 19:48:27 -0700
-Message-ID: <CAE9FiQVaoFWk9A1vyqDgOu_eqWRcZkwrWRQ0CXpcAJ4VBOgwaQ@mail.gmail.com>
-Subject: Re: [PATCH 36/36] PCI: Don't set flags to 0 when assign resource fail
-From: Yinghai Lu <yinghai@kernel.org>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	TJ <linux@iam.tj>, Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 9, 2015 at 7:30 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> If you could update your for-pci-v4.3-next branch, that would be more
-> convenient for me to do the test.
+The function comment claimed this was pcie_port_device_suspend(), but it's
+really pcie_port_device_resume().  Perils of cut and paste.
 
-Just updated that branch, please check it.
+Use the correct function name in the comment.
 
-Thanks
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/portdrv_core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yinghai
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 2f0ce66..88122dc 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -448,7 +448,7 @@ static int resume_iter(struct device *dev, void *data)
+ }
+ 
+ /**
+- * pcie_port_device_suspend - resume port services associated with a PCIe port
++ * pcie_port_device_resume - resume port services associated with a PCIe port
+  * @dev: PCI Express port to handle
+  */
+ int pcie_port_device_resume(struct device *dev)
+
