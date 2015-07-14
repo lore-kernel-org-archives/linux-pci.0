@@ -1,62 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:33097 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752105AbbGJFtH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 01:49:07 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVaoFWk9A1vyqDgOu_eqWRcZkwrWRQ0CXpcAJ4VBOgwaQ@mail.gmail.com>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-	<1436225966-27247-37-git-send-email-yinghai@kernel.org>
-	<20150709033030.GA7079@richard>
-	<CAE9FiQVSK9kAg-qyASpb1AoHSwQbKK33eHhFmzUjoLOftK9M4w@mail.gmail.com>
-	<20150709060420.GA7465@richard>
-	<CAE9FiQWnzM4x_WFZ4rXQe9db4xxXtih6_jrJDe3c-R_Djmm8Hg@mail.gmail.com>
-	<20150710023014.GA16104@richard>
-	<CAE9FiQVaoFWk9A1vyqDgOu_eqWRcZkwrWRQ0CXpcAJ4VBOgwaQ@mail.gmail.com>
-Date: Thu, 9 Jul 2015 22:49:06 -0700
-Message-ID: <CAE9FiQWiCZB0EvQ2RNujdD1-0pRO_izJrqBwExaK9Md1d5wCjw@mail.gmail.com>
-Subject: Re: [PATCH 36/36] PCI: Don't set flags to 0 when assign resource fail
+Received: from userp1040.oracle.com ([156.151.31.81]:35209 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753161AbbGNWr4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:47:56 -0400
 From: Yinghai Lu <yinghai@kernel.org>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	TJ <linux@iam.tj>, Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=089e013c69d2196c36051a7eeeeb
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 25/49] PCI: Don't add too much optional size for hotplug bridge io
+Date: Tue, 14 Jul 2015 15:46:56 -0700
+Message-Id: <1436914040-13206-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---089e013c69d2196c36051a7eeeeb
-Content-Type: text/plain; charset=UTF-8
+Same as patch for mmio (PCI: Don't add too much optional size for hotplug
+bridge mmio), and this one is addressing io port.
 
-On Thu, Jul 9, 2015 at 7:48 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Thu, Jul 9, 2015 at 7:30 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
->> If you could update your for-pci-v4.3-next branch, that would be more
->> convenient for me to do the test.
->
-> Just updated that branch, please check it.
->
+It will compare must+optional with min_sum_size to get smaller
+optional size.
 
-just updated the branch again.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
-If you don't want to re get it again, please apply attached patch.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8999ead..de55e07 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1189,7 +1189,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  *
+  * @bus : the bus
+  * @min_size : the minimum io window that must to be allocated
+- * @add_size : additional optional io window
+  * @realloc_head : track the additional io window on this list
+  *
+  * Sizing the IO windows of the PCI-PCI bridge is trivial,
+@@ -1198,9 +1197,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  * We must be careful with the ISA aliasing though.
+  */
+ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+-		resource_size_t add_size, struct list_head *realloc_head)
++			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
++	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+@@ -1210,6 +1211,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	if (!b_res)
+ 		return;
+ 
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+@@ -1239,10 +1245,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_iosize(size, min_size, add_size + size1,
++	sum_add_size = children_add_size + size + size1;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
++	size1 = !realloc_head ? size0 :
++		calculate_iosize(size, min_size, sum_add_size - size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+@@ -1783,7 +1790,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t min_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, min_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
+ 
+@@ -1816,13 +1823,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	case PCI_CLASS_BRIDGE_PCI:
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+-			additional_io_size  = pci_hotplug_io_size;
++			min_io_size  = pci_hotplug_io_size;
+ 			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+-		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
+-			     additional_io_size, realloc_head);
++		pbus_size_io(bus, min_io_size, realloc_head);
+ 
+ 		/*
+ 		 * If there's a 64-bit prefetchable MMIO window, compute
+-- 
+1.8.4.5
 
---089e013c69d2196c36051a7eeeeb
-Content-Type: text/x-patch; charset=US-ASCII; name="resource_disabled_fix.patch"
-Content-Disposition: attachment; filename="resource_disabled_fix.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ibx7div30
-
-LS0tCiBkcml2ZXJzL3BjaS9idXMuYyB8ICAgIDIgKy0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2Vy
-dGlvbigrKSwgMSBkZWxldGlvbigtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9idXMu
-Ywo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9idXMuYworKysgbGlu
-dXgtMi42L2RyaXZlcnMvcGNpL2J1cy5jCkBAIC0xNDAsNyArMTQwLDcgQEAgc3RhdGljIGludCBw
-Y2lfYnVzX2FsbG9jX2Zyb21fcmVnaW9uKHN0cgogCXR5cGVfbWFzayB8PSBJT1JFU09VUkNFX1RZ
-UEVfQklUUzsKIAogCXBjaV9idXNfZm9yX2VhY2hfcmVzb3VyY2UoYnVzLCByLCBpKSB7Ci0JCWlm
-ICghcikKKwkJaWYgKCFyIHx8IHJlc291cmNlX2Rpc2FibGVkKHIpKQogCQkJY29udGludWU7CiAK
-IAkJLyogdHlwZV9tYXNrIG11c3QgbWF0Y2ggKi8K
---089e013c69d2196c36051a7eeeeb--
