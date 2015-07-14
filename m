@@ -1,65 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 35/49] PCI: Add has_mem64 for host_bridge
-Date: Tue, 14 Jul 2015 15:47:06 -0700
-Message-Id: <1436914040-13206-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:33672 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752301AbbGNTe4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:34:56 -0400
+Received: by oige126 with SMTP id e126so13711907oig.0
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 12:34:56 -0700 (PDT)
+Subject: [PATCH v2 3/5] PCI: Fix TI816X class code quirk
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mathias Nyman <mathias.nyman@intel.com>, x86@kernel.org,
+	Felipe Balbi <balbi@ti.com>, Yu Zhao <yu.zhao@intel.com>,
+	Huang Rui <ray.huang@amd.com>,
+	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Matthew Wilcox <willy@linux.intel.com>,
+	Jason Chang <jason.chang@amd.com>
+Date: Tue, 14 Jul 2015 14:34:52 -0500
+Message-ID: <20150714193452.13224.5892.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150714193153.13224.40528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150714193153.13224.40528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On system that does not support mmio64 above 4g, will not set that.
-We will use that info next two following patches:
-1. Don't treat non-pref mmio64 as pref mmio, so will not put
-   it under bridge's pref range when rescan the devices
-2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
+In fixup_ti816x_class(), we assigned "class = PCI_CLASS_MULTIMEDIA_VIDEO".
+But PCI_CLASS_MULTIMEDIA_VIDEO is only the two-byte base class/sub-class
+and needs to be shifted to make space for the low-order interface byte.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Shift PCI_CLASS_MULTIMEDIA_VIDEO to set the correct class code.
+
+Fixes: 63c4408074cb ("PCI: Add quirk for setting valid class for TI816X Endpoint")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Hemant Pedanekar <hemantp@ti.com>
 ---
- drivers/pci/probe.c | 9 +++++++++
- include/linux/pci.h | 1 +
- 2 files changed, 10 insertions(+)
+ drivers/pci/quirks.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 010d8d9..14bdbca 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2051,6 +2051,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 	}
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index afc8151..9734b42 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2835,12 +2835,15 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3c28, vtd_mask_spec_errors);
  
-+	resource_list_for_each_entry(window, &bridge->windows) {
-+		res = window->res;
-+		if (resource_type(res) == IORESOURCE_MEM &&
-+		    (res->end - window->offset) > 0xffffffff) {
-+			bridge->has_mem64 = 1;
-+			break;
-+		}
-+	}
+ static void fixup_ti816x_class(struct pci_dev *dev)
+ {
++	u32 class = dev->class;
 +
- 	down_write(&pci_bus_sem);
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33ef25f..0771b37 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -409,6 +409,7 @@ struct pci_host_bridge {
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-+	unsigned int has_mem64:1;
- };
+ 	/* TI 816x devices do not have class code set when in PCIe boot mode */
+-	dev_info(&dev->dev, "Setting PCI class for 816x PCIe device\n");
+-	dev->class = PCI_CLASS_MULTIMEDIA_VIDEO;
++	dev->class = PCI_CLASS_MULTIMEDIA_VIDEO << 8;
++	dev_info(&dev->dev, "PCI class overridden (%#08x -> %#08x)\n",
++		 class, dev->class);
+ }
+ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_TI, 0xb800,
+-				 PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
++			      PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
  
- #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
--- 
-1.8.4.5
+ /* Some PCIe devices do not work reliably with the claimed maximum
+  * payload size supported.
 
