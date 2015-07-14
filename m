@@ -1,158 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38750 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752760AbbGOMR2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 08:17:28 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v4 13/19] irqchip: gicv3-its: Get rid of struct msi_controller
-Date: Wed, 15 Jul 2015 13:16:47 +0100
-Message-Id: <1436962613-17359-14-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH 3/4] arm64: Add Broadcom's North Star 2 support
+Date: Mon, 13 Jul 2015 18:39:14 -0700
+Message-ID: <1436837955-26279-4-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1436837955-26279-1-git-send-email-rjui@broadcom.com>
+References: <1436837955-26279-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The GICv3 ITS only uses the msi_controller structure as a way
-to match the PHB with its MSI HW, and thus the msi_domain.
-But now that we can directly associate an msi_domain with a device,
-there is no use keeping this msi_controller around.
+This patch adds support to Broadcom's North Star 2 SoC in the arm64
+Kconfig and defconfig files
 
-Just remove all traces of msi_controller from the driver.
-
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
 ---
- drivers/irqchip/irq-gic-v3-its.c | 38 ++++++++++++++++----------------------
- 1 file changed, 16 insertions(+), 22 deletions(-)
+ arch/arm64/Kconfig           |   12 ++++++++++++
+ arch/arm64/configs/defconfig |    2 ++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 3f95826..20fe0dc 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -54,13 +54,12 @@ struct its_collection {
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 318175f..6c5c279 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -162,6 +162,18 @@ source "kernel/Kconfig.freezer"
  
- /*
-  * The ITS structure - contains most of the infrastructure, with the
-- * msi_controller, the command queue, the collections, and the list of
-- * devices writing to it.
-+ * top-level MSI domain, the command queue, the collections, and the
-+ * list of devices writing to it.
-  */
- struct its_node {
- 	raw_spinlock_t		lock;
- 	struct list_head	entry;
--	struct msi_controller	msi_chip;
- 	struct irq_domain	*domain;
- 	void __iomem		*base;
- 	unsigned long		phys_base;
-@@ -776,7 +775,7 @@ static void its_free_tables(struct its_node *its)
- 	}
- }
+ menu "Platform selection"
  
--static int its_alloc_tables(struct its_node *its)
-+static int its_alloc_tables(const char *node_name, struct its_node *its)
- {
- 	int err;
- 	int i;
-@@ -819,7 +818,7 @@ static int its_alloc_tables(struct its_node *its)
- 			if (order >= MAX_ORDER) {
- 				order = MAX_ORDER - 1;
- 				pr_warn("%s: Device Table too large, reduce its page order to %u\n",
--					its->msi_chip.of_node->full_name, order);
-+					node_name, order);
- 			}
- 		}
- 
-@@ -889,7 +888,7 @@ retry_baser:
- 
- 		if (val != tmp) {
- 			pr_err("ITS: %s: GITS_BASER%d doesn't stick: %lx %lx\n",
--			       its->msi_chip.of_node->full_name, i,
-+			       node_name, i,
- 			       (unsigned long) val, (unsigned long) tmp);
- 			err = -ENXIO;
- 			goto out_free;
-@@ -1317,6 +1316,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	struct resource res;
- 	struct its_node *its;
- 	void __iomem *its_base;
-+	struct irq_domain *inner_domain = NULL;
- 	u32 val;
- 	u64 baser, tmp;
- 	int err;
-@@ -1360,7 +1360,6 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	INIT_LIST_HEAD(&its->its_device_list);
- 	its->base = its_base;
- 	its->phys_base = res.start;
--	its->msi_chip.of_node = node;
- 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
- 
- 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
-@@ -1370,7 +1369,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	}
- 	its->cmd_write = its->cmd_base;
- 
--	err = its_alloc_tables(its);
-+	err = its_alloc_tables(node->full_name, its);
- 	if (err)
- 		goto out_free_cmd;
- 
-@@ -1406,26 +1405,21 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	writeq_relaxed(0, its->base + GITS_CWRITER);
- 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
- 
--	if (of_property_read_bool(its->msi_chip.of_node, "msi-controller")) {
--		its->domain = irq_domain_add_tree(node, &its_domain_ops, its);
--		if (!its->domain) {
-+	if (of_property_read_bool(node, "msi-controller")) {
-+		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
-+		if (!inner_domain) {
- 			err = -ENOMEM;
- 			goto out_free_tables;
- 		}
- 
--		its->domain->parent = parent;
--		its->domain->bus_token = DOMAIN_BUS_NEXUS_MSI;
-+		inner_domain->parent = parent;
-+		inner_domain->bus_token = DOMAIN_BUS_NEXUS_MSI;
- 
--		its->msi_chip.domain = its_pci_msi_alloc_domain(node,
--								its->domain);
--		if (!its->msi_chip.domain) {
-+		its->domain = its_pci_msi_alloc_domain(node, inner_domain);
-+		if (!its->domain) {
- 			err = -ENOMEM;
- 			goto out_free_domains;
- 		}
--
--		err = of_pci_msi_chip_add(&its->msi_chip);
--		if (err)
--			goto out_free_domains;
- 	}
- 
- 	spin_lock(&its_lock);
-@@ -1435,10 +1429,10 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	return 0;
- 
- out_free_domains:
--	if (its->msi_chip.domain)
--		irq_domain_remove(its->msi_chip.domain);
- 	if (its->domain)
- 		irq_domain_remove(its->domain);
-+	if (inner_domain)
-+		irq_domain_remove(inner_domain);
- out_free_tables:
- 	its_free_tables(its);
- out_free_cmd:
++config ARCH_BCM_IPROC
++	bool
++	help
++	  This enables support for Broadcom iProc based SoCs
++
++config ARCH_BCM_NS2
++	bool "Broadcom North Start 2 (BCM5871X)"
++	select ARCH_BCM_IPROC
++	help
++	  This enables support for Broadcom NS2 (BCM5871X). NS2 is in
++	  the iProc family of SoCs based on the ARMv8 architecture
++
+ config ARCH_EXYNOS
+ 	bool
+ 	help
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 4e17e7e..3138700 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -31,6 +31,7 @@ CONFIG_MODULES=y
+ CONFIG_MODULE_UNLOAD=y
+ # CONFIG_BLK_DEV_BSG is not set
+ # CONFIG_IOSCHED_DEADLINE is not set
++CONFIG_ARCH_BCM_NS2=y
+ CONFIG_ARCH_EXYNOS7=y
+ CONFIG_ARCH_FSL_LS2085A=y
+ CONFIG_ARCH_HISI=y
+@@ -102,6 +103,7 @@ CONFIG_SERIO_AMBAKMI=y
+ CONFIG_LEGACY_PTY_COUNT=16
+ CONFIG_SERIAL_8250=y
+ CONFIG_SERIAL_8250_CONSOLE=y
++CONFIG_SERIAL_8250_DW=y
+ CONFIG_SERIAL_8250_MT6577=y
+ CONFIG_SERIAL_AMBA_PL011=y
+ CONFIG_SERIAL_AMBA_PL011_CONSOLE=y
 -- 
-2.1.4
+1.7.9.5
 
