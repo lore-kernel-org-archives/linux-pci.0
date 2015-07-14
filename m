@@ -1,82 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 22 Jul 2015 08:43:48 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ingo Molnar <mingo@kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bp@suse.de,
-	arnd@arndb.de, luto@amacapital.net, akpm@linux-foundation.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:44909 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752930AbbGNWrz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:47:55 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org
-Subject: Re: [PATCH v9 0/8] pci: add pci_iomap_wc() and pci_ioremap_wc_bar()
-Message-ID: <20150722134348.GA10966@google.com>
-References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
- <20150717202923.GC30479@wotan.suse.de>
- <20150721085252.GA15861@gmail.com>
- <20150721132157.GE16841@google.com>
- <20150722083844.GA14626@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150722083844.GA14626@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 09/49] PCI: Rename pdev_sort_resources to pdev_check_resources
+Date: Tue, 14 Jul 2015 15:46:40 -0700
+Message-Id: <1436914040-13206-10-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ingo,
+We don't do sorting in those functions anymore, so change "sort" to "check"
+instead.
 
-On Wed, Jul 22, 2015 at 10:38:45AM +0200, Ingo Molnar wrote:
-> 
-> * Bjorn Helgaas <bhelgaas@google.com> wrote:
-> 
-> > > > > Let me know if these are OK or if there are any questions.
-> > > > > 
-> > > > > [0] http://lkml.kernel.org/r/20150625204703.GC4898@pd.tnic
-> > > > > [1] http://lkml.kernel.org/r/20150707095012.GQ7021@wotan.suse.de
-> > > > 
-> > > > Ingo,
-> > > > 
-> > > > Just a friendly reminder. Let me know if there are any issues or questions.
-> > > 
-> > > It would be nice to get an Acked-by from Bjorn for the PCI API bits.
-> > 
-> > I think the actual code of pci_ioremap_wc() and pci_ioremap_wc_bar() is fine 
-> > (although I might have named it pci_ioremap_bar_wc() for consistency).
-> > 
-> > I declined to merge or ack them myself because they're obvious extensions of 
-> > pci_ioremap() and pci_ioremap_bar(), and I would prefer that they be exported 
-> > the same way, i.e., with EXPORT_SYMBOL(), not EXPORT_SYMBOL_GPL().
-> 
-> Huh? AFAICS pci_ioremap_bar() has been a _GPL export for a long time:
-> ...
-> (ioremap_wc() is EXPORT_SYMBOL() mostly by accident, it's the odd one out.)
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-You're right, I was mistaken about pci_ioremap_bar().  But I'm not
-convinced yet that ioremap_wc() is the odd one out.  All the interfaces I
-found, with the exception of ioremap_uc() on x86 and pci_ioremap_bar(), are
-EXPORT_SYMBOL(), even the _wc and _wt flavors.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6642a60..292f2a5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -206,8 +206,8 @@ static resource_size_t __pci_resource_alignment(
+ 	return r_align;
+ }
+ 
+-/* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev,
++/* check resources and save to the list */
++static void pdev_check_resources(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+@@ -243,7 +243,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 	}
+ }
+ 
+-static void __dev_sort_resources(struct pci_dev *dev,
++static void __dev_check_resources(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+@@ -261,7 +261,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
+ 
+-	pdev_sort_resources(dev, realloc_head, head);
++	pdev_check_resources(dev, realloc_head, head);
+ }
+ 
+ static inline void reset_resource(struct resource *res)
+@@ -561,7 +561,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
+ 
+-	__dev_sort_resources(dev, add_head, &head);
++	__dev_check_resources(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -574,7 +574,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, realloc_head, &head);
++		__dev_check_resources(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
+-- 
+1.8.4.5
 
-> Also, FWIIW: I personally got essentially zero feedback and help from proprietary 
-> binary kernel module vendors in the past couple of years as x86 maintainer, 
-> despite a fair chunk of kernel crashes reported on distro kernels occuring in 
-> them...
-> 
-> Based on that very negative experience, when we introduce something as complex and 
-> as critical as new caching APIs, the last thing I want is to have obscure bugs in 
-> binary modules I cannot fix in any reasonable fashion. So even if the parent APIs 
-> of new APIs weren't already _GPL exports (as in this case), I'd export them as 
-> _GPL in this case.
-> 
-> > I think using EXPORT_SYMBOL_GPL to express individual political aims rather than 
-> > as a hint about what might be derived work makes us look like zealots, and 
-> > that's not my style.
-> 
-> As far as I'm concerned it's a pure technological choice: I don't want to export 
-> certain types of hard to fix and critical functionality to drivers that I cannot 
-> then fix.
-
-That's a good argument that I hadn't heard before (or possibly it was there
-and I missed it).  It would be stronger still if we could change the parent
-APIs similarly.  If a proprietary driver can't use pci_ioremap_wc() because
-it's exported _GPL, it's trivial to use ioremap_wc() directly.
-
-Bjorn
