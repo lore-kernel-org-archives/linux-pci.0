@@ -1,182 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:49280 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752307AbbG2DRe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 23:17:34 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 29 Jul 2015 08:47:30 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 9D0D0125804F
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 08:50:28 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6T3HM5E45547530
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 08:47:23 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6T3HLlF024584
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 08:47:21 +0530
-Date: Wed, 29 Jul 2015 11:17:18 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
-Message-ID: <20150729031718.GA18069@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v2 00/49] PCI: Resource allocation cleanup for v4.3
+Date: Tue, 14 Jul 2015 15:46:31 -0700
+Message-Id: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Michael
+Hi,
 
-Hope you didn't take this yet. We may change this patch a little.
+After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
+to 64-bit resources), we have several reports on resource allocation
+failure, and we try to fix the problem with resource clip, and get
+more problems.
 
-On Fri, Jul 17, 2015 at 02:02:41PM +0800, Wei Yang wrote:
->When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
->which means those VFs in a group should form a compound PE.
->
->This patch links those VF PEs into compound PE in this case.
->
->[gwshan: code refactoring for a bit]
->Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->---
-> arch/powerpc/platforms/powernv/pci-ioda.c |   46 +++++++++++++++++++++++++----
-> arch/powerpc/platforms/powernv/pci.c      |   17 +++++++++--
-> 2 files changed, 56 insertions(+), 7 deletions(-)
->
->diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->index 5738d31..d1530cb 100644
->--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->@@ -1359,9 +1359,20 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
-> 	}
->
-> 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
->+		struct pnv_ioda_pe *s, *sn;
-> 		if (pe->parent_dev != pdev)
-> 			continue;
->
->+		if ((pe->flags & PNV_IODA_PE_MASTER) &&
->+		    (pe->flags & PNV_IODA_PE_VF)) {
->+			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
->+				pnv_pci_ioda2_release_dma_pe(pdev, s);
->+				list_del(&s->list);
->+				pnv_ioda_deconfigure_pe(phb, s);
->+				pnv_ioda_free_pe(phb, s->pe_number);
->+			}
->+		}
->+
-> 		pnv_pci_ioda2_release_dma_pe(pdev, pe);
->
-> 		/* Remove from list */
->@@ -1414,7 +1425,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
-> 	struct pci_bus        *bus;
-> 	struct pci_controller *hose;
-> 	struct pnv_phb        *phb;
->-	struct pnv_ioda_pe    *pe;
->+	struct pnv_ioda_pe    *pe, *master_pe;
-> 	int                    pe_num;
-> 	u16                    vf_index;
-> 	struct pci_dn         *pdn;
->@@ -1456,10 +1467,13 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
-> 			continue;
-> 		}
->
->-		/* Put PE to the list */
->-		mutex_lock(&phb->ioda.pe_list_mutex);
->-		list_add_tail(&pe->list, &phb->ioda.pe_list);
->-		mutex_unlock(&phb->ioda.pe_list_mutex);
->+		/* Put PE to the list, or postpone it for compound PEs */
->+		if ((pdn->m64_per_iov != M64_PER_IOV) ||
->+		    (num_vfs <= M64_PER_IOV)) {
->+			mutex_lock(&phb->ioda.pe_list_mutex);
->+			list_add_tail(&pe->list, &phb->ioda.pe_list);
->+			mutex_unlock(&phb->ioda.pe_list_mutex);
->+		}
->
-> 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
-> 	}
->@@ -1472,10 +1486,32 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
-> 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
->
-> 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
->+			master_pe = NULL;
->+
-> 			for (vf_index = vf_group * vf_per_group;
-> 			     vf_index < (vf_group + 1) * vf_per_group &&
-> 			     vf_index < num_vfs;
-> 			     vf_index++) {
->+
->+				/*
->+				 * Figure out the master PE and put all slave
->+				 * PEs to master PE's list.
->+				 */
->+				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
->+				if (!master_pe) {
->+					pe->flags |= PNV_IODA_PE_MASTER;
->+					INIT_LIST_HEAD(&pe->slaves);
->+					master_pe = pe;
->+					mutex_lock(&phb->ioda.pe_list_mutex);
->+					list_add_tail(&pe->list, &phb->ioda.pe_list);
->+					mutex_unlock(&phb->ioda.pe_list_mutex);
->+				} else {
->+					pe->flags |= PNV_IODA_PE_SLAVE;
->+					pe->master = master_pe;
->+					list_add_tail(&pe->list,
->+						&master_pe->slaves);
->+				}
->+
-> 				for (vf_index1 = vf_group * vf_per_group;
-> 				     vf_index1 < (vf_group + 1) * vf_per_group &&
-> 				     vf_index1 < num_vfs;
->diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
->index 0e4f42e..f3aead0 100644
->--- a/arch/powerpc/platforms/powernv/pci.c
->+++ b/arch/powerpc/platforms/powernv/pci.c
->@@ -739,7 +739,7 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
-> 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
-> 	struct pnv_phb *phb = hose->private_data;
-> #ifdef CONFIG_PCI_IOV
->-	struct pnv_ioda_pe *pe;
->+	struct pnv_ioda_pe *pe, *slave;
-> 	struct pci_dn *pdn;
->
-> 	/* Fix the VF pdn PE number */
->@@ -751,10 +751,23 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
-> 			    (pdev->devfn & 0xff))) {
-> 				pdn->pe_number = pe->pe_number;
-> 				pe->pdev = pdev;
->-				break;
->+				goto found;
->+			}
->+
->+			if ((pe->flags & PNV_IODA_PE_MASTER) &&
->+			    (pe->flags & PNV_IODA_PE_VF)) {
->+				list_for_each_entry(slave, &pe->slaves, list) {
->+					if (slave->rid == ((pdev->bus->number << 8)
->+					   | (pdev->devfn & 0xff))) {
->+						pdn->pe_number = slave->pe_number;
->+						slave->pdev = pdev;
->+						goto found;
->+					}
->+				}
-> 			}
-> 		}
-> 	}
->+found:
-> #endif /* CONFIG_PCI_IOV */
->
-> 	if (phb && phb->dma_dev_setup)
->-- 
->1.7.9.5
+One is realloc fail with two graphics cards above 4G.
+One is from sparc that have problem with clip as we don't parse
+mem64 for it.
+
+Other report is about pci remove/rescan does not work on some setup
+when BIOS tend to allocate small bus size.
+
+This patchset enhance resource allocation to address those problems.
+1. optimize bus mmio alignment calculation.
+2. optimize bus mmio optional alignment calculation.
+3. add support for alt size to prefer small bus size to small bus alignment.
+   when we have small resource window on parent bridges.
+4. treat ROM bar as optional resource.
+5. during allocation, will pick up just fit resource.
+6. parse MEM64 for sparc and other system with OF.
+7. treat non-pref mmio64 if parent bridges are all pcie.
+8. restore old pref allocation logic if hostbridge does not support mmio64 really.
+9. don't realloc resource if device firmware does not support bar change.
+10. add pci=assign_pref_bars to clear and assign pref bars.
+11. don't clear resource when allocation fails.
+
+I put latest copy at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-v4.3-next
+
+That is based on kind of v4.2-rc2.
+
+v2:
+    - fix resource_disabled allocation from powerpc
+    - other warnings that were found by Fengguang's build robot.
+    - io port alignment clean up.
+    - rebased to v4.2-rc2
+    - better for two alt_size support.
+
+Thanks
+
+Yinghai
+
+Yinghai Lu (49):
+  PCI: Cleanup res_to_dev_res() printout for addon resources
+  PCI: Reuse res_to_dev_res in reassign_resources_sorted
+  PCI: Use correct align for optional only resources during sorting
+  PCI: Optimize bus align/size calculation during sizing
+  PCI: Optimize bus align/size calculation for optional during sizing
+  PCI: Don't add too much optional size for hotplug bridge mmio
+  PCI: Reorder resources list for must/optional resources
+  PCI: Remove duplicated code for resource sorting
+  PCI: Rename pdev_sort_resources to pdev_check_resources
+  PCI: Treat ROM resource as optional during realloc
+  PCI: Add debug printout during releasing partial assigned resources
+  PCI: Simplify res reference using in __assign_resourcs_sorted
+  PCI: Separate realloc list checking after allocation
+  PCI: Add __add_to_list()
+  PCI: Cache window alignment value
+  PCI: Check if resource is allocated before pci_assign
+  PCI: Separate out save_resources/restore_resource
+  PCI: Move comment to pci_need_to_release()
+  PCI: Separate must+optional assigning to another function
+  PCI: Skip must+optional if there is no optional addon
+  PCI: Move saved required resource list out of must+optional assigning
+  PCI: Add alt_size allocation support
+  PCI: Add support for more than two alt_size under same bridge
+  PCI: Better support for two alt_size
+  PCI: Don't add too much optional size for hotplug bridge io
+  PCI: Move ISA ioport align out of calculate_iosize
+  PCI: Unifiy calculate_size for io port and mmio
+  PCI: Allow optional only io resource must size to be 0
+  PCI: Unify skip_ioresource_align()
+  PCI: Kill macro checking for bus io port sizing
+  resources: Split out __allocate_resource()
+  resources: Make allocate_resource return just fit resource
+  PCI: Check pref compatible bit for mem64 resource of pcie device
+  PCI: Only treat non-pef mmio64 as pref if all bridges has MEM_64
+  PCI: Add has_mem64 for host_bridge
+  PCI: Only treat non-pef mmio64 as pref if host-bridge has_mem64
+  PCI: Restore pref mmio allocation logic for hostbridge without mmio64
+  sparc/PCI: Add mem64 resource parsing for root bus
+  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
+  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
+  of/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+  PCI: Treat optional as must in first try for bridge rescan
+  PCI: Get new realloc size for bridge for last try
+  PCI: Don't release sibiling bridge resources during hotplug
+  PCI: Don't release fixed resource for realloc
+  PCI: Set resource to FIXED for lsi devices
+  PCI, x86: Add pci=assign_pref_bars to re-allocate pref bars
+  PCI: Introduce resource_disabled()
+  PCI: Don't set flags to 0 when assign resource fail
+
+ arch/alpha/kernel/pci.c                   |    2 +-
+ arch/ia64/pci/pci.c                       |    4 +-
+ arch/microblaze/pci/pci-common.c          |   23 +-
+ arch/mn10300/unit-asb2305/pci-asb2305.c   |    4 +-
+ arch/mn10300/unit-asb2305/pci.c           |    4 +-
+ arch/powerpc/kernel/pci-common.c          |   27 +-
+ arch/powerpc/kernel/pci_of_scan.c         |    4 +-
+ arch/powerpc/platforms/powernv/pci-ioda.c |   12 +-
+ arch/s390/pci/pci.c                       |    2 +-
+ arch/sparc/kernel/of_device_32.c          |    5 +-
+ arch/sparc/kernel/of_device_64.c          |    5 +-
+ arch/sparc/kernel/pci.c                   |    9 +-
+ arch/sparc/kernel/pci_common.c            |   15 +-
+ arch/sparc/kernel/pci_impl.h              |    1 +
+ arch/x86/include/asm/pci_x86.h            |    2 +-
+ arch/x86/pci/common.c                     |    7 +-
+ arch/x86/pci/i386.c                       |   72 +-
+ arch/xtensa/kernel/pci.c                  |    4 +-
+ drivers/iommu/intel-iommu.c               |    3 +-
+ drivers/of/address.c                      |    4 +-
+ drivers/pci/bus.c                         |    6 +-
+ drivers/pci/host/pcie-rcar.c              |    2 +-
+ drivers/pci/hotplug/acpiphp_glue.c        |    1 +
+ drivers/pci/iov.c                         |    2 +-
+ drivers/pci/pci.c                         |    3 +-
+ drivers/pci/pci.h                         |    4 +
+ drivers/pci/probe.c                       |   44 +-
+ drivers/pci/quirks.c                      |   20 +
+ drivers/pci/rom.c                         |    2 +-
+ drivers/pci/setup-bus.c                   | 1302 +++++++++++++++++++++--------
+ drivers/pci/setup-res.c                   |   18 +-
+ include/asm-generic/pci-bridge.h          |    2 +
+ include/linux/ioport.h                    |    6 +-
+ include/linux/pci.h                       |    2 +
+ kernel/resource.c                         |  175 +++-
+ 35 files changed, 1325 insertions(+), 473 deletions(-)
 
 -- 
-Richard Yang
-Help you, Help me
+1.8.4.5
 
