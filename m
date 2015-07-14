@@ -1,64 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp07.in.ibm.com ([122.248.162.7]:36124 "EHLO
-	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756712AbbGQGDI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:08 -0400
-Received: from /spool/local
-	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 17 Jul 2015 11:33:05 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id A20E6E006A
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:36:58 +0530 (IST)
-Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
-	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H62wYq37355748
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:32:59 +0530
-Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
-	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H4m3XX002825
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 10:18:04 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 02/11] PCI: Add pcibios_bus_add_device() weak function
-Date: Fri, 17 Jul 2015 14:02:32 +0800
-Message-Id: <1437112961-17275-3-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mga14.intel.com ([192.55.52.115]:1238 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751724AbbGNW00 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 14 Jul 2015 18:26:26 -0400
+Message-ID: <55A58C8F.4010703@intel.com>
+Date: Wed, 15 Jul 2015 00:26:23 +0200
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+CC: Myron Stowe <myron.stowe@redhat.com>,
+	Jiang Liu <jiang.liu@intel.com>
+Subject: Re: [PATCH 2/2] PCI: Add pcie_downstream_port() (true for Root and
+ Switch Downstream Ports)
+References: <20150714193757.13471.77973.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150714194511.13471.8395.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150714194511.13471.8395.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a weak function pcibios_bus_add_device() for arch dependent
-code could do proper setup. For example, powerpc could setup EEH related
-resources.
+On 7/14/2015 9:45 PM, Bjorn Helgaas wrote:
+> As used in the PCIe spec, "Downstream Port" includes both Root Ports and
+> Switch Downstream Ports.  We sometimes checked for PCI_EXP_TYPE_DOWNSTREAM
+> when we should have checked for PCI_EXP_TYPE_ROOT_PORT or
+> PCI_EXP_TYPE_DOWNSTREAM.
+>
+> For a Root Port without a slot, the effect of this was that using
+> pcie_capability_read_word() to read PCI_EXP_SLTSTA returned zero instead of
+> showing the Presence Detect State bit hardwired to one as the PCIe Spec,
+> r3.0, sec 7.8, requires.  (This read is completed in software because
+> previous PCIe spec versions didn't require PCI_EXP_SLTSTA to exist at all.)
+>
+> Nothing in the kernel currently depends on this (pciehp only reads
+> PCI_EXP_SLTSTA on ports with slots), so this is a cleanup and not a
+> functional change.
+>
+> Add a pcie_downstream_port() helper function and use it.
+>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/bus.c |    3 +++
- 1 file changed, 3 insertions(+)
+ACK
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6fbd3f2..b7e30a7 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -267,6 +267,7 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
- 
- void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
- 
-+void __weak pcibios_bus_add_device(struct pci_dev *dev) { }
- /**
-  * pci_bus_add_device - start driver for a single device
-  * @dev: device to add
-@@ -277,6 +278,8 @@ void pci_bus_add_device(struct pci_dev *dev)
- {
- 	int retval;
- 
-+	pcibios_bus_add_device(dev);
-+
- 	/*
- 	 * Can not put in pci_device_add yet because resources
- 	 * are not assigned yet for some devices.
--- 
-1.7.9.5
+> ---
+>   drivers/pci/access.c |   23 +++++++++++++----------
+>   1 file changed, 13 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index d9b64a1..79f0102 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -531,6 +531,14 @@ static inline int pcie_cap_version(const struct pci_dev *dev)
+>   	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
+>   }
+>   
+> +static bool pcie_downstream_port(constr struct pci_dev *dev)
+> +{
+> +	int type = pci_pcie_type(dev);
+> +
+> +	return type == PCI_EXP_TYPE_ROOT_PORT ||
+> +	       type == PCI_EXP_TYPE_DOWNSTREAM;
+> +}
+> +
+>   bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+>   {
+>   	int type = pci_pcie_type(dev);
+> @@ -546,10 +554,7 @@ bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+>   
+>   static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
+>   {
+> -	int type = pci_pcie_type(dev);
+> -
+> -	return (type == PCI_EXP_TYPE_ROOT_PORT ||
+> -		type == PCI_EXP_TYPE_DOWNSTREAM) &&
+> +	return pcie_downstream_port(dev) &&
+>   	       pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT;
+>   }
+>   
+> @@ -628,10 +633,9 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
+>   	 * State bit in the Slot Status register of Downstream Ports,
+>   	 * which must be hardwired to 1b.  (PCIe Base Spec 3.0, sec 7.8)
+>   	 */
+> -	if (pci_is_pcie(dev) && pos == PCI_EXP_SLTSTA &&
+> -		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
+> +	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
+> +	    pos == PCI_EXP_SLTSTA)
+>   		*val = PCI_EXP_SLTSTA_PDS;
+> -	}
+>   
+>   	return 0;
+>   }
+> @@ -657,10 +661,9 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
+>   		return ret;
+>   	}
+>   
+> -	if (pci_is_pcie(dev) && pos == PCI_EXP_SLTCTL &&
+> -		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
+> +	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
+> +	    pos == PCI_EXP_SLTSTA)
+>   		*val = PCI_EXP_SLTSTA_PDS;
+> -	}
+>   
+>   	return 0;
+>   }
+>
 
