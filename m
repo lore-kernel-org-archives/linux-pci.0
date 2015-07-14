@@ -1,384 +1,170 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH 4/6] pci: altera: Add Altera PCIe MSI driver
-Date: Tue, 28 Jul 2015 18:45:43 +0800
-Message-ID: <1438080345-7233-5-git-send-email-lftan@altera.com>
-In-Reply-To: <1438080345-7233-1-git-send-email-lftan@altera.com>
-References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:33865 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751843AbbGNWaT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:30:19 -0400
+Received: by obre1 with SMTP id e1so15318084obr.1
+        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 15:30:19 -0700 (PDT)
+Date: Tue, 14 Jul 2015 17:30:13 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Kees Cook <keescook@chromium.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Baoquan He <bhe@redhat.com>,
+	linux-kernel@vger.kernel.org,
+	Matt Fleming <matt.fleming@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 33/42] x86, boot: Add add_pci handler for SETUP_PCI
+Message-ID: <20150714223013.GP24416@google.com>
+References: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
+ <1436300428-21163-34-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1436300428-21163-34-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds Altera PCIe MSI driver. This soft IP supports configurable
-number of vectors, which is a dts parameter.
+On Tue, Jul 07, 2015 at 01:20:19PM -0700, Yinghai Lu wrote:
+> Let it reserve setup_data, and keep it's own list.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- drivers/pci/host/Kconfig           |   7 +
- drivers/pci/host/Makefile          |   1 +
- drivers/pci/host/pcie-altera-msi.c | 318 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 326 insertions(+)
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
+s/it's/its/
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index af19039..a8b87fd 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -154,4 +154,11 @@ config PCIE_ALTERA
- 	  Say Y here if you want to enable PCIe controller support for Altera
- 	  SoCFPGA family of SoCs.
- 
-+config PCIE_ALTERA_MSI
-+	bool "Altera PCIe MSI feature"
-+	depends on PCI_MSI && PCIE_ALTERA
-+	help
-+	  Say Y here if you want PCIe MSI support for the Altera SocFPGA SoC.
-+	  This MSI driver supports Altera MSI to GIC controller IP.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 6954f76..6c4913d 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -18,3 +18,4 @@ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
- obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
-+obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
-diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
-new file mode 100644
-index 0000000..b852b51
---- /dev/null
-+++ b/drivers/pci/host/pcie-altera-msi.c
-@@ -0,0 +1,318 @@
-+/*
-+ * Copyright Altera Corporation (C) 2013-2015. All rights reserved
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/msi.h>
-+#include <linux/of_address.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_pci.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/slab.h>
-+
-+#define MSI_STATUS		0x0
-+#define MSI_ERROR		0x4
-+#define MSI_INTMASK		0x8
-+
-+#define MAX_MSI_VECTORS		32
-+struct altera_msi {
-+	DECLARE_BITMAP(used, MAX_MSI_VECTORS);
-+	struct mutex		lock;	/* proctect used variable */
-+	struct platform_device	*pdev;
-+	struct irq_domain		*msi_domain;
-+	void __iomem		*csr_base;
-+	void __iomem		*vector_base;
-+	u32			vector_phy;
-+	u32			num_of_vectors;
-+	int			irq;
-+};
-+
-+static inline void msi_writel(struct altera_msi *msi, u32 value, u32 reg)
-+{
-+	writel(value, msi->csr_base + reg);
-+}
-+
-+static inline u32 msi_readl(struct altera_msi *msi, u32 reg)
-+{
-+	return readl(msi->csr_base + reg);
-+}
-+
-+static irqreturn_t altera_msi_isr(int irq, void *data)
-+{
-+	struct altera_msi *msi = data;
-+	unsigned long status;
-+	u32 num_of_vectors = msi->num_of_vectors;
-+	u32 processed = 0;
-+	u32 offset;
-+
-+	do {
-+		status = msi_readl(msi, MSI_STATUS);
-+		if (!status)
-+			break;
-+
-+		do {
-+			offset = find_first_bit(&status, num_of_vectors);
-+			/* Dummy read from vector to clear the interrupt */
-+			readl(msi->vector_base + (offset * sizeof(u32)));
-+
-+			irq = irq_find_mapping(msi->msi_domain->parent, offset);
-+			if (irq) {
-+				if (test_bit(offset, msi->used))
-+					generic_handle_irq(irq);
-+				else
-+					dev_info(&msi->pdev->dev, "unhandled MSI\n");
-+			} else
-+				dev_info(&msi->pdev->dev, "unexpected MSI\n");
-+
-+			/* Clear the bit from status and repeat without reading
-+			 * again status register. */
-+			clear_bit(offset, &status);
-+			processed++;
-+		} while (status);
-+	} while (1);
-+
-+	return processed > 0 ? IRQ_HANDLED : IRQ_NONE;
-+}
-+
-+static struct irq_chip altera_msi_irq_chip = {
-+	.name = "Altera PCIe MSI",
-+	.irq_enable = pci_msi_unmask_irq,
-+	.irq_disable = pci_msi_mask_irq,
-+	.irq_mask = pci_msi_mask_irq,
-+	.irq_unmask = pci_msi_unmask_irq,
-+};
-+
-+static struct msi_domain_info altera_msi_domain_info = {
-+	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS),
-+	.chip	= &altera_msi_irq_chip,
-+};
-+
-+static void altera_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	struct altera_msi *msi = irq_data_get_irq_chip_data(data);
-+	u32 mask;
-+
-+	msg->address_lo = msi->vector_phy + (data->hwirq * sizeof(u32));
-+	/* 32 bit address only */
-+	msg->address_hi = 0;
-+	msg->data = data->hwirq;
-+
-+	mask = msi_readl(msi, MSI_INTMASK);
-+	mask |= 1 << data->hwirq;
-+	msi_writel(msi, mask, MSI_INTMASK);
-+	dev_dbg(&msi->pdev->dev, "msi#%d address_lo 0x%x\n", (int)data->hwirq,
-+		msg->address_lo);
-+}
-+
-+static int altera_msi_set_affinity(struct irq_data *irq_data,
-+				 const struct cpumask *mask, bool force)
-+{
-+	 return irq_set_affinity(irq_data->hwirq, mask);
-+}
-+
-+static struct irq_chip altera_msi_bottom_irq_chip = {
-+	.name			= "Altera MSI",
-+	.irq_compose_msi_msg	= altera_compose_msi_msg,
-+	.irq_set_affinity	= altera_msi_set_affinity,
-+};
-+
-+static int altera_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-+				  unsigned int nr_irqs, void *args)
-+{
-+	struct altera_msi *msi = domain->host_data;
-+	int bit;
-+
-+	mutex_lock(&msi->lock);
-+
-+	bit = find_first_zero_bit(msi->used, msi->num_of_vectors);
-+	if (bit < msi->num_of_vectors)
-+		set_bit(bit, msi->used);
-+	else
-+		bit = -ENOSPC;
-+
-+	mutex_unlock(&msi->lock);
-+
-+	if (bit < 0)
-+		return bit;
-+
-+	irq_domain_set_info(domain, virq, bit, &altera_msi_bottom_irq_chip,
-+			    domain->host_data, handle_simple_irq,
-+			    NULL, NULL);
-+	set_irq_flags(virq, IRQF_VALID);
-+
-+	return 0;
-+}
-+
-+static void altera_irq_domain_free(struct irq_domain *domain,
-+				  unsigned int virq, unsigned int nr_irqs)
-+{
-+	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
-+	struct altera_msi *msi = irq_data_get_irq_chip_data(d);
-+	u32 mask;
-+
-+	mutex_lock(&msi->lock);
-+
-+	if (!test_bit(d->hwirq, msi->used))
-+		dev_err(&msi->pdev->dev, "trying to free unused MSI#%lu\n",
-+		d->hwirq);
-+	else {
-+		clear_bit(d->hwirq, msi->used);
-+		mask = msi_readl(msi, MSI_INTMASK);
-+		mask &= ~(1 << d->hwirq);
-+		msi_writel(msi, mask, MSI_INTMASK);
-+	}
-+
-+	mutex_unlock(&msi->lock);
-+}
-+
-+static const struct irq_domain_ops msi_domain_ops = {
-+	.alloc	= altera_irq_domain_alloc,
-+	.free	= altera_irq_domain_free,
-+};
-+
-+static int altera_allocate_domains(struct altera_msi *msi)
-+{
-+	struct irq_domain *inner_domain;
-+
-+	inner_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
-+					     &msi_domain_ops, msi);
-+	if (!inner_domain) {
-+		dev_err(&msi->pdev->dev, "failed to create IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+
-+	msi->msi_domain = pci_msi_create_irq_domain(
-+				msi->pdev->dev.of_node,
-+				&altera_msi_domain_info, inner_domain);
-+	if (!msi->msi_domain) {
-+		dev_err(&msi->pdev->dev, "failed to create MSI domain\n");
-+		irq_domain_remove(inner_domain);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+static void altera_free_domains(struct altera_msi *msi)
-+{
-+	struct irq_domain *inner_domain = msi->msi_domain->parent;
-+
-+	irq_domain_remove(msi->msi_domain);
-+	irq_domain_remove(inner_domain);
-+}
-+
-+int altera_msi_probe(struct platform_device *pdev)
-+{
-+	struct altera_msi *msi;
-+	struct device_node *np = pdev->dev.of_node;
-+	struct resource *res;
-+	int ret;
-+
-+	msi = devm_kzalloc(&pdev->dev, sizeof(struct altera_msi),
-+		GFP_KERNEL);
-+	if (!msi)
-+		return -ENOMEM;
-+
-+	mutex_init(&msi->lock);
-+	msi->pdev = pdev;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
-+	msi->csr_base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(msi->csr_base)) {
-+		dev_err(&pdev->dev, "get csr resource failed\n");
-+		return -EADDRNOTAVAIL;
-+	}
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+			"vector_slave");
-+	msi->vector_base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(msi->vector_base)) {
-+		dev_err(&pdev->dev, "get vector slave resource failed\n");
-+		return -EADDRNOTAVAIL;
-+	}
-+
-+	msi->vector_phy = res->start;
-+
-+	if (of_property_read_u32(np, "num-vectors", &msi->num_of_vectors)) {
-+		dev_err(&pdev->dev, "failed to parse the number of vectors\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = altera_allocate_domains(msi);
-+	if (ret)
-+		return ret;
-+
-+	msi->irq = platform_get_irq(pdev, 0);
-+	if (msi->irq <= 0) {
-+		dev_err(&pdev->dev, "failed to map IRQ: %d\n", msi->irq);
-+		ret = -ENODEV;
-+		goto err;
-+	}
-+
-+	ret = devm_request_irq(&pdev->dev, msi->irq, altera_msi_isr, 0,
-+				altera_msi_irq_chip.name, msi);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to request IRQ: %d\n", ret);
-+		goto err;
-+	}
-+
-+	platform_set_drvdata(pdev, msi);
-+
-+	return 0;
-+
-+err:
-+	irq_domain_remove(msi->msi_domain);
-+	return ret;
-+}
-+
-+static int altera_msi_remove(struct platform_device *pdev)
-+{
-+	struct altera_msi *msi = platform_get_drvdata(pdev);
-+
-+	msi_writel(msi, 0, MSI_INTMASK);
-+
-+	altera_free_domains(msi);
-+
-+	platform_set_drvdata(pdev, NULL);
-+	return 0;
-+}
-+
-+static const struct of_device_id altera_msi_of_match[] = {
-+	{ .compatible = "altr,msi-1.0", NULL },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, altera_msi_of_match);
-+
-+static struct platform_driver altera_msi_driver = {
-+	.driver = {
-+		.name = "altera-msi",
-+		.owner = THIS_MODULE,
-+		.of_match_table = altera_msi_of_match,
-+	},
-+	.probe = altera_msi_probe,
-+	.remove = altera_msi_remove,
-+};
-+
-+static int __init altera_msi_init(void)
-+{
-+	return platform_driver_register(&altera_msi_driver);
-+}
-+
-+subsys_initcall(altera_msi_init);
-+
-+MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
-+MODULE_DESCRIPTION("Altera PCIe MSI support");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.2.1
+> Also clear the hdr.setup_data, as all handler now handle or
+> reserve setup_data locally already.
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Matt Fleming <matt.fleming@intel.com>
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  arch/x86/include/asm/pci.h |  2 ++
+>  arch/x86/kernel/setup.c    |  8 ++++++++
+>  arch/x86/pci/common.c      | 42 ++++++++++++++++++++++++++++--------------
+>  3 files changed, 38 insertions(+), 14 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+> index 4625943..7d2468c 100644
+> --- a/arch/x86/include/asm/pci.h
+> +++ b/arch/x86/include/asm/pci.h
+> @@ -80,8 +80,10 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+>  
+>  #ifdef CONFIG_PCI
+>  extern void early_quirks(void);
+> +void add_pci(u64 pa_data);
+>  #else
+>  static inline void early_quirks(void) { }
+> +static inline void add_pci(u64 pa_data) { }
+>  #endif
+>  
+>  extern void pci_iommu_alloc(void);
+> diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
+> index a3b65f1..de0f830 100644
+> --- a/arch/x86/kernel/setup.c
+> +++ b/arch/x86/kernel/setup.c
+> @@ -440,6 +440,8 @@ static void __init parse_setup_data(void)
+>  		pa_next = data->next;
+>  		early_memunmap(data, sizeof(*data));
+>  
+> +		printk(KERN_DEBUG "setup_data type: %d @ %#010llx\n",
+> +				data_type, pa_data);
+>  		switch (data_type) {
+>  		case SETUP_E820_EXT:
+>  			parse_e820_ext(pa_data, data_len);
+> @@ -447,14 +449,20 @@ static void __init parse_setup_data(void)
+>  		case SETUP_DTB:
+>  			add_dtb(pa_data);
+>  			break;
+> +		case SETUP_PCI:
+> +			add_pci(pa_data);
+> +			break;
+>  		case SETUP_EFI:
+>  			parse_efi_setup(pa_data, data_len);
+>  			break;
+>  		default:
+> +			pr_warn("Unknown setup_data type: %d @ %#010llx ignored!\n",
+> +				data_type, pa_data);
+>  			break;
+>  		}
+>  		pa_data = pa_next;
+>  	}
+> +	boot_params.hdr.setup_data = 0; /* all done */
+>  }
+>  
+>  static void __init memblock_x86_reserve_range_setup_data(void)
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 8fd6f44..16ace12 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -9,6 +9,7 @@
+>  #include <linux/pci-acpi.h>
+>  #include <linux/ioport.h>
+>  #include <linux/init.h>
+> +#include <linux/memblock.h>
+>  #include <linux/dmi.h>
+>  #include <linux/slab.h>
+>  
+> @@ -641,31 +642,44 @@ unsigned int pcibios_assign_all_busses(void)
+>  	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
+>  }
+>  
+> +static u64 pci_setup_data;
+> +void __init add_pci(u64 pa_data)
+> +{
+> +	struct setup_data *data;
+> +
+> +	data = early_memremap(pa_data, sizeof(*data));
+> +	memblock_reserve(pa_data, sizeof(*data) + data->len);
+> +	data->next = pci_setup_data;
+> +	pci_setup_data = pa_data;
+> +	early_memunmap(data, sizeof(*data));
+> +}
+> +
+>  int pcibios_add_device(struct pci_dev *dev)
+>  {
+>  	struct setup_data *data;
+>  	struct pci_setup_rom *rom;
+>  	u64 pa_data;
+>  
+> -	pa_data = boot_params.hdr.setup_data;
+> +	pa_data = pci_setup_data;
+>  	while (pa_data) {
+>  		data = ioremap(pa_data, sizeof(*rom));
+>  		if (!data)
+>  			return -ENOMEM;
+>  
+> -		if (data->type == SETUP_PCI) {
+> -			rom = (struct pci_setup_rom *)data;
+> -
+> -			if ((pci_domain_nr(dev->bus) == rom->segment) &&
+> -			    (dev->bus->number == rom->bus) &&
+> -			    (PCI_SLOT(dev->devfn) == rom->device) &&
+> -			    (PCI_FUNC(dev->devfn) == rom->function) &&
+> -			    (dev->vendor == rom->vendor) &&
+> -			    (dev->device == rom->devid)) {
+> -				dev->rom = pa_data +
+> -				      offsetof(struct pci_setup_rom, romdata);
+> -				dev->romlen = rom->pcilen;
+> -			}
+> +		rom = (struct pci_setup_rom *)data;
+> +
+> +		if ((pci_domain_nr(dev->bus) == rom->segment) &&
+> +		    (dev->bus->number == rom->bus) &&
+> +		    (PCI_SLOT(dev->devfn) == rom->device) &&
+> +		    (PCI_FUNC(dev->devfn) == rom->function) &&
+> +		    (dev->vendor == rom->vendor) &&
+> +		    (dev->device == rom->devid)) {
+> +			dev->rom = pa_data +
+> +			      offsetof(struct pci_setup_rom, romdata);
+> +			dev->romlen = rom->pcilen;
+> +			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
+> +				   (unsigned long)dev->rom,
+> +				   (unsigned long)(dev->rom + dev->romlen - 1));
 
+"set ROM to [mem %#010lx-%#010lx] via SETUP_PCI" so it matches the way we
+print other MMIO ranges.
+
+>  		}
+>  		pa_data = data->next;
+>  		iounmap(data);
+> -- 
+> 1.8.4.5
+> 
