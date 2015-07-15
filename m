@@ -1,139 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>, <arm@kernel.org>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v5 1/4] PCI: iproc: enable arm64 support for iProc PCIe
-Date: Mon, 27 Jul 2015 15:42:18 -0700
-Message-ID: <1438036941-27210-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
-References: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:38690 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753108AbbGOMRN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 08:17:13 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 06/19] PCI/MSI: of: Allow msi_domain lookup using the host bridge node
+Date: Wed, 15 Jul 2015 13:16:40 +0100
+Message-Id: <1436962613-17359-7-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI: iproc: Add arm64 support
+A number of platforms do not need to use the msi-parent property,
+as the host bridge itself provides the MSI controller.
 
-Add arm64 support to the iProc PCIe driver.
+Allow this configuration by performing an irq domain lookup based
+on the host bridge node if it doesn't have a valid msi-parent property.
 
-Note that on arm32, bus->sysdata points to the arm32-specific
-pci_sys_data struct, and pci_sys_data.private_data contains the
-iproc_pcie pointer. For arm64, there's nothing corresponding to
-pci_sys_data, so we keep the iproc_pcie pointer directly in
-bus->sysdata.
-
-In addition, arm64 does IRQ mapping in pcibios_add_device(), so it
-doesn't need pci_fixup_irqs() as arm32 does.
-
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/host/pcie-iproc.c |   27 ++++++++++++++++++++-------
- drivers/pci/host/pcie-iproc.h |    4 +++-
- 2 files changed, 23 insertions(+), 8 deletions(-)
+ drivers/pci/of.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index d77481e..ba087b5 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -58,9 +58,17 @@
- #define SYS_RC_INTX_EN               0x330
- #define SYS_RC_INTX_MASK             0xf
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 09df465..9d61cef 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -69,9 +69,14 @@ void pci_set_phb_of_msi_domain(struct pci_bus *bus)
  
--static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
-+static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
- {
--	return sys->private_data;
-+	struct iproc_pcie *pcie;
-+#ifdef CONFIG_ARM
-+	struct pci_sys_data *sys = bus->sysdata;
-+
-+	pcie = sys->private_data;
-+#else
-+	pcie = bus->sysdata;
-+#endif
-+	return pcie;
- }
- 
- /**
-@@ -71,8 +79,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
- 					    unsigned int devfn,
- 					    int where)
- {
--	struct pci_sys_data *sys = bus->sysdata;
--	struct iproc_pcie *pcie = sys_to_pcie(sys);
-+	struct iproc_pcie *pcie = iproc_data(bus);
- 	unsigned slot = PCI_SLOT(devfn);
- 	unsigned fn = PCI_FUNC(devfn);
- 	unsigned busno = bus->number;
-@@ -186,6 +193,7 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
- int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- {
- 	int ret;
-+	void *sysdata;
- 	struct pci_bus *bus;
- 
- 	if (!pcie || !pcie->dev || !pcie->base)
-@@ -208,10 +216,13 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 
- 	iproc_pcie_reset(pcie);
- 
-+#ifdef CONFIG_ARM
- 	pcie->sysdata.private_data = pcie;
--
--	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
--				  &pcie->sysdata, res);
-+	sysdata = &pcie->sysdata;
-+#else
-+	sysdata = pcie;
-+#endif
-+	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, sysdata, res);
- 	if (!bus) {
- 		dev_err(pcie->dev, "unable to create PCI root bus\n");
- 		ret = -ENOMEM;
-@@ -229,7 +240,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 
- 	pci_scan_child_bus(bus);
- 	pci_assign_unassigned_bus_resources(bus);
-+#ifdef CONFIG_ARM
- 	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
-+#endif
- 	pci_bus_add_devices(bus);
- 
- 	return 0;
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index ba0a108..c9e4c10 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -21,7 +21,7 @@
-  * @dev: pointer to device data structure
-  * @base: PCIe host controller I/O register base
-  * @resources: linked list of all PCI resources
-- * @sysdata: Per PCI controller data
-+ * @sysdata: Per PCI controller data (ARM-specific)
-  * @root_bus: pointer to root bus
-  * @phy: optional PHY device that controls the Serdes
-  * @irqs: interrupt IDs
-@@ -29,7 +29,9 @@
- struct iproc_pcie {
- 	struct device *dev;
- 	void __iomem *base;
-+#ifdef CONFIG_ARM
- 	struct pci_sys_data sysdata;
-+#endif
- 	struct pci_bus *root_bus;
- 	struct phy *phy;
- 	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
+ 	if (!bus->dev.of_node)
+ 		return;
++	/* Start looking for a phandle to an MSI controller. */
+ 	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
++	/*
++	 * If we don't have an msi-parent property, look for a domain
++	 * directly attached to the host bridge.
++	 */
+ 	if (!np)
+-		return;
++		np = bus->dev.of_node;
+ 	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
+ 	if (!d)
+ 		d = irq_find_host(np);
 -- 
-1.7.9.5
+2.1.4
 
