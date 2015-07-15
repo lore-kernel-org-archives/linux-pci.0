@@ -1,118 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17830 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756591AbbGFXmY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:42:24 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH 33/36] PCI: Don't release fixed resource for realloc
-Date: Mon,  6 Jul 2015 16:39:23 -0700
-Message-Id: <1436225966-27247-34-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:37586 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753266AbbGOQy6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 12:54:58 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-arm-kernel@lists.infradead.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>,
+	David Daney <david.daney@cavium.com>
+Subject: [PATCH 3/5] arm64, pci: Allow RC drivers to supply pcibios_add_device() implementation.
+Date: Wed, 15 Jul 2015 09:54:43 -0700
+Message-Id: <1436979285-8177-4-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not release bridge resource if there is fixed resources
-under it, otherwise the children firmware would stop working.
+From: David Daney <david.daney@cavium.com>
 
-Reported-by: Paul Johnson <pjay@nwtrail.com>
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
+The default is to continue doing the what we have done before, but add
+a hook so that this can be overridden.
+
+Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/pci/setup-bus.c |  6 ++++--
- include/linux/ioport.h  |  2 +-
- kernel/resource.c       | 28 ++++++++++++++++++++++++++--
- 3 files changed, 31 insertions(+), 5 deletions(-)
+ arch/arm64/include/asm/pci.h |  3 +++
+ arch/arm64/kernel/pci.c      | 10 ++++++++++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 82b7873..22ef9a1 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2007,14 +2007,16 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 
- 	r = &b_res[idx];
- 
--	if (!r->parent)
-+	if (!r->parent || r->flags & IORESOURCE_PCI_FIXED)
- 		return;
- 
- 	/*
- 	 * if there are children under that, we should release them
- 	 *  all
- 	 */
--	release_child_resources(r);
-+	if (!release_child_resources(r))
-+		return;
+diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+index b008a72..ad3fb18 100644
+--- a/arch/arm64/include/asm/pci.h
++++ b/arch/arm64/include/asm/pci.h
+@@ -37,6 +37,9 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ {
+ 	return 1;
+ }
 +
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & type_mask;
- 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 388e3ae..27dbb18 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -141,7 +141,7 @@ extern struct resource iomem_resource;
- extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
- extern int request_resource(struct resource *root, struct resource *new);
- extern int release_resource(struct resource *new);
--void release_child_resources(struct resource *new);
-+bool release_child_resources(struct resource *new);
- extern void reserve_region_with_split(struct resource *root,
- 			     resource_size_t start, resource_size_t end,
- 			     const char *name);
-diff --git a/kernel/resource.c b/kernel/resource.c
-index c630ef1..0285f11 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -276,11 +276,35 @@ static void __release_child_resources(struct resource *r)
- 	}
++void set_pcibios_add_device(int (*arg)(struct pci_dev *));
++
+ #endif  /* CONFIG_PCI */
+ 
+ #endif  /* __KERNEL__ */
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 4095379..3356023 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -38,11 +38,21 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return res->start;
  }
  
--void release_child_resources(struct resource *r)
-+static bool __has_fixed_child_resources(struct resource *r)
- {
-+	struct resource *p;
++static int (*pcibios_add_device_impl)(struct pci_dev *);
 +
-+	p = r->child;
-+	while (p) {
-+		if (p->flags & IORESOURCE_PCI_FIXED)
-+			return true;
-+
-+		if (__has_fixed_child_resources(p))
-+			return true;
-+
-+		p = p->sibling;
-+	}
-+
-+	return false;
++void set_pcibios_add_device(int (*arg)(struct pci_dev *))
++{
++	pcibios_add_device_impl = arg;
 +}
 +
-+bool release_child_resources(struct resource *r)
-+{
-+	bool fixed;
+ /*
+  * Try to assign the IRQ number from DT when adding a new device
+  */
+ int pcibios_add_device(struct pci_dev *dev)
+ {
++	if (pcibios_add_device_impl)
++		return pcibios_add_device_impl(dev);
 +
- 	write_lock(&resource_lock);
--	__release_child_resources(r);
-+	fixed = __has_fixed_child_resources(r);
-+	if (!fixed)
-+		__release_child_resources(r);
- 	write_unlock(&resource_lock);
-+
-+	return !fixed;
- }
+ 	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
  
- /**
+ 	return 0;
 -- 
-1.8.4.5
+1.9.1
 
