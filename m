@@ -1,143 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 03/36] PCI: Use correct align for optional only resources during sorting for resource allocation
-Date: Mon,  6 Jul 2015 16:38:53 -0700
-Message-Id: <1436225966-27247-4-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56748 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753395AbbGOV3I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 17:29:08 -0400
+Date: Wed, 15 Jul 2015 14:29:07 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: "Sean O. Stalley" <sean.stalley@intel.com>
+Cc: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
+	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
+	mmarek@suse.cz, bigeasy@linutronix.de, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-mm@kvack.org,
+	cocci@systeme.lip6.fr
+Subject: Re: [PATCH 1/4] mm: Add support for __GFP_ZERO flag to
+ dma_pool_alloc()
+Message-Id: <20150715142907.ccfd473ea0e039642d46893d@linux-foundation.org>
+In-Reply-To: <1436994883-16563-2-git-send-email-sean.stalley@intel.com>
+References: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
+	<1436994883-16563-2-git-send-email-sean.stalley@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During sorting before assign, we only put resource with non-zero align
-in the sorted list, so for optional resources that must part is 0 and only
-have addon parts, we need to have correct align.
+On Wed, 15 Jul 2015 14:14:40 -0700 "Sean O. Stalley" <sean.stalley@intel.com> wrote:
 
-Use addon resource align instead in that case.
+> Currently the __GFP_ZERO flag is ignored by dma_pool_alloc().
+> Make dma_pool_alloc() zero the memory if this flag is set.
+> 
+> ...
+>
+> --- a/mm/dmapool.c
+> +++ b/mm/dmapool.c
+> @@ -334,7 +334,7 @@ void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
+>  	/* pool_alloc_page() might sleep, so temporarily drop &pool->lock */
+>  	spin_unlock_irqrestore(&pool->lock, flags);
+>  
+> -	page = pool_alloc_page(pool, mem_flags);
+> +	page = pool_alloc_page(pool, mem_flags & (~__GFP_ZERO));
+>  	if (!page)
+>  		return NULL;
+>  
+> @@ -375,6 +375,10 @@ void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
+>  	memset(retval, POOL_POISON_ALLOCATED, pool->size);
+>  #endif
+>  	spin_unlock_irqrestore(&pool->lock, flags);
+> +
+> +	if (mem_flags & __GFP_ZERO)
+> +		memset(retval, 0, pool->size);
+> +
+>  	return retval;
+>  }
+>  EXPORT_SYMBOL(dma_pool_alloc);
 
-Sorted list will contain must res align/size to 0/0 to hold spot for
-optional resources.
+hm, this code is all a bit confused.
 
-And later we will treat the ROM BAR as optional resource with this support.
+We'd really prefer that the __GFP_ZERO be passed all the way to the
+bottom level, so that places which are responsible for zeroing memory
+(eg, the page allocator) can do their designated function.  One reason
+for this is that if someone comes up with a whizzy way of zeroing
+memory on their architecture (eg, non-temporal store) then that will be
+implemented in the core page allocator and the dma code will miss out.
 
-The patch will pass realloc_head from sizing stage to sorting stage, and
-get entry from realloc and calculate align from the entry.
+Also, and just from a brief look around,
+drivers/base/dma-coherent.c:dma_alloc_from_coherent() is already
+zeroing the memory so under some circumstances I think we'll zero the
+memory twice?  We could fix that by passing the gfp_t to
+dma_alloc_from_coherent() and then changing dma_alloc_from_coherent()
+to *not* zero the memory if __GFP_ZERO, but wouldn't that be peculiar?
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 45 ++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 38 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 247d8fe..9f4c477 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -145,9 +145,38 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	return dev_res->min_align;
- }
- 
-+static resource_size_t __pci_resource_alignment(
-+				struct pci_dev *dev,
-+				struct resource *r,
-+				struct list_head *realloc_head)
-+{
-+	resource_size_t r_align = pci_resource_alignment(dev, r);
-+	resource_size_t orig_start, orig_end;
-+
-+	if (r_align || !realloc_head)
-+		return r_align;
-+
-+	orig_start = r->start;
-+	orig_end = r->end;
-+	r->end += get_res_add_size(realloc_head, r);
-+	if ((r->flags & IORESOURCE_STARTALIGN)) {
-+		resource_size_t r_size = resource_size(r);
-+		resource_size_t add_align = get_res_add_align(realloc_head, r);
-+
-+		r->start = add_align;
-+		r->end = add_align + r_size - 1;
-+	}
-+	r_align = pci_resource_alignment(dev, r);
-+	r->start = orig_start;
-+	r->end = orig_end;
-+
-+	return r_align;
-+}
- 
- /* Sort resources by alignment */
--static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
-+static void pdev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
-+				 struct list_head *head)
- {
- 	int i;
- 
-@@ -165,7 +194,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		if (!(r->flags) || r->parent)
- 			continue;
- 
--		r_align = pci_resource_alignment(dev, r);
-+		r_align = __pci_resource_alignment(dev, r, realloc_head);
- 		if (!r_align) {
- 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
- 				 i, r);
-@@ -183,8 +212,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		list_for_each_entry(dev_res, head, list) {
- 			resource_size_t align;
- 
--			align = pci_resource_alignment(dev_res->dev,
--							 dev_res->res);
-+			align = __pci_resource_alignment(dev_res->dev,
-+							 dev_res->res,
-+							 realloc_head);
- 
- 			if (r_align > align) {
- 				n = &dev_res->list;
-@@ -197,6 +227,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- }
- 
- static void __dev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
- 	u16 class = dev->class >> 8;
-@@ -213,7 +244,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
- 			return;
- 	}
- 
--	pdev_sort_resources(dev, head);
-+	pdev_sort_resources(dev, realloc_head, head);
- }
- 
- static inline void reset_resource(struct resource *res)
-@@ -501,7 +532,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
- {
- 	LIST_HEAD(head);
- 
--	__dev_sort_resources(dev, &head);
-+	__dev_sort_resources(dev, add_head, &head);
- 	__assign_resources_sorted(&head, add_head, fail_head);
- 
- }
-@@ -514,7 +545,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
- 	LIST_HEAD(head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list)
--		__dev_sort_resources(dev, &head);
-+		__dev_sort_resources(dev, realloc_head, &head);
- 
- 	__assign_resources_sorted(&head, realloc_head, fail_head);
- }
--- 
-1.8.4.5
+Also, passing __GFP_ZERO will now cause pool_alloc_page()'s
+memset(POOL_POISON_FREED) to be wiped out.  I guess that's harmless,
+but a bit inefficient?
 
