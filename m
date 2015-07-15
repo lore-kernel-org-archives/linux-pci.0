@@ -1,53 +1,83 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
-Subject: [PATCH v6 12/19] irqchip: gicv3-its: Register irq domain with NEXUS token
-Date: Tue, 28 Jul 2015 14:46:19 +0100
-Message-Id: <1438091186-10244-13-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
-References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+Message-ID: <55A6AD1F.902@caviumnetworks.com>
+Date: Wed, 15 Jul 2015 11:57:35 -0700
+From: David Daney <ddaney@caviumnetworks.com>
+MIME-Version: 1.0
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Robert Richter <rrichter@cavium.com>,
+	<linux-kernel@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
+ the irqdomain of the GIC.
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com> <55A6947F.8070903@arm.com>
+In-Reply-To: <55A6947F.8070903@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we can distinguish between multiple domains carrying the
-same device_node, tag the raw ITS domain with DOMAIN_BUS_NEXUS.
-This will allow MSI providers built on top of the raw ITS domain
-to identify it.
+On 07/15/2015 10:12 AM, Marc Zyngier wrote:
+> On 15/07/15 17:54, David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> Needed to map SPI interrupt sources.
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> ---
+>>   drivers/irqchip/irq-gic-v3.c       | 5 +++++
+>>   include/linux/irqchip/arm-gic-v3.h | 1 +
+>>   2 files changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+>> index c52f7ba..0019fed 100644
+>> --- a/drivers/irqchip/irq-gic-v3.c
+>> +++ b/drivers/irqchip/irq-gic-v3.c
+>> @@ -58,6 +58,11 @@ static struct gic_chip_data gic_data __read_mostly;
+>>   /* Our default, arbitrary priority value. Linux only uses one anyway. */
+>>   #define DEFAULT_PMR_VALUE	0xf0
+>>
+>> +struct irq_domain *gic_get_irq_domain(void)
+>> +{
+>> +	return gic_data.domain;
+>> +}
+>> +
+>>   static inline unsigned int gic_irq(struct irq_data *d)
+>>   {
+>>   	return d->hwirq;
+>> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+>> index 18e3757..5992224 100644
+>> --- a/include/linux/irqchip/arm-gic-v3.h
+>> +++ b/include/linux/irqchip/arm-gic-v3.h
+>> @@ -391,6 +391,7 @@ int its_init(struct device_node *node, struct rdists *rdists,
+>>
+>>   typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
+>>   void set_its_pci_requester_id(its_pci_requester_id_t fn);
+>> +struct irq_domain *gic_get_irq_domain(void);
+>>   #endif
+>>
+>>   #endif
+>>
+>
+> Hmmmffff... You need the domain for SPIs??
+>
+> What is wrong with putting these interrupts in your device tree?
+>
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/irqchip/irq-gic-v3-its.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+There is no device tree node for ECAM based "PCIe" devices, they are 
+discovered in the PCI bus scan, yet they still need to use SPI interrupts.
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 7c01fe4..760467d 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -1407,13 +1407,14 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
- 
- 	if (of_property_read_bool(its->msi_chip.of_node, "msi-controller")) {
--		its->domain = irq_domain_add_tree(NULL, &its_domain_ops, its);
-+		its->domain = irq_domain_add_tree(node, &its_domain_ops, its);
- 		if (!its->domain) {
- 			err = -ENOMEM;
- 			goto out_free_tables;
- 		}
- 
- 		its->domain->parent = parent;
-+		its->domain->bus_token = DOMAIN_BUS_NEXUS;
- 
- 		its->msi_chip.domain = its_pci_msi_alloc_domain(node,
- 								its->domain);
--- 
-2.1.4
+We need a way to be able to map these.
+
+David Daney
+
+
+
+> 	M.
+>
 
