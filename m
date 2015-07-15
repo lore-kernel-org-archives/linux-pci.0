@@ -1,91 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:58456 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752130AbbGAJhq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 05:37:46 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	James Morse <james.morse@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v3 4/5] Documentation: DT: Add Hisilicon PCIe host binding
-Date: Wed, 1 Jul 2015 17:43:36 +0800
-Message-ID: <1435743817-19083-5-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from hauke-m.de ([5.39.93.123]:53789 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751895AbbGOVx5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 17:53:57 -0400
+Message-ID: <55A6D673.1040908@hauke-m.de>
+Date: Wed, 15 Jul 2015 23:53:55 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ray Jui <rjui@broadcom.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 3/4] arm64: Add Broadcom iProc family support
+References: <1436935343-4437-1-git-send-email-rjui@broadcom.com> <1436935343-4437-4-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1436935343-4437-4-git-send-email-rjui@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds related DTS binding document for Hisilicon PCIe host driver.
+On 07/15/2015 06:42 AM, Ray Jui wrote:
+> This patch adds support to Broadcom's iProc family of arm64 based SoCs
+> in the arm64 Kconfig and defconfig files
+> 
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+> ---
+>  arch/arm64/Kconfig           |    5 +++++
+>  arch/arm64/configs/defconfig |    2 ++
+>  2 files changed, 7 insertions(+)
+> 
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index 318175f..969ef4a 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -162,6 +162,11 @@ source "kernel/Kconfig.freezer"
+>  
+>  menu "Platform selection"
+>  
+> +config ARCH_BCM_IPROC
+> +	bool "Broadcom iProc SoC Family"
+> +	help
+> +	  This enables support for Broadcom iProc based SoCs
+> +
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+Is this working correctly if we have ARCH_BCM_IPROC under ARM and ARM64?
+They are guarding the same SoC line, which now uses ARM64 CPUS.
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-new file mode 100644
-index 0000000..6c9b827
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -0,0 +1,46 @@
-+Hisilicon PCIe host bridge DT description
-+
-+Hisilicon PCIe host controller is based on Designware PCI core.
-+It shares common functions with PCIe Designware core driver and inherits
-+common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties:
-+- compatible: Should contain "hisilicon,hip05-pcie".
-+- reg: Should contain rc_dbi, subctrl, config registers location and length.
-+- reg-names: Must include the following entries:
-+  "rc_dbi": controller configuration registers;
-+  "subctrl": whole PCIe hosts configuration registers;
-+  "config": PCIe configuration space registers.
-+- msi-parent: Should be its_pcie which is an its receiving MSI interrupts.
-+- port-id: Should be 0, 1, 2 or 3.
-+
-+Optional properties:
-+- status: Either "ok" or "disabled".
-+- dma-coherent: Present if dma operations are coherent.
-+
-+Example:
-+	pcie@0xb0080000 {
-+		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
-+		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
-+		      <0x220 0x00000000 0 0x2000>;
-+		reg-names = "rc_dbi", "subctrl", "config";
-+		bus-range = <0  15>;
-+		msi-parent = <&its_pcie>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		dma-coherent;
-+		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
-+		num-lanes = <8>;
-+		port-id = <1>;
-+		#interrupts-cells = <1>;
-+		interrupts-map-mask = <0xf800 0 0 7>;
-+		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
-+				  0x0 0 0 2 &mbigen_pcie 2 11
-+				  0x0 0 0 3 &mbigen_pcie 3 12
-+				  0x0 0 0 4 &mbigen_pcie 4 13>;
-+		status = "ok";
-+	};
--- 
-1.9.1
+>  config ARCH_EXYNOS
+>  	bool
+>  	help
+> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+> index 4e17e7e..c83d51f 100644
+> --- a/arch/arm64/configs/defconfig
+> +++ b/arch/arm64/configs/defconfig
+> @@ -31,6 +31,7 @@ CONFIG_MODULES=y
+>  CONFIG_MODULE_UNLOAD=y
+>  # CONFIG_BLK_DEV_BSG is not set
+>  # CONFIG_IOSCHED_DEADLINE is not set
+> +CONFIG_ARCH_BCM_IPROC=y
+>  CONFIG_ARCH_EXYNOS7=y
+>  CONFIG_ARCH_FSL_LS2085A=y
+>  CONFIG_ARCH_HISI=y
+> @@ -102,6 +103,7 @@ CONFIG_SERIO_AMBAKMI=y
+>  CONFIG_LEGACY_PTY_COUNT=16
+>  CONFIG_SERIAL_8250=y
+>  CONFIG_SERIAL_8250_CONSOLE=y
+> +CONFIG_SERIAL_8250_DW=y
+>  CONFIG_SERIAL_8250_MT6577=y
+>  CONFIG_SERIAL_AMBA_PL011=y
+>  CONFIG_SERIAL_AMBA_PL011_CONSOLE=y
+> 
 
