@@ -1,121 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 30 Jul 2015 14:23:08 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [Patch v3 0/4] Introduce a mechanism to allocate PCI IRQ on
- demand
-Message-ID: <20150730192308.GJ9640@google.com>
-References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:55270 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750861AbbGOEmU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 00:42:20 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v2 0/4] Add Broadcom North Star 2 support
+Date: Tue, 14 Jul 2015 21:42:19 -0700
+Message-ID: <1436935343-4437-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 10, 2015 at 04:54:57PM +0800, Jiang Liu wrote:
-> Hi Bjorn,
-> 	I have verified that this patch set could be applied to the
-> mainstream kernel without dependency on other patches, so could you
-> please help to merge it?
-> 
-> This patch set introduces a mechanism to allocate PCI IRQ on demand and
-> free it when not used anymore by hooking pci_device_probe() and
-> pci_device_remove().
-> 
-> It will be used to track IOAPIC pin usage on x86 so we could support
-> IOAPIC hot-removal.
-> 
-> The patch set passes Fengguang's 0day test suite.
-> 
-> V2->V3:
-> 1) Change the default pcibios_alloc_irq() to always return 0, as
->    suggested by Bjorn.
-> 2) Refine comments.
-> 
-> V1->V2:
-> 1) Refine pci_device_probe() to optimize for mainline code as suggested
->    by Bjorn
-> 2) Reorder patch set to put optional patch as the last (Patch 4)
-> 
-> 
-> Jiang Liu (4):
->   PCI: Add hooks to allocate/free IRQ resources when binding/unbinding
->     driver
->   PCI, x86: Allocate PCI IRQ on demand and free it when not used
->     anymore
->   PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed
->   PCI, MSI: Free legacy PCI IRQ when enabling MSI/MSI-X
+This patch series adds Broadcom North Star 2 (NS2) SoC support. NS2 is an ARMv8
+based SoC and under the Broadcom iProc family.
 
-Applied to pci/irq with the following changelogs for v4.3, thanks!
+Sorry for tying this with the Broadcom iProc PCIe driver fixes for ARM64. I
+have to tie them together because iProc PCIe support is enabled by default
+when ARCH_BCM_IPROC is enabled. Without the fixes in the iProc PCIe driver,
+enabling CONFIG_ARCH_BCM_IPROC would break the build for arm64 defconfig. Let
+me know if there's a better way to handle this.
 
-commit 890e4847587fcff5eb0438e90992ad7d2a261f33
-Author: Jiang Liu <jiang.liu@linux.intel.com>
-Date:   Wed Jun 10 16:54:58 2015 +0800
+This patch series is generated based on v4.2-rc2 and tested on Broadcom NS2 SVK
 
-    PCI: Add pcibios_alloc_irq() and pcibios_free_irq()
-    
-    Add pcibios_alloc_irq() and pcibios_free_irq(), which are called when
-    binding/unbinding PCI device drivers.
-    
-    PCI arch code may implement these to manage IRQ resources for hotplugged
-    devices.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Code available on GITHUB: https://github.com/Broadcom/arm64-linux.git
+branch is ns2-core-v2
 
-commit 991de2e59090e55c65a7f59a049142e3c480f7bd
-Author: Jiang Liu <jiang.liu@linux.intel.com>
-Date:   Wed Jun 10 16:54:59 2015 +0800
+Changes from V1:
+- Took Arnd's advice to tweak the location of struct pci_sys_data within
+struct iproc_pcie. This helps to get rid of most of the CONFIG_ARM wrap in
+iProc PCIe core driver
+- Use stdout-path and alias for serial console in NS2 SVK dts
+- Add all 4 CPU descriptions in NS2 dtsi
+- Remove "clock-frequency" property in the armv8 timer node so timer frequency
+can be determined based on readings from CNTFRQ_EL0
+- Remove config flag ARCH_BCM_NS2. Leave only ARCH_BCM_IPROC for all Broadcom
+arm64 SoCs as advised
 
-    PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()
-    
-    To support IOAPIC hotplug, we need to allocate PCI IRQ resources on demand
-    and free them when not used anymore.
-    
-    Implement pcibios_alloc_irq() and pcibios_free_irq() to dynamically
-    allocate and free PCI IRQs.
-    
-    Remove mp_should_keep_irq(), which is no longer used.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Ray Jui (4):
+  PCI: iproc: enable arm64 support for iProc PCIe
+  PCI: iproc: Fix ARM64 dependency in Kconfig
+  arm64: Add Broadcom iProc family support
+  arm64: dts: Add Broadcom North Star 2 support
 
-commit 811a4e6fce09bc9239c664c6a1a53645a678c303
-Author: Jiang Liu <jiang.liu@linux.intel.com>
-Date:   Wed Jun 10 16:55:00 2015 +0800
+ Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
+ arch/arm64/Kconfig                                |    5 +
+ arch/arm64/boot/dts/Makefile                      |    1 +
+ arch/arm64/boot/dts/broadcom/Makefile             |    5 +
+ arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   60 +++++++++++
+ arch/arm64/boot/dts/broadcom/ns2.dtsi             |  118 +++++++++++++++++++++
+ arch/arm64/configs/defconfig                      |    2 +
+ drivers/pci/host/Kconfig                          |    2 +-
+ drivers/pci/host/pcie-iproc.c                     |   15 +--
+ drivers/pci/host/pcie-iproc.h                     |    8 +-
+ 10 files changed, 211 insertions(+), 14 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
+ create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
 
-    PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed
-    
-    Add pci_has_managed_irq(), pci_set_managed_irq(), and
-    pci_reset_managed_irq() to simplify code.  No functional change.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Thomas Gleixner <tglx@linutronix.de>
+-- 
+1.7.9.5
 
-commit 5f2269916b0e509f2926346b58209abfa8316143
-Author: Jiang Liu <jiang.liu@linux.intel.com>
-Date:   Thu Jul 30 14:00:08 2015 -0500
-
-    PCI/MSI: Free legacy IRQ when enabling MSI/MSI-X
-    
-    Once MSI/MSI-X is enabled by the device driver, a PCI device won't use
-    legacy IRQs again until MSI/MSI-X is disabled.
-    
-    Call pcibios_free_irq() when enabling MSI/MSI-X and pcibios_alloc_irq()
-    when disabling MSI/MSI-X.  This allows arch code to manage resources
-    associated with the legacy IRQ.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Thomas Gleixner <tglx@linutronix.de>
