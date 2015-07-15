@@ -1,62 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:33672 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752301AbbGNTe4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:34:56 -0400
-Received: by oige126 with SMTP id e126so13711907oig.0
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 12:34:56 -0700 (PDT)
-Subject: [PATCH v2 3/5] PCI: Fix TI816X class code quirk
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mathias Nyman <mathias.nyman@intel.com>, x86@kernel.org,
-	Felipe Balbi <balbi@ti.com>, Yu Zhao <yu.zhao@intel.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>
-Date: Tue, 14 Jul 2015 14:34:52 -0500
-Message-ID: <20150714193452.13224.5892.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150714193153.13224.40528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150714193153.13224.40528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from foss.arm.com ([217.140.101.70]:40154 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751753AbbGORMe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 13:12:34 -0400
+Message-ID: <55A6947F.8070903@arm.com>
+Date: Wed, 15 Jul 2015 18:12:31 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: David Daney <ddaney.cavm@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>
+CC: Robert Richter <rrichter@cavium.com>, linux-kernel@vger.kernel.org,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
+ the irqdomain of the GIC.
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In fixup_ti816x_class(), we assigned "class = PCI_CLASS_MULTIMEDIA_VIDEO".
-But PCI_CLASS_MULTIMEDIA_VIDEO is only the two-byte base class/sub-class
-and needs to be shifted to make space for the low-order interface byte.
+On 15/07/15 17:54, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> Needed to map SPI interrupt sources.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  drivers/irqchip/irq-gic-v3.c       | 5 +++++
+>  include/linux/irqchip/arm-gic-v3.h | 1 +
+>  2 files changed, 6 insertions(+)
+> 
+> diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+> index c52f7ba..0019fed 100644
+> --- a/drivers/irqchip/irq-gic-v3.c
+> +++ b/drivers/irqchip/irq-gic-v3.c
+> @@ -58,6 +58,11 @@ static struct gic_chip_data gic_data __read_mostly;
+>  /* Our default, arbitrary priority value. Linux only uses one anyway. */
+>  #define DEFAULT_PMR_VALUE	0xf0
+>  
+> +struct irq_domain *gic_get_irq_domain(void)
+> +{
+> +	return gic_data.domain;
+> +}
+> +
+>  static inline unsigned int gic_irq(struct irq_data *d)
+>  {
+>  	return d->hwirq;
+> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+> index 18e3757..5992224 100644
+> --- a/include/linux/irqchip/arm-gic-v3.h
+> +++ b/include/linux/irqchip/arm-gic-v3.h
+> @@ -391,6 +391,7 @@ int its_init(struct device_node *node, struct rdists *rdists,
+>  
+>  typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
+>  void set_its_pci_requester_id(its_pci_requester_id_t fn);
+> +struct irq_domain *gic_get_irq_domain(void);
+>  #endif
+>  
+>  #endif
+> 
 
-Shift PCI_CLASS_MULTIMEDIA_VIDEO to set the correct class code.
+Hmmmffff... You need the domain for SPIs??
 
-Fixes: 63c4408074cb ("PCI: Add quirk for setting valid class for TI816X Endpoint")
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Hemant Pedanekar <hemantp@ti.com>
----
- drivers/pci/quirks.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+What is wrong with putting these interrupts in your device tree?
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index afc8151..9734b42 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2835,12 +2835,15 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3c28, vtd_mask_spec_errors);
- 
- static void fixup_ti816x_class(struct pci_dev *dev)
- {
-+	u32 class = dev->class;
-+
- 	/* TI 816x devices do not have class code set when in PCIe boot mode */
--	dev_info(&dev->dev, "Setting PCI class for 816x PCIe device\n");
--	dev->class = PCI_CLASS_MULTIMEDIA_VIDEO;
-+	dev->class = PCI_CLASS_MULTIMEDIA_VIDEO << 8;
-+	dev_info(&dev->dev, "PCI class overridden (%#08x -> %#08x)\n",
-+		 class, dev->class);
- }
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_TI, 0xb800,
--				 PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
-+			      PCI_CLASS_NOT_DEFINED, 0, fixup_ti816x_class);
- 
- /* Some PCIe devices do not work reliably with the claimed maximum
-  * payload size supported.
-
+	M.
+-- 
+Jazz is not dead. It just smells funny...
