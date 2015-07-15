@@ -1,47 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60743 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751428AbbGaI24 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jul 2015 04:28:56 -0400
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-To: Andreas Hartmann <andihartmann@freenet.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Ondrej Kozina <okozina@redhat.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
- <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
- <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org>
- <20150728212441.GA25761@redhat.com> <55B87005.7010409@redhat.com>
- <55B8759B.8070400@redhat.com> <55B90C25.8030502@maya.org>
- <55BA895D.30509@maya.org> <55BB2284.1060706@redhat.com>
- <55BB2A02.70700@maya.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Mike Snitzer <msnitzer@redhat.com>, mpatocka@redhat.com
-From: Milan Broz <mbroz@redhat.com>
-Message-ID: <55BB31C5.9020407@redhat.com>
-Date: Fri, 31 Jul 2015 10:28:53 +0200
+Received: from szxga03-in.huawei.com ([119.145.14.66]:22499 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018AbbGOFQg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 01:16:36 -0400
+Message-ID: <55A5EC94.4090507@huawei.com>
+Date: Wed, 15 Jul 2015 13:16:04 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <55BB2A02.70700@maya.org>
-Content-Type: text/plain; charset=windows-1252
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	David Ahern <david.ahern@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 17/36] PCI: Add support for more than two alt_size under
+ same bridge
+References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>	<1436225966-27247-18-git-send-email-yinghai@kernel.org>	<55A5CE68.90007@huawei.com> <CAE9FiQVZogYHKuXwkjQmCqFatBOAJYaQF=39_-Z9=FnWkbNHkQ@mail.gmail.com>
+In-Reply-To: <CAE9FiQVZogYHKuXwkjQmCqFatBOAJYaQF=39_-Z9=FnWkbNHkQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/31/2015 09:55 AM, Andreas Hartmann wrote:
-> On 07/31/2015 at 09:23 AM, Milan Broz wrote:
-
-...
-
->> - if you disable NCQ, the problems goes away?
+On 2015/7/15 13:08, Yinghai Lu wrote:
+> On Tue, Jul 14, 2015 at 8:07 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>> On 2015/7/7 7:39, Yinghai Lu wrote:
+>>> Need to increase size to make sure it could fit all alt entries.
+>>>
+>>> So at last, we use 8M/17M as parent bridge alt_align/alt_size.
+>>
+>> Tested-by: Yijing Wang <wangyijing@huawei.com>
 > 
-> As I already wrote in another post - than other error came up instead
-> (radeon). But I will try it especially again in conjunction w/
-> --perf-submit_from_crypt_cpus --perf-same_cpu_crypt.
+> Thanks for testing.
+> 
+>>
+>> Hi Yinghai, does this patch depend on the previous items in this patchset ?
+> 
+> Yes, it depends most of patches from patch1 to this patch.
+> 
+>> Could you provide another version of this patch for stable branch, eg. 3.10 stable ?
+> 
+> That is RHEL 7 kernel, right ?
 
-Yes, I know, But this is probably just some unfortunate side effect,
-this code definitely does not relate to Radeon code.
-(Could be some minor compiler change, whatever...)
+Yes.
 
-Thanks,
-Milan
+> 
+> After those patches get into upstream, I will try to port them to 3.10 stable.
+
+Thanks very much!
+
+> 
+> Thanks
+> 
+> Yinghai
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
 
