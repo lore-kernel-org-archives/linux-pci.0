@@ -1,113 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:4024 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965275AbbGVOOh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 10:14:37 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v3] PCI: Store PCIe bus address in struct of_pci_range
-Date: Wed, 22 Jul 2015 14:14:14 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D6663C@lhreml503-mbx>
-References: <1437574598-135008-1-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1437574598-135008-1-git-send-email-gabriele.paoloni@huawei.com>
-Content-Type: text/plain; charset="gb2312"
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:34667 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750996AbbGOB5F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 21:57:05 -0400
 MIME-Version: 1.0
+In-Reply-To: <20150714223537.GQ24416@google.com>
+References: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
+	<1436300428-21163-36-git-send-email-yinghai@kernel.org>
+	<20150714223537.GQ24416@google.com>
+Date: Tue, 14 Jul 2015 18:57:03 -0700
+Message-ID: <CAE9FiQWhFA3BCY0-oEUBrAU9SMycJZofpGQip3RQVt3UBAvwCw@mail.gmail.com>
+Subject: Re: [PATCH 35/42] x86, boot, PCI: Convert SETUP_PCI data to list
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kees Cook <keescook@chromium.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Baoquan He <bhe@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBHYWJyaWVsZSBQYW9sb25pDQo+
-IFNlbnQ6IFdlZG5lc2RheSwgSnVseSAyMiwgMjAxNSAzOjE3IFBNDQo+IFRvOiBHYWJyaWVsZSBQ
-YW9sb25pOyBhcm5kQGFybmRiLmRlOyBsb3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tOw0KPiBXYW5n
-emhvdSAoQik7IGJoZWxnYWFzQGdvb2dsZS5jb207IHJvYmgrZHRAa2VybmVsLm9yZzsNCj4gamFt
-ZXMubW9yc2VAYXJtLmNvbTsgTGl2aXUuRHVkYXVAYXJtLmNvbQ0KPiBDYzogbGludXgtcGNpQHZn
-ZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiBk
-ZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdq
-dWt1bzsNCj4gcWl1emhlbmZhOyBMaWd1b3podSAoS2VubmV0aCkNCj4gU3ViamVjdDogW1BBVENI
-IHYzXSBQQ0k6IFN0b3JlIFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0IG9mX3BjaV9yYW5nZQ0K
-PiANCj4gRnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29t
-Pg0KPiANCj4gICAgIFRoaXMgcGF0Y2ggaXMgbmVlZGVkIHBvcnQgUENJZSBkZXNpZ253YXJlIHRv
-IG5ldyBEVCBwYXJzaW5nIEFQSQ0KPiAgICAgQXMgZGlzY3Vzc2VkIGluDQo+ICAgICBodHRwOi8v
-bGlzdHMuaW5mcmFkZWFkLm9yZy9waXBlcm1haWwvbGludXgtYXJtLWtlcm5lbC8yMDE1LQ0KPiBK
-YW51YXJ5LzMxNzc0My5odG1sDQo+ICAgICBpbiBkZXNpZ253YXJlIHdlIGhhdmUgYSBwcm9ibGVt
-IGFzIHRoZSBQQ0kgYWRkcmVzc2VzIGluIHRoZSBQQ0llDQo+IGNvbnRyb2xsZXINCj4gICAgIGFk
-ZHJlc3Mgc3BhY2UgYXJlIHJlcXVpcmVkIGluIG9yZGVyIHRvIHBlcmZvcm0gY29ycmVjdCBIVyBv
-cGVyYXRpb24uDQo+IA0KPiAgICAgSW4gb3JkZXIgdG8gc29sdmUgdGhpcyBwcm9ibGVtIGNvbW1p
-dA0KPiAgICAgZjRjNTVjNWEzICJQQ0k6IGRlc2lnbndhcmU6IFByb2dyYW0gQVRVIHdpdGggdW50
-cmFuc2xhdGVkIGFkZHJlc3MiDQo+ICAgICBhZGRlZCBjb2RlIHRvIHJlYWQgdGhlIFBDSWUgY29u
-dHJvbGxlciBzdGFydCBhZGRyZXNzIGRpcmVjdGx5IGZyb20NCj4gdGhlDQo+ICAgICBEVCByYW5n
-ZXMuDQo+IA0KPiAgICAgSW4gdGhlIG5ldyBEVCBwYXJzaW5nIEFQSSBvZl9wY2lfZ2V0X2hvc3Rf
-YnJpZGdlX3Jlc291cmNlcygpIGhpZGVzDQo+IHRoZQ0KPiAgICAgRFQgcGFyc2VyIGZyb20gdGhl
-IGhvc3QgY29udHJvbGxlciBkcml2ZXJzLCBzbyBpdCBpcyBub3QgcG9zc2libGUNCj4gICAgIGZv
-ciBkcml2ZXJzIHRvIHBhcnNlIHZhbHVlcyBkaXJlY3RseSBmcm9tIHRoZSBEVC4NCj4gDQo+ICAg
-ICBJbiBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXBjaS9tc2c0MjU0MC5odG1s
-IHdlIGFscmVhZHkNCj4gdHJpZWQNCj4gICAgIHRvIHVzZSB0aGUgbmV3IERUIHBhcnNpbmcgQVBJ
-IGJ1dCB0aGVyZSBpcyBhIGJ1ZyAob2J2aW91c2x5KSBpbg0KPiBzZXR0aW5nDQo+ICAgICB0aGUg
-PCo+X21vZF9iYXNlIGFkZHJlc3Nlcw0KPiAgICAgQXBwbHlpbmcgdGhpcyBwYXRjaCB3ZSBjYW4g
-ZWFzaWx5IHNldCAiPCo+X21vZF9iYXNlID0gd2luLQ0KPiA+X19yZXMuc3RhcnQiDQo+IA0KPiAg
-ICAgVGhpcyBwYXRjaCBhZGRzIGEgbmV3IGZpZWxkIGluICJzdHJ1Y3Qgb2ZfcGNpX3JhbmdlIiB0
-byBzdG9yZSB0aGUNCj4gICAgIHBjaSBidXMgc3RhcnQgYWRkcmVzczsgaXQgZmlsbHMgdGhlIGZp
-ZWxkIGluDQo+IG9mX3BjaV9yYW5nZV9wYXJzZXJfb25lKCk7DQo+ICAgICBpbiBvZl9wY2lfZ2V0
-X2hvc3RfYnJpZGdlX3Jlc291cmNlcygpIGl0IHJldHJpZXZlcyB0aGUgcmVzb3VyY2UNCj4gZW50
-cnkNCj4gICAgIGFmdGVyIGl0IGlzIGNyZWF0ZWQgYW5kIGFkZGVkIHRvIHRoZSByZXNvdXJjZSBs
-aXN0IGFuZCB1c2VzDQo+ICAgICBlbnRyeS0+X19yZXMuc3RhcnQgdG8gc3RvcmUgdGhlIHBjaSBj
-b250cm9sbGVyIGFkZHJlc3MNCj4gDQo+ICAgICB0aGUgcGF0Y2ggaXMgYmFzZWQgb24gNC4yLXJj
-MQ0KPiANCj4gICAgIFNpZ25lZC1vZmYtYnk6IEdhYnJpZWxlIFBhb2xvbmkgPGdhYnJpZWxlLnBh
-b2xvbmlAaHVhd2VpLmNvbT4NCj4gICAgIEFja2VkLWJ5OiBMaXZpdSBEdWRhaSA8TGl2aXUuRHVk
-YXVAYXJtLmNvbT4NClNvcnJ5LCBJIGp1c3QgcmVhbGl6ZWQgSSd2ZSBwdXQgYSB0eXBvIGluIExp
-dml1J3Mgc3VybmFtZSwgSSBhbSBnb2luZyB0byBzZW5kIHY0DQo+IC0tLQ0KPiAgZHJpdmVycy9v
-Zi9hZGRyZXNzLmMgICAgICAgfCAyICsrDQo+ICBkcml2ZXJzL29mL29mX3BjaS5jICAgICAgICB8
-IDQgKysrKw0KPiAgaW5jbHVkZS9saW51eC9vZl9hZGRyZXNzLmggfCAxICsNCj4gIDMgZmlsZXMg
-Y2hhbmdlZCwgNyBpbnNlcnRpb25zKCspDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9vZi9h
-ZGRyZXNzLmMgYi9kcml2ZXJzL29mL2FkZHJlc3MuYw0KPiBpbmRleCA4YmZkYTZhLi4yM2E1Nzkz
-IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL29mL2FkZHJlc3MuYw0KPiArKysgYi9kcml2ZXJzL29m
-L2FkZHJlc3MuYw0KPiBAQCAtMjUzLDYgKzI1Myw3IEBAIHN0cnVjdCBvZl9wY2lfcmFuZ2UgKm9m
-X3BjaV9yYW5nZV9wYXJzZXJfb25lKHN0cnVjdA0KPiBvZl9wY2lfcmFuZ2VfcGFyc2VyICpwYXJz
-ZXIsDQo+ICAJCQkJCQlzdHJ1Y3Qgb2ZfcGNpX3JhbmdlICpyYW5nZSkNCj4gIHsNCj4gIAljb25z
-dCBpbnQgbmEgPSAzLCBucyA9IDI7DQo+ICsJY29uc3QgaW50IHBfbnMgPSBvZl9uX3NpemVfY2Vs
-bHMocGFyc2VyLT5ub2RlKTsNCj4gDQo+ICAJaWYgKCFyYW5nZSkNCj4gIAkJcmV0dXJuIE5VTEw7
-DQo+IEBAIC0yNjUsNiArMjY2LDcgQEAgc3RydWN0IG9mX3BjaV9yYW5nZSAqb2ZfcGNpX3Jhbmdl
-X3BhcnNlcl9vbmUoc3RydWN0DQo+IG9mX3BjaV9yYW5nZV9wYXJzZXIgKnBhcnNlciwNCj4gIAly
-YW5nZS0+cGNpX2FkZHIgPSBvZl9yZWFkX251bWJlcihwYXJzZXItPnJhbmdlICsgMSwgbnMpOw0K
-PiAgCXJhbmdlLT5jcHVfYWRkciA9IG9mX3RyYW5zbGF0ZV9hZGRyZXNzKHBhcnNlci0+bm9kZSwN
-Cj4gIAkJCQlwYXJzZXItPnJhbmdlICsgbmEpOw0KPiArCXJhbmdlLT5idXNfYWRkciA9IG9mX3Jl
-YWRfbnVtYmVyKHBhcnNlci0+cmFuZ2UgKyBuYSwgcF9ucyk7DQo+ICAJcmFuZ2UtPnNpemUgPSBv
-Zl9yZWFkX251bWJlcihwYXJzZXItPnJhbmdlICsgcGFyc2VyLT5wbmEgKyBuYSwNCj4gbnMpOw0K
-PiANCj4gIAlwYXJzZXItPnJhbmdlICs9IHBhcnNlci0+bnA7DQo+IGRpZmYgLS1naXQgYS9kcml2
-ZXJzL29mL29mX3BjaS5jIGIvZHJpdmVycy9vZi9vZl9wY2kuYw0KPiBpbmRleCA1NzUxZGM1Li5m
-ZTU3MDMwIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL29mL29mX3BjaS5jDQo+ICsrKyBiL2RyaXZl
-cnMvb2Yvb2ZfcGNpLmMNCj4gQEAgLTE5OCw2ICsxOTgsNyBAQCBpbnQgb2ZfcGNpX2dldF9ob3N0
-X2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0DQo+IGRldmljZV9ub2RlICpkZXYsDQo+IA0KPiAgCXBy
-X2RlYnVnKCJQYXJzaW5nIHJhbmdlcyBwcm9wZXJ0eS4uLlxuIik7DQo+ICAJZm9yX2VhY2hfb2Zf
-cGNpX3JhbmdlKCZwYXJzZXIsICZyYW5nZSkgew0KPiArCQlzdHJ1Y3QgcmVzb3VyY2VfZW50cnkg
-KmVudHJ5Ow0KPiAgCQkvKiBSZWFkIG5leHQgcmFuZ2VzIGVsZW1lbnQgKi8NCj4gIAkJaWYgKChy
-YW5nZS5mbGFncyAmIElPUkVTT1VSQ0VfVFlQRV9CSVRTKSA9PSBJT1JFU09VUkNFX0lPKQ0KPiAg
-CQkJc25wcmludGYocmFuZ2VfdHlwZSwgNCwgIiBJTyIpOw0KPiBAQCAtMjQwLDYgKzI0MSw5IEBA
-IGludCBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcyhzdHJ1Y3QNCj4gZGV2aWNlX25v
-ZGUgKmRldiwNCj4gIAkJfQ0KPiANCj4gIAkJcGNpX2FkZF9yZXNvdXJjZV9vZmZzZXQocmVzb3Vy
-Y2VzLCByZXMsCXJlcy0+c3RhcnQgLQ0KPiByYW5nZS5wY2lfYWRkcik7DQo+ICsJCWVudHJ5ID0g
-bGlzdF9sYXN0X2VudHJ5KHJlc291cmNlcywgc3RydWN0IHJlc291cmNlX2VudHJ5LA0KPiBub2Rl
-KTsNCj4gKwkJLyogd2UgYXJlIHVzaW5nIF9fcmVzIGZvciBzdG9yaW5nIHRoZSBQQ0kgY29udHJv
-bGxlcg0KPiBhZGRyZXNzICovDQo+ICsJCWVudHJ5LT5fX3Jlcy5zdGFydCA9IHJhbmdlLmJ1c19h
-ZGRyOw0KPiAgCX0NCj4gDQo+ICAJcmV0dXJuIDA7DQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xp
-bnV4L29mX2FkZHJlc3MuaCBiL2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5oDQo+IGluZGV4IGQ4
-OGU4MWIuLjg2NWY5NmUgMTAwNjQ0DQo+IC0tLSBhL2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5o
-DQo+ICsrKyBiL2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5oDQo+IEBAIC0xNiw2ICsxNiw3IEBA
-IHN0cnVjdCBvZl9wY2lfcmFuZ2Ugew0KPiAgCXUzMiBwY2lfc3BhY2U7DQo+ICAJdTY0IHBjaV9h
-ZGRyOw0KPiAgCXU2NCBjcHVfYWRkcjsNCj4gKwl1NjQgYnVzX2FkZHI7DQo+ICAJdTY0IHNpemU7
-DQo+ICAJdTMyIGZsYWdzOw0KPiAgfTsNCj4gLS0NCj4gMS45LjENCg0K
+On Tue, Jul 14, 2015 at 3:35 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>> index 16ace12..32d4f21 100644
+>> --- a/arch/x86/pci/common.c
+>> +++ b/arch/x86/pci/common.c
+>
+>> +struct firmware_setup_pci_entry {
+>> +     struct list_head list;
+>> +     uint16_t vendor;
+>> +     uint16_t devid;
+>> +     uint64_t pcilen;
+>
+> Is there a reason to use uint16_t and uint64_t instead of u16 and u64?
+
+keep them same as arch/x86/include/asm/pci.h::pci_setup_rom.
+
+and we have that from:
+
+commit dd5fc854de5fd37adfcef8a366cd21a55aa01d3d
+Author: Matthew Garrett <mjg@redhat.com>
+Date:   Wed Dec 5 14:33:26 2012 -0700
+
+    EFI: Stash ROMs if they're not in the PCI BAR
+
+    EFI provides support for providing PCI ROMs via means other than the ROM
+    BAR. This support vanishes after we've exited boot services, so add support
+    for stashing copies of the ROMs in setup_data if they're not otherwise
+    available.
+
+    Signed-off-by: Matthew Garrett <mjg@redhat.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Tested-by: Seth Forshee <seth.forshee@canonical.com>
+
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 6e41b93..dba7805 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -171,4 +171,16 @@ cpumask_of_pcibus(const struct pci_bus *bus)
+ }
+ #endif
+
++struct pci_setup_rom {
++       struct setup_data data;
++       uint16_t vendor;
++       uint16_t devid;
++       uint64_t pcilen;
++       unsigned long segment;
++       unsigned long bus;
++       unsigned long device;
++       unsigned long function;
++       uint8_t romdata[0];
++};
++
+ #endif /* _ASM_X86_PCI_H */
