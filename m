@@ -1,86 +1,120 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 35/51] PCI: Only treat non-pef mmio64 as pref if all bridges has MEM_64
-Date: Mon, 27 Jul 2015 16:29:53 -0700
-Message-Id: <1438039809-24957-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:21393 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752821AbbGOV5R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 17:57:17 -0400
+Message-ID: <55A6D73A.90206@broadcom.com>
+Date: Wed, 15 Jul 2015 14:57:14 -0700
+From: Ray Jui <rjui@broadcom.com>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] PCI: iproc: enable arm64 support for iProc PCIe
+References: <1436935343-4437-1-git-send-email-rjui@broadcom.com> <1436935343-4437-2-git-send-email-rjui@broadcom.com> <55A6D60C.6000405@hauke-m.de>
+In-Reply-To: <55A6D60C.6000405@hauke-m.de>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
 
-We need to move pci_bridge_check_ranges calling early.
-for parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+On 7/15/2015 2:52 PM, Hauke Mehrtens wrote:
+> On 07/15/2015 06:42 AM, Ray Jui wrote:
+>> This patch enables arm64 support to the iProc PCIe driver
+>>
+>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+>> ---
+>>  drivers/pci/host/pcie-iproc.c |   15 ++++-----------
+>>  drivers/pci/host/pcie-iproc.h |    8 ++++++--
+>>  2 files changed, 10 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>> index d77481e..8a556d5 100644
+>> --- a/drivers/pci/host/pcie-iproc.c
+>> +++ b/drivers/pci/host/pcie-iproc.c
+>> @@ -58,11 +58,6 @@
+>>  #define SYS_RC_INTX_EN               0x330
+>>  #define SYS_RC_INTX_MASK             0xf
+>>  
+>> -static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
+>> -{
+>> -	return sys->private_data;
+>> -}
+>> -
+>>  /**
+>>   * Note access to the configuration registers are protected at the higher layer
+>>   * by 'pci_lock' in drivers/pci/access.c
+>> @@ -71,8 +66,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+>>  					    unsigned int devfn,
+>>  					    int where)
+>>  {
+>> -	struct pci_sys_data *sys = bus->sysdata;
+>> -	struct iproc_pcie *pcie = sys_to_pcie(sys);
+>> +	struct iproc_pcie *pcie = bus->sysdata;
+>>  	unsigned slot = PCI_SLOT(devfn);
+>>  	unsigned fn = PCI_FUNC(devfn);
+>>  	unsigned busno = bus->number;
+>> @@ -208,10 +202,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>>  
+>>  	iproc_pcie_reset(pcie);
+>>  
+>> -	pcie->sysdata.private_data = pcie;
+>> -
+>> -	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
+>> -				  &pcie->sysdata, res);
+>> +	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, pcie, res);
+>>  	if (!bus) {
+>>  		dev_err(pcie->dev, "unable to create PCI root bus\n");
+>>  		ret = -ENOMEM;
+>> @@ -229,7 +220,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>>  
+>>  	pci_scan_child_bus(bus);
+>>  	pci_assign_unassigned_bus_resources(bus);
+>> +#ifdef CONFIG_ARM
+>>  	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+>> +#endif
+>>  	pci_bus_add_devices(bus);
+>>  
+>>  	return 0;
+>> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+>> index ba0a108..0ee9673 100644
+>> --- a/drivers/pci/host/pcie-iproc.h
+>> +++ b/drivers/pci/host/pcie-iproc.h
+>> @@ -18,18 +18,22 @@
+>>  
+>>  /**
+>>   * iProc PCIe device
+>> + * @sysdata: Per PCI controller data. This needs to be kept at the beginning of
+>> + * struct iproc_pcie, to enable support of both ARM32 and ARM64 platforms with
+>> + * minimal changes in the iProc PCIe core driver
+>>   * @dev: pointer to device data structure
+>>   * @base: PCIe host controller I/O register base
+>>   * @resources: linked list of all PCI resources
+>> - * @sysdata: Per PCI controller data
+>>   * @root_bus: pointer to root bus
+>>   * @phy: optional PHY device that controls the Serdes
+>>   * @irqs: interrupt IDs
+>>   */
+>>  struct iproc_pcie {
+>> +#ifdef CONFIG_ARM
+>> +	struct pci_sys_data sysdata;
+>> +#endif
+> 
+> This looks for me like a dirty hack. Why is the PCIe controller
+> interface between ARM and ARM64 different?
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 78b0c36..c6c9d56 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1038,6 +1038,18 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
-+			   IORESOURCE_MEM_64))
-+		return false;
-+
-+	return pci_up_path_over_pref_mem64(bus->parent);
-+}
-+
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
- {
-@@ -1046,7 +1058,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
- 
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
- 
- 	return res->flags;
-@@ -1827,6 +1840,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
- 
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1854,7 +1871,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		break;
- 
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
--- 
-1.8.4.5
+Yes I do not disagree. According to Arnd, there's already work in
+process of removing the need for pci_sys_data on arm32. Before that is
+done, we need this in the driver for it to work on both arm32 and arm64.
 
+Thanks,
+
+Ray
