@@ -1,53 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:57126 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622AbbG2UC2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 16:02:28 -0400
-Message-ID: <55B93151.8040608@roeck-us.net>
-Date: Wed, 29 Jul 2015 13:02:25 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
-References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>	<20150729160903.GD31170@google.com>	<CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>	<55B92DA5.4030409@roeck-us.net> <CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
-In-Reply-To: <CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
+	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
+	mmarek@suse.cz
+Cc: sean.stalley@intel.com, akpm@linux-foundation.org,
+	bigeasy@linutronix.de, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-mm@kvack.org,
+	cocci@systeme.lip6.fr
+Subject: [PATCH 3/4] pci: mm: Add pci_pool_zalloc() call
+Date: Wed, 15 Jul 2015 14:14:42 -0700
+Message-Id: <1436994883-16563-4-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
+References: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/29/2015 12:53 PM, Yinghai Lu wrote:
-> On Wed, Jul 29, 2015 at 12:46 PM, Guenter Roeck <linux@roeck-us.net> wrote:
->> On 07/29/2015 12:30 PM, Yinghai Lu wrote:
->>
->>>
->>> so PCI_BUS_FLAGS_SUPPORTS_IO will never get set.
->>>
->>
->> excellent catch. Unfortunately, I don't know how to make it
->> work with the reversed flag. The idea here was that the flag
->> propagates from parent to child. This makes sense for an
->> "it doesn't work" flag to be inherited from the child,
->> but not for an "it works" flag.
->>
->
-> also would be better if we can add has_ioport in hostbridge instead.
-> like has_mem64 in https://patchwork.ozlabs.org/patch/500926/
-> and use
->
-> to_pci_host_bridge(bus->bridge)->has_ioport
->
-> to replace pci_root_has_io_resource()
->
+Add a wrapper function for pci_pool_alloc() to get zeroed memory.
 
-Sure, that would make sense.
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+---
+ include/linux/pci.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Bjorn, how do you want to handle the flag problem ?
-Do you have an idea on how to make it work with
-the reversed definition ?
-
-Thanks,
-Guenter
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 755a2cd..e6ec7d9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1176,6 +1176,8 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ 		dma_pool_create(name, &pdev->dev, size, align, allocation)
+ #define	pci_pool_destroy(pool) dma_pool_destroy(pool)
+ #define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
++#define	pci_pool_zalloc(pool, flags, handle) \
++		dma_pool_zalloc(pool, flags, handle)
+ #define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
+ 
+ enum pci_dma_burst_strategy {
+-- 
+1.9.1
 
