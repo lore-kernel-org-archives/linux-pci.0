@@ -1,123 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 21/51] PCI: Move saved required resource list out of must+optional assigning
-Date: Mon, 27 Jul 2015 16:29:39 -0700
-Message-Id: <1438039809-24957-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:56875 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595AbbGOCJD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 22:09:03 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 15 Jul 2015 07:38:58 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 7ED7EE0056
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 07:42:50 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6F28sa240632380
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 07:38:55 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6F0qiwm001893
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 06:22:44 +0530
+Date: Wed, 15 Jul 2015 10:08:52 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2 0/4] PCI: code clean up on pci configuration space
+Message-ID: <20150715020852.GD6525@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150714213738.GJ24416@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150714213738.GJ24416@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We will need to share that saved list for alt_size support.
+On Tue, Jul 14, 2015 at 04:37:38PM -0500, Bjorn Helgaas wrote:
+>On Tue, Jun 30, 2015 at 09:16:40AM +0800, Wei Yang wrote:
+>> This series is a clean up in the pci subsystem when accessing the pci
+>> configuration space.
+>> 
+>> The first one is to re-use the PCI_FIND_CAP_TTL to limit the times iterating
+>> in pci configuration space.
+>> 
+>> The next three are to use the exact type to access the pci cap and pcie ext
+>> cap.
+>> 
+>> Tested on x86 and powerpc on top of v4.1.
+>> 
+>> The original thread could be referenced in below link:
+>> http://comments.gmane.org/gmane.linux.kernel.pci/35931
+>> 
+>> ---
+>> v1->v2:
+>>    * define PCI_FIND_CAP_TTL in drivers/pci/pci.h instead of
+>>      include/linux/pci.h
+>>    * split the change for return position check from second one, and make the
+>>      forth patch
+>> 
+>> Wei Yang (4):
+>>   PCI: move PCI_FIND_CAP_TTL to pci.h and use it in quirks
+>>   PCI: use u8 to represent pci configuration space pos and cap
+>>   PCI: use u16 to represent pci express extended capabilities pos and
+>>     cap
+>>   PCI: consolidate return value check for pci_find_(ext_)capability
+>
+>The first and last seem fine to me.  As far as I can tell, the last does
+>not actually depend on the u8 and u16 changes.
+>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+With patch 2/3, changing the return value, it makes sure pos will not be
+negative. So that patch 4 could make sure there is not cap when pos is 0. And
+no possibility to check the negative value.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 64ef516..1c0b4c5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -456,6 +456,9 @@ static bool __has_addon(struct list_head *head,
- 	int add_count = 0;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 
-+	if (!realloc_head)
-+		return false;
-+
- 	/* check if we have add really */
- 	list_for_each_entry(dev_res, head, list) {
- 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-@@ -492,9 +495,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- }
- 
- static bool __assign_resources_must_add_sorted(struct list_head *head,
-+				 struct list_head *save_head,
- 				 struct list_head *realloc_head)
- {
--	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
-@@ -502,12 +505,6 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
- 	resource_size_t add_align, add_size;
- 	struct resource *res;
- 
--	if (!__has_addon(head, realloc_head))
--		return false;
--
--	if (!save_resources(head, &save_head))
--		return false;
--
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
-@@ -548,7 +545,6 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
- 		/* Remove head list from realloc_head list */
- 		list_for_each_entry(dev_res, head, list)
- 			remove_from_list(realloc_head, dev_res->res);
--		free_list(&save_head);
- 		free_list(head);
- 
- 		return true;
-@@ -562,7 +558,7 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
- 		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
- 			remove_from_list(realloc_head, res);
--			remove_from_list(&save_head, res);
-+			remove_from_list(save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-@@ -581,11 +577,9 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
- 		}
- 	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list)
-+	list_for_each_entry(save_res, save_head, list)
- 		restore_resource(save_res, save_res->res);
- 
--	free_list(&save_head);
--
- 	return false;
- }
- 
-@@ -603,16 +597,24 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *    then try to reassign add_size for some resources.
- 	 */
- 
-+	LIST_HEAD(save_head);
-+
- 	/* Check must+optional add */
--	if (realloc_head &&
--	    __assign_resources_must_add_sorted(head, realloc_head))
-+	if (__has_addon(head, realloc_head) &&
-+	    save_resources(head, &save_head) &&
-+	    __assign_resources_must_add_sorted(head, &save_head,
-+					       realloc_head)) {
-+		free_list(&save_head);
- 		return;
-+	}
- 
- 	__sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
- 
-+	free_list(&save_head);
-+
- 	/* Try to satisfy any additional optional resource
- 		requests */
- 	if (realloc_head)
+>The u8 and u16 patches change the signatures of several exported functions.
+>Do they fix some problem?  Unless there's something broken, these seem like
+>pretty minor changes, and I don't think they're worth it.
+>
+
+You are right, no functional change and currently no bug related.
+
+While without 2/3, it would not be that clear the pos return value must not
+be negative. Then then the change in patch 4 would not be that obvious.
+
+>Bjorn
+
 -- 
-1.8.4.5
+Richard Yang
+Help you, Help me
 
