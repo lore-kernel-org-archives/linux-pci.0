@@ -1,61 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 24 Jul 2015 09:55:42 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-Message-ID: <20150724085542.GB30410@arm.com>
-References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20150723161257.GZ21967@google.com>
- <20150723174845.GB23324@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from pearsoncomputing.net ([192.119.205.242]:4943 "EHLO
+	mail.pearsoncomputing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738AbbGOOBl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 10:01:41 -0400
+Message-ID: <55A6658D.6030802@raptorengineeringinc.com>
+Date: Wed, 15 Jul 2015 08:52:13 -0500
+From: Timothy Pearson <tpearson@raptorengineeringinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150723174845.GB23324@red-moon>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+CC: Yinghai Lu <yinghai@kernel.org>, James Bottomley <jejb@kernel.org>,
+	martin.petersen@oracle.com,
+	Linux-Scsi <linux-scsi@vger.kernel.org>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Sathya.Prakash@avagotech.com,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no
+ memory I/O resources detected
+References: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com> <CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com> <20150715062456.GB19028@dhcp-135-24-192-118.lsi.com>
+In-Reply-To: <20150715062456.GB19028@dhcp-135-24-192-118.lsi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 23, 2015 at 06:48:45PM +0100, Lorenzo Pieralisi wrote:
-> On Thu, Jul 23, 2015 at 05:12:57PM +0100, Bjorn Helgaas wrote:
-> > I'm a little uneasy that we might break some alpha or mips system, since
-> > there must have been some reason this was done originally.  It'd be ideal
-> > if somebody could test a non-PCI_PROBE_ONLY system.  But maybe they're all
-> > obsolete.
+On 07/15/2015 01:24 AM, Sreekanth Reddy wrote:
+> On Tue, Jul 14, 2015 at 10:36:58PM -0700, Yinghai Lu wrote:
+>> On Tue, Jul 14, 2015 at 9:49 PM, Sreekanth Reddy
+>> <sreekanth.reddy@avagotech.com> wrote:
+>>> Driver crashes if the BIOS do not set up at least one
+>>> memory I/O resource. This failure can happen if the device is too
+>>> slow to respond during POST and is missed by the BIOS, but Linux
+>>> then detects the device later in the boot process.
+>>
+>> But pci subsystem should assign resources to those unassigned BAR.
+>>
+>> Do you mean even kernel can not assign resource to them? or it takes so long for
+>> mpt FW to get ready?
 > 
-> I have no way to test them, that's the reason behind the RFT on this
-> patch, I am uneasy too I do not if anyone can help us test it
-> (maybe adding it to -next can help with that).
+> This is not an issue from mpt FW.
+> 
+> I have just kept the same description provide by Timothy in his
+> initial patch.
+> 
+> But I observe that their may be chance of getting "unable to handle
+> kernel NULL pointer dereference" kernel panic if no Memory Resource
+> available in the PCI subsystem. So agreed to the Timothy proposal of
+> aborting the driver initialization if it doesn't detect any Memory
+> resource instead of whole system get into panic state.
+> 
+>>
+>> Thanks
+>>
+>> Yinghai
 
-I've got some dusty old alpha and mips machines w/pci at home if you
-want to borrow them? They were last seen running 3.0.
+On some systems Linux is unable / unwilling to assign a BAR if the BIOS
+does not assign one at startup.  I didn't look into the Linux allocator
+side of things in much detail, but it is quite possible that Linux is
+unaware the device only has partial resources assigned.
 
-Will
+-- 
+Timothy Pearson
+Raptor Engineering
++1 (415) 727-8645
+http://www.raptorengineeringinc.com
