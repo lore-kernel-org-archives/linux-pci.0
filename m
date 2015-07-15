@@ -1,235 +1,273 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36314 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751101AbbG2NS5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jul 2015 09:18:57 -0400
-Date: Wed, 29 Jul 2015 14:19:36 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"lftan.linux@gmail.com" <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH 3/6] pci:host: Add Altera PCIe host controller driver
-Message-ID: <20150729131936.GA6376@red-moon>
-References: <1438080345-7233-1-git-send-email-lftan@altera.com>
- <1438080345-7233-4-git-send-email-lftan@altera.com>
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>
+Subject: [PATCH v2 4/4] arm64: dts: Add Broadcom North Star 2 support
+Date: Tue, 14 Jul 2015 21:42:23 -0700
+Message-ID: <1436935343-4437-5-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1436935343-4437-1-git-send-email-rjui@broadcom.com>
+References: <1436935343-4437-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438080345-7233-4-git-send-email-lftan@altera.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 28, 2015 at 11:45:42AM +0100, Ley Foon Tan wrote:
+Add Broadcom NS2 device tree binding document. Also add initial device
+tree dtsi for Broadcom North Star 2 (NS2) SoC and board support for NS2
+SVK board
 
-[...]
+Signed-off-by: Jon Mason <jonmason@broadcom.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
+ arch/arm64/boot/dts/Makefile                      |    1 +
+ arch/arm64/boot/dts/broadcom/Makefile             |    5 +
+ arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   60 +++++++++++
+ arch/arm64/boot/dts/broadcom/ns2.dtsi             |  118 +++++++++++++++++++++
+ 5 files changed, 193 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
+ create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
 
-> +static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
-> +{
-> +       int err, res_valid = 0;
-> +       struct device *dev = &pcie->pdev->dev;
-> +       struct device_node *np = dev->of_node;
-> +       resource_size_t iobase;
-> +       struct resource_entry *win;
-> +       int offset = 0;
-> +
-> +       err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
-> +                                              &iobase);
-> +       if (err)
-> +               return err;
+diff --git a/Documentation/devicetree/bindings/arm/bcm/ns2.txt b/Documentation/devicetree/bindings/arm/bcm/ns2.txt
+new file mode 100644
+index 0000000..35f056f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/arm/bcm/ns2.txt
+@@ -0,0 +1,9 @@
++Broadcom North Star 2 (NS2) device tree bindings
++------------------------------------------------
++
++Boards with NS2 shall have the following properties:
++
++Required root node property:
++
++NS2 SVK board
++compatible = "brcm,ns2-svk", "brcm,ns2";
+diff --git a/arch/arm64/boot/dts/Makefile b/arch/arm64/boot/dts/Makefile
+index 38913be..9f95941 100644
+--- a/arch/arm64/boot/dts/Makefile
++++ b/arch/arm64/boot/dts/Makefile
+@@ -1,6 +1,7 @@
+ dts-dirs += amd
+ dts-dirs += apm
+ dts-dirs += arm
++dts-dirs += broadcom
+ dts-dirs += cavium
+ dts-dirs += exynos
+ dts-dirs += freescale
+diff --git a/arch/arm64/boot/dts/broadcom/Makefile b/arch/arm64/boot/dts/broadcom/Makefile
+new file mode 100644
+index 0000000..e21fe66
+--- /dev/null
++++ b/arch/arm64/boot/dts/broadcom/Makefile
+@@ -0,0 +1,5 @@
++dtb-$(CONFIG_ARCH_BCM_IPROC) += ns2-svk.dtb
++
++always		:= $(dtb-y)
++subdir-y	:= $(dts-dirs)
++clean-files	:= *.dtb
+diff --git a/arch/arm64/boot/dts/broadcom/ns2-svk.dts b/arch/arm64/boot/dts/broadcom/ns2-svk.dts
+new file mode 100644
+index 0000000..a43d93f
+--- /dev/null
++++ b/arch/arm64/boot/dts/broadcom/ns2-svk.dts
+@@ -0,0 +1,60 @@
++/*
++ *  BSD LICENSE
++ *
++ *  Copyright(c) 2015 Broadcom Corporation.  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions
++ *  are met:
++ *
++ *    * Redistributions of source code must retain the above copyright
++ *      notice, this list of conditions and the following disclaimer.
++ *    * Redistributions in binary form must reproduce the above copyright
++ *      notice, this list of conditions and the following disclaimer in
++ *      the documentation and/or other materials provided with the
++ *      distribution.
++ *    * Neither the name of Broadcom Corporation nor the names of its
++ *      contributors may be used to endorse or promote products derived
++ *      from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/dts-v1/;
++
++#include "ns2.dtsi"
++
++/ {
++	model = "Broadcom NS2 SVK";
++	compatible = "brcm,ns2-svk", "brcm,ns2";
++
++	aliases {
++		serial0 = &uart3;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++		bootargs = "earlycon=uart8250,mmio32,0x66130000";
++	};
++
++	memory {
++		device_type = "memory";
++		reg = <0x000000000 0x80000000 0x00000000 0x40000000>;
++	};
++
++	soc: soc {
++		uart3: serial@66130000 {
++			status = "ok";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/broadcom/ns2.dtsi b/arch/arm64/boot/dts/broadcom/ns2.dtsi
+new file mode 100644
+index 0000000..3c92d92
+--- /dev/null
++++ b/arch/arm64/boot/dts/broadcom/ns2.dtsi
+@@ -0,0 +1,118 @@
++/*
++ *  BSD LICENSE
++ *
++ *  Copyright(c) 2015 Broadcom Corporation.  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions
++ *  are met:
++ *
++ *    * Redistributions of source code must retain the above copyright
++ *      notice, this list of conditions and the following disclaimer.
++ *    * Redistributions in binary form must reproduce the above copyright
++ *      notice, this list of conditions and the following disclaimer in
++ *      the documentation and/or other materials provided with the
++ *      distribution.
++ *    * Neither the name of Broadcom Corporation nor the names of its
++ *      contributors may be used to endorse or promote products derived
++ *      from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++
++/memreserve/ 0x84b00000 0x00000008;
++
++/ {
++	compatible = "brcm,ns2";
++	interrupt-parent = <&gic>;
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	cpus {
++		#address-cells = <2>;
++		#size-cells = <0>;
++
++		cpu@0 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a57", "arm,armv8";
++			reg = <0 0>;
++			enable-method = "spin-table";
++			cpu-release-addr = <0 0x84b00000>;
++		};
++
++		cpu@1 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a57", "arm,armv8";
++			reg = <0 1>;
++			enable-method = "spin-table";
++			cpu-release-addr = <0 0x84b00000>;
++		};
++
++		cpu@2 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a57", "arm,armv8";
++			reg = <0 2>;
++			enable-method = "spin-table";
++			cpu-release-addr = <0 0x84b00000>;
++		};
++
++		cpu@3 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a57", "arm,armv8";
++			reg = <0 3>;
++			enable-method = "spin-table";
++			cpu-release-addr = <0 0x84b00000>;
++		};
++	};
++
++	timer {
++		compatible = "arm,armv8-timer";
++		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_RAW(0xff) |
++			      IRQ_TYPE_EDGE_RISING)>,
++			     <GIC_PPI 14 (GIC_CPU_MASK_RAW(0xff) |
++			      IRQ_TYPE_EDGE_RISING)>,
++			     <GIC_PPI 11 (GIC_CPU_MASK_RAW(0xff) |
++			      IRQ_TYPE_EDGE_RISING)>,
++			     <GIC_PPI 10 (GIC_CPU_MASK_RAW(0xff) |
++			      IRQ_TYPE_EDGE_RISING)>;
++	};
++
++	soc: soc {
++		compatible = "simple-bus";
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges = <0 0 0 0xffffffff>;
++
++		gic: interrupt-controller@65210000 {
++			compatible = "arm,gic-400";
++			#interrupt-cells = <3>;
++			interrupt-controller;
++			reg = <0x65210000 0x1000>,
++			      <0x65220000 0x1000>,
++			      <0x65240000 0x2000>,
++			      <0x65260000 0x1000>;
++		};
++
++		uart3: serial@66130000 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x66130000 0x100>;
++			interrupts = <GIC_SPI 393 IRQ_TYPE_LEVEL_HIGH>;
++			reg-shift = <2>;
++			reg-io-width = <4>;
++			clock-frequency = <23961600>;
++			status = "disabled";
++		};
++	};
++};
+-- 
+1.7.9.5
 
-On top of Rob's comments on ARM bios32 dependency removal (ie rewrite
-the driver so that it does not use pci_common_init_dev()), if you need IO
-access you have to map iobase, see pci_remap_iospace() in pci-host-generic.c
-
-Lorenzo
-
-> +
-> +       resource_list_for_each_entry(win, &pcie->resources) {
-> +               struct resource *parent, *res = win->res;
-> +
-> +               switch (resource_type(res)) {
-> +               case IORESOURCE_MEM:
-> +                       parent = &iomem_resource;
-> +                       res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-> +                       cra_writel(pcie, res->start,
-> +                               A2P_ADDR_MAP_LO0 + offset);
-> +                       cra_writel(pcie, 0,
-> +                               A2P_ADDR_MAP_HI0 + offset);
-> +                       offset += ATT_ENTRY_SIZE;
-> +                       break;
-> +               default:
-> +                       continue;
-> +               }
-> +
-> +               err = devm_request_resource(dev, parent, res);
-> +               if (err)
-> +                       goto out_release_res;
-> +       }
-> +
-> +       if (!res_valid) {
-> +               dev_err(dev, "non-prefetchable memory resource required\n");
-> +               err = -EINVAL;
-> +               goto out_release_res;
-> +       }
-> +
-> +       return 0;
-> +
-> +out_release_res:
-> +       altera_pcie_release_of_pci_ranges(pcie);
-> +       return err;
-> +}
-> +
-> +static void altera_pcie_free_irq_domain(struct altera_pcie *pcie)
-> +{
-> +       int i;
-> +       u32 irq;
-> +
-> +       for (i = 0; i < INTX_NUM; i++) {
-> +               irq = irq_find_mapping(pcie->irq_domain, i);
-> +               if (irq > 0)
-> +                       irq_dispose_mapping(irq);
-> +       }
-> +
-> +       irq_domain_remove(pcie->irq_domain);
-> +}
-> +
-> +static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
-> +{
-> +       struct device *dev = &pcie->pdev->dev;
-> +       struct device_node *node = dev->of_node;
-> +
-> +       /* Setup INTx */
-> +       pcie->irq_domain = irq_domain_add_linear(node, INTX_NUM,
-> +                                       &intx_domain_ops, pcie);
-> +       if (!pcie->irq_domain) {
-> +               dev_err(dev, "Failed to get a INTx IRQ domain\n");
-> +               return PTR_ERR(pcie->irq_domain);
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +static int altera_pcie_parse_dt(struct altera_pcie *pcie)
-> +{
-> +       struct resource *cra;
-> +       int ret;
-> +       struct platform_device *pdev = pcie->pdev;
-> +
-> +       cra = platform_get_resource_byname(pdev, IORESOURCE_MEM, "Cra");
-> +       pcie->cra_base = devm_ioremap_resource(&pdev->dev, cra);
-> +       if (IS_ERR(pcie->cra_base)) {
-> +               dev_err(&pdev->dev, "get Cra resource failed\n");
-> +               return PTR_ERR(pcie->cra_base);
-> +       }
-> +
-> +       /* setup IRQ */
-> +       pcie->hwirq = platform_get_irq(pdev, 0);
-> +       if (pcie->hwirq <= 0) {
-> +               dev_err(&pdev->dev, "failed to get IRQ: %d\n", pcie->hwirq);
-> +               return -EINVAL;
-> +       }
-> +       ret = devm_request_irq(&pdev->dev, pcie->hwirq, altera_pcie_isr,
-> +                       IRQF_SHARED, pdev->name, pcie);
-> +
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "failed to request irq %d\n", pcie->hwirq);
-> +               return ret;
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +static int altera_pcie_probe(struct platform_device *pdev)
-> +{
-> +       struct altera_pcie *pcie;
-> +       int ret;
-> +
-> +       pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-> +       if (!pcie)
-> +               return -ENOMEM;
-> +
-> +       pcie->pdev = pdev;
-> +
-> +       ret = altera_pcie_parse_dt(pcie);
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "Parsing DT failed\n");
-> +               return ret;
-> +       }
-> +
-> +       INIT_LIST_HEAD(&pcie->resources);
-> +
-> +       ret = altera_pcie_parse_request_of_pci_ranges(pcie);
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "Failed add resources\n");
-> +               return ret;
-> +       }
-> +
-> +       ret = altera_pcie_init_irq_domain(pcie);
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "Failed creating IRQ Domain\n");
-> +               return ret;
-> +       }
-> +
-> +       pcie->root_bus_nr = -1;
-> +
-> +       /* clear all interrupts */
-> +       cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
-> +       /* enable all interrupts */
-> +       cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
-> +
-> +       altera_pcie_hw.private_data = (void **)&pcie;
-> +
-> +       pci_common_init_dev(&pdev->dev, &altera_pcie_hw);
-> +
-> +       platform_set_drvdata(pdev, pcie);
-> +       return ret;
-> +}
-> +
-> +static int __exit altera_pcie_remove(struct platform_device *pdev)
-> +{
-> +       struct altera_pcie *pcie = platform_get_drvdata(pdev);
-> +
-> +       altera_pcie_free_irq_domain(pcie);
-> +       platform_set_drvdata(pdev, NULL);
-> +       return 0;
-> +}
-> +
-> +static const struct of_device_id altera_pcie_of_match[] = {
-> +       { .compatible = "altr,pcie-root-port-1.0", },
-> +       {},
-> +};
-> +MODULE_DEVICE_TABLE(of, altera_pcie_of_match);
-> +
-> +static struct platform_driver altera_pcie_driver = {
-> +       .probe          = altera_pcie_probe,
-> +       .remove         = altera_pcie_remove,
-> +       .driver = {
-> +               .name   = "altera-pcie",
-> +               .owner  = THIS_MODULE,
-> +               .of_match_table = altera_pcie_of_match,
-> +       },
-> +};
-> +
-> +module_platform_driver(altera_pcie_driver);
-> +
-> +MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
-> +MODULE_DESCRIPTION("Altera PCIe host controller driver");
-> +MODULE_LICENSE("GPL v2");
-> --
-> 1.8.2.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
