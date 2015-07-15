@@ -1,50 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36300 "EHLO mx1.redhat.com"
+Received: from foss.arm.com ([217.140.101.70]:38796 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752246AbbG1S6M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 14:58:12 -0400
-Date: Tue, 28 Jul 2015 14:58:11 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: dm-devel@redhat.com, mpatocka@redhat.com,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
- QUEUED errors since Linux 4.0
-Message-ID: <20150728185811.GA25060@redhat.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com>
- <55B7C800.2070702@maya.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55B7C800.2070702@maya.org>
+	id S1752761AbbGOMRm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 08:17:42 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 19/19] PCI/MSI: Drop domain field from msi_controller
+Date: Wed, 15 Jul 2015 13:16:53 +0100
+Message-Id: <1436962613-17359-20-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 28 2015 at  2:20pm -0400,
-Andreas Hartmann <andihartmann@freenet.de> wrote:
+The only three users of that field are not using the msi_controller
+structure anymore, so drop it altogether.
 
-> On 07/28/2015 at 07:50 PM, Mike Snitzer wrote:
-> [..]
-> > Are your SATA devcies using NCQ?
-> 
-> Yes. It's enabled:
-> 
-> dmesg| grep -i ncq
-> ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
-> ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
-> ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
-> ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
-> 
-> As the errors already come up on boot (during mount of partitions or
-> even before the password for the disk has been provided): How can I
-> disable NCQ during boot of the kernel? Is there a kernel option?
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/msi.c   | 2 --
+ include/linux/msi.h | 3 ---
+ 2 files changed, 5 deletions(-)
 
-See:
-https://ata.wiki.kernel.org/index.php/Libata_FAQ#Enabling.2C_disabling_and_checking_NCQ
-
-alternatively, and likely easier, set this on the kernel commandline:
- libata.force=noncq
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index c77fdaf..31bae50 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -42,8 +42,6 @@ static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
+ 	struct irq_domain *domain = NULL;
  
-> I'm trying to apply your mentioned patches to 3.19 and report back.
+ 	domain = dev_get_msi_domain(&dev->dev);
+-	if (!domain && dev->bus->msi)
+-		domain = dev->bus->msi->domain;
+ 	if (!domain)
+ 		domain = arch_get_pci_msi_domain(dev);
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index b55cf63..e29c31f 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -124,9 +124,6 @@ struct msi_controller {
+ 	struct device *dev;
+ 	struct device_node *of_node;
+ 	struct list_head list;
+-#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+-	struct irq_domain *domain;
+-#endif
+ 
+ 	int (*setup_irq)(struct msi_controller *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
+-- 
+2.1.4
 
-OK.
