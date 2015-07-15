@@ -1,92 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:36320 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752385AbbG2Tax (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 15:30:53 -0400
-Received: by igbij6 with SMTP id ij6so152407224igb.1
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 12:30:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150729160903.GD31170@google.com>
-References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
-	<20150729160903.GD31170@google.com>
-Date: Wed, 29 Jul 2015 12:30:52 -0700
-Message-ID: <CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>
-Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Guenter Roeck <linux@roeck-us.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from foss.arm.com ([217.140.101.70]:38750 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752760AbbGOMR2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 08:17:28 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 13/19] irqchip: gicv3-its: Get rid of struct msi_controller
+Date: Wed, 15 Jul 2015 13:16:47 +0100
+Message-Id: <1436962613-17359-14-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 29, 2015 at 9:09 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Tue, Jul 07, 2015 at 11:11:20AM -0700, Guenter Roeck wrote:
->> The PCI subsystem always assumes that I/O is supported on PCIe bridges
->> and tries to assign an I/O window to each child bus even if that is not
->> the case.
->>
->> This may result in messages such as
->>
->> pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
->>                                       get_res_add_size add_size 1000
->> pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
->> pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
->>
->
-> Applied to pci/resource for v4.3, thanks!
->> @@ -340,6 +369,23 @@ static void pci_read_bridge_io(struct pci_bus *child)
->>       struct pci_bus_region region;
->>       struct resource *res;
->>
->> +     if (child->bus_flags & PCI_BUS_FLAGS_NO_IO)
->> +             return;
->> +
->> +     if (!pci_bus_supports_io(child)) {
->> +             dev_printk(KERN_DEBUG, &dev->dev,
->> +                        "  bus does not support IO\n");
->> +             child->bus_flags |= PCI_BUS_FLAGS_NO_IO;
->> +             return;
->> +     }
->> +
->> +     if (!pci_root_has_io_resource(child)) {
->> +             dev_printk(KERN_DEBUG, &dev->dev,
->> +                        "  no IO window on root bus\n");
->> +             child->bus_flags |= PCI_BUS_FLAGS_NO_IO;
->> +             return;
->> +     }
->> +
->>       io_mask = PCI_IO_RANGE_MASK;
->>       io_granularity = 0x1000;
->>       if (dev->io_window_1k) {
+The GICv3 ITS only uses the msi_controller structure as a way
+to match the PHB with its MSI HW, and thus the msi_domain.
+But now that we can directly associate an msi_domain with a device,
+there is no use keeping this msi_controller around.
 
-Hi Bjorn,
+Just remove all traces of msi_controller from the driver.
 
-Looks like you flip the PCI_BUS_FLAGS_NO_IO to
-PCI_BUS_FLAGS_SUPPORT_IO, and now have
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/irqchip/irq-gic-v3-its.c | 38 ++++++++++++++++----------------------
+ 1 file changed, 16 insertions(+), 22 deletions(-)
 
-@@ -340,6 +373,21 @@ static void pci_read_bridge_io(struct pci_bus *child)
-        struct pci_bus_region region;
-        struct resource *res;
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 3f95826..20fe0dc 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -54,13 +54,12 @@ struct its_collection {
+ 
+ /*
+  * The ITS structure - contains most of the infrastructure, with the
+- * msi_controller, the command queue, the collections, and the list of
+- * devices writing to it.
++ * top-level MSI domain, the command queue, the collections, and the
++ * list of devices writing to it.
+  */
+ struct its_node {
+ 	raw_spinlock_t		lock;
+ 	struct list_head	entry;
+-	struct msi_controller	msi_chip;
+ 	struct irq_domain	*domain;
+ 	void __iomem		*base;
+ 	unsigned long		phys_base;
+@@ -776,7 +775,7 @@ static void its_free_tables(struct its_node *its)
+ 	}
+ }
+ 
+-static int its_alloc_tables(struct its_node *its)
++static int its_alloc_tables(const char *node_name, struct its_node *its)
+ {
+ 	int err;
+ 	int i;
+@@ -819,7 +818,7 @@ static int its_alloc_tables(struct its_node *its)
+ 			if (order >= MAX_ORDER) {
+ 				order = MAX_ORDER - 1;
+ 				pr_warn("%s: Device Table too large, reduce its page order to %u\n",
+-					its->msi_chip.of_node->full_name, order);
++					node_name, order);
+ 			}
+ 		}
+ 
+@@ -889,7 +888,7 @@ retry_baser:
+ 
+ 		if (val != tmp) {
+ 			pr_err("ITS: %s: GITS_BASER%d doesn't stick: %lx %lx\n",
+-			       its->msi_chip.of_node->full_name, i,
++			       node_name, i,
+ 			       (unsigned long) val, (unsigned long) tmp);
+ 			err = -ENXIO;
+ 			goto out_free;
+@@ -1317,6 +1316,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
++	struct irq_domain *inner_domain = NULL;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+@@ -1360,7 +1360,6 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	INIT_LIST_HEAD(&its->its_device_list);
+ 	its->base = its_base;
+ 	its->phys_base = res.start;
+-	its->msi_chip.of_node = node;
+ 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
+ 
+ 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
+@@ -1370,7 +1369,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	}
+ 	its->cmd_write = its->cmd_base;
+ 
+-	err = its_alloc_tables(its);
++	err = its_alloc_tables(node->full_name, its);
+ 	if (err)
+ 		goto out_free_cmd;
+ 
+@@ -1406,26 +1405,21 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	if (of_property_read_bool(its->msi_chip.of_node, "msi-controller")) {
+-		its->domain = irq_domain_add_tree(node, &its_domain_ops, its);
+-		if (!its->domain) {
++	if (of_property_read_bool(node, "msi-controller")) {
++		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++		if (!inner_domain) {
+ 			err = -ENOMEM;
+ 			goto out_free_tables;
+ 		}
+ 
+-		its->domain->parent = parent;
+-		its->domain->bus_token = DOMAIN_BUS_NEXUS_MSI;
++		inner_domain->parent = parent;
++		inner_domain->bus_token = DOMAIN_BUS_NEXUS_MSI;
+ 
+-		its->msi_chip.domain = its_pci_msi_alloc_domain(node,
+-								its->domain);
+-		if (!its->msi_chip.domain) {
++		its->domain = its_pci_msi_alloc_domain(node, inner_domain);
++		if (!its->domain) {
+ 			err = -ENOMEM;
+ 			goto out_free_domains;
+ 		}
+-
+-		err = of_pci_msi_chip_add(&its->msi_chip);
+-		if (err)
+-			goto out_free_domains;
+ 	}
+ 
+ 	spin_lock(&its_lock);
+@@ -1435,10 +1429,10 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	return 0;
+ 
+ out_free_domains:
+-	if (its->msi_chip.domain)
+-		irq_domain_remove(its->msi_chip.domain);
+ 	if (its->domain)
+ 		irq_domain_remove(its->domain);
++	if (inner_domain)
++		irq_domain_remove(inner_domain);
+ out_free_tables:
+ 	its_free_tables(its);
+ out_free_cmd:
+-- 
+2.1.4
 
-+       if (!(child->bus_flags & PCI_BUS_FLAGS_SUPPORTS_IO))
-+               return;
-+
-+       if (!pci_bridge_supports_io(dev)) {
-+               dev_printk(KERN_DEBUG, &dev->dev, "  no I/O window\n");
-+               return;
-+       }
-+
-+       if (!pci_root_has_io_resource(child)) {
-+               dev_printk(KERN_DEBUG, &dev->dev, "  no I/O resource
-on root bus\n");
-+               return;
-+       }
-+
-+       child->bus_flags |= PCI_BUS_FLAGS_SUPPORTS_IO;
-+
-
-so PCI_BUS_FLAGS_SUPPORTS_IO will never get set.
-
-Yinghai
