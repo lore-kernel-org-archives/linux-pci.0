@@ -1,78 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 21 Jul 2015 08:21:57 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ingo Molnar <mingo@kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bp@suse.de,
-	arnd@arndb.de, luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org
-Subject: Re: [PATCH v9 0/8] pci: add pci_iomap_wc() and pci_ioremap_wc_bar()
-Message-ID: <20150721132157.GE16841@google.com>
-References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
- <20150717202923.GC30479@wotan.suse.de>
- <20150721085252.GA15861@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150721085252.GA15861@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:38706 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753163AbbGOMRR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 08:17:17 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 08/19] platform: of: Assign MSI domain to platform device
+Date: Wed, 15 Jul 2015 13:16:42 +0100
+Message-Id: <1436962613-17359-9-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 21, 2015 at 10:52:52AM +0200, Ingo Molnar wrote:
-> 
-> * Luis R. Rodriguez <mcgrof@suse.com> wrote:
-> 
-> > On Wed, Jul 08, 2015 at 06:54:11PM -0700, Luis R. Rodriguez wrote:
-> > > From: "Luis R. Rodriguez" <mcgrof@suse.com>
-> > > 
-> > > Ingo,
-> > > 
-> > > Boris is on vacation, he picked up these patches on his bp#tip-mm tree [0]
-> > > and they have baked there for a while now. That tree receives 0-day
-> > > bot testing, but other than that its not clear what other tests were
-> > > run on these patches. Boris modified the commit logs a bit, and made one
-> > > optimizaiton to bail early on an PCI ioremap call when it should. These
-> > > patches have no modifications from what is on Boris' tree and tip-mm branch.
-> > > 
-> > > The 0 day build bot did find issues on Boris' tree but those are related
-> > > to ioremap_uc() (already upstream) and its first use on atyfb (not
-> > > upstream) -- I will be addressing a fix for that ioremap_uc() issue through
-> > > another patch series prior to posting the final set for atyfb which makes
-> > > use of ioremap_uc().
-> > > 
-> > > No issues have been found with this series. Benh did note some possible issues
-> > > with expectations with what is done for write-combining for PowerPC [1] but
-> > > the issue is a rather general long standing issue with semantics of ioremap --
-> > > in the case for ioremap_wc() on PowerPC benh notes that writel() will never
-> > > write-combine as it uses too heavy barriers. Benh notes that although
-> > > writel_relaxed() today is identical to writel() this can be changed. There are
-> > > other general semantics issues with ioremap() variant calls -- we seem to have
-> > > all gotten together to discuss all these issues on a thread where Dan Williams
-> > > is proposing to "unify ioremap prototypes and macro aliases" [1], folks
-> > > intersted on these issues or semantic concerns can drop in and chime there.
-> > > 
-> > > Let me know if these are OK or if there are any questions.
-> > > 
-> > > [0] http://lkml.kernel.org/r/20150625204703.GC4898@pd.tnic
-> > > [1] http://lkml.kernel.org/r/20150707095012.GQ7021@wotan.suse.de
-> > 
-> > Ingo,
-> > 
-> > Just a friendly reminder. Let me know if there are any issues or questions.
-> 
-> It would be nice to get an Acked-by from Bjorn for the PCI API bits.
+As for PCI, we're able to populate the msi_domain field at probe time,
+provided that the device tree has an "msi-parent" property.
 
-I think the actual code of pci_ioremap_wc() and pci_ioremap_wc_bar() is
-fine (although I might have named it pci_ioremap_bar_wc() for consistency).
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/of/irq.c          | 16 ++++++++++++++++
+ drivers/of/platform.c     |  1 +
+ include/linux/irqdomain.h |  1 +
+ include/linux/of_irq.h    |  1 +
+ 4 files changed, 19 insertions(+)
 
-I declined to merge or ack them myself because they're obvious extensions
-of pci_ioremap() and pci_ioremap_bar(), and I would prefer that they be
-exported the same way, i.e., with EXPORT_SYMBOL(), not EXPORT_SYMBOL_GPL().
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index 3cf7a01..64392a6 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -18,6 +18,7 @@
+  * driver.
+  */
+ 
++#include <linux/device.h>
+ #include <linux/errno.h>
+ #include <linux/list.h>
+ #include <linux/module.h>
+@@ -576,3 +577,18 @@ err:
+ 		kfree(desc);
+ 	}
+ }
++
++void of_msi_configure(struct device *dev, struct device_node *np)
++{
++	struct device_node *msi_np;
++	struct irq_domain *d;
++
++	msi_np = of_parse_phandle(np, "msi-parent", 0);
++	if (!msi_np)
++		return;
++
++	d = irq_find_matching_host(msi_np, DOMAIN_BUS_PLATFORM_MSI);
++	if (!d)
++		d = irq_find_host(msi_np);
++	dev_set_msi_domain(dev, d);
++}
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index ddf8e42..8a002d6 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -184,6 +184,7 @@ static struct platform_device *of_platform_device_create_pdata(
+ 	dev->dev.bus = &platform_bus_type;
+ 	dev->dev.platform_data = platform_data;
+ 	of_dma_configure(&dev->dev, dev->dev.of_node);
++	of_msi_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	if (of_device_add(dev) != 0) {
+ 		of_dma_deconfigure(&dev->dev);
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 25e9e66..b4a74f7 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -55,6 +55,7 @@ struct irq_data;
+ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_ANY		= 0,
+ 	DOMAIN_BUS_PCI_MSI,
++	DOMAIN_BUS_PLATFORM_MSI,
+ };
+ 
+ /**
+diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
+index d884929..4bcbd58 100644
+--- a/include/linux/of_irq.h
++++ b/include/linux/of_irq.h
+@@ -74,6 +74,7 @@ static inline int of_irq_to_resource_table(struct device_node *dev,
+  */
+ extern unsigned int irq_of_parse_and_map(struct device_node *node, int index);
+ extern struct device_node *of_irq_find_parent(struct device_node *child);
++extern void of_msi_configure(struct device *dev, struct device_node *np);
+ 
+ #else /* !CONFIG_OF */
+ static inline unsigned int irq_of_parse_and_map(struct device_node *dev,
+-- 
+2.1.4
 
-I think using EXPORT_SYMBOL_GPL to express individual political aims rather
-than as a hint about what might be derived work makes us look like zealots,
-and that's not my style.
-
-Bjorn
