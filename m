@@ -1,106 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:47203 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932178AbbGQGqq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jul 2015 02:46:46 -0400
-Date: Fri, 17 Jul 2015 07:45:49 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	David Daney <david.daney@cavium.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
- the irqdomain of the GIC.
-Message-ID: <20150717074549.7a502e09@arm.com>
-In-Reply-To: <55A7EAAC.8000800@arm.com>
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
-	<1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com>
-	<55A6947F.8070903@arm.com>
-	<55A6AD1F.902@caviumnetworks.com>
-	<55A75F8B.3080009@arm.com>
-	<55A7E0C2.8020704@caviumnetworks.com>
-	<55A7E52D.9080201@arm.com>
-	<55A7E663.9030000@caviumnetworks.com>
-	<55A7EAAC.8000800@arm.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46890 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751426AbbGOBqd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 21:46:33 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 15 Jul 2015 11:46:31 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 7CD8F2BB0055
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 11:46:28 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6F1kJgC32899300
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 11:46:28 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6F1jtBj031264
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 11:45:55 +1000
+Date: Wed, 15 Jul 2015 09:45:38 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: Re: [PATCH] PCI: Remove useless redundant code
+Message-ID: <20150715014538.GB6525@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <20150714220118.21427.99172.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150714220118.21427.99172.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 16 Jul 2015 18:32:28 +0100
-Marc Zyngier <marc.zyngier@arm.com> wrote:
+On Tue, Jul 14, 2015 at 05:01:18PM -0500, Bjorn Helgaas wrote:
+>Remove redundant code from __pci_bus_find_cap_start().  No functional
+>change.
+>
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> On 16/07/15 18:14, David Daney wrote:
-> > On 07/16/2015 10:09 AM, Marc Zyngier wrote:
-> >> On 16/07/15 17:50, David Daney wrote:
-> > [...]
-> >>>> Patch 5 has established that you're using "virtual wire" SPIs, so we
-> >>>> need to work on exposing that with the normal kernel abstraction, and
-> >>>> not by messing with the internals of the GIC.
-> >>>>
-> >>>
-> >>> Agreed.
-> >>>
-> >>> The MSI system has pci_enable_msix()/pci_disable_msix().
-> >>>
-> >>> I would propose something like:
-> >>>
-> >>> struct gic_spi_entry {
-> >>> 	int spi   /* SPI number */
-> >>> 	int irq;  /* kernel irq number mapped to the spi*/
-> >>> 	u32 msg;  /* message to be written */
-> >>> 	u64 assert_addr;
-> >>> 	u64 deassert_addr;
-> >>> };
-> >>>
-> >>> /* Fill in the SPI processing information */
-> >>> int gic_map_spi(int spi, struct gic_spi_entry *data);
-> >>
-> >> Neither.
-> >>
-> >> The way to do it is to make this a *separate* IRQ domain stacked onto
-> >> the SPI domain. No funky hook on the side. If it doesn't go through the
-> >> normal kernel API, it doesn't reach the GIC.
-> > 
-> > Yes, the irqdomain does handle mapping SPI -> irq, and the message can 
-> > be derived from the SPI.  However, the irqdomain infrastructure cannot 
-> > supply values for either assert_addr or deassert_addr.
-> 
-> This is why I suggested earlier (in my reply to patch 5) that you have a
-> look at the series I posted a couple of days ago to implement non-PCI
-> MSI support. This would allow you to compose the domains as such:
-> 
-> platform-MSI -> message-SPI -> GIC
-> 
-> You'd end up with a msi_msg containing the GICD_SETSPI_NSR doorbell, and
-> the SPI as a payload.
-> 
-> > Those are needed in order to use SPI.  How would you suggest that they 
-> > be obtained?
-> 
-> Two possibilities: either you derive GICD_CLRSPI_NSR by adding 8 to the
-> doorbell you got from the msi_msg structure (ugly, but limited to your
-> own code), or you extend msi_msg to cater for this case.
+Reviewed-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-A simpler alternative to the above would be to move all this to
-firmware, and only expose a *wired* SPI to the kernel. This would have
-the advantage to use the existing infrastructure for both DT and ACPI.
+>---
+> drivers/pci/pci.c |    2 --
+> 1 file changed, 2 deletions(-)
+>
+>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>index 29b5605..359b954 100644
+>--- a/drivers/pci/pci.c
+>+++ b/drivers/pci/pci.c
+>@@ -195,8 +195,6 @@ static int __pci_bus_find_cap_start(struct pci_bus *bus,
+> 		return PCI_CAPABILITY_LIST;
+> 	case PCI_HEADER_TYPE_CARDBUS:
+> 		return PCI_CB_CAPABILITY_LIST;
+>-	default:
+>-		return 0;
+> 	}
+>
+> 	return 0;
 
-As a side note, that was the intended use of these registers - to
-provide a "virtual wire" interface that remains mostly invisible to
-software.
-
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny.
+Richard Yang
+Help you, Help me
+
