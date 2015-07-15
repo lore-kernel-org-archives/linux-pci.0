@@ -1,328 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:58386 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752475AbbGAJhq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 05:37:46 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from foss.arm.com ([217.140.101.70]:38681 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752825AbbGOMRL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 08:17:11 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	James Morse <james.morse@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v3 3/5] PCI: hisi: Add PCIe host support for Hisilicon Soc Hip05
-Date: Wed, 1 Jul 2015 17:43:35 +0800
-Message-ID: <1435743817-19083-4-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 05/19] PCI/MSI: of: Add support for OF-provided msi_domain
+Date: Wed, 15 Jul 2015 13:16:39 +0100
+Message-Id: <1436962613-17359-6-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds PCIe host support for Hisilicon Soc Hip05.
+In order to populate the PHB msi_domain, use the "msi-parent"
+attribute to lookup a corresponding irq domain. If found,
+this is our MSI domain.
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+This gets plugged into the core PCI code.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/host/Kconfig     |   5 +
- drivers/pci/host/Makefile    |   1 +
- drivers/pci/host/pcie-hisi.c | 258 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 264 insertions(+)
- create mode 100644 drivers/pci/host/pcie-hisi.c
+ drivers/pci/of.c    | 19 +++++++++++++++++++
+ drivers/pci/probe.c |  1 +
+ include/linux/pci.h |  2 ++
+ 3 files changed, 22 insertions(+)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 1dfb567..486d822 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -125,4 +125,9 @@ config PCIE_IPROC_PLATFORM
- 	  Say Y here if you want to use the Broadcom iProc PCIe controller
- 	  through the generic platform bus interface
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index f092993..09df465 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -9,6 +9,7 @@
+  * 2 of the License, or (at your option) any later version.
+  */
  
-+config PCI_HISI
-+	depends on OF && ARM64
-+	bool "Hisilicon Soc HIP05 PCIe controller"
-+	select PCIE_DW
++#include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
+ #include <linux/of.h>
+@@ -59,3 +60,21 @@ struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
+ 		return of_node_get(bus->bridge->parent->of_node);
+ 	return NULL;
+ }
 +
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index f733b4e..562142e 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -15,3 +15,4 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
- obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
- obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
- obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
-+obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-new file mode 100644
-index 0000000..8328add
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -0,0 +1,258 @@
-+/*
-+ * PCIe host controller driver for Hisilicon Hip05 SoCs
-+ *
-+ * Copyright (C) 2015 Hisilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Zhou Wang <wangzhou1@hisilicon.com>
-+ *         Dacai Zhu <zhudacai@hisilicon.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_pci.h>
-+#include <linux/platform_device.h>
-+
-+#include "pcie-designware.h"
-+
-+#define PCIE_SUBCTRL_MODE_REG                           0x2800
-+#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
-+#define PCIE_SLV_DBI_MODE                               0x0
-+#define PCIE_SLV_SYSCTRL_MODE                           0x1
-+#define PCIE_SLV_CONTENT_MODE                           0x2
-+#define PCIE_SLV_MSI_ASID                               0x10
-+#define PCIE_LTSSM_LINKUP_STATE                         0x11
-+#define PCIE_LTSSM_STATE_MASK                           0x3F
-+#define PCIE_MSI_ASID_ENABLE                            (0x1 << 12)
-+#define PCIE_MSI_ASID_VALUE                             (0x1 << 16)
-+#define PCIE_MSI_TRANS_ENABLE                           (0x1 << 12)
-+#define PCIE_MSI_TRANS_REG                              0x1c8
-+#define PCIE_MSI_LOW_ADDRESS                            0x1b4
-+#define PCIE_MSI_HIGH_ADDRESS                           0x1c4
-+#define PCIE_MSI_ADDRESS_VAL                            0xb7010040
-+
-+#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
-+
-+struct hisi_pcie {
-+	void __iomem *subctrl_base;
-+	void __iomem *reg_base;
-+	struct msi_controller *msi;
-+	u32 port_id;
-+	struct pcie_port pp;
-+};
-+
-+static inline void hisi_pcie_subctrl_writel(struct hisi_pcie *pcie,
-+					    u32 val, u32 reg)
++void pci_set_phb_of_msi_domain(struct pci_bus *bus)
 +{
-+	writel(val, pcie->subctrl_base + reg);
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	struct device_node *np;
++	struct irq_domain *d;
++
++	if (!bus->dev.of_node)
++		return;
++	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
++	if (!np)
++		return;
++	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
++	if (!d)
++		d = irq_find_host(np);
++	dev_set_msi_domain(&bus->dev, d);
++#endif
 +}
-+
-+static inline u32 hisi_pcie_subctrl_readl(struct hisi_pcie *pcie, u32 reg)
-+{
-+	return readl(pcie->subctrl_base + reg);
-+}
-+
-+static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
-+					u32 val, u32 reg)
-+{
-+	writel(val, pcie->reg_base + reg);
-+}
-+
-+static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
-+{
-+	return readl(pcie->reg_base + reg);
-+}
-+
-+/*
-+ * Change mode to indicate the same reg_base to base of PCIe host configure
-+ * registers, base of RC configure space or base of vmid/asid context table
-+ */
-+static void hisi_pcie_change_apb_mode(struct hisi_pcie *pcie, u32 mode)
-+{
-+	u32 val;
-+	u32 bit_mask;
-+	u32 bit_shift;
-+	u32 port_id = pcie->port_id;
-+	u32 reg = PCIE_SUBCTRL_MODE_REG + 0x100 * port_id;
-+
-+	if ((port_id == 1) || (port_id == 2)) {
-+		bit_mask = 0xc;
-+		bit_shift = 0x2;
-+	} else {
-+		bit_mask = 0x6;
-+		bit_shift = 0x1;
-+	}
-+
-+	val = hisi_pcie_subctrl_readl(pcie, reg);
-+	val = (val & (~bit_mask)) | (mode << bit_shift);
-+	hisi_pcie_subctrl_writel(pcie, val, reg);
-+}
-+
-+/* Configure vmid/asid table in PCIe host */
-+static void hisi_pcie_config_context(struct hisi_pcie *pcie)
-+{
-+	int i;
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
-+
-+	/*
-+	 * init vmid and asid tables for all PCIes device as 0
-+	 * vmid table: 0 ~ 0x3ff, asid table: 0x400 ~ 0x7ff
-+	 */
-+	for (i = 0; i < 0x800; i++)
-+		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
-+
-+	hisi_pcie_apb_writel(pcie, PCIE_MSI_ADDRESS_VAL, PCIE_MSI_LOW_ADDRESS);
-+	hisi_pcie_apb_writel(pcie, 0x0, PCIE_MSI_HIGH_ADDRESS);
-+	hisi_pcie_apb_writel(pcie, PCIE_MSI_ASID_ENABLE | PCIE_MSI_ASID_VALUE,
-+			     PCIE_SLV_MSI_ASID);
-+	hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, PCIE_MSI_TRANS_REG);
-+
-+	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
-+}
-+
-+static int hisi_pcie_link_up(struct pcie_port *pp)
-+{
-+	u32 val;
-+
-+	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
-+
-+	val = hisi_pcie_subctrl_readl(hisi_pcie, PCIE_SUBCTRL_SYS_STATE4_REG +
-+				      0x100 * hisi_pcie->port_id);
-+
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+}
-+
-+static
-+int hisi_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
-+{
-+	struct device_node *msi_node;
-+	struct irq_domain *irq_domain;
-+	struct device_node *np = pp->dev->of_node;
-+	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
-+
-+	msi_node = of_parse_phandle(np, "msi-parent", 0);
-+	if (!msi_node) {
-+		pr_err("failed to find msi-parent\n");
-+		return -ENODEV;
-+	}
-+
-+	irq_domain = irq_find_host(msi_node);
-+	if (!irq_domain) {
-+		pr_err("failed to find irq domain\n");
-+		return -ENODEV;
-+	}
-+
-+	pp->irq_domain = irq_domain;
-+
-+	return 0;
-+}
-+
-+static struct pcie_host_ops hisi_pcie_host_ops = {
-+	.link_up = hisi_pcie_link_up,
-+	.msi_host_init = hisi_pcie_msi_host_init,
-+};
-+
-+static int __init hisi_add_pcie_port(struct pcie_port *pp,
-+				     struct platform_device *pdev)
-+{
-+	int ret;
-+	u32 port_id;
-+	struct resource busn;
-+
-+	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
-+
-+	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
-+		dev_err(&pdev->dev, "failed to read port-id\n");
-+		return -EINVAL;
-+	}
-+	if (port_id > 3) {
-+		dev_err(&pdev->dev, "Invalid port-id\n");
-+		return -EINVAL;
-+	}
-+
-+	hisi_pcie->port_id = port_id;
-+
-+	if (of_pci_parse_bus_range(pdev->dev.of_node, &busn)) {
-+		dev_err(&pdev->dev, "failed to parse bus-ranges\n");
-+		return -EINVAL;
-+	}
-+
-+	pp->root_bus_nr = busn.start;
-+	pp->ops = &hisi_pcie_host_ops;
-+
-+	hisi_pcie_config_context(hisi_pcie);
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int __init hisi_pcie_probe(struct platform_device *pdev)
-+{
-+	struct hisi_pcie *hisi_pcie;
-+	struct pcie_port *pp;
-+	struct resource *reg;
-+	struct resource *subctrl;
-+	int ret;
-+
-+	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
-+	if (!hisi_pcie)
-+		return -ENOMEM;
-+
-+	pp = &hisi_pcie->pp;
-+	pp->dev = &pdev->dev;
-+
-+	subctrl = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subctrl");
-+	hisi_pcie->subctrl_base = devm_ioremap_nocache(&pdev->dev,
-+					subctrl->start, resource_size(subctrl));
-+	if (IS_ERR(hisi_pcie->subctrl_base)) {
-+		dev_err(pp->dev, "cannot get subctrl base\n");
-+		return PTR_ERR(hisi_pcie->subctrl_base);
-+	}
-+
-+	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
-+	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
-+	if (IS_ERR(hisi_pcie->reg_base)) {
-+		dev_err(pp->dev, "cannot get reg base\n");
-+		return PTR_ERR(hisi_pcie->reg_base);
-+	}
-+
-+	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
-+
-+	ret = hisi_add_pcie_port(pp, pdev);
-+	if (ret < 0)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, hisi_pcie);
-+
-+	return ret;
-+}
-+
-+static const struct of_device_id hisi_pcie_of_match[] = {
-+	{.compatible = "hisilicon,hip05-pcie",},
-+	{},
-+};
-+
-+MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
-+
-+static struct platform_driver hisi_pcie_driver = {
-+	.probe  = hisi_pcie_probe,
-+	.driver = {
-+		   .name = "hisi-pcie",
-+		   .owner = THIS_MODULE,
-+		   .of_match_table = hisi_pcie_of_match,
-+	},
-+};
-+
-+module_platform_driver(hisi_pcie_driver);
-+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 376f6fa..c80626f 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -663,6 +663,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+ 
+ void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
+ {
++	pci_set_phb_of_msi_domain(bus);
+ }
+ 
+ static void pci_set_bus_msi_domain(struct pci_bus *bus)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fe0825f..b3ad3d4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1846,6 +1846,7 @@ void pci_set_of_node(struct pci_dev *dev);
+ void pci_release_of_node(struct pci_dev *dev);
+ void pci_set_bus_of_node(struct pci_bus *bus);
+ void pci_release_bus_of_node(struct pci_bus *bus);
++void pci_set_phb_of_msi_domain(struct pci_bus *bus);
+ 
+ /* Arch may override this (weak) */
+ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
+@@ -1868,6 +1869,7 @@ static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+ static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+ static inline struct device_node *
+ pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
++static inline void pci_set_phb_of_msi_domain(struct pci_bus *bus) { }
+ #endif  /* CONFIG_OF */
+ 
+ #ifdef CONFIG_EEH
 -- 
-1.9.1
+2.1.4
 
