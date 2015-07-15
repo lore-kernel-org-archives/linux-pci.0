@@ -1,93 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:48331 "EHLO foss.arm.com"
+Received: from mga02.intel.com ([134.134.136.20]:56353 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757703AbbGQK7j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jul 2015 06:59:39 -0400
-Date: Fri, 17 Jul 2015 12:00:16 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: David Daney <ddaney.cavm@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 3/5] arm64, pci: Allow RC drivers to supply
- pcibios_add_device() implementation.
-Message-ID: <20150717110016.GB19067@red-moon>
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
- <1436979285-8177-4-git-send-email-ddaney.cavm@gmail.com>
- <20150716090426.GA17097@red-moon>
- <55A7E334.3030101@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55A7E334.3030101@caviumnetworks.com>
+	id S1753347AbbGOVRA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 17:17:00 -0400
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
+	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
+	mmarek@suse.cz
+Cc: sean.stalley@intel.com, akpm@linux-foundation.org,
+	bigeasy@linutronix.de, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-mm@kvack.org,
+	cocci@systeme.lip6.fr
+Subject: [PATCH 2/4] mm: Add dma_pool_zalloc() call to DMA API
+Date: Wed, 15 Jul 2015 14:14:41 -0700
+Message-Id: <1436994883-16563-3-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
+References: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
+Add a wrapper function for dma_pool_alloc() to get zeroed memory.
 
-On Thu, Jul 16, 2015 at 06:00:36PM +0100, David Daney wrote:
-> On 07/16/2015 02:04 AM, Lorenzo Pieralisi wrote:
-> > Hi David,
-> >
-> > On Wed, Jul 15, 2015 at 05:54:43PM +0100, David Daney wrote:
-> >> From: David Daney <david.daney@cavium.com>
-> >>
-> [...]
-> >> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> >> index 4095379..3356023 100644
-> >> --- a/arch/arm64/kernel/pci.c
-> >> +++ b/arch/arm64/kernel/pci.c
-> >> @@ -38,11 +38,21 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> >>   	return res->start;
-> >>   }
-> >>
-> >> +static int (*pcibios_add_device_impl)(struct pci_dev *);
-> >> +
-> >> +void set_pcibios_add_device(int (*arg)(struct pci_dev *))
-> >> +{
-> >> +	pcibios_add_device_impl = arg;
-> >> +}
-> >> +
-> >>   /*
-> >>    * Try to assign the IRQ number from DT when adding a new device
-> >>    */
-> >>   int pcibios_add_device(struct pci_dev *dev)
-> >>   {
-> >> +	if (pcibios_add_device_impl)
-> >> +		return pcibios_add_device_impl(dev);
-> >
-> > I am totally against this (and to be honest by reading the other
-> > patches I failed to understand why you even need it), see above.
-> >
-> 
-> It is because ...
-> 
-> 
-> > Thanks,
-> > Lorenzo
-> >
-> >> +
-> >>   	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> 
-> 
->   ... this is total crap.  But I didn't want to break existing systems.
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+---
+ Documentation/DMA-API.txt | 7 +++++++
+ include/linux/dmapool.h   | 6 ++++++
+ 2 files changed, 13 insertions(+)
 
-That's a good aim, but you are still failing to explain the issue properly
-I am afraid.
+diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
+index 5208840..988f757 100644
+--- a/Documentation/DMA-API.txt
++++ b/Documentation/DMA-API.txt
+@@ -104,6 +104,13 @@ crossing restrictions, pass 0 for alloc; passing 4096 says memory allocated
+ from this pool must not cross 4KByte boundaries.
+ 
+ 
++	void *dma_pool_zalloc(struct dma_pool *pool, gfp_t mem_flags,
++			      dma_addr_t *handle)
++
++Wraps dma_pool_alloc() and also zeroes the returned memory if the
++allocation attempt succeeded.
++
++
+ 	void *dma_pool_alloc(struct dma_pool *pool, gfp_t gfp_flags,
+ 			dma_addr_t *dma_handle);
+ 
+diff --git a/include/linux/dmapool.h b/include/linux/dmapool.h
+index 022e34f..6d8079b 100644
+--- a/include/linux/dmapool.h
++++ b/include/linux/dmapool.h
+@@ -22,6 +22,12 @@ void dma_pool_destroy(struct dma_pool *pool);
+ void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
+ 		     dma_addr_t *handle);
+ 
++static inline void *dma_pool_zalloc(struct dma_pool *pool, gfp_t mem_flags,
++				    dma_addr_t *handle)
++{
++	return dma_pool_alloc(pool, mem_flags | __GFP_ZERO, handle);
++}
++
+ void dma_pool_free(struct dma_pool *pool, void *vaddr, dma_addr_t addr);
+ 
+ /*
+-- 
+1.9.1
 
-> The PCI RC drivers need a way to configure the legacy virtual-wire 
-> interrupts, because the existing code doesn't do it.
-
-Can I ask you please to explain the issue a bit more clearly (and why
-the OF API does not work for you ?)
-
-Thank you !
-Lorenzo
