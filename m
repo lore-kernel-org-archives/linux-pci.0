@@ -1,144 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:22842 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752487AbbGJInM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 04:43:12 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <gabriele.paoloni@huawei.com>, <arnd@arndb.de>,
-	<lorenzo.pieralisi@arm.com>, <wangzhou1@hisilicon.com>,
-	<bhelgaas@google.com>, <robh+dt@kernel.org>, <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH] Store PCIe controllers address in struct of_pci_range
-Date: Fri, 10 Jul 2015 16:48:19 +0800
-Message-ID: <1436518099-98633-1-git-send-email-gabriele.paoloni@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from foss.arm.com ([217.140.101.70]:38775 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752760AbbGOMRf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 08:17:35 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 16/19] irqchip: GICv2m: Get rid of struct msi_controller
+Date: Wed, 15 Jul 2015 13:16:50 +0100
+Message-Id: <1436962613-17359-17-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+GICv2m only uses the msi_controller structure as a way to match
+the host bridge with its MSI HW, and thus the msi_domain.
 
-This patch is needed port PCIe designware to new DT parsing API
-As discussed in
-http://lists.infradead.org/pipermail/linux-arm-kernel/2015-January/317743.html
-in designware we have a problem as the PCI addresses in the PCIe controller
-address space are required in order to perform correct HW operation.
+But now that we can directly associate an msi_domain with a device,
+there is no use keeping this msi_controller around.
 
-In order to solve this problem commit
-f4c55c5a3f7f68c06cc559ed7af8b2d017cbb0a7 "PCI: designware:
-Program ATU with untranslated address" added code to read the PCIe
-controller start address directly from the DT ranges.
+Just remove all traces of msi_controller from the driver. Also
+tag the inner (non-PCI) domain with DOMAIN_BUS_NEXUS.
 
-In the new DT parsing API of_pci_get_host_bridge_resources() hides the
-DT parser from the host controller drivers, so it is not possible
-for drivers to parse values directly from the DT.
-
-In http://www.spinics.net/lists/linux-pci/msg42540.html we already tried
-to use the new DT parsing API but there is a bug (obviously) in setting
-the <*>_mod_base addresses
-Applying this patch we can easily set "<*>_mod_base = win->__res.start"
-
-This patch adds a new field in "struct of_pci_range" to store the
-pci controller start address; it fills the field in of_pci_range_parser_one();
-in of_pci_get_host_bridge_resources() it retrieve the resource entry
-after it is created and added to the resource list and uses
-entry->__res.start to store the pci controller address
-
-the patch is based on 4.2-rc1
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/of/address.c               | 1 +
- drivers/of/of_pci.c                | 4 ++++
- drivers/pci/host/pcie-designware.c | 9 +++------
- include/linux/of_address.h         | 1 +
- 4 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/irqchip/irq-gic-v2m.c | 27 ++++++++++-----------------
+ 1 file changed, 10 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 8bfda6a..52f9321 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -265,6 +265,7 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
- 	range->pci_addr = of_read_number(parser->range + 1, ns);
- 	range->cpu_addr = of_translate_address(parser->node,
- 				parser->range + na);
-+	range->pci_ctrl_addr = of_read_number(parser->range + na, ns);
- 	range->size = of_read_number(parser->range + parser->pna + na, ns);
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+index fdf7065..ec9c376 100644
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -45,7 +45,6 @@
  
- 	parser->range += parser->np;
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 5751dc5..2ccc749 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -198,6 +198,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ struct v2m_data {
+ 	spinlock_t msi_cnt_lock;
+-	struct msi_controller mchip;
+ 	struct resource res;	/* GICv2m resource */
+ 	void __iomem *base;	/* GICv2m virt address */
+ 	u32 spi_start;		/* The SPI number that MSIs start */
+@@ -218,6 +217,7 @@ static int __init gicv2m_init_one(struct device_node *node,
+ {
+ 	int ret;
+ 	struct v2m_data *v2m;
++	struct irq_domain *inner_domain;
  
- 	pr_debug("Parsing ranges property...\n");
- 	for_each_of_pci_range(&parser, &range) {
-+		struct resource_entry *entry;
- 		/* Read next ranges element */
- 		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
- 			snprintf(range_type, 4, " IO");
-@@ -240,6 +241,9 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 		}
- 
- 		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
-+		entry = list_last_entry(resources, struct resource_entry, node);
-+		/*we are using __res for storing the PCI controller address*/
-+		entry->__res.start = range.pci_ctrl_addr;
+ 	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
+ 	if (!v2m) {
+@@ -261,19 +261,18 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 		goto err_iounmap;
  	}
  
+-	v2m->domain = irq_domain_add_tree(NULL, &gicv2m_domain_ops, v2m);
+-	if (!v2m->domain) {
++	inner_domain = irq_domain_add_tree(node, &gicv2m_domain_ops, v2m);
++	if (!inner_domain) {
+ 		pr_err("Failed to create GICv2m domain\n");
+ 		ret = -ENOMEM;
+ 		goto err_free_bm;
+ 	}
+ 
+-	v2m->domain->parent = parent;
+-	v2m->mchip.of_node = node;
+-	v2m->mchip.domain = pci_msi_create_irq_domain(node,
+-						      &gicv2m_msi_domain_info,
+-						      v2m->domain);
+-	if (!v2m->mchip.domain) {
++	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
++	inner_domain->parent = parent;
++	v2m->domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
++						inner_domain);
++	if (!v2m->domain) {
+ 		pr_err("Failed to create MSI domain\n");
+ 		ret = -ENOMEM;
+ 		goto err_free_domains;
+@@ -281,12 +280,6 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 
+ 	spin_lock_init(&v2m->msi_cnt_lock);
+ 
+-	ret = of_pci_msi_chip_add(&v2m->mchip);
+-	if (ret) {
+-		pr_err("Failed to add msi_chip.\n");
+-		goto err_free_domains;
+-	}
+-
+ 	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
+ 		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
+ 		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+@@ -294,10 +287,10 @@ static int __init gicv2m_init_one(struct device_node *node,
  	return 0;
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be..106dae6 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -416,8 +416,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->io_base = range.cpu_addr;
  
- 			/* Find the untranslated IO space address */
--			pp->io_mod_base = of_read_number(parser.range -
--							 parser.np + na, ns);
-+			pp->io_mod_base = range.pci_ctrl_addr;
- 		}
- 		if (restype == IORESOURCE_MEM) {
- 			of_pci_range_to_resource(&range, np, &pp->mem);
-@@ -426,8 +425,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->mem_bus_addr = range.pci_addr;
- 
- 			/* Find the untranslated MEM space address */
--			pp->mem_mod_base = of_read_number(parser.range -
--							  parser.np + na, ns);
-+			pp->mem_mod_base = range.pci_ctrl_addr;
- 		}
- 		if (restype == 0) {
- 			of_pci_range_to_resource(&range, np, &pp->cfg);
-@@ -437,8 +435,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
- 
- 			/* Find the untranslated configuration space address */
--			pp->cfg0_mod_base = of_read_number(parser.range -
--							   parser.np + na, ns);
-+			pp->cfg0_mod_base = range.pci_ctrl_addr;
- 			pp->cfg1_mod_base = pp->cfg0_mod_base +
- 					    pp->cfg0_size;
- 		}
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index d88e81b..55bb1ae 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -16,6 +16,7 @@ struct of_pci_range {
- 	u32 pci_space;
- 	u64 pci_addr;
- 	u64 cpu_addr;
-+	u64 pci_ctrl_addr;
- 	u64 size;
- 	u32 flags;
- };
+ err_free_domains:
+-	if (v2m->mchip.domain)
+-		irq_domain_remove(v2m->mchip.domain);
+ 	if (v2m->domain)
+ 		irq_domain_remove(v2m->domain);
++	if (inner_domain)
++		irq_domain_remove(inner_domain);
+ err_free_bm:
+ 	kfree(v2m->bm);
+ err_iounmap:
 -- 
-1.9.1
+2.1.4
 
