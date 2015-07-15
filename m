@@ -1,82 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:34950 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755199AbbGUVRi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 17:17:38 -0400
-Received: by iecri3 with SMTP id ri3so57745384iec.2
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 14:17:37 -0700 (PDT)
-Date: Tue, 21 Jul 2015 16:17:31 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v4 07/19] PCI/MSI: Let pci_msi_get_domain use struct
- device's msi_domain
-Message-ID: <20150721211731.GA3691@google.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
- <1436962613-17359-8-git-send-email-marc.zyngier@arm.com>
+Received: from mga14.intel.com ([192.55.52.115]:57278 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753399AbbGOXPz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 19:15:55 -0400
+Date: Wed, 15 Jul 2015 16:13:57 -0700
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
+	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
+	mmarek@suse.cz, bigeasy@linutronix.de, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-mm@kvack.org,
+	cocci@systeme.lip6.fr
+Subject: Re: [PATCH 1/4] mm: Add support for __GFP_ZERO flag to
+ dma_pool_alloc()
+Message-ID: <20150715231356.GA16638@sean.stalley.intel.com>
+References: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
+ <1436994883-16563-2-git-send-email-sean.stalley@intel.com>
+ <20150715142907.ccfd473ea0e039642d46893d@linux-foundation.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436962613-17359-8-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <20150715142907.ccfd473ea0e039642d46893d@linux-foundation.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
+Thanks for the review Andrew, my responses are inline.
 
-On Wed, Jul 15, 2015 at 01:16:41PM +0100, Marc Zyngier wrote:
-> Now that we can easily find which MSI domain a PCI device is
-> using, use dev_get_msi_domain as a way to retrieve the information.
+-Sean
+
+On Wed, Jul 15, 2015 at 02:29:07PM -0700, Andrew Morton wrote:
+> On Wed, 15 Jul 2015 14:14:40 -0700 "Sean O. Stalley" <sean.stalley@intel.com> wrote:
 > 
-> The original code is still used as a fallback.
+> > Currently the __GFP_ZERO flag is ignored by dma_pool_alloc().
+> > Make dma_pool_alloc() zero the memory if this flag is set.
+> > 
+> > ...
+> >
+> > --- a/mm/dmapool.c
+> > +++ b/mm/dmapool.c
+> > @@ -334,7 +334,7 @@ void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
+> >  	/* pool_alloc_page() might sleep, so temporarily drop &pool->lock */
+> >  	spin_unlock_irqrestore(&pool->lock, flags);
+> >  
+> > -	page = pool_alloc_page(pool, mem_flags);
+> > +	page = pool_alloc_page(pool, mem_flags & (~__GFP_ZERO));
+> >  	if (!page)
+> >  		return NULL;
+> >  
+> > @@ -375,6 +375,10 @@ void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
+> >  	memset(retval, POOL_POISON_ALLOCATED, pool->size);
+> >  #endif
+> >  	spin_unlock_irqrestore(&pool->lock, flags);
+> > +
+> > +	if (mem_flags & __GFP_ZERO)
+> > +		memset(retval, 0, pool->size);
+> > +
+> >  	return retval;
+> >  }
+> >  EXPORT_SYMBOL(dma_pool_alloc);
 > 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  drivers/pci/msi.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+> hm, this code is all a bit confused.
 > 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index ef4ec6e..c77fdaf 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -41,7 +41,8 @@ static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
->  {
->  	struct irq_domain *domain = NULL;
->  
-> -	if (dev->bus->msi)
-> +	domain = dev_get_msi_domain(&dev->dev);
-> +	if (!domain && dev->bus->msi)
->  		domain = dev->bus->msi->domain;
->  	if (!domain)
->  		domain = arch_get_pci_msi_domain(dev);
+> We'd really prefer that the __GFP_ZERO be passed all the way to the
+> bottom level, so that places which are responsible for zeroing memory
+> (eg, the page allocator) can do their designated function.  One reason
+> for this is that if someone comes up with a whizzy way of zeroing
+> memory on their architecture (eg, non-temporal store) then that will be
+> implemented in the core page allocator and the dma code will miss out.
 
-I think this would be slightly easier to read as:
+It would be nice if we could use the page allocator for whizzy zeroing.
+There are a few reasons why I didn't pass __GFP_ZERO down to the allocator:
 
-    struct irq_domain *domain;
+ - dma_pool_alloc() reuses blocks of memory that were recently freed by dma_pool_free().
+   We have to memset(0) old blocks, since we don't know what's in them.
 
-    domain = dev_get_msi_domain(&dev->dev);
-    if (domain)
-	return domain;
+ - When a new page is alloced, pool_initalize_page() writes an integer to every block.
+   So even if we passed __GFP_ZERO down to the allocator, the block would not be empty
+   by the time dma_pool_alloc() returns.
 
-    if (dev->bus->msi && (domain = dev->bus->msi->domain))
-	return domain;
+ - Assuming a driver is allocing as often as it is freeing,
+   once the pool has enough memory it shouldn't call down to the allocator very often,
+   so any optimization down in the allocator shouldn't make much of a difference
 
-    return arch_get_pci_msi_domain(dev);
+> Also, and just from a brief look around,
+> drivers/base/dma-coherent.c:dma_alloc_from_coherent() is already
+> zeroing the memory so under some circumstances I think we'll zero the
+> memory twice?  We could fix that by passing the gfp_t to
+> dma_alloc_from_coherent() and then changing dma_alloc_from_coherent()
+> to *not* zero the memory if __GFP_ZERO, but wouldn't that be peculiar?
 
-I'm not a huge fan of assignments inside "if" conditions, and checkpatch
-might even complain about it, but it exposes the fallback order pretty well
-here.  I guess we could also just repeat the dev->bus->msi->domain
-expression:
+I noticed this as well. In this case, we would be zeroing twice.
+This is no worse than the current case (where dma_pool_alloc() returns,
+then the driver calls memset(0)).
 
-    if (dev->bus->msi && dev->bus->msi->domain)
-	return dev->bus->msi->domain;
+> Also, passing __GFP_ZERO will now cause pool_alloc_page()'s
+> memset(POOL_POISON_FREED) to be wiped out.  I guess that's harmless,
+> but a bit inefficient?
 
-We can at least get rid of the superfluous initialization of domain to
-NULL.
-
-Bjorn
+Inefficient, but no more inefficient than the current case.
+I didn't think it would be a problem (since it only happens if dma pool debuging is enabled).
+I could add a check to only memset the poison if __GFP_ZERO is not set.
