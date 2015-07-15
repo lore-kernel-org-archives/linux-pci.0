@@ -1,58 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 28/49] PCI: Allow optional only io resource must size to be 0
-Date: Tue, 14 Jul 2015 15:46:59 -0700
-Message-Id: <1436914040-13206-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:37463 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752672AbbGOWED (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 18:04:03 -0400
+Message-ID: <55A6D8C8.6030901@broadcom.com>
+Date: Wed, 15 Jul 2015 15:03:52 -0700
+From: Ray Jui <rjui@broadcom.com>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 3/4] arm64: Add Broadcom iProc family support
+References: <1436935343-4437-1-git-send-email-rjui@broadcom.com> <1436935343-4437-4-git-send-email-rjui@broadcom.com> <55A6D673.1040908@hauke-m.de>
+In-Reply-To: <55A6D673.1040908@hauke-m.de>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When there is no child device under the non hotplug bridge,
-We can use 0 for must size, and do not use old size as must size.
 
-When there is child device, size will not be 0.
-when the bridge is not hotplug, min_size will not be 0.
-So they will still honor the old size as must size.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+On 7/15/2015 2:53 PM, Hauke Mehrtens wrote:
+> On 07/15/2015 06:42 AM, Ray Jui wrote:
+>> This patch adds support to Broadcom's iProc family of arm64 based SoCs
+>> in the arm64 Kconfig and defconfig files
+>>
+>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+>> ---
+>>  arch/arm64/Kconfig           |    5 +++++
+>>  arch/arm64/configs/defconfig |    2 ++
+>>  2 files changed, 7 insertions(+)
+>>
+>> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+>> index 318175f..969ef4a 100644
+>> --- a/arch/arm64/Kconfig
+>> +++ b/arch/arm64/Kconfig
+>> @@ -162,6 +162,11 @@ source "kernel/Kconfig.freezer"
+>>  
+>>  menu "Platform selection"
+>>  
+>> +config ARCH_BCM_IPROC
+>> +	bool "Broadcom iProc SoC Family"
+>> +	help
+>> +	  This enables support for Broadcom iProc based SoCs
+>> +
+> 
+> Is this working correctly if we have ARCH_BCM_IPROC under ARM and ARM64?
+> They are guarding the same SoC line, which now uses ARM64 CPUS.
+> 
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 969a0b1..0420d27 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1242,8 +1242,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_size(size, min_size,
--			resource_size(b_res), min_align);
-+	if (size || min_size)
-+		size0 = calculate_size(size, min_size,
-+					resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
-@@ -1259,7 +1260,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		return;
- 	}
- 
--	b_res->start = min_align;
-+	b_res->start = size0 ? min_align : 0;
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--- 
-1.8.4.5
+Yes, since the "ARCH=" parameter from the compiler helps to route it to
+the right directory, arch/arm or arch/arm64, and you cannot compile both
+in a single image. Same case for other SoCs, e.g., tegra (ARCH_TEGRA),
+exynos (ARCH_EXYNOS), and etc.
 
+The benefit of sharing the same arch flag is that the device driver that
+exists in iProc family of SoCs (both arm32 and arm64) can be guarded or
+enabled properly.
+
+Thanks,
+
+Ray
