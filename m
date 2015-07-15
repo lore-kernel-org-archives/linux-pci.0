@@ -1,85 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:36172 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757286AbbGUAPP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 20:15:15 -0400
-Received: by igbij6 with SMTP id ij6so95449502igb.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 17:15:14 -0700 (PDT)
-Subject: [PATCH v2 10/11] PCI: Stop caching ATS Invalidate Queue Depth
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: iommu@lists.linux-foundation.org,
-	Gregor Dick <gdick@solarflare.com>
-Date: Mon, 20 Jul 2015 19:15:11 -0500
-Message-ID: <20150721001511.28145.29144.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 02/19] PCI: MSI: Register irq domain with specific token
+Date: Wed, 15 Jul 2015 13:16:36 +0100
+Message-Id: <1436962613-17359-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Stop caching the Invalidate Queue Depth in struct pci_dev.
-pci_ats_queue_depth() is typically called only once per device, and it
-returns a fixed value per-device, so callers who need the value frequently
-can cache it themselves.
+When creating a PCI/MSI domain, tag it with DOMAIN_BUS_PCI_MSI so
+that it can be looked-up using irq_find_matching_host().
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/ats.c   |    9 ++++-----
- include/linux/pci.h |    1 -
- 2 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/pci/msi.c         | 8 +++++++-
+ include/linux/irqdomain.h | 1 +
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 67524a7..bdb1383 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -20,16 +20,12 @@
- void pci_ats_init(struct pci_dev *dev)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 373d96e..ef4ec6e 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1273,12 +1273,18 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
+ 					     struct msi_domain_info *info,
+ 					     struct irq_domain *parent)
  {
- 	int pos;
--	u16 cap;
++	struct irq_domain *domain;
++
+ 	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
+ 		pci_msi_domain_update_dom_ops(info);
+ 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+ 		pci_msi_domain_update_chip_ops(info);
  
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
- 	if (!pos)
- 		return;
- 
- 	dev->ats_cap = pos;
--	pci_read_config_word(dev, dev->ats_cap + PCI_ATS_CAP, &cap);
--	dev->ats_qdep = PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) :
--					    PCI_ATS_MAX_QDEP;
+-	return msi_create_irq_domain(node, info, parent);
++	domain = msi_create_irq_domain(node, info, parent);
++	if (domain)
++		domain->bus_token = DOMAIN_BUS_PCI_MSI;
++
++	return domain;
  }
  
  /**
-@@ -131,13 +127,16 @@ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 91a83ad..25e9e66 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -54,6 +54,7 @@ struct irq_data;
   */
- int pci_ats_queue_depth(struct pci_dev *dev)
- {
-+	u16 cap;
-+
- 	if (!dev->ats_cap)
- 		return -EINVAL;
+ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_ANY		= 0,
++	DOMAIN_BUS_PCI_MSI,
+ };
  
- 	if (dev->is_virtfn)
- 		return 0;
- 
--	return dev->ats_qdep;
-+	pci_read_config_word(dev, dev->ats_cap + PCI_ATS_CAP, &cap);
-+	return PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) : PCI_ATS_MAX_QDEP;
- }
- EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 307f96a..4b484fd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -378,7 +378,6 @@ struct pci_dev {
- 	};
- 	u16		ats_cap;	/* ATS Capability offset */
- 	u8		ats_stu;	/* ATS Smallest Translation Unit */
--	u8		ats_qdep;	/* ATS Invalidate Queue Depth */
- 	atomic_t	ats_ref_cnt;	/* number of VFs with ATS enabled */
- #endif
- 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+ /**
+-- 
+2.1.4
 
