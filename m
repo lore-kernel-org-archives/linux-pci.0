@@ -1,103 +1,71 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
-	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH part3 v12 04/10] PCI: Introduce pci_host_assign_domain_nr() to assign domain
-Date: Mon, 20 Jul 2015 20:01:12 +0800
-Message-ID: <1437393678-4077-5-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
-References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v2 3/4] arm64: Add Broadcom iProc family support
+Date: Tue, 14 Jul 2015 21:42:22 -0700
+Message-ID: <1436935343-4437-4-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1436935343-4437-1-git-send-email-rjui@broadcom.com>
+References: <1436935343-4437-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce pci_host_assign_domain_nr() to assign domain number
-for pci_host_bridge.
+This patch adds support to Broadcom's iProc family of arm64 based SoCs
+in the arm64 Kconfig and defconfig files
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
 ---
- drivers/pci/pci.c |   24 +++++++++++++++++++-----
- drivers/pci/pci.h |    1 +
- 2 files changed, 20 insertions(+), 5 deletions(-)
+ arch/arm64/Kconfig           |    5 +++++
+ arch/arm64/configs/defconfig |    2 ++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 59032e2..79d01e4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4484,10 +4484,10 @@ static int pci_get_new_domain_nr(void)
- 	return atomic_inc_return(&__domain_nr);
- }
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 318175f..969ef4a 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -162,6 +162,11 @@ source "kernel/Kconfig.freezer"
  
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+static int pci_assign_domain_nr(struct device *dev)
- {
- 	static int use_dt_domains = -1;
--	int domain = of_get_pci_domain_nr(parent->of_node);
-+	int domain = of_get_pci_domain_nr(dev->of_node);
+ menu "Platform selection"
  
- 	/*
- 	 * Check DT domain and use_dt_domains values.
-@@ -4521,16 +4521,30 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 		use_dt_domains = 0;
- 		domain = pci_get_new_domain_nr();
- 	} else {
--		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
--			parent->of_node->full_name);
-+		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
-+			dev->of_node->full_name);
- 		domain = -1;
- 	}
- 
--	bus->domain_nr = domain;
-+	return domain;
-+}
++config ARCH_BCM_IPROC
++	bool "Broadcom iProc SoC Family"
++	help
++	  This enables support for Broadcom iProc based SoCs
 +
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+{
-+	bus->domain_nr = pci_assign_domain_nr(parent);
- }
- #endif
- #endif
- 
-+void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain)
-+{
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+	host->domain = pci_assign_domain_nr(host->dev.parent);
-+#else
-+	host->domain = domain;
-+#endif
-+}
-+
- /**
-  * pci_ext_cfg_avail - can we access extended PCI config space?
-  *
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 02192aa..4a815c9 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -344,4 +344,5 @@ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
- }
- #endif
- 
-+void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain);
- #endif /* DRIVERS_PCI_H */
+ config ARCH_EXYNOS
+ 	bool
+ 	help
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 4e17e7e..c83d51f 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -31,6 +31,7 @@ CONFIG_MODULES=y
+ CONFIG_MODULE_UNLOAD=y
+ # CONFIG_BLK_DEV_BSG is not set
+ # CONFIG_IOSCHED_DEADLINE is not set
++CONFIG_ARCH_BCM_IPROC=y
+ CONFIG_ARCH_EXYNOS7=y
+ CONFIG_ARCH_FSL_LS2085A=y
+ CONFIG_ARCH_HISI=y
+@@ -102,6 +103,7 @@ CONFIG_SERIO_AMBAKMI=y
+ CONFIG_LEGACY_PTY_COUNT=16
+ CONFIG_SERIAL_8250=y
+ CONFIG_SERIAL_8250_CONSOLE=y
++CONFIG_SERIAL_8250_DW=y
+ CONFIG_SERIAL_8250_MT6577=y
+ CONFIG_SERIAL_AMBA_PL011=y
+ CONFIG_SERIAL_AMBA_PL011_CONSOLE=y
 -- 
-1.7.1
+1.7.9.5
 
