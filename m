@@ -1,100 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:13509 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751638AbbGFPbB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 11:31:01 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joerg Roedel <joro@8bytes.org>
-CC: Will Davis <wdavis@nvidia.com>, Dave Jiang <dave.jiang@intel.com>,
-	"John Hubbard" <jhubbard@nvidia.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	<iommu@lists.linux-foundation.org>,
-	Jerome Glisse <jglisse@redhat.com>,
-	<linux-pci@vger.kernel.org>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v3 3/7] dma-mapping: pci: add pci_(un)map_resource
-Date: Mon, 6 Jul 2015 10:16:11 -0500
-Message-ID: <1436195771-11816-1-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <20150701183127.GD13409@google.com>
-References: <20150701183127.GD13409@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from foss.arm.com ([217.140.101.70]:38634 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752637AbbGOMRA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 08:17:00 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 00/19] Per-device MSI domain & platform MSI
+Date: Wed, 15 Jul 2015 13:16:34 +0100
+Message-Id: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+MSI-like interrupts are starting to creep out of the PCI world, and
+can now be seen into a number of "platform"-type busses. The
+introduction of the MSI domains feature in v3.19 recognised that fact,
+and started providing a way to implement this.
 
-> On Wed, Jul 01, 2015 at 11:06:06AM -0500, Bjorn Helgaas wrote:
-> > On Fri, May 29, 2015 at 12:14:42PM -0500, wdavis@... wrote:
-> > > From: Will Davis <wdavis@...>
-> > > 
-> > > Simply route these through to the new dma_(un)map_resource APIs.
-> > > 
-> > > Signed-off-by: Will Davis <wdavis@...>
-> > > Reviewed-by: Terence Ripperda <tripperda@...>
-> > > Reviewed-by: John Hubbard <jhubbard@...>
-> > > ---
-> > >  include/asm-generic/pci-dma-compat.h | 14 ++++++++++++++
-> > >  1 file changed, 14 insertions(+)
-> > > 
-> > > diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
-> > > index c110843..ac4a4ad 100644
-> > > --- a/include/asm-generic/pci-dma-compat.h
-> > > +++ b/include/asm-generic/pci-dma-compat.h
-> > >  <at>  <at>  -61,6 +61,20  <at>  <at>  pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
-> > >  	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
-> > >  }
-> > >  
-> > > +static inline dma_addr_t
-> > > +pci_map_resource(struct pci_dev *hwdev, struct resource *resource,
-> > > +		 unsigned long offset, size_t size, int direction)
-> > 
-> > After 3a9ad0b4fdcd ("PCI: Add pci_bus_addr_t"), which will appear in
-> > v4.2-rc1, there is a pci_bus_addr_t, and I think you need that instead
-> > of dma_addr_t.
-> > 
-> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd
-> 
-> This wasn't a very good response, sorry.  I don't think just
-> changing dma_addr_t to pci_bus_addr_t is a good resolution.
-> 
-> Isn't there an implicit assumption here that either you're using an IOMMU
-> driver that always returns bus addresses that fit in a dma_addr_t, or
-> you're not using an IOMMU and dma_addr_t is big enough for any bus address?
-> 
-> What happens on a system with 64-bit PCI bus addresses, 32-bit dma_addr_t,
-> and no IOMMU?  Would this return failure somehow?
-> 
+Another step in this direction is Jiang Liu's msi_desc series:
 
-I think I see your point. Even if pci_map_resource() were changed to return
-a pci_bus_addr_t, we would have the same problem again where the dma_addr_t
-would either need to expand (a non-starter as already discussed) or replace
-the return type of dma_map_resource() with something wider to accommodate,
-or prevent such platforms from attempting to return a valid address that
-will be truncated.
+https://github.com/jiangliu/linux.git msi_desc_v1
 
-PCI devices on the platform in question (64-bit PCI bus addresses, 32-bit
-dma_addr_t, and no IOMMU) should theoretically still be capable of PCI
-peer-to-peer traffic, but would only be limited by the API, which we do not
-want.
+which moves the msi_list from being specific to PCI devices into the
+generic device structure.
 
-What about introducing another always-64-bit type, like peer_dma_addr_t,
-for use with the new DMA APIs?
+A problem we have to solve is to identify which MSI domain a device is
+"connected" to. Currently, PCI gets away with a mixture of
+arch-specific callbacks, and a msi_controller structure that can
+optionally carry a pointer to an MSI domain. As we add new bus types
+and start dealing with topologies that do not map to what PCI does,
+this doesn't scale anymore.
 
-> > > +{
-> > > +	return dma_map_resource(hwdev == NULL ? NULL : &hwdev->dev, resource, offset, size, (enum dma_data_direction)direction);
-> > > +}
-> > > +
-> > > +static inline void
-> > > +pci_unmap_resource(struct pci_dev *hwdev, dma_addr_t dma_address, size_t size,
-> > > +		   int direction)
-> > > +{
-> > > +	dma_unmap_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
-> > > +}
-> > > +
-> > >  static inline int
-> > >  pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
-> > >  	   int nents, int direction)
-> > > -- 
-> > > 2.4.0
-> > >
+This patch series tries to address some of it by providing a basic
+link between 'struct device' and an MSI domain. It also adds :
+
+- a way to "tag" domains according to the "type" of interrupt it
+  provides (PCI/MSI, platform MSI...), allowing a driver for a piece
+  of HW identified by its device_node to provide several IRQ domains
+
+- (yet another) way for PCI to propagate the domain pointer through
+  the PCI device hierarchy, providing a method for OF to kick-start
+  the propagation process, and finally allowing the PCI/MSI layer to
+  use that information
+
+- a similar way to hook an MSI domain to a platform device.
+
+- a generic implementation of MSI for platform devices that can be
+  supported by interrupt controllers.
+
+- support code for platform MSI for both GICv2m and GICv3 ITS.
+
+This should make implementing MSI support in platform devices a
+relatively trivial task.
+
+Additionally, a few patches use most of the above to remove any trace
+of the msi_controller structure from the three MSI controllers that
+are currently in use on arm64, so that they solely rely on the above
+infrastructure, leading to some interesting improvements (also known
+as "gross hack prevention measures"). We also take this opportunity to
+kill the domain pointer from the msi_controller structure.
+
+My hope is to eventually kill msi_controller entirely, and only rely
+on the msi_domain contained in the device structure (any help
+welcomed, as I already have cleaned up Tegra, and Lorenzo has scrubbed
+Designware).
+
+This has been tested on arm64 with GICv2m (AMD Seattle) and GICv3 ITS
+(FVP model), and use of platform MSI has been tested with the ARM
+SMMUv3.
+
+Patches are on top of 4.2-rc2 and Jiang Liu's series, and available
+at:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/npci-msi-v2
+
+As always, comments most welcome..
+
+Marc Zyngier (19):
+  genirq: irqdomain: Allow irq domain aliasing
+  PCI: MSI: Register irq domain with specific token
+  device core: Introduce per-device MSI domain pointer
+  PCI/MSI: Add hooks to populate the msi_domain field
+  PCI/MSI: of: Add support for OF-provided msi_domain
+  PCI/MSI: of: Allow msi_domain lookup using the host bridge node
+  PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
+  platform: of: Assign MSI domain to platform device
+  drivers: base: Add MSI domain support for non-PCI devices
+  genirq: Add DOMAIN_BUS_NEXUS irqdomain property
+  irqchip: gicv3-its: Split PCI/MSI code from the core ITS driver
+  irqchip: gicv3-its: Register irq domain with NEXUS token
+  irqchip: gicv3-its: Get rid of struct msi_controller
+  irqchip: gicv3-its: Make the PCI/MSI code standalone
+  irqchip: gicv3-its: Add platform MSI support
+  irqchip: GICv2m: Get rid of struct msi_controller
+  irqchip: GICv2m: Add platform MSI support
+  PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
+  PCI/MSI: Drop domain field from msi_controller
+
+ arch/powerpc/platforms/512x/mpc5121_ads_cpld.c   |   3 +-
+ arch/powerpc/platforms/cell/interrupt.c          |   3 +-
+ arch/powerpc/platforms/embedded6xx/flipper-pic.c |   3 +-
+ arch/powerpc/platforms/powermac/pic.c            |   3 +-
+ arch/powerpc/platforms/powernv/opal-irqchip.c    |   3 +-
+ arch/powerpc/platforms/ps3/interrupt.c           |   3 +-
+ arch/powerpc/sysdev/ehv_pic.c                    |   3 +-
+ arch/powerpc/sysdev/i8259.c                      |   3 +-
+ arch/powerpc/sysdev/ipic.c                       |   3 +-
+ arch/powerpc/sysdev/mpic.c                       |   3 +-
+ arch/powerpc/sysdev/qe_lib/qe_ic.c               |   3 +-
+ arch/powerpc/sysdev/xics/xics-common.c           |   3 +-
+ drivers/base/Makefile                            |   1 +
+ drivers/base/platform-msi.c                      | 282 +++++++++++++++++++++++
+ drivers/irqchip/Makefile                         |   2 +-
+ drivers/irqchip/irq-gic-v2m.c                    |  52 +++--
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c         | 140 +++++++++++
+ drivers/irqchip/irq-gic-v3-its-platform-msi.c    |  93 ++++++++
+ drivers/irqchip/irq-gic-v3-its.c                 | 140 ++++-------
+ drivers/of/irq.c                                 |  16 ++
+ drivers/of/platform.c                            |   1 +
+ drivers/pci/host/pci-xgene-msi.c                 |  41 ++--
+ drivers/pci/msi.c                                |  11 +-
+ drivers/pci/of.c                                 |  24 ++
+ drivers/pci/probe.c                              |  31 +++
+ include/linux/device.h                           |  20 ++
+ include/linux/irqchip/arm-gic-v3.h               |   1 +
+ include/linux/irqdomain.h                        |  26 ++-
+ include/linux/msi.h                              |  18 +-
+ include/linux/of_irq.h                           |   1 +
+ include/linux/pci.h                              |   3 +
+ kernel/irq/irqdomain.c                           |  18 +-
+ 32 files changed, 785 insertions(+), 172 deletions(-)
+ create mode 100644 drivers/base/platform-msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v3-its-pci-msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v3-its-platform-msi.c
+
+-- 
+2.1.4
+
