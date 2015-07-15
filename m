@@ -1,137 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:61105 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753882AbbGJIyd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 04:54:33 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	James Morse <james.morse@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"kishon@ti.com" <kishon@ti.com>,
-	"xobs@kosagi.com" <xobs@kosagi.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v3 2/5] PCI: designware: Add ARM64 support
-Date: Fri, 10 Jul 2015 08:53:45 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D568F4@lhreml503-mbs>
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
- <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs>
- <5593F899.6050306@arm.com> <559B4B0E.4060004@hisilicon.com>
-In-Reply-To: <559B4B0E.4060004@hisilicon.com>
-Content-Type: text/plain; charset="gb2312"
+Received: from hauke-m.de ([5.39.93.123]:53780 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753364AbbGOVwO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 17:52:14 -0400
+Message-ID: <55A6D60C.6000405@hauke-m.de>
+Date: Wed, 15 Jul 2015 23:52:12 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
+To: Ray Jui <rjui@broadcom.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] PCI: iproc: enable arm64 support for iProc PCIe
+References: <1436935343-4437-1-git-send-email-rjui@broadcom.com> <1436935343-4437-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1436935343-4437-2-git-send-email-rjui@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SSBoYXZlIGp1c3Qgc2VudCB0aGlzIHBhdGNoICJbUEFUQ0hdIFN0b3JlIFBDSWUgY29udHJvbGxl
-cnMgYWRkcmVzcyBpbiBzdHJ1Y3Qgb2ZfcGNpX3JhbmdlIi4NCg0KSXQgd291bGQgYmUgbmVlZGVk
-IGJ5ICJwY2llX2Rlc2lnbndhcmUuYyIgdG8gcmV0cmlldmUgdGhlIFBDSSBjb250cm9sbGVyIGFk
-ZHJlc3NlcyBmcm9tICJ3aW4tPl9fcmVzLnN0YXJ0Ii4NCg0KU28gd2UgZG8gbm90IG5lZWQgdG8g
-cmV0cmlldmUgaW5mbyBmcm9tIHRoZSBEVCBwYXJzZXIgYW55bW9yZSBhbmQgd2UgY2FuIHVzZSB0
-aGUgbmV3IFBDSSBEVCBwYXJzaW5nIEFQSQ0KDQpUaGlzIHByb2JsZW0gd2FzIGFscmVhZHkgZGlz
-Y3Vzc2VkIGluIHRoaXMgdGhyZWFkOg0KaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvcGlwZXJt
-YWlsL2xpbnV4LWFybS1rZXJuZWwvMjAxNS1KYW51YXJ5LzMxNzc0My5odG1sDQoNCg0KPiAtLS0t
-LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBXYW5nemhvdSAoQikNCj4gU2VudDogVHVl
-c2RheSwgSnVseSAwNywgMjAxNSA0OjQ0IEFNDQo+IFRvOiBKYW1lcyBNb3JzZQ0KPiBDYzogR2Fi
-cmllbGUgUGFvbG9uaTsgQmpvcm4gSGVsZ2FhczsgSmluZ29vIEhhbjsgUHJhdHl1c2ggQW5hbmQ7
-IEFybmQNCj4gQmVyZ21hbm47IExpdml1IER1ZGF1OyBraXNob25AdGkuY29tOyB4b2JzQGtvc2Fn
-aS5jb207IG0tDQo+IGthcmljaGVyaTJAdGkuY29tOyBNaW5naHVhbi5MaWFuQGZyZWVzY2FsZS5j
-b207IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3Rz
-LmluZnJhZGVhZC5vcmc7DQo+IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBZdWFuemhpY2hh
-bmc7IFpodWRhY2FpOyB6aGFuZ2p1a3VvOw0KPiBxaXV6aGVuZmE7IExpZ3Vvemh1IChLZW5uZXRo
-KQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYzIDIvNV0gUENJOiBkZXNpZ253YXJlOiBBZGQgQVJN
-NjQgc3VwcG9ydA0KPiANCj4gT24gMjAxNS83LzEgMjI6MjYsIEphbWVzIE1vcnNlIHdyb3RlOg0K
-PiA+IFpob3UgV2FuZyB3cm90ZToNCj4gPj4gSSB0ZXN0ZWQgdGhpcyBwYXRjaCBvbiBEMDIgYm9h
-cmQgb2YgSGlzaWxpY29uLiBJdCB3b3JrcyB3ZWxsLg0KPiA+PiBJIGhhdmUgY29tcGlsZWQgdGhl
-IGRyaXZlciB3aXRoIG11bHRpX3Y3X2RlZmNvbmZpZy4gSG93ZXZlciwgSSBkb24ndA0KPiA+PiBo
-YXZlDQo+ID4+IEFSTTMyIFBDSWUgcmVsYXRlZCBib2FyZCB0byBkbyB0ZXN0LiBJdCB3aWxsIGJl
-IGFwcHJlY2lhdGVkIGlmDQo+IHNvbWVvbmUNCj4gPj4gY291bGQNCj4gPj4gaGVscCB0byB0ZXN0
-IGl0Lg0KPiA+Pg0KPiA+PiBTaWduZWQtb2ZmLWJ5OiBaaG91IFdhbmcgPHdhbmd6aG91MUBoaXNp
-bGljb24uY29tPg0KPiA+PiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRi
-LmRlPg0KPiA+PiBTaWduZWQtb2ZmLWJ5OiBHYWJyaWVsZSBQYW9sb25pIDxnYWJyaWVsZS5wYW9s
-b25pQGh1YXdlaS5jb20+DQo+ID4+IFRlc3RlZC1ieTogRmFicmljZSBHYXNuaWVyIDxmYWJyaWNl
-Lmdhc25pZXJAc3QuY29tPg0KPiA+PiBUZXN0ZWQtYnk6IEphbWVzIE1vcnNlIDxqYW1lcy5tb3Jz
-ZUBhcm0uY29tPg0KPiA+DQo+ID4gVGVzdHMgb24gdGhpcyBuZXcgc2VyaWVzLCB1c2luZyB0aGUg
-c2FtZSBpLk1YIDZRdWFkIGJvYXJkLCBhcmUgbm90DQo+IHdvcmtpbmcuDQo+ID4NCj4gPiBUaGUg
-bmV0d29yayBjYXJkIGlzIG5vIGxvbmdlciBkZXRlY3RlZCwgYW5kIEkgZ2V0IGEgbG9ja3VwIHdo
-ZW4NCj4gcmVtb3ZpbmcNCj4gPiB0aGUgcm9vdCBicmlkZ2UgYW5kIHJlc2Nhbm5pbmcuDQo+ID4N
-Cj4gPiBQYXJ0aWFsIGRtZXNnIG91dHB1dCBiZWxvdy4gU2lnbmlmaWNhbnRseSwgdGhlIGxpbmVz
-Og0KPiA+PiBbICAgIDAuMTUyMTI4XSBQQ0kgaG9zdCBicmlkZ2UgL3NvYy9wY2llQDB4MDEwMDAw
-MDAgcmFuZ2VzOg0KPiA+PiBbICAgIDAuMTUyMTQyXSAgIE5vIGJ1cyByYW5nZSBmb3VuZCBmb3Ig
-L3NvYy9wY2llQDB4MDEwMDAwMDAsIHVzaW5nDQo+IFtidXMNCj4gPiAwMC1mZl0NCj4gPiBhcmUg
-bmV3Lg0KPiA+DQo+ID4gQm90aCBzZXJpZXMgYXJlIGFwcGxpZWQgdG8gdjQuMSwgdXNlIHRoZSBz
-YW1lIC5jb25maWcgZmlsZSwgYW5kIHRoZQ0KPiBzYW1lIGR0Yi4NCj4gPiBJIHdpbGwgaW52ZXN0
-aWdhdGUgZnVydGhlci4NCj4gPg0KPiA+IChSZS10ZXN0aW5nIHYyIHdvcmtzLCBzbyB0aGlzIGlz
-bid0IGFuIGludGVyaW0gaGFyZHdhcmUgZmFpbHVyZSkNCj4gPg0KPiA+IFRoYW5rcywNCj4gPg0K
-PiA+IEphbWVzDQo+ID4NCj4gDQo+IEhpIEphbWVzLA0KPiANCj4gVGhlcmUgYXJlIHNvbWV0aGlu
-ZyB3cm9uZyB3aXRoIHYzIHBhdGNoLg0KPiANCj4gcHAtPmlvX21vZF9iYXNlID0gb2ZfcmVhZF9u
-dW1iZXIocGFyc2VyX3JhbmdlX2VuZCAtDQo+IAkJb2Zfbl9hZGRyX2NlbGxzKG5wKSAtIDUgKyBu
-YSwgbnMpOw0KPiBwcC0+bWVtX21vZF9iYXNlID0gb2ZfcmVhZF9udW1iZXIocGFyc2VyX3Jhbmdl
-X2VuZCAtDQo+IAkJb2Zfbl9hZGRyX2NlbGxzKG5wKSAtIDUgKyBuYSwgbnMpOw0KPiBwcC0+Y2Zn
-MF9tb2RfYmFzZSA9IG9mX3JlYWRfbnVtYmVyKHBhcnNlcl9yYW5nZV9lbmQgLQ0KPiAJCW9mX25f
-YWRkcl9jZWxscyhucCkgLSA1ICsgbmEsIG5zKTsNCj4gYXJlIHdyb25nLg0KPiANCj4gVGhlIHJh
-bmdlcyBpdGVtIGluIHlvdXIgZHRzIGlzOg0KPiByYW5nZXMgPSA8MHg4MDAgMHgwIDB4MWYwMDAw
-MCAweDFmMDAwMDAgMHgwIDB4ODAwMDANCj4gCSAgMHg4MTAwMDAwMCAweDAgMHgwICAweDFmODAw
-MDAgMHgwIDB4MTAwMDANCj4gCSAgMHg4MjAwMDAwMCAweDAgMHgxMDAwMDAwIDB4MTAwMDAwMCAw
-eDAgMHhmMDAwMDA+Ow0KPiBwYXJzZXJfcmFuZ2VfZW5kIHBvaW50cyB0byB0aGUgZW5kIG9mIHJh
-bmdlcygweGYwMDAwMCkgZGlyZWN0bHkuIEluIHYyDQo+IHBhdGNoLA0KPiBvZl9yZWFkX251bWJl
-ciBpcyBvZl9yZWFkX251bWJlcihwYXJzZXIucmFuZ2UgLSBwYXJzZXIubnAgKyBuYSwgbnMpOw0K
-PiBwYXJzZXIucmFuZ2UNCj4gcG9pbnRzIHRvIHRoZSBlbmQgb2YgZWFjaCBsaW5lIGluIHJhbmdl
-cyBpdGVtLg0KPiANCj4gV2hlbiBJIGRpZCB0ZXN0IG9uIEQwMiBib2FyZCB3aXRoIGludGVsODI1
-OTkgY2FyZCwgSSBzZXQgcmFuZ2VzIGl0ZW0gYXM6DQo+IHJhbmdlcyA9IDwweDAzMDAwMDAwIDAg
-MHhiMDAwMDAwMCAweDIyMCAweDAwMDAwMDAwIDAgMHhmMDAwMDAwPjsNCj4gSXQgaXMganVzdCBv
-bmUgbGluZS4gSW4gdGhpcyBjYXNlLCBwYXJzZXJfcmFuZ2VfZW5kIGlzIHNhbWUgd2l0aA0KPiBw
-YXJzZXIucmFuZ2UuDQo+IFRoYXQgaXMgd2h5IGl0IGhhcHBlbmVkIHRvIHdvcmsgd2VsbCBvbiBE
-MDIgYm9hcmQuDQo+IA0KPiB2ZXJ5IHNvcnJ5IHRvIGJvdGhlciB5b3UgYWJvdXQgdGhpcyBwcm9i
-bGVtLg0KPiANCj4gVGhhbmtzLA0KPiBaaG91DQo+IA0KPiA+DQo+ID4NCj4gPiByb290QGxvY2Fs
-aG9zdDp+IyBkbWVzZyB8IGdyZXAgLWkgcGNpDQo+ID4gWyAgICAwLjEyNjE4NF0gUENJOiBDTFMg
-MCBieXRlcywgZGVmYXVsdCA2NA0KPiA+IFsgICAgMC4xNTIxMjhdIFBDSSBob3N0IGJyaWRnZSAv
-c29jL3BjaWVAMHgwMTAwMDAwMCByYW5nZXM6DQo+ID4gWyAgICAwLjE1MjE0Ml0gICBObyBidXMg
-cmFuZ2UgZm91bmQgZm9yIC9zb2MvcGNpZUAweDAxMDAwMDAwLCB1c2luZw0KPiBbYnVzIDAwLWZm
-XQ0KPiA+IFsgICAgMC4xNTQxODNdIGlteDZxLXBjaWUgMWZmYzAwMC5wY2llOiBQQ0kgaG9zdCBi
-cmlkZ2UgdG8gYnVzDQo+IDAwMDA6MDANCj4gPiBbICAgIDAuMTU0MjAxXSBwY2lfYnVzIDAwMDA6
-MDA6IHJvb3QgYnVzIHJlc291cmNlIFtidXMgMDAtZmZdDQo+ID4gWyAgICAwLjE1NDIxNV0gcGNp
-X2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNvdXJjZSBbPz8/DQo+ID4gMHgwMWYwMDAwMC0weDAx
-ZjdmZmZmIGZsYWdzIDB4MF0NCj4gPiBbICAgIDAuMTU0MjI4XSBwY2lfYnVzIDAwMDA6MDA6IHJv
-b3QgYnVzIHJlc291cmNlIFtpbyAgMHgwMDAwLTB4ZmZmZl0NCj4gPiBbICAgIDAuMTU0MjcwXSBw
-Y2lfYnVzIDAwMDA6MDA6IHJvb3QgYnVzIHJlc291cmNlIFttZW0gMHgwMTAwMDAwMC0NCj4gMHgw
-MWVmZmZmZl0NCj4gPiBbICAgIDAuMTU0MzA2XSBwY2kgMDAwMDowMDowMC4wOiBbMTZjMzphYmNk
-XSB0eXBlIDAxIGNsYXNzIDB4MDYwNDAwDQo+ID4gWyAgICAwLjE1NDMzM10gcGNpIDAwMDA6MDA6
-MDAuMDogcmVnIDB4MTA6IFttZW0gMHgwMDAwMDAwMC0weDAwMGZmZmZmXQ0KPiA+IFsgICAgMC4x
-NTQzNTJdIHBjaSAwMDAwOjAwOjAwLjA6IHJlZyAweDM4OiBbbWVtIDB4MDAwMDAwMDAtMHgwMDAw
-ZmZmZg0KPiBwcmVmXQ0KPiA+IFsgICAgMC4xNTQzNzddIHBjaSAwMDAwOjAwOjAwLjA6IElPTU1V
-IGlzIGN1cnJlbnRseSBub3Qgc3VwcG9ydGVkIGZvcg0KPiBQQ0kNCj4gPiBbICAgIDAuMTU0NDI5
-XSBwY2kgMDAwMDowMDowMC4wOiBzdXBwb3J0cyBEMQ0KPiA+IFsgICAgMC4xNTQ0NDBdIHBjaSAw
-MDAwOjAwOjAwLjA6IFBNRSMgc3VwcG9ydGVkIGZyb20gRDAgRDEgRDNob3QNCj4gRDNjb2xkDQo+
-ID4gWyAgICAwLjE1NDY4M10gUENJOiBidXMwOiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMg
-ZGlzYWJsZWQNCj4gPiBbICAgIDAuMTU0ODA2XSBQQ0k6IGJ1czE6IEZhc3QgYmFjayB0byBiYWNr
-IHRyYW5zZmVycyBlbmFibGVkDQo+ID4gWyAgICAwLjE1NDg4NF0gcGNpIDAwMDA6MDA6MDAuMDog
-QkFSIDA6IGFzc2lnbmVkIFttZW0gMHgwMTAwMDAwMC0NCj4gMHgwMTBmZmZmZl0NCj4gPiBbICAg
-IDAuMTU0OTAzXSBwY2kgMDAwMDowMDowMC4wOiBCQVIgNjogYXNzaWduZWQgW21lbSAweDAxMTAw
-MDAwLQ0KPiAweDAxMTBmZmZmDQo+ID4gcHJlZl0NCj4gPiBbICAgIDAuMTU0OTE3XSBwY2kgMDAw
-MDowMDowMC4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMDFdDQo+ID4gWyAgICAwLjE1NTE0NV0gcGNp
-ZXBvcnQgMDAwMDowMDowMC4wOiBTaWduYWxpbmcgUE1FIHRocm91Z2ggUENJZSBQTUUNCj4gaW50
-ZXJydXB0DQo+ID4gWyAgICAwLjE1NTE2MV0gcGNpZV9wbWUgMDAwMDowMDowMC4wOnBjaWUwMTog
-c2VydmljZSBkcml2ZXIgcGNpZV9wbWUNCj4gbG9hZGVkDQo+ID4gWyAgICAwLjE1NTI3OV0gYWVy
-IDAwMDA6MDA6MDAuMDpwY2llMDI6IHNlcnZpY2UgZHJpdmVyIGFlciBsb2FkZWQNCj4gPiBbICAg
-IDEuMTg4ODQwXSBlaGNpLXBjaTogRUhDSSBQQ0kgcGxhdGZvcm0gZHJpdmVyDQo+ID4gWyAgICAx
-LjIzMjUxOF0gb2hjaS1wY2k6IE9IQ0kgUENJIHBsYXRmb3JtIGRyaXZlcg0KPiA+DQo+ID4gLS0N
-Cj4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJz
-Y3JpYmUgbGludXgtcGNpIg0KPiBpbg0KPiA+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
-cmRvbW9Admdlci5rZXJuZWwub3JnDQo+ID4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
-L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+ID4NCj4gPiAuDQo+ID4NCj4g
-DQoNCg==
+On 07/15/2015 06:42 AM, Ray Jui wrote:
+> This patch enables arm64 support to the iProc PCIe driver
+> 
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+> ---
+>  drivers/pci/host/pcie-iproc.c |   15 ++++-----------
+>  drivers/pci/host/pcie-iproc.h |    8 ++++++--
+>  2 files changed, 10 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index d77481e..8a556d5 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -58,11 +58,6 @@
+>  #define SYS_RC_INTX_EN               0x330
+>  #define SYS_RC_INTX_MASK             0xf
+>  
+> -static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
+> -{
+> -	return sys->private_data;
+> -}
+> -
+>  /**
+>   * Note access to the configuration registers are protected at the higher layer
+>   * by 'pci_lock' in drivers/pci/access.c
+> @@ -71,8 +66,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+>  					    unsigned int devfn,
+>  					    int where)
+>  {
+> -	struct pci_sys_data *sys = bus->sysdata;
+> -	struct iproc_pcie *pcie = sys_to_pcie(sys);
+> +	struct iproc_pcie *pcie = bus->sysdata;
+>  	unsigned slot = PCI_SLOT(devfn);
+>  	unsigned fn = PCI_FUNC(devfn);
+>  	unsigned busno = bus->number;
+> @@ -208,10 +202,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  
+>  	iproc_pcie_reset(pcie);
+>  
+> -	pcie->sysdata.private_data = pcie;
+> -
+> -	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
+> -				  &pcie->sysdata, res);
+> +	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, pcie, res);
+>  	if (!bus) {
+>  		dev_err(pcie->dev, "unable to create PCI root bus\n");
+>  		ret = -ENOMEM;
+> @@ -229,7 +220,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  
+>  	pci_scan_child_bus(bus);
+>  	pci_assign_unassigned_bus_resources(bus);
+> +#ifdef CONFIG_ARM
+>  	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+> +#endif
+>  	pci_bus_add_devices(bus);
+>  
+>  	return 0;
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> index ba0a108..0ee9673 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -18,18 +18,22 @@
+>  
+>  /**
+>   * iProc PCIe device
+> + * @sysdata: Per PCI controller data. This needs to be kept at the beginning of
+> + * struct iproc_pcie, to enable support of both ARM32 and ARM64 platforms with
+> + * minimal changes in the iProc PCIe core driver
+>   * @dev: pointer to device data structure
+>   * @base: PCIe host controller I/O register base
+>   * @resources: linked list of all PCI resources
+> - * @sysdata: Per PCI controller data
+>   * @root_bus: pointer to root bus
+>   * @phy: optional PHY device that controls the Serdes
+>   * @irqs: interrupt IDs
+>   */
+>  struct iproc_pcie {
+> +#ifdef CONFIG_ARM
+> +	struct pci_sys_data sysdata;
+> +#endif
+
+This looks for me like a dirty hack. Why is the PCIe controller
+interface between ARM and ARM64 different?
+
+I do not know if this patch is the right place to fix it but I think we
+should come up with a PCI controller interface which works on all archs,
+as we see here some drivers are shared between different archs.
+
+>  	struct device *dev;
+>  	void __iomem *base;
+> -	struct pci_sys_data sysdata;
+>  	struct pci_bus *root_bus;
+>  	struct phy *phy;
+>  	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
+> 
+
