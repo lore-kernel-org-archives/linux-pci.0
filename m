@@ -1,109 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53534 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752117AbbG1VYn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 17:24:43 -0400
-Date: Tue, 28 Jul 2015 17:24:41 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: dm-devel@redhat.com, mpatocka@redhat.com,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Milan Broz <mbroz@redhat.com>
-Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
- QUEUED errors since Linux 4.0
-Message-ID: <20150728212441.GA25761@redhat.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com>
- <55B7C800.2070702@maya.org>
- <20150728185811.GA25060@redhat.com>
- <55B7D6BE.5010203@maya.org>
- <20150728193101.GB25264@redhat.com>
- <55B7E14A.4050500@maya.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55A6AA89.60202@raptorengineeringinc.com>
+Date: Wed, 15 Jul 2015 13:46:33 -0500
+From: Timothy Pearson <tpearson@raptorengineeringinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55B7E14A.4050500@maya.org>
-Sender: linux-pci-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Sreekanth Reddy <sreekanth.reddy@avagotech.com>,
+	James Bottomley <jejb@kernel.org>, martin.petersen@oracle.com,
+	Linux-Scsi <linux-scsi@vger.kernel.org>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	Sathya.Prakash@avagotech.com,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no
+ memory I/O resources detected
+References: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>	<CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com>	<20150715062456.GB19028@dhcp-135-24-192-118.lsi.com>	<55A6658D.6030802@raptorengineeringinc.com> <CAE9FiQXtxWHr0j5zFeAS2LxjqwMfecP_aeQDh93CUni+GbQxWw@mail.gmail.com>
+In-Reply-To: <CAE9FiQXtxWHr0j5zFeAS2LxjqwMfecP_aeQDh93CUni+GbQxWw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 28 2015 at  4:08pm -0400,
-Andreas Hartmann <andihartmann@freenet.de> wrote:
+On 07/15/2015 01:28 PM, Yinghai Lu wrote:
+> On Wed, Jul 15, 2015 at 6:52 AM, Timothy Pearson
+> <tpearson@raptorengineeringinc.com> wrote:
+>>> I have just kept the same description provide by Timothy in his
+>>> initial patch.
+>>>
+>>> But I observe that their may be chance of getting "unable to handle
+>>> kernel NULL pointer dereference" kernel panic if no Memory Resource
+>>> available in the PCI subsystem. So agreed to the Timothy proposal of
+>>> aborting the driver initialization if it doesn't detect any Memory
+>>> resource instead of whole system get into panic state.
+>>>
+>> On some systems Linux is unable / unwilling to assign a BAR if the BIOS
+>> does not assign one at startup.  I didn't look into the Linux allocator
+>> side of things in much detail, but it is quite possible that Linux is
+>> unaware the device only has partial resources assigned.
+>>
+> 
+> Would be great if you can post boot log so we can figure about why those
+> BARs are not assigned.
+> 
+> Yinghai
 
-> On 07/28/2015 at 21:31 PM, Mike Snitzer wrote:
-> > On Tue, Jul 28 2015 at  3:23pm -0400,
-> >Andreas Hartmann <andihartmann@freenet.de> wrote:
-> >
-> >>On 07/28/2015 at 08:58 PM, Mike Snitzer wrote:
-> >>>On Tue, Jul 28 2015 at  2:20pm -0400,
-> >>>Andreas Hartmann <andihartmann@freenet.de> wrote:
-> >>>
-> >>>>On 07/28/2015 at 07:50 PM, Mike Snitzer wrote:
-> >>>>[..]
-> >>>>>Are your SATA devcies using NCQ?
-> >>>>
-> >>>>Yes. It's enabled:
-> >>>>
-> >>>>dmesg| grep -i ncq
-> >>>>ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
-> >>>>ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
-> >>>>ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
-> >>>>ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
-> >>>>
-> >>>>As the errors already come up on boot (during mount of partitions or
-> >>>>even before the password for the disk has been provided): How can I
-> >>>>disable NCQ during boot of the kernel? Is there a kernel option?
-> >>>
-> >>>See:
-> >>>https://ata.wiki.kernel.org/index.php/Libata_FAQ#Enabling.2C_disabling_and_checking_NCQ
-> >>>
-> >>>alternatively, and likely easier, set this on the kernel commandline:
-> >>>  libata.force=noncq
-> >>
-> >>ata2.00: FORCE: horkage modified (noncq)
-> >>ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
-> >>ata3.00: FORCE: horkage modified (noncq)
-> >>ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
-> >>ata5.00: FORCE: horkage modified (noncq)
-> >>ata1.00: FORCE: horkage modified (noncq)
-> >>ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (not used)
-> >>
-> >>
-> >>Perfectly. Seems to work w/ 3.19.8 and your mentioned patches. But now,
-> >>I'm getting another error, which I didn't see before w/ 3.x-kernels:
-> >>
-> >>[drm:btc_dpm_set_power_state [radeon]] *ERROR*
-> >>rv770_restrict_performance_levels_before_switch failed
-> >>
-> >>It seams that your patches do have some unwanted side effects :-).
-> >
-> >That is a completely different issue.  drm and radeon is a graphics
-> >issue.
-> 
-> Nothing changed on radeon code. I just applied your patches. Nothing
-> more. Why should radeon been suddenly broken if I apply your patches
-> to a stable 3.19.8 code?
-> 
-> These patches trigger tons of AMD-Vi IO_PAGE_FAULTs w/ ncq enabled
-> and the IOMMU developers say, that it is not a problem of the iommu
-> code.
-> 
-> >>Could you please reexamine your patch "dm crypt: don't allocate
-> >>pages for a partial request" - after applying this patch all the
-> >>problems are coming up here.
-> >
-> >More likely than not your hardware isn't very good.
-> 
-> Maybe - maybe not. The only thing I know for sure, is: with these
-> patches applied, the machine doesn't work reliably any more. W/ ncq
-> disabled, the AMD-Vi IO_PAGE_FAULTs are gone, but a radeon error
-> never seen before came instead. Most probably chance. Most probably,
-> it could have been risen any other error, too.
-> 
-> I am willing to do tests if you have any idea to be tested - I can
-> reproduce it quite easily.
+Unfortunately the systems exhibiting the issue were upgraded to a later
+BIOS that does not have this problem; it might be possible to set up a
+test system in the future but that probably won't happen for some time.
 
-You can try disabling dm-crypt's parallelization by specifying these 2
-features: same_cpu_crypt submit_from_crypt_cpus
-
-It is my understanding that these can be set using the cryptsetup tool.
-Milan can you clarify how these features can be set from a high-level
-(on an existing crypt device)?
+-- 
+Timothy Pearson
+Raptor Engineering
++1 (415) 727-8645
+http://www.raptorengineeringinc.com
