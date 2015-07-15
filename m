@@ -1,158 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17417 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756361AbbGFXlV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:41:21 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:38768 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753282AbbGOMRd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 08:17:33 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 14/36] PCI: Separate must_add assigning to another function
-Date: Mon,  6 Jul 2015 16:39:04 -0700
-Message-Id: <1436225966-27247-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v4 15/19] irqchip: gicv3-its: Add platform MSI support
+Date: Wed, 15 Jul 2015 13:16:49 +0100
+Message-Id: <1436962613-17359-16-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__assign_resources_sorted() is getting too big if we put alt_size support
-into it.  Split must_add assigning code out to another function.
+In order to support non-PCI MSI with the GICv3 ITS, add the minimal
+required entry points for the MSI domain (an msi_prepare implementation).
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+The rest is only boilerplate code to find the raw ITS domain.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/setup-bus.c | 79 ++++++++++++++++++++++++++++---------------------
- 1 file changed, 46 insertions(+), 33 deletions(-)
+ drivers/irqchip/Makefile                      |  2 +-
+ drivers/irqchip/irq-gic-v3-its-platform-msi.c | 93 +++++++++++++++++++++++++++
+ 2 files changed, 94 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/irqchip/irq-gic-v3-its-platform-msi.c
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 32cdc28..48f5616 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -422,6 +422,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
- 
- static bool pci_need_to_release(unsigned long mask, struct resource *res)
- {
-+	/*
-+	 * Separate three resource type checking if we need to release
-+	 * assigned resource after requested + add_size try.
-+	 *	1. if there is io port assign fail, will release assigned
-+	 *	   io port.
-+	 *	2. if there is pref mmio assign fail, release assigned
-+	 *	   pref mmio.
-+	 *	   if assigned pref mmio's parent is non-pref mmio and there
-+	 *	   is non-pref mmio assign fail, will release that assigned
-+	 *	   pref mmio.
-+	 *	3. if there is non-pref mmio assign fail or pref mmio
-+	 *	   assigned fail, will release assigned non-pref mmio.
-+	 */
+diff --git a/drivers/irqchip/Makefile b/drivers/irqchip/Makefile
+index 0d5f2a9..11d08c9 100644
+--- a/drivers/irqchip/Makefile
++++ b/drivers/irqchip/Makefile
+@@ -22,7 +22,7 @@ obj-$(CONFIG_ARCH_SPEAR3XX)		+= spear-shirq.o
+ obj-$(CONFIG_ARM_GIC)			+= irq-gic.o irq-gic-common.o
+ obj-$(CONFIG_ARM_GIC_V2M)		+= irq-gic-v2m.o
+ obj-$(CONFIG_ARM_GIC_V3)		+= irq-gic-v3.o irq-gic-common.o
+-obj-$(CONFIG_ARM_GIC_V3_ITS)		+= irq-gic-v3-its.o irq-gic-v3-its-pci-msi.o
++obj-$(CONFIG_ARM_GIC_V3_ITS)		+= irq-gic-v3-its.o irq-gic-v3-its-pci-msi.o irq-gic-v3-its-platform-msi.o
+ obj-$(CONFIG_ARM_NVIC)			+= irq-nvic.o
+ obj-$(CONFIG_ARM_VIC)			+= irq-vic.o
+ obj-$(CONFIG_ATMEL_AIC_IRQ)		+= irq-atmel-aic-common.o irq-atmel-aic.o
+diff --git a/drivers/irqchip/irq-gic-v3-its-platform-msi.c b/drivers/irqchip/irq-gic-v3-its-platform-msi.c
+new file mode 100644
+index 0000000..a865505
+--- /dev/null
++++ b/drivers/irqchip/irq-gic-v3-its-platform-msi.c
+@@ -0,0 +1,93 @@
++/*
++ * Copyright (C) 2013-2015 ARM Limited, All Rights Reserved.
++ * Author: Marc Zyngier <marc.zyngier@arm.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
 +
- 	if (res->flags & IORESOURCE_IO)
- 		return !!(mask & IORESOURCE_IO);
- 
-@@ -443,50 +457,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
- }
- 
--static void __assign_resources_sorted(struct list_head *head,
--				 struct list_head *realloc_head,
--				 struct list_head *fail_head)
-+static bool __assign_resources_must_add_sorted(struct list_head *head,
-+				 struct list_head *realloc_head)
- {
--	/*
--	 * Should not assign requested resources at first.
--	 *   they could be adjacent, so later reassign can not reallocate
--	 *   them one by one in parent resource window.
--	 * Try to assign requested + add_size at beginning
--	 *  if could do that, could get out early.
--	 *  if could not do that, we still try to assign requested at first,
--	 *    then try to reassign add_size for some resources.
--	 *
--	 * Separate three resource type checking if we need to release
--	 * assigned resource after requested + add_size try.
--	 *	1. if there is io port assign fail, will release assigned
--	 *	   io port.
--	 *	2. if there is pref mmio assign fail, release assigned
--	 *	   pref mmio.
--	 *	   if assigned pref mmio's parent is non-pref mmio and there
--	 *	   is non-pref mmio assign fail, will release that assigned
--	 *	   pref mmio.
--	 *	3. if there is non-pref mmio assign fail or pref mmio
--	 *	   assigned fail, will release assigned non-pref mmio.
--	 */
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
-+	LIST_HEAD(local_alt_fail_head);
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
- 	resource_size_t add_align;
- 	struct resource *res;
- 
--	/* Check if optional add_size is there */
--	if (!realloc_head || list_empty(realloc_head))
--		goto requested_and_reassign;
--
- 	/* Save original start, end, flags etc at first */
--	list_for_each_entry(dev_res, head, list) {
-+	list_for_each_entry(dev_res, head, list)
- 		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
- 			free_list(&save_head);
--			goto requested_and_reassign;
-+			return false;
- 		}
--	}
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -525,7 +513,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 			remove_from_list(realloc_head, dev_res->res);
- 		free_list(&save_head);
- 		free_list(head);
--		return;
++#include <linux/device.h>
++#include <linux/msi.h>
++#include <linux/of.h>
++#include <linux/of_irq.h>
 +
-+		return true;
- 	}
- 
- 	/* check failed type */
-@@ -563,7 +552,31 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
- 
--requested_and_reassign:
-+	return false;
++static struct irq_chip its_pmsi_irq_chip = {
++	.name			= "ITS-pMSI",
++};
++
++static int its_pmsi_prepare(struct irq_domain *domain, struct device *dev,
++			    int nvec, msi_alloc_info_t *info)
++{
++	struct msi_domain_info *msi_info;
++	u32 dev_id;
++	int ret;
++
++	msi_info = msi_get_domain_info(domain->parent);
++
++	/* Suck the DeviceID out of the msi-parent property */
++	ret = of_property_read_u32_index(dev->of_node, "msi-parent",
++					 1, &dev_id);
++	if (ret)
++		return ret;
++
++	/* ITS specific DeviceID, as the core ITS ignores dev. */
++	info->scratchpad[0].ul = dev_id;
++
++	return msi_info->ops->msi_prepare(domain->parent,
++					  dev, nvec, info);
 +}
 +
-+static void __assign_resources_sorted(struct list_head *head,
-+				 struct list_head *realloc_head,
-+				 struct list_head *fail_head)
++static struct msi_domain_ops its_pmsi_ops = {
++	.msi_prepare	= its_pmsi_prepare,
++};
++
++static struct msi_domain_info its_pmsi_domain_info = {
++	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS),
++	.ops	= &its_pmsi_ops,
++	.chip	= &its_pmsi_irq_chip,
++};
++
++static struct of_device_id its_device_id[] = {
++	{	.compatible	= "arm,gic-v3-its",	},
++	{},
++};
++
++static int __init its_pmsi_init(void)
 +{
-+	/*
-+	 * Should not assign requested resources at first.
-+	 *   they could be adjacent, so later reassign can not reallocate
-+	 *   them one by one in parent resource window.
-+	 * Try to assign requested + add_size at beginning
-+	 *  if could do that, could get out early.
-+	 *  if could not do that, we still try to assign requested at first,
-+	 *    then try to reassign add_size for some resources.
-+	 */
++	struct device_node *np;
++	struct irq_domain *parent;
 +
-+	LIST_HEAD(save_head);
-+	LIST_HEAD(local_fail_head);
++	for (np = of_find_matching_node(NULL, its_device_id); np;
++	     np = of_find_matching_node(np, its_device_id)) {
++		if (!of_property_read_bool(np, "msi-controller"))
++			continue;
 +
-+	/* Check must+optional add */
-+	if (realloc_head && !list_empty(realloc_head) &&
-+	    __assign_resources_must_add_sorted(head, realloc_head))
-+		return;
++		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
++		if (!parent || !msi_get_domain_info(parent)) {
++			pr_err("%s: unable to locate ITS domain\n",
++			       np->full_name);
++			continue;
++		}
 +
- 	__sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
++		if (!platform_msi_create_irq_domain(np, &its_pmsi_domain_info,
++						    parent)) {
++			pr_err("%s: unable to create platform domain\n",
++			       np->full_name);
++			continue;
++		}
++
++		pr_info("Platform MSI: %s domain created\n", np->full_name);
++	}
++
++	return 0;
++}
++early_initcall(its_pmsi_init);
 -- 
-1.8.4.5
+2.1.4
 
