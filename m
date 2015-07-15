@@ -1,110 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 19/51] PCI: Separate must+optional assigning to another function
-Date: Mon, 27 Jul 2015 16:29:37 -0700
-Message-Id: <1438039809-24957-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:40031 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800AbbGOCDB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 22:03:01 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 15 Jul 2015 12:02:59 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 5EDD92CE8052
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 12:02:56 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6F22mpe48955520
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 12:02:56 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6F22Nhf026001
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 12:02:24 +1000
+Date: Wed, 15 Jul 2015 10:02:06 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V2 4/4] PCI: consolidate return value check for
+ pci_find_(ext_)capability
+Message-ID: <20150715020206.GC6525@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1435627004-6029-5-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150714220021.GL24416@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150714220021.GL24416@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__assign_resources_sorted() is getting too big if we put alt_size support
-into it.  Split must_add assigning code out to another function.
+On Tue, Jul 14, 2015 at 05:00:21PM -0500, Bjorn Helgaas wrote:
+>On Tue, Jun 30, 2015 at 09:16:44AM +0800, Wei Yang wrote:
+>> The return value of the pci_find_(ext_)capability is the position of this
+>> Cap.  After previous two patches clean up, the position returned is an
+>> unsigned value. Only 0 indicates the Cap is not presented.
+>> 
+>> This patch consolidates the form of check from (pos <= 0)to (!pos).
+>> 
+>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>
+>Applied to pci/misc with changelog as below.
+>
+>It seems pretty clear to me that pci_find_capability() returns either 0 or
+>a u8 value.  pci_find_ext_capability() does return an int.  It looks to me
+>like it can never be negative, but if you wanted it to be even more clear,
+>you could easily change just pci_find_next_ext_capability() to use a u16
+>for "pos".  That would be very simple and wouldn't change any interfaces.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+pci_find_capability() will return either 0 or a u8 value, while in the code
+the return value is an "int" type. So for the first sight, it may not that
+immediate. The same as pci_find_ext_capability().
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f8b9a24..d1f9e19 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- 	res->flags = save_res->flags;
- }
- 
--static void __assign_resources_sorted(struct list_head *head,
--				 struct list_head *realloc_head,
--				 struct list_head *fail_head)
-+static bool __assign_resources_must_add_sorted(struct list_head *head,
-+				 struct list_head *realloc_head)
- {
--	/*
--	 * Should not assign requested resources at first.
--	 *   they could be adjacent, so later reassign can not reallocate
--	 *   them one by one in parent resource window.
--	 * Try to assign requested + add_size at beginning
--	 *  if could do that, could get out early.
--	 *  if could not do that, we still try to assign requested at first,
--	 *    then try to reassign add_size for some resources.
--	 */
--
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
-@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	resource_size_t add_align;
- 	struct resource *res;
- 
--	/* Check if optional add_size is there */
--	if (!realloc_head || list_empty(realloc_head))
--		goto requested_and_reassign;
--
- 	if (!save_resources(head, &save_head))
--		goto requested_and_reassign;
-+		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 			remove_from_list(realloc_head, dev_res->res);
- 		free_list(&save_head);
- 		free_list(head);
--		return;
-+
-+		return true;
- 	}
- 
- 	/* check failed type */
-@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	free_list(&save_head);
- 
--requested_and_reassign:
-+	return false;
-+}
-+
-+static void __assign_resources_sorted(struct list_head *head,
-+				 struct list_head *realloc_head,
-+				 struct list_head *fail_head)
-+{
-+	/*
-+	 * Should not assign requested resources at first.
-+	 *   they could be adjacent, so later reassign can not reallocate
-+	 *   them one by one in parent resource window.
-+	 * Try to assign requested + add_size at beginning
-+	 *  if could do that, could get out early.
-+	 *  if could not do that, we still try to assign requested at first,
-+	 *    then try to reassign add_size for some resources.
-+	 */
-+
-+	/* Check must+optional add */
-+	if (realloc_head && !list_empty(realloc_head) &&
-+	    __assign_resources_must_add_sorted(head, realloc_head))
-+		return;
-+
- 	__sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
+This is the reason for patch 2/3. The purpose is to make the return type
+reflect the value it will return.
+
+Patch 3 does exactly what you said, use a u16 for "pos" in
+pci_find_next_ext_capability().
+
+>
+>commit d5fa86074987b1b5fcbfba8c9315e75ff7262f71
+>Author: Wei Yang <weiyang@linux.vnet.ibm.com>
+>Date:   Tue Jun 30 09:16:44 2015 +0800
+>
+>    PCI: Simplify pci_find_(ext_)capability() return value checks
+>    
+>    The return value of the pci_find_(ext_)capability() is either zero or the
+>    position of a capability.  It is never negative.
+>    
+>    This patch consolidates the form of check from (pos <= 0) to (!pos).
+>    
+>    Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
 -- 
-1.8.4.5
+Richard Yang
+Help you, Help me
 
