@@ -1,73 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:36626 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756847AbbGUAOu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 20:14:50 -0400
-Received: by iehx8 with SMTP id x8so49646199ieh.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 17:14:49 -0700 (PDT)
-Subject: [PATCH v2 07/11] PCI: Use pci_physfn() rather than looking up
- physfn by hand
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: iommu@lists.linux-foundation.org,
-	Gregor Dick <gdick@solarflare.com>
-Date: Mon, 20 Jul 2015 19:14:46 -0500
-Message-ID: <20150721001446.28145.65839.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-arm-kernel@lists.infradead.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>,
+	David Daney <david.daney@cavium.com>
+Subject: [PATCH 1/5] pci: Add is_pcierc element to struct pci_bus
+Date: Wed, 15 Jul 2015 09:54:41 -0700
+Message-Id: <1436979285-8177-2-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the pci_physfn() helper rather than looking up physfn by hand.
-No functional change.
+From: David Daney <david.daney@cavium.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Joerg Roedel <jroedel@suse.de>
+... and use is to force only_one_child() to return true.
+
+Needed because the ThunderX PCIe RC cannot be identified by existing methods.
+
+Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/pci/ats.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/probe.c | 2 ++
+ include/linux/pci.h | 1 +
+ 2 files changed, 3 insertions(+)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 95905f3..0b5b0ed 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -42,6 +42,7 @@ void pci_ats_init(struct pci_dev *dev)
- int pci_enable_ats(struct pci_dev *dev, int ps)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..11ec2e7 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1643,6 +1643,8 @@ static int only_one_child(struct pci_bus *bus)
  {
- 	u16 ctrl;
-+	struct pci_dev *pdev;
+ 	struct pci_dev *parent = bus->self;
  
- 	BUG_ON(dev->ats_cap && dev->ats_enabled);
++	if (bus->is_pcierc)
++		return 1;
+ 	if (!parent || !pci_is_pcie(parent))
+ 		return 0;
+ 	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a..1f1ce73 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -473,6 +473,7 @@ struct pci_bus {
+ 	struct bin_attribute	*legacy_io; /* legacy I/O for this bus */
+ 	struct bin_attribute	*legacy_mem; /* legacy mem */
+ 	unsigned int		is_added:1;
++	unsigned int		is_pcierc:1;
+ };
  
-@@ -57,8 +58,7 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
- 	 */
- 	ctrl = PCI_ATS_CTRL_ENABLE;
- 	if (dev->is_virtfn) {
--		struct pci_dev *pdev = dev->physfn;
--
-+		pdev = pci_physfn(dev);
- 		if (pdev->ats_stu != ps)
- 			return -EINVAL;
- 
-@@ -80,6 +80,7 @@ EXPORT_SYMBOL_GPL(pci_enable_ats);
-  */
- void pci_disable_ats(struct pci_dev *dev)
- {
-+	struct pci_dev *pdev;
- 	u16 ctrl;
- 
- 	BUG_ON(!dev->ats_cap || !dev->ats_enabled);
-@@ -88,8 +89,7 @@ void pci_disable_ats(struct pci_dev *dev)
- 		return;		/* VFs still enabled */
- 
- 	if (dev->is_virtfn) {
--		struct pci_dev *pdev = dev->physfn;
--
-+		pdev = pci_physfn(dev);
- 		atomic_dec(&pdev->ats_ref_cnt);
- 	}
- 
+ #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
+-- 
+1.9.1
 
