@@ -1,47 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49901 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756383AbbGFXlv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:41:51 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 24/36] PCI: Only treat non-pef mmio64 as pref if host-bridge has_mem64
-Date: Mon,  6 Jul 2015 16:39:14 -0700
-Message-Id: <1436225966-27247-25-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Received: from bastion.smtp.avagotech.com ([202.86.248.61]:50630 "EHLO
+	sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbbGOGa5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 02:30:57 -0400
+Date: Tue, 14 Jul 2015 23:24:56 -0700
+From: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: <tpearson@raptorengineeringinc.com>,
+	James Bottomley <jejb@kernel.org>,
+	<martin.petersen@oracle.com>,
+	Linux-Scsi <linux-scsi@vger.kernel.org>,
+	"James E.J. Bottomley" <JBottomley@parallels.com>,
+	<Sathya.Prakash@avagotech.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no
+ memory I/O resources detected
+Message-ID: <20150715062456.GB19028@dhcp-135-24-192-118.lsi.com>
+References: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
+ <CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If host bridge does not have mmio64 above 4G, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+On Tue, Jul 14, 2015 at 10:36:58PM -0700, Yinghai Lu wrote:
+> On Tue, Jul 14, 2015 at 9:49 PM, Sreekanth Reddy
+> <sreekanth.reddy@avagotech.com> wrote:
+> > Driver crashes if the BIOS do not set up at least one
+> > memory I/O resource. This failure can happen if the device is too
+> > slow to respond during POST and is missed by the BIOS, but Linux
+> > then detects the device later in the boot process.
+> 
+> But pci subsystem should assign resources to those unassigned BAR.
+> 
+> Do you mean even kernel can not assign resource to them? or it takes so long for
+> mpt FW to get ready?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is not an issue from mpt FW.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ab7bafe..e8e9029 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1010,7 +1010,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
- {
- 	if (pci_is_root_bus(bus))
--		return true;
-+		return to_pci_host_bridge(bus->bridge)->has_mem64;
- 
- 	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
- 			   IORESOURCE_MEM_64))
--- 
-1.8.4.5
+I have just kept the same description provide by Timothy in his
+initial patch.
 
+But I observe that their may be chance of getting "unable to handle
+kernel NULL pointer dereference" kernel panic if no Memory Resource
+available in the PCI subsystem. So agreed to the Timothy proposal of
+aborting the driver initialization if it doesn't detect any Memory
+resource instead of whole system get into panic state.
+
+> 
+> Thanks
+> 
+> Yinghai
