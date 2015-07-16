@@ -1,68 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:33982 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932229AbbGJOQv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 10:16:51 -0400
-Received: by lbnk3 with SMTP id k3so93376216lbn.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Jul 2015 07:16:50 -0700 (PDT)
-From: Kashyap Desai <kashyap.desai@avagotech.com>
-References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
-	 <CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
-	 <robbat2-20140712T215640-831385120Z@orbis-terrarum.net>	 <20150429172832.GB7888@google.com>
- <20150528122443.GI10210@google.com>	 <9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
-	 <20150707104426.3d7e8697@endymion.delvare>	 <a2dbe3edaba57bb78f0c3e22d6068178@mail.gmail.com>
- <1436537115.4540.31.camel@chaos.site>
-In-Reply-To: <1436537115.4540.31.camel@chaos.site>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:34146 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753135AbbGPEWJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 00:22:09 -0400
+Received: by iebmu5 with SMTP id mu5so47918991ieb.1
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 21:22:08 -0700 (PDT)
+Date: Wed, 15 Jul 2015 23:22:03 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatja@google.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
+ deadlock
+Message-ID: <20150716042203.GC25591@google.com>
+References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Date: Fri, 10 Jul 2015 19:46:46 +0530
-Message-ID: <775bb7e5ecc09c3f042ca8e949b35e5f@mail.gmail.com>
-Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
- output? [BKO63661]
-To: Jean Delvare <jdelvare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Robin H. Johnson" <robbat2@gentoo.org>,
-	Adam Radford <aradford@gmail.com>,
-	Neela Syam Kolli <megaraidlinux@lsi.com>,
-	linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Sumit Saxena <sumit.saxena@avagotech.com>,
-	Uday Lingala <uday.lingala@avagotech.com>,
-	"PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->
-> I am about to commit the patch that was successfully tested by the
-> customer on
-> SLES 12, but I'm a bit confused. The upstream patch you referred to is:
->
-> https://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?h=for-
-> next&id=6431f5d7c6025f8b007af06ea090de308f7e6881
-> [SCSI] megaraid_sas: megaraid_sas driver init fails in kdump kernel
->
-> But the patch I used is the one you sent by e-mail on May 28th. It is
-> completely
-> different!
->
-> So what am I supposed to do? Use the patch you sent (and that was tested
-> by
-> the customer) for SLES 11 SP3 and SLES 12? Or was it just for testing and
-> the
-> proper way of fixing the problem would be to backport the upstream commit?
+[+cc Guenter, Rafael]
 
-You can use that patch as valid candidate for upstream submission. Some of
-the MR maintainer (Sumit Saxena) will send that patch. We are just
-organizing other patch series.
-Since SLES already ported patch without commit id, we are fine. I am just
-giving reference that patch which send via email will be send to upstream
-very soon along with other patch set.
+On Thu, Jun 11, 2015 at 07:12:14PM +0800, Yijing Wang wrote:
+> Rajat Jain reported a deadlock when a hierarchical hot plug
+> thread and aer recovery thread both run.
+> https://lkml.org/lkml/2015/3/11/861
+> 
+> thread 1:
+> pciehp_enable_slot()
+> 	pciehp_configure_device()
+> 		pci_bus_add_devices()
+> 			device_attach(dev)
+> 				device_lock(dev) //acquire device mutex successfully
+> 			...
+> 			pciehp_probe(dev)
+> 				__pci_hp_register()
+> 					pci_create_slot()
+> 						down_write(pci_bus_sem) //deadlock here
+> 
+> thread 2:
+> aer_isr_one_error()
+> 	aer_process_err_device()
+> 		do_recovery()
+> 			broadcast_error_message()
+> 				pci_walk_bus()
+> 					down_read(&pci_bus_sem) //acquire pci_bus_sem successfully
+> 						report_error_detected(dev)
+> 							device_lock(dev) // deadlock here
+> 
+> Now we use pci_bus_sem to protect pci_slot creation and destroy,
+> it's unnecessary. We could introduce a new local mutex instead of
+> pci_bus_sem to avoid the deadlock.
 
-Thanks, Kashyap
->
-> Please advise,
-> --
-> Jean Delvare
-> SUSE L3 Support
+I see there's definitely a problem here, and using a new mutex instead of
+pci_bus_sem certainly avoids the deadlock.
+
+I'm trying to convince myself that it is safe.  I think we need to protect:
+
+  - search of bus->slots list in get_slot()
+  - addition to bus->slots list in pci_create_slot()
+  - search of bus->devices list in pci_create_slot()
+  - search of bus->devices list in pci_slot_release()
+  - deletion from bus->slots list in pci_slot_release()
+
+Most other maintenance of these lists is protected by pci_bus_sem, so using
+a different mutex here seems like a problem.
+
+If I'm mistaken, please correct me and explain why this patch is safe.
+
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> ---
+>  drivers/pci/slot.c |   11 ++++++-----
+>  1 files changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+> index 396c200..feb08de 100644
+> --- a/drivers/pci/slot.c
+> +++ b/drivers/pci/slot.c
+> @@ -14,6 +14,7 @@
+>  
+>  struct kset *pci_slots_kset;
+>  EXPORT_SYMBOL_GPL(pci_slots_kset);
+> +static DEFINE_MUTEX(pci_slot_mutex);
+>  
+>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
+>  					struct attribute *attr, char *buf)
+> @@ -195,7 +196,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
+>  {
+>  	struct pci_slot *slot;
+>  	/*
+> -	 * We already hold pci_bus_sem so don't worry
+> +	 * We already hold pci_slot_mutex so don't worry
+>  	 */
+>  	list_for_each_entry(slot, &parent->slots, list)
+>  		if (slot->number == slot_nr) {
+> @@ -253,7 +254,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>  	int err = 0;
+>  	char *slot_name = NULL;
+>  
+> -	down_write(&pci_bus_sem);
+> +	mutex_lock(&pci_slot_mutex);
+>  
+>  	if (slot_nr == -1)
+>  		goto placeholder;
+> @@ -310,7 +311,7 @@ placeholder:
+>  
+>  out:
+>  	kfree(slot_name);
+> -	up_write(&pci_bus_sem);
+> +	mutex_unlock(&pci_slot_mutex);
+>  	return slot;
+>  err:
+>  	kfree(slot);
+> @@ -332,9 +333,9 @@ void pci_destroy_slot(struct pci_slot *slot)
+>  	dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
+>  		slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
+>  
+> -	down_write(&pci_bus_sem);
+> +	mutex_lock(&pci_slot_mutex);
+>  	kobject_put(&slot->kobj);
+> -	up_write(&pci_bus_sem);
+> +	mutex_unlock(&pci_slot_mutex);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
+>  
+> -- 
+> 1.7.1
+> 
