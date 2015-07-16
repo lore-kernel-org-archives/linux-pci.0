@@ -1,91 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:35877 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752301AbbGNTfF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:35:05 -0400
-Received: by obnw1 with SMTP id w1so12617626obn.3
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 12:35:04 -0700 (PDT)
-Subject: [PATCH v2 4/5] PCI: Revert aeb30016fec3 ("PCI: add Intel USB
- specific reset method")
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mathias Nyman <mathias.nyman@intel.com>, x86@kernel.org,
-	Felipe Balbi <balbi@ti.com>, Yu Zhao <yu.zhao@intel.com>,
-	Huang Rui <ray.huang@amd.com>,
-	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Jason Chang <jason.chang@amd.com>
-Date: Tue, 14 Jul 2015 14:35:01 -0500
-Message-ID: <20150714193501.13224.74481.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150714193153.13224.40528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150714193153.13224.40528.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from foss.arm.com ([217.140.101.70]:42234 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752133AbbGPHiz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Jul 2015 03:38:55 -0400
+Message-ID: <55A75F8B.3080009@arm.com>
+Date: Thu, 16 Jul 2015 08:38:51 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: David Daney <ddaney@caviumnetworks.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Robert Richter <rrichter@cavium.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
+ the irqdomain of the GIC.
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com> <55A6947F.8070903@arm.com> <55A6AD1F.902@caviumnetworks.com>
+In-Reply-To: <55A6AD1F.902@caviumnetworks.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Revert aeb30016fec3 ("PCI: add Intel USB specific reset method").
+On 15/07/15 19:57, David Daney wrote:
+> On 07/15/2015 10:12 AM, Marc Zyngier wrote:
+>> On 15/07/15 17:54, David Daney wrote:
+>>> From: David Daney <david.daney@cavium.com>
+>>>
+>>> Needed to map SPI interrupt sources.
+>>>
+>>> Signed-off-by: David Daney <david.daney@cavium.com>
+>>> ---
+>>>   drivers/irqchip/irq-gic-v3.c       | 5 +++++
+>>>   include/linux/irqchip/arm-gic-v3.h | 1 +
+>>>   2 files changed, 6 insertions(+)
+>>>
+>>> diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+>>> index c52f7ba..0019fed 100644
+>>> --- a/drivers/irqchip/irq-gic-v3.c
+>>> +++ b/drivers/irqchip/irq-gic-v3.c
+>>> @@ -58,6 +58,11 @@ static struct gic_chip_data gic_data __read_mostly;
+>>>   /* Our default, arbitrary priority value. Linux only uses one anyway. */
+>>>   #define DEFAULT_PMR_VALUE	0xf0
+>>>
+>>> +struct irq_domain *gic_get_irq_domain(void)
+>>> +{
+>>> +	return gic_data.domain;
+>>> +}
+>>> +
+>>>   static inline unsigned int gic_irq(struct irq_data *d)
+>>>   {
+>>>   	return d->hwirq;
+>>> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+>>> index 18e3757..5992224 100644
+>>> --- a/include/linux/irqchip/arm-gic-v3.h
+>>> +++ b/include/linux/irqchip/arm-gic-v3.h
+>>> @@ -391,6 +391,7 @@ int its_init(struct device_node *node, struct rdists *rdists,
+>>>
+>>>   typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
+>>>   void set_its_pci_requester_id(its_pci_requester_id_t fn);
+>>> +struct irq_domain *gic_get_irq_domain(void);
+>>>   #endif
+>>>
+>>>   #endif
+>>>
+>>
+>> Hmmmffff... You need the domain for SPIs??
+>>
+>> What is wrong with putting these interrupts in your device tree?
+>>
+> 
+> There is no device tree node for ECAM based "PCIe" devices, they are 
+> discovered in the PCI bus scan, yet they still need to use SPI interrupts.
 
-We checked for "dev->class == PCI_CLASS_SERIAL_USB", but dev->class
-contains the entire three-byte base class/sub-class/interface, while
-PCI_CLASS_SERIAL_USB is only the two-byte base class/sub-class.
+What is different between these and the normal legacy interrupts that
+are normally expressed in the RC node using an interrupt map? Sorry if
+I'm only showing my ignorance here, but I'd like to understand the exact
+nature of the problem.
 
-This error meant that we used the Intel device-specific reset on devices
-with class code 0x000c03 instead of those with class code 0x0c03xx.
-0x000c03 is a reserved value in the 0x00 backwards compatibility base
-class and shouldn't match any devices, so I think reset_intel_generic_dev()
-always failed.
+> We need a way to be able to map these.
 
-I considered adding a shift, but I can't test it, so it's as likely to
-break something as to fix something.
+However you're going to map them, it will not be by just blindly
+exporting random irqdomains from an unsuspecting interrupt controller.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Yu Zhao <yu.zhao@intel.com>
-CC: Mathias Nyman <mathias.nyman@intel.com>
----
- drivers/pci/quirks.c |   24 ------------------------
- 1 file changed, 24 deletions(-)
+Patch 5 has established that you're using "virtual wire" SPIs, so we
+need to work on exposing that with the normal kernel abstraction, and
+not by messing with the internals of the GIC.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 9734b42..35f8d40 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3344,28 +3344,6 @@ fs_initcall_sync(pci_apply_final_quirks);
-  * reset a single function if other methods (e.g. FLR, PM D0->D3) are
-  * not available.
-  */
--static int reset_intel_generic_dev(struct pci_dev *dev, int probe)
--{
--	int pos;
--
--	/* only implement PCI_CLASS_SERIAL_USB at present */
--	if (dev->class == PCI_CLASS_SERIAL_USB) {
--		pos = pci_find_capability(dev, PCI_CAP_ID_VNDR);
--		if (!pos)
--			return -ENOTTY;
--
--		if (probe)
--			return 0;
--
--		pci_write_config_byte(dev, pos + 0x4, 1);
--		msleep(100);
--
--		return 0;
--	} else {
--		return -ENOTTY;
--	}
--}
--
- static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
- {
- 	/*
-@@ -3524,8 +3502,6 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
- 		reset_ivb_igd },
- 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_IVB_M2_VGA,
- 		reset_ivb_igd },
--	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
--		reset_intel_generic_dev },
- 	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
- 		reset_chelsio_generic_dev },
- 	{ 0 }
+Thanks,
 
+	M.
+-- 
+Jazz is not dead. It just smells funny...
