@@ -1,88 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:36935 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751785AbbG2RnO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 13:43:14 -0400
-MIME-Version: 1.0
-In-Reply-To: <1438158927.5106.20.camel@tiscali.nl>
-References: <1438080345-7233-1-git-send-email-lftan@altera.com>
-	<1438080345-7233-4-git-send-email-lftan@altera.com>
-	<1438158927.5106.20.camel@tiscali.nl>
-Date: Thu, 30 Jul 2015 01:43:13 +0800
-Message-ID: <CAFiDJ5_yXoXJ+UUROX1aiNeTyxt6wDZ+h8DW=c4EdUiS5OkkJg@mail.gmail.com>
-Subject: Re: [PATCH 3/6] pci:host: Add Altera PCIe host controller driver
-From: Ley Foon Tan <lftan@altera.com>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1437035476.27428.24.camel@tiscali.nl>
+Subject: Re: [PATCH 5/5] PCI: Add host drivers for Cavium ThunderX
+ processors.
+From: Paul Bolle <pebolle@tiscali.nl>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>,
+	David Daney <david.daney@cavium.com>
+Date: Thu, 16 Jul 2015 10:31:16 +0200
+In-Reply-To: <1436979285-8177-6-git-send-email-ddaney.cavm@gmail.com>
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
+	 <1436979285-8177-6-git-send-email-ddaney.cavm@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 29, 2015 at 4:35 PM, Paul Bolle <pebolle@tiscali.nl> wrote:
-> On di, 2015-07-28 at 18:45 +0800, Ley Foon Tan wrote:
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->
->> +config PCIE_ALTERA
->> +     bool "Altera PCIe controller"
->> +     depends on ARCH_SOCFPGA
->> +     depends on OF
->> +     select PCI_MSI_IRQ_DOMAIN if PCI_MSI
->> +     help
->> +       Say Y here if you want to enable PCIe controller support for Altera
->> +       SoCFPGA family of SoCs.
->
->> --- a/drivers/pci/host/Makefile
->> +++ b/drivers/pci/host/Makefile
->
->> +obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
->
->> --- /dev/null
->> +++ b/drivers/pci/host/pcie-altera.c
->
->> +#include <linux/module.h>
->
->> +static const struct of_device_id altera_pcie_of_match[] = {
->> +     { .compatible = "altr,pcie-root-port-1.0", },
->> +     {},
->> +};
->> +MODULE_DEVICE_TABLE(of, altera_pcie_of_match);
->
->
->> +static struct platform_driver altera_pcie_driver = {
->> +     [...]
->> +             .owner  = THIS_MODULE,
->> +     ]...]
->> +};
->> +
->> +module_platform_driver(altera_pcie_driver);
->> +
->> +MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
->> +MODULE_DESCRIPTION("Altera PCIe host controller driver");
->> +MODULE_LICENSE("GPL v2");
->
-> PCIE_ALTERA is a bool symbol. So pcie-altera.o is built-in only. Yet
-> pcie-altera.c uses a number of module-specific constructs. Should
-> PCIE_ALTERA perhaps be tristate?
-Yes, PCIE_ALTERA can be changed to tristate after we remove call to
-pci_common_init_dev to now.
-pci_common_init_dev is not a exported symbol.
+On wo, 2015-07-15 at 09:54 -0700, David Daney wrote:
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+
+> +config PCI_THUNDER_PEM
+> +	bool
+
+Do you expect other symbols to select this symbol in the future? Because
+at this moment PCI_THUNDER_PEM is merely an alias for PCI_THUNDER.
+
+> +config PCI_THUNDER
+> +	bool "Thunder PCIe host controller"
+> +	depends on ARM64 || COMPILE_TEST
+> +	depends on OF_PCI
+> +	select PCI_MSI
+> +	select PCI_THUNDER_PEM
+> +	help
+> +	  Say Y here if you want internal PCI support on Thunder SoC.
+
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+
+> +obj-$(CONFIG_PCI_THUNDER) += pcie-thunder.o
+> +obj-$(CONFIG_PCI_THUNDER_PEM) += pcie-thunder-pem.o
+
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-thunder-pem.c
+
+> +#include <linux/module.h>
+
+> +MODULE_DEVICE_TABLE(pci, thunder_pem_pci_table);
+
+> +static int __init thunder_pcie_init(void)
+> +{
+> +	int ret;
+> +
+> +	ret = pci_register_driver(&thunder_pem_driver);
+> +
+> +	return ret;
+> +}
+> +module_init(thunder_pcie_init);
+> +
+> +static void __exit thunder_pcie_exit(void)
+> +{
+> +	pci_unregister_driver(&thunder_pem_driver);
+> +}
+> +module_exit(thunder_pcie_exit);
+
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-thunder.c
+
+> +#include <linux/module.h>
+
+> +MODULE_DEVICE_TABLE(of, thunder_pcie_of_match);
+> +
+> +static struct platform_driver thunder_pcie_driver = {
+> +	.driver = {
+> +		[...]
+> +		.owner = THIS_MODULE,
+> +		[...]
+> +};
+> +module_platform_driver(thunder_pcie_driver);
+
+> +MODULE_AUTHOR("Sunil Goutham");
+> +MODULE_DESCRIPTION("Cavium Thunder ECAM host controller driver");
+> +MODULE_LICENSE("GPL v2");
+
+This patch adds two bool Kconfig symbols and two files that can only be
+built-in if these symbols are set, right?
+
+But the code uses various constructs that are only useful for modular
+code (MODULE_DEVICE_TABLE, __exit, module_exit, THIS_MODULE, and the
+three MODULE_* macros) or have built-in alternatives (module_init and
+module_platform_driver).
+
+Was it your intention to make this code built-in or modular?
+
+Thanks,
 
 
-> Likewise for PCIE_ALTERA_MSI in 4/6.
-PCIE_ALTERA_MSI can only be built-in only. It depends on quite a
-number of non-exported symbols.
-Eg: pci_msi_mask_irq, pci_msi_create_irq_domain, irq_domain_set_info and etc..
-
-Thanks.
-
-Regards
-Ley Foon
+Paul Bolle
