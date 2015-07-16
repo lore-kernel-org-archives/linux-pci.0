@@ -1,86 +1,168 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 21 Jul 2015 08:30:31 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: Re: [RFC Patch V1 00/12] Reorganize struct msi_desc to prepare for
- support of generic MSI
-Message-ID: <20150721133031.GF16841@google.com>
-References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:33487 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755524AbbGPTgX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 15:36:23 -0400
+Received: by widic2 with SMTP id ic2so23462134wid.0
+        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2015 12:36:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <55A80262.2010401@ti.com>
+References: <1401297293-3950-1-git-send-email-m-karicheri2@ti.com>
+ <20150516140230.GF31666@google.com> <55A80262.2010401@ti.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 16 Jul 2015 14:36:02 -0500
+Message-ID: <CAErSpo5uMkr+fQnG4G6mT_34ERNT_1mSbSpyWyaf3s8_RutUJw@mail.gmail.com>
+Subject: Re: [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Paul]
+On Thu, Jul 16, 2015 at 2:13 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> On 05/16/2015 10:02 AM, Bjorn Helgaas wrote:
+>>
+>> On Wed, May 28, 2014 at 01:14:53PM -0400, Murali Karicheri wrote:
+>>>
+>>> Call pcie_bus_configure_settings on ARM, like for other platforms.
+>>> pcie_bus_configure_settings makes sure the MPS across the bus is
+>>> uniform and provides the ability to tune the MRSS and MPS to higher
+>>> performance values. This is particularly important for embedded where
+>>> there is no firmware to program these PCI-E settings for the OS.
+>>>
+>>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>>>
+>>> CC: Russell King <linux@arm.linux.org.uk>
+>>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>>> CC: Arnd Bergmann <arnd@arndb.de>
+>>> CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>>> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+>>>
+>>> ---
+>>>   - Fixed comments against initial version
+>>>   arch/arm/kernel/bios32.c |   12 ++++++++++++
+>>>   1 file changed, 12 insertions(+)
+>>>
+>>> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+>>> index 16d43cd..17a26c1 100644
+>>> --- a/arch/arm/kernel/bios32.c
+>>> +++ b/arch/arm/kernel/bios32.c
+>>> @@ -545,6 +545,18 @@ void pci_common_init_dev(struct device *parent,
+>>> struct hw_pci *hw)
+>>>                  */
+>>>                 pci_bus_add_devices(bus);
+>>>         }
+>>> +
+>>> +       list_for_each_entry(sys, &head, node) {
+>>> +               struct pci_bus *bus = sys->bus;
+>>> +
+>>> +               /* Configure PCI Express settings */
+>>> +               if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>>> +                       struct pci_bus *child;
+>>> +
+>>> +                       list_for_each_entry(child, &bus->children, node)
+>>> +                               pcie_bus_configure_settings(child);
+>>
+>>
+>> This patch (8b5742ad156d ("ARM/PCI: Call pcie_bus_configure_settings() to
+>> set MPS")) has been upstream since v3.16-rc1, but I think we goofed.
+>>
+>> The MPS configuration should be done *before* pci_bus_add_devices().
+>> After
+>> pci_bus_add_devices(), drivers may be bound to devices, and the PCI core
+>> shouldn't touch device configuration while a driver owns the device.
+>>
+>> Looking at the code, it seems like it would have been simpler to do this
+>> in
+>> the existing loop:
+>>
+>>    list_for_each_entry(sys, &head, node) {
+>>      struct pci_bus *bus = sys->bus;
+>>
+>>      if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>>        pci_bus_size_bridges(bus);
+>>        pci_bus_assign_resources(bus);
+>>        list_for_each_entry(child, &bus->children, node)
+>>          pcie_bus_configure_settings(child);
+>>      }
+>>
+>>      pci_bus_add_devices(bus);
+>>    }
+>>
+>> so maybe there's some reason I'm not aware of for not doing it that way?
+>
+>
+> Bjorn,
+>
+> This one has escaped my radar and I found it recently while I was searching
+> for something else. I can't recall why this was not done this way. However I
+> have tried the below code on Keystone and it works fine.
+>
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index fcbbbb1..17efde7 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -520,7 +520,8 @@ void pci_common_init_dev(struct device *parent, struct
+> hw_pci *hw)
+>         list_for_each_entry(sys, &head, node) {
+>                 struct pci_bus *bus = sys->bus;
+>
+> -               if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> +               if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+> +                       struct pci_bus *child;
+>                         /*
+>                          * Size the bridge windows.
+>                          */
+> @@ -530,25 +531,15 @@ void pci_common_init_dev(struct device *parent, struct
+> hw_pci *hw)
+>                          * Assign resources.
+>                          */
+>                         pci_bus_assign_resources(bus);
+> -               }
+>
+> +                       list_for_each_entry(child, &bus->children, node)
+> +                               pcie_bus_configure_settings(child);
+> +               }
+>                 /*
+>                  * Tell drivers about devices found.
+>                  */
+>                 pci_bus_add_devices(bus);
+>         }
+> -
+> -       list_for_each_entry(sys, &head, node) {
+> -               struct pci_bus *bus = sys->bus;
+> -
+> -               /* Configure PCI Express settings */
+> -               if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+> -                       struct pci_bus *child;
+> -
+> -                       list_for_each_entry(child, &bus->children, node)
+> -                               pcie_bus_configure_settings(child);
+> -               }
+> -       }
+>  }
+>
+> The SATA comes up fine and ahci is able to override the mrrs value as shown
+> by the log below.
+>
+> [    1.581526] ahci 0001:01:00.0: limiting MRRS to 256
+> [    1.586521] ahci 0001:01:00.0: AHCI 0001.0000 32 slots 2 ports 6 Gbps 0x3
+> impl SATA mode
+> [    1.594604] ahci 0001:01:00.0: flags: 64bit ncq sntf led only pmp fbs pio
+> slum part sxs
+> [    1.603772] scsi host0: ahci
+> [    1.606976] scsi host1: ahci
+> [
+>
+> If you are fine, I can send a patch for this. Please confirm.
 
-On Thu, Jul 09, 2015 at 04:00:35PM +0800, Jiang Liu wrote:
-> Recently Marc Zyngier <marc.zyngier@arm.com> has posted a patch set at
-> https://lkml.org/lkml/2015/7/7/712
-> to enhance PCI MSI code to support generic MSI.
-> 
-> This is a companion patch set to refine struct msi_desc and related data
-> structures to support generic MSI, and it would be better to combined with
-> Marc's patch set.  It's also requested by
-> Stuart Yoder <stuart.yoder@freescale.com>
-> 
-> It first introduces a helper function msi_desc_to_pci_sysdata(), and
-> convert current PCI drivers to use helper functions to access fields
-> in struct msi_desc.
-> Then it moves msi_list from struct pci_dev into struct device and
-> refines struct msi_desc.
-> At last it moves alloc_msi_entry() into kernel/irq/msi.c for reuse.
-> 
-> Currently msi_desc_to_pci_sysdata() and msi_desc_to_pci_dev() are
-> implemented as normal functions instead of inlines to avoid header file
-> inclusion issue. If inlined version is preferred for performance, we could
-> move all of first_pci_msi_entry, for_each_pci_msi_entry, msi_desc_to_pci_dev
-> and msi_desc_to_pci_sysdata from linxu/kernel/msi.h into linux/kernel/pci.h.
-> 
-> This patch set is based on v4.2-rc1 and passes 0day test suite. You
-> may access the code at:
-> https://github.com/jiangliu/linux.git msi_desc_v1
-> 
-> Thanks!
-> Gerry
-> 
-> Jiang Liu (12):
->   PCI: Add helper function msi_desc_to_pci_sysdata()
->   MIPS, PCI: Use for_pci_msi_entry() to access MSI device list
->   PowerPC, PCI: Use for_pci_msi_entry() to access MSI device list
->   s390/pci: Use for_pci_msi_entry() to access MSI device list
->   x86, PCI: Use for_pci_msi_entry() to access MSI device list
->   PCI: Use for_pci_msi_entry() to access MSI device list
->   sparc, PCI: Use helper functions to access fields in struct msi_desc
->   PCI: Use helper functions to access fields in struct msi_desc
->   genirq: Move msi_list from struct pci_dev to struct device
->   genirq, PCI: Store 'struct device *' instead 'struct pci_dev *' in
->     struct msi_desc
->   genirq, PCI: Reorginize struct msi_desc to prepare for support of
->     generic MSI
->   genirq, PCI: Move alloc_msi_entry() from PCI MSI code into generic
->     MSI code
-
-Sergei pointed out typos in the "Use for_pci_msi_entry()" subject and
-changelogs; I assume you'll fix those.
-
-Paul had a question on 09/12 regarding Kconfig, and I didn't see a
-resolution to that.
-
-For the PCI parts:
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Thomas, I assume you'll take this via your tree.
+Yes, please!  I think the existing code that calls
+pci_bus_add_devices() before configuring MPS is wrong, because MPS
+should be configured before drivers can claim the device.
 
 Bjorn
