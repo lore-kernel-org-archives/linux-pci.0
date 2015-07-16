@@ -1,157 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0064.outbound.protection.outlook.com ([65.55.169.64]:40736
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754905AbbGPROS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Jul 2015 13:14:18 -0400
+Message-ID: <55A7E663.9030000@caviumnetworks.com>
+Date: Thu, 16 Jul 2015 10:14:11 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <1436289485-28230-15-git-send-email-marc.zyngier@arm.com>
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com> <1436289485-28230-15-git-send-email-marc.zyngier@arm.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Thu, 9 Jul 2015 15:12:44 -0700
-Message-ID: <CADaLNDm9o8XH749ocy4eJO=1T_w0AAFa1UZJLiFGrgR=5Aqjcg@mail.gmail.com>
-Subject: Re: [PATCH v3 14/15] PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
 To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+CC: David Daney <ddaney.cavm@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
 	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Robert Richter <rrichter@cavium.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
+ the irqdomain of the GIC.
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com> <55A6947F.8070903@arm.com> <55A6AD1F.902@caviumnetworks.com> <55A75F8B.3080009@arm.com> <55A7E0C2.8020704@caviumnetworks.com> <55A7E52D.9080201@arm.com>
+In-Reply-To: <55A7E52D.9080201@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 7, 2015 at 10:18 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> The XGene MSI driver only uses the msi_controller structure as
-> a way to match the host bridge  with its MSI HW, and thus the
-> msi_domain.
+On 07/16/2015 10:09 AM, Marc Zyngier wrote:
+> On 16/07/15 17:50, David Daney wrote:
+[...]
+>>> Patch 5 has established that you're using "virtual wire" SPIs, so we
+>>> need to work on exposing that with the normal kernel abstraction, and
+>>> not by messing with the internals of the GIC.
+>>>
+>>
+>> Agreed.
+>>
+>> The MSI system has pci_enable_msix()/pci_disable_msix().
+>>
+>> I would propose something like:
+>>
+>> struct gic_spi_entry {
+>> 	int spi   /* SPI number */
+>> 	int irq;  /* kernel irq number mapped to the spi*/
+>> 	u32 msg;  /* message to be written */
+>> 	u64 assert_addr;
+>> 	u64 deassert_addr;
+>> };
+>>
+>> /* Fill in the SPI processing information */
+>> int gic_map_spi(int spi, struct gic_spi_entry *data);
 >
-> But now that we can directly associate an msi_domain with a device,
-> there is no use keeping this msi_controller around.
+> Neither.
 >
-> Just remove all traces of msi_controller from the driver.
->
-Thanks, Marc.
+> The way to do it is to make this a *separate* IRQ domain stacked onto
+> the SPI domain. No funky hook on the side. If it doesn't go through the
+> normal kernel API, it doesn't reach the GIC.
 
-I tested this patch set and it works on my APM X-Gene evaluation platform.
+Yes, the irqdomain does handle mapping SPI -> irq, and the message can 
+be derived from the SPI.  However, the irqdomain infrastructure cannot 
+supply values for either assert_addr or deassert_addr.
 
-The xgene_pcie_msi_enable (in driver/pci/host/pci-xgene.c), which is
-used to get msi_controller for X-Gene PCIe port,
-also becomes unnecessary with this patch set. I will post a clean-up
-patch when your changes are accepted.
-
-You can add my tested-by if you want:
-
-Tested-by: Duc Dang <dhdang@apm.com>
-
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  drivers/pci/host/pci-xgene-msi.c | 41 ++++++++++++++++------------------------
->  1 file changed, 16 insertions(+), 25 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> index 2d31d4d..ec5a14b 100644
-> --- a/drivers/pci/host/pci-xgene-msi.c
-> +++ b/drivers/pci/host/pci-xgene-msi.c
-> @@ -40,8 +40,8 @@ struct xgene_msi_group {
->
->  struct xgene_msi {
->         struct device_node      *node;
-> -       struct msi_controller   mchip;
-> -       struct irq_domain       *domain;
-> +       struct irq_domain       *inner_domain;
-> +       struct irq_domain       *msi_domain;
->         u64                     msi_addr;
->         void __iomem            *msi_regs;
->         unsigned long           *bitmap;
-> @@ -252,17 +252,17 @@ static const struct irq_domain_ops msi_domain_ops = {
->
->  static int xgene_allocate_domains(struct xgene_msi *msi)
->  {
-> -       msi->domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-> -                                           &msi_domain_ops, msi);
-> -       if (!msi->domain)
-> +       msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-> +                                                 &msi_domain_ops, msi);
-> +       if (!msi->inner_domain)
->                 return -ENOMEM;
->
-> -       msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
-> -                                                     &xgene_msi_domain_info,
-> -                                                     msi->domain);
-> +       msi->msi_domain = pci_msi_create_irq_domain(msi->node,
-> +                                                   &xgene_msi_domain_info,
-> +                                                   msi->inner_domain);
->
-> -       if (!msi->mchip.domain) {
-> -               irq_domain_remove(msi->domain);
-> +       if (!msi->msi_domain) {
-> +               irq_domain_remove(msi->inner_domain);
->                 return -ENOMEM;
->         }
->
-> @@ -271,10 +271,10 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->
->  static void xgene_free_domains(struct xgene_msi *msi)
->  {
-> -       if (msi->mchip.domain)
-> -               irq_domain_remove(msi->mchip.domain);
-> -       if (msi->domain)
-> -               irq_domain_remove(msi->domain);
-> +       if (msi->msi_domain)
-> +               irq_domain_remove(msi->msi_domain);
-> +       if (msi->inner_domain)
-> +               irq_domain_remove(msi->inner_domain);
->  }
->
->  static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
-> @@ -340,7 +340,7 @@ static void xgene_msi_isr(unsigned int irq, struct irq_desc *desc)
->                          * CPU0
->                          */
->                         hw_irq = hwirq_to_canonical_hwirq(hw_irq);
-> -                       virq = irq_find_mapping(xgene_msi->domain, hw_irq);
-> +                       virq = irq_find_mapping(xgene_msi->inner_domain, hw_irq);
->                         WARN_ON(!virq);
->                         if (virq != 0)
->                                 generic_handle_irq(virq);
-> @@ -497,7 +497,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
->                 goto error;
->         }
->         xgene_msi->msi_addr = res->start;
-> -
-> +       xgene_msi->node = pdev->dev.of_node;
->         xgene_msi->num_cpus = num_possible_cpus();
->
->         rc = xgene_msi_init_allocator(xgene_msi);
-> @@ -561,19 +561,10 @@ static int xgene_msi_probe(struct platform_device *pdev)
->
->         cpu_notifier_register_done();
->
-> -       xgene_msi->mchip.of_node = pdev->dev.of_node;
-> -       rc = of_pci_msi_chip_add(&xgene_msi->mchip);
-> -       if (rc) {
-> -               dev_err(&pdev->dev, "failed to add MSI controller chip\n");
-> -               goto error_notifier;
-> -       }
-> -
->         dev_info(&pdev->dev, "APM X-Gene PCIe MSI driver loaded\n");
->
->         return 0;
->
-> -error_notifier:
-> -       unregister_hotcpu_notifier(&xgene_msi_cpu_notifier);
->  error:
->         xgene_msi_remove(pdev);
->         return rc;
-> --
-> 2.1.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Those are needed in order to use SPI.  How would you suggest that they 
+be obtained?
 
 
+David Daney
 
--- 
-Regards,
-Duc Dang.
+
+>
+> 	M.
+>
+
