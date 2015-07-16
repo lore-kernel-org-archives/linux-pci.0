@@ -1,186 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44956 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238AbbGNWr7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:47:59 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 14/49] PCI: Add __add_to_list()
-Date: Tue, 14 Jul 2015 15:46:45 -0700
-Message-Id: <1436914040-13206-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:42621 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751429AbbGPEjT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 00:39:19 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v3 1/4] PCI: iproc: enable arm64 support for iProc PCIe
+Date: Wed, 15 Jul 2015 21:39:20 -0700
+Message-ID: <1437021563-29139-2-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
+References: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-to take alt_size, alt_align.
+This patch enables arm64 support to the iProc PCIe driver
 
-preparation patch for alt_size support.
-
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
 ---
- drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 31 insertions(+), 20 deletions(-)
+ drivers/pci/host/pcie-iproc.c |   15 ++++-----------
+ drivers/pci/host/pcie-iproc.h |    8 ++++++--
+ 2 files changed, 10 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f30225c..57b5c09 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -66,6 +66,8 @@ struct pci_dev_resource {
- 	resource_size_t end;
- 	resource_size_t add_size;
- 	resource_size_t min_align;
-+	resource_size_t alt_size;
-+	resource_size_t alt_align;
- 	unsigned long flags;
- };
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index d77481e..8a556d5 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -58,11 +58,6 @@
+ #define SYS_RC_INTX_EN               0x330
+ #define SYS_RC_INTX_MASK             0xf
  
-@@ -88,15 +90,16 @@ static void free_list(struct list_head *head)
-  * @add_size:	additional size to be optionally added
-  *              to the resource
-  */
--static int add_to_list(struct list_head *head,
-+static int __add_to_list(struct list_head *head,
- 		 struct pci_dev *dev, struct resource *res,
--		 resource_size_t add_size, resource_size_t min_align)
-+		 resource_size_t add_size, resource_size_t min_align,
-+		 resource_size_t alt_size, resource_size_t alt_align)
+-static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
+-{
+-	return sys->private_data;
+-}
+-
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -71,8 +66,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 					    unsigned int devfn,
+ 					    int where)
  {
- 	struct pci_dev_resource *tmp;
+-	struct pci_sys_data *sys = bus->sysdata;
+-	struct iproc_pcie *pcie = sys_to_pcie(sys);
++	struct iproc_pcie *pcie = bus->sysdata;
+ 	unsigned slot = PCI_SLOT(devfn);
+ 	unsigned fn = PCI_FUNC(devfn);
+ 	unsigned busno = bus->number;
+@@ -208,10 +202,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
  
- 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
- 	if (!tmp) {
--		pr_warn("add_to_list: kmalloc() failed!\n");
-+		pr_warn("__add_to_list: kmalloc() failed!\n");
- 		return -ENOMEM;
- 	}
+ 	iproc_pcie_reset(pcie);
  
-@@ -107,12 +110,20 @@ static int add_to_list(struct list_head *head,
- 	tmp->flags = res->flags;
- 	tmp->add_size = add_size;
- 	tmp->min_align = min_align;
-+	tmp->alt_size = alt_size;
-+	tmp->alt_align = alt_align;
+-	pcie->sysdata.private_data = pcie;
+-
+-	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
+-				  &pcie->sysdata, res);
++	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, pcie, res);
+ 	if (!bus) {
+ 		dev_err(pcie->dev, "unable to create PCI root bus\n");
+ 		ret = -ENOMEM;
+@@ -229,7 +220,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
  
- 	list_add(&tmp->list, head);
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
++#ifdef CONFIG_ARM
+ 	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
++#endif
+ 	pci_bus_add_devices(bus);
  
  	return 0;
- }
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index ba0a108..0ee9673 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -18,18 +18,22 @@
  
-+static int add_to_list(struct list_head *head,
-+		 struct pci_dev *dev, struct resource *res)
-+{
-+	return __add_to_list(head, dev, res, 0, 0, 0, 0);
-+}
-+
- static void remove_from_list(struct list_head *head,
- 				 struct resource *res)
- {
-@@ -378,9 +389,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
--				add_to_list(fail_head, dev_res->dev, res,
--					    0 /* don't care */,
--					    0 /* don't care */);
-+				add_to_list(fail_head, dev_res->dev, res);
- 			reset_resource(res);
- 		}
- 	}
-@@ -466,7 +475,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	/* Save original start, end, flags etc at first */
- 	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
-+		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
- 			free_list(&save_head);
- 			goto requested_and_reassign;
- 		}
-@@ -1019,8 +1028,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0,
--			    min_align);
-+		__add_to_list(realloc_head, bus->self, b_res,
-+			      size1 - size0, min_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long)size1-size0);
-@@ -1222,7 +1231,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
--				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
-+				__add_to_list(realloc_head, dev, r,
-+					      r_size, align, 0, 0);
- 				sum_add_size += r_size;
- 				if (align > max_add_align)
- 					max_add_align = align;
-@@ -1293,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
--				min_add_align);
-+		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
-+				min_add_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long) (size1 - size0),
-@@ -1331,8 +1341,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[0].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
--				pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_1:
-@@ -1343,8 +1353,8 @@ handle_b_res_1:
- 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[1].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
--				 pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res + 1,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_2:
-@@ -1381,8 +1391,9 @@ handle_b_res_2:
- 				  IORESOURCE_STARTALIGN;
- 		if (realloc_head) {
- 			b_res[2].end -= pci_cardbus_mem_size;
--			add_to_list(realloc_head, bridge, b_res+2,
--				 pci_cardbus_mem_size, pci_cardbus_mem_size);
-+			__add_to_list(realloc_head, bridge, b_res + 2,
-+				pci_cardbus_mem_size, pci_cardbus_mem_size,
-+				0, 0);
- 		}
- 
- 		/* reduce that to half */
-@@ -1397,8 +1408,8 @@ handle_b_res_3:
- 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[3].end -= b_res_3_size;
--		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
--				 pci_cardbus_mem_size);
-+		__add_to_list(realloc_head, bridge, b_res + 3,
-+				b_res_3_size, pci_cardbus_mem_size, 0, 0);
- 	}
- 
- handle_done:
+ /**
+  * iProc PCIe device
++ * @sysdata: Per PCI controller data. This needs to be kept at the beginning of
++ * struct iproc_pcie, to enable support of both ARM32 and ARM64 platforms with
++ * minimal changes in the iProc PCIe core driver
+  * @dev: pointer to device data structure
+  * @base: PCIe host controller I/O register base
+  * @resources: linked list of all PCI resources
+- * @sysdata: Per PCI controller data
+  * @root_bus: pointer to root bus
+  * @phy: optional PHY device that controls the Serdes
+  * @irqs: interrupt IDs
+  */
+ struct iproc_pcie {
++#ifdef CONFIG_ARM
++	struct pci_sys_data sysdata;
++#endif
+ 	struct device *dev;
+ 	void __iomem *base;
+-	struct pci_sys_data sysdata;
+ 	struct pci_bus *root_bus;
+ 	struct phy *phy;
+ 	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
 -- 
-1.8.4.5
+1.7.9.5
 
