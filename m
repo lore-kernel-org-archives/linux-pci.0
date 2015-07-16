@@ -1,63 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50880 "EHLO mx2.suse.de"
+Received: from foss.arm.com ([217.140.101.70]:44992 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757011AbbGGQPM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jul 2015 12:15:12 -0400
-Date: Tue, 7 Jul 2015 18:15:09 +0200
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bp@suse.de,
-	mingo@kernel.org, arnd@arndb.de, bhelgaas@google.com,
-	luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com
-Subject: Re: [PATCH v8 0/9] pci: add pci_iomap_wc() and pci_ioremap_wc_bar()
-Message-ID: <20150707161509.GS7021@wotan.suse.de>
-References: <1435195342-26879-1-git-send-email-mcgrof@do-not-panic.com>
- <1435284726.3822.28.camel@kernel.crashing.org>
+	id S1751033AbbGPRJF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Jul 2015 13:09:05 -0400
+Message-ID: <55A7E52D.9080201@arm.com>
+Date: Thu, 16 Jul 2015 18:09:01 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435284726.3822.28.camel@kernel.crashing.org>
+To: David Daney <ddaney@caviumnetworks.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Robert Richter <rrichter@cavium.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
+ the irqdomain of the GIC.
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com> <55A6947F.8070903@arm.com> <55A6AD1F.902@caviumnetworks.com> <55A75F8B.3080009@arm.com> <55A7E0C2.8020704@caviumnetworks.com>
+In-Reply-To: <55A7E0C2.8020704@caviumnetworks.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 26, 2015 at 12:12:06PM +1000, Benjamin Herrenschmidt wrote:
-> On Wed, 2015-06-24 at 18:22 -0700, Luis R. Rodriguez wrote:
-> > Although I had test compiled this before just to be safe I went ahead and
-> > successfully test-compiled this set with allmodconfig, specially since I've now
-> > removed the exports for the devres routines.  Please let me know if these might
-> > be able to go through you or if there are any questions. I will note the recent
-> > discussion with Benjamin over the v7 series concluded that the ideas we both
-> > were alluding to, on automating instead the WC effects for devices seems a bit
-> > too idealistic for PCI / PCIE for now, but perhaps we should at least consider
-> > this in the future for userspace mmap() calls [4].
+On 16/07/15 17:50, David Daney wrote:
+> On 07/16/2015 12:38 AM, Marc Zyngier wrote:
+>> On 15/07/15 19:57, David Daney wrote:
+>>> On 07/15/2015 10:12 AM, Marc Zyngier wrote:
+>>>> On 15/07/15 17:54, David Daney wrote:
+>>>>> From: David Daney <david.daney@cavium.com>
+>>>>>
+>>>>> Needed to map SPI interrupt sources.
+>>>>>
+>>>>> Signed-off-by: David Daney <david.daney@cavium.com>
+>>>>> ---
+>>>>>    drivers/irqchip/irq-gic-v3.c       | 5 +++++
+>>>>>    include/linux/irqchip/arm-gic-v3.h | 1 +
+>>>>>    2 files changed, 6 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+>>>>> index c52f7ba..0019fed 100644
+>>>>> --- a/drivers/irqchip/irq-gic-v3.c
+>>>>> +++ b/drivers/irqchip/irq-gic-v3.c
+>>>>> @@ -58,6 +58,11 @@ static struct gic_chip_data gic_data __read_mostly;
+>>>>>    /* Our default, arbitrary priority value. Linux only uses one anyway. */
+>>>>>    #define DEFAULT_PMR_VALUE	0xf0
+>>>>>
+>>>>> +struct irq_domain *gic_get_irq_domain(void)
+>>>>> +{
+>>>>> +	return gic_data.domain;
+>>>>> +}
+>>>>> +
+>>>>>    static inline unsigned int gic_irq(struct irq_data *d)
+>>>>>    {
+>>>>>    	return d->hwirq;
+>>>>> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+>>>>> index 18e3757..5992224 100644
+>>>>> --- a/include/linux/irqchip/arm-gic-v3.h
+>>>>> +++ b/include/linux/irqchip/arm-gic-v3.h
+>>>>> @@ -391,6 +391,7 @@ int its_init(struct device_node *node, struct rdists *rdists,
+>>>>>
+>>>>>    typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
+>>>>>    void set_its_pci_requester_id(its_pci_requester_id_t fn);
+>>>>> +struct irq_domain *gic_get_irq_domain(void);
+>>>>>    #endif
+> [...]
+>>
+>>> We need a way to be able to map these.
+>>
+>> However you're going to map them, it will not be by just blindly
+>> exporting random irqdomains from an unsuspecting interrupt controller.
 > 
-> So I've been trying to figure out how to make this practically work for us (powerpc).
-> 
-> writel() will never write combine for us, it uses too heavy barriers.
-> 
-> writel_relaxed() today is identical to writel() but we can change it.
-> 
-> The problem is that switching to G=0 mappings (which is what provides us with write
-> combining) also architecturally enables prefetch and speculative loads... and again
-> architecturally (the implementations may differ), kills the effect of the lightweight
-> io barrier eieio which we would have to use in readl_relaxed() and writel_relaxed()
-> to provide their normal semantics.
-> 
-> So it boils down to: Can we modify the documentation of readl_relaxed() and writel_relaxed()
-> to define them as being even further relaxed when using a "wc" mapping ?
->
-> Otherwise, the only way out I see for us on powerpc is to bias massively writel_relaxed()
-> against real_relaxed() by putting heavy barriers around the load in the latter so we can
-> keep them completely out of the former and still enable wc.
+> There is nothing random about it.  The ARM architects specified that 
+> there is exactly One True GIC in a system.  If we need to do something 
+> with the GIC, it is not a "random ... unsuspecting interrupt 
+> controller", it is *The* GIC.
 
-Depends if you semantically then also are implicating its use for the ioremap_wc()
-area and if we've ensured we've visited all other possibilities to avoid this. Instead
-of replying here though it seems we have a large general ioremap() semantic discussion
-ongoing on another thread which is far ahead of this one and more generalized. Mind
-following up there, seems the party is there:
+Indeed. And The One True GIC Driver will not be butchered just because
+you can, thank you very much.
 
-http://lkml.kernel.org/r/20150707160703.GR7021@wotan.suse.de
+>>
+>> Patch 5 has established that you're using "virtual wire" SPIs, so we
+>> need to work on exposing that with the normal kernel abstraction, and
+>> not by messing with the internals of the GIC.
+>>
+> 
+> Agreed.
+> 
+> The MSI system has pci_enable_msix()/pci_disable_msix().
+> 
+> I would propose something like:
+> 
+> struct gic_spi_entry {
+> 	int spi   /* SPI number */
+> 	int irq;  /* kernel irq number mapped to the spi*/
+> 	u32 msg;  /* message to be written */
+> 	u64 assert_addr;
+> 	u64 deassert_addr;
+> };
+> 
+> /* Fill in the SPI processing information */
+> int gic_map_spi(int spi, struct gic_spi_entry *data);
 
- Luis
+Neither.
+
+The way to do it is to make this a *separate* IRQ domain stacked onto
+the SPI domain. No funky hook on the side. If it doesn't go through the
+normal kernel API, it doesn't reach the GIC.
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
