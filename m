@@ -1,102 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:57278 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753399AbbGOXPz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 19:15:55 -0400
-Date: Wed, 15 Jul 2015 16:13:57 -0700
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
-	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
-	mmarek@suse.cz, bigeasy@linutronix.de, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mm@kvack.org,
-	cocci@systeme.lip6.fr
-Subject: Re: [PATCH 1/4] mm: Add support for __GFP_ZERO flag to
- dma_pool_alloc()
-Message-ID: <20150715231356.GA16638@sean.stalley.intel.com>
-References: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
- <1436994883-16563-2-git-send-email-sean.stalley@intel.com>
- <20150715142907.ccfd473ea0e039642d46893d@linux-foundation.org>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:2641 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753333AbbGPEjW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 00:39:22 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v3 3/4] arm64: Add Broadcom iProc family support
+Date: Wed, 15 Jul 2015 21:39:22 -0700
+Message-ID: <1437021563-29139-4-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
+References: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150715142907.ccfd473ea0e039642d46893d@linux-foundation.org>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks for the review Andrew, my responses are inline.
+This patch adds support to Broadcom's iProc family of arm64 based SoCs
+in the arm64 Kconfig and defconfig files
 
--Sean
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ arch/arm64/Kconfig           |    5 +++++
+ arch/arm64/configs/defconfig |    2 ++
+ 2 files changed, 7 insertions(+)
 
-On Wed, Jul 15, 2015 at 02:29:07PM -0700, Andrew Morton wrote:
-> On Wed, 15 Jul 2015 14:14:40 -0700 "Sean O. Stalley" <sean.stalley@intel.com> wrote:
-> 
-> > Currently the __GFP_ZERO flag is ignored by dma_pool_alloc().
-> > Make dma_pool_alloc() zero the memory if this flag is set.
-> > 
-> > ...
-> >
-> > --- a/mm/dmapool.c
-> > +++ b/mm/dmapool.c
-> > @@ -334,7 +334,7 @@ void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
-> >  	/* pool_alloc_page() might sleep, so temporarily drop &pool->lock */
-> >  	spin_unlock_irqrestore(&pool->lock, flags);
-> >  
-> > -	page = pool_alloc_page(pool, mem_flags);
-> > +	page = pool_alloc_page(pool, mem_flags & (~__GFP_ZERO));
-> >  	if (!page)
-> >  		return NULL;
-> >  
-> > @@ -375,6 +375,10 @@ void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
-> >  	memset(retval, POOL_POISON_ALLOCATED, pool->size);
-> >  #endif
-> >  	spin_unlock_irqrestore(&pool->lock, flags);
-> > +
-> > +	if (mem_flags & __GFP_ZERO)
-> > +		memset(retval, 0, pool->size);
-> > +
-> >  	return retval;
-> >  }
-> >  EXPORT_SYMBOL(dma_pool_alloc);
-> 
-> hm, this code is all a bit confused.
-> 
-> We'd really prefer that the __GFP_ZERO be passed all the way to the
-> bottom level, so that places which are responsible for zeroing memory
-> (eg, the page allocator) can do their designated function.  One reason
-> for this is that if someone comes up with a whizzy way of zeroing
-> memory on their architecture (eg, non-temporal store) then that will be
-> implemented in the core page allocator and the dma code will miss out.
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 318175f..969ef4a 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -162,6 +162,11 @@ source "kernel/Kconfig.freezer"
+ 
+ menu "Platform selection"
+ 
++config ARCH_BCM_IPROC
++	bool "Broadcom iProc SoC Family"
++	help
++	  This enables support for Broadcom iProc based SoCs
++
+ config ARCH_EXYNOS
+ 	bool
+ 	help
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 4e17e7e..c83d51f 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -31,6 +31,7 @@ CONFIG_MODULES=y
+ CONFIG_MODULE_UNLOAD=y
+ # CONFIG_BLK_DEV_BSG is not set
+ # CONFIG_IOSCHED_DEADLINE is not set
++CONFIG_ARCH_BCM_IPROC=y
+ CONFIG_ARCH_EXYNOS7=y
+ CONFIG_ARCH_FSL_LS2085A=y
+ CONFIG_ARCH_HISI=y
+@@ -102,6 +103,7 @@ CONFIG_SERIO_AMBAKMI=y
+ CONFIG_LEGACY_PTY_COUNT=16
+ CONFIG_SERIAL_8250=y
+ CONFIG_SERIAL_8250_CONSOLE=y
++CONFIG_SERIAL_8250_DW=y
+ CONFIG_SERIAL_8250_MT6577=y
+ CONFIG_SERIAL_AMBA_PL011=y
+ CONFIG_SERIAL_AMBA_PL011_CONSOLE=y
+-- 
+1.7.9.5
 
-It would be nice if we could use the page allocator for whizzy zeroing.
-There are a few reasons why I didn't pass __GFP_ZERO down to the allocator:
-
- - dma_pool_alloc() reuses blocks of memory that were recently freed by dma_pool_free().
-   We have to memset(0) old blocks, since we don't know what's in them.
-
- - When a new page is alloced, pool_initalize_page() writes an integer to every block.
-   So even if we passed __GFP_ZERO down to the allocator, the block would not be empty
-   by the time dma_pool_alloc() returns.
-
- - Assuming a driver is allocing as often as it is freeing,
-   once the pool has enough memory it shouldn't call down to the allocator very often,
-   so any optimization down in the allocator shouldn't make much of a difference
-
-> Also, and just from a brief look around,
-> drivers/base/dma-coherent.c:dma_alloc_from_coherent() is already
-> zeroing the memory so under some circumstances I think we'll zero the
-> memory twice?  We could fix that by passing the gfp_t to
-> dma_alloc_from_coherent() and then changing dma_alloc_from_coherent()
-> to *not* zero the memory if __GFP_ZERO, but wouldn't that be peculiar?
-
-I noticed this as well. In this case, we would be zeroing twice.
-This is no worse than the current case (where dma_pool_alloc() returns,
-then the driver calls memset(0)).
-
-> Also, passing __GFP_ZERO will now cause pool_alloc_page()'s
-> memset(POOL_POISON_FREED) to be wiped out.  I guess that's harmless,
-> but a bit inefficient?
-
-Inefficient, but no more inefficient than the current case.
-I didn't think it would be a problem (since it only happens if dma pool debuging is enabled).
-I could add a check to only memset the poison if __GFP_ZERO is not set.
