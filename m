@@ -1,128 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0078.outbound.protection.outlook.com ([157.56.110.78]:31332
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2on0098.outbound.protection.outlook.com ([65.55.169.98]:54263
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751037AbbGaKPe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jul 2015 06:15:34 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH v2 4/5] Documentation: dt-bindings: pci: altera pcie device tree binding
-Date: Fri, 31 Jul 2015 18:15:14 +0800
-Message-ID: <1438337715-22594-5-git-send-email-lftan@altera.com>
-In-Reply-To: <1438337715-22594-1-git-send-email-lftan@altera.com>
-References: <1438337715-22594-1-git-send-email-lftan@altera.com>
+	id S1751033AbbGPQuR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Jul 2015 12:50:17 -0400
+Message-ID: <55A7E0C2.8020704@caviumnetworks.com>
+Date: Thu, 16 Jul 2015 09:50:10 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Marc Zyngier <marc.zyngier@arm.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Robert Richter <rrichter@cavium.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
+ the irqdomain of the GIC.
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com> <55A6947F.8070903@arm.com> <55A6AD1F.902@caviumnetworks.com> <55A75F8B.3080009@arm.com>
+In-Reply-To: <55A75F8B.3080009@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds the bindings for Altera PCIe host controller driver and
-Altera PCIe MSI driver.
+On 07/16/2015 12:38 AM, Marc Zyngier wrote:
+> On 15/07/15 19:57, David Daney wrote:
+>> On 07/15/2015 10:12 AM, Marc Zyngier wrote:
+>>> On 15/07/15 17:54, David Daney wrote:
+>>>> From: David Daney <david.daney@cavium.com>
+>>>>
+>>>> Needed to map SPI interrupt sources.
+>>>>
+>>>> Signed-off-by: David Daney <david.daney@cavium.com>
+>>>> ---
+>>>>    drivers/irqchip/irq-gic-v3.c       | 5 +++++
+>>>>    include/linux/irqchip/arm-gic-v3.h | 1 +
+>>>>    2 files changed, 6 insertions(+)
+>>>>
+>>>> diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+>>>> index c52f7ba..0019fed 100644
+>>>> --- a/drivers/irqchip/irq-gic-v3.c
+>>>> +++ b/drivers/irqchip/irq-gic-v3.c
+>>>> @@ -58,6 +58,11 @@ static struct gic_chip_data gic_data __read_mostly;
+>>>>    /* Our default, arbitrary priority value. Linux only uses one anyway. */
+>>>>    #define DEFAULT_PMR_VALUE	0xf0
+>>>>
+>>>> +struct irq_domain *gic_get_irq_domain(void)
+>>>> +{
+>>>> +	return gic_data.domain;
+>>>> +}
+>>>> +
+>>>>    static inline unsigned int gic_irq(struct irq_data *d)
+>>>>    {
+>>>>    	return d->hwirq;
+>>>> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+>>>> index 18e3757..5992224 100644
+>>>> --- a/include/linux/irqchip/arm-gic-v3.h
+>>>> +++ b/include/linux/irqchip/arm-gic-v3.h
+>>>> @@ -391,6 +391,7 @@ int its_init(struct device_node *node, struct rdists *rdists,
+>>>>
+>>>>    typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
+>>>>    void set_its_pci_requester_id(its_pci_requester_id_t fn);
+>>>> +struct irq_domain *gic_get_irq_domain(void);
+>>>>    #endif
+[...]
+>
+>> We need a way to be able to map these.
+>
+> However you're going to map them, it will not be by just blindly
+> exporting random irqdomains from an unsuspecting interrupt controller.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- .../devicetree/bindings/pci/altera-pcie-msi.txt    | 27 ++++++++++++
- .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
- 2 files changed, 76 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+There is nothing random about it.  The ARM architects specified that 
+there is exactly One True GIC in a system.  If we need to do something 
+with the GIC, it is not a "random ... unsuspecting interrupt 
+controller", it is *The* GIC.
 
-diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-new file mode 100644
-index 0000000..7f330c9
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-@@ -0,0 +1,27 @@
-+* Altera PCIe MSI controller
-+
-+Required properties:
-+- compatible:	should contain "altr,msi-1.0"
-+- reg:		specifies the physical base address of the controller and
-+		the length of the memory mapped region.
-+- reg-names:	Must include the following entries:
-+		"csr": CSR registers
-+		"vector_slave": vectors region
-+-interrupts:	specifies the interrupt source of the parent interrupt
-+		controller. The format of the interrupt specifier depends on the
-+		parent interrupt controller.
-+- num-vectors:	Number of vectors, range 1 to 32.
-+- msi-controller:	indicates that this is MSI controller node
-+
-+
-+Example
-+msi0: msi@0xFF200000 {
-+	compatible = "altr,msi-1.0";
-+	reg = <0xFF200000 0x00000010
-+		0xFF200010 0x00000080>;
-+	reg-names = "csr", "vector_slave";
-+	interrupt-parent = <&hps_0_arm_gic_0>;
-+	interrupts = <0 42 4>;
-+	msi-controller = <1>;
-+	num-vectors = <32>;
-+};
-diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-new file mode 100644
-index 0000000..54c45f5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-@@ -0,0 +1,49 @@
-+* Altera PCIe controller
-+
-+Required properties:
-+- compatible :	should contain "altr,pcie-root-port-1.0"
-+- reg:		A list of physical base address and length for TXS and CRA.
-+- reg-names:	Must include the following entries:
-+		"Txs": TXS region
-+		"Cra": Control register access region
-+-interrupts:	specifies the interrupt source of the parent interrupt controller.
-+		The format of the interrupt specifier depends on the parent interrupt
-+		controller.
-+- device_type:	must be "pci"
-+- #address-cells:	set to <3>
-+- #size-cells:	set to <2>
-+- #interrupt-cells:	set to <1>
-+- ranges:		Describes the translation of addresses for root ports and standard
-+		PCI regions.
-+- interrupt-map-mask and interrupt-map: standard PCI properties
-+	to define the mapping of the PCIe interface to interrupt
-+	numbers.
-+
-+Optional properties:
-+- msi-parent:	Link to the hardware entity that serves as the MSI controller for this PCIe
-+		controller.
-+- bus-range:	PCI bus numbers covered
-+
-+Example
-+	pcie_0: pcie@0xc00000000 {
-+		compatible = "altr,pcie-root-port-1.0";
-+		reg = <0xc0000000 0x20000000>,
-+			<0xff220000 0x00004000>;
-+		reg-names = "Txs", "Cra";
-+		interrupt-parent = <&hps_0_arm_gic_0>;
-+		interrupts = <0 40 4>;
-+		interrupt-controller;
-+		#interrupt-cells = <1>;
-+		bus-range = <0x0 0xFF>;
-+		device_type = "pci";
-+		msi-parent = <&msi_to_gic_gen_0>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_0 1>,
-+			            <0 0 0 2 &pcie_0 2>,
-+			            <0 0 0 3 &pcie_0 3>,
-+			            <0 0 0 4 &pcie_0 4>;
-+		ranges = <0x82000000 0x00000000 0xc0000000 0xc0000000 0x00000000 0x10000000
-+			    0x82000000 0x00000000 0xd0000000 0xd0000000 0x00000000 0x10000000>;
-+	};
--- 
-1.8.2.1
+>
+> Patch 5 has established that you're using "virtual wire" SPIs, so we
+> need to work on exposing that with the normal kernel abstraction, and
+> not by messing with the internals of the GIC.
+>
+
+Agreed.
+
+The MSI system has pci_enable_msix()/pci_disable_msix().
+
+I would propose something like:
+
+struct gic_spi_entry {
+	int spi   /* SPI number */
+	int irq;  /* kernel irq number mapped to the spi*/
+	u32 msg;  /* message to be written */
+	u64 assert_addr;
+	u64 deassert_addr;
+};
+
+/* Fill in the SPI processing information */
+int gic_map_spi(int spi, struct gic_spi_entry *data);
+
+David Daney
+
+
+
+> Thanks,
+>
+> 	M.
+>
 
