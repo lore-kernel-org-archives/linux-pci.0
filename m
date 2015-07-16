@@ -1,131 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41500 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753709AbbGWRsH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Jul 2015 13:48:07 -0400
-Date: Thu, 23 Jul 2015 18:48:45 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-Message-ID: <20150723174845.GB23324@red-moon>
-References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20150723161257.GZ21967@google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v3 0/4] Add Broadcom North Star 2 support
+Date: Wed, 15 Jul 2015 21:39:19 -0700
+Message-ID: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150723161257.GZ21967@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 23, 2015 at 05:12:57PM +0100, Bjorn Helgaas wrote:
-> On Thu, Jul 09, 2015 at 11:59:16AM +0100, Lorenzo Pieralisi wrote:
-> > When a PCI bus is scanned, upon PCI bridge detection the kernel
-> > has to read the bridge registers to set-up its resources so that
-> > the PCI resource hierarchy can be validated properly.
-> > 
-> > Most if not all architectures read PCI bridge registers in the
-> > pcibios_fixup_bus hook, that is called by the PCI generic layer
-> > whenever a PCI bus is scanned.
-> > 
-> > Since pci_read_bridge_bases is an arch agnostic operation (and it
-> > is carried out on all architectures) it can be moved to the generic
-> > PCI layer in order to consolidate code and remove the respective
-> > calls from the architectures back-ends.
-> > 
-> > The PCI_PROBE_ONLY flag is not checked before calling
-> > pci_read_bridge_buses in the generic layer since reading the bridge
-> > bases is not related to resources assignment; this implies that it
-> > can be carried out safely on PCI_PROBE_ONLY systems too and should
-> > not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
-> > flag before reading the bridge bases.
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> 
-> Applied to pci/resource for v4.3, thanks!
-> 
-> The PCI_PROBE_ONLY text seems backward to me: previously alpha and mips
-> only called pci_read_bridge_bases() if PCI_PROBE_ONLY was set.  After this
-> patch, alpha and mips systems that do not set PCI_PROBE_ONLY will also call
-> pci_read_bridge_bases().
+This patch series adds Broadcom North Star 2 (NS2) SoC support. NS2 is an ARMv8
+based SoC and under the Broadcom iProc family.
 
-Yes you are right, your log is much clearer.
+Sorry for tying this with the Broadcom iProc PCIe driver fixes for ARM64. I
+have to tie them together because iProc PCIe support is enabled by default
+when ARCH_BCM_IPROC is enabled. Without the fixes in the iProc PCIe driver,
+enabling CONFIG_ARCH_BCM_IPROC would break the build for arm64 defconfig. Let
+me know if there's a better way to handle this.
 
-> I really don't know why alpha and mips were like that.  It seems backwards.
-> It seems like we'd want to know the bridge windows if we were assigning
-> things, but they only read them if they were *not* going to assign things.
+This patch series is generated based on v4.2-rc2 and tested on Broadcom NS2 SVK
 
-I do not know either I will check again what issues this might trigger
-(apart from some odd log messages) hopefully they are not reading the bases
-because they are reassigning them anyway on !PCI_PROBE_ONLY, I hope that's
-not subtler than that.
+Code available on GITHUB: https://github.com/Broadcom/arm64-linux.git
+branch is ns2-core-v3
 
-Actually I noticed on alpha at least, they claim resources only
-on PCI_PROBE_ONLY and for that to succeed bridge bases must be
-read before, that may be an explanation but I do not know the reason.
+Changes from V2:
+- Drop hardcoded earlycon kernel command line paramter in NS2 SVK dts file
+because 1) earlycon is a debugging feature that can be enabled in the
+bootloader and should not be enabled by default in the board dts file and 2)
+of_earlycon should be used and support should be added to 8250 DW driver
 
-> I'm a little uneasy that we might break some alpha or mips system, since
-> there must have been some reason this was done originally.  It'd be ideal
-> if somebody could test a non-PCI_PROBE_ONLY system.  But maybe they're all
-> obsolete.
+Changes from V1:
+- Took Arnd's advice to tweak the location of struct pci_sys_data within
+struct iproc_pcie. This helps to get rid of most of the CONFIG_ARM wrap in
+iProc PCIe core driver
+- Use stdout-path and alias for serial console in NS2 SVK dts
+- Add all 4 CPU descriptions in NS2 dtsi
+- Remove "clock-frequency" property in the armv8 timer node so timer frequency
+can be determined based on readings from CNTFRQ_EL0
+- Remove config flag ARCH_BCM_NS2. Leave only ARCH_BCM_IPROC for all Broadcom
+arm64 SoCs as advised
 
-I have no way to test them, that's the reason behind the RFT on this
-patch, I am uneasy too I do not if anyone can help us test it
-(maybe adding it to -next can help with that).
+Ray Jui (4):
+  PCI: iproc: enable arm64 support for iProc PCIe
+  PCI: iproc: Fix ARM64 dependency in Kconfig
+  arm64: Add Broadcom iProc family support
+  arm64: dts: Add Broadcom North Star 2 support
 
-Please let me know.
+ Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
+ arch/arm64/Kconfig                                |    5 +
+ arch/arm64/boot/dts/Makefile                      |    1 +
+ arch/arm64/boot/dts/broadcom/Makefile             |    5 +
+ arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   59 +++++++++++
+ arch/arm64/boot/dts/broadcom/ns2.dtsi             |  118 +++++++++++++++++++++
+ arch/arm64/configs/defconfig                      |    2 +
+ drivers/pci/host/Kconfig                          |    2 +-
+ drivers/pci/host/pcie-iproc.c                     |   15 +--
+ drivers/pci/host/pcie-iproc.h                     |    8 +-
+ 10 files changed, 210 insertions(+), 14 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
+ create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
 
-Thanks !
-Lorenzo
+-- 
+1.7.9.5
 
-> 
-> I amended the changelog like this:
-> 
->     PCI: Call pci_read_bridge_bases() from core instead of arch code
->     
->     When we scan a PCI bus, we read PCI-PCI bridge window registers with
->     pci_read_bridge_bases() so we can validate the resource hierarchy.  Most
->     architectures call pci_read_bridge_bases() from pcibios_fixup_bus(), but
->     PCI-PCI bridges are not arch-specific, so this doesn't need to be in
->     arch-specific code.
->     
->     Call pci_read_bridge_bases() directly from the PCI core instead of from
->     arch code.
->     
->     For alpha and mips, we now call pci_read_bridge_bases() always; previously
->     we only called it if PCI_PROBE_ONLY was set.
->     
->     [bhelgaas: changelog]
->     Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     ...
-> 
