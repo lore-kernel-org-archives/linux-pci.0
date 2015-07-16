@@ -1,105 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59136 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932489AbbGTOZS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jul 2015 10:25:18 -0400
-Date: Mon, 20 Jul 2015 16:25:15 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
-Subject: Re: [PATCH 8/8] PCI: Move ATS declarations to linux/pci.h so they're
- all together
-Message-ID: <20150720142515.GH13082@suse.de>
-References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150717213247.18379.66315.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 16 Jul 2015 10:04:26 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Robert Richter <rrichter@cavium.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 3/5] arm64, pci: Allow RC drivers to supply
+ pcibios_add_device() implementation.
+Message-ID: <20150716090426.GA17097@red-moon>
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
+ <1436979285-8177-4-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150717213247.18379.66315.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1436979285-8177-4-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 17, 2015 at 04:32:47PM -0500, Bjorn Helgaas wrote:
-> Move ATS declarations to linux/pci.h so they're all in one place.
+Hi David,
+
+On Wed, Jul 15, 2015 at 05:54:43PM +0100, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
 > 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> The default is to continue doing the what we have done before, but add
+> a hook so that this can be overridden.
+
+This commit log is inappropriate. On top of that, it is already
+complicated enough to keep ARM and ARM64 in sync, I can't even
+imagine what would happen if we added a hook to pcibios_add_device
+so that RCs can implement their quirks beyond ARM64 core control.
+
+> Signed-off-by: David Daney <david.daney@cavium.com>
 > ---
->  include/linux/pci-ats.h |   41 -----------------------------------------
->  include/linux/pci.h     |    8 ++++++++
->  2 files changed, 8 insertions(+), 41 deletions(-)
+>  arch/arm64/include/asm/pci.h |  3 +++
+>  arch/arm64/kernel/pci.c      | 10 ++++++++++
+>  2 files changed, 13 insertions(+)
 > 
-> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-> index 5d81d47..57e0b82 100644
-> --- a/include/linux/pci-ats.h
-> +++ b/include/linux/pci-ats.h
-> @@ -3,47 +3,6 @@
+> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> index b008a72..ad3fb18 100644
+> --- a/arch/arm64/include/asm/pci.h
+> +++ b/arch/arm64/include/asm/pci.h
+> @@ -37,6 +37,9 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+>  {
+>  	return 1;
+>  }
+> +
+> +void set_pcibios_add_device(int (*arg)(struct pci_dev *));
+> +
+>  #endif  /* CONFIG_PCI */
 >  
->  #include <linux/pci.h>
+>  #endif  /* __KERNEL__ */
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 4095379..3356023 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -38,11 +38,21 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  	return res->start;
+>  }
 >  
-> -/* Address Translation Service */
-> -#ifdef CONFIG_PCI_ATS
-> -
-> -int pci_enable_ats(struct pci_dev *dev, int ps);
-> -void pci_disable_ats(struct pci_dev *dev);
-> -int pci_ats_queue_depth(struct pci_dev *dev);
-> -
-> -/**
-> - * pci_ats_enabled - query the ATS status
-> - * @dev: the PCI device
-> - *
-> - * Returns 1 if ATS capability is enabled, or 0 if not.
-> - */
-> -static inline int pci_ats_enabled(struct pci_dev *dev)
-> -{
-> -	return dev->ats_cap && dev->ats_enabled;
-> -}
-> -
-> -#else /* CONFIG_PCI_ATS */
-> -
-> -static inline int pci_enable_ats(struct pci_dev *dev, int ps)
-> -{
-> -	return -ENODEV;
-> -}
-> -
-> -static inline void pci_disable_ats(struct pci_dev *dev)
-> -{
-> -}
-> -
-> -static inline int pci_ats_queue_depth(struct pci_dev *dev)
-> -{
-> -	return -ENODEV;
-> -}
-> -
-> -static inline int pci_ats_enabled(struct pci_dev *dev)
-> -{
-> -	return 0;
-> -}
-> -
-> -#endif /* CONFIG_PCI_ATS */
-> -
->  #ifdef CONFIG_PCI_PRI
->  
->  int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1997853..744a5e9 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1300,8 +1300,16 @@ void ht_destroy_irq(unsigned int irq);
->  #ifdef CONFIG_PCI_ATS
->  /* Address Translation Service */
->  void pci_ats_init(struct pci_dev *dev);
-> +int pci_enable_ats(struct pci_dev *dev, int ps);
-> +void pci_disable_ats(struct pci_dev *dev);
-> +int pci_ats_queue_depth(struct pci_dev *dev);
-> +static inline int pci_ats_enabled(struct pci_dev *dev) { return dev->ats_enabled; }
->  #else
->  static inline void pci_ats_init(struct pci_dev *) { }
-> +static inline int pci_enable_ats(struct pci_dev *, int) { return -ENODEV; }
-> +static inline void pci_disable_ats(struct pci_dev *) { }
-> +static inline int pci_ats_queue_depth(struct pci_dev *) { return -ENODEV; }
-> +static inline int pci_ats_enabled(struct pci_dev *dev) { return 0; }
->  #endif
->  
->  void pci_cfg_access_lock(struct pci_dev *dev);
+> +static int (*pcibios_add_device_impl)(struct pci_dev *);
+> +
+> +void set_pcibios_add_device(int (*arg)(struct pci_dev *))
+> +{
+> +	pcibios_add_device_impl = arg;
+> +}
+> +
+>  /*
+>   * Try to assign the IRQ number from DT when adding a new device
+>   */
+>  int pcibios_add_device(struct pci_dev *dev)
+>  {
+> +	if (pcibios_add_device_impl)
+> +		return pcibios_add_device_impl(dev);
 
-Reviewed-by: Joerg Roedel <jroedel@suse.de>
+I am totally against this (and to be honest by reading the other
+patches I failed to understand why you even need it), see above.
 
+Thanks,
+Lorenzo
+
+> +
+>  	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>  
+>  	return 0;
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
