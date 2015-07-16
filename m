@@ -1,61 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:59042 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755003AbbGPBWr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 15 Jul 2015 21:22:47 -0400
+Subject: Re: [PATCH] PCI / ACPI: Fix pci_acpi_optimize_delay() comment
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 02/51] PCI: Reuse res_to_dev_res in reassign_resources_sorted
-Date: Mon, 27 Jul 2015 16:29:20 -0700
-Message-Id: <1438039809-24957-3-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Srinidhi Kasagar <srinidhi.kasagar@intel.com>
+References: <20150715092915.GA8262@intel-desktop>
+ <20150715201414.GA25591@google.com>
+Cc: linux-pci@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Message-ID: <55A707BC.5010505@intel.com>
+Date: Thu, 16 Jul 2015 09:24:12 +0800
+MIME-Version: 1.0
+In-Reply-To: <20150715201414.GA25591@google.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now res_to_dev_res() does not print out debug message anymore, so
-reuse it in reassign_resource_sorted().
+On 07/16/2015 04:14 AM, Bjorn Helgaas wrote:
+> [+cc Aaron]
+> 
+> On Wed, Jul 15, 2015 at 02:59:46PM +0530, Srinidhi Kasagar wrote:
+>> The function takes ACPI handle, not the device itself. Fix the
+>> comment
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+I must have overlooked the comment while changing the function
+prototype, thanks for the fix!
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f0fa705..247d8fe 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -240,26 +240,17 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- {
- 	struct resource *res;
- 	struct pci_dev_resource *add_res, *tmp;
--	struct pci_dev_resource *dev_res;
- 	resource_size_t add_size, align;
- 	int idx;
- 
- 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
--		bool found_match = false;
--
- 		res = add_res->res;
- 		/* skip resource that has been reset */
- 		if (!res->flags)
- 			goto out;
- 
- 		/* skip this resource if not found in head list */
--		list_for_each_entry(dev_res, head, list) {
--			if (dev_res->res == res) {
--				found_match = true;
--				break;
--			}
--		}
--		if (!found_match)/* just skip */
-+		if (!res_to_dev_res(head, res))
- 			continue;
- 
- 		idx = res - &add_res->dev->resource[0];
--- 
-1.8.4.5
+Regards,
+Aaron
+
+>>
+>> Signed-off-by: Srinidhi Kasagar <srinidhi.kasagar@intel.com>
+> 
+> Applied to pci/misc for v4.3, thanks!
+> 
+>> ---
+>> Add this as part of your trivial commenting fixes patch series
+>>
+>>  drivers/pci/pci-acpi.c |    2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>> index 6f6f175f51f7..d2e2bf4ef0a4 100644
+>> --- a/drivers/pci/pci-acpi.c
+>> +++ b/drivers/pci/pci-acpi.c
+>> @@ -594,7 +594,7 @@ static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+>>  /**
+>>   * pci_acpi_optimize_delay - optimize PCI D3 and D3cold delay from ACPI
+>>   * @pdev: the PCI device whose delay is to be updated
+>> - * @adev: the companion ACPI device of this PCI device
+>> + * @handle: ACPI handle of this device
+>>   *
+>>   * Update the d3_delay and d3cold_delay of a PCI device from the ACPI _DSM
+>>   * control method of either the device itself or the PCI host bridge.
+>> -- 
+>> 1.7.9.5
+>>
+>>
+>> -- 
 
