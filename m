@@ -1,244 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38763 "EHLO foss.arm.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:58133 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753217AbbGOMRb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 08:17:31 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v4 14/19] irqchip: gicv3-its: Make the PCI/MSI code standalone
-Date: Wed, 15 Jul 2015 13:16:48 +0100
-Message-Id: <1436962613-17359-15-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+	id S1753436AbbGPTOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 16 Jul 2015 15:14:19 -0400
+Message-ID: <55A80262.2010401@ti.com>
+Date: Thu, 16 Jul 2015 15:13:38 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [PATCH v1] ARM: pci: add call to pcie_bus_configure_settings()
+References: <1401297293-3950-1-git-send-email-m-karicheri2@ti.com> <20150516140230.GF31666@google.com>
+In-Reply-To: <20150516140230.GF31666@google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can now lookup the base ITS domain, making it possible to
-initialize the PCI/MSI code independently from the main ITS
-subsystem.
+On 05/16/2015 10:02 AM, Bjorn Helgaas wrote:
+> On Wed, May 28, 2014 at 01:14:53PM -0400, Murali Karicheri wrote:
+>> Call pcie_bus_configure_settings on ARM, like for other platforms.
+>> pcie_bus_configure_settings makes sure the MPS across the bus is
+>> uniform and provides the ability to tune the MRSS and MPS to higher
+>> performance values. This is particularly important for embedded where
+>> there is no firmware to program these PCI-E settings for the OS.
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>>
+>> CC: Russell King <linux@arm.linux.org.uk>
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Arnd Bergmann <arnd@arndb.de>
+>> CC: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+>> CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+>> ---
+>>   - Fixed comments against initial version
+>>   arch/arm/kernel/bios32.c |   12 ++++++++++++
+>>   1 file changed, 12 insertions(+)
+>>
+>> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+>> index 16d43cd..17a26c1 100644
+>> --- a/arch/arm/kernel/bios32.c
+>> +++ b/arch/arm/kernel/bios32.c
+>> @@ -545,6 +545,18 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>>   		 */
+>>   		pci_bus_add_devices(bus);
+>>   	}
+>> +
+>> +	list_for_each_entry(sys, &head, node) {
+>> +		struct pci_bus *bus = sys->bus;
+>> +
+>> +		/* Configure PCI Express settings */
+>> +		if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>> +			struct pci_bus *child;
+>> +
+>> +			list_for_each_entry(child, &bus->children, node)
+>> +				pcie_bus_configure_settings(child);
+>
+> This patch (8b5742ad156d ("ARM/PCI: Call pcie_bus_configure_settings() to
+> set MPS")) has been upstream since v3.16-rc1, but I think we goofed.
+>
+> The MPS configuration should be done *before* pci_bus_add_devices().  After
+> pci_bus_add_devices(), drivers may be bound to devices, and the PCI core
+> shouldn't touch device configuration while a driver owns the device.
+>
+> Looking at the code, it seems like it would have been simpler to do this in
+> the existing loop:
+>
+>    list_for_each_entry(sys, &head, node) {
+>      struct pci_bus *bus = sys->bus;
+>
+>      if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>        pci_bus_size_bridges(bus);
+>        pci_bus_assign_resources(bus);
+>        list_for_each_entry(child, &bus->children, node)
+>          pcie_bus_configure_settings(child);
+>      }
+>
+>      pci_bus_add_devices(bus);
+>    }
+>
+> so maybe there's some reason I'm not aware of for not doing it that way?
 
-This allows us to remove all the previously add hooks.
+Bjorn,
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 47 ++++++++++++++++++++++++++----
- drivers/irqchip/irq-gic-v3-its.c         | 50 +++++++++++++++++++++-----------
- include/linux/irqchip/arm-gic-v3.h       |  5 ----
- 3 files changed, 74 insertions(+), 28 deletions(-)
+This one has escaped my radar and I found it recently while I was 
+searching for something else. I can't recall why this was not done this 
+way. However I have tried the below code on Keystone and it works fine.
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index 7614721..cf351c6 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -20,8 +20,6 @@
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
- 
--#include <linux/irqchip/arm-gic-v3.h>
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index fcbbbb1..17efde7 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -520,7 +520,8 @@ void pci_common_init_dev(struct device *parent, 
+struct hw_pci *hw)
+         list_for_each_entry(sys, &head, node) {
+                 struct pci_bus *bus = sys->bus;
+
+-               if (!pci_has_flag(PCI_PROBE_ONLY)) {
++               if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
++                       struct pci_bus *child;
+                         /*
+                          * Size the bridge windows.
+                          */
+@@ -530,25 +531,15 @@ void pci_common_init_dev(struct device *parent, 
+struct hw_pci *hw)
+                          * Assign resources.
+                          */
+                         pci_bus_assign_resources(bus);
+-               }
+
++                       list_for_each_entry(child, &bus->children, node)
++                               pcie_bus_configure_settings(child);
++               }
+                 /*
+                  * Tell drivers about devices found.
+                  */
+                 pci_bus_add_devices(bus);
+         }
 -
- static void its_mask_msi_irq(struct irq_data *d)
- {
- 	pci_msi_mask_irq(d);
-@@ -74,17 +72,24 @@ static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
- {
- 	struct pci_dev *pdev;
- 	struct its_pci_alias dev_alias;
-+	struct msi_domain_info *msi_info;
- 
- 	if (!dev_is_pci(dev))
- 		return -EINVAL;
- 
-+	msi_info = msi_get_domain_info(domain->parent);
-+
- 	pdev = to_pci_dev(dev);
- 	dev_alias.pdev = pdev;
- 	dev_alias.count = nvec;
- 
- 	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
- 
--	return its_msi_prepare(domain, dev_alias.dev_id, dev_alias.count, info);
-+	/* ITS specific DeviceID, as the core ITS ignores dev. */
-+	info->scratchpad[0].ul = dev_alias.dev_id;
-+
-+	return msi_info->ops->msi_prepare(domain->parent,
-+					  dev, dev_alias.count, info);
- }
- 
- static struct msi_domain_ops its_pci_msi_ops = {
-@@ -98,8 +103,38 @@ static struct msi_domain_info its_pci_msi_domain_info = {
- 	.chip	= &its_msi_irq_chip,
- };
- 
--struct irq_domain *its_pci_msi_alloc_domain(struct device_node *np,
--					    struct irq_domain *parent)
-+static struct of_device_id its_device_id[] = {
-+	{	.compatible	= "arm,gic-v3-its",	},
-+	{},
-+};
-+
-+static int __init its_pci_msi_init(void)
- {
--	return pci_msi_create_irq_domain(np, &its_pci_msi_domain_info, parent);
-+	struct device_node *np;
-+	struct irq_domain *parent;
-+
-+	for (np = of_find_matching_node(NULL, its_device_id); np;
-+	     np = of_find_matching_node(np, its_device_id)) {
-+		if (!of_property_read_bool(np, "msi-controller"))
-+			continue;
-+
-+		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
-+		if (!parent || !msi_get_domain_info(parent)) {
-+			pr_err("%s: unable to locate ITS domain\n",
-+			       np->full_name);
-+			continue;
-+		}
-+
-+		if (!pci_msi_create_irq_domain(np, &its_pci_msi_domain_info,
-+					       parent)) {
-+			pr_err("%s: unable to create PCI domain\n",
-+			       np->full_name);
-+			continue;
-+		}
-+
-+		pr_info("PCI/MSI: %s domain created\n", np->full_name);
-+	}
-+
-+	return 0;
- }
-+early_initcall(its_pci_msi_init);
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 20fe0dc..21b002f 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -60,7 +60,6 @@ struct its_collection {
- struct its_node {
- 	raw_spinlock_t		lock;
- 	struct list_head	entry;
--	struct irq_domain	*domain;
- 	void __iomem		*base;
- 	unsigned long		phys_base;
- 	struct its_cmd_block	*cmd_base;
-@@ -1152,13 +1151,25 @@ static int its_alloc_device_irq(struct its_device *dev, irq_hw_number_t *hwirq)
- 	return 0;
- }
- 
--int its_msi_prepare(struct irq_domain *domain, u32 dev_id,
--		    int nvec, msi_alloc_info_t *info)
-+static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
-+			   int nvec, msi_alloc_info_t *info)
- {
- 	struct its_node *its;
- 	struct its_device *its_dev;
-+	struct msi_domain_info *msi_info;
-+	u32 dev_id;
-+
-+	/*
-+	 * We ignore "dev" entierely, and rely on the dev_id that has
-+	 * been passed via the scratchpad. This limits this domain's
-+	 * usefulness to upper layers that definitely know that they
-+	 * are built on top of the ITS.
-+	 */
-+	dev_id = info->scratchpad[0].ul;
-+
-+	msi_info = msi_get_domain_info(domain);
-+	its = msi_info->data;
- 
--	its = domain->parent->host_data;
- 	its_dev = its_find_device(its, dev_id);
- 	if (its_dev) {
- 		/*
-@@ -1180,6 +1191,10 @@ out:
- 	return 0;
- }
- 
-+static struct msi_domain_ops its_msi_domain_ops = {
-+	.msi_prepare	= its_msi_prepare,
-+};
-+
- static int its_irq_gic_domain_alloc(struct irq_domain *domain,
- 				    unsigned int virq,
- 				    irq_hw_number_t hwirq)
-@@ -1316,7 +1331,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	struct resource res;
- 	struct its_node *its;
- 	void __iomem *its_base;
--	struct irq_domain *inner_domain = NULL;
-+	struct irq_domain *inner_domain;
- 	u32 val;
- 	u64 baser, tmp;
- 	int err;
-@@ -1406,20 +1421,26 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
- 
- 	if (of_property_read_bool(node, "msi-controller")) {
-+		struct msi_domain_info *info;
-+
-+		info = kzalloc(sizeof(*info), GFP_KERNEL);
-+		if (!info) {
-+			err = -ENOMEM;
-+			goto out_free_tables;
-+		}
-+
- 		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
- 		if (!inner_domain) {
- 			err = -ENOMEM;
-+			kfree(info);
- 			goto out_free_tables;
- 		}
- 
- 		inner_domain->parent = parent;
--		inner_domain->bus_token = DOMAIN_BUS_NEXUS_MSI;
+-       list_for_each_entry(sys, &head, node) {
+-               struct pci_bus *bus = sys->bus;
 -
--		its->domain = its_pci_msi_alloc_domain(node, inner_domain);
--		if (!its->domain) {
--			err = -ENOMEM;
--			goto out_free_domains;
--		}
-+		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
-+		info->ops = &its_msi_domain_ops;
-+		info->data = its;
-+		inner_domain->host_data = info;
- 	}
- 
- 	spin_lock(&its_lock);
-@@ -1428,11 +1449,6 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 
- 	return 0;
- 
--out_free_domains:
--	if (its->domain)
--		irq_domain_remove(its->domain);
--	if (inner_domain)
--		irq_domain_remove(inner_domain);
- out_free_tables:
- 	its_free_tables(its);
- out_free_cmd:
-diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
-index d6149ba..bf982e0 100644
---- a/include/linux/irqchip/arm-gic-v3.h
-+++ b/include/linux/irqchip/arm-gic-v3.h
-@@ -389,11 +389,6 @@ struct irq_domain;
- int its_cpu_init(void);
- int its_init(struct device_node *node, struct rdists *rdists,
- 	     struct irq_domain *domain);
--int its_msi_prepare(struct irq_domain *domain, u32 dev_id,
--		    int nvec, msi_alloc_info_t *info);
+-               /* Configure PCI Express settings */
+-               if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+-                       struct pci_bus *child;
 -
--struct irq_domain *its_pci_msi_alloc_domain(struct device_node *node,
--					    struct irq_domain *parent);
- 
- #endif
- 
+-                       list_for_each_entry(child, &bus->children, node)
+-                               pcie_bus_configure_settings(child);
+-               }
+-       }
+  }
+
+The SATA comes up fine and ahci is able to override the mrrs value as 
+shown by the log below.
+
+[    1.581526] ahci 0001:01:00.0: limiting MRRS to 256
+[    1.586521] ahci 0001:01:00.0: AHCI 0001.0000 32 slots 2 ports 6 Gbps 
+0x3 impl SATA mode
+[    1.594604] ahci 0001:01:00.0: flags: 64bit ncq sntf led only pmp fbs 
+pio slum part sxs
+[    1.603772] scsi host0: ahci
+[    1.606976] scsi host1: ahci
+[
+
+If you are fine, I can send a patch for this. Please confirm.
+
+Murali
+
+>
+>> +		}
+>> +	}
+>>   }
+>>
+>>   #ifndef CONFIG_PCI_HOST_ITE8152
+>> --
+>> 1.7.9.5
+>>
+
+
 -- 
-2.1.4
-
+Murali Karicheri
+Linux Kernel, Keystone
