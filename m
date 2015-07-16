@@ -1,168 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp88.iad3a.emailsrvr.com ([173.203.187.88]:41050 "EHLO
-	smtp88.iad3a.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932198AbbGGTRM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 15:17:12 -0400
-Message-ID: <559C25B6.5030101@compro.net>
-Date: Tue, 07 Jul 2015 15:17:10 -0400
-From: Mark Hounschell <markh@compro.net>
-Reply-To: markh@compro.net
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:35818 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000AbbGPPZy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 11:25:54 -0400
+Received: by iecuq6 with SMTP id uq6so58335795iec.2
+        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2015 08:25:53 -0700 (PDT)
+Date: Thu, 16 Jul 2015 10:25:48 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatja@google.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
+ deadlock
+Message-ID: <20150716152548.GD25591@google.com>
+References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
+ <20150716042203.GC25591@google.com>
+ <55A76361.8070604@huawei.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, wdavis@nvidia.com,
-	joro@8bytes.org, iommu@lists.linux-foundation.org,
-	linux-pci@vger.kernel.org, tripperda@nvidia.com,
-	jhubbard@nvidia.com, jglisse@redhat.com, konrad.wilk@oracle.com,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>	 <1431973504-5903-5-git-send-email-wdavis@nvidia.com>	 <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net>	 <20150707151517.GA14215@google.com> <559C08F3.7010103@compro.net> <1436290089.1391.95.camel@redhat.com>
-In-Reply-To: <1436290089.1391.95.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55A76361.8070604@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/07/2015 01:28 PM, Alex Williamson wrote:
-> On Tue, 2015-07-07 at 13:14 -0400, Mark Hounschell wrote:
->> Hi Bjorn.
->>
->> On 07/07/2015 11:15 AM, Bjorn Helgaas wrote:
->>> [+cc Alex]
->>>
->>> Hi Mark,
->>>
->>> On Wed, May 20, 2015 at 08:11:17AM -0400, Mark Hounschell wrote:
->>>> Most currently available hardware doesn't allow reads but will allow
->>>> writes on PCIe peer-to-peer transfers. All current AMD chipsets are
->>>> this way. I'm pretty sure all Intel chipsets are this way also. What
->>>> happens with reads is they are just dropped with no indication of
->>>> error other than the data will not be as expected. Supposedly the
->>>> PCIe spec does not even require any peer-to-peer support. Regular
->>>> PCI there is no problem and this API could be useful. However I
->>>> doubt seriously you will find a pure PCI motherboard that has an
->>>> IOMMU.
->>>>
->>>> I don't understand the chipset manufactures reasoning for disabling
->>>> PCIe peer-to-peer reads. We would like to make PCIe versions of our
->>>> cards but their application requires  peer-to-peer reads and writes.
->>>> So we cannot develop PCIe versions of the cards.
->>>
->>> I'd like to understand this better.  Peer-to-peer between two devices
->>> below the same Root Port should work as long as ACS doesn't prevent
->>> it.  If we find an Intel or AMD IOMMU, I think we configure ACS to
->>> prevent direct peer-to-peer (see "pci_acs_enable"), but maybe it could
->>> still be done with the appropriate IOMMU support.  And if you boot
->>> with "iommu=off", we don't do that ACS configuration, so peer-to-peer
->>> should work.
->>>
->>> I suppose the problem is that peer-to-peer doesn't work between
->>> devices under different Root Ports or even devices under different
->>> Root Complexes?
->>>
->>> PCIe r3.0, sec 6.12.1.1, says Root Ports that support peer-to-peer
->>> traffic are required to implement ACS P2P Request Redirect, so if a
->>> Root Port doesn't implement RR, we can assume it doesn't support
->>> peer-to-peer.  But unfortunately the converse is not true: if a Root
->>> Port implements RR, that does *not* imply that it supports
->>> peer-to-peer traffic.
->>>
->>> So I don't know how to discover whether peer-to-peer between Root
->>> Ports or Root Complexes is supported.  Maybe there's some clue in the
->>> IOMMU?  The Intel VT-d spec mentions it, but "peer" doesn't even
->>> appear in the AMD spec.
->>>
->>> And I'm curious about why writes sometimes work when reads do not.
->>> That sounds like maybe the hardware support is there, but we don't
->>> understand how to configure everything correctly.
->>>
->>> Can you give us the specifics of the topology you'd like to use, e.g.,
->>> lspci -vv of the path between the two devices?
->>>
->>
->> First off, writes always work for me. Not just sometimes. Only reads
->> NEVER do.
->>
->> Reading the AMD-990FX-990X-970-Register-Programming-Requirements-48693.pdf
->> in section 2.5 "Enabling/Disabling Peer-to-Peer Traffic Access", it
->> states specifically that
->> only P2P memory writes are supported. This has been the case with older
->> AMD chipset also. In one of the older chipset documents I read (I think
->> the 770 series) , it said this was a security feature. Makes no sense to
->> me.
->>
->> As for the topology I'd like to be able to use. This particular
->> configuration (MB) has a single regular pci slot and the rest are pci-e.
->> In two of those pci-e slots is a pci-e to pci expansion chassis
->> interface card connected to a regular pci expansion rack. I am trying to
->> to peer to peer between a regular pci card in one of those chassis to
->> another regular pci card in the other chassis. In turn through the pci-e
->> subsystem. Attached is the lcpci -vv output from this particular box.
->> The cards that initiate the P2P are these:
->>
->> 04:04.0 Intelligent controller [0e80]: PLX Technology, Inc. Device 0480
->> (rev 55)
->> 04:05.0 Intelligent controller [0e80]: PLX Technology, Inc. Device 0480
->> (rev 55)
->> 04:06.0 Intelligent controller [0e80]: PLX Technology, Inc. Device 0480
->> (rev 55)
->> 04:07.0 Intelligent controller [0e80]: PLX Technology, Inc. Device 0480
->> (rev 55)
->>
->> The card they need to P2P to and from is this one.
->>
->> 0a:05.0 Network controller: VMIC GE-IP PCI5565,PMC5565 Reflective Memory
->> Node (rev 01)
->>
->> Like wise, reversing the chassis the initiator lives in from these cards.
->>
->> 0b:00.0 Unassigned class [ff00]: Compro Computer Services, Inc. Device
->> 4710 (rev 41)
->> 0c:00.0 Unassigned class [ff00]: Compro Computer Services, Inc. Device
->> 4710 (rev 41)
->> 0d:00.0 Unassigned class [ff00]: Compro Computer Services, Inc. Device
->> 4710 (rev 41)
->> 0e:00.0 Unassigned class [ff00]: Compro Computer Services, Inc. Device
->> 0100 (rev 42)
->>
->> to this card
->>
->> 04:0a.0 Memory controller: Compro Computer Services, Inc. Device 4360
->> (rev 4d)
->>
->> Again, I can go between both pci chassis as long as I am doing writes.
->> Only reads do not work.
->>
->> I can send the AMD-990FX-990X-970-Register-Programming-Requirements if
->> you would like. It's available for download on AMD web site. Let me know.
->
->
-> It would be interesting to know if this already works if you assign all
-> the endpoints to a QEMU/KVM VM with vfio-pci.  We make an attempt to map
-> the device MMIO BARs through the IOMMU, but as I said, I don't know how
-> to test it.  Does the register programming guide provide any indication
-> if there are any restrictions on p2p when bounced through the IOMMU?  So
-> long as the IOMMU does the translation and redirection, I don't see why
-> the rest of the topology would handle it differently than a DMA to
-> memory.  Thanks,
->
+On Thu, Jul 16, 2015 at 03:55:13PM +0800, Yijing Wang wrote:
+> On 2015/7/16 12:22, Bjorn Helgaas wrote:
+> > [+cc Guenter, Rafael]
+> > 
+> > On Thu, Jun 11, 2015 at 07:12:14PM +0800, Yijing Wang wrote:
+> >> Rajat Jain reported a deadlock when a hierarchical hot plug
+> >> thread and aer recovery thread both run.
+> >> https://lkml.org/lkml/2015/3/11/861
+> >>
+> >> thread 1:
+> >> pciehp_enable_slot()
+> >> 	pciehp_configure_device()
+> >> 		pci_bus_add_devices()
+> >> 			device_attach(dev)
+> >> 				device_lock(dev) //acquire device mutex successfully
+> >> 			...
+> >> 			pciehp_probe(dev)
+> >> 				__pci_hp_register()
+> >> 					pci_create_slot()
+> >> 						down_write(pci_bus_sem) //deadlock here
+> >>
+> >> thread 2:
+> >> aer_isr_one_error()
+> >> 	aer_process_err_device()
+> >> 		do_recovery()
+> >> 			broadcast_error_message()
+> >> 				pci_walk_bus()
+> >> 					down_read(&pci_bus_sem) //acquire pci_bus_sem successfully
+> >> 						report_error_detected(dev)
+> >> 							device_lock(dev) // deadlock here
+> >>
+> >> Now we use pci_bus_sem to protect pci_slot creation and destroy,
+> >> it's unnecessary. We could introduce a new local mutex instead of
+> >> pci_bus_sem to avoid the deadlock.
+> > 
+> > I see there's definitely a problem here, and using a new mutex instead of
+> > pci_bus_sem certainly avoids the deadlock.
+> > 
+> > I'm trying to convince myself that it is safe.  I think we need to protect:
+> > 
+> >   - search of bus->slots list in get_slot()
+> >   - addition to bus->slots list in pci_create_slot()
+> >   - search of bus->devices list in pci_create_slot()
+> >   - search of bus->devices list in pci_slot_release()
+> >   - deletion from bus->slots list in pci_slot_release()
+> > 
+> > Most other maintenance of these lists is protected by pci_bus_sem, so using
+> > a different mutex here seems like a problem.
+> > 
+> > If I'm mistaken, please correct me and explain why this patch is safe.
+> 
+> Hi Bjorn, I think pci_bus_sem here was introduced to protect the bus->slots list, because it
+> use down_write() here, for bus->devices list, we only traverse it, won't add/remove it, for the latter, down_read() is enough.
+> When I posted this patch, I thought we should protect the bus when we start to register a slot,
+> something like a big lock at outermost routine to tell others not to touch its children devices, use pci_bus_sem to protect hotplug
+> cases is not a good idea, and actually in PCI code, we have found several deadlock caused by the pci_bus_sem.
+> 
+> But for this patch, I know what you worried, what about add a down_read(&pci_bus_sem) to avoid to introduce a regression ?
+> 
+> 
+> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+> index 396c200..a9079d9 100644
+> --- a/drivers/pci/slot.c
+> +++ b/drivers/pci/slot.c
+> @@ -14,6 +14,7 @@
+> 
+>  struct kset *pci_slots_kset;
+>  EXPORT_SYMBOL_GPL(pci_slots_kset);
+> +static DEFINE_MUTEX(pci_slot_mutex);
+> 
+>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
+>                                         struct attribute *attr, char *buf)
+> @@ -106,9 +107,11 @@ static void pci_slot_release(struct kobject *kobj)
+>         dev_dbg(&slot->bus->dev, "dev %02x, released physical slot %s\n",
+>                 slot->number, pci_slot_name(slot));
+> 
+> +       down_read(&pci_bus_sem);
+>         list_for_each_entry(dev, &slot->bus->devices, bus_list)
+>                 if (PCI_SLOT(dev->devfn) == slot->number)
+>                         dev->slot = NULL;
+> +       up_read(&pci_bus_sem);
+> 
+>         list_del(&slot->list);
 
-Hi Alex,
+This list_del() updates the bus->slots list.
 
-Somehow I don't think "assigning all the endpoints to a QEMU/KVM VM with 
-vfio-pci" would be an easy thing for me to do. I have never used 
-QEMU/KVM VM and my particular application is already an emulation. Just 
-not an emulation that could use QEMU/KVM. It's an emulation of a totally 
-different arch, unknown to any VM. But what I do do, is basically "map 
-the device MMIO BARs through the IOMMU". Reads have never worked for me 
-even when there was no iommu available. One of the reasons I started 
-using the iommu was because I was "hoping" it would fix my long standing 
-problems with p2p reads through pcie. The other reason was, I no longer 
-had to do (buggie) DAC crap with my 32 bit pci cards.
-
-As far as the manual saying anything about p2p when the iommu is used, 
-it actually says nothing about p2p at all in the iommu section, nor the 
-iommu in the p2p section.
-
-Regards
-Mark
-
+> @@ -195,7 +198,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
+>  {
+>         struct pci_slot *slot;
+>         /*
+> -        * We already hold pci_bus_sem so don't worry
+> +        * We already hold pci_slot_mutex so don't worry
+>          */
+>         list_for_each_entry(slot, &parent->slots, list)
+>                 if (slot->number == slot_nr) {
+> @@ -253,7 +256,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>         int err = 0;
+>         char *slot_name = NULL;
+> 
+> -       down_write(&pci_bus_sem);
+> +       mutex_lock(&pci_slot_mutex);
+> 
+>         if (slot_nr == -1)
+>                 goto placeholder;
+> @@ -301,16 +304,18 @@ placeholder:
+>         INIT_LIST_HEAD(&slot->list);
+>         list_add(&slot->list, &parent->slots);
+> 
+> +       down_read(&pci_bus_sem);
+>         list_for_each_entry(dev, &parent->devices, bus_list)
+>                 if (PCI_SLOT(dev->devfn) == slot_nr)
+>                         dev->slot = slot;
+> +       up_read(&pci_bus_sem);
+> 
+>         dev_dbg(&parent->dev, "dev %02x, created physical slot %s\n",
+>                 slot_nr, pci_slot_name(slot));
+> 
+>  out:
+>         kfree(slot_name);
+> -       up_write(&pci_bus_sem);
+> +       mutex_unlock(&pci_slot_mutex);
+>         return slot;
+>  err:
+>         kfree(slot);
+> @@ -332,9 +337,9 @@ void pci_destroy_slot(struct pci_slot *slot)
+>         dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
+>                 slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
+> 
+> -       down_write(&pci_bus_sem);
+> +       mutex_lock(&pci_slot_mutex);
+>         kobject_put(&slot->kobj);
+> -       up_write(&pci_bus_sem);
+> +       mutex_unlock(&pci_slot_mutex);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
