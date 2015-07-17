@@ -1,86 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 34/49] PCI: Only treat non-pef mmio64 as pref if all bridges has MEM_64
-Date: Tue, 14 Jul 2015 15:47:05 -0700
-Message-Id: <1436914040-13206-35-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0092.outbound.protection.outlook.com ([157.56.111.92]:46304
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752557AbbGQL6d convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 07:58:33 -0400
+From: Ravikiran Gummaluri <ravikiran.gummaluri@xilinx.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bharat Kumar Gogada <bharatku@xilinx.com>
+Subject: RE: PCIe support for ARM64
+Date: Fri, 17 Jul 2015 11:43:42 +0000
+Message-ID: <A12CBBFFEB35D84DABCB166110D762215E41B2C5@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <loom.20150619T074145-299@post.gmane.org>
+ <CAErSpo52WYqB9hfNKo-ADrJF1LASUz5y9vWzsmp2FaCNc9WZfg@mail.gmail.com>
+ <loom.20150710T130734-815@post.gmane.org> <20150711201634.GA24416@google.com>
+In-Reply-To: <20150711201634.GA24416@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+HI Bjorn/Pratyush,
+	Thanks for your inputs. We were able to do modify our driver according to V4.2-rc1. We were only be able to bring up MSI related changes but not Legacy. Can you point us how to handle Legacy interrupts in new approach (previously in ARM32 handled by map_irq method in hw_pci structure).
 
-We need to move pci_bridge_check_ranges calling early.
-for parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
+Thanks & Regards
+Ravi Kiran G 
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+-----Original Message-----
+From: Bjorn Helgaas [mailto:bhelgaas@google.com] 
+Sent: Sunday, July 12, 2015 1:47 AM
+To: Ravikiran Gummaluri
+Cc: linux-pci@vger.kernel.org; Pratyush Anand; Bharat Kumar Gogada
+Subject: Re: PCIe support for ARM64
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 3a1d659..8a8e5a7 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1038,6 +1038,18 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
-+			   IORESOURCE_MEM_64))
-+		return false;
-+
-+	return pci_up_path_over_pref_mem64(bus->parent);
-+}
-+
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
- {
-@@ -1046,7 +1058,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
- 
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
- 
- 	return res->flags;
-@@ -1816,6 +1829,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
- 
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1843,7 +1860,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		break;
- 
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
--- 
-1.8.4.5
+[+cc Pratyush, Bharat]
 
+On Fri, Jul 10, 2015 at 11:18:10AM +0000, ravikiran gummaluri wrote:
+> Bjorn Helgaas <bhelgaas <at> google.com> writes:
+> 
+> > 
+> > On Fri, Jun 19, 2015 at 12:43 AM, ravikiran gummaluri <rgummal <at> 
+> > xilinx.com> wrote:
+> > > HI
+> > >
+> > > I am developing PCIe root port driver for Xilinx device. We have 
+> > > used following patch for ARM64 bit support 
+> > > "https://lkml.org/lkml/2014/7/3/764". The link explains it as 
+> > > temporary patch and main line will be updated soon with those 
+> > > changes. We have not seen the changes till now. Can you let us 
+> > > know when we can expect the changes in mainline? We are planning to push our drivers to mainline.
+> > 
+> > There is PCI support for ARM64 in mainline:
+> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?
+> id=d1e6dc91b532
+> > 
+> > There is also a Xilinx driver already:
+> > 
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/dr
+> ivers/
+> pci/host/pcie-xilinx.c
+> > 
+> > I don't know if your device is similar to the AXI device, but it 
+> > would be good if you can share or modify that driver instead of 
+> > adding a new one.
+> > 
+> > As with several other drivers, the current pcie-xilinx.c uses 
+> > pci_common_init_dev(), so it only works on ARM (not ARM64).  This is 
+> > a known issue, and people are working on making these drivers less 
+> > arch-specific.
+> > 
+> > Bjorn
+> > 
+> 
+> Thanks Bjorn. pcie-xilinx.c is AXI device. Now we are developing for 
+> different device using pcie-xilinx.c as reference. When we trying to 
+> compile our new driver with latest kernel we are getting compilation 
+> problems for struct hw_pci and struct pci_sys_data for ARM64. These 
+> structures are not defined in ARM64. The following patch has the 
+> structure definitions "https://lkml.org/lkml/2014/7/3/764". We have 
+> used this patch and able complete our development. Now for up 
+> streaming it we need this patch in main line. From your discursion we 
+> understood that some work is going on ARCH independent API and 
+> structure. When can we expect them in mainline?
+
+Pratyush already answered this:
+
+    Please have a look to the latest kernel and try to see what is
+    available for ARM64 PCIe.
+
+    You may see drivers/pci/host/pci-xgene.c as reference.
+
+    I see that there is already a driver for xilinx PCIe controller with
+    ARM platform.
+    drivers/pci/host/pcie-xilinx.c
+
+    If it is the same device on ARM64, then you need to take similar
+    approach what is being discussed
+    for designware on ARM64.
+
+    http://marc.info/?l=devicetree&m=143394380815743&w=2
+
+My advice is to adapt your driver so it works using the interfaces and structures in v4.2-rc1 and post that.  As Pratyush mentioned, the X-Gene driver should be a good place to start.
+
+There will likely be changes to the way we handle arch- and platform- specific data, but you don't need to wait for those to be completed.  When people make changes like that, it is always their responsibility to update all the code in the tree to match.  So once your code is in the tree, you don't have to worry about updating your driver to follow those changes.
+
+On the other hand, if you do wait for those changes to be completed, you never know when or if they ever will be done, and you'll have to do your own updates before posting your driver.
+
+Bjorn
