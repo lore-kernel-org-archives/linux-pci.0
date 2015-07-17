@@ -1,126 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:8739 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300AbbGVVyD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 17:54:03 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: [PATCH v4 04/12] DMA-API: Introduce dma_(un)map_peer_resource
-Date: Wed, 22 Jul 2015 16:39:49 -0500
-Message-ID: <1437601197-6481-5-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
-References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:36124 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756712AbbGQGDI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:08 -0400
+Received: from /spool/local
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 17 Jul 2015 11:33:05 +0530
+Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id A20E6E006A
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:36:58 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H62wYq37355748
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:32:59 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H4m3XX002825
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 10:18:04 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 02/11] PCI: Add pcibios_bus_add_device() weak function
+Date: Fri, 17 Jul 2015 14:02:32 +0800
+Message-Id: <1437112961-17275-3-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add functions to DMA-map and -unmap a peer device's resource for a given
-device. This will allow devices to DMA-map, for example, another device's
-BAR region on PCI to enable peer-to-peer transactions.
+This patch adds a weak function pcibios_bus_add_device() for arch dependent
+code could do proper setup. For example, powerpc could setup EEH related
+resources.
 
-Guard these new functions behind CONFIG_HAS_DMA_P2P.
-
-Signed-off-by: Will Davis <wdavis@nvidia.com>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- include/asm-generic/dma-mapping-common.h | 43 ++++++++++++++++++++++++++++++++
- include/linux/dma-mapping.h              | 12 +++++++++
- 2 files changed, 55 insertions(+)
+ drivers/pci/bus.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/include/asm-generic/dma-mapping-common.h b/include/asm-generic/dma-mapping-common.h
-index 940d5ec..45eec17 100644
---- a/include/asm-generic/dma-mapping-common.h
-+++ b/include/asm-generic/dma-mapping-common.h
-@@ -73,6 +73,42 @@ static inline void dma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg
- 		ops->unmap_sg(dev, sg, nents, dir, attrs);
- }
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6fbd3f2..b7e30a7 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -267,6 +267,7 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
  
-+#ifdef CONFIG_HAS_DMA_P2P
-+static inline dma_peer_addr_t dma_map_peer_resource_attrs(struct device *dev,
-+							  struct device *peer,
-+							  struct resource *res,
-+							  size_t offset,
-+							  size_t size,
-+							  enum dma_data_direction dir,
-+							  struct dma_attrs *attrs)
-+{
-+	struct dma_map_ops *ops = get_dma_ops(dev);
-+	dma_peer_addr_t addr;
-+
-+	BUG_ON(!valid_dma_direction(dir));
-+	BUG_ON(ops->map_peer_resource == NULL);
-+	addr = ops->map_peer_resource(dev, peer, res, offset, size, dir,
-+				      attrs);
-+	debug_dma_map_peer_resource(dev, peer, res, offset, size, dir, addr);
-+
-+	return addr;
-+}
-+
-+static inline void dma_unmap_peer_resource_attrs(struct device *dev,
-+						 dma_peer_addr_t addr,
-+						 size_t size,
-+						 enum dma_data_direction dir,
-+						 struct dma_attrs *attrs)
-+{
-+	struct dma_map_ops *ops = get_dma_ops(dev);
-+
-+	BUG_ON(!valid_dma_direction(dir));
-+	if (ops->unmap_peer_resource)
-+		ops->unmap_peer_resource(dev, addr, size, dir, attrs);
-+	debug_dma_unmap_peer_resource(dev, addr, size, dir);
-+}
-+#endif
-+
- static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
- 				      size_t offset, size_t size,
- 				      enum dma_data_direction dir)
-@@ -181,6 +217,13 @@ dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
- #define dma_map_sg(d, s, n, r) dma_map_sg_attrs(d, s, n, r, NULL)
- #define dma_unmap_sg(d, s, n, r) dma_unmap_sg_attrs(d, s, n, r, NULL)
+ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
  
-+#ifdef CONFIG_HAS_DMA_P2P
-+#define dma_map_peer_resource(d, p, e, o, s, r) \
-+	dma_map_peer_resource_attrs(d, p, e, o, s, r, NULL)
-+#define dma_unmap_peer_resource(d, a, s, r) \
-+	dma_unmap_peer_resource_attrs(d, a, s, r, NULL)
-+#endif
-+
- extern int dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
- 			   void *cpu_addr, dma_addr_t dma_addr, size_t size);
++void __weak pcibios_bus_add_device(struct pci_dev *dev) { }
+ /**
+  * pci_bus_add_device - start driver for a single device
+  * @dev: device to add
+@@ -277,6 +278,8 @@ void pci_bus_add_device(struct pci_dev *dev)
+ {
+ 	int retval;
  
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index ac07ff0..7b8fddc 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -34,6 +34,18 @@ struct dma_map_ops {
- 	void (*unmap_page)(struct device *dev, dma_addr_t dma_handle,
- 			   size_t size, enum dma_data_direction dir,
- 			   struct dma_attrs *attrs);
-+#ifdef CONFIG_HAS_DMA_P2P
-+	dma_peer_addr_t (*map_peer_resource)(struct device *dev,
-+					     struct device *peer,
-+					     struct resource *res,
-+					     unsigned long offset, size_t size,
-+					     enum dma_data_direction dir,
-+					     struct dma_attrs *attrs);
-+	void (*unmap_peer_resource)(struct device *dev,
-+				    dma_peer_addr_t dma_handle,
-+				    size_t size, enum dma_data_direction dir,
-+				    struct dma_attrs *attrs);
-+#endif
++	pcibios_bus_add_device(dev);
++
  	/*
- 	 * map_sg returns 0 on error and a value > 0 on success.
- 	 * It should never return a value < 0.
+ 	 * Can not put in pci_device_add yet because resources
+ 	 * are not assigned yet for some devices.
 -- 
-2.4.6
+1.7.9.5
 
