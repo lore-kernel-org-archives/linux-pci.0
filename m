@@ -1,224 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:46513 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754933AbbGQGDS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:18 -0400
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 17 Jul 2015 11:33:16 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 6910C125805F
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:36:08 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H638NJ54591710
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:10 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H637G1015308
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:07 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 08/11] powerpc/powernv: Support EEH reset for VF PE
-Date: Fri, 17 Jul 2015 14:02:38 +0800
-Message-Id: <1437112961-17275-9-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+Date: Fri, 17 Jul 2015 02:32:55 +0200
+Message-ID: <CAJZ5v0h+Nbh8SwS1xzHFw=cBZ1U0scBdSFrZaAAdH6cB+vXnbQ@mail.gmail.com>
+Subject: [GIT PULL] Power management and ACPI fixes for v4.2-rc3
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PEs for VFs don't have primary bus. So they have to have their own reset
-backend, which is used during EEH recovery. The patch implements the reset
-backend for VF's PE by issuing FLR or AF FLR to the VFs, which are contained
-in the PE.
+Hi Linus,
 
-[gwshan: changelog and code refactoring]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |    1 +
- arch/powerpc/platforms/powernv/eeh-powernv.c |  134 +++++++++++++++++++++++++-
- 2 files changed, 134 insertions(+), 1 deletion(-)
+Please pull from
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index ec21f8f..331c856 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -136,6 +136,7 @@ struct eeh_dev {
- 	int pcix_cap;			/* Saved PCIx capability	*/
- 	int pcie_cap;			/* Saved PCIe capability	*/
- 	int aer_cap;			/* Saved AER capability		*/
-+	int af_cap;			/* Saved AF capability		*/
- 	struct eeh_pe *pe;		/* Associated PE		*/
- 	struct list_head list;		/* Form link list in the PE	*/
- 	struct pci_controller *phb;	/* Associated PHB		*/
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index e9aec1d..8d88be1 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -404,6 +404,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
- 	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
- 	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
- 	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
-+	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
- 	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
- 		edev->mode |= EEH_DEV_BRIDGE;
- 		if (edev->pcie_cap) {
-@@ -893,6 +894,127 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	return 0;
- }
- 
-+static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
-+				     u16 mask, bool af_flr_rst)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	int status, i;
-+
-+	/* Wait for Transaction Pending bit to be cleared */
-+	for (i = 0; i < 4; i++) {
-+		eeh_ops->read_config(pdn, pos, 2, &status);
-+		if (!(status & mask))
-+			return;
-+
-+		msleep((1 << i) * 100);
-+	}
-+
-+	pr_warn("%s: Pending transaction while issuing %s FLR to "
-+		"%04x:%02x:%02x.%01x\n",
-+		__func__, af_flr_rst ? "AF" : "",
-+		edev->phb->global_number, pdn->busno,
-+		PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+}
-+
-+static int pnv_eeh_do_flr(struct pci_dn *pdn, int option)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 reg;
-+
-+	if (!edev->pcie_cap)
-+		return -ENOTTY;
-+
-+	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &reg);
-+	if (!(reg & PCI_EXP_DEVCAP_FLR))
-+		return -ENOTTY;
-+
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+	case EEH_RESET_FUNDAMENTAL:
-+		pnv_eeh_wait_for_pending(pdn, edev->pcie_cap + PCI_EXP_DEVSTA,
-+					 PCI_EXP_DEVSTA_TRPND, false);
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     4, &reg);
-+		reg |= PCI_EXP_DEVCTL_BCR_FLR;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      4, reg);
-+		msleep(EEH_PE_RST_HOLD_TIME);
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     4, &reg);
-+		reg &= ~PCI_EXP_DEVCTL_BCR_FLR;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      4, reg);
-+		msleep(EEH_PE_RST_SETTLE_TIME);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+static int pnv_eeh_do_af_flr(struct pci_dn *pdn, int option)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 cap;
-+
-+	if (!edev->af_cap)
-+		return -ENOTTY;
-+
-+	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
-+	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
-+		return -ENOTTY;
-+
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+	case EEH_RESET_FUNDAMENTAL:
-+		/*
-+		 * Wait for Transaction Pending bit to clear. A word-aligned
-+		 * test is used, so we use the conrol offset rather than status
-+		 * and shift the test bit to match.
-+		 */
-+		pnv_eeh_wait_for_pending(pdn, edev->af_cap + PCI_AF_CTRL,
-+					 PCI_AF_STATUS_TP << 8, true);
-+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL,
-+				      1, PCI_AF_CTRL_FLR);
-+		msleep(EEH_PE_RST_HOLD_TIME);
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, 0);
-+		msleep(EEH_PE_RST_SETTLE_TIME);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+static int pnv_eeh_reset_vf(struct pci_dn *pdn, int option)
-+{
-+	int ret;
-+
-+	ret = pnv_eeh_do_flr(pdn, option);
-+	if (ret != -ENOTTY)
-+		return ret;
-+
-+	return pnv_eeh_do_af_flr(pdn, option);
-+}
-+
-+static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
-+{
-+	struct eeh_dev *edev, *tmp;
-+	struct pci_dn *pdn;
-+	int ret;
-+
-+	eeh_pe_for_each_dev(pe, edev, tmp) {
-+		pdn = eeh_dev_to_pdn(edev);
-+		ret = pnv_eeh_reset_vf(pdn, option);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
- void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- {
- 	struct pci_controller *hose;
-@@ -968,7 +1090,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- 		}
- 
- 		bus = eeh_pe_bus_get(pe);
--		if (pci_is_root_bus(bus) ||
-+		if (pe->type & EEH_PE_VF)
-+			ret = pnv_eeh_vf_pe_reset(pe, option);
-+		else if (pci_is_root_bus(bus) ||
- 			pci_is_root_bus(bus->parent))
- 			ret = pnv_eeh_root_reset(hose, option);
- 		else
-@@ -1108,6 +1232,14 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
- 	if (!edev || !edev->pe)
- 		return false;
- 
-+	/*
-+	 * We will issue FLR or AF FLR to all VFs, which are contained
-+	 * in VF PE. It relies on the EEH PCI config accessors. So we
-+	 * can't block them during the window.
-+	 */
-+	if ((edev->physfn) && (edev->pe->state & EEH_PE_RESET))
-+		return false;
-+
- 	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
- 		return true;
- 
--- 
-1.7.9.5
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm+acpi-4.2-rc3
 
+to receive power management and ACPI fixes for v4.2-rc3 with
+top-most commit 17ffc8b083ac299ff798419d1887b7cdcd4ae4d2
+
+ Merge branches 'pm-cpuidle', 'pm-cpufreq' and 'acpi-resources'
+
+on top of commit bc0195aad0daa2ad5b0d76cce22b167bc3435590
+
+ Linux 4.2-rc2
+
+These fix two bugs in the cpufreq core (including one recent
+regression), fix a 4.0 PCI regression related to the ACPI resources
+management and quieten an RCU-related lockdep complaint about a
+tracepoint in the suspend-to-idle code.
+
+Specifics:
+
+ - Fix a recently introduced issue in the cpufreq policy object
+   reinitialization that leads to CPU offline/online breakage
+   (Viresh Kumar).
+
+ - Make it possible to access frequency tables of offline CPUs
+   which is needed by thermal management code among other things
+   (Viresh Kumar).
+
+ - Fix an ACPI resource management regression introduced during
+   the 4.0 cycle that may cause incorrect resource validation
+   results to appear in 32-bit x86 kernels due to silent truncation
+   of 64-bit values to 32-bit (Jiang Liu).
+
+ - Fix up an RCU-related lockdep complaint about suspicious RCU
+   usage in idle caused by using a suspend tracepoint in the
+   core suspend-to-idle code (Rafael J Wysocki).
+
+Thanks!
+
+---------------
+
+Jiang Liu (1):
+      ACPI / PCI: Fix regressions caused by resource_size_t overflow
+with 32-bit kernel
+
+Rafael J. Wysocki (1):
+      suspend-to-idle: Prevent RCU from complaining about tick_freeze()
+
+Viresh Kumar (2):
+      cpufreq: Initialize the governor again while restoring policy
+      cpufreq: Allow freq_table to be obtained for offline CPUs
+
+---------------
+
+ drivers/acpi/resource.c      | 24 +++++++++++++++---------
+ drivers/cpufreq/cpufreq.c    | 10 ++++++++++
+ drivers/cpufreq/freq_table.c |  9 ---------
+ drivers/cpuidle/cpuidle.c    |  9 +++++++--
+ 4 files changed, 32 insertions(+), 20 deletions(-)
