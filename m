@@ -1,236 +1,310 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35710 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756062AbbGVMv1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Jul 2015 08:51:27 -0400
-Date: Wed, 22 Jul 2015 13:52:07 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	James Morse <James.Morse@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jayachandran C <jchandra@broadcom.com>
-Subject: Re: [RFT PATCH] ARM: pci: kill pcibios_msi_controller
-Message-ID: <20150722125207.GB537@red-moon>
-References: <1436784206-14414-1-git-send-email-lorenzo.pieralisi@arm.com>
- <55AF62BA.1000702@hisilicon.com>
- <55AF6D59.8080505@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Robert Richter <rrichter@cavium.com>,
+	linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 5/5] PCI: Add host drivers for Cavium ThunderX processors.
+Date: Fri, 17 Jul 2015 14:12:15 +0200
+Message-ID: <3909080.h1jF0cZoik@wuerfel>
+In-Reply-To: <1436979285-8177-6-git-send-email-ddaney.cavm@gmail.com>
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-6-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55AF6D59.8080505@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 22, 2015 at 11:15:53AM +0100, Marc Zyngier wrote:
-> On 22/07/15 10:30, Zhou Wang wrote:
-> > On 2015/7/13 18:43, Lorenzo Pieralisi wrote:
-> >> On ARM PCI systems relying on the pcibios API to initialize PCI host
-> >> controllers, the pcibios_msi_controller weak callback is used to look-up
-> >> the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
-> >>
-> >> pci_sys_data is an arch specific structure, which prevents using the
-> >> same mechanism (so same PCI host controller drivers) on ARM64 systems.
-> >>
-> >> Since the struct pci_bus already contains an msi_controller pointer and
-> >> the kernel already uses it to look-up the msi controller,
-> >> this patch converts ARM host controller and relate pcibios/host bridges
-> >> initialization routines so that the msi_controller pointer look-up can be
-> >> carried out by PCI core code through the struct pci_bus msi pointer,
-> >> removing the need for arch specific pcibios_msi_controller callback
-> >> and the related pci_sys_data msi_ctrl pointer.
-> >>
-> >> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> >> Cc: Arnd Bergmann <arnd@arndb.de>
-> >> Cc: Jingoo Han <jingoohan1@gmail.com>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Simon Horman <horms@verge.net.au>
-> >> Cc: Russell King <linux@arm.linux.org.uk>
-> >> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> >> Cc: Thierry Reding <thierry.reding@gmail.com>
-> >> Cc: Michal Simek <michal.simek@xilinx.com>
-> >> Cc: Marc Zyngier <marc.zyngier@arm.com>
-> >> ---
-> >> Bjorn, all,
-> >>
-> >> I am posting this patch to sound out if that's a reasonable approach.
-> >> xgene implements MSI look-up this way at present and this would represent
-> >> another step forward towards having common drivers for ARM/ARM64, comments
-> >> and testing welcome.
-> >>
-> >> Thanks,
-> >> Lorenzo
-> >>
-> >>  arch/arm/include/asm/mach/pci.h    |  3 ---
-> >>  arch/arm/kernel/bios32.c           | 35 +++++++++++++++++------------------
-> >>  drivers/pci/host/pcie-designware.c |  9 +++++++--
-> >>  drivers/pci/host/pcie-xilinx.c     | 12 ++++++++++--
-> >>  4 files changed, 34 insertions(+), 25 deletions(-)
-> >>
-> >> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> >> index 28b9bb3..32abc0c 100644
-> >> --- a/arch/arm/include/asm/mach/pci.h
-> >> +++ b/arch/arm/include/asm/mach/pci.h
-> >> @@ -42,9 +42,6 @@ struct hw_pci {
-> >>   * Per-controller structure
-> >>   */
-> >>  struct pci_sys_data {
-> >> -#ifdef CONFIG_PCI_MSI
-> >> -	struct msi_controller *msi_ctrl;
-> >> -#endif
-> >>  	struct list_head node;
-> >>  	int		busnr;		/* primary bus number			*/
-> >>  	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
-> >> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> >> index fcbbbb1..c841b33 100644
-> >> --- a/arch/arm/kernel/bios32.c
-> >> +++ b/arch/arm/kernel/bios32.c
-> >> @@ -18,15 +18,6 @@
-> >>  
-> >>  static int debug_pci;
-> >>  
-> >> -#ifdef CONFIG_PCI_MSI
-> >> -struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-> >> -{
-> >> -	struct pci_sys_data *sysdata = dev->bus->sysdata;
-> >> -
-> >> -	return sysdata->msi_ctrl;
-> >> -}
-> >> -#endif
-> >> -
-> >>  /*
-> >>   * We can't use pci_get_device() here since we are
-> >>   * called from interrupt context.
-> >> @@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
-> >>  		if (!sys)
-> >>  			panic("PCI: unable to allocate sys data!");
-> >>  
-> >> -#ifdef CONFIG_PCI_MSI
-> >> -		sys->msi_ctrl = hw->msi_ctrl;
-> >> -#endif
-> >>  		sys->busnr   = busnr;
-> >>  		sys->swizzle = hw->swizzle;
-> >>  		sys->map_irq = hw->map_irq;
-> >> @@ -483,14 +471,25 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
-> >>  				break;
-> >>  			}
-> >>  
-> >> -			if (hw->scan)
-> >> +			if (hw->scan) {
-> >>  				sys->bus = hw->scan(nr, sys);
-> >> -			else
-> >> -				sys->bus = pci_scan_root_bus(parent, sys->busnr,
-> >> -						hw->ops, sys, &sys->resources);
-> >> +				if (!sys->bus)
-> >> +					panic("PCI: unable to scan bus!");
-> >> +			} else {
-> >> +				sys->bus = pci_create_root_bus(parent,
-> >> +							       sys->busnr,
-> >> +							       hw->ops, sys,
-> >> +							       &sys->resources);
-> >> +				if (WARN_ON(!sys->bus)) {
-> >> +					kfree(sys);
-> >> +					break;
-> >> +				}
-> >> +#ifdef CONFIG_PCI_MSI
-> >> +				sys->bus->msi = hw->msi_ctrl;
-> >> +#endif
-> >>  
-> >> -			if (!sys->bus)
-> >> -				panic("PCI: unable to scan bus!");
-> >> +				pci_scan_child_bus(sys->bus);
-> >> +			}
-> >>  
-> >>  			busnr = sys->bus->busn_res.end + 1;
-> >>  
-> >> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> >> index 69486be..e584dfa 100644
-> >> --- a/drivers/pci/host/pcie-designware.c
-> >> +++ b/drivers/pci/host/pcie-designware.c
-> >> @@ -526,7 +526,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >>  
-> >>  #ifdef CONFIG_PCI_MSI
-> >>  	dw_pcie_msi_chip.dev = pp->dev;
-> >> -	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
-> >>  #endif
-> >>  
-> >>  	dw_pci.nr_controllers = 1;
-> >> @@ -708,11 +707,17 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> >>  	struct pcie_port *pp = sys_to_pcie(sys);
-> >>  
-> >>  	pp->root_bus_nr = sys->busnr;
-> >> -	bus = pci_scan_root_bus(pp->dev, sys->busnr,
-> >> +	bus = pci_create_root_bus(pp->dev, sys->busnr,
-> >>  				  &dw_pcie_ops, sys, &sys->resources);
-> >>  	if (!bus)
-> >>  		return NULL;
-> >>  
-> >> +#ifdef CONFIG_PCI_MSI
-> >> +	bus->msi = &dw_pcie_msi_chip;
-> >> +#endif
-> >> +
-> >> +	pci_scan_child_bus(bus);
-> >> +
-> >>  	if (bus && pp->ops->scan_bus)
-> >>  		pp->ops->scan_bus(pp);
-> >>  
-> >> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> >> index f1a06a0..b21eb7d 100644
-> >> --- a/drivers/pci/host/pcie-xilinx.c
-> >> +++ b/drivers/pci/host/pcie-xilinx.c
-> >> @@ -647,9 +647,18 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> >>  	struct pci_bus *bus;
-> >>  
-> >>  	port->root_busno = sys->busnr;
-> >> -	bus = pci_scan_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
-> >> +	bus = pci_create_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
-> >>  				sys, &sys->resources);
-> >>  
-> >> +	if (!bus)
-> >> +		return NULL;
-> >> +
-> >> +#ifdef CONFIG_PCI_MSI
-> >> +	bus->msi = &xilinx_pcie_msi_chip;
-> >> +#endif
-> >> +
-> >> +	pci_scan_child_bus(bus);
-> >> +
-> >>  	return bus;
-> >>  }
-> >>  
-> >> @@ -847,7 +856,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
-> >>  
-> >>  #ifdef CONFIG_PCI_MSI
-> >>  	xilinx_pcie_msi_chip.dev = port->dev;
-> >> -	hw.msi_ctrl = &xilinx_pcie_msi_chip;
-> >>  #endif
-> >>  	pci_common_init_dev(dev, &hw);
-> >>  
-> >>
-> > 
-> > Hi Lorenzo,
-> > 
-> > I wonder if we can delete weak pcibios_msi_controller and the call in
-> > pci_msi_controller in drivers/pci/msi.c
+On Wednesday 15 July 2015 09:54:45 David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
 > 
-> Yeah, I think we can replace it with a straight "return NULL;" in
-> pci_msi_controller, as ARM is the only arch to implement this function
-> (which Lorenzo now removes).
+> Signed-off-by: David Daney <david.daney@cavium.com>
 
-Agreed, I did not do it since I wanted to get feedback on the approach
-first, if we agree that's the right thing to do we can kill
-pcibios_msi_controller() in the core too (since it becomes unused).
+Please describe here in what way is this incompatible with SBSA.
+>From earlier discussions I had expected ThunderX to be SBSA compliant,
+so I'm a bit surprised to see a PCI hack now.
 
-Lorenzo
+> +#define THUNDER_SLI_S2M_REG_ACC_BASE	0x874001000000ull
+> +
+> +#define THUNDER_GIC			0x801000000000ull
+> +#define THUNDER_GICD_SETSPI_NSR		0x801000000040ull
+> +#define THUNDER_GICD_CLRSPI_NSR		0x801000000048ull
+> +
+
+All I/O addresses must come from DT.
+
+> +#define THUNDER_GSER_PCIE_MASK		0x01
+> +
+> +#define PEM_CTL_STATUS	0x000
+> +#define PEM_RD_CFG	0x030
+> +#define P2N_BAR0_START	0x080
+> +#define P2N_BAR1_START	0x088
+> +#define P2N_BAR2_START	0x090
+> +#define BAR_CTL		0x0a8
+> +#define BAR2_MASK	0x0b0
+> +#define BAR1_INDEX	0x100
+> +#define PEM_CFG		0x410
+> +#define PEM_ON		0x420
+> +
+> +struct thunder_pem {
+> +	struct list_head list; /* on thunder_pem_buses */
+> +	bool		connected;
+> +	unsigned int	id;
+> +	unsigned int	sli;
+> +	unsigned int	sli_group;
+> +	unsigned int	node;
+> +	u64		sli_window_base;
+> +	void __iomem	*bar0;
+> +	void __iomem	*bar4;
+> +	void __iomem	*sli_s2m;
+> +	void __iomem	*cfgregion;
+> +	struct pci_bus	*bus;
+> +	int		vwire_irqs[4];
+> +	u32		vwire_data[4];
+> +};
+> +
+> +static LIST_HEAD(thunder_pem_buses);
+
+Please kill off global lists like this and use the driver
+model abstractions we have.
+
+> +static u64 slix_s2m_reg_val(unsigned mac, enum slix_s2m_ctype ctype,
+> +			    bool merge, bool relaxed, bool snoop, u32 ba_msb)
+> +{
+> +	u64 v;
+> +
+> +	v = (u64)(mac % 3) << 49;
+> +	v |= (u64)ctype << 53;
+> +	if (!merge)
+> +		v |= 1ull << 48;
+> +	if (relaxed)
+> +		v |= 5ull << 40;
+> +	if (!snoop)
+> +		v |= 5ull << 41;
+> +	v |= (u64)ba_msb;
+> +
+> +	return v;
+> +}
+
+Please add a comment to explain why these registers have to be
+configured at runtime. Are you working around broken bootloaders,
+or does the configuration depend on the connected PCI devices?
+
+> +static int thunder_pem_read_config(struct pci_bus *bus, unsigned int devfn,
+> +				   int reg, int size, u32 *val)
+> +{
+> +	void __iomem *addr;
+> +	struct thunder_pem *pem = bus->sysdata;
+> +	unsigned int busnr = bus->number;
+> +
+> +	if (busnr > 255 || devfn > 255 || reg > 4095)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +	addr = pem->cfgregion + ((busnr << 24)  | (devfn << 16) | reg);
+
+This looks like ECAM. Could you use the standard accessors?
+
+> +
+> +static int thunder_pem_pci_probe(struct pci_dev *pdev,
+> +				 const struct pci_device_id *ent)
+> +{
+> +	struct thunder_pem *pem;
+> +	resource_size_t bar0_start;
+> +	u64 regval;
+> +	u64 sliaddr, pciaddr;
+> +	u32 cfgval;
+> +	int primary_bus;
+> +	int i;
+> +	int ret = 0;
+> +	struct resource *res;
+> +	LIST_HEAD(resources);
+> +
+> +	set_pcibios_add_device(thunder_pem_pcibios_add_device);
+
+This looks awful. I don't know who introduced the set_pcibios_add_device
+interface, but we should not have something like that. In particular,
+it seem wrong for a PCI device driver to add that.
+
+What exactly is the pem? Is that an incompatible replacement of the
+normal PCIe port devices?
+
+> +
+> +	bar0_start = pci_resource_start(pdev, 0);
+> +	pem->node = (bar0_start >> 44) & 3;
+> +	pem->id = ((bar0_start >> 24) & 7) + (6 * pem->node);
+> +	pem->sli = pem->id % 3;
+> +	pem->sli_group = (pem->id / 3) % 2;
+> +	pem->sli_window_base = 0x880000000000ull | (((u64)pem->node) << 44) | ((u64)pem->sli_group << 40);
+> +	pem->sli_window_base += 0x4000000000 * pem->sli;
+
+What is this computation?
+
+> +	udelay(1000);
+
+This is awfully long for a delay. Please try to avoid it or at least turn it
+into a sleeping wait.
+
+> +	res->start = primary_bus;
+> +	res->end = 255;
+> +	res->flags = IORESOURCE_BUS;
+> +	pci_add_resource(&resources, res);
+
+What is this about? You have a PCI device that itself has 255 buses underneath it?
+
+> +static int __init thunder_pcie_init(void)
+> +{
+> +	int ret;
+> +
+> +	ret = pci_register_driver(&thunder_pem_driver);
+> +
+> +	return ret;
+> +}
+> +module_init(thunder_pcie_init);
+> +
+> +static void __exit thunder_pcie_exit(void)
+> +{
+> +	pci_unregister_driver(&thunder_pem_driver);
+> +}
+
+module_pci_driver() ?
+
+> +
+> +#define PCI_DEVICE_ID_THUNDER_BRIDGE	0xa002
+> +
+> +#define THUNDER_PCIE_BUS_SHIFT		20
+> +#define THUNDER_PCIE_DEV_SHIFT		15
+> +#define THUNDER_PCIE_FUNC_SHIFT		12
+
+ECAM?
+
+> +#define THUNDER_ECAM0_CFG_BASE		0x848000000000
+> +#define THUNDER_ECAM1_CFG_BASE		0x849000000000
+> +#define THUNDER_ECAM2_CFG_BASE		0x84a000000000
+> +#define THUNDER_ECAM3_CFG_BASE		0x84b000000000
+> +#define THUNDER_ECAM4_CFG_BASE		0x948000000000
+> +#define THUNDER_ECAM5_CFG_BASE		0x949000000000
+> +#define THUNDER_ECAM6_CFG_BASE		0x94a000000000
+> +#define THUNDER_ECAM7_CFG_BASE		0x94b000000000
+
+-> DT
+
+> +/*
+> + * All PCIe devices in Thunder have fixed resources, shouldn't be reassigned.
+> + * Also claim the device's valid resources to set 'res->parent' hierarchy.
+> + */
+> +static void pci_dev_resource_fixup(struct pci_dev *dev)
+> +{
+> +	struct resource *res;
+> +	int resno;
+> +
+> +	/*
+> +	 * If the ECAM is not yet probed, we must be in a virtual
+> +	 * machine.  In that case, don't mark things as
+> +	 * IORESOURCE_PCI_FIXED
+> +	 */
+> +	if (!atomic_read(&thunder_pcie_ecam_probed))
+> +		return;
+> +
+> +	for (resno = 0; resno < PCI_NUM_RESOURCES; resno++)
+> +		dev->resource[resno].flags |= IORESOURCE_PCI_FIXED;
+
+Just list the resources as fixed in DT and kill this function.
+
+If that doesn't work, it's a bug in the PCI core code.
+
+> +
+> +static int thunder_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
+> +				int reg, int size, u32 *val)
+> +{
+> +	struct thunder_pcie *pcie = bus->sysdata;
+> +	void __iomem *addr;
+> +	unsigned int busnr = bus->number;
+> +
+> +	if (busnr > 255 || devfn > 255 || reg > 4095)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +	addr = thunder_pcie_get_cfg_addr(pcie, busnr, devfn, reg);
+
+ECAM again?
+
+> +static int thunder_pcie_msi_enable(struct thunder_pcie *pcie,
+> +					struct pci_bus *bus)
+> +{
+> +	struct device_node *msi_node;
+> +
+> +	msi_node = of_parse_phandle(pcie->node, "msi-parent", 0);
+> +	if (!msi_node)
+> +		return -ENODEV;
+> +
+> +	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
+> +	if (!pcie->msi)
+> +		return -ENODEV;
+> +
+> +	pcie->msi->dev = pcie->dev;
+> +	bus->msi = pcie->msi;
+> +
+> +	return 0;
+> +}
+
+This should really be done in the core code, so we don't have to duplicate
+it to each driver.
+
+> +
+> +static void thunder_pcie_config(struct thunder_pcie *pcie, u64 addr)
+> +{
+> +	atomic_set(&thunder_pcie_ecam_probed, 1);
+> +	set_its_pci_requester_id(thunder_pci_requester_id);
+> +
+> +	pcie->valid = true;
+> +
+> +	switch (addr) {
+> +	case THUNDER_ECAM0_CFG_BASE:
+> +		pcie->ecam = 0;
+> +		break;
+> +	case THUNDER_ECAM1_CFG_BASE:
+> +		pcie->ecam = 1;
+> +		break;
+> +	case THUNDER_ECAM2_CFG_BASE:
+> +		pcie->ecam = 2;
+> +		break;
+> +	case THUNDER_ECAM3_CFG_BASE:
+> +		pcie->ecam = 3;
+> +		break;
+> +	case THUNDER_ECAM4_CFG_BASE:
+> +		pcie->ecam = 4;
+> +		break;
+> +	case THUNDER_ECAM5_CFG_BASE:
+> +		pcie->ecam = 5;
+> +		break;
+> +	case THUNDER_ECAM6_CFG_BASE:
+> +		pcie->ecam = 6;
+> +		break;
+> +	case THUNDER_ECAM7_CFG_BASE:
+> +		pcie->ecam = 7;
+> +		break;
+> +	default:
+> +		pcie->valid = false;
+> +		break;
+> +	}
+> +}
+
+You don't even seem to use the "ecam" numbers, and the "valid" part
+looks pointless: if the device is listed by firmware, you should
+assume that it is valid.
+
+> +#ifdef CONFIG_ACPI
+> +
+> +static int
+> +thunder_mmcfg_read_config(struct pci_mmcfg_region *cfg, unsigned int busnr,
+> +			unsigned int devfn, int reg, int len, u32 *value)
+> +{
+
+Just drop the ACPI part: if the device is not compatible with the
+normal ACPI probing method and the PCI definition and with SBSA,
+then we can't really support it on ACPI based systems.
+
+	Arnd
