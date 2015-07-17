@@ -1,60 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:33951 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360AbbGNWPQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:15:16 -0400
-Received: by obre1 with SMTP id e1so15126506obr.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 15:15:16 -0700 (PDT)
-Date: Tue, 14 Jul 2015 17:15:11 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Don't update VF's BAR
-Message-ID: <20150714221511.GM24416@google.com>
-References: <1435649834-3148-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55A92F95.307@caviumnetworks.com>
+Date: Fri, 17 Jul 2015 09:38:45 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435649834-3148-1-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Robert Richter <rrichter@cavium.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 3/5] arm64, pci: Allow RC drivers to supply pcibios_add_device()
+ implementation.
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-4-git-send-email-ddaney.cavm@gmail.com> <20150716090426.GA17097@red-moon> <55A7E334.3030101@caviumnetworks.com> <20150717110016.GB19067@red-moon>
+In-Reply-To: <20150717110016.GB19067@red-moon>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 30, 2015 at 03:37:14PM +0800, Wei Yang wrote:
-> VF BARs are RO zero, so updating VF BARs will not take any effect.
-> See the SR-IOV spec r1.1, sec 3.4.1.11.
-> 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-> ---
->  drivers/pci/setup-res.c |    7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 232f925..334b394 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -37,6 +37,13 @@ void pci_update_resource(struct pci_dev *dev, int resno)
->  	struct resource *res = dev->resource + resno;
->  
->  	/*
-> +	 * Per SRIOV SPEC 3.4.1.11, VF BARs are RO zero.
-> +	 * If this is a VF, just return.
-> +	 */
-> +	if (dev->is_virtfn)
-> +		return;
+On 07/17/2015 04:00 AM, Lorenzo Pieralisi wrote:
+> Hi David,
+>
+> On Thu, Jul 16, 2015 at 06:00:36PM +0100, David Daney wrote:
+>> On 07/16/2015 02:04 AM, Lorenzo Pieralisi wrote:
+>>> Hi David,
+>>>
+>>> On Wed, Jul 15, 2015 at 05:54:43PM +0100, David Daney wrote:
+>>>> From: David Daney <david.daney@cavium.com>
+>>>>
+>> [...]
+>>>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>>>> index 4095379..3356023 100644
+>>>> --- a/arch/arm64/kernel/pci.c
+>>>> +++ b/arch/arm64/kernel/pci.c
+>>>> @@ -38,11 +38,21 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>>>>    	return res->start;
+>>>>    }
+>>>>
+>>>> +static int (*pcibios_add_device_impl)(struct pci_dev *);
+>>>> +
+>>>> +void set_pcibios_add_device(int (*arg)(struct pci_dev *))
+>>>> +{
+>>>> +	pcibios_add_device_impl = arg;
+>>>> +}
+>>>> +
+>>>>    /*
+>>>>     * Try to assign the IRQ number from DT when adding a new device
+>>>>     */
+>>>>    int pcibios_add_device(struct pci_dev *dev)
+>>>>    {
+>>>> +	if (pcibios_add_device_impl)
+>>>> +		return pcibios_add_device_impl(dev);
+>>>
+>>> I am totally against this (and to be honest by reading the other
+>>> patches I failed to understand why you even need it), see above.
+>>>
+>>
+>> It is because ...
+>>
+>>
+>>> Thanks,
+>>> Lorenzo
+>>>
+>>>> +
+>>>>    	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>>
+>>
+>>    ... this is total crap.  But I didn't want to break existing systems.
+>
+> That's a good aim, but you are still failing to explain the issue properly
+> I am afraid.
+>
+>> The PCI RC drivers need a way to configure the legacy virtual-wire
+>> interrupts, because the existing code doesn't do it.
+>
+> Can I ask you please to explain the issue a bit more clearly (and why
+> the OF API does not work for you ?)
 
-Does this fix a problem?  Are you seeing the "BAR %d: error updating"
-message?
+Several problems:
 
-I wouldn't think we would even call pci_update_resource() for VFs, except
-for pci_restore_bars().  Maybe we should check there?
+1) It prints many times to the boot log this string:
+     pci 0000:01:0e.2: of_irq_parse_pci() failed with rc=-19
 
-If the PCI core is assigning space directly to VF BARs and trying to update
-them, I'd like to know about that rather than silently ignoring it.
+2) For a RC with no device_node it does nothing (in addition to printing 
+the annoying message).
 
-> +
-> +	/*
->  	 * Ignore resources for unimplemented BARs and unused resource slots
->  	 * for 64 bit BARs.
->  	 */
-> -- 
-> 1.7.9.5
-> 
+
+>
+> Thank you !
+> Lorenzo
+>
+
