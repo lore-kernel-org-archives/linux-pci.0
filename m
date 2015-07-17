@@ -1,104 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 29 Jul 2015 15:37:41 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Jakub Sitnicki <jsitnicki@gmail.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [Patch v5 1/6] ACPI/PCI: Enhance ACPI core to support sparse IO
- space
-Message-ID: <20150729203741.GC9640@google.com>
-References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
- <1433780448-18636-2-git-send-email-jiang.liu@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 17 Jul 2015 22:37:55 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: mingo@kernel.org, bp@suse.de, tomi.valkeinen@ti.com,
+	airlied@redhat.com, arnd@arndb.de, dan.j.williams@intel.com,
+	hch@lst.de, luto@amacapital.net, hpa@zytor.com, tglx@linutronix.de,
+	geert@linux-m68k.org, ralf@linux-mips.org, hmh@hmh.eng.br,
+	ross.zwisler@linux.intel.com, akpm@linux-foundation.org,
+	jgross@suse.com, benh@kernel.crashing.org, mpe@ellerman.id.au,
+	tj@kernel.org, x86@kernel.org, mst@redhat.com, toshi.kani@hp.com,
+	stefan.bader@canonical.com, syrjala@sci.fi,
+	ville.syrjala@linux.intel.com, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org, linux-fbdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 0/4] atyfb: atyfb: address MTRR corner case
+Message-ID: <20150717203755.GE30479@wotan.suse.de>
+References: <1436491499-3289-1-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1433780448-18636-2-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1436491499-3289-1-git-send-email-mcgrof@do-not-panic.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 09, 2015 at 12:20:43AM +0800, Jiang Liu wrote:
-> Enhance ACPI resource parsing interfaces to support sparse IO space,
-> which will be used to share common code between x86 and IA64 later.
+On Thu, Jul 09, 2015 at 06:24:55PM -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
 > 
-> Tested-by: Tony Luck <tony.luck@intel.com>
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> ---
->  drivers/acpi/resource.c |    9 ++++++---
->  include/linux/ioport.h  |    1 +
->  2 files changed, 7 insertions(+), 3 deletions(-)
+> Ingo,
 > 
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index 8244f013f210..fdcc73dad2c1 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
->  EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
->  
->  static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
-> -				      u8 io_decode)
-> +				      u8 io_decode, u8 translation_type)
->  {
->  	res->flags = IORESOURCE_IO;
->  
-> @@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->  
->  	if (io_decode == ACPI_DECODE_16)
->  		res->flags |= IORESOURCE_IO_16BIT_ADDR;
-> +	if (translation_type == ACPI_SPARSE_TRANSLATION)
-> +		res->flags |= IORESOURCE_IO_SPARSE;
->  }
->  
->  static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
-> @@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
->  {
->  	res->start = start;
->  	res->end = start + len - 1;
-> -	acpi_dev_ioresource_flags(res, len, io_decode);
-> +	acpi_dev_ioresource_flags(res, len, io_decode, 0);
->  }
->  
->  /**
-> @@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
->  		acpi_dev_memresource_flags(res, len, wp);
->  		break;
->  	case ACPI_IO_RANGE:
-> -		acpi_dev_ioresource_flags(res, len, iodec);
-> +		acpi_dev_ioresource_flags(res, len, iodec,
-> +					  addr->info.io.translation_type);
->  		break;
->  	case ACPI_BUS_NUMBER_RANGE:
->  		res->flags = IORESOURCE_BUS;
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 388e3ae94f7a..24bea087e7af 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -94,6 +94,7 @@ struct resource {
->  /* PnP I/O specific bits (IORESOURCE_BITS) */
->  #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
->  #define IORESOURCE_IO_FIXED		(1<<1)
-> +#define IORESOURCE_IO_SPARSE		(1<<2)
-
-I don't really like this bit.  We adding a new generic IORESOURCE_* bit
-just for a special case, and it's only used in one place, for one arch,
-during enumeration.
-
-Don't we have a similar problem (struct resource can't express all the
-information from an ACPI resource) for the _TRA value for bridge windows?
-If it's a similar issue, we should solve it in a similar way.
-
->  /* PCI ROM control bits (IORESOURCE_BITS) */
->  #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
-> -- 
-> 1.7.10.4
+> Boris is on vacation so sending these through you. This v6 addresses one code
+> comment update requested by Ville. Boris had picked up these patches on his
+> tree and this series had gone through 0-day bot testing. The only issue it
+> found was the lack of ioremap_uc() implementation on some architectures which
+> have an IOMMU. There are two approaches to this issue, one is to go and define
+> ioremap_uc() on all architectures, another is to provide a default for
+> ioremap_uc() as architectures catch up. I've gone with the later approach [0],
+> and so to ensure things won't build-break this patch series must also go
+> through the same tree as the patch-fixes for ioremap_uc() for missing
+> ioremap_uc() implementations go through. I intend on following up with
+> implementing ioremap_uc() for other architectures but for that I need to get
+> feedback from other architecture developers and that will take time.
 > 
+> Tomi, the framebuffer maintainer had already expressed he was OK for this to go
+> through you. The driver maintainer, Ville, has been Cc'd on all the series, but
+> has only provided feedback for the comment request as I noted above. This
+> series addresses the more complex work on the entire series I've been putting
+> out and as such I've provided a TL;DR full review of what this series does in
+> my previous v5 patch series, that can be looked at for more details if needed
+> [1].
+> 
+> This series depends on the patch which I recently posted to address compilation
+> issue on architectures missing ioremap_uc() [0]. If that goes through then it
+> should be safe to apply this series, otherwise we have to sit and wait until
+> all architectures get ioremap_uc() properly defined.
+> 
+> Please let me know if there are any questions.
+> 
+> [0] http://lkml.kernel.org/r/1436488096-3165-1-git-send-email-mcgrof@do-not-panic.com
+> [1] http://lkml.kernel.org/r/1435196060-27350-1-git-send-email-mcgrof@do-not-panic.com
+
+Ingo, please let me know if there are any questions or issues with this series.
+
+  Luis
