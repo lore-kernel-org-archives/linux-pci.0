@@ -1,116 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35109 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752914AbbGNWrs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:47:48 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 12/49] PCI: Simplify res reference using in __assign_resourcs_sorted
-Date: Tue, 14 Jul 2015 15:46:43 -0700
-Message-Id: <1436914040-13206-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:47203 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932178AbbGQGqq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jul 2015 02:46:46 -0400
+Date: Fri, 17 Jul 2015 07:45:49 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	David Daney <david.daney@cavium.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Robert Richter <rrichter@cavium.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
+ the irqdomain of the GIC.
+Message-ID: <20150717074549.7a502e09@arm.com>
+In-Reply-To: <55A7EAAC.8000800@arm.com>
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
+	<1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com>
+	<55A6947F.8070903@arm.com>
+	<55A6AD1F.902@caviumnetworks.com>
+	<55A75F8B.3080009@arm.com>
+	<55A7E0C2.8020704@caviumnetworks.com>
+	<55A7E52D.9080201@arm.com>
+	<55A7E663.9030000@caviumnetworks.com>
+	<55A7EAAC.8000800@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use res instead of dev_res->res.
+On Thu, 16 Jul 2015 18:32:28 +0100
+Marc Zyngier <marc.zyngier@arm.com> wrote:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+> On 16/07/15 18:14, David Daney wrote:
+> > On 07/16/2015 10:09 AM, Marc Zyngier wrote:
+> >> On 16/07/15 17:50, David Daney wrote:
+> > [...]
+> >>>> Patch 5 has established that you're using "virtual wire" SPIs, so we
+> >>>> need to work on exposing that with the normal kernel abstraction, and
+> >>>> not by messing with the internals of the GIC.
+> >>>>
+> >>>
+> >>> Agreed.
+> >>>
+> >>> The MSI system has pci_enable_msix()/pci_disable_msix().
+> >>>
+> >>> I would propose something like:
+> >>>
+> >>> struct gic_spi_entry {
+> >>> 	int spi   /* SPI number */
+> >>> 	int irq;  /* kernel irq number mapped to the spi*/
+> >>> 	u32 msg;  /* message to be written */
+> >>> 	u64 assert_addr;
+> >>> 	u64 deassert_addr;
+> >>> };
+> >>>
+> >>> /* Fill in the SPI processing information */
+> >>> int gic_map_spi(int spi, struct gic_spi_entry *data);
+> >>
+> >> Neither.
+> >>
+> >> The way to do it is to make this a *separate* IRQ domain stacked onto
+> >> the SPI domain. No funky hook on the side. If it doesn't go through the
+> >> normal kernel API, it doesn't reach the GIC.
+> > 
+> > Yes, the irqdomain does handle mapping SPI -> irq, and the message can 
+> > be derived from the SPI.  However, the irqdomain infrastructure cannot 
+> > supply values for either assert_addr or deassert_addr.
+> 
+> This is why I suggested earlier (in my reply to patch 5) that you have a
+> look at the series I posted a couple of days ago to implement non-PCI
+> MSI support. This would allow you to compose the domains as such:
+> 
+> platform-MSI -> message-SPI -> GIC
+> 
+> You'd end up with a msi_msg containing the GICD_SETSPI_NSR doorbell, and
+> the SPI as a payload.
+> 
+> > Those are needed in order to use SPI.  How would you suggest that they 
+> > be obtained?
+> 
+> Two possibilities: either you derive GICD_CLRSPI_NSR by adding 8 to the
+> doorbell you got from the msi_msg structure (ugly, but limited to your
+> own code), or you extend msi_msg to cater for this case.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6dff258..06664db 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -453,6 +453,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
- 	resource_size_t add_align;
-+	struct resource *res;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -468,8 +469,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
--		dev_res->res->end += get_res_add_size(realloc_head,
--							dev_res->res);
-+		res = dev_res->res;
-+		res->end += get_res_add_size(realloc_head, res);
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
-@@ -478,16 +479,16 @@ static void __assign_resources_sorted(struct list_head *head,
- 		 * 2. resource with IORESOURCE_SIZEALIGN
- 		 *    update size above already change alignment.
- 		 */
--		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+		if (!(res->flags & IORESOURCE_STARTALIGN))
- 			continue;
- 
--		add_align = get_res_add_align(realloc_head, dev_res->res);
-+		add_align = get_res_add_align(realloc_head, res);
- 
- 		if (add_align) {
--			resource_size_t r_size = resource_size(dev_res->res);
-+			resource_size_t r_size = resource_size(res);
- 
--			dev_res->res->start = add_align;
--			dev_res->res->end = add_align + r_size - 1;
-+			res->start = add_align;
-+			res->end = add_align + r_size - 1;
-                }
- 	}
- 
-@@ -509,21 +510,21 @@ static void __assign_resources_sorted(struct list_head *head,
- 	/* check failed type */
- 	fail_type = pci_fail_res_type_mask(&local_fail_head);
- 	/* remove not need to be released assigned res from head list etc */
--	list_for_each_entry_safe(dev_res, tmp_res, head, list)
--		if (dev_res->res->parent &&
--		    !pci_need_to_release(fail_type, dev_res->res)) {
-+	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
-+		res = dev_res->res;
-+		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
--			remove_from_list(realloc_head, dev_res->res);
--			remove_from_list(&save_head, dev_res->res);
-+			remove_from_list(realloc_head, res);
-+			remove_from_list(&save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-+	}
- 
- 	free_list(&local_fail_head);
- 	/* Release assigned resource */
- 	list_for_each_entry(dev_res, head, list) {
--		struct resource *res = dev_res->res;
--
-+		res = dev_res->res;
- 		if (res->parent) {
- 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
- 				   "BAR %d: released %pR\n",
-@@ -534,8 +535,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	/* Restore start/end/flags from saved list */
- 	list_for_each_entry(save_res, &save_head, list) {
--		struct resource *res = save_res->res;
--
-+		res = save_res->res;
- 		res->start = save_res->start;
- 		res->end = save_res->end;
- 		res->flags = save_res->flags;
+A simpler alternative to the above would be to move all this to
+firmware, and only expose a *wired* SPI to the kernel. This would have
+the advantage to use the existing infrastructure for both DT and ACPI.
+
+As a side note, that was the intended use of these registers - to
+provide a "virtual wire" interface that remains mostly invisible to
+software.
+
+Thanks,
+
+	M.
 -- 
-1.8.4.5
-
+Jazz is not dead. It just smells funny.
