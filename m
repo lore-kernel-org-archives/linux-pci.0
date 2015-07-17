@@ -1,118 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:6097 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752603AbbG0PKL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 11:10:11 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <gabriele.paoloni@huawei.com>, <arnd@arndb.de>,
-	<lorenzo.pieralisi@arm.com>, <wangzhou1@hisilicon.com>,
-	<bhelgaas@google.com>, <robh+dt@kernel.org>, <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
-Date: Mon, 27 Jul 2015 23:17:03 +0800
-Message-ID: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:46466 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756712AbbGQGDL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:11 -0400
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 17 Jul 2015 11:33:07 +0530
+Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
+	by d28dlp01.in.ibm.com (Postfix) with ESMTP id D6F28E006F
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:36:59 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H632jw28377190
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:02 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H631kD014976
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:01 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 04/11] powerpc/pci: Remove VFs prior to PF
+Date: Fri, 17 Jul 2015 14:02:34 +0800
+Message-Id: <1437112961-17275-5-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove") indicates,
+VFs, which might be hooked to same PCI bus as their PF should be removed
+before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
+cause kernel crash.
 
-    This patch is needed port PCIe designware to new DT parsing API
-    As discussed in
-    http://lists.infradead.org/pipermail/linux-arm-kernel/2015-January/317743.html
-    in designware we have a problem as the PCI addresses in the PCIe controller
-    address space are required in order to perform correct HW operation.
+The patch applies the above pattern to PowerPC PCI hotplug path.
 
-    In order to solve this problem commit f4c55c5a3 "PCI: designware:
-    Program ATU with untranslated address" added code to read the PCIe
-    controller start address directly from the DT ranges.
-
-    In the new DT parsing API of_pci_get_host_bridge_resources() hides the
-    DT parser from the host controller drivers, so it is not possible
-    for drivers to parse values directly from the DT.
-
-    In http://www.spinics.net/lists/linux-pci/msg42540.html we already tried
-    to use the new DT parsing API but there is a bug (obviously) in setting
-    the <*>_mod_base addresses
-    Applying this patch we can easily set "<*>_mod_base = win->__res.start"
-
-    This patch adds a new field in "struct of_pci_range" to store the
-    pci bus start address; it fills the field in of_pci_range_parser_one();
-    in of_pci_get_host_bridge_resources() it retrieves the resource entry
-    after it is created and added to the resource list and uses
-    entry->__res.start to store the pci controller address
-
-    the patch is based on 4.2-rc1
-
-    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-    Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
-    Acked-by: Rob Herring <robh@kernel.org>
+[gwshan: changelog]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/of/address.c       | 2 ++
- drivers/of/of_pci.c        | 4 ++++
- include/linux/of_address.h | 1 +
- 3 files changed, 7 insertions(+)
+ arch/powerpc/kernel/pci-hotplug.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 8bfda6a..23a5793 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -253,6 +253,7 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
- 						struct of_pci_range *range)
- {
- 	const int na = 3, ns = 2;
-+	const int p_ns = of_n_size_cells(parser->node);
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7f9ed0c..59c4361 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -55,7 +55,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
  
- 	if (!range)
- 		return NULL;
-@@ -265,6 +266,7 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
- 	range->pci_addr = of_read_number(parser->range + 1, ns);
- 	range->cpu_addr = of_translate_address(parser->node,
- 				parser->range + na);
-+	range->bus_addr = of_read_number(parser->range + na, p_ns);
- 	range->size = of_read_number(parser->range + parser->pna + na, ns);
- 
- 	parser->range += parser->np;
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 5751dc5..fe57030 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -198,6 +198,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 
- 	pr_debug("Parsing ranges property...\n");
- 	for_each_of_pci_range(&parser, &range) {
-+		struct resource_entry *entry;
- 		/* Read next ranges element */
- 		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
- 			snprintf(range_type, 4, " IO");
-@@ -240,6 +241,9 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 		}
- 
- 		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
-+		entry = list_last_entry(resources, struct resource_entry, node);
-+		/* we are using __res for storing the PCI controller address */
-+		entry->__res.start = range.bus_addr;
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		pr_debug("   Removing %s...\n", pci_name(dev));
+ 		pci_stop_and_remove_bus_device(dev);
  	}
- 
- 	return 0;
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index d88e81b..865f96e 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -16,6 +16,7 @@ struct of_pci_range {
- 	u32 pci_space;
- 	u64 pci_addr;
- 	u64 cpu_addr;
-+	u64 bus_addr;
- 	u64 size;
- 	u32 flags;
- };
 -- 
-1.9.1
+1.7.9.5
 
