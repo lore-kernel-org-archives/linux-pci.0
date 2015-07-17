@@ -1,48 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:58141 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbbGJPlQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 11:41:16 -0400
-From: Marek Vasut <marex@denx.de>
-To: Pratyush Anand <pratyush.anand@gmail.com>
-Subject: Re: [PATCH 2/3] PCI: host: pcie-designware: add support for suspend and resume
-Date: Fri, 10 Jul 2015 17:41:11 +0200
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>, linux-omap@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, nsekhar@ti.com,
-	Tim Harvey <tharvey@gateworks.com>
-References: <1435921425-15121-1-git-send-email-kishon@ti.com> <559FDB97.1090803@ti.com> <CAHM4w1mTCHNTAYG4c-9x9kMPjGevyngT4ixVinpuDPCwKtT0FA@mail.gmail.com>
-In-Reply-To: <CAHM4w1mTCHNTAYG4c-9x9kMPjGevyngT4ixVinpuDPCwKtT0FA@mail.gmail.com>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:34289 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752710AbbGQVc1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 17:32:27 -0400
+Received: by oigd21 with SMTP id d21so36099695oig.1
+        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 14:32:27 -0700 (PDT)
+Subject: [PATCH 5/8] PCI: Inline the ATS setup code into pci_ats_init()
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gregor Dick <gdick@solarflare.com>
+Date: Fri, 17 Jul 2015 16:32:23 -0500
+Message-ID: <20150717213223.18379.75832.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201507101741.11873.marex@denx.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, July 10, 2015 at 05:30:46 PM, Pratyush Anand wrote:
-> Hi Kishon,
+The ATS setup code in ats_alloc_one() is only used by pci_ats_init(), so
+inline it there.  No functional change.
 
-Hi,
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/ats.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-> On Fri, Jul 10, 2015 at 8:19 PM, Kishon Vijay Abraham I <kishon@ti.com>
-> wrote:
-> 
-> [...]
-> 
-> >> Have you tested with a card having IO space memory as well.
-> > 
-> > I don't have any cards with IO space memory. Do you have any suggestion
-> > for cards with IO space memory?
-> 
-> Sorry, I never used it either :(
-> IIRC, then Tim and Marek (in cc) had reported long back with some
-> issues of IO transaction
-> with SKY2 based card. They may let you know about exact card ID.
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index ea459b3..fe59182 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -17,7 +17,7 @@
+ 
+ #include "pci.h"
+ 
+-static void ats_alloc_one(struct pci_dev *dev)
++void pci_ats_init(struct pci_dev *dev)
+ {
+ 	int pos;
+ 	u16 cap;
+@@ -32,11 +32,6 @@ static void ats_alloc_one(struct pci_dev *dev)
+ 					    PCI_ATS_MAX_QDEP;
+ }
+ 
+-void pci_ats_init(struct pci_dev *dev)
+-{
+-	ats_alloc_one(dev);
+-}
+-
+ /**
+  * pci_enable_ats - enable the ATS capability
+  * @dev: the PCI device
 
-That was Tim, I didn't ever try with SKY2 , sorry.
-
-Best regards,
-Marek Vasut
