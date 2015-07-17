@@ -1,41 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:64115 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbbG2Oa7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 10:30:59 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Ray Jui <rjui@broadcom.com>, Olof Johansson <olof@lixom.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, arm@kernel.org,
-	bcm-kernel-feedback-list@broadcom.com
-Subject: Re: [PATCH] PCI: iproc: Fix BCMA dependency in Kconfig
-Date: Wed, 29 Jul 2015 16:30:21 +0200
-Message-ID: <33449873.RA3z6vhrMA@wuerfel>
-In-Reply-To: <1438109533-28694-1-git-send-email-rjui@broadcom.com>
-References: <1438109533-28694-1-git-send-email-rjui@broadcom.com>
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:35457 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752605AbbGQVcL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 17:32:11 -0400
+Received: by oihq81 with SMTP id q81so78523974oih.2
+        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 14:32:11 -0700 (PDT)
+Subject: [PATCH 3/8] PCI: Reduce size of ATS structure elements
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gregor Dick <gdick@solarflare.com>
+Date: Fri, 17 Jul 2015 16:32:08 -0500
+Message-ID: <20150717213208.18379.24197.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 28 July 2015 11:52:13 Ray Jui wrote:
->  config PCIE_IPROC_BCMA
->         bool "Broadcom iProc PCIe BCMA bus driver"
-> -       depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
-> +       depends on ARCH_BCM_IPROC && ARM
->         select PCIE_IPROC
->         select BCMA
->         select PCI_DOMAINS
-> 
+The extended capabilities list is linked with 12-bit pointers, and the ATS
+Smallest Translation Unit and Invalidate Queue Depth fields are both 5
+bits.
 
-How about this:
+Use u16 and u8 to hold the extended capability address and the stu and qdep
+values.  No functional change.
 
-	depends on ARM && (ARCH_BCM_IPROC || COMPILE_TEST)
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ include/linux/pci.h |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-That would leave the compile test present for non-iproc
-ARM platforms while preventing ARM64 and MIPS builds with
-ARCH_BCM_IPROC set.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ba4a23b..1997853 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -376,9 +376,9 @@ struct pci_dev {
+ 		struct pci_sriov *sriov;	/* SR-IOV capability related */
+ 		struct pci_dev *physfn;	/* the PF this VF is associated with */
+ 	};
+-	int		ats_cap;	/* ATS Capability offset */
+-	int		ats_stu;	/* ATS Smallest Translation Unit */
+-	int		ats_qdep;	/* ATS Invalidate Queue Depth */
++	u16		ats_cap;	/* ATS Capability offset */
++	u8		ats_stu;	/* ATS Smallest Translation Unit */
++	u8		ats_qdep;	/* ATS Invalidate Queue Depth */
+ #endif
+ 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+ 	size_t romlen; /* Length of ROM if it's not from the BAR */
 
-	Arnd
