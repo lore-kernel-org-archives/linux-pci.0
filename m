@@ -1,94 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49978 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756530AbbGFXmC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:42:02 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 30/36] PCI: Treat optional as must in first try for bridge rescan
-Date: Mon,  6 Jul 2015 16:39:20 -0700
-Message-Id: <1436225966-27247-31-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:50615 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754933AbbGQGDQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:16 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 17 Jul 2015 11:33:14 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id A8EEC3940062
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:09 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H6362d17432740
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:07 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H4mBS7003307
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 10:18:11 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 07/11] powerpc/eeh: Create PE for VFs
+Date: Fri, 17 Jul 2015 14:02:37 +0800
+Message-Id: <1437112961-17275-8-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For rescan bridge/bus that children are removed before, we should treat
-optional as must just like root bus the boot time in 19aa7ee432ce
-(PCI: make re-allocation try harder by reassigning ranges higher in
-the heirarchy).
+Current EEH recovery code works with the assumption: the PE has primary
+bus. Unfortunately, that's not true for VF PEs, which generally contains
+one or multiple VFs (for VF group case).
 
-The reason: allocate must and expand to optional path do not
-put failed resource to fail list, so will lose must info before
-next try.
+The patch creates PEs for VFs in the weak function
+pcibios_bus_add_device(). Those PEs for VFs are identified with newly
+introduced flag EEH_PE_VF so that we handle them differently during EEH
+recovery.
 
-So we are using following way:
-1. First and following try before last try:
-   We don't keep realloc list so treat every optional as must.
-   allocate for must+optional and put failed in the fail list.
-   then size info (include must and optonal separatedly) will be kept
-   for next try.
-2. last try:
-   a: try to allocate must+optional to see if all get allocated.
-   b: try to allocate must then expand to optional.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/setup-bus.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ arch/powerpc/include/asm/eeh.h               |    1 +
+ arch/powerpc/kernel/eeh_pe.c                 |   10 ++++++++--
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   16 ++++++++++++++++
+ 3 files changed, 25 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8f8b4c7..5b2944a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2300,25 +2300,34 @@ void __init pci_assign_unassigned_resources(void)
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- {
- 	struct pci_bus *parent = bridge->subordinate;
--	LIST_HEAD(add_list); /* list of resources that
-+	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
-+	struct list_head *add_list = NULL;
- 	int tried_times = 0;
- 	LIST_HEAD(fail_head);
- 	struct pci_dev_resource *fail_res;
- 	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-+	int pci_try_num = 2;
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 6c383ad..ec21f8f 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -72,6 +72,7 @@ struct pci_dn;
+ #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+ #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+ #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
++#define EEH_PE_VF	(1 << 4)	/* VF PE     */
  
- again:
--	__pci_bus_size_bridges(parent, &add_list);
--	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	__pci_bus_check_realloc(&add_list);
+ #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+ #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index 35f0b62..260a701 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+ 	 * EEH device already having associated PE, but
+ 	 * the direct parent EEH device doesn't have yet.
+ 	 */
+-	pdn = pdn ? pdn->parent : NULL;
++	if (edev->physfn)
++		pdn = pci_get_pdn(edev->physfn);
++	else
++		pdn = pdn ? pdn->parent : NULL;
+ 	while (pdn) {
+ 		/* We're poking out of PCI territory */
+ 		parent = pdn_to_eeh_dev(pdn);
+@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+ 	}
+ 
+ 	/* Create a new EEH PE */
+-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
++	if (edev->physfn)
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
++	else
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+ 	if (!pe) {
+ 		pr_err("%s: out of memory!\n", __func__);
+ 		return -ENOMEM;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 5cf5e6e..e9aec1d 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1524,6 +1524,22 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.restore_config		= pnv_eeh_restore_config
+ };
+ 
++void pcibios_bus_add_device(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++
++	if (!pdev->is_virtfn)
++		return;
++
 +	/*
-+	 * last try will use add_list, otherwise will try good to have as
-+	 * must have, so can realloc parent bridge resource
++	 * The following operations will fail if VF's sysfs files
++	 * aren't created or its resources aren't finalized.
 +	 */
-+	if (tried_times + 1 == pci_try_num)
-+		add_list = &realloc_head;
-+	__pci_bus_size_bridges(parent, add_list);
-+	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
-+	if (add_list)
-+		__pci_bus_check_realloc(add_list);
- 	tried_times++;
- 
- 	if (list_empty(&fail_head))
- 		goto enable_all;
- 
--	if (tried_times >= 2) {
-+	if (tried_times >= pci_try_num) {
- 		/* still fail, don't need to try more */
- 		free_list(&fail_head);
- 		goto enable_all;
++	eeh_add_device_early(pdn);
++	eeh_add_device_late(pdev);
++	eeh_sysfs_add_device(pdev);
++}
++
+ /**
+  * eeh_powernv_init - Register platform dependent EEH operations
+  *
 -- 
-1.8.4.5
+1.7.9.5
 
