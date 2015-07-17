@@ -1,76 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55732 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751410AbbGaHXw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jul 2015 03:23:52 -0400
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-To: Andreas Hartmann <andihartmann@freenet.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Ondrej Kozina <okozina@redhat.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
- <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
- <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org>
- <20150728212441.GA25761@redhat.com> <55B87005.7010409@redhat.com>
- <55B8759B.8070400@redhat.com> <55B90C25.8030502@maya.org>
- <55BA895D.30509@maya.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Mike Snitzer <msnitzer@redhat.com>, mpatocka@redhat.com
-From: Milan Broz <mbroz@redhat.com>
-Message-ID: <55BB2284.1060706@redhat.com>
-Date: Fri, 31 Jul 2015 09:23:48 +0200
-MIME-Version: 1.0
-In-Reply-To: <55BA895D.30509@maya.org>
-Content-Type: text/plain; charset=windows-1252
+Received: from e28smtp04.in.ibm.com ([122.248.162.4]:35054 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756713AbbGQGDJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:09 -0400
+Received: from /spool/local
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 17 Jul 2015 11:33:07 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 9C43C125805D
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:35:58 +0530 (IST)
+Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H630cF18874400
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:01 +0530
+Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
+	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H4jVP9028012
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 10:15:31 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 03/11] powerpc/pci: Cache VF index in pci_dn
+Date: Fri, 17 Jul 2015 14:02:33 +0800
+Message-Id: <1437112961-17275-4-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/30/2015 10:30 PM, Andreas Hartmann wrote:
-...
+The patch caches the VF index in pci_dn, which can be used to calculate
+VF's bus, device and function number. Those information helps to locate
+the VF's PCI device instance when doing hotplug during EEH recovery if
+necessary.
 
-> Next tests:
-> I didn't mount any filesystem on bootup located on the ssd (only the
-> rotational based mounts) -> no problem.
-> 
-> Next: I tried to add the partitions from the ssd to be mounted on boot -
-> one by one. As there where 4 partitions to be mounted from the ssd, the
-> errors came up again.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h |    1 +
+ arch/powerpc/kernel/pci_dn.c          |    4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-This is strange... Do I understand it correctly that this bug appears only
-if you mount more than 3 encrypted partitions? (IOW if you mount only 2 or 3
-there is no problem?)
-
-> Next: You suspect the ssd as being bad. Therefore, I changed the ssd and
-> tested with KINGSTON SV300S37A240G. Result: Same as above - errors are
-> coming up if there are mounted more than 3 partitions at the same time.
-
-ok. I guess it was just image of the same disk on different hw, correct?
-
-> 
-> Summary:
-> - --perf-submit_from_crypt_cpus --perf-same_cpu_crypt -> broken anyway
-
-That is even more interesting because these should effectively disable
-the parralel submit code in dmcrypt.
-
-Could you please verify that these flags are really applied when you used
-them? (I am just trying to eliminate possible cryptsetup bug, the code is new).
-(Run dmsetup table, you should see submit_from_crypt_cpus/same_cpu_crypt
-on the dmcrypt mappping table line according to commandline.)
-
-> - rotational disks alone: it's ok
-> - more than 3 partitions on ssd Corsair Force GT -> broken
-> - more than 3 partitions on ssd KINGSTON SV300S37A240G -> broken
-
-- if you disable NCQ, the problems goes away?
-
-Could you please post "lsblk" and dmesg output from the situation which fails,
-(with mounted >3 partition on boot)?
-I think someone should defititely try to reproduce it on some development hw here,
-configured storage stack should be visible from the lsblk output.
-
-Thanks for for the info & tests!
-
-Milan
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 712add5..7a72f68 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -210,6 +210,7 @@ struct pci_dn {
+ #define IODA_INVALID_PE		(-1)
+ #ifdef CONFIG_PPC_POWERNV
+ 	int	pe_number;
++	int     vf_index;		/* VF index in the PF */
+ #ifdef CONFIG_PCI_IOV
+ 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
+ 	u16     num_vfs;		/* number of VFs enabled*/
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index b3b4df9..f771130 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
+ #ifdef CONFIG_PCI_IOV
+ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ 					   struct pci_dev *pdev,
++					   int vf_index,
+ 					   int busno, int devfn)
+ {
+ 	struct pci_dn *pdn;
+@@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
+ 	pdn->parent = parent;
+ 	pdn->busno = busno;
+ 	pdn->devfn = devfn;
++	pdn->vf_index = vf_index;
+ #ifdef CONFIG_PPC_POWERNV
+ 	pdn->pe_number = IODA_INVALID_PE;
+ #endif
+@@ -196,7 +198,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+ 		return NULL;
+ 
+ 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
+-		pdn = add_one_dev_pci_data(parent, NULL,
++		pdn = add_one_dev_pci_data(parent, NULL, i,
+ 					   pci_iov_virtfn_bus(pdev, i),
+ 					   pci_iov_virtfn_devfn(pdev, i));
+ 		if (!pdn) {
+-- 
+1.7.9.5
 
