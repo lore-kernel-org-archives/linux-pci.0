@@ -1,138 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46590 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753991AbbGNWxS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:53:18 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 47/49] PCI, x86: Add pci=assign_pref_bars to re-allocate pref bars
-Date: Tue, 14 Jul 2015 15:47:18 -0700
-Message-Id: <1436914040-13206-48-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:45806 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754933AbbGQGDU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:20 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Fri, 17 Jul 2015 11:33:17 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id A3EDA3940066
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:12 +0530 (IST)
+Received: from d28av03.in.ibm.com (d28av03.in.ibm.com [9.184.220.65])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H639K017432742
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:10 +0530
+Received: from d28av03.in.ibm.com (localhost [127.0.0.1])
+	by d28av03.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H4mEUl003612
+	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 10:18:14 +0530
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH V9 09/11] powerpc/powernv: Support PCI config restore for VFs
+Date: Fri, 17 Jul 2015 14:02:39 +0800
+Message-Id: <1437112961-17275-10-git-send-email-weiyang@linux.vnet.ibm.com>
+In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So could reallocate pref mmio64 above 4G later.
+After PE reset, OPAL API opal_pci_reinit() is called on all devices
+contained in the PE to reinitialize them. However, VFs can't be seen
+from skiboot firmware. We have to implement the functions, similar
+those in skiboot firmware, to reinitialize VFs after reset on PE
+for VFs.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+[gwshan: changelog and code refactoring]
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/x86/include/asm/pci_x86.h |  1 +
- arch/x86/pci/common.c          |  3 +++
- arch/x86/pci/i386.c            | 56 ++++++++++++++++++++++++++----------------
- 3 files changed, 39 insertions(+), 21 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h        |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c |   70 +++++++++++++++++++++++++-
+ arch/powerpc/platforms/powernv/pci.c         |   18 +++++++
+ 3 files changed, 88 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index ddac225..7b634b8 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -34,6 +34,7 @@ do {						\
- #define PCI_NOASSIGN_ROMS	0x80000
- #define PCI_ROOT_NO_CRS		0x100000
- #define PCI_NOASSIGN_BARS	0x200000
-+#define PCI_ASSIGN_PREF_BARS	0x400000
- 
- extern unsigned int pci_probe;
- extern unsigned long pirq_table_addr;
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index e8df922..dcc7c48 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -606,6 +606,9 @@ char *__init pcibios_setup(char *str)
- 	} else if (!strcmp(str, "assign-busses")) {
- 		pci_probe |= PCI_ASSIGN_ALL_BUSSES;
- 		return NULL;
-+	} else if (!strcmp(str, "assign_pref_bars")) {
-+		pci_probe |= PCI_ASSIGN_PREF_BARS;
-+		return NULL;
- 	} else if (!strcmp(str, "use_crs")) {
- 		pci_probe |= PCI_USE__CRS;
- 		return NULL;
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 3f17726..0b74efe 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -208,16 +208,25 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 			continue;
- 		if (r->parent)	/* Already allocated */
- 			continue;
--		if (!r->start || pci_claim_bridge_resource(dev, idx) < 0) {
--			/*
--			 * Something is wrong with the region.
--			 * Invalidate the resource to prevent
--			 * child resource allocations in this
--			 * range.
--			 */
--			r->start = r->end = 0;
--			r->flags = 0;
--		}
-+
-+		if ((r->flags & IORESOURCE_PREFETCH) &&
-+		    (pci_probe & PCI_ASSIGN_PREF_BARS))
-+			goto clear;
-+
-+		if (!r->start)
-+			goto clear;
-+
-+		if (pci_claim_bridge_resource(dev, idx) == 0)
-+			continue;
-+
-+clear:
-+		/*
-+		 * Something is wrong with the region.
-+		 * Invalidate the resource to prevent
-+		 * child resource allocations in this range.
-+		 */
-+		r->start = r->end = 0;
-+		r->flags = 0;
- 	}
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 7a72f68..c927d5b 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -220,6 +220,7 @@ struct pci_dn {
+ #define IODA_INVALID_M64        (-1)
+ 	int     m64_wins[PCI_SRIOV_NUM_BARS][M64_PER_IOV];
+ #endif /* CONFIG_PCI_IOV */
++	int	mps;
+ #endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 8d88be1..b09c0d1 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1616,6 +1616,67 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
  }
  
-@@ -263,21 +272,26 @@ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
- 			else
- 				disabled = !(command & PCI_COMMAND_MEMORY);
- 			if (pass == disabled) {
-+				if ((r->flags & IORESOURCE_PREFETCH) &&
-+				    (pci_probe & PCI_ASSIGN_PREF_BARS))
-+					goto clear;
++static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
++{
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 devctl, cmd, cap2, aer_capctl;
++	int old_mps;
 +
- 				dev_dbg(&dev->dev,
- 					"BAR %d: reserving %pr (d=%d, p=%d)\n",
- 					idx, r, disabled, pass);
--				if (pci_claim_resource(dev, idx) < 0) {
--					if (r->flags & IORESOURCE_PCI_FIXED) {
--						dev_info(&dev->dev, "BAR %d %pR is immovable\n",
--							 idx, r);
--					} else {
--						/* We'll assign a new address later */
--						pcibios_save_fw_addr(dev,
--								idx, r->start);
--						r->end -= r->start;
--						r->start = 0;
--					}
-+				if (pci_claim_resource(dev, idx) == 0)
-+					continue;
-+				if (r->flags & IORESOURCE_PCI_FIXED) {
-+					dev_info(&dev->dev, "BAR %d %pR is immovable\n",
-+						 idx, r);
-+					continue;
- 				}
++	/* Restore MPS */
++	if (edev->pcie_cap) {
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++	}
 +
-+clear:
-+				/* We'll assign a new address later */
-+				pcibios_save_fw_addr(dev, idx, r->start);
-+				r->end -= r->start;
-+				r->start = 0;
- 			}
- 		}
- 	if (!pass) {
++	/* Disable Completion Timeout */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				     4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn,
++					edev->pcie_cap + PCI_EXP_DEVCTL2,
++					4, cap2);
++		}
++	}
++
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				4, aer_capctl);
++	}
++
++	return 0;
++}
++
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ {
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -1626,7 +1687,14 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 		return -EEXIST;
+ 
+ 	phb = edev->phb->private_data;
+-	ret = opal_pci_reinit(phb->opal_id,
++	/*
++	 * We have to restore the PCI config space after reset since the
++	 * firmware can't see SRIOV VFs.
++	 */
++	if (edev->physfn)
++		ret = pnv_eeh_restore_vf_config(pdn);
++	else
++		ret = opal_pci_reinit(phb->opal_id,
+ 			      OPAL_REINIT_PCI_DEV, edev->config_addr);
+ 	if (ret) {
+ 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 765d8ed..0e4f42e 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -788,6 +788,24 @@ static void pnv_p7ioc_rc_quirk(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_IBM, 0x3b9, pnv_p7ioc_rc_quirk);
+ 
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	int parent_mps;
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/* Synchronize MPS for VF and PF */
++	parent_mps = pcie_get_mps(pdev->physfn);
++	if ((128 << pdev->pcie_mpss) >= parent_mps)
++		pcie_set_mps(pdev, parent_mps);
++	pdn->mps = pcie_get_mps(pdev);
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
++#endif /* CONFIG_PCI_IOV */
++
+ void __init pnv_pci_init(void)
+ {
+ 	struct device_node *np;
 -- 
-1.8.4.5
+1.7.9.5
 
