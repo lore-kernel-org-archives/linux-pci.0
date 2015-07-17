@@ -1,74 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:45941 "EHLO foss.arm.com"
+Received: from foss.arm.com ([217.140.101.70]:49353 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752586AbbGXQMX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 24 Jul 2015 12:12:23 -0400
+	id S1758346AbbGQOzW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jul 2015 10:55:22 -0400
+Date: Fri, 17 Jul 2015 15:55:58 +0100
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	James Morse <james.morse@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jayachandran C <jchandra@broadcom.com>,
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH v2 1/2] ARM: PCI: bios32: replace panic with WARN messages on failures
-Date: Fri, 24 Jul 2015 17:13:02 +0100
-Message-Id: <1437754383-8162-1-git-send-email-lorenzo.pieralisi@arm.com>
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: PCIe support for ARM64
+Message-ID: <20150717145558.GA20059@red-moon>
+References: <loom.20150619T074145-299@post.gmane.org>
+ <CAErSpo52WYqB9hfNKo-ADrJF1LASUz5y9vWzsmp2FaCNc9WZfg@mail.gmail.com>
+ <loom.20150710T130734-815@post.gmane.org>
+ <20150711201634.GA24416@google.com>
+ <A12CBBFFEB35D84DABCB166110D762215E41B2C5@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20150717124454.GA19824@red-moon>
+ <8520D5D51A55D047800579B094147198C7BFE7@XAP-PVEXMBX01.xlnx.xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8520D5D51A55D047800579B094147198C7BFE7@XAP-PVEXMBX01.xlnx.xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the ARM PCI bios32 layer, failures to dynamically allocate pci_sys_data
-for a PCI bus, or a PCI bus scan failure have to be considered serious
-warnings but they should not trigger a system panic so that at least the
-system is given a chance to be debugged.
+On Fri, Jul 17, 2015 at 02:27:38PM +0100, Bharat Kumar Gogada wrote:
+> Hi Lorenzo,
+> 
+> Thanks for the input. But pci_fixup_irqs is defined in drivers/pci/setup-irq.c and when I see its Makefile (drivers/pci/Makefile), it shows that this function is available for ARM and not for ARM64 in v4.2-rc1 kernel.
 
-This patch replaces the panic statements with WARN() messages to
-improve error reporting in the ARM PCI bios32 layer.
+I meant enable it (you can make a separate patch as part of the series)
+and use it.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
----
- arch/arm/kernel/bios32.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+We still have a problem with pci_sys_data align_resource() pointer
+to solve before.
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index fcbbbb1..a5c782c 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -459,8 +459,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 
- 	for (nr = busnr = 0; nr < hw->nr_controllers; nr++) {
- 		sys = kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL);
--		if (!sys)
--			panic("PCI: unable to allocate sys data!");
-+		if (WARN(!sys, "PCI: unable to allocate sys data!"))
-+			break;
- 
- #ifdef CONFIG_PCI_MSI
- 		sys->msi_ctrl = hw->msi_ctrl;
-@@ -489,8 +489,10 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 				sys->bus = pci_scan_root_bus(parent, sys->busnr,
- 						hw->ops, sys, &sys->resources);
- 
--			if (!sys->bus)
--				panic("PCI: unable to scan bus!");
-+			if (WARN(!sys->bus, "PCI: unable to scan bus!")) {
-+				kfree(sys);
-+				break;
-+			}
- 
- 			busnr = sys->bus->busn_res.end + 1;
- 
--- 
-2.2.1
+Lorenzo
 
+> # Some architectures use the generic PCI setup functions
+> #
+> obj-$(CONFIG_ALPHA) += setup-irq.o
+> obj-$(CONFIG_ARM) += setup-irq.o
+> obj-$(CONFIG_UNICORE32) += setup-irq.o
+> obj-$(CONFIG_SUPERH) += setup-irq.o
+> obj-$(CONFIG_MIPS) += setup-irq.o
+> obj-$(CONFIG_TILE) += setup-irq.o
+> obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+> obj-$(CONFIG_M68K) += setup-irq.o
+> 
+> 
+> Regards
+> Bharat Kumar Gogada
+> 
+> 
+> -----Original Message-----
+> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
+> Sent: Friday, July 17, 2015 6:15 PM
+> To: Ravikiran Gummaluri
+> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; Pratyush Anand; Bharat Kumar Gogada
+> Subject: Re: PCIe support for ARM64
+> 
+> On Fri, Jul 17, 2015 at 12:43:42PM +0100, Ravikiran Gummaluri wrote:
+> > HI Bjorn/Pratyush,
+> >       Thanks for your inputs. We were able to do modify our driver according to V4.2-rc1. We were only be able to bring up MSI related changes but not Legacy. Can you point us how to handle Legacy interrupts in new approach (previously in ARM32 handled by map_irq method in hw_pci structure).
+> 
+> Call pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> 
+> in your now ARM/ARM64 common host controller driver.
+> 
+> Lorenzo
+> 
+> >
+> > Thanks & Regards
+> > Ravi Kiran G
+> >
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> > Sent: Sunday, July 12, 2015 1:47 AM
+> > To: Ravikiran Gummaluri
+> > Cc: linux-pci@vger.kernel.org; Pratyush Anand; Bharat Kumar Gogada
+> > Subject: Re: PCIe support for ARM64
+> >
+> > [+cc Pratyush, Bharat]
+> >
+> > On Fri, Jul 10, 2015 at 11:18:10AM +0000, ravikiran gummaluri wrote:
+> > > Bjorn Helgaas <bhelgaas <at> google.com> writes:
+> > >
+> > > >
+> > > > On Fri, Jun 19, 2015 at 12:43 AM, ravikiran gummaluri <rgummal
+> > > > <at> xilinx.com> wrote:
+> > > > > HI
+> > > > >
+> > > > > I am developing PCIe root port driver for Xilinx device. We have
+> > > > > used following patch for ARM64 bit support
+> > > > > "https://lkml.org/lkml/2014/7/3/764". The link explains it as
+> > > > > temporary patch and main line will be updated soon with those
+> > > > > changes. We have not seen the changes till now. Can you let us
+> > > > > know when we can expect the changes in mainline? We are planning to push our drivers to mainline.
+> > > >
+> > > > There is PCI support for ARM64 in mainline:
+> > > > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?
+> > > id=d1e6dc91b532
+> > > >
+> > > > There is also a Xilinx driver already:
+> > > >
+> > > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/
+> > > dr
+> > > ivers/
+> > > pci/host/pcie-xilinx.c
+> > > >
+> > > > I don't know if your device is similar to the AXI device, but it
+> > > > would be good if you can share or modify that driver instead of
+> > > > adding a new one.
+> > > >
+> > > > As with several other drivers, the current pcie-xilinx.c uses
+> > > > pci_common_init_dev(), so it only works on ARM (not ARM64).  This
+> > > > is a known issue, and people are working on making these drivers
+> > > > less arch-specific.
+> > > >
+> > > > Bjorn
+> > > >
+> > >
+> > > Thanks Bjorn. pcie-xilinx.c is AXI device. Now we are developing for
+> > > different device using pcie-xilinx.c as reference. When we trying to
+> > > compile our new driver with latest kernel we are getting compilation
+> > > problems for struct hw_pci and struct pci_sys_data for ARM64. These
+> > > structures are not defined in ARM64. The following patch has the
+> > > structure definitions "https://lkml.org/lkml/2014/7/3/764". We have
+> > > used this patch and able complete our development. Now for up
+> > > streaming it we need this patch in main line. From your discursion
+> > > we understood that some work is going on ARCH independent API and
+> > > structure. When can we expect them in mainline?
+> >
+> > Pratyush already answered this:
+> >
+> >     Please have a look to the latest kernel and try to see what is
+> >     available for ARM64 PCIe.
+> >
+> >     You may see drivers/pci/host/pci-xgene.c as reference.
+> >
+> >     I see that there is already a driver for xilinx PCIe controller with
+> >     ARM platform.
+> >     drivers/pci/host/pcie-xilinx.c
+> >
+> >     If it is the same device on ARM64, then you need to take similar
+> >     approach what is being discussed
+> >     for designware on ARM64.
+> >
+> >     http://marc.info/?l=devicetree&m=143394380815743&w=2
+> >
+> > My advice is to adapt your driver so it works using the interfaces and structures in v4.2-rc1 and post that.  As Pratyush mentioned, the X-Gene driver should be a good place to start.
+> >
+> > There will likely be changes to the way we handle arch- and platform- specific data, but you don't need to wait for those to be completed.  When people make changes like that, it is always their responsibility to update all the code in the tree to match.  So once your code is in the tree, you don't have to worry about updating your driver to follow those changes.
+> >
+> > On the other hand, if you do wait for those changes to be completed, you never know when or if they ever will be done, and you'll have to do your own updates before posting your driver.
+> >
+> > Bjorn
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > in the body of a message to majordomo@vger.kernel.org More majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> 
+> This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
+> 
