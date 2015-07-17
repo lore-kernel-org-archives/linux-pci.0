@@ -1,106 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:59220 "EHLO foss.arm.com"
+Received: from foss.arm.com ([217.140.101.70]:48794 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932396AbbG1NrM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 09:47:12 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
-Subject: [PATCH v6 17/19] irqchip: GICv2m: Add platform MSI support
-Date: Tue, 28 Jul 2015 14:46:24 +0100
-Message-Id: <1438091186-10244-18-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
-References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+	id S1753069AbbGQMoS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jul 2015 08:44:18 -0400
+Date: Fri, 17 Jul 2015 13:44:54 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ravikiran Gummaluri <ravikiran.gummaluri@xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bharat Kumar Gogada <bharatku@xilinx.com>
+Subject: Re: PCIe support for ARM64
+Message-ID: <20150717124454.GA19824@red-moon>
+References: <loom.20150619T074145-299@post.gmane.org>
+ <CAErSpo52WYqB9hfNKo-ADrJF1LASUz5y9vWzsmp2FaCNc9WZfg@mail.gmail.com>
+ <loom.20150710T130734-815@post.gmane.org>
+ <20150711201634.GA24416@google.com>
+ <A12CBBFFEB35D84DABCB166110D762215E41B2C5@XAP-PVEXMBX01.xlnx.xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <A12CBBFFEB35D84DABCB166110D762215E41B2C5@XAP-PVEXMBX01.xlnx.xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to support non-PCI MSI with GICv2m, add the minimal
-required entry points for the MSI domain, which is actually almost
-nothing (we just use the defaults provided by the core code).
+On Fri, Jul 17, 2015 at 12:43:42PM +0100, Ravikiran Gummaluri wrote:
+> HI Bjorn/Pratyush,
+> 	Thanks for your inputs. We were able to do modify our driver according to V4.2-rc1. We were only be able to bring up MSI related changes but not Legacy. Can you point us how to handle Legacy interrupts in new approach (previously in ARM32 handled by map_irq method in hw_pci structure).
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/irqchip/irq-gic-v2m.c | 33 +++++++++++++++++++++++++--------
- 1 file changed, 25 insertions(+), 8 deletions(-)
+Call pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
 
-diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-index ec9c376..db04fc1 100644
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -50,7 +50,6 @@ struct v2m_data {
- 	u32 spi_start;		/* The SPI number that MSIs start */
- 	u32 nr_spis;		/* The number of SPIs for MSIs */
- 	unsigned long *bm;	/* MSI vector bitmap */
--	struct irq_domain *domain;
- };
- 
- static void gicv2m_mask_msi_irq(struct irq_data *d)
-@@ -212,12 +211,25 @@ static bool is_msi_spi_valid(u32 base, u32 num)
- 	return true;
- }
- 
-+static struct irq_chip gicv2m_pmsi_irq_chip = {
-+	.name			= "pMSI",
-+};
-+
-+static struct msi_domain_ops gicv2m_pmsi_ops = {
-+};
-+
-+static struct msi_domain_info gicv2m_pmsi_domain_info = {
-+	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS),
-+	.ops	= &gicv2m_pmsi_ops,
-+	.chip	= &gicv2m_pmsi_irq_chip,
-+};
-+
- static int __init gicv2m_init_one(struct device_node *node,
- 				  struct irq_domain *parent)
- {
- 	int ret;
- 	struct v2m_data *v2m;
--	struct irq_domain *inner_domain;
-+	struct irq_domain *inner_domain, *pci_domain, *plat_domain;
- 
- 	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
- 	if (!v2m) {
-@@ -270,10 +282,13 @@ static int __init gicv2m_init_one(struct device_node *node,
- 
- 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
- 	inner_domain->parent = parent;
--	v2m->domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
--						inner_domain);
--	if (!v2m->domain) {
--		pr_err("Failed to create MSI domain\n");
-+	pci_domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
-+					       inner_domain);
-+	plat_domain = platform_msi_create_irq_domain(node,
-+						     &gicv2m_pmsi_domain_info,
-+						     inner_domain);
-+	if (!pci_domain || !plat_domain) {
-+		pr_err("Failed to create MSI domains\n");
- 		ret = -ENOMEM;
- 		goto err_free_domains;
- 	}
-@@ -287,8 +302,10 @@ static int __init gicv2m_init_one(struct device_node *node,
- 	return 0;
- 
- err_free_domains:
--	if (v2m->domain)
--		irq_domain_remove(v2m->domain);
-+	if (plat_domain)
-+		irq_domain_remove(plat_domain);
-+	if (pci_domain)
-+		irq_domain_remove(pci_domain);
- 	if (inner_domain)
- 		irq_domain_remove(inner_domain);
- err_free_bm:
--- 
-2.1.4
+in your now ARM/ARM64 common host controller driver.
 
+Lorenzo
+
+> 
+> Thanks & Regards
+> Ravi Kiran G 
+> 
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:bhelgaas@google.com] 
+> Sent: Sunday, July 12, 2015 1:47 AM
+> To: Ravikiran Gummaluri
+> Cc: linux-pci@vger.kernel.org; Pratyush Anand; Bharat Kumar Gogada
+> Subject: Re: PCIe support for ARM64
+> 
+> [+cc Pratyush, Bharat]
+> 
+> On Fri, Jul 10, 2015 at 11:18:10AM +0000, ravikiran gummaluri wrote:
+> > Bjorn Helgaas <bhelgaas <at> google.com> writes:
+> > 
+> > > 
+> > > On Fri, Jun 19, 2015 at 12:43 AM, ravikiran gummaluri <rgummal <at> 
+> > > xilinx.com> wrote:
+> > > > HI
+> > > >
+> > > > I am developing PCIe root port driver for Xilinx device. We have 
+> > > > used following patch for ARM64 bit support 
+> > > > "https://lkml.org/lkml/2014/7/3/764". The link explains it as 
+> > > > temporary patch and main line will be updated soon with those 
+> > > > changes. We have not seen the changes till now. Can you let us 
+> > > > know when we can expect the changes in mainline? We are planning to push our drivers to mainline.
+> > > 
+> > > There is PCI support for ARM64 in mainline:
+> > > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?
+> > id=d1e6dc91b532
+> > > 
+> > > There is also a Xilinx driver already:
+> > > 
+> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/dr
+> > ivers/
+> > pci/host/pcie-xilinx.c
+> > > 
+> > > I don't know if your device is similar to the AXI device, but it 
+> > > would be good if you can share or modify that driver instead of 
+> > > adding a new one.
+> > > 
+> > > As with several other drivers, the current pcie-xilinx.c uses 
+> > > pci_common_init_dev(), so it only works on ARM (not ARM64).  This is 
+> > > a known issue, and people are working on making these drivers less 
+> > > arch-specific.
+> > > 
+> > > Bjorn
+> > > 
+> > 
+> > Thanks Bjorn. pcie-xilinx.c is AXI device. Now we are developing for 
+> > different device using pcie-xilinx.c as reference. When we trying to 
+> > compile our new driver with latest kernel we are getting compilation 
+> > problems for struct hw_pci and struct pci_sys_data for ARM64. These 
+> > structures are not defined in ARM64. The following patch has the 
+> > structure definitions "https://lkml.org/lkml/2014/7/3/764". We have 
+> > used this patch and able complete our development. Now for up 
+> > streaming it we need this patch in main line. From your discursion we 
+> > understood that some work is going on ARCH independent API and 
+> > structure. When can we expect them in mainline?
+> 
+> Pratyush already answered this:
+> 
+>     Please have a look to the latest kernel and try to see what is
+>     available for ARM64 PCIe.
+> 
+>     You may see drivers/pci/host/pci-xgene.c as reference.
+> 
+>     I see that there is already a driver for xilinx PCIe controller with
+>     ARM platform.
+>     drivers/pci/host/pcie-xilinx.c
+> 
+>     If it is the same device on ARM64, then you need to take similar
+>     approach what is being discussed
+>     for designware on ARM64.
+> 
+>     http://marc.info/?l=devicetree&m=143394380815743&w=2
+> 
+> My advice is to adapt your driver so it works using the interfaces and structures in v4.2-rc1 and post that.  As Pratyush mentioned, the X-Gene driver should be a good place to start.
+> 
+> There will likely be changes to the way we handle arch- and platform- specific data, but you don't need to wait for those to be completed.  When people make changes like that, it is always their responsibility to update all the code in the tree to match.  So once your code is in the tree, you don't have to worry about updating your driver to follow those changes.
+> 
+> On the other hand, if you do wait for those changes to be completed, you never know when or if they ever will be done, and you'll have to do your own updates before posting your driver.
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
