@@ -1,108 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:33836 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753929AbbGWQNE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 12:13:04 -0400
-Received: by iebmu5 with SMTP id mu5so311938ieb.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 09:13:03 -0700 (PDT)
-Date: Thu, 23 Jul 2015 11:12:57 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-Message-ID: <20150723161257.GZ21967@google.com>
-References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:33175 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751829AbbGQCF6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 22:05:58 -0400
+Received: by widic2 with SMTP id ic2so28624336wid.0
+        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2015 19:05:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <55A8605A.6000902@huawei.com>
+References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
+ <20150716042203.GC25591@google.com> <55A76361.8070604@huawei.com>
+ <20150716152548.GD25591@google.com> <55A856F2.1040900@huawei.com>
+ <CAErSpo6UTEfBieOm3P4Ms45rXhp5SS80QqU_wcDjNswdBzzifg@mail.gmail.com> <55A8605A.6000902@huawei.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 16 Jul 2015 21:05:37 -0500
+Message-ID: <CAErSpo56r2ZK59jWF9LhT=Vqy8E6FS_ozS2ye978=OfVjEi4iA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatja@google.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 09, 2015 at 11:59:16AM +0100, Lorenzo Pieralisi wrote:
-> When a PCI bus is scanned, upon PCI bridge detection the kernel
-> has to read the bridge registers to set-up its resources so that
-> the PCI resource hierarchy can be validated properly.
-> 
-> Most if not all architectures read PCI bridge registers in the
-> pcibios_fixup_bus hook, that is called by the PCI generic layer
-> whenever a PCI bus is scanned.
-> 
-> Since pci_read_bridge_bases is an arch agnostic operation (and it
-> is carried out on all architectures) it can be moved to the generic
-> PCI layer in order to consolidate code and remove the respective
-> calls from the architectures back-ends.
-> 
-> The PCI_PROBE_ONLY flag is not checked before calling
-> pci_read_bridge_buses in the generic layer since reading the bridge
-> bases is not related to resources assignment; this implies that it
-> can be carried out safely on PCI_PROBE_ONLY systems too and should
-> not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
-> flag before reading the bridge bases.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+On Thu, Jul 16, 2015 at 8:54 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+> On 2015/7/17 9:35, Bjorn Helgaas wrote:
+>> On Thu, Jul 16, 2015 at 8:14 PM, Yijing Wang <wangyijing@huawei.com> wrote:
+>>>>>> If I'm mistaken, please correct me and explain why this patch is safe.
+>>>>>
+>>>>> Hi Bjorn, I think pci_bus_sem here was introduced to protect the bus->slots list, because it
+>>>>> use down_write() here, for bus->devices list, we only traverse it, won't add/remove it, for the latter, down_read() is enough.
+>>>>> When I posted this patch, I thought we should protect the bus when we start to register a slot,
+>>>>> something like a big lock at outermost routine to tell others not to touch its children devices, use pci_bus_sem to protect hotplug
+>>>>> cases is not a good idea, and actually in PCI code, we have found several deadlock caused by the pci_bus_sem.
+>>>>>
+>>>>> But for this patch, I know what you worried, what about add a down_read(&pci_bus_sem) to avoid to introduce a regression ?
+>>>>>
+>>>>>
+>>>>> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+>>>>> index 396c200..a9079d9 100644
+>>>>> --- a/drivers/pci/slot.c
+>>>>> +++ b/drivers/pci/slot.c
+>>>>> @@ -14,6 +14,7 @@
+>>>>>
+>>>>>  struct kset *pci_slots_kset;
+>>>>>  EXPORT_SYMBOL_GPL(pci_slots_kset);
+>>>>> +static DEFINE_MUTEX(pci_slot_mutex);
+>>>>>
+>>>>>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
+>>>>>                                         struct attribute *attr, char *buf)
+>>>>> @@ -106,9 +107,11 @@ static void pci_slot_release(struct kobject *kobj)
+>>>>>         dev_dbg(&slot->bus->dev, "dev %02x, released physical slot %s\n",
+>>>>>                 slot->number, pci_slot_name(slot));
+>>>>>
+>>>>> +       down_read(&pci_bus_sem);
+>>>>>         list_for_each_entry(dev, &slot->bus->devices, bus_list)
+>>>>>                 if (PCI_SLOT(dev->devfn) == slot->number)
+>>>>>                         dev->slot = NULL;
+>>>>> +       up_read(&pci_bus_sem);
+>>>>>
+>>>>>         list_del(&slot->list);
+>>>>
+>>>> This list_del() updates the bus->slots list.
+>>>
+>>> It's safe here, because we have locked the pci_slot_mutex in pci_destroy_slot(), which is the only caller of pci_slot_release().
+>>
+>> That doesn't protect anybody else who might be traversing the
+>> bus->slots list while we're deleting this entry.
+>
+> Hi Bjorn, sorry, I don't understand your point, before this patch, we use pci_bus_sem to protect the whole pci_slot_release(),
+> in which, we would traverse the bus->devices list and update the bus->slots list. And now what we did is introduce a new pci_slot_mutex
+> to protect the bus->slots here, and use down_read(pci_bus_sem) instead of down_write(pci_bus_sem).
 
-Applied to pci/resource for v4.3, thanks!
+pci_setup_device() does this:
 
-The PCI_PROBE_ONLY text seems backward to me: previously alpha and mips
-only called pci_read_bridge_bases() if PCI_PROBE_ONLY was set.  After this
-patch, alpha and mips systems that do not set PCI_PROBE_ONLY will also call
-pci_read_bridge_bases().
+        list_for_each_entry(slot, &dev->bus->slots, list)
+                if (PCI_SLOT(dev->devfn) == slot->number)
+                        dev->slot = slot;
 
-I really don't know why alpha and mips were like that.  It seems backwards.
-It seems like we'd want to know the bridge windows if we were assigning
-things, but they only read them if they were *not* going to assign things.
+What keeps that code from running at the same time pci_slot_release()
+is removing something from the bus->slots list?
 
-I'm a little uneasy that we might break some alpha or mips system, since
-there must have been some reason this was done originally.  It'd be ideal
-if somebody could test a non-PCI_PROBE_ONLY system.  But maybe they're all
-obsolete.
+It looks to me like the loop in pci_setup_device() is unsafe to begin
+with.  But the obvious thing to do would be to add
+down_read(&pci_bus_sem) there, and then you'd need a down_write() in
+pci_slot_release(), so you're back where we started.
 
-I amended the changelog like this:
-
-    PCI: Call pci_read_bridge_bases() from core instead of arch code
-    
-    When we scan a PCI bus, we read PCI-PCI bridge window registers with
-    pci_read_bridge_bases() so we can validate the resource hierarchy.  Most
-    architectures call pci_read_bridge_bases() from pcibios_fixup_bus(), but
-    PCI-PCI bridges are not arch-specific, so this doesn't need to be in
-    arch-specific code.
-    
-    Call pci_read_bridge_bases() directly from the PCI core instead of from
-    arch code.
-    
-    For alpha and mips, we now call pci_read_bridge_bases() always; previously
-    we only called it if PCI_PROBE_ONLY was set.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    ...
+>>>>> @@ -195,7 +198,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
+>>>>>  {
+>>>>>         struct pci_slot *slot;
+>>>>>         /*
+>>>>> -        * We already hold pci_bus_sem so don't worry
+>>>>> +        * We already hold pci_slot_mutex so don't worry
+>>>>>          */
+>>>>>         list_for_each_entry(slot, &parent->slots, list)
+>>>>>                 if (slot->number == slot_nr) {
+>>>>> @@ -253,7 +256,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>>>>>         int err = 0;
+>>>>>         char *slot_name = NULL;
+>>>>>
+>>>>> -       down_write(&pci_bus_sem);
+>>>>> +       mutex_lock(&pci_slot_mutex);
+>>>>>
+>>>>>         if (slot_nr == -1)
+>>>>>                 goto placeholder;
+>>>>> @@ -301,16 +304,18 @@ placeholder:
+>>>>>         INIT_LIST_HEAD(&slot->list);
+>>>>>         list_add(&slot->list, &parent->slots);
+>>>>>
+>>>>> +       down_read(&pci_bus_sem);
+>>>>>         list_for_each_entry(dev, &parent->devices, bus_list)
+>>>>>                 if (PCI_SLOT(dev->devfn) == slot_nr)
+>>>>>                         dev->slot = slot;
+>>>>> +       up_read(&pci_bus_sem);
+>>>>>
+>>>>>         dev_dbg(&parent->dev, "dev %02x, created physical slot %s\n",
+>>>>>                 slot_nr, pci_slot_name(slot));
+>>>>>
+>>>>>  out:
+>>>>>         kfree(slot_name);
+>>>>> -       up_write(&pci_bus_sem);
+>>>>> +       mutex_unlock(&pci_slot_mutex);
+>>>>>         return slot;
+>>>>>  err:
+>>>>>         kfree(slot);
+>>>>> @@ -332,9 +337,9 @@ void pci_destroy_slot(struct pci_slot *slot)
+>>>>>         dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
+>>>>>                 slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
+>>>>>
+>>>>> -       down_write(&pci_bus_sem);
+>>>>> +       mutex_lock(&pci_slot_mutex);
+>>>>>         kobject_put(&slot->kobj);
+>>>>> -       up_write(&pci_bus_sem);
+>>>>> +       mutex_unlock(&pci_slot_mutex);
+>>>>>  }
+>>>>>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
+>>>>
+>>>> .
+>>>>
+>>>
+>>>
+>>> --
+>>> Thanks!
+>>> Yijing
+>>>
+>>
+>> .
+>>
+>
+>
+> --
+> Thanks!
+> Yijing
+>
