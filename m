@@ -1,146 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:1444 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753539AbbGaOZd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2015 10:25:33 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Rob Herring <robherring2@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	"kishon@ti.com" <kishon@ti.com>
-Subject: RE: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
-Date: Fri, 31 Jul 2015 14:25:09 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D70589@lhreml503-mbs>
-References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
- <20150729172053.GE31170@google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
- <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs>
- <20150730161447.GG9640@google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs>
- <20150730171445.GI9640@google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs>
- <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com>
-In-Reply-To: <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga03-in.huawei.com ([119.145.14.66]:18928 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbbGQCZG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 22:25:06 -0400
+Message-ID: <55A86754.7070408@huawei.com>
+Date: Fri, 17 Jul 2015 10:24:20 +0800
+From: Yijing Wang <wangyijing@huawei.com>
 MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatja@google.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
+ deadlock
+References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com> <20150716042203.GC25591@google.com> <55A76361.8070604@huawei.com> <20150716152548.GD25591@google.com> <55A856F2.1040900@huawei.com> <CAErSpo6UTEfBieOm3P4Ms45rXhp5SS80QqU_wcDjNswdBzzifg@mail.gmail.com> <55A8605A.6000902@huawei.com> <CAErSpo56r2ZK59jWF9LhT=Vqy8E6FS_ozS2ye978=OfVjEi4iA@mail.gmail.com>
+In-Reply-To: <CAErSpo56r2ZK59jWF9LhT=Vqy8E6FS_ozS2ye978=OfVjEi4iA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-WytjYyBLaXNob25dDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
-dXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJA
-dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgUm9iIEhlcnJpbmcNCj4gU2VudDogVGh1cnNk
-YXksIEp1bHkgMzAsIDIwMTUgOTo0MiBQTQ0KPiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiBDYzog
-Qmpvcm4gSGVsZ2FhczsgYXJuZEBhcm5kYi5kZTsgbG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsg
-V2FuZ3pob3UNCj4gKEIpOyByb2JoK2R0QGtlcm5lbC5vcmc7IGphbWVzLm1vcnNlQGFybS5jb207
-IExpdml1LkR1ZGF1QGFybS5jb207DQo+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4
-LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4gZGV2aWNldHJlZUB2Z2VyLmtlcm5l
-bC5vcmc7IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87DQo+IHFpdXpoZW5mYTsg
-TGlndW96aHUgKEtlbm5ldGgpOyBKaW5nb28gSGFuOyBQcmF0eXVzaCBBbmFuZA0KPiBTdWJqZWN0
-OiBSZTogW1BBVENIIHY2XSBQQ0k6IFN0b3JlIFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0DQo+
-IG9mX3BjaV9yYW5nZQ0KPiANCj4gT24gVGh1LCBKdWwgMzAsIDIwMTUgYXQgMTI6MzQgUE0sIEdh
-YnJpZWxlIFBhb2xvbmkNCj4gPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4gd3JvdGU6DQo+
-ID4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZyb206IEJqb3JuIEhlbGdhYXMg
-W21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiA+PiBTZW50OiAzMCBKdWx5IDIwMTUgMTg6
-MTUNCj4gPj4gT24gVGh1LCBKdWwgMzAsIDIwMTUgYXQgMDQ6NTA6NTVQTSArMDAwMCwgR2Ficmll
-bGUgUGFvbG9uaSB3cm90ZToNCj4gPj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+
-ID4+ID4gPiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGlu
-dXgtcGNpLQ0KPiA+PiA+ID4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQmpv
-cm4gSGVsZ2Fhcw0KPiA+PiA+ID4gU2VudDogVGh1cnNkYXksIEp1bHkgMzAsIDIwMTUgNToxNSBQ
-TQ0KPiA+PiA+ID4gT24gVGh1LCBKdWwgMzAsIDIwMTUgYXQgMDE6NTI6MTNQTSArMDAwMCwgR2Fi
-cmllbGUgUGFvbG9uaSB3cm90ZToNCj4gDQo+IFsuLi5dDQo+IA0KPiA+PiA+ID4gPiBJIGRvbuKA
-mXQgdGhpbmsgd2Ugc2hvdWxkIHJlbHkgb24gW0NQVV0gYWRkcmVzc2VzLi4ud2hhdCBpZiB0aGUN
-Cj4gPj4gPiA+IGludGVybWVkaWF0ZQ0KPiA+PiA+ID4gPiB0cmFuc2xhdGlvbiBsYXllciBjaGFu
-Z2VzIHRoZSBsb3dlciBzaWduaWZpY2FudCBiaXRzIG9mIHRoZQ0KPiAiYnVzDQo+ID4+ID4gPiBh
-ZGRyZXNzIg0KPiA+PiA+ID4gPiB0byB0cmFuc2xhdGUgaW50byBhIGNwdSBhZGRyZXNzPw0KPiA+
-PiA+ID4NCj4gPj4gPiA+IElzIGl0IHJlYWxseSBhIHBvc3NpYmxpdHkgdGhhdCB0aGUgbG93ZXIg
-Yml0cyBjb3VsZCBiZSBjaGFuZ2VkPw0KPiA+PiA+DQo+ID4+ID4gSSd2ZSBjaGVja2VkIGFsbCB0
-aGUgY3VycmVudCBkZWlnbndhcmUgdXNlcnMgRFRzIGV4Y2VwdCAicGNpLQ0KPiA+PiBsYXllcnNj
-YXBlIg0KPiA+PiA+IHRoYXQgSSBjb3VsZCBub3QgZmluZDoNCj4gPj4gPiBzcGVhcjEzMTAuZHRz
-aQ0KPiA+PiA+IHNwZWFyMTM0MC5kdHNpDQo+ID4+ID4gZHJhNy5kdHNpDQo+ID4+ID4gaW14NnFk
-bC5kdHNpDQo+ID4+ID4gaW14NnN4LmR0c2kNCj4gPj4gPiBrZXlzdG9uZS5kdHNpDQo+ID4+ID4g
-ZXh5bm9zNTQ0MC5kdHNpDQo+ID4+ID4NCj4gPj4gPiBOb25lIG9mIHRoZW0gbW9kaWZpZXMgdGhl
-IGxvd2VyIGJpdHMuIFRvIGJlIG1vcmUgcHJlY2lzZSB0aGUgb25seQ0KPiBndXkNCj4gPj4gPiB0
-aGF0IHByb3ZpZGVzIGFub3RoZXIgdHJhbnNsYXRpb24gbGF5ZXIgaXMgImRyYTcuZHRzaSI6DQo+
-ID4+ID4gYXhpMA0KPiA+PiA+IGh0dHA6Ly9seHIuZnJlZS0NCj4gZWxlY3Ryb25zLmNvbS9zb3Vy
-Y2UvYXJjaC9hcm0vYm9vdC9kdHMvZHJhNy5kdHNpI0wyMDcNCj4gPj4gPg0KPiA+PiA+IGF4aTEN
-Cj4gPj4gPiBodHRwOi8vbHhyLmZyZWUtDQo+IGVsZWN0cm9ucy5jb20vc291cmNlL2FyY2gvYXJt
-L2Jvb3QvZHRzL2RyYTcuZHRzaSNMMjQxDQo+ID4+ID4NCj4gPj4gPiBGb3IgdGhpcyBjYXNlIG1h
-c2tpbmcgdGhlIHRvcCA0Yml0cyAoYml0czI4IHRvIDMxKSBzaG91bGQgbWFrZSB0aGUNCj4gam9i
-Lg0KPiANCj4gSU1PLCB3ZSBzaG91bGQganVzdCBmaXggdGhpcyBjYXNlLiBBZnRlciBmdXJ0aGVy
-IHN0dWR5LCBJIGRvbid0IHRoaW5rDQo+IHRoaXMgaXMgYSBEVyBpc3N1ZSwgYnV0IHJhdGhlciBh
-biBTT0MgaW50ZWdyYXRpb24gaXNzdWUuDQo+IA0KPiBJIGJlbGlldmUgeW91IGNhbiBqdXN0IGZp
-eHVwIHRoZSBhZGRyZXNzIGluIHRoZSBwcC0+b3BzLT5ob3N0X2luaXQgaG9vay4NCj4gDQoNClll
-cyBJIGd1ZXNzIHRoYXQgSSBjb3VsZCBqdXN0IGFzc2lnbiBwcC0+KCopX21vZF9iYXNlIHRvIHRo
-ZSBDUFUgYWRkcmVzcyANCmluIERXIGFuZCBtYXNrIGl0IG91dCBpbiBkcmE3eHhfcGNpZV9ob3N0
-X2luaXQoKS4uLg0KDQpLaXNob24sIHdvdWxkIHlvdSBiZSBvayB3aXRoIHRoYXQ/IA0KDQoNCj4g
-SW4gbG9va2luZyBhdCB0aGlzLCBJJ20gY3VyaW91cyB3aHkgb25seSAyIEFUVSB2aWV3cG9ydHMg
-YXJlIHVzZWQgYnkNCj4gZGVmYXVsdCBhcyB0aGlzIGNhdXNlcyBzd2l0Y2hpbmcgb24gY29uZmln
-IGFjY2Vzc2VzLiBQcm9iYWJseSBzb21lDQo+IGNvbmZpZ3VyYXRpb24gb25seSBoYXMgMiB2aWV3
-cG9ydHMuIFRoaXMgd291bGQgbm90IGV2ZW4gd29yayBvbiBTTVANCj4gc3lzdGVtcyEgTWVtb3J5
-IGFuZCBpL28gYWNjZXNzZXMgZG8gbm90IGhhdmUgYW55IGxvY2suIEEgY29uZmlnIGFjY2Vzcw0K
-PiBvbiBvbmUgY29yZSB3aWxsIHRlbXBvcmFyaWx5IGRpc2FibGUgdGhlIGkvbyBvciBtZW1vcnkg
-dmlld3BvcnQgd2hpY2gNCj4gd2lsbCBjYXVzZSBhbiBhYm9ydCwgZHJvcHBlZCwgb3IgZ2FyYmFn
-ZSBkYXRhIG9uIGFuIGkvbyBvciBtZW1vcnkNCj4gYWNjZXNzIGZyb20gYW5vdGhlciBjb3JlLiBZ
-b3Ugd291bGQgaGF2ZSB0byBiZSBhY2Nlc3NpbmcgY2ZnIHNwYWNlIG9uDQo+IGEgYnVzIG90aGVy
-IHRoYW4gdGhlIHJvb3QgYnVzLCBzbyBtYXliZSBubyBvbmUgaXMgZG9pbmcgdGhhdC4NCj4gDQo+
-ID4+ID4NCj4gPj4gPiBTcGVha2luZyBpbiBnZW5lcmFsIHRlcm1zIHNvIGZhciBJJ3ZlIGFsd2F5
-cyBzZWVuIGxpbmVhciBtYXBwaW5ncw0KPiA+PiA+IHRoYXQgZGlmZmVyIGJ5IGJpdG1hc2sgb2Zm
-c2V0LCBob3dldmVyIGxpbmVhciBkb2VzIG5vdCBtZWFuIHRoYXQNCj4geW91DQo+ID4+ID4gY2Fu
-bm90IGFmZmVjdCB0aGUgbG93ZXIgYml0czogZS5nLiA8MHgwPiB0byA8MHgwICsgc2l6ZT4gY2Fu
-IG1hcA0KPiB0bw0KPiA+PiA+IDwweDAwMDBjYWZlIHRvIDB4MDAwMGNhZmUgKyBzaXplPiwgYnV0
-IEkgZ3Vlc3MgdGhhdCBmb3IgSFcgZGVzaWduDQo+ID4+IHJlYXNvbnMNCj4gPj4gPiBpdCBpcyBt
-dWNoIGVhc2llciB0byByZW1hcCBkaXJlY3RseSB1c2luZyBhIGJpdG1hc2suLi5idXQgSSB3YXMN
-Cj4gbm90DQo+ID4+IHN1cmUNCj4gPj4gPiBhbmQgSSBkaWRuJ3QgdGhpbmsgYWJvdXQgdGhlIHBy
-b2JsZW1zIHRoYXQgY2FuIGFyaXNlIHdpdGggQUNQSS4NCj4gDQo+IEZvciBoaWdoZXIgc3BlZWQg
-YnVzZXMsIHRoZSBoL3cgZGVzaWducyBhcmUgbm90IGdvaW5nIHRvIGJlIGRvaW5nDQo+IGNvbXBs
-aWNhdGVkIHRyYW5zbGF0aW9ucyBpbiBvcmRlciB0byBtZWV0IHRpbWluZyByZXF1aXJlbWVudHMu
-IEF0IHRoZQ0KPiB0b3AgbGV2ZWwgb25seSB0aGUgaGlnaGVzdCBvcmRlciBiaXRzIGFyZSBnb2lu
-ZyB0byBiZSBsb29rZWQgYXQuIEZvcg0KPiBkb3duc3RyZWFtIHNlZ21lbnRzLCB0aGUgaGlnaCBv
-cmRlciBiaXRzIG1heSBnZXQgZHJvcHBlZCB0byBzaW1wbGlmeQ0KPiByb3V0aW5nLiBJZiBhbiBJ
-UCBibG9jayBoYXMgZnVsbCBhZGRyZXNzIGJpdHMgaW4gdGhpcyBjYXNlLCB0aGV5IGNvdWxkDQo+
-IGVpdGhlciBiZSB0aWVkIHRvIDAgb3IgdGllZCBvZmYgdG8gdGhlIGNvcnJlY3QgYWRkcmVzcy4g
-RWl0aGVyIGlzDQo+IHJlYXNvbmFibGUsIHNvIEknbSBzdXJlIHRoZXJlIGlzIGgvdyBkb2luZyBi
-b3RoLiBUaGF0IGRvZXNuJ3QgbWVhbiBoL3cNCj4gZGVzaWduZXJzIGhhdmVuJ3QgZG9uZSBzb21l
-dGhpbmcgY3JhenksIHRvby4NCj4gDQo+ID4+IEFzIEkgc2FpZCwgaXQgd291bGRuJ3QgbWFrZSBz
-ZW5zZSBmb3IgdGhlIGJpdHMgdGhhdCBjb21wcmlzZSB0aGUNCj4gPj4gb2Zmc2V0IGludG8gdGhl
-IHdpbmRvdyB0byBjaGFuZ2UsIHNvIHRoZSBtYXBwaW5nIG9ubHkgaGFzIHRvIGJlDQo+IGxpbmVh
-cg0KPiA+PiBpbnNpZGUgdGhlIHdpbmRvdy4NCj4gPj4NCj4gPj4gRm9yIHRoZSBiaXRzIG91dHNp
-ZGUgdGhlIHdpbmRvdyBvZmZzZXQsIEkgZG9uJ3Qga25vdyBlbm91Z2ggdG8gc2F5DQo+ID4+IHdo
-ZXRoZXIgbWFza2luZyBpcyBzdWZmaWNpZW50IG9yIHNhZmUuDQo+ID4+DQo+ID4+ID4gSWYgeW91
-IHRoaW5rIHRoZSBiaXRtYXNrIGlzIE9rIHRoZW4gSSBjYW4gZGlyZWN0bHkgZGVmaW5lIGl0IGlu
-DQo+ID4+ID4gZGVzaWdud2FyZSBhbmQgd2UgY2FuIGRyb3AgdGhpcyBwYXRjaC4NCj4gPj4NCj4g
-Pj4gSXQncyBPSyBieSBtZSwgYnV0IEkga25vdyBub3RoaW5nIGFib3V0IHRoZSBhY3R1YWwgaGFy
-ZHdhcmUgaW52b2x2ZWQuDQo+ID4+IEZvciB0aGUgRGVzaWduV2FyZSBxdWVzdGlvbiwgSSB0aGlu
-ayB5b3Ugd291bGQganVzdCBoYXZlIHRvIGNvbnZpbmNlDQo+ID4+IEppbmdvbyBhbmQgUHJhdHl1
-c2ggKGNjJ2QpLg0KPiA+DQo+ID4gWWVzIGFjdHVhbGx5IGxvb2tpbmcgYXQNCj4gPiBodHRwOi8v
-bHhyLmZyZWUtDQo+IGVsZWN0cm9ucy5jb20vc291cmNlL2FyY2gvYXJtL2Jvb3QvZHRzL3NwZWFy
-MTMxMC5kdHNpI0w5OQ0KPiA+IEkgY2FuIHNlZSB0aGF0IHBjaV9hZGRyPTAgaXMgbWFwcGVkIHRv
-IGJ1c19hZGRyIDB4ODAwMjAwMDAsIHNvDQo+IGNsZWFyaW5nDQo+ID4gdGhlIHRvcCA0IGJpdHMg
-d291bGQgYWx0ZXIgdGhlIGJlaGF2aW91ciBvZiB0aGUgY3VycmVudCBkZXNpZ253YXJlDQo+ID4g
-U1cgZnJhbWV3b3JrLi4ubm93IEkgZG9uJ3Qga25vdyBpZiBEVyBuZWVkcyBvbmx5IHRoZSBsb3cg
-MjhiIG9mIHRoYXQNCj4gPiB2YWx1ZSBvciBub3QuLi4uDQo+IA0KPiBHaXZlbiB0aGF0IG1vc3Qg
-Y2FzZXMgaGF2ZSBzYW1lIGNwdSBhbmQgYnVzIGFkZHJlc3MsIG1hc2tpbmcgaXMgbm90DQo+IHRo
-ZSByaWdodCBzb2x1dGlvbiBpbiBnZW5lcmFsLg0KPiANCj4gVGhlcmUgaXMgYWxzbyBhIGJ1ZyBo
-ZXJlIEJUVy4gcGNpZTAgYW5kIHBjaWUyIGhhdmUgdGhlIHNhbWUgQ1BVDQo+IGFkZHJlc3MgZm9y
-IHRoZSBtZW1vcnkgcmFuZ2UuDQo+IA0KPiBSb2INCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJv
-bSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4NCj4g
-dGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9y
-ZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5m
-by5odG1sDQo=
+>>>>> This list_del() updates the bus->slots list.
+>>>>
+>>>> It's safe here, because we have locked the pci_slot_mutex in pci_destroy_slot(), which is the only caller of pci_slot_release().
+>>>
+>>> That doesn't protect anybody else who might be traversing the
+>>> bus->slots list while we're deleting this entry.
+>>
+>> Hi Bjorn, sorry, I don't understand your point, before this patch, we use pci_bus_sem to protect the whole pci_slot_release(),
+>> in which, we would traverse the bus->devices list and update the bus->slots list. And now what we did is introduce a new pci_slot_mutex
+>> to protect the bus->slots here, and use down_read(pci_bus_sem) instead of down_write(pci_bus_sem).
+> 
+> pci_setup_device() does this:
+> 
+>         list_for_each_entry(slot, &dev->bus->slots, list)
+>                 if (PCI_SLOT(dev->devfn) == slot->number)
+>                         dev->slot = slot;
+> 
+> What keeps that code from running at the same time pci_slot_release()
+> is removing something from the bus->slots list?
+> 
+> It looks to me like the loop in pci_setup_device() is unsafe to begin
+> with.  But the obvious thing to do would be to add
+> down_read(&pci_bus_sem) there, and then you'd need a down_write() in
+> pci_slot_release(), so you're back where we started.
+
+I got it, I missed the bus->slots list traverse in pci scan code,
+What about moving the bus->slots loop code from pci_setup_device() to drivers/pci/slot.c, and add a pci_slot_mutex to protect it ?
+I think we should avoid to use pci_bus_sem to protect bus->slots list.
+
+Something like this:
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..6f00273 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1149,10 +1149,7 @@ int pci_setup_device(struct pci_dev *dev)
+        dev->error_state = pci_channel_io_normal;
+        set_pcie_port_type(dev);
+
+-       list_for_each_entry(slot, &dev->bus->slots, list)
+-               if (PCI_SLOT(dev->devfn) == slot->number)
+-                       dev->slot = slot;
+-
++       pci_dev_assign_slot(dev);
+        /* Assume 32-bit PCI; let 64-bit PCI cards (which are far rarer)
+           set this higher, assuming the system even supports it.  */
+        dev->dma_mask = 0xffffffff;
+diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+index a9079d9..cf259e7 100644
+--- a/drivers/pci/slot.c
++++ b/drivers/pci/slot.c
+@@ -99,6 +99,15 @@ static ssize_t cur_speed_read_file(struct pci_slot *slot, char *buf)
+        return bus_speed_read(slot->bus->cur_bus_speed, buf);
+ }
+
++void pci_dev_assign_slot(struct pci_dev *dev)
++{
++       mutex_lock(&pci_slot_mutex);
++       list_for_each_entry(slot, &dev->bus->slots, list)
++               if (PCI_SLOT(dev->devfn) == slot->number)
++                       dev->slot = slot;
++       mutex_unlock(&pci_slot_mutex);
++}
++
+ static void pci_slot_release(struct kobject *kobj)
+ {
+        struct pci_dev *dev;
+
+
+> 
+>>>>>> @@ -195,7 +198,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
+>>>>>>  {
+>>>>>>         struct pci_slot *slot;
+>>>>>>         /*
+>>>>>> -        * We already hold pci_bus_sem so don't worry
+>>>>>> +        * We already hold pci_slot_mutex so don't worry
+>>>>>>          */
+>>>>>>         list_for_each_entry(slot, &parent->slots, list)
+>>>>>>                 if (slot->number == slot_nr) {
+>>>>>> @@ -253,7 +256,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>>>>>>         int err = 0;
+>>>>>>         char *slot_name = NULL;
+>>>>>>
+>>>>>> -       down_write(&pci_bus_sem);
+>>>>>> +       mutex_lock(&pci_slot_mutex);
+>>>>>>
+>>>>>>         if (slot_nr == -1)
+>>>>>>                 goto placeholder;
+>>>>>> @@ -301,16 +304,18 @@ placeholder:
+>>>>>>         INIT_LIST_HEAD(&slot->list);
+>>>>>>         list_add(&slot->list, &parent->slots);
+>>>>>>
+>>>>>> +       down_read(&pci_bus_sem);
+>>>>>>         list_for_each_entry(dev, &parent->devices, bus_list)
+>>>>>>                 if (PCI_SLOT(dev->devfn) == slot_nr)
+>>>>>>                         dev->slot = slot;
+>>>>>> +       up_read(&pci_bus_sem);
+>>>>>>
+>>>>>>         dev_dbg(&parent->dev, "dev %02x, created physical slot %s\n",
+>>>>>>                 slot_nr, pci_slot_name(slot));
+>>>>>>
+>>>>>>  out:
+>>>>>>         kfree(slot_name);
+>>>>>> -       up_write(&pci_bus_sem);
+>>>>>> +       mutex_unlock(&pci_slot_mutex);
+>>>>>>         return slot;
+>>>>>>  err:
+>>>>>>         kfree(slot);
+>>>>>> @@ -332,9 +337,9 @@ void pci_destroy_slot(struct pci_slot *slot)
+>>>>>>         dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
+>>>>>>                 slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
+>>>>>>
+>>>>>> -       down_write(&pci_bus_sem);
+>>>>>> +       mutex_lock(&pci_slot_mutex);
+>>>>>>         kobject_put(&slot->kobj);
+>>>>>> -       up_write(&pci_bus_sem);
+>>>>>> +       mutex_unlock(&pci_slot_mutex);
+>>>>>>  }
+>>>>>>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
+>>>>>
+>>>>> .
+>>>>>
+>>>>
+>>>>
+>>>> --
+>>>> Thanks!
+>>>> Yijing
+>>>>
+>>>
+>>> .
+>>>
+>>
+>>
+>> --
+>> Thanks!
+>> Yijing
+>>
+> 
+> .
+> 
+
+
+-- 
+Thanks!
+Yijing
+
