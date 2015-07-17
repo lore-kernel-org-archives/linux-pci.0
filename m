@@ -1,88 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:43502 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752851AbbGTMFz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 08:05:55 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
-	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH part3 v12 06/10] PCI: Make pci_host_bridge hold sysdata in drvdata
-Date: Mon, 20 Jul 2015 20:01:14 +0800
-Message-ID: <1437393678-4077-7-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
-References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:36339 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091AbbGQVcn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 17:32:43 -0400
+Received: by obnw1 with SMTP id w1so73164125obn.3
+        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 14:32:42 -0700 (PDT)
+Subject: [PATCH 7/8] PCI: Clean up ATS error handling
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gregor Dick <gdick@solarflare.com>
+Date: Fri, 17 Jul 2015 16:32:40 -0500
+Message-ID: <20150717213240.18379.42110.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now platform specific sysdata is saved in pci_bus,
-and pcibios_root_bridge_prepare() need to know
-the sysdata. Later, we would move pcibios_root_bridge_prepare()
-prior to root bus creation, so we need to make
-pci_host_bridge hold sysdata.
+There's no need to BUG() if we enable ATS when it's already enabled.  We
+don't need to BUG() when disabling ATS on a device that doesn't support ATS
+or if it's already disabled.  If ATS is enabled, certainly we found an ATS
+capability in the past, so it should still be there now.
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Clean up these error paths.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/ia64/pci/pci.c |    2 +-
- arch/x86/pci/acpi.c |    2 +-
- drivers/pci/probe.c |    1 +
- 3 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/ats.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 67ffe1f..8f79852 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -485,7 +485,7 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	 * that case.
- 	 */
- 	if (!bridge->dev.parent) {
--		struct pci_controller *controller = bridge->bus->sysdata;
-+		struct pci_controller *controller = dev_get_drvdata(&bridge->dev);
- 		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
- 	}
- 	return 0;
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 629fc3b..38ce348 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -502,7 +502,7 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 	 * that case.
- 	 */
- 	if (!bridge->dev.parent) {
--		struct pci_sysdata *sd = bridge->bus->sysdata;
-+		struct pci_sysdata *sd = dev_get_drvdata(&bridge->dev);
- 		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
- 	}
- 	return 0;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 0eba126..0ae8bf2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1967,6 +1967,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
- 	bridge->domain = domain;
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_host_bridge_dev;
-+	dev_set_drvdata(&bridge->dev, sysdata);
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error) {
--- 
-1.7.1
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index c35de8e..9069126 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -43,8 +43,6 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
+ {
+ 	u16 ctrl;
+ 
+-	BUG_ON(dev->ats_cap && dev->ats_enabled);
+-
+ 	if (!dev->ats_cap)
+ 		return -EINVAL;
+ 
+@@ -74,7 +72,8 @@ void pci_disable_ats(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
+ 
+-	BUG_ON(!dev->ats_cap || !dev->ats_enabled);
++	if (!dev->ats_cap)
++		return;
+ 
+ 	pci_read_config_word(dev, dev->ats_cap + PCI_ATS_CTRL, &ctrl);
+ 	ctrl &= ~PCI_ATS_CTRL_ENABLE;
+@@ -90,8 +89,6 @@ void pci_restore_ats_state(struct pci_dev *dev)
+ 
+ 	if (!pci_ats_enabled(dev))
+ 		return;
+-	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS))
+-		BUG();
+ 
+ 	ctrl = PCI_ATS_CTRL_ENABLE;
+ 	if (!dev->is_virtfn)
 
