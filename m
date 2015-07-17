@@ -1,66 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:33010 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752827AbbGNSeH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 14:34:07 -0400
-Received: by obbgp5 with SMTP id gp5so11670783obb.0
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 11:34:06 -0700 (PDT)
-Date: Tue, 14 Jul 2015 13:34:02 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: David =?iso-8859-1?Q?M=FCller?= <dave.mueller@gmx.ch>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] ARM: imx6: Fix non-working MSI interrupts if PCIe switch
- is attached
-Message-ID: <20150714183402.GC24416@google.com>
-References: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch>
+Received: from cantor2.suse.de ([195.135.220.15]:52252 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751343AbbGQU3f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 17 Jul 2015 16:29:35 -0400
+Date: Fri, 17 Jul 2015 22:29:23 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: mingo@kernel.org, bp@suse.de, arnd@arndb.de, bhelgaas@google.com,
+	luto@amacapital.net, akpm@linux-foundation.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
+	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
+	benh@kernel.crashing.org
+Subject: Re: [PATCH v9 0/8] pci: add pci_iomap_wc() and pci_ioremap_wc_bar()
+Message-ID: <20150717202923.GC30479@wotan.suse.de>
+References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1434614347-2154-1-git-send-email-dave.mueller@gmx.ch>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 18, 2015 at 09:59:07AM +0200, David Müller wrote:
-> This problem has already been reported as 
-> https://bugzilla.kernel.org/show_bug.cgi?id=100051
+On Wed, Jul 08, 2015 at 06:54:11PM -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@suse.com>
 > 
-> Signed-off-by: David Müller <dave.mueller@gmx.ch>
+> Ingo,
+> 
+> Boris is on vacation, he picked up these patches on his bp#tip-mm tree [0]
+> and they have baked there for a while now. That tree receives 0-day
+> bot testing, but other than that its not clear what other tests were
+> run on these patches. Boris modified the commit logs a bit, and made one
+> optimizaiton to bail early on an PCI ioremap call when it should. These
+> patches have no modifications from what is on Boris' tree and tip-mm branch.
+> 
+> The 0 day build bot did find issues on Boris' tree but those are related
+> to ioremap_uc() (already upstream) and its first use on atyfb (not
+> upstream) -- I will be addressing a fix for that ioremap_uc() issue through
+> another patch series prior to posting the final set for atyfb which makes
+> use of ioremap_uc().
+> 
+> No issues have been found with this series. Benh did note some possible issues
+> with expectations with what is done for write-combining for PowerPC [1] but
+> the issue is a rather general long standing issue with semantics of ioremap --
+> in the case for ioremap_wc() on PowerPC benh notes that writel() will never
+> write-combine as it uses too heavy barriers. Benh notes that although
+> writel_relaxed() today is identical to writel() this can be changed. There are
+> other general semantics issues with ioremap() variant calls -- we seem to have
+> all gotten together to discuss all these issues on a thread where Dan Williams
+> is proposing to "unify ioremap prototypes and macro aliases" [1], folks
+> intersted on these issues or semantic concerns can drop in and chime there.
+> 
+> Let me know if these are OK or if there are any questions.
+> 
+> [0] http://lkml.kernel.org/r/20150625204703.GC4898@pd.tnic
+> [1] http://lkml.kernel.org/r/20150707095012.GQ7021@wotan.suse.de
 
-Dropping for now, hoping for a repost with more info.
+Ingo,
 
-> ---
->  drivers/pci/host/pci-imx6.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index c63691c..53f8dea 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -433,9 +433,6 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
->  	dw_pcie_setup_rc(pp);
->  
->  	imx6_pcie_start_link(pp);
-> -
-> -	if (IS_ENABLED(CONFIG_PCI_MSI))
-> -		dw_pcie_msi_init(pp);
->  }
->  
->  static void imx6_pcie_reset_phy(struct pcie_port *pp)
-> @@ -550,6 +547,9 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->  		return ret;
->  	}
->  
-> +	if (IS_ENABLED(CONFIG_PCI_MSI))
-> +		dw_pcie_msi_init(pp);
-> +
->  	return 0;
->  }
->  
-> -- 
-> 1.8.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Just a friendly reminder. Let me know if there are any issues or questions.
+
+ Luis
