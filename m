@@ -1,97 +1,166 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:39123 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753598AbbGBW2E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Jul 2015 18:28:04 -0400
-Message-ID: <1435875987.1475.73.camel@kernel.crashing.org>
-Subject: Re: [PATCH v7 5/9] PCI: Add pci_iomap_wc() variants
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: Casey Leedom <leedom@chelsio.com>, Arnd Bergmann <arnd@arndb.de>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toshi Kani <toshi.kani@hp.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Juergen Gross <jgross@suse.com>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	"venkatesh.pallipadi@intel.com" <venkatesh.pallipadi@intel.com>,
-	Stefan Bader <stefan.bader@canonical.com>,
-	"ville.syrjala@linux.intel.com" <ville.syrjala@linux.intel.com>,
-	David Vrabel <david.vrabel@citrix.com>,
-	Jan Beulich <jbeulich@suse.com>,
-	Roger Pau =?ISO-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>
-Date: Fri, 03 Jul 2015 08:26:27 +1000
-In-Reply-To: <20150702184904.GA7021@wotan.suse.de>
-References: <1434751712-24333-1-git-send-email-mcgrof@do-not-panic.com>
-	 <1435189081.3790.24.camel@kernel.crashing.org>
-	 <4985EFDD773FCB459EF7915D2A3621ADC02F10@nice.asicdesigners.com>
-	 <6806026.xb91q6Ad7G@wuerfel>
-	 <4985EFDD773FCB459EF7915D2A3621ADC031F8@nice.asicdesigners.com>
-	 <1435284123.3822.24.camel@kernel.crashing.org>
-	 <4985EFDD773FCB459EF7915D2A3621ADC03621@nice.asicdesigners.com>
-	 <1435356048.26815.9.camel@kernel.crashing.org>
-	 <20150702184904.GA7021@wotan.suse.de>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:17672 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752390AbbGQDII (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 23:08:08 -0400
+Message-ID: <55A86DD9.60305@huawei.com>
+Date: Fri, 17 Jul 2015 10:52:09 +0800
+From: Yijing Wang <wangyijing@huawei.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatja@google.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
+ deadlock
+References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com> <20150716042203.GC25591@google.com> <55A76361.8070604@huawei.com> <20150716152548.GD25591@google.com> <55A856F2.1040900@huawei.com> <CAErSpo6UTEfBieOm3P4Ms45rXhp5SS80QqU_wcDjNswdBzzifg@mail.gmail.com> <55A8605A.6000902@huawei.com> <CAErSpo56r2ZK59jWF9LhT=Vqy8E6FS_ozS2ye978=OfVjEi4iA@mail.gmail.com> <55A86754.7070408@huawei.com> <CAErSpo78rQW0LE8gVyHiZst4FC_m1B4ts2zf-vX5zr+4CQK+=A@mail.gmail.com>
+In-Reply-To: <CAErSpo78rQW0LE8gVyHiZst4FC_m1B4ts2zf-vX5zr+4CQK+=A@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2015-07-02 at 20:49 +0200, Luis R. Rodriguez wrote:
-> > The question then is what is "the right thing". In the powerpc case,
-> > we'll have a non-garded mapping, which means we also get no ordering
-> > between load and stores.
+>>> It looks to me like the loop in pci_setup_device() is unsafe to begin
+>>> with.  But the obvious thing to do would be to add
+>>> down_read(&pci_bus_sem) there, and then you'd need a down_write() in
+>>> pci_slot_release(), so you're back where we started.
+>>
+>> I got it, I missed the bus->slots list traverse in pci scan code,
+>> What about moving the bus->slots loop code from pci_setup_device() to drivers/pci/slot.c, and add a pci_slot_mutex to protect it ?
+>> I think we should avoid to use pci_bus_sem to protect bus->slots list.
 > 
-> I don't follow, you *ordering* between load and stores for WC? We should
-> not need that for WC, its why WC is used for only very specific things
-> such as framebuffer and PIO (which BTw I still don't quite get all this
-> use case for infiniband to be honest, and I will note I do see some
-> proprietary hardware extensions like bursts but nothing covering all
-> this in a general doc, I think I think it all just has to do that this
-> is a hardware hack in reality, which we sell as a feature).
+> Seems better, although it's starting to feel a bit ad hoc.  We would
+> need to write down this locking rule somewhere, e.g., near the struct
+> pci_bus declaration.
 
-Well, that's the problem, the semantics that we provide to drivers
-aren't well defined.
+OK, I will post a updated patch.
 
-The words "write combine" themselves only specify that writes to subsequent
-addresses can be combined into larger transactions. That's in itself is already
-quite vague (are their boundaries, limits ? some can depend on bus type, etc...)
-though in practice is probably sufficient.
+Thanks!
+Yijing.
 
-However, overloading a _wc mapping with additional memory model differences
-such as loss of ordering between load and stores, etc... is not an obvious
-thing to do. I agree it would make *my* life easier if we did it since this
-is precisely the semantics provided by a "G=0" mapping on ppc, but we need
-to agree and *document* it, otherwise bad things will happen eventually.
+> 
+>> Something like this:
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index cefd636..6f00273 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1149,10 +1149,7 @@ int pci_setup_device(struct pci_dev *dev)
+>>         dev->error_state = pci_channel_io_normal;
+>>         set_pcie_port_type(dev);
+>>
+>> -       list_for_each_entry(slot, &dev->bus->slots, list)
+>> -               if (PCI_SLOT(dev->devfn) == slot->number)
+>> -                       dev->slot = slot;
+>> -
+>> +       pci_dev_assign_slot(dev);
+>>         /* Assume 32-bit PCI; let 64-bit PCI cards (which are far rarer)
+>>            set this higher, assuming the system even supports it.  */
+>>         dev->dma_mask = 0xffffffff;
+>> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
+>> index a9079d9..cf259e7 100644
+>> --- a/drivers/pci/slot.c
+>> +++ b/drivers/pci/slot.c
+>> @@ -99,6 +99,15 @@ static ssize_t cur_speed_read_file(struct pci_slot *slot, char *buf)
+>>         return bus_speed_read(slot->bus->cur_bus_speed, buf);
+>>  }
+>>
+>> +void pci_dev_assign_slot(struct pci_dev *dev)
+>> +{
+>> +       mutex_lock(&pci_slot_mutex);
+>> +       list_for_each_entry(slot, &dev->bus->slots, list)
+>> +               if (PCI_SLOT(dev->devfn) == slot->number)
+>> +                       dev->slot = slot;
+>> +       mutex_unlock(&pci_slot_mutex);
+>> +}
+>> +
+>>  static void pci_slot_release(struct kobject *kobj)
+>>  {
+>>         struct pci_dev *dev;
+>>
+>>
+>>>
+>>>>>>>> @@ -195,7 +198,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
+>>>>>>>>  {
+>>>>>>>>         struct pci_slot *slot;
+>>>>>>>>         /*
+>>>>>>>> -        * We already hold pci_bus_sem so don't worry
+>>>>>>>> +        * We already hold pci_slot_mutex so don't worry
+>>>>>>>>          */
+>>>>>>>>         list_for_each_entry(slot, &parent->slots, list)
+>>>>>>>>                 if (slot->number == slot_nr) {
+>>>>>>>> @@ -253,7 +256,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>>>>>>>>         int err = 0;
+>>>>>>>>         char *slot_name = NULL;
+>>>>>>>>
+>>>>>>>> -       down_write(&pci_bus_sem);
+>>>>>>>> +       mutex_lock(&pci_slot_mutex);
+>>>>>>>>
+>>>>>>>>         if (slot_nr == -1)
+>>>>>>>>                 goto placeholder;
+>>>>>>>> @@ -301,16 +304,18 @@ placeholder:
+>>>>>>>>         INIT_LIST_HEAD(&slot->list);
+>>>>>>>>         list_add(&slot->list, &parent->slots);
+>>>>>>>>
+>>>>>>>> +       down_read(&pci_bus_sem);
+>>>>>>>>         list_for_each_entry(dev, &parent->devices, bus_list)
+>>>>>>>>                 if (PCI_SLOT(dev->devfn) == slot_nr)
+>>>>>>>>                         dev->slot = slot;
+>>>>>>>> +       up_read(&pci_bus_sem);
+>>>>>>>>
+>>>>>>>>         dev_dbg(&parent->dev, "dev %02x, created physical slot %s\n",
+>>>>>>>>                 slot_nr, pci_slot_name(slot));
+>>>>>>>>
+>>>>>>>>  out:
+>>>>>>>>         kfree(slot_name);
+>>>>>>>> -       up_write(&pci_bus_sem);
+>>>>>>>> +       mutex_unlock(&pci_slot_mutex);
+>>>>>>>>         return slot;
+>>>>>>>>  err:
+>>>>>>>>         kfree(slot);
+>>>>>>>> @@ -332,9 +337,9 @@ void pci_destroy_slot(struct pci_slot *slot)
+>>>>>>>>         dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
+>>>>>>>>                 slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
+>>>>>>>>
+>>>>>>>> -       down_write(&pci_bus_sem);
+>>>>>>>> +       mutex_lock(&pci_slot_mutex);
+>>>>>>>>         kobject_put(&slot->kobj);
+>>>>>>>> -       up_write(&pci_bus_sem);
+>>>>>>>> +       mutex_unlock(&pci_slot_mutex);
+>>>>>>>>  }
+>>>>>>>>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
+>>>>>>>
+>>>>>>> .
+>>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> --
+>>>>>> Thanks!
+>>>>>> Yijing
+>>>>>>
+>>>>>
+>>>>> .
+>>>>>
+>>>>
+>>>>
+>>>> --
+>>>> Thanks!
+>>>> Yijing
+>>>>
+>>>
+>>> .
+>>>
+>>
+>>
+>> --
+>> Thanks!
+>> Yijing
+>>
+> 
+> .
+> 
 
-We also need to document in that case which barriers can be used to explicitly
-enforce the ordering on such a mapping and which barriers can be used to break
-write combine (they don't necessarily have to be the same).
 
-We also need to document which accessors will actually provide the write combine
-"feature" of a _wc mapping. For example while writel() will do it on Intel, it
-will not on ppc and I wouldn't be surprised if a bunch of other archs fall in
-the same bucket as ppc (basically anything that has barriers in their writel
-implementation to order vs. DMA etc...).
-
-So we might need to explicitly document that writel_relaxed() needs to be used.
-
-Finally what are the precise guaranteed semantics of writeX/readX,
-writeX_relaxed/readX_relaxed and __raw_ (everything else) on a _wc mapping, what
-do we mandate and document, what do we leave to be implementation dependent ?
-
-Cheers,
-Ben.
-
+-- 
+Thanks!
+Yijing
 
