@@ -1,71 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36933 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932764AbbGGRSY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jul 2015 13:18:24 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v3 02/15] PCI: MSI: Register irq domain with specific token
-Date: Tue,  7 Jul 2015 18:17:52 +0100
-Message-Id: <1436289485-28230-3-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34568 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754142AbbGTNdj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 09:33:39 -0400
+Received: by wibud3 with SMTP id ud3so87929319wib.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 06:33:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAG0bkv+Sve7+XWtGk-kkQU=-64CPbpE=5RMbVq-RzWNgg--6ZQ@mail.gmail.com>
+References: <CAG0bkv+Sve7+XWtGk-kkQU=-64CPbpE=5RMbVq-RzWNgg--6ZQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 20 Jul 2015 08:33:18 -0500
+Message-ID: <CAErSpo5hak56Xm-AqHDM1D+gEiCi+a5r-9cA7bJZWpNO+2oZGw@mail.gmail.com>
+Subject: Re: PCIe: Xilinx: sdhci-pci: probe() issue
+To: Naveen Kumar Parna <pnaveenkos@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When creating a PCI/MSI domain, tag it with DOMAIN_BUS_PCI_MSI so
-that it can be looked-up using irq_find_matching_host().
+Hi Naveen,
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/pci/msi.c         | 8 +++++++-
- include/linux/irqdomain.h | 1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+On Mon, Jul 20, 2015 at 5:55 AM, Naveen Kumar Parna
+<pnaveenkos@gmail.com> wrote:
+> Hi ,
+>
+> I have a Verilog image & hardware which provides a PCIe interface with
+> two BAR’s(BAR0 & BAR1) to host.
+>
+> BAR0 is having customized UART, GPIO and 1-wire prom modules. These
+> modules are accessed via customized PCIe interface driver.
+>
+> BAR1 is having SD Host controller as per SD Specifications. Here
+> requirement is such that we should use Linux kernel stack drivers
+> (sdhci.ko & sdhci-pci.ko).
+>
+>
+> Here the issue is only one driver’s probe() function gets executed
+> i.e. either customized PCIe driver or sdhci-pci.ko.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index f66be86..1e55935 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1269,12 +1269,18 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
- 					     struct msi_domain_info *info,
- 					     struct irq_domain *parent)
- {
-+	struct irq_domain *domain;
-+
- 	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
- 		pci_msi_domain_update_dom_ops(info);
- 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
- 		pci_msi_domain_update_chip_ops(info);
- 
--	return msi_create_irq_domain(node, info, parent);
-+	domain = msi_create_irq_domain(node, info, parent);
-+	if (domain)
-+		domain->bus_token = DOMAIN_BUS_PCI_MSI;
-+
-+	return domain;
- }
- 
- /**
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 91a83ad..25e9e66 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -54,6 +54,7 @@ struct irq_data;
-  */
- enum irq_domain_bus_token {
- 	DOMAIN_BUS_ANY		= 0,
-+	DOMAIN_BUS_PCI_MSI,
- };
- 
- /**
--- 
-2.1.4
+The PCI infrastructure is designed such that a bus/device/function
+address identifies a single device.  To that device, we can attach a
+single driver, which manages all BARs on that device.  There is no
+provision for attaching one driver to BAR0 and a different driver to
+BAR1.
 
+To manage the device you describe, you'd have to have a driver that
+claims the entire PCI device, including both BARs.  That driver would
+internally deal with the UART, GPIO, 1-wire prom, and SD host
+controller modules.
+
+Bjorn
