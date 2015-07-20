@@ -1,74 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 15/49] PCI: Cache window alignment value
-Date: Tue, 14 Jul 2015 15:46:46 -0700
-Message-Id: <1436914040-13206-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:59136 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932489AbbGTOZS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jul 2015 10:25:18 -0400
+Date: Mon, 20 Jul 2015 16:25:15 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH 8/8] PCI: Move ATS declarations to linux/pci.h so they're
+ all together
+Message-ID: <20150720142515.GH13082@suse.de>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150717213247.18379.66315.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150717213247.18379.66315.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are several calling to window_alignment().
-And we will have more for alt_size support.
+On Fri, Jul 17, 2015 at 04:32:47PM -0500, Bjorn Helgaas wrote:
+> Move ATS declarations to linux/pci.h so they're all in one place.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  include/linux/pci-ats.h |   41 -----------------------------------------
+>  include/linux/pci.h     |    8 ++++++++
+>  2 files changed, 8 insertions(+), 41 deletions(-)
+> 
+> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+> index 5d81d47..57e0b82 100644
+> --- a/include/linux/pci-ats.h
+> +++ b/include/linux/pci-ats.h
+> @@ -3,47 +3,6 @@
+>  
+>  #include <linux/pci.h>
+>  
+> -/* Address Translation Service */
+> -#ifdef CONFIG_PCI_ATS
+> -
+> -int pci_enable_ats(struct pci_dev *dev, int ps);
+> -void pci_disable_ats(struct pci_dev *dev);
+> -int pci_ats_queue_depth(struct pci_dev *dev);
+> -
+> -/**
+> - * pci_ats_enabled - query the ATS status
+> - * @dev: the PCI device
+> - *
+> - * Returns 1 if ATS capability is enabled, or 0 if not.
+> - */
+> -static inline int pci_ats_enabled(struct pci_dev *dev)
+> -{
+> -	return dev->ats_cap && dev->ats_enabled;
+> -}
+> -
+> -#else /* CONFIG_PCI_ATS */
+> -
+> -static inline int pci_enable_ats(struct pci_dev *dev, int ps)
+> -{
+> -	return -ENODEV;
+> -}
+> -
+> -static inline void pci_disable_ats(struct pci_dev *dev)
+> -{
+> -}
+> -
+> -static inline int pci_ats_queue_depth(struct pci_dev *dev)
+> -{
+> -	return -ENODEV;
+> -}
+> -
+> -static inline int pci_ats_enabled(struct pci_dev *dev)
+> -{
+> -	return 0;
+> -}
+> -
+> -#endif /* CONFIG_PCI_ATS */
+> -
+>  #ifdef CONFIG_PCI_PRI
+>  
+>  int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 1997853..744a5e9 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1300,8 +1300,16 @@ void ht_destroy_irq(unsigned int irq);
+>  #ifdef CONFIG_PCI_ATS
+>  /* Address Translation Service */
+>  void pci_ats_init(struct pci_dev *dev);
+> +int pci_enable_ats(struct pci_dev *dev, int ps);
+> +void pci_disable_ats(struct pci_dev *dev);
+> +int pci_ats_queue_depth(struct pci_dev *dev);
+> +static inline int pci_ats_enabled(struct pci_dev *dev) { return dev->ats_enabled; }
+>  #else
+>  static inline void pci_ats_init(struct pci_dev *) { }
+> +static inline int pci_enable_ats(struct pci_dev *, int) { return -ENODEV; }
+> +static inline void pci_disable_ats(struct pci_dev *) { }
+> +static inline int pci_ats_queue_depth(struct pci_dev *) { return -ENODEV; }
+> +static inline int pci_ats_enabled(struct pci_dev *dev) { return 0; }
+>  #endif
+>  
+>  void pci_cfg_access_lock(struct pci_dev *dev);
 
-Cache the value instead of keeping on getting it.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 57b5c09..1b5fbca 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1203,6 +1203,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					mask | IORESOURCE_PREFETCH, type);
- 	LIST_HEAD(align_test_list);
- 	LIST_HEAD(align_test_add_list);
-+	resource_size_t window_align;
- 
- 	if (!b_res)
- 		return -ENOSPC;
-@@ -1212,6 +1213,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		min_size = 0;
- 	}
- 
-+	window_align = window_alignment(bus, b_res->flags);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1272,10 +1275,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		}
- 	}
- 
--	max_align = max(max_align, window_alignment(bus, b_res->flags));
-+	max_align = max(max_align, window_align);
- 	if (size || min_size) {
- 		min_align = calculate_mem_align(&align_test_list, max_align,
--				 size, window_alignment(bus, b_res->flags));
-+						size, window_align);
- 		size0 = calculate_memsize(size, min_size,
- 				  resource_size(b_res), min_align);
- 	}
-@@ -1286,7 +1289,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
--					window_alignment(bus, b_res->flags));
-+					window_align);
- 		size1 = calculate_memsize(sum_add_size, min_size,
- 				 resource_size(b_res), min_add_align);
- 	}
--- 
-1.8.4.5
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
 
