@@ -1,34 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:51180 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082AbbGRDvD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 23:51:03 -0400
-Date: Fri, 17 Jul 2015 20:50:47 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	rajatja@google.com, rjw@rjwysocki.net
-Subject: Re: [PATCH v2 0/2] Fix a deadlock for aer and pciehp driver
-Message-ID: <20150718035047.GA6108@roeck-us.net>
-References: <1437124592-2070-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:36004 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754358AbbGTQ0j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 12:26:39 -0400
+Received: by iehx8 with SMTP id x8so41308700ieh.3
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 09:26:39 -0700 (PDT)
+Date: Mon, 20 Jul 2015 11:26:35 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Joerg Roedel <jroedel@suse.de>
+Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH 2/8] PCI: Embed ATS info directly into struct pci_dev
+Message-ID: <20150720162635.GD16841@google.com>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150717213200.18379.96435.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150720140318.GC13082@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437124592-2070-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <20150720140318.GC13082@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 17, 2015 at 05:16:30PM +0800, Yijing Wang wrote:
-> Yijing Wang (2):
->   PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
->   PCI: Lock pci_slot_mutex when traverse bus->slots
+On Mon, Jul 20, 2015 at 04:03:18PM +0200, Joerg Roedel wrote:
+> On Fri, Jul 17, 2015 at 04:32:00PM -0500, Bjorn Helgaas wrote:
+> > @@ -98,13 +81,13 @@ void pci_disable_ats(struct pci_dev *dev)
+> >  {
+> >  	u16 ctrl;
+> >  
+> > -	BUG_ON(!dev->ats || !dev->ats->is_enabled);
+> > +	BUG_ON(!dev->ats_cap || !dev->ats_enabled);
 > 
->  arch/powerpc/kernel/pci_of_scan.c |    6 +-----
->  arch/sparc/kernel/pci.c           |    6 +-----
->  drivers/pci/probe.c               |    6 +-----
->  drivers/pci/slot.c                |   26 +++++++++++++++++++++-----
->  include/linux/pci.h               |    4 +++-
->  5 files changed, 27 insertions(+), 21 deletions(-)
+> So since dev->ats_enabled can only get set to 1 of dev->ats_cap != 0,
+> wouldn't it be sufficient to just do a BUG_ON(!dev->ats_enabled)?
 > 
-I'll give the series a try next week.
+> >  static inline int pci_ats_enabled(struct pci_dev *dev)
+> >  {
+> > -	return dev->ats && dev->ats->is_enabled;
+> > +	return dev->ats_cap && dev->ats_enabled;
+> >  }
+> 
+> Here too, can't we just return dev->ats_enabled?
 
-Guenter
+Yep, that makes sense.  I left ats_cap in to try to make it easier to
+review, but I removed it later in the series.
+
+Bjorn
