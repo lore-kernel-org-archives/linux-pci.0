@@ -1,88 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36005 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932164AbbG0XbD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:31:03 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	<linux-mips@linux-mips.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
+	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
 	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 08/51] PCI: Remove duplicated code for resource sorting
-Date: Mon, 27 Jul 2015 16:29:26 -0700
-Message-Id: <1438039809-24957-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH part3 v12 03/10] PCI: Remove declaration for pci_get_new_domain_nr()
+Date: Mon, 20 Jul 2015 20:01:11 +0800
+Message-ID: <1437393678-4077-4-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now __sort_resources, and pdev_sort_resources all have sorting
-code.
+pci_get_new_domain_nr() is only used in drivers/pci/pci.c,
+remove the declaration in include/linux/pci.h.
 
-As we are going to call __sort_resources several places later, so
-choose to keep __sort_resources, and remove related code in
-pdev_sort_resources.
-
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/setup-bus.c | 22 +++-------------------
- 1 file changed, 3 insertions(+), 19 deletions(-)
+ drivers/pci/pci.c   |    4 ++--
+ include/linux/pci.h |    3 ---
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6f2d508..6642a60 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -215,9 +215,8 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 
- 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 		struct resource *r;
--		struct pci_dev_resource *dev_res, *tmp;
-+		struct pci_dev_resource *tmp;
- 		resource_size_t r_align;
--		struct list_head *n;
- 
- 		r = &dev->resource[i];
- 
-@@ -240,22 +239,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 		tmp->res = r;
- 		tmp->dev = dev;
- 
--		/* fallback is smallest one or list is empty*/
--		n = head;
--		list_for_each_entry(dev_res, head, list) {
--			resource_size_t align;
--
--			align = __pci_resource_alignment(dev_res->dev,
--							 dev_res->res,
--							 realloc_head);
--
--			if (r_align > align) {
--				n = &dev_res->list;
--				break;
--			}
--		}
--		/* Insert it just before n*/
--		list_add_tail(&tmp->list, n);
-+		list_add_tail(&tmp->list, head);
- 	}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 0008c95..59032e2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4476,14 +4476,14 @@ static void pci_no_domains(void)
  }
  
-@@ -558,9 +542,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
+ #ifdef CONFIG_PCI_DOMAINS
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static atomic_t __domain_nr = ATOMIC_INIT(-1);
  
-+requested_and_reassign:
- 	__sort_resources(head);
+-int pci_get_new_domain_nr(void)
++static int pci_get_new_domain_nr(void)
+ {
+ 	return atomic_inc_return(&__domain_nr);
+ }
  
--requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f7e4204..4524592 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1319,12 +1319,10 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
+  */
+ #ifdef CONFIG_PCI_DOMAINS
+ extern int pci_domains_supported;
+-int pci_get_new_domain_nr(void);
+ #else
+ enum { pci_domains_supported = 0 };
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+-static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #endif /* CONFIG_PCI_DOMAINS */
  
+ /*
+@@ -1445,7 +1443,6 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+ 
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
+-static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 
+ #define dev_is_pci(d) (false)
+ #define dev_is_pf(d) (false)
 -- 
-1.8.4.5
+1.7.1
 
