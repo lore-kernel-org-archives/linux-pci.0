@@ -1,45 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f182.google.com ([209.85.160.182]:35821 "EHLO
-	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbbGXFaF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 01:30:05 -0400
-From: Kevin Hao <haokexin@gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:59238 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756056AbbGTO1Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jul 2015 10:27:25 -0400
+Date: Mon, 20 Jul 2015 16:27:22 +0200
+From: Joerg Roedel <jroedel@suse.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	linux-samsung-soc@vger.kernel.org
-Subject: [PATCH 3/4] PCI: exynos: Mark the msi cascade handler IRQF_NO_THREAD
-Date: Fri, 24 Jul 2015 13:29:35 +0800
-Message-Id: <1437715776-2243-4-git-send-email-haokexin@gmail.com>
-In-Reply-To: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
-References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
+Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH 3/8] PCI: Reduce size of ATS structure elements
+Message-ID: <20150720142722.GI13082@suse.de>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150717213208.18379.24197.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150717213208.18379.24197.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The cascade handler must run in hard interrupt context, otherwise
-it will cause dead lock if we force threading of all the interrupt
-handlers via kernel command parameter "threadirqs".
+On Fri, Jul 17, 2015 at 04:32:08PM -0500, Bjorn Helgaas wrote:
+> The extended capabilities list is linked with 12-bit pointers, and the ATS
+> Smallest Translation Unit and Invalidate Queue Depth fields are both 5
+> bits.
+> 
+> Use u16 and u8 to hold the extended capability address and the stu and qdep
+> values.  No functional change.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  include/linux/pci.h |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index ba4a23b..1997853 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -376,9 +376,9 @@ struct pci_dev {
+>  		struct pci_sriov *sriov;	/* SR-IOV capability related */
+>  		struct pci_dev *physfn;	/* the PF this VF is associated with */
+>  	};
+> -	int		ats_cap;	/* ATS Capability offset */
+> -	int		ats_stu;	/* ATS Smallest Translation Unit */
+> -	int		ats_qdep;	/* ATS Invalidate Queue Depth */
+> +	u16		ats_cap;	/* ATS Capability offset */
+> +	u8		ats_stu;	/* ATS Smallest Translation Unit */
+> +	u8		ats_qdep;	/* ATS Invalidate Queue Depth */
+>  #endif
+>  	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+>  	size_t romlen; /* Length of ROM if it's not from the BAR */
 
-Signed-off-by: Kevin Hao <haokexin@gmail.com>
----
- drivers/pci/host/pci-exynos.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I was about to suggest to fold this into the previous patch. But since
+the elements in the old ats-struct were also ints, it makes sense to
+have this as a seperate patch :)
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index f9f468d9a819..7b6be7791d33 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -523,7 +523,8 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
- 
- 		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
- 					exynos_pcie_msi_irq_handler,
--					IRQF_SHARED, "exynos-pcie", pp);
-+					IRQF_SHARED | IRQF_NO_THREAD,
-+					"exynos-pcie", pp);
- 		if (ret) {
- 			dev_err(&pdev->dev, "failed to request msi irq\n");
- 			return ret;
--- 
-2.1.0
+
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
 
