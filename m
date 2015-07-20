@@ -1,127 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@kernel.org>,
-	Boszormenyi Zoltan <zboszor@pr.hu>, Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: [Bugfix v4] PCI, ACPI: Fix regressions caused by resource_size_t overflow with 32-bit kernel
-Date: Wed,  8 Jul 2015 15:26:39 +0800
-Message-Id: <1436340399-19695-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <559107F2.3080701@pr.hu>
-References: <559107F2.3080701@pr.hu>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:58445 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752319AbbGTORk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jul 2015 10:17:40 -0400
+Date: Mon, 20 Jul 2015 16:17:37 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH 6/8] PCI: Use pci_physfn() rather than looking up physfn
+ by hand
+Message-ID: <20150720141737.GF13082@suse.de>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150717213232.18379.64802.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150717213232.18379.64802.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Zoltan Boszormenyi reported this regression:
-  "There's a Realtek RTL8111/8168/8411 (PCI ID 10ec:8168, Subsystem ID
-   1565:230e) network chip on the mainboard. After the r8169 driver loaded
-   the IRQs in the machine went berserk. Keyboard keypressed arrived with
-   considerable latency and duplicated, so no real work was possible.
-   The machine responded to the power button but didn't actually power
-   down. It just stuck at the powering down message. I had to press the
-   power button for 4 seconds to power it down.
+On Fri, Jul 17, 2015 at 04:32:32PM -0500, Bjorn Helgaas wrote:
+> Use the pci_physfn() helper rather than looking up physfn by hand.
+> No functional change.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/ats.c |    4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index fe59182..c35de8e 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -53,9 +53,7 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
+>  
+>  	ctrl = PCI_ATS_CTRL_ENABLE;
+>  	if (dev->is_virtfn) {
+> -		struct pci_dev *pdev = dev->physfn;
+> -
+> -		if (pdev->ats_stu != ps)
+> +		if (pci_physfn(dev)->ats_stu != ps)
+>  			return -EINVAL;
+>  	} else {
+>  		dev->ats_stu = ps;
 
-   The computer is a POS machine with a big battery inside. Because of this,
-   either ACPI or the Realtek chip kept the bad state and after rebooting,
-   the network chip didn't even show up in lspci. Not even the PXE ROM
-   announced itself during boot. I had to disconnect the battery to beat
-   some sense back to the computer.
-
-   The regression happens with 4.0.5, 4.1.0-rc8 and 4.1.0-final. 3.18.16 was
-   good."
-
-The regression is caused by commit 593669c2ac0f ("x86/PCI/ACPI: Use common
-ACPI resource interfaces to simplify implementation"). Since commit
-593669c2ac0f, x86 PCI ACPI host bridge driver validates ACPI resources by
-first converting an ACPI resource to a 'struct resource' structure and
-then applying checks against the converted resource structure. The 'start'
-and 'end' fields in 'struct resource' are defined to be type of
-resource_size_t, which may be 32 bits or 64 bits depending on
-CONFIG_PHYS_ADDR_T_64BIT.
-
-This may cause incorrect resource validation results with 32-bit kernels
-because 64-bit ACPI resource descriptors may get truncated when converting
-to 32-bit 'start' and 'end' fields in 'struct resource'. It eventually
-affects PCI resource allocation subsystem and makes some PCI devices and
-the system behave abnormally due to incorrect resource assignment.
-
-So enhance the ACPI resource parsing interfaces to ignore ACPI resource
-descriptors with address/offset above 4G when running in 32-bit mode.
-
-With the fix applied, the behavior of the machine was restored to how
-3.18.16 worked, i.e. the memory range that is over 4GB is ignored again,
-and lspci -vvxxx shows that everything is at the same memory window as
-they were with 3.18.16.
-
-Reported-and-Tested-by: Boszormenyi Zoltan <zboszor@pr.hu>
-Fixes: 593669c2ac0f ("x86/PCI/ACPI: Use common ACPI resource interfaces to simplify implementation")
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: stable@vger.kernel.org # 4.0
----
- drivers/acpi/resource.c |   24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index 10561ce16ed1..e8d281739cbc 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -194,6 +194,7 @@ static bool acpi_decode_space(struct resource_win *win,
- 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
- 	bool wp = addr->info.mem.write_protect;
- 	u64 len = attr->address_length;
-+	u64 start, end, offset = 0;
- 	struct resource *res = &win->res;
- 
- 	/*
-@@ -205,9 +206,6 @@ static bool acpi_decode_space(struct resource_win *win,
- 		pr_debug("ACPI: Invalid address space min_addr_fix %d, max_addr_fix %d, len %llx\n",
- 			 addr->min_address_fixed, addr->max_address_fixed, len);
- 
--	res->start = attr->minimum;
--	res->end = attr->maximum;
--
- 	/*
- 	 * For bridges that translate addresses across the bridge,
- 	 * translation_offset is the offset that must be added to the
-@@ -215,12 +213,22 @@ static bool acpi_decode_space(struct resource_win *win,
- 	 * primary side. Non-bridge devices must list 0 for all Address
- 	 * Translation offset bits.
- 	 */
--	if (addr->producer_consumer == ACPI_PRODUCER) {
--		res->start += attr->translation_offset;
--		res->end += attr->translation_offset;
--	} else if (attr->translation_offset) {
-+	if (addr->producer_consumer == ACPI_PRODUCER)
-+		offset = attr->translation_offset;
-+	else if (attr->translation_offset)
- 		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
- 			 attr->translation_offset);
-+	start = attr->minimum + offset;
-+	end = attr->maximum + offset;
-+
-+	win->offset = offset;
-+	res->start = start;
-+	res->end = end;
-+	if (sizeof(resource_size_t) < sizeof(u64) &&
-+	    (offset != win->offset || start != res->start || end != res->end)) {
-+		pr_warn("acpi resource window ([%#llx-%#llx] ignored, not CPU addressable)\n",
-+			attr->minimum, attr->maximum);
-+		return false;
- 	}
- 
- 	switch (addr->resource_type) {
-@@ -237,8 +245,6 @@ static bool acpi_decode_space(struct resource_win *win,
- 		return false;
- 	}
- 
--	win->offset = attr->translation_offset;
--
- 	if (addr->producer_consumer == ACPI_PRODUCER)
- 		res->flags |= IORESOURCE_WINDOW;
- 
--- 
-1.7.10.4
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
 
