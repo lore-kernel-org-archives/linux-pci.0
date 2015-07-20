@@ -1,33 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Rami Rosen <ramirose@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rami Rosen <ramirose@gmail.com>
-Subject: [PATCH] PCI: remove a broken link in quirks.c.
-Date: Wed,  1 Jul 2015 17:37:10 +0300
-Message-Id: <1435761430-1353-1-git-send-email-ramirose@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:58328 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753400AbbGTOPF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jul 2015 10:15:05 -0400
+Date: Mon, 20 Jul 2015 16:15:01 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH 4/8] PCI: Rationalize pci_ats_queue_depth() error checking
+Message-ID: <20150720141501.GD13082@suse.de>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150717213215.18379.59848.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150717213215.18379.59848.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch removes a broken link in drivers/pci/quirks.c.
+On Fri, Jul 17, 2015 at 04:32:16PM -0500, Bjorn Helgaas wrote:
+> We previously returned -ENODEV for devices that don't support ATS (except
+> that we always returned 0 for VFs, whether or not they support ATS).
+> 
+> For consistency, always return -EINVAL (not -ENODEV) if the device doesn't
+> support ATS.  Return zero for VFs that support ATS.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/ats.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index 2f1fb9c..ea459b3 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -121,13 +121,13 @@ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
+>   */
+>  int pci_ats_queue_depth(struct pci_dev *dev)
+>  {
+> +	if (!dev->ats_cap)
+> +		return -EINVAL;
+> +
+>  	if (dev->is_virtfn)
+>  		return 0;
+>  
+> -	if (dev->ats_cap)
+> -		return dev->ats_qdep;
+> -
+> -	return -ENODEV;
+> +	return dev->ats_qdep;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
 
-Signed-off-by: Rami Rosen <ramirose@gmail.com>
----
- drivers/pci/quirks.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c6dc1df..f78bcc0 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -163,7 +163,6 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82439TX,	quirk_
-  *	VIA Apollo KT133 needs PCI latency patch
-  *	Made according to a windows driver based patch by George E. Breese
-  *	see PCI Latency Adjust on http://www.viahardware.com/download/viatweak.shtm
-- *	and http://www.georgebreese.com/net/software/#PCI
-  *	Also see http://www.au-ja.org/review-kt133a-1-en.phtml for
-  *	the info on which Mr Breese based his work.
-  *
--- 
-2.4.3
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
 
