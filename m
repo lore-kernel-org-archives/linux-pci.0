@@ -1,105 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:57390 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbbGUGgk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 02:36:40 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v4 0/5] PCI: hisi: Add PCIe host support for Hisilicon Soc Hip05
-Date: Tue, 21 Jul 2015 14:42:22 +0800
-Message-ID: <1437460947-2328-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:61655 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753530AbbGTCh3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 19 Jul 2015 22:37:29 -0400
+Message-ID: <55AC5DF3.8090502@huawei.com>
+Date: Mon, 20 Jul 2015 10:33:23 +0800
+From: "majun (F)" <majun258@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v4 09/19] drivers: base: Add MSI domain support for non-PCI
+ devices
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com> <1436962613-17359-10-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1436962613-17359-10-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset="gbk"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset adds PCIe host support for Hisilicon Soc Hip05. The PCIe hosts
-use PCIe IP core from Synopsys, So this driver is base on designware PCIe driver.
 
-Hip05 is an ARMv8 architecture Soc. It should be able to use ARM64 PCIe API in
-designeware PCIe driver. So this patch also adds ARM64 support for designware
-pcie.
 
-This patchset is based on v4.2-rc1 and Gabriele's patch about of_pci_range
-fix[1].
+ÔÚ 2015/7/15 20:16, Marc Zyngier Ð´µÀ:
+> With the msi_list and the msi_domain properties now being at the
+> generic device level, it is starting to be relatively easy to offer
+> a generic way of providing non-PCI MSIs.
+> 
+[...]
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index c10ec56..b55cf63 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -18,6 +18,11 @@ struct pci_dev;
+>  void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+>  void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+>  
+> +typedef void (*irq_write_msi_msg_t)(struct msi_desc *desc,
+> +				    struct msi_msg *msg);
+> +
+> +struct platform_msi_priv_data;
+> +
+>  struct msi_desc {
+>  	struct list_head		list;
+>  	unsigned int			irq;
+> @@ -42,6 +47,10 @@ struct msi_desc {
+>  				void __iomem *mask_base;
+>  			};
+>  		};
+> +		struct {
+> +			struct platform_msi_priv_data *platform_msi_priv_data;
+> +			u16 msi_index;
+> +		};
+>  	};
+>  };
+>  
+When I add this patch in linux 4.2.rc2, this part is rejected. So I added this part
+myself. But there is compiling errors.
 
-Change from v3:
-- Change 1/5 to what Gabriele suggested.
-- Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3 series.
+drivers/base/platform-msi.c: In function 'platform_msi_free_descs':
+drivers/base/platform-msi.c:129:2: error: implicit declaration of function 'to_pci_dev' [-Werror=implicit-function-declaration]
+  list_for_each_entry_safe(desc, tmp, dev_to_msi_list(dev), list) {
+  ^
+In file included from include/linux/list.h:8:0,
+                 from include/linux/kobject.h:20,
+                 from include/linux/device.h:17,
+                 from drivers/base/platform-msi.c:20:
+include/linux/msi.h:57:50: error: invalid type argument of '->' (have 'int')
+ #define dev_to_msi_list(dev)  (&to_pci_dev((dev))->msi_list)
+                                                  ^
+include/linux/kernel.h:810:49: note: in definition of macro 'container_of'
+  const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+                                                 ^
 
-Change from v2:
-- Move struct pci_dev *dev and struct pci_sys_data *sys in
-  pcibios_align_resource in 1/5.
-- Add Gabriele's codes in 2/5 which delete unnecessary information parse and
-  use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
-- Add maintainer patch 5/5.
-
-Change from RFC v1:
-- Add 1/4 patch by Arnd which removes align_resource callback in ARM
-  pcibios_align_resource.
-- Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
-- Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
-  spear13xx.
-- Remove unnecessary parentheses of some macros in pcie-hisi.
-- Use macro to replace some magic values.
-- Merge two loops together and add some comments about it in context_config
-  function in pcie-hisi.
-- Modify some value of items in pcie node example in binding document. 
-
-Change from RFC:
-- delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
-  merge related operations into dw_pcie_host_init.
-
-Link of v3:
-- http://www.spinics.net/lists/linux-pci/msg42539.html
-Link of v2:
-- http://www.spinics.net/lists/linux-pci/msg41844.html
-Link of RFC v1:
-- http://www.spinics.net/lists/linux-pci/msg41305.html
-Link of RFC:
-- http://www.spinics.net/lists/linux-pci/msg40434.html
-
-[1] https://patchwork.ozlabs.org/patch/495018/
-
-Zhou Wang (5):
-  ARM/PCI: remove align_resource in pci_sys_data
-  PCI: designware: Add ARM64 support
-  PCI: hisi: Add PCIe host support for Hisilicon Soc Hip05
-  Documentation: DT: Add Hisilicon PCIe host binding
-  MAINTAINERS: Add pcie-hisi maintainer
-
- .../devicetree/bindings/pci/hisilicon-pcie.txt     |  46 ++++
- MAINTAINERS                                        |   7 +
- arch/arm/include/asm/mach/pci.h                    |   5 -
- arch/arm/kernel/bios32.c                           |  12 +-
- drivers/pci/host/Kconfig                           |   5 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-dra7xx.c                      |   1 +
- drivers/pci/host/pci-exynos.c                      |   2 +-
- drivers/pci/host/pci-imx6.c                        |   2 +-
- drivers/pci/host/pci-keystone-dw.c                 |   2 +-
- drivers/pci/host/pci-keystone.c                    |   2 +-
- drivers/pci/host/pci-layerscape.c                  |   2 +-
- drivers/pci/host/pcie-designware.c                 | 217 ++++++-----------
- drivers/pci/host/pcie-designware.h                 |  10 +-
- drivers/pci/host/pcie-hisi.c                       | 257 +++++++++++++++++++++
- drivers/pci/host/pcie-spear13xx.c                  |   2 +-
- 16 files changed, 410 insertions(+), 163 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- create mode 100644 drivers/pci/host/pcie-hisi.c
-
--- 
-1.9.1
+> @@ -228,6 +237,12 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
+>  void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev);
+>  struct msi_domain_info *msi_get_domain_info(struct irq_domain *domain);
+>  
+> +struct irq_domain *platform_msi_create_irq_domain(struct device_node *np,
+> +						  struct msi_domain_info *info,
+> +						  struct irq_domain *parent);
+> +int platform_msi_domain_alloc_irqs(struct device *dev, unsigned int nvec,
+> +				   irq_write_msi_msg_t write_msi_msg);
+> +void platform_msi_domain_free_irqs(struct device *dev);
+>  #endif /* CONFIG_GENERIC_MSI_IRQ_DOMAIN */
+>  
+>  #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+> 
 
