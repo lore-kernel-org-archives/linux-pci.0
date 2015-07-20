@@ -1,60 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([122.248.162.8]:46466 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756712AbbGQGDL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:11 -0400
-Received: from /spool/local
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 17 Jul 2015 11:33:07 +0530
-Received: from d28relay03.in.ibm.com (d28relay03.in.ibm.com [9.184.220.60])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id D6F28E006F
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:36:59 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay03.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H632jw28377190
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:02 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H631kD014976
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:01 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 04/11] powerpc/pci: Remove VFs prior to PF
-Date: Fri, 17 Jul 2015 14:02:34 +0800
-Message-Id: <1437112961-17275-5-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ig0-f196.google.com ([209.85.213.196]:33964 "EHLO
+	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503AbbGTKzL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 06:55:11 -0400
+Received: by igbpg9 with SMTP id pg9so3878667igb.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 03:55:10 -0700 (PDT)
+MIME-Version: 1.0
+Date: Mon, 20 Jul 2015 16:25:10 +0530
+Message-ID: <CAG0bkv+Sve7+XWtGk-kkQU=-64CPbpE=5RMbVq-RzWNgg--6ZQ@mail.gmail.com>
+Subject: PCIe: Xilinx: sdhci-pci: probe() issue
+From: Naveen Kumar Parna <pnaveenkos@gmail.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove") indicates,
-VFs, which might be hooked to same PCI bus as their PF should be removed
-before the PF. Otherwise, the PCI hot unplugging on the PCI bus would
-cause kernel crash.
+Hi ,
 
-The patch applies the above pattern to PowerPC PCI hotplug path.
+I have a Verilog image & hardware which provides a PCIe interface with
+two BAR’s(BAR0 & BAR1) to host.
 
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-hotplug.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+BAR0 is having customized UART, GPIO and 1-wire prom modules. These
+modules are accessed via customized PCIe interface driver.
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 7f9ed0c..59c4361 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -55,7 +55,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
- 
- 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
- 		 pci_domain_nr(bus),  bus->number);
--	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
-+	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
- 		pr_debug("   Removing %s...\n", pci_name(dev));
- 		pci_stop_and_remove_bus_device(dev);
- 	}
--- 
-1.7.9.5
+BAR1 is having SD Host controller as per SD Specifications. Here
+requirement is such that we should use Linux kernel stack drivers
+(sdhci.ko & sdhci-pci.ko).
 
+
+Here the issue is only one driver’s probe() function gets executed
+i.e. either customized PCIe driver or sdhci-pci.ko.
+
+
+Output of lspci:
+02:00.0 SD Host controller: PLDA Device 5555
+
+
+Customized PCIe driver's struct pci_device_id:
+static struct pci_device_id pci_id_table[] = {
+
+    { PCI_DEVICE( 0x1556, 0x5555)},
+
+    { 0 },
+
+};
+
+
+For example: If I load the customized PCIe driver first and then
+sdhci-pci, then only customized PCIe driver’s probe() function gets
+called.
+
+If I change the order of loading the module i.e. sdhci-pci first then
+only sdhci-pci’s probe gets called.
+
+
+Is there any better solution to use customized PCIe driver for BAR0
+and sdhci for BAR1?
+
+I will be happy to provide additional debugging info, just let me know.
+
+
+Thanks,
+Naveen
