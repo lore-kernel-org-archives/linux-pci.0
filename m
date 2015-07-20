@@ -1,154 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:38780 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754560AbbG0WMc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 18:12:32 -0400
-Received: by iggf3 with SMTP id f3so96698973igg.1
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2015 15:12:32 -0700 (PDT)
-Subject: [PATCH] PCI: Remove unused "pci_probe" flags
-To: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-am33-list@redhat.com,
-	linux-kernel@vger.kernel.org, linux-sh@vger.kernel.org
-Date: Mon, 27 Jul 2015 17:12:29 -0500
-Message-ID: <20150727221228.24133.16599.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:43796 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755285AbbGTMGZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 08:06:25 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	<linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
+	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH part3 v12 10/10] IA64/PCI: Fix build warning found by kbuild test
+Date: Mon, 20 Jul 2015 20:01:18 +0800
+Message-ID: <1437393678-4077-11-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following flags are only used on x86, but they got copied to FR-V,
-MN10300, and SuperH:
+Kbuild test robot found we passed a pci_dev * to
+pci_domain_nr(). In old IA64 specific pci_domain_nr()
+It was macro defines:
 
-  PCI_PROBE_BIOS
-  PCI_PROBE_CONF1
-  PCI_PROBE_CONF2
-  PCI_ASSIGN_ROMS
-  PCI_NO_CHECKS
-  PCI_BIOS_IRQ_SCAN
-  PCI_ASSIGN_ALL_BUSSES
+#define PCI_CONTROLLER(busdev) ((struct pci_controller *) busdev->sysdata)
+#define pci_domain_nr(busdev)    (PCI_CONTROLLER(busdev)->segment)
 
-FR-V and MN10300 do test for PCI_ASSIGN_ROMS, but they never set it, so
-it's dead code.
+Both pci_dev * and pci_bus * have opaque sysdata, so IA64 specific
+pci_domain_nr() could get the pci_controller and return the exact
+domain number, but now we use common pci_domain_nr() functions, so we
+should fix this warning.
 
-Remove the unused flags above.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/frv/mb93090-mb00/pci-frv.c         |    8 --------
- arch/frv/mb93090-mb00/pci-frv.h         |    8 --------
- arch/mn10300/unit-asb2305/pci-asb2305.c |   22 ++++++++++------------
- arch/mn10300/unit-asb2305/pci-asb2305.h |    7 -------
- arch/sh/drivers/pci/pci-sh4.h           |    8 --------
- 5 files changed, 10 insertions(+), 43 deletions(-)
+ arch/ia64/sn/kernel/io_acpi_init.c |    6 +++---
+ arch/ia64/sn/kernel/io_init.c      |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/arch/frv/mb93090-mb00/pci-frv.c b/arch/frv/mb93090-mb00/pci-frv.c
-index 0635bd6..34bb4b1 100644
---- a/arch/frv/mb93090-mb00/pci-frv.c
-+++ b/arch/frv/mb93090-mb00/pci-frv.c
-@@ -175,14 +175,6 @@ static void __init pcibios_assign_resources(void)
- 			if (!r->start && r->end)
- 				pci_assign_resource(dev, idx);
- 		}
--
--		if (pci_probe & PCI_ASSIGN_ROMS) {
--			r = &dev->resource[PCI_ROM_RESOURCE];
--			r->end -= r->start;
--			r->start = 0;
--			if (r->end)
--				pci_assign_resource(dev, PCI_ROM_RESOURCE);
--		}
- 	}
- }
+diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
+index 0640739..2fd7414 100644
+--- a/arch/ia64/sn/kernel/io_acpi_init.c
++++ b/arch/ia64/sn/kernel/io_acpi_init.c
+@@ -364,12 +364,12 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
+         status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
+                                        &segment);
+         if (ACPI_SUCCESS(status)) {
+-		if (segment != pci_domain_nr(dev)) {
++		if (segment != pci_domain_nr(dev->bus)) {
+ 			acpi_get_name(rootbus_handle, ACPI_FULL_PATHNAME,
+ 				&name_buffer);
+ 			printk(KERN_ERR
+ 			       "%s: Segment number mismatch, 0x%llx vs 0x%x for: %s\n",
+-			       __func__, segment, pci_domain_nr(dev),
++			       __func__, segment, pci_domain_nr(dev->bus),
+ 			       (char *)name_buffer.pointer);
+ 			kfree(name_buffer.pointer);
+ 			return 1;
+@@ -407,7 +407,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
+ 	/* Build up the pcidev_info.pdi_slot_host_handle */
+ 	host_devfn = get_host_devfn(pcidev_match.handle, rootbus_handle);
+ 	(*pcidev_info)->pdi_slot_host_handle =
+-			((unsigned long) pci_domain_nr(dev) << 40) |
++			((unsigned long) pci_domain_nr(dev->bus) << 40) |
+ 					/* bus == 0 */
+ 					host_devfn;
+ 	return 0;
+diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
+index d528814..0bdab82 100644
+--- a/arch/ia64/sn/kernel/io_init.c
++++ b/arch/ia64/sn/kernel/io_init.c
+@@ -164,7 +164,7 @@ sn_io_slot_fixup(struct pci_dev *dev)
+ 		panic("%s: Unable to alloc memory for sn_irq_info", __func__);
  
-diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
-index a7e487fe..d51992f 100644
---- a/arch/frv/mb93090-mb00/pci-frv.h
-+++ b/arch/frv/mb93090-mb00/pci-frv.h
-@@ -14,14 +14,6 @@
- #define DBG(x...)
- #endif
- 
--#define PCI_PROBE_BIOS		0x0001
--#define PCI_PROBE_CONF1		0x0002
--#define PCI_PROBE_CONF2		0x0004
--#define PCI_NO_CHECKS		0x0400
--#define PCI_ASSIGN_ROMS		0x1000
--#define PCI_BIOS_IRQ_SCAN	0x2000
--#define PCI_ASSIGN_ALL_BUSSES	0x4000
--
- extern unsigned int __nongpreldata pci_probe;
- 
- /* pci-frv.c */
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
-index b5b036f..b7ab837 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.c
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
-@@ -183,18 +183,16 @@ static int __init pcibios_assign_resources(void)
- 	struct pci_dev *dev = NULL;
- 	struct resource *r;
- 
--	if (!(pci_probe & PCI_ASSIGN_ROMS)) {
--		/* Try to use BIOS settings for ROMs, otherwise let
--		   pci_assign_unassigned_resources() allocate the new
--		   addresses. */
--		for_each_pci_dev(dev) {
--			r = &dev->resource[PCI_ROM_RESOURCE];
--			if (!r->flags || !r->start)
--				continue;
--			if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
--				r->end -= r->start;
--				r->start = 0;
--			}
-+	/* Try to use BIOS settings for ROMs, otherwise let
-+	   pci_assign_unassigned_resources() allocate the new
-+	   addresses. */
-+	for_each_pci_dev(dev) {
-+		r = &dev->resource[PCI_ROM_RESOURCE];
-+		if (!r->flags || !r->start)
-+			continue;
-+		if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
-+			r->end -= r->start;
-+			r->start = 0;
- 		}
- 	}
- 
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.h b/arch/mn10300/unit-asb2305/pci-asb2305.h
-index 9e17aca..96c484b 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.h
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.h
-@@ -20,13 +20,6 @@
- #define DBG(x...)
- #endif
- 
--#define PCI_PROBE_BIOS 1
--#define PCI_PROBE_CONF1 2
--#define PCI_PROBE_CONF2 4
--#define PCI_NO_CHECKS 0x400
--#define PCI_ASSIGN_ROMS 0x1000
--#define PCI_BIOS_IRQ_SCAN 0x2000
--
- extern unsigned int pci_probe;
- 
- /* pci-asb2305.c */
-diff --git a/arch/sh/drivers/pci/pci-sh4.h b/arch/sh/drivers/pci/pci-sh4.h
-index cbf763b..0288efc 100644
---- a/arch/sh/drivers/pci/pci-sh4.h
-+++ b/arch/sh/drivers/pci/pci-sh4.h
-@@ -11,14 +11,6 @@
- 
- #include <asm/io.h>
- 
--/* startup values */
--#define PCI_PROBE_BIOS		1
--#define PCI_PROBE_CONF1		2
--#define PCI_PROBE_CONF2		4
--#define PCI_NO_CHECKS		0x400
--#define PCI_ASSIGN_ROMS		0x1000
--#define PCI_BIOS_IRQ_SCAN	0x2000
--
- #define SH4_PCICR		0x100		/* PCI Control Register */
-   #define SH4_PCICR_PREFIX	  0xA5000000	/* CR prefix for write */
-   #define SH4_PCICR_FTO		  0x00000400	/* TRDY/IRDY Enable */
+ 	/* Call to retrieve pci device information needed by kernel. */
+-	status = sal_get_pcidev_info((u64) pci_domain_nr(dev),
++	status = sal_get_pcidev_info((u64) pci_domain_nr(dev->bus),
+ 		(u64) dev->bus->number,
+ 		dev->devfn,
+ 		(u64) __pa(pcidev_info),
+-- 
+1.7.1
 
