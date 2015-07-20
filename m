@@ -1,64 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f196.google.com ([209.85.213.196]:33964 "EHLO
-	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753503AbbGTKzL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 06:55:11 -0400
-Received: by igbpg9 with SMTP id pg9so3878667igb.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 03:55:10 -0700 (PDT)
+Received: from cantor2.suse.de ([195.135.220.15]:57420 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753024AbbGTNzT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 20 Jul 2015 09:55:19 -0400
+Date: Mon, 20 Jul 2015 15:55:16 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH 1/8] PCI: Allocate ATS struct during enumeration
+Message-ID: <20150720135516.GB13082@suse.de>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150717213152.18379.50159.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Date: Mon, 20 Jul 2015 16:25:10 +0530
-Message-ID: <CAG0bkv+Sve7+XWtGk-kkQU=-64CPbpE=5RMbVq-RzWNgg--6ZQ@mail.gmail.com>
-Subject: PCIe: Xilinx: sdhci-pci: probe() issue
-From: Naveen Kumar Parna <pnaveenkos@gmail.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150717213152.18379.50159.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi ,
+Hi Bjorn,
 
-I have a Verilog image & hardware which provides a PCIe interface with
-two BAR’s(BAR0 & BAR1) to host.
+On Fri, Jul 17, 2015 at 04:31:52PM -0500, Bjorn Helgaas wrote:
+> -static int ats_alloc_one(struct pci_dev *dev, int ps)
+> +static void ats_alloc_one(struct pci_dev *dev)
+>  {
+>  	int pos;
+>  	u16 cap;
+> @@ -25,20 +25,17 @@ static int ats_alloc_one(struct pci_dev *dev, int ps)
+>  
+>  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+>  	if (!pos)
+> -		return -ENODEV;
+> +		return;
+>  
+>  	ats = kzalloc(sizeof(*ats), GFP_KERNEL);
+>  	if (!ats)
+> -		return -ENOMEM;
+> +		return;
 
-BAR0 is having customized UART, GPIO and 1-wire prom modules. These
-modules are accessed via customized PCIe interface driver.
+I think we should print a warning here when the allocation fails.
+Otherwise the user wonders why ATS can't be used despite the available
+capability.
 
-BAR1 is having SD Host controller as per SD Specifications. Here
-requirement is such that we should use Linux kernel stack drivers
-(sdhci.ko & sdhci-pci.ko).
+> -	if (dev->is_physfn || dev->is_virtfn) {
+> -		struct pci_dev *pdev = dev->is_physfn ? dev : dev->physfn;
+> -
+> -		mutex_lock(&pdev->sriov->lock);
+> -		if (pdev->ats)
+> -			rc = pdev->ats->stu == ps ? 0 : -EINVAL;
+> -		else
+> -			rc = ats_alloc_one(pdev, ps);
+> +	if (ps < PCI_ATS_MIN_STU)
+> +		return -EINVAL;
+>  
+> -		if (!rc)
+> -			pdev->ats->ref_cnt++;
+> -		mutex_unlock(&pdev->sriov->lock);
+> -		if (rc)
+> -			return rc;
+> -	}
+> +	ctrl = PCI_ATS_CTRL_ENABLE;
+> +	if (dev->is_virtfn) {
+> +		struct pci_dev *pdev = dev->physfn;
+>  
+> -	if (!dev->is_physfn) {
+> -		rc = ats_alloc_one(dev, ps);
+> -		if (rc)
+> -			return rc;
+> +		if (pdev->ats->stu != ps)
+> +			return -EINVAL;
+> +	} else {
+> +		dev->ats->stu = ps;
+> +		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
+>  	}
+
+Okay, enabling ATS for the virt_fn will now fail when it is not
+already enabled for the phys_fn. The drivers probe function, which might
+enable SR-IOV, runs after BUS_NOTIFY_ADD_DEVICE has finished, so this
+should be safe.
+
+But I think a comment explaining these dependencies would be good here.
 
 
-Here the issue is only one driver’s probe() function gets executed
-i.e. either customized PCIe driver or sdhci-pci.ko.
+	Joerg
 
-
-Output of lspci:
-02:00.0 SD Host controller: PLDA Device 5555
-
-
-Customized PCIe driver's struct pci_device_id:
-static struct pci_device_id pci_id_table[] = {
-
-    { PCI_DEVICE( 0x1556, 0x5555)},
-
-    { 0 },
-
-};
-
-
-For example: If I load the customized PCIe driver first and then
-sdhci-pci, then only customized PCIe driver’s probe() function gets
-called.
-
-If I change the order of loading the module i.e. sdhci-pci first then
-only sdhci-pci’s probe gets called.
-
-
-Is there any better solution to use customized PCIe driver for BAR0
-and sdhci for BAR1?
-
-I will be happy to provide additional debugging info, just let me know.
-
-
-Thanks,
-Naveen
