@@ -1,45 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f179.google.com ([209.85.160.179]:34414 "EHLO
-	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbbGXFaI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 01:30:08 -0400
-Received: by ykax123 with SMTP id x123so11808244yka.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 22:30:07 -0700 (PDT)
-From: Kevin Hao <haokexin@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Subject: [PATCH 4/4] PCI: spear: Mark the msi cascade handler IRQF_NO_THREAD
-Date: Fri, 24 Jul 2015 13:29:36 +0800
-Message-Id: <1437715776-2243-5-git-send-email-haokexin@gmail.com>
-In-Reply-To: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
-References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	<linux-mips@linux-mips.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
+	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH part3 v12 04/10] PCI: Introduce pci_host_assign_domain_nr() to assign domain
+Date: Mon, 20 Jul 2015 20:01:12 +0800
+Message-ID: <1437393678-4077-5-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The cascade handler must run in hard interrupt context, otherwise
-it will cause dead lock if we force threading of all the interrupt
-handlers via kernel command parameter "threadirqs".
+Introduce pci_host_assign_domain_nr() to assign domain number
+for pci_host_bridge.
 
-Signed-off-by: Kevin Hao <haokexin@gmail.com>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/host/pcie-spear13xx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/pci.c |   24 +++++++++++++++++++-----
+ drivers/pci/pci.h |    1 +
+ 2 files changed, 20 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index c49fbdc0f6e4..338788b28631 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -280,7 +280,8 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
- 		return -ENODEV;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 59032e2..79d01e4 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4484,10 +4484,10 @@ static int pci_get_new_domain_nr(void)
+ 	return atomic_inc_return(&__domain_nr);
+ }
+ 
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++static int pci_assign_domain_nr(struct device *dev)
+ {
+ 	static int use_dt_domains = -1;
+-	int domain = of_get_pci_domain_nr(parent->of_node);
++	int domain = of_get_pci_domain_nr(dev->of_node);
+ 
+ 	/*
+ 	 * Check DT domain and use_dt_domains values.
+@@ -4521,16 +4521,30 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 		use_dt_domains = 0;
+ 		domain = pci_get_new_domain_nr();
+ 	} else {
+-		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+-			parent->of_node->full_name);
++		dev_err(dev, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
++			dev->of_node->full_name);
+ 		domain = -1;
  	}
- 	ret = devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
--			       IRQF_SHARED, "spear1340-pcie", pp);
-+			       IRQF_SHARED | IRQF_NO_THREAD,
-+			       "spear1340-pcie", pp);
- 	if (ret) {
- 		dev_err(dev, "failed to request irq %d\n", pp->irq);
- 		return ret;
+ 
+-	bus->domain_nr = domain;
++	return domain;
++}
++
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	bus->domain_nr = pci_assign_domain_nr(parent);
+ }
+ #endif
+ #endif
+ 
++void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain)
++{
++#ifdef CONFIG_PCI_DOMAINS_GENERIC
++	host->domain = pci_assign_domain_nr(host->dev.parent);
++#else
++	host->domain = domain;
++#endif
++}
++
+ /**
+  * pci_ext_cfg_avail - can we access extended PCI config space?
+  *
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 02192aa..4a815c9 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -344,4 +344,5 @@ static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
+ }
+ #endif
+ 
++void pci_host_assign_domain_nr(struct pci_host_bridge *host, int domain);
+ #endif /* DRIVERS_PCI_H */
 -- 
-2.1.0
+1.7.1
 
