@@ -1,155 +1,145 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37301 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754629AbbG0XdE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:33:04 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
+	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	<linux-mips@linux-mips.org>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
+	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
 	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 07/51] PCI: Reorder resources list for must/optional resources
-Date: Mon, 27 Jul 2015 16:29:25 -0700
-Message-Id: <1438039809-24957-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH part3 v12 05/10] powerpc/PCI: Rename pcibios_root_bridge_prepare() to pcibios_root_bus_prepare()
+Date: Mon, 20 Jul 2015 20:01:13 +0800
+Message-ID: <1437393678-4077-6-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After we update size and alignment for must+optional resource, we
-reorder them with new alignment, but this is only for STARTALIGN.
+Pcibios_root_bridge_prepare() in powerpc set root bus
+speed, it's not the preparation for pci host bridge.
+For better separation of host bridge and root bus creation,
+It's need to rename it to another weak function.
 
-For SIZEALIGN type resource, after add back add_size, the alignment
-get changed, so need to do the sorting like STARTALIGN type resources.
-
-Also we need to reorder the sorting back after we restore
-resource to must only when must+optional fail to allocate for all.
-
-So move out the reordering code from the loop to separated function,
-and call it two times accordingly.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 37 insertions(+), 25 deletions(-)
+ arch/powerpc/include/asm/machdep.h       |    2 +-
+ arch/powerpc/kernel/pci-common.c         |    6 +++---
+ arch/powerpc/platforms/pseries/pci.c     |    2 +-
+ arch/powerpc/platforms/pseries/pseries.h |    2 +-
+ arch/powerpc/platforms/pseries/setup.c   |    2 +-
+ drivers/pci/probe.c                      |    9 +++++++++
+ 6 files changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7346bbf..6f2d508 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -287,6 +287,31 @@ static inline void reset_resource(struct resource *res)
- 	res->flags = 0;
+diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+index 952579f..dbd5e8b 100644
+--- a/arch/powerpc/include/asm/machdep.h
++++ b/arch/powerpc/include/asm/machdep.h
+@@ -100,7 +100,7 @@ struct machdep_calls {
+ 	/* Called after allocating resources */
+ 	void		(*pcibios_fixup)(void);
+ 	void		(*pci_irq_fixup)(struct pci_dev *dev);
+-	int		(*pcibios_root_bridge_prepare)(struct pci_host_bridge
++	int		(*pcibios_root_bus_prepare)(struct pci_host_bridge
+ 				*bridge);
+ 
+ 	/* To setup PHBs when using automatic OF platform driver for PCI */
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index df7f018..3e398c8 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -782,10 +782,10 @@ int pci_proc_domain(struct pci_bus *bus)
+ 	return 1;
  }
  
-+static void __sort_resources(struct list_head *head)
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
++int pcibios_root_bus_prepare(struct pci_host_bridge *bridge)
+ {
+-	if (ppc_md.pcibios_root_bridge_prepare)
+-		return ppc_md.pcibios_root_bridge_prepare(bridge);
++	if (ppc_md.pcibios_root_bus_prepare)
++		return ppc_md.pcibios_root_bus_prepare(bridge);
+ 
+ 	return 0;
+ }
+diff --git a/arch/powerpc/platforms/pseries/pci.c b/arch/powerpc/platforms/pseries/pci.c
+index fe16a50..885f9ff 100644
+--- a/arch/powerpc/platforms/pseries/pci.c
++++ b/arch/powerpc/platforms/pseries/pci.c
+@@ -110,7 +110,7 @@ static void fixup_winbond_82c105(struct pci_dev* dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_WINBOND, PCI_DEVICE_ID_WINBOND_82C105,
+ 			 fixup_winbond_82c105);
+ 
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge)
++int pseries_root_bus_prepare(struct pci_host_bridge *bridge)
+ {
+ 	struct device_node *dn, *pdn;
+ 	struct pci_bus *bus;
+diff --git a/arch/powerpc/platforms/pseries/pseries.h b/arch/powerpc/platforms/pseries/pseries.h
+index 8411c27..41310dc 100644
+--- a/arch/powerpc/platforms/pseries/pseries.h
++++ b/arch/powerpc/platforms/pseries/pseries.h
+@@ -75,7 +75,7 @@ static inline int dlpar_memory(struct pseries_hp_errorlog *hp_elog)
+ 
+ /* PCI root bridge prepare function override for pseries */
+ struct pci_host_bridge;
+-int pseries_root_bridge_prepare(struct pci_host_bridge *bridge);
++int pseries_root_bus_prepare(struct pci_host_bridge *bridge);
+ 
+ extern struct pci_controller_ops pseries_pci_controller_ops;
+ 
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index df6a704..2815309 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -537,7 +537,7 @@ static void __init pSeries_setup_arch(void)
+ 		ppc_md.enable_pmcs = power4_enable_pmcs;
+ 	}
+ 
+-	ppc_md.pcibios_root_bridge_prepare = pseries_root_bridge_prepare;
++	ppc_md.pcibios_root_bus_prepare = pseries_root_bus_prepare;
+ 
+ 	if (firmware_has_feature(FW_FEATURE_SET_MODE)) {
+ 		long rc;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b49deb8..0eba126 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1919,6 +1919,11 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 	return 0;
+ }
+ 
++int __weak pcibios_root_bus_prepare(struct pci_host_bridge *bridge)
 +{
-+	struct pci_dev_resource *res1, *tmp_res, *res2;
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		resource_size_t align1, size1, align2, size2;
-+
-+		align1 = pci_resource_alignment(res1->dev, res1->res);
-+		size1 = resource_size(res1->res);
-+
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			align2 = pci_resource_alignment(res2->dev, res2->res);
-+			size2 = resource_size(res2->res);
-+			if (is_before(align1, size1, align2, size2)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
++	return 0;
 +}
 +
- /**
-  * reassign_resources_sorted() - satisfy any additional resource requests
-  *
-@@ -449,9 +474,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
-+	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align, align;
-+	resource_size_t add_align;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -466,47 +491,32 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 
- 	/* Update res in head list with add_size in realloc_head list */
--	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
-+	list_for_each_entry(dev_res, head, list) {
- 		dev_res->res->end += get_res_add_size(realloc_head,
- 							dev_res->res);
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
--		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
--		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
--		 * Here just fix the additional alignment for bridge
-+		 * 1. bridge resource with IORESOURCE_STARTALIGN
-+		 *    need to update start to change alignment
-+		 * 2. resource with IORESOURCE_SIZEALIGN
-+		 *    update size above already change alignment.
- 		 */
- 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
- 			continue;
- 
- 		add_align = get_res_add_align(realloc_head, dev_res->res);
- 
--		/*
--		 * The "head" list is sorted by the alignment to make sure
--		 * resources with bigger alignment will be assigned first.
--		 * After we change the alignment of a dev_res in "head" list,
--		 * we need to reorder the list by alignment to make it
--		 * consistent.
--		 */
--		if (add_align > dev_res->res->start) {
-+		if (add_align) {
- 			resource_size_t r_size = resource_size(dev_res->res);
- 
- 			dev_res->res->start = add_align;
- 			dev_res->res->end = add_align + r_size - 1;
--
--			list_for_each_entry(dev_res2, head, list) {
--				align = pci_resource_alignment(dev_res2->dev,
--							       dev_res2->res);
--				if (add_align > align) {
--					list_move_tail(&dev_res->list,
--						       &dev_res2->list);
--					break;
--				}
--			}
-                }
--
- 	}
- 
-+	__sort_resources(head);
+ void __weak pcibios_add_bus(struct pci_bus *bus)
+ {
+ }
+@@ -1984,6 +1989,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int domain,
+ 	b->dev.class = &pcibus_class;
+ 	b->dev.parent = b->bridge;
+ 	dev_set_name(&b->dev, "%04x:%02x", pci_domain_nr(b), bus);
++	error = pcibios_root_bus_prepare(bridge);
++	if (error)
++		goto class_dev_reg_err;
 +
- 	/* Try updated head list with add_size added */
- 	assign_requested_resources_sorted(head, &local_fail_head);
- 
-@@ -548,6 +558,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
- 
-+	__sort_resources(head);
-+
- requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
+ 	error = device_register(&b->dev);
+ 	if (error)
+ 		goto class_dev_reg_err;
 -- 
-1.8.4.5
+1.7.1
 
