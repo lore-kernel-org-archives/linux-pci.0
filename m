@@ -1,131 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:34146 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753135AbbGPEWJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 00:22:09 -0400
-Received: by iebmu5 with SMTP id mu5so47918991ieb.1
-        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 21:22:08 -0700 (PDT)
-Date: Wed, 15 Jul 2015 23:22:03 -0500
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:35138 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752926AbbGTPeN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 11:34:13 -0400
+Received: by igr7 with SMTP id 7so16506437igr.0
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 08:34:13 -0700 (PDT)
+Date: Mon, 20 Jul 2015 10:34:08 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, Rajat Jain <rajatja@google.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
- deadlock
-Message-ID: <20150716042203.GC25591@google.com>
-References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
+To: Joerg Roedel <jroedel@suse.de>
+Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH 1/8] PCI: Allocate ATS struct during enumeration
+Message-ID: <20150720153408.GB16841@google.com>
+References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150717213152.18379.50159.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150720135516.GB13082@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
+In-Reply-To: <20150720135516.GB13082@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Guenter, Rafael]
-
-On Thu, Jun 11, 2015 at 07:12:14PM +0800, Yijing Wang wrote:
-> Rajat Jain reported a deadlock when a hierarchical hot plug
-> thread and aer recovery thread both run.
-> https://lkml.org/lkml/2015/3/11/861
+On Mon, Jul 20, 2015 at 03:55:16PM +0200, Joerg Roedel wrote:
+> Hi Bjorn,
 > 
-> thread 1:
-> pciehp_enable_slot()
-> 	pciehp_configure_device()
-> 		pci_bus_add_devices()
-> 			device_attach(dev)
-> 				device_lock(dev) //acquire device mutex successfully
-> 			...
-> 			pciehp_probe(dev)
-> 				__pci_hp_register()
-> 					pci_create_slot()
-> 						down_write(pci_bus_sem) //deadlock here
+> On Fri, Jul 17, 2015 at 04:31:52PM -0500, Bjorn Helgaas wrote:
+> > -static int ats_alloc_one(struct pci_dev *dev, int ps)
+> > +static void ats_alloc_one(struct pci_dev *dev)
+> >  {
+> >  	int pos;
+> >  	u16 cap;
+> > @@ -25,20 +25,17 @@ static int ats_alloc_one(struct pci_dev *dev, int ps)
+> >  
+> >  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+> >  	if (!pos)
+> > -		return -ENODEV;
+> > +		return;
+> >  
+> >  	ats = kzalloc(sizeof(*ats), GFP_KERNEL);
+> >  	if (!ats)
+> > -		return -ENOMEM;
+> > +		return;
 > 
-> thread 2:
-> aer_isr_one_error()
-> 	aer_process_err_device()
-> 		do_recovery()
-> 			broadcast_error_message()
-> 				pci_walk_bus()
-> 					down_read(&pci_bus_sem) //acquire pci_bus_sem successfully
-> 						report_error_detected(dev)
-> 							device_lock(dev) // deadlock here
+> I think we should print a warning here when the allocation fails.
+> Otherwise the user wonders why ATS can't be used despite the available
+> capability.
+
+Good idea, done (although it gets removed right away in the next patch :))
 > 
-> Now we use pci_bus_sem to protect pci_slot creation and destroy,
-> it's unnecessary. We could introduce a new local mutex instead of
-> pci_bus_sem to avoid the deadlock.
-
-I see there's definitely a problem here, and using a new mutex instead of
-pci_bus_sem certainly avoids the deadlock.
-
-I'm trying to convince myself that it is safe.  I think we need to protect:
-
-  - search of bus->slots list in get_slot()
-  - addition to bus->slots list in pci_create_slot()
-  - search of bus->devices list in pci_create_slot()
-  - search of bus->devices list in pci_slot_release()
-  - deletion from bus->slots list in pci_slot_release()
-
-Most other maintenance of these lists is protected by pci_bus_sem, so using
-a different mutex here seems like a problem.
-
-If I'm mistaken, please correct me and explain why this patch is safe.
-
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/slot.c |   11 ++++++-----
->  1 files changed, 6 insertions(+), 5 deletions(-)
+> > -	if (dev->is_physfn || dev->is_virtfn) {
+> > -		struct pci_dev *pdev = dev->is_physfn ? dev : dev->physfn;
+> > -
+> > -		mutex_lock(&pdev->sriov->lock);
+> > -		if (pdev->ats)
+> > -			rc = pdev->ats->stu == ps ? 0 : -EINVAL;
+> > -		else
+> > -			rc = ats_alloc_one(pdev, ps);
+> > +	if (ps < PCI_ATS_MIN_STU)
+> > +		return -EINVAL;
+> >  
+> > -		if (!rc)
+> > -			pdev->ats->ref_cnt++;
+> > -		mutex_unlock(&pdev->sriov->lock);
+> > -		if (rc)
+> > -			return rc;
+> > -	}
+> > +	ctrl = PCI_ATS_CTRL_ENABLE;
+> > +	if (dev->is_virtfn) {
+> > +		struct pci_dev *pdev = dev->physfn;
+> >  
+> > -	if (!dev->is_physfn) {
+> > -		rc = ats_alloc_one(dev, ps);
+> > -		if (rc)
+> > -			return rc;
+> > +		if (pdev->ats->stu != ps)
+> > +			return -EINVAL;
+> > +	} else {
+> > +		dev->ats->stu = ps;
+> > +		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
+> >  	}
 > 
-> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-> index 396c200..feb08de 100644
-> --- a/drivers/pci/slot.c
-> +++ b/drivers/pci/slot.c
-> @@ -14,6 +14,7 @@
->  
->  struct kset *pci_slots_kset;
->  EXPORT_SYMBOL_GPL(pci_slots_kset);
-> +static DEFINE_MUTEX(pci_slot_mutex);
->  
->  static ssize_t pci_slot_attr_show(struct kobject *kobj,
->  					struct attribute *attr, char *buf)
-> @@ -195,7 +196,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
->  {
->  	struct pci_slot *slot;
->  	/*
-> -	 * We already hold pci_bus_sem so don't worry
-> +	 * We already hold pci_slot_mutex so don't worry
->  	 */
->  	list_for_each_entry(slot, &parent->slots, list)
->  		if (slot->number == slot_nr) {
-> @@ -253,7 +254,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
->  	int err = 0;
->  	char *slot_name = NULL;
->  
-> -	down_write(&pci_bus_sem);
-> +	mutex_lock(&pci_slot_mutex);
->  
->  	if (slot_nr == -1)
->  		goto placeholder;
-> @@ -310,7 +311,7 @@ placeholder:
->  
->  out:
->  	kfree(slot_name);
-> -	up_write(&pci_bus_sem);
-> +	mutex_unlock(&pci_slot_mutex);
->  	return slot;
->  err:
->  	kfree(slot);
-> @@ -332,9 +333,9 @@ void pci_destroy_slot(struct pci_slot *slot)
->  	dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
->  		slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
->  
-> -	down_write(&pci_bus_sem);
-> +	mutex_lock(&pci_slot_mutex);
->  	kobject_put(&slot->kobj);
-> -	up_write(&pci_bus_sem);
-> +	mutex_unlock(&pci_slot_mutex);
->  }
->  EXPORT_SYMBOL_GPL(pci_destroy_slot);
->  
-> -- 
-> 1.7.1
+> Okay, enabling ATS for the virt_fn will now fail when it is not
+> already enabled for the phys_fn. The drivers probe function, which might
+> enable SR-IOV, runs after BUS_NOTIFY_ADD_DEVICE has finished, so this
+> should be safe.
 > 
+> But I think a comment explaining these dependencies would be good here.
+
+Comment added, thanks!
+
+Bjorn
