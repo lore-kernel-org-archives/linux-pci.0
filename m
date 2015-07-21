@@ -1,50 +1,50 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jingoohan1@gmail.com>, <nsekhar@ti.com>
-CC: <kishon@ti.com>
-Subject: [PATCH v5 1/3] PCI: host: pci-dra7xx: Disable pm_runtime on get_sync failure
-Date: Fri, 31 Jul 2015 17:55:10 +0530
-Message-ID: <1438345512-28973-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1438345512-28973-1-git-send-email-kishon@ti.com>
-References: <1438345512-28973-1-git-send-email-kishon@ti.com>
+Date: Tue, 21 Jul 2015 16:26:44 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v4 04/19] PCI/MSI: Add hooks to populate the msi_domain
+ field
+Message-ID: <20150721212644.GB3691@google.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+ <1436962613-17359-5-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1436962613-17359-5-git-send-email-marc.zyngier@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix the error handling code in case pm_runtime_get_sync fails. Now
-when pm_runtime_get_sync fails pm_runtime_disable is invoked so that
-there is no unbalanced pm_runtime_enable calls.
+On Wed, Jul 15, 2015 at 01:16:38PM +0100, Marc Zyngier wrote:
+> In order to be able to populate the device msi_domain field,
+> add the necesary hooks to propagate the host bridge msi_domain
+> across secondary busses to devices.
+> 
+> So far, nobody populates the initial msi_domain.
+> 
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  1 +
+>  2 files changed, 31 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index cefd636..376f6fa 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -661,6 +661,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+>  	}
+>  }
+>  
+> +void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
+> +{
+> +}
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/host/pci-dra7xx.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 80db09e..d8b6d66 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -384,7 +384,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	ret = pm_runtime_get_sync(dev);
- 	if (IS_ERR_VALUE(ret)) {
- 		dev_err(dev, "pm_runtime_get_sync failed\n");
--		goto err_phy;
-+		goto err_get_sync;
- 	}
- 
- 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-@@ -401,6 +401,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 
- err_add_port:
- 	pm_runtime_put(dev);
-+
-+err_get_sync:
- 	pm_runtime_disable(dev);
- 
- err_phy:
--- 
-1.7.9.5
-
+I don't think there's anything in this series that requires this to be a
+weak function, is there?  This is the only definition I see.
