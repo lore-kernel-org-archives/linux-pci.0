@@ -1,100 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:43588 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755609AbbG1Nyt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 09:54:49 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v4 2/3] PCI: host: pci-dra7xx: add pm support to pci dra7xx
-Date: Tue, 28 Jul 2015 19:24:35 +0530
-Message-ID: <1438091676-21243-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1438091676-21243-1-git-send-email-kishon@ti.com>
-References: <1438091676-21243-1-git-send-email-kishon@ti.com>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:37112 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754181AbbGUANw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 20:13:52 -0400
+Received: by igbpg9 with SMTP id pg9so93983918igb.0
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 17:13:52 -0700 (PDT)
+Subject: [PATCH v2 00/11] PCI: Fix ATS deadlock
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: iommu@lists.linux-foundation.org,
+	Gregor Dick <gdick@solarflare.com>
+Date: Mon, 20 Jul 2015 19:13:49 -0500
+Message-ID: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PM support to pci-dra7xx so that PCI clocks can be disabled
-during suspend and enabled back during resume without affecting
-PCI functionality.
+Gregor reported a deadlock [1] when enabling a VF that supports ATS.
+This series is intended to fix that.  The second patch should be enough to
+fix the deadlock; the rest are simplification and cleanup.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+These are based on v4.2-rc2.
+
+[1] http://permalink.gmane.org/gmane.linux.kernel.iommu/9433
+
+Changes between v1 and v2:
+  - Remove use of pci_ats_enabled() (intel-iommu.c)
+  - Call pci_ats_queue_depth() only once per device and cache result
+    (intel-iommu.c)
+  - Remove pci_ats_enabled() interface
+  - Stop caching queue depth in pci_dev to save space
+  - Add PF refcount of how many associated VFs have ATS enabled
+  - Add comment that ATS must be enabled on PF before on VFs
+  - Require ATS to be disabled on all VFs and PF before changing STU
+
+
 ---
- drivers/pci/host/pci-dra7xx.c |   51 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index d8b6d66..08b999a 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -433,6 +433,56 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int dra7xx_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	int count = dra7xx->phy_count;
-+
-+	while (count--) {
-+		phy_power_off(dra7xx->phy[count]);
-+		phy_exit(dra7xx->phy[count]);
-+	}
-+
-+	return 0;
-+}
-+
-+static int dra7xx_pcie_resume_noirq(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	int phy_count = dra7xx->phy_count;
-+	int ret;
-+	int i;
-+
-+	for (i = 0; i < phy_count; i++) {
-+		ret = phy_init(dra7xx->phy[i]);
-+		if (ret < 0)
-+			goto err_phy;
-+
-+		ret = phy_power_on(dra7xx->phy[i]);
-+		if (ret < 0) {
-+			phy_exit(dra7xx->phy[i]);
-+			goto err_phy;
-+		}
-+	}
-+
-+	return 0;
-+
-+err_phy:
-+	while (--i >= 0) {
-+		phy_power_off(dra7xx->phy[i]);
-+		phy_exit(dra7xx->phy[i]);
-+	}
-+
-+	return ret;
-+}
-+#endif
-+
-+static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
-+				      dra7xx_pcie_resume_noirq)
-+};
-+
- static const struct of_device_id of_dra7xx_pcie_match[] = {
- 	{ .compatible = "ti,dra7-pcie", },
- 	{},
-@@ -444,6 +494,7 @@ static struct platform_driver dra7xx_pcie_driver = {
- 	.driver = {
- 		.name	= "dra7-pcie",
- 		.of_match_table = of_dra7xx_pcie_match,
-+		.pm	= &dra7xx_pcie_pm_ops,
- 	},
- };
- 
--- 
-1.7.9.5
+Bjorn Helgaas (11):
+      iommu/vt-d: Cache PCI ATS state and Invalidate Queue Depth
+      PCI: Allocate ATS struct during enumeration
+      PCI: Embed ATS info directly into struct pci_dev
+      PCI: Reduce size of ATS structure elements
+      PCI: Rationalize pci_ats_queue_depth() error checking
+      PCI: Inline the ATS setup code into pci_ats_init()
+      PCI: Use pci_physfn() rather than looking up physfn by hand
+      PCI: Clean up ATS error handling
+      PCI: Move ATS declarations to linux/pci.h so they're all together
+      PCI: Stop caching ATS Invalidate Queue Depth
+      PCI: Remove pci_ats_enabled()
 
+
+ drivers/iommu/intel-iommu.c |   26 +++++----
+ drivers/pci/ats.c           |  131 +++++++++++++++----------------------------
+ drivers/pci/probe.c         |    3 +
+ include/linux/pci-ats.h     |   49 ----------------
+ include/linux/pci.h         |   18 ++++++
+ 5 files changed, 82 insertions(+), 145 deletions(-)
