@@ -1,74 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:40154 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751753AbbGORMe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 13:12:34 -0400
-Message-ID: <55A6947F.8070903@arm.com>
-Date: Wed, 15 Jul 2015 18:12:31 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:37910 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757286AbbGUAPH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 20:15:07 -0400
+Received: by iggf3 with SMTP id f3so94280548igg.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 17:15:06 -0700 (PDT)
+Subject: [PATCH v2 09/11] PCI: Move ATS declarations to linux/pci.h so
+ they're all together
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: iommu@lists.linux-foundation.org,
+	Gregor Dick <gdick@solarflare.com>
+Date: Mon, 20 Jul 2015 19:15:03 -0500
+Message-ID: <20150721001503.28145.54521.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-To: David Daney <ddaney.cavm@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: Robert Richter <rrichter@cavium.com>, linux-kernel@vger.kernel.org,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
- the irqdomain of the GIC.
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15/07/15 17:54, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> Needed to map SPI interrupt sources.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/irqchip/irq-gic-v3.c       | 5 +++++
->  include/linux/irqchip/arm-gic-v3.h | 1 +
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
-> index c52f7ba..0019fed 100644
-> --- a/drivers/irqchip/irq-gic-v3.c
-> +++ b/drivers/irqchip/irq-gic-v3.c
-> @@ -58,6 +58,11 @@ static struct gic_chip_data gic_data __read_mostly;
->  /* Our default, arbitrary priority value. Linux only uses one anyway. */
->  #define DEFAULT_PMR_VALUE	0xf0
->  
-> +struct irq_domain *gic_get_irq_domain(void)
-> +{
-> +	return gic_data.domain;
-> +}
-> +
->  static inline unsigned int gic_irq(struct irq_data *d)
->  {
->  	return d->hwirq;
-> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
-> index 18e3757..5992224 100644
-> --- a/include/linux/irqchip/arm-gic-v3.h
-> +++ b/include/linux/irqchip/arm-gic-v3.h
-> @@ -391,6 +391,7 @@ int its_init(struct device_node *node, struct rdists *rdists,
->  
->  typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
->  void set_its_pci_requester_id(its_pci_requester_id_t fn);
-> +struct irq_domain *gic_get_irq_domain(void);
->  #endif
->  
->  #endif
-> 
+Move ATS declarations to linux/pci.h so they're all in one place.
 
-Hmmmffff... You need the domain for SPIs??
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
+---
+ include/linux/pci-ats.h |   41 -----------------------------------------
+ include/linux/pci.h     |   10 +++++++++-
+ 2 files changed, 9 insertions(+), 42 deletions(-)
 
-What is wrong with putting these interrupts in your device tree?
+diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+index 5d81d47..57e0b82 100644
+--- a/include/linux/pci-ats.h
++++ b/include/linux/pci-ats.h
+@@ -3,47 +3,6 @@
+ 
+ #include <linux/pci.h>
+ 
+-/* Address Translation Service */
+-#ifdef CONFIG_PCI_ATS
+-
+-int pci_enable_ats(struct pci_dev *dev, int ps);
+-void pci_disable_ats(struct pci_dev *dev);
+-int pci_ats_queue_depth(struct pci_dev *dev);
+-
+-/**
+- * pci_ats_enabled - query the ATS status
+- * @dev: the PCI device
+- *
+- * Returns 1 if ATS capability is enabled, or 0 if not.
+- */
+-static inline int pci_ats_enabled(struct pci_dev *dev)
+-{
+-	return dev->ats_cap && dev->ats_enabled;
+-}
+-
+-#else /* CONFIG_PCI_ATS */
+-
+-static inline int pci_enable_ats(struct pci_dev *dev, int ps)
+-{
+-	return -ENODEV;
+-}
+-
+-static inline void pci_disable_ats(struct pci_dev *dev)
+-{
+-}
+-
+-static inline int pci_ats_queue_depth(struct pci_dev *dev)
+-{
+-	return -ENODEV;
+-}
+-
+-static inline int pci_ats_enabled(struct pci_dev *dev)
+-{
+-	return 0;
+-}
+-
+-#endif /* CONFIG_PCI_ATS */
+-
+ #ifdef CONFIG_PCI_PRI
+ 
+ int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 238b77e..307f96a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1301,8 +1301,16 @@ void ht_destroy_irq(unsigned int irq);
+ #ifdef CONFIG_PCI_ATS
+ /* Address Translation Service */
+ void pci_ats_init(struct pci_dev *dev);
++int pci_enable_ats(struct pci_dev *dev, int ps);
++void pci_disable_ats(struct pci_dev *dev);
++int pci_ats_queue_depth(struct pci_dev *dev);
++static inline int pci_ats_enabled(struct pci_dev *dev) { return dev->ats_cap && dev->ats_enabled; }
+ #else
+-static inline void pci_ats_init(struct pci_dev *dev) { }
++static inline void pci_ats_init(struct pci_dev *d) { }
++static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
++static inline void pci_disable_ats(struct pci_dev *d) { }
++static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
++static inline int pci_ats_enabled(struct pci_dev *d) { return 0; }
+ #endif
+ 
+ void pci_cfg_access_lock(struct pci_dev *dev);
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
