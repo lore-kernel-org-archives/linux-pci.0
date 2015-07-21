@@ -1,67 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:59104 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932349AbbG1Nqt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 09:46:49 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v6 07/19] PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
-Date: Tue, 28 Jul 2015 14:46:14 +0100
-Message-Id: <1438091186-10244-8-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
-References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20150721161446.GC21967@google.com>
+References: <1481643.dA4ocqzitg@wuerfel> <cover.1436476099.git.dhdang@apm.com> <20150721161446.GC21967@google.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Tue, 21 Jul 2015 11:11:45 -0700
+Message-ID: <CADaLND=abMVVZrv-GPb5un_7yEDs5QNpL8zR44=6N_CdYDCzMA@mail.gmail.com>
+Subject: Re: [PATCH v3 0/2] pci: xgene: Add multiple memory ranges support
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Will Deacon <will.deacon@arm.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	patches <patches@apm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we can easily find which MSI domain a PCI device is
-using, use dev_get_msi_domain as a way to retrieve the information.
+On Tue, Jul 21, 2015 at 9:14 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Thu, Jul 09, 2015 at 02:20:10PM -0700, Duc Dang wrote:
+>> This patch set adds 1 large (up to 64GB) memory window for each PCIe
+>> controller nodes in X-Gene device tree and fix PCIe controller driver
+>> to handle multiple memory ranges correctly. These changes are required
+>> to support PCIe devices that have huge BAR.
+>>
+>> v3 changes:
+>>       1. Explicitly mention in change log that: Each PCIe node in dts
+>>       will have 1 32-bit non-prefetchable memory window and 1 64-bit
+>>       prefetchable memory window.
+>>
+>> v2 changes:
+>>         1. Separate device-tree changes and driver changes into different
+>>         patches
+>>         2. Explicitly define new large window as 64-bit prefetchable in dts.
+>>         3. Use IORESOURCE_PREFETCH flag to determine which PCIe controller
+>>         register to be used to configure the memory ranges.
+>>
+>>  arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
+>>  drivers/pci/host/pci-xgene.c           | 12 ++++++++++--
+>>  2 files changed, 24 insertions(+), 11 deletions(-)
+>
+> Applied to pci/host-xgene for v4.3, with changelogs as follows, thanks!
 
-The original code is still used as a fallback.
+Thanks a lot, Bjorn.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/pci/msi.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+>
+>
+> commit 80bb3eda7475eb38b688d2e915c191ce6ad20df1
+> Author: Duc Dang <dhdang@apm.com>
+> Date:   Thu Jul 9 14:20:11 2015 -0700
+>
+>     arm64: dts: Add APM X-Gene PCIe 64-bit prefetchable window
+>
+>     Add a large window (up to 64GB) for X-Gene PCIe nodes to support devices
+>     that require huge BARs.
+>
+>     Each X-Gene PCIe node will now have two memory windows: a 32-bit
+>     non-prefetchable window and a 64-bit prefetchable window.
+>
+>     [bhelgaas: changelog]
+>     Signed-off-by: Duc Dang <dhdang@apm.com>
+>     Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> commit 8ef54f27f6f425fa8deedc237d99b9daf41d68d2
+> Author: Duc Dang <dhdang@apm.com>
+> Date:   Thu Jul 9 14:20:12 2015 -0700
+>
+>     PCI: xgene: Add support for a 64-bit prefetchable memory window
+>
+>     X-Gene PCIe controller has registers to support multiple memory ranges.
+>
+>     Add support for a 64-bit prefetchable memory window.
+>
+>     [bhelgaas: changelog]
+>     Signed-off-by: Duc Dang <dhdang@apm.com>
+>     Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 8c30cfc..70afadc 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -39,14 +39,16 @@ struct irq_domain * __weak arch_get_pci_msi_domain(struct pci_dev *dev)
- 
- static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
- {
--	struct irq_domain *domain = NULL;
-+	struct irq_domain *domain;
- 
--	if (dev->bus->msi)
--		domain = dev->bus->msi->domain;
--	if (!domain)
--		domain = arch_get_pci_msi_domain(dev);
-+	domain = dev_get_msi_domain(&dev->dev);
-+	if (domain)
-+		return domain;
- 
--	return domain;
-+	if (dev->bus->msi && (domain = dev->bus->msi->domain))
-+		return domain;
-+
-+	return arch_get_pci_msi_domain(dev);
- }
- 
- static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+
+
 -- 
-2.1.4
-
+Regards,
+Duc Dang.
