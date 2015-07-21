@@ -1,166 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:17672 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752390AbbGQDII (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 23:08:08 -0400
-Message-ID: <55A86DD9.60305@huawei.com>
-Date: Fri, 17 Jul 2015 10:52:09 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:34078 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933340AbbGUSYY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 14:24:24 -0400
+Received: by igvi1 with SMTP id i1so109858550igv.1
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 11:24:24 -0700 (PDT)
+Date: Tue, 21 Jul 2015 13:24:19 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Mark D Rustad <mark.d.rustad@intel.com>
+Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	netdev@vger.kernel.org,
+	Alexander Duyck <alexander.h.duyck@redhat.com>
+Subject: Re: [PATCH V4 0/2] pci: Provide a flag to access VPD through
+ function 0
+Message-ID: <20150721182419.GF21967@google.com>
+References: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatja@google.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
- deadlock
-References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com> <20150716042203.GC25591@google.com> <55A76361.8070604@huawei.com> <20150716152548.GD25591@google.com> <55A856F2.1040900@huawei.com> <CAErSpo6UTEfBieOm3P4Ms45rXhp5SS80QqU_wcDjNswdBzzifg@mail.gmail.com> <55A8605A.6000902@huawei.com> <CAErSpo56r2ZK59jWF9LhT=Vqy8E6FS_ozS2ye978=OfVjEi4iA@mail.gmail.com> <55A86754.7070408@huawei.com> <CAErSpo78rQW0LE8gVyHiZst4FC_m1B4ts2zf-vX5zr+4CQK+=A@mail.gmail.com>
-In-Reply-To: <CAErSpo78rQW0LE8gVyHiZst4FC_m1B4ts2zf-vX5zr+4CQK+=A@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->>> It looks to me like the loop in pci_setup_device() is unsafe to begin
->>> with.  But the obvious thing to do would be to add
->>> down_read(&pci_bus_sem) there, and then you'd need a down_write() in
->>> pci_slot_release(), so you're back where we started.
->>
->> I got it, I missed the bus->slots list traverse in pci scan code,
->> What about moving the bus->slots loop code from pci_setup_device() to drivers/pci/slot.c, and add a pci_slot_mutex to protect it ?
->> I think we should avoid to use pci_bus_sem to protect bus->slots list.
+[+cc Alex]
+
+On Mon, Jul 13, 2015 at 11:39:54AM -0700, Mark D Rustad wrote:
+> Many multi-function devices provide shared registers in extended
+> config space for accessing VPD. The behavior of these registers
+> means that the state must be tracked and access locked correctly
+> for accesses not to hang or worse. One way to meet these needs is
+> to always perform the accesses through function 0, thereby using
+> the state tracking and mutex that already exists.
 > 
-> Seems better, although it's starting to feel a bit ad hoc.  We would
-> need to write down this locking rule somewhere, e.g., near the struct
-> pci_bus declaration.
-
-OK, I will post a updated patch.
-
-Thanks!
-Yijing.
-
+> To provide this behavior, add a dev_flags bit to indicate that this
+> should be done. This bit can then be set for any non-zero function
+> that needs to redirect such VPD access to function 0. Do not set
+> this bit on the zero function or there will be an infinite recursion.
 > 
->> Something like this:
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index cefd636..6f00273 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1149,10 +1149,7 @@ int pci_setup_device(struct pci_dev *dev)
->>         dev->error_state = pci_channel_io_normal;
->>         set_pcie_port_type(dev);
->>
->> -       list_for_each_entry(slot, &dev->bus->slots, list)
->> -               if (PCI_SLOT(dev->devfn) == slot->number)
->> -                       dev->slot = slot;
->> -
->> +       pci_dev_assign_slot(dev);
->>         /* Assume 32-bit PCI; let 64-bit PCI cards (which are far rarer)
->>            set this higher, assuming the system even supports it.  */
->>         dev->dma_mask = 0xffffffff;
->> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
->> index a9079d9..cf259e7 100644
->> --- a/drivers/pci/slot.c
->> +++ b/drivers/pci/slot.c
->> @@ -99,6 +99,15 @@ static ssize_t cur_speed_read_file(struct pci_slot *slot, char *buf)
->>         return bus_speed_read(slot->bus->cur_bus_speed, buf);
->>  }
->>
->> +void pci_dev_assign_slot(struct pci_dev *dev)
->> +{
->> +       mutex_lock(&pci_slot_mutex);
->> +       list_for_each_entry(slot, &dev->bus->slots, list)
->> +               if (PCI_SLOT(dev->devfn) == slot->number)
->> +                       dev->slot = slot;
->> +       mutex_unlock(&pci_slot_mutex);
->> +}
->> +
->>  static void pci_slot_release(struct kobject *kobj)
->>  {
->>         struct pci_dev *dev;
->>
->>
->>>
->>>>>>>> @@ -195,7 +198,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
->>>>>>>>  {
->>>>>>>>         struct pci_slot *slot;
->>>>>>>>         /*
->>>>>>>> -        * We already hold pci_bus_sem so don't worry
->>>>>>>> +        * We already hold pci_slot_mutex so don't worry
->>>>>>>>          */
->>>>>>>>         list_for_each_entry(slot, &parent->slots, list)
->>>>>>>>                 if (slot->number == slot_nr) {
->>>>>>>> @@ -253,7 +256,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
->>>>>>>>         int err = 0;
->>>>>>>>         char *slot_name = NULL;
->>>>>>>>
->>>>>>>> -       down_write(&pci_bus_sem);
->>>>>>>> +       mutex_lock(&pci_slot_mutex);
->>>>>>>>
->>>>>>>>         if (slot_nr == -1)
->>>>>>>>                 goto placeholder;
->>>>>>>> @@ -301,16 +304,18 @@ placeholder:
->>>>>>>>         INIT_LIST_HEAD(&slot->list);
->>>>>>>>         list_add(&slot->list, &parent->slots);
->>>>>>>>
->>>>>>>> +       down_read(&pci_bus_sem);
->>>>>>>>         list_for_each_entry(dev, &parent->devices, bus_list)
->>>>>>>>                 if (PCI_SLOT(dev->devfn) == slot_nr)
->>>>>>>>                         dev->slot = slot;
->>>>>>>> +       up_read(&pci_bus_sem);
->>>>>>>>
->>>>>>>>         dev_dbg(&parent->dev, "dev %02x, created physical slot %s\n",
->>>>>>>>                 slot_nr, pci_slot_name(slot));
->>>>>>>>
->>>>>>>>  out:
->>>>>>>>         kfree(slot_name);
->>>>>>>> -       up_write(&pci_bus_sem);
->>>>>>>> +       mutex_unlock(&pci_slot_mutex);
->>>>>>>>         return slot;
->>>>>>>>  err:
->>>>>>>>         kfree(slot);
->>>>>>>> @@ -332,9 +337,9 @@ void pci_destroy_slot(struct pci_slot *slot)
->>>>>>>>         dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
->>>>>>>>                 slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
->>>>>>>>
->>>>>>>> -       down_write(&pci_bus_sem);
->>>>>>>> +       mutex_lock(&pci_slot_mutex);
->>>>>>>>         kobject_put(&slot->kobj);
->>>>>>>> -       up_write(&pci_bus_sem);
->>>>>>>> +       mutex_unlock(&pci_slot_mutex);
->>>>>>>>  }
->>>>>>>>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
->>>>>>>
->>>>>>> .
->>>>>>>
->>>>>>
->>>>>>
->>>>>> --
->>>>>> Thanks!
->>>>>> Yijing
->>>>>>
->>>>>
->>>>> .
->>>>>
->>>>
->>>>
->>>> --
->>>> Thanks!
->>>> Yijing
->>>>
->>>
->>> .
->>>
->>
->>
->> --
->> Thanks!
->> Yijing
->>
+> The second patch uses this new flag to invoke this behavior on all
+> multi-function Intel Ethernet devices.
 > 
-> .
+> Any hardware that shares VPD registers with multiple functions has
+> been suffering these problems forever. The hangs result in the log
+> message:
 > 
+> vpd r/w failed.  This is likely a firmware bug on this device.
+> 
+> Both read and write data corruption are also possible during
+> overlapping accesses in addition to hangs.
+> 
+> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+> 
+> ---
+> Changes in V2:
+> - Corrected a spelling error in a log message
+> - Added checks to see that the referenced function 0 is reasonable
+> Changes in V3:
+> - Don't leak a device reference
+> - Check that function 0 has VPD
+> - Make a helper for the function 0 checks
+> - Moved a multifunction check to the quirk patch
+> Changes in V4:
+> - Provide a more extensive commit log for patch 1
+
+I applied these to pci/misc for v4.3 with changelogs as follows.  I added
+Alex's ack, since he acked v3 and the only difference here is the
+changelog.  I also added a stable tag.  Thanks!
+
+Bjorn
 
 
--- 
-Thanks!
-Yijing
+commit 932c435caba8a2ce473a91753bad0173269ef334
+Author: Mark Rustad <mark.d.rustad@intel.com>
+Date:   Mon Jul 13 11:40:02 2015 -0700
 
+    PCI: Add dev_flags bit to access VPD through function 0
+    
+    Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
+    function 0 to provide VPD access on other functions.  This is for hardware
+    devices that provide copies of the same VPD capability registers in
+    multiple functions.  Because the kernel expects that each function has its
+    own registers, both the locking and the state tracking are affected by VPD
+    accesses to different functions.
+    
+    On such devices for example, if a VPD write is performed on function 0,
+    *any* later attempt to read VPD from any other function of that device will
+    hang.  This has to do with how the kernel tracks the expected value of the
+    F bit per function.
+    
+    Concurrent accesses to different functions of the same device can not only
+    hang but also corrupt both read and write VPD data.
+    
+    When hangs occur, typically the error message:
+    
+      vpd r/w failed.  This is likely a firmware bug on this device.
+    
+    will be seen.
+    
+    Never set this bit on function 0 or there will be an infinite recursion.
+    
+    Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Alexander Duyck <alexander.h.duyck@redhat.com>
+    CC: stable@vger.kernel.org
+
+commit 7aa6ca4d39edf01f997b9e02cf6d2fdeb224f351
+Author: Mark Rustad <mark.d.rustad@intel.com>
+Date:   Mon Jul 13 11:40:07 2015 -0700
+
+    PCI: Add VPD function 0 quirk for Intel Ethernet devices
+    
+    Set the PCI_DEV_FLAGS_VPD_REF_F0 flag on all Intel Ethernet device
+    functions other than function 0, so that on multi-function devices, we will
+    always read VPD from function 0 instead of from the other functions.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Alexander Duyck <alexander.h.duyck@redhat.com>
+    CC: stable@vger.kernel.org
