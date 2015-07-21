@@ -1,40 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:34907 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835AbbGNWBW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:01:22 -0400
-Received: by oihq81 with SMTP id q81so16135073oih.2
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 15:01:21 -0700 (PDT)
-Subject: [PATCH] PCI: Remove useless redundant code
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>
-Date: Tue, 14 Jul 2015 17:01:18 -0500
-Message-ID: <20150714220118.21427.99172.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150721165759.GD21967@google.com>
+References: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
+	<20150713093518.7e869d07@endymion.delvare>
+	<CAC1AzdfFjPrfvg2iBYXY5JDKhbVH3LPQdh5LzyjMaBFSNDBi6Q@mail.gmail.com>
+	<20150721165759.GD21967@google.com>
+Date: Tue, 21 Jul 2015 12:31:35 -0500
+Message-ID: <CAC1AzddX-HQe_UQ4C=ohyWDGjE=aed5+soDzjypQjjcqFfWTNA@mail.gmail.com>
+Subject: Re: [PATCH] Add support for reading SMBIOS Slot number for PCI devices
+From: Jordan Hargrave <jharg93@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jean Delvare <jdelvare@suse.de>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove redundant code from __pci_bus_find_cap_start().  No functional
-change.
+On Tue, Jul 21, 2015 at 11:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jul 13, 2015 at 09:57:32AM -0500, Jordan Hargrave wrote:
+>> On Mon, Jul 13, 2015 at 2:35 AM, Jean Delvare <jdelvare@suse.de> wrote:
+>>
+>> > Hi Jordan,
+>> >
+>> > On Fri, 10 Jul 2015 17:02:46 -0500, Jordan Hargrave wrote:
+>> > > From: Jordan Hargrave <Jordan_Hargrave@dell.com>
+>> > >
+>> > > There currently isn't an easy way to determine which PCI devices belong
+>> > to
+>> > > system slots.  This patch adds support to read SMBIOS Type 9 (System
+>> > Slots).
+>> >
+>> > I'm wondering, can't you use dmidecode or libsmbios to retrieve the
+>> > same information?
+>> >
+>> > --
+>> > Jean Delvare
+>> > SUSE L3 Support
+>> >
+>>
+>> You can but it's as not easy to determine the slot number for leaf devices
+>> on bridges.  Eventually planning on using this for pulling slot number for
+>> identifying network cards and disk numbering for systemd
+>
+> Can you outline the problems with using dmidecode or libsmbios?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c |    2 --
- 1 file changed, 2 deletions(-)
+Neither dmidecode nor libsmbios report the slot number for devices
+behind bridges in a slot.  I'm wanting to use this sysfs variable to
+get slot numbers for systemd, so using libsmbios and dmidecode aren't
+very useful.  We already report the index for embedded devices in
+pci-label.c, this code should have gone in at the same time.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 29b5605..359b954 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -195,8 +195,6 @@ static int __pci_bus_find_cap_start(struct pci_bus *bus,
- 		return PCI_CAPABILITY_LIST;
- 	case PCI_HEADER_TYPE_CARDBUS:
- 		return PCI_CB_CAPABILITY_LIST;
--	default:
--		return 0;
- 	}
- 
- 	return 0;
+For example.  The SMBIOS entry for slot 3 is 40:00.0 There is a
+quad-port NIC in the slot with a bridge at 40:00.0
 
+42:00.0 Bridge (sec=43, sub=45)
+43:02.0 Bridge (sec=44, sub=44)
+43:04.0 Bridge (sec=45, sub=45)
+44:00.0 Ethernet
+44:00.1 Ethernet
+45:00.0 Ethernet
+45:00.1 Ethernet
+
+So dmidecode only returns the slot number for 42:00.0 but not any
+child devices.  This code will provide a 'slot' sysfs variable that
+reports '3' for all devices under and including the bridge.
