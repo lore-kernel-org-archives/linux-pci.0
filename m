@@ -1,102 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v4 17/19] irqchip: GICv2m: Add platform MSI support
-Date: Wed, 15 Jul 2015 13:16:51 +0100
-Message-Id: <1436962613-17359-18-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:35287 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754792AbbGUAOl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 20:14:41 -0400
+Received: by igr7 with SMTP id 7so26845292igr.0
+        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 17:14:41 -0700 (PDT)
+Subject: [PATCH v2 06/11] PCI: Inline the ATS setup code into pci_ats_init()
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: iommu@lists.linux-foundation.org,
+	Gregor Dick <gdick@solarflare.com>
+Date: Mon, 20 Jul 2015 19:14:38 -0500
+Message-ID: <20150721001438.28145.28518.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order to support non-PCI MSI with GICv2m, add the minimal
-required entry points for the MSI domain, which is actually almost
-nothing (we just use the defaults provided by the core code).
+The ATS setup code in ats_alloc_one() is only used by pci_ats_init(), so
+inline it there.  No functional change.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
 ---
- drivers/irqchip/irq-gic-v2m.c | 33 +++++++++++++++++++++++++--------
- 1 file changed, 25 insertions(+), 8 deletions(-)
+ drivers/pci/ats.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-index ec9c376..db04fc1 100644
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -50,7 +50,6 @@ struct v2m_data {
- 	u32 spi_start;		/* The SPI number that MSIs start */
- 	u32 nr_spis;		/* The number of SPIs for MSIs */
- 	unsigned long *bm;	/* MSI vector bitmap */
--	struct irq_domain *domain;
- };
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 9a98b3a..95905f3 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -17,7 +17,7 @@
  
- static void gicv2m_mask_msi_irq(struct irq_data *d)
-@@ -212,12 +211,25 @@ static bool is_msi_spi_valid(u32 base, u32 num)
- 	return true;
+ #include "pci.h"
+ 
+-static void ats_alloc_one(struct pci_dev *dev)
++void pci_ats_init(struct pci_dev *dev)
+ {
+ 	int pos;
+ 	u16 cap;
+@@ -32,11 +32,6 @@ static void ats_alloc_one(struct pci_dev *dev)
+ 					    PCI_ATS_MAX_QDEP;
  }
  
-+static struct irq_chip gicv2m_pmsi_irq_chip = {
-+	.name			= "pMSI",
-+};
-+
-+static struct msi_domain_ops gicv2m_pmsi_ops = {
-+};
-+
-+static struct msi_domain_info gicv2m_pmsi_domain_info = {
-+	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS),
-+	.ops	= &gicv2m_pmsi_ops,
-+	.chip	= &gicv2m_pmsi_irq_chip,
-+};
-+
- static int __init gicv2m_init_one(struct device_node *node,
- 				  struct irq_domain *parent)
- {
- 	int ret;
- 	struct v2m_data *v2m;
--	struct irq_domain *inner_domain;
-+	struct irq_domain *inner_domain, *pci_domain, *plat_domain;
- 
- 	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
- 	if (!v2m) {
-@@ -270,10 +282,13 @@ static int __init gicv2m_init_one(struct device_node *node,
- 
- 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
- 	inner_domain->parent = parent;
--	v2m->domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
--						inner_domain);
--	if (!v2m->domain) {
--		pr_err("Failed to create MSI domain\n");
-+	pci_domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
-+					       inner_domain);
-+	plat_domain = platform_msi_create_irq_domain(node,
-+						     &gicv2m_pmsi_domain_info,
-+						     inner_domain);
-+	if (!pci_domain || !plat_domain) {
-+		pr_err("Failed to create MSI domains\n");
- 		ret = -ENOMEM;
- 		goto err_free_domains;
- 	}
-@@ -287,8 +302,10 @@ static int __init gicv2m_init_one(struct device_node *node,
- 	return 0;
- 
- err_free_domains:
--	if (v2m->domain)
--		irq_domain_remove(v2m->domain);
-+	if (plat_domain)
-+		irq_domain_remove(plat_domain);
-+	if (pci_domain)
-+		irq_domain_remove(pci_domain);
- 	if (inner_domain)
- 		irq_domain_remove(inner_domain);
- err_free_bm:
--- 
-2.1.4
+-void pci_ats_init(struct pci_dev *dev)
+-{
+-	ats_alloc_one(dev);
+-}
+-
+ /**
+  * pci_enable_ats - enable the ATS capability
+  * @dev: the PCI device
 
