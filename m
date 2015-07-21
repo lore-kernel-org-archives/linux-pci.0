@@ -1,154 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Kees Cook <keescook@chromium.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, Baoquan He <bhe@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Matt Fleming <matt.fleming@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 33/42] x86, boot: Add add_pci handler for SETUP_PCI
-Date: Tue,  7 Jul 2015 13:20:19 -0700
-Message-Id: <1436300428-21163-34-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
-References: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:34950 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755199AbbGUVRi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 17:17:38 -0400
+Received: by iecri3 with SMTP id ri3so57745384iec.2
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 14:17:37 -0700 (PDT)
+Date: Tue, 21 Jul 2015 16:17:31 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v4 07/19] PCI/MSI: Let pci_msi_get_domain use struct
+ device's msi_domain
+Message-ID: <20150721211731.GA3691@google.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+ <1436962613-17359-8-git-send-email-marc.zyngier@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1436962613-17359-8-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let it reserve setup_data, and keep it's own list.
+Hi Marc,
 
-Also clear the hdr.setup_data, as all handler now handle or
-reserve setup_data locally already.
+On Wed, Jul 15, 2015 at 01:16:41PM +0100, Marc Zyngier wrote:
+> Now that we can easily find which MSI domain a PCI device is
+> using, use dev_get_msi_domain as a way to retrieve the information.
+> 
+> The original code is still used as a fallback.
+> 
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/msi.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index ef4ec6e..c77fdaf 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -41,7 +41,8 @@ static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
+>  {
+>  	struct irq_domain *domain = NULL;
+>  
+> -	if (dev->bus->msi)
+> +	domain = dev_get_msi_domain(&dev->dev);
+> +	if (!domain && dev->bus->msi)
+>  		domain = dev->bus->msi->domain;
+>  	if (!domain)
+>  		domain = arch_get_pci_msi_domain(dev);
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matt Fleming <matt.fleming@intel.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/include/asm/pci.h |  2 ++
- arch/x86/kernel/setup.c    |  8 ++++++++
- arch/x86/pci/common.c      | 42 ++++++++++++++++++++++++++++--------------
- 3 files changed, 38 insertions(+), 14 deletions(-)
+I think this would be slightly easier to read as:
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4625943..7d2468c 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -80,8 +80,10 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 
- #ifdef CONFIG_PCI
- extern void early_quirks(void);
-+void add_pci(u64 pa_data);
- #else
- static inline void early_quirks(void) { }
-+static inline void add_pci(u64 pa_data) { }
- #endif
- 
- extern void pci_iommu_alloc(void);
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index a3b65f1..de0f830 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -440,6 +440,8 @@ static void __init parse_setup_data(void)
- 		pa_next = data->next;
- 		early_memunmap(data, sizeof(*data));
- 
-+		printk(KERN_DEBUG "setup_data type: %d @ %#010llx\n",
-+				data_type, pa_data);
- 		switch (data_type) {
- 		case SETUP_E820_EXT:
- 			parse_e820_ext(pa_data, data_len);
-@@ -447,14 +449,20 @@ static void __init parse_setup_data(void)
- 		case SETUP_DTB:
- 			add_dtb(pa_data);
- 			break;
-+		case SETUP_PCI:
-+			add_pci(pa_data);
-+			break;
- 		case SETUP_EFI:
- 			parse_efi_setup(pa_data, data_len);
- 			break;
- 		default:
-+			pr_warn("Unknown setup_data type: %d @ %#010llx ignored!\n",
-+				data_type, pa_data);
- 			break;
- 		}
- 		pa_data = pa_next;
- 	}
-+	boot_params.hdr.setup_data = 0; /* all done */
- }
- 
- static void __init memblock_x86_reserve_range_setup_data(void)
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 8fd6f44..16ace12 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -9,6 +9,7 @@
- #include <linux/pci-acpi.h>
- #include <linux/ioport.h>
- #include <linux/init.h>
-+#include <linux/memblock.h>
- #include <linux/dmi.h>
- #include <linux/slab.h>
- 
-@@ -641,31 +642,44 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
-+static u64 pci_setup_data;
-+void __init add_pci(u64 pa_data)
-+{
-+	struct setup_data *data;
-+
-+	data = early_memremap(pa_data, sizeof(*data));
-+	memblock_reserve(pa_data, sizeof(*data) + data->len);
-+	data->next = pci_setup_data;
-+	pci_setup_data = pa_data;
-+	early_memunmap(data, sizeof(*data));
-+}
-+
- int pcibios_add_device(struct pci_dev *dev)
- {
- 	struct setup_data *data;
- 	struct pci_setup_rom *rom;
- 	u64 pa_data;
- 
--	pa_data = boot_params.hdr.setup_data;
-+	pa_data = pci_setup_data;
- 	while (pa_data) {
- 		data = ioremap(pa_data, sizeof(*rom));
- 		if (!data)
- 			return -ENOMEM;
- 
--		if (data->type == SETUP_PCI) {
--			rom = (struct pci_setup_rom *)data;
--
--			if ((pci_domain_nr(dev->bus) == rom->segment) &&
--			    (dev->bus->number == rom->bus) &&
--			    (PCI_SLOT(dev->devfn) == rom->device) &&
--			    (PCI_FUNC(dev->devfn) == rom->function) &&
--			    (dev->vendor == rom->vendor) &&
--			    (dev->device == rom->devid)) {
--				dev->rom = pa_data +
--				      offsetof(struct pci_setup_rom, romdata);
--				dev->romlen = rom->pcilen;
--			}
-+		rom = (struct pci_setup_rom *)data;
-+
-+		if ((pci_domain_nr(dev->bus) == rom->segment) &&
-+		    (dev->bus->number == rom->bus) &&
-+		    (PCI_SLOT(dev->devfn) == rom->device) &&
-+		    (PCI_FUNC(dev->devfn) == rom->function) &&
-+		    (dev->vendor == rom->vendor) &&
-+		    (dev->device == rom->devid)) {
-+			dev->rom = pa_data +
-+			      offsetof(struct pci_setup_rom, romdata);
-+			dev->romlen = rom->pcilen;
-+			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
-+				   (unsigned long)dev->rom,
-+				   (unsigned long)(dev->rom + dev->romlen - 1));
- 		}
- 		pa_data = data->next;
- 		iounmap(data);
--- 
-1.8.4.5
+    struct irq_domain *domain;
 
+    domain = dev_get_msi_domain(&dev->dev);
+    if (domain)
+	return domain;
+
+    if (dev->bus->msi && (domain = dev->bus->msi->domain))
+	return domain;
+
+    return arch_get_pci_msi_domain(dev);
+
+I'm not a huge fan of assignments inside "if" conditions, and checkpatch
+might even complain about it, but it exposes the fallback order pretty well
+here.  I guess we could also just repeat the dev->bus->msi->domain
+expression:
+
+    if (dev->bus->msi && dev->bus->msi->domain)
+	return dev->bus->msi->domain;
+
+We can at least get rid of the superfluous initialization of domain to
+NULL.
+
+Bjorn
