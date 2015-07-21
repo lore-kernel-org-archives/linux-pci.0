@@ -1,97 +1,272 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:60340 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753963AbbGWQsE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 12:48:04 -0400
-Message-ID: <55B11AB0.7050002@roeck-us.net>
-Date: Thu, 23 Jul 2015 09:47:44 -0700
-From: Guenter Roeck <linux@roeck-us.net>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:37125 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933262AbbGUS4Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 14:56:24 -0400
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com> <20150723161257.GZ21967@google.com>
-In-Reply-To: <20150723161257.GZ21967@google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20150721180919.GE21967@google.com>
+References: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
+	<20150721180919.GE21967@google.com>
+Date: Tue, 21 Jul 2015 13:56:23 -0500
+Message-ID: <CAC1AzdfPkMLN9cSE6eux8hGzG6kV7a-VC6_PkG6tVuhDe=F1RQ@mail.gmail.com>
+Subject: Re: [PATCH] Add support for reading SMBIOS Slot number for PCI devices
+From: Jordan Hargrave <jharg93@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jean Delvare <jdelvare@suse.de>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/23/2015 09:12 AM, Bjorn Helgaas wrote:
-> On Thu, Jul 09, 2015 at 11:59:16AM +0100, Lorenzo Pieralisi wrote:
->> When a PCI bus is scanned, upon PCI bridge detection the kernel
->> has to read the bridge registers to set-up its resources so that
->> the PCI resource hierarchy can be validated properly.
+On Tue, Jul 21, 2015 at 1:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Jul 10, 2015 at 05:02:46PM -0500, Jordan Hargrave wrote:
+>> From: Jordan Hargrave <Jordan_Hargrave@dell.com>
 >>
->> Most if not all architectures read PCI bridge registers in the
->> pcibios_fixup_bus hook, that is called by the PCI generic layer
->> whenever a PCI bus is scanned.
+>> There currently isn't an easy way to determine which PCI devices belong to
+>> system slots.  This patch adds support to read SMBIOS Type 9 (System Slots).
 >>
->> Since pci_read_bridge_bases is an arch agnostic operation (and it
->> is carried out on all architectures) it can be moved to the generic
->> PCI layer in order to consolidate code and remove the respective
->> calls from the architectures back-ends.
+>> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+>> ---
+>>  drivers/firmware/dmi_scan.c | 39 ++++++++++++++++++++
+>>  drivers/pci/pci-label.c     | 89 +++++++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/dmi.h         |  1 +
+>>  3 files changed, 129 insertions(+)
 >>
->> The PCI_PROBE_ONLY flag is not checked before calling
->> pci_read_bridge_buses in the generic layer since reading the bridge
->> bases is not related to resources assignment; this implies that it
->> can be carried out safely on PCI_PROBE_ONLY systems too and should
->> not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
->> flag before reading the bridge bases.
+>> diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
+>> index ac1ce4a..8f95897 100644
+>> --- a/drivers/firmware/dmi_scan.c
+>> +++ b/drivers/firmware/dmi_scan.c
+>> @@ -356,6 +356,41 @@ static void __init dmi_save_extended_devices(const struct dmi_header *dm)
+>>       dmi_save_one_device(*d & 0x7f, dmi_string_nosave(dm, *(d - 1)));
+>>  }
 >>
->> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> +static void __init dmi_save_dev_slot(int instance, int segment, int bus, int devfn, const char *name)
+>> +{
+>> +     struct dmi_dev_onboard *slot;
+>> +
+>> +     slot = dmi_alloc(sizeof(*slot) + strlen(name) + 1);
+>> +     if (!slot) {
+>> +             printk(KERN_ERR "dmi_save_system_slot: out of memory.\n");
 >
-> Applied to pci/resource for v4.3, thanks!
+> You've got lots of data that might be useful in the printk: segment, bus,
+> devfn, name.
 >
-> The PCI_PROBE_ONLY text seems backward to me: previously alpha and mips
-> only called pci_read_bridge_bases() if PCI_PROBE_ONLY was set.  After this
-> patch, alpha and mips systems that do not set PCI_PROBE_ONLY will also call
-> pci_read_bridge_bases().
+>> +             return;
+>> +     }
+>> +     slot->instance = instance;
+>> +     slot->segment = segment;
+>> +     slot->bus = bus;
+>> +     slot->devfn = devfn;
+>> +
+>> +     strcpy((char *)&slot[1], name);
+>> +     slot->dev.type = DMI_DEV_TYPE_SYSTEM_SLOT;
+>> +     slot->dev.name = (char *)&slot[1];
+>> +     slot->dev.device_data = slot;
+>> +
+>> +     list_add(&slot->dev.list, &dmi_devices);
+>> +}
+>> +
+>> +
+>> +static void __init dmi_save_system_slot(const struct dmi_header *dm)
+>> +{
+>> +     const char *name;
+>> +     const u8 *d = (u8*)dm;
+>> +
+>> +     if (dm->type == DMI_ENTRY_SYSTEM_SLOT && dm->length >= 0x11) {
+>> +             name = dmi_string_nosave(dm, *(d + 0x04));
+>> +             dmi_save_dev_slot(*(u16 *)(d + 0x09), *(u16 *)(d + 0xD),
+>> +                               *(d + 0xF), *(d + 0x10), name);
+>> +     }
+>> +}
+>> +
+>>  static void __init count_mem_devices(const struct dmi_header *dm, void *v)
+>>  {
+>>       if (dm->type != DMI_ENTRY_MEM_DEVICE)
+>> @@ -437,6 +472,10 @@ static void __init dmi_decode(const struct dmi_header *dm, void *dummy)
+>>               break;
+>>       case 41:        /* Onboard Devices Extended Information */
+>>               dmi_save_extended_devices(dm);
+>> +             break;
+>> +     case 9:         /* System Slots */
+>> +             dmi_save_system_slot(dm);
+>> +             break;
+>>       }
+>>  }
+>>
+>> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+>> index 024b5c1..38dfb45 100644
+>> --- a/drivers/pci/pci-label.c
+>> +++ b/drivers/pci/pci-label.c
+>> @@ -125,14 +125,103 @@ static struct attribute_group smbios_attr_group = {
+>>       .is_visible = smbios_instance_string_exist,
+>>  };
+>>
+>> +static int smbios_getslot(struct pci_dev *pdev)
+>> +{
+>> +     struct pci_dev *sdev;
+>> +     struct dmi_dev_onboard *dslot;
+>> +     const struct dmi_device *dmi;
+>> +     u8 sub, sec, bus;
+>> +
+>> +     dmi = NULL;
+>> +     if (pdev->is_virtfn) {
+>> +             /* Get Physical device for SR-IOV */
+>> +             pdev = pdev->physfn;
+>> +     }
 >
-> I really don't know why alpha and mips were like that.  It seems backwards.
-> It seems like we'd want to know the bridge windows if we were assigning
-> things, but they only read them if they were *not* going to assign things.
+> Use pci_physfn().
 >
-> I'm a little uneasy that we might break some alpha or mips system, since
-> there must have been some reason this was done originally.  It'd be ideal
-> if somebody could test a non-PCI_PROBE_ONLY system.  But maybe they're all
-> obsolete.
+>> +     bus = pdev->bus->number;
+>> +     while ((dmi = dmi_find_device(DMI_DEV_TYPE_SYSTEM_SLOT, NULL, dmi)) != NULL) {
+>
+> This loop doesn't match my naive expectation of how we should find a slot.
+> I expected something like:
+>
+>   - Look for DMI info that's an exact match for my D:B:D.F
+>   - Walk bridges upstream towards the root, looking for a subtree that
+>     includes pdev
+>
+It's a top-down approach vs bottom up.  This way we only need to
+search a single pci device for the slot... saves having to search up
+the tree for all pci devices that *aren't* on a slot (eg embedded
+devices will always search up to root without finding a slot entry).
+
+>> +             sec = sub = -1;
+>> +
+>> +             dslot = dmi->device_data;
+>> +             sdev = pci_get_domain_bus_and_slot(dslot->segment, dslot->bus, dslot->devfn);
+>
+> This acquires a reference on the dev returned, so you need to dispose of
+> that somewhere.
+
+Ok
+
+>
+>> +             if (sdev == NULL)
+>> +                     continue;
+>> +
+>> +             if (sdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+>> +                     pci_read_config_byte(sdev, PCI_SECONDARY_BUS, &sec);
+>> +                     pci_read_config_byte(sdev, PCI_SUBORDINATE_BUS, &sub);
+>
+> We should not have to read this out of config space; busn_res in struct
+> pci_bus has this information already.
 >
 
-For alpha, PCI_PROBE_ONLY is set for two platforms, marvel and titan,
-out of ~20. mips sets the flag for 6 platforms out of >25.
-Unlikely that those are the only relevant ones.
+Ok
 
-I could try to run some qemu tests for both architectures, but I have
-no idea what to look out for. Ideas, anyone ?
+>> +                     if (bus >= sec && bus <= sub) {
+>> +                             /* device is child of bridge */
+>> +                             return dslot->instance;
+>
+> If you have a slot name for 0000:00:00.0 and a device at 0001:00:00.0, this
+> will erroneously associate the domain 0 name with the domain 1 device.
+>
+OK will put in domain check earlier.
 
-Guenter
+>> +                     }
+>> +             }
+>> +             if (pci_domain_nr(sdev->bus) == pci_domain_nr(pdev->bus) &&
+>> +                 sdev->bus->number == pdev->bus->number &&
+>> +                 PCI_SLOT(sdev->devfn) == PCI_SLOT(pdev->devfn)) {
+>> +                     /* Match domain:bus:dev.  If PCIE root, only match function */
+>
+> The PCIe part of this comment doesn't seem to match the code.
+>
 
+There can be multifunction devices with pcie root ports
+00:01.0 PCIE Root (SMBIOS Slot 2)
+00:01.1 PCIE Root (SMBIOS Slot 3)
+00:02.2 PCIE Root
+etc
+
+and multifunction devices on a single device
+01:00.0 Ethernet (SMBIOS slot points to function 0 only)
+01:00.1 Ethernet
+
+If SMBIOS slot points to PCIE root port, only match exact function
+number. Otherwise match any function number.
+
+>> +                     if (PCI_FUNC(sdev->devfn) == PCI_FUNC(pdev->devfn) ||
+>> +                         pci_pcie_type(sdev) != PCI_EXP_TYPE_ROOT_PORT) {
+>> +                             return dslot->instance;
+>> +                     }
+>> +             }
+>> +     }
+>> +     return -ENODEV;
+>> +}
+>> +
+>> +static ssize_t smbiosslot_show(struct device *dev,
+>> +                            struct device_attribute *attr, char *buf)
+>> +{
+>> +     struct pci_dev *pdev;
+>> +     int slot;
+>> +
+>> +     pdev = to_pci_dev(dev);
+>> +     slot = smbios_getslot(pdev);
+>> +     if (slot > 0) {
+>> +             return scnprintf(buf, PAGE_SIZE, "%d\n", slot);
+>> +     }
+>> +     return 0;
+>> +}
+>> +
+>> +static umode_t smbios_slot_exist(struct kobject *kobj, struct attribute *attr,
+>> +                              int n)
+>> +{
+>> +     struct device *dev;
+>> +     struct pci_dev *pdev;
+>> +
+>> +     dev = container_of(kobj, struct device, kobj);
+>> +     pdev = to_pci_dev(dev);
+>> +
+>> +     return (smbios_getslot(pdev) > 0) ? S_IRUGO : 0;
+>> +}
+>> +
+>> +static struct device_attribute smbios_attr_slot = {
+>> +     .attr = {.name = "slot", .mode = 0444},
+>> +     .show = smbiosslot_show,
+>> +};
+>> +
+>> +static struct attribute *smbios_slot_attributes[] = {
+>> +     &smbios_attr_slot.attr,
+>> +     NULL,
+>> +};
+>> +
+>> +static struct attribute_group smbios_slot_attr_group = {
+>> +     .attrs = smbios_slot_attributes,
+>> +     .is_visible = smbios_slot_exist,
+>> +};
+>> +
+>>  static int pci_create_smbiosname_file(struct pci_dev *pdev)
+>>  {
+>> +     int rc;
+>> +
+>> +     rc = sysfs_create_group(&pdev->dev.kobj, &smbios_slot_attr_group);
+>> +     if (rc != 0)
+>> +             return rc;
+>>       return sysfs_create_group(&pdev->dev.kobj, &smbios_attr_group);
+>>  }
+>>
+>>  static void pci_remove_smbiosname_file(struct pci_dev *pdev)
+>>  {
+>>       sysfs_remove_group(&pdev->dev.kobj, &smbios_attr_group);
+>> +     sysfs_remove_group(&pdev->dev.kobj, &smbios_slot_attr_group);
+>>  }
+>>  #else
+>>  static inline int pci_create_smbiosname_file(struct pci_dev *pdev)
+>> diff --git a/include/linux/dmi.h b/include/linux/dmi.h
+>> index 5055ac3..09f42e7 100644
+>> --- a/include/linux/dmi.h
+>> +++ b/include/linux/dmi.h
+>> @@ -22,6 +22,7 @@ enum dmi_device_type {
+>>       DMI_DEV_TYPE_IPMI = -1,
+>>       DMI_DEV_TYPE_OEM_STRING = -2,
+>>       DMI_DEV_TYPE_DEV_ONBOARD = -3,
+>> +     DMI_DEV_TYPE_SYSTEM_SLOT = -4,
+>>  };
+>>
+>>  enum dmi_entry_type {
+>> --
+>> 1.8.3.1
+>>
