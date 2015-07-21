@@ -1,121 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60746 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751723AbbG1Ru4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 13:50:56 -0400
-Date: Tue, 28 Jul 2015 13:50:54 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: dm-devel@redhat.com, mpatocka@redhat.com,
-	linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
- QUEUED errors since Linux 4.0
-Message-ID: <20150728175054.GB24782@redhat.com>
-References: <55B7BEA2.30205@01019freenet.de>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:33157 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755689AbbGUWoM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 18:44:12 -0400
+Received: by ietj16 with SMTP id j16so154223646iet.0
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 15:44:12 -0700 (PDT)
+Date: Tue, 21 Jul 2015 17:44:06 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, gabriele.paoloni@huawei.com,
+	lorenzo.pieralisi@arm.com, James Morse <james.morse@arm.com>,
+	Liviu.Dudau@arm.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	yuanzhichang@hisilicon.com, zhudacai@hisilicon.com,
+	zhangjukuo@huawei.com, qiuzhenfa@hisilicon.com,
+	liudongdong3@huawei.com, qiujiang@huawei.com,
+	kangfenglong@huawei.com, liguozhu@hisilicon.com
+Subject: Re: [PATCH v4 1/5] ARM/PCI: remove align_resource in pci_sys_data
+Message-ID: <20150721224406.GM21967@google.com>
+References: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com>
+ <1437461323-3531-2-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55B7BEA2.30205@01019freenet.de>
+In-Reply-To: <1437461323-3531-2-git-send-email-wangzhou1@hisilicon.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 28 2015 at  1:40pm -0400,
-Andreas Hartmann <andihartmann@01019freenet.de> wrote:
+Hi Zhou & Gabriele,
 
-> Hello!
+On Tue, Jul 21, 2015 at 02:48:39PM +0800, Zhou Wang wrote:
+> This patch is needed in order to unify the PCIe designware framework for ARM and
+> ARM64 architectures. In the PCIe designware unification process we are calling
+> pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+> ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+> cause a problem with the function pcibios_align_resource(); in fact this will
+> cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+> "struct pcie_port*" pointer.
 > 
-> After long and heavy bisecting, I found this commit
-> "dm crypt: don't allocate pages for a partial request" [1] being the
-> cause of the ata errors and AMD-Vi IO_PAGE_FAULTs.
+> This patch solves the issue by removing "align_resource" from "pci_sys_data"
+> struct and defining a static global function pointer in "bios32.c"
 > 
-> That's the bisect I did with Linus' repository
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/
-> 
-> 
-> git bisect start
-> # good: [3466b547e37b988723dc93465b7cb06b4b1f731f] Merge branches 'pnp',
-> 'pm-cpuidle' and 'pm-cpufreq'
-> git bisect good 3466b547e37b988723dc93465b7cb06b4b1f731f
-> # bad: [cd50b70ccd5c87794ec28bfb87b7fba9961eb0ae] Merge tag
-> 'pm+acpi-3.20-rc1-3' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm
-> git bisect bad cd50b70ccd5c87794ec28bfb87b7fba9961eb0ae
-> # good: [27a22ee4c7d5839fd7e3e441c9d675c8a5c4c22c] Merge branch 'kbuild'
-> of git://git.kernel.org/pub/scm/linux/kernel/git/mmarek/kbuild
-> git bisect good 27a22ee4c7d5839fd7e3e441c9d675c8a5c4c22c
-> # good: [c189cb8ef62832f33b6cf757350a0270532a1ad8] Merge tag
-> 'vfio-v3.20-rc1' of git://github.com/awilliam/linux-vfio
-> git bisect good c189cb8ef62832f33b6cf757350a0270532a1ad8
-> # good: [295324556c427d60b41668ab81a43f604533f456] Merge branch
-> 'i2c/for-3.20' of git://git.kernel.org/pub/scm/linux/kernel/git/wsa/linux
-> git bisect good 295324556c427d60b41668ab81a43f604533f456
-> # good: [1acd2de5facd7fbea499aea64a3a3d0ec7bb9b51] Merge branch
-> 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/dtor/input
-> git bisect good 1acd2de5facd7fbea499aea64a3a3d0ec7bb9b51
-> # good: [fde9f50f80fe89a9115b4bfa773017272597d85d] target: Add sanity
-> checks for DPO/FUA bit usage
-> 
-> git bisect good fde9f50f80fe89a9115b4bfa773017272597d85d
-> 
-> 
-> # bad: [22aa66a3ee5b61e0f4a0bfeabcaa567861109ec3] dm snapshot: fix a
-> possible invalid memory access on unload
-> 
-> 
-> git bisect bad 22aa66a3ee5b61e0f4a0bfeabcaa567861109ec3
-> 
-> 
-> # bad: [7145c241a1bf2841952c3e297c4080b357b3e52d] dm crypt: avoid
-> deadlock in mempools
-> 
-> 
-> git bisect bad 7145c241a1bf2841952c3e297c4080b357b3e52d
-> 
-> 
-> # good: [37527b869207ad4c208b1e13967d69b8bba1fbf9] dm io: reject
-> unsupported DISCARD requests with EOPNOTSUPP
-> 
-> 
-> git bisect good 37527b869207ad4c208b1e13967d69b8bba1fbf9
-> 
-> 
-> # bad: [cf2f1abfbd0dba701f7f16ef619e4d2485de3366] dm crypt: don't
-> allocate pages for a partial request
-> 
-> 
-> git bisect bad cf2f1abfbd0dba701f7f16ef619e4d2485de3366
-> 
-> 
-> # good: [f3396c58fd8442850e759843457d78b6ec3a9589] dm crypt: use unbound
-> workqueue for request processing
-> 
-> git bisect good f3396c58fd8442850e759843457d78b6ec3a9589
-> 
-> 
-> # first bad commit: [cf2f1abfbd0dba701f7f16ef619e4d2485de3366] dm crypt:
-> don't allocate pages for a partial request
-> 
-> 
-> How can I verify (e.g. w/ a patch to Linux 4.0.9) if this patch is
-> really the culprit?
-> 
-> I'm heavily relying upon encryption:
-> 
-> There are 3 disks:
-> - One 240 GB SSD (crypted LVM, swap and boot partition)
-> - Two SATA rotational 3 TB disks (WD ST3000DM001-1CH166, encrypted raid
->   /dev/md0, LVM)
-> - All in all 29 logical volumes with xfs as filesystem (besides swap
->   and bootpartition - the latter is ext4).
-> 
-> The system is based on an AMD FX8350 processor (8 core) w/ 24GB RAM.
-> Motherboard is a Gigabyte GA-990XA-UD3. You can find a complete dmesg
-> output here [2].
-> 
-> 
-> 
-> I would be glad to get some assistance!
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni at huawei.com>
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 
-Are your SATA devcies using NCQ?
+Can you fix up Gabriele's email address above (currently contains " at ")
+and verify that this sign-off chain is accurate per section 11 of
+Documentation/SubmittingPatches?  The above suggests to me that Gabriele
+originally wrote this patch and Zhou is passing it along.  That might well
+be true; I haven't followed the development, so I'm just double-checking.
 
-Please see this dm-devl thread (and this post in particular):
-https://www.redhat.com/archives/dm-devel/2015-June/msg00005.html
+> ---
+>  arch/arm/include/asm/mach/pci.h |  5 -----
+>  arch/arm/kernel/bios32.c        | 12 ++++++++----
+>  2 files changed, 8 insertions(+), 9 deletions(-)
+> 
+> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> index 28b9bb3..8a4e4de 100644
+> --- a/arch/arm/include/asm/mach/pci.h
+> +++ b/arch/arm/include/asm/mach/pci.h
+> @@ -58,11 +58,6 @@ struct pci_sys_data {
+>  					/* IRQ mapping				*/
+>  	int		(*map_irq)(const struct pci_dev *, u8, u8);
+>  					/* Resource alignement requirements	*/
+> -	resource_size_t (*align_resource)(struct pci_dev *dev,
+> -					  const struct resource *res,
+> -					  resource_size_t start,
+> -					  resource_size_t size,
+> -					  resource_size_t align);
+>  	void		*private_data;	/* platform controller private data	*/
+>  };
+>  
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index fcbbbb1..4cdc64d 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -17,6 +17,11 @@
+>  #include <asm/mach/pci.h>
+>  
+>  static int debug_pci;
+> +static resource_size_t (*align_resource)(struct pci_dev *dev,
+> +		  const struct resource *res,
+> +		  resource_size_t start,
+> +		  resource_size_t size,
+> +		  resource_size_t align) = NULL;
+>  
+>  #ifdef CONFIG_PCI_MSI
+>  struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+> @@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  		sys->busnr   = busnr;
+>  		sys->swizzle = hw->swizzle;
+>  		sys->map_irq = hw->map_irq;
+> -		sys->align_resource = hw->align_resource;
+> +		align_resource = hw->align_resource;
+>  		INIT_LIST_HEAD(&sys->resources);
+>  
+>  		if (hw->private_data)
+> @@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  				resource_size_t size, resource_size_t align)
+>  {
+>  	struct pci_dev *dev = data;
+> -	struct pci_sys_data *sys = dev->sysdata;
+>  	resource_size_t start = res->start;
+>  
+>  	if (res->flags & IORESOURCE_IO && start & 0x300)
+> @@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  
+>  	start = (start + align - 1) & ~(align - 1);
+>  
+> -	if (sys->align_resource)
+> -		return sys->align_resource(dev, res, start, size, align);
+> +	if (align_resource)
+> +		return align_resource(dev, res, start, size, align);
+>  
+>  	return start;
+>  }
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
