@@ -1,225 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38875 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754552AbbG0Xgf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:36:35 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, <stable@vger.kernel.org>
-Subject: [PATCH v3 34/51] PCI: Check pref compatible bit for mem64 resource of pcie device
-Date: Mon, 27 Jul 2015 16:29:52 -0700
-Message-Id: <1438039809-24957-35-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:34902 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933868AbbGUWDF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 18:03:05 -0400
+Received: by iecri3 with SMTP id ri3so58503028iec.2
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 15:03:05 -0700 (PDT)
+Date: Tue, 21 Jul 2015 17:02:59 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/4] PCI: iproc: enable arm64 support for iProc PCIe
+Message-ID: <20150721220259.GK21967@google.com>
+References: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
+ <1437021563-29139-2-git-send-email-rjui@broadcom.com>
+ <20150721203018.GH21967@google.com>
+ <55AEB094.1090601@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55AEB094.1090601@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We still get "no compatible bridge window" warning on sparc T5-8
-after we add support for 64bit resource parsing for root bus.
+On Tue, Jul 21, 2015 at 01:50:28PM -0700, Ray Jui wrote:
+> 
+> 
+> On 7/21/2015 1:30 PM, Bjorn Helgaas wrote:
+> > On Wed, Jul 15, 2015 at 09:39:20PM -0700, Ray Jui wrote:
+> >> This patch enables arm64 support to the iProc PCIe driver
+> > 
+> > This needs a little more explanation: ARM has a common struct pci_sys_data
+> > but ARM64 does not,
+> 
+> Correct, and according to Arnd, there's already work in process of
+> removing the need for pci_sys_data on arm32. Before that is done, we
+> need this in the driver for it to work on both arm32 and arm64.
+> 
+> and ARM needs pci_fixup_irqs() but ARM64 does not (why
+> > not?),
+> 
+> under arch/arm64/kernel/pci.c:
+> 
+>  41 /*
+>  42  * Try to assign the IRQ number from DT when adding a new device
+>  43  */
+>  44 int pcibios_add_device(struct pci_dev *dev)
+>  45 {
+>  46         dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>  47
+>  48         return 0;
+>  49 }
+> 
+> interrupt is automatically parsed and mapped when adding a new device
+> for arm64.
+> 
+> ARM uses the common pci_sys_data for the PCI sysdata while ARM64
+> > uses a driver-specific sysdata, etc.
+> 
+> Correct. pci_sys_data for arm32 will eventually be removed, so all arm32
+> based PCie host should only need to carry driver specific sysdata.
 
- PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
- PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
- PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
- pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
+That all makes sense.  I'm just looking for a condensed version of it in
+the changelog because it takes some digging to figure it out, and in a
+couple months even the implicit context of "somebody's working to combine
+arm32 and arm64" will be gone.  So we need a changelog that motivates this
+patch as it is.
 
-All the bridges 64-bit resource have pref bit, but the device resource does not
-have pref set, then we can not find parent for the device resource,
-as we can not put non-pref mem under pref mem.
+> >> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> >> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+> >> ---
+> >>  drivers/pci/host/pcie-iproc.c |   15 ++++-----------
+> >>  drivers/pci/host/pcie-iproc.h |    8 ++++++--
+> >>  2 files changed, 10 insertions(+), 13 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> >> index d77481e..8a556d5 100644
+> >> --- a/drivers/pci/host/pcie-iproc.c
+> >> +++ b/drivers/pci/host/pcie-iproc.c
+> >> @@ -58,11 +58,6 @@
+> >>  #define SYS_RC_INTX_EN               0x330
+> >>  #define SYS_RC_INTX_MASK             0xf
+> >>  
+> >> -static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
+> >> -{
+> >> -	return sys->private_data;
+> >> -}
+> >> -
+> >>  /**
+> >>   * Note access to the configuration registers are protected at the higher layer
+> >>   * by 'pci_lock' in drivers/pci/access.c
+> >> @@ -71,8 +66,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+> >>  					    unsigned int devfn,
+> >>  					    int where)
+> >>  {
+> >> -	struct pci_sys_data *sys = bus->sysdata;
+> >> -	struct iproc_pcie *pcie = sys_to_pcie(sys);
+> >> +	struct iproc_pcie *pcie = bus->sysdata;
+> >>  	unsigned slot = PCI_SLOT(devfn);
+> >>  	unsigned fn = PCI_FUNC(devfn);
+> >>  	unsigned busno = bus->number;
+> >> @@ -208,10 +202,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+> >>  
+> >>  	iproc_pcie_reset(pcie);
+> >>  
+> >> -	pcie->sysdata.private_data = pcie;
+> >> -
+> >> -	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
+> >> -				  &pcie->sysdata, res);
+> >> +	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, pcie, res);
+> >>  	if (!bus) {
+> >>  		dev_err(pcie->dev, "unable to create PCI root bus\n");
+> >>  		ret = -ENOMEM;
+> >> @@ -229,7 +220,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+> >>  
+> >>  	pci_scan_child_bus(bus);
+> >>  	pci_assign_unassigned_bus_resources(bus);
+> >> +#ifdef CONFIG_ARM
+> >>  	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+> >> +#endif
+> >>  	pci_bus_add_devices(bus);
+> >>  
+> >>  	return 0;
+> >> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> >> index ba0a108..0ee9673 100644
+> >> --- a/drivers/pci/host/pcie-iproc.h
+> >> +++ b/drivers/pci/host/pcie-iproc.h
+> >> @@ -18,18 +18,22 @@
+> >>  
+> >>  /**
+> >>   * iProc PCIe device
+> >> + * @sysdata: Per PCI controller data. This needs to be kept at the beginning of
+> >> + * struct iproc_pcie, to enable support of both ARM32 and ARM64 platforms with
+> >> + * minimal changes in the iProc PCIe core driver
+> >>   * @dev: pointer to device data structure
+> >>   * @base: PCIe host controller I/O register base
+> >>   * @resources: linked list of all PCI resources
+> >> - * @sysdata: Per PCI controller data
+> >>   * @root_bus: pointer to root bus
+> >>   * @phy: optional PHY device that controls the Serdes
+> >>   * @irqs: interrupt IDs
+> >>   */
+> >>  struct iproc_pcie {
+> >> +#ifdef CONFIG_ARM
+> >> +	struct pci_sys_data sysdata;
+> >> +#endif
+> > 
+> > I'm OK with adding #ifdefs to make this work on both ARM and ARM64.  We can
+> > at least see the ifdefs and know what needs to be fixed.  I'm a little more
+> > hesitant about adding code that depends on the position of sysdata within
+> > struct iproc_pcie.  I'd rather have something ugly and robust that cries
+> > out for fixing than something minimal and fragile.
+> 
+> Yes that was my original code and that was a bit ugly. Arnd proposed
+> this and it does indeed make the look a lot cleaner. But yeah, it now
+> depends on the location of struct pci_sys_data in memory and I see your
+> concern. In fact, I asked exactly the same question to Arnd.
+> 
+> Are you okay with living with this for a little while until struct
+> pci_sys_data is eventually removed from arm32?
+> 
+> > I see that your v1 patch added #ifdef CONFIG_ARM around sysdata at its
+> > original location below, and you mentioned that you took Arnd's advice to
+> > move sysdata to the beginning of the structure, but I don't see Arnd's
+> > email on the list.
+> 
+> Sorry maybe you need to elaborate here. Am I supposed to add Arnd's name
+> in the commit message? Other than that, Arnd is on this email thread.
 
-According to pcie spec errta
-https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-page 13, in some case it is ok to mark some as pref.
+No, I wasn't looking for Arnd's name in the changelog; I was just hoping to
+read that discussion because it could save me from the embarrassment of
+suggesting something different than Arnd did :)
 
-Mark if the entire path from the host to the adapter is over PCI Express.
-Then set pref compatible bit for claim/sizing/assign for 64bit mem resource
-on that pcie device.
+Personally I'd rather have ugly ifdefs because they make it obvious where
+the potholes are.  But again, I'm sure Arnd has very good reasons if he
+thinks this is better.
 
-Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: <stable@vger.kernel.org> #3.19
----
- drivers/pci/pci.c       |  3 ++-
- drivers/pci/pci.h       |  2 ++
- drivers/pci/probe.c     | 33 +++++++++++++++++++++++++++++++++
- drivers/pci/setup-bus.c | 21 ++++++++++++++++++---
- drivers/pci/setup-res.c |  4 ++++
- include/linux/pci.h     |  1 +
- 6 files changed, 60 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0008c95..ff1192a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -414,6 +414,7 @@ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
- struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 					  struct resource *res)
- {
-+	int flags = pci_resource_pref_compatible(dev, res);
- 	const struct pci_bus *bus = dev->bus;
- 	struct resource *r;
- 	int i;
-@@ -428,7 +429,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 			 * not, the allocator made a mistake.
- 			 */
- 			if (r->flags & IORESOURCE_PREFETCH &&
--			    !(res->flags & IORESOURCE_PREFETCH))
-+			    !(flags & IORESOURCE_PREFETCH))
- 				return NULL;
- 
- 			/*
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 2b83977..1804d44 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -336,4 +336,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- 
- struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..010d8d9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1544,6 +1544,36 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);
- }
- 
-+static bool pci_up_path_over_pcie(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !pci_is_pcie(bus->self))
-+		return false;
-+
-+	return pci_up_path_over_pcie(bus->parent);
-+}
-+
-+/*
-+ * According to
-+ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-+ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
-+ * on some cases.
-+ * Let's mark if entire path from the host to the adapter is over PCI
-+ * Express. later will use that compute pref compaitable bit.
-+ */
-+static void pci_set_on_all_pcie_path(struct pci_dev *dev)
-+{
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	if (!pci_up_path_over_pcie(dev->bus))
-+		return;
-+
-+	dev->on_all_pcie_path = 1;
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
-@@ -1574,6 +1604,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	/* Initialize various capabilities */
- 	pci_init_capabilities(dev);
- 
-+	/* After pcie_cap is assigned */
-+	pci_set_on_all_pcie_path(dev);
-+
- 	/*
- 	 * Add the device to our list of discovered devices
- 	 * and the bus list for fixup functions, etc.
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f8f89cd..78b0c36 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1038,6 +1038,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res)
-+{
-+	if (res->flags & IORESOURCE_PREFETCH)
-+		return res->flags;
-+
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    (res->flags & IORESOURCE_MEM_64) &&
-+	    dev->on_all_pcie_path)
-+		return res->flags | IORESOURCE_PREFETCH;
-+
-+	return res->flags;
-+}
-+
- /* Check whether the bridge supports optional I/O and
-    prefetchable memory ranges. If not, the respective
-    base/limit registers must be read-only and read as 0. */
-@@ -1532,10 +1546,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 			resource_size_t r_size, align;
-+			int flags = pci_resource_pref_compatible(dev, r);
- 
--			if (r->parent || ((r->flags & mask) != type &&
--					  (r->flags & mask) != type2 &&
--					  (r->flags & mask) != type3))
-+			if (r->parent || ((flags & mask) != type &&
-+					  (flags & mask) != type2 &&
-+					  (flags & mask) != type3))
- 				continue;
- 
- 			r_size = resource_size(r);
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 232f925..b19aa5b 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -250,15 +250,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 				resource_size_t size, resource_size_t min_align)
- {
-+	struct resource *res = dev->resource + resno;
-+	int old_flags = res->flags;
- 	struct pci_bus *bus;
- 	int ret;
- 
-+	res->flags = pci_resource_pref_compatible(dev, res);
- 	bus = dev->bus;
- 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
- 		if (!bus->parent || !bus->self->transparent)
- 			break;
- 		bus = bus->parent;
- 	}
-+	res->flags = old_flags;
- 
- 	return ret;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a..33ef25f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -309,6 +309,7 @@ struct pci_dev {
- 						   powered on/off by the
- 						   corresponding bridge */
- 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-+	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
- 
--- 
-1.8.4.5
-
+> >>  	struct device *dev;
+> >>  	void __iomem *base;
+> >> -	struct pci_sys_data sysdata;
+> >>  	struct pci_bus *root_bus;
+> >>  	struct phy *phy;
+> >>  	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
+> >> -- 
+> >> 1.7.9.5
+> >>
