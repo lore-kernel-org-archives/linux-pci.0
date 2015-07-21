@@ -1,58 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:34221 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756481AbbGUAOd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 20:14:33 -0400
-Received: by iebmu5 with SMTP id mu5so129467529ieb.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 17:14:33 -0700 (PDT)
-Subject: [PATCH v2 05/11] PCI: Rationalize pci_ats_queue_depth() error
- checking
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 21 Jul 2015 16:37:04 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: iommu@lists.linux-foundation.org,
-	Gregor Dick <gdick@solarflare.com>
-Date: Mon, 20 Jul 2015 19:14:30 -0500
-Message-ID: <20150721001429.28145.76331.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v4 19/19] PCI/MSI: Drop domain field from msi_controller
+Message-ID: <20150721213704.GC3691@google.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+ <1436962613-17359-20-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1436962613-17359-20-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We previously returned -ENODEV for devices that don't support ATS (except
-that we always returned 0 for VFs, whether or not they support ATS).
+On Wed, Jul 15, 2015 at 01:16:53PM +0100, Marc Zyngier wrote:
+> The only three users of that field are not using the msi_controller
+> structure anymore, so drop it altogether.
+> 
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 
-For consistency, always return -EINVAL (not -ENODEV) if the device doesn't
-support ATS.  Return zero for VFs that support ATS.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Joerg Roedel <jroedel@suse.de>
----
- drivers/pci/ats.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> ---
+>  drivers/pci/msi.c   | 2 --
+>  include/linux/msi.h | 3 ---
+>  2 files changed, 5 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index c77fdaf..31bae50 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -42,8 +42,6 @@ static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
+>  	struct irq_domain *domain = NULL;
+>  
+>  	domain = dev_get_msi_domain(&dev->dev);
+> -	if (!domain && dev->bus->msi)
+> -		domain = dev->bus->msi->domain;
+>  	if (!domain)
+>  		domain = arch_get_pci_msi_domain(dev);
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 690ae6e..9a98b3a 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -136,13 +136,13 @@ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
-  */
- int pci_ats_queue_depth(struct pci_dev *dev)
- {
-+	if (!dev->ats_cap)
-+		return -EINVAL;
-+
- 	if (dev->is_virtfn)
- 		return 0;
- 
--	if (dev->ats_cap)
--		return dev->ats_qdep;
--
--	return -ENODEV;
-+	return dev->ats_qdep;
- }
- EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
- 
+I guess this takes care of the "assignment inside if" question :)
 
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index b55cf63..e29c31f 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -124,9 +124,6 @@ struct msi_controller {
+>  	struct device *dev;
+>  	struct device_node *of_node;
+>  	struct list_head list;
+> -#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+> -	struct irq_domain *domain;
+> -#endif
+>  
+>  	int (*setup_irq)(struct msi_controller *chip, struct pci_dev *dev,
+>  			 struct msi_desc *desc);
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
