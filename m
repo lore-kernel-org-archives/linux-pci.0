@@ -1,85 +1,86 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Jul 2015 18:28:19 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-Message-ID: <20150707172818.GA930@red-moon>
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net>
- <20150527210447.GY32152@google.com>
- <20150528022332.GA23724@roeck-us.net>
- <20150528124112.GJ10210@google.com>
- <20150618180103.GA23809@roeck-us.net>
- <20150619162413.GA21533@red-moon>
- <20150707144019.GH4379@red-moon>
- <559BE9D9.4050407@roeck-us.net>
+Date: Tue, 21 Jul 2015 16:30:29 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v4 05/19] PCI/MSI: of: Add support for OF-provided
+ msi_domain
+Message-ID: <20150721213029.GJ21967@google.com>
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
+ <1436962613-17359-6-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <559BE9D9.4050407@roeck-us.net>
+In-Reply-To: <1436962613-17359-6-git-send-email-marc.zyngier@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 07, 2015 at 04:01:45PM +0100, Guenter Roeck wrote:
-> Hi Lorenzo,
+On Wed, Jul 15, 2015 at 01:16:39PM +0100, Marc Zyngier wrote:
+> In order to populate the PHB msi_domain, use the "msi-parent"
+> attribute to lookup a corresponding irq domain. If found,
+> this is our MSI domain.
 > 
-> On 07/07/2015 07:40 AM, Lorenzo Pieralisi wrote:
-> > On Fri, Jun 19, 2015 at 05:24:13PM +0100, Lorenzo Pieralisi wrote:
-> >> Hi Guenter,
-> >>
-> >> On Thu, Jun 18, 2015 at 07:01:03PM +0100, Guenter Roeck wrote:
-> >>> On Thu, May 28, 2015 at 07:41:12AM -0500, Bjorn Helgaas wrote:
-> >>>>
-> >>>>>> I'd like res->flags to reflect the capabilities of the hardware, not
-> >>>>>> whether the window is currently enabled.
-> >>>>>>
-> >>>>> Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
-> >>>>> purpose, or could that cause conflicts elsewhere ?
-> >>>>
-> >>>> Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
-> >>>> below a host bridge that doesn't support I/O space.
-> >>>>
-> >>> I integrated Lorenzo's patch and tried to get this working.
-> >>
-> >> Thanks. How do you want to proceed with this ? Are you taking my patch
-> >> and post it along with your updated series ? We need to extend test
-> >> coverage to platforms we could not test on, as you know my series
-> >> affects all archs but SPARC (I mean it should *not* affect them, this
-> >> has to be tested though, I do not have the HW needed, your coverage
-> >> for x86 and PowerPC is great but I do not think it can be deemed
-> >> sufficient).
-> >>
-> >> Please let me know, thanks !
-> >
-> > Any comment on this ? I will have to remove the bridge resource claiming
-> > from my patch according to Ben's concerns for PowerPC, which requires
-> > a v3.
-> >
-> > How do you want me to go on with this ?
-> >
+> This gets plugged into the core PCI code.
 > 
-> Can you send your v3 ?
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/of.c    | 19 +++++++++++++++++++
+>  drivers/pci/probe.c |  1 +
+>  include/linux/pci.h |  2 ++
+>  3 files changed, 22 insertions(+)
+> 
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index f092993..09df465 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -9,6 +9,7 @@
+>   * 2 of the License, or (at your option) any later version.
+>   */
+>  
+> +#include <linux/irqdomain.h>
+>  #include <linux/kernel.h>
+>  #include <linux/pci.h>
+>  #include <linux/of.h>
+> @@ -59,3 +60,21 @@ struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
+>  		return of_node_get(bus->bridge->parent->of_node);
+>  	return NULL;
+>  }
+> +
+> +void pci_set_phb_of_msi_domain(struct pci_bus *bus)
+> +{
+> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+> +	struct device_node *np;
+> +	struct irq_domain *d;
+> +
+> +	if (!bus->dev.of_node)
+> +		return;
+> +	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
+> +	if (!np)
+> +		return;
+> +	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
+> +	if (!d)
+> +		d = irq_find_host(np);
+> +	dev_set_msi_domain(&bus->dev, d);
+> +#endif
+> +}
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 376f6fa..c80626f 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -663,6 +663,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+>  
+>  void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
+>  {
+> +	pci_set_phb_of_msi_domain(bus);
 
-Yes, I have to figure out though where I can claim bridge resources
-on PROBE_ONLY arm/arm64 systems, which is proving interesting, anyway
-I will send it out asap.
-
-> I didn't submit my latest version because I recalled Ben's objections,
-> and I never got around asking you if you plan to send a new version
-> of your patch.
-
-No worries, let's get this sorted.
-
-> I had to drop the idea of using IORESOURCE_DISABLED; pretty much all
-> kernel code uses the "!flags" test to identify unused resources.
-> I tried to change that, but just could not get it to work.
-> I ended up introducing a new bus flag instead, PCI_BUS_FLAGS_NO_IO,
-> which works quite nicely since it propagates to child buses.
-
-Ok, great, I can test it too.
-
-Thanks,
-Lorenzo
+The code itself is OK with me, but "phb" is an abbreviation that we haven't
+really been using in the PCI core, so I'd prefer something else.  Maybe
+"pci_set_host_of_msi_domain()"?  Or even (for symmetry with the pcibios
+function), "pci_set_host_bridge_of_msi_domain()", although that is getting
+pretty wordy?
