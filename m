@@ -1,67 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pearsoncomputing.net ([192.119.205.242]:4943 "EHLO
-	mail.pearsoncomputing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbbGOOBl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 10:01:41 -0400
-Message-ID: <55A6658D.6030802@raptorengineeringinc.com>
-Date: Wed, 15 Jul 2015 08:52:13 -0500
-From: Timothy Pearson <tpearson@raptorengineeringinc.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:38814 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751769AbbGUVvI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Jul 2015 17:51:08 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>,
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: keystone: fix the boot noise for missing *config* reg space
+Date: Tue, 21 Jul 2015 17:51:05 -0400
+Message-ID: <1437515465-20739-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-To: Sreekanth Reddy <sreekanth.reddy@avagotech.com>
-CC: Yinghai Lu <yinghai@kernel.org>, James Bottomley <jejb@kernel.org>,
-	martin.petersen@oracle.com,
-	Linux-Scsi <linux-scsi@vger.kernel.org>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Sathya.Prakash@avagotech.com,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no
- memory I/O resources detected
-References: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com> <CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com> <20150715062456.GB19028@dhcp-135-24-192-118.lsi.com>
-In-Reply-To: <20150715062456.GB19028@dhcp-135-24-192-118.lsi.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/15/2015 01:24 AM, Sreekanth Reddy wrote:
-> On Tue, Jul 14, 2015 at 10:36:58PM -0700, Yinghai Lu wrote:
->> On Tue, Jul 14, 2015 at 9:49 PM, Sreekanth Reddy
->> <sreekanth.reddy@avagotech.com> wrote:
->>> Driver crashes if the BIOS do not set up at least one
->>> memory I/O resource. This failure can happen if the device is too
->>> slow to respond during POST and is missed by the BIOS, but Linux
->>> then detects the device later in the boot process.
->>
->> But pci subsystem should assign resources to those unassigned BAR.
->>
->> Do you mean even kernel can not assign resource to them? or it takes so long for
->> mpt FW to get ready?
-> 
-> This is not an issue from mpt FW.
-> 
-> I have just kept the same description provide by Timothy in his
-> initial patch.
-> 
-> But I observe that their may be chance of getting "unable to handle
-> kernel NULL pointer dereference" kernel panic if no Memory Resource
-> available in the PCI subsystem. So agreed to the Timothy proposal of
-> aborting the driver initialization if it doesn't detect any Memory
-> resource instead of whole system get into panic state.
-> 
->>
->> Thanks
->>
->> Yinghai
+Currently on Keystone SoCs, boot up log shows an unnecessary boot
+noise as follows:-
 
-On some systems Linux is unable / unwilling to assign a BAR if the BIOS
-does not assign one at startup.  I didn't look into the Linux allocator
-side of things in much detail, but it is quite possible that Linux is
-unaware the device only has partial resources assigned.
+[    0.365823] keystone-pcie 21021000.pcie: missing *config* reg space
 
+Keystone uses older version of designware h/w that doesn't have ATU
+support. So va_cfg0_base and va_cfg1_base are already set up in
+ks_dw_pcie_host_init() before calling dw_pcie_host_init() and
+they point to the remote config space address va (both same for Keystone).
+So add a check to avoid this boot noise on Keystone.
+
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/pci/host/pcie-designware.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 69486be..b48b8a2 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -388,7 +388,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		addrp = of_get_address(np, index, NULL, NULL);
+ 		pp->cfg0_mod_base = of_read_number(addrp, ns);
+ 		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
+-	} else {
++	} else if (!pp->va_cfg0_base) {
+ 		dev_err(pp->dev, "missing *config* reg space\n");
+ 	}
+ 
 -- 
-Timothy Pearson
-Raptor Engineering
-+1 (415) 727-8645
-http://www.raptorengineeringinc.com
+1.9.1
+
