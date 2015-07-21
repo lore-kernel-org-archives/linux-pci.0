@@ -1,342 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17360 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756294AbbGFXlJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:41:09 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 04/36] PCI: Optimize bus align/size calculation during sizing
-Date: Mon,  6 Jul 2015 16:38:54 -0700
-Message-Id: <1436225966-27247-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:34000 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932257AbbGUQO5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 12:14:57 -0400
+Received: by igvi1 with SMTP id i1so106825304igv.1
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 09:14:56 -0700 (PDT)
+Date: Tue, 21 Jul 2015 11:14:46 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Duc Dang <dhdang@apm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Will Deacon <will.deacon@arm.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com
+Subject: Re: [PATCH v3 0/2] pci: xgene: Add multiple memory ranges support
+Message-ID: <20150721161446.GC21967@google.com>
+References: <1481643.dA4ocqzitg@wuerfel>
+ <cover.1436476099.git.dhdang@apm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1436476099.git.dhdang@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code try to get align as small as possible and use that to
-align final size. But it does not handle resource that size is bigger
-than align in optimal way, kernel only use max align for them.
+On Thu, Jul 09, 2015 at 02:20:10PM -0700, Duc Dang wrote:
+> This patch set adds 1 large (up to 64GB) memory window for each PCIe
+> controller nodes in X-Gene device tree and fix PCIe controller driver
+> to handle multiple memory ranges correctly. These changes are required
+> to support PCIe devices that have huge BAR.
+> 
+> v3 changes:
+> 	1. Explicitly mention in change log that: Each PCIe node in dts 
+> 	will have 1 32-bit non-prefetchable memory window and 1 64-bit 
+> 	prefetchable memory window.
+> 
+> v2 changes:
+>         1. Separate device-tree changes and driver changes into different
+>         patches
+>         2. Explicitly define new large window as 64-bit prefetchable in dts.
+>         3. Use IORESOURCE_PREFETCH flag to determine which PCIe controller
+>         register to be used to configure the memory ranges.
+>  
+>  arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
+>  drivers/pci/host/pci-xgene.c           | 12 ++++++++++--
+>  2 files changed, 24 insertions(+), 11 deletions(-)
 
-For example:
- when we have resources with align/size: 1M/1M, 512M/512M,
-   bus resource min_align/size0 will be 256M/768M.
- when we have resources with align/size: 1M/2M, 512M/512M,
-   bus resource min_align/size0 will be 512M/1024M,
-   but optimal value should be 256M/768M.
+Applied to pci/host-xgene for v4.3, with changelogs as follows, thanks!
 
-Under following cases that we have resource size that is bigger
-than resource alignment:
-1. SRIOV bar.
-2. PCI bridges with several bridges or devices as children.
 
-We can try to allocate children devices resources under range
-[half_align, half_align + aligned_size).
-If sucesses, we can use that half_align as new min_align.
+commit 80bb3eda7475eb38b688d2e915c191ce6ad20df1
+Author: Duc Dang <dhdang@apm.com>
+Date:   Thu Jul 9 14:20:11 2015 -0700
 
-After this patch, we get:
- align/size: 1M/2M, 2M/4M, 4M/8M, 8M/16M
- new min_align/min_size: 4M/32M, and old is 8M/32M
+    arm64: dts: Add APM X-Gene PCIe 64-bit prefetchable window
+    
+    Add a large window (up to 64GB) for X-Gene PCIe nodes to support devices
+    that require huge BARs.
+    
+    Each X-Gene PCIe node will now have two memory windows: a 32-bit
+    non-prefetchable window and a 64-bit prefetchable window.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Duc Dang <dhdang@apm.com>
+    Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
- align/size: 1M/2M, 2M/4M, 4M/8M
- new min_align/min_size: 2M/14M, and old is 4M/16M
+commit 8ef54f27f6f425fa8deedc237d99b9daf41d68d2
+Author: Duc Dang <dhdang@apm.com>
+Date:   Thu Jul 9 14:20:12 2015 -0700
 
- align/size: 1M/2M, 512M/512M
- new min_align/min_size: 256M/768M, and old is 512M/1024M
-
-The real result from one system with one pcie card that has
-four functions that support sriov:
- align/size:
-   00800000/00800000
-   00800000/00800000
-   00800000/00800000
-   00800000/00800000
-   00010000/00200000
-   00010000/00200000
-   00010000/00200000
-   00010000/00200000
-   00008000/00008000
-   00008000/00008000
-   00008000/00008000
-   00008000/00008000
-   00004000/00080000
-   00004000/00080000
-   00004000/00080000
-   00004000/00080000
- old min_align/min_size: 00400000/02c00000
-     min_align/min_size: 00100000/02b00000
-
-So align will be 1M instead of 4M.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 195 ++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 157 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9f4c477..87cf431 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -30,6 +30,34 @@
- 
- unsigned int pci_flags;
- 
-+static inline bool is_before(resource_size_t align1, resource_size_t size1,
-+			     resource_size_t align2, resource_size_t size2)
-+{
-+	resource_size_t size1_left, size2_left;
-+
-+	/* big align is before small align */
-+	if (align1 > align2)
-+		return true;
-+
-+	/*
-+	 * for same align:
-+	 *   aligned is before not aligned
-+	 *   for not aligned, big remainder is before small remainder
-+	 */
-+	if (align1 == align2) {
-+		size1_left = size1 & (align1 - 1);
-+		if (!size1_left)
-+			size1_left = align1;
-+		size2_left = size2 & (align2 - 1);
-+		if (!size2_left)
-+			size2_left = align2;
-+		if (size1_left > size2_left)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- struct pci_dev_resource {
- 	struct list_head list;
- 	struct resource *res;
-@@ -994,26 +1022,125 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	}
- }
- 
--static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
--						  int max_order)
-+struct align_test_res {
-+	struct list_head list;
-+	struct resource res;
-+	resource_size_t size;
-+	resource_size_t align;
-+};
-+
-+static void free_align_test_list(struct list_head *head)
- {
--	resource_size_t align = 0;
--	resource_size_t min_align = 0;
--	int order;
-+	struct align_test_res *p, *tmp;
- 
--	for (order = 0; order <= max_order; order++) {
--		resource_size_t align1 = 1;
-+	list_for_each_entry_safe(p, tmp, head, list) {
-+		list_del(&p->list);
-+		kfree(p);
-+	}
-+}
- 
--		align1 <<= (order + 20);
-+static int add_to_align_test_list(struct list_head *head,
-+				  resource_size_t align, resource_size_t size)
-+{
-+	struct align_test_res *tmp;
-+
-+	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
-+	if (!tmp)
-+		return -ENOMEM;
-+
-+	tmp->align = align;
-+	tmp->size = size;
-+
-+	list_add_tail(&tmp->list, head);
-+
-+	return 0;
-+}
-+
-+static void __sort_align_test(struct list_head *head)
-+{
-+	struct align_test_res *res1, *tmp_res, *res2;
- 
--		if (!align)
--			min_align = align1;
--		else if (ALIGN(align + min_align, min_align) < align1)
--			min_align = align1 >> 1;
--		align += aligns[order];
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			if (is_before(res1->align, res1->size,
-+				      res2->align, res2->size)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
-+static bool is_align_size_good(struct list_head *head,
-+			resource_size_t min_align, resource_size_t size,
-+			resource_size_t start)
-+{
-+	struct align_test_res *p;
-+	struct resource root;
-+
-+	memset(&root, 0, sizeof(root));
-+	root.start = start;
-+	root.end = start + size - 1;
-+
-+	list_for_each_entry(p, head, list)
-+		memset(&p->res, 0, sizeof(p->res));
-+
-+	list_for_each_entry(p, head, list)
-+		if (allocate_resource(&root, &p->res, p->size,
-+				0, (resource_size_t)-1ULL,
-+				p->align, NULL, NULL))
-+			return false;
-+
-+	return true;
-+}
-+
-+static resource_size_t calculate_mem_align(struct list_head *head,
-+				resource_size_t max_align, resource_size_t size,
-+				resource_size_t align_low)
-+{
-+	struct align_test_res *p;
-+	resource_size_t min_align, good_align, aligned_size, start;
-+	int count = 0;
-+
-+	if (max_align <= align_low) {
-+		good_align = align_low;
-+		goto out;
- 	}
- 
--	return min_align;
-+	good_align = max_align;
-+
-+	list_for_each_entry(p, head, list)
-+		count++;
-+
-+	if (count <= 1)
-+		goto out;
-+
-+	__sort_align_test(head);
-+
-+	do {
-+		/* check if we can use smaller align */
-+		min_align = good_align >> 1;
-+		aligned_size = ALIGN(size, min_align);
-+
-+		/* need to make sure every offset work */
-+		for (start = min_align; start < max_align; start += min_align) {
-+			/* checked already with last align ? */
-+			if (!(start & (good_align - 1)))
-+				continue;
-+
-+			if (!is_align_size_good(head, min_align, aligned_size,
-+					       start))
-+				goto out;
-+		}
-+		good_align = min_align;
-+	} while (min_align > align_low);
-+
-+out:
-+	return good_align;
- }
- 
- /**
-@@ -1043,19 +1170,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_align, align, size, size0, size1;
--	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
--	int order, max_order;
-+	resource_size_t max_align = 0;
- 	struct resource *b_res = find_free_bus_resource(bus,
- 					mask | IORESOURCE_PREFETCH, type);
- 	resource_size_t children_add_size = 0;
- 	resource_size_t children_add_align = 0;
- 	resource_size_t add_align = 0;
-+	LIST_HEAD(align_test_list);
- 
- 	if (!b_res)
- 		return -ENOSPC;
- 
--	memset(aligns, 0, sizeof(aligns));
--	max_order = 0;
- 	size = 0;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
-@@ -1081,29 +1206,20 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				continue;
- 			}
- #endif
--			/*
--			 * aligns[0] is for 1MB (since bridge memory
--			 * windows are always at least 1MB aligned), so
--			 * keep "order" from being negative for smaller
--			 * resources.
--			 */
- 			align = pci_resource_alignment(dev, r);
--			order = __ffs(align) - 20;
--			if (order < 0)
--				order = 0;
--			if (order >= ARRAY_SIZE(aligns)) {
-+			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
--					 i, r, (unsigned long long) align);
-+					i, r, (unsigned long long) align);
- 				r->flags = 0;
- 				continue;
- 			}
-+
-+			if (r_size > 1)
-+				add_to_align_test_list(&align_test_list,
-+							align, r_size);
- 			size += r_size;
--			/* Exclude ranges with size > align from
--			   calculation of the alignment. */
--			if (r_size == align)
--				aligns[order] += align;
--			if (order > max_order)
--				max_order = order;
-+			if (align > max_align)
-+				max_align = align;
- 
- 			if (realloc_head) {
- 				children_add_size += get_res_add_size(realloc_head, r);
-@@ -1113,9 +1229,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		}
- 	}
- 
--	min_align = calculate_mem_align(aligns, max_order);
--	min_align = max(min_align, window_alignment(bus, b_res->flags));
--	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
-+	max_align = max(max_align, window_alignment(bus, b_res->flags));
-+	min_align = calculate_mem_align(&align_test_list, max_align, size,
-+					window_alignment(bus, b_res->flags));
-+	size0 = calculate_memsize(size, min_size, 0,
-+				  resource_size(b_res), min_align);
-+	free_align_test_list(&align_test_list);
- 	add_align = max(min_align, add_align);
- 	if (children_add_size > add_size)
- 		add_size = children_add_size;
--- 
-1.8.4.5
-
+    PCI: xgene: Add support for a 64-bit prefetchable memory window
+    
+    X-Gene PCIe controller has registers to support multiple memory ranges.
+    
+    Add support for a 64-bit prefetchable memory window.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Duc Dang <dhdang@apm.com>
+    Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
