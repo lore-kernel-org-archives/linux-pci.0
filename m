@@ -1,120 +1,86 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
-	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
-	mmarek@suse.cz, akpm@linux-foundation.org
-Cc: sean.stalley@intel.com, bigeasy@linutronix.de,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org, cocci@systeme.lip6.fr
-Subject: [PATCH v2 4/4] coccinelle: mm: scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-Date: Fri, 31 Jul 2015 12:36:44 -0700
-Message-Id: <1438371404-3219-5-git-send-email-sean.stalley@intel.com>
-In-Reply-To: <1438371404-3219-1-git-send-email-sean.stalley@intel.com>
-References: <1438371404-3219-1-git-send-email-sean.stalley@intel.com>
+Date: Tue, 21 Jul 2015 08:30:31 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Stuart Yoder <stuart.yoder@freescale.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: Re: [RFC Patch V1 00/12] Reorganize struct msi_desc to prepare for
+ support of generic MSI
+Message-ID: <20150721133031.GF16841@google.com>
+References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-add [pci|dma]_pool_zalloc coccinelle check.
-replaces instances of [pci|dma]_pool_alloc() followed by memset(0)
-with [pci|dma]_pool_zalloc().
+[+cc Paul]
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
----
- .../coccinelle/api/alloc/pool_zalloc-simple.cocci  | 84 ++++++++++++++++++++++
- 1 file changed, 84 insertions(+)
- create mode 100644 scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
+On Thu, Jul 09, 2015 at 04:00:35PM +0800, Jiang Liu wrote:
+> Recently Marc Zyngier <marc.zyngier@arm.com> has posted a patch set at
+> https://lkml.org/lkml/2015/7/7/712
+> to enhance PCI MSI code to support generic MSI.
+> 
+> This is a companion patch set to refine struct msi_desc and related data
+> structures to support generic MSI, and it would be better to combined with
+> Marc's patch set.  It's also requested by
+> Stuart Yoder <stuart.yoder@freescale.com>
+> 
+> It first introduces a helper function msi_desc_to_pci_sysdata(), and
+> convert current PCI drivers to use helper functions to access fields
+> in struct msi_desc.
+> Then it moves msi_list from struct pci_dev into struct device and
+> refines struct msi_desc.
+> At last it moves alloc_msi_entry() into kernel/irq/msi.c for reuse.
+> 
+> Currently msi_desc_to_pci_sysdata() and msi_desc_to_pci_dev() are
+> implemented as normal functions instead of inlines to avoid header file
+> inclusion issue. If inlined version is preferred for performance, we could
+> move all of first_pci_msi_entry, for_each_pci_msi_entry, msi_desc_to_pci_dev
+> and msi_desc_to_pci_sysdata from linxu/kernel/msi.h into linux/kernel/pci.h.
+> 
+> This patch set is based on v4.2-rc1 and passes 0day test suite. You
+> may access the code at:
+> https://github.com/jiangliu/linux.git msi_desc_v1
+> 
+> Thanks!
+> Gerry
+> 
+> Jiang Liu (12):
+>   PCI: Add helper function msi_desc_to_pci_sysdata()
+>   MIPS, PCI: Use for_pci_msi_entry() to access MSI device list
+>   PowerPC, PCI: Use for_pci_msi_entry() to access MSI device list
+>   s390/pci: Use for_pci_msi_entry() to access MSI device list
+>   x86, PCI: Use for_pci_msi_entry() to access MSI device list
+>   PCI: Use for_pci_msi_entry() to access MSI device list
+>   sparc, PCI: Use helper functions to access fields in struct msi_desc
+>   PCI: Use helper functions to access fields in struct msi_desc
+>   genirq: Move msi_list from struct pci_dev to struct device
+>   genirq, PCI: Store 'struct device *' instead 'struct pci_dev *' in
+>     struct msi_desc
+>   genirq, PCI: Reorginize struct msi_desc to prepare for support of
+>     generic MSI
+>   genirq, PCI: Move alloc_msi_entry() from PCI MSI code into generic
+>     MSI code
 
-diff --git a/scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci b/scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-new file mode 100644
-index 0000000..9b7eb32
---- /dev/null
-+++ b/scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-@@ -0,0 +1,84 @@
-+///
-+/// Use *_pool_zalloc rather than *_pool_alloc followed by memset with 0
-+///
-+// Copyright: (C) 2015 Intel Corp.  GPLv2.
-+// Options: --no-includes --include-headers
-+//
-+// Keywords: dma_pool_zalloc, pci_pool_zalloc
-+//
-+
-+virtual context
-+virtual patch
-+virtual org
-+virtual report
-+
-+//----------------------------------------------------------
-+//  For context mode
-+//----------------------------------------------------------
-+
-+@depends on context@
-+expression x;
-+statement S;
-+@@
-+
-+* x = \(dma_pool_alloc\|pci_pool_alloc\)(...);
-+  if ((x==NULL) || ...) S
-+* memset(x,0, ...);
-+
-+//----------------------------------------------------------
-+//  For patch mode
-+//----------------------------------------------------------
-+
-+@depends on patch@
-+expression x;
-+expression a,b,c;
-+statement S;
-+@@
-+
-+- x = dma_pool_alloc(a,b,c);
-++ x = dma_pool_zalloc(a,b,c);
-+  if ((x==NULL) || ...) S
-+- memset(x,0,...);
-+
-+@depends on patch@
-+expression x;
-+expression a,b,c;
-+statement S;
-+@@
-+
-+- x = pci_pool_alloc(a,b,c);
-++ x = pci_pool_zalloc(a,b,c);
-+  if ((x==NULL) || ...) S
-+- memset(x,0,...);
-+
-+//----------------------------------------------------------
-+//  For org and report mode
-+//----------------------------------------------------------
-+
-+@r depends on org || report@
-+expression x;
-+expression a,b,c;
-+statement S;
-+position p;
-+@@
-+
-+ x = @p\(dma_pool_alloc\|pci_pool_alloc\)(a,b,c);
-+ if ((x==NULL) || ...) S
-+ memset(x,0, ...);
-+
-+@script:python depends on org@
-+p << r.p;
-+x << r.x;
-+@@
-+
-+msg="%s" % (x)
-+msg_safe=msg.replace("[","@(").replace("]",")")
-+coccilib.org.print_todo(p[0], msg_safe)
-+
-+@script:python depends on report@
-+p << r.p;
-+x << r.x;
-+@@
-+
-+msg="WARNING: *_pool_zalloc should be used for %s, instead of *_pool_alloc/memset" % (x)
-+coccilib.report.print_report(p[0], msg)
--- 
-1.9.1
+Sergei pointed out typos in the "Use for_pci_msi_entry()" subject and
+changelogs; I assume you'll fix those.
 
+Paul had a question on 09/12 regarding Kconfig, and I didn't see a
+resolution to that.
+
+For the PCI parts:
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Thomas, I assume you'll take this via your tree.
+
+Bjorn
