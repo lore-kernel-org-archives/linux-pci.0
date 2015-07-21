@@ -1,117 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37717 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932084AbbG0XeC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:34:02 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:64314 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbbGUGnN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 02:43:13 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH v3 46/51] PCI: Don't release fixed resource for realloc
-Date: Mon, 27 Jul 2015 16:30:04 -0700
-Message-Id: <1438039809-24957-47-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
+	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
+	<Liviu.Dudau@arm.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v4 5/5] MAINTAINERS: Add pcie-hisi maintainer
+Date: Tue, 21 Jul 2015 14:48:43 +0800
+Message-ID: <1437461323-3531-6-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not release bridge resource if there is fixed resources
-under it, otherwise the children firmware would stop working.
-
-Reported-by: Paul Johnson <pjay@nwtrail.com>
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 ---
- drivers/pci/setup-bus.c |  6 ++++--
- include/linux/ioport.h  |  2 +-
- kernel/resource.c       | 28 ++++++++++++++++++++++++++--
- 3 files changed, 31 insertions(+), 5 deletions(-)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 63a5d4cf..dcbbe04 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2070,14 +2070,16 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8133cef..7cd8e47 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7854,6 +7854,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ F:	drivers/pci/host/pci-xgene-msi.c
  
- 	r = &b_res[idx];
- 
--	if (!r->parent)
-+	if (!r->parent || r->flags & IORESOURCE_PCI_FIXED)
- 		return;
- 
- 	/*
- 	 * if there are children under that, we should release them
- 	 *  all
- 	 */
--	release_child_resources(r);
-+	if (!release_child_resources(r))
-+		return;
++PCIE DRIVER FOR HISILICON
++M:	Zhou Wang <wangzhou1@hisilicon.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++F:	drivers/pci/host/pcie-hisi.c
 +
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & type_mask;
- 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 388e3ae..27dbb18 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -141,7 +141,7 @@ extern struct resource iomem_resource;
- extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
- extern int request_resource(struct resource *root, struct resource *new);
- extern int release_resource(struct resource *new);
--void release_child_resources(struct resource *new);
-+bool release_child_resources(struct resource *new);
- extern void reserve_region_with_split(struct resource *root,
- 			     resource_size_t start, resource_size_t end,
- 			     const char *name);
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 697b8ca..4e43f9b 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -276,11 +276,35 @@ static void __release_child_resources(struct resource *r)
- 	}
- }
- 
--void release_child_resources(struct resource *r)
-+static bool __has_fixed_child_resources(struct resource *r)
- {
-+	struct resource *p;
-+
-+	p = r->child;
-+	while (p) {
-+		if (p->flags & IORESOURCE_PCI_FIXED)
-+			return true;
-+
-+		if (__has_fixed_child_resources(p))
-+			return true;
-+
-+		p = p->sibling;
-+	}
-+
-+	return false;
-+}
-+
-+bool release_child_resources(struct resource *r)
-+{
-+	bool fixed;
-+
- 	write_lock(&resource_lock);
--	__release_child_resources(r);
-+	fixed = __has_fixed_child_resources(r);
-+	if (!fixed)
-+		__release_child_resources(r);
- 	write_unlock(&resource_lock);
-+
-+	return !fixed;
- }
- 
- /**
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-1.8.4.5
+1.9.1
 
