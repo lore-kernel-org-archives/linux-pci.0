@@ -1,201 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:18483 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756131AbbFPKQ1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jun 2015 06:16:27 -0400
-Message-ID: <557FF705.4090203@hisilicon.com>
-Date: Tue, 16 Jun 2015 18:14:29 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:36958 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752110AbbGUUaX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 16:30:23 -0400
+Received: by igbpg9 with SMTP id pg9so116914448igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 13:30:23 -0700 (PDT)
+Date: Tue, 21 Jul 2015 15:30:18 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 1/4] PCI: iproc: enable arm64 support for iProc PCIe
+Message-ID: <20150721203018.GH21967@google.com>
+References: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
+ <1437021563-29139-2-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Arnd Bergmann <arnd@arndb.de>, <fabrice.gasnier@st.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Zhichang Yuan <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, "Zhang Jukuo" <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, Liguozhu <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v2 2/4] PCI: designware: Add ARM64 support
-References: <1433320542-49576-1-git-send-email-wangzhou1@hisilicon.com> <1433320542-49576-3-git-send-email-wangzhou1@hisilicon.com> <CAHM4w1nfaUMgY4PfhG4Aar962=m8XndHeHJG1yP04KjL=67xaQ@mail.gmail.com>
-In-Reply-To: <CAHM4w1nfaUMgY4PfhG4Aar962=m8XndHeHJG1yP04KjL=67xaQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1437021563-29139-2-git-send-email-rjui@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Pratyush,
+On Wed, Jul 15, 2015 at 09:39:20PM -0700, Ray Jui wrote:
+> This patch enables arm64 support to the iProc PCIe driver
 
-sorry for late.
+This needs a little more explanation: ARM has a common struct pci_sys_data
+but ARM64 does not, and ARM needs pci_fixup_irqs() but ARM64 does not (why
+not?), ARM uses the common pci_sys_data for the PCI sysdata while ARM64
+uses a driver-specific sysdata, etc.
 
-On 2015/6/15 3:18, Pratyush Anand wrote:
-> Hi Zhou Wang,
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> Reviewed-by: Scott Branden <sbranden@broadcom.com>
+> ---
+>  drivers/pci/host/pcie-iproc.c |   15 ++++-----------
+>  drivers/pci/host/pcie-iproc.h |    8 ++++++--
+>  2 files changed, 10 insertions(+), 13 deletions(-)
 > 
-> Thanks for unifying arm and arm64 code.
-> 
-> On Wed, Jun 3, 2015 at 2:05 PM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
->>
->> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
->> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
->> move related operations to dw_pcie_host_init. Also set pp->root_bus_nr = 0 in
->> each PCIe host driver which is based on pcie-designware.
->>
->> I am not very clear about I/O resource management:
-> 
-> Following discussion may help to understand it, specially in the
-> context of designware.
-> 
-> http://marc.info/?l=linux-pci&m=138621989417562&w=2
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index d77481e..8a556d5 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -58,11 +58,6 @@
+>  #define SYS_RC_INTX_EN               0x330
+>  #define SYS_RC_INTX_MASK             0xf
+>  
+> -static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
+> -{
+> -	return sys->private_data;
+> -}
+> -
+>  /**
+>   * Note access to the configuration registers are protected at the higher layer
+>   * by 'pci_lock' in drivers/pci/access.c
+> @@ -71,8 +66,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+>  					    unsigned int devfn,
+>  					    int where)
+>  {
+> -	struct pci_sys_data *sys = bus->sysdata;
+> -	struct iproc_pcie *pcie = sys_to_pcie(sys);
+> +	struct iproc_pcie *pcie = bus->sysdata;
+>  	unsigned slot = PCI_SLOT(devfn);
+>  	unsigned fn = PCI_FUNC(devfn);
+>  	unsigned busno = bus->number;
+> @@ -208,10 +202,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  
+>  	iproc_pcie_reset(pcie);
+>  
+> -	pcie->sysdata.private_data = pcie;
+> -
+> -	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
+> -				  &pcie->sysdata, res);
+> +	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, pcie, res);
+>  	if (!bus) {
+>  		dev_err(pcie->dev, "unable to create PCI root bus\n");
+>  		ret = -ENOMEM;
+> @@ -229,7 +220,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  
+>  	pci_scan_child_bus(bus);
+>  	pci_assign_unassigned_bus_resources(bus);
+> +#ifdef CONFIG_ARM
+>  	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+> +#endif
+>  	pci_bus_add_devices(bus);
+>  
+>  	return 0;
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> index ba0a108..0ee9673 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -18,18 +18,22 @@
+>  
+>  /**
+>   * iProc PCIe device
+> + * @sysdata: Per PCI controller data. This needs to be kept at the beginning of
+> + * struct iproc_pcie, to enable support of both ARM32 and ARM64 platforms with
+> + * minimal changes in the iProc PCIe core driver
+>   * @dev: pointer to device data structure
+>   * @base: PCIe host controller I/O register base
+>   * @resources: linked list of all PCI resources
+> - * @sysdata: Per PCI controller data
+>   * @root_bus: pointer to root bus
+>   * @phy: optional PHY device that controls the Serdes
+>   * @irqs: interrupt IDs
+>   */
+>  struct iproc_pcie {
+> +#ifdef CONFIG_ARM
+> +	struct pci_sys_data sysdata;
+> +#endif
 
-Thanks for sharing above information.
+I'm OK with adding #ifdefs to make this work on both ARM and ARM64.  We can
+at least see the ifdefs and know what needs to be fixed.  I'm a little more
+hesitant about adding code that depends on the position of sysdata within
+struct iproc_pcie.  I'd rather have something ugly and robust that cries
+out for fixing than something minimal and fragile.
 
-> 
-> 
->>>       if (global_io_offset < SZ_1M && pp->io_size > 0) {
->>>               pci_ioremap_io(global_io_offset, pp->io_base);
->>>               global_io_offset += SZ_64K;
->>>               pci_add_resource_offset(&res, &pp->io,
->>>                                       global_io_offset - pp->io_bus_addr);
->>>       }
->> so just move steps in dw_pcie_setup to dw_pcie_host_init.
->>
->> I have compiled the driver with multi_v7_defconfig. However, I don't have
->> ARM32 PCIe related board to do test. It will be appreciated if someone could
->> help to test it.
->>
->> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->> Tested-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> ---
->>  drivers/pci/host/pci-dra7xx.c      |   1 +
->>  drivers/pci/host/pci-exynos.c      |   2 +-
->>  drivers/pci/host/pci-imx6.c        |   2 +-
->>  drivers/pci/host/pci-keystone.c    |   2 +-
->>  drivers/pci/host/pci-layerscape.c  |   2 +-
->>  drivers/pci/host/pcie-designware.c | 128 +++++++++++++++----------------------
->>  drivers/pci/host/pcie-spear13xx.c  |   2 +-
->>  7 files changed, 56 insertions(+), 83 deletions(-)
->>
-> 
-> [...]
-> 
->> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
->> index 4a6e62f..5c7a9c4 100644
->> --- a/drivers/pci/host/pci-layerscape.c
->> +++ b/drivers/pci/host/pci-layerscape.c
->> @@ -101,7 +101,7 @@ static int ls_add_pcie_port(struct ls_pcie *pcie)
->>         pp = &pcie->pp;
->>         pp->dev = pcie->dev;
->>         pp->dbi_base = pcie->dbi;
->> -       pp->root_bus_nr = -1;
->> +       pp->root_bus_nr = 0;
-> 
-> similar change for pcie-spear13xx.c should be needed as well.
-> 
+I see that your v1 patch added #ifdef CONFIG_ARM around sysdata at its
+original location below, and you mentioned that you took Arnd's advice to
+move sysdata to the beginning of the structure, but I don't see Arnd's
+email on the list.
 
-Right, will add this in next version.
-
->>         pp->ops = &ls_pcie_host_ops;
->>
->>         ret = dw_pcie_host_init(pp);
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index 2e9f84f..b3f0ac7 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
+>  	struct device *dev;
+>  	void __iomem *base;
+> -	struct pci_sys_data sysdata;
+>  	struct pci_bus *root_bus;
+>  	struct phy *phy;
+>  	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
+> -- 
+> 1.7.9.5
 > 
-> [...]
-> 
->> -#ifdef CONFIG_PCI_MSI
->> -       dw_pcie_msi_chip.dev = pp->dev;
->> -       dw_pci.msi_ctrl = &dw_pcie_msi_chip;
->> +#ifdef CONFIG_ARM
->> +       /*
->> +        * FIXME: we should really be able to use
->> +        * of_pci_get_host_bridge_resources on arm32 as well,
->> +        * but the conversion needs some more testing
->> +        */
->> +       if (global_io_offset < SZ_1M && pp->io_size > 0) {
->> +               pci_ioremap_io(global_io_offset, pp->io_base);
->> +               global_io_offset += SZ_64K;
->> +               pci_add_resource_offset(&res, &pp->io,
->> +                                       global_io_offset - pp->io_bus_addr);
->> +       }
->> +       pci_add_resource_offset(&res, &pp->mem,
->> +                               pp->mem.start - pp->mem_bus_addr);
->> +       pci_add_resource(&res, &pp->busn);
->> +#else
->> +       ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
->> +       if (ret)
->> +               return ret;
->> +#endif
->> +
->> +       bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
->> +                             pp, &res);
->> +       if (!bus)
->> +               return -ENOMEM;
->> +
->> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
->> +       bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
->> +#else
->> +       bus->msi = &dw_pcie_msi_chip;
->>  #endif
->>
->> -       dw_pci.nr_controllers = 1;
->> -       dw_pci.private_data = (void **)&pp;
->> +       pci_scan_child_bus(bus);
->> +       if (pp->ops->scan_bus)
->> +               pp->ops->scan_bus(pp);
->>
->> -       pci_common_init_dev(pp->dev, &dw_pci);
->> +#ifdef CONFIG_ARM
->> +       /* support old dtbs that incorrectly describe IRQs */
->> +       pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
->> +#endif
->> +
->> +       pci_assign_unassigned_bus_resources(bus);
->> +       pci_bus_add_devices(bus);
-> 
-> As James and Lorenzo has suggested, of_pci_get_host_bridge_resources should
-> work for ARM as well. I would suggest to move that just after cfg
-> resource parsing and
-> then to remove following piece of code.
-> for_each_of_pci_range(&parser, &range) {
-> ...
-> }
-> ret = of_pci_parse_bus_range(np, &pp->busn);
-> 
-> Then you can have a loop like
-> 
->          list_for_each_entry(entry, &res, node) {
->                  struct resource *res_temp = entry->res;
->                  if (resource_type(res_temp) == IORESOURCE_IO) {
->                  } else if (resource_type(res_temp) == IORESOURCE_MEM) {
->                 }
->          }
-> 
-> where you can fill, xx_size, xx_bus_addr, xx_mod_base etc.
-
-I think it will be better to do like this. And Gabriele already shared a
-patch about this in this series'discussions, I will try to merge his patch
-in my next version patchset.
-
-> You can also remove global_io_offset variable.
-
-will use pci_remap_iospace in next version patch.
-
-Many thanks for your comments
-Zhou
-
-> 
-> ~Pratyush
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
-
-
