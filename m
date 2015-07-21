@@ -1,319 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:34971 "EHLO foss.arm.com"
+Received: from 8bytes.org ([81.169.241.247]:43390 "EHLO theia.8bytes.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756052AbbGVJNu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Jul 2015 05:13:50 -0400
-Date: Wed, 22 Jul 2015 10:14:28 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-Message-ID: <20150722091427.GB344@red-moon>
-References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
+	id S1755421AbbGUQfT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 21 Jul 2015 12:35:19 -0400
+Date: Tue, 21 Jul 2015 18:35:17 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	iommu <iommu@lists.linux-foundation.org>
+Subject: Re: Since Linux 4.1: A lot of AMD-Vi IO_PAGE_FAULTs
+Message-ID: <20150721163517.GG10969@8bytes.org>
+References: <55AE5F84.5020204@01019freenet.de>
+ <1437492886.1391.847.camel@redhat.com>
+ <20150721155635.GE10969@8bytes.org>
+ <55AE7147.7070902@maya.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <55AE7147.7070902@maya.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Guenter,
+On Tue, Jul 21, 2015 at 06:20:23PM +0200, Andreas Hartmann wrote:
+> [   48.193901] <6>[fglrx] Firegl kernel thread PID: 1840
+> [   48.193985] <6>[fglrx] Firegl kernel thread PID: 1841
+> [   48.194063] <6>[fglrx] Firegl kernel thread PID: 1842
+> [   48.194172] <6>[fglrx] IRQ 28 Enabled
+> [   48.261580] <6>[fglrx] Reserved FB block: Shared offset:0, size:1000000 
+> [   48.261586] <6>[fglrx] Reserved FB block: Unshared offset:f7b4000, size:4000 
+> [   48.261587] <6>[fglrx] Reserved FB block: Unshared offset:f7b8000, size:548000 
+> [   48.261588] <6>[fglrx] Reserved FB block: Unshared offset:3fff3000, size:d000
 
-On Thu, Jul 09, 2015 at 11:59:16AM +0100, Lorenzo Pieralisi wrote:
-> When a PCI bus is scanned, upon PCI bridge detection the kernel
-> has to read the bridge registers to set-up its resources so that
-> the PCI resource hierarchy can be validated properly.
-> 
-> Most if not all architectures read PCI bridge registers in the
-> pcibios_fixup_bus hook, that is called by the PCI generic layer
-> whenever a PCI bus is scanned.
-> 
-> Since pci_read_bridge_bases is an arch agnostic operation (and it
-> is carried out on all architectures) it can be moved to the generic
-> PCI layer in order to consolidate code and remove the respective
-> calls from the architectures back-ends.
-> 
-> The PCI_PROBE_ONLY flag is not checked before calling
-> pci_read_bridge_buses in the generic layer since reading the bridge
-> bases is not related to resources assignment; this implies that it
-> can be carried out safely on PCI_PROBE_ONLY systems too and should
-> not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
-> flag before reading the bridge bases.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Ralf Baechle <ralf@linux-mips.org>
-> Cc: James E.J. Bottomley <jejb@parisc-linux.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Richard Henderson <rth@twiddle.net>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: David Howells <dhowells@redhat.com>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Tony Luck <tony.luck@intel.com>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Cc: Michal Simek <monstr@monstr.eu>
-> Cc: Chris Zankel <chris@zankel.net>
-> ---
-> v2->v3:
-> 
-> - Dropped RFC status
-> - Removed bridge resources claiming from pci_read_bridge_bases()
+>From a first glance it doesn't look like an IOMMU driver issue, because
+the addresses where the faults happen are not from the AMD IOMMU driver.
 
-What do you want me to do with this patch ? I removed the resource
-claiming - ie the only controversial bit, I can only test on
-arm64, I would like to make some progress on this otherwise
-I will have to add the bridge bases read to arm64 pcibios_fixup_bus()
-and be done with this.
+And you have proprietary closed-source drivers loaded, can you reproduce
+the issue without fglrx?
 
-Thanks,
-Lorenzo
 
-> v2: https://lkml.org/lkml/2015/6/9/187
-> 
-> v1->v2:
-> 
-> - Moved pci_read_bridge_bases call to pci_scan_bridge to read bases before
->   scanning devices
-> - Added bridge resources claiming
-> 
-> v1: https://lkml.org/lkml/2015/5/21/359
-> 
->  arch/alpha/kernel/pci.c          | 7 +------
->  arch/frv/mb93090-mb00/pci-vdk.c  | 2 --
->  arch/ia64/pci/pci.c              | 1 -
->  arch/microblaze/pci/pci-common.c | 9 +--------
->  arch/mips/pci/pci.c              | 6 ------
->  arch/mn10300/unit-asb2305/pci.c  | 1 -
->  arch/powerpc/kernel/pci-common.c | 8 +-------
->  arch/x86/pci/common.c            | 1 -
->  arch/xtensa/kernel/pci.c         | 4 ----
->  drivers/parisc/dino.c            | 3 ---
->  drivers/parisc/lba_pci.c         | 1 -
->  drivers/pci/probe.c              | 9 +++++++++
->  12 files changed, 12 insertions(+), 40 deletions(-)
-> 
-> diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-> index 82f738e..cded02c 100644
-> --- a/arch/alpha/kernel/pci.c
-> +++ b/arch/alpha/kernel/pci.c
-> @@ -242,12 +242,7 @@ pci_restore_srm_config(void)
->  
->  void pcibios_fixup_bus(struct pci_bus *bus)
->  {
-> -	struct pci_dev *dev = bus->self;
-> -
-> -	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
-> - 		   (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
-> - 		pci_read_bridge_bases(bus);
-> -	} 
-> +	struct pci_dev *dev;
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		pdev_save_srm_config(dev);
-> diff --git a/arch/frv/mb93090-mb00/pci-vdk.c b/arch/frv/mb93090-mb00/pci-vdk.c
-> index f211839..f9c86c4 100644
-> --- a/arch/frv/mb93090-mb00/pci-vdk.c
-> +++ b/arch/frv/mb93090-mb00/pci-vdk.c
-> @@ -294,8 +294,6 @@ void pcibios_fixup_bus(struct pci_bus *bus)
->  	printk("### PCIBIOS_FIXUP_BUS(%d)\n",bus->number);
->  #endif
->  
-> -	pci_read_bridge_bases(bus);
-> -
->  	if (bus->number == 0) {
->  		struct pci_dev *dev;
->  		list_for_each_entry(dev, &bus->devices, bus_list) {
-> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> index 7cc3be9..563228b 100644
-> --- a/arch/ia64/pci/pci.c
-> +++ b/arch/ia64/pci/pci.c
-> @@ -534,7 +534,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
->  	struct pci_dev *dev;
->  
->  	if (b->self) {
-> -		pci_read_bridge_bases(b);
->  		pcibios_fixup_bridge_resources(b->self);
->  	}
->  	list_for_each_entry(dev, &b->devices, bus_list)
-> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-> index ae838ed..6b8b752 100644
-> --- a/arch/microblaze/pci/pci-common.c
-> +++ b/arch/microblaze/pci/pci-common.c
-> @@ -863,14 +863,7 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
->  
->  void pcibios_fixup_bus(struct pci_bus *bus)
->  {
-> -	/* When called from the generic PCI probe, read PCI<->PCI bridge
-> -	 * bases. This is -not- called when generating the PCI tree from
-> -	 * the OF device-tree.
-> -	 */
-> -	if (bus->self != NULL)
-> -		pci_read_bridge_bases(bus);
-> -
-> -	/* Now fixup the bus bus */
-> +	/* Fixup the bus */
->  	pcibios_setup_bus_self(bus);
->  
->  	/* Now fixup devices on that bus */
-> diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-> index b8a0bf5..c6996cf 100644
-> --- a/arch/mips/pci/pci.c
-> +++ b/arch/mips/pci/pci.c
-> @@ -311,12 +311,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  
->  void pcibios_fixup_bus(struct pci_bus *bus)
->  {
-> -	struct pci_dev *dev = bus->self;
-> -
-> -	if (pci_has_flag(PCI_PROBE_ONLY) && dev &&
-> -	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
-> -		pci_read_bridge_bases(bus);
-> -	}
->  }
->  
->  EXPORT_SYMBOL(PCIBIOS_MIN_IO);
-> diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-> index 3dfe2d3..deaa893 100644
-> --- a/arch/mn10300/unit-asb2305/pci.c
-> +++ b/arch/mn10300/unit-asb2305/pci.c
-> @@ -324,7 +324,6 @@ void pcibios_fixup_bus(struct pci_bus *bus)
->  	struct pci_dev *dev;
->  
->  	if (bus->self) {
-> -		pci_read_bridge_bases(bus);
->  		pcibios_fixup_bridge_resources(bus->self);
->  	}
->  
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index b9de34d..02c1d5d 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1044,13 +1044,7 @@ void pcibios_set_master(struct pci_dev *dev)
->  
->  void pcibios_fixup_bus(struct pci_bus *bus)
->  {
-> -	/* When called from the generic PCI probe, read PCI<->PCI bridge
-> -	 * bases. This is -not- called when generating the PCI tree from
-> -	 * the OF device-tree.
-> -	 */
-> -	pci_read_bridge_bases(bus);
-> -
-> -	/* Now fixup the bus bus */
-> +	/* Fixup the bus */
->  	pcibios_setup_bus_self(bus);
->  
->  	/* Now fixup devices on that bus */
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 8fd6f44..3bff244 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -166,7 +166,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
->  {
->  	struct pci_dev *dev;
->  
-> -	pci_read_bridge_bases(b);
->  	list_for_each_entry(dev, &b->devices, bus_list)
->  		pcibios_fixup_device_resources(dev);
->  }
-> diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-> index b848cc3..d27b4dc 100644
-> --- a/arch/xtensa/kernel/pci.c
-> +++ b/arch/xtensa/kernel/pci.c
-> @@ -210,10 +210,6 @@ subsys_initcall(pcibios_init);
->  
->  void pcibios_fixup_bus(struct pci_bus *bus)
->  {
-> -	if (bus->parent) {
-> -		/* This is a subordinate bridge */
-> -		pci_read_bridge_bases(bus);
-> -	}
->  }
->  
->  void pcibios_set_master(struct pci_dev *dev)
-> diff --git a/drivers/parisc/dino.c b/drivers/parisc/dino.c
-> index a0580af..baec33c 100644
-> --- a/drivers/parisc/dino.c
-> +++ b/drivers/parisc/dino.c
-> @@ -560,9 +560,6 @@ dino_fixup_bus(struct pci_bus *bus)
->  	} else if (bus->parent) {
->  		int i;
->  
-> -		pci_read_bridge_bases(bus);
-> -
-> -
->  		for(i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
->  			if((bus->self->resource[i].flags & 
->  			    (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
-> diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-> index dceb9dd..901e1a3 100644
-> --- a/drivers/parisc/lba_pci.c
-> +++ b/drivers/parisc/lba_pci.c
-> @@ -693,7 +693,6 @@ lba_fixup_bus(struct pci_bus *bus)
->  	if (bus->parent) {
->  		int i;
->  		/* PCI-PCI Bridge */
-> -		pci_read_bridge_bases(bus);
->  		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++)
->  			pci_claim_bridge_resource(bus->self, i);
->  	} else {
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index c80626f..de1c424 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -842,6 +842,11 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->  			child->bridge_ctl = bctl;
->  		}
->  
-> +		/*
-> +		 * Read and initialize bridge resources.
-> +		 */
-> +		pci_read_bridge_bases(child);
-> +
->  		cmax = pci_scan_child_bus(child);
->  		if (cmax > subordinate)
->  			dev_warn(&dev->dev, "bridge has subordinate %02x but max busn %02x\n",
-> @@ -902,6 +907,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
->  
->  		if (!is_cardbus) {
->  			child->bridge_ctl = bctl;
-> +			/*
-> +			 * Read and initialize bridge resources.
-> +			 */
-> +			pci_read_bridge_bases(child);
->  			max = pci_scan_child_bus(child);
->  		} else {
->  			/*
-> -- 
-> 2.2.1
-> 
+	Joerg
+
