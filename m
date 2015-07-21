@@ -1,120 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:34078 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933340AbbGUSYY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 14:24:24 -0400
-Received: by igvi1 with SMTP id i1so109858550igv.1
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 11:24:24 -0700 (PDT)
-Date: Tue, 21 Jul 2015 13:24:19 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Mark D Rustad <mark.d.rustad@intel.com>
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org,
-	Alexander Duyck <alexander.h.duyck@redhat.com>
-Subject: Re: [PATCH V4 0/2] pci: Provide a flag to access VPD through
- function 0
-Message-ID: <20150721182419.GF21967@google.com>
-References: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jarod Wilson <jarod@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Jarod Wilson <jarod@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] pci/pciehp: bail on bogus pcie reads from removed devices
+Date: Tue, 21 Jul 2015 12:25:30 -0400
+Message-Id: <1437495930-7723-1-git-send-email-jarod@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex]
+https://bugzilla.kernel.org/show_bug.cgi?id=99841
 
-On Mon, Jul 13, 2015 at 11:39:54AM -0700, Mark D Rustad wrote:
-> Many multi-function devices provide shared registers in extended
-> config space for accessing VPD. The behavior of these registers
-> means that the state must be tracked and access locked correctly
-> for accesses not to hang or worse. One way to meet these needs is
-> to always perform the accesses through function 0, thereby using
-> the state tracking and mutex that already exists.
-> 
-> To provide this behavior, add a dev_flags bit to indicate that this
-> should be done. This bit can then be set for any non-zero function
-> that needs to redirect such VPD access to function 0. Do not set
-> this bit on the zero function or there will be an infinite recursion.
-> 
-> The second patch uses this new flag to invoke this behavior on all
-> multi-function Intel Ethernet devices.
-> 
-> Any hardware that shares VPD registers with multiple functions has
-> been suffering these problems forever. The hangs result in the log
-> message:
-> 
-> vpd r/w failed.  This is likely a firmware bug on this device.
-> 
-> Both read and write data corruption are also possible during
-> overlapping accesses in addition to hangs.
-> 
-> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-> 
-> ---
-> Changes in V2:
-> - Corrected a spelling error in a log message
-> - Added checks to see that the referenced function 0 is reasonable
-> Changes in V3:
-> - Don't leak a device reference
-> - Check that function 0 has VPD
-> - Make a helper for the function 0 checks
-> - Moved a multifunction check to the quirk patch
-> Changes in V4:
-> - Provide a more extensive commit log for patch 1
+Seems like a read of all 1's from a register of a device that has gone
+away should be taken as a sign that the device has gone away.
+Section 6.2.10 of the PCIE spec (v4.0, rev 0.3, Feb 19, 2014) suggests as
+much with this snippet:
 
-I applied these to pci/misc for v4.3 with changelogs as follows.  I added
-Alex's ack, since he acked v3 and the only difference here is the
-changelog.  I also added a stable tag.  Thanks!
+|IMPLEMENTATION NOTE
+|Data Value of All 1’s
+|Many platforms, including those supporting RP Extensions for DPC, can
+|return a data value of all 1’s to software when an error is associated
+|with a PCI Express Configuration, I/O, or Memory Read Request. During DPC,
+|the Downstream Port discards Requests destined for the Link and completes
+|them with an error (i.e., either with an Unsupported Request (UR) or
+|Completer Abort (CA) Completion Status). By ending a series of MMIO or
+|configuration space operations with a read to an address with a known
+|data value not equal to all 1’s, software may determine if a Completer
+|has been removed or DPC has been triggered.
 
-Bjorn
+I'm not sure the above is directly relevant to this case, but the same
+principle (reading all 1's means the device is probably gone) seems to
+hold.
 
+This is based on part of a debugging patch Bjorn posted in the referenced
+bugzilla, and its required to make the HP ZBook G2 I've got here not barf
+when disconnecting a thunderbolt ethernet adapter and corrupt memory.
 
-commit 932c435caba8a2ce473a91753bad0173269ef334
-Author: Mark Rustad <mark.d.rustad@intel.com>
-Date:   Mon Jul 13 11:40:02 2015 -0700
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+CC: linux-pci@vger.kernel.org
+Signed-off-by: Jarod Wilson <jarod@redhat.com>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-    PCI: Add dev_flags bit to access VPD through function 0
-    
-    Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
-    function 0 to provide VPD access on other functions.  This is for hardware
-    devices that provide copies of the same VPD capability registers in
-    multiple functions.  Because the kernel expects that each function has its
-    own registers, both the locking and the state tracking are affected by VPD
-    accesses to different functions.
-    
-    On such devices for example, if a VPD write is performed on function 0,
-    *any* later attempt to read VPD from any other function of that device will
-    hang.  This has to do with how the kernel tracks the expected value of the
-    F bit per function.
-    
-    Concurrent accesses to different functions of the same device can not only
-    hang but also corrupt both read and write VPD data.
-    
-    When hangs occur, typically the error message:
-    
-      vpd r/w failed.  This is likely a firmware bug on this device.
-    
-    will be seen.
-    
-    Never set this bit on function 0 or there will be an infinite recursion.
-    
-    Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Alexander Duyck <alexander.h.duyck@redhat.com>
-    CC: stable@vger.kernel.org
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index bb1d0de..c397851 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -547,6 +547,11 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	do {
+ 		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &detected);
+ 
++		if (detected == (u16) ~0) {
++			ctrl_info(ctrl, "Device has gone away\n");
++			return IRQ_HANDLED;
++		}
++
+ 		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+ 			     PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
+ 			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
+-- 
+1.8.3.1
 
-commit 7aa6ca4d39edf01f997b9e02cf6d2fdeb224f351
-Author: Mark Rustad <mark.d.rustad@intel.com>
-Date:   Mon Jul 13 11:40:07 2015 -0700
-
-    PCI: Add VPD function 0 quirk for Intel Ethernet devices
-    
-    Set the PCI_DEV_FLAGS_VPD_REF_F0 flag on all Intel Ethernet device
-    functions other than function 0, so that on multi-function devices, we will
-    always read VPD from function 0 instead of from the other functions.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Alexander Duyck <alexander.h.duyck@redhat.com>
-    CC: stable@vger.kernel.org
