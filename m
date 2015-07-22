@@ -1,78 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:34159 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751769AbbGOCMP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 22:12:15 -0400
-Received: by wibud3 with SMTP id ud3so68991011wib.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 19:12:14 -0700 (PDT)
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:2971 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820AbbGVVyE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 17:54:04 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>
+CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>
+Subject: [PATCH v4 05/12] dma-mapping: pci: add pci_(un)map_peer_resource
+Date: Wed, 22 Jul 2015 16:39:50 -0500
+Message-ID: <1437601197-6481-6-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
+References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20150715020206.GC6525@richard>
-References: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1435627004-6029-5-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150714220021.GL24416@google.com> <20150715020206.GC6525@richard>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 14 Jul 2015 21:11:54 -0500
-Message-ID: <CAErSpo4o4z+OHdoLjhzEY4QwTN4dZkbjw5ot4sdUmOx8bFxyjA@mail.gmail.com>
-Subject: Re: [PATCH V2 4/4] PCI: consolidate return value check for pci_find_(ext_)capability
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 14, 2015 at 9:02 PM, Wei Yang <weiyang@linux.vnet.ibm.com> wrote:
-> On Tue, Jul 14, 2015 at 05:00:21PM -0500, Bjorn Helgaas wrote:
->>On Tue, Jun 30, 2015 at 09:16:44AM +0800, Wei Yang wrote:
->>> The return value of the pci_find_(ext_)capability is the position of this
->>> Cap.  After previous two patches clean up, the position returned is an
->>> unsigned value. Only 0 indicates the Cap is not presented.
->>>
->>> This patch consolidates the form of check from (pos <= 0)to (!pos).
->>>
->>> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>
->>Applied to pci/misc with changelog as below.
->>
->>It seems pretty clear to me that pci_find_capability() returns either 0 or
->>a u8 value.  pci_find_ext_capability() does return an int.  It looks to me
->>like it can never be negative, but if you wanted it to be even more clear,
->>you could easily change just pci_find_next_ext_capability() to use a u16
->>for "pos".  That would be very simple and wouldn't change any interfaces.
->
-> pci_find_capability() will return either 0 or a u8 value, while in the code
-> the return value is an "int" type. So for the first sight, it may not that
-> immediate. The same as pci_find_ext_capability().
->
-> This is the reason for patch 2/3. The purpose is to make the return type
-> reflect the value it will return.
->
-> Patch 3 does exactly what you said, use a u16 for "pos" in
-> pci_find_next_ext_capability().
+Simply route these through to the new dma_(un)map_peer_resource APIs.
 
-Yes.  Patch 3 contains this hunk:
+Also route pci_peer_mapping_error through to the new dma_peer_mapping_error
+API.
 
-@@ -272,11 +272,11 @@ EXPORT_SYMBOL(pci_bus_find_capability);
-  * not support it.  Some capabilities can occur several times, e.g., the
-  * vendor-specific capability, and this provides a way to find them all.
-  */
--int pci_find_next_ext_capability(struct pci_dev *dev, int start, int cap)
-+u16 pci_find_next_ext_capability(struct pci_dev *dev, int start, u16 cap)
- {
-        u32 header;
-        int ttl;
--       int pos = PCI_CFG_SPACE_SIZE;
-+       u16 pos = PCI_CFG_SPACE_SIZE;
+Guard these new functions behind CONFIG_HAS_DMA_P2P.
 
-        /* minimum 8 bytes per capability */
-        ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ include/asm-generic/pci-dma-compat.h | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-I think the second piece (changing "pos" from int to u16) is enough to
-make it easy to analyze, and it only affects this function, so that
-seems obviously fine.
+diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
+index c110843..7baf09e 100644
+--- a/include/asm-generic/pci-dma-compat.h
++++ b/include/asm-generic/pci-dma-compat.h
+@@ -61,6 +61,29 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
+ 	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
+ }
+ 
++#ifdef CONFIG_HAS_DMA_P2P
++static inline dma_peer_addr_t
++pci_map_peer_resource(struct pci_dev *hwdev, struct pci_dev *peer,
++		      int res, unsigned long offset, size_t size,
++		      int direction)
++{
++	return dma_map_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, peer == NULL ? NULL : &peer->dev, peer == NULL ? NULL : &peer->resource[res], offset, size, (enum dma_data_direction)direction);
++}
++
++static inline int
++pci_dma_peer_mapping_error(struct pci_dev *pdev, dma_peer_addr_t dma_addr)
++{
++	return dma_peer_mapping_error(&pdev->dev, dma_addr);
++}
++
++static inline void
++pci_unmap_peer_resource(struct pci_dev *hwdev, dma_peer_addr_t dma_address,
++			size_t size, int direction)
++{
++	dma_unmap_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
++}
++#endif
++
+ static inline int
+ pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
+ 	   int nents, int direction)
+-- 
+2.4.6
 
-The first piece (changing the return type) changes the signature of an
-exported interface.  That is more work, e.g., it's more of a hassle
-for distros to backport if they want to preserve interfaces, so it's
-not quite as obvious that it's worthwhile.
-
-Bjorn
