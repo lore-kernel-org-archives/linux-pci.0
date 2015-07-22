@@ -1,125 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:48794 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753069AbbGQMoS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 17 Jul 2015 08:44:18 -0400
-Date: Fri, 17 Jul 2015 13:44:54 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ravikiran Gummaluri <ravikiran.gummaluri@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bharat Kumar Gogada <bharatku@xilinx.com>
-Subject: Re: PCIe support for ARM64
-Message-ID: <20150717124454.GA19824@red-moon>
-References: <loom.20150619T074145-299@post.gmane.org>
- <CAErSpo52WYqB9hfNKo-ADrJF1LASUz5y9vWzsmp2FaCNc9WZfg@mail.gmail.com>
- <loom.20150710T130734-815@post.gmane.org>
- <20150711201634.GA24416@google.com>
- <A12CBBFFEB35D84DABCB166110D762215E41B2C5@XAP-PVEXMBX01.xlnx.xilinx.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55AFA741.2010703@roeck-us.net>
+Date: Wed, 22 Jul 2015 07:22:57 -0700
+From: Guenter Roeck <linux@roeck-us.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <A12CBBFFEB35D84DABCB166110D762215E41B2C5@XAP-PVEXMBX01.xlnx.xilinx.com>
-Sender: linux-pci-owner@vger.kernel.org
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Simon Horman <horms@verge.net.au>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
+ PCI layer
+References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com> <20150722091427.GB344@red-moon>
+In-Reply-To: <20150722091427.GB344@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 17, 2015 at 12:43:42PM +0100, Ravikiran Gummaluri wrote:
-> HI Bjorn/Pratyush,
-> 	Thanks for your inputs. We were able to do modify our driver according to V4.2-rc1. We were only be able to bring up MSI related changes but not Legacy. Can you point us how to handle Legacy interrupts in new approach (previously in ARM32 handled by map_irq method in hw_pci structure).
+On 07/22/2015 02:14 AM, Lorenzo Pieralisi wrote:
+> Bjorn, Guenter,
+>
+> On Thu, Jul 09, 2015 at 11:59:16AM +0100, Lorenzo Pieralisi wrote:
+>> When a PCI bus is scanned, upon PCI bridge detection the kernel
+>> has to read the bridge registers to set-up its resources so that
+>> the PCI resource hierarchy can be validated properly.
+>>
+>> Most if not all architectures read PCI bridge registers in the
+>> pcibios_fixup_bus hook, that is called by the PCI generic layer
+>> whenever a PCI bus is scanned.
+>>
+>> Since pci_read_bridge_bases is an arch agnostic operation (and it
+>> is carried out on all architectures) it can be moved to the generic
+>> PCI layer in order to consolidate code and remove the respective
+>> calls from the architectures back-ends.
+>>
+>> The PCI_PROBE_ONLY flag is not checked before calling
+>> pci_read_bridge_buses in the generic layer since reading the bridge
+>> bases is not related to resources assignment; this implies that it
+>> can be carried out safely on PCI_PROBE_ONLY systems too and should
+>> not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
+>> flag before reading the bridge bases.
+>>
+>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Ralf Baechle <ralf@linux-mips.org>
+>> Cc: James E.J. Bottomley <jejb@parisc-linux.org>
+>> Cc: Michael Ellerman <mpe@ellerman.id.au>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Richard Henderson <rth@twiddle.net>
+>> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>> Cc: David Howells <dhowells@redhat.com>
+>> Cc: Russell King <linux@arm.linux.org.uk>
+>> Cc: Tony Luck <tony.luck@intel.com>
+>> Cc: David S. Miller <davem@davemloft.net>
+>> Cc: Ingo Molnar <mingo@redhat.com>
+>> Cc: Guenter Roeck <linux@roeck-us.net>
+>> Cc: Michal Simek <monstr@monstr.eu>
+>> Cc: Chris Zankel <chris@zankel.net>
+>> ---
+>> v2->v3:
+>>
+>> - Dropped RFC status
+>> - Removed bridge resources claiming from pci_read_bridge_bases()
+>
+> What do you want me to do with this patch ? I removed the resource
+> claiming - ie the only controversial bit, I can only test on
+> arm64, I would like to make some progress on this otherwise
+> I will have to add the bridge bases read to arm64 pcibios_fixup_bus()
+> and be done with this.
+>
 
-Call pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+Lorenzo,
 
-in your now ARM/ARM64 common host controller driver.
+please give me a few days to test it. I was out on vacation for
+the last two weeks, and I am still struggling to get my test systems
+back to a working state.
 
-Lorenzo
+Thanks,
+Guenter
 
-> 
-> Thanks & Regards
-> Ravi Kiran G 
-> 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com] 
-> Sent: Sunday, July 12, 2015 1:47 AM
-> To: Ravikiran Gummaluri
-> Cc: linux-pci@vger.kernel.org; Pratyush Anand; Bharat Kumar Gogada
-> Subject: Re: PCIe support for ARM64
-> 
-> [+cc Pratyush, Bharat]
-> 
-> On Fri, Jul 10, 2015 at 11:18:10AM +0000, ravikiran gummaluri wrote:
-> > Bjorn Helgaas <bhelgaas <at> google.com> writes:
-> > 
-> > > 
-> > > On Fri, Jun 19, 2015 at 12:43 AM, ravikiran gummaluri <rgummal <at> 
-> > > xilinx.com> wrote:
-> > > > HI
-> > > >
-> > > > I am developing PCIe root port driver for Xilinx device. We have 
-> > > > used following patch for ARM64 bit support 
-> > > > "https://lkml.org/lkml/2014/7/3/764". The link explains it as 
-> > > > temporary patch and main line will be updated soon with those 
-> > > > changes. We have not seen the changes till now. Can you let us 
-> > > > know when we can expect the changes in mainline? We are planning to push our drivers to mainline.
-> > > 
-> > > There is PCI support for ARM64 in mainline:
-> > > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?
-> > id=d1e6dc91b532
-> > > 
-> > > There is also a Xilinx driver already:
-> > > 
-> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/dr
-> > ivers/
-> > pci/host/pcie-xilinx.c
-> > > 
-> > > I don't know if your device is similar to the AXI device, but it 
-> > > would be good if you can share or modify that driver instead of 
-> > > adding a new one.
-> > > 
-> > > As with several other drivers, the current pcie-xilinx.c uses 
-> > > pci_common_init_dev(), so it only works on ARM (not ARM64).  This is 
-> > > a known issue, and people are working on making these drivers less 
-> > > arch-specific.
-> > > 
-> > > Bjorn
-> > > 
-> > 
-> > Thanks Bjorn. pcie-xilinx.c is AXI device. Now we are developing for 
-> > different device using pcie-xilinx.c as reference. When we trying to 
-> > compile our new driver with latest kernel we are getting compilation 
-> > problems for struct hw_pci and struct pci_sys_data for ARM64. These 
-> > structures are not defined in ARM64. The following patch has the 
-> > structure definitions "https://lkml.org/lkml/2014/7/3/764". We have 
-> > used this patch and able complete our development. Now for up 
-> > streaming it we need this patch in main line. From your discursion we 
-> > understood that some work is going on ARCH independent API and 
-> > structure. When can we expect them in mainline?
-> 
-> Pratyush already answered this:
-> 
->     Please have a look to the latest kernel and try to see what is
->     available for ARM64 PCIe.
-> 
->     You may see drivers/pci/host/pci-xgene.c as reference.
-> 
->     I see that there is already a driver for xilinx PCIe controller with
->     ARM platform.
->     drivers/pci/host/pcie-xilinx.c
-> 
->     If it is the same device on ARM64, then you need to take similar
->     approach what is being discussed
->     for designware on ARM64.
-> 
->     http://marc.info/?l=devicetree&m=143394380815743&w=2
-> 
-> My advice is to adapt your driver so it works using the interfaces and structures in v4.2-rc1 and post that.  As Pratyush mentioned, the X-Gene driver should be a good place to start.
-> 
-> There will likely be changes to the way we handle arch- and platform- specific data, but you don't need to wait for those to be completed.  When people make changes like that, it is always their responsibility to update all the code in the tree to match.  So once your code is in the tree, you don't have to worry about updating your driver to follow those changes.
-> 
-> On the other hand, if you do wait for those changes to be completed, you never know when or if they ever will be done, and you'll have to do your own updates before posting your driver.
-> 
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
