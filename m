@@ -1,169 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:54409 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754933AbbGQGDi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:38 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 17 Jul 2015 11:33:36 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 4698DE0044
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:37:29 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H63Us752297938
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:31 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H63TNI028585
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:30 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
-Date: Fri, 17 Jul 2015 14:02:41 +0800
-Message-Id: <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from foss.arm.com ([217.140.101.70]:36520 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934333AbbGVOyS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Jul 2015 10:54:18 -0400
+Message-ID: <55AFAE96.4070401@arm.com>
+Date: Wed, 22 Jul 2015 15:54:14 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v4 04/19] PCI/MSI: Add hooks to populate the msi_domain
+ field
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com> <1436962613-17359-5-git-send-email-marc.zyngier@arm.com> <20150721212644.GB3691@google.com> <55AFABF3.5050303@arm.com> <CAErSpo5GRHp0-51tj8XiXKLujkLmtdmhg+gJOy0szJpP3002cQ@mail.gmail.com>
+In-Reply-To: <CAErSpo5GRHp0-51tj8XiXKLujkLmtdmhg+gJOy0szJpP3002cQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
-which means those VFs in a group should form a compound PE.
+On 22/07/15 15:48, Bjorn Helgaas wrote:
+> On Wed, Jul 22, 2015 at 9:42 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>> Hi Bjorn,
+>>
+>> On 21/07/15 22:26, Bjorn Helgaas wrote:
+>>> On Wed, Jul 15, 2015 at 01:16:38PM +0100, Marc Zyngier wrote:
+>>>> In order to be able to populate the device msi_domain field,
+>>>> add the necesary hooks to propagate the host bridge msi_domain
+>>>> across secondary busses to devices.
+>>>>
+>>>> So far, nobody populates the initial msi_domain.
+>>>>
+>>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>>>> ---
+>>>>  drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
+>>>>  include/linux/pci.h |  1 +
+>>>>  2 files changed, 31 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>> index cefd636..376f6fa 100644
+>>>> --- a/drivers/pci/probe.c
+>>>> +++ b/drivers/pci/probe.c
+>>>> @@ -661,6 +661,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+>>>>      }
+>>>>  }
+>>>>
+>>>> +void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
+>>>> +{
+>>>> +}
+>>>
+>>> I don't think there's anything in this series that requires this to be a
+>>> weak function, is there?  This is the only definition I see.
+>>
+>> It looks like all the pcibios_* functions so far have a weak attribute,
+>> and I've added it as a matter of consistency.
+> 
+> We've used pcibios_* names where we might need an arch-specific
+> implementation.  I'm not sure that's the case here -- do you envision
+> an implementation under arch/* someday?  If not, maybe it should just
+> be a pci_* function instead of pcibios_*.
 
-This patch links those VF PEs into compound PE in this case.
+I could definitely see non-OF driven architectures wanting to override this.
 
-[gwshan: code refactoring for a bit]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c |   46 +++++++++++++++++++++++++----
- arch/powerpc/platforms/powernv/pci.c      |   17 +++++++++--
- 2 files changed, 56 insertions(+), 7 deletions(-)
+Or maybe we should turn it the other way around and make it call the
+various firmware interfaces (OF, ACPI...) until one of them succeeds. In
+which case your suggestion of making it a pci_* function makes a lot of
+sense.
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 5738d31..d1530cb 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1359,9 +1359,20 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 	}
- 
- 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
-+		struct pnv_ioda_pe *s, *sn;
- 		if (pe->parent_dev != pdev)
- 			continue;
- 
-+		if ((pe->flags & PNV_IODA_PE_MASTER) &&
-+		    (pe->flags & PNV_IODA_PE_VF)) {
-+			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
-+				pnv_pci_ioda2_release_dma_pe(pdev, s);
-+				list_del(&s->list);
-+				pnv_ioda_deconfigure_pe(phb, s);
-+				pnv_ioda_free_pe(phb, s->pe_number);
-+			}
-+		}
-+
- 		pnv_pci_ioda2_release_dma_pe(pdev, pe);
- 
- 		/* Remove from list */
-@@ -1414,7 +1425,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
--	struct pnv_ioda_pe    *pe;
-+	struct pnv_ioda_pe    *pe, *master_pe;
- 	int                    pe_num;
- 	u16                    vf_index;
- 	struct pci_dn         *pdn;
-@@ -1456,10 +1467,13 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 			continue;
- 		}
- 
--		/* Put PE to the list */
--		mutex_lock(&phb->ioda.pe_list_mutex);
--		list_add_tail(&pe->list, &phb->ioda.pe_list);
--		mutex_unlock(&phb->ioda.pe_list_mutex);
-+		/* Put PE to the list, or postpone it for compound PEs */
-+		if ((pdn->m64_per_iov != M64_PER_IOV) ||
-+		    (num_vfs <= M64_PER_IOV)) {
-+			mutex_lock(&phb->ioda.pe_list_mutex);
-+			list_add_tail(&pe->list, &phb->ioda.pe_list);
-+			mutex_unlock(&phb->ioda.pe_list_mutex);
-+		}
- 
- 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
- 	}
-@@ -1472,10 +1486,32 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
- 
- 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
-+			master_pe = NULL;
-+
- 			for (vf_index = vf_group * vf_per_group;
- 			     vf_index < (vf_group + 1) * vf_per_group &&
- 			     vf_index < num_vfs;
- 			     vf_index++) {
-+
-+				/*
-+				 * Figure out the master PE and put all slave
-+				 * PEs to master PE's list.
-+				 */
-+				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
-+				if (!master_pe) {
-+					pe->flags |= PNV_IODA_PE_MASTER;
-+					INIT_LIST_HEAD(&pe->slaves);
-+					master_pe = pe;
-+					mutex_lock(&phb->ioda.pe_list_mutex);
-+					list_add_tail(&pe->list, &phb->ioda.pe_list);
-+					mutex_unlock(&phb->ioda.pe_list_mutex);
-+				} else {
-+					pe->flags |= PNV_IODA_PE_SLAVE;
-+					pe->master = master_pe;
-+					list_add_tail(&pe->list,
-+						&master_pe->slaves);
-+				}
-+
- 				for (vf_index1 = vf_group * vf_per_group;
- 				     vf_index1 < (vf_group + 1) * vf_per_group &&
- 				     vf_index1 < num_vfs;
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index 0e4f42e..f3aead0 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -739,7 +739,7 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
- 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
- 	struct pnv_phb *phb = hose->private_data;
- #ifdef CONFIG_PCI_IOV
--	struct pnv_ioda_pe *pe;
-+	struct pnv_ioda_pe *pe, *slave;
- 	struct pci_dn *pdn;
- 
- 	/* Fix the VF pdn PE number */
-@@ -751,10 +751,23 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
- 			    (pdev->devfn & 0xff))) {
- 				pdn->pe_number = pe->pe_number;
- 				pe->pdev = pdev;
--				break;
-+				goto found;
-+			}
-+
-+			if ((pe->flags & PNV_IODA_PE_MASTER) &&
-+			    (pe->flags & PNV_IODA_PE_VF)) {
-+				list_for_each_entry(slave, &pe->slaves, list) {
-+					if (slave->rid == ((pdev->bus->number << 8)
-+					   | (pdev->devfn & 0xff))) {
-+						pdn->pe_number = slave->pe_number;
-+						slave->pdev = pdev;
-+						goto found;
-+					}
-+				}
- 			}
- 		}
- 	}
-+found:
- #endif /* CONFIG_PCI_IOV */
- 
- 	if (phb && phb->dma_dev_setup)
+Thanks,
+
+	M.
 -- 
-1.7.9.5
-
+Jazz is not dead. It just smells funny...
