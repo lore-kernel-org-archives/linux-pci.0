@@ -1,171 +1,242 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51311 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757821AbbGGUVI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 16:21:08 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Kees Cook <keescook@chromium.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, Baoquan He <bhe@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 35/42] x86, boot, PCI: Convert SETUP_PCI data to list
-Date: Tue,  7 Jul 2015 13:20:21 -0700
-Message-Id: <1436300428-21163-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
-References: <1436300428-21163-1-git-send-email-yinghai@kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:2962 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753330AbbGVVyD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 17:54:03 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>
+CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	"Konrad Wilk" <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"Terence Ripperda" <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	"Jerome Glisse" <jglisse@redhat.com>
+Subject: [PATCH v4 03/12] dma-debug: add checking for map/unmap_peer_resource
+Date: Wed, 22 Jul 2015 16:39:48 -0500
+Message-ID: <1437601197-6481-4-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
+References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-So we could avoid ioremap every time later.
+Add debug callbacks for the new dma_map_peer_resource and
+dma_unmap_peer_resource functions.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Also add a callback for dma_peer_mapping_error. Most of the time this will
+be identical to dma_mapping_error, except where the dma_addr_t is not as
+wide as dma_peer_addr_t.
+
+Guard these new callbacks behind a CONFIG_HAS_DMA_P2P check.
+
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 ---
- arch/x86/include/asm/pci.h |  2 ++
- arch/x86/kernel/setup.c    |  1 +
- arch/x86/pci/common.c      | 77 +++++++++++++++++++++++++++++++++++++---------
- 3 files changed, 65 insertions(+), 15 deletions(-)
+ include/linux/dma-debug.h | 39 ++++++++++++++++++++-
+ lib/dma-debug.c           | 86 +++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 122 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 7d2468c..1c905a8 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -81,9 +81,11 @@ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- #ifdef CONFIG_PCI
- extern void early_quirks(void);
- void add_pci(u64 pa_data);
-+int fill_setup_pci_entries(void);
- #else
- static inline void early_quirks(void) { }
- static inline void add_pci(u64 pa_data) { }
-+static inline int fill_setup_pci_entries(void) { }
- #endif
+diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
+index fe8cb61..4ff8364 100644
+--- a/include/linux/dma-debug.h
++++ b/include/linux/dma-debug.h
+@@ -43,7 +43,21 @@ extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
  
- extern void pci_iommu_alloc(void);
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 35d9ff5..6badf66 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -1180,6 +1180,7 @@ void __init setup_arch(char **cmdline_p)
- 	acpi_boot_init();
- 	sfi_init();
- 	x86_dtb_init();
-+	fill_setup_pci_entries();
- 
- 	/*
- 	 * get boot-time SMP configuration:
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 16ace12..32d4f21 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -642,7 +642,7 @@ unsigned int pcibios_assign_all_busses(void)
- 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
- }
- 
--static u64 pci_setup_data;
-+static u64 pci_setup_data __initdata;
- void __init add_pci(u64 pa_data)
- {
- 	struct setup_data *data;
-@@ -654,36 +654,83 @@ void __init add_pci(u64 pa_data)
- 	early_memunmap(data, sizeof(*data));
- }
- 
--int pcibios_add_device(struct pci_dev *dev)
-+struct firmware_setup_pci_entry {
-+	struct list_head list;
-+	uint16_t vendor;
-+	uint16_t devid;
-+	uint64_t pcilen;
-+	unsigned long segment;
-+	unsigned long bus;
-+	unsigned long device;
-+	unsigned long function;
-+	phys_addr_t romdata;
-+};
-+
-+static LIST_HEAD(setup_pci_entries);
-+
-+int __init fill_setup_pci_entries(void)
- {
- 	struct setup_data *data;
- 	struct pci_setup_rom *rom;
-+	struct firmware_setup_pci_entry *entry;
-+	phys_addr_t pa_entry;
- 	u64 pa_data;
- 
- 	pa_data = pci_setup_data;
- 	while (pa_data) {
--		data = ioremap(pa_data, sizeof(*rom));
-+		data  = early_memremap(pa_data, sizeof(*rom));
- 		if (!data)
- 			return -ENOMEM;
+ extern void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+ 				 size_t size, int direction, bool map_single);
 -
- 		rom = (struct pci_setup_rom *)data;
++#ifdef CONFIG_HAS_DMA_P2P
++extern void debug_dma_map_peer_resource(struct device *dev,
++					struct device *peer,
++					struct resource *resource,
++					size_t offset, size_t size,
++					int direction,
++					dma_peer_addr_t dma_addr);
++
++extern void debug_dma_peer_mapping_error(struct device *dev,
++					 dma_peer_addr_t dma_addr);
++
++extern void debug_dma_unmap_peer_resource(struct device *dev,
++					  dma_peer_addr_t addr,
++					  size_t size, int direction);
++#endif
+ extern void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 			     int nents, int mapped_ents, int direction);
  
--		if ((pci_domain_nr(dev->bus) == rom->segment) &&
--		    (dev->bus->number == rom->bus) &&
--		    (PCI_SLOT(dev->devfn) == rom->device) &&
--		    (PCI_FUNC(dev->devfn) == rom->function) &&
--		    (dev->vendor == rom->vendor) &&
--		    (dev->device == rom->devid)) {
--			dev->rom = pa_data +
--			      offsetof(struct pci_setup_rom, romdata);
--			dev->romlen = rom->pcilen;
-+		pa_entry = memblock_alloc(sizeof(*entry), sizeof(long));
-+		if (!pa_entry) {
-+			early_memunmap(data, sizeof(*rom));
-+			return -ENOMEM;
-+		}
-+
-+		entry = phys_to_virt(pa_entry);
-+		entry->segment = rom->segment;
-+		entry->bus = rom->bus;
-+		entry->device = rom->device;
-+		entry->function = rom->function;
-+		entry->vendor = rom->vendor;
-+		entry->devid = rom->devid;
-+		entry->pcilen = rom->pcilen;
-+		entry->romdata = pa_data +
-+				 offsetof(struct pci_setup_rom, romdata);
-+
-+		list_add(&entry->list, &setup_pci_entries);
-+
-+		memblock_free(pa_data, sizeof(*rom));
-+		pa_data = data->next;
-+		early_memunmap(data, sizeof(*rom));
-+	}
-+
-+	pci_setup_data = 0;
-+
-+	return 0;
+@@ -120,6 +134,29 @@ static inline void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+ {
+ }
+ 
++#ifdef CONFIG_HAS_DMA_P2P
++static inline void debug_dma_map_peer_resource(struct device *dev,
++					       struct device *peer,
++					       struct resource *resource,
++					       size_t offset, size_t size,
++					       int direction,
++					       dma_peer_addr_t dma_addr)
++{
 +}
 +
-+int pcibios_add_device(struct pci_dev *dev)
++static inline void debug_dma_peer_mapping_error(struct device *dev,
++						dma_peer_addr_t dma_addr)
 +{
-+	struct firmware_setup_pci_entry *entry;
++}
 +
-+	list_for_each_entry(entry, &setup_pci_entries, list) {
-+		if ((pci_domain_nr(dev->bus) == entry->segment) &&
-+		    (dev->bus->number == entry->bus) &&
-+		    (PCI_SLOT(dev->devfn) == entry->device) &&
-+		    (PCI_FUNC(dev->devfn) == entry->function) &&
-+		    (dev->vendor == entry->vendor) &&
-+		    (dev->device == entry->devid)) {
-+			dev->rom = entry->romdata;
-+			dev->romlen = entry->pcilen;
- 			dev_printk(KERN_DEBUG, &dev->dev, "set rom to [%#010lx, %#010lx] via SETUP_PCI\n",
- 				   (unsigned long)dev->rom,
- 				   (unsigned long)(dev->rom + dev->romlen - 1));
- 		}
--		pa_data = data->next;
--		iounmap(data);
- 	}
++static inline void debug_dma_unmap_peer_resource(struct device *dev,
++						 dma_peer_addr_t addr,
++						 size_t size,
++						 int direction)
++{
++}
++#endif
 +
- 	return 0;
+ static inline void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 				    int nents, int mapped_ents, int direction)
+ {
+diff --git a/lib/dma-debug.c b/lib/dma-debug.c
+index ae4b65e..622f569 100644
+--- a/lib/dma-debug.c
++++ b/lib/dma-debug.c
+@@ -43,6 +43,7 @@ enum {
+ 	dma_debug_page,
+ 	dma_debug_sg,
+ 	dma_debug_coherent,
++	dma_debug_peer_resource,
+ };
+ 
+ enum map_err_types {
+@@ -64,7 +65,8 @@ enum map_err_types {
+  * @direction: enum dma_data_direction
+  * @sg_call_ents: 'nents' from dma_map_sg
+  * @sg_mapped_ents: 'mapped_ents' from dma_map_sg
+- * @map_err_type: track whether dma_mapping_error() was checked
++ * @map_err_type: track whether dma_mapping_error() or dma_peer_mapping_error()
++ *		  was called
+  * @stacktrace: support backtraces when a violation is detected
+  */
+ struct dma_debug_entry {
+@@ -1250,6 +1252,23 @@ out:
+ 	put_hash_bucket(bucket, &flags);
  }
  
++static void check_mapping_error(struct dma_debug_entry *entry, bool peer)
++{
++	if (peer && !(entry->type == dma_debug_peer_resource))
++		err_printk(entry->dev, entry, "DMA-API: device driver calls "
++				"dma_peer_mapping_error() on dma_addr_t "
++				"[device address=0x%016llx] [size=%llu bytes]\n",
++				(unsigned long long)entry->dev_addr,
++				entry->size);
++
++	if (!peer && (entry->type == dma_debug_peer_resource))
++		err_printk(entry->dev, entry, "DMA-API: device driver calls "
++				"dma_mapping_error() on dma_peer_addr_t "
++				"[device address=0x%016llx] [size=%llu bytes]\n",
++				(unsigned long long)entry->dev_addr,
++				entry->size);
++}
++
+ void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
+ 			size_t size, int direction, dma_addr_t dma_addr,
+ 			bool map_single)
+@@ -1289,7 +1308,9 @@ void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
+ }
+ EXPORT_SYMBOL(debug_dma_map_page);
+ 
+-void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
++static void debug_dma_mapping_error_common(struct device *dev,
++					   u64 dma_addr,
++					   bool peer)
+ {
+ 	struct dma_debug_entry ref;
+ 	struct dma_debug_entry *entry;
+@@ -1319,12 +1340,18 @@ void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
+ 		 */
+ 		if (entry->map_err_type == MAP_ERR_NOT_CHECKED) {
+ 			entry->map_err_type = MAP_ERR_CHECKED;
++			check_mapping_error(entry, peer);
+ 			break;
+ 		}
+ 	}
+ 
+ 	put_hash_bucket(bucket, &flags);
+ }
++
++void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
++{
++	debug_dma_mapping_error_common(dev, (u64)dma_addr, false);
++}
+ EXPORT_SYMBOL(debug_dma_mapping_error);
+ 
+ void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+@@ -1348,6 +1375,61 @@ void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+ }
+ EXPORT_SYMBOL(debug_dma_unmap_page);
+ 
++#ifdef CONFIG_HAS_DMA_P2P
++void debug_dma_map_peer_resource(struct device *dev, struct device *peer,
++				 struct resource *resource, size_t offset,
++				 size_t size, int direction,
++				 dma_peer_addr_t dma_addr)
++{
++	struct dma_debug_entry *entry;
++
++	if (unlikely(dma_debug_disabled()))
++		return;
++
++	if (dma_mapping_error(dev, dma_addr))
++		return;
++
++	entry = dma_entry_alloc();
++	if (!entry)
++		return;
++
++	entry->dev       = dev;
++	entry->type      = dma_debug_peer_resource;
++	entry->pfn       = resource->start >> PAGE_SHIFT;
++	entry->offset    = offset,
++	entry->dev_addr  = dma_addr;
++	entry->size      = size;
++	entry->direction = direction;
++
++	add_dma_entry(entry);
++}
++EXPORT_SYMBOL(debug_dma_map_peer_resource);
++
++void debug_dma_peer_mapping_error(struct device *dev, dma_peer_addr_t dma_addr)
++{
++	debug_dma_mapping_error_common(dev, (u64)dma_addr, true);
++}
++EXPORT_SYMBOL(debug_dma_peer_mapping_error);
++
++void debug_dma_unmap_peer_resource(struct device *dev, dma_peer_addr_t addr,
++				   size_t size, int direction)
++{
++	struct dma_debug_entry ref = {
++		.type           = dma_debug_peer_resource,
++		.dev            = dev,
++		.dev_addr       = addr,
++		.size           = size,
++		.direction      = direction,
++	};
++
++	if (unlikely(dma_debug_disabled()))
++		return;
++
++	check_unmap(&ref);
++}
++EXPORT_SYMBOL(debug_dma_unmap_peer_resource);
++#endif
++
+ void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 		      int nents, int mapped_ents, int direction)
+ {
 -- 
-1.8.4.5
+2.4.6
 
