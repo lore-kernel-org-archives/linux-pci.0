@@ -1,76 +1,99 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v3 0/4] Add Broadcom North Star 2 support
-Date: Wed, 15 Jul 2015 21:39:19 -0700
-Message-ID: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
+Message-ID: <55AFD5F3.3000705@arm.com>
+Date: Wed, 22 Jul 2015 18:42:11 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v4 04/19] PCI/MSI: Add hooks to populate the msi_domain
+ field
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com> <1436962613-17359-5-git-send-email-marc.zyngier@arm.com> <20150721212644.GB3691@google.com> <55AFABF3.5050303@arm.com> <CAErSpo5GRHp0-51tj8XiXKLujkLmtdmhg+gJOy0szJpP3002cQ@mail.gmail.com> <55AFAE96.4070401@arm.com> <20150722165318.GA27197@google.com>
+In-Reply-To: <20150722165318.GA27197@google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds Broadcom North Star 2 (NS2) SoC support. NS2 is an ARMv8
-based SoC and under the Broadcom iProc family.
+On 22/07/15 17:53, Bjorn Helgaas wrote:
+> On Wed, Jul 22, 2015 at 03:54:14PM +0100, Marc Zyngier wrote:
+>> On 22/07/15 15:48, Bjorn Helgaas wrote:
+>>> On Wed, Jul 22, 2015 at 9:42 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>>>> Hi Bjorn,
+>>>>
+>>>> On 21/07/15 22:26, Bjorn Helgaas wrote:
+>>>>> On Wed, Jul 15, 2015 at 01:16:38PM +0100, Marc Zyngier wrote:
+>>>>>> In order to be able to populate the device msi_domain field,
+>>>>>> add the necesary hooks to propagate the host bridge msi_domain
+>>>>>> across secondary busses to devices.
+>>>>>>
+>>>>>> So far, nobody populates the initial msi_domain.
+>>>>>>
+>>>>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>>>>>> ---
+>>>>>>  drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
+>>>>>>  include/linux/pci.h |  1 +
+>>>>>>  2 files changed, 31 insertions(+)
+>>>>>>
+>>>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>>>> index cefd636..376f6fa 100644
+>>>>>> --- a/drivers/pci/probe.c
+>>>>>> +++ b/drivers/pci/probe.c
+>>>>>> @@ -661,6 +661,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+>>>>>>      }
+>>>>>>  }
+>>>>>>
+>>>>>> +void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
+>>>>>> +{
+>>>>>> +}
+>>>>>
+>>>>> I don't think there's anything in this series that requires this to be a
+>>>>> weak function, is there?  This is the only definition I see.
+>>>>
+>>>> It looks like all the pcibios_* functions so far have a weak attribute,
+>>>> and I've added it as a matter of consistency.
+>>>
+>>> We've used pcibios_* names where we might need an arch-specific
+>>> implementation.  I'm not sure that's the case here -- do you envision
+>>> an implementation under arch/* someday?  If not, maybe it should just
+>>> be a pci_* function instead of pcibios_*.
+>>
+>> I could definitely see non-OF driven architectures wanting to override this.
+>>
+>> Or maybe we should turn it the other way around and make it call the
+>> various firmware interfaces (OF, ACPI...) until one of them succeeds. In
+>> which case your suggestion of making it a pci_* function makes a lot of
+>> sense.
+> 
+> Here's my advice, FWIW:
+> 
+>   - remove __weak
+> 
+>   - rename pcibios_set_host_bridge_msi_domain() to
+>     pci_host_bridge_msi_domain() and have it return a struct irq_domain *
+> 
+>   - pci_host_bridge_msi_domain() can call whatever firmware- or
+>     arch-specific code you need to look up the irq_domain
+> 
+>   - move the dev_set_msi_domain() call from pci_set_phb_of_msi_domain() to
+>     pci_set_bus_msi_domain()
+> 
 
-Sorry for tying this with the Broadcom iProc PCIe driver fixes for ARM64. I
-have to tie them together because iProc PCIe support is enabled by default
-when ARCH_BCM_IPROC is enabled. Without the fixes in the iProc PCIe driver,
-enabling CONFIG_ARCH_BCM_IPROC would break the build for arm64 defconfig. Let
-me know if there's a better way to handle this.
+Yes, seems to make sense. I end-up with something that looks much more
+readable (pci_set_bus_msi_domain looks fairly neat now).
 
-This patch series is generated based on v4.2-rc2 and tested on Broadcom NS2 SVK
+I'll post a new version shortly.
 
-Code available on GITHUB: https://github.com/Broadcom/arm64-linux.git
-branch is ns2-core-v3
+Thanks,
 
-Changes from V2:
-- Drop hardcoded earlycon kernel command line paramter in NS2 SVK dts file
-because 1) earlycon is a debugging feature that can be enabled in the
-bootloader and should not be enabled by default in the board dts file and 2)
-of_earlycon should be used and support should be added to 8250 DW driver
-
-Changes from V1:
-- Took Arnd's advice to tweak the location of struct pci_sys_data within
-struct iproc_pcie. This helps to get rid of most of the CONFIG_ARM wrap in
-iProc PCIe core driver
-- Use stdout-path and alias for serial console in NS2 SVK dts
-- Add all 4 CPU descriptions in NS2 dtsi
-- Remove "clock-frequency" property in the armv8 timer node so timer frequency
-can be determined based on readings from CNTFRQ_EL0
-- Remove config flag ARCH_BCM_NS2. Leave only ARCH_BCM_IPROC for all Broadcom
-arm64 SoCs as advised
-
-Ray Jui (4):
-  PCI: iproc: enable arm64 support for iProc PCIe
-  PCI: iproc: Fix ARM64 dependency in Kconfig
-  arm64: Add Broadcom iProc family support
-  arm64: dts: Add Broadcom North Star 2 support
-
- Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
- arch/arm64/Kconfig                                |    5 +
- arch/arm64/boot/dts/Makefile                      |    1 +
- arch/arm64/boot/dts/broadcom/Makefile             |    5 +
- arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   59 +++++++++++
- arch/arm64/boot/dts/broadcom/ns2.dtsi             |  118 +++++++++++++++++++++
- arch/arm64/configs/defconfig                      |    2 +
- drivers/pci/host/Kconfig                          |    2 +-
- drivers/pci/host/pcie-iproc.c                     |   15 +--
- drivers/pci/host/pcie-iproc.h                     |    8 +-
- 10 files changed, 210 insertions(+), 14 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
- create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
-
+	M.
 -- 
-1.7.9.5
-
+Jazz is not dead. It just smells funny...
