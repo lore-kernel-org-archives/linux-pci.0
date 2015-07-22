@@ -1,105 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [PATCH v3 13/51] PCI: Separate realloc list checking after allocation
-Date: Mon, 27 Jul 2015 16:29:31 -0700
-Message-Id: <1438039809-24957-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:27223 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964848AbbGVB3a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 21:29:30 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v4 0/4] Add Broadcom North Star 2 support
+Date: Tue, 21 Jul 2015 18:29:39 -0700
+Message-ID: <1437528583-855-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We check the realloc list, as list must be empty after allocation.
+This patch series adds Broadcom North Star 2 (NS2) SoC support. NS2 is an ARMv8
+based SoC and under the Broadcom iProc family.
 
-Separate the realloc list checking to another function.
+Sorry for tying this with the Broadcom iProc PCIe driver fixes for ARM64. I
+have to tie them together because iProc PCIe support is enabled by default
+when ARCH_BCM_IPROC is enabled. Without the fixes in the iProc PCIe driver,
+enabling CONFIG_ARCH_BCM_IPROC would break the build for arm64 defconfig. Let
+me know if there's a better way to handle this.
 
-Add checking that is missed in acpiphp driver.
+This patch series is generated based on v4.2-rc2 and tested on Broadcom NS2 SVK
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/pci/hotplug/acpiphp_glue.c |  1 +
- drivers/pci/pci.h                  |  1 +
- drivers/pci/setup-bus.c            | 11 ++++++++---
- 3 files changed, 10 insertions(+), 3 deletions(-)
+Code available on GITHUB: https://github.com/Broadcom/arm64-linux.git
+branch is ns2-core-v4
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index ff53856..134caee 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 		}
- 	}
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	__pci_bus_check_realloc(&add_list);
- 
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4ff0ff1..2b83977 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -235,6 +235,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head);
-+void __pci_bus_check_realloc(struct list_head *realloc_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
- 
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 06664db..f30225c 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -350,6 +350,11 @@ out:
- 	}
- }
- 
-+void __pci_bus_check_realloc(struct list_head *realloc_head)
-+{
-+	BUG_ON(!list_empty(realloc_head));
-+}
-+
- /**
-  * assign_requested_resources_sorted() - satisfy resource requests
-  *
-@@ -1861,7 +1866,7 @@ again:
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
--		BUG_ON(!list_empty(add_list));
-+		__pci_bus_check_realloc(add_list);
- 	tried_times++;
- 
- 	/* any device complain? */
-@@ -1936,7 +1941,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
- 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	BUG_ON(!list_empty(&add_list));
-+	__pci_bus_check_realloc(&add_list);
- 	tried_times++;
- 
- 	if (list_empty(&fail_head))
-@@ -1995,6 +2000,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 							 &add_list);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
--	BUG_ON(!list_empty(&add_list));
-+	__pci_bus_check_realloc(&add_list);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+Changes from V3:
+- Add more paragraph to the iProc PCIe arm64 support patch commit message to
+explain the change and anticipated future change in more details
+
+Changes from V2:
+- Drop hardcoded earlycon kernel command line paramter in NS2 SVK dts file
+because 1) earlycon is a debugging feature that can be enabled in the
+bootloader and should not be enabled by default in the board dts file and 2)
+of_earlycon should be used and support should be added to 8250 DW driver
+
+Changes from V1:
+- Took Arnd's advice to tweak the location of struct pci_sys_data within
+struct iproc_pcie. This helps to get rid of most of the CONFIG_ARM wrap in
+iProc PCIe core driver
+- Use stdout-path and alias for serial console in NS2 SVK dts
+- Add all 4 CPU descriptions in NS2 dtsi
+- Remove "clock-frequency" property in the armv8 timer node so timer frequency
+can be determined based on readings from CNTFRQ_EL0
+- Remove config flag ARCH_BCM_NS2. Leave only ARCH_BCM_IPROC for all Broadcom
+arm64 SoCs as advised
+
+Ray Jui (4):
+  PCI: iproc: enable arm64 support for iProc PCIe
+  PCI: iproc: Fix ARM64 dependency in Kconfig
+  arm64: Add Broadcom iProc family support
+  arm64: dts: Add Broadcom North Star 2 support
+
+ Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
+ arch/arm64/Kconfig                                |    5 +
+ arch/arm64/boot/dts/Makefile                      |    1 +
+ arch/arm64/boot/dts/broadcom/Makefile             |    5 +
+ arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   59 +++++++++++
+ arch/arm64/boot/dts/broadcom/ns2.dtsi             |  118 +++++++++++++++++++++
+ arch/arm64/configs/defconfig                      |    2 +
+ drivers/pci/host/Kconfig                          |    2 +-
+ drivers/pci/host/pcie-iproc.c                     |   15 +--
+ drivers/pci/host/pcie-iproc.h                     |    8 +-
+ 10 files changed, 210 insertions(+), 14 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
+ create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
+
 -- 
-1.8.4.5
+1.7.9.5
 
