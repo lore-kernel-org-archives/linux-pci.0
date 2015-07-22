@@ -1,151 +1,151 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 06/49] PCI: Don't add too much optional size for hotplug bridge mmio
-Date: Tue, 14 Jul 2015 15:46:37 -0700
-Message-Id: <1436914040-13206-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from eu-smtp-delivery-143.mimecast.com ([207.82.80.143]:53525 "EHLO
+	eu-smtp-delivery-143.mimecast.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932748AbbGVKq2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Jul 2015 06:46:28 -0400
+Date: Wed, 22 Jul 2015 11:46:19 +0100
+From: Liviu Dudau <Liviu.Dudau@arm.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "arnd@arndb.de" <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"wangzhou1@hisilicon.com" <wangzhou1@hisilicon.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	James Morse <James.Morse@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"yuanzhichang@hisilicon.com" <yuanzhichang@hisilicon.com>,
+	"zhudacai@hisilicon.com" <zhudacai@hisilicon.com>,
+	"zhangjukuo@huawei.com" <zhangjukuo@huawei.com>,
+	"qiuzhenfa@hisilicon.com" <qiuzhenfa@hisilicon.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v2]   PCI: Store PCIe bus address in struct of_pci_range
+Message-ID: <20150722104619.GE14923@e106497-lin.cambridge.arm.com>
+References: <1436870799-207766-1-git-send-email-gabriele.paoloni@huawei.com>
+MIME-Version: 1.0
+In-Reply-To: <1436870799-207766-1-git-send-email-gabriele.paoloni@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will always add 2M for hotplug bridge mmio even
-there is child device under it.
+Hi Gabriele,
 
-For example:
-	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
-					 \- 45:00.1
+On Tue, Jul 14, 2015 at 11:46:39AM +0100, Gabriele Paoloni wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> 
+>     This patch is needed port PCIe designware to new DT parsing API
+>     As discussed in
+>     http://lists.infradead.org/pipermail/linux-arm-kernel/2015-January/317743.html
+>     in designware we have a problem as the PCI addresses in the PCIe controller
+>     address space are required in order to perform correct HW operation.
+> 
+>     In order to solve this problem commit
+>     f4c55c5a3 "PCI: designware: Program ATU with untranslated address"
+>     added code to read the PCIe controller start address directly from the
+>     DT ranges.
+> 
+>     In the new DT parsing API of_pci_get_host_bridge_resources() hides the
+>     DT parser from the host controller drivers, so it is not possible
+>     for drivers to parse values directly from the DT.
+> 
+>     In http://www.spinics.net/lists/linux-pci/msg42540.html we already tried
+>     to use the new DT parsing API but there is a bug (obviously) in setting
+>     the <*>_mod_base addresses
+>     Applying this patch we can easily set "<*>_mod_base = win->__res.start"
+> 
+>     This patch adds a new field in "struct of_pci_range" to store the
+>     pci bus start address; it fills the field in of_pci_range_parser_one();
+>     in of_pci_get_host_bridge_resources() it retrieves the resource entry
+>     after it is created and added to the resource list and uses
+>     entry->__res.start to store the pci controller address
+> 
+>     the patch is based on 4.2-rc1
+> 
+>     Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> ---
+>  drivers/of/address.c       | 2 ++
+>  drivers/of/of_pci.c        | 4 ++++
+>  include/linux/of_address.h | 1 +
+>  3 files changed, 7 insertions(+)
+> 
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 8bfda6a..23a5793 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -253,6 +253,7 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
+>  						struct of_pci_range *range)
+>  {
+>  	const int na = 3, ns = 2;
+> +	const int p_ns = of_n_size_cells(parser->node);
+>  
+>  	if (!range)
+>  		return NULL;
+> @@ -265,6 +266,7 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
+>  	range->pci_addr = of_read_number(parser->range + 1, ns);
+>  	range->cpu_addr = of_translate_address(parser->node,
+>  				parser->range + na);
+> +	range->bus_addr = of_read_number(parser->range + na, p_ns);
+>  	range->size = of_read_number(parser->range + parser->pna + na, ns);
+>  
+>  	parser->range += parser->np;
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 5751dc5..b171d02 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -198,6 +198,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  
+>  	pr_debug("Parsing ranges property...\n");
+>  	for_each_of_pci_range(&parser, &range) {
+> +		struct resource_entry *entry;
+>  		/* Read next ranges element */
+>  		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
+>  			snprintf(range_type, 4, " IO");
+> @@ -240,6 +241,9 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+>  		}
+>  
+>  		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
+> +		entry = list_last_entry(resources, struct resource_entry, node);
+> +		/*we are using __res for storing the PCI controller address*/
 
-44:02.0 will need 1M as must for 45:00.0 and 45:00.1
-When we calculate add_size for 44:02.0, we pass 2M as additional
-size for hotplug bridge, total will be 3M.
+Minor nit, please add spaces around the beginning and end of comment markers.
 
-That is different from code before changes for optional support,
-or even current code that treat optional as must directly by
-not passing realloc head. We only need 2M as total.
+> +		entry->__res.start = range.bus_addr;
+>  	}
+>  
+>  	return 0;
+> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+> index d88e81b..865f96e 100644
+> --- a/include/linux/of_address.h
+> +++ b/include/linux/of_address.h
+> @@ -16,6 +16,7 @@ struct of_pci_range {
+>  	u32 pci_space;
+>  	u64 pci_addr;
+>  	u64 cpu_addr;
+> +	u64 bus_addr;
+>  	u64 size;
+>  	u32 flags;
+>  };
+> -- 
+> 1.9.1
+> 
 
-The optional size should be 1M, and total size should be 2M.
+This touches code I have previously added, so I guess you need:
 
-This patch change to comparing must+optional with min_sum_size to
-get smaller optional size.
+Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+Best regards,
+Liviu
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4c7f25f..7346bbf 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1156,7 +1156,6 @@ out:
-  * @type2: second match type
-  * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-- * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-  *
-  * Calculate the size of the bus and minimal alignment which
-@@ -1169,10 +1168,11 @@ out:
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 unsigned long type, unsigned long type2,
- 			 unsigned long type3,
--			 resource_size_t min_size, resource_size_t add_size,
-+			 resource_size_t min_size,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
- 	resource_size_t min_align = 0, min_add_align = 0;
- 	resource_size_t max_align = 0, max_add_align = 0;
- 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
-@@ -1184,6 +1184,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (!b_res)
- 		return -ENOSPC;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1254,8 +1259,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	free_align_test_list(&align_test_list);
- 
--	if ((sum_add_size - size) < add_size)
--		sum_add_size = size + add_size;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
-@@ -1392,7 +1397,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, additional_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1426,7 +1431,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
-@@ -1445,8 +1450,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				  min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1469,8 +1473,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+					 min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1479,7 +1482,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				min_mem_size += min_mem_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1500,8 +1503,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+				min_mem_size, realloc_head);
- 		break;
- 	}
- }
 -- 
-1.8.4.5
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
 
