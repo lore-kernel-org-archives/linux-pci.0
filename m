@@ -1,99 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45140 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753046AbbGNWsX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:48:23 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH v2 46/49] PCI: Set resource to FIXED for lsi devices
-Date: Tue, 14 Jul 2015 15:47:17 -0700
-Message-Id: <1436914040-13206-47-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:4024 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965275AbbGVOOh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 10:14:37 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v3] PCI: Store PCIe bus address in struct of_pci_range
+Date: Wed, 22 Jul 2015 14:14:14 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D6663C@lhreml503-mbx>
+References: <1437574598-135008-1-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1437574598-135008-1-git-send-email-gabriele.paoloni@huawei.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-LSI HBA firmware stop responding pci read from host if pci core ever change
-pci device BAR values.
-
-Set their resources to FIXED, so will allow realloc to skip them.
-
-Reported-by: Paul Johnson <pjay@nwtrail.com>
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
----
- drivers/pci/pci.h       |  1 +
- drivers/pci/quirks.c    | 20 ++++++++++++++++++++
- drivers/pci/setup-bus.c |  4 ++++
- 3 files changed, 25 insertions(+)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 1804d44..dec1c18 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -168,6 +168,7 @@ static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u
- }
- 
- void pci_realloc_get_opt(char *);
-+bool pci_realloc_user_enabled(void);
- 
- static inline int pci_no_d1d2(struct pci_dev *dev)
- {
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e9fd0e9..184a09e 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -324,6 +324,26 @@ static void quirk_s3_64M(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
- 
-+/*
-+ * LSI devices firmware does not like BAR get changed
-+ */
-+static void quirk_bar_fixed(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	if (pci_realloc_user_enabled())
-+		return;
-+
-+	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
-+		struct resource *r = &dev->resource[i];
-+
-+		if (!r->flags || r->flags & IORESOURCE_UNSET)
-+			continue;
-+		r->flags |= IORESOURCE_PCI_FIXED;
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC,	PCI_ANY_ID,	quirk_bar_fixed);
-+
- static void quirk_io(struct pci_dev *dev, int pos, unsigned size,
- 		     const char *name)
- {
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9d5423c..d9cfb55 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2196,6 +2196,10 @@ void __init pci_realloc_get_opt(char *str)
- 	else if (!strncmp(str, "on", 2))
- 		pci_realloc_enable = user_enabled;
- }
-+bool pci_realloc_user_enabled(void)
-+{
-+	return pci_realloc_enable == user_enabled;
-+}
- static bool pci_realloc_enabled(enum enable_type enable)
- {
- 	return enable >= user_enabled;
--- 
-1.8.4.5
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBHYWJyaWVsZSBQYW9sb25pDQo+
+IFNlbnQ6IFdlZG5lc2RheSwgSnVseSAyMiwgMjAxNSAzOjE3IFBNDQo+IFRvOiBHYWJyaWVsZSBQ
+YW9sb25pOyBhcm5kQGFybmRiLmRlOyBsb3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tOw0KPiBXYW5n
+emhvdSAoQik7IGJoZWxnYWFzQGdvb2dsZS5jb207IHJvYmgrZHRAa2VybmVsLm9yZzsNCj4gamFt
+ZXMubW9yc2VAYXJtLmNvbTsgTGl2aXUuRHVkYXVAYXJtLmNvbQ0KPiBDYzogbGludXgtcGNpQHZn
+ZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiBk
+ZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdq
+dWt1bzsNCj4gcWl1emhlbmZhOyBMaWd1b3podSAoS2VubmV0aCkNCj4gU3ViamVjdDogW1BBVENI
+IHYzXSBQQ0k6IFN0b3JlIFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0IG9mX3BjaV9yYW5nZQ0K
+PiANCj4gRnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29t
+Pg0KPiANCj4gICAgIFRoaXMgcGF0Y2ggaXMgbmVlZGVkIHBvcnQgUENJZSBkZXNpZ253YXJlIHRv
+IG5ldyBEVCBwYXJzaW5nIEFQSQ0KPiAgICAgQXMgZGlzY3Vzc2VkIGluDQo+ICAgICBodHRwOi8v
+bGlzdHMuaW5mcmFkZWFkLm9yZy9waXBlcm1haWwvbGludXgtYXJtLWtlcm5lbC8yMDE1LQ0KPiBK
+YW51YXJ5LzMxNzc0My5odG1sDQo+ICAgICBpbiBkZXNpZ253YXJlIHdlIGhhdmUgYSBwcm9ibGVt
+IGFzIHRoZSBQQ0kgYWRkcmVzc2VzIGluIHRoZSBQQ0llDQo+IGNvbnRyb2xsZXINCj4gICAgIGFk
+ZHJlc3Mgc3BhY2UgYXJlIHJlcXVpcmVkIGluIG9yZGVyIHRvIHBlcmZvcm0gY29ycmVjdCBIVyBv
+cGVyYXRpb24uDQo+IA0KPiAgICAgSW4gb3JkZXIgdG8gc29sdmUgdGhpcyBwcm9ibGVtIGNvbW1p
+dA0KPiAgICAgZjRjNTVjNWEzICJQQ0k6IGRlc2lnbndhcmU6IFByb2dyYW0gQVRVIHdpdGggdW50
+cmFuc2xhdGVkIGFkZHJlc3MiDQo+ICAgICBhZGRlZCBjb2RlIHRvIHJlYWQgdGhlIFBDSWUgY29u
+dHJvbGxlciBzdGFydCBhZGRyZXNzIGRpcmVjdGx5IGZyb20NCj4gdGhlDQo+ICAgICBEVCByYW5n
+ZXMuDQo+IA0KPiAgICAgSW4gdGhlIG5ldyBEVCBwYXJzaW5nIEFQSSBvZl9wY2lfZ2V0X2hvc3Rf
+YnJpZGdlX3Jlc291cmNlcygpIGhpZGVzDQo+IHRoZQ0KPiAgICAgRFQgcGFyc2VyIGZyb20gdGhl
+IGhvc3QgY29udHJvbGxlciBkcml2ZXJzLCBzbyBpdCBpcyBub3QgcG9zc2libGUNCj4gICAgIGZv
+ciBkcml2ZXJzIHRvIHBhcnNlIHZhbHVlcyBkaXJlY3RseSBmcm9tIHRoZSBEVC4NCj4gDQo+ICAg
+ICBJbiBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXBjaS9tc2c0MjU0MC5odG1s
+IHdlIGFscmVhZHkNCj4gdHJpZWQNCj4gICAgIHRvIHVzZSB0aGUgbmV3IERUIHBhcnNpbmcgQVBJ
+IGJ1dCB0aGVyZSBpcyBhIGJ1ZyAob2J2aW91c2x5KSBpbg0KPiBzZXR0aW5nDQo+ICAgICB0aGUg
+PCo+X21vZF9iYXNlIGFkZHJlc3Nlcw0KPiAgICAgQXBwbHlpbmcgdGhpcyBwYXRjaCB3ZSBjYW4g
+ZWFzaWx5IHNldCAiPCo+X21vZF9iYXNlID0gd2luLQ0KPiA+X19yZXMuc3RhcnQiDQo+IA0KPiAg
+ICAgVGhpcyBwYXRjaCBhZGRzIGEgbmV3IGZpZWxkIGluICJzdHJ1Y3Qgb2ZfcGNpX3JhbmdlIiB0
+byBzdG9yZSB0aGUNCj4gICAgIHBjaSBidXMgc3RhcnQgYWRkcmVzczsgaXQgZmlsbHMgdGhlIGZp
+ZWxkIGluDQo+IG9mX3BjaV9yYW5nZV9wYXJzZXJfb25lKCk7DQo+ICAgICBpbiBvZl9wY2lfZ2V0
+X2hvc3RfYnJpZGdlX3Jlc291cmNlcygpIGl0IHJldHJpZXZlcyB0aGUgcmVzb3VyY2UNCj4gZW50
+cnkNCj4gICAgIGFmdGVyIGl0IGlzIGNyZWF0ZWQgYW5kIGFkZGVkIHRvIHRoZSByZXNvdXJjZSBs
+aXN0IGFuZCB1c2VzDQo+ICAgICBlbnRyeS0+X19yZXMuc3RhcnQgdG8gc3RvcmUgdGhlIHBjaSBj
+b250cm9sbGVyIGFkZHJlc3MNCj4gDQo+ICAgICB0aGUgcGF0Y2ggaXMgYmFzZWQgb24gNC4yLXJj
+MQ0KPiANCj4gICAgIFNpZ25lZC1vZmYtYnk6IEdhYnJpZWxlIFBhb2xvbmkgPGdhYnJpZWxlLnBh
+b2xvbmlAaHVhd2VpLmNvbT4NCj4gICAgIEFja2VkLWJ5OiBMaXZpdSBEdWRhaSA8TGl2aXUuRHVk
+YXVAYXJtLmNvbT4NClNvcnJ5LCBJIGp1c3QgcmVhbGl6ZWQgSSd2ZSBwdXQgYSB0eXBvIGluIExp
+dml1J3Mgc3VybmFtZSwgSSBhbSBnb2luZyB0byBzZW5kIHY0DQo+IC0tLQ0KPiAgZHJpdmVycy9v
+Zi9hZGRyZXNzLmMgICAgICAgfCAyICsrDQo+ICBkcml2ZXJzL29mL29mX3BjaS5jICAgICAgICB8
+IDQgKysrKw0KPiAgaW5jbHVkZS9saW51eC9vZl9hZGRyZXNzLmggfCAxICsNCj4gIDMgZmlsZXMg
+Y2hhbmdlZCwgNyBpbnNlcnRpb25zKCspDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9vZi9h
+ZGRyZXNzLmMgYi9kcml2ZXJzL29mL2FkZHJlc3MuYw0KPiBpbmRleCA4YmZkYTZhLi4yM2E1Nzkz
+IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL29mL2FkZHJlc3MuYw0KPiArKysgYi9kcml2ZXJzL29m
+L2FkZHJlc3MuYw0KPiBAQCAtMjUzLDYgKzI1Myw3IEBAIHN0cnVjdCBvZl9wY2lfcmFuZ2UgKm9m
+X3BjaV9yYW5nZV9wYXJzZXJfb25lKHN0cnVjdA0KPiBvZl9wY2lfcmFuZ2VfcGFyc2VyICpwYXJz
+ZXIsDQo+ICAJCQkJCQlzdHJ1Y3Qgb2ZfcGNpX3JhbmdlICpyYW5nZSkNCj4gIHsNCj4gIAljb25z
+dCBpbnQgbmEgPSAzLCBucyA9IDI7DQo+ICsJY29uc3QgaW50IHBfbnMgPSBvZl9uX3NpemVfY2Vs
+bHMocGFyc2VyLT5ub2RlKTsNCj4gDQo+ICAJaWYgKCFyYW5nZSkNCj4gIAkJcmV0dXJuIE5VTEw7
+DQo+IEBAIC0yNjUsNiArMjY2LDcgQEAgc3RydWN0IG9mX3BjaV9yYW5nZSAqb2ZfcGNpX3Jhbmdl
+X3BhcnNlcl9vbmUoc3RydWN0DQo+IG9mX3BjaV9yYW5nZV9wYXJzZXIgKnBhcnNlciwNCj4gIAly
+YW5nZS0+cGNpX2FkZHIgPSBvZl9yZWFkX251bWJlcihwYXJzZXItPnJhbmdlICsgMSwgbnMpOw0K
+PiAgCXJhbmdlLT5jcHVfYWRkciA9IG9mX3RyYW5zbGF0ZV9hZGRyZXNzKHBhcnNlci0+bm9kZSwN
+Cj4gIAkJCQlwYXJzZXItPnJhbmdlICsgbmEpOw0KPiArCXJhbmdlLT5idXNfYWRkciA9IG9mX3Jl
+YWRfbnVtYmVyKHBhcnNlci0+cmFuZ2UgKyBuYSwgcF9ucyk7DQo+ICAJcmFuZ2UtPnNpemUgPSBv
+Zl9yZWFkX251bWJlcihwYXJzZXItPnJhbmdlICsgcGFyc2VyLT5wbmEgKyBuYSwNCj4gbnMpOw0K
+PiANCj4gIAlwYXJzZXItPnJhbmdlICs9IHBhcnNlci0+bnA7DQo+IGRpZmYgLS1naXQgYS9kcml2
+ZXJzL29mL29mX3BjaS5jIGIvZHJpdmVycy9vZi9vZl9wY2kuYw0KPiBpbmRleCA1NzUxZGM1Li5m
+ZTU3MDMwIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL29mL29mX3BjaS5jDQo+ICsrKyBiL2RyaXZl
+cnMvb2Yvb2ZfcGNpLmMNCj4gQEAgLTE5OCw2ICsxOTgsNyBAQCBpbnQgb2ZfcGNpX2dldF9ob3N0
+X2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0DQo+IGRldmljZV9ub2RlICpkZXYsDQo+IA0KPiAgCXBy
+X2RlYnVnKCJQYXJzaW5nIHJhbmdlcyBwcm9wZXJ0eS4uLlxuIik7DQo+ICAJZm9yX2VhY2hfb2Zf
+cGNpX3JhbmdlKCZwYXJzZXIsICZyYW5nZSkgew0KPiArCQlzdHJ1Y3QgcmVzb3VyY2VfZW50cnkg
+KmVudHJ5Ow0KPiAgCQkvKiBSZWFkIG5leHQgcmFuZ2VzIGVsZW1lbnQgKi8NCj4gIAkJaWYgKChy
+YW5nZS5mbGFncyAmIElPUkVTT1VSQ0VfVFlQRV9CSVRTKSA9PSBJT1JFU09VUkNFX0lPKQ0KPiAg
+CQkJc25wcmludGYocmFuZ2VfdHlwZSwgNCwgIiBJTyIpOw0KPiBAQCAtMjQwLDYgKzI0MSw5IEBA
+IGludCBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcyhzdHJ1Y3QNCj4gZGV2aWNlX25v
+ZGUgKmRldiwNCj4gIAkJfQ0KPiANCj4gIAkJcGNpX2FkZF9yZXNvdXJjZV9vZmZzZXQocmVzb3Vy
+Y2VzLCByZXMsCXJlcy0+c3RhcnQgLQ0KPiByYW5nZS5wY2lfYWRkcik7DQo+ICsJCWVudHJ5ID0g
+bGlzdF9sYXN0X2VudHJ5KHJlc291cmNlcywgc3RydWN0IHJlc291cmNlX2VudHJ5LA0KPiBub2Rl
+KTsNCj4gKwkJLyogd2UgYXJlIHVzaW5nIF9fcmVzIGZvciBzdG9yaW5nIHRoZSBQQ0kgY29udHJv
+bGxlcg0KPiBhZGRyZXNzICovDQo+ICsJCWVudHJ5LT5fX3Jlcy5zdGFydCA9IHJhbmdlLmJ1c19h
+ZGRyOw0KPiAgCX0NCj4gDQo+ICAJcmV0dXJuIDA7DQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xp
+bnV4L29mX2FkZHJlc3MuaCBiL2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5oDQo+IGluZGV4IGQ4
+OGU4MWIuLjg2NWY5NmUgMTAwNjQ0DQo+IC0tLSBhL2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5o
+DQo+ICsrKyBiL2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5oDQo+IEBAIC0xNiw2ICsxNiw3IEBA
+IHN0cnVjdCBvZl9wY2lfcmFuZ2Ugew0KPiAgCXUzMiBwY2lfc3BhY2U7DQo+ICAJdTY0IHBjaV9h
+ZGRyOw0KPiAgCXU2NCBjcHVfYWRkcjsNCj4gKwl1NjQgYnVzX2FkZHI7DQo+ICAJdTY0IHNpemU7
+DQo+ICAJdTMyIGZsYWdzOw0KPiAgfTsNCj4gLS0NCj4gMS45LjENCg0K
