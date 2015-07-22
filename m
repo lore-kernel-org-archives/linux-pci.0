@@ -1,67 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34928 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754016AbbGIVVY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jul 2015 17:21:24 -0400
-Received: by pactm7 with SMTP id tm7so156495284pac.2
-        for <linux-pci@vger.kernel.org>; Thu, 09 Jul 2015 14:21:23 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v3 2/2] pci: xgene: Fix driver to handle multiple memory ranges
-Date: Thu,  9 Jul 2015 14:20:12 -0700
-Message-Id: <844cb76fe55ce4ce45411281500bdb93e0d6932a.1436476100.git.dhdang@apm.com>
-In-Reply-To: <cover.1436476099.git.dhdang@apm.com>
-References: <cover.1436476099.git.dhdang@apm.com>
-In-Reply-To: <cover.1436476099.git.dhdang@apm.com>
-References: <1481643.dA4ocqzitg@wuerfel> <cover.1436476099.git.dhdang@apm.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:8765 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753496AbbGVVyH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 17:54:07 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>
+CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	"Konrad Wilk" <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"Terence Ripperda" <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	"Jerome Glisse" <jglisse@redhat.com>
+Subject: [PATCH v4 09/12] iommu/vt-d: implement (un)map_peer_resource
+Date: Wed, 22 Jul 2015 16:39:54 -0500
+Message-ID: <1437601197-6481-10-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
+References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-X-Gene PCIe controller has registers to support multiple memory ranges.
-This patch implement addtional register configuration required for the
-driver to support 1 additional huge 64-bit prefetch memory window.
+Implement 'map_peer_resource' for the Intel IOMMU driver. Simply translate
+the resource to a physical address and route it to the same handlers used
+by the 'map_page' API.
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+This allows a device to map another's resource, to enable peer-to-peer
+transactions.
+
+These functions are guarded behind CONFIG_HAS_DMA_P2P, since the
+dma_map_ops members are as well.
+
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 ---
- drivers/pci/host/pci-xgene.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/iommu/intel-iommu.c | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index a9dfb70..55fe865 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -321,8 +321,16 @@ static int xgene_pcie_map_ranges(struct xgene_pcie_port *port,
- 				return ret;
- 			break;
- 		case IORESOURCE_MEM:
--			xgene_pcie_setup_ob_reg(port, res, OMR1BARL, res->start,
--						res->start - window->offset);
-+			if (res->flags & IORESOURCE_PREFETCH)
-+				xgene_pcie_setup_ob_reg(port, res, OMR2BARL,
-+							res->start,
-+							res->start -
-+							window->offset);
-+			else
-+				xgene_pcie_setup_ob_reg(port, res, OMR1BARL,
-+							res->start,
-+							res->start -
-+							window->offset);
- 			break;
- 		case IORESOURCE_BUS:
- 			break;
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index a98a7b2..66b371c 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3544,6 +3544,40 @@ static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
+ 	intel_unmap(dev, dev_addr);
+ }
+ 
++#ifdef CONFIG_HAS_DMA_P2P
++static dma_peer_addr_t intel_map_peer_resource(struct device *dev,
++					       struct device *peer,
++					       struct resource *res,
++					       unsigned long offset,
++					       size_t size,
++					       enum dma_data_direction dir,
++					       struct dma_attrs *attrs)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct pci_dev *ppeer = to_pci_dev(peer);
++	struct pci_host_bridge *hbdev = pci_find_host_bridge(pdev->bus);
++	struct pci_host_bridge *hbpeer = pci_find_host_bridge(ppeer->bus);
++
++	/*
++	 * Disallow the peer-to-peer mapping if the devices do not share a host
++	 * bridge.
++	 */
++	if (hbdev != hbpeer)
++		return 0;
++
++	return __intel_map_single(dev, res->start + offset, size,
++				  dir, *dev->dma_mask);
++}
++
++static void intel_unmap_peer_resource(struct device *dev,
++				      dma_peer_addr_t dev_addr,
++				      size_t size, enum dma_data_direction dir,
++				      struct dma_attrs *attrs)
++{
++	intel_unmap(dev, dev_addr);
++}
++#endif
++
+ static void *intel_alloc_coherent(struct device *dev, size_t size,
+ 				  dma_addr_t *dma_handle, gfp_t flags,
+ 				  struct dma_attrs *attrs)
+@@ -3700,6 +3734,10 @@ struct dma_map_ops intel_dma_ops = {
+ 	.unmap_sg = intel_unmap_sg,
+ 	.map_page = intel_map_page,
+ 	.unmap_page = intel_unmap_page,
++#ifdef CONFIG_HAS_DMA_P2P
++	.map_peer_resource = intel_map_peer_resource,
++	.unmap_peer_resource = intel_unmap_peer_resource,
++#endif
+ 	.mapping_error = intel_mapping_error,
+ };
+ 
 -- 
-1.9.1
+2.4.6
 
