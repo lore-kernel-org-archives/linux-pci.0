@@ -1,76 +1,255 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51333 "EHLO foss.arm.com"
+Received: from foss.arm.com ([217.140.101.70]:35684 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932394AbbGJOZE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Jul 2015 10:25:04 -0400
-Message-ID: <559FD5BC.9070206@arm.com>
-Date: Fri, 10 Jul 2015 15:25:00 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
+	id S1754802AbbGVMsv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Jul 2015 08:48:51 -0400
+Date: Wed, 22 Jul 2015 13:49:29 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>
-Subject: Re: [PATCH v3 00/15] Introducing per-device MSI domain
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com> <20150709135809.GA5223@red-moon> <559E8699.4010007@arm.com> <20150710133458.GC11270@red-moon>
-In-Reply-To: <20150710133458.GC11270@red-moon>
-Content-Type: text/plain; charset=windows-1252
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	James Morse <James.Morse@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jayachandran C <jchandra@broadcom.com>
+Subject: Re: [RFT PATCH] ARM: pci: kill pcibios_msi_controller
+Message-ID: <20150722124929.GA537@red-moon>
+References: <1436784206-14414-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150722090248.GA344@red-moon>
+ <55AF6149.4000601@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55AF6149.4000601@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/07/15 14:34, Lorenzo Pieralisi wrote:
-> On Thu, Jul 09, 2015 at 03:35:05PM +0100, Marc Zyngier wrote:
-> 
-> [...]
-> 
->>> BTW, is there a reason why _all_ arm host bridges rely on
->>> pcibios_msi_controller (so pci_sys_data) instead of initializing
->>> the struct pci_bus.msi pointer to carry out the MSI controller look-up ?
->>
->> Probably an ordering issue - the bus may not be there yet. But ensuring
->> that the MSI domain is created early (before the bus is scanned) should
->> solve that problem nicely enough.
-> 
-> Yes, I think the only reason is that, as sysdata, the msi controller
-> pointer is propagated (in pci_alloc_child_bus()), with a tiny difference:
-> sysdata can be passed to pci_scan_root_bus(), msi controller pointer
-> can't (explicitly) at present.
-> 
-> Since most of the ARM PCI host controllers have been converted to:
-> 
-> - pci_create_root_bus()
-> 
-> -> here we can init bus msi controller pointer
-> 
-> - pci_scan_child_bus()
-> 
-> we could get rid of pcibios_msi_controller on arm _now_ by just initializing
-> the msi controller pointer in the struct pci_bus before
-> pci_scan_child_bus() is called, unless I am missing something.
-> 
-> I converted pcie-designware.c to stacked domains (and pci-keystone that
-> relies on it, with its own quirks of course), I might take the step
-> above as an intermediate step to have a common arm/arm64 generic host
-> controller asap (ie for that getting rid of pcibios_msi_controller is
-> mandatory, which requires converting all ARM host controllers to stacked
-> domains, or taking the intermediate step above).
+Hi Marc,
 
-It doesn't look like the two approaches are incompatible. Killing
-pcibios_msi_controller is an interesting short term goal which could
-happen quite quickly. Converting these host controllers to stacked
-domains is obviously more effort, which can happen at its own pace. We
-just need to make sure people do not add more cruft to the mix in the
-meantime.
+On Wed, Jul 22, 2015 at 10:24:25AM +0100, Marc Zyngier wrote:
+> On 22/07/15 10:02, Lorenzo Pieralisi wrote:
+> > On Mon, Jul 13, 2015 at 11:43:25AM +0100, Lorenzo Pieralisi wrote:
+> >> On ARM PCI systems relying on the pcibios API to initialize PCI host
+> >> controllers, the pcibios_msi_controller weak callback is used to look-up
+> >> the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
+> >>
+> >> pci_sys_data is an arch specific structure, which prevents using the
+> >> same mechanism (so same PCI host controller drivers) on ARM64 systems.
+> >>
+> >> Since the struct pci_bus already contains an msi_controller pointer and
+> >> the kernel already uses it to look-up the msi controller,
+> >> this patch converts ARM host controller and relate pcibios/host bridges
+> >> initialization routines so that the msi_controller pointer look-up can be
+> >> carried out by PCI core code through the struct pci_bus msi pointer,
+> >> removing the need for arch specific pcibios_msi_controller callback
+> >> and the related pci_sys_data msi_ctrl pointer.
+> >>
+> >> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >> Cc: Pratyush Anand <pratyush.anand@gmail.com>
+> >> Cc: Arnd Bergmann <arnd@arndb.de>
+> >> Cc: Jingoo Han <jingoohan1@gmail.com>
+> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> Cc: Simon Horman <horms@verge.net.au>
+> >> Cc: Russell King <linux@arm.linux.org.uk>
+> >> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> >> Cc: Thierry Reding <thierry.reding@gmail.com>
+> >> Cc: Michal Simek <michal.simek@xilinx.com>
+> >> Cc: Marc Zyngier <marc.zyngier@arm.com>
+> >> ---
+> >> Bjorn, all,
+> >>
+> >> I am posting this patch to sound out if that's a reasonable approach.
+> >> xgene implements MSI look-up this way at present and this would represent
+> >> another step forward towards having common drivers for ARM/ARM64, comments
+> >> and testing welcome.
+> > 
+> > Any comments/testing on this patch ? I do not have platforms
+> > with these host bridges handy (apart from an iMX6 Sabrelite)
+> > so I can't test on them (change is quite mechanical though),
+> > help on testing and feedback on the patch much appreciated.
+> 
+> Hi Lorenzo,
+> 
+> I can't test it (no relevant HW), but that seems like a very sensible
+> approach to me (the less dependency on sysdata, the better).
 
-Thanks,
+Thanks !
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+> One remark below:
+> 
+> >>  arch/arm/include/asm/mach/pci.h    |  3 ---
+> >>  arch/arm/kernel/bios32.c           | 35 +++++++++++++++++------------------
+> >>  drivers/pci/host/pcie-designware.c |  9 +++++++--
+> >>  drivers/pci/host/pcie-xilinx.c     | 12 ++++++++++--
+> >>  4 files changed, 34 insertions(+), 25 deletions(-)
+> >>
+> >> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> >> index 28b9bb3..32abc0c 100644
+> >> --- a/arch/arm/include/asm/mach/pci.h
+> >> +++ b/arch/arm/include/asm/mach/pci.h
+> >> @@ -42,9 +42,6 @@ struct hw_pci {
+> >>   * Per-controller structure
+> >>   */
+> >>  struct pci_sys_data {
+> >> -#ifdef CONFIG_PCI_MSI
+> >> -	struct msi_controller *msi_ctrl;
+> >> -#endif
+> >>  	struct list_head node;
+> >>  	int		busnr;		/* primary bus number			*/
+> >>  	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
+> >> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> >> index fcbbbb1..c841b33 100644
+> >> --- a/arch/arm/kernel/bios32.c
+> >> +++ b/arch/arm/kernel/bios32.c
+> >> @@ -18,15 +18,6 @@
+> >>  
+> >>  static int debug_pci;
+> >>  
+> >> -#ifdef CONFIG_PCI_MSI
+> >> -struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+> >> -{
+> >> -	struct pci_sys_data *sysdata = dev->bus->sysdata;
+> >> -
+> >> -	return sysdata->msi_ctrl;
+> >> -}
+> >> -#endif
+> >> -
+> >>  /*
+> >>   * We can't use pci_get_device() here since we are
+> >>   * called from interrupt context.
+> >> @@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+> >>  		if (!sys)
+> >>  			panic("PCI: unable to allocate sys data!");
+> >>  
+> >> -#ifdef CONFIG_PCI_MSI
+> >> -		sys->msi_ctrl = hw->msi_ctrl;
+> >> -#endif
+> >>  		sys->busnr   = busnr;
+> >>  		sys->swizzle = hw->swizzle;
+> >>  		sys->map_irq = hw->map_irq;
+> >> @@ -483,14 +471,25 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+> >>  				break;
+> >>  			}
+> >>  
+> >> -			if (hw->scan)
+> >> +			if (hw->scan) {
+> >>  				sys->bus = hw->scan(nr, sys);
+> >> -			else
+> >> -				sys->bus = pci_scan_root_bus(parent, sys->busnr,
+> >> -						hw->ops, sys, &sys->resources);
+> >> +				if (!sys->bus)
+> >> +					panic("PCI: unable to scan bus!");
+> 
+> This was in the original code, but I have to ask: Do we really want to
+> panic the kernel if we couldn't scan the bus? Worse case, the system
+> won't be able to boot at all and will panic somewhere else anyway, but
+> we should give the user a chance to understand what's happening...
+
+No, it was in the original code but I was very tempted to remove it
+or merge the error paths and make it a warning, and that's what I am
+going to do, unless someone complains (that panic statement has been there
+forever).
+
+> >> +			} else {
+> >> +				sys->bus = pci_create_root_bus(parent,
+> >> +							       sys->busnr,
+> >> +							       hw->ops, sys,
+> >> +							       &sys->resources);
+> >> +				if (WARN_ON(!sys->bus)) {
+> >> +					kfree(sys);
+> >> +					break;
+> >> +				}
+> >> +#ifdef CONFIG_PCI_MSI
+> >> +				sys->bus->msi = hw->msi_ctrl;
+> >> +#endif
+> >>  
+> >> -			if (!sys->bus)
+> >> -				panic("PCI: unable to scan bus!");
+> >> +				pci_scan_child_bus(sys->bus);
+> >> +			}
+> >>  
+> >>  			busnr = sys->bus->busn_res.end + 1;
+> >>  
+> >> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> >> index 69486be..e584dfa 100644
+> >> --- a/drivers/pci/host/pcie-designware.c
+> >> +++ b/drivers/pci/host/pcie-designware.c
+> >> @@ -526,7 +526,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >>  
+> >>  #ifdef CONFIG_PCI_MSI
+> >>  	dw_pcie_msi_chip.dev = pp->dev;
+> >> -	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+> >>  #endif
+> >>  
+> >>  	dw_pci.nr_controllers = 1;
+> >> @@ -708,11 +707,17 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> >>  	struct pcie_port *pp = sys_to_pcie(sys);
+> >>  
+> >>  	pp->root_bus_nr = sys->busnr;
+> >> -	bus = pci_scan_root_bus(pp->dev, sys->busnr,
+> >> +	bus = pci_create_root_bus(pp->dev, sys->busnr,
+> >>  				  &dw_pcie_ops, sys, &sys->resources);
+> >>  	if (!bus)
+> >>  		return NULL;
+> >>  
+> >> +#ifdef CONFIG_PCI_MSI
+> >> +	bus->msi = &dw_pcie_msi_chip;
+> >> +#endif
+> >> +
+> >> +	pci_scan_child_bus(bus);
+> >> +
+> >>  	if (bus && pp->ops->scan_bus)
+> >>  		pp->ops->scan_bus(pp);
+> >>  
+> >> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> >> index f1a06a0..b21eb7d 100644
+> >> --- a/drivers/pci/host/pcie-xilinx.c
+> >> +++ b/drivers/pci/host/pcie-xilinx.c
+> >> @@ -647,9 +647,18 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+> >>  	struct pci_bus *bus;
+> >>  
+> >>  	port->root_busno = sys->busnr;
+> >> -	bus = pci_scan_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
+> >> +	bus = pci_create_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
+> >>  				sys, &sys->resources);
+> >>  
+> >> +	if (!bus)
+> >> +		return NULL;
+> >> +
+> >> +#ifdef CONFIG_PCI_MSI
+> >> +	bus->msi = &xilinx_pcie_msi_chip;
+> >> +#endif
+> >> +
+> >> +	pci_scan_child_bus(bus);
+> >> +
+> >>  	return bus;
+> >>  }
+> >>  
+> >> @@ -847,7 +856,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+> >>  
+> >>  #ifdef CONFIG_PCI_MSI
+> >>  	xilinx_pcie_msi_chip.dev = port->dev;
+> >> -	hw.msi_ctrl = &xilinx_pcie_msi_chip;
+> >>  #endif
+> >>  	pci_common_init_dev(dev, &hw);
+> >>  
+> >> -- 
+> >> 2.2.1
+> >>
+> > 
+> 
+> Bar the nit above:
+> 
+> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+
+Thanks ! I will prepare a v2 with required changes.
+
+Lorenzo
