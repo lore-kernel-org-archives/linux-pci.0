@@ -1,39 +1,78 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 0/3] x86/pci/intel-mid-pci: fix to get eMMC detected
-Date: Wed,  8 Jul 2015 14:14:16 +0300
-Message-Id: <1436354059-130135-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH v3 1/4] PCI: iproc: enable arm64 support for iProc PCIe
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
+ <1437021563-29139-2-git-send-email-rjui@broadcom.com>
+ <20150721203018.GH21967@google.com> <55AEB094.1090601@broadcom.com>
+ <20150721220259.GK21967@google.com>
+CC: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <55AEDD3E.6060808@broadcom.com>
+Date: Tue, 21 Jul 2015 17:01:02 -0700
+MIME-Version: 1.0
+In-Reply-To: <20150721220259.GK21967@google.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Intel Edison we have an interesting implementation of x86 platform without
-legacy PIC and with specific PCI. There are devices which are not using
-interrupt by some reasons, but have them as IRQ0 in the PCI configuration.
-Suprisingly the first eMMC host controller is the actual user for IRQ0. Since
-we have serial driver implemented that enumerates unused serial IP (one of
-four) which has IRQ0 assigned we, in case it gets it first by
-pci_enable_device(), lost a possibility to probe eMMC. 
 
-So, this series provides a quirk (patch 1), small fix of error code
-(patch 2), and sparse warning fix (patch 3).
 
-Changelog v2:
- - rearrange patches 1 and 2 to provide fix first with Fixes: tag
- - append patch 3
- - rebase on top of recent linux-next
+On 7/21/2015 3:02 PM, Bjorn Helgaas wrote:
+> On Tue, Jul 21, 2015 at 01:50:28PM -0700, Ray Jui wrote:
+>>
+>>
+>> On 7/21/2015 1:30 PM, Bjorn Helgaas wrote:
+>>> On Wed, Jul 15, 2015 at 09:39:20PM -0700, Ray Jui wrote:
+>>>> This patch enables arm64 support to the iProc PCIe driver
+>>>
+>>> This needs a little more explanation: ARM has a common struct pci_sys_data
+>>> but ARM64 does not,
+>>
+>> Correct, and according to Arnd, there's already work in process of
+>> removing the need for pci_sys_data on arm32. Before that is done, we
+>> need this in the driver for it to work on both arm32 and arm64.
+>>
+>> and ARM needs pci_fixup_irqs() but ARM64 does not (why
+>>> not?),
+>>
+>> under arch/arm64/kernel/pci.c:
+>>
+>>  41 /*
+>>  42  * Try to assign the IRQ number from DT when adding a new device
+>>  43  */
+>>  44 int pcibios_add_device(struct pci_dev *dev)
+>>  45 {
+>>  46         dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>>  47
+>>  48         return 0;
+>>  49 }
+>>
+>> interrupt is automatically parsed and mapped when adding a new device
+>> for arm64.
+>>
+>> ARM uses the common pci_sys_data for the PCI sysdata while ARM64
+>>> uses a driver-specific sysdata, etc.
+>>
+>> Correct. pci_sys_data for arm32 will eventually be removed, so all arm32
+>> based PCie host should only need to carry driver specific sysdata.
+> 
+> That all makes sense.  I'm just looking for a condensed version of it in
+> the changelog because it takes some digging to figure it out, and in a
+> couple months even the implicit context of "somebody's working to combine
+> arm32 and arm64" will be gone.  So we need a changelog that motivates this
+> patch as it is.
+> 
 
-Andy Shevchenko (3):
-  x86/pci/intel_mid_pci: work around for IRQ0 assignment
-  x86/pci/intel_mid_pci: propagate actual return code
-  x86/pci/intel_mid_pci: fix a sparse warning
+Okay I will re-submit a new patch with a commit message that explains
+the change in more details.
 
- arch/x86/pci/intel_mid_pci.c | 27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
+Thanks,
 
--- 
-2.1.4
-
+Ray
