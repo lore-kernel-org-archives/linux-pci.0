@@ -1,99 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout1.freenet.de ([195.4.92.91]:34116 "EHLO mout1.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752521AbbG1UKd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 16:10:33 -0400
-Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
- QUEUED errors since Linux 4.0
-To: Mike Snitzer <snitzer@redhat.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
- <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
- <20150728193101.GB25264@redhat.com>
-Cc: dm-devel@redhat.com, mpatocka@redhat.com,
-	linux-pci <linux-pci@vger.kernel.org>
-From: Andreas Hartmann <andihartmann@freenet.de>
-Message-ID: <55B7E14A.4050500@maya.org>
-Date: Tue, 28 Jul 2015 22:08:42 +0200
+Received: from szxga02-in.huawei.com ([119.145.14.65]:9360 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752495AbbGVCBp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 22:01:45 -0400
+Message-ID: <55AEF93E.9040508@hisilicon.com>
+Date: Wed, 22 Jul 2015 10:00:30 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20150728193101.GB25264@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
+	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
+	<Liviu.Dudau@arm.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<liguozhu@hisilicon.com>
+Subject: Re: [PATCH v4 1/5] ARM/PCI: remove align_resource in pci_sys_data
+References: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com> <1437461323-3531-2-git-send-email-wangzhou1@hisilicon.com> <20150721224406.GM21967@google.com>
+In-Reply-To: <20150721224406.GM21967@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/28/2015 at 21:31 PM, Mike Snitzer wrote:
- > On Tue, Jul 28 2015 at  3:23pm -0400,
-> Andreas Hartmann <andihartmann@freenet.de> wrote:
+On 2015/7/22 6:44, Bjorn Helgaas wrote:
+> Hi Zhou & Gabriele,
+> 
+> On Tue, Jul 21, 2015 at 02:48:39PM +0800, Zhou Wang wrote:
+>> This patch is needed in order to unify the PCIe designware framework for ARM and
+>> ARM64 architectures. In the PCIe designware unification process we are calling
+>> pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+>> ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+>> cause a problem with the function pcibios_align_resource(); in fact this will
+>> cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+>> "struct pcie_port*" pointer.
+>>
+>> This patch solves the issue by removing "align_resource" from "pci_sys_data"
+>> struct and defining a static global function pointer in "bios32.c"
+>>
+>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni at huawei.com>
+>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+> 
+> Can you fix up Gabriele's email address above (currently contains " at ")
+> and verify that this sign-off chain is accurate per section 11 of
+> Documentation/SubmittingPatches?  The above suggests to me that Gabriele
+> originally wrote this patch and Zhou is passing it along.  That might well
+> be true; I haven't followed the development, so I'm just double-checking.
 >
->> On 07/28/2015 at 08:58 PM, Mike Snitzer wrote:
->>> On Tue, Jul 28 2015 at  2:20pm -0400,
->>> Andreas Hartmann <andihartmann@freenet.de> wrote:
->>>
->>>> On 07/28/2015 at 07:50 PM, Mike Snitzer wrote:
->>>> [..]
->>>>> Are your SATA devcies using NCQ?
->>>>
->>>> Yes. It's enabled:
->>>>
->>>> dmesg| grep -i ncq
->>>> ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
->>>> ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
->>>> ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
->>>> ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
->>>>
->>>> As the errors already come up on boot (during mount of partitions or
->>>> even before the password for the disk has been provided): How can I
->>>> disable NCQ during boot of the kernel? Is there a kernel option?
->>>
->>> See:
->>> https://ata.wiki.kernel.org/index.php/Libata_FAQ#Enabling.2C_disabling_and_checking_NCQ
->>>
->>> alternatively, and likely easier, set this on the kernel commandline:
->>>   libata.force=noncq
+
+Hi Bjorn,
+
+Sorry about above mistake. Will change it in next version.
+
+Thanks for your reminding,
+Zhou
+
+>> ---
+>>  arch/arm/include/asm/mach/pci.h |  5 -----
+>>  arch/arm/kernel/bios32.c        | 12 ++++++++----
+>>  2 files changed, 8 insertions(+), 9 deletions(-)
 >>
->> ata2.00: FORCE: horkage modified (noncq)
->> ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
->> ata3.00: FORCE: horkage modified (noncq)
->> ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
->> ata5.00: FORCE: horkage modified (noncq)
->> ata1.00: FORCE: horkage modified (noncq)
->> ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (not used)
+>> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+>> index 28b9bb3..8a4e4de 100644
+>> --- a/arch/arm/include/asm/mach/pci.h
+>> +++ b/arch/arm/include/asm/mach/pci.h
+>> @@ -58,11 +58,6 @@ struct pci_sys_data {
+>>  					/* IRQ mapping				*/
+>>  	int		(*map_irq)(const struct pci_dev *, u8, u8);
+>>  					/* Resource alignement requirements	*/
+>> -	resource_size_t (*align_resource)(struct pci_dev *dev,
+>> -					  const struct resource *res,
+>> -					  resource_size_t start,
+>> -					  resource_size_t size,
+>> -					  resource_size_t align);
+>>  	void		*private_data;	/* platform controller private data	*/
+>>  };
+>>  
+>> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+>> index fcbbbb1..4cdc64d 100644
+>> --- a/arch/arm/kernel/bios32.c
+>> +++ b/arch/arm/kernel/bios32.c
+>> @@ -17,6 +17,11 @@
+>>  #include <asm/mach/pci.h>
+>>  
+>>  static int debug_pci;
+>> +static resource_size_t (*align_resource)(struct pci_dev *dev,
+>> +		  const struct resource *res,
+>> +		  resource_size_t start,
+>> +		  resource_size_t size,
+>> +		  resource_size_t align) = NULL;
+>>  
+>>  #ifdef CONFIG_PCI_MSI
+>>  struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+>> @@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>>  		sys->busnr   = busnr;
+>>  		sys->swizzle = hw->swizzle;
+>>  		sys->map_irq = hw->map_irq;
+>> -		sys->align_resource = hw->align_resource;
+>> +		align_resource = hw->align_resource;
+>>  		INIT_LIST_HEAD(&sys->resources);
+>>  
+>>  		if (hw->private_data)
+>> @@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>>  				resource_size_t size, resource_size_t align)
+>>  {
+>>  	struct pci_dev *dev = data;
+>> -	struct pci_sys_data *sys = dev->sysdata;
+>>  	resource_size_t start = res->start;
+>>  
+>>  	if (res->flags & IORESOURCE_IO && start & 0x300)
+>> @@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>>  
+>>  	start = (start + align - 1) & ~(align - 1);
+>>  
+>> -	if (sys->align_resource)
+>> -		return sys->align_resource(dev, res, start, size, align);
+>> +	if (align_resource)
+>> +		return align_resource(dev, res, start, size, align);
+>>  
+>>  	return start;
+>>  }
+>> -- 
+>> 1.9.1
 >>
->>
->> Perfectly. Seems to work w/ 3.19.8 and your mentioned patches. But now,
->> I'm getting another error, which I didn't see before w/ 3.x-kernels:
->>
->> [drm:btc_dpm_set_power_state [radeon]] *ERROR*
->> rv770_restrict_performance_levels_before_switch failed
->>
->> It seams that your patches do have some unwanted side effects :-).
->
-> That is a completely different issue.  drm and radeon is a graphics
-> issue.
-
-Nothing changed on radeon code. I just applied your patches. Nothing 
-more. Why should radeon been suddenly broken if I apply your patches to 
-a stable 3.19.8 code?
-
-These patches trigger tons of AMD-Vi IO_PAGE_FAULTs w/ ncq enabled and 
-the IOMMU developers say, that it is not a problem of the iommu code.
-
->> Could you please reexamine your patch "dm crypt: don't allocate
->> pages for a partial request" - after applying this patch all the
->> problems are coming up here.
->
-> More likely than not your hardware isn't very good.
-
-Maybe - maybe not. The only thing I know for sure, is: with these 
-patches applied, the machine doesn't work reliably any more. W/ ncq 
-disabled, the AMD-Vi IO_PAGE_FAULTs are gone, but a radeon error never 
-seen before came instead. Most probably chance. Most probably, it could 
-have been risen any other error, too.
-
-I am willing to do tests if you have any idea to be tested - I can 
-reproduce it quite easily.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
 
-Thanks,
-regards,
-Andreas
