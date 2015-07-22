@@ -1,120 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55A57D2B.4010207@broadcom.com>
-Date: Tue, 14 Jul 2015 14:20:43 -0700
-From: Ray Jui <rjui@broadcom.com>
-MIME-Version: 1.0
-To: Mark Rutland <mark.rutland@arm.com>
-CC: Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Jon Mason <jonmason@broadcom.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:36958 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934682AbbGVQyx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 22 Jul 2015 12:54:53 -0400
+Date: Wed, 22 Jul 2015 17:55:31 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bcm-kernel-feedback-list@broadcom.com"
-	<bcm-kernel-feedback-list@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH 4/4] arm64: dts: Add Broadcom North Star 2 support
-References: <1436837955-26279-1-git-send-email-rjui@broadcom.com> <1436837955-26279-5-git-send-email-rjui@broadcom.com> <20150714092353.GA12675@leverpostej>
-In-Reply-To: <20150714092353.GA12675@leverpostej>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Simon Horman <horms@verge.net.au>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
+ PCI layer
+Message-ID: <20150722165531.GB1153@red-moon>
+References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150722091427.GB344@red-moon>
+ <55AFA741.2010703@roeck-us.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55AFA741.2010703@roeck-us.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Guenter,
 
-
-On 7/14/2015 2:23 AM, Mark Rutland wrote:
-> Hi,
+On Wed, Jul 22, 2015 at 03:22:57PM +0100, Guenter Roeck wrote:
+> On 07/22/2015 02:14 AM, Lorenzo Pieralisi wrote:
+> > Bjorn, Guenter,
+> >
+> > On Thu, Jul 09, 2015 at 11:59:16AM +0100, Lorenzo Pieralisi wrote:
+> >> When a PCI bus is scanned, upon PCI bridge detection the kernel
+> >> has to read the bridge registers to set-up its resources so that
+> >> the PCI resource hierarchy can be validated properly.
+> >>
+> >> Most if not all architectures read PCI bridge registers in the
+> >> pcibios_fixup_bus hook, that is called by the PCI generic layer
+> >> whenever a PCI bus is scanned.
+> >>
+> >> Since pci_read_bridge_bases is an arch agnostic operation (and it
+> >> is carried out on all architectures) it can be moved to the generic
+> >> PCI layer in order to consolidate code and remove the respective
+> >> calls from the architectures back-ends.
+> >>
+> >> The PCI_PROBE_ONLY flag is not checked before calling
+> >> pci_read_bridge_buses in the generic layer since reading the bridge
+> >> bases is not related to resources assignment; this implies that it
+> >> can be carried out safely on PCI_PROBE_ONLY systems too and should
+> >> not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
+> >> flag before reading the bridge bases.
+> >>
+> >> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >> Cc: Ralf Baechle <ralf@linux-mips.org>
+> >> Cc: James E.J. Bottomley <jejb@parisc-linux.org>
+> >> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> Cc: Richard Henderson <rth@twiddle.net>
+> >> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> >> Cc: David Howells <dhowells@redhat.com>
+> >> Cc: Russell King <linux@arm.linux.org.uk>
+> >> Cc: Tony Luck <tony.luck@intel.com>
+> >> Cc: David S. Miller <davem@davemloft.net>
+> >> Cc: Ingo Molnar <mingo@redhat.com>
+> >> Cc: Guenter Roeck <linux@roeck-us.net>
+> >> Cc: Michal Simek <monstr@monstr.eu>
+> >> Cc: Chris Zankel <chris@zankel.net>
+> >> ---
+> >> v2->v3:
+> >>
+> >> - Dropped RFC status
+> >> - Removed bridge resources claiming from pci_read_bridge_bases()
+> >
+> > What do you want me to do with this patch ? I removed the resource
+> > claiming - ie the only controversial bit, I can only test on
+> > arm64, I would like to make some progress on this otherwise
+> > I will have to add the bridge bases read to arm64 pcibios_fixup_bus()
+> > and be done with this.
+> >
 > 
->> +/dts-v1/;
->> +
->> +#include "ns2.dtsi"
->> +
->> +/ {
->> +       model = "Broadcom NS2 SVK";
->> +       compatible = "brcm,ns2-svk", "brcm,ns2";
->> +
->> +       chosen {
->> +               bootargs = "console=ttyS0,115200n8 earlycon=uart8250,mmio32,0x66130000";
->> +       };
+> Lorenzo,
 > 
-> Please use stdout-path instead (you can use /aliases to make it
-> simpler). It'll save a redundant description of the UART and will remove
-> the dependency on Linux-specific naming of the UART.
-> 
-> [...]
+> please give me a few days to test it. I was out on vacation for
+> the last two weeks, and I am still struggling to get my test systems
+> back to a working state.
 
-Saw that Arnd also has the same comment. I will fix this.
+No worries, I just wanted to make sure we can make progress on this,
+I do not think there is anything controversial in this set, it just
+requires testing the mechanical change on all affected archs, that's
+the problem.
 
-> 
->> +/ {
->> +       compatible = "brcm,ns2";
->> +       interrupt-parent = <&gic>;
->> +       #address-cells = <2>;
->> +       #size-cells = <2>;
->> +
->> +       cpus {
->> +               #address-cells = <2>;
->> +               #size-cells = <0>;
->> +
->> +               cpu@0 {
->> +                       device_type = "cpu";
->> +                       compatible = "arm,cortex-a57", "arm,armv8";
->> +                       reg = <0 0>;
->> +                       enable-method = "spin-table";
->> +                       cpu-release-addr = <0 0x84b00000>;
->> +               };
->> +       };
-> 
-> Shouldn't the other CPUs be described?
-
-Let me give that a try but there's a chance that I cannot enable other 3
-cores until we have a more stable bootloader configuration.
-
-> 
-> Using spin-table for SMP is somewhat unfortunate, as it comes with a
-> number of problems (e.g. unwoken secondaries spinning in the kernel). I
-> would strongly advise using PSCI instead.
->
-
-Yes I agree and I'm fully aware PSCI is the preferred way of bringing up
-ARMv8 cores. Unfortunately this is currently out of my control as this
-is done in ARM Trusted Firmware that was handled by a different team
-within Broadcom and they have very tight schedule and will not have time
-to add PSCI support in the near term.
-
-The plan is to use spin-table for now and convert to PSCI when we have
-the support for it in our ATF. That should happen within the next couple
-months.
-
-
->> +
->> +       timer {
->> +               compatible = "arm,armv8-timer";
->> +               interrupts = <GIC_PPI 13 (GIC_CPU_MASK_RAW(0xff) |
->> +                             IRQ_TYPE_EDGE_RISING)>,
->> +                            <GIC_PPI 14 (GIC_CPU_MASK_RAW(0xff) |
->> +                             IRQ_TYPE_EDGE_RISING)>,
->> +                            <GIC_PPI 11 (GIC_CPU_MASK_RAW(0xff) |
->> +                             IRQ_TYPE_EDGE_RISING)>,
->> +                            <GIC_PPI 10 (GIC_CPU_MASK_RAW(0xff) |
->> +                             IRQ_TYPE_EDGE_RISING)>;
->> +               clock-frequency = <25000000>;
->> +       };
-> 
-> Please fix your firmware to configure CNTFRQ_EL0, it is simply a bug not
-> to, and using clock-frequency does not fix all the problems that not
-> configuring it causes.
-
-Yes will do this.
-
-> 
-> Thanks,
-> Mark.
-> 
-
-Thanks,
-
-Ray
+Thanks a lot for your help !
+Lorenzo
