@@ -1,10 +1,6 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36520 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934333AbbGVOyS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Jul 2015 10:54:18 -0400
-Message-ID: <55AFAE96.4070401@arm.com>
-Date: Wed, 22 Jul 2015 15:54:14 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55AFB492.7070800@arm.com>
+Date: Wed, 22 Jul 2015 16:19:46 +0100
 From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
 To: Bjorn Helgaas <bhelgaas@google.com>
@@ -19,61 +15,69 @@ CC: Thomas Gleixner <tglx@linutronix.de>,
 	Ma Jun <majun258@huawei.com>,
 	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
 	Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v4 04/19] PCI/MSI: Add hooks to populate the msi_domain
- field
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com> <1436962613-17359-5-git-send-email-marc.zyngier@arm.com> <20150721212644.GB3691@google.com> <55AFABF3.5050303@arm.com> <CAErSpo5GRHp0-51tj8XiXKLujkLmtdmhg+gJOy0szJpP3002cQ@mail.gmail.com>
-In-Reply-To: <CAErSpo5GRHp0-51tj8XiXKLujkLmtdmhg+gJOy0szJpP3002cQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Subject: Re: [PATCH v4 07/19] PCI/MSI: Let pci_msi_get_domain use struct device's
+ msi_domain
+References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com> <1436962613-17359-8-git-send-email-marc.zyngier@arm.com> <20150721211731.GA3691@google.com>
+In-Reply-To: <20150721211731.GA3691@google.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22/07/15 15:48, Bjorn Helgaas wrote:
-> On Wed, Jul 22, 2015 at 9:42 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->> Hi Bjorn,
->>
->> On 21/07/15 22:26, Bjorn Helgaas wrote:
->>> On Wed, Jul 15, 2015 at 01:16:38PM +0100, Marc Zyngier wrote:
->>>> In order to be able to populate the device msi_domain field,
->>>> add the necesary hooks to propagate the host bridge msi_domain
->>>> across secondary busses to devices.
->>>>
->>>> So far, nobody populates the initial msi_domain.
->>>>
->>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->>>> ---
->>>>  drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
->>>>  include/linux/pci.h |  1 +
->>>>  2 files changed, 31 insertions(+)
->>>>
->>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>> index cefd636..376f6fa 100644
->>>> --- a/drivers/pci/probe.c
->>>> +++ b/drivers/pci/probe.c
->>>> @@ -661,6 +661,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
->>>>      }
->>>>  }
->>>>
->>>> +void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
->>>> +{
->>>> +}
->>>
->>> I don't think there's anything in this series that requires this to be a
->>> weak function, is there?  This is the only definition I see.
->>
->> It looks like all the pcibios_* functions so far have a weak attribute,
->> and I've added it as a matter of consistency.
+On 21/07/15 22:17, Bjorn Helgaas wrote:
+> Hi Marc,
 > 
-> We've used pcibios_* names where we might need an arch-specific
-> implementation.  I'm not sure that's the case here -- do you envision
-> an implementation under arch/* someday?  If not, maybe it should just
-> be a pci_* function instead of pcibios_*.
+> On Wed, Jul 15, 2015 at 01:16:41PM +0100, Marc Zyngier wrote:
+>> Now that we can easily find which MSI domain a PCI device is
+>> using, use dev_get_msi_domain as a way to retrieve the information.
+>>
+>> The original code is still used as a fallback.
+>>
+>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>> ---
+>>  drivers/pci/msi.c | 3 ++-
+>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index ef4ec6e..c77fdaf 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -41,7 +41,8 @@ static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
+>>  {
+>>  	struct irq_domain *domain = NULL;
+>>  
+>> -	if (dev->bus->msi)
+>> +	domain = dev_get_msi_domain(&dev->dev);
+>> +	if (!domain && dev->bus->msi)
+>>  		domain = dev->bus->msi->domain;
+>>  	if (!domain)
+>>  		domain = arch_get_pci_msi_domain(dev);
+> 
+> I think this would be slightly easier to read as:
+> 
+>     struct irq_domain *domain;
+> 
+>     domain = dev_get_msi_domain(&dev->dev);
+>     if (domain)
+> 	return domain;
+> 
+>     if (dev->bus->msi && (domain = dev->bus->msi->domain))
+> 	return domain;
+> 
+>     return arch_get_pci_msi_domain(dev);
+> 
+> I'm not a huge fan of assignments inside "if" conditions, and checkpatch
+> might even complain about it, but it exposes the fallback order pretty well
+> here.  I guess we could also just repeat the dev->bus->msi->domain
+> expression:
+> 
+>     if (dev->bus->msi && dev->bus->msi->domain)
+> 	return dev->bus->msi->domain;
+> 
+> We can at least get rid of the superfluous initialization of domain to
+> NULL.
 
-I could definitely see non-OF driven architectures wanting to override this.
-
-Or maybe we should turn it the other way around and make it call the
-various firmware interfaces (OF, ACPI...) until one of them succeeds. In
-which case your suggestion of making it a pci_* function makes a lot of
-sense.
+Yeah, that's better, considering that (as you've noticed) the ugly
+assignment is removed in the last patch.
 
 Thanks,
 
