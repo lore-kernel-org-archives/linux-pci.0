@@ -1,78 +1,272 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51702 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753626AbbG0NIO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Jul 2015 09:08:14 -0400
-Date: Mon, 27 Jul 2015 15:08:10 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org,
-	Gregor Dick <gdick@solarflare.com>
-Subject: Re: [PATCH v2 01/11] iommu/vt-d: Cache PCI ATS state and Invalidate
- Queue Depth
-Message-ID: <20150727130810.GG27614@suse.de>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150721001357.28145.83631.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>
+Subject: [PATCH v4 4/4] arm64: dts: Add Broadcom North Star 2 support
+Date: Tue, 21 Jul 2015 18:29:43 -0700
+Message-ID: <1437528583-855-5-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1437528583-855-1-git-send-email-rjui@broadcom.com>
+References: <1437528583-855-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150721001357.28145.83631.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 20, 2015 at 07:13:57PM -0500, Bjorn Helgaas wrote:
-> We check the ATS state (enabled/disabled) and fetch the PCI ATS Invalidate
-> Queue Depth in performance-sensitive paths.  It's easy to cache these,
-> which removes dependencies on PCI.
-> 
-> Remember the ATS enabled state.  When enabling, read the queue depth once
-> and cache it in the device_domain_info struct.  This is similar to what
-> amd_iommu.c does.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/iommu/intel-iommu.c |   26 ++++++++++++++++----------
->  1 file changed, 16 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index a98a7b2..50832f1 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -408,6 +408,10 @@ struct device_domain_info {
->  	struct list_head global; /* link to global list */
->  	u8 bus;			/* PCI bus number */
->  	u8 devfn;		/* PCI devfn number */
-> +	struct {
-> +		int enabled:1;
-> +		u8 qdep;
-> +	} ats;			/* ATS state */
->  	struct device *dev; /* it's NULL for PCIe-to-PCI bridge */
->  	struct intel_iommu *iommu; /* IOMMU used by this device */
->  	struct dmar_domain *domain; /* pointer to domain */
-> @@ -1391,19 +1395,26 @@ iommu_support_dev_iotlb (struct dmar_domain *domain, struct intel_iommu *iommu,
->  
->  static void iommu_enable_dev_iotlb(struct device_domain_info *info)
->  {
-> +	struct pci_dev *pdev;
-> +
->  	if (!info || !dev_is_pci(info->dev))
->  		return;
->  
-> -	pci_enable_ats(to_pci_dev(info->dev), VTD_PAGE_SHIFT);
-> +	pdev = to_pci_dev(info->dev);
-> +	if (pci_enable_ats(pdev, VTD_PAGE_SHIFT))
-> +		return;
-> +
-> +	info->ats.enabled = 1;
-> +	info->ats.qdep = pci_ats_queue_depth(pdev);
+Add Broadcom NS2 device tree binding document. Also add initial device
+tree dtsi for Broadcom North Star 2 (NS2) SoC and board support for NS2
+SVK board
 
-Hmm, this is a place where the relaxed error handling in
-pci_enable_ats() can get problematic. If ATS is (by accident or a bug
-elsewhere) already enabled an the function returns -EINVAL, the IOMMU
-driver considers ATS disabled and doesn't flush the IO/TLBs of the
-device. This can cause data corruption later on, so we should make sure
-that info->ats.enabled is consistent with pdev->ats_enabled.
+Signed-off-by: Jon Mason <jonmason@broadcom.com>
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
+ arch/arm64/boot/dts/Makefile                      |    1 +
+ arch/arm64/boot/dts/broadcom/Makefile             |    5 +
+ arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   59 +++++++++++
+ arch/arm64/boot/dts/broadcom/ns2.dtsi             |  118 +++++++++++++++++++++
+ 5 files changed, 192 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
+ create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
+ create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
 
-
-	Joerg
+diff --git a/Documentation/devicetree/bindings/arm/bcm/ns2.txt b/Documentation/devicetree/bindings/arm/bcm/ns2.txt
+new file mode 100644
+index 0000000..35f056f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/arm/bcm/ns2.txt
+@@ -0,0 +1,9 @@
++Broadcom North Star 2 (NS2) device tree bindings
++------------------------------------------------
++
++Boards with NS2 shall have the following properties:
++
++Required root node property:
++
++NS2 SVK board
++compatible = "brcm,ns2-svk", "brcm,ns2";
+diff --git a/arch/arm64/boot/dts/Makefile b/arch/arm64/boot/dts/Makefile
+index 38913be..9f95941 100644
+--- a/arch/arm64/boot/dts/Makefile
++++ b/arch/arm64/boot/dts/Makefile
+@@ -1,6 +1,7 @@
+ dts-dirs += amd
+ dts-dirs += apm
+ dts-dirs += arm
++dts-dirs += broadcom
+ dts-dirs += cavium
+ dts-dirs += exynos
+ dts-dirs += freescale
+diff --git a/arch/arm64/boot/dts/broadcom/Makefile b/arch/arm64/boot/dts/broadcom/Makefile
+new file mode 100644
+index 0000000..e21fe66
+--- /dev/null
++++ b/arch/arm64/boot/dts/broadcom/Makefile
+@@ -0,0 +1,5 @@
++dtb-$(CONFIG_ARCH_BCM_IPROC) += ns2-svk.dtb
++
++always		:= $(dtb-y)
++subdir-y	:= $(dts-dirs)
++clean-files	:= *.dtb
+diff --git a/arch/arm64/boot/dts/broadcom/ns2-svk.dts b/arch/arm64/boot/dts/broadcom/ns2-svk.dts
+new file mode 100644
+index 0000000..244baf8
+--- /dev/null
++++ b/arch/arm64/boot/dts/broadcom/ns2-svk.dts
+@@ -0,0 +1,59 @@
++/*
++ *  BSD LICENSE
++ *
++ *  Copyright(c) 2015 Broadcom Corporation.  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions
++ *  are met:
++ *
++ *    * Redistributions of source code must retain the above copyright
++ *      notice, this list of conditions and the following disclaimer.
++ *    * Redistributions in binary form must reproduce the above copyright
++ *      notice, this list of conditions and the following disclaimer in
++ *      the documentation and/or other materials provided with the
++ *      distribution.
++ *    * Neither the name of Broadcom Corporation nor the names of its
++ *      contributors may be used to endorse or promote products derived
++ *      from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/dts-v1/;
++
++#include "ns2.dtsi"
++
++/ {
++	model = "Broadcom NS2 SVK";
++	compatible = "brcm,ns2-svk", "brcm,ns2";
++
++	aliases {
++		serial0 = &uart3;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	memory {
++		device_type = "memory";
++		reg = <0x000000000 0x80000000 0x00000000 0x40000000>;
++	};
++
++	soc: soc {
++		uart3: serial@66130000 {
++			status = "ok";
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/broadcom/ns2.dtsi b/arch/arm64/boot/dts/broadcom/ns2.dtsi
+new file mode 100644
+index 0000000..3c92d92
+--- /dev/null
++++ b/arch/arm64/boot/dts/broadcom/ns2.dtsi
+@@ -0,0 +1,118 @@
++/*
++ *  BSD LICENSE
++ *
++ *  Copyright(c) 2015 Broadcom Corporation.  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions
++ *  are met:
++ *
++ *    * Redistributions of source code must retain the above copyright
++ *      notice, this list of conditions and the following disclaimer.
++ *    * Redistributions in binary form must reproduce the above copyright
++ *      notice, this list of conditions and the following disclaimer in
++ *      the documentation and/or other materials provided with the
++ *      distribution.
++ *    * Neither the name of Broadcom Corporation nor the names of its
++ *      contributors may be used to endorse or promote products derived
++ *      from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++
++/memreserve/ 0x84b00000 0x00000008;
++
++/ {
++	compatible = "brcm,ns2";
++	interrupt-parent = <&gic>;
++	#address-cells = <2>;
++	#size-cells = <2>;
++
++	cpus {
++		#address-cells = <2>;
++		#size-cells = <0>;
++
++		cpu@0 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a57", "arm,armv8";
++			reg = <0 0>;
++			enable-method = "spin-table";
++			cpu-release-addr = <0 0x84b00000>;
++		};
++
++		cpu@1 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a57", "arm,armv8";
++			reg = <0 1>;
++			enable-method = "spin-table";
++			cpu-release-addr = <0 0x84b00000>;
++		};
++
++		cpu@2 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a57", "arm,armv8";
++			reg = <0 2>;
++			enable-method = "spin-table";
++			cpu-release-addr = <0 0x84b00000>;
++		};
++
++		cpu@3 {
++			device_type = "cpu";
++			compatible = "arm,cortex-a57", "arm,armv8";
++			reg = <0 3>;
++			enable-method = "spin-table";
++			cpu-release-addr = <0 0x84b00000>;
++		};
++	};
++
++	timer {
++		compatible = "arm,armv8-timer";
++		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_RAW(0xff) |
++			      IRQ_TYPE_EDGE_RISING)>,
++			     <GIC_PPI 14 (GIC_CPU_MASK_RAW(0xff) |
++			      IRQ_TYPE_EDGE_RISING)>,
++			     <GIC_PPI 11 (GIC_CPU_MASK_RAW(0xff) |
++			      IRQ_TYPE_EDGE_RISING)>,
++			     <GIC_PPI 10 (GIC_CPU_MASK_RAW(0xff) |
++			      IRQ_TYPE_EDGE_RISING)>;
++	};
++
++	soc: soc {
++		compatible = "simple-bus";
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges = <0 0 0 0xffffffff>;
++
++		gic: interrupt-controller@65210000 {
++			compatible = "arm,gic-400";
++			#interrupt-cells = <3>;
++			interrupt-controller;
++			reg = <0x65210000 0x1000>,
++			      <0x65220000 0x1000>,
++			      <0x65240000 0x2000>,
++			      <0x65260000 0x1000>;
++		};
++
++		uart3: serial@66130000 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x66130000 0x100>;
++			interrupts = <GIC_SPI 393 IRQ_TYPE_LEVEL_HIGH>;
++			reg-shift = <2>;
++			reg-io-width = <4>;
++			clock-frequency = <23961600>;
++			status = "disabled";
++		};
++	};
++};
+-- 
+1.7.9.5
 
