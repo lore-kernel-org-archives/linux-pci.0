@@ -1,90 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:32993 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754401AbbG0Wl7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 18:41:59 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>, <arm@kernel.org>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v5 0/4] Add Broadcom North Star 2 support
-Date: Mon, 27 Jul 2015 15:42:17 -0700
-Message-ID: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:2981 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753300AbbGVVyF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 17:54:05 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>
+CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	"Konrad Wilk" <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"Terence Ripperda" <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	"Jerome Glisse" <jglisse@redhat.com>
+Subject: [PATCH v4 06/12] DMA-API: Add peer resource mapping documentation
+Date: Wed, 22 Jul 2015 16:39:51 -0500
+Message-ID: <1437601197-6481-7-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
+References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds Broadcom North Star 2 (NS2) SoC support. NS2 is an ARMv8
-based SoC and under the Broadcom iProc family.
+Add references to both the general API documentation, as well as the HOWTO,
+about the dma_(un)map_peer_resource() and dma_peer_mapping_error() APIs.
 
-Sorry for tying this with the Broadcom iProc PCIe driver fixes for ARM64. I
-have to tie them together because iProc PCIe support is enabled by default
-when ARCH_BCM_IPROC is enabled. Without the fixes in the iProc PCIe driver,
-enabling CONFIG_ARCH_BCM_IPROC would break the build for arm64 defconfig. Let
-me know if there's a better way to handle this.
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+---
+ Documentation/DMA-API-HOWTO.txt | 69 +++++++++++++++++++++++++++++++++++++++++
+ Documentation/DMA-API.txt       | 38 ++++++++++++++++++++---
+ 2 files changed, 102 insertions(+), 5 deletions(-)
 
-This patch series is generated based on v4.2-rc2 and tested on Broadcom NS2 SVK
-
-Code available on GITHUB:
-repo: https://github.com/Broadcom/arm64-linux.git
-branch: ns2-core-v5
-
-Changes from V4:
-- Incorporate iProc PCIe changes from Bjorn Helgaas to handle ARM32 specific
-struct pci_sys_data
-- Move ARCH_BCM_IPROC from arch/arm64/Kconfig to arch/arm64/Kconfig.platforms
-
-Changes from V3:
-- Add more paragraph to the iProc PCIe arm64 support patch commit message to
-explain the change and anticipated future change in more details
-
-Changes from V2:
-- Drop hardcoded earlycon kernel command line paramter in NS2 SVK dts file
-because 1) earlycon is a debugging feature that can be enabled in the
-bootloader and should not be enabled by default in the board dts file and 2)
-of_earlycon should be used and support should be added to 8250 DW driver
-
-Changes from V1:
-- Took Arnd's advice to tweak the location of struct pci_sys_data within
-struct iproc_pcie. This helps to get rid of most of the CONFIG_ARM wrap in
-iProc PCIe core driver
-- Use stdout-path and alias for serial console in NS2 SVK dts
-- Add all 4 CPU descriptions in NS2 dtsi
-- Remove "clock-frequency" property in the armv8 timer node so timer frequency
-can be determined based on readings from CNTFRQ_EL0
-- Remove config flag ARCH_BCM_NS2. Leave only ARCH_BCM_IPROC for all Broadcom
-arm64 SoCs as advised
-
-Ray Jui (4):
-  PCI: iproc: enable arm64 support for iProc PCIe
-  PCI: iproc: Fix ARM64 dependency in Kconfig
-  arm64: Add Broadcom iProc family support
-  arm64: dts: Add Broadcom North Star 2 support
-
- Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
- arch/arm64/Kconfig.platforms                      |    5 +
- arch/arm64/boot/dts/Makefile                      |    1 +
- arch/arm64/boot/dts/broadcom/Makefile             |    5 +
- arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   59 +++++++++++
- arch/arm64/boot/dts/broadcom/ns2.dtsi             |  118 +++++++++++++++++++++
- arch/arm64/configs/defconfig                      |    1 +
- drivers/pci/host/Kconfig                          |    2 +-
- drivers/pci/host/pcie-iproc.c                     |   27 +++--
- drivers/pci/host/pcie-iproc.h                     |    4 +-
- 10 files changed, 222 insertions(+), 9 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
- create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
-
+diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
+index 55b70b9..053a18f 100644
+--- a/Documentation/DMA-API-HOWTO.txt
++++ b/Documentation/DMA-API-HOWTO.txt
+@@ -143,6 +143,10 @@ What about block I/O and networking buffers?  The block I/O and
+ networking subsystems make sure that the buffers they use are valid
+ for you to DMA from/to.
+ 
++In some systems, it may also be possible to DMA to and/or from a peer
++device's MMIO region, as described by a 'struct resource'. This is
++referred to as a peer-to-peer mapping.
++
+ 			DMA addressing limitations
+ 
+ Does your device have any DMA addressing limitations?  For example, is
+@@ -653,6 +657,45 @@ Every dma_map_{single,sg}() call should have its dma_unmap_{single,sg}()
+ counterpart, because the DMA address space is a shared resource and
+ you could render the machine unusable by consuming all DMA addresses.
+ 
++Peer-to-peer DMA mappings can be obtained using dma_map_peer_resource() to
++map another device's MMIO region for the given device:
++
++	dma_peer_addr_t dma_handle = dma_map_peer_resource(dev, peer, res,
++							   offset, size,
++							   direction);
++	if (dma_peer_mapping_error(dev, dma_handle))
++	{
++		/*
++		 * reduce current DMA mapping usage,
++		 * delay and try again later or
++		 * reset driver. P2P DMA may not be
++		 * supported between the devices.
++		 */
++		goto map_error_handling;
++	}
++
++	...
++
++	dma_unmap_peer_resource(dev, dma_handle, size, direction);
++
++Here, "res" is the struct resource * of the MMIO region, and "offset" means
++byte offset within the given resource.
++
++You should call dma_peer_mapping_error() as dma_map_peer_resource() could fail
++and return error.
++
++Not all implementations support dma_map_peer_resource(), but those that do
++should also implement dma_peer_mapping_error(). dma_map_peer_resource() may
++fail for various reasons depending on the implementation, but generally
++may fail for the same reasons as those outlined under the dma_map_single()
++discussion. In addition, the success of dma_map_peer_resource() may depend
++on the physical topology between the two devices. For example, in the x86
++implementations, peer-to-peer mappings will fail if the devices are behind
++different host bridges.
++
++You should call dma_unmap_peer_resource() when DMA activity is finished,
++e.g., from the interrupt which told you that the DMA transfer is done.
++
+ If you need to use the same streaming DMA region multiple times and touch
+ the data in between the DMA transfers, the buffer needs to be synced
+ properly in order for the CPU and device to see the most up-to-date and
+@@ -785,6 +828,23 @@ failure can be determined by:
+ 		goto map_error_handling;
+ 	}
+ 
++- checking the dma_peer_addr_t returned from dma_map_peer_resource() by using
++  dma_peer_mapping_error():
++
++  	dma_peer_addr_t dma_handle;
++
++	dma_handle = dma_map_peer_resource(dev, peer, res, offset, size,
++					   direction);
++	if (dma_peer_mapping_error(dev, dma_handle)) {
++		/*
++		 * reduce current DMA mapping usage,
++		 * delay and try again later or
++		 * reset driver. P2P DMA may not be
++		 * supported between the devices.
++		 */
++		goto map_error_handling;
++	}
++
+ - unmap pages that are already mapped, when mapping error occurs in the middle
+   of a multiple page mapping attempt. These example are applicable to
+   dma_map_page() as well.
+@@ -956,6 +1016,15 @@ to "Closing".
+    support multiple types of IOMMUs in a single system, the example of
+    x86 or powerpc helps.
+ 
++4) Peer-to-peer requirements.
++
++   If your platform can support peer-to-peer DMA, enable HAS_DMA_P2P to
++   include the peer-resource mapping interfaces in the DMA API, and
++   provide an implementation of dma_peer_mapping_error(). The latter part
++   is necessary because on some platforms, the dma_addr_t is not as wide
++   as the full bus address, and therefore the existing dma_mapping_error()
++   API may not be sufficient.
++
+ 			   Closing
+ 
+ This document, and the API itself, would not be in its current
+diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
+index 7eba542..c6f11a1 100644
+--- a/Documentation/DMA-API.txt
++++ b/Documentation/DMA-API.txt
+@@ -283,14 +283,42 @@ and <size> parameters are provided to do partial page mapping, it is
+ recommended that you never use these unless you really know what the
+ cache width is.
+ 
++dma_peer_addr_t
++dma_map_peer_resource(struct device *dev, struct device *peer,
++		      struct resource *res, unsigned long offset,
++		      size_t size, enum dma_data_direction_direction)
++
++API for mapping resources. This API allows a driver to map a peer
++device's resource for DMA. All the notes and warnings for the other
++APIs apply here. Also, the success of this API does not validate or
++guarantee that peer-to-peer transactions between the device and its
++peer will be functional. They only grant access so that if such
++transactions are possible, an IOMMU will not prevent them from
++succeeding. However, a failure of this API may indicate that peer-to-peer
++transactions are not expected to succeed across the underlying topology
++between the devices.
++
++void
++dma_unmap_peer_resource(struct device *dev, dma_peer_addr_t dma_address,
++			size_t size, enum dma_data_direction direction)
++
++Unmaps the resource previously mapped. All the parameters passed in
++must be identical to those passed in to (and returned by) the mapping
++API.
++
+ int
+ dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
+ 
+-In some circumstances dma_map_single() and dma_map_page() will fail to create
+-a mapping. A driver can check for these errors by testing the returned
+-DMA address with dma_mapping_error(). A non-zero return value means the mapping
+-could not be created and the driver should take appropriate action (e.g.
+-reduce current DMA mapping usage or delay and try again later).
++int
++dma_peer_mapping_error(struct device *dev, dma_peer_addr_t dma_addr)
++
++In some circumstances dma_map_single(), dma_map_page() and
++dma_map_peer_resource() will fail to create a mapping. A driver can check for
++these errors by testing the returned DMA address with dma_mapping_error()
++(or dma_peer_mapping_error() for dma_map_peer_resource()). A non-zero return
++value means the mapping could not be created and the driver should take
++appropriate action (e.g. reduce current DMA mapping usage or delay and try
++again later).
+ 
+ 	int
+ 	dma_map_sg(struct device *dev, struct scatterlist *sg,
 -- 
-1.7.9.5
+2.4.6
 
