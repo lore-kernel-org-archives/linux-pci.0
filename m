@@ -1,189 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:38018 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbbGVUxX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 16:53:23 -0400
-Received: by iggf3 with SMTP id f3so142841079igg.1
-        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2015 13:53:23 -0700 (PDT)
-Date: Wed, 22 Jul 2015 15:53:16 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 1/4] PCI: iproc: enable arm64 support for iProc PCIe
-Message-ID: <20150722205316.GO21967@google.com>
-References: <1437528583-855-1-git-send-email-rjui@broadcom.com>
- <1437528583-855-2-git-send-email-rjui@broadcom.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:47804 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754334AbbGVCv7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 22:51:59 -0400
+Message-ID: <55AF050C.1070105@hisilicon.com>
+Date: Wed, 22 Jul 2015 10:50:52 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437528583-855-2-git-send-email-rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
+	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
+	<Liviu.Dudau@arm.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<liguozhu@hisilicon.com>, Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v4 4/5] Documentation: DT: Add Hisilicon PCIe host binding
+References: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com> <1437461323-3531-5-git-send-email-wangzhou1@hisilicon.com> <20150721230205.GN21967@google.com>
+In-Reply-To: <20150721230205.GN21967@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 21, 2015 at 06:29:40PM -0700, Ray Jui wrote:
-> This patch enables arm64 support to the iProc PCIe driver
+On 2015/7/22 7:02, Bjorn Helgaas wrote:
+> [+cc Rob]
 > 
-> Note struct pci_sys_data is arm32 specific and will eventually be
-> removed. This change is done in such a way that when struct pci_sys_data
-> is removed from arm32, one only needs to also remove it from
-> pcie-iproc.h, no other change in the iProc PCIe core driver is needed
+> On Tue, Jul 21, 2015 at 02:48:42PM +0800, Zhou Wang wrote:
+>> This patch adds related DTS binding document for Hisilicon PCIe host driver.
+>>
+>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 > 
-> In addition, arm64 based PCI driver does not require call to
-> pci_fixup_irqs, as it implements OF based irq parsing and mapping in
-> pcibios_add_device
+> If I merge this via my tree, I'm looking for an ack from Arnd and/or Rob
+> here.
 > 
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
-> Reviewed-by: Scott Branden <sbranden@broadcom.com>
-> ---
->  drivers/pci/host/pcie-iproc.c |   15 ++++-----------
->  drivers/pci/host/pcie-iproc.h |    8 ++++++--
->  2 files changed, 10 insertions(+), 13 deletions(-)
+>> ---
+>>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
+>>  1 file changed, 46 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>> new file mode 100644
+>> index 0000000..6c9b827
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>> @@ -0,0 +1,46 @@
+>> +Hisilicon PCIe host bridge DT description
 > 
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index d77481e..8a556d5 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -58,11 +58,6 @@
->  #define SYS_RC_INTX_EN               0x330
->  #define SYS_RC_INTX_MASK             0xf
->  
-> -static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
-> -{
-> -	return sys->private_data;
-> -}
-> -
->  /**
->   * Note access to the configuration registers are protected at the higher layer
->   * by 'pci_lock' in drivers/pci/access.c
-> @@ -71,8 +66,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
->  					    unsigned int devfn,
->  					    int where)
->  {
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct iproc_pcie *pcie = sys_to_pcie(sys);
-> +	struct iproc_pcie *pcie = bus->sysdata;
+> Even the website at http://hisilicon.com isn't consistent, but there is
+> some indication that the correct capitalization would be "HiSilicon".
+> Since this is English text, feel free to capitalize it correctly here :)
+>
 
-I'm thinking something like the following so we don't depend on
-pci_sys_data being at the beginning of iproc_pcie.  What do you think?
-It has more ifdefs but feels a bit safer.  And I don't mind if ugly code
-comes with ugly ifdefs -- it's a little incentive to make the code cleaner.
+Hi Bjorn,
+
+I checked with related colleagues about this. It should be "HiSilicon" as
+formal name. Thanks for pointing this :)
+
+> Similarly, Synopsys seems to use "DesignWare," so I try to use that when
+> it makes sense.
+> 
+>> +Hisilicon PCIe host controller is based on Designware PCI core.
+>> +It shares common functions with PCIe Designware core driver and inherits
+>> +common properties defined in
+>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+>> +
+>> +Additional properties are described here:
+>> +
+>> +Required properties:
+>> +- compatible: Should contain "hisilicon,hip05-pcie".
+>> +- reg: Should contain rc_dbi, subctrl, config registers location and length.
+>> +- reg-names: Must include the following entries:
+>> +  "rc_dbi": controller configuration registers;
+>> +  "subctrl": whole PCIe hosts configuration registers;
+>> +  "config": PCIe configuration space registers.
+>> +- msi-parent: Should be its_pcie which is an its receiving MSI interrupts.
+> 
+> I guess "its" here is an abbreviation for something; if so, this would read
+> better as "... which is an ITS receiving ..."
+> 
+
+It is ITS(Interrupt Translation Service) in GIC v3. Will modify it.
+
+>> +- port-id: Should be 0, 1, 2 or 3.
+>> +
+>> +Optional properties:
+>> +- status: Either "ok" or "disabled".
+>> +- dma-coherent: Present if dma operations are coherent.
+> 
+> "if DMA operations"
+>
+
+Thanks, will modify this.
+
+Best regards,
+Zhou
+
+>> +
+>> +Example:
+>> +	pcie@0xb0080000 {
+>> +		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+>> +		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
+>> +		      <0x220 0x00000000 0 0x2000>;
+>> +		reg-names = "rc_dbi", "subctrl", "config";
+>> +		bus-range = <0  15>;
+>> +		msi-parent = <&its_pcie>;
+>> +		#address-cells = <3>;
+>> +		#size-cells = <2>;
+>> +		device_type = "pci";
+>> +		dma-coherent;
+>> +		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
+>> +		num-lanes = <8>;
+>> +		port-id = <1>;
+>> +		#interrupts-cells = <1>;
+>> +		interrupts-map-mask = <0xf800 0 0 7>;
+>> +		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
+>> +				  0x0 0 0 2 &mbigen_pcie 2 11
+>> +				  0x0 0 0 3 &mbigen_pcie 3 12
+>> +				  0x0 0 0 4 &mbigen_pcie 4 13>;
+>> +		status = "ok";
+>> +	};
+>> -- 
+>> 1.9.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
 
-commit 8d9bfe3702aaea457b3d59b09b86e9f03c322605
-Author: Ray Jui <rjui@broadcom.com>
-Date:   Tue Jul 21 18:29:40 2015 -0700
-
-    PCI: iproc: Add arm64 support
-    
-    Add arm64 support to the iProc PCIe driver.
-    
-    Note that on arm32, bus->sysdata points to the arm32-specific pci_sys_data
-    struct, and pci_sys_data.private_data contains the iproc_pcie pointer.
-    For arm64, there's nothing corresponding to pci_sys_data, so we keep the
-    iproc_pcie pointer directly in bus->sysdata.
-    
-    In addition, arm64 does IRQ mapping in pcibios_add_device(), so it doesn't
-    need pci_fixup_irqs() as arm32 does.
-    
-    Signed-off-by: Ray Jui <rjui@broadcom.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Scott Branden <sbranden@broadcom.com>
-
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 9a00dca..fe2efb1 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -58,9 +58,17 @@
- #define SYS_RC_INTX_EN               0x330
- #define SYS_RC_INTX_MASK             0xf
- 
--static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
-+static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
- {
--	return sys->private_data;
-+	struct iproc_pcie *pcie;
-+#ifdef CONFIG_ARM
-+	struct pci_sys_data *sys = bus->sysdata;
-+
-+	pcie = sys->private_data;
-+#else
-+	pcie = bus->sysdata;
-+#endif
-+	return pcie;
- }
- 
- /**
-@@ -71,8 +79,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
- 					    unsigned int devfn,
- 					    int where)
- {
--	struct pci_sys_data *sys = bus->sysdata;
--	struct iproc_pcie *pcie = sys_to_pcie(sys);
-+	struct iproc_pcie *pcie = iproc_data(bus);
- 	unsigned slot = PCI_SLOT(devfn);
- 	unsigned fn = PCI_FUNC(devfn);
- 	unsigned busno = bus->number;
-@@ -186,6 +193,7 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
- int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- {
- 	int ret;
-+	void *sysdata;
- 	struct pci_bus *bus;
- 
- 	if (!pcie || !pcie->dev || !pcie->base)
-@@ -205,10 +213,14 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 
- 	iproc_pcie_reset(pcie);
- 
-+#ifdef CONFIG_ARM
- 	pcie->sysdata.private_data = pcie;
-+	sysdata = &pcie->sysdata;
-+#else
-+	sysdata = pcie;
-+#endif
- 
--	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
--				  &pcie->sysdata, res);
-+	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, sysdata, res);
- 	if (!bus) {
- 		dev_err(pcie->dev, "unable to create PCI root bus\n");
- 		ret = -ENOMEM;
-@@ -226,7 +238,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 
- 	pci_scan_child_bus(bus);
- 	pci_assign_unassigned_bus_resources(bus);
-+#ifdef CONFIG_ARM
- 	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
-+#endif
- 	pci_bus_add_devices(bus);
- 
- 	return 0;
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index ba0a108..c9e4c10 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -21,7 +21,7 @@
-  * @dev: pointer to device data structure
-  * @base: PCIe host controller I/O register base
-  * @resources: linked list of all PCI resources
-- * @sysdata: Per PCI controller data
-+ * @sysdata: Per PCI controller data (ARM-specific)
-  * @root_bus: pointer to root bus
-  * @phy: optional PHY device that controls the Serdes
-  * @irqs: interrupt IDs
-@@ -29,7 +29,9 @@
- struct iproc_pcie {
- 	struct device *dev;
- 	void __iomem *base;
-+#ifdef CONFIG_ARM
- 	struct pci_sys_data sysdata;
-+#endif
- 	struct pci_bus *root_bus;
- 	struct phy *phy;
- 	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
