@@ -1,192 +1,82 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
+Date: Wed, 22 Jul 2015 08:43:48 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ingo Molnar <mingo@kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bp@suse.de,
+	arnd@arndb.de, luto@amacapital.net, akpm@linux-foundation.org,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 20/36] resources: Make allocate_resource return just fit resource
-Date: Mon,  6 Jul 2015 16:39:10 -0700
-Message-Id: <1436225966-27247-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
+	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
+	benh@kernel.crashing.org
+Subject: Re: [PATCH v9 0/8] pci: add pci_iomap_wc() and pci_ioremap_wc_bar()
+Message-ID: <20150722134348.GA10966@google.com>
+References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
+ <20150717202923.GC30479@wotan.suse.de>
+ <20150721085252.GA15861@gmail.com>
+ <20150721132157.GE16841@google.com>
+ <20150722083844.GA14626@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150722083844.GA14626@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Find all suitable empty slots and pick one just fit, so we could save
-the big slot for needed ones later when we have several pcie switches
-and some bridges get assigned bios and we need to assign others in kernel.
+Hi Ingo,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 68 insertions(+), 13 deletions(-)
+On Wed, Jul 22, 2015 at 10:38:45AM +0200, Ingo Molnar wrote:
+> 
+> * Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+> > > > > Let me know if these are OK or if there are any questions.
+> > > > > 
+> > > > > [0] http://lkml.kernel.org/r/20150625204703.GC4898@pd.tnic
+> > > > > [1] http://lkml.kernel.org/r/20150707095012.GQ7021@wotan.suse.de
+> > > > 
+> > > > Ingo,
+> > > > 
+> > > > Just a friendly reminder. Let me know if there are any issues or questions.
+> > > 
+> > > It would be nice to get an Acked-by from Bjorn for the PCI API bits.
+> > 
+> > I think the actual code of pci_ioremap_wc() and pci_ioremap_wc_bar() is fine 
+> > (although I might have named it pci_ioremap_bar_wc() for consistency).
+> > 
+> > I declined to merge or ack them myself because they're obvious extensions of 
+> > pci_ioremap() and pci_ioremap_bar(), and I would prefer that they be exported 
+> > the same way, i.e., with EXPORT_SYMBOL(), not EXPORT_SYMBOL_GPL().
+> 
+> Huh? AFAICS pci_ioremap_bar() has been a _GPL export for a long time:
+> ...
+> (ioremap_wc() is EXPORT_SYMBOL() mostly by accident, it's the odd one out.)
 
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 830cc11..c630ef1 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -48,6 +48,7 @@ struct resource_constraint {
- 	resource_size_t (*alignf)(void *, const struct resource *,
- 			resource_size_t, resource_size_t);
- 	void *alignf_data;
-+	bool fit;
- };
- 
- static DEFINE_RWLOCK(resource_lock);
-@@ -554,12 +555,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
-  * alignment constraints
-  */
- static int __find_resource(struct resource *root, struct resource *old,
--			 struct resource *new,
-+			 struct resource *new, struct resource *avail,
- 			 resource_size_t  size,
- 			 struct resource_constraint *constraint)
- {
- 	struct resource *this = root->child;
--	struct resource tmp = *new, avail, alloc;
-+	struct resource tmp = *new, availx, alloc;
-+
-+	if (!avail || avail == new)
-+		avail = &availx;
- 
- 	tmp.start = root->start;
- 	/*
-@@ -583,15 +587,16 @@ static int __find_resource(struct resource *root, struct resource *old,
- 		arch_remove_reservations(&tmp);
- 
- 		/* Check for overflow after ALIGN() */
--		avail.start = ALIGN(tmp.start, constraint->align);
--		avail.end = tmp.end;
--		avail.flags = new->flags & ~IORESOURCE_UNSET;
--		if (avail.start >= tmp.start) {
--			alloc.flags = avail.flags;
--			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
-+		avail->start = ALIGN(tmp.start, constraint->align);
-+		avail->end = tmp.end;
-+		avail->flags = new->flags & ~IORESOURCE_UNSET;
-+		if (avail->start >= tmp.start) {
-+			alloc.flags = avail->flags;
-+			alloc.start = constraint->alignf(
-+					constraint->alignf_data, avail,
- 					size, constraint->align);
- 			alloc.end = alloc.start + size - 1;
--			if (resource_contains(&avail, &alloc)) {
-+			if (resource_contains(avail, &alloc)) {
- 				new->start = alloc.start;
- 				new->end = alloc.end;
- 				return 0;
-@@ -608,6 +613,11 @@ next:		if (!this || this->end == root->end)
- 	return -EBUSY;
- }
- 
-+struct good_resource {
-+	struct list_head list;
-+	struct resource avail;
-+	struct resource new;
-+};
- /*
-  * Find empty slot in the resource tree given range and alignment.
-  */
-@@ -615,7 +625,49 @@ static int find_resource(struct resource *root, struct resource *new,
- 			resource_size_t size,
- 			struct resource_constraint  *constraint)
- {
--	return  __find_resource(root, NULL, new, size, constraint);
-+	int ret = -1;
-+	LIST_HEAD(head);
-+	struct good_resource *good, *tmp;
-+	resource_size_t avail_size = (resource_size_t)-1ULL;
-+
-+	if (!constraint->fit)
-+		return __find_resource(root, NULL, new, NULL, size,
-+					constraint);
-+
-+	/* find all suitable ones and add to the list */
-+	for (;;) {
-+		good = kzalloc(sizeof(*good), GFP_KERNEL);
-+		if (!good)
-+			break;
-+
-+		good->new.start = new->start;
-+		good->new.end = new->end;
-+		good->new.flags = new->flags;
-+		ret = __find_resource(root, NULL, &good->new, &good->avail,
-+					size, constraint);
-+		if (ret || __request_resource(root, &good->avail)) {
-+			ret = -EBUSY;
-+			kfree(good);
-+			break;
-+		}
-+
-+		list_add(&good->list, &head);
-+	}
-+
-+	/* pick up the smallest one and delete the list */
-+	list_for_each_entry_safe(good, tmp, &head, list) {
-+		if (resource_size(&good->avail) < avail_size) {
-+			avail_size = resource_size(&good->avail);
-+			new->start = good->new.start;
-+			new->end = good->new.end;
-+			ret = 0;
-+		}
-+		list_del(&good->list);
-+		__release_resource(&good->avail);
-+		kfree(good);
-+	}
-+
-+	return ret;
- }
- 
- /**
-@@ -636,7 +688,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
- 	struct resource new = *old;
- 	struct resource *conflict;
- 
--	if ((err = __find_resource(root, old, &new, newsize, constraint)))
-+	err = __find_resource(root, old, &new, NULL, newsize, constraint);
-+	if (err)
- 		goto out;
- 
- 	if (resource_contains(&new, old)) {
-@@ -675,6 +728,7 @@ out:
-  * @align: alignment requested, in bytes
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-+ * @fit: only allocate fit range.
-  *
-  * Caller need to hold resource_lock if needed.
-  */
-@@ -685,7 +739,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 						  const struct resource *,
- 						  resource_size_t,
- 						  resource_size_t),
--				void *alignf_data)
-+				void *alignf_data, bool fit)
- {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -698,6 +752,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 	constraint.align = align;
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
-+	constraint.fit = fit;
- 
- 	if (new->parent) {
- 		/* resource is already allocated, try reallocating with
-@@ -738,7 +793,7 @@ int allocate_resource(struct resource *root, struct resource *new,
- 
- 	write_lock(&resource_lock);
- 	ret = __allocate_resource(root, new, size, min, max, align,
--				   alignf, alignf_data);
-+				   alignf, alignf_data, true);
- 	write_unlock(&resource_lock);
- 
- 	return ret;
--- 
-1.8.4.5
+You're right, I was mistaken about pci_ioremap_bar().  But I'm not
+convinced yet that ioremap_wc() is the odd one out.  All the interfaces I
+found, with the exception of ioremap_uc() on x86 and pci_ioremap_bar(), are
+EXPORT_SYMBOL(), even the _wc and _wt flavors.
 
+> Also, FWIIW: I personally got essentially zero feedback and help from proprietary 
+> binary kernel module vendors in the past couple of years as x86 maintainer, 
+> despite a fair chunk of kernel crashes reported on distro kernels occuring in 
+> them...
+> 
+> Based on that very negative experience, when we introduce something as complex and 
+> as critical as new caching APIs, the last thing I want is to have obscure bugs in 
+> binary modules I cannot fix in any reasonable fashion. So even if the parent APIs 
+> of new APIs weren't already _GPL exports (as in this case), I'd export them as 
+> _GPL in this case.
+> 
+> > I think using EXPORT_SYMBOL_GPL to express individual political aims rather than 
+> > as a hint about what might be derived work makes us look like zealots, and 
+> > that's not my style.
+> 
+> As far as I'm concerned it's a pure technological choice: I don't want to export 
+> certain types of hard to fix and critical functionality to drivers that I cannot 
+> then fix.
+
+That's a good argument that I hadn't heard before (or possibly it was there
+and I missed it).  It would be stronger still if we could change the parent
+APIs similarly.  If a proprietary driver can't use pci_ioremap_wc() because
+it's exported _GPL, it's trivial to use ioremap_wc() directly.
+
+Bjorn
