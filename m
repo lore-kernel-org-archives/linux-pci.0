@@ -1,99 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55A92F95.307@caviumnetworks.com>
-Date: Fri, 17 Jul 2015 09:38:45 -0700
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:39441 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752613AbbGWJ1K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Jul 2015 05:27:10 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 3/5] arm64, pci: Allow RC drivers to supply pcibios_add_device()
- implementation.
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-4-git-send-email-ddaney.cavm@gmail.com> <20150716090426.GA17097@red-moon> <55A7E334.3030101@caviumnetworks.com> <20150717110016.GB19067@red-moon>
-In-Reply-To: <20150717110016.GB19067@red-moon>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v5 07/19] PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
+Date: Thu, 23 Jul 2015 10:26:26 +0100
+Message-Id: <1437643598-19795-8-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/17/2015 04:00 AM, Lorenzo Pieralisi wrote:
-> Hi David,
->
-> On Thu, Jul 16, 2015 at 06:00:36PM +0100, David Daney wrote:
->> On 07/16/2015 02:04 AM, Lorenzo Pieralisi wrote:
->>> Hi David,
->>>
->>> On Wed, Jul 15, 2015 at 05:54:43PM +0100, David Daney wrote:
->>>> From: David Daney <david.daney@cavium.com>
->>>>
->> [...]
->>>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->>>> index 4095379..3356023 100644
->>>> --- a/arch/arm64/kernel/pci.c
->>>> +++ b/arch/arm64/kernel/pci.c
->>>> @@ -38,11 +38,21 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->>>>    	return res->start;
->>>>    }
->>>>
->>>> +static int (*pcibios_add_device_impl)(struct pci_dev *);
->>>> +
->>>> +void set_pcibios_add_device(int (*arg)(struct pci_dev *))
->>>> +{
->>>> +	pcibios_add_device_impl = arg;
->>>> +}
->>>> +
->>>>    /*
->>>>     * Try to assign the IRQ number from DT when adding a new device
->>>>     */
->>>>    int pcibios_add_device(struct pci_dev *dev)
->>>>    {
->>>> +	if (pcibios_add_device_impl)
->>>> +		return pcibios_add_device_impl(dev);
->>>
->>> I am totally against this (and to be honest by reading the other
->>> patches I failed to understand why you even need it), see above.
->>>
->>
->> It is because ...
->>
->>
->>> Thanks,
->>> Lorenzo
->>>
->>>> +
->>>>    	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
->>
->>
->>    ... this is total crap.  But I didn't want to break existing systems.
->
-> That's a good aim, but you are still failing to explain the issue properly
-> I am afraid.
->
->> The PCI RC drivers need a way to configure the legacy virtual-wire
->> interrupts, because the existing code doesn't do it.
->
-> Can I ask you please to explain the issue a bit more clearly (and why
-> the OF API does not work for you ?)
+Now that we can easily find which MSI domain a PCI device is
+using, use dev_get_msi_domain as a way to retrieve the information.
 
-Several problems:
+The original code is still used as a fallback.
 
-1) It prints many times to the boot log this string:
-     pci 0000:01:0e.2: of_irq_parse_pci() failed with rc=-19
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/msi.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-2) For a RC with no device_node it does nothing (in addition to printing 
-the annoying message).
-
-
->
-> Thank you !
-> Lorenzo
->
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index ef4ec6e..da3c607 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -39,14 +39,16 @@ struct irq_domain * __weak arch_get_pci_msi_domain(struct pci_dev *dev)
+ 
+ static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
+ {
+-	struct irq_domain *domain = NULL;
++	struct irq_domain *domain;
++
++	domain = dev_get_msi_domain(&dev->dev);
++	if (domain)
++		return domain;
+ 
+-	if (dev->bus->msi)
+-		domain = dev->bus->msi->domain;
+-	if (!domain)
+-		domain = arch_get_pci_msi_domain(dev);
++	if (dev->bus->msi && (domain = dev->bus->msi->domain))
++		return domain;
+ 
+-	return domain;
++	return arch_get_pci_msi_domain(dev);
+ }
+ 
+ static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+-- 
+2.1.4
 
