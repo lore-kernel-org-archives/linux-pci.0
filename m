@@ -1,92 +1,131 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20150721161446.GC21967@google.com>
-References: <1481643.dA4ocqzitg@wuerfel> <cover.1436476099.git.dhdang@apm.com> <20150721161446.GC21967@google.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Tue, 21 Jul 2015 11:11:45 -0700
-Message-ID: <CADaLND=abMVVZrv-GPb5un_7yEDs5QNpL8zR44=6N_CdYDCzMA@mail.gmail.com>
-Subject: Re: [PATCH v3 0/2] pci: xgene: Add multiple memory ranges support
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:41500 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753709AbbGWRsH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Jul 2015 13:48:07 -0400
+Date: Thu, 23 Jul 2015 18:48:45 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
 	"David S. Miller" <davem@davemloft.net>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	patches <patches@apm.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Ingo Molnar <mingo@redhat.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Simon Horman <horms@verge.net.au>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
+Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
+ PCI layer
+Message-ID: <20150723174845.GB23324@red-moon>
+References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150723161257.GZ21967@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150723161257.GZ21967@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 21, 2015 at 9:14 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Thu, Jul 09, 2015 at 02:20:10PM -0700, Duc Dang wrote:
->> This patch set adds 1 large (up to 64GB) memory window for each PCIe
->> controller nodes in X-Gene device tree and fix PCIe controller driver
->> to handle multiple memory ranges correctly. These changes are required
->> to support PCIe devices that have huge BAR.
->>
->> v3 changes:
->>       1. Explicitly mention in change log that: Each PCIe node in dts
->>       will have 1 32-bit non-prefetchable memory window and 1 64-bit
->>       prefetchable memory window.
->>
->> v2 changes:
->>         1. Separate device-tree changes and driver changes into different
->>         patches
->>         2. Explicitly define new large window as 64-bit prefetchable in dts.
->>         3. Use IORESOURCE_PREFETCH flag to determine which PCIe controller
->>         register to be used to configure the memory ranges.
->>
->>  arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
->>  drivers/pci/host/pci-xgene.c           | 12 ++++++++++--
->>  2 files changed, 24 insertions(+), 11 deletions(-)
->
-> Applied to pci/host-xgene for v4.3, with changelogs as follows, thanks!
+On Thu, Jul 23, 2015 at 05:12:57PM +0100, Bjorn Helgaas wrote:
+> On Thu, Jul 09, 2015 at 11:59:16AM +0100, Lorenzo Pieralisi wrote:
+> > When a PCI bus is scanned, upon PCI bridge detection the kernel
+> > has to read the bridge registers to set-up its resources so that
+> > the PCI resource hierarchy can be validated properly.
+> > 
+> > Most if not all architectures read PCI bridge registers in the
+> > pcibios_fixup_bus hook, that is called by the PCI generic layer
+> > whenever a PCI bus is scanned.
+> > 
+> > Since pci_read_bridge_bases is an arch agnostic operation (and it
+> > is carried out on all architectures) it can be moved to the generic
+> > PCI layer in order to consolidate code and remove the respective
+> > calls from the architectures back-ends.
+> > 
+> > The PCI_PROBE_ONLY flag is not checked before calling
+> > pci_read_bridge_buses in the generic layer since reading the bridge
+> > bases is not related to resources assignment; this implies that it
+> > can be carried out safely on PCI_PROBE_ONLY systems too and should
+> > not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
+> > flag before reading the bridge bases.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> Applied to pci/resource for v4.3, thanks!
+> 
+> The PCI_PROBE_ONLY text seems backward to me: previously alpha and mips
+> only called pci_read_bridge_bases() if PCI_PROBE_ONLY was set.  After this
+> patch, alpha and mips systems that do not set PCI_PROBE_ONLY will also call
+> pci_read_bridge_bases().
 
-Thanks a lot, Bjorn.
+Yes you are right, your log is much clearer.
 
->
->
-> commit 80bb3eda7475eb38b688d2e915c191ce6ad20df1
-> Author: Duc Dang <dhdang@apm.com>
-> Date:   Thu Jul 9 14:20:11 2015 -0700
->
->     arm64: dts: Add APM X-Gene PCIe 64-bit prefetchable window
->
->     Add a large window (up to 64GB) for X-Gene PCIe nodes to support devices
->     that require huge BARs.
->
->     Each X-Gene PCIe node will now have two memory windows: a 32-bit
->     non-prefetchable window and a 64-bit prefetchable window.
->
+> I really don't know why alpha and mips were like that.  It seems backwards.
+> It seems like we'd want to know the bridge windows if we were assigning
+> things, but they only read them if they were *not* going to assign things.
+
+I do not know either I will check again what issues this might trigger
+(apart from some odd log messages) hopefully they are not reading the bases
+because they are reassigning them anyway on !PCI_PROBE_ONLY, I hope that's
+not subtler than that.
+
+Actually I noticed on alpha at least, they claim resources only
+on PCI_PROBE_ONLY and for that to succeed bridge bases must be
+read before, that may be an explanation but I do not know the reason.
+
+> I'm a little uneasy that we might break some alpha or mips system, since
+> there must have been some reason this was done originally.  It'd be ideal
+> if somebody could test a non-PCI_PROBE_ONLY system.  But maybe they're all
+> obsolete.
+
+I have no way to test them, that's the reason behind the RFT on this
+patch, I am uneasy too I do not if anyone can help us test it
+(maybe adding it to -next can help with that).
+
+Please let me know.
+
+Thanks !
+Lorenzo
+
+> 
+> I amended the changelog like this:
+> 
+>     PCI: Call pci_read_bridge_bases() from core instead of arch code
+>     
+>     When we scan a PCI bus, we read PCI-PCI bridge window registers with
+>     pci_read_bridge_bases() so we can validate the resource hierarchy.  Most
+>     architectures call pci_read_bridge_bases() from pcibios_fixup_bus(), but
+>     PCI-PCI bridges are not arch-specific, so this doesn't need to be in
+>     arch-specific code.
+>     
+>     Call pci_read_bridge_bases() directly from the PCI core instead of from
+>     arch code.
+>     
+>     For alpha and mips, we now call pci_read_bridge_bases() always; previously
+>     we only called it if PCI_PROBE_ONLY was set.
+>     
 >     [bhelgaas: changelog]
->     Signed-off-by: Duc Dang <dhdang@apm.com>
->     Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
+>     Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> commit 8ef54f27f6f425fa8deedc237d99b9daf41d68d2
-> Author: Duc Dang <dhdang@apm.com>
-> Date:   Thu Jul 9 14:20:12 2015 -0700
->
->     PCI: xgene: Add support for a 64-bit prefetchable memory window
->
->     X-Gene PCIe controller has registers to support multiple memory ranges.
->
->     Add support for a 64-bit prefetchable memory window.
->
->     [bhelgaas: changelog]
->     Signed-off-by: Duc Dang <dhdang@apm.com>
->     Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-
-
--- 
-Regards,
-Duc Dang.
+>     ...
+> 
