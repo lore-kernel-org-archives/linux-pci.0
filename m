@@ -1,73 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50546 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753237AbbGBRkh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 2 Jul 2015 13:40:37 -0400
-Message-ID: <55957790.9060802@arm.com>
-Date: Thu, 02 Jul 2015 18:40:32 +0100
-From: James Morse <james.morse@arm.com>
-MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"kishon@ti.com" <kishon@ti.com>,
-	"xobs@kosagi.com" <xobs@kosagi.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v3 2/5] PCI: designware: Add ARM64 support
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com> <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs> <5593F899.6050306@arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E6A2@lhreml503-mbs> <55942441.3050705@arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4EC38@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D4EC38@lhreml503-mbs>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: Duc Dang <dhdang@apm.com>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v5 18/19] PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
+Date: Thu, 23 Jul 2015 10:26:37 +0100
+Message-Id: <1437643598-19795-19-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/07/15 08:24, Gabriele Paoloni wrote:
->> It looks like the BAR containing the bridge window is not being assigned,
->> so no devices on bus 1 are discovered.
-> 
-> Can you confirm the dtsi you are using..."imx6qdl.dtsi" ?
+The XGene MSI driver only uses the msi_controller structure as
+a way to match the host bridge  with its MSI HW, and thus the
+msi_domain.
 
-Yes, that looks right.
+But now that we can directly associate an msi_domain with a device,
+there is no use keeping this msi_controller around.
 
-The on-disk file was 'imx6q-sabrelite.dtb' when I received the board, I
-replaced it with the one from the v4.1 kernel tree.
+Just remove all traces of msi_controller from the driver.
 
-Decompiled from /sys/firmware/fdt (to eliminate bootloader trickery), the
-pcie section reads:
-pcie@0x01000000 {
-	compatible = "fsl,imx6q-pcie", "snps,dw-pcie";
-	reg = <0x1ffc000 0x4000 0x1f00000 0x80000>;
-	reg-names = "dbi", "config";
-	#address-cells = <0x3>;
-	#size-cells = <0x2>;
-	device_type = "pci";
-	ranges = <0x800 0x0 0x1f00000 0x1f00000 0x0 0x80000 0x81000000 0x0 0x0
-0x1f80000 0x0 0x10000 0x82000000 0x0 0x1000000 0x1000000 0x0 0xf00000>;
-	num-lanes = <0x1>;
-	interrupts = <0x0 0x78 0x4>;
-	interrupt-names = "msi";
-	#interrupt-cells = <0x1>;
-	interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-	interrupt-map = <0x0 0x0 0x0 0x1 0x1 0x0 0x7b 0x4 0x0 0x0 0x0 0x2 0x1 0x0
-0x7a 0x4 0x0 0x0 0x0 0x3 0x1 0x0 0x79 0x4 0x0 0x0 0x0 0x4 0x1 0x0 0x78 0x4>;
-	clocks = <0x3 0x90 0x3 0xce 0x3 0xbd>;
-	clock-names = "pcie", "pcie_bus", "pcie_phy";
-	status = "okay";
-};
+Tested-by: Duc Dang <dhdang@apm.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/host/pci-xgene-msi.c | 41 ++++++++++++++++------------------------
+ 1 file changed, 16 insertions(+), 25 deletions(-)
 
+diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+index 2d31d4d..ec5a14b 100644
+--- a/drivers/pci/host/pci-xgene-msi.c
++++ b/drivers/pci/host/pci-xgene-msi.c
+@@ -40,8 +40,8 @@ struct xgene_msi_group {
+ 
+ struct xgene_msi {
+ 	struct device_node	*node;
+-	struct msi_controller	mchip;
+-	struct irq_domain	*domain;
++	struct irq_domain	*inner_domain;
++	struct irq_domain	*msi_domain;
+ 	u64			msi_addr;
+ 	void __iomem		*msi_regs;
+ 	unsigned long		*bitmap;
+@@ -252,17 +252,17 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 
+ static int xgene_allocate_domains(struct xgene_msi *msi)
+ {
+-	msi->domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+-					    &msi_domain_ops, msi);
+-	if (!msi->domain)
++	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
++						  &msi_domain_ops, msi);
++	if (!msi->inner_domain)
+ 		return -ENOMEM;
+ 
+-	msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
+-						      &xgene_msi_domain_info,
+-						      msi->domain);
++	msi->msi_domain = pci_msi_create_irq_domain(msi->node,
++						    &xgene_msi_domain_info,
++						    msi->inner_domain);
+ 
+-	if (!msi->mchip.domain) {
+-		irq_domain_remove(msi->domain);
++	if (!msi->msi_domain) {
++		irq_domain_remove(msi->inner_domain);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -271,10 +271,10 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+ 
+ static void xgene_free_domains(struct xgene_msi *msi)
+ {
+-	if (msi->mchip.domain)
+-		irq_domain_remove(msi->mchip.domain);
+-	if (msi->domain)
+-		irq_domain_remove(msi->domain);
++	if (msi->msi_domain)
++		irq_domain_remove(msi->msi_domain);
++	if (msi->inner_domain)
++		irq_domain_remove(msi->inner_domain);
+ }
+ 
+ static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
+@@ -340,7 +340,7 @@ static void xgene_msi_isr(unsigned int irq, struct irq_desc *desc)
+ 			 * CPU0
+ 			 */
+ 			hw_irq = hwirq_to_canonical_hwirq(hw_irq);
+-			virq = irq_find_mapping(xgene_msi->domain, hw_irq);
++			virq = irq_find_mapping(xgene_msi->inner_domain, hw_irq);
+ 			WARN_ON(!virq);
+ 			if (virq != 0)
+ 				generic_handle_irq(virq);
+@@ -497,7 +497,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+ 		goto error;
+ 	}
+ 	xgene_msi->msi_addr = res->start;
+-
++	xgene_msi->node = pdev->dev.of_node;
+ 	xgene_msi->num_cpus = num_possible_cpus();
+ 
+ 	rc = xgene_msi_init_allocator(xgene_msi);
+@@ -561,19 +561,10 @@ static int xgene_msi_probe(struct platform_device *pdev)
+ 
+ 	cpu_notifier_register_done();
+ 
+-	xgene_msi->mchip.of_node = pdev->dev.of_node;
+-	rc = of_pci_msi_chip_add(&xgene_msi->mchip);
+-	if (rc) {
+-		dev_err(&pdev->dev, "failed to add MSI controller chip\n");
+-		goto error_notifier;
+-	}
+-
+ 	dev_info(&pdev->dev, "APM X-Gene PCIe MSI driver loaded\n");
+ 
+ 	return 0;
+ 
+-error_notifier:
+-	unregister_hotcpu_notifier(&xgene_msi_cpu_notifier);
+ error:
+ 	xgene_msi_remove(pdev);
+ 	return rc;
+-- 
+2.1.4
 
-
-James
