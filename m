@@ -1,48 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:33585 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750803AbbG2WTd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jul 2015 18:19:33 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Bjorn Helgass <bhelgaas@google.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 0/3] PCI-e Max Payload Size configuration
-Date: Wed, 29 Jul 2015 16:18:52 -0600
-Message-Id: <1438208335-19457-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v5 12/19] irqchip: gicv3-its: Register irq domain with NEXUS token
+Date: Thu, 23 Jul 2015 10:26:31 +0100
+Message-Id: <1437643598-19795-13-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series removes arch, driver, and hot-plug specific calls to
-configure a PCI-e device's MPS setting. The device is instead configured
-in the generic pci-core layer when the device is initially added, and
-before it is bound to a driver.
+Now that we can distinguish between multiple domains carrying the
+same device_node, tag the raw ITS domain with DOMAIN_BUS_NEXUS.
+This will allow MSI providers built on top of the raw ITS domain
+to identify it.
 
-The default policy is also changed from "do nothing" to update the
-down stream port to match the upstream port if it is capable.
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/irqchip/irq-gic-v3-its.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Dave Jiang (2):
-  QIB: Removing usage of pcie_set_mps()
-  PCIE: Remove symbol export for pcie_set_mps()
-
-Keith Busch (1):
-  pci: Default MPS tuning to match upstream port
-
- arch/arm/kernel/bios32.c             |   12 ------------
- arch/powerpc/kernel/pci-common.c     |    7 -------
- arch/tile/kernel/pci_gx.c            |    4 ----
- arch/x86/pci/acpi.c                  |    9 ---------
- drivers/infiniband/hw/qib/qib_pcie.c |   27 +--------------------------
- drivers/pci/bus.c                    |    4 ++++
- drivers/pci/hotplug/acpiphp_glue.c   |    1 -
- drivers/pci/hotplug/pciehp_pci.c     |    1 -
- drivers/pci/hotplug/shpchp_pci.c     |    1 -
- drivers/pci/pci.c                    |    1 -
- drivers/pci/probe.c                  |   22 ++++++++++++++++------
- include/linux/pci.h                  |    2 --
- 12 files changed, 21 insertions(+), 70 deletions(-)
-
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 7c01fe4..760467d 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -1407,13 +1407,14 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+ 	if (of_property_read_bool(its->msi_chip.of_node, "msi-controller")) {
+-		its->domain = irq_domain_add_tree(NULL, &its_domain_ops, its);
++		its->domain = irq_domain_add_tree(node, &its_domain_ops, its);
+ 		if (!its->domain) {
+ 			err = -ENOMEM;
+ 			goto out_free_tables;
+ 		}
+ 
+ 		its->domain->parent = parent;
++		its->domain->bus_token = DOMAIN_BUS_NEXUS;
+ 
+ 		its->msi_chip.domain = its_pci_msi_alloc_domain(node,
+ 								its->domain);
 -- 
-1.7.10.4
+2.1.4
 
