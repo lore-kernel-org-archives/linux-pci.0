@@ -1,121 +1,82 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
-	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
-	mmarek@suse.cz
-Cc: sean.stalley@intel.com, akpm@linux-foundation.org,
-	bigeasy@linutronix.de, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mm@kvack.org,
-	cocci@systeme.lip6.fr
-Subject: [PATCH 4/4] coccinelle: mm: scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-Date: Wed, 15 Jul 2015 14:14:43 -0700
-Message-Id: <1436994883-16563-5-git-send-email-sean.stalley@intel.com>
-In-Reply-To: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
-References: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
+Message-ID: <55B0F91A.7020206@ti.com>
+Date: Thu, 23 Jul 2015 10:24:26 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+MIME-Version: 1.0
+To: <linux@arm.linux.org.uk>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ARM/PCI: set MPS before pci_bus_add_devices()
+References: <1437514519-18545-1-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1437514519-18545-1-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-add [pci|dma]_pool_zalloc coccinelle check.
-replaces instances of [pci|dma]_pool_alloc() followed by memset(0)
-with [pci|dma]_pool_zalloc().
+On 07/21/2015 05:35 PM, Murali Karicheri wrote:
+> The MPS configuration should be done *before* pci_bus_add_devices().
+> After pci_bus_add_devices(), drivers may be bound to devices, and
+> the PCI core shouldn't touch device configuration while a driver
+> owns the device.
+>
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>   arch/arm/kernel/bios32.c | 19 +++++--------------
+>   1 file changed, 5 insertions(+), 14 deletions(-)
+>
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index fcbbbb1..17efde7 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -520,7 +520,8 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>   	list_for_each_entry(sys, &head, node) {
+>   		struct pci_bus *bus = sys->bus;
+>
+> -		if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> +		if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+> +			struct pci_bus *child;
+>   			/*
+>   			 * Size the bridge windows.
+>   			 */
+> @@ -530,25 +531,15 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>   			 * Assign resources.
+>   			 */
+>   			pci_bus_assign_resources(bus);
+> -		}
+>
+> +			list_for_each_entry(child, &bus->children, node)
+> +				pcie_bus_configure_settings(child);
+> +		}
+>   		/*
+>   		 * Tell drivers about devices found.
+>   		 */
+>   		pci_bus_add_devices(bus);
+>   	}
+> -
+> -	list_for_each_entry(sys, &head, node) {
+> -		struct pci_bus *bus = sys->bus;
+> -
+> -		/* Configure PCI Express settings */
+> -		if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+> -			struct pci_bus *child;
+> -
+> -			list_for_each_entry(child, &bus->children, node)
+> -				pcie_bus_configure_settings(child);
+> -		}
+> -	}
+>   }
+>
+>   #ifndef CONFIG_PCI_HOST_ITE8152
+>
+Bjorn,
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
----
- .../coccinelle/api/alloc/pool_zalloc-simple.cocci  | 84 ++++++++++++++++++++++
- 1 file changed, 84 insertions(+)
- create mode 100644 scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
+When you get a chance, please review this. We discussed this change in a 
+separate thread and agreed for a patch from me.
 
-diff --git a/scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci b/scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-new file mode 100644
-index 0000000..9b7eb32
---- /dev/null
-+++ b/scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-@@ -0,0 +1,84 @@
-+///
-+/// Use *_pool_zalloc rather than *_pool_alloc followed by memset with 0
-+///
-+// Copyright: (C) 2015 Intel Corp.  GPLv2.
-+// Options: --no-includes --include-headers
-+//
-+// Keywords: dma_pool_zalloc, pci_pool_zalloc
-+//
-+
-+virtual context
-+virtual patch
-+virtual org
-+virtual report
-+
-+//----------------------------------------------------------
-+//  For context mode
-+//----------------------------------------------------------
-+
-+@depends on context@
-+expression x;
-+statement S;
-+@@
-+
-+* x = \(dma_pool_alloc\|pci_pool_alloc\)(...);
-+  if ((x==NULL) || ...) S
-+* memset(x,0, ...);
-+
-+//----------------------------------------------------------
-+//  For patch mode
-+//----------------------------------------------------------
-+
-+@depends on patch@
-+expression x;
-+expression a,b,c;
-+statement S;
-+@@
-+
-+- x = dma_pool_alloc(a,b,c);
-++ x = dma_pool_zalloc(a,b,c);
-+  if ((x==NULL) || ...) S
-+- memset(x,0,...);
-+
-+@depends on patch@
-+expression x;
-+expression a,b,c;
-+statement S;
-+@@
-+
-+- x = pci_pool_alloc(a,b,c);
-++ x = pci_pool_zalloc(a,b,c);
-+  if ((x==NULL) || ...) S
-+- memset(x,0,...);
-+
-+//----------------------------------------------------------
-+//  For org and report mode
-+//----------------------------------------------------------
-+
-+@r depends on org || report@
-+expression x;
-+expression a,b,c;
-+statement S;
-+position p;
-+@@
-+
-+ x = @p\(dma_pool_alloc\|pci_pool_alloc\)(a,b,c);
-+ if ((x==NULL) || ...) S
-+ memset(x,0, ...);
-+
-+@script:python depends on org@
-+p << r.p;
-+x << r.x;
-+@@
-+
-+msg="%s" % (x)
-+msg_safe=msg.replace("[","@(").replace("]",")")
-+coccilib.org.print_todo(p[0], msg_safe)
-+
-+@script:python depends on report@
-+p << r.p;
-+x << r.x;
-+@@
-+
-+msg="WARNING: *_pool_zalloc should be used for %s, instead of *_pool_alloc/memset" % (x)
-+coccilib.report.print_report(p[0], msg)
+Thanks and regards
+
 -- 
-1.9.1
-
+Murali Karicheri
+Linux Kernel, Keystone
