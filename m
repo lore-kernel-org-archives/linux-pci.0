@@ -1,93 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37664 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754980AbbG0Xd4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:33:56 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 44/51] PCI: Get new realloc size for bridge for last try
-Date: Mon, 27 Jul 2015 16:30:02 -0700
-Message-Id: <1438039809-24957-45-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:35856 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752615AbbGWPK0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 11:10:26 -0400
+Received: by iehx8 with SMTP id x8so114741079ieh.3
+        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 08:10:25 -0700 (PDT)
+Date: Thu, 23 Jul 2015 10:10:18 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	James Morse <James.Morse@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jayachandran C <jchandra@broadcom.com>
+Subject: Re: [RFT PATCH] ARM: pci: kill pcibios_msi_controller
+Message-ID: <20150723151018.GY21967@google.com>
+References: <1436784206-14414-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150722090248.GA344@red-moon>
+ <55AF6149.4000601@arm.com>
+ <20150722124929.GA537@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150722124929.GA537@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current realloc path would not shrink bridge resource through
-pbus_size_mem() checking with the old size.
+On Wed, Jul 22, 2015 at 01:49:29PM +0100, Lorenzo Pieralisi wrote:
 
-That cause problem: when "must+optional" resource allocation fails,
-the cached bridge resource size will prevent "must" resource to get
-allocated smaller resource.
+> > >> @@ -483,14 +471,25 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+> > >>  				break;
+> > >>  			}
+> > >>  
+> > >> -			if (hw->scan)
+> > >> +			if (hw->scan) {
+> > >>  				sys->bus = hw->scan(nr, sys);
+> > >> -			else
+> > >> -				sys->bus = pci_scan_root_bus(parent, sys->busnr,
+> > >> -						hw->ops, sys, &sys->resources);
+> > >> +				if (!sys->bus)
+> > >> +					panic("PCI: unable to scan bus!");
+> > 
+> > This was in the original code, but I have to ask: Do we really want to
+> > panic the kernel if we couldn't scan the bus? Worse case, the system
+> > won't be able to boot at all and will panic somewhere else anyway, but
+> > we should give the user a chance to understand what's happening...
+> 
+> No, it was in the original code but I was very tempted to remove it
+> or merge the error paths and make it a warning, and that's what I am
+> going to do, unless someone complains (that panic statement has been there
+> forever).
 
-Clear the old resource size for last try or third and later try.
+I agree the panic should be removed.  I would do it in a separate patch
+since it's not related to your main objective here.
 
--v3: change reset_bridge_resource_size to static according to Fengguang.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 541cea5..83e3201 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2256,6 +2256,17 @@ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- }
- #endif
- 
-+static void reset_bridge_resource_size(struct pci_dev *dev,
-+				       struct resource *res)
-+{
-+	int idx = res - &dev->resource[0];
-+
-+	if (idx >= PCI_BRIDGE_RESOURCES && idx <= PCI_BRIDGE_RESOURCE_END) {
-+		res->start = 0;
-+		res->end = res->start - 1;
-+	}
-+}
-+
- /*
-  * first try will not touch pci bridge res
-  * second and later try will clear small leaf bridge res
-@@ -2338,8 +2349,13 @@ again:
- 		struct resource *res = fail_res->res;
- 
- 		restore_resource(fail_res, res);
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last or third times and later */
-+			if (tried_times + 1 == pci_try_num ||
-+			    tried_times + 1 > 2)
-+				reset_bridge_resource_size(fail_res->dev, res);
-+		}
- 	}
- 	free_list(&fail_head);
- 
-@@ -2411,8 +2427,11 @@ again:
- 		struct resource *res = fail_res->res;
- 
- 		restore_resource(fail_res, res);
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last time */
-+			reset_bridge_resource_size(fail_res->dev, res);
-+		}
- 	}
- 	free_list(&fail_head);
- 
--- 
-1.8.4.5
-
+Bjorn
