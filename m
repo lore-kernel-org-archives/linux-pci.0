@@ -1,89 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:52267 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932391AbbGGSNN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jul 2015 14:13:13 -0400
-Message-ID: <559C16B0.6060909@roeck-us.net>
-Date: Tue, 07 Jul 2015 11:13:04 -0700
-From: Guenter Roeck <linux@roeck-us.net>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 23 Jul 2015 08:17:08 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>, Duc Dang <dhdang@apm.com>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v5 18/19] PCI/MSI: pci-xgene-msi: Get rid of struct
+ msi_controller
+Message-ID: <20150723131708.GV21967@google.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+ <1437643598-19795-19-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Will Deacon <Will.Deacon@arm.com>
-Subject: Re: [PATCH] PCI: Only enable IO window if supported
-References: <1432342336-25832-1-git-send-email-linux@roeck-us.net> <20150527210447.GY32152@google.com> <20150528022332.GA23724@roeck-us.net> <20150528124112.GJ10210@google.com> <20150618180103.GA23809@roeck-us.net> <20150619162413.GA21533@red-moon> <20150707144019.GH4379@red-moon> <559BE9D9.4050407@roeck-us.net> <20150707172818.GA930@red-moon>
-In-Reply-To: <20150707172818.GA930@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1437643598-19795-19-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/07/2015 10:28 AM, Lorenzo Pieralisi wrote:
-> On Tue, Jul 07, 2015 at 04:01:45PM +0100, Guenter Roeck wrote:
->> Hi Lorenzo,
->>
->> On 07/07/2015 07:40 AM, Lorenzo Pieralisi wrote:
->>> On Fri, Jun 19, 2015 at 05:24:13PM +0100, Lorenzo Pieralisi wrote:
->>>> Hi Guenter,
->>>>
->>>> On Thu, Jun 18, 2015 at 07:01:03PM +0100, Guenter Roeck wrote:
->>>>> On Thu, May 28, 2015 at 07:41:12AM -0500, Bjorn Helgaas wrote:
->>>>>>
->>>>>>>> I'd like res->flags to reflect the capabilities of the hardware, not
->>>>>>>> whether the window is currently enabled.
->>>>>>>>
->>>>>>> Flag bits seem to be all taken. Could we use IORESOURCE_DISABLED for that
->>>>>>> purpose, or could that cause conflicts elsewhere ?
->>>>>>
->>>>>> Yes, I think IORESOURCE_DISABLED would be appropriate for any I/O windows
->>>>>> below a host bridge that doesn't support I/O space.
->>>>>>
->>>>> I integrated Lorenzo's patch and tried to get this working.
->>>>
->>>> Thanks. How do you want to proceed with this ? Are you taking my patch
->>>> and post it along with your updated series ? We need to extend test
->>>> coverage to platforms we could not test on, as you know my series
->>>> affects all archs but SPARC (I mean it should *not* affect them, this
->>>> has to be tested though, I do not have the HW needed, your coverage
->>>> for x86 and PowerPC is great but I do not think it can be deemed
->>>> sufficient).
->>>>
->>>> Please let me know, thanks !
->>>
->>> Any comment on this ? I will have to remove the bridge resource claiming
->>> from my patch according to Ben's concerns for PowerPC, which requires
->>> a v3.
->>>
->>> How do you want me to go on with this ?
->>>
->>
->> Can you send your v3 ?
->
-> Yes, I have to figure out though where I can claim bridge resources
-> on PROBE_ONLY arm/arm64 systems, which is proving interesting, anyway
-> I will send it out asap.
->
->> I didn't submit my latest version because I recalled Ben's objections,
->> and I never got around asking you if you plan to send a new version
->> of your patch.
->
-> No worries, let's get this sorted.
->
->> I had to drop the idea of using IORESOURCE_DISABLED; pretty much all
->> kernel code uses the "!flags" test to identify unused resources.
->> I tried to change that, but just could not get it to work.
->> I ended up introducing a new bus flag instead, PCI_BUS_FLAGS_NO_IO,
->> which works quite nicely since it propagates to child buses.
->
-> Ok, great, I can test it too.
->
+Subject: "PCI/MSI: xgene: Get rid of ..."
 
-I just sent out the curent version of my patch as RFC to get some feedback.
-I'll be out of the office for the next two weeks, so I won't be able
-to do much if any testing during that time. So take time for your v3.
+On Thu, Jul 23, 2015 at 10:26:37AM +0100, Marc Zyngier wrote:
+> The XGene MSI driver only uses the msi_controller structure as
 
-Thanks,
-Guenter
+s/XGene/X-Gene/
 
+> a way to match the host bridge  with its MSI HW, and thus the
+> msi_domain.
+> 
+> But now that we can directly associate an msi_domain with a device,
+> there is no use keeping this msi_controller around.
+> 
+> Just remove all traces of msi_controller from the driver.
+> 
+> Tested-by: Duc Dang <dhdang@apm.com>
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  drivers/pci/host/pci-xgene-msi.c | 41 ++++++++++++++++------------------------
+>  1 file changed, 16 insertions(+), 25 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+> index 2d31d4d..ec5a14b 100644
+> --- a/drivers/pci/host/pci-xgene-msi.c
+> +++ b/drivers/pci/host/pci-xgene-msi.c
+> @@ -40,8 +40,8 @@ struct xgene_msi_group {
+>  
+>  struct xgene_msi {
+>  	struct device_node	*node;
+> -	struct msi_controller	mchip;
+> -	struct irq_domain	*domain;
+> +	struct irq_domain	*inner_domain;
+> +	struct irq_domain	*msi_domain;
+>  	u64			msi_addr;
+>  	void __iomem		*msi_regs;
+>  	unsigned long		*bitmap;
+> @@ -252,17 +252,17 @@ static const struct irq_domain_ops msi_domain_ops = {
+>  
+>  static int xgene_allocate_domains(struct xgene_msi *msi)
+>  {
+> -	msi->domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+> -					    &msi_domain_ops, msi);
+> -	if (!msi->domain)
+> +	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+> +						  &msi_domain_ops, msi);
+> +	if (!msi->inner_domain)
+>  		return -ENOMEM;
+>  
+> -	msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
+> -						      &xgene_msi_domain_info,
+> -						      msi->domain);
+> +	msi->msi_domain = pci_msi_create_irq_domain(msi->node,
+> +						    &xgene_msi_domain_info,
+> +						    msi->inner_domain);
+>  
+> -	if (!msi->mchip.domain) {
+> -		irq_domain_remove(msi->domain);
+> +	if (!msi->msi_domain) {
+> +		irq_domain_remove(msi->inner_domain);
+>  		return -ENOMEM;
+>  	}
+>  
+> @@ -271,10 +271,10 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>  
+>  static void xgene_free_domains(struct xgene_msi *msi)
+>  {
+> -	if (msi->mchip.domain)
+> -		irq_domain_remove(msi->mchip.domain);
+> -	if (msi->domain)
+> -		irq_domain_remove(msi->domain);
+> +	if (msi->msi_domain)
+> +		irq_domain_remove(msi->msi_domain);
+> +	if (msi->inner_domain)
+> +		irq_domain_remove(msi->inner_domain);
+>  }
+>  
+>  static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
+> @@ -340,7 +340,7 @@ static void xgene_msi_isr(unsigned int irq, struct irq_desc *desc)
+>  			 * CPU0
+>  			 */
+>  			hw_irq = hwirq_to_canonical_hwirq(hw_irq);
+> -			virq = irq_find_mapping(xgene_msi->domain, hw_irq);
+> +			virq = irq_find_mapping(xgene_msi->inner_domain, hw_irq);
+>  			WARN_ON(!virq);
+>  			if (virq != 0)
+>  				generic_handle_irq(virq);
+> @@ -497,7 +497,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>  		goto error;
+>  	}
+>  	xgene_msi->msi_addr = res->start;
+> -
+> +	xgene_msi->node = pdev->dev.of_node;
+>  	xgene_msi->num_cpus = num_possible_cpus();
+>  
+>  	rc = xgene_msi_init_allocator(xgene_msi);
+> @@ -561,19 +561,10 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>  
+>  	cpu_notifier_register_done();
+>  
+> -	xgene_msi->mchip.of_node = pdev->dev.of_node;
+> -	rc = of_pci_msi_chip_add(&xgene_msi->mchip);
+> -	if (rc) {
+> -		dev_err(&pdev->dev, "failed to add MSI controller chip\n");
+> -		goto error_notifier;
+> -	}
+> -
+>  	dev_info(&pdev->dev, "APM X-Gene PCIe MSI driver loaded\n");
+>  
+>  	return 0;
+>  
+> -error_notifier:
+> -	unregister_hotcpu_notifier(&xgene_msi_cpu_notifier);
+>  error:
+>  	xgene_msi_remove(pdev);
+>  	return rc;
+> -- 
+> 2.1.4
+> 
