@@ -1,46 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:36004 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754358AbbGTQ0j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 12:26:39 -0400
-Received: by iehx8 with SMTP id x8so41308700ieh.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 09:26:39 -0700 (PDT)
-Date: Mon, 20 Jul 2015 11:26:35 -0500
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:34626 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752280AbbGWNM1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 09:12:27 -0400
+Received: by iebmu5 with SMTP id mu5so191375540ieb.1
+        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 06:12:26 -0700 (PDT)
+Date: Thu, 23 Jul 2015 08:12:21 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Joerg Roedel <jroedel@suse.de>
-Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
-Subject: Re: [PATCH 2/8] PCI: Embed ATS info directly into struct pci_dev
-Message-ID: <20150720162635.GD16841@google.com>
-References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150717213200.18379.96435.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150720140318.GC13082@suse.de>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v5 05/19] PCI/MSI: of: Add support for OF-provided
+ msi_domain
+Message-ID: <20150723131221.GS21967@google.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+ <1437643598-19795-6-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150720140318.GC13082@suse.de>
+In-Reply-To: <1437643598-19795-6-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 20, 2015 at 04:03:18PM +0200, Joerg Roedel wrote:
-> On Fri, Jul 17, 2015 at 04:32:00PM -0500, Bjorn Helgaas wrote:
-> > @@ -98,13 +81,13 @@ void pci_disable_ats(struct pci_dev *dev)
-> >  {
-> >  	u16 ctrl;
-> >  
-> > -	BUG_ON(!dev->ats || !dev->ats->is_enabled);
-> > +	BUG_ON(!dev->ats_cap || !dev->ats_enabled);
+On Thu, Jul 23, 2015 at 10:26:24AM +0100, Marc Zyngier wrote:
+> In order to populate the PCI host bridge msi_domain, use the
+> "msi-parent" attribute to lookup a corresponding irq domain.
+> If found, this is our MSI domain.
 > 
-> So since dev->ats_enabled can only get set to 1 of dev->ats_cap != 0,
-> wouldn't it be sufficient to just do a BUG_ON(!dev->ats_enabled)?
+> This gets plugged into the core PCI code.
 > 
-> >  static inline int pci_ats_enabled(struct pci_dev *dev)
-> >  {
-> > -	return dev->ats && dev->ats->is_enabled;
-> > +	return dev->ats_cap && dev->ats_enabled;
-> >  }
-> 
-> Here too, can't we just return dev->ats_enabled?
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 
-Yep, that makes sense.  I left ats_cap in to try to make it easier to
-review, but I removed it later in the series.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Bjorn
+> +struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
+> +{
+> +#ifdef CONFIG_IRQ_DOMAIN
+> +	struct device_node *np;
+> +	struct irq_domain *d;
+> +
+> +	if (!bus->dev.of_node)
+> +		return NULL;
+> +	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
+> +	if (!np)
+> +		return NULL;
+> +	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
+> +	if (!d)
+> +		d = irq_find_host(np);
+> +	return d;
+
+    d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
+    if (d)
+	    return d;
+
+    return irq_find_host(np);
+
+> +#else
+> +	return NULL;
+> +#endif
+
+>  static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+>  {
+> +	struct irq_domain *d;
+> +
+>  	/*
+>  	 * Any firmware interface that can resolve the msi_domain
+>  	 * should be called from here.
+>  	 */
+> +	d = pci_host_bridge_of_msi_domain(bus);
+>  
+> -	return NULL;
+> +	return d;
+
+No temporary needed (until there's another firmware interface):
+
+    return pci_host_bridge_of_msi_domain(bus);
