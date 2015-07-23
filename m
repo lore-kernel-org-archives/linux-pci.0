@@ -1,313 +1,347 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:36658 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757247AbbGUAOJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 20:14:09 -0400
-Received: by igbij6 with SMTP id ij6so95434451igb.1
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 17:14:08 -0700 (PDT)
-Subject: [PATCH v2 02/11] PCI: Allocate ATS struct during enumeration
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: iommu@lists.linux-foundation.org,
-	Gregor Dick <gdick@solarflare.com>
-Date: Mon, 20 Jul 2015 19:14:05 -0500
-Message-ID: <20150721001405.28145.43004.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from foss.arm.com ([217.140.101.70]:39393 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752375AbbGWJ05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Jul 2015 05:26:57 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v5 01/19] genirq: irqdomain: Allow irq domain aliasing
+Date: Thu, 23 Jul 2015 10:26:20 +0100
+Message-Id: <1437643598-19795-2-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously, we allocated pci_ats structures when an IOMMU driver called
-pci_enable_ats().  An SR-IOV VF shares the STU setting with its PF, so when
-enabling ATS on the VF, we allocated a pci_ats struct for the PF if it
-didn't already have one.  We held the sriov->lock to serialize threads
-concurrently enabling ATS on several VFS so only one would allocate the PF
-pci_ats.
+It is not uncommon (at least with the ARM stuff) to have a piece
+of hardware that implements different flavours of "interrupts".
+A typical example of this is the GICv3 ITS, which implements
+standard PCI/MSI support, but also some form of "generic MSI".
 
-Gregor reported a deadlock here:
+So far, the PCI/MSI domain is registered using the ITS device_node,
+so that irq_find_host can return it. On the contrary, the raw MSI
+domain is not registered with an device_node, making it impossible
+to be looked up by another subsystem (obviously, using the same
+device_node twice would only result in confusion, as it is not
+defined which one irq_find_host would return).
 
-  pci_enable_sriov
-    sriov_enable
-      virtfn_add
-        mutex_lock(dev->sriov->lock)      # acquire sriov->lock
-        pci_device_add
-          device_add
-            BUS_NOTIFY_ADD_DEVICE notifier chain
-            iommu_bus_notifier
-              amd_iommu_add_device        # iommu_ops.add_device
-                init_iommu_group
-                  iommu_group_get_for_dev
-                    iommu_group_add_device
-                      __iommu_attach_device
-                        amd_iommu_attach_device  # iommu_ops.attach_device
-                          attach_device
-                            pci_enable_ats
-                              mutex_lock(dev->sriov->lock) # deadlock
+A solution to this is to "type" domains that may be aliasing, and
+to be able to lookup an device_node that matches a given type.
+For this, we introduce irq_find_matching_host() as a superset
+of irq_find_host:
 
-There's no reason to delay allocating the pci_ats struct, and if we
-allocate it for each device at enumeration-time, there's no need for
-locking in pci_enable_ats().
+struct irq_domain *irq_find_matching_host(struct device_node *node,
+                                enum irq_domain_bus_token bus_token);
 
-Allocate pci_ats struct during enumeration, when we initialize other
-capabilities.
+where bus_token is the "type" we want to match the domain against
+(so far, only DOMAIN_BUS_ANY is defined). This result in some
+moderately invasive changes on the PPC side (which is the only
+user of the .match method).
 
-Note that this implementation requires ATS to be enabled on the PF first,
-before on any of the VFs because the PF controls the STU for all the VFs.
+This has otherwise no functionnal change.
 
-Link: http://permalink.gmane.org/gmane.linux.kernel.iommu/9433
-Reported-by: Gregor Dick <gdick@solarflare.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/ats.c       |   98 ++++++++++++++++++++---------------------------
- drivers/pci/probe.c     |    3 +
- drivers/pci/remove.c    |    1 
- include/linux/pci-ats.h |    2 -
- include/linux/pci.h     |    9 ++++
- 5 files changed, 56 insertions(+), 57 deletions(-)
+ arch/powerpc/platforms/512x/mpc5121_ads_cpld.c   |  3 ++-
+ arch/powerpc/platforms/cell/interrupt.c          |  3 ++-
+ arch/powerpc/platforms/embedded6xx/flipper-pic.c |  3 ++-
+ arch/powerpc/platforms/powermac/pic.c            |  3 ++-
+ arch/powerpc/platforms/powernv/opal-irqchip.c    |  3 ++-
+ arch/powerpc/platforms/ps3/interrupt.c           |  3 ++-
+ arch/powerpc/sysdev/ehv_pic.c                    |  3 ++-
+ arch/powerpc/sysdev/i8259.c                      |  3 ++-
+ arch/powerpc/sysdev/ipic.c                       |  3 ++-
+ arch/powerpc/sysdev/mpic.c                       |  3 ++-
+ arch/powerpc/sysdev/qe_lib/qe_ic.c               |  3 ++-
+ arch/powerpc/sysdev/xics/xics-common.c           |  3 ++-
+ include/linux/irqdomain.h                        | 23 +++++++++++++++++++++--
+ kernel/irq/irqdomain.c                           | 18 +++++++++++++-----
+ 14 files changed, 58 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index a8099d4..2026f53 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -17,7 +17,7 @@
+diff --git a/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c b/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
+index ca3a062..11090ab 100644
+--- a/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
++++ b/arch/powerpc/platforms/512x/mpc5121_ads_cpld.c
+@@ -123,7 +123,8 @@ cpld_pic_cascade(unsigned int irq, struct irq_desc *desc)
+ }
  
- #include "pci.h"
- 
--static int ats_alloc_one(struct pci_dev *dev, int ps)
-+static void ats_alloc_one(struct pci_dev *dev)
+ static int
+-cpld_pic_host_match(struct irq_domain *h, struct device_node *node)
++cpld_pic_host_match(struct irq_domain *h, struct device_node *node,
++		    enum irq_domain_bus_token bus_token)
  {
- 	int pos;
- 	u16 cap;
-@@ -25,20 +25,19 @@ static int ats_alloc_one(struct pci_dev *dev, int ps)
+ 	return cpld_pic_node == node;
+ }
+diff --git a/arch/powerpc/platforms/cell/interrupt.c b/arch/powerpc/platforms/cell/interrupt.c
+index 3af8324..a15f1ef 100644
+--- a/arch/powerpc/platforms/cell/interrupt.c
++++ b/arch/powerpc/platforms/cell/interrupt.c
+@@ -222,7 +222,8 @@ void iic_request_IPIs(void)
+ #endif /* CONFIG_SMP */
  
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
- 	if (!pos)
--		return -ENODEV;
-+		return;
  
- 	ats = kzalloc(sizeof(*ats), GFP_KERNEL);
--	if (!ats)
--		return -ENOMEM;
-+	if (!ats) {
-+		dev_warn(&dev->dev, "can't allocate space for ATS state\n");
-+		return;
-+	}
- 
- 	ats->pos = pos;
--	ats->stu = ps;
- 	pci_read_config_word(dev, pos + PCI_ATS_CAP, &cap);
- 	ats->qdep = PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) :
- 					    PCI_ATS_MAX_QDEP;
- 	dev->ats = ats;
--
--	return 0;
+-static int iic_host_match(struct irq_domain *h, struct device_node *node)
++static int iic_host_match(struct irq_domain *h, struct device_node *node,
++			  enum irq_domain_bus_token bus_token)
+ {
+ 	return of_device_is_compatible(node,
+ 				    "IBM,CBEA-Internal-Interrupt-Controller");
+diff --git a/arch/powerpc/platforms/embedded6xx/flipper-pic.c b/arch/powerpc/platforms/embedded6xx/flipper-pic.c
+index 4cde8e7..b7866e0 100644
+--- a/arch/powerpc/platforms/embedded6xx/flipper-pic.c
++++ b/arch/powerpc/platforms/embedded6xx/flipper-pic.c
+@@ -108,7 +108,8 @@ static int flipper_pic_map(struct irq_domain *h, unsigned int virq,
+ 	return 0;
  }
  
- static void ats_free_one(struct pci_dev *dev)
-@@ -47,6 +46,16 @@ static void ats_free_one(struct pci_dev *dev)
- 	dev->ats = NULL;
+-static int flipper_pic_match(struct irq_domain *h, struct device_node *np)
++static int flipper_pic_match(struct irq_domain *h, struct device_node *np,
++			     enum irq_domain_bus_token bus_token)
+ {
+ 	return 1;
+ }
+diff --git a/arch/powerpc/platforms/powermac/pic.c b/arch/powerpc/platforms/powermac/pic.c
+index 59cfc9d..6f4f8b0 100644
+--- a/arch/powerpc/platforms/powermac/pic.c
++++ b/arch/powerpc/platforms/powermac/pic.c
+@@ -268,7 +268,8 @@ static struct irqaction gatwick_cascade_action = {
+ 	.name		= "cascade",
+ };
+ 
+-static int pmac_pic_host_match(struct irq_domain *h, struct device_node *node)
++static int pmac_pic_host_match(struct irq_domain *h, struct device_node *node,
++			       enum irq_domain_bus_token bus_token)
+ {
+ 	/* We match all, we don't always have a node anyway */
+ 	return 1;
+diff --git a/arch/powerpc/platforms/powernv/opal-irqchip.c b/arch/powerpc/platforms/powernv/opal-irqchip.c
+index e2e7d75..2c91ee7 100644
+--- a/arch/powerpc/platforms/powernv/opal-irqchip.c
++++ b/arch/powerpc/platforms/powernv/opal-irqchip.c
+@@ -134,7 +134,8 @@ static void opal_handle_irq_work(struct irq_work *work)
+ 	opal_handle_events(be64_to_cpu(last_outstanding_events));
  }
  
-+void pci_ats_init(struct pci_dev *dev)
-+{
-+	ats_alloc_one(dev);
-+}
+-static int opal_event_match(struct irq_domain *h, struct device_node *node)
++static int opal_event_match(struct irq_domain *h, struct device_node *node,
++			    enum irq_domain_bus_token bus_token)
+ {
+ 	return h->of_node == node;
+ }
+diff --git a/arch/powerpc/platforms/ps3/interrupt.c b/arch/powerpc/platforms/ps3/interrupt.c
+index a6c42f3..638c406 100644
+--- a/arch/powerpc/platforms/ps3/interrupt.c
++++ b/arch/powerpc/platforms/ps3/interrupt.c
+@@ -678,7 +678,8 @@ static int ps3_host_map(struct irq_domain *h, unsigned int virq,
+ 	return 0;
+ }
+ 
+-static int ps3_host_match(struct irq_domain *h, struct device_node *np)
++static int ps3_host_match(struct irq_domain *h, struct device_node *np,
++			  enum irq_domain_bus_token bus_token)
+ {
+ 	/* Match all */
+ 	return 1;
+diff --git a/arch/powerpc/sysdev/ehv_pic.c b/arch/powerpc/sysdev/ehv_pic.c
+index 2d20f10..eca0b00 100644
+--- a/arch/powerpc/sysdev/ehv_pic.c
++++ b/arch/powerpc/sysdev/ehv_pic.c
+@@ -177,7 +177,8 @@ unsigned int ehv_pic_get_irq(void)
+ 	return irq_linear_revmap(global_ehv_pic->irqhost, irq);
+ }
+ 
+-static int ehv_pic_host_match(struct irq_domain *h, struct device_node *node)
++static int ehv_pic_host_match(struct irq_domain *h, struct device_node *node,
++			      enum irq_domain_bus_token bus_token)
+ {
+ 	/* Exact match, unless ehv_pic node is NULL */
+ 	return h->of_node == NULL || h->of_node == node;
+diff --git a/arch/powerpc/sysdev/i8259.c b/arch/powerpc/sysdev/i8259.c
+index 31c3347..e1a9c2c 100644
+--- a/arch/powerpc/sysdev/i8259.c
++++ b/arch/powerpc/sysdev/i8259.c
+@@ -162,7 +162,8 @@ static struct resource pic_edgectrl_iores = {
+ 	.flags = IORESOURCE_BUSY,
+ };
+ 
+-static int i8259_host_match(struct irq_domain *h, struct device_node *node)
++static int i8259_host_match(struct irq_domain *h, struct device_node *node,
++			    enum irq_domain_bus_token bus_token)
+ {
+ 	return h->of_node == NULL || h->of_node == node;
+ }
+diff --git a/arch/powerpc/sysdev/ipic.c b/arch/powerpc/sysdev/ipic.c
+index d78f136..6b2b689 100644
+--- a/arch/powerpc/sysdev/ipic.c
++++ b/arch/powerpc/sysdev/ipic.c
+@@ -671,7 +671,8 @@ static struct irq_chip ipic_edge_irq_chip = {
+ 	.irq_set_type	= ipic_set_irq_type,
+ };
+ 
+-static int ipic_host_match(struct irq_domain *h, struct device_node *node)
++static int ipic_host_match(struct irq_domain *h, struct device_node *node,
++			   enum irq_domain_bus_token bus_token)
+ {
+ 	/* Exact match, unless ipic node is NULL */
+ 	return h->of_node == NULL || h->of_node == node;
+diff --git a/arch/powerpc/sysdev/mpic.c b/arch/powerpc/sysdev/mpic.c
+index c8e7333..97a8ae8 100644
+--- a/arch/powerpc/sysdev/mpic.c
++++ b/arch/powerpc/sysdev/mpic.c
+@@ -1007,7 +1007,8 @@ static struct irq_chip mpic_irq_ht_chip = {
+ #endif /* CONFIG_MPIC_U3_HT_IRQS */
+ 
+ 
+-static int mpic_host_match(struct irq_domain *h, struct device_node *node)
++static int mpic_host_match(struct irq_domain *h, struct device_node *node,
++			   enum irq_domain_bus_token bus_token)
+ {
+ 	/* Exact match, unless mpic node is NULL */
+ 	return h->of_node == NULL || h->of_node == node;
+diff --git a/arch/powerpc/sysdev/qe_lib/qe_ic.c b/arch/powerpc/sysdev/qe_lib/qe_ic.c
+index 6512cd8..47b352e 100644
+--- a/arch/powerpc/sysdev/qe_lib/qe_ic.c
++++ b/arch/powerpc/sysdev/qe_lib/qe_ic.c
+@@ -244,7 +244,8 @@ static struct irq_chip qe_ic_irq_chip = {
+ 	.irq_mask_ack = qe_ic_mask_irq,
+ };
+ 
+-static int qe_ic_host_match(struct irq_domain *h, struct device_node *node)
++static int qe_ic_host_match(struct irq_domain *h, struct device_node *node,
++			    enum irq_domain_bus_token bus_token)
+ {
+ 	/* Exact match, unless qe_ic node is NULL */
+ 	return h->of_node == NULL || h->of_node == node;
+diff --git a/arch/powerpc/sysdev/xics/xics-common.c b/arch/powerpc/sysdev/xics/xics-common.c
+index 08c248e..47e43b7 100644
+--- a/arch/powerpc/sysdev/xics/xics-common.c
++++ b/arch/powerpc/sysdev/xics/xics-common.c
+@@ -298,7 +298,8 @@ int xics_get_irq_server(unsigned int virq, const struct cpumask *cpumask,
+ }
+ #endif /* CONFIG_SMP */
+ 
+-static int xics_host_match(struct irq_domain *h, struct device_node *node)
++static int xics_host_match(struct irq_domain *h, struct device_node *node,
++			   enum irq_domain_bus_token bus_token)
+ {
+ 	struct ics *ics;
+ 
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 744ac0e..91a83ad 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -45,6 +45,17 @@ struct irq_data;
+ /* Number of irqs reserved for a legacy isa controller */
+ #define NUM_ISA_INTERRUPTS	16
+ 
++/*
++ * Should several domains have the same device node, but serve
++ * different purposes (for example one domain is for PCI/MSI, and the
++ * other for wired IRQs), they can be distinguished using a
++ * bus-specific token. Most domains are expected to only carry
++ * DOMAIN_BUS_ANY.
++ */
++enum irq_domain_bus_token {
++	DOMAIN_BUS_ANY		= 0,
++};
 +
-+void pci_ats_free(struct pci_dev *dev)
+ /**
+  * struct irq_domain_ops - Methods for irq_domain objects
+  * @match: Match an interrupt controller device node to a host, returns
+@@ -61,7 +72,8 @@ struct irq_data;
+  * to setup the irq_desc when returning from map().
+  */
+ struct irq_domain_ops {
+-	int (*match)(struct irq_domain *d, struct device_node *node);
++	int (*match)(struct irq_domain *d, struct device_node *node,
++		     enum irq_domain_bus_token bus_token);
+ 	int (*map)(struct irq_domain *d, unsigned int virq, irq_hw_number_t hw);
+ 	void (*unmap)(struct irq_domain *d, unsigned int virq);
+ 	int (*xlate)(struct irq_domain *d, struct device_node *node,
+@@ -116,6 +128,7 @@ struct irq_domain {
+ 
+ 	/* Optional data */
+ 	struct device_node *of_node;
++	enum irq_domain_bus_token bus_token;
+ 	struct irq_domain_chip_generic *gc;
+ #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
+ 	struct irq_domain *parent;
+@@ -161,9 +174,15 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
+ 					 irq_hw_number_t first_hwirq,
+ 					 const struct irq_domain_ops *ops,
+ 					 void *host_data);
+-extern struct irq_domain *irq_find_host(struct device_node *node);
++extern struct irq_domain *irq_find_matching_host(struct device_node *node,
++						 enum irq_domain_bus_token bus_token);
+ extern void irq_set_default_host(struct irq_domain *host);
+ 
++static inline struct irq_domain *irq_find_host(struct device_node *node)
 +{
-+	ats_free_one(dev);
++	return irq_find_matching_host(node, DOMAIN_BUS_ANY);
 +}
 +
  /**
-  * pci_enable_ats - enable the ATS capability
-  * @dev: the PCI device
-@@ -56,43 +65,35 @@ static void ats_free_one(struct pci_dev *dev)
+  * irq_domain_add_linear() - Allocate and register a linear revmap irq_domain.
+  * @of_node: pointer to interrupt controller's device tree node.
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index 8c3577f..995d217 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -187,10 +187,12 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
+ EXPORT_SYMBOL_GPL(irq_domain_add_legacy);
+ 
+ /**
+- * irq_find_host() - Locates a domain for a given device node
++ * irq_find_matching_host() - Locates a domain for a given device node
+  * @node: device-tree node of the interrupt controller
++ * @data: domain-specific data
   */
- int pci_enable_ats(struct pci_dev *dev, int ps)
+-struct irq_domain *irq_find_host(struct device_node *node)
++struct irq_domain *irq_find_matching_host(struct device_node *node,
++					  enum irq_domain_bus_token bus_token)
  {
--	int rc;
- 	u16 ctrl;
+ 	struct irq_domain *h, *found = NULL;
+ 	int rc;
+@@ -199,13 +201,19 @@ struct irq_domain *irq_find_host(struct device_node *node)
+ 	 * it might potentially be set to match all interrupts in
+ 	 * the absence of a device node. This isn't a problem so far
+ 	 * yet though...
++	 *
++	 * bus_token == DOMAIN_BUS_ANY matches any domain, any other
++	 * values must generate an exact match for the domain to be
++	 * selected.
+ 	 */
+ 	mutex_lock(&irq_domain_mutex);
+ 	list_for_each_entry(h, &irq_domain_list, link) {
+ 		if (h->ops->match)
+-			rc = h->ops->match(h, node);
++			rc = h->ops->match(h, node, bus_token);
+ 		else
+-			rc = (h->of_node != NULL) && (h->of_node == node);
++			rc = ((h->of_node != NULL) && (h->of_node == node) &&
++			      ((bus_token == DOMAIN_BUS_ANY) ||
++			       (h->bus_token == bus_token)));
  
- 	BUG_ON(dev->ats && dev->ats->is_enabled);
- 
-+	if (!dev->ats)
-+		return -EINVAL;
-+
- 	if (ps < PCI_ATS_MIN_STU)
- 		return -EINVAL;
- 
--	if (dev->is_physfn || dev->is_virtfn) {
--		struct pci_dev *pdev = dev->is_physfn ? dev : dev->physfn;
-+	/*
-+	 * Note that enabling ATS on a VF fails unless it's already enabled
-+	 * with the same STU on the PF.
-+	 */
-+	ctrl = PCI_ATS_CTRL_ENABLE;
-+	if (dev->is_virtfn) {
-+		struct pci_dev *pdev = dev->physfn;
- 
--		mutex_lock(&pdev->sriov->lock);
--		if (pdev->ats)
--			rc = pdev->ats->stu == ps ? 0 : -EINVAL;
--		else
--			rc = ats_alloc_one(pdev, ps);
-+		if (pdev->ats->stu != ps)
-+			return -EINVAL;
- 
--		if (!rc)
--			pdev->ats->ref_cnt++;
--		mutex_unlock(&pdev->sriov->lock);
--		if (rc)
--			return rc;
--	}
--
--	if (!dev->is_physfn) {
--		rc = ats_alloc_one(dev, ps);
--		if (rc)
--			return rc;
-+		atomic_inc(&pdev->ats->ref_cnt);  /* count enabled VFs */
-+	} else {
-+		dev->ats->stu = ps;
-+		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
- 	}
--
--	ctrl = PCI_ATS_CTRL_ENABLE;
--	if (!dev->is_virtfn)
--		ctrl |= PCI_ATS_CTRL_STU(ps - PCI_ATS_MIN_STU);
- 	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl);
- 
- 	dev->ats->is_enabled = 1;
--
- 	return 0;
+ 		if (rc) {
+ 			found = h;
+@@ -215,7 +223,7 @@ struct irq_domain *irq_find_host(struct device_node *node)
+ 	mutex_unlock(&irq_domain_mutex);
+ 	return found;
  }
- EXPORT_SYMBOL_GPL(pci_enable_ats);
-@@ -107,24 +108,20 @@ void pci_disable_ats(struct pci_dev *dev)
+-EXPORT_SYMBOL_GPL(irq_find_host);
++EXPORT_SYMBOL_GPL(irq_find_matching_host);
  
- 	BUG_ON(!dev->ats || !dev->ats->is_enabled);
- 
-+	if (atomic_read(&dev->ats->ref_cnt))
-+		return;		/* VFs still enabled */
-+
-+	if (dev->is_virtfn) {
-+		struct pci_dev *pdev = dev->physfn;
-+
-+		atomic_dec(&pdev->ats->ref_cnt);
-+	}
-+
- 	pci_read_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, &ctrl);
- 	ctrl &= ~PCI_ATS_CTRL_ENABLE;
- 	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl);
- 
- 	dev->ats->is_enabled = 0;
--
--	if (dev->is_physfn || dev->is_virtfn) {
--		struct pci_dev *pdev = dev->is_physfn ? dev : dev->physfn;
--
--		mutex_lock(&pdev->sriov->lock);
--		pdev->ats->ref_cnt--;
--		if (!pdev->ats->ref_cnt)
--			ats_free_one(pdev);
--		mutex_unlock(&pdev->sriov->lock);
--	}
--
--	if (!dev->is_physfn)
--		ats_free_one(dev);
- }
- EXPORT_SYMBOL_GPL(pci_disable_ats);
- 
-@@ -140,7 +137,6 @@ void pci_restore_ats_state(struct pci_dev *dev)
- 	ctrl = PCI_ATS_CTRL_ENABLE;
- 	if (!dev->is_virtfn)
- 		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
--
- 	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl);
- }
- EXPORT_SYMBOL_GPL(pci_restore_ats_state);
-@@ -159,23 +155,13 @@ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
-  */
- int pci_ats_queue_depth(struct pci_dev *dev)
- {
--	int pos;
--	u16 cap;
--
- 	if (dev->is_virtfn)
- 		return 0;
- 
- 	if (dev->ats)
- 		return dev->ats->qdep;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
--	if (!pos)
--		return -ENODEV;
--
--	pci_read_config_word(dev, pos + PCI_ATS_CAP, &cap);
--
--	return PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) :
--				       PCI_ATS_MAX_QDEP;
-+	return -ENODEV;
- }
- EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..c206398 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1540,6 +1540,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	/* Single Root I/O Virtualization */
- 	pci_iov_init(dev);
- 
-+	/* Address Translation Services */
-+	pci_ats_init(dev);
-+
- 	/* Enable ACS P2P upstream forwarding */
- 	pci_enable_acs(dev);
- }
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8a280e9..27617b8 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -26,6 +26,7 @@ static void pci_stop_dev(struct pci_dev *dev)
- 		dev->is_added = 0;
- 	}
- 
-+	pci_ats_free(dev);
- 	if (dev->bus->self)
- 		pcie_aspm_exit_link_state(dev);
- }
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 7203178..e2dcc2f 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -8,7 +8,7 @@ struct pci_ats {
- 	int pos;        /* capability position */
- 	int stu;        /* Smallest Translation Unit */
- 	int qdep;       /* Invalidate Queue Depth */
--	int ref_cnt;    /* Physical Function reference count */
-+	atomic_t ref_cnt; /* number of VFs with ATS enabled */
- 	unsigned int is_enabled:1;      /* Enable bit is set */
- };
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a..1817819 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1294,6 +1294,15 @@ int  ht_create_irq(struct pci_dev *dev, int idx);
- void ht_destroy_irq(unsigned int irq);
- #endif /* CONFIG_HT_IRQ */
- 
-+#ifdef CONFIG_PCI_ATS
-+/* Address Translation Service */
-+void pci_ats_init(struct pci_dev *dev);
-+void pci_ats_free(struct pci_dev *dev);
-+#else
-+static inline void pci_ats_init(struct pci_dev *dev) { }
-+static inline void pci_ats_free(struct pci_dev *dev) { }
-+#endif
-+
- void pci_cfg_access_lock(struct pci_dev *dev);
- bool pci_cfg_access_trylock(struct pci_dev *dev);
- void pci_cfg_access_unlock(struct pci_dev *dev);
+ /**
+  * irq_set_default_host() - Set a "default" irq domain
+-- 
+2.1.4
 
