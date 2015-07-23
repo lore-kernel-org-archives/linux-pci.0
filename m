@@ -1,46 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:33972 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751360AbbGNWT1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:19:27 -0400
-Received: by oiab3 with SMTP id b3so16347708oia.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 15:19:27 -0700 (PDT)
-Date: Tue, 14 Jul 2015 17:19:23 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rami Rosen <ramirose@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: remove a broken link in quirks.c.
-Message-ID: <20150714221923.GN24416@google.com>
-References: <1435761430-1353-1-git-send-email-ramirose@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435761430-1353-1-git-send-email-ramirose@gmail.com>
+Received: from foss.arm.com ([217.140.101.70]:39411 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752531AbbGWJ1B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Jul 2015 05:27:01 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v5 03/19] device core: Introduce per-device MSI domain pointer
+Date: Thu, 23 Jul 2015 10:26:22 +0100
+Message-Id: <1437643598-19795-4-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 01, 2015 at 05:37:10PM +0300, Rami Rosen wrote:
-> This patch removes a broken link in drivers/pci/quirks.c.
-> 
-> Signed-off-by: Rami Rosen <ramirose@gmail.com>
+As MSI-type features are creeping into non-PCI devices, it is
+starting to make sense to give our struct device some form of
+support for this, by allowing a pointer to an MSI irq domain to
+be set/retrieved.
 
-Applied to pci/misc for v4.3, thanks!
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ include/linux/device.h | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-> ---
->  drivers/pci/quirks.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index c6dc1df..f78bcc0 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -163,7 +163,6 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82439TX,	quirk_
->   *	VIA Apollo KT133 needs PCI latency patch
->   *	Made according to a windows driver based patch by George E. Breese
->   *	see PCI Latency Adjust on http://www.viahardware.com/download/viatweak.shtm
-> - *	and http://www.georgebreese.com/net/software/#PCI
->   *	Also see http://www.au-ja.org/review-kt133a-1-en.phtml for
->   *	the info on which Mr Breese based his work.
->   *
-> -- 
-> 2.4.3
-> 
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 22227e7..7c49b48 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -714,6 +714,7 @@ struct device_dma_parameters {
+  * @pins:	For device pin management.
+  *		See Documentation/pinctrl.txt for details.
+  * @msi_list:	Hosts MSI descriptors
++ * @msi_domain: The generic MSI domain this device is using.
+  * @numa_node:	NUMA node this device is close to.
+  * @dma_mask:	Dma mask (if dma'ble device).
+  * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
+@@ -774,6 +775,9 @@ struct device {
+ 	struct dev_pm_info	power;
+ 	struct dev_pm_domain	*pm_domain;
+ 
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	struct irq_domain	*msi_domain; /* MSI domain device uses */
++#endif
+ #ifdef CONFIG_PINCTRL
+ 	struct dev_pin_info	*pins;
+ #endif
+@@ -864,6 +868,22 @@ static inline void set_dev_node(struct device *dev, int node)
+ }
+ #endif
+ 
++static inline struct irq_domain *dev_get_msi_domain(const struct device *dev)
++{
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	return dev->msi_domain;
++#else
++	return NULL;
++#endif
++}
++
++static inline void dev_set_msi_domain(struct device *dev, struct irq_domain *d)
++{
++#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++	dev->msi_domain = d;
++#endif
++}
++
+ static inline void *dev_get_drvdata(const struct device *dev)
+ {
+ 	return dev->driver_data;
+-- 
+2.1.4
+
