@@ -1,233 +1,119 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: mingo@kernel.org
-Cc: bp@suse.de, arnd@arndb.de, bhelgaas@google.com,
-	luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Juergen Gross <jgross@suse.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH v9 3/8] drivers/video/fbdev/kyrofb: Use arch_phys_wc_add() and pci_ioremap_wc_bar()
-Date: Wed,  8 Jul 2015 18:54:14 -0700
-Message-Id: <1436406859-1280-4-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v5 05/19] PCI/MSI: of: Add support for OF-provided msi_domain
+Date: Thu, 23 Jul 2015 10:26:24 +0100
+Message-Id: <1437643598-19795-6-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+In order to populate the PCI host bridge msi_domain, use the
+"msi-parent" attribute to lookup a corresponding irq domain.
+If found, this is our MSI domain.
 
-Convert the driver from using the x86-specific MTRR code to the
-architecture-agnostic arch_phys_wc_add(). It will avoid MTRR if
-write-combining is available, in order to take advantage of that
-also ensure the ioremapped area is requested as write-combining.
+This gets plugged into the core PCI code.
 
-There are a few motivations for this:
-
-a) Take advantage of PAT when available
-
-b) Help bury MTRR code away, MTRR is architecture-specific and on
-   x86 it is being replaced by PAT.
-
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
-
-The conversion done is expressed by the following Coccinelle SmPL
-patch, it additionally required manual intervention to address all the
-ifdeffery and removal of redundant things which arch_phys_wc_add()
-already addresses such as verbose message about when MTRR fails and
-doing nothing when we didn't get an MTRR.
-
-@ mtrr_found @
-expression index, base, size;
-@@
-
--index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
-+index = arch_phys_wc_add(base, size);
-
-@ mtrr_rm depends on mtrr_found @
-expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
-@@
-
--mtrr_del(index, base, size);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_zero_arg depends on mtrr_found @
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, 0, 0);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_fb_info depends on mtrr_found @
-struct fb_info *info;
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
-+arch_phys_wc_del(index);
-
-@ ioremap_replace_nocache depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap_nocache(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-@ ioremap_replace_default depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: benh@kernel.crashing.org
-Cc: bhelgaas@google.com
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: mst@redhat.com
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: toshi.kani@hp.com
-Link: http://lkml.kernel.org/r/1435195342-26879-4-git-send-email-mcgrof@do-not-panic.com
-Signed-off-by: Borislav Petkov <bp@suse.de>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/video/fbdev/kyro/fbdev.c | 33 +++++++++++----------------------
- include/video/kyro.h             |  4 +---
- 2 files changed, 12 insertions(+), 25 deletions(-)
+ drivers/pci/of.c    | 21 +++++++++++++++++++++
+ drivers/pci/probe.c |  5 ++++-
+ include/linux/pci.h |  4 ++++
+ 3 files changed, 29 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/video/fbdev/kyro/fbdev.c b/drivers/video/fbdev/kyro/fbdev.c
-index 65041e15fd59..5bb01533271e 100644
---- a/drivers/video/fbdev/kyro/fbdev.c
-+++ b/drivers/video/fbdev/kyro/fbdev.c
-@@ -22,9 +22,6 @@
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index f092993..e2ebb7d 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -9,6 +9,7 @@
+  * 2 of the License, or (at your option) any later version.
+  */
+ 
++#include <linux/irqdomain.h>
+ #include <linux/kernel.h>
  #include <linux/pci.h>
- #include <asm/io.h>
- #include <linux/uaccess.h>
--#ifdef CONFIG_MTRR
--#include <asm/mtrr.h>
--#endif
+ #include <linux/of.h>
+@@ -59,3 +60,23 @@ struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
+ 		return of_node_get(bus->bridge->parent->of_node);
+ 	return NULL;
+ }
++
++struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
++{
++#ifdef CONFIG_IRQ_DOMAIN
++	struct device_node *np;
++	struct irq_domain *d;
++
++	if (!bus->dev.of_node)
++		return NULL;
++	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
++	if (!np)
++		return NULL;
++	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
++	if (!d)
++		d = irq_find_host(np);
++	return d;
++#else
++	return NULL;
++#endif
++}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2fd4f8e..b30eb6e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -663,12 +663,15 @@ static void pci_set_bus_speed(struct pci_bus *bus)
  
- #include <video/kyro.h>
+ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+ {
++	struct irq_domain *d;
++
+ 	/*
+ 	 * Any firmware interface that can resolve the msi_domain
+ 	 * should be called from here.
+ 	 */
++	d = pci_host_bridge_of_msi_domain(bus);
  
-@@ -84,9 +81,7 @@ static device_info_t deviceInfo;
- static char *mode_option = NULL;
- static int nopan = 0;
- static int nowrap = 1;
--#ifdef CONFIG_MTRR
- static int nomtrr = 0;
--#endif
+-	return NULL;
++	return d;
+ }
  
- /* PCI driver prototypes */
- static int kyrofb_probe(struct pci_dev *pdev, const struct pci_device_id *ent);
-@@ -570,10 +565,8 @@ static int __init kyrofb_setup(char *options)
- 			nopan = 1;
- 		} else if (strcmp(this_opt, "nowrap") == 0) {
- 			nowrap = 1;
--#ifdef CONFIG_MTRR
- 		} else if (strcmp(this_opt, "nomtrr") == 0) {
- 			nomtrr = 1;
--#endif
- 		} else {
- 			mode_option = this_opt;
- 		}
-@@ -691,17 +684,16 @@ static int kyrofb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ static void pci_set_bus_msi_domain(struct pci_bus *bus)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index fbf245f..772616d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1841,10 +1841,12 @@ int pci_vpd_find_info_keyword(const u8 *buf, unsigned int off,
+ /* PCI <-> OF binding helpers */
+ #ifdef CONFIG_OF
+ struct device_node;
++struct irq_domain;
+ void pci_set_of_node(struct pci_dev *dev);
+ void pci_release_of_node(struct pci_dev *dev);
+ void pci_set_bus_of_node(struct pci_bus *bus);
+ void pci_release_bus_of_node(struct pci_bus *bus);
++struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus);
  
- 	currentpar->regbase = deviceInfo.pSTGReg =
- 		ioremap_nocache(kyro_fix.mmio_start, kyro_fix.mmio_len);
-+	if (!currentpar->regbase)
-+		goto out_free_fb;
+ /* Arch may override this (weak) */
+ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
+@@ -1867,6 +1869,8 @@ static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+ static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+ static inline struct device_node *
+ pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
++static inline struct irq_domain *
++pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
+ #endif  /* CONFIG_OF */
  
--	info->screen_base = ioremap_nocache(kyro_fix.smem_start,
--					    kyro_fix.smem_len);
-+	info->screen_base = pci_ioremap_wc_bar(pdev, 0);
-+	if (!info->screen_base)
-+		goto out_unmap_regs;
- 
--#ifdef CONFIG_MTRR
- 	if (!nomtrr)
--		currentpar->mtrr_handle =
--			mtrr_add(kyro_fix.smem_start,
--				 kyro_fix.smem_len,
--				 MTRR_TYPE_WRCOMB, 1);
--#endif
-+		currentpar->wc_cookie = arch_phys_wc_add(kyro_fix.smem_start,
-+							 kyro_fix.smem_len);
- 
- 	kyro_fix.ypanstep	= nopan ? 0 : 1;
- 	kyro_fix.ywrapstep	= nowrap ? 0 : 1;
-@@ -745,8 +737,10 @@ static int kyrofb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	return 0;
- 
- out_unmap:
--	iounmap(currentpar->regbase);
- 	iounmap(info->screen_base);
-+out_unmap_regs:
-+	iounmap(currentpar->regbase);
-+out_free_fb:
- 	framebuffer_release(info);
- 
- 	return -EINVAL;
-@@ -770,12 +764,7 @@ static void kyrofb_remove(struct pci_dev *pdev)
- 	iounmap(info->screen_base);
- 	iounmap(par->regbase);
- 
--#ifdef CONFIG_MTRR
--	if (par->mtrr_handle)
--		mtrr_del(par->mtrr_handle,
--			 info->fix.smem_start,
--			 info->fix.smem_len);
--#endif
-+	arch_phys_wc_del(par->wc_cookie);
- 
- 	unregister_framebuffer(info);
- 	framebuffer_release(info);
-diff --git a/include/video/kyro.h b/include/video/kyro.h
-index c563968e926c..b958c2e9c915 100644
---- a/include/video/kyro.h
-+++ b/include/video/kyro.h
-@@ -35,9 +35,7 @@ struct kyrofb_info {
- 	/* Useful to hold depth here for Linux */
- 	u8 PIXDEPTH;
- 
--#ifdef CONFIG_MTRR
--	int mtrr_handle;
--#endif
-+	int wc_cookie;
- };
- 
- extern int kyro_dev_init(void);
+ #ifdef CONFIG_EEH
 -- 
-2.3.2.209.gd67f9d5.dirty
+2.1.4
 
