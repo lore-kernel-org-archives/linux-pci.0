@@ -1,124 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:27223 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964964AbbGVB3c (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 21:29:32 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v4 1/4] PCI: iproc: enable arm64 support for iProc PCIe
-Date: Tue, 21 Jul 2015 18:29:40 -0700
-Message-ID: <1437528583-855-2-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1437528583-855-1-git-send-email-rjui@broadcom.com>
-References: <1437528583-855-1-git-send-email-rjui@broadcom.com>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:60340 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753963AbbGWQsE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 12:48:04 -0400
+Message-ID: <55B11AB0.7050002@roeck-us.net>
+Date: Thu, 23 Jul 2015 09:47:44 -0700
+From: Guenter Roeck <linux@roeck-us.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
+	Krzysztof Halasa <khalasa@piap.pl>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Simon Horman <horms@verge.net.au>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
+ PCI layer
+References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com> <20150723161257.GZ21967@google.com>
+In-Reply-To: <20150723161257.GZ21967@google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch enables arm64 support to the iProc PCIe driver
+On 07/23/2015 09:12 AM, Bjorn Helgaas wrote:
+> On Thu, Jul 09, 2015 at 11:59:16AM +0100, Lorenzo Pieralisi wrote:
+>> When a PCI bus is scanned, upon PCI bridge detection the kernel
+>> has to read the bridge registers to set-up its resources so that
+>> the PCI resource hierarchy can be validated properly.
+>>
+>> Most if not all architectures read PCI bridge registers in the
+>> pcibios_fixup_bus hook, that is called by the PCI generic layer
+>> whenever a PCI bus is scanned.
+>>
+>> Since pci_read_bridge_bases is an arch agnostic operation (and it
+>> is carried out on all architectures) it can be moved to the generic
+>> PCI layer in order to consolidate code and remove the respective
+>> calls from the architectures back-ends.
+>>
+>> The PCI_PROBE_ONLY flag is not checked before calling
+>> pci_read_bridge_buses in the generic layer since reading the bridge
+>> bases is not related to resources assignment; this implies that it
+>> can be carried out safely on PCI_PROBE_ONLY systems too and should
+>> not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
+>> flag before reading the bridge bases.
+>>
+>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>
+> Applied to pci/resource for v4.3, thanks!
+>
+> The PCI_PROBE_ONLY text seems backward to me: previously alpha and mips
+> only called pci_read_bridge_bases() if PCI_PROBE_ONLY was set.  After this
+> patch, alpha and mips systems that do not set PCI_PROBE_ONLY will also call
+> pci_read_bridge_bases().
+>
+> I really don't know why alpha and mips were like that.  It seems backwards.
+> It seems like we'd want to know the bridge windows if we were assigning
+> things, but they only read them if they were *not* going to assign things.
+>
+> I'm a little uneasy that we might break some alpha or mips system, since
+> there must have been some reason this was done originally.  It'd be ideal
+> if somebody could test a non-PCI_PROBE_ONLY system.  But maybe they're all
+> obsolete.
+>
 
-Note struct pci_sys_data is arm32 specific and will eventually be
-removed. This change is done in such a way that when struct pci_sys_data
-is removed from arm32, one only needs to also remove it from
-pcie-iproc.h, no other change in the iProc PCIe core driver is needed
+For alpha, PCI_PROBE_ONLY is set for two platforms, marvel and titan,
+out of ~20. mips sets the flag for 6 platforms out of >25.
+Unlikely that those are the only relevant ones.
 
-In addition, arm64 based PCI driver does not require call to
-pci_fixup_irqs, as it implements OF based irq parsing and mapping in
-pcibios_add_device
+I could try to run some qemu tests for both architectures, but I have
+no idea what to look out for. Ideas, anyone ?
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- drivers/pci/host/pcie-iproc.c |   15 ++++-----------
- drivers/pci/host/pcie-iproc.h |    8 ++++++--
- 2 files changed, 10 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index d77481e..8a556d5 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -58,11 +58,6 @@
- #define SYS_RC_INTX_EN               0x330
- #define SYS_RC_INTX_MASK             0xf
- 
--static inline struct iproc_pcie *sys_to_pcie(struct pci_sys_data *sys)
--{
--	return sys->private_data;
--}
--
- /**
-  * Note access to the configuration registers are protected at the higher layer
-  * by 'pci_lock' in drivers/pci/access.c
-@@ -71,8 +66,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
- 					    unsigned int devfn,
- 					    int where)
- {
--	struct pci_sys_data *sys = bus->sysdata;
--	struct iproc_pcie *pcie = sys_to_pcie(sys);
-+	struct iproc_pcie *pcie = bus->sysdata;
- 	unsigned slot = PCI_SLOT(devfn);
- 	unsigned fn = PCI_FUNC(devfn);
- 	unsigned busno = bus->number;
-@@ -208,10 +202,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 
- 	iproc_pcie_reset(pcie);
- 
--	pcie->sysdata.private_data = pcie;
--
--	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops,
--				  &pcie->sysdata, res);
-+	bus = pci_create_root_bus(pcie->dev, 0, &iproc_pcie_ops, pcie, res);
- 	if (!bus) {
- 		dev_err(pcie->dev, "unable to create PCI root bus\n");
- 		ret = -ENOMEM;
-@@ -229,7 +220,9 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 
- 	pci_scan_child_bus(bus);
- 	pci_assign_unassigned_bus_resources(bus);
-+#ifdef CONFIG_ARM
- 	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
-+#endif
- 	pci_bus_add_devices(bus);
- 
- 	return 0;
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index ba0a108..0ee9673 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -18,18 +18,22 @@
- 
- /**
-  * iProc PCIe device
-+ * @sysdata: Per PCI controller data. This needs to be kept at the beginning of
-+ * struct iproc_pcie, to enable support of both ARM32 and ARM64 platforms with
-+ * minimal changes in the iProc PCIe core driver
-  * @dev: pointer to device data structure
-  * @base: PCIe host controller I/O register base
-  * @resources: linked list of all PCI resources
-- * @sysdata: Per PCI controller data
-  * @root_bus: pointer to root bus
-  * @phy: optional PHY device that controls the Serdes
-  * @irqs: interrupt IDs
-  */
- struct iproc_pcie {
-+#ifdef CONFIG_ARM
-+	struct pci_sys_data sysdata;
-+#endif
- 	struct device *dev;
- 	void __iomem *base;
--	struct pci_sys_data sysdata;
- 	struct pci_bus *root_bus;
- 	struct phy *phy;
- 	int irqs[IPROC_PCIE_MAX_NUM_IRQS];
--- 
-1.7.9.5
+Guenter
 
