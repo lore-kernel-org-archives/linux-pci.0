@@ -1,272 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:37125 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933262AbbGUS4Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 14:56:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <20150721180919.GE21967@google.com>
-References: <1436565766-21820-1-git-send-email-jordan_hargrave@dell.com>
-	<20150721180919.GE21967@google.com>
-Date: Tue, 21 Jul 2015 13:56:23 -0500
-Message-ID: <CAC1AzdfPkMLN9cSE6eux8hGzG6kV7a-VC6_PkG6tVuhDe=F1RQ@mail.gmail.com>
-Subject: Re: [PATCH] Add support for reading SMBIOS Slot number for PCI devices
-From: Jordan Hargrave <jharg93@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jean Delvare <jdelvare@suse.de>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from foss.arm.com ([217.140.101.70]:39517 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752875AbbGWJ13 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 23 Jul 2015 05:27:29 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v5 16/19] irqchip: GICv2m: Get rid of struct msi_controller
+Date: Thu, 23 Jul 2015 10:26:35 +0100
+Message-Id: <1437643598-19795-17-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 21, 2015 at 1:09 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Jul 10, 2015 at 05:02:46PM -0500, Jordan Hargrave wrote:
->> From: Jordan Hargrave <Jordan_Hargrave@dell.com>
->>
->> There currently isn't an easy way to determine which PCI devices belong to
->> system slots.  This patch adds support to read SMBIOS Type 9 (System Slots).
->>
->> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
->> ---
->>  drivers/firmware/dmi_scan.c | 39 ++++++++++++++++++++
->>  drivers/pci/pci-label.c     | 89 +++++++++++++++++++++++++++++++++++++++++++++
->>  include/linux/dmi.h         |  1 +
->>  3 files changed, 129 insertions(+)
->>
->> diff --git a/drivers/firmware/dmi_scan.c b/drivers/firmware/dmi_scan.c
->> index ac1ce4a..8f95897 100644
->> --- a/drivers/firmware/dmi_scan.c
->> +++ b/drivers/firmware/dmi_scan.c
->> @@ -356,6 +356,41 @@ static void __init dmi_save_extended_devices(const struct dmi_header *dm)
->>       dmi_save_one_device(*d & 0x7f, dmi_string_nosave(dm, *(d - 1)));
->>  }
->>
->> +static void __init dmi_save_dev_slot(int instance, int segment, int bus, int devfn, const char *name)
->> +{
->> +     struct dmi_dev_onboard *slot;
->> +
->> +     slot = dmi_alloc(sizeof(*slot) + strlen(name) + 1);
->> +     if (!slot) {
->> +             printk(KERN_ERR "dmi_save_system_slot: out of memory.\n");
->
-> You've got lots of data that might be useful in the printk: segment, bus,
-> devfn, name.
->
->> +             return;
->> +     }
->> +     slot->instance = instance;
->> +     slot->segment = segment;
->> +     slot->bus = bus;
->> +     slot->devfn = devfn;
->> +
->> +     strcpy((char *)&slot[1], name);
->> +     slot->dev.type = DMI_DEV_TYPE_SYSTEM_SLOT;
->> +     slot->dev.name = (char *)&slot[1];
->> +     slot->dev.device_data = slot;
->> +
->> +     list_add(&slot->dev.list, &dmi_devices);
->> +}
->> +
->> +
->> +static void __init dmi_save_system_slot(const struct dmi_header *dm)
->> +{
->> +     const char *name;
->> +     const u8 *d = (u8*)dm;
->> +
->> +     if (dm->type == DMI_ENTRY_SYSTEM_SLOT && dm->length >= 0x11) {
->> +             name = dmi_string_nosave(dm, *(d + 0x04));
->> +             dmi_save_dev_slot(*(u16 *)(d + 0x09), *(u16 *)(d + 0xD),
->> +                               *(d + 0xF), *(d + 0x10), name);
->> +     }
->> +}
->> +
->>  static void __init count_mem_devices(const struct dmi_header *dm, void *v)
->>  {
->>       if (dm->type != DMI_ENTRY_MEM_DEVICE)
->> @@ -437,6 +472,10 @@ static void __init dmi_decode(const struct dmi_header *dm, void *dummy)
->>               break;
->>       case 41:        /* Onboard Devices Extended Information */
->>               dmi_save_extended_devices(dm);
->> +             break;
->> +     case 9:         /* System Slots */
->> +             dmi_save_system_slot(dm);
->> +             break;
->>       }
->>  }
->>
->> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
->> index 024b5c1..38dfb45 100644
->> --- a/drivers/pci/pci-label.c
->> +++ b/drivers/pci/pci-label.c
->> @@ -125,14 +125,103 @@ static struct attribute_group smbios_attr_group = {
->>       .is_visible = smbios_instance_string_exist,
->>  };
->>
->> +static int smbios_getslot(struct pci_dev *pdev)
->> +{
->> +     struct pci_dev *sdev;
->> +     struct dmi_dev_onboard *dslot;
->> +     const struct dmi_device *dmi;
->> +     u8 sub, sec, bus;
->> +
->> +     dmi = NULL;
->> +     if (pdev->is_virtfn) {
->> +             /* Get Physical device for SR-IOV */
->> +             pdev = pdev->physfn;
->> +     }
->
-> Use pci_physfn().
->
->> +     bus = pdev->bus->number;
->> +     while ((dmi = dmi_find_device(DMI_DEV_TYPE_SYSTEM_SLOT, NULL, dmi)) != NULL) {
->
-> This loop doesn't match my naive expectation of how we should find a slot.
-> I expected something like:
->
->   - Look for DMI info that's an exact match for my D:B:D.F
->   - Walk bridges upstream towards the root, looking for a subtree that
->     includes pdev
->
-It's a top-down approach vs bottom up.  This way we only need to
-search a single pci device for the slot... saves having to search up
-the tree for all pci devices that *aren't* on a slot (eg embedded
-devices will always search up to root without finding a slot entry).
+GICv2m only uses the msi_controller structure as a way to match
+the host bridge with its MSI HW, and thus the msi_domain.
 
->> +             sec = sub = -1;
->> +
->> +             dslot = dmi->device_data;
->> +             sdev = pci_get_domain_bus_and_slot(dslot->segment, dslot->bus, dslot->devfn);
->
-> This acquires a reference on the dev returned, so you need to dispose of
-> that somewhere.
+But now that we can directly associate an msi_domain with a device,
+there is no use keeping this msi_controller around.
 
-Ok
+Just remove all traces of msi_controller from the driver. Also
+tag the inner (non-PCI) domain with DOMAIN_BUS_NEXUS.
 
->
->> +             if (sdev == NULL)
->> +                     continue;
->> +
->> +             if (sdev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
->> +                     pci_read_config_byte(sdev, PCI_SECONDARY_BUS, &sec);
->> +                     pci_read_config_byte(sdev, PCI_SUBORDINATE_BUS, &sub);
->
-> We should not have to read this out of config space; busn_res in struct
-> pci_bus has this information already.
->
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/irqchip/irq-gic-v2m.c | 27 ++++++++++-----------------
+ 1 file changed, 10 insertions(+), 17 deletions(-)
 
-Ok
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+index fdf7065..ec9c376 100644
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -45,7 +45,6 @@
+ 
+ struct v2m_data {
+ 	spinlock_t msi_cnt_lock;
+-	struct msi_controller mchip;
+ 	struct resource res;	/* GICv2m resource */
+ 	void __iomem *base;	/* GICv2m virt address */
+ 	u32 spi_start;		/* The SPI number that MSIs start */
+@@ -218,6 +217,7 @@ static int __init gicv2m_init_one(struct device_node *node,
+ {
+ 	int ret;
+ 	struct v2m_data *v2m;
++	struct irq_domain *inner_domain;
+ 
+ 	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
+ 	if (!v2m) {
+@@ -261,19 +261,18 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 		goto err_iounmap;
+ 	}
+ 
+-	v2m->domain = irq_domain_add_tree(NULL, &gicv2m_domain_ops, v2m);
+-	if (!v2m->domain) {
++	inner_domain = irq_domain_add_tree(node, &gicv2m_domain_ops, v2m);
++	if (!inner_domain) {
+ 		pr_err("Failed to create GICv2m domain\n");
+ 		ret = -ENOMEM;
+ 		goto err_free_bm;
+ 	}
+ 
+-	v2m->domain->parent = parent;
+-	v2m->mchip.of_node = node;
+-	v2m->mchip.domain = pci_msi_create_irq_domain(node,
+-						      &gicv2m_msi_domain_info,
+-						      v2m->domain);
+-	if (!v2m->mchip.domain) {
++	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
++	inner_domain->parent = parent;
++	v2m->domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
++						inner_domain);
++	if (!v2m->domain) {
+ 		pr_err("Failed to create MSI domain\n");
+ 		ret = -ENOMEM;
+ 		goto err_free_domains;
+@@ -281,12 +280,6 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 
+ 	spin_lock_init(&v2m->msi_cnt_lock);
+ 
+-	ret = of_pci_msi_chip_add(&v2m->mchip);
+-	if (ret) {
+-		pr_err("Failed to add msi_chip.\n");
+-		goto err_free_domains;
+-	}
+-
+ 	pr_info("Node %s: range[%#lx:%#lx], SPI[%d:%d]\n", node->name,
+ 		(unsigned long)v2m->res.start, (unsigned long)v2m->res.end,
+ 		v2m->spi_start, (v2m->spi_start + v2m->nr_spis));
+@@ -294,10 +287,10 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 	return 0;
+ 
+ err_free_domains:
+-	if (v2m->mchip.domain)
+-		irq_domain_remove(v2m->mchip.domain);
+ 	if (v2m->domain)
+ 		irq_domain_remove(v2m->domain);
++	if (inner_domain)
++		irq_domain_remove(inner_domain);
+ err_free_bm:
+ 	kfree(v2m->bm);
+ err_iounmap:
+-- 
+2.1.4
 
->> +                     if (bus >= sec && bus <= sub) {
->> +                             /* device is child of bridge */
->> +                             return dslot->instance;
->
-> If you have a slot name for 0000:00:00.0 and a device at 0001:00:00.0, this
-> will erroneously associate the domain 0 name with the domain 1 device.
->
-OK will put in domain check earlier.
-
->> +                     }
->> +             }
->> +             if (pci_domain_nr(sdev->bus) == pci_domain_nr(pdev->bus) &&
->> +                 sdev->bus->number == pdev->bus->number &&
->> +                 PCI_SLOT(sdev->devfn) == PCI_SLOT(pdev->devfn)) {
->> +                     /* Match domain:bus:dev.  If PCIE root, only match function */
->
-> The PCIe part of this comment doesn't seem to match the code.
->
-
-There can be multifunction devices with pcie root ports
-00:01.0 PCIE Root (SMBIOS Slot 2)
-00:01.1 PCIE Root (SMBIOS Slot 3)
-00:02.2 PCIE Root
-etc
-
-and multifunction devices on a single device
-01:00.0 Ethernet (SMBIOS slot points to function 0 only)
-01:00.1 Ethernet
-
-If SMBIOS slot points to PCIE root port, only match exact function
-number. Otherwise match any function number.
-
->> +                     if (PCI_FUNC(sdev->devfn) == PCI_FUNC(pdev->devfn) ||
->> +                         pci_pcie_type(sdev) != PCI_EXP_TYPE_ROOT_PORT) {
->> +                             return dslot->instance;
->> +                     }
->> +             }
->> +     }
->> +     return -ENODEV;
->> +}
->> +
->> +static ssize_t smbiosslot_show(struct device *dev,
->> +                            struct device_attribute *attr, char *buf)
->> +{
->> +     struct pci_dev *pdev;
->> +     int slot;
->> +
->> +     pdev = to_pci_dev(dev);
->> +     slot = smbios_getslot(pdev);
->> +     if (slot > 0) {
->> +             return scnprintf(buf, PAGE_SIZE, "%d\n", slot);
->> +     }
->> +     return 0;
->> +}
->> +
->> +static umode_t smbios_slot_exist(struct kobject *kobj, struct attribute *attr,
->> +                              int n)
->> +{
->> +     struct device *dev;
->> +     struct pci_dev *pdev;
->> +
->> +     dev = container_of(kobj, struct device, kobj);
->> +     pdev = to_pci_dev(dev);
->> +
->> +     return (smbios_getslot(pdev) > 0) ? S_IRUGO : 0;
->> +}
->> +
->> +static struct device_attribute smbios_attr_slot = {
->> +     .attr = {.name = "slot", .mode = 0444},
->> +     .show = smbiosslot_show,
->> +};
->> +
->> +static struct attribute *smbios_slot_attributes[] = {
->> +     &smbios_attr_slot.attr,
->> +     NULL,
->> +};
->> +
->> +static struct attribute_group smbios_slot_attr_group = {
->> +     .attrs = smbios_slot_attributes,
->> +     .is_visible = smbios_slot_exist,
->> +};
->> +
->>  static int pci_create_smbiosname_file(struct pci_dev *pdev)
->>  {
->> +     int rc;
->> +
->> +     rc = sysfs_create_group(&pdev->dev.kobj, &smbios_slot_attr_group);
->> +     if (rc != 0)
->> +             return rc;
->>       return sysfs_create_group(&pdev->dev.kobj, &smbios_attr_group);
->>  }
->>
->>  static void pci_remove_smbiosname_file(struct pci_dev *pdev)
->>  {
->>       sysfs_remove_group(&pdev->dev.kobj, &smbios_attr_group);
->> +     sysfs_remove_group(&pdev->dev.kobj, &smbios_slot_attr_group);
->>  }
->>  #else
->>  static inline int pci_create_smbiosname_file(struct pci_dev *pdev)
->> diff --git a/include/linux/dmi.h b/include/linux/dmi.h
->> index 5055ac3..09f42e7 100644
->> --- a/include/linux/dmi.h
->> +++ b/include/linux/dmi.h
->> @@ -22,6 +22,7 @@ enum dmi_device_type {
->>       DMI_DEV_TYPE_IPMI = -1,
->>       DMI_DEV_TYPE_OEM_STRING = -2,
->>       DMI_DEV_TYPE_DEV_ONBOARD = -3,
->> +     DMI_DEV_TYPE_SYSTEM_SLOT = -4,
->>  };
->>
->>  enum dmi_entry_type {
->> --
->> 1.8.3.1
->>
