@@ -1,52 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:38287 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946AbbGOFIH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 01:08:07 -0400
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:34796 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbbGWNGn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 09:06:43 -0400
+Received: by iebmu5 with SMTP id mu5so191243232ieb.1
+        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 06:06:42 -0700 (PDT)
+Date: Thu, 23 Jul 2015 08:06:37 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v5 04/19] PCI/MSI: Add hooks to populate the msi_domain
+ field
+Message-ID: <20150723130637.GR21967@google.com>
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+ <1437643598-19795-5-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <55A5CE68.90007@huawei.com>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-	<1436225966-27247-18-git-send-email-yinghai@kernel.org>
-	<55A5CE68.90007@huawei.com>
-Date: Tue, 14 Jul 2015 22:08:06 -0700
-Message-ID: <CAE9FiQVZogYHKuXwkjQmCqFatBOAJYaQF=39_-Z9=FnWkbNHkQ@mail.gmail.com>
-Subject: Re: [PATCH 17/36] PCI: Add support for more than two alt_size under
- same bridge
-From: Yinghai Lu <yinghai@kernel.org>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1437643598-19795-5-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 14, 2015 at 8:07 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2015/7/7 7:39, Yinghai Lu wrote:
->> Need to increase size to make sure it could fit all alt entries.
->>
->> So at last, we use 8M/17M as parent bridge alt_align/alt_size.
->
-> Tested-by: Yijing Wang <wangyijing@huawei.com>
+On Thu, Jul 23, 2015 at 10:26:23AM +0100, Marc Zyngier wrote:
+> In order to be able to populate the device msi_domain field,
+> add the necessary hooks to propagate the host bridge msi_domain
+> across secondary busses to devices.
+> 
+> So far, nobody populates the initial msi_domain.
+> 
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 
-Thanks for testing.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
->
-> Hi Yinghai, does this patch depend on the previous items in this patchset ?
+> +static void pci_set_msi_domain(struct pci_dev *dev)
+> +{
+> +	/*
+> +	 * If no domain has been set through the pcibios callback,
+> +	 * inherit the default from the bus device.
 
-Yes, it depends most of patches from patch1 to this patch.
+Nit: there isn't a pcibios callback anymore.
 
-> Could you provide another version of this patch for stable branch, eg. 3.10 stable ?
-
-That is RHEL 7 kernel, right ?
-
-After those patches get into upstream, I will try to port them to 3.10 stable.
-
-Thanks
-
-Yinghai
+> +	 */
+> +	if (!dev_get_msi_domain(&dev->dev))
+> +		dev_set_msi_domain(&dev->dev,
+> +				   dev_get_msi_domain(&dev->bus->dev));
+> +}
