@@ -1,118 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36958 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934682AbbGVQyx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 22 Jul 2015 12:54:53 -0400
-Date: Wed, 22 Jul 2015 17:55:31 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-Message-ID: <20150722165531.GB1153@red-moon>
-References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20150722091427.GB344@red-moon>
- <55AFA741.2010703@roeck-us.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55AFA741.2010703@roeck-us.net>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:57808 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753213AbbGXIWu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 04:22:50 -0400
+Message-ID: <1437726167.3071.43.camel@pengutronix.de>
+Subject: Re: [PATCH 1/4] PCI: imx6: Mark the msi cascade handler
+ IRQF_NO_THREAD
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Kevin Hao <haokexin@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Richard Zhu <Richard.Zhu@freescale.com>
+Date: Fri, 24 Jul 2015 10:22:47 +0200
+In-Reply-To: <20150724081917.GC29472@pek-khao-d1.corp.ad.wrs.com>
+References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
+	 <1437715776-2243-2-git-send-email-haokexin@gmail.com>
+	 <1437724859.3071.40.camel@pengutronix.de>
+	 <20150724081917.GC29472@pek-khao-d1.corp.ad.wrs.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Guenter,
-
-On Wed, Jul 22, 2015 at 03:22:57PM +0100, Guenter Roeck wrote:
-> On 07/22/2015 02:14 AM, Lorenzo Pieralisi wrote:
-> > Bjorn, Guenter,
-> >
-> > On Thu, Jul 09, 2015 at 11:59:16AM +0100, Lorenzo Pieralisi wrote:
-> >> When a PCI bus is scanned, upon PCI bridge detection the kernel
-> >> has to read the bridge registers to set-up its resources so that
-> >> the PCI resource hierarchy can be validated properly.
-> >>
-> >> Most if not all architectures read PCI bridge registers in the
-> >> pcibios_fixup_bus hook, that is called by the PCI generic layer
-> >> whenever a PCI bus is scanned.
-> >>
-> >> Since pci_read_bridge_bases is an arch agnostic operation (and it
-> >> is carried out on all architectures) it can be moved to the generic
-> >> PCI layer in order to consolidate code and remove the respective
-> >> calls from the architectures back-ends.
-> >>
-> >> The PCI_PROBE_ONLY flag is not checked before calling
-> >> pci_read_bridge_buses in the generic layer since reading the bridge
-> >> bases is not related to resources assignment; this implies that it
-> >> can be carried out safely on PCI_PROBE_ONLY systems too and should
-> >> not affect architectures (alpha, mips) that check the PCI_PROBE_ONLY
-> >> flag before reading the bridge bases.
-> >>
-> >> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >> Cc: Ralf Baechle <ralf@linux-mips.org>
-> >> Cc: James E.J. Bottomley <jejb@parisc-linux.org>
-> >> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Richard Henderson <rth@twiddle.net>
-> >> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> >> Cc: David Howells <dhowells@redhat.com>
-> >> Cc: Russell King <linux@arm.linux.org.uk>
-> >> Cc: Tony Luck <tony.luck@intel.com>
-> >> Cc: David S. Miller <davem@davemloft.net>
-> >> Cc: Ingo Molnar <mingo@redhat.com>
-> >> Cc: Guenter Roeck <linux@roeck-us.net>
-> >> Cc: Michal Simek <monstr@monstr.eu>
-> >> Cc: Chris Zankel <chris@zankel.net>
-> >> ---
-> >> v2->v3:
-> >>
-> >> - Dropped RFC status
-> >> - Removed bridge resources claiming from pci_read_bridge_bases()
-> >
-> > What do you want me to do with this patch ? I removed the resource
-> > claiming - ie the only controversial bit, I can only test on
-> > arm64, I would like to make some progress on this otherwise
-> > I will have to add the bridge bases read to arm64 pcibios_fixup_bus()
-> > and be done with this.
-> >
+Am Freitag, den 24.07.2015, 16:19 +0800 schrieb Kevin Hao:
+> On Fri, Jul 24, 2015 at 10:00:59AM +0200, Lucas Stach wrote:
+> > Hi Kevin,
+> > 
+> > Am Freitag, den 24.07.2015, 13:29 +0800 schrieb Kevin Hao:
+> > > The cascade handler must run in hard interrupt context, otherwise
+> > > it will cause the following kernel warning if we force threading
+> > > of all the interrupt handlers via kernel command parameter
+> > > "threadirqs":
+> > 
+> > The change looks good, but there are a few other designware drivers that
+> > use the same logic to trigger the cascaded MSI handler. Can you please
+> > make sure to change them, too?
 > 
-> Lorenzo,
+> I have made the same change for the following drivers:
+> Kevin Hao (4):
+>   PCI: imx6: Mark the msi cascade handler IRQF_NO_THREAD
+>   PCI: dra7xx: Mark the msi cascade handler IRQF_NO_THREAD
+>   PCI: exynos: Mark the msi cascade handler IRQF_NO_THREAD
+>   PCI: spear: Mark the msi cascade handler IRQF_NO_THREAD
 > 
-> please give me a few days to test it. I was out on vacation for
-> the last two weeks, and I am still struggling to get my test systems
-> back to a working state.
+>  drivers/pci/host/pci-dra7xx.c     | 3 ++-
+>  drivers/pci/host/pci-exynos.c     | 3 ++-
+>  drivers/pci/host/pci-imx6.c       | 3 ++-
+>  drivers/pci/host/pcie-spear13xx.c | 3 ++-
+>  4 files changed, 8 insertions(+), 4 deletions(-)
+> 
+> Did I miss something?
 
-No worries, I just wanted to make sure we can make progress on this,
-I do not think there is anything controversial in this set, it just
-requires testing the mechanical change on all affected archs, that's
-the problem.
+Sorry, I did miss that the patch CC'ed to me was part of a series. I was
+under the impression that such a trivial change could be done in one
+patch for all drivers. But it's up to Bjorn to decide if he wants to
+take this as individual patches.
 
-Thanks a lot for your help !
-Lorenzo
+Regards,
+Lucas
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
