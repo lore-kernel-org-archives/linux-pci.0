@@ -1,63 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46564 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751008AbbGARcy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 1 Jul 2015 13:32:54 -0400
-Message-ID: <55942441.3050705@arm.com>
-Date: Wed, 01 Jul 2015 18:32:49 +0100
-From: James Morse <james.morse@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v2 0/3] dra7xx: Add PM support to PCIe
+Date: Fri, 24 Jul 2015 17:23:07 +0530
+Message-ID: <1437738790-11114-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"kishon@ti.com" <kishon@ti.com>,
-	"xobs@kosagi.com" <xobs@kosagi.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v3 2/5] PCI: designware: Add ARM64 support
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com> <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs> <5593F899.6050306@arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E6A2@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D4E6A2@lhreml503-mbs>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gabriele Paoloni wrote:
->> Both series are applied to v4.1, use the same .config file, and the
->> same dtb.
->> I will investigate further.
->>
->> (Re-testing v2 works, so this isn't an interim hardware failure)
->
-> This is a bit weird....
->
-> Patch 2/5 is the only one that affect platforms different from Hisilicon
->
-> The only difference between V3 patch[2/5] and v2 patch[2/4] is
+This series adds PM support to pci-dra7xx so that PCI clocks can be disabled
+during suspend and enabled back during resume without affecting
+PCI functionality.
 
-Between v3:2/5 and your replacement for v2:2/4, which arrived after I had
-tested the v2 series. As the patch has been replaced with a different one -
-neither 'tested-by' is true any more.
+Changes from v1:
+*) Moved resetting and setting of MSE bit to pci-dra7xx.
 
-It looks like the BAR containing the bridge window is not being assigned,
-so no devices on bus 1 are discovered.
+The comment to reset and set ISE is not done now since I don't have a card
+with IO space. Once I get to test that, I'll post a separate patch for
+handling that.
 
-I will send the full v2 and v3 dmesg output separately.
+Kishon Vijay Abraham I (3):
+  PCI: host: pci-dra7xx: Disable pm_runtime on get_sync failure
+  PCI: host: pci-dra7xx: add pm support to pci dra7xx
+  PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
 
+ drivers/pci/host/pci-dra7xx.c |  100 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 99 insertions(+), 1 deletion(-)
 
-Thanks,
-
-James
+-- 
+1.7.9.5
 
