@@ -1,53 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:36329 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753668AbbGIVVU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jul 2015 17:21:20 -0400
-Received: by pdjr16 with SMTP id r16so10325763pdj.3
-        for <linux-pci@vger.kernel.org>; Thu, 09 Jul 2015 14:21:19 -0700 (PDT)
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v3 0/2] pci: xgene: Add multiple memory ranges support
-Date: Thu,  9 Jul 2015 14:20:10 -0700
-Message-Id: <cover.1436476099.git.dhdang@apm.com>
-In-Reply-To: <1481643.dA4ocqzitg@wuerfel>
-References: <1481643.dA4ocqzitg@wuerfel>
+Received: from mail-yk0-f182.google.com ([209.85.160.182]:35821 "EHLO
+	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500AbbGXFaF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 01:30:05 -0400
+From: Kevin Hao <haokexin@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+	Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	linux-samsung-soc@vger.kernel.org
+Subject: [PATCH 3/4] PCI: exynos: Mark the msi cascade handler IRQF_NO_THREAD
+Date: Fri, 24 Jul 2015 13:29:35 +0800
+Message-Id: <1437715776-2243-4-git-send-email-haokexin@gmail.com>
+In-Reply-To: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
+References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set adds 1 large (up to 64GB) memory window for each PCIe
-controller nodes in X-Gene device tree and fix PCIe controller driver
-to handle multiple memory ranges correctly. These changes are required
-to support PCIe devices that have huge BAR.
+The cascade handler must run in hard interrupt context, otherwise
+it will cause dead lock if we force threading of all the interrupt
+handlers via kernel command parameter "threadirqs".
 
-v3 changes:
-	1. Explicitly mention in change log that: Each PCIe node in dts 
-	will have 1 32-bit non-prefetchable memory window and 1 64-bit 
-	prefetchable memory window.
+Signed-off-by: Kevin Hao <haokexin@gmail.com>
+---
+ drivers/pci/host/pci-exynos.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-v2 changes:
-        1. Separate device-tree changes and driver changes into different
-        patches
-        2. Explicitly define new large window as 64-bit prefetchable in dts.
-        3. Use IORESOURCE_PREFETCH flag to determine which PCIe controller
-        register to be used to configure the memory ranges.
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index f9f468d9a819..7b6be7791d33 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -523,7 +523,8 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
  
- arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
- drivers/pci/host/pci-xgene.c           | 12 ++++++++++--
- 2 files changed, 24 insertions(+), 11 deletions(-)
-
+ 		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+ 					exynos_pcie_msi_irq_handler,
+-					IRQF_SHARED, "exynos-pcie", pp);
++					IRQF_SHARED | IRQF_NO_THREAD,
++					"exynos-pcie", pp);
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "failed to request msi irq\n");
+ 			return ret;
 -- 
-1.9.1
+2.1.0
 
