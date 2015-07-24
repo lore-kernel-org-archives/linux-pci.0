@@ -1,60 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:59314 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752594AbbGILsU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 9 Jul 2015 07:48:20 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Duc Dang <dhdang@apm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	patches <patches@apm.com>
-Subject: Re: [PATCH v2 0/2] pci: xgene: Add multiple memory ranges support
-Date: Thu, 09 Jul 2015 13:47:39 +0200
-Message-ID: <1481643.dA4ocqzitg@wuerfel>
-In-Reply-To: <CADaLNDmpkdHT7B1fSEu9qtoVcj4ookvxh=BA4EUCvG=pp80s=A@mail.gmail.com>
-References: <46305464.n5SOjGAhJb@wuerfel> <cover.1435688121.git.dhdang@apm.com> <CADaLNDmpkdHT7B1fSEu9qtoVcj4ookvxh=BA4EUCvG=pp80s=A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-yk0-f171.google.com ([209.85.160.171]:36754 "EHLO
+	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392AbbGXF3y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 01:29:54 -0400
+Received: by ykay190 with SMTP id y190so11688591yka.3
+        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 22:29:54 -0700 (PDT)
+From: Kevin Hao <haokexin@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: [PATCH 0/4] PCI: Mark the msi cascade handler IRQF_NO_THREAD
+Date: Fri, 24 Jul 2015 13:29:32 +0800
+Message-Id: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 06 July 2015 16:28:43 Duc Dang wrote:
-> On Tue, Jun 30, 2015 at 11:22 AM, Duc Dang <dhdang@apm.com> wrote:
-> > This patch set adds 1 large (up to 64GB) memory window for each PCIe
-> > controller nodes in X-Gene device tree and fix PCIe controller driver
-> > to handle multiple memory ranges correctly. These changes are required
-> > to support PCIe devices that has huge BAR.
-> >
-> > v2 changes:
-> >         1. Separate device-tree changes and driver changes into different
-> >         patches
-> >         2. Explicitly define new large window as 64-bit prefetchable in dts
-> >         3. Use IORESOURCE_PREFETCH flag to determine which PCIe controller
-> >         register to be used to configure the memory ranges.
-> >
-> >  arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
-> >  drivers/pci/host/pci-xgene.c           | 12 ++++++++++--
-> >  2 files changed, 24 insertions(+), 11 deletions(-)
-> 
-> Hi Arnd, Bjorn,
-> 
-> Do you have additional comment on this v2 patch set?
-> 
-> 
+Hi,
 
-The changes look ok to me now, but I'd mention in the changelog about
-the fact that one of the windows is prefetchable and the other one
-is not, and that only prefetchable BARs are now using the 64-bit
-window.
+I got a kernel warning on imx6 board when forcing threading of all the
+interrupt handler. This patch series tries to fix this issue for all
+the msi handler which leverage on dw_handle_msi_irq(). Only boot test
+on imx6 board, all others just passed build test.
 
-	Arnd
+Kevin Hao (4):
+  PCI: imx6: Mark the msi cascade handler IRQF_NO_THREAD
+  PCI: dra7xx: Mark the msi cascade handler IRQF_NO_THREAD
+  PCI: exynos: Mark the msi cascade handler IRQF_NO_THREAD
+  PCI: spear: Mark the msi cascade handler IRQF_NO_THREAD
+
+ drivers/pci/host/pci-dra7xx.c     | 3 ++-
+ drivers/pci/host/pci-exynos.c     | 3 ++-
+ drivers/pci/host/pci-imx6.c       | 3 ++-
+ drivers/pci/host/pcie-spear13xx.c | 3 ++-
+ 4 files changed, 8 insertions(+), 4 deletions(-)
+
+Thanks,
+Kevin
+-- 
+2.1.0
+
