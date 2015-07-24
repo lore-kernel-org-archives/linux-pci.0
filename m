@@ -1,62 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46890 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426AbbGOBqd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 21:46:33 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 15 Jul 2015 11:46:31 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 7CD8F2BB0055
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 11:46:28 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6F1kJgC32899300
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 11:46:28 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6F1jtBj031264
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 11:45:55 +1000
-Date: Wed, 15 Jul 2015 09:45:38 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+Received: from mout3.freenet.de ([195.4.92.93]:36049 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753030AbbGXSEY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Jul 2015 14:04:24 -0400
+Subject: Re: Since Linux 4.1: A lot of AMD-Vi IO_PAGE_FAULTs
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: Re: [PATCH] PCI: Remove useless redundant code
-Message-ID: <20150715014538.GB6525@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <20150714220118.21427.99172.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <55AE5F84.5020204@01019freenet.de>
+ <1437492886.1391.847.camel@redhat.com> <20150721155635.GE10969@8bytes.org>
+ <55AE7147.7070902@maya.org> <20150721163517.GG10969@8bytes.org>
+ <55B1BDA3.3030507@maya.org>
+ <CAErSpo666MBxpDe+uPvfVc7LPJsJQsVTusBhHygtwbou5GGj1w@mail.gmail.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	iommu <iommu@lists.linux-foundation.org>,
+	Tejun Heo <tj@kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55B27CEB.6010007@maya.org>
+Date: Fri, 24 Jul 2015 19:59:07 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150714220118.21427.99172.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <CAErSpo666MBxpDe+uPvfVc7LPJsJQsVTusBhHygtwbou5GGj1w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 14, 2015 at 05:01:18PM -0500, Bjorn Helgaas wrote:
->Remove redundant code from __pci_bus_find_cap_start().  No functional
->change.
->
->Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+New information: During testing, I now realized that Linux 4.0.9 shows
+the same problem ... . I'm now testing 3.19.4.
 
-Reviewed-by: Wei Yang <weiyang@linux.vnet.ibm.com>
 
->---
-> drivers/pci/pci.c |    2 --
-> 1 file changed, 2 deletions(-)
->
->diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->index 29b5605..359b954 100644
->--- a/drivers/pci/pci.c
->+++ b/drivers/pci/pci.c
->@@ -195,8 +195,6 @@ static int __pci_bus_find_cap_start(struct pci_bus *bus,
-> 		return PCI_CAPABILITY_LIST;
-> 	case PCI_HEADER_TYPE_CARDBUS:
-> 		return PCI_CB_CAPABILITY_LIST;
->-	default:
->-		return 0;
-> 	}
->
-> 	return 0;
+Regards,
+Andreas
 
--- 
-Richard Yang
-Help you, Help me
+
+On 07/24/2015 at 06:15 PM, Bjorn Helgaas wrote:
+> [+cc Tejun, linux-ide]
+> 
+> On Thu, Jul 23, 2015 at 11:22 PM, Andreas Hartmann
+> <andihartmann@freenet.de> wrote:
+>> On Tue, Jul 21, 2015 at 06:35PM +0200, Joerg Roedel wrote:
+>>> On Tue, Jul 21, 2015 at 06:20:23PM +0200, Andreas Hartmann wrote:
+>>>> [   48.193901] <6>[fglrx] Firegl kernel thread PID: 1840
+>>>> [   48.193985] <6>[fglrx] Firegl kernel thread PID: 1841
+>>>> [   48.194063] <6>[fglrx] Firegl kernel thread PID: 1842
+>>>> [   48.194172] <6>[fglrx] IRQ 28 Enabled
+>>>> [   48.261580] <6>[fglrx] Reserved FB block: Shared offset:0, size:1000000
+>>>> [   48.261586] <6>[fglrx] Reserved FB block: Unshared offset:f7b4000, size:4000
+>>>> [   48.261587] <6>[fglrx] Reserved FB block: Unshared offset:f7b8000, size:548000
+>>>> [   48.261588] <6>[fglrx] Reserved FB block: Unshared offset:3fff3000, size:d000
+>>>
+>>> From a first glance it doesn't look like an IOMMU driver issue, because
+>>> the addresses where the faults happen are not from the AMD IOMMU driver.
+>>>
+>>> And you have proprietary closed-source drivers loaded, can you reproduce
+>>> the issue without fglrx?
+>>
+>> Yes. I attached this one.
+>>
+>> Meanwhile I tested with 4.0.9, too. I wasn't able to reproduce the
+>> problem with this kernel even after lots of reboots (the problem w/ 4.1
+>> usually comes up during boot process (but not only - it can be seen
+>> after boot process, too)).
+>>
+>> The problem always is, that there are errors w/ one of the sata discs
+>> and at the same time, IO_PAGE_FAULT errors are rising as described before:
+>>
+>> [  152.533708] ata3.00: failed command: READ FPDMA QUEUED
+>> [  152.538102] ata3.00: failed command: READ FPDMA QUEUED
+>> [  152.539862] ata3.00: failed command: READ FPDMA QUEUED
+>> [  152.541778] ata3.00: failed command: WRITE FPDMA QUEUED
+>> [  152.543861] ata3.00: failed command: WRITE FPDMA QUEUED
+>>
+>> [ 5818.068050] ata2.00: failed command: WRITE FPDMA QUEUED
+>> [ 5818.068059] ata2.00: failed command: WRITE FPDMA QUEUED
+>>
+>> I compared dmesg from 4.1 w/ 4.0 and I realized the following *missing*
+>> entries in 4.1:
+>>
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x01] lapic_id[0x01] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x02] lapic_id[0x02] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x03] lapic_id[0x03] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x04] lapic_id[0x04] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x05] lapic_id[0x05] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x06] lapic_id[0x06] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x07] lapic_id[0x07] enabled)
+>>
+>>
+>> What does this mean? Is there missing some part of the acpi initialization?
+>>
+>>
+>> Thanks for any hint as Linux 4.1 is completely unusable here with these
+>> errors.
+> 
+> This looks more like an AHCI problem than an IOMMU or PCI problem.
+> Seems like the device has the wrong idea about where its DMA buffers
+> are.  Maybe something scribbled on its command list?
+> 
+> From your attachments:
+> 
+> # lspci -vvs 00:11.0
+> 00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD/ATI]
+> SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode] (rev 40) (prog-if 01 [AHCI
+> 1.0])
+> 
+> pci 0000:00:11.0: [1002:4391] type 00 class 0x010601
+> ahci 0000:00:11.0: version 3.0
+> ahci 0000:00:11.0: AHCI 0001.0200 32 slots 6 ports 6 Gbps 0x3f impl SATA mode
+> ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x40eba32100618000 flags=0x0010]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x40eba32100618040 flags=0x0010]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x0000000000000000 flags=0x0000]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x00000000000000c0 flags=0x0000]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x0000000000000040 flags=0x0000]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x00000000000001c0 flags=0x0000]
+> 
 
