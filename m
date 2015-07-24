@@ -1,294 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:43238 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703AbbG3HRP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 03:17:15 -0400
-Message-ID: <55B9CF5A.2080503@hisilicon.com>
-Date: Thu, 30 Jul 2015 15:16:42 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
-References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com> <20150729172053.GE31170@google.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
-Content-Type: text/plain; charset="windows-1252"
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:51315 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990AbbGXIBD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 04:01:03 -0400
+Message-ID: <1437724859.3071.40.camel@pengutronix.de>
+Subject: Re: [PATCH 1/4] PCI: imx6: Mark the msi cascade handler
+ IRQF_NO_THREAD
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Kevin Hao <haokexin@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Richard Zhu <Richard.Zhu@freescale.com>
+Date: Fri, 24 Jul 2015 10:00:59 +0200
+In-Reply-To: <1437715776-2243-2-git-send-email-haokexin@gmail.com>
+References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
+	 <1437715776-2243-2-git-send-email-haokexin@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/7/30 3:44, Gabriele Paoloni wrote:
-> Hi Bjorn
-> 
-> Many Thanks for your reply
-> 
-> I have commented back inline with resolutions from my side.
-> 
-> If you're ok with them I'll send it out a new version in the appropriate patchset
-> 
-> Cheers
-> 
-> Gab
-> 
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: Wednesday, July 29, 2015 6:21 PM
->> To: Gabriele Paoloni
->> Cc: arnd@arndb.de; lorenzo.pieralisi@arm.com; Wangzhou (B);
->> robh+dt@kernel.org; james.morse@arm.com; Liviu.Dudau@arm.com; linux-
->> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->> devicetree@vger.kernel.org; Yuanzhichang; Zhudacai; zhangjukuo;
->> qiuzhenfa; Liguozhu (Kenneth)
->> Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct
->> of_pci_range
->>
->> Hi Gabriele,
->>
->> As far as I can tell, this is not specific to PCIe, so please use "PCI"
->> in
->> the subject as a generic term that includes both PCI and PCIe.
-> 
-> sure agreed
-> 
->>
->> On Mon, Jul 27, 2015 at 11:17:03PM +0800, Gabriele Paoloni wrote:
->>> From: gabriele paoloni <gabriele.paoloni@huawei.com>
->>>
->>>     This patch is needed port PCIe designware to new DT parsing API
->>>     As discussed in
->>>     http://lists.infradead.org/pipermail/linux-arm-kernel/2015-
->> January/317743.html
->>>     in designware we have a problem as the PCI addresses in the PCIe
->> controller
->>>     address space are required in order to perform correct HW
->> operation.
->>>
->>>     In order to solve this problem commit f4c55c5a3 "PCI: designware:
->>>     Program ATU with untranslated address" added code to read the
->> PCIe
->>
->> Conventional reference is 12-char SHA1, like this:
->>
->>   f4c55c5a3f7f ("PCI: designware: Program ATU with untranslated
->> address")
-> 
-> Agreed, will change this
-> 
->>
->>>     controller start address directly from the DT ranges.
->>>
->>>     In the new DT parsing API of_pci_get_host_bridge_resources()
->> hides the
->>>     DT parser from the host controller drivers, so it is not possible
->>>     for drivers to parse values directly from the DT.
->>>
->>>     In http://www.spinics.net/lists/linux-pci/msg42540.html we
->> already tried
->>>     to use the new DT parsing API but there is a bug (obviously) in
->> setting
->>>     the <*>_mod_base addresses
->>>     Applying this patch we can easily set "<*>_mod_base = win-
->>> __res.start"
->>
->> By itself, this patch adds something.  It would help me understand it
->> if
->> the *user* of this new something were in the same patch series.
-> 
-> the user is: "[PATCH v5 2/5] PCI: designware: Add ARM64 support"
-> I will ask Zhou Wang to include this patch in his patchset
->
+Hi Kevin,
 
-Hi Gab,
+Am Freitag, den 24.07.2015, 13:29 +0800 schrieb Kevin Hao:
+> The cascade handler must run in hard interrupt context, otherwise
+> it will cause the following kernel warning if we force threading
+> of all the interrupt handlers via kernel command parameter
+> "threadirqs":
 
-I can merge this patch in my series if this make it clearer to understand.
+The change looks good, but there are a few other designware drivers that
+use the same logic to trigger the cascaded MSI handler. Can you please
+make sure to change them, too?
 
-Thanks,
-Zhou
+Regards,
+Lucas
 
+>    [ INFO: inconsistent lock state ]
+>    4.2.0-rc3-next-20150723 #28 Not tainted
+>    ---------------------------------
+>    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
+>    irq/21-mx6-pcie/62 [HC0[0]:SC0[2]:HE1:SE0] takes:
+>     (&irq_desc_lock_class){?.-...}, at: [<80078d94>] handle_simple_irq+0x1c/0xc0
+>    {IN-HARDIRQ-W} state was registered at:
+>      [<8006aa70>] lock_acquire+0x74/0x94
+>      [<807acc6c>] _raw_spin_lock+0x34/0x44
+>      [<8007900c>] handle_fasteoi_irq+0x20/0x1b8
+>      [<80075720>] generic_handle_irq+0x28/0x38
+>      [<80075864>] __handle_domain_irq+0x6c/0xe0
+>      [<80009558>] gic_handle_irq+0x28/0x68
+>      [<80013b64>] __irq_svc+0x44/0x5c
+>      [<807ad400>] _raw_spin_unlock_irq+0x30/0x34
+>      [<8004cffc>] finish_task_switch+0xc0/0x218
+>      [<807a7a10>] __schedule+0x248/0x6e0
+>      [<807a7fac>] schedule+0x38/0x9c
+>      [<807a8240>] schedule_preempt_disabled+0x10/0x14
+>      [<80063f8c>] cpu_startup_entry+0xfc/0x1f8
+>      [<8079f640>] rest_init+0x130/0x16c
+>      [<80a55ca4>] start_kernel+0x374/0x3e8
+>      [<1000807c>] 0x1000807c
+>    irq event stamp: 16
+>    hardirqs last  enabled at (15): [<807ad3fc>] _raw_spin_unlock_irq+0x2c/0x34
+>    hardirqs last disabled at (14): [<807acd80>] _raw_spin_lock_irq+0x20/0x58
+>    softirqs last  enabled at (0): [<800283d8>] copy_process.isra.58+0x3bc/0x1504
+>    softirqs last disabled at (16): [<80076f08>] irq_forced_thread_fn+0x0/0x68
 > 
->>
->>>     This patch adds a new field in "struct of_pci_range" to store the
->>>     pci bus start address; it fills the field in
->> of_pci_range_parser_one();
->>>     in of_pci_get_host_bridge_resources() it retrieves the resource
->> entry
->>>     after it is created and added to the resource list and uses
->>>     entry->__res.start to store the pci controller address
->>
->> struct of_pci_range is starting to get confusing to non-OF folks like
->> me.
->> It now contains:
->>
->>   u32 pci_space;
->>   u64 pci_addr;
->>   u64 cpu_addr;
->>   u64 bus_addr;
->>
->> Can you explain what all these things mean, and maybe even add one-line
->> comments to the structure?
+>    other info that might help us debug this:
+>     Possible unsafe locking scenario:
 > 
-> sure I can add comments inline in the code
+>           CPU0
+>           ----
+>      lock(&irq_desc_lock_class);
+>      <Interrupt>
+>        lock(&irq_desc_lock_class);
 > 
->>
->> pci_space: The only uses I see are to determine whether to print
->> "Prefetch".  I don't see any real functionality that uses this.
+>     *** DEADLOCK ***
 > 
-> Looking at the code I agree. it's seems to be used only in powerpc 
-> and microblaze to print out.
-> However from my understanding pci_space is the phys.hi field of the 
-> ranges property: it defines the properties of the address space associated
-> to the PCI address. if you're curious you can find a nice and quick to read
-> "guide" in http://devicetree.org/MPC5200:PCI
+>    no locks held by irq/21-mx6-pcie/62.
 > 
->>
->> pci_addr: I assume this is a PCI bus address, like what you would see
->> if
->> you put an analyzer on the bus/link.  This address could go in a BAR.
+>    stack backtrace:
+>    CPU: 0 PID: 62 Comm: irq/21-mx6-pcie Not tainted 4.2.0-rc3-next-20150723 #28
+>    Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+>    Backtrace:
+>    [<80012dc4>] (dump_backtrace) from [<80012f64>] (show_stack+0x18/0x1c)
+>     r6:be3eeb78 r5:00000000 r4:00000000 r3:00000000
+>    [<80012f4c>] (show_stack) from [<807a4b50>] (dump_stack+0x80/0x9c)
+>    [<807a4ad0>] (dump_stack) from [<807a2efc>] (print_usage_bug+0x270/0x2e4)
+>     r5:be3ee780 r4:80c579ec
+>    [<807a2c8c>] (print_usage_bug) from [<8006874c>] (mark_lock+0x5b4/0x6e0)
+>     r10:80c579ec r9:800678e0 r8:be3ee780 r7:00000000 r6:80c579ec r5:be3eeb78
+>     r4:00000002
+>    [<80068198>] (mark_lock) from [<80068f70>] (__lock_acquire+0x6f8/0x1e20)
+>     r10:00000001 r9:be3eeb78 r8:be3ee780 r7:00000008 r6:000003f8 r5:be3ee780
+>     r4:00000000
+>    [<80068878>] (__lock_acquire) from [<8006aa70>] (lock_acquire+0x74/0x94)
+>     r10:00000001 r9:00000001 r8:00000000 r7:00000001 r6:00000001 r5:60030013
+>     r4:00000000
+>    [<8006a9fc>] (lock_acquire) from [<807acc6c>] (_raw_spin_lock+0x34/0x44)
+>     r6:0000012c r5:00000001 r4:be1f4d64
+>    [<807acc38>] (_raw_spin_lock) from [<80078d94>] (handle_simple_irq+0x1c/0xc0)
+>     r5:be1f4d64 r4:be1f4d00
+>    [<80078d78>] (handle_simple_irq) from [<80075720>] (generic_handle_irq+0x28/0x38)
+>     r5:be28ee20 r4:0000012c
+>    [<800756f8>] (generic_handle_irq) from [<80321914>] (dw_handle_msi_irq+0x68/0x90)
+>     r4:00000001 r3:00000002
+>    [<803218ac>] (dw_handle_msi_irq) from [<8032265c>] (imx6_pcie_msi_handler+0x14/0x18)
+>     r7:80076f08 r6:be39efc0 r5:be154000 r4:be39efc0
+>    [<80322648>] (imx6_pcie_msi_handler) from [<80076f38>] (irq_forced_thread_fn+0x30/0x68)
+>    [<80076f08>] (irq_forced_thread_fn) from [<80076cb4>] (irq_thread+0x14c/0x19c)
+>     r6:be39efc0 r5:be154000 r4:be39efe0 r3:00000004
+>    [<80076b68>] (irq_thread) from [<80047f80>] (kthread+0xdc/0xf8)
+>     r10:00000000 r9:00000000 r8:00000000 r7:80076b68 r6:be39efc0 r5:be3a1000
+>     r4:00000000
+>    [<80047ea4>] (kthread) from [<8000fa38>] (ret_from_fork+0x14/0x3c)
+>     r7:00000000 r6:00000000 r5:80047ea4 r4:be3a1000
 > 
-> Yes, this is the PCI start address of the range: phys.mid + phys.low in the
-> guide mentioned above
+> Signed-off-by: Kevin Hao <haokexin@gmail.com>
+> ---
+>  drivers/pci/host/pci-imx6.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
->>
->> cpu_addr: I assume this is a CPU physical address, like what you would
->> see
->> in /proc/iomem and what you would pass to ioremap().
-> 
-> Yes correct
-> 
->>
->> bus_addr: ?
->>
-> 
-> According to the guide above, this is the address into which the pci_address 
-> get translated to and that is passed to the root complex. Between the root 
-> complex and the CPU there can be intermediate translation layers: see that to 
-> get pci_address we call "of_translate_address"; this will apply all the 
-> translation layers (ranges in the DT) that it finds till it comes to the root 
-> node of the DT (thus retrieving the CPU address).
-> Now said that, for designware we need the first translated PCI address, that we call
-> here bus_addr after Rob Herring suggested the name...honestly I cannot think of a 
-> different name
-> 
->    
-> 
->> I'm trying to imagine how this might be expressed in ACPI.  A host
->> bridge
->> ACPI _CRS contains a CPU physical address and applying a _TRA
->> (translation
->> offset) to the CPU address gives you a PCI bus address.  I know this
->> code
->> is OF, not ACPI, but I assume that it should be possible to describe
->> your
->> hardware via ACPI as well as by OF.
->>
->>>     the patch is based on 4.2-rc1
->>
->> You can put this after the "---" line because it's not relevant in the
->> permanent changelog.
-> 
-> Agreed
-> 
->>
->>>     Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->>>     Acked-by: Liviu Dudau <Liviu.Dudau@arm.com>
->>>     Acked-by: Rob Herring <robh@kernel.org>
->>
->> Please un-indent your changelog.
-> 
-> Ok agreed
-> 
->>
->>> ---
->>>  drivers/of/address.c       | 2 ++
->>>  drivers/of/of_pci.c        | 4 ++++
->>>  include/linux/of_address.h | 1 +
->>>  3 files changed, 7 insertions(+)
->>>
->>> diff --git a/drivers/of/address.c b/drivers/of/address.c
->>> index 8bfda6a..23a5793 100644
->>> --- a/drivers/of/address.c
->>> +++ b/drivers/of/address.c
->>> @@ -253,6 +253,7 @@ struct of_pci_range
->> *of_pci_range_parser_one(struct of_pci_range_parser *parser,
->>>  						struct of_pci_range *range)
->>>  {
->>>  	const int na = 3, ns = 2;
->>> +	const int p_ns = of_n_size_cells(parser->node);
->>>
->>>  	if (!range)
->>>  		return NULL;
->>> @@ -265,6 +266,7 @@ struct of_pci_range
->> *of_pci_range_parser_one(struct of_pci_range_parser *parser,
->>>  	range->pci_addr = of_read_number(parser->range + 1, ns);
->>>  	range->cpu_addr = of_translate_address(parser->node,
->>>  				parser->range + na);
->>> +	range->bus_addr = of_read_number(parser->range + na, p_ns);
->>>  	range->size = of_read_number(parser->range + parser->pna + na,
->> ns);
->>>
->>>  	parser->range += parser->np;
->>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->>> index 5751dc5..fe57030 100644
->>> --- a/drivers/of/of_pci.c
->>> +++ b/drivers/of/of_pci.c
->>> @@ -198,6 +198,7 @@ int of_pci_get_host_bridge_resources(struct
->> device_node *dev,
->>>
->>>  	pr_debug("Parsing ranges property...\n");
->>>  	for_each_of_pci_range(&parser, &range) {
->>> +		struct resource_entry *entry;
->>>  		/* Read next ranges element */
->>>  		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
->>>  			snprintf(range_type, 4, " IO");
->>> @@ -240,6 +241,9 @@ int of_pci_get_host_bridge_resources(struct
->> device_node *dev,
->>>  		}
->>>
->>>  		pci_add_resource_offset(resources, res,	res->start -
->> range.pci_addr);
->>> +		entry = list_last_entry(resources, struct resource_entry,
->> node);
->>> +		/* we are using __res for storing the PCI controller
->> address */
->>> +		entry->__res.start = range.bus_addr;
->>>  	}
->>>
->>>  	return 0;
->>> diff --git a/include/linux/of_address.h b/include/linux/of_address.h
->>> index d88e81b..865f96e 100644
->>> --- a/include/linux/of_address.h
->>> +++ b/include/linux/of_address.h
->>> @@ -16,6 +16,7 @@ struct of_pci_range {
->>>  	u32 pci_space;
->>>  	u64 pci_addr;
->>>  	u64 cpu_addr;
->>> +	u64 bus_addr;
->>>  	u64 size;
->>>  	u32 flags;
->>>  };
->>> --
->>> 1.9.1
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
->> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 233a196c6e66..fd5eb2e34fc0 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -544,7 +544,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+>  
+>  		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+>  				       imx6_pcie_msi_handler,
+> -				       IRQF_SHARED, "mx6-pcie-msi", pp);
+> +				       IRQF_SHARED | IRQF_NO_THREAD,
+> +				       "mx6-pcie-msi", pp);
+>  		if (ret) {
+>  			dev_err(&pdev->dev, "failed to request MSI irq\n");
+>  			return -ENODEV;
 
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
