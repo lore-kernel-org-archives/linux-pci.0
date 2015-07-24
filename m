@@ -1,124 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:35768 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751623AbbGaO6U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jul 2015 10:58:20 -0400
-Message-ID: <55BB8CC6.1080203@ti.com>
-Date: Fri, 31 Jul 2015 20:27:10 +0530
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v2 3/3] PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
+Date: Fri, 24 Jul 2015 17:23:10 +0530
+Message-ID: <1437738790-11114-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1437738790-11114-1-git-send-email-kishon@ti.com>
+References: <1437738790-11114-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Rob Herring <robherring2@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@linaro.org>, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
-References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com> <20150729172053.GE31170@google.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs> <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs> <20150730161447.GG9640@google.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs> <20150730171445.GI9640@google.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs> <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D70589@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D70589@lhreml503-mbs>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+Arnd
+DRA7xx require MSE bit to be cleared to set the master in
+standby mode. (In DRA7xx TRM_vE, section 24.9.4.5.2.2.1 PCIe
+Controller Master Standby Behavior advises to use the clearing
+of the local MSE bit to set the master in standby. Without this
+some of the clocks do not idle).
 
-Hi,
+Cleared the MSE bit on suspend and enabled it back on resume.
+Clearing MSE bit is required to get clocks to be idled after
+suspend.
 
-On Friday 31 July 2015 07:55 PM, Gabriele Paoloni wrote:
-> [+cc Kishon]
-> 
->> -----Original Message-----
->> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
->> owner@vger.kernel.org] On Behalf Of Rob Herring
->> Sent: Thursday, July 30, 2015 9:42 PM
->> To: Gabriele Paoloni
->> Cc: Bjorn Helgaas; arnd@arndb.de; lorenzo.pieralisi@arm.com; Wangzhou
->> (B); robh+dt@kernel.org; james.morse@arm.com; Liviu.Dudau@arm.com;
->> linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->> devicetree@vger.kernel.org; Yuanzhichang; Zhudacai; zhangjukuo;
->> qiuzhenfa; Liguozhu (Kenneth); Jingoo Han; Pratyush Anand
->> Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct
->> of_pci_range
->>
->> On Thu, Jul 30, 2015 at 12:34 PM, Gabriele Paoloni
->> <gabriele.paoloni@huawei.com> wrote:
->>>> -----Original Message-----
->>>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->>>> Sent: 30 July 2015 18:15
->>>> On Thu, Jul 30, 2015 at 04:50:55PM +0000, Gabriele Paoloni wrote:
->>>>>> -----Original Message-----
->>>>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
->>>>>> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
->>>>>> Sent: Thursday, July 30, 2015 5:15 PM
->>>>>> On Thu, Jul 30, 2015 at 01:52:13PM +0000, Gabriele Paoloni wrote:
->>
->> [...]
->>
->>>>>>> I don’t think we should rely on [CPU] addresses...what if the
->>>>>> intermediate
->>>>>>> translation layer changes the lower significant bits of the
->> "bus
->>>>>> address"
->>>>>>> to translate into a cpu address?
->>>>>>
->>>>>> Is it really a possiblity that the lower bits could be changed?
->>>>>
->>>>> I've checked all the current deignware users DTs except "pci-
->>>> layerscape"
->>>>> that I could not find:
->>>>> spear1310.dtsi
->>>>> spear1340.dtsi
->>>>> dra7.dtsi
->>>>> imx6qdl.dtsi
->>>>> imx6sx.dtsi
->>>>> keystone.dtsi
->>>>> exynos5440.dtsi
->>>>>
->>>>> None of them modifies the lower bits. To be more precise the only
->> guy
->>>>> that provides another translation layer is "dra7.dtsi":
->>>>> axi0
->>>>> http://lxr.free-
->> electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L207
->>>>>
->>>>> axi1
->>>>> http://lxr.free-
->> electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L241
->>>>>
->>>>> For this case masking the top 4bits (bits28 to 31) should make the
->> job.
->>
->> IMO, we should just fix this case. After further study, I don't think
->> this is a DW issue, but rather an SOC integration issue.
->>
->> I believe you can just fixup the address in the pp->ops->host_init hook.
->>
-> 
-> Yes I guess that I could just assign pp->(*)_mod_base to the CPU address 
-> in DW and mask it out in dra7xx_pcie_host_init()...
-> 
-> Kishon, would you be ok with that? 
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+---
+ drivers/pci/host/pci-dra7xx.c |   23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
 
-Initially I was using *base-mask* property from dt. Me and Arnd (cc'ed) had
-this discussion [1] before we decided the current approach. It'll be good to
-check with Arnd too.
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index d3ee2ef..7e798e8 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -83,6 +83,17 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
+ 	writel(value, pcie->base + offset);
+ }
+ 
++static inline u32 dra7xx_pcie_readl_rc(struct pcie_port *pp, u32 offset)
++{
++	return readl(pp->dbi_base + offset);
++}
++
++static inline void dra7xx_pcie_writel_rc(struct pcie_port *pp, u32 offset,
++					 u32 value)
++{
++	writel(value, pp->dbi_base + offset);
++}
++
+ static int dra7xx_pcie_link_up(struct pcie_port *pp)
+ {
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+@@ -438,8 +449,12 @@ static int dra7xx_pcie_suspend(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+ 	struct pcie_port *pp = &dra7xx->pp;
++	u32 val;
+ 
+-	dw_pcie_suspend_rc(pp);
++	/* clear MSE */
++	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
++	val &= ~PCI_COMMAND_MEMORY;
++	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
+ 
+ 	return 0;
+ }
+@@ -448,8 +463,12 @@ static int dra7xx_pcie_resume(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+ 	struct pcie_port *pp = &dra7xx->pp;
++	u32 val;
+ 
+-	dw_pcie_resume_rc(pp);
++	/* clear MSE */
++	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
++	val |= PCI_COMMAND_MEMORY;
++	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
+ 
+ 	return 0;
+ }
+-- 
+1.7.9.5
 
-[1] ->  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-May/253528.html
-
-Thanks
-Kishon
