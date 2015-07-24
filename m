@@ -1,68 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:58763 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754512AbbG1Btg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 27 Jul 2015 21:49:36 -0400
-From: "Liu, Chuansheng" <chuansheng.liu@intel.com>
-To: "Zhang, Rui" <rui.zhang@intel.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Tejun Heo <tj@kernel.org>, Alan Stern <stern@rowland.harvard.edu>,
-	"Lu, Aaron" <aaron.lu@intel.com>,
-	"MyMailClone@t-online.de" <MyMailClone@t-online.de>,
-	"mister.freeman@laposte.net" <mister.freeman@laposte.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: RE: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-Date: Tue, 28 Jul 2015 01:48:27 +0000
-Message-ID: <27240C0AC20F114CBF8149A2696CBE4A059534E6@SHSMSX101.ccr.corp.intel.com>
-References: <1438047747.1856.12.camel@rzhang1-mobl4>
-In-Reply-To: <1438047747.1856.12.camel@rzhang1-mobl4>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:33229 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753213AbbGXIXg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 04:23:36 -0400
+Message-ID: <1437726214.3071.44.camel@pengutronix.de>
+Subject: Re: [PATCH 1/4] PCI: imx6: Mark the msi cascade handler
+ IRQF_NO_THREAD
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Kevin Hao <haokexin@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Richard Zhu <Richard.Zhu@freescale.com>
+Date: Fri, 24 Jul 2015 10:23:34 +0200
+In-Reply-To: <1437715776-2243-2-git-send-email-haokexin@gmail.com>
+References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
+	 <1437715776-2243-2-git-send-email-haokexin@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogWmhhbmcsIFJ1aQ0KPiBT
-ZW50OiBUdWVzZGF5LCBKdWx5IDI4LCAyMDE1IDk6NDIgQU0NCj4gVG86IGxpbnV4LXBjaTsgQmpv
-cm4gSGVsZ2Fhcw0KPiBDYzogTGl1LCBDaHVhbnNoZW5nOyBUZWp1biBIZW87IEFsYW4gU3Rlcm47
-IEx1LCBBYXJvbjsNCj4gTXlNYWlsQ2xvbmVAdC1vbmxpbmUuZGU7IG1pc3Rlci5mcmVlbWFuQGxh
-cG9zdGUubmV0OyBaaGFuZywgUnVpOyBSYWZhZWwgSi4NCj4gV3lzb2NraQ0KPiBTdWJqZWN0OiBb
-UEFUQ0hdIFBDSTogRGlzYWJsZSBhc3luYyBzdXNwZW5kL3Jlc3VtZSBmb3IgSm1pY3JvbiBjaGlw
-DQo+IA0KPiBGcm9tIDU3ZWRiYTljNjc3ZTQ3MzU0ODQ2ZGI5NTEwMTRkYzRkNWIxM2NlNTQgTW9u
-IFNlcCAxNyAwMDowMDowMA0KPiAyMDAxDQo+IEZyb206IFpoYW5nIFJ1aSA8cnVpLnpoYW5nQGlu
-dGVsLmNvbT4NCj4gRGF0ZTogU3VuLCAyNiBKdWwgMjAxNSAxNDoxNTozNiArMDgwMA0KPiBTdWJq
-ZWN0OiBbUEFUQ0hdIFBDSTogRGlzYWJsZSBhc3luYyBzdXNwZW5kL3Jlc3VtZSBmb3IgSm1pY3Jv
-biBjaGlwDQo+IA0KPiBJbiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dp
-P2lkPTgxNTUxLA0KPiB3ZSBmb3VuZCB0aGF0IEptaWNyb24gY2hpcCAzNjEvMzYzIGlzIGJyb2tl
-biBhZnRlciByZXN1bWUgaWYgYXN5bmMgbm9pcnENCj4gKDc2NTY5ZmFhNjIgKFBNIC8gc2xlZXA6
-IEFzeW5jaHJvbm91cyB0aHJlYWRzIGZvciByZXN1bWVfbm9pcnEpKSBpcw0KPiBzdXBwb3J0ZWQs
-DQo+IHRodXMgY29tbWl0IGU2YjdlNDFjZGQgKGF0YTogRGlzYWJsaW5nIHRoZSBhc3luYyBQTSBm
-b3IgSk1pY3JvbiBjaGlwDQo+IDM2My8zNjEpDQo+IGlzIGludHJvZHVjZWQgdG8gZml4IHRoaXMg
-cHJvYmxlbS4NCj4gQnV0IHRoZW4sIHdlIGZvdW5kIHRoYXQgSm1pY3JvbiBjaGlwIDM2OCBhbHNv
-IGhhcyB0aGlzIHByb2JsZW0sIGFuZCBpdCBpcw0KPiBkZWNpZGVkDQo+IHRvIGRpc2FibGUgdGhl
-IHBtIGFzeW5jIGZlYXR1cmUgZm9yIGFsbCB0aGUgSm1pY3JvbiBjaGlwcy4NCj4gDQo+IEJ1dCBo
-b3cgdG8gZml4IHRoaXMgd2FzIGRpc2N1c3NlZCBpbiB0aGUgbWFpbGluZyBsaXN0IGZvciBzb21l
-IHRpbWUuDQo+IEFmdGVyIHNvbWUgaW52ZXN0aWdhdGlvbiwgd2UgYmVsaWV2ZSB0aGF0IGEgcHJv
-cGVyIGZpeCBpcyB0byBkaXNhYmxlDQo+IHRoZSBhc3luYyBQTSBpbiBQQ0kgaW5zdGVhZCBvZiBh
-dGEgZHJpdmVyLCBiZWNhdXNlLCBvbiB0aGlzIHBsYXRmb3JtLA0KPiBwY2lfcmVzdW1lX25vaXJx
-KCkgb2YgSURFIGNvbnRyb2xsZXIgbXVzdCBoYXBwZW4gYWZ0ZXIgcGNpX3Jlc3VtZV9ub2lycSgp
-DQo+IG9mIEFIQ0kgY29udHJvbGxlci4gQnV0IGFzIC5yZXN1bWVfbm9pcnEoKSBvZiB0aGUgcGF0
-YV9qbWljcm9uIGRyaXZlciBpcw0KPiBuby1vcCwgdGhpcyBzdWdnZXN0cyB0aGF0IGl0IGlzIHRo
-ZSBQQ0kgY29tbW9uIGFjdGlvbnMsIGFrYSwNCj4gcGNpX3BtX2RlZmF1bHRfcmVzdW1lX2Vhcmx5
-KCksIGhhdmUgdGhlIGRlcGVuZGVuY3kuDQo+IFRvIGZpeCB0aGlzLCB1c2luZyBkZXZpY2VfcG1f
-d2FpdF9mb3JfZGV2KCkgaW4gcGF0YV9qbWljcm9uIGRyaXZlciBjYW4gbm90DQo+IHNvbHZlIHRo
-ZSBkZXBlbmRlbmN5IGJlY2F1c2UgcGNpX3BtX2RlZmF1bHRfcmVzdW1lX2Vhcmx5KCkgaXMgaW52
-b2tlZA0KPiBiZWZvcmUNCj4gZHJpdmVyIGNhbGxiYWNrIGJlaW5nIGludm9rZWQsIHBsdXMsIGFz
-IGl0IGlzIHRoZSBQQ0kgY29tbW9uIGFjdGlvbnMgdGhhdA0KPiBoYXZlIHRoZSBkZXBlbmRlbmN5
-LCBpdCBpcyByZWFzb25hYmxlIHRvIGZpeCBpdCBpbiBQQ0kgYnVzIGNvZGUsDQo+IHJhdGhlciB0
-aGFuIGRyaXZlciBjb2RlLg0KPiANCj4gVGhpcyBwYXRjaCBpcyBtYWRlIGJhc2VkIG9uIHRoZSBw
-YXRjaCBmcm9tIExpdSBDaHVhbnNoZW5nIGF0DQo+IGh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE0
-LzEyLzUvNzQNCj4gaXQgcmV2ZXJ0cyBjb21taXQgZTZiN2U0MWNkZCAoImF0YTogRGlzYWJsaW5n
-IHRoZSBhc3luYyBQTSBmb3IgSk1pY3Jvbg0KPiBjaGlwIDM2My8zNjEiKSwgYW5kIGludHJvZHVj
-ZXMgYSBQQ0kgcXVpcmsgdG8gZGlzYWJsZSBhc3luYyBQTSBmb3IgSm1pY3Jvbg0KPiBjaGlwcy4N
-Cj4gDQo+IFJlZmVyZW5jZTogaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNn
-aT9pZD04MTU1MQ0KPiBUZXN0ZWQtYnk6IEpheSA8TXlNYWlsQ2xvbmVAdC1vbmxpbmUuZGU+DQo+
-IFRlc3RlZC1ieTogQmFydG8gPG1pc3Rlci5mcmVlbWFuQGxhcG9zdGUubmV0Pg0KPiBTaWduZWQt
-b2ZmLWJ5OiBaaGFuZyBSdWkgPHJ1aS56aGFuZ0BpbnRlbC5jb20+DQo+IC0tLQ0KDQpUaGFua3Mg
-UnVpLg0KDQpBY2tlZC1ieTogQ2h1YW5zaGVuZyBMaXUgPGNodWFuc2hlbmcubGl1QGludGVsLmNv
-bT4NCg0KDQoNCg0K
+Am Freitag, den 24.07.2015, 13:29 +0800 schrieb Kevin Hao:
+> The cascade handler must run in hard interrupt context, otherwise
+> it will cause the following kernel warning if we force threading
+> of all the interrupt handlers via kernel command parameter
+> "threadirqs":
+>    [ INFO: inconsistent lock state ]
+>    4.2.0-rc3-next-20150723 #28 Not tainted
+>    ---------------------------------
+>    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
+>    irq/21-mx6-pcie/62 [HC0[0]:SC0[2]:HE1:SE0] takes:
+>     (&irq_desc_lock_class){?.-...}, at: [<80078d94>] handle_simple_irq+0x1c/0xc0
+>    {IN-HARDIRQ-W} state was registered at:
+>      [<8006aa70>] lock_acquire+0x74/0x94
+>      [<807acc6c>] _raw_spin_lock+0x34/0x44
+>      [<8007900c>] handle_fasteoi_irq+0x20/0x1b8
+>      [<80075720>] generic_handle_irq+0x28/0x38
+>      [<80075864>] __handle_domain_irq+0x6c/0xe0
+>      [<80009558>] gic_handle_irq+0x28/0x68
+>      [<80013b64>] __irq_svc+0x44/0x5c
+>      [<807ad400>] _raw_spin_unlock_irq+0x30/0x34
+>      [<8004cffc>] finish_task_switch+0xc0/0x218
+>      [<807a7a10>] __schedule+0x248/0x6e0
+>      [<807a7fac>] schedule+0x38/0x9c
+>      [<807a8240>] schedule_preempt_disabled+0x10/0x14
+>      [<80063f8c>] cpu_startup_entry+0xfc/0x1f8
+>      [<8079f640>] rest_init+0x130/0x16c
+>      [<80a55ca4>] start_kernel+0x374/0x3e8
+>      [<1000807c>] 0x1000807c
+>    irq event stamp: 16
+>    hardirqs last  enabled at (15): [<807ad3fc>] _raw_spin_unlock_irq+0x2c/0x34
+>    hardirqs last disabled at (14): [<807acd80>] _raw_spin_lock_irq+0x20/0x58
+>    softirqs last  enabled at (0): [<800283d8>] copy_process.isra.58+0x3bc/0x1504
+>    softirqs last disabled at (16): [<80076f08>] irq_forced_thread_fn+0x0/0x68
+> 
+>    other info that might help us debug this:
+>     Possible unsafe locking scenario:
+> 
+>           CPU0
+>           ----
+>      lock(&irq_desc_lock_class);
+>      <Interrupt>
+>        lock(&irq_desc_lock_class);
+> 
+>     *** DEADLOCK ***
+> 
+>    no locks held by irq/21-mx6-pcie/62.
+> 
+>    stack backtrace:
+>    CPU: 0 PID: 62 Comm: irq/21-mx6-pcie Not tainted 4.2.0-rc3-next-20150723 #28
+>    Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+>    Backtrace:
+>    [<80012dc4>] (dump_backtrace) from [<80012f64>] (show_stack+0x18/0x1c)
+>     r6:be3eeb78 r5:00000000 r4:00000000 r3:00000000
+>    [<80012f4c>] (show_stack) from [<807a4b50>] (dump_stack+0x80/0x9c)
+>    [<807a4ad0>] (dump_stack) from [<807a2efc>] (print_usage_bug+0x270/0x2e4)
+>     r5:be3ee780 r4:80c579ec
+>    [<807a2c8c>] (print_usage_bug) from [<8006874c>] (mark_lock+0x5b4/0x6e0)
+>     r10:80c579ec r9:800678e0 r8:be3ee780 r7:00000000 r6:80c579ec r5:be3eeb78
+>     r4:00000002
+>    [<80068198>] (mark_lock) from [<80068f70>] (__lock_acquire+0x6f8/0x1e20)
+>     r10:00000001 r9:be3eeb78 r8:be3ee780 r7:00000008 r6:000003f8 r5:be3ee780
+>     r4:00000000
+>    [<80068878>] (__lock_acquire) from [<8006aa70>] (lock_acquire+0x74/0x94)
+>     r10:00000001 r9:00000001 r8:00000000 r7:00000001 r6:00000001 r5:60030013
+>     r4:00000000
+>    [<8006a9fc>] (lock_acquire) from [<807acc6c>] (_raw_spin_lock+0x34/0x44)
+>     r6:0000012c r5:00000001 r4:be1f4d64
+>    [<807acc38>] (_raw_spin_lock) from [<80078d94>] (handle_simple_irq+0x1c/0xc0)
+>     r5:be1f4d64 r4:be1f4d00
+>    [<80078d78>] (handle_simple_irq) from [<80075720>] (generic_handle_irq+0x28/0x38)
+>     r5:be28ee20 r4:0000012c
+>    [<800756f8>] (generic_handle_irq) from [<80321914>] (dw_handle_msi_irq+0x68/0x90)
+>     r4:00000001 r3:00000002
+>    [<803218ac>] (dw_handle_msi_irq) from [<8032265c>] (imx6_pcie_msi_handler+0x14/0x18)
+>     r7:80076f08 r6:be39efc0 r5:be154000 r4:be39efc0
+>    [<80322648>] (imx6_pcie_msi_handler) from [<80076f38>] (irq_forced_thread_fn+0x30/0x68)
+>    [<80076f08>] (irq_forced_thread_fn) from [<80076cb4>] (irq_thread+0x14c/0x19c)
+>     r6:be39efc0 r5:be154000 r4:be39efe0 r3:00000004
+>    [<80076b68>] (irq_thread) from [<80047f80>] (kthread+0xdc/0xf8)
+>     r10:00000000 r9:00000000 r8:00000000 r7:80076b68 r6:be39efc0 r5:be3a1000
+>     r4:00000000
+>    [<80047ea4>] (kthread) from [<8000fa38>] (ret_from_fork+0x14/0x3c)
+>     r7:00000000 r6:00000000 r5:80047ea4 r4:be3a1000
+> 
+> Signed-off-by: Kevin Hao <haokexin@gmail.com>
+
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+
+> ---
+>  drivers/pci/host/pci-imx6.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 233a196c6e66..fd5eb2e34fc0 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -544,7 +544,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+>  
+>  		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+>  				       imx6_pcie_msi_handler,
+> -				       IRQF_SHARED, "mx6-pcie-msi", pp);
+> +				       IRQF_SHARED | IRQF_NO_THREAD,
+> +				       "mx6-pcie-msi", pp);
+>  		if (ret) {
+>  			dev_err(&pdev->dev, "failed to request MSI irq\n");
+>  			return -ENODEV;
+
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
