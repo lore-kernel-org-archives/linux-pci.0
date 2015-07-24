@@ -1,114 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from dfwrgout.huawei.com ([206.16.17.72]:4133 "EHLO
-	dfwrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233AbbG0PMh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 11:12:37 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Received: from foss.arm.com ([217.140.101.70]:46232 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752688AbbGXQyj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 24 Jul 2015 12:54:39 -0400
+Message-ID: <55B26DC9.8010408@arm.com>
+Date: Fri, 24 Jul 2015 17:54:33 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v5] PCI: Store PCIe bus address in struct of_pci_range
-Date: Mon, 27 Jul 2015 15:11:13 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D6DEE7@lhreml503-mbs>
-References: <1437993919-99241-1-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1437993919-99241-1-git-send-email-gabriele.paoloni@huawei.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	James Morse <James.Morse@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>
+Subject: Re: [PATCH v2 1/2] ARM: PCI: bios32: replace panic with WARN messages
+ on failures
+References: <1437754383-8162-1-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1437754383-8162-1-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEdhYnJpZWxlIFBhb2xvbmkN
-Cj4gU2VudDogTW9uZGF5LCBKdWx5IDI3LCAyMDE1IDExOjQ1IEFNDQo+IFRvOiBHYWJyaWVsZSBQ
-YW9sb25pOyBhcm5kQGFybmRiLmRlOyBsb3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tOw0KPiBXYW5n
-emhvdSAoQik7IGJoZWxnYWFzQGdvb2dsZS5jb207IHJvYmgrZHRAa2VybmVsLm9yZzsNCj4gamFt
-ZXMubW9yc2VAYXJtLmNvbTsgTGl2aXUuRHVkYXVAYXJtLmNvbQ0KPiBDYzogbGludXgtcGNpQHZn
-ZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiBk
-ZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdq
-dWt1bzsNCj4gcWl1emhlbmZhOyBMaWd1b3podSAoS2VubmV0aCkNCj4gU3ViamVjdDogW1BBVENI
-IHY1XSBQQ0k6IFN0b3JlIFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0IG9mX3BjaV9yYW5nZQ0K
-PiANCj4gRnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29t
-Pg0KPiANCj4gICAgIFRoaXMgcGF0Y2ggaXMgbmVlZGVkIHBvcnQgUENJZSBkZXNpZ253YXJlIHRv
-IG5ldyBEVCBwYXJzaW5nIEFQSQ0KPiAgICAgQXMgZGlzY3Vzc2VkIGluDQo+ICAgICBodHRwOi8v
-bGlzdHMuaW5mcmFkZWFkLm9yZy9waXBlcm1haWwvbGludXgtYXJtLWtlcm5lbC8yMDE1LQ0KPiBK
-YW51YXJ5LzMxNzc0My5odG1sDQo+ICAgICBpbiBkZXNpZ253YXJlIHdlIGhhdmUgYSBwcm9ibGVt
-IGFzIHRoZSBQQ0kgYWRkcmVzc2VzIGluIHRoZSBQQ0llDQo+IGNvbnRyb2xsZXINCj4gICAgIGFk
-ZHJlc3Mgc3BhY2UgYXJlIHJlcXVpcmVkIGluIG9yZGVyIHRvIHBlcmZvcm0gY29ycmVjdCBIVyBv
-cGVyYXRpb24uDQo+IA0KPiAgICAgSW4gb3JkZXIgdG8gc29sdmUgdGhpcyBwcm9ibGVtIGNvbW1p
-dCBmNGM1NWM1YTMgIlBDSTogZGVzaWdud2FyZToNCj4gICAgIFByb2dyYW0gQVRVIHdpdGggdW50
-cmFuc2xhdGVkIGFkZHJlc3MiIGFkZGVkIGNvZGUgdG8gcmVhZCB0aGUgUENJZQ0KPiAgICAgY29u
-dHJvbGxlciBzdGFydCBhZGRyZXNzIGRpcmVjdGx5IGZyb20gdGhlIERUIHJhbmdlcy4NCj4gDQo+
-ICAgICBJbiB0aGUgbmV3IERUIHBhcnNpbmcgQVBJIG9mX3BjaV9nZXRfaG9zdF9icmlkZ2VfcmVz
-b3VyY2VzKCkgaGlkZXMNCj4gdGhlDQo+ICAgICBEVCBwYXJzZXIgZnJvbSB0aGUgaG9zdCBjb250
-cm9sbGVyIGRyaXZlcnMsIHNvIGl0IGlzIG5vdCBwb3NzaWJsZQ0KPiAgICAgZm9yIGRyaXZlcnMg
-dG8gcGFyc2UgdmFsdWVzIGRpcmVjdGx5IGZyb20gdGhlIERULg0KPiANCj4gICAgIEluIGh0dHA6
-Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtcGNpL21zZzQyNTQwLmh0bWwgd2UgYWxyZWFk
-eQ0KPiB0cmllZA0KPiAgICAgdG8gdXNlIHRoZSBuZXcgRFQgcGFyc2luZyBBUEkgYnV0IHRoZXJl
-IGlzIGEgYnVnIChvYnZpb3VzbHkpIGluDQo+IHNldHRpbmcNCj4gICAgIHRoZSA8Kj5fbW9kX2Jh
-c2UgYWRkcmVzc2VzDQo+ICAgICBBcHBseWluZyB0aGlzIHBhdGNoIHdlIGNhbiBlYXNpbHkgc2V0
-ICI8Kj5fbW9kX2Jhc2UgPSB3aW4tDQo+ID5fX3Jlcy5zdGFydCINCj4gDQo+ICAgICBUaGlzIHBh
-dGNoIGFkZHMgYSBuZXcgZmllbGQgaW4gInN0cnVjdCBvZl9wY2lfcmFuZ2UiIHRvIHN0b3JlIHRo
-ZQ0KPiAgICAgcGNpIGJ1cyBzdGFydCBhZGRyZXNzOyBpdCBmaWxscyB0aGUgZmllbGQgaW4NCj4g
-b2ZfcGNpX3JhbmdlX3BhcnNlcl9vbmUoKTsNCj4gICAgIGluIG9mX3BjaV9nZXRfaG9zdF9icmlk
-Z2VfcmVzb3VyY2VzKCkgaXQgcmV0cmlldmVzIHRoZSByZXNvdXJjZQ0KPiBlbnRyeQ0KPiAgICAg
-YWZ0ZXIgaXQgaXMgY3JlYXRlZCBhbmQgYWRkZWQgdG8gdGhlIHJlc291cmNlIGxpc3QgYW5kIHVz
-ZXMNCj4gICAgIGVudHJ5LT5fX3Jlcy5zdGFydCB0byBzdG9yZSB0aGUgcGNpIGNvbnRyb2xsZXIg
-YWRkcmVzcw0KPiANCj4gICAgIHRoZSBwYXRjaCBpcyBiYXNlZCBvbiA0LjItcmMxDQo+IA0KPiAg
-ICAgU2lnbmVkLW9mZi1ieTogR2FicmllbGUgUGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3
-ZWkuY29tPg0KPiAgICAgQWNrZWQtYnk6IExpdml1IER1ZGFpIDxMaXZpdS5EdWRhdUBhcm0uY29t
-Pg0KDQpGaXhlZCBMaXZpdSdzIHN1cm5hbWUgaW4gdjYsIHNvcnJ5IEkgbWVzc2VkIHVwIGFtZW5k
-aW5nIHRoZSBjb21taXQNCg0KPiAgICAgQWNrZWQtYnk6IFJvYiBIZXJyaW5nIDxyb2JoQGtlcm5l
-bC5vcmc+DQo+IC0tLQ0KPiAgZHJpdmVycy9vZi9hZGRyZXNzLmMgICAgICAgfCAyICsrDQo+ICBk
-cml2ZXJzL29mL29mX3BjaS5jICAgICAgICB8IDQgKysrKw0KPiAgaW5jbHVkZS9saW51eC9vZl9h
-ZGRyZXNzLmggfCAxICsNCj4gIDMgZmlsZXMgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspDQo+IA0K
-PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9vZi9hZGRyZXNzLmMgYi9kcml2ZXJzL29mL2FkZHJlc3Mu
-Yw0KPiBpbmRleCA4YmZkYTZhLi4yM2E1NzkzIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL29mL2Fk
-ZHJlc3MuYw0KPiArKysgYi9kcml2ZXJzL29mL2FkZHJlc3MuYw0KPiBAQCAtMjUzLDYgKzI1Myw3
-IEBAIHN0cnVjdCBvZl9wY2lfcmFuZ2UgKm9mX3BjaV9yYW5nZV9wYXJzZXJfb25lKHN0cnVjdA0K
-PiBvZl9wY2lfcmFuZ2VfcGFyc2VyICpwYXJzZXIsDQo+ICAJCQkJCQlzdHJ1Y3Qgb2ZfcGNpX3Jh
-bmdlICpyYW5nZSkNCj4gIHsNCj4gIAljb25zdCBpbnQgbmEgPSAzLCBucyA9IDI7DQo+ICsJY29u
-c3QgaW50IHBfbnMgPSBvZl9uX3NpemVfY2VsbHMocGFyc2VyLT5ub2RlKTsNCj4gDQo+ICAJaWYg
-KCFyYW5nZSkNCj4gIAkJcmV0dXJuIE5VTEw7DQo+IEBAIC0yNjUsNiArMjY2LDcgQEAgc3RydWN0
-IG9mX3BjaV9yYW5nZSAqb2ZfcGNpX3JhbmdlX3BhcnNlcl9vbmUoc3RydWN0DQo+IG9mX3BjaV9y
-YW5nZV9wYXJzZXIgKnBhcnNlciwNCj4gIAlyYW5nZS0+cGNpX2FkZHIgPSBvZl9yZWFkX251bWJl
-cihwYXJzZXItPnJhbmdlICsgMSwgbnMpOw0KPiAgCXJhbmdlLT5jcHVfYWRkciA9IG9mX3RyYW5z
-bGF0ZV9hZGRyZXNzKHBhcnNlci0+bm9kZSwNCj4gIAkJCQlwYXJzZXItPnJhbmdlICsgbmEpOw0K
-PiArCXJhbmdlLT5idXNfYWRkciA9IG9mX3JlYWRfbnVtYmVyKHBhcnNlci0+cmFuZ2UgKyBuYSwg
-cF9ucyk7DQo+ICAJcmFuZ2UtPnNpemUgPSBvZl9yZWFkX251bWJlcihwYXJzZXItPnJhbmdlICsg
-cGFyc2VyLT5wbmEgKyBuYSwNCj4gbnMpOw0KPiANCj4gIAlwYXJzZXItPnJhbmdlICs9IHBhcnNl
-ci0+bnA7DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL29mL29mX3BjaS5jIGIvZHJpdmVycy9vZi9v
-Zl9wY2kuYw0KPiBpbmRleCA1NzUxZGM1Li5mZTU3MDMwIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJz
-L29mL29mX3BjaS5jDQo+ICsrKyBiL2RyaXZlcnMvb2Yvb2ZfcGNpLmMNCj4gQEAgLTE5OCw2ICsx
-OTgsNyBAQCBpbnQgb2ZfcGNpX2dldF9ob3N0X2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0DQo+IGRl
-dmljZV9ub2RlICpkZXYsDQo+IA0KPiAgCXByX2RlYnVnKCJQYXJzaW5nIHJhbmdlcyBwcm9wZXJ0
-eS4uLlxuIik7DQo+ICAJZm9yX2VhY2hfb2ZfcGNpX3JhbmdlKCZwYXJzZXIsICZyYW5nZSkgew0K
-PiArCQlzdHJ1Y3QgcmVzb3VyY2VfZW50cnkgKmVudHJ5Ow0KPiAgCQkvKiBSZWFkIG5leHQgcmFu
-Z2VzIGVsZW1lbnQgKi8NCj4gIAkJaWYgKChyYW5nZS5mbGFncyAmIElPUkVTT1VSQ0VfVFlQRV9C
-SVRTKSA9PSBJT1JFU09VUkNFX0lPKQ0KPiAgCQkJc25wcmludGYocmFuZ2VfdHlwZSwgNCwgIiBJ
-TyIpOw0KPiBAQCAtMjQwLDYgKzI0MSw5IEBAIGludCBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jl
-c291cmNlcyhzdHJ1Y3QNCj4gZGV2aWNlX25vZGUgKmRldiwNCj4gIAkJfQ0KPiANCj4gIAkJcGNp
-X2FkZF9yZXNvdXJjZV9vZmZzZXQocmVzb3VyY2VzLCByZXMsCXJlcy0+c3RhcnQgLQ0KPiByYW5n
-ZS5wY2lfYWRkcik7DQo+ICsJCWVudHJ5ID0gbGlzdF9sYXN0X2VudHJ5KHJlc291cmNlcywgc3Ry
-dWN0IHJlc291cmNlX2VudHJ5LA0KPiBub2RlKTsNCj4gKwkJLyogd2UgYXJlIHVzaW5nIF9fcmVz
-IGZvciBzdG9yaW5nIHRoZSBQQ0kgY29udHJvbGxlcg0KPiBhZGRyZXNzICovDQo+ICsJCWVudHJ5
-LT5fX3Jlcy5zdGFydCA9IHJhbmdlLmJ1c19hZGRyOw0KPiAgCX0NCj4gDQo+ICAJcmV0dXJuIDA7
-DQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L29mX2FkZHJlc3MuaCBiL2luY2x1ZGUvbGlu
-dXgvb2ZfYWRkcmVzcy5oDQo+IGluZGV4IGQ4OGU4MWIuLjg2NWY5NmUgMTAwNjQ0DQo+IC0tLSBh
-L2luY2x1ZGUvbGludXgvb2ZfYWRkcmVzcy5oDQo+ICsrKyBiL2luY2x1ZGUvbGludXgvb2ZfYWRk
-cmVzcy5oDQo+IEBAIC0xNiw2ICsxNiw3IEBAIHN0cnVjdCBvZl9wY2lfcmFuZ2Ugew0KPiAgCXUz
-MiBwY2lfc3BhY2U7DQo+ICAJdTY0IHBjaV9hZGRyOw0KPiAgCXU2NCBjcHVfYWRkcjsNCj4gKwl1
-NjQgYnVzX2FkZHI7DQo+ICAJdTY0IHNpemU7DQo+ICAJdTMyIGZsYWdzOw0KPiAgfTsNCj4gLS0N
-Cj4gMS45LjENCg0K
+On 24/07/15 17:13, Lorenzo Pieralisi wrote:
+> In the ARM PCI bios32 layer, failures to dynamically allocate pci_sys_data
+> for a PCI bus, or a PCI bus scan failure have to be considered serious
+> warnings but they should not trigger a system panic so that at least the
+> system is given a chance to be debugged.
+> 
+> This patch replaces the panic statements with WARN() messages to
+> improve error reporting in the ARM PCI bios32 layer.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> Cc: Marc Zyngier <marc.zyngier@arm.com>
+
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
