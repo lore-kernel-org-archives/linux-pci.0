@@ -1,321 +1,329 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Jul 2015 11:30:30 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 36/36] PCI: Don't set flags to 0 when assign resource fail
-Message-ID: <20150709033030.GA7079@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
- <1436225966-27247-37-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:42348 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753504AbbGYDPe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 23:15:34 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
+	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
+	<Liviu.Dudau@arm.com>, <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v5 3/5] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+Date: Sat, 25 Jul 2015 11:21:24 +0800
+Message-ID: <1437794486-21134-4-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436225966-27247-37-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Yinghai
+This patch adds PCIe host support for HiSilicon SoC Hip05.
 
-This patch may introduce some problem.
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ drivers/pci/host/Kconfig     |   8 ++
+ drivers/pci/host/Makefile    |   1 +
+ drivers/pci/host/pcie-hisi.c | 254 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 263 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-hisi.c
 
-On my P8 machine, after applying this patch, I see following error:
-
-[    0.589948] pnv_ioda_setup_pe_seg: trigger IO SEG 0
-[    0.589992] pnv_ioda_setup_pe_seg: res[io  0x1000-0x3fff] 100
-
-The last 0x100 is the res->flags, which indicates the UNSET and DISABLED bit
-is not set.
-
-On P8, we don't have IO window, which means the IO BAR will not be assigned.
-And those io_segmap is not allocated. The following trace is printed since the
-io_segmap is accessed, while it is NULL.
-
-[    0.590050] Unable to handle kernel paging request for data at address 0x00000000
-[    0.590115] Faulting instruction address: 0xc0000000000759b8
-[    0.590172] Oops: Kernel access of bad area, sig: 11 [#1]
-[    0.590216] SMP NR_CPUS=1024 NUMA PowerNV
-[    0.590262] Modules linked in:
-[    0.590309] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.2.0-rc1eeh_refactor+ #244
-[    0.590375] task: c000002ff4380000 ti: c000002ff6084000 task.ti: c000002ff6084000
-[    0.590440] NIP: c0000000000759b8 LR: c000000000075960 CTR: 000000003004a1bc
-[    0.590506] REGS: c000002ff6087620 TRAP: 0300   Not tainted  (4.2.0-rc1eeh_refactor+)
-[    0.590572] MSR: 9000000000009032 <SF,HV,EE,ME,IR,DR,RI>  CR: 22000028  XER: 20000000
-[    0.590727] CFAR: c000000000008468 DAR: 0000000000000000 DSISR: 42000000 SOFTE: 1 
-GPR00: c000000000075960 c000002ff60878a0 c000000001534f00 0000000000000031 
-GPR04: 0000000000000001 0000000000000003 0000000000000000 0000000000000000 
-GPR08: 0000000000000006 0000000000000000 0000000000000000 00000000000003f2 
-GPR12: 0000000022000022 c00000000fda0000 c000000000b82c88 0000000000000000 
-GPR16: 0000000000003fff 0000000000000000 0000000000001000 c000000000b82cc8 
-GPR20: c000000000b82c50 c000000000b82c70 c000000001452148 c000002fffb2d900 
-GPR24: c000000000923c40 c000002fffb4c810 c000002fffb4c300 0000000000102000 
-GPR28: c000002fffb40720 c000001ff42aa500 c000002fffb4c580 0000000000000000 
-[    0.591603] NIP [c0000000000759b8] .pnv_pci_ioda_fixup+0xaa8/0xb20
-[    0.591658] LR [c000000000075960] .pnv_pci_ioda_fixup+0xa50/0xb20
-[    0.591713] Call Trace:
-[    0.591736] [c000002ff60878a0] [c000000000075960] .pnv_pci_ioda_fixup+0xa50/0xb20 (unreliable)
-[    0.591824] [c000002ff6087a40] [c000000000caf0a8] .pcibios_resource_survey+0x3a8/0x404
-[    0.591901] [c000002ff6087b60] [c000000000cae7f0] .pcibios_init+0xa0/0xd4
-[    0.591968] [c000002ff6087bf0] [c00000000000ad30] .do_one_initcall+0x110/0x280
-[    0.592045] [c000002ff6087ce0] [c000000000ca45c4] .kernel_init_freeable+0x274/0x35c
-[    0.592122] [c000002ff6087db0] [c00000000000b5e4] .kernel_init+0x24/0x140
-[    0.592188] [c000002ff6087e30] [c0000000000094e8] .ret_from_kernel_thread+0x58/0x70
-[    0.592265] Instruction dump:
-[    0.592298] 7d3107b4 7f084840 7e525214 7fb09040 4099f7b8 419cf7b4 e93e0180 811c0024 
-[    0.592408] 7a2a1764 38a00003 7a270420 38c00000 <7d09512e> a09c0026 e87e0018 4bff1c59 
-[    0.592524] ---[ end trace 856c9d223a60380c ]---
-[    0.593584] 
-[    2.593742] Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
-[    2.593742] 
-[    2.605223] Rebooting in 10 seconds..
-
-
-On Mon, Jul 06, 2015 at 04:39:26PM -0700, Yinghai Lu wrote:
->make flags take IORESOURCE_UNSET | IORESOURCE_DISABLED instead.
->
->Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->---
-> drivers/pci/setup-bus.c | 52 +++++++++++++++++++++++++------------------------
-> drivers/pci/setup-res.c | 11 +++++++++++
-> 2 files changed, 38 insertions(+), 25 deletions(-)
->
->diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->index 9b27e15..e82655b 100644
->--- a/drivers/pci/setup-bus.c
->+++ b/drivers/pci/setup-bus.c
->@@ -255,7 +255,8 @@ static void pdev_check_resources(struct pci_dev *dev,
-> 		if (r->flags & IORESOURCE_PCI_FIXED)
-> 			continue;
->
->-		if (!(r->flags) || r->parent)
->+		if (!r->flags || r->parent ||
->+		    (r->flags & IORESOURCE_DISABLED))
-> 			continue;
->
-> 		r_align = __pci_resource_alignment(dev, r, realloc_head);
->@@ -296,13 +297,6 @@ static void __dev_check_resources(struct pci_dev *dev,
-> 	pdev_check_resources(dev, realloc_head, head);
-> }
->
->-static inline void reset_resource(struct resource *res)
->-{
->-	res->start = 0;
->-	res->end = 0;
->-	res->flags = 0;
->-}
->-
-> static void __sort_resources(struct list_head *head)
-> {
-> 	struct pci_dev_resource *res1, *tmp_res, *res2;
->@@ -387,7 +381,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
-> 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
-> 		res = add_res->res;
-> 		/* skip resource that has been reset */
->-		if (!res->flags)
->+		if (res->flags & IORESOURCE_DISABLED)
-> 			goto out;
->
-> 		/* skip this resource if not found in head list */
->@@ -405,7 +399,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
-> 			res->start = align;
-> 			res->end = res->start + add_size - 1;
-> 			if (pci_assign_resource(add_res->dev, idx))
->-				reset_resource(res);
->+				res->flags |= IORESOURCE_DISABLED;
-> 		} else {
-> 			/* could just assigned with alt, add difference ? */
-> 			if (r_size < add_res->must_size)
->@@ -454,7 +448,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
-> 		    pci_assign_resource(dev_res->dev, idx)) {
-> 			if (fail_head)
-> 				add_to_list(fail_head, dev_res->dev, res);
->-			reset_resource(res);
->+			res->flags |= IORESOURCE_DISABLED;
-> 		}
-> 	}
-> }
->@@ -672,7 +666,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
-> 			release_resource(dev_res->res);
-> 			/* put into fail list */
-> 			add_to_list(local_fail_head, dev_res->dev, res);
->-			reset_resource(res);
->+			res->flags |= IORESOURCE_DISABLED;
-> 		}
->
-> 		alt_res = res_to_dev_res(realloc_head, res);
->@@ -716,7 +710,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
-> 		res->end = res->start + dev_res->must_size - 1;
->
-> 		add_to_list(local_fail_head, fail_res->dev, res);
->-		reset_resource(res);
->+		res->flags |= IORESOURCE_DISABLED;
-> 	}
-> 	free_list(&local_alt_fail_head);
-> }
->@@ -872,7 +866,7 @@ static void pci_setup_bridge_io(struct pci_dev *bridge)
-> 	/* Set up the top and bottom of the PCI I/O segment for this bus. */
-> 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
-> 	pcibios_resource_to_bus(bridge->bus, &region, res);
->-	if (res->flags & IORESOURCE_IO) {
->+	if ((res->flags & IORESOURCE_IO) && !(res->flags & IORESOURCE_UNSET)) {
-> 		pci_read_config_word(bridge, PCI_IO_BASE, &l);
-> 		io_base_lo = (region.start >> 8) & io_mask;
-> 		io_limit_lo = (region.end >> 8) & io_mask;
->@@ -902,7 +896,8 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
-> 	/* Set up the top and bottom of the PCI Memory segment for this bus. */
-> 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
-> 	pcibios_resource_to_bus(bridge->bus, &region, res);
->-	if (res->flags & IORESOURCE_MEM) {
->+	if ((res->flags & IORESOURCE_MEM) &&
->+	    !(res->flags & IORESOURCE_UNSET)) {
-> 		l = (region.start >> 16) & 0xfff0;
-> 		l |= region.end & 0xfff00000;
-> 		dev_info(&bridge->dev, "  bridge window %pR\n", res);
->@@ -927,7 +922,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
-> 	bu = lu = 0;
-> 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
-> 	pcibios_resource_to_bus(bridge->bus, &region, res);
->-	if (res->flags & IORESOURCE_PREFETCH) {
->+	if ((res->flags & IORESOURCE_PREFETCH) &&
->+	    !(res->flags & IORESOURCE_UNSET)) {
-> 		l = (region.start >> 16) & 0xfff0;
-> 		l |= region.end & 0xfff00000;
-> 		if (res->flags & IORESOURCE_MEM_64) {
->@@ -1046,6 +1042,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->
-> 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-> 	b_res[1].flags |= IORESOURCE_MEM;
->+	b_res[1].flags &= ~IORESOURCE_DISABLED;
->
-> 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> 	if (!io) {
->@@ -1053,8 +1050,10 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
-> 		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-> 	}
->-	if (io)
->+	if (io) {
-> 		b_res[0].flags |= IORESOURCE_IO;
->+		b_res[0].flags &= ~IORESOURCE_DISABLED;
->+	}
->
-> 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
-> 	    disconnect boundary by one PCI data phase.
->@@ -1071,6 +1070,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
-> 	}
-> 	if (pmem) {
-> 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
->+		b_res[2].flags &= ~IORESOURCE_DISABLED;
-> 		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
-> 		    PCI_PREF_RANGE_TYPE_64) {
-> 			b_res[2].flags |= IORESOURCE_MEM_64;
->@@ -1214,8 +1214,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-> 			struct resource *r = &dev->resource[i];
-> 			unsigned long r_size;
->
->-			if (r->parent || !(r->flags & IORESOURCE_IO))
->+			if (r->parent || !(r->flags & IORESOURCE_IO) ||
->+			    (r->flags & IORESOURCE_DISABLED))
-> 				continue;
->+
-> 			r_size = resource_size(r);
->
-> 			if (r_size < 0x400)
->@@ -1244,7 +1246,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
-> 		if (b_res->start || b_res->end)
-> 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
-> 				 b_res, &bus->busn_res);
->-		b_res->flags = 0;
->+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
-> 		return;
-> 	}
->
->@@ -1513,7 +1515,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->
-> 			if (r->parent || ((flags & mask) != type &&
-> 					  (flags & mask) != type2 &&
->-					  (flags & mask) != type3))
->+					  (flags & mask) != type3) ||
->+			    (r->flags & IORESOURCE_DISABLED))
-> 				continue;
->
-> 			r_size = resource_size(r);
->@@ -1534,7 +1537,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
-> 			if (align > (1ULL<<37)) { /*128 Gb*/
-> 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
-> 					i, r, (unsigned long long) align);
->-				r->flags = 0;
->+				r->flags |= IORESOURCE_UNSET |
->+					    IORESOURCE_DISABLED;
-> 				continue;
-> 			}
->
->@@ -1622,7 +1626,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
-> 		if (b_res->start || b_res->end)
-> 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
-> 				 b_res, &bus->busn_res);
->-		b_res->flags = 0;
->+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
-> 		return 0;
-> 	}
-> 	b_res->start = min_align;
->@@ -2024,7 +2028,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
-> 		/* keep the old size */
-> 		r->end = resource_size(r) - 1;
-> 		r->start = 0;
->-		r->flags = 0;
->+		r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
->
-> 		/* avoiding touch the one without PREF */
-> 		if (type & IORESOURCE_PREFETCH)
->@@ -2284,7 +2288,6 @@ again:
-> 		res->end = fail_res->end;
-> 		res->flags = fail_res->flags;
-> 		if (fail_res->dev->subordinate) {
->-			res->flags = 0;
-> 			/* last or third times and later */
-> 			if (tried_times + 1 == pci_try_num ||
-> 			    tried_times + 1 > 2) {
->@@ -2372,7 +2375,6 @@ again:
-> 		res->end = fail_res->end;
-> 		res->flags = fail_res->flags;
-> 		if (fail_res->dev->subordinate) {
->-			res->flags = 0;
-> 			/* last time */
-> 			res->start = 0;
-> 			res->end = res->start - 1;
->diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
->index 26aedde..2a5cddc 100644
->--- a/drivers/pci/setup-res.c
->+++ b/drivers/pci/setup-res.c
->@@ -371,6 +371,17 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
-> 			continue;
->
-> 		if (r->flags & IORESOURCE_UNSET) {
->+			/* bridge BAR could be disabled one by one */
->+			if (dev->subordinate && i >= PCI_BRIDGE_RESOURCES &&
->+						i <= PCI_BRIDGE_RESOURCE_END)
->+				continue;
->+
->+#ifdef CONFIG_PCI_IOV
->+			/* SRIOV ? */
->+			if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
->+				continue;
->+#endif
->+
-> 			dev_err(&dev->dev, "can't enable device: BAR %d %pR not assigned\n",
-> 				i, r);
-> 			return -EINVAL;
->-- 
->1.8.4.5
-
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index c132bdd..2c4ceab 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -145,4 +145,12 @@ config PCIE_IPROC_BCMA
+ 	  Say Y here if you want to use the Broadcom iProc PCIe controller
+ 	  through the BCMA bus interface
+ 
++config PCI_HISI
++	depends on OF && ARM64
++	bool "HiSilicon SoC HIP05 PCIe controller"
++	select PCIEPORTBUS
++	select PCIE_DW
++	help
++	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 140d66f..ea1dbf2 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
++obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+new file mode 100644
+index 0000000..173561d
+--- /dev/null
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -0,0 +1,254 @@
++/*
++ * PCIe host controller driver for HiSilicon Hip05 SoC
++ *
++ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
++ *
++ * Author: Zhou Wang <wangzhou1@hisilicon.com>
++ *         Dacai Zhu <zhudacai@hisilicon.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#include <linux/interrupt.h>
++#include <linux/irqdomain.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_pci.h>
++#include <linux/platform_device.h>
++
++#include "pcie-designware.h"
++
++#define PCIE_SUBCTRL_MODE_REG                           0x2800
++#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
++#define PCIE_SLV_DBI_MODE                               0x0
++#define PCIE_SLV_SYSCTRL_MODE                           0x1
++#define PCIE_SLV_CONTENT_MODE                           0x2
++#define PCIE_SLV_MSI_ASID                               0x10
++#define PCIE_LTSSM_LINKUP_STATE                         0x11
++#define PCIE_LTSSM_STATE_MASK                           0x3F
++#define PCIE_MSI_ASID_ENABLE                            (0x1 << 12)
++#define PCIE_MSI_ASID_VALUE                             (0x1 << 16)
++#define PCIE_MSI_TRANS_ENABLE                           (0x1 << 12)
++#define PCIE_MSI_TRANS_REG                              0x1c8
++#define PCIE_MSI_LOW_ADDRESS                            0x1b4
++#define PCIE_MSI_HIGH_ADDRESS                           0x1c4
++#define PCIE_MSI_ADDRESS_VAL                            0xb7010040
++
++#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
++
++struct hisi_pcie {
++	void __iomem *subctrl_base;
++	void __iomem *reg_base;
++	struct msi_controller *msi;
++	u32 port_id;
++	struct pcie_port pp;
++};
++
++static inline void hisi_pcie_subctrl_writel(struct hisi_pcie *pcie,
++					    u32 val, u32 reg)
++{
++	writel(val, pcie->subctrl_base + reg);
++}
++
++static inline u32 hisi_pcie_subctrl_readl(struct hisi_pcie *pcie, u32 reg)
++{
++	return readl(pcie->subctrl_base + reg);
++}
++
++static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
++					u32 val, u32 reg)
++{
++	writel(val, pcie->reg_base + reg);
++}
++
++static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
++{
++	return readl(pcie->reg_base + reg);
++}
++
++/*
++ * Change mode to indicate the same reg_base to base of PCIe host configure
++ * registers, base of RC configure space or base of vmid/asid context table
++ */
++static void hisi_pcie_change_apb_mode(struct hisi_pcie *pcie, u32 mode)
++{
++	u32 val;
++	u32 bit_mask;
++	u32 bit_shift;
++	u32 port_id = pcie->port_id;
++	u32 reg = PCIE_SUBCTRL_MODE_REG + 0x100 * port_id;
++
++	if ((port_id == 1) || (port_id == 2)) {
++		bit_mask = 0xc;
++		bit_shift = 0x2;
++	} else {
++		bit_mask = 0x6;
++		bit_shift = 0x1;
++	}
++
++	val = hisi_pcie_subctrl_readl(pcie, reg);
++	val = (val & (~bit_mask)) | (mode << bit_shift);
++	hisi_pcie_subctrl_writel(pcie, val, reg);
++}
++
++/* Configure vmid/asid table in PCIe host */
++static void hisi_pcie_config_context(struct hisi_pcie *pcie)
++{
++	int i;
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_CONTENT_MODE);
++
++	/*
++	 * init vmid and asid tables for all PCIe devices as 0
++	 * vmid table: 0 ~ 0x3ff, asid table: 0x400 ~ 0x7ff
++	 */
++	for (i = 0; i < 0x800; i++)
++		hisi_pcie_apb_writel(pcie, 0x0, i * 4);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_SYSCTRL_MODE);
++
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_ADDRESS_VAL, PCIE_MSI_LOW_ADDRESS);
++	hisi_pcie_apb_writel(pcie, 0x0, PCIE_MSI_HIGH_ADDRESS);
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_ASID_ENABLE | PCIE_MSI_ASID_VALUE,
++			     PCIE_SLV_MSI_ASID);
++	hisi_pcie_apb_writel(pcie, PCIE_MSI_TRANS_ENABLE, PCIE_MSI_TRANS_REG);
++
++	hisi_pcie_change_apb_mode(pcie, PCIE_SLV_DBI_MODE);
++}
++
++static int hisi_pcie_link_up(struct pcie_port *pp)
++{
++	u32 val;
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	val = hisi_pcie_subctrl_readl(hisi_pcie, PCIE_SUBCTRL_SYS_STATE4_REG +
++				      0x100 * hisi_pcie->port_id);
++
++	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++}
++
++static
++int hisi_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
++{
++	struct device_node *msi_node;
++	struct irq_domain *irq_domain;
++	struct device_node *np = pp->dev->of_node;
++
++	msi_node = of_parse_phandle(np, "msi-parent", 0);
++	if (!msi_node) {
++		dev_err(pp->dev, "failed to find msi-parent\n");
++		return -ENODEV;
++	}
++
++	irq_domain = irq_find_host(msi_node);
++	if (!irq_domain) {
++		dev_err(pp->dev, "failed to find irq domain\n");
++		return -ENODEV;
++	}
++
++	pp->irq_domain = irq_domain;
++
++	return 0;
++}
++
++static struct pcie_host_ops hisi_pcie_host_ops = {
++	.link_up = hisi_pcie_link_up,
++	.msi_host_init = hisi_pcie_msi_host_init,
++};
++
++static int __init hisi_add_pcie_port(struct pcie_port *pp,
++				     struct platform_device *pdev)
++{
++	int ret;
++	u32 port_id;
++	struct resource busn;
++	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
++
++	if (of_property_read_u32(pdev->dev.of_node, "port-id", &port_id)) {
++		dev_err(&pdev->dev, "failed to read port-id\n");
++		return -EINVAL;
++	}
++	if (port_id > 3) {
++		dev_err(&pdev->dev, "Invalid port-id: %d\n", port_id);
++		return -EINVAL;
++	}
++
++	hisi_pcie->port_id = port_id;
++
++	if (of_pci_parse_bus_range(pdev->dev.of_node, &busn)) {
++		dev_err(&pdev->dev, "failed to parse bus-ranges\n");
++		return -EINVAL;
++	}
++
++	pp->root_bus_nr = busn.start;
++	pp->ops = &hisi_pcie_host_ops;
++
++	hisi_pcie_config_context(hisi_pcie);
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int __init hisi_pcie_probe(struct platform_device *pdev)
++{
++	struct hisi_pcie *hisi_pcie;
++	struct pcie_port *pp;
++	struct resource *reg;
++	struct resource *subctrl;
++	int ret;
++
++	hisi_pcie = devm_kzalloc(&pdev->dev, sizeof(*hisi_pcie), GFP_KERNEL);
++	if (!hisi_pcie)
++		return -ENOMEM;
++
++	pp = &hisi_pcie->pp;
++	pp->dev = &pdev->dev;
++
++	subctrl = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subctrl");
++	hisi_pcie->subctrl_base = devm_ioremap_nocache(&pdev->dev,
++					subctrl->start, resource_size(subctrl));
++	if (IS_ERR(hisi_pcie->subctrl_base)) {
++		dev_err(pp->dev, "cannot get subctrl base\n");
++		return PTR_ERR(hisi_pcie->subctrl_base);
++	}
++
++	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
++	hisi_pcie->reg_base = devm_ioremap_resource(&pdev->dev, reg);
++	if (IS_ERR(hisi_pcie->reg_base)) {
++		dev_err(pp->dev, "cannot get rc_dbi base\n");
++		return PTR_ERR(hisi_pcie->reg_base);
++	}
++
++	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
++
++	ret = hisi_add_pcie_port(pp, pdev);
++	if (ret)
++		return ret;
++
++	platform_set_drvdata(pdev, hisi_pcie);
++
++	return 0;
++}
++
++static const struct of_device_id hisi_pcie_of_match[] = {
++	{.compatible = "hisilicon,hip05-pcie",},
++	{},
++};
++
++MODULE_DEVICE_TABLE(of, hisi_pcie_of_match);
++
++static struct platform_driver hisi_pcie_driver = {
++	.probe  = hisi_pcie_probe,
++	.driver = {
++		   .name = "hisi-pcie",
++		   .of_match_table = hisi_pcie_of_match,
++	},
++};
++
++module_platform_driver(hisi_pcie_driver);
 -- 
-Richard Yang
-Help you, Help me
+1.9.1
 
