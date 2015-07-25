@@ -1,79 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36110 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932255AbbG0XbL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:31:11 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 18/51] PCI: Move comment to pci_need_to_release()
-Date: Mon, 27 Jul 2015 16:29:36 -0700
-Message-Id: <1438039809-24957-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:35408 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754883AbbGYIZK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 Jul 2015 04:25:10 -0400
+Received: by pabkd10 with SMTP id kd10so25564481pab.2
+        for <linux-pci@vger.kernel.org>; Sat, 25 Jul 2015 01:25:09 -0700 (PDT)
+Message-ID: <55B347DC.2090104@linaro.org>
+Date: Sat, 25 Jul 2015 16:25:00 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
+MIME-Version: 1.0
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+CC: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH v5 07/19] PCI/MSI: Let pci_msi_get_domain use struct device's
+ msi_domain
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com> <1437643598-19795-8-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1437643598-19795-8-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move comment from caller to callee, as we will have one new caller
-for alt_size support later.
+On 07/23/2015 05:26 PM, Marc Zyngier wrote:
+> Now that we can easily find which MSI domain a PCI device is
+> using, use dev_get_msi_domain as a way to retrieve the information.
+>
+> The original code is still used as a fallback.
+>
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>   drivers/pci/msi.c | 14 ++++++++------
+>   1 file changed, 8 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index ef4ec6e..da3c607 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -39,14 +39,16 @@ struct irq_domain * __weak arch_get_pci_msi_domain(struct pci_dev *dev)
+>
+>   static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
+>   {
+> -	struct irq_domain *domain = NULL;
+> +	struct irq_domain *domain;
+> +
+> +	domain = dev_get_msi_domain(&dev->dev);
+> +	if (domain)
+> +		return domain;
+>
+> -	if (dev->bus->msi)
+> -		domain = dev->bus->msi->domain;
+> -	if (!domain)
+> -		domain = arch_get_pci_msi_domain(dev);
+> +	if (dev->bus->msi && (domain = dev->bus->msi->domain))
+> +		return domain;
+>
+> -	return domain;
+> +	return arch_get_pci_msi_domain(dev);
+>   }
+>
+>   static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 2e3d00b..f8b9a24 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -415,6 +415,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
- 
- static bool pci_need_to_release(unsigned long mask, struct resource *res)
- {
-+	/*
-+	 * Separate three resource type checking if we need to release
-+	 * assigned resource.
-+	 *	1. if there is io port assign fail, will release assigned
-+	 *	   io port.
-+	 *	2. if there is pref mmio assign fail, release assigned
-+	 *	   pref mmio.
-+	 *	   if assigned pref mmio's parent is non-pref mmio and there
-+	 *	   is non-pref mmio assign fail, will release that assigned
-+	 *	   pref mmio.
-+	 *	3. if there is non-pref mmio assign fail or pref mmio
-+	 *	   assigned fail, will release assigned non-pref mmio.
-+	 */
-+
- 	if (res->flags & IORESOURCE_IO)
- 		return !!(mask & IORESOURCE_IO);
- 
-@@ -471,19 +485,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *  if could do that, could get out early.
- 	 *  if could not do that, we still try to assign requested at first,
- 	 *    then try to reassign add_size for some resources.
--	 *
--	 * Separate three resource type checking if we need to release
--	 * assigned resource after requested + add_size try.
--	 *	1. if there is io port assign fail, will release assigned
--	 *	   io port.
--	 *	2. if there is pref mmio assign fail, release assigned
--	 *	   pref mmio.
--	 *	   if assigned pref mmio's parent is non-pref mmio and there
--	 *	   is non-pref mmio assign fail, will release that assigned
--	 *	   pref mmio.
--	 *	3. if there is non-pref mmio assign fail or pref mmio
--	 *	   assigned fail, will release assigned non-pref mmio.
- 	 */
-+
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--- 
-1.8.4.5
-
+Thanks
+Hanjun
