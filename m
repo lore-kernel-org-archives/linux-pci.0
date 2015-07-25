@@ -1,102 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:52139 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753147AbbGWOtk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 10:49:40 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:42338 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753408AbbGYDPe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 23:15:34 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Cc: linux-pci@vger.kernel.org, patchwork-lst@pengutronix.de
-Subject: [PATCH v2 2/2] PCI: designware: implement multivector MSI irq setup
-Date: Thu, 23 Jul 2015 16:49:36 +0200
-Message-Id: <1437662976-27188-2-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1437662976-27188-1-git-send-email-l.stach@pengutronix.de>
-References: <1437662976-27188-1-git-send-email-l.stach@pengutronix.de>
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
+	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
+	<Liviu.Dudau@arm.com>, <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v5 4/5] Documentation: DT: Add HiSilicon PCIe host binding
+Date: Sat, 25 Jul 2015 11:21:25 +0800
+Message-ID: <1437794486-21134-5-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allows to set up and use multiple MSI irqs per device.
+This patch adds related DTS binding document for HiSilicon PCIe host driver.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 ---
-The ifdef is needed to avoid a compile error on
-!CONFIG_PCI_MSI, as msi_list is only part of pci_dev
-when the kernel is compiled with MSI support.
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
 
-v2: move ifdeffery inside single function
----
- drivers/pci/host/pcie-designware.c | 43 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be7181e..52c600327805 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- 	}
- 
- 	*pos = pos0;
-+	desc->nvec_used = no_irqs;
-+	desc->msi_attrib.multiple = order_base_2(no_irqs);
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+new file mode 100644
+index 0000000..2afc9d1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -0,0 +1,46 @@
++HiSilicon PCIe host bridge DT description
 +
- 	return irq;
- 
- no_valid_irq:
-@@ -323,6 +326,45 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
- 	return 0;
- }
- 
-+static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
-+			     int nvec, int type)
-+{
-+#ifdef CONFIG_PCI_MSI
-+	int irq, pos;
-+	struct msi_desc *desc;
-+	struct msi_msg msg;
-+	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
++HiSilicon PCIe host controller is based on Designware PCI core.
++It shares common functions with PCIe Designware core driver and inherits
++common properties defined in
++Documentation/devicetree/bindings/pci/designware-pci.txt.
 +
-+	/* MSI-X interrupts are not supported */
-+	if (type == PCI_CAP_ID_MSIX)
-+		return -EINVAL;
++Additional properties are described here:
 +
-+	WARN_ON(!list_is_singular(&pdev->msi_list));
-+	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
++Required properties:
++- compatible: Should contain "hisilicon,hip05-pcie".
++- reg: Should contain rc_dbi, subctrl, config registers location and length.
++- reg-names: Must include the following entries:
++  "rc_dbi": controller configuration registers;
++  "subctrl": whole PCIe hosts configuration registers;
++  "config": PCIe configuration space registers.
++- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
++- port-id: Should be 0, 1, 2 or 3.
 +
-+	irq = assign_irq(nvec, desc, &pos);
-+	if (irq < 0)
-+		return irq;
++Optional properties:
++- status: Either "ok" or "disabled".
++- dma-coherent: Present if DMA operations are coherent.
 +
-+	if (pp->ops->get_msi_addr)
-+		msg.address_lo = pp->ops->get_msi_addr(pp);
-+	else
-+		msg.address_lo = virt_to_phys((void *)pp->msi_data);
-+	msg.address_hi = 0x0;
-+
-+	if (pp->ops->get_msi_data)
-+		msg.data = pp->ops->get_msi_data(pp, pos);
-+	else
-+		msg.data = pos;
-+
-+	pci_write_msi_msg(irq, &msg);
-+
-+	return 0;
-+#else
-+	return -ENOSYS;
-+#endif
-+}
-+
- static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
- {
- 	struct irq_data *data = irq_get_irq_data(irq);
-@@ -334,6 +376,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
- 
- static struct msi_controller dw_pcie_msi_chip = {
- 	.setup_irq = dw_msi_setup_irq,
-+	.setup_irqs = dw_msi_setup_irqs,
- 	.teardown_irq = dw_msi_teardown_irq,
- };
- 
++Example:
++	pcie@0xb0080000 {
++		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
++		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
++		      <0x220 0x00000000 0 0x2000>;
++		reg-names = "rc_dbi", "subctrl", "config";
++		bus-range = <0  15>;
++		msi-parent = <&its_pcie>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		dma-coherent;
++		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
++		num-lanes = <8>;
++		port-id = <1>;
++		#interrupts-cells = <1>;
++		interrupts-map-mask = <0xf800 0 0 7>;
++		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
++				  0x0 0 0 2 &mbigen_pcie 2 11
++				  0x0 0 0 3 &mbigen_pcie 3 12
++				  0x0 0 0 4 &mbigen_pcie 4 13>;
++		status = "ok";
++	};
 -- 
-2.1.4
+1.9.1
 
