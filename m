@@ -1,76 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f175.google.com ([209.85.160.175]:36221 "EHLO
-	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753185AbbG1R6v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 13:58:51 -0400
-Received: by ykay190 with SMTP id y190so102142944yka.3
-        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2015 10:58:51 -0700 (PDT)
-Date: Tue, 28 Jul 2015 13:58:48 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Zhang Rui <rui.zhang@intel.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, chuansheng.liu@intel.com,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Aaron Lu <aaron.lu@intel.com>, MyMailClone@t-online.de,
-	mister.freeman@laposte.net, "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-Message-ID: <20150728175848.GI5322@mtj.duckdns.org>
-References: <1438047747.1856.12.camel@rzhang1-mobl4>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:42333 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753357AbbGYDPd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 23:15:33 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
+	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
+	<Liviu.Dudau@arm.com>, <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<liguozhu@hisilicon.com>
+Subject: [PATCH v5 1/5] ARM/PCI: remove align_resource in pci_sys_data
+Date: Sat, 25 Jul 2015 11:21:22 +0800
+Message-ID: <1437794486-21134-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438047747.1856.12.camel@rzhang1-mobl4>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 28, 2015 at 09:42:27AM +0800, Zhang Rui wrote:
-> From 57edba9c677e47354846db951014dc4d5b13ce54 Mon Sep 17 00:00:00 2001
-> From: Zhang Rui <rui.zhang@intel.com>
-> Date: Sun, 26 Jul 2015 14:15:36 +0800
-> Subject: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-> 
-> In https://bugzilla.kernel.org/show_bug.cgi?id=81551,
-> we found that Jmicron chip 361/363 is broken after resume if async noirq
-> (76569faa62 (PM / sleep: Asynchronous threads for resume_noirq)) is supported,
-> thus commit e6b7e41cdd (ata: Disabling the async PM for JMicron chip 363/361)
-> is introduced to fix this problem.
-> But then, we found that Jmicron chip 368 also has this problem, and it is decided
-> to disable the pm async feature for all the Jmicron chips.
-> 
-> But how to fix this was discussed in the mailing list for some time.
-> After some investigation, we believe that a proper fix is to disable
-> the async PM in PCI instead of ata driver, because, on this platform,
-> pci_resume_noirq() of IDE controller must happen after pci_resume_noirq()
-> of AHCI controller. But as .resume_noirq() of the pata_jmicron driver is
-> no-op, this suggests that it is the PCI common actions, aka,
-> pci_pm_default_resume_early(), have the dependency.
-> To fix this, using device_pm_wait_for_dev() in pata_jmicron driver can not
-> solve the dependency because pci_pm_default_resume_early() is invoked before
-> driver callback being invoked, plus, as it is the PCI common actions that
-> have the dependency, it is reasonable to fix it in PCI bus code,
-> rather than driver code.
-> 
-> This patch is made based on the patch from Liu Chuansheng at
-> https://lkml.org/lkml/2014/12/5/74
-> it reverts commit e6b7e41cdd ("ata: Disabling the async PM for JMicron
-> chip 363/361"), and introduces a PCI quirk to disable async PM for Jmicron
-> chips.
-> 
-> Reference: https://bugzilla.kernel.org/show_bug.cgi?id=81551
-> Tested-by: Jay <MyMailClone@t-online.de>
-> Tested-by: Barto <mister.freeman@laposte.net>
-> Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-Acked-by: Tejun Heo <tj@kernel.org>
+This patch is needed in order to unify the PCIe designware framework for ARM and
+ARM64 architectures. In the PCIe designware unification process we are calling
+pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+cause a problem with the function pcibios_align_resource(); in fact this will
+cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+"struct pcie_port*" pointer.
 
->  /*
-> + * For JMicron chips, we need to disable the async_suspend method, otherwise
-> + * they will hit the power-on issue when doing device resume, add one quick
-> + * solution to disable the async_suspend method.
-> + */
+This patch solves the issue by removing "align_resource" from "pci_sys_data"
+struct and defining a static global function pointer in "bios32.c"
 
-Maybe add a link to the bug report and/or discussion thread?
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ arch/arm/include/asm/mach/pci.h |  5 -----
+ arch/arm/kernel/bios32.c        | 12 ++++++++----
+ 2 files changed, 8 insertions(+), 9 deletions(-)
 
-Thanks.
-
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 28b9bb3..8a4e4de 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -58,11 +58,6 @@ struct pci_sys_data {
+ 					/* IRQ mapping				*/
+ 	int		(*map_irq)(const struct pci_dev *, u8, u8);
+ 					/* Resource alignement requirements	*/
+-	resource_size_t (*align_resource)(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align);
+ 	void		*private_data;	/* platform controller private data	*/
+ };
+ 
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index fcbbbb1..4cdc64d 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -17,6 +17,11 @@
+ #include <asm/mach/pci.h>
+ 
+ static int debug_pci;
++static resource_size_t (*align_resource)(struct pci_dev *dev,
++		  const struct resource *res,
++		  resource_size_t start,
++		  resource_size_t size,
++		  resource_size_t align) = NULL;
+ 
+ #ifdef CONFIG_PCI_MSI
+ struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+@@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+-		sys->align_resource = hw->align_resource;
++		align_resource = hw->align_resource;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		if (hw->private_data)
+@@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
+ 	struct pci_dev *dev = data;
+-	struct pci_sys_data *sys = dev->sysdata;
+ 	resource_size_t start = res->start;
+ 
+ 	if (res->flags & IORESOURCE_IO && start & 0x300)
+@@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
+-	if (sys->align_resource)
+-		return sys->align_resource(dev, res, start, size, align);
++	if (align_resource)
++		return align_resource(dev, res, start, size, align);
+ 
+ 	return start;
+ }
 -- 
-tejun
+1.9.1
+
