@@ -1,272 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>
-Subject: [PATCH v4 4/4] arm64: dts: Add Broadcom North Star 2 support
-Date: Tue, 21 Jul 2015 18:29:43 -0700
-Message-ID: <1437528583-855-5-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1437528583-855-1-git-send-email-rjui@broadcom.com>
-References: <1437528583-855-1-git-send-email-rjui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:36682 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753592AbbGYIM5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 25 Jul 2015 04:12:57 -0400
+Received: by pachj5 with SMTP id hj5so25411672pac.3
+        for <linux-pci@vger.kernel.org>; Sat, 25 Jul 2015 01:12:56 -0700 (PDT)
+Message-ID: <55B34500.50805@linaro.org>
+Date: Sat, 25 Jul 2015 16:12:48 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-pci@vger.kernel.org, Duc Dang <dhdang@apm.com>,
+	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
+	linux-arm-kernel@lists.infradead.org, Ma Jun <majun258@huawei.com>
+Subject: Re: [PATCH v5 03/19] device core: Introduce per-device MSI domain
+ pointer
+References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com> <1437643598-19795-4-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1437643598-19795-4-git-send-email-marc.zyngier@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Broadcom NS2 device tree binding document. Also add initial device
-tree dtsi for Broadcom North Star 2 (NS2) SoC and board support for NS2
-SVK board
+On 07/23/2015 05:26 PM, Marc Zyngier wrote:
+> As MSI-type features are creeping into non-PCI devices, it is
+> starting to make sense to give our struct device some form of
+> support for this, by allowing a pointer to an MSI irq domain to
+> be set/retrieved.
+>
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>   include/linux/device.h | 20 ++++++++++++++++++++
+>   1 file changed, 20 insertions(+)
+>
+> diff --git a/include/linux/device.h b/include/linux/device.h
+> index 22227e7..7c49b48 100644
+> --- a/include/linux/device.h
+> +++ b/include/linux/device.h
+> @@ -714,6 +714,7 @@ struct device_dma_parameters {
+>    * @pins:	For device pin management.
+>    *		See Documentation/pinctrl.txt for details.
+>    * @msi_list:	Hosts MSI descriptors
+> + * @msi_domain: The generic MSI domain this device is using.
+>    * @numa_node:	NUMA node this device is close to.
+>    * @dma_mask:	Dma mask (if dma'ble device).
+>    * @coherent_dma_mask: Like dma_mask, but for alloc_coherent mapping as not all
+> @@ -774,6 +775,9 @@ struct device {
+>   	struct dev_pm_info	power;
+>   	struct dev_pm_domain	*pm_domain;
+>
+> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+> +	struct irq_domain	*msi_domain; /* MSI domain device uses */
+> +#endif
+>   #ifdef CONFIG_PINCTRL
+>   	struct dev_pin_info	*pins;
+>   #endif
+> @@ -864,6 +868,22 @@ static inline void set_dev_node(struct device *dev, int node)
+>   }
+>   #endif
+>
+> +static inline struct irq_domain *dev_get_msi_domain(const struct device *dev)
+> +{
+> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+> +	return dev->msi_domain;
+> +#else
+> +	return NULL;
+> +#endif
+> +}
+> +
+> +static inline void dev_set_msi_domain(struct device *dev, struct irq_domain *d)
+> +{
+> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+> +	dev->msi_domain = d;
+> +#endif
+> +}
+> +
+>   static inline void *dev_get_drvdata(const struct device *dev)
+>   {
+>   	return dev->driver_data;
 
-Signed-off-by: Jon Mason <jonmason@broadcom.com>
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
----
- Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
- arch/arm64/boot/dts/Makefile                      |    1 +
- arch/arm64/boot/dts/broadcom/Makefile             |    5 +
- arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   59 +++++++++++
- arch/arm64/boot/dts/broadcom/ns2.dtsi             |  118 +++++++++++++++++++++
- 5 files changed, 192 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
- create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
 
-diff --git a/Documentation/devicetree/bindings/arm/bcm/ns2.txt b/Documentation/devicetree/bindings/arm/bcm/ns2.txt
-new file mode 100644
-index 0000000..35f056f
---- /dev/null
-+++ b/Documentation/devicetree/bindings/arm/bcm/ns2.txt
-@@ -0,0 +1,9 @@
-+Broadcom North Star 2 (NS2) device tree bindings
-+------------------------------------------------
-+
-+Boards with NS2 shall have the following properties:
-+
-+Required root node property:
-+
-+NS2 SVK board
-+compatible = "brcm,ns2-svk", "brcm,ns2";
-diff --git a/arch/arm64/boot/dts/Makefile b/arch/arm64/boot/dts/Makefile
-index 38913be..9f95941 100644
---- a/arch/arm64/boot/dts/Makefile
-+++ b/arch/arm64/boot/dts/Makefile
-@@ -1,6 +1,7 @@
- dts-dirs += amd
- dts-dirs += apm
- dts-dirs += arm
-+dts-dirs += broadcom
- dts-dirs += cavium
- dts-dirs += exynos
- dts-dirs += freescale
-diff --git a/arch/arm64/boot/dts/broadcom/Makefile b/arch/arm64/boot/dts/broadcom/Makefile
-new file mode 100644
-index 0000000..e21fe66
---- /dev/null
-+++ b/arch/arm64/boot/dts/broadcom/Makefile
-@@ -0,0 +1,5 @@
-+dtb-$(CONFIG_ARCH_BCM_IPROC) += ns2-svk.dtb
-+
-+always		:= $(dtb-y)
-+subdir-y	:= $(dts-dirs)
-+clean-files	:= *.dtb
-diff --git a/arch/arm64/boot/dts/broadcom/ns2-svk.dts b/arch/arm64/boot/dts/broadcom/ns2-svk.dts
-new file mode 100644
-index 0000000..244baf8
---- /dev/null
-+++ b/arch/arm64/boot/dts/broadcom/ns2-svk.dts
-@@ -0,0 +1,59 @@
-+/*
-+ *  BSD LICENSE
-+ *
-+ *  Copyright(c) 2015 Broadcom Corporation.  All rights reserved.
-+ *
-+ *  Redistribution and use in source and binary forms, with or without
-+ *  modification, are permitted provided that the following conditions
-+ *  are met:
-+ *
-+ *    * Redistributions of source code must retain the above copyright
-+ *      notice, this list of conditions and the following disclaimer.
-+ *    * Redistributions in binary form must reproduce the above copyright
-+ *      notice, this list of conditions and the following disclaimer in
-+ *      the documentation and/or other materials provided with the
-+ *      distribution.
-+ *    * Neither the name of Broadcom Corporation nor the names of its
-+ *      contributors may be used to endorse or promote products derived
-+ *      from this software without specific prior written permission.
-+ *
-+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+/dts-v1/;
-+
-+#include "ns2.dtsi"
-+
-+/ {
-+	model = "Broadcom NS2 SVK";
-+	compatible = "brcm,ns2-svk", "brcm,ns2";
-+
-+	aliases {
-+		serial0 = &uart3;
-+	};
-+
-+	chosen {
-+		stdout-path = "serial0:115200n8";
-+	};
-+
-+	memory {
-+		device_type = "memory";
-+		reg = <0x000000000 0x80000000 0x00000000 0x40000000>;
-+	};
-+
-+	soc: soc {
-+		uart3: serial@66130000 {
-+			status = "ok";
-+		};
-+	};
-+};
-diff --git a/arch/arm64/boot/dts/broadcom/ns2.dtsi b/arch/arm64/boot/dts/broadcom/ns2.dtsi
-new file mode 100644
-index 0000000..3c92d92
---- /dev/null
-+++ b/arch/arm64/boot/dts/broadcom/ns2.dtsi
-@@ -0,0 +1,118 @@
-+/*
-+ *  BSD LICENSE
-+ *
-+ *  Copyright(c) 2015 Broadcom Corporation.  All rights reserved.
-+ *
-+ *  Redistribution and use in source and binary forms, with or without
-+ *  modification, are permitted provided that the following conditions
-+ *  are met:
-+ *
-+ *    * Redistributions of source code must retain the above copyright
-+ *      notice, this list of conditions and the following disclaimer.
-+ *    * Redistributions in binary form must reproduce the above copyright
-+ *      notice, this list of conditions and the following disclaimer in
-+ *      the documentation and/or other materials provided with the
-+ *      distribution.
-+ *    * Neither the name of Broadcom Corporation nor the names of its
-+ *      contributors may be used to endorse or promote products derived
-+ *      from this software without specific prior written permission.
-+ *
-+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ *  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#include <dt-bindings/interrupt-controller/arm-gic.h>
-+
-+/memreserve/ 0x84b00000 0x00000008;
-+
-+/ {
-+	compatible = "brcm,ns2";
-+	interrupt-parent = <&gic>;
-+	#address-cells = <2>;
-+	#size-cells = <2>;
-+
-+	cpus {
-+		#address-cells = <2>;
-+		#size-cells = <0>;
-+
-+		cpu@0 {
-+			device_type = "cpu";
-+			compatible = "arm,cortex-a57", "arm,armv8";
-+			reg = <0 0>;
-+			enable-method = "spin-table";
-+			cpu-release-addr = <0 0x84b00000>;
-+		};
-+
-+		cpu@1 {
-+			device_type = "cpu";
-+			compatible = "arm,cortex-a57", "arm,armv8";
-+			reg = <0 1>;
-+			enable-method = "spin-table";
-+			cpu-release-addr = <0 0x84b00000>;
-+		};
-+
-+		cpu@2 {
-+			device_type = "cpu";
-+			compatible = "arm,cortex-a57", "arm,armv8";
-+			reg = <0 2>;
-+			enable-method = "spin-table";
-+			cpu-release-addr = <0 0x84b00000>;
-+		};
-+
-+		cpu@3 {
-+			device_type = "cpu";
-+			compatible = "arm,cortex-a57", "arm,armv8";
-+			reg = <0 3>;
-+			enable-method = "spin-table";
-+			cpu-release-addr = <0 0x84b00000>;
-+		};
-+	};
-+
-+	timer {
-+		compatible = "arm,armv8-timer";
-+		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_RAW(0xff) |
-+			      IRQ_TYPE_EDGE_RISING)>,
-+			     <GIC_PPI 14 (GIC_CPU_MASK_RAW(0xff) |
-+			      IRQ_TYPE_EDGE_RISING)>,
-+			     <GIC_PPI 11 (GIC_CPU_MASK_RAW(0xff) |
-+			      IRQ_TYPE_EDGE_RISING)>,
-+			     <GIC_PPI 10 (GIC_CPU_MASK_RAW(0xff) |
-+			      IRQ_TYPE_EDGE_RISING)>;
-+	};
-+
-+	soc: soc {
-+		compatible = "simple-bus";
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		ranges = <0 0 0 0xffffffff>;
-+
-+		gic: interrupt-controller@65210000 {
-+			compatible = "arm,gic-400";
-+			#interrupt-cells = <3>;
-+			interrupt-controller;
-+			reg = <0x65210000 0x1000>,
-+			      <0x65220000 0x1000>,
-+			      <0x65240000 0x2000>,
-+			      <0x65260000 0x1000>;
-+		};
-+
-+		uart3: serial@66130000 {
-+			compatible = "snps,dw-apb-uart";
-+			reg = <0x66130000 0x100>;
-+			interrupts = <GIC_SPI 393 IRQ_TYPE_LEVEL_HIGH>;
-+			reg-shift = <2>;
-+			reg-io-width = <4>;
-+			clock-frequency = <23961600>;
-+			status = "disabled";
-+		};
-+	};
-+};
--- 
-1.7.9.5
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
+Thanks
+Hanjun
