@@ -1,160 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:36733 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642AbbG2P4g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 11:56:36 -0400
-Received: by oibn4 with SMTP id n4so7353866oib.3
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 08:56:36 -0700 (PDT)
-Date: Wed, 29 Jul 2015 10:56:31 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: David Howells <dhowells@redhat.com>,
-	Koichi Yasutake <yasutake.koichi@jp.panasonic.com>
-Cc: linux-pci@vger.kernel.org, linux-am33-list@redhat.com,
-	linux-kernel@vger.kernel.org, linux-sh@vger.kernel.org
-Subject: Re: [PATCH] PCI: Remove unused "pci_probe" flags
-Message-ID: <20150729155631.GB31170@google.com>
-References: <20150727221228.24133.16599.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mout3.freenet.de ([195.4.92.93]:41651 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755012AbbGYSZn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 25 Jul 2015 14:25:43 -0400
+Subject: Re: Since Linux 4.1: A lot of AMD-Vi IO_PAGE_FAULTs
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <55AE5F84.5020204@01019freenet.de>
+ <1437492886.1391.847.camel@redhat.com> <20150721155635.GE10969@8bytes.org>
+ <55AE7147.7070902@maya.org> <20150721163517.GG10969@8bytes.org>
+ <55B1BDA3.3030507@maya.org>
+ <CAErSpo666MBxpDe+uPvfVc7LPJsJQsVTusBhHygtwbou5GGj1w@mail.gmail.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	iommu <iommu@lists.linux-foundation.org>,
+	Tejun Heo <tj@kernel.org>,
+	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55B3D3F3.5020601@maya.org>
+Date: Sat, 25 Jul 2015 20:22:43 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150727221228.24133.16599.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <CAErSpo666MBxpDe+uPvfVc7LPJsJQsVTusBhHygtwbou5GGj1w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 27, 2015 at 05:12:29PM -0500, Bjorn Helgaas wrote:
-> The following flags are only used on x86, but they got copied to FR-V,
-> MN10300, and SuperH:
+On 07/24/2015 at 06:15 PM, Bjorn Helgaas wrote:
+> [+cc Tejun, linux-ide]
 > 
->   PCI_PROBE_BIOS
->   PCI_PROBE_CONF1
->   PCI_PROBE_CONF2
->   PCI_ASSIGN_ROMS
->   PCI_NO_CHECKS
->   PCI_BIOS_IRQ_SCAN
->   PCI_ASSIGN_ALL_BUSSES
+> On Thu, Jul 23, 2015 at 11:22 PM, Andreas Hartmann
+> <andihartmann@freenet.de> wrote:
+>> On Tue, Jul 21, 2015 at 06:35PM +0200, Joerg Roedel wrote:
+>>> On Tue, Jul 21, 2015 at 06:20:23PM +0200, Andreas Hartmann wrote:
+>>>> [   48.193901] <6>[fglrx] Firegl kernel thread PID: 1840
+>>>> [   48.193985] <6>[fglrx] Firegl kernel thread PID: 1841
+>>>> [   48.194063] <6>[fglrx] Firegl kernel thread PID: 1842
+>>>> [   48.194172] <6>[fglrx] IRQ 28 Enabled
+>>>> [   48.261580] <6>[fglrx] Reserved FB block: Shared offset:0, size:1000000
+>>>> [   48.261586] <6>[fglrx] Reserved FB block: Unshared offset:f7b4000, size:4000
+>>>> [   48.261587] <6>[fglrx] Reserved FB block: Unshared offset:f7b8000, size:548000
+>>>> [   48.261588] <6>[fglrx] Reserved FB block: Unshared offset:3fff3000, size:d000
+>>>
+>>> From a first glance it doesn't look like an IOMMU driver issue, because
+>>> the addresses where the faults happen are not from the AMD IOMMU driver.
+>>>
+>>> And you have proprietary closed-source drivers loaded, can you reproduce
+>>> the issue without fglrx?
+>>
+>> Yes. I attached this one.
+>>
+>> Meanwhile I tested with 4.0.9, too. I wasn't able to reproduce the
+>> problem with this kernel even after lots of reboots (the problem w/ 4.1
+>> usually comes up during boot process (but not only - it can be seen
+>> after boot process, too)).
+>>
+>> The problem always is, that there are errors w/ one of the sata discs
+>> and at the same time, IO_PAGE_FAULT errors are rising as described before:
+>>
+>> [  152.533708] ata3.00: failed command: READ FPDMA QUEUED
+>> [  152.538102] ata3.00: failed command: READ FPDMA QUEUED
+>> [  152.539862] ata3.00: failed command: READ FPDMA QUEUED
+>> [  152.541778] ata3.00: failed command: WRITE FPDMA QUEUED
+>> [  152.543861] ata3.00: failed command: WRITE FPDMA QUEUED
+>>
+>> [ 5818.068050] ata2.00: failed command: WRITE FPDMA QUEUED
+>> [ 5818.068059] ata2.00: failed command: WRITE FPDMA QUEUED
+>>
+>> I compared dmesg from 4.1 w/ 4.0 and I realized the following *missing*
+>> entries in 4.1:
+>>
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x01] lapic_id[0x01] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x02] lapic_id[0x02] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x03] lapic_id[0x03] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x04] lapic_id[0x04] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x05] lapic_id[0x05] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x06] lapic_id[0x06] enabled)
+>> [    0.000000] ACPI: LAPIC (acpi_id[0x07] lapic_id[0x07] enabled)
+>>
+>>
+>> What does this mean? Is there missing some part of the acpi initialization?
+>>
+>>
+>> Thanks for any hint as Linux 4.1 is completely unusable here with these
+>> errors.
 > 
-> FR-V and MN10300 do test for PCI_ASSIGN_ROMS, but they never set it, so
-> it's dead code.
-> 
-> Remove the unused flags above.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> This looks more like an AHCI problem than an IOMMU or PCI problem.
+> Seems like the device has the wrong idea about where its DMA buffers
+> are.  Maybe something scribbled on its command list?
 
-Applied to pci/misc for v4.3.
+During further tests I detected, that the problem already occurs in
+Linux 4.0. I couldn't see it in 3.19.8 until now.
 
-> ---
->  arch/frv/mb93090-mb00/pci-frv.c         |    8 --------
->  arch/frv/mb93090-mb00/pci-frv.h         |    8 --------
->  arch/mn10300/unit-asb2305/pci-asb2305.c |   22 ++++++++++------------
->  arch/mn10300/unit-asb2305/pci-asb2305.h |    7 -------
->  arch/sh/drivers/pci/pci-sh4.h           |    8 --------
->  5 files changed, 10 insertions(+), 43 deletions(-)
+
+I tried hard to bisect it. I got stuck 2 times of 3 here (the third
+round, I got stuck later on - unfortunately, sometimes it is working :-( ):
+
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=be5e6616dd74e17fdd8e16ca015cfef94d49b467
+
+Does this help?
+
+
+> From your attachments:
 > 
-> diff --git a/arch/frv/mb93090-mb00/pci-frv.c b/arch/frv/mb93090-mb00/pci-frv.c
-> index 0635bd6..34bb4b1 100644
-> --- a/arch/frv/mb93090-mb00/pci-frv.c
-> +++ b/arch/frv/mb93090-mb00/pci-frv.c
-> @@ -175,14 +175,6 @@ static void __init pcibios_assign_resources(void)
->  			if (!r->start && r->end)
->  				pci_assign_resource(dev, idx);
->  		}
-> -
-> -		if (pci_probe & PCI_ASSIGN_ROMS) {
-> -			r = &dev->resource[PCI_ROM_RESOURCE];
-> -			r->end -= r->start;
-> -			r->start = 0;
-> -			if (r->end)
-> -				pci_assign_resource(dev, PCI_ROM_RESOURCE);
-> -		}
->  	}
->  }
->  
-> diff --git a/arch/frv/mb93090-mb00/pci-frv.h b/arch/frv/mb93090-mb00/pci-frv.h
-> index a7e487fe..d51992f 100644
-> --- a/arch/frv/mb93090-mb00/pci-frv.h
-> +++ b/arch/frv/mb93090-mb00/pci-frv.h
-> @@ -14,14 +14,6 @@
->  #define DBG(x...)
->  #endif
->  
-> -#define PCI_PROBE_BIOS		0x0001
-> -#define PCI_PROBE_CONF1		0x0002
-> -#define PCI_PROBE_CONF2		0x0004
-> -#define PCI_NO_CHECKS		0x0400
-> -#define PCI_ASSIGN_ROMS		0x1000
-> -#define PCI_BIOS_IRQ_SCAN	0x2000
-> -#define PCI_ASSIGN_ALL_BUSSES	0x4000
-> -
->  extern unsigned int __nongpreldata pci_probe;
->  
->  /* pci-frv.c */
-> diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
-> index b5b036f..b7ab837 100644
-> --- a/arch/mn10300/unit-asb2305/pci-asb2305.c
-> +++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
-> @@ -183,18 +183,16 @@ static int __init pcibios_assign_resources(void)
->  	struct pci_dev *dev = NULL;
->  	struct resource *r;
->  
-> -	if (!(pci_probe & PCI_ASSIGN_ROMS)) {
-> -		/* Try to use BIOS settings for ROMs, otherwise let
-> -		   pci_assign_unassigned_resources() allocate the new
-> -		   addresses. */
-> -		for_each_pci_dev(dev) {
-> -			r = &dev->resource[PCI_ROM_RESOURCE];
-> -			if (!r->flags || !r->start)
-> -				continue;
-> -			if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
-> -				r->end -= r->start;
-> -				r->start = 0;
-> -			}
-> +	/* Try to use BIOS settings for ROMs, otherwise let
-> +	   pci_assign_unassigned_resources() allocate the new
-> +	   addresses. */
-> +	for_each_pci_dev(dev) {
-> +		r = &dev->resource[PCI_ROM_RESOURCE];
-> +		if (!r->flags || !r->start)
-> +			continue;
-> +		if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
-> +			r->end -= r->start;
-> +			r->start = 0;
->  		}
->  	}
->  
-> diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.h b/arch/mn10300/unit-asb2305/pci-asb2305.h
-> index 9e17aca..96c484b 100644
-> --- a/arch/mn10300/unit-asb2305/pci-asb2305.h
-> +++ b/arch/mn10300/unit-asb2305/pci-asb2305.h
-> @@ -20,13 +20,6 @@
->  #define DBG(x...)
->  #endif
->  
-> -#define PCI_PROBE_BIOS 1
-> -#define PCI_PROBE_CONF1 2
-> -#define PCI_PROBE_CONF2 4
-> -#define PCI_NO_CHECKS 0x400
-> -#define PCI_ASSIGN_ROMS 0x1000
-> -#define PCI_BIOS_IRQ_SCAN 0x2000
-> -
->  extern unsigned int pci_probe;
->  
->  /* pci-asb2305.c */
-> diff --git a/arch/sh/drivers/pci/pci-sh4.h b/arch/sh/drivers/pci/pci-sh4.h
-> index cbf763b..0288efc 100644
-> --- a/arch/sh/drivers/pci/pci-sh4.h
-> +++ b/arch/sh/drivers/pci/pci-sh4.h
-> @@ -11,14 +11,6 @@
->  
->  #include <asm/io.h>
->  
-> -/* startup values */
-> -#define PCI_PROBE_BIOS		1
-> -#define PCI_PROBE_CONF1		2
-> -#define PCI_PROBE_CONF2		4
-> -#define PCI_NO_CHECKS		0x400
-> -#define PCI_ASSIGN_ROMS		0x1000
-> -#define PCI_BIOS_IRQ_SCAN	0x2000
-> -
->  #define SH4_PCICR		0x100		/* PCI Control Register */
->    #define SH4_PCICR_PREFIX	  0xA5000000	/* CR prefix for write */
->    #define SH4_PCICR_FTO		  0x00000400	/* TRDY/IRDY Enable */
+> # lspci -vvs 00:11.0
+> 00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD/ATI]
+> SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode] (rev 40) (prog-if 01 [AHCI
+> 1.0])
 > 
+> pci 0000:00:11.0: [1002:4391] type 00 class 0x010601
+> ahci 0000:00:11.0: version 3.0
+> ahci 0000:00:11.0: AHCI 0001.0200 32 slots 6 ports 6 Gbps 0x3f impl SATA mode
+> ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x40eba32100618000 flags=0x0010]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x40eba32100618040 flags=0x0010]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x0000000000000000 flags=0x0000]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x00000000000000c0 flags=0x0000]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x0000000000000040 flags=0x0000]
+> AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+> address=0x00000000000001c0 flags=0x0000]
+
+
+Regards,
+Andreas
