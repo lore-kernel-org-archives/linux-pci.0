@@ -1,97 +1,143 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	Gerald Schaefer <gerald.schaefer@de.ibm.com>
-Subject: [RFC PATCH 0/1] iommu: Detach device from domain when removed from group
-Date: Tue, 28 Jul 2015 19:55:55 +0200
-Message-Id: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:49906 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755205AbbGZSQG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 26 Jul 2015 14:16:06 -0400
+Date: Sun, 26 Jul 2015 19:16:46 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Jayachandran C." <jchandra@broadcom.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	James Morse <James.Morse@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH v2 2/2] ARM: pci: kill pcibios_msi_controller
+Message-ID: <20150726181646.GA9584@red-moon>
+References: <1437754383-8162-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1437754383-8162-2-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150726152528.GB2357@jayachandranc.netlogicmicro.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150726152528.GB2357@jayachandranc.netlogicmicro.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Sun, Jul 26, 2015 at 04:25:29PM +0100, Jayachandran C. wrote:
+> On Fri, Jul 24, 2015 at 05:13:03PM +0100, Lorenzo Pieralisi wrote:
+> > On ARM PCI systems relying on the pcibios API to initialize PCI host
+> > controllers, the pcibios_msi_controller weak callback is used to look-up
+> > the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
+> > 
+> > pci_sys_data is an ARM specific structure, which prevents using the
+> > same mechanism (so same PCI host controller drivers) on ARM64 systems.
+> > 
+> > Since the struct pci_bus already contains an msi_controller pointer and
+> > the kernel already uses it to look-up the msi controller,
+> > this patch converts ARM host controller and related pcibios/host bridges
+> > initialization routines so that the msi_controller pointer look-up can be
+> > carried out by PCI core code through the struct pci_bus msi pointer,
+> > removing the need for the arch specific pcibios_msi_controller callback
+> > and the related pci_sys_data msi_ctrl pointer.
+> > 
+> > ARM is the only arch relying on the pcibios_msi_controller() weak
+> > function, hence this patch removes the default weak implementation
+> > from PCI core code since it becomes of no use.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> > Cc: Pratyush Anand <pratyush.anand@gmail.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Jingoo Han <jingoohan1@gmail.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Simon Horman <horms@verge.net.au>
+> > Cc: Russell King <linux@arm.linux.org.uk>
+> > Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > Cc: Thierry Reding <thierry.reding@gmail.com>
+> > Cc: Michal Simek <michal.simek@xilinx.com>
+> > Cc: Marc Zyngier <marc.zyngier@arm.com>
+> > ---
+> > v1->v2
+> > 
+> > - Added patch to replace panic statements with WARN
+> > - Removed unused pcibios_msi_controller() and pci_msi_controller() from
+> >   core code
+> > - Dropped RFT status
+> > 
+> > v1: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/356028.html
+> > 
+> >  arch/arm/include/asm/mach/pci.h    |  3 ---
+> >  arch/arm/kernel/bios32.c           | 29 +++++++++++++----------------
+> >  drivers/pci/host/pcie-designware.c |  9 +++++++--
+> >  drivers/pci/host/pcie-xilinx.c     | 12 ++++++++++--
+> >  drivers/pci/msi.c                  | 17 +----------------
+> >  5 files changed, 31 insertions(+), 39 deletions(-)
+> > 
+> [...]
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index f66be86..0d20142 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -77,24 +77,9 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
+> >  
+> >  /* Arch hooks */
+> >  
+> > -struct msi_controller * __weak pcibios_msi_controller(struct pci_dev *dev)
+> > -{
+> > -	return NULL;
+> > -}
+> > -
+> > -static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
+> > -{
+> > -	struct msi_controller *msi_ctrl = dev->bus->msi;
+> > -
+> > -	if (msi_ctrl)
+> > -		return msi_ctrl;
+> > -
+> > -	return pcibios_msi_controller(dev);
+> > -}
+> > -
+> >  int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+> >  {
+> > -	struct msi_controller *chip = pci_msi_controller(dev);
+> > +	struct msi_controller *chip = dev->bus->msi;
+> >  	int err;
+> >  
+> >  	if (!chip || !chip->setup_irq)
+> 
+> Don't you have to go to the top level bus and get the ->msi pointer? Something
+> like:
+> 
+> 	for (bus = dev->bus; bus != NULL; bus = bus->parent)
+> 		if (bus->msi)
+> 			return bus->msi;
+> 
+> I have not been following this closely, so I may have missed some patches.
 
-during IOMMU API function testing on s390 I hit the following scenario:
+The msi pointer is initialized from parent to child in
+pci_alloc_child_bus(), so PCI core does that for us,
+that's my understanding.
 
-After binding a device to vfio-pci, the user completes the VFIO_SET_IOMMU
-ioctl and stops, see the sample C program below. Now the device is manually
-removed via "echo 1 > /sys/bus/pci/devices/.../remove".
+It works the same as sysdata pointer, which is why
+pcibios_msi_controller works in the current kernel.
 
-Although the SET_IOMMU ioctl triggered the attach_dev callback in the
-underlying IOMMU API, removing the device in this way won't trigger the
-detach_dev callback, neither during remove nor when the user program
-continues with closing group/container.
+On a side note, are you able to prepare a new version
+of your set to enable the PCI generic host on ARM64
+(and remove pci_sys_data and related ifdef CONFIG_ARM
+from it) ?
 
-On s390, this eventually leads to a kernel panic when binding the device
-again to its non-vfio PCI driver, because of the missing arch-specific
-cleanup in detach_dev. On x86, the detach_dev callback will also not be
-called directly, but there is a notifier that will catch
-BUS_NOTIFY_REMOVED_DEVICE and eventually do the cleanup. Other
-architectures w/o the notifier probably have at least some kind of memory
-leak in this scenario, so a general fix would be nice.
+We are not far from removing the pci_sys_data dependency,
+if you can't prepare a new version of your series let me
+know I can do it on your behalf.
 
-My first approach was to try and fix this in VFIO code, but Alex Williamson
-pointed me to some asymmetry in the IOMMU code: iommu_group_add_device()
-will invoke the attach_dev callback, but iommu_group_remove_device() won't
-trigger detach_dev. Fixing this asymmetry would fix the issue for me, but
-is this the correct fix? Any thoughts?
-
-Regards,
-Gerald
-
-
-Here is the sample C program to trigger the ioctl:
-
-#include <stdio.h>
-#include <fcntl.h>
-#include <linux/vfio.h>
-
-int main(void)
-{
-        int container, group, rc;
-
-        container = open("/dev/vfio/vfio", O_RDWR);
-        if (container < 0) {
-                perror("open /dev/vfio/vfio\n");
-                return -1;
-        }
-
-        group = open("/dev/vfio/0", O_RDWR);
-        if (group < 0) {
-                perror("open /dev/vfio/0\n");
-                return -1;
-        }
-
-        rc = ioctl(group, VFIO_GROUP_SET_CONTAINER, &container);
-        if (rc) {
-                perror("ioctl VFIO_GROUP_SET_CONTAINER\n");
-                return -1;
-        }
-
-        rc = ioctl(container, VFIO_SET_IOMMU, VFIO_TYPE1_IOMMU);
-        if (rc) {
-                perror("ioctl VFIO_SET_IOMMU\n");
-                return -1;
-        }
-
-        printf("Try device remove...\n");
-        getchar();
-
-        close(group);
-        close(container);
-        return 0;
-}
-
-Gerald Schaefer (1):
-  iommu: Detach device from domain when removed from group
-
- drivers/iommu/iommu.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
--- 
-2.3.8
-
+Thanks !
+Lorenzo
