@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36887 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754095AbbGNWxN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:53:13 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:37301 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754629AbbG0XdE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:33:04 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -12,227 +12,144 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 49/49] PCI: Don't set flags to 0 when assign resource fail
-Date: Tue, 14 Jul 2015 15:47:20 -0700
-Message-Id: <1436914040-13206-50-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v3 07/51] PCI: Reorder resources list for must/optional resources
+Date: Mon, 27 Jul 2015 16:29:25 -0700
+Message-Id: <1438039809-24957-8-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-make flags take IORESOURCE_UNSET | IORESOURCE_DISABLED instead.
+After we update size and alignment for must+optional resource, we
+reorder them with new alignment, but this is only for STARTALIGN.
+
+For SIZEALIGN type resource, after add back add_size, the alignment
+get changed, so need to do the sorting like STARTALIGN type resources.
+
+Also we need to reorder the sorting back after we restore
+resource to must only when must+optional fail to allocate for all.
+
+So move out the reordering code from the loop to separated function,
+and call it two times accordingly.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/bus.c       |  2 +-
- drivers/pci/setup-bus.c | 45 +++++++++++++++++++++++----------------------
- drivers/pci/setup-res.c |  3 ++-
- 3 files changed, 26 insertions(+), 24 deletions(-)
+ drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 37 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index b043bdf..b68f1cd 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -140,7 +140,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
- 	type_mask |= IORESOURCE_TYPE_BITS;
- 
- 	pci_bus_for_each_resource(bus, r, i) {
--		if (!r)
-+		if (!r || resource_disabled(r))
- 			continue;
- 
- 		/* type_mask must match */
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7734be6..a7fbdcc 100644
+index 7346bbf..6f2d508 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -289,13 +289,6 @@ static void __dev_check_resources(struct pci_dev *dev,
- 	pdev_check_resources(dev, realloc_head, head);
+@@ -287,6 +287,31 @@ static inline void reset_resource(struct resource *res)
+ 	res->flags = 0;
  }
  
--static inline void reset_resource(struct resource *res)
--{
--	res->start = 0;
--	res->end = 0;
--	res->flags = 0;
--}
--
- static void __sort_resources(struct list_head *head)
- {
- 	struct pci_dev_resource *res1, *tmp_res, *res2;
-@@ -398,7 +391,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 			res->start = align;
- 			res->end = res->start + add_size - 1;
- 			if (pci_assign_resource(add_res->dev, idx))
--				reset_resource(res);
-+				res->flags |= IORESOURCE_DISABLED;
- 		} else {
- 			/* could just assigned with alt, add difference ? */
- 			resource_size_t must_size;
-@@ -451,7 +444,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
- 				add_to_list(fail_head, dev_res->dev, res);
--			reset_resource(res);
-+			res->flags |= IORESOURCE_DISABLED;
- 		}
- 	}
- }
-@@ -737,7 +730,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
- 
- 		if (!res_to_dev_res(local_fail_head, res))
- 			add_to_list(local_fail_head, fail_res->dev, res);
--		reset_resource(res);
-+		res->flags |= IORESOURCE_DISABLED;
- 	}
- 	free_list(&local_alt_fail_head);
- }
-@@ -903,7 +896,7 @@ static void pci_setup_bridge_io(struct pci_dev *bridge)
- 	/* Set up the top and bottom of the PCI I/O segment for this bus. */
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_IO) {
-+	if ((res->flags & IORESOURCE_IO) && !(res->flags & IORESOURCE_UNSET)) {
- 		pci_read_config_word(bridge, PCI_IO_BASE, &l);
- 		io_base_lo = (region.start >> 8) & io_mask;
- 		io_limit_lo = (region.end >> 8) & io_mask;
-@@ -933,7 +926,8 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
- 	/* Set up the top and bottom of the PCI Memory segment for this bus. */
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_MEM) {
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    !(res->flags & IORESOURCE_UNSET)) {
- 		l = (region.start >> 16) & 0xfff0;
- 		l |= region.end & 0xfff00000;
- 		dev_info(&bridge->dev, "  bridge window %pR\n", res);
-@@ -958,7 +952,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
- 	bu = lu = 0;
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_PREFETCH) {
-+	if ((res->flags & IORESOURCE_PREFETCH) &&
-+	    !(res->flags & IORESOURCE_UNSET)) {
- 		l = (region.start >> 16) & 0xfff0;
- 		l |= region.end & 0xfff00000;
- 		if (res->flags & IORESOURCE_MEM_64) {
-@@ -1077,6 +1072,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 
- 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
- 	b_res[1].flags |= IORESOURCE_MEM;
-+	b_res[1].flags &= ~IORESOURCE_DISABLED;
- 
- 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 	if (!io) {
-@@ -1084,8 +1080,10 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 		pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
- 	}
--	if (io)
-+	if (io) {
- 		b_res[0].flags |= IORESOURCE_IO;
-+		b_res[0].flags &= ~IORESOURCE_DISABLED;
-+	}
- 
- 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
- 	    disconnect boundary by one PCI data phase.
-@@ -1102,6 +1100,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 	}
- 	if (pmem) {
- 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-+		b_res[2].flags &= ~IORESOURCE_DISABLED;
- 		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
- 		    PCI_PREF_RANGE_TYPE_64) {
- 			b_res[2].flags |= IORESOURCE_MEM_64;
-@@ -1247,8 +1246,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			struct resource *r = &dev->resource[i];
- 			unsigned long r_size, r_add_size;
- 
--			if (r->parent || !(r->flags & IORESOURCE_IO))
-+			if (r->parent || !(r->flags & IORESOURCE_IO) ||
-+			    resource_disabled(r))
- 				continue;
++static void __sort_resources(struct list_head *head)
++{
++	struct pci_dev_resource *res1, *tmp_res, *res2;
 +
- 			r_size = resource_size(r);
++	list_for_each_entry_safe(res1, tmp_res, head, list) {
++		resource_size_t align1, size1, align2, size2;
++
++		align1 = pci_resource_alignment(res1->dev, res1->res);
++		size1 = resource_size(res1->res);
++
++		/* reorder it */
++		list_for_each_entry(res2, head, list) {
++			if (res2 == res1)
++				break;
++
++			align2 = pci_resource_alignment(res2->dev, res2->res);
++			size2 = resource_size(res2->res);
++			if (is_before(align1, size1, align2, size2)) {
++				list_move_tail(&res1->list, &res2->list);
++				break;
++			}
++		}
++	}
++}
++
+ /**
+  * reassign_resources_sorted() - satisfy any additional resource requests
+  *
+@@ -449,9 +474,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
++	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+-	resource_size_t add_align, align;
++	resource_size_t add_align;
  
- 			if (r_size < 0x400)
-@@ -1289,7 +1290,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
- 				 b_res, &bus->busn_res);
--		b_res->flags = 0;
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 		return;
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -466,47 +491,32 @@ static void __assign_resources_sorted(struct list_head *head,
  	}
  
-@@ -1563,7 +1564,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	/* Update res in head list with add_size in realloc_head list */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++	list_for_each_entry(dev_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
  
- 			if (r->parent || ((flags & mask) != type &&
- 					  (flags & mask) != type2 &&
--					  (flags & mask) != type3))
-+					  (flags & mask) != type3) ||
-+			    resource_disabled(r))
- 				continue;
- 
- 			r_size = resource_size(r);
-@@ -1584,7 +1586,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
--				r->flags = 0;
-+				r->flags |= IORESOURCE_UNSET |
-+					    IORESOURCE_DISABLED;
- 				continue;
- 			}
- 
-@@ -1671,7 +1674,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
- 				 b_res, &bus->busn_res);
--		b_res->flags = 0;
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 		return 0;
- 	}
- 	b_res->start = min_align;
-@@ -2076,7 +2079,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 		/* keep the old size */
- 		r->end = resource_size(r) - 1;
- 		r->start = 0;
--		r->flags = 0;
-+		r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 
- 		/* avoiding touch the one without PREF */
- 		if (type & IORESOURCE_PREFETCH)
-@@ -2334,7 +2337,6 @@ again:
- 
- 		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
--			res->flags = 0;
- 			/* last or third times and later */
- 			if (tried_times + 1 == pci_try_num ||
- 			    tried_times + 1 > 2) {
-@@ -2420,7 +2422,6 @@ again:
- 
- 		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
--			res->flags = 0;
- 			/* last time */
- 			res->start = 0;
- 			res->end = res->start - 1;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 55caf7a..d17f23c 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -364,7 +364,8 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
- 
- 		r = &dev->resource[i];
- 
--		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
-+		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)) ||
-+		    resource_disabled(r))
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+-		 * Here just fix the additional alignment for bridge
++		 * 1. bridge resource with IORESOURCE_STARTALIGN
++		 *    need to update start to change alignment
++		 * 2. resource with IORESOURCE_SIZEALIGN
++		 *    update size above already change alignment.
+ 		 */
+ 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
  			continue;
- 		if ((i == PCI_ROM_RESOURCE) &&
- 				(!(r->flags & IORESOURCE_ROM_ENABLE)))
+ 
+ 		add_align = get_res_add_align(realloc_head, dev_res->res);
+ 
+-		/*
+-		 * The "head" list is sorted by the alignment to make sure
+-		 * resources with bigger alignment will be assigned first.
+-		 * After we change the alignment of a dev_res in "head" list,
+-		 * we need to reorder the list by alignment to make it
+-		 * consistent.
+-		 */
+-		if (add_align > dev_res->res->start) {
++		if (add_align) {
+ 			resource_size_t r_size = resource_size(dev_res->res);
+ 
+ 			dev_res->res->start = add_align;
+ 			dev_res->res->end = add_align + r_size - 1;
+-
+-			list_for_each_entry(dev_res2, head, list) {
+-				align = pci_resource_alignment(dev_res2->dev,
+-							       dev_res2->res);
+-				if (add_align > align) {
+-					list_move_tail(&dev_res->list,
+-						       &dev_res2->list);
+-					break;
+-				}
+-			}
+                }
+-
+ 	}
+ 
++	__sort_resources(head);
++
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -548,6 +558,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	free_list(&save_head);
+ 
++	__sort_resources(head);
++
+ requested_and_reassign:
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
 -- 
 1.8.4.5
 
