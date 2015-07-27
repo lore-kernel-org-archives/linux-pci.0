@@ -1,78 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:50845 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750803AbbG0M4f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Jul 2015 08:56:35 -0400
+Date: Mon, 27 Jul 2015 14:56:32 +0200
+From: Joerg Roedel <jroedel@suse.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
-	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH part3 v12 02/10] PCI: Move pci_bus_assign_domain_nr() declaration into drivers/pci/pci.h
-Date: Mon, 20 Jul 2015 20:01:10 +0800
-Message-ID: <1437393678-4077-3-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
-References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org,
+	Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH v2 08/11] PCI: Clean up ATS error handling
+Message-ID: <20150727125632.GD27614@suse.de>
+References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150721001454.28145.35617.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150721001454.28145.35617.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_bus_assign_domain_nr() is only called in probe.c,
-Move pci_bus_assign_domain_nr() declaration into
-drivers/pci/pci.h.
+On Mon, Jul 20, 2015 at 07:14:54PM -0500, Bjorn Helgaas wrote:
+> There's no need to BUG() if we enable ATS when it's already enabled.  We
+> don't need to BUG() when disabling ATS on a device that doesn't support ATS
+> or if it's already disabled.  If ATS is enabled, certainly we found an ATS
+> capability in the past, so it should still be there now.
+> 
+> Clean up these error paths.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/ats.c |   10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index 0b5b0ed..67524a7 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -44,11 +44,12 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
+>  	u16 ctrl;
+>  	struct pci_dev *pdev;
+>  
+> -	BUG_ON(dev->ats_cap && dev->ats_enabled);
+> -
+>  	if (!dev->ats_cap)
+>  		return -EINVAL;
+>  
+> +	if (pci_ats_enabled(dev))
+> +		return -EINVAL;
+> +
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/pci.h   |    9 +++++++++
- include/linux/pci.h |    6 ------
- 2 files changed, 9 insertions(+), 6 deletions(-)
+Better return -EBUSY here? It would be good to find out if we are trying
+to enable ATS while it is already enabled. A WARN_ON around this would
+also be good, so that we spot bugs in the iommu drivers early when they
+use this interface.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4ff0ff1..02192aa 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -335,4 +335,13 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- 
- struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
- 
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
-+#else
-+static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
-+					struct device *parent)
-+{
-+}
-+#endif
-+
- #endif /* DRIVERS_PCI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 50c0c47..f7e4204 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1337,12 +1337,6 @@ static inline int pci_domain_nr(struct pci_bus *bus)
- {
- 	return bus->domain_nr;
- }
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent);
--#else
--static inline void pci_bus_assign_domain_nr(struct pci_bus *bus,
--					struct device *parent)
--{
--}
- #endif
- 
- /* some architectures require additional setup to direct VGA traffic */
--- 
-1.7.1
+
+
+	Joerg
 
