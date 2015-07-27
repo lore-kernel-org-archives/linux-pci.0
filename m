@@ -1,72 +1,86 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v6 02/19] PCI: MSI: Register irq domain with specific token
-Date: Tue, 28 Jul 2015 14:46:09 +0100
-Message-Id: <1438091186-10244-3-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
-References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 35/51] PCI: Only treat non-pef mmio64 as pref if all bridges has MEM_64
+Date: Mon, 27 Jul 2015 16:29:53 -0700
+Message-Id: <1438039809-24957-36-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When creating a PCI/MSI domain, tag it with DOMAIN_BUS_PCI_MSI so
-that it can be looked-up using irq_find_matching_host().
+If any bridge up to root only have 32bit pref mmio, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+We need to move pci_bridge_check_ranges calling early.
+for parent bridges pref mmio BAR may not allocated by BIOS, res flags
+is still 0, we need to have it correct set before we check them for
+child device resources.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/msi.c         | 9 ++++++++-
- include/linux/irqdomain.h | 1 +
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 373d96e..8c30cfc 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1273,12 +1273,19 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
- 					     struct msi_domain_info *info,
- 					     struct irq_domain *parent)
- {
-+	struct irq_domain *domain;
-+
- 	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
- 		pci_msi_domain_update_dom_ops(info);
- 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
- 		pci_msi_domain_update_chip_ops(info);
- 
--	return msi_create_irq_domain(node, info, parent);
-+	domain = msi_create_irq_domain(node, info, parent);
-+	if (!domain)
-+		return NULL;
-+
-+	domain->bus_token = DOMAIN_BUS_PCI_MSI;
-+	return domain;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 78b0c36..c6c9d56 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1038,6 +1038,18 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
  }
  
- /**
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 91a83ad..25e9e66 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -54,6 +54,7 @@ struct irq_data;
-  */
- enum irq_domain_bus_token {
- 	DOMAIN_BUS_ANY		= 0,
-+	DOMAIN_BUS_PCI_MSI,
- };
++static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
++			   IORESOURCE_MEM_64))
++		return false;
++
++	return pci_up_path_over_pref_mem64(bus->parent);
++}
++
+ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 				 struct resource *res)
+ {
+@@ -1046,7 +1058,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
  
- /**
+ 	if ((res->flags & IORESOURCE_MEM) &&
+ 	    (res->flags & IORESOURCE_MEM_64) &&
+-	    dev->on_all_pcie_path)
++	    dev->on_all_pcie_path &&
++	    pci_up_path_over_pref_mem64(dev->bus))
+ 		return res->flags | IORESOURCE_PREFETCH;
+ 
+ 	return res->flags;
+@@ -1827,6 +1840,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	struct resource *b_res;
+ 	int ret;
+ 
++	if (!pci_is_root_bus(bus) &&
++	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
++		pci_bridge_check_ranges(bus);
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+ 		if (!b)
+@@ -1854,7 +1871,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		break;
+ 
+ 	case PCI_CLASS_BRIDGE_PCI:
+-		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			min_io_size  = pci_hotplug_io_size;
+ 			min_mem_size = pci_hotplug_mem_size;
 -- 
-2.1.4
+1.8.4.5
 
