@@ -1,58 +1,182 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38690 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753108AbbGOMRN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 08:17:13 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v4 06/19] PCI/MSI: of: Allow msi_domain lookup using the host bridge node
-Date: Wed, 15 Jul 2015 13:16:40 +0100
-Message-Id: <1436962613-17359-7-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 14/51] PCI: Add __add_to_list()
+Date: Mon, 27 Jul 2015 16:29:32 -0700
+Message-Id: <1438039809-24957-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A number of platforms do not need to use the msi-parent property,
-as the host bridge itself provides the MSI controller.
+to take alt_size, alt_align.
 
-Allow this configuration by performing an irq domain lookup based
-on the host bridge node if it doesn't have a valid msi-parent property.
+preparation patch for alt_size support.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/of.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 31 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 09df465..9d61cef 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -69,9 +69,14 @@ void pci_set_phb_of_msi_domain(struct pci_bus *bus)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f30225c..57b5c09 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -66,6 +66,8 @@ struct pci_dev_resource {
+ 	resource_size_t end;
+ 	resource_size_t add_size;
+ 	resource_size_t min_align;
++	resource_size_t alt_size;
++	resource_size_t alt_align;
+ 	unsigned long flags;
+ };
  
- 	if (!bus->dev.of_node)
- 		return;
-+	/* Start looking for a phandle to an MSI controller. */
- 	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
-+	/*
-+	 * If we don't have an msi-parent property, look for a domain
-+	 * directly attached to the host bridge.
-+	 */
- 	if (!np)
--		return;
-+		np = bus->dev.of_node;
- 	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
- 	if (!d)
- 		d = irq_find_host(np);
+@@ -88,15 +90,16 @@ static void free_list(struct list_head *head)
+  * @add_size:	additional size to be optionally added
+  *              to the resource
+  */
+-static int add_to_list(struct list_head *head,
++static int __add_to_list(struct list_head *head,
+ 		 struct pci_dev *dev, struct resource *res,
+-		 resource_size_t add_size, resource_size_t min_align)
++		 resource_size_t add_size, resource_size_t min_align,
++		 resource_size_t alt_size, resource_size_t alt_align)
+ {
+ 	struct pci_dev_resource *tmp;
+ 
+ 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
+ 	if (!tmp) {
+-		pr_warn("add_to_list: kmalloc() failed!\n");
++		pr_warn("__add_to_list: kmalloc() failed!\n");
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -107,12 +110,20 @@ static int add_to_list(struct list_head *head,
+ 	tmp->flags = res->flags;
+ 	tmp->add_size = add_size;
+ 	tmp->min_align = min_align;
++	tmp->alt_size = alt_size;
++	tmp->alt_align = alt_align;
+ 
+ 	list_add(&tmp->list, head);
+ 
+ 	return 0;
+ }
+ 
++static int add_to_list(struct list_head *head,
++		 struct pci_dev *dev, struct resource *res)
++{
++	return __add_to_list(head, dev, res, 0, 0, 0, 0);
++}
++
+ static void remove_from_list(struct list_head *head,
+ 				 struct resource *res)
+ {
+@@ -378,9 +389,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head)
+-				add_to_list(fail_head, dev_res->dev, res,
+-					    0 /* don't care */,
+-					    0 /* don't care */);
++				add_to_list(fail_head, dev_res->dev, res);
+ 			reset_resource(res);
+ 		}
+ 	}
+@@ -466,7 +475,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Save original start, end, flags etc at first */
+ 	list_for_each_entry(dev_res, head, list) {
+-		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
++		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
+ 			free_list(&save_head);
+ 			goto requested_and_reassign;
+ 		}
+@@ -1019,8 +1028,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0,
+-			    min_align);
++		__add_to_list(realloc_head, bus->self, b_res,
++			      size1 - size0, min_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long)size1-size0);
+@@ -1222,7 +1231,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				add_to_align_test_list(&align_test_add_list,
+ 							align, r_size);
+ 				r->end = r->start - 1;
+-				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
++				__add_to_list(realloc_head, dev, r,
++					      r_size, align, 0, 0);
+ 				sum_add_size += r_size;
+ 				if (align > max_add_align)
+ 					max_add_align = align;
+@@ -1293,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
+-				min_add_align);
++		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
++				min_add_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long) (size1 - size0),
+@@ -1331,8 +1341,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[0].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
+-				pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_1:
+@@ -1343,8 +1353,8 @@ handle_b_res_1:
+ 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[1].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
+-				 pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res + 1,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_2:
+@@ -1381,8 +1391,9 @@ handle_b_res_2:
+ 				  IORESOURCE_STARTALIGN;
+ 		if (realloc_head) {
+ 			b_res[2].end -= pci_cardbus_mem_size;
+-			add_to_list(realloc_head, bridge, b_res+2,
+-				 pci_cardbus_mem_size, pci_cardbus_mem_size);
++			__add_to_list(realloc_head, bridge, b_res + 2,
++				pci_cardbus_mem_size, pci_cardbus_mem_size,
++				0, 0);
+ 		}
+ 
+ 		/* reduce that to half */
+@@ -1397,8 +1408,8 @@ handle_b_res_3:
+ 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[3].end -= b_res_3_size;
+-		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
+-				 pci_cardbus_mem_size);
++		__add_to_list(realloc_head, bridge, b_res + 3,
++				b_res_3_size, pci_cardbus_mem_size, 0, 0);
+ 	}
+ 
+ handle_done:
 -- 
-2.1.4
+1.8.4.5
 
