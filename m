@@ -1,287 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:47207 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753338AbbGQGED (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:04:03 -0400
-Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 17 Jul 2015 16:04:01 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id DD6B02BB003F
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 16:03:58 +1000 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H63omL48693310
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 16:03:58 +1000
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H63QDd002797
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 16:03:26 +1000
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 10/11] powerpc/eeh: Support error recovery for VF PE
-Date: Fri, 17 Jul 2015 14:02:40 +0800
-Message-Id: <1437112961-17275-11-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:36450 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754738AbbG0Uzp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 16:55:45 -0400
+From: Rob Herring <robh@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-sh@vger.kernel.org
+Subject: [PATCH v3] PCI: kill off set_irq_flags usage
+Date: Mon, 27 Jul 2015 15:55:21 -0500
+Message-Id: <1438030523-15853-9-git-send-email-robh@kernel.org>
+In-Reply-To: <1438030523-15853-1-git-send-email-robh@kernel.org>
+References: <1438030523-15853-1-git-send-email-robh@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Different from PCI bus dependent PE, PE for VFs doesn't have the
-primary bus, on which the PCI hotplug is implemented. The patch
-supports error recovery, especially the PCI hotplug for VF's PE.
-The hotplug on VF's PE is implemented based on VFs, instead of
-PCI bus any more.
+set_irq_flags is ARM specific with custom flags which have genirq
+equivalents. Convert drivers to use the genirq interfaces directly, so we
+can kill off set_irq_flags. The translation of flags is as follows:
 
-[gwshan: changelog and code refactoring]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+IRQF_VALID -> !IRQ_NOREQUEST
+IRQF_PROBE -> !IRQ_NOPROBE
+IRQF_NOAUTOEN -> IRQ_NOAUTOEN
+
+For IRQs managed by an irqdomain, the irqdomain core code handles clearing
+and setting IRQ_NOREQUEST already, so there is no need to do this in
+.map() functions and we can simply remove the set_irq_flags calls. Some
+users also modify IRQ_NOPROBE and this has been maintained although it
+is not clear that is really needed. There appears to be a great deal of
+blind copy and paste of this code.
+
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Alexandre Courbot <gnurou@gmail.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
+Cc: linux-omap@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-tegra@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
 ---
- arch/powerpc/include/asm/eeh.h   |    1 +
- arch/powerpc/kernel/eeh.c        |    8 +++
- arch/powerpc/kernel/eeh_driver.c |  100 ++++++++++++++++++++++++++++++--------
- arch/powerpc/kernel/eeh_pe.c     |    3 +-
- 4 files changed, 90 insertions(+), 22 deletions(-)
+Thomas asked that this be merged thru subsystem trees instead of arm-soc,
+so please apply this to your tree.
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 331c856..ea1f13c4 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -142,6 +142,7 @@ struct eeh_dev {
- 	struct pci_controller *phb;	/* Associated PHB		*/
- 	struct pci_dn *pdn;		/* Associated PCI device node	*/
- 	struct pci_dev *pdev;		/* Associated PCI device	*/
-+	int    in_error;		/* Error flag for eeh_dev	*/
- 	struct pci_dev *physfn;		/* Associated PF PORT		*/
- 	struct pci_bus *bus;		/* PCI bus for partial hotplug	*/
- };
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index af9b597..28e4d73 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -1227,6 +1227,14 @@ void eeh_remove_device(struct pci_dev *dev)
- 	 * from the parent PE during the BAR resotre.
- 	 */
- 	edev->pdev = NULL;
-+
-+	/*
-+	 * The flag "in_error" is used to trace EEH devices for VFs
-+	 * in error state or not. It's set in eeh_report_error(). If
-+	 * it's not set, eeh_report_{reset,resume}() won't be called
-+	 * for the VF EEH device.
-+	 */
-+	edev->in_error = 0;
- 	dev->dev.archdata.edev = NULL;
- 	if (!(edev->pe->state & EEH_PE_KEEP))
- 		eeh_rmv_from_parent_pe(edev);
-diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-index 89eb4bc..99868e2 100644
---- a/arch/powerpc/kernel/eeh_driver.c
-+++ b/arch/powerpc/kernel/eeh_driver.c
-@@ -211,6 +211,7 @@ static void *eeh_report_error(void *data, void *userdata)
- 	if (rc == PCI_ERS_RESULT_NEED_RESET) *res = rc;
- 	if (*res == PCI_ERS_RESULT_NONE) *res = rc;
- 
-+	edev->in_error = 1;
- 	eeh_pcid_put(dev);
- 	return NULL;
- }
-@@ -282,7 +283,8 @@ static void *eeh_report_reset(void *data, void *userdata)
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->slot_reset ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
-+	    (!edev->in_error)) {
- 		eeh_pcid_put(dev);
- 		return NULL;
- 	}
-@@ -339,14 +341,16 @@ static void *eeh_report_resume(void *data, void *userdata)
- 
- 	if (!driver->err_handler ||
- 	    !driver->err_handler->resume ||
--	    (edev->mode & EEH_DEV_NO_HANDLER)) {
-+	    (edev->mode & EEH_DEV_NO_HANDLER) ||
-+	    (!edev->in_error)) {
- 		edev->mode &= ~EEH_DEV_NO_HANDLER;
--		eeh_pcid_put(dev);
--		return NULL;
-+		goto out;
- 	}
- 
- 	driver->err_handler->resume(dev);
- 
-+out:
-+	edev->in_error = 0;
- 	eeh_pcid_put(dev);
- 	return NULL;
- }
-@@ -386,12 +390,38 @@ static void *eeh_report_failure(void *data, void *userdata)
- 	return NULL;
- }
- 
-+static void *eeh_add_virt_device(void *data, void *userdata)
-+{
-+	struct pci_driver *driver;
-+	struct eeh_dev *edev = (struct eeh_dev *)data;
-+	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
-+
-+	if (!(edev->physfn)) {
-+		pr_warn("%s: EEH dev %04x:%02x:%02x.%01x not for VF\n",
-+			__func__, edev->phb->global_number, pdn->busno,
-+			PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+		return NULL;
-+	}
-+
-+	driver = eeh_pcid_get(dev);
-+	if (driver) {
-+		eeh_pcid_put(dev);
-+		if (driver->err_handler)
-+			return NULL;
-+	}
-+
-+	pci_iov_virtfn_add(edev->physfn, pdn->vf_index, 0);
-+	return NULL;
-+}
-+
- static void *eeh_rmv_device(void *data, void *userdata)
+Rob
+
+ drivers/pci/host/pci-dra7xx.c      | 1 -
+ drivers/pci/host/pci-keystone-dw.c | 2 --
+ drivers/pci/host/pci-tegra.c       | 1 -
+ drivers/pci/host/pci-xgene-msi.c   | 1 -
+ drivers/pci/host/pcie-designware.c | 1 -
+ drivers/pci/host/pcie-rcar.c       | 1 -
+ drivers/pci/host/pcie-xilinx.c     | 2 --
+ 7 files changed, 9 deletions(-)
+
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 80db09e..1a0d124 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -155,7 +155,6 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
  {
- 	struct pci_driver *driver;
- 	struct eeh_dev *edev = (struct eeh_dev *)data;
- 	struct pci_dev *dev = eeh_dev_to_pci_dev(edev);
- 	int *removed = (int *)userdata;
-+	struct pci_dn *pdn = eeh_dev_to_pdn(edev);
- 
- 	/*
- 	 * Actually, we should remove the PCI bridges as well.
-@@ -416,7 +446,7 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 	driver = eeh_pcid_get(dev);
- 	if (driver) {
- 		eeh_pcid_put(dev);
--		if (driver->err_handler)
-+		if (removed && driver->err_handler)
- 			return NULL;
- 	}
- 
-@@ -425,11 +455,23 @@ static void *eeh_rmv_device(void *data, void *userdata)
- 		 pci_name(dev));
- 	edev->bus = dev->bus;
- 	edev->mode |= EEH_DEV_DISCONNECTED;
--	(*removed)++;
-+	if (removed)
-+		(*removed)++;
- 
--	pci_lock_rescan_remove();
--	pci_stop_and_remove_bus_device(dev);
--	pci_unlock_rescan_remove();
-+	if (edev->physfn) {
-+		pci_iov_virtfn_remove(edev->physfn, pdn->vf_index, 0);
-+		edev->pdev = NULL;
-+
-+		/*
-+		 * We have to set the VF PE number to invalid one, which is
-+		 * required to plug the VF successfully.
-+		 */
-+		pdn->pe_number = IODA_INVALID_PE;
-+	} else {
-+		pci_lock_rescan_remove();
-+		pci_stop_and_remove_bus_device(dev);
-+		pci_unlock_rescan_remove();
-+	}
- 
- 	return NULL;
+ 	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
  }
-@@ -548,6 +590,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	struct pci_bus *frozen_bus = eeh_pe_bus_get(pe);
- 	struct timeval tstamp;
- 	int cnt, rc, removed = 0;
-+	struct eeh_dev *edev;
- 
- 	/* pcibios will clear the counter; save the value */
- 	cnt = pe->freeze_count;
-@@ -561,12 +604,15 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	 */
- 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
- 	if (bus) {
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(bus);
--		pci_unlock_rescan_remove();
--	} else if (frozen_bus) {
-+		if (pe->type & EEH_PE_VF)
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+		else {
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(bus);
-+			pci_unlock_rescan_remove();
-+		}
-+	} else if (frozen_bus)
- 		eeh_pe_dev_traverse(pe, eeh_rmv_device, &removed);
--	}
- 
- 	/*
- 	 * Reset the pci controller. (Asserts RST#; resets config space).
-@@ -607,14 +653,22 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 		 * PE. We should disconnect it so the binding can be
- 		 * rebuilt when adding PCI devices.
- 		 */
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(bus);
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+			pcibios_add_pci_devices(bus);
- 	} else if (frozen_bus && removed) {
- 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
- 		ssleep(5);
- 
-+		edev = list_first_entry(&pe->edevs, struct eeh_dev, list);
- 		eeh_pe_traverse(pe, eeh_pe_detach_dev, NULL);
--		pcibios_add_pci_devices(frozen_bus);
-+		if (pe->type & EEH_PE_VF)
-+			eeh_add_virt_device(edev, NULL);
-+		else
-+			pcibios_add_pci_devices(frozen_bus);
- 	}
- 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
- 
-@@ -792,11 +846,15 @@ perm_error:
- 	 * the their PCI config any more.
- 	 */
- 	if (frozen_bus) {
--		eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
--
--		pci_lock_rescan_remove();
--		pcibios_remove_pci_devices(frozen_bus);
--		pci_unlock_rescan_remove();
-+		if (pe->type & EEH_PE_VF) {
-+			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+		} else {
-+			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
-+			pci_lock_rescan_remove();
-+			pcibios_remove_pci_devices(frozen_bus);
-+			pci_unlock_rescan_remove();
-+		}
- 	}
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index f34892e..f1d0749 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -196,7 +196,6 @@ static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+ 	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
+ 				 handle_level_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
  }
- 
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index 260a701..5cde950 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -914,7 +914,8 @@ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe)
- 	if (pe->type & EEH_PE_PHB) {
- 		bus = pe->phb->bus;
- 	} else if (pe->type & EEH_PE_BUS ||
--		   pe->type & EEH_PE_DEVICE) {
-+		   pe->type & EEH_PE_DEVICE ||
-+		   pe->type & EEH_PE_VF) {
- 		if (pe->bus) {
- 			bus = pe->bus;
- 			goto out;
--- 
-1.7.9.5
+@@ -277,7 +276,6 @@ static int ks_dw_pcie_init_legacy_irq_map(struct irq_domain *d,
+ 	irq_set_chip_and_handler(irq, &ks_dw_pcie_legacy_irq_chip,
+ 				 handle_level_irq);
+ 	irq_set_chip_data(irq, d->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 10c0571..81df0c1 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1248,7 +1248,6 @@ static int tegra_msi_map(struct irq_domain *domain, unsigned int irq,
+ {
+ 	irq_set_chip_and_handler(irq, &tegra_msi_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	tegra_cpuidle_pcie_irqs_in_use();
+
+diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+index 2d31d4d..8e559d1 100644
+--- a/drivers/pci/host/pci-xgene-msi.c
++++ b/drivers/pci/host/pci-xgene-msi.c
+@@ -223,7 +223,6 @@ static int xgene_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 	irq_domain_set_info(domain, virq, msi_irq,
+ 			    &xgene_msi_bottom_irq_chip, domain->host_data,
+ 			    handle_simple_irq, NULL, NULL);
+-	set_irq_flags(virq, IRQF_VALID);
+
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 69486be..5c6b562 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -350,7 +350,6 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+ {
+ 	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index c086210..7678fe0 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -664,7 +664,6 @@ static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
+ {
+ 	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index f1a06a0..72015119 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -338,7 +338,6 @@ static int xilinx_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+ {
+ 	irq_set_chip_and_handler(irq, &xilinx_msi_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+@@ -377,7 +376,6 @@ static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ {
+ 	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+-	set_irq_flags(irq, IRQF_VALID);
+
+ 	return 0;
+ }
+--
+2.1.0
 
