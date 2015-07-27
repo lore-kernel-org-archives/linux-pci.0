@@ -1,67 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50998 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932214AbbGJNeZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 10 Jul 2015 09:34:25 -0400
-Date: Fri, 10 Jul 2015 14:34:58 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>
-Subject: Re: [PATCH v3 00/15] Introducing per-device MSI domain
-Message-ID: <20150710133458.GC11270@red-moon>
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
- <20150709135809.GA5223@red-moon>
- <559E8699.4010007@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+To: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-arm-kernel@lists.infradead.org>, <arm@kernel.org>,
+	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
+Subject: [PATCH v5 3/4] arm64: Add Broadcom iProc family support
+Date: Mon, 27 Jul 2015 15:42:20 -0700
+Message-ID: <1438036941-27210-4-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
+References: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <559E8699.4010007@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 09, 2015 at 03:35:05PM +0100, Marc Zyngier wrote:
+This patch adds support to Broadcom's iProc family of arm64 based SoCs
+in the arm64 Kconfig and defconfig files
 
-[...]
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
+---
+ arch/arm64/Kconfig.platforms |    5 +++++
+ arch/arm64/configs/defconfig |    1 +
+ 2 files changed, 6 insertions(+)
 
-> > BTW, is there a reason why _all_ arm host bridges rely on
-> > pcibios_msi_controller (so pci_sys_data) instead of initializing
-> > the struct pci_bus.msi pointer to carry out the MSI controller look-up ?
-> 
-> Probably an ordering issue - the bus may not be there yet. But ensuring
-> that the MSI domain is created early (before the bus is scanned) should
-> solve that problem nicely enough.
+diff --git a/arch/arm64/Kconfig.platforms b/arch/arm64/Kconfig.platforms
+index f7e4327..e2deb18 100644
+--- a/arch/arm64/Kconfig.platforms
++++ b/arch/arm64/Kconfig.platforms
+@@ -1,5 +1,10 @@
+ menu "Platform selection"
+ 
++config ARCH_BCM_IPROC
++	bool "Broadcom iProc SoC Family"
++	help
++	  This enables support for Broadcom iProc based SoCs
++
+ config ARCH_EXYNOS
+ 	bool
+ 	help
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 506b466..913f121 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -31,6 +31,7 @@ CONFIG_MODULES=y
+ CONFIG_MODULE_UNLOAD=y
+ # CONFIG_BLK_DEV_BSG is not set
+ # CONFIG_IOSCHED_DEADLINE is not set
++CONFIG_ARCH_BCM_IPROC=y
+ CONFIG_ARCH_EXYNOS7=y
+ CONFIG_ARCH_FSL_LS2085A=y
+ CONFIG_ARCH_HISI=y
+-- 
+1.7.9.5
 
-Yes, I think the only reason is that, as sysdata, the msi controller
-pointer is propagated (in pci_alloc_child_bus()), with a tiny difference:
-sysdata can be passed to pci_scan_root_bus(), msi controller pointer
-can't (explicitly) at present.
-
-Since most of the ARM PCI host controllers have been converted to:
-
-- pci_create_root_bus()
-
--> here we can init bus msi controller pointer
-
-- pci_scan_child_bus()
-
-we could get rid of pcibios_msi_controller on arm _now_ by just initializing
-the msi controller pointer in the struct pci_bus before
-pci_scan_child_bus() is called, unless I am missing something.
-
-I converted pcie-designware.c to stacked domains (and pci-keystone that
-relies on it, with its own quirks of course), I might take the step
-above as an intermediate step to have a common arm/arm64 generic host
-controller asap (ie for that getting rid of pcibios_msi_controller is
-mandatory, which requires converting all ARM host controllers to stacked
-domains, or taking the intermediate step above).
-
-Thanks,
-Lorenzo
