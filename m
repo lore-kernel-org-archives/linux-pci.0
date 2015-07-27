@@ -1,123 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33777 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:51702 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757692AbbGGQlf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 7 Jul 2015 12:41:35 -0400
-Message-ID: <1436287293.1391.74.camel@redhat.com>
-Subject: Re: [PATCH v2 4/7] DMA-API: Add dma_(un)map_resource() documentation
-From: Alex Williamson <alex.williamson@redhat.com>
+	id S1753626AbbG0NIO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Jul 2015 09:08:14 -0400
+Date: Mon, 27 Jul 2015 15:08:10 +0200
+From: Joerg Roedel <jroedel@suse.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mark Hounschell <markh@compro.net>,
-	William Davis <wdavis@nvidia.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>
-Date: Tue, 07 Jul 2015 10:41:33 -0600
-In-Reply-To: <CAErSpo74X7ny_30L2uDWJ==vQJKq3KgFk8CPVsKuJ7=-DwNo3w@mail.gmail.com>
-References: <1431973504-5903-1-git-send-email-wdavis@nvidia.com>
-	 <1431973504-5903-5-git-send-email-wdavis@nvidia.com>
-	 <20150519234300.GA31666@google.com> <555C79E5.9040507@compro.net>
-	 <20150707151517.GA14215@google.com> <1436283678.1391.50.camel@redhat.com>
-	 <CAErSpo74X7ny_30L2uDWJ==vQJKq3KgFk8CPVsKuJ7=-DwNo3w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org,
+	Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH v2 01/11] iommu/vt-d: Cache PCI ATS state and Invalidate
+ Queue Depth
+Message-ID: <20150727130810.GG27614@suse.de>
+References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150721001357.28145.83631.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150721001357.28145.83631.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2015-07-07 at 11:16 -0500, Bjorn Helgaas wrote:
-> On Tue, Jul 7, 2015 at 10:41 AM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Tue, 2015-07-07 at 10:15 -0500, Bjorn Helgaas wrote:
-> >> [+cc Alex]
-> >>
-> >> Hi Mark,
-> >>
-> >> On Wed, May 20, 2015 at 08:11:17AM -0400, Mark Hounschell wrote:
-> >> > Most currently available hardware doesn't allow reads but will allow
-> >> > writes on PCIe peer-to-peer transfers. All current AMD chipsets are
-> >> > this way. I'm pretty sure all Intel chipsets are this way also. What
-> >> > happens with reads is they are just dropped with no indication of
-> >> > error other than the data will not be as expected. Supposedly the
-> >> > PCIe spec does not even require any peer-to-peer support. Regular
-> >> > PCI there is no problem and this API could be useful. However I
-> >> > doubt seriously you will find a pure PCI motherboard that has an
-> >> > IOMMU.
-> >> >
-> >> > I don't understand the chipset manufactures reasoning for disabling
-> >> > PCIe peer-to-peer reads. We would like to make PCIe versions of our
-> >> > cards but their application requires  peer-to-peer reads and writes.
-> >> > So we cannot develop PCIe versions of the cards.
-> >>
-> >> I'd like to understand this better.  Peer-to-peer between two devices
-> >> below the same Root Port should work as long as ACS doesn't prevent
-> >> it.  If we find an Intel or AMD IOMMU, I think we configure ACS to
-> >> prevent direct peer-to-peer (see "pci_acs_enable"), but maybe it could
-> >> still be done with the appropriate IOMMU support.  And if you boot
-> >> with "iommu=off", we don't do that ACS configuration, so peer-to-peer
-> >> should work.
-> >
-> > The assumption I work from in vfio is that peer-to-peer should be able
-> > to take a path through the IOMMU, that is from one endpoint, up through
-> > to the RC (with ACS enabled), be translated by the IOMMU and directed
-> > back downstream to the specified endpoint.  Whether that actually works
-> > for any/all transactions, I can't say, I don't know how to test it.
-> > It'd be interesting to know if this is a false assumption.
+On Mon, Jul 20, 2015 at 07:13:57PM -0500, Bjorn Helgaas wrote:
+> We check the ATS state (enabled/disabled) and fetch the PCI ATS Invalidate
+> Queue Depth in performance-sensitive paths.  It's easy to cache these,
+> which removes dependencies on PCI.
 > 
-> That's what I assume as well.
+> Remember the ATS enabled state.  When enabling, read the queue depth once
+> and cache it in the device_domain_info struct.  This is similar to what
+> amd_iommu.c does.
 > 
-> >> I suppose the problem is that peer-to-peer doesn't work between
-> >> devices under different Root Ports or even devices under different
-> >> Root Complexes?
-> >>
-> >> PCIe r3.0, sec 6.12.1.1, says Root Ports that support peer-to-peer
-> >> traffic are required to implement ACS P2P Request Redirect, so if a
-> >> Root Port doesn't implement RR, we can assume it doesn't support
-> >> peer-to-peer.  But unfortunately the converse is not true: if a Root
-> >> Port implements RR, that does *not* imply that it supports
-> >> peer-to-peer traffic.
-> >
-> > ACS is a much overlooked part of the spec, afaict we can't assume
-> > anything about a root port that doesn't implement ACS, and most of them
-> > don't.
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/iommu/intel-iommu.c |   26 ++++++++++++++++----------
+>  1 file changed, 16 insertions(+), 10 deletions(-)
 > 
-> I think we can assume a Root Port that does not implement ACS P2P
-> Request Redirect does not support peer-to-peer traffic with other Root
-> Ports, right?  That's how I read sec 6.12.1.1.
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index a98a7b2..50832f1 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -408,6 +408,10 @@ struct device_domain_info {
+>  	struct list_head global; /* link to global list */
+>  	u8 bus;			/* PCI bus number */
+>  	u8 devfn;		/* PCI devfn number */
+> +	struct {
+> +		int enabled:1;
+> +		u8 qdep;
+> +	} ats;			/* ATS state */
+>  	struct device *dev; /* it's NULL for PCIe-to-PCI bridge */
+>  	struct intel_iommu *iommu; /* IOMMU used by this device */
+>  	struct dmar_domain *domain; /* pointer to domain */
+> @@ -1391,19 +1395,26 @@ iommu_support_dev_iotlb (struct dmar_domain *domain, struct intel_iommu *iommu,
+>  
+>  static void iommu_enable_dev_iotlb(struct device_domain_info *info)
+>  {
+> +	struct pci_dev *pdev;
+> +
+>  	if (!info || !dev_is_pci(info->dev))
+>  		return;
+>  
+> -	pci_enable_ats(to_pci_dev(info->dev), VTD_PAGE_SHIFT);
+> +	pdev = to_pci_dev(info->dev);
+> +	if (pci_enable_ats(pdev, VTD_PAGE_SHIFT))
+> +		return;
+> +
+> +	info->ats.enabled = 1;
+> +	info->ats.qdep = pci_ats_queue_depth(pdev);
 
-I think that means that *if* the device supports ACS and does not
-implement RR then it does not support peer-to-peer.  The assumption we
-make in IOMMU grouping is that if ACS is not supported at all, then the
-hardware is providing us with no indication for or against peer-to-peer
-and we therefore assume peer-to-peer is possible, but that's for
-isolation, not actually trying to make use of p2p.  It seems overly
-optimistic to assume the designers of a device that does not implement
-ACS evaluated the capability and determined it not to be necessary.
-Besides, ACS was only introduced in PCIe rev 2.
+Hmm, this is a place where the relaxed error handling in
+pci_enable_ats() can get problematic. If ATS is (by accident or a bug
+elsewhere) already enabled an the function returns -EINVAL, the IOMMU
+driver considers ATS disabled and doesn't flush the IO/TLBs of the
+device. This can cause data corruption later on, so we should make sure
+that info->ats.enabled is consistent with pdev->ats_enabled.
 
-> If we're trying to set up a peer-to-peer path between devices under
-> different Root ports, I think it would make sense to check the ACS
-> support somewhere in the pci_map_resource() path and fail if P2P RR is
-> not implemented.
 
-There are multiple options here:
-
-1) No ACS
-2) ACS, no RR
-3) ACS, RR enabled
-4) ACS, RR disabled
-
-In case 1), we have no idea.  Cases 2) and 3) are really the same,
-neither does peer-to-peer and I think whether we can support any sort of
-peer-to-peer mapping depends on whether there's an IOMMU upstream that
-can do the redirect.  For case 4), possibly we can assume the redirect
-happens at the root port, but you'll never see this case if an IOMMU is
-present and enabled.  Thanks,
-
-Alex
+	Joerg
 
