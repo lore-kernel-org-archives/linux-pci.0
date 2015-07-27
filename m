@@ -1,130 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:12438 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024AbbGUD2p (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 23:28:45 -0400
-Message-ID: <55ADBBE3.70204@hisilicon.com>
-Date: Tue, 21 Jul 2015 11:26:27 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:33230 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751336AbbG0GZJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 02:25:09 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v3 2/3] PCI: host: pci-dra7xx: add pm support to pci dra7xx
+Date: Mon, 27 Jul 2015 11:54:53 +0530
+Message-ID: <1437978294-22317-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1437978294-22317-1-git-send-email-kishon@ti.com>
+References: <1437978294-22317-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	James Morse <James.Morse@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v3 1/5] ARM/PCI: remove align_resource callback in pcibios_align_resource
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com> <1435743817-19083-2-git-send-email-wangzhou1@hisilicon.com> <20150702175056.GX944@e106497-lin.cambridge.arm.com> <559B6721.4080305@hisilicon.com> <20150707092220.GA980@e106497-lin.cambridge.arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D5F503@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D5F503@lhreml503-mbs>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/7/17 18:02, Gabriele Paoloni wrote:
-> The following patch is maybe a better solution
-> 
-> Gab
->
+Add PM support to pci-dra7xx so that PCI clocks can be disabled
+during suspend and enabled back during resume without affecting
+PCI functionality.
 
-Hi Gab,
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/host/pci-dra7xx.c |   72 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 72 insertions(+)
 
-Many thanks for your patch, I think this patch is cleaner than 1/4 in v2 patchset.
-I will merge this one in my new series.
-
-Thanks，
-Zhou
-
-> -----------------------
-> This patch is needed in order to unify the PCIe designware
-> framework for ARM and ARM64 architectures.
-> In the PCIe designware unification process we are calling
-> pci_create_root_bus() passing a "sysdata" parameter
-> that is the same for both ARM and ARM64 and is of type
-> "struct pcie_port*". In the ARM case this will cause
-> a problem with the function pcibios_align_resource();
-> in fact this will cast "dev->sysdata" to "struct pci_sys_data*",
-> whereas designware had passed a "struct pcie_port*" pointer.
-> 
-> This patch solves the issue by removing "align_resource" from
-> "pci_sys_data" struct and defining a static global function pointer
-> in "bios32.c"
-> 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni at huawei.com>
-> ---
->  arch/arm/include/asm/mach/pci.h |  5 -----
->  arch/arm/kernel/bios32.c        | 12 ++++++++----
->  2 files changed, 8 insertions(+), 9 deletions(-)
-> 
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> index 28b9bb3..8a4e4de 100644
-> --- a/arch/arm/include/asm/mach/pci.h
-> +++ b/arch/arm/include/asm/mach/pci.h
-> @@ -58,11 +58,6 @@ struct pci_sys_data {
->  					/* IRQ mapping				*/
->  	int		(*map_irq)(const struct pci_dev *, u8, u8);
->  					/* Resource alignement requirements	*/
-> -	resource_size_t (*align_resource)(struct pci_dev *dev,
-> -					  const struct resource *res,
-> -					  resource_size_t start,
-> -					  resource_size_t size,
-> -					  resource_size_t align);
->  	void		*private_data;	/* platform controller private data	*/
->  };
->  
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index fcbbbb1..4cdc64d 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -17,6 +17,11 @@
->  #include <asm/mach/pci.h>
->  
->  static int debug_pci;
-> +static resource_size_t (*align_resource)(struct pci_dev *dev,
-> +		  const struct resource *res,
-> +		  resource_size_t start,
-> +		  resource_size_t size,
-> +		  resource_size_t align) = NULL;
->  
->  #ifdef CONFIG_PCI_MSI
->  struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-> @@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  		sys->busnr   = busnr;
->  		sys->swizzle = hw->swizzle;
->  		sys->map_irq = hw->map_irq;
-> -		sys->align_resource = hw->align_resource;
-> +		align_resource = hw->align_resource;
->  		INIT_LIST_HEAD(&sys->resources);
->  
->  		if (hw->private_data)
-> @@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->  				resource_size_t size, resource_size_t align)
->  {
->  	struct pci_dev *dev = data;
-> -	struct pci_sys_data *sys = dev->sysdata;
->  	resource_size_t start = res->start;
->  
->  	if (res->flags & IORESOURCE_IO && start & 0x300)
-> @@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->  
->  	start = (start + align - 1) & ~(align - 1);
->  
-> -	if (sys->align_resource)
-> -		return sys->align_resource(dev, res, start, size, align);
-> +	if (align_resource)
-> +		return align_resource(dev, res, start, size, align);
->  
->  	return start;
->  }
-> 
-
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index d8b6d66..7599201 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -433,6 +433,77 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
++static int dra7xx_pcie_suspend(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	struct pcie_port *pp = &dra7xx->pp;
++
++	dw_pcie_suspend_rc(pp);
++
++	return 0;
++}
++
++static int dra7xx_pcie_resume(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	struct pcie_port *pp = &dra7xx->pp;
++
++	dw_pcie_resume_rc(pp);
++
++	return 0;
++}
++
++static int dra7xx_pcie_suspend_noirq(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	int count = dra7xx->phy_count;
++
++	while (count--) {
++		phy_power_off(dra7xx->phy[count]);
++		phy_exit(dra7xx->phy[count]);
++	}
++
++	return 0;
++}
++
++static int dra7xx_pcie_resume_noirq(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	int phy_count = dra7xx->phy_count;
++	int ret;
++	int i;
++
++	for (i = 0; i < phy_count; i++) {
++		ret = phy_init(dra7xx->phy[i]);
++		if (ret < 0)
++			goto err_phy;
++
++		ret = phy_power_on(dra7xx->phy[i]);
++		if (ret < 0) {
++			phy_exit(dra7xx->phy[i]);
++			goto err_phy;
++		}
++	}
++
++	return 0;
++
++err_phy:
++	while (--i >= 0) {
++		phy_power_off(dra7xx->phy[i]);
++		phy_exit(dra7xx->phy[i]);
++	}
++
++	return ret;
++}
++#endif
++
++static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
++	SET_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend, dra7xx_pcie_resume)
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
++				      dra7xx_pcie_resume_noirq)
++};
++
+ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ 	{ .compatible = "ti,dra7-pcie", },
+ 	{},
+@@ -444,6 +515,7 @@ static struct platform_driver dra7xx_pcie_driver = {
+ 	.driver = {
+ 		.name	= "dra7-pcie",
+ 		.of_match_table = of_dra7xx_pcie_match,
++		.pm	= &dra7xx_pcie_pm_ops,
+ 	},
+ };
+ 
+-- 
+1.7.9.5
 
