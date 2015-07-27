@@ -1,43 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:47344 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753080AbbG2PWK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jul 2015 11:22:10 -0400
-Date: Wed, 29 Jul 2015 17:22:08 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	iommu <iommu@lists.linux-foundation.org>,
-	Tejun Heo <tj@kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Subject: Re: Since Linux 4.1: A lot of AMD-Vi IO_PAGE_FAULTs
-Message-ID: <20150729152208.GS10969@8bytes.org>
-References: <55AE5F84.5020204@01019freenet.de>
- <1437492886.1391.847.camel@redhat.com>
- <20150721155635.GE10969@8bytes.org>
- <55AE7147.7070902@maya.org>
- <20150721163517.GG10969@8bytes.org>
- <55B1BDA3.3030507@maya.org>
- <CAErSpo666MBxpDe+uPvfVc7LPJsJQsVTusBhHygtwbou5GGj1w@mail.gmail.com>
- <55B27CEB.6010007@maya.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55B27CEB.6010007@maya.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 19/51] PCI: Separate must+optional assigning to another function
+Date: Mon, 27 Jul 2015 16:29:37 -0700
+Message-Id: <1438039809-24957-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andreas,
+__assign_resources_sorted() is getting too big if we put alt_size support
+into it.  Split must_add assigning code out to another function.
 
-On Fri, Jul 24, 2015 at 07:59:07PM +0200, Andreas Hartmann wrote:
-> New information: During testing, I now realized that Linux 4.0.9 shows
-> the same problem ... . I'm now testing 3.19.4.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 27 insertions(+), 20 deletions(-)
 
-Have you seen the issue on 3.19 too or hasn't it happened there at all
-yet? The question is where to look for a commit that breaks it on  your
-machine.
-
-
-	Joerg
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f8b9a24..d1f9e19 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+ 	res->flags = save_res->flags;
+ }
+ 
+-static void __assign_resources_sorted(struct list_head *head,
+-				 struct list_head *realloc_head,
+-				 struct list_head *fail_head)
++static bool __assign_resources_must_add_sorted(struct list_head *head,
++				 struct list_head *realloc_head)
+ {
+-	/*
+-	 * Should not assign requested resources at first.
+-	 *   they could be adjacent, so later reassign can not reallocate
+-	 *   them one by one in parent resource window.
+-	 * Try to assign requested + add_size at beginning
+-	 *  if could do that, could get out early.
+-	 *  if could not do that, we still try to assign requested at first,
+-	 *    then try to reassign add_size for some resources.
+-	 */
+-
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	resource_size_t add_align;
+ 	struct resource *res;
+ 
+-	/* Check if optional add_size is there */
+-	if (!realloc_head || list_empty(realloc_head))
+-		goto requested_and_reassign;
+-
+ 	if (!save_resources(head, &save_head))
+-		goto requested_and_reassign;
++		return false;
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 			remove_from_list(realloc_head, dev_res->res);
+ 		free_list(&save_head);
+ 		free_list(head);
+-		return;
++
++		return true;
+ 	}
+ 
+ 	/* check failed type */
+@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	free_list(&save_head);
+ 
+-requested_and_reassign:
++	return false;
++}
++
++static void __assign_resources_sorted(struct list_head *head,
++				 struct list_head *realloc_head,
++				 struct list_head *fail_head)
++{
++	/*
++	 * Should not assign requested resources at first.
++	 *   they could be adjacent, so later reassign can not reallocate
++	 *   them one by one in parent resource window.
++	 * Try to assign requested + add_size at beginning
++	 *  if could do that, could get out early.
++	 *  if could not do that, we still try to assign requested at first,
++	 *    then try to reassign add_size for some resources.
++	 */
++
++	/* Check must+optional add */
++	if (realloc_head && !list_empty(realloc_head) &&
++	    __assign_resources_must_add_sorted(head, realloc_head))
++		return;
++
+ 	__sort_resources(head);
+ 
+ 	/* Satisfy the must-have resource requests */
+-- 
+1.8.4.5
 
