@@ -1,130 +1,123 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v3 14/15] PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
-Date: Tue,  7 Jul 2015 18:18:04 +0100
-Message-Id: <1436289485-28230-15-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
-References: <1436289485-28230-1-git-send-email-marc.zyngier@arm.com>
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 21/51] PCI: Move saved required resource list out of must+optional assigning
+Date: Mon, 27 Jul 2015 16:29:39 -0700
+Message-Id: <1438039809-24957-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The XGene MSI driver only uses the msi_controller structure as
-a way to match the host bridge  with its MSI HW, and thus the
-msi_domain.
+We will need to share that saved list for alt_size support.
 
-But now that we can directly associate an msi_domain with a device,
-there is no use keeping this msi_controller around.
-
-Just remove all traces of msi_controller from the driver.
-
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pci-xgene-msi.c | 41 ++++++++++++++++------------------------
- 1 file changed, 16 insertions(+), 25 deletions(-)
+ drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-index 2d31d4d..ec5a14b 100644
---- a/drivers/pci/host/pci-xgene-msi.c
-+++ b/drivers/pci/host/pci-xgene-msi.c
-@@ -40,8 +40,8 @@ struct xgene_msi_group {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 64ef516..1c0b4c5 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -456,6 +456,9 @@ static bool __has_addon(struct list_head *head,
+ 	int add_count = 0;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
  
- struct xgene_msi {
- 	struct device_node	*node;
--	struct msi_controller	mchip;
--	struct irq_domain	*domain;
-+	struct irq_domain	*inner_domain;
-+	struct irq_domain	*msi_domain;
- 	u64			msi_addr;
- 	void __iomem		*msi_regs;
- 	unsigned long		*bitmap;
-@@ -252,17 +252,17 @@ static const struct irq_domain_ops msi_domain_ops = {
- 
- static int xgene_allocate_domains(struct xgene_msi *msi)
- {
--	msi->domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
--					    &msi_domain_ops, msi);
--	if (!msi->domain)
-+	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-+						  &msi_domain_ops, msi);
-+	if (!msi->inner_domain)
- 		return -ENOMEM;
- 
--	msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
--						      &xgene_msi_domain_info,
--						      msi->domain);
-+	msi->msi_domain = pci_msi_create_irq_domain(msi->node,
-+						    &xgene_msi_domain_info,
-+						    msi->inner_domain);
- 
--	if (!msi->mchip.domain) {
--		irq_domain_remove(msi->domain);
-+	if (!msi->msi_domain) {
-+		irq_domain_remove(msi->inner_domain);
- 		return -ENOMEM;
- 	}
- 
-@@ -271,10 +271,10 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
- 
- static void xgene_free_domains(struct xgene_msi *msi)
- {
--	if (msi->mchip.domain)
--		irq_domain_remove(msi->mchip.domain);
--	if (msi->domain)
--		irq_domain_remove(msi->domain);
-+	if (msi->msi_domain)
-+		irq_domain_remove(msi->msi_domain);
-+	if (msi->inner_domain)
-+		irq_domain_remove(msi->inner_domain);
++	if (!realloc_head)
++		return false;
++
+ 	/* check if we have add really */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
+@@ -492,9 +495,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
  }
  
- static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
-@@ -340,7 +340,7 @@ static void xgene_msi_isr(unsigned int irq, struct irq_desc *desc)
- 			 * CPU0
- 			 */
- 			hw_irq = hwirq_to_canonical_hwirq(hw_irq);
--			virq = irq_find_mapping(xgene_msi->domain, hw_irq);
-+			virq = irq_find_mapping(xgene_msi->inner_domain, hw_irq);
- 			WARN_ON(!virq);
- 			if (virq != 0)
- 				generic_handle_irq(virq);
-@@ -497,7 +497,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
- 		goto error;
+ static bool __assign_resources_must_add_sorted(struct list_head *head,
++				 struct list_head *save_head,
+ 				 struct list_head *realloc_head)
+ {
+-	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+@@ -502,12 +505,6 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
+ 	resource_size_t add_align, add_size;
+ 	struct resource *res;
+ 
+-	if (!__has_addon(head, realloc_head))
+-		return false;
+-
+-	if (!save_resources(head, &save_head))
+-		return false;
+-
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+@@ -548,7 +545,6 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
+ 		/* Remove head list from realloc_head list */
+ 		list_for_each_entry(dev_res, head, list)
+ 			remove_from_list(realloc_head, dev_res->res);
+-		free_list(&save_head);
+ 		free_list(head);
+ 
+ 		return true;
+@@ -562,7 +558,7 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
+ 		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+ 			remove_from_list(realloc_head, res);
+-			remove_from_list(&save_head, res);
++			remove_from_list(save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
+@@ -581,11 +577,9 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
+ 		}
  	}
- 	xgene_msi->msi_addr = res->start;
+ 	/* Restore start/end/flags from saved list */
+-	list_for_each_entry(save_res, &save_head, list)
++	list_for_each_entry(save_res, save_head, list)
+ 		restore_resource(save_res, save_res->res);
+ 
+-	free_list(&save_head);
 -
-+	xgene_msi->node = pdev->dev.of_node;
- 	xgene_msi->num_cpus = num_possible_cpus();
+ 	return false;
+ }
  
- 	rc = xgene_msi_init_allocator(xgene_msi);
-@@ -561,19 +561,10 @@ static int xgene_msi_probe(struct platform_device *pdev)
+@@ -603,16 +597,24 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 *    then try to reassign add_size for some resources.
+ 	 */
  
- 	cpu_notifier_register_done();
++	LIST_HEAD(save_head);
++
+ 	/* Check must+optional add */
+-	if (realloc_head &&
+-	    __assign_resources_must_add_sorted(head, realloc_head))
++	if (__has_addon(head, realloc_head) &&
++	    save_resources(head, &save_head) &&
++	    __assign_resources_must_add_sorted(head, &save_head,
++					       realloc_head)) {
++		free_list(&save_head);
+ 		return;
++	}
  
--	xgene_msi->mchip.of_node = pdev->dev.of_node;
--	rc = of_pci_msi_chip_add(&xgene_msi->mchip);
--	if (rc) {
--		dev_err(&pdev->dev, "failed to add MSI controller chip\n");
--		goto error_notifier;
--	}
--
- 	dev_info(&pdev->dev, "APM X-Gene PCIe MSI driver loaded\n");
+ 	__sort_resources(head);
  
- 	return 0;
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
  
--error_notifier:
--	unregister_hotcpu_notifier(&xgene_msi_cpu_notifier);
- error:
- 	xgene_msi_remove(pdev);
- 	return rc;
++	free_list(&save_head);
++
+ 	/* Try to satisfy any additional optional resource
+ 		requests */
+ 	if (realloc_head)
 -- 
-2.1.4
+1.8.4.5
 
