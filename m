@@ -1,101 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:34966 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754181AbbGUAOB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 20 Jul 2015 20:14:01 -0400
-Received: by igr7 with SMTP id 7so26836054igr.0
-        for <linux-pci@vger.kernel.org>; Mon, 20 Jul 2015 17:14:00 -0700 (PDT)
-Subject: [PATCH v2 01/11] iommu/vt-d: Cache PCI ATS state and Invalidate
- Queue Depth
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: iommu@lists.linux-foundation.org,
-	Gregor Dick <gdick@solarflare.com>
-Date: Mon, 20 Jul 2015 19:13:57 -0500
-Message-ID: <20150721001357.28145.83631.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:38930 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754690AbbG0Xgj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:36:39 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 38/51] PCI: Restore pref mmio allocation logic for hostbridge without mmio64
+Date: Mon, 27 Jul 2015 16:29:56 -0700
+Message-Id: <1438039809-24957-39-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We check the ATS state (enabled/disabled) and fetch the PCI ATS Invalidate
-Queue Depth in performance-sensitive paths.  It's easy to cache these,
-which removes dependencies on PCI.
+>From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
+resources), we change the logic for pref mmio allocation:
+When bridge pref support mmio64, we will only put children pref
+that support mmio64 into it, and will put children pref mmio32
+into bridge's non-pref mmio32.
 
-Remember the ATS enabled state.  When enabling, read the queue depth once
-and cache it in the device_domain_info struct.  This is similar to what
-amd_iommu.c does.
+That could leave bridge pref bar not used when that pref bar is mmio64,
+and children res only has mmio32.
+Also could have allocation failure when non-pref mmio32 is not big
+enough space for those children pref mmio32.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+That is not rational when the host bridge does not 64bit mmio above 4g
+at all.
+
+The patch restore to old logic:
+when hostbridge does not have has_mem64 so put children pref mmio64 and
+pref mmio32 all under bridges pref bars.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/iommu/intel-iommu.c |   26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ drivers/pci/bus.c       |  4 +++-
+ drivers/pci/setup-bus.c | 13 +++++++++----
+ drivers/pci/setup-res.c |  9 ++++++---
+ 3 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index a98a7b2..50832f1 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -408,6 +408,10 @@ struct device_domain_info {
- 	struct list_head global; /* link to global list */
- 	u8 bus;			/* PCI bus number */
- 	u8 devfn;		/* PCI devfn number */
-+	struct {
-+		int enabled:1;
-+		u8 qdep;
-+	} ats;			/* ATS state */
- 	struct device *dev; /* it's NULL for PCIe-to-PCI bridge */
- 	struct intel_iommu *iommu; /* IOMMU used by this device */
- 	struct dmar_domain *domain; /* pointer to domain */
-@@ -1391,19 +1395,26 @@ iommu_support_dev_iotlb (struct dmar_domain *domain, struct intel_iommu *iommu,
- 
- static void iommu_enable_dev_iotlb(struct device_domain_info *info)
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6fbd3f2..b043bdf 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -202,8 +202,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
  {
-+	struct pci_dev *pdev;
-+
- 	if (!info || !dev_is_pci(info->dev))
- 		return;
+ #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+ 	int rc;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
  
--	pci_enable_ats(to_pci_dev(info->dev), VTD_PAGE_SHIFT);
-+	pdev = to_pci_dev(info->dev);
-+	if (pci_enable_ats(pdev, VTD_PAGE_SHIFT))
-+		return;
-+
-+	info->ats.enabled = 1;
-+	info->ats.qdep = pci_ats_queue_depth(pdev);
- }
+-	if (res->flags & IORESOURCE_MEM_64) {
++	if (res->flags & mmio64) {
+ 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
+ 					       type_mask, alignf, alignf_data,
+ 					       &pci_high);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 0269868..54f0261 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1887,7 +1887,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+ 		mask = IORESOURCE_MEM;
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		if (b_res[2].flags & IORESOURCE_MEM_64) {
++		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
++		    pci_find_host_bridge(bus)->has_mem64) {
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+@@ -2043,17 +2044,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 *	  io port.
+ 	 *     2. if there is non pref mmio assign fail, release bridge
+ 	 *	  nonpref mmio.
+-	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
++	 *     3. if there is pref mmio assign fail, and host bridge does
++	 *	  have 64bit mmio, release bridge pref mmio.
++	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
+ 	 *	  is 64bit, release bridge pref mmio.
+-	 *     4. if there is pref mmio assign fail, and bridge pref is
++	 *     5. if there is pref mmio assign fail, and bridge pref is
+ 	 *	  32bit mmio, release bridge pref mmio
+-	 *     5. if there is pref mmio assign fail, and bridge pref is not
++	 *     6. if there is pref mmio assign fail, and bridge pref is not
+ 	 *	  assigned, release bridge nonpref mmio.
+ 	 */
+ 	if (type & IORESOURCE_IO)
+ 		idx = 0;
+ 	else if (!(type & IORESOURCE_PREFETCH))
+ 		idx = 1;
++	else if (!pci_find_host_bridge(bus)->has_mem64)
++		idx = 2;
+ 	else if ((type & IORESOURCE_MEM_64) &&
+ 		 (b_res[2].flags & IORESOURCE_MEM_64))
+ 		idx = 2;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index b19aa5b..26aedde 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -205,6 +205,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	struct resource *res = dev->resource + resno;
+ 	resource_size_t min;
+ 	int ret;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
  
- static void iommu_disable_dev_iotlb(struct device_domain_info *info)
- {
--	if (!info->dev || !dev_is_pci(info->dev) ||
--	    !pci_ats_enabled(to_pci_dev(info->dev)))
-+	if (!info->ats.enabled)
- 		return;
+ 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
  
- 	pci_disable_ats(to_pci_dev(info->dev));
-+	info->ats.enabled = 0;
- }
+@@ -216,7 +218,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * things differently than they were sized, not everything will fit.
+ 	 */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+-				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
++				     IORESOURCE_PREFETCH | mmio64,
+ 				     pcibios_align_resource, dev);
+ 	if (ret == 0)
+ 		return 0;
+@@ -225,7 +227,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * If the prefetchable window is only 32 bits wide, we can put
+ 	 * 64-bit prefetchable resources in it.
+ 	 */
+-	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
++	if (mmio64 &&
++	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
+ 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 					     IORESOURCE_PREFETCH,
+@@ -240,7 +243,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * non-prefetchable, the first call already tried the only possibility
+ 	 * so we don't need to try again.
+ 	 */
+-	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
++	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+ 					     pcibios_align_resource, dev);
  
- static void iommu_flush_dev_iotlb(struct dmar_domain *domain,
-@@ -1415,16 +1426,11 @@ static void iommu_flush_dev_iotlb(struct dmar_domain *domain,
- 
- 	spin_lock_irqsave(&device_domain_lock, flags);
- 	list_for_each_entry(info, &domain->devices, link) {
--		struct pci_dev *pdev;
--		if (!info->dev || !dev_is_pci(info->dev))
--			continue;
--
--		pdev = to_pci_dev(info->dev);
--		if (!pci_ats_enabled(pdev))
-+		if (!info->ats.enabled)
- 			continue;
- 
- 		sid = info->bus << 8 | info->devfn;
--		qdep = pci_ats_queue_depth(pdev);
-+		qdep = info->ats.qdep;
- 		qi_flush_dev_iotlb(info->iommu, sid, qdep, addr, mask);
- 	}
- 	spin_unlock_irqrestore(&device_domain_lock, flags);
+-- 
+1.8.4.5
 
