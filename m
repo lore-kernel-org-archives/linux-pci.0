@@ -1,112 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:36728 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037AbbGaH7E (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2015 03:59:04 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Rob Herring <robh@kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	James Morse <James.Morse@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	Kangfenglong <kangfenglong@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v5 1/5] ARM/PCI: remove align_resource in pci_sys_data
-Date: Fri, 31 Jul 2015 07:57:51 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D7023A@lhreml503-mbs>
-References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
- <1437794486-21134-2-git-send-email-wangzhou1@hisilicon.com>
- <55B72C7E.1020102@hisilicon.com> <20150728174406.GB19909@red-moon>
- <CAL_JsqK5a7q=VfpKJkRtgoEVWo5zhCe+h2ouDeyZRj4oN=jH6w@mail.gmail.com>
-In-Reply-To: <CAL_JsqK5a7q=VfpKJkRtgoEVWo5zhCe+h2ouDeyZRj4oN=jH6w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:36376 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932146AbbG0Xba (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:31:30 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 27/51] PCI: Move ISA ioport align out of calculate_iosize
+Date: Mon, 27 Jul 2015 16:29:45 -0700
+Message-Id: <1438039809-24957-28-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUm9iLCBUaGFua3MgZm9yIHJldmlld2luZw0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
-LS0tDQo+IEZyb206IHJvYmhlcnJpbmcyQGdtYWlsLmNvbSBbbWFpbHRvOnJvYmhlcnJpbmcyQGdt
-YWlsLmNvbV0gT24gQmVoYWxmIE9mIFJvYg0KPiBIZXJyaW5nDQo+IFNlbnQ6IDMwIEp1bHkgMjAx
-NSAyMzo0OA0KPiBUbzogTG9yZW56byBQaWVyYWxpc2k7IFJ1c3NlbGwgS2luZyAtIEFSTSBMaW51
-eDsgV2FuZ3pob3UgKEIpDQo+IENjOiBCam9ybiBIZWxnYWFzOyBKaW5nb28gSGFuOyBQcmF0eXVz
-aCBBbmFuZDsgQXJuZCBCZXJnbWFubjsgR2FicmllbGUgUGFvbG9uaTsNCj4gSmFtZXMgTW9yc2U7
-IExpdml1IER1ZGF1OyB0aG9tYXMucGV0YXp6b25pQGZyZWUtZWxlY3Ryb25zLmNvbTsgSmFzb24g
-Q29vcGVyOw0KPiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxp
-c3RzLmluZnJhZGVhZC5vcmc7DQo+IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBZdWFuemhp
-Y2hhbmc7IFpodWRhY2FpOyB6aGFuZ2p1a3VvOyBxaXV6aGVuZmE7DQo+IGxpdWRvbmdkb25nIChD
-KTsgcWl1amlhbmc7IEthbmdmZW5nbG9uZzsgTGlndW96aHUgKEtlbm5ldGgpDQo+IFN1YmplY3Q6
-IFJlOiBbUEFUQ0ggdjUgMS81XSBBUk0vUENJOiByZW1vdmUgYWxpZ25fcmVzb3VyY2UgaW4gcGNp
-X3N5c19kYXRhDQo+IA0KPiBPbiBUdWUsIEp1bCAyOCwgMjAxNSBhdCAxMjo0NCBQTSwgTG9yZW56
-byBQaWVyYWxpc2kNCj4gPGxvcmVuem8ucGllcmFsaXNpQGFybS5jb20+IHdyb3RlOg0KPiA+IFtD
-QydpbmcgUk1LXQ0KPiA+DQo+ID4gT24gVHVlLCBKdWwgMjgsIDIwMTUgYXQgMDg6MTc6MThBTSAr
-MDEwMCwgWmhvdSBXYW5nIHdyb3RlOg0KPiA+PiBPbiAyMDE1LzcvMjUgMTE6MjEsIFpob3UgV2Fu
-ZyB3cm90ZToNCj4gPj4gPiBGcm9tOiBHYWJyaWVsZSBQYW9sb25pIDxnYWJyaWVsZS5wYW9sb25p
-QGh1YXdlaS5jb20+DQo+ID4+ID4NCj4gPj4gPiBUaGlzIHBhdGNoIGlzIG5lZWRlZCBpbiBvcmRl
-ciB0byB1bmlmeSB0aGUgUENJZSBkZXNpZ253YXJlIGZyYW1ld29yayBmb3INCj4gQVJNIGFuZA0K
-PiA+PiA+IEFSTTY0IGFyY2hpdGVjdHVyZXMuIEluIHRoZSBQQ0llIGRlc2lnbndhcmUgdW5pZmlj
-YXRpb24gcHJvY2VzcyB3ZSBhcmUNCj4gY2FsbGluZw0KPiA+PiA+IHBjaV9jcmVhdGVfcm9vdF9i
-dXMoKSBwYXNzaW5nIGEgInN5c2RhdGEiIHBhcmFtZXRlciB0aGF0IGlzIHRoZSBzYW1lIGZvcg0K
-PiBib3RoDQo+ID4+ID4gQVJNIGFuZCBBUk02NCBhbmQgaXMgb2YgdHlwZSAic3RydWN0IHBjaWVf
-cG9ydCoiLiBJbiB0aGUgQVJNIGNhc2UgdGhpcw0KPiB3aWxsDQo+ID4+ID4gY2F1c2UgYSBwcm9i
-bGVtIHdpdGggdGhlIGZ1bmN0aW9uIHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UoKTsgaW4gZmFjdCB0
-aGlzDQo+IHdpbGwNCj4gPj4gPiBjYXN0ICJkZXYtPnN5c2RhdGEiIHRvICJzdHJ1Y3QgcGNpX3N5
-c19kYXRhKiIsIHdoZXJlYXMgZGVzaWdud2FyZSBoYWQNCj4gcGFzc2VkIGENCj4gPj4gPiAic3Ry
-dWN0IHBjaWVfcG9ydCoiIHBvaW50ZXIuDQo+ID4+ID4NCj4gPj4gPiBUaGlzIHBhdGNoIHNvbHZl
-cyB0aGUgaXNzdWUgYnkgcmVtb3ZpbmcgImFsaWduX3Jlc291cmNlIiBmcm9tDQo+ICJwY2lfc3lz
-X2RhdGEiDQo+ID4+ID4gc3RydWN0IGFuZCBkZWZpbmluZyBhIHN0YXRpYyBnbG9iYWwgZnVuY3Rp
-b24gcG9pbnRlciBpbiAiYmlvczMyLmMiDQo+ID4+ID4NCj4gPj4gPiBTaWduZWQtb2ZmLWJ5OiBH
-YWJyaWVsZSBQYW9sb25pIDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+DQo+ID4+DQo+ID4+
-IEhpIEFybmQgYW5kIFJvYiwNCj4gPj4NCj4gPj4gV2hhdCBpcyB5b3VyIG9waW5pb24gYWJvdXQg
-dGhpcyBwYXRjaD8gR2FicmllbGUgYWRkcyBhIGdsb2JhbCBwb2ludGVyIGluDQo+IGJpb3MzMi5j
-DQo+ID4+IHRvIHN0b3JlIGFsaWduX3Jlc291cmNlLCBzbyB3ZSBjb3VsZCByZW1vdmUgc3lzLT5h
-bGlnbl9yZXNvdXJjZSBpbg0KPiBwY2liaW9zX2FsaWduX3Jlc291cmNlLg0KPiA+Pg0KPiA+PiBB
-cyBMb3JlbnpvIG1lbnRpb25lZCBpbiB2NCBzZXJpZXMsIHRoaXMgaXMgYSB0ZW1wb3Jhcnkgc29s
-dXRpb24gYmVmb3JlDQo+IG1vdmluZw0KPiA+PiBhbGlnbl9yZXNvdXJjZSB0byBob3N0IGJyaWRn
-ZSBzdHJ1Y3R1cmUuDQo+ID4+DQo+ID4+IEFueSBjb21tZW50cyB3ZWxjb21lLg0KPiA+DQo+ID4g
-VGhlIGFsaWduX3Jlc291cmNlKCkgcG9pbnRlciBpcyBqdXN0IHVzZWQgaW4gZHJpdmVycy9wY2kv
-aG9zdC9wY2ktbXZlYnUuYywNCj4gPiBJIHdvdWxkIGxpa2UgdGhlIHBjaS1tdmVidS5jIG1haW50
-YWluZXJzIHRvIGNvbW1lbnQgb24gdGhpcyBhbmQgdGVzdCBpdCwgSQ0KPiA+IGRvIG5vdCBleHBl
-Y3QgaXQgdG8gY3JlYXRlIGFueSBpc3N1ZSBhbmQgbWlnaHQgYmUgYSB0ZW1wb3Jhcnkgc29sdXRp
-b24gdG8NCj4gPiBtYWtlIHByb2dyZXNzIG9uIEFSTS9BUk02NCBjb25zb2xpZGF0aW9uLCBpdCBp
-cyBhIGJsb2NraW5nIHBvaW50Lg0KPiA+DQo+ID4gSXQgd291bGQgYmUgZ29vZCBpZiBSdXNzZWxs
-IGNhbiBoYXZlIGEgbG9vayB0b28sIEkgZG8gbm90IHNlZSB3aGF0DQo+ID4gaXNzdWUgdGhpcyBj
-YW4gdHJpZ2dlciBnaXZlbiB0aGF0IGlzIGp1c3QgdXNlZCBpbjoNCj4gDQo+IEl0J3MgUnVzc2Vs
-bCdzIGNhbGwgb24gdGhpcyBpZiB5b3Ugd2FudCB0byB0b3VjaCBiaW9zMzIuYy4uLg0KPiANCj4g
-Pg0KPiA+IGRyaXZlcnMvcGNpL2hvc3QvcGNpLW12ZWJ1LmMNCj4gPg0KPiA+IGFuZCBhIGdsb2Jh
-bCBwb2ludGVyIChub3Qgc2F5aW5nIGl0IGlzIGVsZWdhbnQsIGJ1dCBpdCBzaG91bGQgd29yaykN
-Cj4gPiBtaWdodCBiZSBvay4NCj4gPg0KPiA+IFNvIHllcywgY29tbWVudHMgdmVyeSB3ZWxjb21l
-Lg0KPiANCj4gSSBtYXkgYmUgd3JvbmcsIGJ1dCBJIGRvbid0IHRoaW5rIGV2ZW4gbXZlYnUgbmVl
-ZHMgdGhpcyBhcyBwYXJ0IG9mDQo+IHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UuIHBjaWJpb3NfYWxp
-Z25fcmVzb3VyY2UgaXMgY2FsbGVkIGZvciBldmVyeQ0KPiBkZXZpY2UsIGJ1dCBhbGwgbXZlYnUg
-c2hvdWxkIGNhcmUgYWJvdXQgaXMgdGhlIGFsaWdubWVudCBvZiB0aGUgcm9vdA0KPiBidXMgQkFS
-cyAoYW5kIGNvcnJlc3BvbmRpbmcgTUJ1cyB3aW5kb3dzKSB3aGljaCBjYW4gYmUgaGFuZGxlZCBp
-bg0KPiBwcm9iZS4gSSBjYW4ndCBzZWUgaG93IHJlZ2lvbnMgd2l0aGluIHRoZXJlIG1hdHRlci4g
-QnV0IHRoYXQgaXMganVzdA0KPiBteSAxMCBtaW51dGUgbG9vayBhdCBpdC4NCg0KSSB0aGluayBU
-aG9tYXMgUGV0YXp6b25pIHNob3VsZCBhbnN3ZXIgdGhpcy4uLnJpZ2h0PyAgDQoNCj4gDQo+IElm
-IG5vdCwgdGhlbiBJIHRoaW5rIGFsaWduX3Jlc291cmNlIHNob3VsZCBiZSBhIGNvbW1vbiBwZXIg
-aG9zdA0KPiBmdW5jdGlvbiBwdHIuIEluIG90aGVyIHdvcmRzLCB0aGluayBhYm91dCBob3cgdG8g
-cHJvdmlkZSBhIGRlZmF1bHQNCj4gaW1wbGVtZW50YXRpb24gb2YgcGNpYmlvc19hbGlnbl9yZXNv
-dXJjZS4gVGhleSBhbG1vc3QgYWxsIGxvb2sgdGhlDQo+IHNhbWUgdG8gbWUgd2l0aCB0aGUgc2Ft
-ZSBJL08gMHgzeHggYWRkcmVzcyBoYW5kbGluZy4NCg0KcGNpYmlvc19hbGlnbl9yZXNvdXJjZSBh
-bHJlYWR5IHByb3ZpZGVzIHRoZSBkZWZhdWx0IGFsaWdubWVudCBqb2IuDQpBcmUgeW91IHN1Z2dl
-c3RpbmcgdG8gcmVwbGFjZSBwY2liaW9zX2FsaWduX3Jlc291cmNlcyBpbXBsZW1lbnRhdGlvbg0K
-d2l0aCBhIHN0dWIgYW5kIG1vdmUgdGhlIGFsaWdubWVudCBqb2Igc29tZXdoZXJlIGVsc2UuLi4/
-DQoNCj4gDQo+IFJvYg0K
+So we could unify calculate_iosize and calculate_memsize later.
+
+when one bridge have several children devices, and every devices
+have several io port resources and resource size < 0x400.
+
+We need to check size, and add extra size to make sure bit8/9
+to be zero.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b44921e..3db2838 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1126,11 +1126,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	/* To be fixed in 2.5: we should have sort of HAVE_ISA
+-	   flag in the struct pci_bus. */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
+ 	size = ALIGN(size + size1, align);
+ 	if (size < old_size)
+ 		size = old_size;
+@@ -1184,6 +1179,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+ 	return max(align, arch_align);
+ }
+ 
++static resource_size_t size_aligned_for_isa(resource_size_t size)
++{
++	/*
++	 * To be fixed in 2.5: we should have sort of HAVE_ISA
++	 *  flag in the struct pci_bus.
++	 */
++#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
++	size = (size & 0xff) + ((size & ~0xffUL) << 2);
++#endif
++	return size;
++}
++
+ /**
+  * pbus_size_io() - size the io window of a given bus
+  *
+@@ -1201,11 +1208,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_sum_size = 0;
+-	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+-	resource_size_t children_add_size = 0;
++	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
+ 	resource_size_t min_align, align;
+ 
+ 	if (!b_res)
+@@ -1222,7 +1228,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			unsigned long r_size;
++			unsigned long r_size, r_add_size;
+ 
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+ 				continue;
+@@ -1238,18 +1244,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			if (align > min_align)
+ 				min_align = align;
+ 
+-			if (realloc_head)
+-				children_add_size += get_res_add_size(realloc_head, r);
++			if (realloc_head) {
++				r_add_size = get_res_add_size(realloc_head, r);
++				r_add_size += r_size;
++				if (r_add_size < 0x400)
++					/* Might be re-aligned for ISA */
++					sum_add_size += r_add_size;
++				else
++					sum_add_size1 += r_add_size;
++			}
+ 		}
+ 	}
+ 
++	size = size_aligned_for_isa(size);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	sum_add_size = children_add_size + size + size1;
++	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(size, min_size, sum_add_size - size,
++		calculate_iosize(sum_add_size, min_size, 0,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+-- 
+1.8.4.5
+
