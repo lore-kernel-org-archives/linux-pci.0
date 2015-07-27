@@ -1,88 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:34000 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932257AbbGUQO5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 12:14:57 -0400
-Received: by igvi1 with SMTP id i1so106825304igv.1
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jul 2015 09:14:56 -0700 (PDT)
-Date: Tue, 21 Jul 2015 11:14:46 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Duc Dang <dhdang@apm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Tanmay Inamdar <tinamdar@apm.com>, patches@apm.com
-Subject: Re: [PATCH v3 0/2] pci: xgene: Add multiple memory ranges support
-Message-ID: <20150721161446.GC21967@google.com>
-References: <1481643.dA4ocqzitg@wuerfel>
- <cover.1436476099.git.dhdang@apm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1436476099.git.dhdang@apm.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:19150 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932293AbbG0XbX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:31:23 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 25/51] PCI: Fix size calculation with old_size on rescan path
+Date: Mon, 27 Jul 2015 16:29:43 -0700
+Message-Id: <1438039809-24957-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 09, 2015 at 02:20:10PM -0700, Duc Dang wrote:
-> This patch set adds 1 large (up to 64GB) memory window for each PCIe
-> controller nodes in X-Gene device tree and fix PCIe controller driver
-> to handle multiple memory ranges correctly. These changes are required
-> to support PCIe devices that have huge BAR.
-> 
-> v3 changes:
-> 	1. Explicitly mention in change log that: Each PCIe node in dts 
-> 	will have 1 32-bit non-prefetchable memory window and 1 64-bit 
-> 	prefetchable memory window.
-> 
-> v2 changes:
->         1. Separate device-tree changes and driver changes into different
->         patches
->         2. Explicitly define new large window as 64-bit prefetchable in dts.
->         3. Use IORESOURCE_PREFETCH flag to determine which PCIe controller
->         register to be used to configure the memory ranges.
->  
->  arch/arm64/boot/dts/apm/apm-storm.dtsi | 23 ++++++++++++++---------
->  drivers/pci/host/pci-xgene.c           | 12 ++++++++++--
->  2 files changed, 24 insertions(+), 11 deletions(-)
+On booting path, we don't pass realloc at first, and treat all optional just
+as must, in some case we can smaller size/align with optional than must only.
 
-Applied to pci/host-xgene for v4.3, with changelogs as follows, thanks!
+04:00.0 has four child bridges: 05:01.0, 05:02.0, 05:03.0, 05:04.0
+pref layout after booting path like followings:
 
+pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
+pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:07:00.0: BAR 0: assigned [mem 0x81200000-0x8123ffff 64bit]
+pci 0000:05:03.0: PCI bridge to [bus 08-0f]
+pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:10:00.0: BAR 0: assigned [mem 0x90000000-0x9fffffff 64bit pref]
+pci 0000:10:00.0: BAR 2: assigned [mem 0x88000000-0x8800ffff 64bit pref]
+pci 0000:05:04.0: PCI bridge to [bus 10]
+pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:04:00.0: PCI bridge to [bus 05-10]
+pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
 
-commit 80bb3eda7475eb38b688d2e915c191ce6ad20df1
-Author: Duc Dang <dhdang@apm.com>
-Date:   Thu Jul 9 14:20:11 2015 -0700
+so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
 
-    arm64: dts: Add APM X-Gene PCIe 64-bit prefetchable window
-    
-    Add a large window (up to 64GB) for X-Gene PCIe nodes to support devices
-    that require huge BARs.
-    
-    Each X-Gene PCIe node will now have two memory windows: a 32-bit
-    non-prefetchable window and a 64-bit prefetchable window.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Duc Dang <dhdang@apm.com>
-    Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+during remove and rescan:
 
-commit 8ef54f27f6f425fa8deedc237d99b9daf41d68d2
-Author: Duc Dang <dhdang@apm.com>
-Date:   Thu Jul 9 14:20:12 2015 -0700
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
+pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
 
-    PCI: xgene: Add support for a 64-bit prefetchable memory window
-    
-    X-Gene PCIe controller has registers to support multiple memory ranges.
-    
-    Add support for a 64-bit prefetchable memory window.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Duc Dang <dhdang@apm.com>
-    Signed-off-by: Tanmay Inamdar <tinamdar@apm.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
+so for 04:00.0 will have big must and no optional size anymore.
+
+So don't align old size, then we will have same size0 and size1.
+Also use smaller add_align as must align.
+
+After the patch, rescan works properly.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8999ead..2679ccc 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1146,9 +1146,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
++	size = ALIGN(size, align);
+ 	if (size < old_size)
+ 		size = old_size;
+-	size = ALIGN(size, align);
+ 	return size;
+ }
+ 
+@@ -1632,6 +1632,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		b_res->flags = 0;
+ 		return 0;
+ 	}
++
++	/*
++	 * It happens when boot path is not passing realloc
++	 * and later rescan is passing realloc.
++	 * The old value from boot path is bigger, and calculate_size will
++	 * use old value as size0 and size1, and also have
++	 * chance optional align is smaller than must only align.
++	 */
++	if(size0 == size1 && min_align > min_add_align)
++		min_align = min_add_align;
++
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+-- 
+1.8.4.5
+
