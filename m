@@ -1,55 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44971 "EHLO mx1.redhat.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:33154 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751607AbbG2Gle (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 29 Jul 2015 02:41:34 -0400
-Message-ID: <55B8759B.8070400@redhat.com>
-Date: Wed, 29 Jul 2015 08:41:31 +0200
-From: Milan Broz <mbroz@redhat.com>
+	id S1750741AbbG0GZC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Jul 2015 02:25:02 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v3 0/3] dra7xx: Add PM support to PCIe
+Date: Mon, 27 Jul 2015 11:54:51 +0530
+Message-ID: <1437978294-22317-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-To: Ondrej Kozina <okozina@redhat.com>,
-	device-mapper development <dm-devel@redhat.com>,
-	Andreas Hartmann <andihartmann@freenet.de>
-CC: linux-pci <linux-pci@vger.kernel.org>, mpatocka@redhat.com,
-	Mike Snitzer <msnitzer@redhat.com>
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-References: <55B7BEA2.30205@01019freenet.de> <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org> <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org> <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org> <20150728212441.GA25761@redhat.com> <55B87005.7010409@redhat.com>
-In-Reply-To: <55B87005.7010409@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/29/2015 08:17 AM, Ondrej Kozina wrote:
-> On 07/28/2015 11:24 PM, Mike Snitzer wrote:
->>>
->>> I am willing to do tests if you have any idea to be tested - I can
->>> reproduce it quite easily.
->>
->> You can try disabling dm-crypt's parallelization by specifying these 2
->> features: same_cpu_crypt submit_from_crypt_cpus
->>
-> 
-> Hi,
-> 
-> please try adding follwoing cryptsetup perf. options while unlocking 
-> your LUKS containers: --perf-submit_from_crypt_cpus and 
-> --perf-same_cpu_crypt.
-> 
-> Perhaps focus on SSD disk as previous unresolved report mentioned SSD too
+This series adds PM support to pci-dra7xx so that PCI clocks can be disabled
+during suspend and enabled back during resume without affecting
+PCI functionality.
 
-Just you need to use cryptsetup 1.6.7 version (older versions do not have this options yet).
+Changes from v2:
+*) Used SET_SYSTEM_SLEEP_PM_OPS and SET_NOIRQ_SYSTEM_SLEEP_PM_OPS for
+   populating PM ops.
 
-Anyway, it seems strange that one patch triggers such a problem (leading to a conclusion
-that the patch is wrong) but dm-crypt is know to reveal many problems in other systems
-exactly this way...
+Changes from v1:
+*) Moved resetting and setting of MSE bit to pci-dra7xx.
 
-The patches were tested on so many systems without problem that I really believe
-the dmcrypt patch is just trigger for a bug elsewhere.
+The comment to reset and set ISE is not done now since I don't have a card
+with IO space. Once I get to test that, I'll post a separate patch for
+handling that.
 
-Anyway, if we can find configuration which fails here, I would like to help to find
-the core problem... Papering here just means it will break data later elsewhere.
+Kishon Vijay Abraham I (3):
+  PCI: host: pci-dra7xx: Disable pm_runtime on get_sync failure
+  PCI: host: pci-dra7xx: add pm support to pci dra7xx
+  PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
 
-Thanks for testing it!
-Milan
+ drivers/pci/host/pci-dra7xx.c |   95 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 94 insertions(+), 1 deletion(-)
+
+-- 
+1.7.9.5
 
