@@ -1,53 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26003 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751835AbbGMSkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Jul 2015 14:40:09 -0400
-Subject: [PATCH V4 2/2] pci: Add VPD quirk for Intel Ethernet devices
-From: Mark D Rustad <mark.d.rustad@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Mon, 13 Jul 2015 11:40:07 -0700
-Message-ID: <20150713184007.19985.3960.stgit@mdrustad-wks.jf.intel.com>
-In-Reply-To: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
-References: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 37/51] PCI: Only treat non-pef mmio64 as pref if host-bridge has_mem64
+Date: Mon, 27 Jul 2015 16:29:55 -0700
+Message-Id: <1438039809-24957-38-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mark Rustad <mark.d.rustad@intel.com>
+If host bridge does not have mmio64 above 4G, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
-This quirk sets the PCI_DEV_FLAGS_VPD_REF_F0 flag on all Intel
-Ethernet device functions other than function 0.
-
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
-Changes in V3:
-- Added a multifunction device check
----
- drivers/pci/quirks.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/pci/setup-bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e9fd0e90fa3b..08c04e4f5ab2 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -1894,6 +1894,15 @@ static void quirk_netmos(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
- 			 PCI_CLASS_COMMUNICATION_SERIAL, 8, quirk_netmos);
- 
-+static void quirk_f0_vpd_link(struct pci_dev *dev)
-+{
-+	if (!dev->multifunction || !PCI_FUNC(dev->devfn))
-+		return;
-+	dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
-+}
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
-+			      PCI_CLASS_NETWORK_ETHERNET, 8, quirk_f0_vpd_link);
-+
- static void quirk_e100_interrupt(struct pci_dev *dev)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c6c9d56..0269868 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1041,7 +1041,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
  {
- 	u16 command, pmcsr;
+ 	if (pci_is_root_bus(bus))
+-		return true;
++		return to_pci_host_bridge(bus->bridge)->has_mem64;
+ 
+ 	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
+ 			   IORESOURCE_MEM_64))
+-- 
+1.8.4.5
 
