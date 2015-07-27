@@ -1,113 +1,234 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:33329 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424AbbGXQQP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 12:16:15 -0400
-Received: by wicmv11 with SMTP id mv11so70875663wic.0
-        for <linux-pci@vger.kernel.org>; Fri, 24 Jul 2015 09:16:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55B1BDA3.3030507@maya.org>
-References: <55AE5F84.5020204@01019freenet.de> <1437492886.1391.847.camel@redhat.com>
- <20150721155635.GE10969@8bytes.org> <55AE7147.7070902@maya.org>
- <20150721163517.GG10969@8bytes.org> <55B1BDA3.3030507@maya.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 24 Jul 2015 11:15:54 -0500
-Message-ID: <CAErSpo666MBxpDe+uPvfVc7LPJsJQsVTusBhHygtwbou5GGj1w@mail.gmail.com>
-Subject: Re: Since Linux 4.1: A lot of AMD-Vi IO_PAGE_FAULTs
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	iommu <iommu@lists.linux-foundation.org>,
-	Tejun Heo <tj@kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 51/51] PCI: Don't set flags to 0 when assign resource fail
+Date: Mon, 27 Jul 2015 16:30:09 -0700
+Message-Id: <1438039809-24957-52-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Tejun, linux-ide]
+make flags take IORESOURCE_UNSET | IORESOURCE_DISABLED instead.
 
-On Thu, Jul 23, 2015 at 11:22 PM, Andreas Hartmann
-<andihartmann@freenet.de> wrote:
-> On Tue, Jul 21, 2015 at 06:35PM +0200, Joerg Roedel wrote:
->> On Tue, Jul 21, 2015 at 06:20:23PM +0200, Andreas Hartmann wrote:
->>> [   48.193901] <6>[fglrx] Firegl kernel thread PID: 1840
->>> [   48.193985] <6>[fglrx] Firegl kernel thread PID: 1841
->>> [   48.194063] <6>[fglrx] Firegl kernel thread PID: 1842
->>> [   48.194172] <6>[fglrx] IRQ 28 Enabled
->>> [   48.261580] <6>[fglrx] Reserved FB block: Shared offset:0, size:1000000
->>> [   48.261586] <6>[fglrx] Reserved FB block: Unshared offset:f7b4000, size:4000
->>> [   48.261587] <6>[fglrx] Reserved FB block: Unshared offset:f7b8000, size:548000
->>> [   48.261588] <6>[fglrx] Reserved FB block: Unshared offset:3fff3000, size:d000
->>
->> From a first glance it doesn't look like an IOMMU driver issue, because
->> the addresses where the faults happen are not from the AMD IOMMU driver.
->>
->> And you have proprietary closed-source drivers loaded, can you reproduce
->> the issue without fglrx?
->
-> Yes. I attached this one.
->
-> Meanwhile I tested with 4.0.9, too. I wasn't able to reproduce the
-> problem with this kernel even after lots of reboots (the problem w/ 4.1
-> usually comes up during boot process (but not only - it can be seen
-> after boot process, too)).
->
-> The problem always is, that there are errors w/ one of the sata discs
-> and at the same time, IO_PAGE_FAULT errors are rising as described before:
->
-> [  152.533708] ata3.00: failed command: READ FPDMA QUEUED
-> [  152.538102] ata3.00: failed command: READ FPDMA QUEUED
-> [  152.539862] ata3.00: failed command: READ FPDMA QUEUED
-> [  152.541778] ata3.00: failed command: WRITE FPDMA QUEUED
-> [  152.543861] ata3.00: failed command: WRITE FPDMA QUEUED
->
-> [ 5818.068050] ata2.00: failed command: WRITE FPDMA QUEUED
-> [ 5818.068059] ata2.00: failed command: WRITE FPDMA QUEUED
->
-> I compared dmesg from 4.1 w/ 4.0 and I realized the following *missing*
-> entries in 4.1:
->
-> [    0.000000] ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
-> [    0.000000] ACPI: LAPIC (acpi_id[0x01] lapic_id[0x01] enabled)
-> [    0.000000] ACPI: LAPIC (acpi_id[0x02] lapic_id[0x02] enabled)
-> [    0.000000] ACPI: LAPIC (acpi_id[0x03] lapic_id[0x03] enabled)
-> [    0.000000] ACPI: LAPIC (acpi_id[0x04] lapic_id[0x04] enabled)
-> [    0.000000] ACPI: LAPIC (acpi_id[0x05] lapic_id[0x05] enabled)
-> [    0.000000] ACPI: LAPIC (acpi_id[0x06] lapic_id[0x06] enabled)
-> [    0.000000] ACPI: LAPIC (acpi_id[0x07] lapic_id[0x07] enabled)
->
->
-> What does this mean? Is there missing some part of the acpi initialization?
->
->
-> Thanks for any hint as Linux 4.1 is completely unusable here with these
-> errors.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/bus.c       |  2 +-
+ drivers/pci/setup-bus.c | 45 +++++++++++++++++++++++----------------------
+ drivers/pci/setup-res.c |  3 ++-
+ 3 files changed, 26 insertions(+), 24 deletions(-)
 
-This looks more like an AHCI problem than an IOMMU or PCI problem.
-Seems like the device has the wrong idea about where its DMA buffers
-are.  Maybe something scribbled on its command list?
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index b043bdf..b68f1cd 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -140,7 +140,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+ 	type_mask |= IORESOURCE_TYPE_BITS;
+ 
+ 	pci_bus_for_each_resource(bus, r, i) {
+-		if (!r)
++		if (!r || resource_disabled(r))
+ 			continue;
+ 
+ 		/* type_mask must match */
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b44a327..2966da7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -289,13 +289,6 @@ static void __dev_check_resources(struct pci_dev *dev,
+ 	pdev_check_resources(dev, realloc_head, head);
+ }
+ 
+-static inline void reset_resource(struct resource *res)
+-{
+-	res->start = 0;
+-	res->end = 0;
+-	res->flags = 0;
+-}
+-
+ static void __sort_resources(struct list_head *head)
+ {
+ 	struct pci_dev_resource *res1, *tmp_res, *res2;
+@@ -398,7 +391,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 			res->start = align;
+ 			res->end = res->start + add_size - 1;
+ 			if (pci_assign_resource(add_res->dev, idx))
+-				reset_resource(res);
++				res->flags |= IORESOURCE_DISABLED;
+ 		} else {
+ 			/* could just assigned with alt, add difference ? */
+ 			resource_size_t must_size;
+@@ -451,7 +444,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head)
+ 				add_to_list(fail_head, dev_res->dev, res);
+-			reset_resource(res);
++			res->flags |= IORESOURCE_DISABLED;
+ 		}
+ 	}
+ }
+@@ -737,7 +730,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
+ 
+ 		if (!res_to_dev_res(local_fail_head, res))
+ 			add_to_list(local_fail_head, fail_res->dev, res);
+-		reset_resource(res);
++		res->flags |= IORESOURCE_DISABLED;
+ 	}
+ 	free_list(&local_alt_fail_head);
+ }
+@@ -903,7 +896,7 @@ static void pci_setup_bridge_io(struct pci_dev *bridge)
+ 	/* Set up the top and bottom of the PCI I/O segment for this bus. */
+ 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
+ 	pcibios_resource_to_bus(bridge->bus, &region, res);
+-	if (res->flags & IORESOURCE_IO) {
++	if ((res->flags & IORESOURCE_IO) && !(res->flags & IORESOURCE_UNSET)) {
+ 		pci_read_config_word(bridge, PCI_IO_BASE, &l);
+ 		io_base_lo = (region.start >> 8) & io_mask;
+ 		io_limit_lo = (region.end >> 8) & io_mask;
+@@ -933,7 +926,8 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
+ 	/* Set up the top and bottom of the PCI Memory segment for this bus. */
+ 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
+ 	pcibios_resource_to_bus(bridge->bus, &region, res);
+-	if (res->flags & IORESOURCE_MEM) {
++	if ((res->flags & IORESOURCE_MEM) &&
++	    !(res->flags & IORESOURCE_UNSET)) {
+ 		l = (region.start >> 16) & 0xfff0;
+ 		l |= region.end & 0xfff00000;
+ 		dev_info(&bridge->dev, "  bridge window %pR\n", res);
+@@ -958,7 +952,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
+ 	bu = lu = 0;
+ 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
+ 	pcibios_resource_to_bus(bridge->bus, &region, res);
+-	if (res->flags & IORESOURCE_PREFETCH) {
++	if ((res->flags & IORESOURCE_PREFETCH) &&
++	    !(res->flags & IORESOURCE_UNSET)) {
+ 		l = (region.start >> 16) & 0xfff0;
+ 		l |= region.end & 0xfff00000;
+ 		if (res->flags & IORESOURCE_MEM_64) {
+@@ -1077,6 +1072,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 
+ 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+ 	b_res[1].flags |= IORESOURCE_MEM;
++	b_res[1].flags &= ~IORESOURCE_DISABLED;
+ 
+ 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+ 	if (!io) {
+@@ -1084,8 +1080,10 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+ 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+ 	}
+-	if (io)
++	if (io) {
+ 		b_res[0].flags |= IORESOURCE_IO;
++		b_res[0].flags &= ~IORESOURCE_DISABLED;
++	}
+ 
+ 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
+ 	    disconnect boundary by one PCI data phase.
+@@ -1102,6 +1100,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 	}
+ 	if (pmem) {
+ 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
++		b_res[2].flags &= ~IORESOURCE_DISABLED;
+ 		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
+ 		    PCI_PREF_RANGE_TYPE_64) {
+ 			b_res[2].flags |= IORESOURCE_MEM_64;
+@@ -1247,8 +1246,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			struct resource *r = &dev->resource[i];
+ 			unsigned long r_size, r_add_size;
+ 
+-			if (r->parent || !(r->flags & IORESOURCE_IO))
++			if (r->parent || !(r->flags & IORESOURCE_IO) ||
++			    resource_disabled(r))
+ 				continue;
++
+ 			r_size = resource_size(r);
+ 
+ 			if (r_size < 0x400)
+@@ -1289,7 +1290,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+ 				 b_res, &bus->busn_res);
+-		b_res->flags = 0;
++		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+ 		return;
+ 	}
+ 
+@@ -1563,7 +1564,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			if (r->parent || ((flags & mask) != type &&
+ 					  (flags & mask) != type2 &&
+-					  (flags & mask) != type3))
++					  (flags & mask) != type3) ||
++			    resource_disabled(r))
+ 				continue;
+ 
+ 			r_size = resource_size(r);
+@@ -1584,7 +1586,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
+-				r->flags = 0;
++				r->flags |= IORESOURCE_UNSET |
++					    IORESOURCE_DISABLED;
+ 				continue;
+ 			}
+ 
+@@ -1671,7 +1674,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+ 				 b_res, &bus->busn_res);
+-		b_res->flags = 0;
++		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+ 		return 0;
+ 	}
+ 
+@@ -2087,7 +2090,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 		/* keep the old size */
+ 		r->end = resource_size(r) - 1;
+ 		r->start = 0;
+-		r->flags = 0;
++		r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+ 
+ 		/* avoiding touch the one without PREF */
+ 		if (type & IORESOURCE_PREFETCH)
+@@ -2356,7 +2359,6 @@ again:
+ 
+ 		restore_resource(fail_res, res);
+ 		if (fail_res->dev->subordinate) {
+-			res->flags = 0;
+ 			/* last or third times and later */
+ 			if (tried_times + 1 == pci_try_num ||
+ 			    tried_times + 1 > 2)
+@@ -2440,7 +2442,6 @@ again:
+ 
+ 		restore_resource(fail_res, res);
+ 		if (fail_res->dev->subordinate) {
+-			res->flags = 0;
+ 			/* last time */
+ 			reset_bridge_resource_size(fail_res->dev, res);
+ 		}
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 55caf7a..d17f23c 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -364,7 +364,8 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
+ 
+ 		r = &dev->resource[i];
+ 
+-		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
++		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)) ||
++		    resource_disabled(r))
+ 			continue;
+ 		if ((i == PCI_ROM_RESOURCE) &&
+ 				(!(r->flags & IORESOURCE_ROM_ENABLE)))
+-- 
+1.8.4.5
 
->From your attachments:
-
-# lspci -vvs 00:11.0
-00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD/ATI]
-SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode] (rev 40) (prog-if 01 [AHCI
-1.0])
-
-pci 0000:00:11.0: [1002:4391] type 00 class 0x010601
-ahci 0000:00:11.0: version 3.0
-ahci 0000:00:11.0: AHCI 0001.0200 32 slots 6 ports 6 Gbps 0x3f impl SATA mode
-ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
-AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
-address=0x40eba32100618000 flags=0x0010]
-AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
-address=0x40eba32100618040 flags=0x0010]
-AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
-address=0x0000000000000000 flags=0x0000]
-AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
-address=0x00000000000000c0 flags=0x0000]
-AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
-address=0x0000000000000040 flags=0x0000]
-AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
-address=0x00000000000001c0 flags=0x0000]
