@@ -1,628 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:35826 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750798AbbG2Dnz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 23:43:55 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:33439 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752753AbbG0XNP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Jul 2015 19:13:15 -0400
+Message-ID: <55B6BB0A.80904@redhat.com>
+Date: Mon, 27 Jul 2015 19:13:14 -0400
+From: Don Dutile <ddutile@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1438080345-7233-4-git-send-email-lftan@altera.com>
-References: <1438080345-7233-1-git-send-email-lftan@altera.com> <1438080345-7233-4-git-send-email-lftan@altera.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Tue, 28 Jul 2015 22:43:35 -0500
-Message-ID: <CAL_JsqKc0Boc4oRY0wnH0Hb4pEd6U=2i+46A8Yj68sM0btshHQ@mail.gmail.com>
-Subject: Re: [PATCH 3/6] pci:host: Add Altera PCIe host controller driver
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Ley Foon Tan <lftan.linux@gmail.com>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org,
+	Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH v2 10/11] PCI: Stop caching ATS Invalidate Queue Depth
+References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150721001511.28145.29144.stgit@bhelgaas-glaptop2.roam.corp.google.com> <55B63995.8000808@redhat.com> <20150727222726.GA24401@google.com>
+In-Reply-To: <20150727222726.GA24401@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 28, 2015 at 5:45 AM, Ley Foon Tan <lftan@altera.com> wrote:
-> This patch adds the Altera PCIe host controller driver.
+On 07/27/2015 06:27 PM, Bjorn Helgaas wrote:
+> Hi Don,
 >
-> Signed-off-by: Ley Foon Tan <lftan@altera.com>
-> ---
->  drivers/pci/host/Kconfig       |   9 +
->  drivers/pci/host/Makefile      |   1 +
->  drivers/pci/host/pcie-altera.c | 576 +++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 586 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-altera.c
+> On Mon, Jul 27, 2015 at 10:00:53AM -0400, Don Dutile wrote:
+>> On 07/20/2015 08:15 PM, Bjorn Helgaas wrote:
+>>> Stop caching the Invalidate Queue Depth in struct pci_dev.
+>>> pci_ats_queue_depth() is typically called only once per device, and it
+>>> returns a fixed value per-device, so callers who need the value frequently
+>>> can cache it themselves.
+>>>
+>>> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>> ---
+>>>   drivers/pci/ats.c   |    9 ++++-----
+>>>   include/linux/pci.h |    1 -
+>>>   2 files changed, 4 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+>>> index 67524a7..bdb1383 100644
+>>> --- a/drivers/pci/ats.c
+>>> +++ b/drivers/pci/ats.c
+>>> @@ -20,16 +20,12 @@
+>>>   void pci_ats_init(struct pci_dev *dev)
+>>>   {
+>>>   	int pos;
+>>> -	u16 cap;
+>>>
+>>>   	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+>>>   	if (!pos)
+>>>   		return;
+>>>
+>>>   	dev->ats_cap = pos;
+>>> -	pci_read_config_word(dev, dev->ats_cap + PCI_ATS_CAP, &cap);
+>>> -	dev->ats_qdep = PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) :
+>>> -					    PCI_ATS_MAX_QDEP;
+>>>   }
+>>>
+>>>   /**
+>>> @@ -131,13 +127,16 @@ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
+>>>    */
+>>>   int pci_ats_queue_depth(struct pci_dev *dev)
+>>>   {
+>>> +	u16 cap;
+>>> +
+>>>   	if (!dev->ats_cap)
+>>>   		return -EINVAL;
+>>>
+>>>   	if (dev->is_virtfn)
+>>>   		return 0;
+>>>
+>> hmmm, isn't one of the fixes in this patch set to
+>> change the caching of ats queue depth ?  won't above
+>> make it 0 for all VF's ?  is that correct, or desired (virtual) value?
 >
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 675c2d1..af19039 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -145,4 +145,13 @@ config PCIE_IPROC_BCMA
->           Say Y here if you want to use the Broadcom iProc PCIe controller
->           through the BCMA bus interface
+> Per spec (SR-IOV r1.1., sec 3.7.4), the ATS queue depth register on a VF
+> always contains zero.
 >
-> +config PCIE_ALTERA
-> +       bool "Altera PCIe controller"
-> +       depends on ARCH_SOCFPGA
-> +       depends on OF
-> +       select PCI_MSI_IRQ_DOMAIN if PCI_MSI
-> +       help
-> +         Say Y here if you want to enable PCIe controller support for Altera
-> +         SoCFPGA family of SoCs.
-> +
->  endmenu
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 140d66f..6954f76 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
->  obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
->  obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
->  obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
-> +obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
-> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-> new file mode 100644
-> index 0000000..afa64e9
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-altera.c
-> @@ -0,0 +1,576 @@
-> +/*
-> + * Copyright Altera Corporation (C) 2013-2015. All rights reserved
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-> + * more details.
-> + *
-> + * You should have received a copy of the GNU General Public License along with
-> + * this program.  If not, see <http://www.gnu.org/licenses/>.
-> + */
-> +#include <linux/interrupt.h>
-> +#include <linux/module.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_irq.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/pci.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/slab.h>
-> +
-> +#define A2P_ADDR_MAP_LO0               0x1000
-> +#define A2P_ADDR_MAP_HI0               0x1004
-> +#define RP_TX_REG0                     0x2000
-> +#define RP_TX_REG1                     0x2004
-> +#define RP_TX_CNTRL                    0x2008
-> +#define RP_TX_EOP                      0x2
-> +#define RP_TX_SOP                      0x1
-> +#define RP_RXCPL_STATUS                0x2010
-> +#define RP_RXCPL_EOP                   0x2
-> +#define RP_RXCPL_SOP                   0x1
-> +#define RP_RXCPL_REG0                  0x2014
-> +#define RP_RXCPL_REG1                  0x2018
-> +#define P2A_INT_STATUS                 0x3060
-> +#define P2A_INT_STS_ALL                        0xF
-> +#define P2A_INT_ENABLE                 0x3070
-> +#define P2A_INT_ENA_ALL                        0xF
-> +#define RP_LTSSM                       0x3C64
-> +#define LTSSM_L0                       0xF
-> +
-> +/* TLP configuration type 0 and 1 */
-> +#define TLP_FMTTYPE_CFGRD0             0x04    /* Configuration Read Type 0 */
-> +#define TLP_FMTTYPE_CFGWR0             0x44    /* Configuration Write Type 0 */
-> +#define TLP_FMTTYPE_CFGRD1             0x05    /* Configuration Read Type 1 */
-> +#define TLP_FMTTYPE_CFGWR1             0x45    /* Configuration Write Type 1 */
-> +#define TLP_PAYLOAD_SIZE               0x01
-> +#define TLP_READ_TAG                   0x1D
-> +#define TLP_WRITE_TAG                  0x10
-> +#define TLP_CFG_DW0(fmttype)           (((fmttype) << 24) | TLP_PAYLOAD_SIZE)
-> +#define TLP_CFG_DW1(reqid, tag)                (((reqid) << 16) | (tag << 8) | 0xF)
-> +#define TLP_CFG_DW2(bus, devfn, offset)        \
-> +                               (((bus) << 24) | ((devfn) << 16) | (offset))
-> +#define TLP_REQ_ID(bus, devfn)         (((bus) << 8) | (devfn))
-> +#define TLP_COMPL_STATUS(hdr)          (((hdr) & 0xE0) >> 13)
-> +#define TLP_HDR_SIZE                   3
-> +#define TLP_LOOP                       10
-> +
-> +#define INTX_NUM               4
-> +
-> +/* Address translation table entry size */
-> +#define ATT_ENTRY_SIZE         8
-> +
-> +#define DWORD_MASK             3
-> +
-> +struct altera_pcie {
-> +       struct platform_device  *pdev;
-> +       struct resource         *txs;
-> +       void __iomem            *cra_base;
-> +       int                     hwirq;
-> +       u8                      root_bus_nr;
-> +       struct irq_domain               *irq_domain;
-> +       struct resource         bus_range;
-> +       struct list_head                resources;
-> +};
-> +
-> +struct tlp_rp_regpair_t {
-> +       u32 ctrl;
-> +       u32 reg0;
-> +       u32 reg1;
-> +};
-> +
-> +static inline struct altera_pcie *sys_to_pcie(struct pci_sys_data *sys)
-> +{
-> +       return sys->private_data;
-> +}
-> +
-> +static void altera_pcie_retrain(struct pci_dev *dev)
-> +{
-> +       u16 linkcap, linkstat;
-> +
-> +       /*
-> +        * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
-> +        * current speed is 2.5 GB/s.
-> +        */
-> +       pcie_capability_read_word(dev, PCI_EXP_LNKCAP, &linkcap);
-> +
-> +       if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
-> +               return;
-> +
-> +       pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &linkstat);
-> +       if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB)
-> +               pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
-> +                                       PCI_EXP_LNKCTL_RL);
-> +
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, altera_pcie_retrain);
-> +
-> +static inline void cra_writel(struct altera_pcie *pcie, u32 value, u32 reg)
-> +{
-> +       writel(value, pcie->cra_base + reg);
-> +}
-> +
-> +static inline u32 cra_readl(struct altera_pcie *pcie, u32 reg)
-> +{
-> +       return readl(pcie->cra_base + reg);
-> +}
-> +
-> +static void tlp_read_rx(struct altera_pcie *pcie,
-> +                       struct tlp_rp_regpair_t *tlp_rp_regdata)
-> +{
-> +       tlp_rp_regdata->ctrl = cra_readl(pcie, RP_RXCPL_STATUS);
-> +       tlp_rp_regdata->reg0 = cra_readl(pcie, RP_RXCPL_REG0);
-> +       tlp_rp_regdata->reg1 = cra_readl(pcie, RP_RXCPL_REG1);
-> +}
-> +
-> +static void tlp_write_tx(struct altera_pcie *pcie,
-> +                       struct tlp_rp_regpair_t *tlp_rp_regdata)
-> +{
-> +       cra_writel(pcie, tlp_rp_regdata->reg0, RP_TX_REG0);
-> +       cra_writel(pcie, tlp_rp_regdata->reg1, RP_TX_REG1);
-> +       cra_writel(pcie, tlp_rp_regdata->ctrl, RP_TX_CNTRL);
-> +}
-> +
-> +static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
-> +{
-> +       return !!(cra_readl(pcie, RP_LTSSM) & LTSSM_L0);
-> +}
-> +
-> +static bool altera_pcie_valid_config(struct altera_pcie *pcie,
-> +                               struct pci_bus *bus, int dev)
-> +{
-> +       /* If there is no link, then there is no device */
-> +       if (bus->number != pcie->root_bus_nr) {
-> +               if (!altera_pcie_link_is_up(pcie))
-> +                       return false;
-> +       }
-> +
-> +       /* access only one slot on each root port */
-> +       if (bus->number == pcie->root_bus_nr && dev > 0)
-> +               return false;
-> +
-> +       /*
-> +        * Do not read more than one device on the bus directly attached
-> +        * to RC.
-> +        */
-> +       if (bus->primary == pcie->root_bus_nr && dev > 0)
-> +               return false;
-> +
-> +        return true;
-> +}
-> +
-> +static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
-> +{
-> +       u8 loop;
-> +       struct tlp_rp_regpair_t tlp_rp_regdata;
-> +
-> +       for (loop = TLP_LOOP; loop > 0; loop--) {
-> +
-> +               tlp_read_rx(pcie, &tlp_rp_regdata);
-> +
-> +               if (tlp_rp_regdata.ctrl & RP_RXCPL_EOP) {
-> +
-> +                       if (value)
-> +                               *value = tlp_rp_regdata.reg0;
-> +
-> +                       return PCIBIOS_SUCCESSFUL;
-> +               }
-> +       }
-> +
-> +       return -ENOENT;
-> +}
-> +
-> +static void tlp_write_packet(struct altera_pcie *pcie, u32 *headers, u32 data)
-> +{
-> +       struct tlp_rp_regpair_t tlp_rp_regdata;
-> +
-> +       tlp_rp_regdata.reg0 = headers[0];
-> +       tlp_rp_regdata.reg1 = headers[1];
-> +       tlp_rp_regdata.ctrl = RP_TX_SOP;
-> +       tlp_write_tx(pcie, &tlp_rp_regdata);
-> +
-> +       tlp_rp_regdata.reg0 = headers[2];
-> +       tlp_rp_regdata.reg1 = data;
-> +       tlp_rp_regdata.ctrl = RP_TX_EOP;
-> +       tlp_write_tx(pcie, &tlp_rp_regdata);
-> +}
-> +
-> +static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
-> +                             int where, u32 *value)
-> +{
-> +       int ret;
-> +       u32 headers[TLP_HDR_SIZE];
-> +
-> +       if (bus == pcie->root_bus_nr)
-> +               headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD0);
-> +       else
-> +               headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD1);
-> +
-> +       headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
-> +                                       TLP_READ_TAG);
-> +       headers[2] = TLP_CFG_DW2(bus, devfn, where);
-> +
-> +       tlp_write_packet(pcie, headers, 0);
-> +
-> +       ret = tlp_read_packet(pcie, value);
-> +       if (ret)
-> +               *value = ~0UL;  /* return 0xFFFFFFFF if error */
-> +
-> +       return ret;
-> +}
-> +
-> +static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
-> +                              int where, u32 value)
-> +{
-> +       u32 headers[TLP_HDR_SIZE];
-> +
-> +       if (bus == pcie->root_bus_nr)
-> +               headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR0);
-> +       else
-> +               headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR1);
-> +
-> +       headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
-> +                                       TLP_WRITE_TAG);
-> +       headers[2] = TLP_CFG_DW2(bus, devfn, where);
-> +
-> +       tlp_write_packet(pcie, headers, value);
-> +
-> +       tlp_read_packet(pcie, NULL);
-> +
-> +       /* Keep an eye out for changes to the root bus number */
-> +       if ((bus == pcie->root_bus_nr) && (where == PCI_PRIMARY_BUS))
-> +               pcie->root_bus_nr = (u8)(value);
-> +
-> +       return PCIBIOS_SUCCESSFUL;
-> +}
-> +
-> +static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
-> +                              int where, int size, u32 *value)
-> +{
-> +       struct altera_pcie *pcie = sys_to_pcie(bus->sysdata);
-> +       int ret;
-> +
-> +       if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn))) {
-> +               *value = ~0UL;
-> +               return PCIBIOS_DEVICE_NOT_FOUND;
-> +       }
-> +
-> +       ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
-> +               (where & ~DWORD_MASK), value);
-> +       if (ret != PCIBIOS_SUCCESSFUL)
-> +               return ret;
-> +
-> +       if (size == 1)
-> +               *value = (*value >> (8 * (where & 0x3))) & 0xff;
-> +       else if (size == 2)
-> +               *value = (*value >> (8 * (where & 0x2))) & 0xffff;
-> +
-> +       return PCIBIOS_SUCCESSFUL;
-> +}
-> +
-> +static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
-> +                               int where, int size, u32 value)
-> +{
-> +       struct altera_pcie *pcie = sys_to_pcie(bus->sysdata);
-> +       u32 data32 = value;
-> +       u32 shift = 8 * (where & 3);
-> +       int ret;
-> +
-> +       if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
-> +               return PCIBIOS_DEVICE_NOT_FOUND;
-> +
-> +       /* write partial */
-> +       if (size != sizeof(u32)) {
-> +               ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
-> +                       where & ~DWORD_MASK, &data32);
-> +               if (ret)
-> +                       return ret;
-> +
-> +               if (size == 2)
-> +                       data32 = (data32 & ~(0xffff << shift)) |
-> +                                       ((value & 0xffff) << shift);
-> +                else if (size == 1)
-> +                       data32 = (data32 & ~(0xff << shift)) |
-> +                                       ((value & 0xff) << shift);
-> +       }
-> +
-> +       return tlp_cfg_dword_write(pcie, bus->number, devfn,
-> +               (where & ~DWORD_MASK), data32);
-> +}
-> +
-> +static struct pci_ops altera_pcie_ops = {
-> +       .read = altera_pcie_cfg_read,
-> +       .write = altera_pcie_cfg_write,
-> +};
-> +
-> +static int altera_pcie_setup(int nr, struct pci_sys_data *sys)
-> +{
-> +       struct altera_pcie *pcie = sys->private_data;
-> +
-> +       list_splice_init(&pcie->resources, &sys->resources);
-> +
-> +       return 1;
-> +}
-> +
-> +static int altera_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
-> +{
-> +       struct altera_pcie *pcie = sys_to_pcie(pdev->bus->sysdata);
-> +       int irq;
-> +
-> +       irq = of_irq_parse_and_map_pci(pdev, slot, pin);
-> +
-> +       if (!irq)
-> +               irq = pcie->hwirq;
-> +
-> +       return irq;
-> +}
+> Here's the v4.1 code:
+>
+>      int pci_ats_queue_depth(struct pci_dev *dev)
+>      {
+>          if (dev->is_virtfn)
+>                  return 0;
+>
+>          if (dev->ats)
+>                  return dev->ats->qdep;
+>
+> 	...
+>
+>
+> In v4.1, pci_ats_queue_depth() always returned 0 for a VF.  For VFs, we
+> didn't look at the dev->ats->qdep cache.  So I don't think this changes
+> anything for the caller.
+>
+> A previous patch changed this path so we return -EINVAL instead of 0 for
+> VFs that don't support ATS.  I think the previous behavior there was wrong,
+> but I doubt anybody noticed.
+>
+> Bjorn
+>
+ok. thanks for the sanity check.
 
-This should not be needed as the core code should take care of this.
+>>> -	return dev->ats_qdep;
+>>> +	pci_read_config_word(dev, dev->ats_cap + PCI_ATS_CAP, &cap);
+>>> +	return PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) : PCI_ATS_MAX_QDEP;
+>>>   }
+>>>   EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
+>>>
+>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>> index 307f96a..4b484fd 100644
+>>> --- a/include/linux/pci.h
+>>> +++ b/include/linux/pci.h
+>>> @@ -378,7 +378,6 @@ struct pci_dev {
+>>>   	};
+>>>   	u16		ats_cap;	/* ATS Capability offset */
+>>>   	u8		ats_stu;	/* ATS Smallest Translation Unit */
+>>> -	u8		ats_qdep;	/* ATS Invalidate Queue Depth */
+>>>   	atomic_t	ats_ref_cnt;	/* number of VFs with ATS enabled */
+>>>   #endif
+>>>   	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
 
-> +
-> +static struct pci_bus *altera_pcie_scan_bus(int nr, struct pci_sys_data *sys)
-> +{
-> +       struct altera_pcie *pcie = sys_to_pcie(sys);
-> +       struct pci_bus *bus;
-> +
-> +       pcie->root_bus_nr = sys->busnr;
-> +       bus = pci_scan_root_bus(&pcie->pdev->dev, sys->busnr, &altera_pcie_ops,
-> +                               sys, &sys->resources);
-> +
-> +       return bus;
-> +}
-> +
-> +static struct hw_pci altera_pcie_hw __initdata = {
-> +#ifdef CONFIG_PCI_DOMAINS
-> +       .domain                 = 0,
-> +#endif
-> +       .nr_controllers         = 1,
-> +       .ops                    = &altera_pcie_ops,
-> +       .setup                  = altera_pcie_setup,
-> +       .map_irq                        = altera_pcie_map_irq,
-> +       .scan                   = altera_pcie_scan_bus,
-
-You should be able to only have an empty hw_pci struct now.
-
-> +};
-> +
-> +static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-> +                               irq_hw_number_t hwirq)
-> +{
-> +       irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-> +       irq_set_chip_data(irq, domain->host_data);
-> +       set_irq_flags(irq, IRQF_VALID);
-> +
-> +       return 0;
-> +}
-> +
-> +static const struct irq_domain_ops intx_domain_ops = {
-> +       .map = altera_pcie_intx_map,
-> +};
-> +
-> +static irqreturn_t altera_pcie_isr(int irq, void *arg)
-> +{
-> +       struct altera_pcie *pcie = arg;
-> +       u32 status, i;
-> +
-> +       status = cra_readl(pcie, P2A_INT_STATUS) & P2A_INT_STS_ALL;
-> +
-> +       /* clear interrupts */
-> +       cra_writel(pcie, status, P2A_INT_STATUS);
-> +
-> +       for (i = 0; i < INTX_NUM; i++) {
-> +               if (status & (1 << i))
-> +                       generic_handle_irq(irq_find_mapping(pcie->irq_domain,
-> +                                                       i + 1));
-> +       }
-> +
-> +       return IRQ_HANDLED;
-> +}
-> +
-> +static void altera_pcie_release_of_pci_ranges(struct altera_pcie *pcie)
-> +{
-> +       pci_free_resource_list(&pcie->resources);
-> +}
-> +
-> +static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
-> +{
-> +       int err, res_valid = 0;
-> +       struct device *dev = &pcie->pdev->dev;
-> +       struct device_node *np = dev->of_node;
-> +       resource_size_t iobase;
-> +       struct resource_entry *win;
-> +       int offset = 0;
-> +
-> +       err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
-> +                                              &iobase);
-> +       if (err)
-> +               return err;
-> +
-> +       resource_list_for_each_entry(win, &pcie->resources) {
-> +               struct resource *parent, *res = win->res;
-> +
-> +               switch (resource_type(res)) {
-> +               case IORESOURCE_MEM:
-> +                       parent = &iomem_resource;
-> +                       res_valid |= !(res->flags & IORESOURCE_PREFETCH);
-> +                       cra_writel(pcie, res->start,
-> +                               A2P_ADDR_MAP_LO0 + offset);
-> +                       cra_writel(pcie, 0,
-> +                               A2P_ADDR_MAP_HI0 + offset);
-> +                       offset += ATT_ENTRY_SIZE;
-> +                       break;
-> +               default:
-> +                       continue;
-> +               }
-> +
-> +               err = devm_request_resource(dev, parent, res);
-> +               if (err)
-> +                       goto out_release_res;
-> +       }
-> +
-> +       if (!res_valid) {
-> +               dev_err(dev, "non-prefetchable memory resource required\n");
-> +               err = -EINVAL;
-> +               goto out_release_res;
-> +       }
-> +
-> +       return 0;
-> +
-> +out_release_res:
-> +       altera_pcie_release_of_pci_ranges(pcie);
-> +       return err;
-> +}
-> +
-> +static void altera_pcie_free_irq_domain(struct altera_pcie *pcie)
-> +{
-> +       int i;
-> +       u32 irq;
-> +
-> +       for (i = 0; i < INTX_NUM; i++) {
-> +               irq = irq_find_mapping(pcie->irq_domain, i);
-> +               if (irq > 0)
-> +                       irq_dispose_mapping(irq);
-> +       }
-> +
-> +       irq_domain_remove(pcie->irq_domain);
-> +}
-> +
-> +static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
-> +{
-> +       struct device *dev = &pcie->pdev->dev;
-> +       struct device_node *node = dev->of_node;
-> +
-> +       /* Setup INTx */
-> +       pcie->irq_domain = irq_domain_add_linear(node, INTX_NUM,
-> +                                       &intx_domain_ops, pcie);
-> +       if (!pcie->irq_domain) {
-> +               dev_err(dev, "Failed to get a INTx IRQ domain\n");
-> +               return PTR_ERR(pcie->irq_domain);
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +static int altera_pcie_parse_dt(struct altera_pcie *pcie)
-> +{
-> +       struct resource *cra;
-> +       int ret;
-> +       struct platform_device *pdev = pcie->pdev;
-> +
-> +       cra = platform_get_resource_byname(pdev, IORESOURCE_MEM, "Cra");
-> +       pcie->cra_base = devm_ioremap_resource(&pdev->dev, cra);
-> +       if (IS_ERR(pcie->cra_base)) {
-> +               dev_err(&pdev->dev, "get Cra resource failed\n");
-> +               return PTR_ERR(pcie->cra_base);
-> +       }
-> +
-> +       /* setup IRQ */
-> +       pcie->hwirq = platform_get_irq(pdev, 0);
-> +       if (pcie->hwirq <= 0) {
-> +               dev_err(&pdev->dev, "failed to get IRQ: %d\n", pcie->hwirq);
-> +               return -EINVAL;
-> +       }
-> +       ret = devm_request_irq(&pdev->dev, pcie->hwirq, altera_pcie_isr,
-> +                       IRQF_SHARED, pdev->name, pcie);
-> +
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "failed to request irq %d\n", pcie->hwirq);
-> +               return ret;
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +static int altera_pcie_probe(struct platform_device *pdev)
-> +{
-> +       struct altera_pcie *pcie;
-> +       int ret;
-> +
-> +       pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-> +       if (!pcie)
-> +               return -ENOMEM;
-> +
-> +       pcie->pdev = pdev;
-> +
-> +       ret = altera_pcie_parse_dt(pcie);
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "Parsing DT failed\n");
-> +               return ret;
-> +       }
-> +
-> +       INIT_LIST_HEAD(&pcie->resources);
-> +
-> +       ret = altera_pcie_parse_request_of_pci_ranges(pcie);
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "Failed add resources\n");
-> +               return ret;
-> +       }
-> +
-> +       ret = altera_pcie_init_irq_domain(pcie);
-
-I don't think you need an irq domain here.
-
-> +       if (ret) {
-> +               dev_err(&pdev->dev, "Failed creating IRQ Domain\n");
-> +               return ret;
-> +       }
-> +
-> +       pcie->root_bus_nr = -1;
-> +
-> +       /* clear all interrupts */
-> +       cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
-> +       /* enable all interrupts */
-> +       cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
-> +
-> +       altera_pcie_hw.private_data = (void **)&pcie;
-> +
-> +       pci_common_init_dev(&pdev->dev, &altera_pcie_hw);
-
-You should not call this, but call pci_scan_root_bus directly. See
-pci-host-generic.c or pci-versatile.c for examples.
-
-Rob
