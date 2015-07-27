@@ -1,50 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:34947 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976AbbGNV5m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 17:57:42 -0400
-Received: by obbop1 with SMTP id op1so14824393obb.2
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 14:57:41 -0700 (PDT)
-Date: Tue, 14 Jul 2015 16:57:37 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH V2 1/4] PCI: move PCI_FIND_CAP_TTL to pci.h and use it in
- quirks
-Message-ID: <20150714215737.GK24416@google.com>
-References: <1435627004-6029-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1435627004-6029-2-git-send-email-weiyang@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1435627004-6029-2-git-send-email-weiyang@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 15/51] PCI: Cache window alignment value
+Date: Mon, 27 Jul 2015 16:29:33 -0700
+Message-Id: <1438039809-24957-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 30, 2015 at 09:16:41AM +0800, Wei Yang wrote:
-> In some quirks, it tries to search a pci cap and use a ttl value to avoid
-> infinite loop. While the value is hard coded to 48, which is the same as
-> macro PCI_FIND_CAP_TTL.
-> 
-> This patch moves the definition of PCI_FIND_CAP_TTL to pci.h and replace
-> the hard coded value with it.
-> 
-> Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+There are several calling to window_alignment().
+And we will have more for alt_size support.
 
-Applied to pci/misc for v4.3 with changelog as follows.  Original patch
-touched some code that was removed in v4.2, so I adjusted for that, too.
+Cache the value instead of keeping on getting it.
 
-commit 875803b6ef5becdcc2d43b014531279dfaa978af
-Author: Wei Yang <weiyang@linux.vnet.ibm.com>
-Date:   Tue Jun 30 09:16:41 2015 +0800
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-    PCI: Move PCI_FIND_CAP_TTL to pci.h and use it in quirks
-    
-    Some quirks search for a HyperTransport capability and use a hard-coded TTL
-    value of 48 to avoid an infinite loop.
-    
-    Move the definition of PCI_FIND_CAP_TTL to pci.h and use it instead of the
-    hard-coded TTL values.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 57b5c09..1b5fbca 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1203,6 +1203,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	resource_size_t window_align;
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+@@ -1212,6 +1213,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		min_size = 0;
+ 	}
+ 
++	window_align = window_alignment(bus, b_res->flags);
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+@@ -1272,10 +1275,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		}
+ 	}
+ 
+-	max_align = max(max_align, window_alignment(bus, b_res->flags));
++	max_align = max(max_align, window_align);
+ 	if (size || min_size) {
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+-				 size, window_alignment(bus, b_res->flags));
++						size, window_align);
+ 		size0 = calculate_memsize(size, min_size,
+ 				  resource_size(b_res), min_align);
+ 	}
+@@ -1286,7 +1289,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+-					window_alignment(bus, b_res->flags));
++					window_align);
+ 		size1 = calculate_memsize(sum_add_size, min_size,
+ 				 resource_size(b_res), min_add_align);
+ 	}
+-- 
+1.8.4.5
+
