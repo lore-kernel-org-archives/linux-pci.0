@@ -1,74 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v2 39/49] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
-Date: Tue, 14 Jul 2015 15:47:10 -0700
-Message-Id: <1436914040-13206-40-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:33164 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750945AbbG0GZE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Jul 2015 02:25:04 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v3 1/3] PCI: host: pci-dra7xx: Disable pm_runtime on get_sync failure
+Date: Mon, 27 Jul 2015 11:54:52 +0530
+Message-ID: <1437978294-22317-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1437978294-22317-1-git-send-email-kishon@ti.com>
+References: <1437978294-22317-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-parsing.
+Fix the error handling code in case pm_runtime_get_sync fails. Now
+when pm_runtime_get_sync fails pm_runtime_disable is invoked so that
+there is no unbalanced pm_runtime_enable calls.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- arch/sparc/kernel/of_device_32.c | 5 +++--
- arch/sparc/kernel/of_device_64.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/pci/host/pci-dra7xx.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
-index 185aa96..3e9f273 100644
---- a/arch/sparc/kernel/of_device_32.c
-+++ b/arch/sparc/kernel/of_device_32.c
-@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 80db09e..d8b6d66 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -384,7 +384,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	ret = pm_runtime_get_sync(dev);
+ 	if (IS_ERR_VALUE(ret)) {
+ 		dev_err(dev, "pm_runtime_get_sync failed\n");
+-		goto err_phy;
++		goto err_get_sync;
  	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
-diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
-index 7bbdc26..defee61 100644
---- a/arch/sparc/kernel/of_device_64.c
-+++ b/arch/sparc/kernel/of_device_64.c
-@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
+ 
+ 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+@@ -401,6 +401,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 
+ err_add_port:
+ 	pm_runtime_put(dev);
++
++err_get_sync:
+ 	pm_runtime_disable(dev);
+ 
+ err_phy:
 -- 
-1.8.4.5
+1.7.9.5
 
