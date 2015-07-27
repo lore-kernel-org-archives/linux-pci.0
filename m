@@ -1,100 +1,376 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:42234 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752133AbbGPHiz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Jul 2015 03:38:55 -0400
-Message-ID: <55A75F8B.3080009@arm.com>
-Date: Thu, 16 Jul 2015 08:38:51 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: David Daney <ddaney@caviumnetworks.com>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Robert Richter <rrichter@cavium.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 4/5] irqchip: gic-v3: Add gic_get_irq_domain() to get
- the irqdomain of the GIC.
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-5-git-send-email-ddaney.cavm@gmail.com> <55A6947F.8070903@arm.com> <55A6AD1F.902@caviumnetworks.com>
-In-Reply-To: <55A6AD1F.902@caviumnetworks.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 22/51] PCI: Add alt_size allocation support
+Date: Mon, 27 Jul 2015 16:29:40 -0700
+Message-Id: <1438039809-24957-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15/07/15 19:57, David Daney wrote:
-> On 07/15/2015 10:12 AM, Marc Zyngier wrote:
->> On 15/07/15 17:54, David Daney wrote:
->>> From: David Daney <david.daney@cavium.com>
->>>
->>> Needed to map SPI interrupt sources.
->>>
->>> Signed-off-by: David Daney <david.daney@cavium.com>
->>> ---
->>>   drivers/irqchip/irq-gic-v3.c       | 5 +++++
->>>   include/linux/irqchip/arm-gic-v3.h | 1 +
->>>   2 files changed, 6 insertions(+)
->>>
->>> diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
->>> index c52f7ba..0019fed 100644
->>> --- a/drivers/irqchip/irq-gic-v3.c
->>> +++ b/drivers/irqchip/irq-gic-v3.c
->>> @@ -58,6 +58,11 @@ static struct gic_chip_data gic_data __read_mostly;
->>>   /* Our default, arbitrary priority value. Linux only uses one anyway. */
->>>   #define DEFAULT_PMR_VALUE	0xf0
->>>
->>> +struct irq_domain *gic_get_irq_domain(void)
->>> +{
->>> +	return gic_data.domain;
->>> +}
->>> +
->>>   static inline unsigned int gic_irq(struct irq_data *d)
->>>   {
->>>   	return d->hwirq;
->>> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
->>> index 18e3757..5992224 100644
->>> --- a/include/linux/irqchip/arm-gic-v3.h
->>> +++ b/include/linux/irqchip/arm-gic-v3.h
->>> @@ -391,6 +391,7 @@ int its_init(struct device_node *node, struct rdists *rdists,
->>>
->>>   typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
->>>   void set_its_pci_requester_id(its_pci_requester_id_t fn);
->>> +struct irq_domain *gic_get_irq_domain(void);
->>>   #endif
->>>
->>>   #endif
->>>
->>
->> Hmmmffff... You need the domain for SPIs??
->>
->> What is wrong with putting these interrupts in your device tree?
->>
-> 
-> There is no device tree node for ECAM based "PCIe" devices, they are 
-> discovered in the PCI bus scan, yet they still need to use SPI interrupts.
+On system with several pcie switches, BIOS allocate very tight resources
+to the bridge bar, and it is not aligned to min_align as kernel allocation
+code.
 
-What is different between these and the normal legacy interrupts that
-are normally expressed in the RC node using an interrupt map? Sorry if
-I'm only showing my ignorance here, but I'd like to understand the exact
-nature of the problem.
+For example:
+	02:03.0---0c:00.0---0d:04.0---18:00.0
+18:00.0 need 0x10000000, and 0x00010000.
+BIOS only allocate 0x10100000 to 0d:04.0 and above bridges.
+Later after using /sys/bus/pci/devices/0000:0c:00.0/remove to remove 0c:00.0,
+rescan with /sys/bus/pci/rescan can not allocate 0x18000000 to 0c:00.0.
 
-> We need a way to be able to map these.
+another example:
+00:1c.0-[02-21]----00.0-[03-21]--+-01.0-[04-12]----00.0-[05-12]----19.0-[06-12]----00.0
+                                 +-05.0-[13]--
+                                 +-07.0-[14-20]----00.0-[15-20]--+-08.0-[16]--+-00.0
+                                 |                               |            \-00.1
+                                 |                               +-14.0-[17]----00.0
+                                 |                               \-19.0-[18-20]----00.0
+                                 \-09.0-[21]--
+06:00.0 need 0x4000000 and 0x800000.
+BIOS only allocate 0x4800000 to 05:19.0 and 04:00.0.
+when 05:19.0 get removed via /sys/bus/pci/devices/0000:05:19.0/remove,
+rescan with /sys/bus/pci/rescan will fail.
+ pci 0000:05:19.0: BAR 14: no space for [mem size 0x06000000]
+ pci 0000:05:19.0: BAR 14: failed to assign [mem size 0x06000000]
+ pci 0000:06:00.0: BAR 2: no space for [mem size 0x04000000 64bit]
+ pci 0000:06:00.0: BAR 2: failed to assign [mem size 0x04000000 64bit]
+ pci 0000:06:00.0: BAR 0: no space for [mem size 0x00800000]
+ pci 0000:06:00.0: BAR 0: failed to assign [mem size 0x00800000]
+current code try to use align 0x2000000 and size 0x6000000, but parent
+bridge only have 0x4800000.
 
-However you're going to map them, it will not be by just blindly
-exporting random irqdomains from an unsuspecting interrupt controller.
+Introduce alt_align/alt_size and store them in realloc list in addition
+to addon info, and will try it after min_align/min_size allocation fails.
 
-Patch 5 has established that you're using "virtual wire" SPIs, so we
-need to work on exposing that with the normal kernel abstraction, and
-not by messing with the internals of the GIC.
+The alt_align is max_align, and alt_size is aligned size with bridge
+minimum window alignment.
 
-Thanks,
+on my test setup:
+	00:1c.7---61:00.0---62:00.0
+62:00.0 needs 0x800000 and 0x20000.
+and 00:1c.7 only have 9M allocated for mmio, with this patch we have
 
-	M.
+ pci 0000:61:00.0: bridge window [mem 0x00400000-0x00ffffff] to [bus 62] add_size 0 add_align 0 alt_size 900000 alt_align 800000 must_size c00000 must_align 400000
+ pci 0000:61:00.0: BAR 14: no space for [mem size 0x00c00000]
+ pci 0000:61:00.0: BAR 14: failed to assign [mem size 0x00c00000]
+ pci 0000:61:00.0: BAR 14: assigned [mem 0xdf000000-0xdf8fffff]
+ pci 0000:62:00.0: BAR 0: assigned [mem 0xdf000000-0xdf7fffff pref]
+ pci 0000:62:00.0: BAR 1: assigned [mem 0xdf800000-0xdf81ffff]
+ pci 0000:61:00.0: PCI bridge to [bus 62]
+ pci 0000:61:00.0:   bridge window [io  0x6000-0x6fff]
+ pci 0000:61:00.0:   bridge window [mem 0xdf000000-0xdf8fffff]
+ pci 0000:00:1c.7: PCI bridge to [bus 61-68]
+ pci 0000:00:1c.7:   bridge window [io  0x6000-0x6fff]
+ pci 0000:00:1c.7:   bridge window [mem 0xdf000000-0xdf8fffff]
+
+so for 61:00.0 first try with 12M fails, and second try with 9M the
+alt_size works. Later 62:00.0 get correct resource allocated too.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Tested-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 203 +++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 191 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1c0b4c5..9da8b23 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -324,7 +324,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ {
+ 	struct resource *res;
+ 	struct pci_dev_resource *add_res, *tmp;
+-	resource_size_t add_size, align;
++	resource_size_t add_size, align, r_size;
+ 	int idx;
+ 
+ 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
+@@ -340,12 +340,23 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 		idx = res - &add_res->dev->resource[0];
+ 		add_size = add_res->add_size;
+ 		align = add_res->min_align;
+-		if (!resource_size(res)) {
++		if (!add_size || !align) /* alt_size only */
++			goto out;
++
++		r_size = resource_size(res);
++		if (!r_size) {
+ 			res->start = align;
+ 			res->end = res->start + add_size - 1;
+ 			if (pci_assign_resource(add_res->dev, idx))
+ 				reset_resource(res);
+ 		} else {
++			/* could just assigned with alt, add difference ? */
++			resource_size_t must_size;
++
++			must_size = add_res->end - add_res->start + 1;
++			if (r_size < must_size)
++				add_size += must_size - r_size;
++
+ 			res->flags |= add_res->flags &
+ 				 (IORESOURCE_STARTALIGN|IORESOURCE_SIZEALIGN);
+ 			if (pci_reassign_resource(add_res->dev, idx,
+@@ -583,6 +594,104 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
+ 	return false;
+ }
+ 
++static bool __has_alt(struct list_head *head,
++		    struct list_head *realloc_head)
++{
++	int alt_count = 0;
++	struct pci_dev_resource *dev_res, *alt_res;
++
++	if (!realloc_head)
++		return false;
++
++	/* check if we have alt really */
++	list_for_each_entry(dev_res, head, list) {
++		alt_res = res_to_dev_res(realloc_head, dev_res->res);
++		if (!alt_res || !alt_res->alt_size)
++			continue;
++
++		alt_count++;
++	}
++
++	if (!alt_count)
++		return false;
++
++	return true;
++}
++
++static void __assign_resources_alt_sorted(struct list_head *head,
++				 struct list_head *save_head,
++				 struct list_head *realloc_head,
++				 struct list_head *local_fail_head)
++{
++	LIST_HEAD(local_alt_fail_head);
++	struct pci_dev_resource *dev_res;
++	struct pci_dev_resource *alt_res, *fail_res, *save_res;
++	unsigned long fail_type;
++	struct resource *res;
++
++	/* check failed type */
++	fail_type = pci_fail_res_type_mask(local_fail_head);
++	/* release resource with same type that failes */
++	list_for_each_entry(dev_res, head, list) {
++		res = dev_res->res;
++		if (res->parent) {
++			if (!pci_need_to_release(fail_type, res))
++				continue;
++
++			/*
++			 * have to use saved info, as resource that does not
++			 * have addon/alt is not in realloc list.
++			 */
++			save_res = res_to_dev_res(save_head, res);
++			if (!save_res)
++				continue;
++
++			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++				   "BAR %d: released %pR\n",
++				   (int)(res - &dev_res->dev->resource[0]),
++				   res);
++			release_resource(dev_res->res);
++			restore_resource(save_res, res);
++		} else {
++			/* restore fail one */
++			fail_res = res_to_dev_res(local_fail_head, res);
++			if (fail_res) {
++				restore_resource(fail_res, res);
++				remove_from_list(local_fail_head, res);
++			}
++		}
++
++		alt_res = res_to_dev_res(realloc_head, res);
++		if (!alt_res || !alt_res->alt_size)
++			continue;
++
++		/* change res to alt */
++		if (res->flags & IORESOURCE_STARTALIGN)
++			res->start = alt_res->alt_align;
++		else
++			res->start = 0;
++		res->end = res->start + alt_res->alt_size - 1;
++	}
++
++	__sort_resources(head);
++	/* Satisfy the alt resource requests */
++	assign_requested_resources_sorted(head, &local_alt_fail_head);
++
++	/* update local fail list */
++	list_for_each_entry(fail_res, &local_alt_fail_head, list) {
++		res = fail_res->res;
++		dev_res = res_to_dev_res(realloc_head, res);
++		/* change res back to must */
++		if (dev_res && dev_res->alt_size)
++			restore_resource(dev_res, res);
++
++		if (!res_to_dev_res(local_fail_head, res))
++			add_to_list(local_fail_head, fail_res->dev, res);
++		reset_resource(res);
++	}
++	free_list(&local_alt_fail_head);
++}
++
+ static void __assign_resources_sorted(struct list_head *head,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *fail_head)
+@@ -598,6 +707,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 */
+ 
+ 	LIST_HEAD(save_head);
++	LIST_HEAD(local_fail_head);
++	bool has_alt;
+ 
+ 	/* Check must+optional add */
+ 	if (__has_addon(head, realloc_head) &&
+@@ -610,15 +721,29 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	__sort_resources(head);
+ 
++	has_alt = __has_alt(head, realloc_head);
++	if (has_alt && list_empty(&save_head))
++		save_resources(head, &save_head);
++
+ 	/* Satisfy the must-have resource requests */
+-	assign_requested_resources_sorted(head, fail_head);
++	assign_requested_resources_sorted(head, &local_fail_head);
++
++	if (has_alt && !list_empty(&local_fail_head) && !list_empty(&save_head))
++		__assign_resources_alt_sorted(head, &save_head,
++					      realloc_head,
++					      &local_fail_head);
+ 
+ 	free_list(&save_head);
+ 
+-	/* Try to satisfy any additional optional resource
+-		requests */
++	/* Try to satisfy any additional optional resource requests */
+ 	if (realloc_head)
+ 		reassign_resources_sorted(realloc_head, head);
++
++	if (fail_head)
++		list_splice_tail(&local_fail_head, fail_head);
++	else
++		free_list(&local_fail_head);
++
+ 	free_list(head);
+ }
+ 
+@@ -1256,6 +1381,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	resource_size_t alt_size = 0, alt_align = 0;
+ 	resource_size_t window_align;
+ 
+ 	if (!b_res)
+@@ -1312,6 +1438,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			if (realloc_head) {
+ 				resource_size_t add_r_size, add_align;
++				struct pci_dev_resource *dev_res;
+ 
+ 				add_r_size = get_res_add_size(realloc_head, r);
+ 				add_align = get_res_add_align(realloc_head, r);
+@@ -1324,6 +1451,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				sum_add_size += r_size + add_r_size;
+ 				if (add_align > max_add_align)
+ 					max_add_align = add_align;
++
++				dev_res = res_to_dev_res(realloc_head, r);
++				if (dev_res && dev_res->alt_size) {
++					alt_size += dev_res->alt_size;
++					if (alt_align < dev_res->alt_align)
++						alt_align = dev_res->alt_align;
++				} else if (r_size > 1) {
++					alt_size += r_size;
++					if (alt_align < align)
++						alt_align = align;
++				}
+ 			}
+ 		}
+ 	}
+@@ -1337,6 +1475,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	}
+ 	free_align_test_list(&align_test_list);
+ 
++	if (size0 && realloc_head) {
++		alt_align = max(alt_align, window_align);
++		alt_size = calculate_memsize(alt_size, min_size,
++					     0, window_align);
++		/* must is better ? */
++		if (alt_size >= size0) {
++			alt_align = 0;
++			alt_size = 0;
++		}
++	}
++
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
+@@ -1358,13 +1507,43 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+-	if (size1 > size0 && realloc_head) {
+-		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
+-				min_add_align, 0, 0);
+-		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+-			   b_res, &bus->busn_res,
+-			   (unsigned long long) (size1 - size0),
+-			   (unsigned long long) min_add_align);
++	if (realloc_head) {
++		resource_size_t final_add_size = 0;
++
++		if (size1 > size0)
++			final_add_size = size1 - size0;
++		else
++			min_add_align = 0;
++
++		/*
++		 * realloc list include three type entries
++		 * 1. optional only:
++		 *      add_size != 0, alt_size == 0, must_size == 0
++		 * 2. must only with smaller alt_size.
++		 *      add_size == 0, alt_size != 0, must_size > alt_size
++		 * 3. must + optional:
++		 *      add_size != 0, alt_size < must_size, must_size != 0
++		 *
++		 * So there is no must_size != 0, and alt_size == must_size.
++		 *   in that case, we already set alt_size = 0.
++		 *
++		 * must_align/must_size is not stored directly, and we have
++		 *   dev_res start/end/flags instead.
++		 */
++		if (final_add_size || alt_size) {
++			__add_to_list(realloc_head, bus->self, b_res,
++				      final_add_size, min_add_align,
++				      alt_size, alt_align);
++			dev_printk(KERN_DEBUG, &bus->self->dev,
++				   "bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx must_size %llx must_align %llx\n",
++				   b_res, &bus->busn_res,
++				   (unsigned long long)final_add_size,
++				   (unsigned long long)min_add_align,
++				   (unsigned long long)alt_size,
++				   (unsigned long long)alt_align,
++				   (unsigned long long)size0,
++				   (unsigned long long)min_align);
++		}
+ 	}
+ 	return 0;
+ }
 -- 
-Jazz is not dead. It just smells funny...
+1.8.4.5
+
