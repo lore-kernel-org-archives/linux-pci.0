@@ -1,59 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:3786 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818AbbGNBjO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2015 21:39:14 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
+Received: from szxga03-in.huawei.com ([119.145.14.66]:43457 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261AbbG0Ki0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 06:38:26 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <gabriele.paoloni@huawei.com>, <arnd@arndb.de>,
+	<lorenzo.pieralisi@arm.com>, <wangzhou1@hisilicon.com>,
+	<bhelgaas@google.com>, <robh+dt@kernel.org>, <james.morse@arm.com>,
+	<Liviu.Dudau@arm.com>
+CC: <linux-pci@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH 0/4] Add Broadcom North Star 2 support
-Date: Mon, 13 Jul 2015 18:39:11 -0700
-Message-ID: <1436837955-26279-1-git-send-email-rjui@broadcom.com>
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: [PATCH v5] PCI: Store PCIe bus address in struct of_pci_range
+Date: Mon, 27 Jul 2015 18:45:19 +0800
+Message-ID: <1437993919-99241-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds Broadcom North Star 2 (NS2) SoC support. NS2 is an ARMv8
-based SoC and under the Broadcom iProc family.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Sorry for tying this with the Broadcom iProc PCIe driver fixes for ARM64. I
-have to tie them together because iProc PCIe support is enabled by default
-when ARCH_BCM_IPROC is enabled. Without the fixes in the iProc PCIe driver,
-enabling CONFIG_ARCH_BCM_IPROC would break the build for arm64 defconfig. Let
-me know if there's a better way to handle this.
+    This patch is needed port PCIe designware to new DT parsing API
+    As discussed in
+    http://lists.infradead.org/pipermail/linux-arm-kernel/2015-January/317743.html
+    in designware we have a problem as the PCI addresses in the PCIe controller
+    address space are required in order to perform correct HW operation.
 
-This patch series is generated based on v4.2-rc2 and tested on Broadcom NS2 SVK
+    In order to solve this problem commit f4c55c5a3 "PCI: designware:
+    Program ATU with untranslated address" added code to read the PCIe
+    controller start address directly from the DT ranges.
 
-Ray Jui (4):
-  PCI: iproc: enable arm64 support for iProc PCIe
-  PCI: iproc: Fix ARM64 dependency in Kconfig
-  arm64: Add Broadcom's North Star 2 support
-  arm64: dts: Add Broadcom North Star 2 support
+    In the new DT parsing API of_pci_get_host_bridge_resources() hides the
+    DT parser from the host controller drivers, so it is not possible
+    for drivers to parse values directly from the DT.
 
- Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
- arch/arm64/Kconfig                                |   12 +++
- arch/arm64/boot/dts/Makefile                      |    1 +
- arch/arm64/boot/dts/broadcom/Makefile             |    5 ++
- arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   55 ++++++++++++
- arch/arm64/boot/dts/broadcom/ns2.dtsi             |   95 +++++++++++++++++++++
- arch/arm64/configs/defconfig                      |    2 +
- drivers/pci/host/Kconfig                          |    2 +-
- drivers/pci/host/pcie-iproc.c                     |   12 +++
- drivers/pci/host/pcie-iproc.h                     |    2 +
- 10 files changed, 194 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
- create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
+    In http://www.spinics.net/lists/linux-pci/msg42540.html we already tried
+    to use the new DT parsing API but there is a bug (obviously) in setting
+    the <*>_mod_base addresses
+    Applying this patch we can easily set "<*>_mod_base = win->__res.start"
 
+    This patch adds a new field in "struct of_pci_range" to store the
+    pci bus start address; it fills the field in of_pci_range_parser_one();
+    in of_pci_get_host_bridge_resources() it retrieves the resource entry
+    after it is created and added to the resource list and uses
+    entry->__res.start to store the pci controller address
+
+    the patch is based on 4.2-rc1
+
+    Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+    Acked-by: Liviu Dudai <Liviu.Dudau@arm.com>
+    Acked-by: Rob Herring <robh@kernel.org>
+---
+ drivers/of/address.c       | 2 ++
+ drivers/of/of_pci.c        | 4 ++++
+ include/linux/of_address.h | 1 +
+ 3 files changed, 7 insertions(+)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 8bfda6a..23a5793 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -253,6 +253,7 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
+ 						struct of_pci_range *range)
+ {
+ 	const int na = 3, ns = 2;
++	const int p_ns = of_n_size_cells(parser->node);
+ 
+ 	if (!range)
+ 		return NULL;
+@@ -265,6 +266,7 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
+ 	range->pci_addr = of_read_number(parser->range + 1, ns);
+ 	range->cpu_addr = of_translate_address(parser->node,
+ 				parser->range + na);
++	range->bus_addr = of_read_number(parser->range + na, p_ns);
+ 	range->size = of_read_number(parser->range + parser->pna + na, ns);
+ 
+ 	parser->range += parser->np;
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 5751dc5..fe57030 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -198,6 +198,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 
+ 	pr_debug("Parsing ranges property...\n");
+ 	for_each_of_pci_range(&parser, &range) {
++		struct resource_entry *entry;
+ 		/* Read next ranges element */
+ 		if ((range.flags & IORESOURCE_TYPE_BITS) == IORESOURCE_IO)
+ 			snprintf(range_type, 4, " IO");
+@@ -240,6 +241,9 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 		}
+ 
+ 		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
++		entry = list_last_entry(resources, struct resource_entry, node);
++		/* we are using __res for storing the PCI controller address */
++		entry->__res.start = range.bus_addr;
+ 	}
+ 
+ 	return 0;
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index d88e81b..865f96e 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -16,6 +16,7 @@ struct of_pci_range {
+ 	u32 pci_space;
+ 	u64 pci_addr;
+ 	u64 cpu_addr;
++	u64 bus_addr;
+ 	u64 size;
+ 	u32 flags;
+ };
 -- 
-1.7.9.5
+1.9.1
 
