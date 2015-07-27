@@ -1,90 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:40197 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752000AbbGORaj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 15 Jul 2015 13:30:39 -0400
-Message-ID: <55A698BC.2060308@arm.com>
-Date: Wed, 15 Jul 2015 18:30:36 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: David Daney <ddaney.cavm@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>
-CC: Robert Richter <rrichter@cavium.com>, linux-kernel@vger.kernel.org,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 2/5] gic-its: Allow pci_requester_id to be overridden.
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-3-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1436979285-8177-3-git-send-email-ddaney.cavm@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from aserp1040.oracle.com ([141.146.126.69]:36270 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932296AbbG0XbY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:31:24 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 24/51] PCI: Better support for two alt_size
+Date: Mon, 27 Jul 2015 16:29:42 -0700
+Message-Id: <1438039809-24957-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15/07/15 17:54, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/irqchip/irq-gic-v3-its.c   | 14 +++++++++++++-
->  include/linux/irqchip/arm-gic-v3.h |  2 ++
->  2 files changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-> index 1b7e155..4580970 100644
-> --- a/drivers/irqchip/irq-gic-v3-its.c
-> +++ b/drivers/irqchip/irq-gic-v3-its.c
-> @@ -1189,11 +1189,23 @@ static int its_pci_msi_vec_count(struct pci_dev *pdev)
->  	return max(msi, msix);
->  }
->  
-> +static u32 its_dflt_pci_requester_id(struct pci_dev *pdev, u16 alias)
-> +{
-> +	return alias;
-> +}
-> +
-> +static its_pci_requester_id_t its_pci_requester_id = its_dflt_pci_requester_id;
-> +void set_its_pci_requester_id(its_pci_requester_id_t fn)
-> +{
-> +	its_pci_requester_id = fn;
-> +}
-> +EXPORT_SYMBOL(set_its_pci_requester_id);
-> +
->  static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
->  {
->  	struct its_pci_alias *dev_alias = data;
->  
-> -	dev_alias->dev_id = alias;
-> +	dev_alias->dev_id = its_pci_requester_id(pdev, alias);
->  	if (pdev != dev_alias->pdev)
->  		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
->  
-> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
-> index ffbc034..18e3757 100644
-> --- a/include/linux/irqchip/arm-gic-v3.h
-> +++ b/include/linux/irqchip/arm-gic-v3.h
-> @@ -389,6 +389,8 @@ int its_cpu_init(void);
->  int its_init(struct device_node *node, struct rdists *rdists,
->  	     struct irq_domain *domain);
->  
-> +typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
-> +void set_its_pci_requester_id(its_pci_requester_id_t fn);
->  #endif
->  
->  #endif
-> 
+Need to put aligned with max align before not aligned.
 
-This has already been proposed, and I already spoke my mind about that
-sort of approach (just in case you had any doubt, this is a NAK).
+For example:
+alt align/size: 8M/9M, 4M/8M
+before this patch we have 8M/20M.
+After this patch we will have 8M/17M.
 
-If you have a new fancy kind of aliasing, please extend the capabilities
-of pci_for_each_dma_alias or describe it in terms of topological
-information that can be parsed.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 80 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 78 insertions(+), 2 deletions(-)
 
-Thanks,
-
-	M.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index bf28f32..8999ead 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -58,6 +58,20 @@ static inline bool is_before(resource_size_t align1, resource_size_t size1,
+ 	return false;
+ }
+ 
++static inline bool is_before_alt(resource_size_t align, resource_size_t size1,
++			     resource_size_t size2)
++{
++	resource_size_t size1_left, size2_left;
++
++	/*  aligned is before not aligned */
++	size1_left = size1 & (align - 1);
++	size2_left = size2 & (align - 1);
++	if (!size1_left && size2_left)
++		return true;
++
++	return false;
++}
++
+ struct pci_dev_resource {
+ 	struct list_head list;
+ 	struct resource *res;
+@@ -307,6 +321,42 @@ static void __sort_resources(struct list_head *head)
+ 	}
+ }
+ 
++static void __sort_resources_alt(struct list_head *head)
++{
++	struct pci_dev_resource *res1, *tmp_res, *res2;
++	resource_size_t align = 0;
++
++
++	__sort_resources(head);
++
++	/* get max align at first */
++	list_for_each_entry(res1, head, list) {
++		resource_size_t align1;
++
++		align1 = pci_resource_alignment(res1->dev, res1->res);
++		if (align1 > align)
++			align = align1;
++	}
++
++	list_for_each_entry_safe(res1, tmp_res, head, list) {
++		resource_size_t size1, size2;
++
++		size1 = resource_size(res1->res);
++
++		/* reorder it */
++		list_for_each_entry(res2, head, list) {
++			if (res2 == res1)
++				break;
++
++			size2 = resource_size(res2->res);
++			if (is_before_alt(align, size1, size2)) {
++				list_move_tail(&res1->list, &res2->list);
++				break;
++			}
++		}
++	}
++}
++
+ /**
+  * reassign_resources_sorted() - satisfy any additional resource requests
+  *
+@@ -673,7 +723,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
+ 		res->end = res->start + alt_res->alt_size - 1;
+ 	}
+ 
+-	__sort_resources(head);
++	__sort_resources_alt(head);
+ 	/* Satisfy the alt resource requests */
+ 	assign_requested_resources_sorted(head, &local_alt_fail_head);
+ 
+@@ -1267,6 +1317,32 @@ static void __sort_align_test(struct list_head *head)
+ 	}
+ }
+ 
++static void __sort_align_test_alt(struct list_head *head)
++{
++	struct align_test_res *res1, *tmp_res, *res2;
++	resource_size_t align = 0;
++
++	__sort_align_test(head);
++
++	/* get max align at first */
++	list_for_each_entry(res1, head, list)
++		if (res1->align > align)
++			align = res1->align;
++
++	list_for_each_entry_safe(res1, tmp_res, head, list) {
++		/* reorder it */
++		list_for_each_entry(res2, head, list) {
++			if (res2 == res1)
++				break;
++
++			if (is_before_alt(align, res1->size, res2->size)) {
++				list_move_tail(&res1->list, &res2->list);
++				break;
++			}
++		}
++	}
++}
++
+ static bool is_align_size_good(struct list_head *head,
+ 			resource_size_t min_align, resource_size_t size,
+ 			resource_size_t start)
+@@ -1352,7 +1428,7 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
+ 	if (count <= 1)
+ 		goto out;
+ 
+-	__sort_align_test(head);
++	__sort_align_test_alt(head);
+ 
+ 	tmp = max(size, max_align);
+ 	order = __fls(count);
 -- 
-Jazz is not dead. It just smells funny...
+1.8.4.5
+
