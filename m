@@ -1,103 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:34122 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbbGNTpP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:45:15 -0400
-Received: by obre1 with SMTP id e1so12848927obr.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 12:45:14 -0700 (PDT)
-Subject: [PATCH 2/2] PCI: Add pcie_downstream_port() (true for Root and
- Switch Downstream Ports)
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Myron Stowe <myron.stowe@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Date: Tue, 14 Jul 2015 14:45:11 -0500
-Message-ID: <20150714194511.13471.8395.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150714193757.13471.77973.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150714193757.13471.77973.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:38875 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754552AbbG0Xgf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:36:35 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, <stable@vger.kernel.org>
+Subject: [PATCH v3 34/51] PCI: Check pref compatible bit for mem64 resource of pcie device
+Date: Mon, 27 Jul 2015 16:29:52 -0700
+Message-Id: <1438039809-24957-35-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As used in the PCIe spec, "Downstream Port" includes both Root Ports and
-Switch Downstream Ports.  We sometimes checked for PCI_EXP_TYPE_DOWNSTREAM
-when we should have checked for PCI_EXP_TYPE_ROOT_PORT or
-PCI_EXP_TYPE_DOWNSTREAM.
+We still get "no compatible bridge window" warning on sparc T5-8
+after we add support for 64bit resource parsing for root bus.
 
-For a Root Port without a slot, the effect of this was that using
-pcie_capability_read_word() to read PCI_EXP_SLTSTA returned zero instead of
-showing the Presence Detect State bit hardwired to one as the PCIe Spec,
-r3.0, sec 7.8, requires.  (This read is completed in software because
-previous PCIe spec versions didn't require PCI_EXP_SLTSTA to exist at all.)
+ PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
+ PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
+ PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
+ PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
+ PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
+ pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
 
-Nothing in the kernel currently depends on this (pciehp only reads
-PCI_EXP_SLTSTA on ports with slots), so this is a cleanup and not a
-functional change.
+All the bridges 64-bit resource have pref bit, but the device resource does not
+have pref set, then we can not find parent for the device resource,
+as we can not put non-pref mem under pref mem.
 
-Add a pcie_downstream_port() helper function and use it.
+According to pcie spec errta
+https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
+page 13, in some case it is ok to mark some as pref.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Mark if the entire path from the host to the adapter is over PCI Express.
+Then set pref compatible bit for claim/sizing/assign for 64bit mem resource
+on that pcie device.
+
+Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
+Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
+Reported-by: David Ahern <david.ahern@oracle.com>
+Tested-by: David Ahern <david.ahern@oracle.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Tested-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: <stable@vger.kernel.org> #3.19
 ---
- drivers/pci/access.c |   23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ drivers/pci/pci.c       |  3 ++-
+ drivers/pci/pci.h       |  2 ++
+ drivers/pci/probe.c     | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/setup-bus.c | 21 ++++++++++++++++++---
+ drivers/pci/setup-res.c |  4 ++++
+ include/linux/pci.h     |  1 +
+ 6 files changed, 60 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d9b64a1..79f0102 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -531,6 +531,14 @@ static inline int pcie_cap_version(const struct pci_dev *dev)
- 	return pcie_caps_reg(dev) & PCI_EXP_FLAGS_VERS;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 0008c95..ff1192a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -414,6 +414,7 @@ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 					  struct resource *res)
+ {
++	int flags = pci_resource_pref_compatible(dev, res);
+ 	const struct pci_bus *bus = dev->bus;
+ 	struct resource *r;
+ 	int i;
+@@ -428,7 +429,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 			 * not, the allocator made a mistake.
+ 			 */
+ 			if (r->flags & IORESOURCE_PREFETCH &&
+-			    !(res->flags & IORESOURCE_PREFETCH))
++			    !(flags & IORESOURCE_PREFETCH))
+ 				return NULL;
+ 
+ 			/*
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 2b83977..1804d44 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -336,4 +336,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ 
+ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
+ 
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res);
+ #endif /* DRIVERS_PCI_H */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..010d8d9 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1544,6 +1544,36 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
  }
  
-+static bool pcie_downstream_port(constr struct pci_dev *dev)
++static bool pci_up_path_over_pcie(struct pci_bus *bus)
 +{
-+	int type = pci_pcie_type(dev);
++	if (pci_is_root_bus(bus))
++		return true;
 +
-+	return type == PCI_EXP_TYPE_ROOT_PORT ||
-+	       type == PCI_EXP_TYPE_DOWNSTREAM;
++	if (bus->self && !pci_is_pcie(bus->self))
++		return false;
++
++	return pci_up_path_over_pcie(bus->parent);
 +}
 +
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
++/*
++ * According to
++ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
++ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
++ * on some cases.
++ * Let's mark if entire path from the host to the adapter is over PCI
++ * Express. later will use that compute pref compaitable bit.
++ */
++static void pci_set_on_all_pcie_path(struct pci_dev *dev)
++{
++	if (!pci_is_pcie(dev))
++		return;
++
++	if (!pci_up_path_over_pcie(dev->bus))
++		return;
++
++	dev->on_all_pcie_path = 1;
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
  {
- 	int type = pci_pcie_type(dev);
-@@ -546,10 +554,7 @@ bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+ 	int ret;
+@@ -1574,6 +1604,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	/* Initialize various capabilities */
+ 	pci_init_capabilities(dev);
  
- static inline bool pcie_cap_has_sltctl(const struct pci_dev *dev)
- {
--	int type = pci_pcie_type(dev);
--
--	return (type == PCI_EXP_TYPE_ROOT_PORT ||
--		type == PCI_EXP_TYPE_DOWNSTREAM) &&
-+	return pcie_downstream_port(dev) &&
- 	       pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT;
++	/* After pcie_cap is assigned */
++	pci_set_on_all_pcie_path(dev);
++
+ 	/*
+ 	 * Add the device to our list of discovered devices
+ 	 * and the bus list for fixup functions, etc.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f8f89cd..78b0c36 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1038,6 +1038,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
  }
  
-@@ -628,10 +633,9 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
- 	 * State bit in the Slot Status register of Downstream Ports,
- 	 * which must be hardwired to 1b.  (PCIe Base Spec 3.0, sec 7.8)
- 	 */
--	if (pci_is_pcie(dev) && pos == PCI_EXP_SLTSTA &&
--		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
-+	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
-+	    pos == PCI_EXP_SLTSTA)
- 		*val = PCI_EXP_SLTSTA_PDS;
--	}
++int pci_resource_pref_compatible(const struct pci_dev *dev,
++				 struct resource *res)
++{
++	if (res->flags & IORESOURCE_PREFETCH)
++		return res->flags;
++
++	if ((res->flags & IORESOURCE_MEM) &&
++	    (res->flags & IORESOURCE_MEM_64) &&
++	    dev->on_all_pcie_path)
++		return res->flags | IORESOURCE_PREFETCH;
++
++	return res->flags;
++}
++
+ /* Check whether the bridge supports optional I/O and
+    prefetchable memory ranges. If not, the respective
+    base/limit registers must be read-only and read as 0. */
+@@ -1532,10 +1546,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+ 			resource_size_t r_size, align;
++			int flags = pci_resource_pref_compatible(dev, r);
  
- 	return 0;
- }
-@@ -657,10 +661,9 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
- 		return ret;
+-			if (r->parent || ((r->flags & mask) != type &&
+-					  (r->flags & mask) != type2 &&
+-					  (r->flags & mask) != type3))
++			if (r->parent || ((flags & mask) != type &&
++					  (flags & mask) != type2 &&
++					  (flags & mask) != type3))
+ 				continue;
+ 
+ 			r_size = resource_size(r);
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 232f925..b19aa5b 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -250,15 +250,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ static int _pci_assign_resource(struct pci_dev *dev, int resno,
+ 				resource_size_t size, resource_size_t min_align)
+ {
++	struct resource *res = dev->resource + resno;
++	int old_flags = res->flags;
+ 	struct pci_bus *bus;
+ 	int ret;
+ 
++	res->flags = pci_resource_pref_compatible(dev, res);
+ 	bus = dev->bus;
+ 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
+ 		if (!bus->parent || !bus->self->transparent)
+ 			break;
+ 		bus = bus->parent;
  	}
++	res->flags = old_flags;
  
--	if (pci_is_pcie(dev) && pos == PCI_EXP_SLTCTL &&
--		 pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
-+	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
-+	    pos == PCI_EXP_SLTSTA)
- 		*val = PCI_EXP_SLTSTA_PDS;
--	}
- 
- 	return 0;
+ 	return ret;
  }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a..33ef25f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -309,6 +309,7 @@ struct pci_dev {
+ 						   powered on/off by the
+ 						   corresponding bridge */
+ 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
++	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
+-- 
+1.8.4.5
 
