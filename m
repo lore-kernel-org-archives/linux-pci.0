@@ -1,45 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:32812 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751977AbbGQVbr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 17:31:47 -0400
-Received: by oige126 with SMTP id e126so78450080oig.0
-        for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 14:31:47 -0700 (PDT)
-Subject: [PATCH 0/8] PCI: Fix ATS deadlock
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gregor Dick <gdick@solarflare.com>
-Date: Fri, 17 Jul 2015 16:31:44 -0500
-Message-ID: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 45/51] PCI: Don't release sibiling bridge resources during hotplug
+Date: Mon, 27 Jul 2015 16:30:03 -0700
+Message-Id: <1438039809-24957-46-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gregor reported a deadlock [1] when enabling a VF that supports ATS.
-This series is intended to fix that.  The first patch should be enough to
-fix the deadlock; the rest are simplification and cleanup.
+On hotplug path, we can not touch sibling bridges that is out
+side of the slot.
 
-These are based on v4.2-rc2.
+That could happen when BIOS does not assign some bridge BARs and
+later can not assign resource to them in first try.
 
-[1] http://permalink.gmane.org/gmane.linux.kernel.iommu/9433
+Check if fail dev is the parent bridge, then just use subordinate
+bus instead use parent bus.
 
+Reported-by: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
+ drivers/pci/setup-bus.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-Bjorn Helgaas (8):
-      PCI: Allocate ATS struct during enumeration
-      PCI: Embed ATS info directly into struct pci_dev
-      PCI: Reduce size of ATS structure elements
-      PCI: Rationalize pci_ats_queue_depth() error checking
-      PCI: Inline the ATS setup code into pci_ats_init()
-      PCI: Use pci_physfn() rather than looking up physfn by hand
-      PCI: Clean up ATS error handling
-      PCI: Move ATS declarations to linux/pci.h so they're all together
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 83e3201..63a5d4cf 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2417,10 +2417,16 @@ again:
+ 	 * Try to release leaf bridge's resources that doesn't fit resource of
+ 	 * child device under that bridge
+ 	 */
+-	list_for_each_entry(fail_res, &fail_head, list)
+-		pci_bus_release_bridge_resources(fail_res->dev->bus,
++	list_for_each_entry(fail_res, &fail_head, list) {
++		struct pci_bus *bus = fail_res->dev->bus;
++
++		if (fail_res->dev == bridge)
++			bus = bridge->subordinate;
++
++		pci_bus_release_bridge_resources(bus,
+ 						 fail_res->flags & type_mask,
+ 						 whole_subtree);
++	}
+ 
+ 	/* restore size and flags */
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+-- 
+1.8.4.5
 
-
- drivers/pci/ats.c       |  110 +++++++++++------------------------------------
- drivers/pci/probe.c     |    3 +
- drivers/pci/remove.c    |    1 
- include/linux/pci-ats.h |   49 ---------------------
- include/linux/pci.h     |   20 ++++++++-
- 5 files changed, 49 insertions(+), 134 deletions(-)
