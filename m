@@ -1,92 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:64323 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865AbbGUGnR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 02:43:17 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v4 4/5] Documentation: DT: Add Hisilicon PCIe host binding
-Date: Tue, 21 Jul 2015 14:48:42 +0800
-Message-ID: <1437461323-3531-5-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:33546 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840AbbG0QOI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 12:14:08 -0400
+Received: by wicmv11 with SMTP id mv11so145884529wic.0
+        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2015 09:14:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150727175412-mutt-send-email-mst@redhat.com>
+References: <1435745608-21217-1-git-send-email-mst@redhat.com>
+ <20150713181025-mutt-send-email-mst@redhat.com> <20150714232924.GS24416@google.com>
+ <20150727175412-mutt-send-email-mst@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 27 Jul 2015 11:13:46 -0500
+Message-ID: <CAErSpo53wL1NURkiFUOMHDfY0MWrNE0jXwED20uiXXOiRDSB7g@mail.gmail.com>
+Subject: Re: [PATCH] pci_regs: reintroduce PCI_MSIX_FLAGS_BIRMASK
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"Chen, Gong" <gong.chen@linux.intel.com>,
+	Guenter Roeck <groeck@juniper.net>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-api@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds related DTS binding document for Hisilicon PCIe host driver.
+On Mon, Jul 27, 2015 at 9:55 AM, Michael S. Tsirkin <mst@redhat.com> wrote:
+> On Tue, Jul 14, 2015 at 06:29:24PM -0500, Bjorn Helgaas wrote:
+>> On Mon, Jul 13, 2015 at 06:11:38PM +0300, Michael S. Tsirkin wrote:
+>> > On Wed, Jul 01, 2015 at 12:14:10PM +0200, Michael S. Tsirkin wrote:
+>> > > This partially reverts commit 09a2c73ddfc7f173237fc7209a65b34dd5bcb5ed.
+>> > >     PCI: Remove unused PCI_MSIX_FLAGS_BIRMASK definition
+>> > >
+>> > > That commit dropped a symbol from an exported header claiming "no one
+>> > > uses it". This isn't how Linux normally approaches userspace API though,
+>> > > and in fact QEMU build fails if trying to use updated headers from linux
+>> > > 3.12 and up.
+>> > >
+>> > > Sure, userspace can be fixed to use the new symbol, but the cost
+>> > > of keeping the old one around is fairly low, too.
+>> > >
+>> > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+>>
+>> Sorry, I lost the original message somehow, so I can't reply to it.  I
+>> applied this by hand to my for-linus branch for v4.2, thanks!
+>
+>
+>
+> Did you mean 4.2? time's running out on this one ...
+> Just making sure - it's still not upstream, right?
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+It's on my for-linus branch and it's been in -next for a couple weeks.
+We're at -rc4, and I will send a pull request to Linus before v4.2
+releases.  This is a really minor fix, so I'm holding it in case there
+are other fixes that I can include in the same request.
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-new file mode 100644
-index 0000000..6c9b827
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -0,0 +1,46 @@
-+Hisilicon PCIe host bridge DT description
-+
-+Hisilicon PCIe host controller is based on Designware PCI core.
-+It shares common functions with PCIe Designware core driver and inherits
-+common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties:
-+- compatible: Should contain "hisilicon,hip05-pcie".
-+- reg: Should contain rc_dbi, subctrl, config registers location and length.
-+- reg-names: Must include the following entries:
-+  "rc_dbi": controller configuration registers;
-+  "subctrl": whole PCIe hosts configuration registers;
-+  "config": PCIe configuration space registers.
-+- msi-parent: Should be its_pcie which is an its receiving MSI interrupts.
-+- port-id: Should be 0, 1, 2 or 3.
-+
-+Optional properties:
-+- status: Either "ok" or "disabled".
-+- dma-coherent: Present if dma operations are coherent.
-+
-+Example:
-+	pcie@0xb0080000 {
-+		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
-+		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
-+		      <0x220 0x00000000 0 0x2000>;
-+		reg-names = "rc_dbi", "subctrl", "config";
-+		bus-range = <0  15>;
-+		msi-parent = <&its_pcie>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		dma-coherent;
-+		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
-+		num-lanes = <8>;
-+		port-id = <1>;
-+		#interrupts-cells = <1>;
-+		interrupts-map-mask = <0xf800 0 0 7>;
-+		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
-+				  0x0 0 0 2 &mbigen_pcie 2 11
-+				  0x0 0 0 3 &mbigen_pcie 3 12
-+				  0x0 0 0 4 &mbigen_pcie 4 13>;
-+		status = "ok";
-+	};
--- 
-1.9.1
-
+>> commit c9ddbac9c89110f77cb0fa07e634aaf1194899aa
+>> Author: Michael S. Tsirkin <mst@redhat.com>
+>> Date:   Tue Jul 14 18:27:46 2015 -0500
+>>
+>>     PCI: Restore PCI_MSIX_FLAGS_BIRMASK definition
+>>
+>>     09a2c73ddfc7 ("PCI: Remove unused PCI_MSIX_FLAGS_BIRMASK definition")
+>>     removed PCI_MSIX_FLAGS_BIRMASK from an exported header because it was
+>>     unused in the kernel.  But that breaks user programs that were using it
+>>     (QEMU in particular).
+>>
+>>     Restore the PCI_MSIX_FLAGS_BIRMASK definition.
+>>
+>>     [bhelgaas: changelog]
+>>     Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>     CC: stable@vger.kernel.org        # v3.13+
+>>
+>> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+>> index efe3443..413417f 100644
+>> --- a/include/uapi/linux/pci_regs.h
+>> +++ b/include/uapi/linux/pci_regs.h
+>> @@ -319,6 +319,7 @@
+>>  #define PCI_MSIX_PBA         8       /* Pending Bit Array offset */
+>>  #define  PCI_MSIX_PBA_BIR    0x00000007 /* BAR index */
+>>  #define  PCI_MSIX_PBA_OFFSET 0xfffffff8 /* Offset into specified BAR */
+>> +#define PCI_MSIX_FLAGS_BIRMASK       PCI_MSIX_PBA_BIR /* deprecated */
+>>  #define PCI_CAP_MSIX_SIZEOF  12      /* size of MSIX registers */
+>>
+>>  /* MSI-X Table entry format */
