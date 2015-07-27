@@ -1,76 +1,146 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <559CD1CF.3030601@linux.intel.com>
-Date: Wed, 08 Jul 2015 15:31:27 +0800
-From: Jiang Liu <jiang.liu@linux.intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>
-Subject: Re: [Patch v3 0/4] Introduce a mechanism to allocate PCI IRQ on demand
-References: <1433926501-22956-1-git-send-email-jiang.liu@linux.intel.com> <20150619161001.GJ7710@google.com>
-In-Reply-To: <20150619161001.GJ7710@google.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 23/51] PCI: Add support for more than two alt_size under same bridge
+Date: Mon, 27 Jul 2015 16:29:41 -0700
+Message-Id: <1438039809-24957-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/6/20 0:10, Bjorn Helgaas wrote:
-> On Wed, Jun 10, 2015 at 04:54:57PM +0800, Jiang Liu wrote:
->> Hi Bjorn,
->> 	I have verified that this patch set could be applied to the
->> mainstream kernel without dependency on other patches, so could you
->> please help to merge it?
-> 
-> I already acked these and said I was willing to merge them and that I was
-> hoping for an ack from Thomas.
-> 
-> Any thoughts, Thomas?
+Need to increase size to make sure it could fit all alt entries.
 
-Hi Thomas,
-	Any comments about this bugfix series?
-Thanks!
-Gerry
+In the patch, we first select one big size, and then keep reducing
+the size and retrying to get the minimum value for alt_size.
 
-> 
->> This patch set introduces a mechanism to allocate PCI IRQ on demand and
->> free it when not used anymore by hooking pci_device_probe() and
->> pci_device_remove().
->>
->> It will be used to track IOAPIC pin usage on x86 so we could support
->> IOAPIC hot-removal.
->>
->> The patch set passes Fengguang's 0day test suite.
->>
->> V2->V3:
->> 1) Change the default pcibios_alloc_irq() to always return 0, as
->>    suggested by Bjorn.
->> 2) Refine comments.
->>
->> V1->V2:
->> 1) Refine pci_device_probe() to optimize for mainline code as suggested
->>    by Bjorn
->> 2) Reorder patch set to put optional patch as the last (Patch 4)
->>
->>
->> Jiang Liu (4):
->>   PCI: Add hooks to allocate/free IRQ resources when binding/unbinding
->>     driver
->>   PCI, x86: Allocate PCI IRQ on demand and free it when not used
->>     anymore
->>   PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed
->>   PCI, MSI: Free legacy PCI IRQ when enabling MSI/MSI-X
->>
->>  arch/x86/include/asm/pci_x86.h |    2 --
->>  arch/x86/pci/common.c          |   20 +++++++++-----------
->>  arch/x86/pci/intel_mid_pci.c   |    9 ++++++---
->>  arch/x86/pci/irq.c             |   23 ++++-------------------
->>  drivers/acpi/pci_irq.c         |   17 ++++-------------
->>  drivers/pci/msi.c              |    6 +++++-
->>  drivers/pci/pci-driver.c       |   26 ++++++++++++++++++++------
->>  include/linux/pci.h            |   19 +++++++++++++++++++
->>  8 files changed, 67 insertions(+), 55 deletions(-)
->>
->> -- 
->> 1.7.10.4
->>
+Example:
+two bridges: one have 8M/8M, and 1M/1M children res.
+	     one have 4M/4M, and 1M/1M children res.
+
+Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
+Before this patch, parent bridge alt_align/alt_size is 8M/14M
+that is wrong.
+With this patch	parent bridge alt_align/alt_size: 8M/17M.
+
+At same time, child bridges must align/size: 4M/12M, 2M/6M.
+and prarent bridge must align/size: 4M/20M.
+
+So at last, we use 8M/17M as parent bridge alt_align/alt_size.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Tested-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 54 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9da8b23..bf28f32 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1335,6 +1335,47 @@ out:
+ 	return good_align;
+ }
+ 
++static resource_size_t calculate_mem_alt_size(struct list_head *head,
++				resource_size_t max_align, resource_size_t size,
++				resource_size_t align_low)
++{
++	struct align_test_res *p;
++	resource_size_t tmp;
++	resource_size_t good_size, bad_size;
++	int count = 0, order;
++
++	good_size = ALIGN(size, align_low);
++
++	list_for_each_entry(p, head, list)
++		count++;
++
++	if (count <= 1)
++		goto out;
++
++	__sort_align_test(head);
++
++	tmp = max(size, max_align);
++	order = __fls(count);
++	if ((1ULL << order) < count)
++		order++;
++	good_size = ALIGN((tmp << order), align_low);
++	bad_size = ALIGN(size, align_low) - align_low;
++	size = good_size;
++	while (size > bad_size) {
++		/* check if align/size fit all entries */
++		if (is_align_size_good(head, max_align, size, 0))
++			good_size = size;
++		else
++			bad_size = size;
++
++		size = bad_size + ((good_size - bad_size) >> 1);
++		size = round_down(size, align_low);
++	}
++
++out:
++	return good_size;
++}
++
+ static inline bool is_optional(int i)
+ {
+ 
+@@ -1381,6 +1422,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	LIST_HEAD(align_test_alt_list);
+ 	resource_size_t alt_size = 0, alt_align = 0;
+ 	resource_size_t window_align;
+ 
+@@ -1454,10 +1496,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 				dev_res = res_to_dev_res(realloc_head, r);
+ 				if (dev_res && dev_res->alt_size) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						dev_res->alt_align,
++						dev_res->alt_size);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+ 				} else if (r_size > 1) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						align, r_size);
+ 					alt_size += r_size;
+ 					if (alt_align < align)
+ 						alt_align = align;
+@@ -1477,14 +1526,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	if (size0 && realloc_head) {
+ 		alt_align = max(alt_align, window_align);
+-		alt_size = calculate_memsize(alt_size, min_size,
+-					     0, window_align);
++		/* need to increase size to fit more alt */
++		alt_size = calculate_mem_alt_size(&align_test_alt_list,
++						  alt_align, alt_size,
++						  window_align);
+ 		/* must is better ? */
+ 		if (alt_size >= size0) {
+ 			alt_align = 0;
+ 			alt_size = 0;
+ 		}
+ 	}
++	free_align_test_list(&align_test_alt_list);
+ 
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+-- 
+1.8.4.5
+
