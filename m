@@ -1,126 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:35158 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752216AbbGQBgB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 21:36:01 -0400
-Received: by wibxm9 with SMTP id xm9so27287318wib.0
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2015 18:36:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55A856F2.1040900@huawei.com>
-References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
- <20150716042203.GC25591@google.com> <55A76361.8070604@huawei.com>
- <20150716152548.GD25591@google.com> <55A856F2.1040900@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 16 Jul 2015 20:35:40 -0500
-Message-ID: <CAErSpo6UTEfBieOm3P4Ms45rXhp5SS80QqU_wcDjNswdBzzifg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatja@google.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3 26/51] PCI: Don't add too much optional size for hotplug bridge io
+Date: Mon, 27 Jul 2015 16:29:44 -0700
+Message-Id: <1438039809-24957-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 16, 2015 at 8:14 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>> If I'm mistaken, please correct me and explain why this patch is safe.
->>>
->>> Hi Bjorn, I think pci_bus_sem here was introduced to protect the bus->slots list, because it
->>> use down_write() here, for bus->devices list, we only traverse it, won't add/remove it, for the latter, down_read() is enough.
->>> When I posted this patch, I thought we should protect the bus when we start to register a slot,
->>> something like a big lock at outermost routine to tell others not to touch its children devices, use pci_bus_sem to protect hotplug
->>> cases is not a good idea, and actually in PCI code, we have found several deadlock caused by the pci_bus_sem.
->>>
->>> But for this patch, I know what you worried, what about add a down_read(&pci_bus_sem) to avoid to introduce a regression ?
->>>
->>>
->>> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
->>> index 396c200..a9079d9 100644
->>> --- a/drivers/pci/slot.c
->>> +++ b/drivers/pci/slot.c
->>> @@ -14,6 +14,7 @@
->>>
->>>  struct kset *pci_slots_kset;
->>>  EXPORT_SYMBOL_GPL(pci_slots_kset);
->>> +static DEFINE_MUTEX(pci_slot_mutex);
->>>
->>>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
->>>                                         struct attribute *attr, char *buf)
->>> @@ -106,9 +107,11 @@ static void pci_slot_release(struct kobject *kobj)
->>>         dev_dbg(&slot->bus->dev, "dev %02x, released physical slot %s\n",
->>>                 slot->number, pci_slot_name(slot));
->>>
->>> +       down_read(&pci_bus_sem);
->>>         list_for_each_entry(dev, &slot->bus->devices, bus_list)
->>>                 if (PCI_SLOT(dev->devfn) == slot->number)
->>>                         dev->slot = NULL;
->>> +       up_read(&pci_bus_sem);
->>>
->>>         list_del(&slot->list);
->>
->> This list_del() updates the bus->slots list.
->
-> It's safe here, because we have locked the pci_slot_mutex in pci_destroy_slot(), which is the only caller of pci_slot_release().
+Same as patch for mmio (PCI: Don't add too much optional size for hotplug
+bridge mmio), and this one is addressing io port.
 
-That doesn't protect anybody else who might be traversing the
-bus->slots list while we're deleting this entry.
+It will compare must+optional with min_sum_size to get smaller
+optional size.
 
->>> @@ -195,7 +198,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
->>>  {
->>>         struct pci_slot *slot;
->>>         /*
->>> -        * We already hold pci_bus_sem so don't worry
->>> +        * We already hold pci_slot_mutex so don't worry
->>>          */
->>>         list_for_each_entry(slot, &parent->slots, list)
->>>                 if (slot->number == slot_nr) {
->>> @@ -253,7 +256,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
->>>         int err = 0;
->>>         char *slot_name = NULL;
->>>
->>> -       down_write(&pci_bus_sem);
->>> +       mutex_lock(&pci_slot_mutex);
->>>
->>>         if (slot_nr == -1)
->>>                 goto placeholder;
->>> @@ -301,16 +304,18 @@ placeholder:
->>>         INIT_LIST_HEAD(&slot->list);
->>>         list_add(&slot->list, &parent->slots);
->>>
->>> +       down_read(&pci_bus_sem);
->>>         list_for_each_entry(dev, &parent->devices, bus_list)
->>>                 if (PCI_SLOT(dev->devfn) == slot_nr)
->>>                         dev->slot = slot;
->>> +       up_read(&pci_bus_sem);
->>>
->>>         dev_dbg(&parent->dev, "dev %02x, created physical slot %s\n",
->>>                 slot_nr, pci_slot_name(slot));
->>>
->>>  out:
->>>         kfree(slot_name);
->>> -       up_write(&pci_bus_sem);
->>> +       mutex_unlock(&pci_slot_mutex);
->>>         return slot;
->>>  err:
->>>         kfree(slot);
->>> @@ -332,9 +337,9 @@ void pci_destroy_slot(struct pci_slot *slot)
->>>         dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
->>>                 slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
->>>
->>> -       down_write(&pci_bus_sem);
->>> +       mutex_lock(&pci_slot_mutex);
->>>         kobject_put(&slot->kobj);
->>> -       up_write(&pci_bus_sem);
->>> +       mutex_unlock(&pci_slot_mutex);
->>>  }
->>>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
->>
->> .
->>
->
->
-> --
-> Thanks!
-> Yijing
->
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 2679ccc..b44921e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1189,7 +1189,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  *
+  * @bus : the bus
+  * @min_size : the minimum io window that must to be allocated
+- * @add_size : additional optional io window
+  * @realloc_head : track the additional io window on this list
+  *
+  * Sizing the IO windows of the PCI-PCI bridge is trivial,
+@@ -1198,9 +1197,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  * We must be careful with the ISA aliasing though.
+  */
+ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+-		resource_size_t add_size, struct list_head *realloc_head)
++			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
++	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+@@ -1210,6 +1211,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	if (!b_res)
+ 		return;
+ 
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+@@ -1239,10 +1245,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_iosize(size, min_size, add_size + size1,
++	sum_add_size = children_add_size + size + size1;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
++	size1 = !realloc_head ? size0 :
++		calculate_iosize(size, min_size, sum_add_size - size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+@@ -1794,7 +1801,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t min_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, min_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
+ 
+@@ -1827,13 +1834,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	case PCI_CLASS_BRIDGE_PCI:
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+-			additional_io_size  = pci_hotplug_io_size;
++			min_io_size  = pci_hotplug_io_size;
+ 			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+-		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
+-			     additional_io_size, realloc_head);
++		pbus_size_io(bus, min_io_size, realloc_head);
+ 
+ 		/*
+ 		 * If there's a 64-bit prefetchable MMIO window, compute
+-- 
+1.8.4.5
+
