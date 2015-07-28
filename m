@@ -1,88 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Russell King <linux@arm.linux.org.uk>, <dja@axtens.net>,
-	<linux-xtensa@linux-xtensa.org>, <x86@kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:59220 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932396AbbG1NrM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 09:47:12 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	<linux-mips@linux-mips.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
-	Tony Luck <tony.luck@intel.com>, <linux-ia64@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	<linux-alpha@vger.kernel.org>, <linux-m68k@lists.linux-m68k.org>,
-	<linux-am33-list@redhat.com>, Liviu Dudau <liviu@dudau.co.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH part3 v12 03/10] PCI: Remove declaration for pci_get_new_domain_nr()
-Date: Mon, 20 Jul 2015 20:01:11 +0800
-Message-ID: <1437393678-4077-4-git-send-email-wangyijing@huawei.com>
-In-Reply-To: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
-References: <1437393678-4077-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH v6 17/19] irqchip: GICv2m: Add platform MSI support
+Date: Tue, 28 Jul 2015 14:46:24 +0100
+Message-Id: <1438091186-10244-18-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_get_new_domain_nr() is only used in drivers/pci/pci.c,
-remove the declaration in include/linux/pci.h.
+In order to support non-PCI MSI with GICv2m, add the minimal
+required entry points for the MSI domain, which is actually almost
+nothing (we just use the defaults provided by the core code).
 
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/pci.c   |    4 ++--
- include/linux/pci.h |    3 ---
- 2 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/irqchip/irq-gic-v2m.c | 33 +++++++++++++++++++++++++--------
+ 1 file changed, 25 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0008c95..59032e2 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4476,14 +4476,14 @@ static void pci_no_domains(void)
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+index ec9c376..db04fc1 100644
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -50,7 +50,6 @@ struct v2m_data {
+ 	u32 spi_start;		/* The SPI number that MSIs start */
+ 	u32 nr_spis;		/* The number of SPIs for MSIs */
+ 	unsigned long *bm;	/* MSI vector bitmap */
+-	struct irq_domain *domain;
+ };
+ 
+ static void gicv2m_mask_msi_irq(struct irq_data *d)
+@@ -212,12 +211,25 @@ static bool is_msi_spi_valid(u32 base, u32 num)
+ 	return true;
  }
  
- #ifdef CONFIG_PCI_DOMAINS
-+#ifdef CONFIG_PCI_DOMAINS_GENERIC
- static atomic_t __domain_nr = ATOMIC_INIT(-1);
- 
--int pci_get_new_domain_nr(void)
-+static int pci_get_new_domain_nr(void)
++static struct irq_chip gicv2m_pmsi_irq_chip = {
++	.name			= "pMSI",
++};
++
++static struct msi_domain_ops gicv2m_pmsi_ops = {
++};
++
++static struct msi_domain_info gicv2m_pmsi_domain_info = {
++	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS),
++	.ops	= &gicv2m_pmsi_ops,
++	.chip	= &gicv2m_pmsi_irq_chip,
++};
++
+ static int __init gicv2m_init_one(struct device_node *node,
+ 				  struct irq_domain *parent)
  {
- 	return atomic_inc_return(&__domain_nr);
- }
+ 	int ret;
+ 	struct v2m_data *v2m;
+-	struct irq_domain *inner_domain;
++	struct irq_domain *inner_domain, *pci_domain, *plat_domain;
  
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- {
- 	static int use_dt_domains = -1;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f7e4204..4524592 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1319,12 +1319,10 @@ void pci_cfg_access_unlock(struct pci_dev *dev);
-  */
- #ifdef CONFIG_PCI_DOMAINS
- extern int pci_domains_supported;
--int pci_get_new_domain_nr(void);
- #else
- enum { pci_domains_supported = 0 };
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
--static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- #endif /* CONFIG_PCI_DOMAINS */
+ 	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
+ 	if (!v2m) {
+@@ -270,10 +282,13 @@ static int __init gicv2m_init_one(struct device_node *node,
  
- /*
-@@ -1445,7 +1443,6 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+ 	inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+ 	inner_domain->parent = parent;
+-	v2m->domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
+-						inner_domain);
+-	if (!v2m->domain) {
+-		pr_err("Failed to create MSI domain\n");
++	pci_domain = pci_msi_create_irq_domain(node, &gicv2m_msi_domain_info,
++					       inner_domain);
++	plat_domain = platform_msi_create_irq_domain(node,
++						     &gicv2m_pmsi_domain_info,
++						     inner_domain);
++	if (!pci_domain || !plat_domain) {
++		pr_err("Failed to create MSI domains\n");
+ 		ret = -ENOMEM;
+ 		goto err_free_domains;
+ 	}
+@@ -287,8 +302,10 @@ static int __init gicv2m_init_one(struct device_node *node,
+ 	return 0;
  
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
--static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- 
- #define dev_is_pci(d) (false)
- #define dev_is_pf(d) (false)
+ err_free_domains:
+-	if (v2m->domain)
+-		irq_domain_remove(v2m->domain);
++	if (plat_domain)
++		irq_domain_remove(plat_domain);
++	if (pci_domain)
++		irq_domain_remove(pci_domain);
+ 	if (inner_domain)
+ 		irq_domain_remove(inner_domain);
+ err_free_bm:
 -- 
-1.7.1
+2.1.4
 
