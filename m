@@ -1,243 +1,223 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39505 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752849AbbGWJ1Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Jul 2015 05:27:25 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v5 14/19] irqchip: gicv3-its: Make the PCI/MSI code standalone
-Date: Thu, 23 Jul 2015 10:26:33 +0100
-Message-Id: <1437643598-19795-15-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
-References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:34705 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866AbbG1VvJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 17:51:09 -0400
+Received: by obre1 with SMTP id e1so95080503obr.1
+        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2015 14:51:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150728212944.GA12958@google.com>
+References: <20150724224258.GA23990@google.com> <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com>
+ <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com>
+ <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com> <20150728212944.GA12958@google.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Tue, 28 Jul 2015 14:50:39 -0700
+Message-ID: <CADaLNDkOLiyPmVC3VwpnbrfAKFmNwSVJKdChjQFdQqs7XP-Ddg@mail.gmail.com>
+Subject: Re: X-Gene: Unhandled fault: synchronous external abort in pci_generic_config_read32
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can now lookup the base ITS domain, making it possible to
-initialize the PCI/MSI code independently from the main ITS
-subsystem.
+On Tue, Jul 28, 2015 at 2:29 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Jul 28, 2015 at 10:45:26AM -0700, Duc Dang wrote:
+>> On Tue, Jul 28, 2015 at 9:43 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> > On Fri, Jul 24, 2015 at 7:05 PM, Duc Dang <dhdang@apm.com> wrote:
+>> >> Hi Bjorn,
+>> >>
+>> >> On Fri, Jul 24, 2015 at 3:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> >>>
+>> >>> I regularly see faults like this on an APM X-Gene:
+>> >>>
+>> >>>   U-Boot 2013.04-mustang_sw_1.14.14 (Dec 16 2014 - 15:59:33)
+>> >>>   CPU0: APM ARM 64-bit Potenza Rev B0 2400MHz PCP 2400MHz
+>> >>>        32 KB ICACHE, 32 KB DCACHE
+>> >>>        SOC 2000MHz IOBAXI 400MHz AXI 250MHz AHB 200MHz GFC 125MHz
+>> >>>   ...
+>> >>>   Unhandled fault: synchronous external abort (0x96000010) at 0xffffff8000110034
+>> >>>   Internal error: : 96000010 [#1] SMP
+>> >>>   Modules linked in:
+>> >>>   CPU: 0 PID: 3723 Comm: ... 4.1.0-smp-DEV #3
+>> >>>   Hardware name: APM X-Gene Mustang board (DT)
+>> >>>   task: ffffffc7dc1a4140 ti: ffffffc7dc118000 task.ti: ffffffc7dc118000
+>> >>>   PC is at pci_generic_config_read32+0x4c/0xb8
+>> >>>   LR is at pci_generic_config_read32+0x40/0xb8
+>> >>>   pc : [<ffffffc00033b90c>] lr : [<ffffffc00033b900>] pstate: 600001c5
+>> >>>   ...
+>> >>>   Call trace:
+>> >>>   [<ffffffc00033b90c>] pci_generic_config_read32+0x4c/0xb8
+>> >>>   [<ffffffc00033bf58>] pci_user_read_config_byte+0x60/0xc4
+>> >>>   [<ffffffc0003496a8>] pci_read_config+0x15c/0x238
+>> >>>   [<ffffffc0002393b4>] sysfs_kf_bin_read+0x68/0xa0
+>> >>>   [<ffffffc00023896c>] kernfs_fop_read+0x9c/0x1ac
+>> >>>   [<ffffffc0001c361c>] __vfs_read+0x44/0x128
+>> >>>   [<ffffffc0001c3e28>] vfs_read+0x84/0x144
+>> >>>   [<ffffffc0001c4764>] SyS_read+0x50/0xb0
+>> >>
+>> >> The log shows kernel gets an exception when trying to access Mellanox
+>> >> card configuration space. This is usually due to suboptimal PCIe
+>> >> SerDes parameters are using in your board, which will cause bad link
+>> >> quality.
+>> >> The PCIe SerDes programming is done in U-Boot, so I suggest you do a
+>> >> U-Boot upgrade to our latest X-Gene U-Boot release.
+>> >
+>> > I installed U-Boot 1.15.12, which I thought was the latest.  I'm still
+>> > seeing this issue regularly, approx once/hour.
+>>
+>> Our latest U-Boot is 1.15.15, but U-Boot 1.15.12 is already a good
+>> version to use. Are you running any PCIe traffic test when the error
+>> happens?
+>
+> Nope, the machine was either idle or running a reboot test; no PCIe stress
+> test or anything.
+>
+>> And it will be useful if you can share your "lspci -vvv" output when
+>> the board is running, we can check to see if there is any error status
+>> reported.
+>
+> Here's some lspci output and info about the firmware I'm running.
+> Obviously this lspci output was collected before a crash.  I have also
+> seen lspci output where "CESta: RxErr+" was set on the 00:00.0 Root Port.
+>
+> U-Boot 2013.04-mustang_sw_1.15.12 (May 20 2015 - 10:03:33)
+>
+> CPU0: APM ARM 64-bit Potenza Rev B0 2400MHz PCP 2400MHz
+>      32 KB ICACHE, 32 KB DCACHE
+>      SOC 2000MHz IOBAXI 400MHz AXI 250MHz AHB 200MHz GFC 125MHz
+> Boot from SPI-NOR
+> Slimpro FW:
+>         Ver: 2.4 (build 01.15.12.00 2015/05/20)
+>         PMD: 970 mV
+>         SOC: 950 mV
+> Board: Mustang - AppliedMicro APM883208-xNA24SPT Reference Board
+> I2C:   ready
+> DRAM:  ECC 32 GiB @ 1600MHz
+> SF: Detected N25Q256 with page size 256 Bytes, total 32 MiB
+> MMC:   X-Gene SD/SDIO/eMMC: 0
+> PCIE0: (RC) X8 GEN-3 link up
+>   00:00.0     - 10e8:e004 - Bridge device
+>    01:00.0    - 15b3:1007 - Network controller
+>
+> # lspci -vvv
+> 00:00.0 PCI bridge: Applied Micro Circuits Corp. Device e004 (rev 04) (prog-if 00 [Normal decode])
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0
+>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>         I/O behind bridge: 0000f000-00000fff
+>         Memory behind bridge: 80000000-82ffffff
+>         Prefetchable memory behind bridge: 0000000083000000-00000000830fffff
+>         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+>         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+>                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+>                 DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <1us, L1 unlimited
+>                         ExtTag- RBE+ FLReset-
+>                 DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported-
+>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>                         MaxPayload 256 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr+ UncorrErr- FatalErr+ UnsuppReq- AuxPwr- TransPend+
+>                 LnkCap: Port #0, Speed unknown, Width x8, ASPM L0s L1, Latency L0 unlimited, L1 unlimited
+>                         ClockPM- Surprise+ LLActRep+ BwNot+
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed unknown, Width x8, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+>                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+>                         Slot #1, PowerLimit 10.000W; Interlock- NoCompl-
+>                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+>                         Control: AttnInd Off, PwrInd Off, Power- Interlock-
+>                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+>                         Changed: MRL- PresDet- LinkState+
+>                 RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+>                 RootCap: CRSVisible-
+>                 RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+>                 DevCap2: Completion Timeout: Not Supported, TimeoutDis+ ARIFwd-
+>                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+>                 LnkCtl2: Target Link Speed: Unknown, EnterCompliance- SpeedDis-, Selectable De-emphasis: -3.5dB
 
-This allows us to remove all the previously add hooks.
+Target Link Speed unknown is really strange. I also saw the same "Link
+speed unknown" for Mellanox card below.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/irqchip/irq-gic-v3-its-pci-msi.c | 47 +++++++++++++++++++++++++++----
- drivers/irqchip/irq-gic-v3-its.c         | 48 +++++++++++++++++++++-----------
- include/linux/irqchip/arm-gic-v3.h       |  5 ----
- 3 files changed, 73 insertions(+), 27 deletions(-)
+>                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+>                          Compliance De-emphasis: -6dB
+>                 LnkSta2: Current De-emphasis Level: -6dB
+>         Capabilities: [80] Power Management version 3
+>                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [100 v1] Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                 CESta:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>                 CEMsk:  RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>                 AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+>         Capabilities: [180 v1] #19
+>         Capabilities: [150 v1] Vendor Specific Information: ID=0001 Rev=1 Len=010 <?>
+>         Kernel driver in use: pcieport
+>
+> 01:00.0 Ethernet controller: Mellanox Technologies MT27520 Family
+>         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index 7614721..cf351c6 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -20,8 +20,6 @@
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
- 
--#include <linux/irqchip/arm-gic-v3.h>
--
- static void its_mask_msi_irq(struct irq_data *d)
- {
- 	pci_msi_mask_irq(d);
-@@ -74,17 +72,24 @@ static int its_pci_msi_prepare(struct irq_domain *domain, struct device *dev,
- {
- 	struct pci_dev *pdev;
- 	struct its_pci_alias dev_alias;
-+	struct msi_domain_info *msi_info;
- 
- 	if (!dev_is_pci(dev))
- 		return -EINVAL;
- 
-+	msi_info = msi_get_domain_info(domain->parent);
-+
- 	pdev = to_pci_dev(dev);
- 	dev_alias.pdev = pdev;
- 	dev_alias.count = nvec;
- 
- 	pci_for_each_dma_alias(pdev, its_get_pci_alias, &dev_alias);
- 
--	return its_msi_prepare(domain, dev_alias.dev_id, dev_alias.count, info);
-+	/* ITS specific DeviceID, as the core ITS ignores dev. */
-+	info->scratchpad[0].ul = dev_alias.dev_id;
-+
-+	return msi_info->ops->msi_prepare(domain->parent,
-+					  dev, dev_alias.count, info);
- }
- 
- static struct msi_domain_ops its_pci_msi_ops = {
-@@ -98,8 +103,38 @@ static struct msi_domain_info its_pci_msi_domain_info = {
- 	.chip	= &its_msi_irq_chip,
- };
- 
--struct irq_domain *its_pci_msi_alloc_domain(struct device_node *np,
--					    struct irq_domain *parent)
-+static struct of_device_id its_device_id[] = {
-+	{	.compatible	= "arm,gic-v3-its",	},
-+	{},
-+};
-+
-+static int __init its_pci_msi_init(void)
- {
--	return pci_msi_create_irq_domain(np, &its_pci_msi_domain_info, parent);
-+	struct device_node *np;
-+	struct irq_domain *parent;
-+
-+	for (np = of_find_matching_node(NULL, its_device_id); np;
-+	     np = of_find_matching_node(np, its_device_id)) {
-+		if (!of_property_read_bool(np, "msi-controller"))
-+			continue;
-+
-+		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
-+		if (!parent || !msi_get_domain_info(parent)) {
-+			pr_err("%s: unable to locate ITS domain\n",
-+			       np->full_name);
-+			continue;
-+		}
-+
-+		if (!pci_msi_create_irq_domain(np, &its_pci_msi_domain_info,
-+					       parent)) {
-+			pr_err("%s: unable to create PCI domain\n",
-+			       np->full_name);
-+			continue;
-+		}
-+
-+		pr_info("PCI/MSI: %s domain created\n", np->full_name);
-+	}
-+
-+	return 0;
- }
-+early_initcall(its_pci_msi_init);
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index ca8b1cc..21b002f 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -60,7 +60,6 @@ struct its_collection {
- struct its_node {
- 	raw_spinlock_t		lock;
- 	struct list_head	entry;
--	struct irq_domain	*domain;
- 	void __iomem		*base;
- 	unsigned long		phys_base;
- 	struct its_cmd_block	*cmd_base;
-@@ -1152,13 +1151,25 @@ static int its_alloc_device_irq(struct its_device *dev, irq_hw_number_t *hwirq)
- 	return 0;
- }
- 
--int its_msi_prepare(struct irq_domain *domain, u32 dev_id,
--		    int nvec, msi_alloc_info_t *info)
-+static int its_msi_prepare(struct irq_domain *domain, struct device *dev,
-+			   int nvec, msi_alloc_info_t *info)
- {
- 	struct its_node *its;
- 	struct its_device *its_dev;
-+	struct msi_domain_info *msi_info;
-+	u32 dev_id;
-+
-+	/*
-+	 * We ignore "dev" entierely, and rely on the dev_id that has
-+	 * been passed via the scratchpad. This limits this domain's
-+	 * usefulness to upper layers that definitely know that they
-+	 * are built on top of the ITS.
-+	 */
-+	dev_id = info->scratchpad[0].ul;
-+
-+	msi_info = msi_get_domain_info(domain);
-+	its = msi_info->data;
- 
--	its = domain->parent->host_data;
- 	its_dev = its_find_device(its, dev_id);
- 	if (its_dev) {
- 		/*
-@@ -1180,6 +1191,10 @@ out:
- 	return 0;
- }
- 
-+static struct msi_domain_ops its_msi_domain_ops = {
-+	.msi_prepare	= its_msi_prepare,
-+};
-+
- static int its_irq_gic_domain_alloc(struct irq_domain *domain,
- 				    unsigned int virq,
- 				    irq_hw_number_t hwirq)
-@@ -1316,7 +1331,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	struct resource res;
- 	struct its_node *its;
- 	void __iomem *its_base;
--	struct irq_domain *inner_domain = NULL;
-+	struct irq_domain *inner_domain;
- 	u32 val;
- 	u64 baser, tmp;
- 	int err;
-@@ -1406,20 +1421,26 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
- 
- 	if (of_property_read_bool(node, "msi-controller")) {
-+		struct msi_domain_info *info;
-+
-+		info = kzalloc(sizeof(*info), GFP_KERNEL);
-+		if (!info) {
-+			err = -ENOMEM;
-+			goto out_free_tables;
-+		}
-+
- 		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
- 		if (!inner_domain) {
- 			err = -ENOMEM;
-+			kfree(info);
- 			goto out_free_tables;
- 		}
- 
- 		inner_domain->parent = parent;
- 		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
--
--		its->domain = its_pci_msi_alloc_domain(node, inner_domain);
--		if (!its->domain) {
--			err = -ENOMEM;
--			goto out_free_domains;
--		}
-+		info->ops = &its_msi_domain_ops;
-+		info->data = its;
-+		inner_domain->host_data = info;
- 	}
- 
- 	spin_lock(&its_lock);
-@@ -1428,11 +1449,6 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
- 
- 	return 0;
- 
--out_free_domains:
--	if (its->domain)
--		irq_domain_remove(its->domain);
--	if (inner_domain)
--		irq_domain_remove(inner_domain);
- out_free_tables:
- 	its_free_tables(its);
- out_free_cmd:
-diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
-index d6149ba..bf982e0 100644
---- a/include/linux/irqchip/arm-gic-v3.h
-+++ b/include/linux/irqchip/arm-gic-v3.h
-@@ -389,11 +389,6 @@ struct irq_domain;
- int its_cpu_init(void);
- int its_init(struct device_node *node, struct rdists *rdists,
- 	     struct irq_domain *domain);
--int its_msi_prepare(struct irq_domain *domain, u32 dev_id,
--		    int nvec, msi_alloc_info_t *info);
--
--struct irq_domain *its_pci_msi_alloc_domain(struct device_node *node,
--					    struct irq_domain *parent);
- 
- #endif
- 
+Mem and BusMaster are disabled. So this card is not functional?
+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Interrupt: pin A routed to IRQ 226
+>         Region 0: [virtual] Memory at e182000000 (32-bit, non-prefetchable) [size=1M]
+>         Region 2: [virtual] Memory at e180000000 (32-bit, non-prefetchable) [size=32M]
+>         [virtual] Expansion ROM at e183000000 [disabled] [size=1M]
+>         Capabilities: [40] Power Management version 3
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [9c] MSI-X: Enable- Count=64 Masked-
+
+This may be unrelated, but MSI allocation fails for this card somehow.
+
+>                 Vector table: BAR=0 offset=0007c000
+>                 PBA: BAR=0 offset=0007d000
+>         Capabilities: [60] Express (v2) Endpoint, MSI 00
+>                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 unlimited
+>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+>                 LnkCap: Port #8, Speed unknown, Width x8, ASPM L0s, Latency L0 unlimited, L1 unlimited
+>                         ClockPM- Surprise- LLActRep- BwNot-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed unknown, Width x8, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>                 DevCap2: Completion Timeout: Range ABCD, TimeoutDis+
+>                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+>                 LnkCtl2: Target Link Speed: Unknown, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+>                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+>                          Compliance De-emphasis: -6dB
+>                 LnkSta2: Current De-emphasis Level: -6dB
+>         Capabilities: [100 v1] Alternative Routing-ID Interpretation (ARI)
+>                 ARICap: MFVC- ACS-, Next Function: 0
+>                 ARICtl: MFVC- ACS-, Function Group: 0
+>         Capabilities: [148 v1] Device Serial Number xx-xx-xx-xx-xx-xx-xx-xx
+
+The serial number here seems invalid. I have a Mellanox card but
+different model (ConnectX-3 15b3:1003) that shows meaningful serial
+number:
+Capabilities: [148 v1] Device Serial Number f4-52-14-03-00-0b-c2-30.
+
+Do you have another PCIe card to try on the same reboot test on this board?
+
+>         Capabilities: [154 v2] Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>                 AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+>         Capabilities: [18c v1] #19
+>         Kernel modules: mlx4_core
+
 -- 
-2.1.4
-
+Regards,
+Duc Dang.
