@@ -1,173 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:33213 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752347AbbG2QJJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 12:09:09 -0400
-Received: by obdeg2 with SMTP id eg2so10733801obd.0
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 09:09:08 -0700 (PDT)
-Date: Wed, 29 Jul 2015 11:09:03 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
-Message-ID: <20150729160903.GD31170@google.com>
-References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v6 02/19] PCI: MSI: Register irq domain with specific token
+Date: Tue, 28 Jul 2015 14:46:09 +0100
+Message-Id: <1438091186-10244-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 07, 2015 at 11:11:20AM -0700, Guenter Roeck wrote:
-> The PCI subsystem always assumes that I/O is supported on PCIe bridges
-> and tries to assign an I/O window to each child bus even if that is not
-> the case.
-> 
-> This may result in messages such as
-> 
-> pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff]
-> 					get_res_add_size add_size 1000
-> pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
-> pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
-> 
-> for each bridge port, even if a bus or its parent does not support
-> I/O in the first place.
-> 
-> To avoid this message, check if a bus supports I/O before trying to
-> enable it. Also check if the root bus has an IO window assigned;
-> if not, it does not make sense to try to assign one to any of its
-> child busses.
-> 
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+When creating a PCI/MSI domain, tag it with DOMAIN_BUS_PCI_MSI so
+that it can be looked-up using irq_find_matching_host().
 
-Applied to pci/resource for v4.3, thanks!
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/msi.c         | 9 ++++++++-
+ include/linux/irqdomain.h | 1 +
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
-> ---
-> v2: Use a new bus flag to indicate if IO is supported on a bus or not.
->     Using IORESOURCE_DISABLED in resource flags turned out to be futile,
->     since the term "!res->flags" is widely used to detect if a resource
->     window is enabled or not, and setting IORESOURCE_DISABLED would
->     affect all this code.
-> 
-> This patch depends on 'PCI: move pci_read_bridge_bases to the generic
-> PCI layer' by Lorenzo Pieralisi; without it, pci_read_bridge_io()
-> is not always called.
-> 
-> With this version of the patch, pci_bridge_check_ranges() still sets
-> IORESOURCE_IO. Moving this into pci_read_bridge_io() had undesirable
-> side effects and resulted in missing IO window assignments on one of
-> the x86 platforms I tested with. I'll have to explore this further.
-> 
->  drivers/pci/probe.c     | 46 ++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/setup-bus.c |  9 +--------
->  include/linux/pci.h     |  1 +
->  3 files changed, 48 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cefd636681b6..b21cba7aeb79 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -332,6 +332,35 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
->  	}
->  }
->  
-> +static bool pci_bus_supports_io(struct pci_bus *bus)
-> +{
-> +	struct pci_dev *dev = bus->self;
-> +	u16 io;
-> +
-> +	pci_read_config_word(dev, PCI_IO_BASE, &io);
-> +	if (!io) {
-> +		pci_write_config_word(dev, PCI_IO_BASE, 0xe0f0);
-> +		pci_read_config_word(dev, PCI_IO_BASE, &io);
-> +		pci_write_config_word(dev, PCI_IO_BASE, 0x0);
-> +	}
-> +	return !!io;
-> +}
-> +
-> +static bool pci_root_has_io_resource(struct pci_bus *bus)
-> +{
-> +	struct resource *res;
-> +	int i;
-> +
-> +	while (bus->parent)
-> +		bus = bus->parent;
-> +
-> +	 pci_bus_for_each_resource(bus, res, i) {
-> +		if (res && (res->flags & IORESOURCE_IO))
-> +			return true;
-> +	 }
-> +	 return false;
-> +}
-> +
->  static void pci_read_bridge_io(struct pci_bus *child)
->  {
->  	struct pci_dev *dev = child->self;
-> @@ -340,6 +369,23 @@ static void pci_read_bridge_io(struct pci_bus *child)
->  	struct pci_bus_region region;
->  	struct resource *res;
->  
-> +	if (child->bus_flags & PCI_BUS_FLAGS_NO_IO)
-> +		return;
-> +
-> +	if (!pci_bus_supports_io(child)) {
-> +		dev_printk(KERN_DEBUG, &dev->dev,
-> +			   "  bus does not support IO\n");
-> +		child->bus_flags |= PCI_BUS_FLAGS_NO_IO;
-> +		return;
-> +	}
-> +
-> +	if (!pci_root_has_io_resource(child)) {
-> +		dev_printk(KERN_DEBUG, &dev->dev,
-> +			   "  no IO window on root bus\n");
-> +		child->bus_flags |= PCI_BUS_FLAGS_NO_IO;
-> +		return;
-> +	}
-> +
->  	io_mask = PCI_IO_RANGE_MASK;
->  	io_granularity = 0x1000;
->  	if (dev->io_window_1k) {
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 508cc56130e3..c8c7eecadbfe 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -744,7 +744,6 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
->     base/limit registers must be read-only and read as 0. */
->  static void pci_bridge_check_ranges(struct pci_bus *bus)
->  {
-> -	u16 io;
->  	u32 pmem;
->  	struct pci_dev *bridge = bus->self;
->  	struct resource *b_res;
-> @@ -752,13 +751,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
->  	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
->  	b_res[1].flags |= IORESOURCE_MEM;
->  
-> -	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> -	if (!io) {
-> -		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
-> -		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> -		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-> -	}
-> -	if (io)
-> +	if (!(bus->bus_flags & PCI_BUS_FLAGS_NO_IO))
->  		b_res[0].flags |= IORESOURCE_IO;
->  
->  	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8a0321a8fb59..b910ed04aa0b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -191,6 +191,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
->  enum pci_bus_flags {
->  	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
->  	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
-> +	PCI_BUS_FLAGS_NO_IO    = (__force pci_bus_flags_t) 4,
->  };
->  
->  /* These values come from the PCI Express Spec */
-> -- 
-> 2.1.0
-> 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 373d96e..8c30cfc 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1273,12 +1273,19 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
+ 					     struct msi_domain_info *info,
+ 					     struct irq_domain *parent)
+ {
++	struct irq_domain *domain;
++
+ 	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
+ 		pci_msi_domain_update_dom_ops(info);
+ 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+ 		pci_msi_domain_update_chip_ops(info);
+ 
+-	return msi_create_irq_domain(node, info, parent);
++	domain = msi_create_irq_domain(node, info, parent);
++	if (!domain)
++		return NULL;
++
++	domain->bus_token = DOMAIN_BUS_PCI_MSI;
++	return domain;
+ }
+ 
+ /**
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 91a83ad..25e9e66 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -54,6 +54,7 @@ struct irq_data;
+  */
+ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_ANY		= 0,
++	DOMAIN_BUS_PCI_MSI,
+ };
+ 
+ /**
+-- 
+2.1.4
+
