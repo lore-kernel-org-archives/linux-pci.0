@@ -1,68 +1,140 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH v4 02/19] PCI: MSI: Register irq domain with specific token
-Date: Wed, 15 Jul 2015 13:16:36 +0100
-Message-Id: <1436962613-17359-3-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:29676 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754512AbbG1Bmd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Jul 2015 21:42:33 -0400
+Message-ID: <1438047747.1856.12.camel@rzhang1-mobl4>
+Subject: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+From: Zhang Rui <rui.zhang@intel.com>
+To: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: chuansheng.liu@intel.com, Tejun Heo <tj@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Aaron Lu <aaron.lu@intel.com>, MyMailClone@t-online.de,
+	mister.freeman@laposte.net, "Zhang, Rui" <rui.zhang@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Date: Tue, 28 Jul 2015 09:42:27 +0800
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When creating a PCI/MSI domain, tag it with DOMAIN_BUS_PCI_MSI so
-that it can be looked-up using irq_find_matching_host().
+>From 57edba9c677e47354846db951014dc4d5b13ce54 Mon Sep 17 00:00:00 2001
+From: Zhang Rui <rui.zhang@intel.com>
+Date: Sun, 26 Jul 2015 14:15:36 +0800
+Subject: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+In https://bugzilla.kernel.org/show_bug.cgi?id=81551,
+we found that Jmicron chip 361/363 is broken after resume if async noirq
+(76569faa62 (PM / sleep: Asynchronous threads for resume_noirq)) is supported,
+thus commit e6b7e41cdd (ata: Disabling the async PM for JMicron chip 363/361)
+is introduced to fix this problem.
+But then, we found that Jmicron chip 368 also has this problem, and it is decided
+to disable the pm async feature for all the Jmicron chips.
+
+But how to fix this was discussed in the mailing list for some time.
+After some investigation, we believe that a proper fix is to disable
+the async PM in PCI instead of ata driver, because, on this platform,
+pci_resume_noirq() of IDE controller must happen after pci_resume_noirq()
+of AHCI controller. But as .resume_noirq() of the pata_jmicron driver is
+no-op, this suggests that it is the PCI common actions, aka,
+pci_pm_default_resume_early(), have the dependency.
+To fix this, using device_pm_wait_for_dev() in pata_jmicron driver can not
+solve the dependency because pci_pm_default_resume_early() is invoked before
+driver callback being invoked, plus, as it is the PCI common actions that
+have the dependency, it is reasonable to fix it in PCI bus code,
+rather than driver code.
+
+This patch is made based on the patch from Liu Chuansheng at
+https://lkml.org/lkml/2014/12/5/74
+it reverts commit e6b7e41cdd ("ata: Disabling the async PM for JMicron
+chip 363/361"), and introduces a PCI quirk to disable async PM for Jmicron
+chips.
+
+Reference: https://bugzilla.kernel.org/show_bug.cgi?id=81551
+Tested-by: Jay <MyMailClone@t-online.de>
+Tested-by: Barto <mister.freeman@laposte.net>
+Signed-off-by: Zhang Rui <rui.zhang@intel.com>
 ---
- drivers/pci/msi.c         | 8 +++++++-
- include/linux/irqdomain.h | 1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/ata/ahci.c         | 12 ------------
+ drivers/ata/pata_jmicron.c | 12 ------------
+ drivers/pci/quirks.c       | 15 +++++++++++++++
+ 3 files changed, 15 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 373d96e..ef4ec6e 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1273,12 +1273,18 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
- 					     struct msi_domain_info *info,
- 					     struct irq_domain *parent)
- {
-+	struct irq_domain *domain;
-+
- 	if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
- 		pci_msi_domain_update_dom_ops(info);
- 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
- 		pci_msi_domain_update_chip_ops(info);
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 7e62751..26bb40d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1451,18 +1451,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
+ 		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
  
--	return msi_create_irq_domain(node, info, parent);
-+	domain = msi_create_irq_domain(node, info, parent);
-+	if (domain)
-+		domain->bus_token = DOMAIN_BUS_PCI_MSI;
-+
-+	return domain;
+-	/*
+-	 * The JMicron chip 361/363 contains one SATA controller and one
+-	 * PATA controller,for powering on these both controllers, we must
+-	 * follow the sequence one by one, otherwise one of them can not be
+-	 * powered on successfully, so here we disable the async suspend
+-	 * method for these chips.
+-	 */
+-	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+-		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+-		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
+-		device_disable_async_suspend(&pdev->dev);
+-
+ 	/* acquire resources */
+ 	rc = pcim_enable_device(pdev);
+ 	if (rc)
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index 47e418b..4d1a5d2 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -143,18 +143,6 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
+ 
+-	/*
+-	 * The JMicron chip 361/363 contains one SATA controller and one
+-	 * PATA controller,for powering on these both controllers, we must
+-	 * follow the sequence one by one, otherwise one of them can not be
+-	 * powered on successfully, so here we disable the async suspend
+-	 * method for these chips.
+-	 */
+-	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+-		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+-		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
+-		device_disable_async_suspend(&pdev->dev);
+-
+ 	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
  }
  
- /**
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 91a83ad..25e9e66 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -54,6 +54,7 @@ struct irq_data;
-  */
- enum irq_domain_bus_token {
- 	DOMAIN_BUS_ANY		= 0,
-+	DOMAIN_BUS_PCI_MSI,
- };
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e9fd0e9..7a348de 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -29,6 +29,21 @@
+ #include "pci.h"
  
- /**
+ /*
++ * For JMicron chips, we need to disable the async_suspend method, otherwise
++ * they will hit the power-on issue when doing device resume, add one quick
++ * solution to disable the async_suspend method.
++ */
++static void pci_async_suspend_fixup(struct pci_dev *pdev)
++{
++	/*
++	 * disabling the async_suspend method for JMicron chips to
++	 * avoid device resuming issue.
++	 */
++	device_disable_async_suspend(&pdev->dev);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, pci_async_suspend_fixup);
++
++/*
+  * Decoding should be disabled for a PCI device during BAR sizing to avoid
+  * conflict. But doing so may cause problems on host bridge and perhaps other
+  * key system devices. For devices that need to have mmio decoding always-on,
 -- 
-2.1.4
+1.9.1
+
+
 
