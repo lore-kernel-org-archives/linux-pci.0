@@ -1,146 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:52354 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835AbbGMM7u (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jul 2015 08:59:50 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Rob Herring <robherring2@gmail.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
 	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH] Store PCIe controllers address in struct of_pci_range
-Date: Mon, 13 Jul 2015 12:59:28 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D5CDED@lhreml503-mbs>
-References: <1436518099-98633-1-git-send-email-gabriele.paoloni@huawei.com>
- <CAL_JsqJA9WEWK+ywv7ou+88U3cQ7z6GHDTDjxOxRC9X4_K88FQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH v6 15/19] irqchip: gicv3-its: Add platform MSI support
+Date: Tue, 28 Jul 2015 14:46:22 +0100
+Message-Id: <1438091186-10244-16-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-U29ycnkgSSBqdXN0IHJlYWxpemVkIEkgZm9yZ290IHRvIHJlcGx5IHRvIHRoZSBsYXN0IGl0ZW0N
-Cg0KR2FiDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogR2FicmllbGUg
-UGFvbG9uaQ0KPiBTZW50OiBNb25kYXksIEp1bHkgMTMsIDIwMTUgMTI6MDcgUE0NCj4gVG86ICdS
-b2IgSGVycmluZycNCj4gQ2M6IEFybmQgQmVyZ21hbm47IExvcmVuem8gUGllcmFsaXNpOyBXYW5n
-emhvdSAoQik7IEJqb3JuIEhlbGdhYXM7IFJvYg0KPiBIZXJyaW5nOyBqYW1lcy5tb3JzZUBhcm0u
-Y29tOyBMaXZpdSBEdWRhdTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gbGludXgtYXJt
-LWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsN
-Cj4gWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsgcWl1emhlbmZhOyBMaWd1b3po
-dSAoS2VubmV0aCkNCj4gU3ViamVjdDogUkU6IFtQQVRDSF0gU3RvcmUgUENJZSBjb250cm9sbGVy
-cyBhZGRyZXNzIGluIHN0cnVjdA0KPiBvZl9wY2lfcmFuZ2UNCj4gDQo+IEhpIFJvYg0KPiANCj4g
-TWFueSBUaGFua3MgZm9yIHlvdXIgcmV2aWV3DQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2Fn
-ZS0tLS0tDQo+ID4gRnJvbTogUm9iIEhlcnJpbmcgW21haWx0bzpyb2JoZXJyaW5nMkBnbWFpbC5j
-b21dDQo+ID4gU2VudDogRnJpZGF5LCBKdWx5IDEwLCAyMDE1IDg6NTYgUE0NCj4gPiBUbzogR2Fi
-cmllbGUgUGFvbG9uaQ0KPiA+IENjOiBBcm5kIEJlcmdtYW5uOyBMb3JlbnpvIFBpZXJhbGlzaTsg
-V2FuZ3pob3UgKEIpOyBCam9ybiBIZWxnYWFzOw0KPiBSb2INCj4gPiBIZXJyaW5nOyBqYW1lcy5t
-b3JzZUBhcm0uY29tOyBMaXZpdSBEdWRhdTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4g
-PiBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGRldmljZXRyZWVAdmdlci5r
-ZXJuZWwub3JnOw0KPiA+IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpo
-ZW5mYTsgTGlndW96aHUgKEtlbm5ldGgpDQo+ID4gU3ViamVjdDogUmU6IFtQQVRDSF0gU3RvcmUg
-UENJZSBjb250cm9sbGVycyBhZGRyZXNzIGluIHN0cnVjdA0KPiA+IG9mX3BjaV9yYW5nZQ0KPiA+
-DQo+ID4gT24gRnJpLCBKdWwgMTAsIDIwMTUgYXQgMzo0OCBBTSwgR2FicmllbGUgUGFvbG9uaQ0K
-PiA+IDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+IHdyb3RlOg0KPiA+ID4gRnJvbTogZ2Fi
-cmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiA+ID4NCj4gPiA+
-IFRoaXMgcGF0Y2ggaXMgbmVlZGVkIHBvcnQgUENJZSBkZXNpZ253YXJlIHRvIG5ldyBEVCBwYXJz
-aW5nIEFQSQ0KPiA+ID4gQXMgZGlzY3Vzc2VkIGluDQo+ID4gPiBodHRwOi8vbGlzdHMuaW5mcmFk
-ZWFkLm9yZy9waXBlcm1haWwvbGludXgtYXJtLWtlcm5lbC8yMDE1LQ0KPiA+IEphbnVhcnkvMzE3
-NzQzLmh0bWwNCj4gPiA+IGluIGRlc2lnbndhcmUgd2UgaGF2ZSBhIHByb2JsZW0gYXMgdGhlIFBD
-SSBhZGRyZXNzZXMgaW4gdGhlIFBDSWUNCj4gPiBjb250cm9sbGVyDQo+ID4gPiBhZGRyZXNzIHNw
-YWNlIGFyZSByZXF1aXJlZCBpbiBvcmRlciB0byBwZXJmb3JtIGNvcnJlY3QgSFcgb3BlcmF0aW9u
-Lg0KPiA+ID4NCj4gPiA+IEluIG9yZGVyIHRvIHNvbHZlIHRoaXMgcHJvYmxlbSBjb21taXQNCj4g
-PiA+IGY0YzU1YzVhM2Y3ZjY4YzA2Y2M1NTllZDdhZjhiMmQwMTdjYmIwYTcgIlBDSTogZGVzaWdu
-d2FyZToNCj4gPg0KPiA+IFBsZWFzZSBhYmJyZXZpYXRlIGhhc2hzIHRvIDEyIGNoYXJhY3RlcnMu
-DQo+IA0KPiBTdXJlLCB3aWxsIGRvLg0KPiANCj4gPg0KPiA+ID4gUHJvZ3JhbSBBVFUgd2l0aCB1
-bnRyYW5zbGF0ZWQgYWRkcmVzcyIgYWRkZWQgY29kZSB0byByZWFkIHRoZSBQQ0llDQo+ID4gPiBj
-b250cm9sbGVyIHN0YXJ0IGFkZHJlc3MgZGlyZWN0bHkgZnJvbSB0aGUgRFQgcmFuZ2VzLg0KPiA+
-ID4NCj4gPiA+IEluIHRoZSBuZXcgRFQgcGFyc2luZyBBUEkgb2ZfcGNpX2dldF9ob3N0X2JyaWRn
-ZV9yZXNvdXJjZXMoKSBoaWRlcw0KPiA+IHRoZQ0KPiA+ID4gRFQgcGFyc2VyIGZyb20gdGhlIGhv
-c3QgY29udHJvbGxlciBkcml2ZXJzLCBzbyBpdCBpcyBub3QgcG9zc2libGUNCj4gPiA+IGZvciBk
-cml2ZXJzIHRvIHBhcnNlIHZhbHVlcyBkaXJlY3RseSBmcm9tIHRoZSBEVC4NCj4gPiA+DQo+ID4g
-PiBJbiBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXBjaS9tc2c0MjU0MC5odG1s
-IHdlIGFscmVhZHkNCj4gPiB0cmllZA0KPiA+ID4gdG8gdXNlIHRoZSBuZXcgRFQgcGFyc2luZyBB
-UEkgYnV0IHRoZXJlIGlzIGEgYnVnIChvYnZpb3VzbHkpIGluDQo+ID4gc2V0dGluZw0KPiA+ID4g
-dGhlIDwqPl9tb2RfYmFzZSBhZGRyZXNzZXMNCj4gPiA+IEFwcGx5aW5nIHRoaXMgcGF0Y2ggd2Ug
-Y2FuIGVhc2lseSBzZXQgIjwqPl9tb2RfYmFzZSA9IHdpbi0NCj4gPiA+X19yZXMuc3RhcnQiDQo+
-ID4gPg0KPiA+ID4gVGhpcyBwYXRjaCBhZGRzIGEgbmV3IGZpZWxkIGluICJzdHJ1Y3Qgb2ZfcGNp
-X3JhbmdlIiB0byBzdG9yZSB0aGUNCj4gPiA+IHBjaSBjb250cm9sbGVyIHN0YXJ0IGFkZHJlc3M7
-IGl0IGZpbGxzIHRoZSBmaWVsZCBpbg0KPiA+IG9mX3BjaV9yYW5nZV9wYXJzZXJfb25lKCk7DQo+
-ID4gPiBpbiBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcygpIGl0IHJldHJpZXZlIHRo
-ZSByZXNvdXJjZQ0KPiBlbnRyeQ0KPiA+ID4gYWZ0ZXIgaXQgaXMgY3JlYXRlZCBhbmQgYWRkZWQg
-dG8gdGhlIHJlc291cmNlIGxpc3QgYW5kIHVzZXMNCj4gPiA+IGVudHJ5LT5fX3Jlcy5zdGFydCB0
-byBzdG9yZSB0aGUgcGNpIGNvbnRyb2xsZXIgYWRkcmVzcw0KPiA+ID4NCj4gPiA+IHRoZSBwYXRj
-aCBpcyBiYXNlZCBvbiA0LjItcmMxDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogR2Ficmll
-bGUgUGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiA+ID4gLS0tDQo+ID4g
-PiAgZHJpdmVycy9vZi9hZGRyZXNzLmMgICAgICAgICAgICAgICB8IDEgKw0KPiA+ID4gIGRyaXZl
-cnMvb2Yvb2ZfcGNpLmMgICAgICAgICAgICAgICAgfCA0ICsrKysNCj4gPiA+ICBkcml2ZXJzL3Bj
-aS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jIHwgOSArKystLS0tLS0NCj4gPiA+ICBpbmNsdWRlL2xp
-bnV4L29mX2FkZHJlc3MuaCAgICAgICAgIHwgMSArDQo+ID4gPiAgNCBmaWxlcyBjaGFuZ2VkLCA5
-IGluc2VydGlvbnMoKyksIDYgZGVsZXRpb25zKC0pDQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvb2YvYWRkcmVzcy5jIGIvZHJpdmVycy9vZi9hZGRyZXNzLmMNCj4gPiA+IGluZGV4
-IDhiZmRhNmEuLjUyZjkzMjEgMTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL29mL2FkZHJlc3Mu
-Yw0KPiA+ID4gKysrIGIvZHJpdmVycy9vZi9hZGRyZXNzLmMNCj4gPiA+IEBAIC0yNjUsNiArMjY1
-LDcgQEAgc3RydWN0IG9mX3BjaV9yYW5nZQ0KPiA+ICpvZl9wY2lfcmFuZ2VfcGFyc2VyX29uZShz
-dHJ1Y3Qgb2ZfcGNpX3JhbmdlX3BhcnNlciAqcGFyc2VyLA0KPiA+ID4gICAgICAgICByYW5nZS0+
-cGNpX2FkZHIgPSBvZl9yZWFkX251bWJlcihwYXJzZXItPnJhbmdlICsgMSwgbnMpOw0KPiA+ID4g
-ICAgICAgICByYW5nZS0+Y3B1X2FkZHIgPSBvZl90cmFuc2xhdGVfYWRkcmVzcyhwYXJzZXItPm5v
-ZGUsDQo+ID4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHBhcnNlci0+cmFuZ2Ug
-KyBuYSk7DQo+ID4gPiArICAgICAgIHJhbmdlLT5wY2lfY3RybF9hZGRyID0gb2ZfcmVhZF9udW1i
-ZXIocGFyc2VyLT5yYW5nZSArIG5hLA0KPiBucykgOw0KPiA+DQo+ID4gVGhpcyBpcyB3cm9uZyBh
-cyB0aGUgY29ycmVjdCBzaXplIHRvIHJlYWQgaXMgbm90ICJucyIsIGJ1dCB0aGUgcGFyZW50DQo+
-ID4gYnVzICNzaXplLWNlbGxzIHZhbHVlLg0KPiANCj4gT2sgSSB3aWxsIHJlcGxhY2UgIm5zIiB3
-aXRoICJvZl9uX3NpemVfY2VsbHMocGFyc2VyLT5ub2RlKSINCj4gDQo+ID4NCj4gPiBJIHRoaW5r
-ICJidXNfYWRkciIgd291bGQgYmUgYSBiZXR0ZXIgbmFtZS4gSXQgaXMgbm90IHRoZSBQQ0kNCj4g
-PiBjb250cm9sbGVyJ3MgYWRkcmVzcyAoaS5lLiB3aGF0IGlzIGluIHJlZyBwcm9wKS4gTm8gInBj
-aSIgYmVjYXVzZSBpdA0KPiA+IGhhcyBub3RoaW5nIHRvIGRvIHdpdGggUENJIGJ1cyBhZGRyZXNz
-ZXMuDQo+IA0KPiBPayBJIHdpbGwgY2hhbmdlIHRoZSBuYW1lDQo+IA0KPiA+DQo+ID4gSW4gZ2Vu
-ZXJhbCwgdGhpcyBzZWVtcyBmcmFnaWxlIGFzIHRoZSBkdCBhZGRyZXNzIHJhbmdlcy90cmFuc2xh
-dGlvbg0KPiA+IG1heSBub3QgYWxpZ24gd2l0aCB0aGUgaC93IHJhbmdlcy4gRm9yIGV4YW1wbGUs
-IHdoYXQgaWYgeW91IGhhdmUgMg0KPiA+IGxldmVscyBvZiB0cmFuc2xhdGlvbnMgYW5kIHlvdSBo
-YXBwZW4gdG8gbmVlZCBpdCB0cmFuc2xhdGVkIHdpdGgganVzdA0KPiA+IDEgbGV2ZWwgb2YgdHJh
-bnNsYXRpb24uIFRoYXQgc2FpZCwgSSBkb24ndCByZWFsbHkgaGF2ZSBhIGJldHRlcg0KPiA+IHN1
-Z2dlc3Rpb24gYW5kIEkgZ3Vlc3Mgd2UgY2FuIGRlYWwgd2l0aCB0aGF0IGNhc2UgaWYgbmVlZGVk
-IGxhdGVyLg0KPiANCj4gT2sgc28sIHdlJ2xsIGxlYXZlIGl0IGxpa2UgdGhpcyBmb3Igbm93DQo+
-IA0KPiA+DQo+ID4gPiAgICAgICAgIHJhbmdlLT5zaXplID0gb2ZfcmVhZF9udW1iZXIocGFyc2Vy
-LT5yYW5nZSArIHBhcnNlci0+cG5hICsNCj4gbmEsDQo+ID4gbnMpOw0KPiA+ID4NCj4gPiA+ICAg
-ICAgICAgcGFyc2VyLT5yYW5nZSArPSBwYXJzZXItPm5wOw0KPiA+ID4gZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvb2Yvb2ZfcGNpLmMgYi9kcml2ZXJzL29mL29mX3BjaS5jDQo+ID4gPiBpbmRleCA1NzUx
-ZGM1Li4yY2NjNzQ5IDEwMDY0NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9vZi9vZl9wY2kuYw0KPiA+
-ID4gKysrIGIvZHJpdmVycy9vZi9vZl9wY2kuYw0KPiA+ID4gQEAgLTE5OCw2ICsxOTgsNyBAQCBp
-bnQgb2ZfcGNpX2dldF9ob3N0X2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0DQo+ID4gZGV2aWNlX25v
-ZGUgKmRldiwNCj4gPiA+DQo+ID4gPiAgICAgICAgIHByX2RlYnVnKCJQYXJzaW5nIHJhbmdlcyBw
-cm9wZXJ0eS4uLlxuIik7DQo+ID4gPiAgICAgICAgIGZvcl9lYWNoX29mX3BjaV9yYW5nZSgmcGFy
-c2VyLCAmcmFuZ2UpIHsNCj4gPiA+ICsgICAgICAgICAgICAgICBzdHJ1Y3QgcmVzb3VyY2VfZW50
-cnkgKmVudHJ5Ow0KPiA+ID4gICAgICAgICAgICAgICAgIC8qIFJlYWQgbmV4dCByYW5nZXMgZWxl
-bWVudCAqLw0KPiA+ID4gICAgICAgICAgICAgICAgIGlmICgocmFuZ2UuZmxhZ3MgJiBJT1JFU09V
-UkNFX1RZUEVfQklUUykgPT0NCj4gPiBJT1JFU09VUkNFX0lPKQ0KPiA+ID4gICAgICAgICAgICAg
-ICAgICAgICAgICAgc25wcmludGYocmFuZ2VfdHlwZSwgNCwgIiBJTyIpOw0KPiA+ID4gQEAgLTI0
-MCw2ICsyNDEsOSBAQCBpbnQgb2ZfcGNpX2dldF9ob3N0X2JyaWRnZV9yZXNvdXJjZXMoc3RydWN0
-DQo+ID4gZGV2aWNlX25vZGUgKmRldiwNCj4gPiA+ICAgICAgICAgICAgICAgICB9DQo+ID4gPg0K
-PiA+ID4gICAgICAgICAgICAgICAgIHBjaV9hZGRfcmVzb3VyY2Vfb2Zmc2V0KHJlc291cmNlcywg
-cmVzLCByZXMtPnN0YXJ0DQo+IC0NCj4gPiByYW5nZS5wY2lfYWRkcik7DQo+ID4gPiArICAgICAg
-ICAgICAgICAgZW50cnkgPSBsaXN0X2xhc3RfZW50cnkocmVzb3VyY2VzLCBzdHJ1Y3QNCj4gPiBy
-ZXNvdXJjZV9lbnRyeSwgbm9kZSk7DQo+ID4gPiArICAgICAgICAgICAgICAgLyp3ZSBhcmUgdXNp
-bmcgX19yZXMgZm9yIHN0b3JpbmcgdGhlIFBDSSBjb250cm9sbGVyDQo+ID4gYWRkcmVzcyovDQo+
-ID4gPiArICAgICAgICAgICAgICAgZW50cnktPl9fcmVzLnN0YXJ0ID0gcmFuZ2UucGNpX2N0cmxf
-YWRkcjsNCj4gPg0KPiA+IFlvdSB3aWxsIHVzZSB0aGlzIGluIGEgZm9sbG93LXVwIHBhdGNoPyBJ
-J2QgbGlrZSB0byBzZWUgdGhpcyBqdXN0DQo+ID4gc3BsaXQgaW50byBjb3JlIGNoYW5nZXMgYW5k
-IERXIGNoYW5nZXMuIFRoaXMgbG9va3MgbGlrZSB5b3UgYXJlDQo+IG1ha2luZw0KPiA+IGludGVy
-bWVkaWF0ZSBEVyBjaGFuZ2VzIHdoaWNoIHdpbGwgYmUgcmVtb3ZlZCBpbiBzdWJzZXF1ZW50IHBh
-dGNoZXMuDQoNCk9rIEkgd2lsbCBzcGxpdCBpdA0KDQpUaGUgY2hhbmdlcyBpbiAiZHJpdmVycy9w
-Y2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYyIgY2FuIGJlIHJlbW92ZWQgZnJvbSB0aGlzIHBhdGNo
-OyB3ZSBjYW4gbW9kaWZ5IGRpcmVjdGx5IA0KIltQQVRDSCB2MiAyLzRdIFBDSTogZGVzaWdud2Fy
-ZTogQWRkIEFSTTY0IHN1cHBvcnQiIGluIHYzIHBhdGNoc2V0DQoNCj4gPg0KPiA+IFJvYg0K
+In order to support non-PCI MSI with the GICv3 ITS, add the minimal
+required entry points for the MSI domain (an msi_prepare implementation).
+
+The rest is only boilerplate code to find the raw ITS domain.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/irqchip/Makefile                      |  2 +-
+ drivers/irqchip/irq-gic-v3-its-platform-msi.c | 93 +++++++++++++++++++++++++++
+ 2 files changed, 94 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/irqchip/irq-gic-v3-its-platform-msi.c
+
+diff --git a/drivers/irqchip/Makefile b/drivers/irqchip/Makefile
+index 0d5f2a9..11d08c9 100644
+--- a/drivers/irqchip/Makefile
++++ b/drivers/irqchip/Makefile
+@@ -22,7 +22,7 @@ obj-$(CONFIG_ARCH_SPEAR3XX)		+= spear-shirq.o
+ obj-$(CONFIG_ARM_GIC)			+= irq-gic.o irq-gic-common.o
+ obj-$(CONFIG_ARM_GIC_V2M)		+= irq-gic-v2m.o
+ obj-$(CONFIG_ARM_GIC_V3)		+= irq-gic-v3.o irq-gic-common.o
+-obj-$(CONFIG_ARM_GIC_V3_ITS)		+= irq-gic-v3-its.o irq-gic-v3-its-pci-msi.o
++obj-$(CONFIG_ARM_GIC_V3_ITS)		+= irq-gic-v3-its.o irq-gic-v3-its-pci-msi.o irq-gic-v3-its-platform-msi.o
+ obj-$(CONFIG_ARM_NVIC)			+= irq-nvic.o
+ obj-$(CONFIG_ARM_VIC)			+= irq-vic.o
+ obj-$(CONFIG_ATMEL_AIC_IRQ)		+= irq-atmel-aic-common.o irq-atmel-aic.o
+diff --git a/drivers/irqchip/irq-gic-v3-its-platform-msi.c b/drivers/irqchip/irq-gic-v3-its-platform-msi.c
+new file mode 100644
+index 0000000..a865505
+--- /dev/null
++++ b/drivers/irqchip/irq-gic-v3-its-platform-msi.c
+@@ -0,0 +1,93 @@
++/*
++ * Copyright (C) 2013-2015 ARM Limited, All Rights Reserved.
++ * Author: Marc Zyngier <marc.zyngier@arm.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <linux/device.h>
++#include <linux/msi.h>
++#include <linux/of.h>
++#include <linux/of_irq.h>
++
++static struct irq_chip its_pmsi_irq_chip = {
++	.name			= "ITS-pMSI",
++};
++
++static int its_pmsi_prepare(struct irq_domain *domain, struct device *dev,
++			    int nvec, msi_alloc_info_t *info)
++{
++	struct msi_domain_info *msi_info;
++	u32 dev_id;
++	int ret;
++
++	msi_info = msi_get_domain_info(domain->parent);
++
++	/* Suck the DeviceID out of the msi-parent property */
++	ret = of_property_read_u32_index(dev->of_node, "msi-parent",
++					 1, &dev_id);
++	if (ret)
++		return ret;
++
++	/* ITS specific DeviceID, as the core ITS ignores dev. */
++	info->scratchpad[0].ul = dev_id;
++
++	return msi_info->ops->msi_prepare(domain->parent,
++					  dev, nvec, info);
++}
++
++static struct msi_domain_ops its_pmsi_ops = {
++	.msi_prepare	= its_pmsi_prepare,
++};
++
++static struct msi_domain_info its_pmsi_domain_info = {
++	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS),
++	.ops	= &its_pmsi_ops,
++	.chip	= &its_pmsi_irq_chip,
++};
++
++static struct of_device_id its_device_id[] = {
++	{	.compatible	= "arm,gic-v3-its",	},
++	{},
++};
++
++static int __init its_pmsi_init(void)
++{
++	struct device_node *np;
++	struct irq_domain *parent;
++
++	for (np = of_find_matching_node(NULL, its_device_id); np;
++	     np = of_find_matching_node(np, its_device_id)) {
++		if (!of_property_read_bool(np, "msi-controller"))
++			continue;
++
++		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
++		if (!parent || !msi_get_domain_info(parent)) {
++			pr_err("%s: unable to locate ITS domain\n",
++			       np->full_name);
++			continue;
++		}
++
++		if (!platform_msi_create_irq_domain(np, &its_pmsi_domain_info,
++						    parent)) {
++			pr_err("%s: unable to create platform domain\n",
++			       np->full_name);
++			continue;
++		}
++
++		pr_info("Platform MSI: %s domain created\n", np->full_name);
++	}
++
++	return 0;
++}
++early_initcall(its_pmsi_init);
+-- 
+2.1.4
+
