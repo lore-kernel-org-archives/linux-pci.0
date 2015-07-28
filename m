@@ -1,221 +1,158 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:59166 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932494AbbG1NrD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 09:47:03 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, <stable@vger.kernel.org>
-Subject: [PATCH v2 33/49] PCI: Check pref compatible bit for mem64 resource of pcie device
-Date: Tue, 14 Jul 2015 15:47:04 -0700
-Message-Id: <1436914040-13206-34-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH v6 13/19] irqchip: gicv3-its: Get rid of struct msi_controller
+Date: Tue, 28 Jul 2015 14:46:20 +0100
+Message-Id: <1438091186-10244-14-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We still get "no compatible bridge window" warning on sparc T5-8
-after we add support for 64bit resource parsing for root bus.
+The GICv3 ITS only uses the msi_controller structure as a way
+to match the host bridge with its MSI HW, and thus the msi_domain.
+But now that we can directly associate an msi_domain with a device,
+there is no use keeping this msi_controller around.
 
- PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
- PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
- PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
- pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
+Just remove all traces of msi_controller from the driver.
 
-All the bridges 64-bit resource have pref bit, but the device resource does not
-have pref set, then we can not find parent for the device resource,
-as we can not put non-pref mem under pref mem.
-
-According to pcie spec errta
-https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-page 13, in some case it is ok to mark some as pref.
-
-Mark if the entire path from the host to the adapter is over PCI Express.
-Then set pref compatible bit for claim/sizing/assign for 64bit mem resource
-on that pcie device.
-
-Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: <stable@vger.kernel.org> #3.19
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/pci.c       |  3 ++-
- drivers/pci/pci.h       |  2 ++
- drivers/pci/probe.c     | 33 +++++++++++++++++++++++++++++++++
- drivers/pci/setup-bus.c | 21 ++++++++++++++++++---
- drivers/pci/setup-res.c |  4 ++++
- include/linux/pci.h     |  1 +
- 6 files changed, 60 insertions(+), 4 deletions(-)
+ drivers/irqchip/irq-gic-v3-its.c | 38 ++++++++++++++++----------------------
+ 1 file changed, 16 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0008c95..ff1192a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -414,6 +414,7 @@ EXPORT_SYMBOL_GPL(pci_find_ht_capability);
- struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 					  struct resource *res)
- {
-+	int flags = pci_resource_pref_compatible(dev, res);
- 	const struct pci_bus *bus = dev->bus;
- 	struct resource *r;
- 	int i;
-@@ -428,7 +429,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 			 * not, the allocator made a mistake.
- 			 */
- 			if (r->flags & IORESOURCE_PREFETCH &&
--			    !(res->flags & IORESOURCE_PREFETCH))
-+			    !(flags & IORESOURCE_PREFETCH))
- 				return NULL;
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index 760467d..ca8b1cc 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -54,13 +54,12 @@ struct its_collection {
  
- 			/*
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 2b83977..1804d44 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -336,4 +336,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- 
- struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..010d8d9 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1544,6 +1544,36 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);
- }
- 
-+static bool pci_up_path_over_pcie(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !pci_is_pcie(bus->self))
-+		return false;
-+
-+	return pci_up_path_over_pcie(bus->parent);
-+}
-+
-+/*
-+ * According to
-+ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-+ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
-+ * on some cases.
-+ * Let's mark if entire path from the host to the adapter is over PCI
-+ * Express. later will use that compute pref compaitable bit.
-+ */
-+static void pci_set_on_all_pcie_path(struct pci_dev *dev)
-+{
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	if (!pci_up_path_over_pcie(dev->bus))
-+		return;
-+
-+	dev->on_all_pcie_path = 1;
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
-@@ -1574,6 +1604,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	/* Initialize various capabilities */
- 	pci_init_capabilities(dev);
- 
-+	/* After pcie_cap is assigned */
-+	pci_set_on_all_pcie_path(dev);
-+
- 	/*
- 	 * Add the device to our list of discovered devices
- 	 * and the bus list for fixup functions, etc.
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f3bb309..3a1d659 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1038,6 +1038,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res)
-+{
-+	if (res->flags & IORESOURCE_PREFETCH)
-+		return res->flags;
-+
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    (res->flags & IORESOURCE_MEM_64) &&
-+	    dev->on_all_pcie_path)
-+		return res->flags | IORESOURCE_PREFETCH;
-+
-+	return res->flags;
-+}
-+
- /* Check whether the bridge supports optional I/O and
-    prefetchable memory ranges. If not, the respective
-    base/limit registers must be read-only and read as 0. */
-@@ -1532,10 +1546,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 			resource_size_t r_size, align;
-+			int flags = pci_resource_pref_compatible(dev, r);
- 
--			if (r->parent || ((r->flags & mask) != type &&
--					  (r->flags & mask) != type2 &&
--					  (r->flags & mask) != type3))
-+			if (r->parent || ((flags & mask) != type &&
-+					  (flags & mask) != type2 &&
-+					  (flags & mask) != type3))
- 				continue;
- 
- 			r_size = resource_size(r);
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 232f925..b19aa5b 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -250,15 +250,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 				resource_size_t size, resource_size_t min_align)
- {
-+	struct resource *res = dev->resource + resno;
-+	int old_flags = res->flags;
- 	struct pci_bus *bus;
- 	int ret;
- 
-+	res->flags = pci_resource_pref_compatible(dev, res);
- 	bus = dev->bus;
- 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
- 		if (!bus->parent || !bus->self->transparent)
- 			break;
- 		bus = bus->parent;
+ /*
+  * The ITS structure - contains most of the infrastructure, with the
+- * msi_controller, the command queue, the collections, and the list of
+- * devices writing to it.
++ * top-level MSI domain, the command queue, the collections, and the
++ * list of devices writing to it.
+  */
+ struct its_node {
+ 	raw_spinlock_t		lock;
+ 	struct list_head	entry;
+-	struct msi_controller	msi_chip;
+ 	struct irq_domain	*domain;
+ 	void __iomem		*base;
+ 	unsigned long		phys_base;
+@@ -776,7 +775,7 @@ static void its_free_tables(struct its_node *its)
  	}
-+	res->flags = old_flags;
- 
- 	return ret;
  }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a..33ef25f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -309,6 +309,7 @@ struct pci_dev {
- 						   powered on/off by the
- 						   corresponding bridge */
- 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-+	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
  
+-static int its_alloc_tables(struct its_node *its)
++static int its_alloc_tables(const char *node_name, struct its_node *its)
+ {
+ 	int err;
+ 	int i;
+@@ -819,7 +818,7 @@ static int its_alloc_tables(struct its_node *its)
+ 			if (order >= MAX_ORDER) {
+ 				order = MAX_ORDER - 1;
+ 				pr_warn("%s: Device Table too large, reduce its page order to %u\n",
+-					its->msi_chip.of_node->full_name, order);
++					node_name, order);
+ 			}
+ 		}
+ 
+@@ -889,7 +888,7 @@ retry_baser:
+ 
+ 		if (val != tmp) {
+ 			pr_err("ITS: %s: GITS_BASER%d doesn't stick: %lx %lx\n",
+-			       its->msi_chip.of_node->full_name, i,
++			       node_name, i,
+ 			       (unsigned long) val, (unsigned long) tmp);
+ 			err = -ENXIO;
+ 			goto out_free;
+@@ -1317,6 +1316,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	struct resource res;
+ 	struct its_node *its;
+ 	void __iomem *its_base;
++	struct irq_domain *inner_domain = NULL;
+ 	u32 val;
+ 	u64 baser, tmp;
+ 	int err;
+@@ -1360,7 +1360,6 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	INIT_LIST_HEAD(&its->its_device_list);
+ 	its->base = its_base;
+ 	its->phys_base = res.start;
+-	its->msi_chip.of_node = node;
+ 	its->ite_size = ((readl_relaxed(its_base + GITS_TYPER) >> 4) & 0xf) + 1;
+ 
+ 	its->cmd_base = kzalloc(ITS_CMD_QUEUE_SZ, GFP_KERNEL);
+@@ -1370,7 +1369,7 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	}
+ 	its->cmd_write = its->cmd_base;
+ 
+-	err = its_alloc_tables(its);
++	err = its_alloc_tables(node->full_name, its);
+ 	if (err)
+ 		goto out_free_cmd;
+ 
+@@ -1406,26 +1405,21 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	writeq_relaxed(0, its->base + GITS_CWRITER);
+ 	writel_relaxed(GITS_CTLR_ENABLE, its->base + GITS_CTLR);
+ 
+-	if (of_property_read_bool(its->msi_chip.of_node, "msi-controller")) {
+-		its->domain = irq_domain_add_tree(node, &its_domain_ops, its);
+-		if (!its->domain) {
++	if (of_property_read_bool(node, "msi-controller")) {
++		inner_domain = irq_domain_add_tree(node, &its_domain_ops, its);
++		if (!inner_domain) {
+ 			err = -ENOMEM;
+ 			goto out_free_tables;
+ 		}
+ 
+-		its->domain->parent = parent;
+-		its->domain->bus_token = DOMAIN_BUS_NEXUS;
++		inner_domain->parent = parent;
++		inner_domain->bus_token = DOMAIN_BUS_NEXUS;
+ 
+-		its->msi_chip.domain = its_pci_msi_alloc_domain(node,
+-								its->domain);
+-		if (!its->msi_chip.domain) {
++		its->domain = its_pci_msi_alloc_domain(node, inner_domain);
++		if (!its->domain) {
+ 			err = -ENOMEM;
+ 			goto out_free_domains;
+ 		}
+-
+-		err = of_pci_msi_chip_add(&its->msi_chip);
+-		if (err)
+-			goto out_free_domains;
+ 	}
+ 
+ 	spin_lock(&its_lock);
+@@ -1435,10 +1429,10 @@ static int its_probe(struct device_node *node, struct irq_domain *parent)
+ 	return 0;
+ 
+ out_free_domains:
+-	if (its->msi_chip.domain)
+-		irq_domain_remove(its->msi_chip.domain);
+ 	if (its->domain)
+ 		irq_domain_remove(its->domain);
++	if (inner_domain)
++		irq_domain_remove(inner_domain);
+ out_free_tables:
+ 	its_free_tables(its);
+ out_free_cmd:
 -- 
-1.8.4.5
+2.1.4
 
