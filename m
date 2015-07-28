@@ -1,74 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:39574 "EHLO mout3.freenet.de"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:57976 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751459AbbG1T2W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 28 Jul 2015 15:28:22 -0400
-Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
- QUEUED errors since Linux 4.0
-To: Mike Snitzer <snitzer@redhat.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
- <20150728185811.GA25060@redhat.com>
-Cc: dm-devel@redhat.com, mpatocka@redhat.com,
-	linux-pci <linux-pci@vger.kernel.org>
-From: Andreas Hartmann <andihartmann@freenet.de>
-Message-ID: <55B7D6BE.5010203@maya.org>
-Date: Tue, 28 Jul 2015 21:23:42 +0200
+	id S1752141AbbG1Nyp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 09:54:45 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v4 0/3] dra7xx: Add PM support to PCIe
+Date: Tue, 28 Jul 2015 19:24:33 +0530
+Message-ID: <1438091676-21243-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20150728185811.GA25060@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/28/2015 at 08:58 PM, Mike Snitzer wrote:
-> On Tue, Jul 28 2015 at  2:20pm -0400,
-> Andreas Hartmann <andihartmann@freenet.de> wrote:
-> 
->> On 07/28/2015 at 07:50 PM, Mike Snitzer wrote:
->> [..]
->>> Are your SATA devcies using NCQ?
->>
->> Yes. It's enabled:
->>
->> dmesg| grep -i ncq
->> ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
->> ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
->> ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
->> ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
->>
->> As the errors already come up on boot (during mount of partitions or
->> even before the password for the disk has been provided): How can I
->> disable NCQ during boot of the kernel? Is there a kernel option?
-> 
-> See:
-> https://ata.wiki.kernel.org/index.php/Libata_FAQ#Enabling.2C_disabling_and_checking_NCQ
-> 
-> alternatively, and likely easier, set this on the kernel commandline:
->  libata.force=noncq
+This series adds PM support to pci-dra7xx so that PCI clocks can be disabled
+during suspend and enabled back during resume without affecting
+PCI functionality.
 
-ata2.00: FORCE: horkage modified (noncq)
-ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
-ata3.00: FORCE: horkage modified (noncq)
-ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
-ata5.00: FORCE: horkage modified (noncq)
-ata1.00: FORCE: horkage modified (noncq)
-ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (not used)
+Changes from v3:
+*) Fix compilation errors when individual patches are applied
 
+Changes from v2:
+*) Used SET_SYSTEM_SLEEP_PM_OPS and SET_NOIRQ_SYSTEM_SLEEP_PM_OPS for
+   populating PM ops.
 
-Perfectly. Seems to work w/ 3.19.8 and your mentioned patches. But now,
-I'm getting another error, which I didn't see before w/ 3.x-kernels:
+Changes from v1:
+*) Moved resetting and setting of MSE bit to pci-dra7xx.
 
-[drm:btc_dpm_set_power_state [radeon]] *ERROR*
-rv770_restrict_performance_levels_before_switch failed
+The comment to reset and set ISE is not done now since I don't have a card
+with IO space. Once I get to test that, I'll post a separate patch for
+handling that.
 
-It seams that your patches do have some unwanted side effects :-).
+Kishon Vijay Abraham I (3):
+  PCI: host: pci-dra7xx: Disable pm_runtime on get_sync failure
+  PCI: host: pci-dra7xx: add pm support to pci dra7xx
+  PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
 
-Could you please reexamine your patch "dm crypt: don't allocate
-pages for a partial request" - after applying this patch all the
-problems are coming up here.
+ drivers/pci/host/pci-dra7xx.c |   94 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 93 insertions(+), 1 deletion(-)
 
+-- 
+1.7.9.5
 
-
-Thanks,
-regards,
-Andreas
