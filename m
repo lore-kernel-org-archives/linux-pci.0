@@ -1,71 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-arm-kernel@lists.infradead.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>,
-	David Daney <david.daney@cavium.com>
-Subject: [PATCH 2/5] gic-its: Allow pci_requester_id to be overridden.
-Date: Wed, 15 Jul 2015 09:54:42 -0700
-Message-Id: <1436979285-8177-3-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:58763 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754512AbbG1Btg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 27 Jul 2015 21:49:36 -0400
+From: "Liu, Chuansheng" <chuansheng.liu@intel.com>
+To: "Zhang, Rui" <rui.zhang@intel.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Tejun Heo <tj@kernel.org>, Alan Stern <stern@rowland.harvard.edu>,
+	"Lu, Aaron" <aaron.lu@intel.com>,
+	"MyMailClone@t-online.de" <MyMailClone@t-online.de>,
+	"mister.freeman@laposte.net" <mister.freeman@laposte.net>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: RE: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+Date: Tue, 28 Jul 2015 01:48:27 +0000
+Message-ID: <27240C0AC20F114CBF8149A2696CBE4A059534E6@SHSMSX101.ccr.corp.intel.com>
+References: <1438047747.1856.12.camel@rzhang1-mobl4>
+In-Reply-To: <1438047747.1856.12.camel@rzhang1-mobl4>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
-
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/irqchip/irq-gic-v3-its.c   | 14 +++++++++++++-
- include/linux/irqchip/arm-gic-v3.h |  2 ++
- 2 files changed, 15 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 1b7e155..4580970 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -1189,11 +1189,23 @@ static int its_pci_msi_vec_count(struct pci_dev *pdev)
- 	return max(msi, msix);
- }
- 
-+static u32 its_dflt_pci_requester_id(struct pci_dev *pdev, u16 alias)
-+{
-+	return alias;
-+}
-+
-+static its_pci_requester_id_t its_pci_requester_id = its_dflt_pci_requester_id;
-+void set_its_pci_requester_id(its_pci_requester_id_t fn)
-+{
-+	its_pci_requester_id = fn;
-+}
-+EXPORT_SYMBOL(set_its_pci_requester_id);
-+
- static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	struct its_pci_alias *dev_alias = data;
- 
--	dev_alias->dev_id = alias;
-+	dev_alias->dev_id = its_pci_requester_id(pdev, alias);
- 	if (pdev != dev_alias->pdev)
- 		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
- 
-diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
-index ffbc034..18e3757 100644
---- a/include/linux/irqchip/arm-gic-v3.h
-+++ b/include/linux/irqchip/arm-gic-v3.h
-@@ -389,6 +389,8 @@ int its_cpu_init(void);
- int its_init(struct device_node *node, struct rdists *rdists,
- 	     struct irq_domain *domain);
- 
-+typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
-+void set_its_pci_requester_id(its_pci_requester_id_t fn);
- #endif
- 
- #endif
--- 
-1.9.1
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogWmhhbmcsIFJ1aQ0KPiBT
+ZW50OiBUdWVzZGF5LCBKdWx5IDI4LCAyMDE1IDk6NDIgQU0NCj4gVG86IGxpbnV4LXBjaTsgQmpv
+cm4gSGVsZ2Fhcw0KPiBDYzogTGl1LCBDaHVhbnNoZW5nOyBUZWp1biBIZW87IEFsYW4gU3Rlcm47
+IEx1LCBBYXJvbjsNCj4gTXlNYWlsQ2xvbmVAdC1vbmxpbmUuZGU7IG1pc3Rlci5mcmVlbWFuQGxh
+cG9zdGUubmV0OyBaaGFuZywgUnVpOyBSYWZhZWwgSi4NCj4gV3lzb2NraQ0KPiBTdWJqZWN0OiBb
+UEFUQ0hdIFBDSTogRGlzYWJsZSBhc3luYyBzdXNwZW5kL3Jlc3VtZSBmb3IgSm1pY3JvbiBjaGlw
+DQo+IA0KPiBGcm9tIDU3ZWRiYTljNjc3ZTQ3MzU0ODQ2ZGI5NTEwMTRkYzRkNWIxM2NlNTQgTW9u
+IFNlcCAxNyAwMDowMDowMA0KPiAyMDAxDQo+IEZyb206IFpoYW5nIFJ1aSA8cnVpLnpoYW5nQGlu
+dGVsLmNvbT4NCj4gRGF0ZTogU3VuLCAyNiBKdWwgMjAxNSAxNDoxNTozNiArMDgwMA0KPiBTdWJq
+ZWN0OiBbUEFUQ0hdIFBDSTogRGlzYWJsZSBhc3luYyBzdXNwZW5kL3Jlc3VtZSBmb3IgSm1pY3Jv
+biBjaGlwDQo+IA0KPiBJbiBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dp
+P2lkPTgxNTUxLA0KPiB3ZSBmb3VuZCB0aGF0IEptaWNyb24gY2hpcCAzNjEvMzYzIGlzIGJyb2tl
+biBhZnRlciByZXN1bWUgaWYgYXN5bmMgbm9pcnENCj4gKDc2NTY5ZmFhNjIgKFBNIC8gc2xlZXA6
+IEFzeW5jaHJvbm91cyB0aHJlYWRzIGZvciByZXN1bWVfbm9pcnEpKSBpcw0KPiBzdXBwb3J0ZWQs
+DQo+IHRodXMgY29tbWl0IGU2YjdlNDFjZGQgKGF0YTogRGlzYWJsaW5nIHRoZSBhc3luYyBQTSBm
+b3IgSk1pY3JvbiBjaGlwDQo+IDM2My8zNjEpDQo+IGlzIGludHJvZHVjZWQgdG8gZml4IHRoaXMg
+cHJvYmxlbS4NCj4gQnV0IHRoZW4sIHdlIGZvdW5kIHRoYXQgSm1pY3JvbiBjaGlwIDM2OCBhbHNv
+IGhhcyB0aGlzIHByb2JsZW0sIGFuZCBpdCBpcw0KPiBkZWNpZGVkDQo+IHRvIGRpc2FibGUgdGhl
+IHBtIGFzeW5jIGZlYXR1cmUgZm9yIGFsbCB0aGUgSm1pY3JvbiBjaGlwcy4NCj4gDQo+IEJ1dCBo
+b3cgdG8gZml4IHRoaXMgd2FzIGRpc2N1c3NlZCBpbiB0aGUgbWFpbGluZyBsaXN0IGZvciBzb21l
+IHRpbWUuDQo+IEFmdGVyIHNvbWUgaW52ZXN0aWdhdGlvbiwgd2UgYmVsaWV2ZSB0aGF0IGEgcHJv
+cGVyIGZpeCBpcyB0byBkaXNhYmxlDQo+IHRoZSBhc3luYyBQTSBpbiBQQ0kgaW5zdGVhZCBvZiBh
+dGEgZHJpdmVyLCBiZWNhdXNlLCBvbiB0aGlzIHBsYXRmb3JtLA0KPiBwY2lfcmVzdW1lX25vaXJx
+KCkgb2YgSURFIGNvbnRyb2xsZXIgbXVzdCBoYXBwZW4gYWZ0ZXIgcGNpX3Jlc3VtZV9ub2lycSgp
+DQo+IG9mIEFIQ0kgY29udHJvbGxlci4gQnV0IGFzIC5yZXN1bWVfbm9pcnEoKSBvZiB0aGUgcGF0
+YV9qbWljcm9uIGRyaXZlciBpcw0KPiBuby1vcCwgdGhpcyBzdWdnZXN0cyB0aGF0IGl0IGlzIHRo
+ZSBQQ0kgY29tbW9uIGFjdGlvbnMsIGFrYSwNCj4gcGNpX3BtX2RlZmF1bHRfcmVzdW1lX2Vhcmx5
+KCksIGhhdmUgdGhlIGRlcGVuZGVuY3kuDQo+IFRvIGZpeCB0aGlzLCB1c2luZyBkZXZpY2VfcG1f
+d2FpdF9mb3JfZGV2KCkgaW4gcGF0YV9qbWljcm9uIGRyaXZlciBjYW4gbm90DQo+IHNvbHZlIHRo
+ZSBkZXBlbmRlbmN5IGJlY2F1c2UgcGNpX3BtX2RlZmF1bHRfcmVzdW1lX2Vhcmx5KCkgaXMgaW52
+b2tlZA0KPiBiZWZvcmUNCj4gZHJpdmVyIGNhbGxiYWNrIGJlaW5nIGludm9rZWQsIHBsdXMsIGFz
+IGl0IGlzIHRoZSBQQ0kgY29tbW9uIGFjdGlvbnMgdGhhdA0KPiBoYXZlIHRoZSBkZXBlbmRlbmN5
+LCBpdCBpcyByZWFzb25hYmxlIHRvIGZpeCBpdCBpbiBQQ0kgYnVzIGNvZGUsDQo+IHJhdGhlciB0
+aGFuIGRyaXZlciBjb2RlLg0KPiANCj4gVGhpcyBwYXRjaCBpcyBtYWRlIGJhc2VkIG9uIHRoZSBw
+YXRjaCBmcm9tIExpdSBDaHVhbnNoZW5nIGF0DQo+IGh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE0
+LzEyLzUvNzQNCj4gaXQgcmV2ZXJ0cyBjb21taXQgZTZiN2U0MWNkZCAoImF0YTogRGlzYWJsaW5n
+IHRoZSBhc3luYyBQTSBmb3IgSk1pY3Jvbg0KPiBjaGlwIDM2My8zNjEiKSwgYW5kIGludHJvZHVj
+ZXMgYSBQQ0kgcXVpcmsgdG8gZGlzYWJsZSBhc3luYyBQTSBmb3IgSm1pY3Jvbg0KPiBjaGlwcy4N
+Cj4gDQo+IFJlZmVyZW5jZTogaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNn
+aT9pZD04MTU1MQ0KPiBUZXN0ZWQtYnk6IEpheSA8TXlNYWlsQ2xvbmVAdC1vbmxpbmUuZGU+DQo+
+IFRlc3RlZC1ieTogQmFydG8gPG1pc3Rlci5mcmVlbWFuQGxhcG9zdGUubmV0Pg0KPiBTaWduZWQt
+b2ZmLWJ5OiBaaGFuZyBSdWkgPHJ1aS56aGFuZ0BpbnRlbC5jb20+DQo+IC0tLQ0KDQpUaGFua3Mg
+UnVpLg0KDQpBY2tlZC1ieTogQ2h1YW5zaGVuZyBMaXUgPGNodWFuc2hlbmcubGl1QGludGVsLmNv
+bT4NCg0KDQoNCg0K
