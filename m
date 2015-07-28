@@ -1,101 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45002 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbbGNWsD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 18:48:03 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:59078 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932271AbbG1Nqm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 09:46:42 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 20/49] PCI: Skip must+optional if there is no optional addon
-Date: Tue, 14 Jul 2015 15:46:51 -0700
-Message-Id: <1436914040-13206-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>
+Subject: [PATCH v6 04/19] PCI/MSI: Add hooks to populate the msi_domain field
+Date: Tue, 28 Jul 2015 14:46:11 +0100
+Message-Id: <1438091186-10244-5-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the bridge does not support hotplug or no child with sriov support
-we could get out early and don't try must+optional allocation.
+In order to be able to populate the device msi_domain field,
+add the necessary hooks to propagate the host bridge msi_domain
+across secondary busses to devices.
 
-Also in the loop that update res with optional add info, skip resource
-that add_size is 0.
+So far, nobody populates the initial msi_domain.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
+ drivers/pci/probe.c | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d1f9e19..64ef516 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -450,6 +450,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..c03ecbf 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -661,6 +661,32 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+ 	}
  }
  
-+static bool __has_addon(struct list_head *head,
-+			struct list_head *realloc_head)
++static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
 +{
-+	int add_count = 0;
-+	struct pci_dev_resource *dev_res, *tmp_res;
++	/*
++	 * Any firmware interface that can resolve the msi_domain
++	 * should be called from here.
++	 */
 +
-+	/* check if we have add really */
-+	list_for_each_entry(dev_res, head, list) {
-+		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-+		if (!tmp_res || !tmp_res->add_size)
-+			continue;
-+
-+		add_count++;
-+	}
-+
-+	return add_count != 0;
++	return NULL;
 +}
 +
- static bool save_resources(struct list_head *head,
- 			   struct list_head *save_head)
++static void pci_set_bus_msi_domain(struct pci_bus *bus)
++{
++	struct irq_domain *d;
++
++	/*
++	 * Either bus is the root, and we must obtain it from the
++	 * firmware, or we inherit it from the bridge device.
++	 */
++	if (pci_is_root_bus(bus))
++		d = pci_host_bridge_msi_domain(bus);
++	else
++		d = dev_get_msi_domain(&bus->self->dev);
++
++	dev_set_msi_domain(&bus->dev, d);
++}
++
+ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 					   struct pci_dev *bridge, int busnr)
  {
-@@ -481,16 +499,24 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align;
-+	resource_size_t add_align, add_size;
- 	struct resource *res;
+@@ -714,6 +740,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	bridge->subordinate = child;
  
-+	if (!__has_addon(head, realloc_head))
-+		return false;
+ add_dev:
++	pci_set_bus_msi_domain(child);
+ 	ret = device_register(&child->dev);
+ 	WARN_ON(ret < 0);
+ 
+@@ -1544,6 +1571,17 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
+ }
+ 
++static void pci_set_msi_domain(struct pci_dev *dev)
++{
++	/*
++	 * If no domain has been set through the pcibios_add_device
++	 * callback, inherit the default from the bus device.
++	 */
++	if (!dev_get_msi_domain(&dev->dev))
++		dev_set_msi_domain(&dev->dev,
++				   dev_get_msi_domain(&dev->bus->dev));
++}
 +
- 	if (!save_resources(head, &save_head))
- 		return false;
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1585,6 +1623,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	ret = pcibios_add_device(dev);
+ 	WARN_ON(ret < 0);
  
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
--		res->end += get_res_add_size(realloc_head, res);
-+		add_size = get_res_add_size(realloc_head, res);
++	/* Setup MSI irq domain */
++	pci_set_msi_domain(dev);
 +
-+		if (!add_size)
-+			continue;
-+
-+		res->end += add_size;
+ 	/* Notifier could use PCI capabilities */
+ 	dev->match_driver = false;
+ 	ret = device_add(&dev->dev);
+@@ -1975,6 +2016,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	b->bridge = get_device(&bridge->dev);
+ 	device_enable_async_suspend(b->bridge);
+ 	pci_set_bus_of_node(b);
++	pci_set_bus_msi_domain(b);
  
- 		/*
- 		 * There are two kinds of additional resources in the list:
-@@ -578,7 +604,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 */
- 
- 	/* Check must+optional add */
--	if (realloc_head && !list_empty(realloc_head) &&
-+	if (realloc_head &&
- 	    __assign_resources_must_add_sorted(head, realloc_head))
- 		return;
- 
+ 	if (!parent)
+ 		set_dev_node(b->bridge, pcibus_to_node(b));
 -- 
-1.8.4.5
+2.1.4
 
