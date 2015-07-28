@@ -1,140 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41610 "EHLO foss.arm.com"
+Received: from foss.arm.com ([217.140.101.70]:59029 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752721AbbGWSFY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 23 Jul 2015 14:05:24 -0400
-Date: Thu, 23 Jul 2015 19:06:04 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-	James Morse <James.Morse@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"yuanzhichang@hisilicon.com" <yuanzhichang@hisilicon.com>,
-	"zhudacai@hisilicon.com" <zhudacai@hisilicon.com>,
-	"zhangjukuo@huawei.com" <zhangjukuo@huawei.com>,
-	"qiuzhenfa@hisilicon.com" <qiuzhenfa@hisilicon.com>,
-	"liudongdong3@huawei.com" <liudongdong3@huawei.com>,
-	"qiujiang@huawei.com" <qiujiang@huawei.com>,
-	"kangfenglong@huawei.com" <kangfenglong@huawei.com>,
-	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>,
-	thomas.petazzoni@free-electrons.com,
-	Jason Cooper <jason@lakedaemon.net>, robh@kernel.org
-Subject: Re: [PATCH v4 1/5] ARM/PCI: remove align_resource in pci_sys_data
-Message-ID: <20150723180604.GD23324@red-moon>
-References: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com>
- <1437461323-3531-2-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437461323-3531-2-git-send-email-wangzhou1@hisilicon.com>
+	id S1755287AbbG1Nqd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 09:46:33 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH v6 00/19] Per-device MSI domain & platform MSI
+Date: Tue, 28 Jul 2015 14:46:07 +0100
+Message-Id: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[CC'ing Thomas and Jason for pci-mvebu]
+MSI-like interrupts are starting to creep out of the PCI world, and
+can now be seen into a number of "platform"-type busses. The
+introduction of the MSI domains feature in v3.19 recognised that fact,
+and started providing a way to implement this.
 
-On Tue, Jul 21, 2015 at 07:48:39AM +0100, Zhou Wang wrote:
-> This patch is needed in order to unify the PCIe designware framework for ARM and
-> ARM64 architectures. In the PCIe designware unification process we are calling
-> pci_create_root_bus() passing a "sysdata" parameter that is the same for both
-> ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
-> cause a problem with the function pcibios_align_resource(); in fact this will
-> cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
-> "struct pcie_port*" pointer.
-> 
-> This patch solves the issue by removing "align_resource" from "pci_sys_data"
-> struct and defining a static global function pointer in "bios32.c"
-> 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni at huawei.com>
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Another step in this direction is Jiang Liu's msi_desc series:
 
-Arnd, Rob any opinion on this ? It is really the last blocking bit
-to having common ARM/ARM64 drivers (and get rid of pci_sys_data) so I
-would like to get this sorted asap (having a global function pointer
-might be a temporary solution before moving it to the host bridge
-structure).
+https://github.com/jiangliu/linux.git msi_desc_v1
 
-Comments welcome.
+which moves the msi_list from being specific to PCI devices into the
+generic device structure.
 
-Thanks !
-Lorenzo
+A problem we have to solve is to identify which MSI domain a device is
+"connected" to. Currently, PCI gets away with a mixture of
+arch-specific callbacks, and a msi_controller structure that can
+optionally carry a pointer to an MSI domain. As we add new bus types
+and start dealing with topologies that do not map to what PCI does,
+this doesn't scale anymore.
 
-> ---
->  arch/arm/include/asm/mach/pci.h |  5 -----
->  arch/arm/kernel/bios32.c        | 12 ++++++++----
->  2 files changed, 8 insertions(+), 9 deletions(-)
-> 
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> index 28b9bb3..8a4e4de 100644
-> --- a/arch/arm/include/asm/mach/pci.h
-> +++ b/arch/arm/include/asm/mach/pci.h
-> @@ -58,11 +58,6 @@ struct pci_sys_data {
->  					/* IRQ mapping				*/
->  	int		(*map_irq)(const struct pci_dev *, u8, u8);
->  					/* Resource alignement requirements	*/
-> -	resource_size_t (*align_resource)(struct pci_dev *dev,
-> -					  const struct resource *res,
-> -					  resource_size_t start,
-> -					  resource_size_t size,
-> -					  resource_size_t align);
->  	void		*private_data;	/* platform controller private data	*/
->  };
->  
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index fcbbbb1..4cdc64d 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -17,6 +17,11 @@
->  #include <asm/mach/pci.h>
->  
->  static int debug_pci;
-> +static resource_size_t (*align_resource)(struct pci_dev *dev,
-> +		  const struct resource *res,
-> +		  resource_size_t start,
-> +		  resource_size_t size,
-> +		  resource_size_t align) = NULL;
->  
->  #ifdef CONFIG_PCI_MSI
->  struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-> @@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  		sys->busnr   = busnr;
->  		sys->swizzle = hw->swizzle;
->  		sys->map_irq = hw->map_irq;
-> -		sys->align_resource = hw->align_resource;
-> +		align_resource = hw->align_resource;
->  		INIT_LIST_HEAD(&sys->resources);
->  
->  		if (hw->private_data)
-> @@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->  				resource_size_t size, resource_size_t align)
->  {
->  	struct pci_dev *dev = data;
-> -	struct pci_sys_data *sys = dev->sysdata;
->  	resource_size_t start = res->start;
->  
->  	if (res->flags & IORESOURCE_IO && start & 0x300)
-> @@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->  
->  	start = (start + align - 1) & ~(align - 1);
->  
-> -	if (sys->align_resource)
-> -		return sys->align_resource(dev, res, start, size, align);
-> +	if (align_resource)
-> +		return align_resource(dev, res, start, size, align);
->  
->  	return start;
->  }
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+This patch series tries to address some of it by providing a basic
+link between 'struct device' and an MSI domain. It also adds :
+
+- a way to "tag" domains according to the "type" of interrupt it
+  provides (PCI/MSI, platform MSI...), allowing a driver for a piece
+  of HW identified by its device_node to provide several IRQ domains
+
+- (yet another) way for PCI to propagate the domain pointer through
+  the PCI device hierarchy, providing a method for OF to kick-start
+  the propagation process, and finally allowing the PCI/MSI layer to
+  use that information
+
+- a similar way to hook an MSI domain to a platform device.
+
+- a generic implementation of MSI for platform devices that can be
+  supported by interrupt controllers.
+
+- support code for platform MSI for both GICv2m and GICv3 ITS.
+
+This makes implementing MSI support in platform devices a relatively
+trivial task.
+
+Additionally, a few patches use most of the above to remove any trace
+of the msi_controller structure from the three MSI controllers that
+are currently in use on arm64, so that they solely rely on the above
+infrastructure, leading to some interesting improvements (also known
+as "gross hack prevention measures"). We also take this opportunity to
+kill the domain pointer from the msi_controller structure.
+
+My hope is to eventually kill msi_controller entirely, and only rely
+on the msi_domain contained in the device structure (any help
+welcomed, as I already have cleaned up Tegra, and Lorenzo has scrubbed
+Designware).
+
+This has been tested on arm64 with GICv2m (AMD Seattle) and GICv3 ITS
+(FVP model), and use of platform MSI has been tested with the ARM
+SMMUv3.
+
+Patches are on top of 4.2-rc2 and Jiang Liu's series, and available
+at:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/maz/arm-platforms.git irq/npci-msi-v3
+
+It also applies on tip/irq/core with a couple of trivial conflicts.
+
+As always, comments most welcome...
+
+* From v5:
+  - Fixed a few nits noticed by Bjorn
+  - Removed spurious comments
+  - Collected Acked- and Reviewed-bys
+
+* From v4:
+  - Nice cleanups in the PCI code after review from Bjorn
+  - Platform MSI now gets its own namespace in struct msi_desc
+  - Fixed bisectability issue caught by the 01.org folks
+
+Marc Zyngier (19):
+  genirq: irqdomain: Allow irq domain aliasing
+  PCI: MSI: Register irq domain with specific token
+  device core: Introduce per-device MSI domain pointer
+  PCI/MSI: Add hooks to populate the msi_domain field
+  PCI/MSI: of: Add support for OF-provided msi_domain
+  PCI/MSI: of: Allow msi_domain lookup using the host bridge node
+  PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
+  platform: of: Assign MSI domain to platform device
+  drivers: base: Add MSI domain support for non-PCI devices
+  genirq: Add DOMAIN_BUS_NEXUS irqdomain property
+  irqchip: gicv3-its: Split PCI/MSI code from the core ITS driver
+  irqchip: gicv3-its: Register irq domain with NEXUS token
+  irqchip: gicv3-its: Get rid of struct msi_controller
+  irqchip: gicv3-its: Make the PCI/MSI code standalone
+  irqchip: gicv3-its: Add platform MSI support
+  irqchip: GICv2m: Get rid of struct msi_controller
+  irqchip: GICv2m: Add platform MSI support
+  PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
+  PCI/MSI: Drop domain field from msi_controller
+
+ arch/powerpc/platforms/512x/mpc5121_ads_cpld.c   |   3 +-
+ arch/powerpc/platforms/cell/interrupt.c          |   3 +-
+ arch/powerpc/platforms/embedded6xx/flipper-pic.c |   3 +-
+ arch/powerpc/platforms/powermac/pic.c            |   3 +-
+ arch/powerpc/platforms/powernv/opal-irqchip.c    |   3 +-
+ arch/powerpc/platforms/ps3/interrupt.c           |   3 +-
+ arch/powerpc/sysdev/ehv_pic.c                    |   3 +-
+ arch/powerpc/sysdev/i8259.c                      |   3 +-
+ arch/powerpc/sysdev/ipic.c                       |   3 +-
+ arch/powerpc/sysdev/mpic.c                       |   3 +-
+ arch/powerpc/sysdev/qe_lib/qe_ic.c               |   3 +-
+ arch/powerpc/sysdev/xics/xics-common.c           |   3 +-
+ drivers/base/Makefile                            |   1 +
+ drivers/base/platform-msi.c                      | 282 +++++++++++++++++++++++
+ drivers/irqchip/Makefile                         |   2 +-
+ drivers/irqchip/irq-gic-v2m.c                    |  52 +++--
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c         | 140 +++++++++++
+ drivers/irqchip/irq-gic-v3-its-platform-msi.c    |  93 ++++++++
+ drivers/irqchip/irq-gic-v3-its.c                 | 140 ++++-------
+ drivers/of/irq.c                                 |  21 ++
+ drivers/of/platform.c                            |   1 +
+ drivers/pci/host/pci-xgene-msi.c                 |  41 ++--
+ drivers/pci/msi.c                                |  19 +-
+ drivers/pci/of.c                                 |  30 +++
+ drivers/pci/probe.c                              |  45 ++++
+ include/linux/device.h                           |  20 ++
+ include/linux/irqchip/arm-gic-v3.h               |   1 +
+ include/linux/irqdomain.h                        |  26 ++-
+ include/linux/msi.h                              |  18 +-
+ include/linux/of_irq.h                           |   1 +
+ include/linux/pci.h                              |   4 +
+ kernel/irq/irqdomain.c                           |  18 +-
+ 32 files changed, 815 insertions(+), 176 deletions(-)
+ create mode 100644 drivers/base/platform-msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v3-its-pci-msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v3-its-platform-msi.c
+
+-- 
+2.1.4
+
+*** BLURB HERE ***
+
+Marc Zyngier (19):
+  genirq: irqdomain: Allow irq domain aliasing
+  PCI: MSI: Register irq domain with specific token
+  device core: Introduce per-device MSI domain pointer
+  PCI/MSI: Add hooks to populate the msi_domain field
+  PCI/MSI: of: Add support for OF-provided msi_domain
+  PCI/MSI: of: Allow msi_domain lookup using the host bridge node
+  PCI/MSI: Let pci_msi_get_domain use struct device's msi_domain
+  platform: of: Assign MSI domain to platform device
+  drivers: base: Add MSI domain support for non-PCI devices
+  genirq: Add DOMAIN_BUS_NEXUS irqdomain property
+  irqchip: gicv3-its: Split PCI/MSI code from the core ITS driver
+  irqchip: gicv3-its: Register irq domain with NEXUS token
+  irqchip: gicv3-its: Get rid of struct msi_controller
+  irqchip: gicv3-its: Make the PCI/MSI code standalone
+  irqchip: gicv3-its: Add platform MSI support
+  irqchip: GICv2m: Get rid of struct msi_controller
+  irqchip: GICv2m: Add platform MSI support
+  PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
+  PCI/MSI: Drop domain field from msi_controller
+
+ arch/powerpc/platforms/512x/mpc5121_ads_cpld.c   |   3 +-
+ arch/powerpc/platforms/cell/interrupt.c          |   3 +-
+ arch/powerpc/platforms/embedded6xx/flipper-pic.c |   3 +-
+ arch/powerpc/platforms/powermac/pic.c            |   3 +-
+ arch/powerpc/platforms/powernv/opal-irqchip.c    |   3 +-
+ arch/powerpc/platforms/ps3/interrupt.c           |   3 +-
+ arch/powerpc/sysdev/ehv_pic.c                    |   3 +-
+ arch/powerpc/sysdev/i8259.c                      |   3 +-
+ arch/powerpc/sysdev/ipic.c                       |   3 +-
+ arch/powerpc/sysdev/mpic.c                       |   3 +-
+ arch/powerpc/sysdev/qe_lib/qe_ic.c               |   3 +-
+ arch/powerpc/sysdev/xics/xics-common.c           |   3 +-
+ drivers/base/Makefile                            |   1 +
+ drivers/base/platform-msi.c                      | 282 +++++++++++++++++++++++
+ drivers/irqchip/Makefile                         |   2 +-
+ drivers/irqchip/irq-gic-v2m.c                    |  52 +++--
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c         | 140 +++++++++++
+ drivers/irqchip/irq-gic-v3-its-platform-msi.c    |  93 ++++++++
+ drivers/irqchip/irq-gic-v3-its.c                 | 140 ++++-------
+ drivers/of/irq.c                                 |  21 ++
+ drivers/of/platform.c                            |   1 +
+ drivers/pci/host/pci-xgene-msi.c                 |  41 ++--
+ drivers/pci/msi.c                                |  20 +-
+ drivers/pci/of.c                                 |  30 +++
+ drivers/pci/probe.c                              |  45 ++++
+ include/linux/device.h                           |  20 ++
+ include/linux/irqchip/arm-gic-v3.h               |   1 +
+ include/linux/irqdomain.h                        |  26 ++-
+ include/linux/msi.h                              |  18 +-
+ include/linux/of_irq.h                           |   1 +
+ include/linux/pci.h                              |   4 +
+ kernel/irq/irqdomain.c                           |  18 +-
+ 32 files changed, 816 insertions(+), 176 deletions(-)
+ create mode 100644 drivers/base/platform-msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v3-its-pci-msi.c
+ create mode 100644 drivers/irqchip/irq-gic-v3-its-platform-msi.c
+
+-- 
+2.1.4
+
