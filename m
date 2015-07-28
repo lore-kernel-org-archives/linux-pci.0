@@ -1,99 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:38268 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932731AbbGVIiw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 04:38:52 -0400
-Date: Wed, 22 Jul 2015 10:38:45 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bp@suse.de,
-	arnd@arndb.de, luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org
-Subject: Re: [PATCH v9 0/8] pci: add pci_iomap_wc() and pci_ioremap_wc_bar()
-Message-ID: <20150722083844.GA14626@gmail.com>
-References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
- <20150717202923.GC30479@wotan.suse.de>
- <20150721085252.GA15861@gmail.com>
- <20150721132157.GE16841@google.com>
+Received: from mout1.freenet.de ([195.4.92.91]:34116 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752521AbbG1UKd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 16:10:33 -0400
+Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
+ QUEUED errors since Linux 4.0
+To: Mike Snitzer <snitzer@redhat.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
+ <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
+ <20150728193101.GB25264@redhat.com>
+Cc: dm-devel@redhat.com, mpatocka@redhat.com,
+	linux-pci <linux-pci@vger.kernel.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55B7E14A.4050500@maya.org>
+Date: Tue, 28 Jul 2015 22:08:42 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150721132157.GE16841@google.com>
+In-Reply-To: <20150728193101.GB25264@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 07/28/2015 at 21:31 PM, Mike Snitzer wrote:
+ > On Tue, Jul 28 2015 at  3:23pm -0400,
+> Andreas Hartmann <andihartmann@freenet.de> wrote:
+>
+>> On 07/28/2015 at 08:58 PM, Mike Snitzer wrote:
+>>> On Tue, Jul 28 2015 at  2:20pm -0400,
+>>> Andreas Hartmann <andihartmann@freenet.de> wrote:
+>>>
+>>>> On 07/28/2015 at 07:50 PM, Mike Snitzer wrote:
+>>>> [..]
+>>>>> Are your SATA devcies using NCQ?
+>>>>
+>>>> Yes. It's enabled:
+>>>>
+>>>> dmesg| grep -i ncq
+>>>> ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
+>>>> ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
+>>>> ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
+>>>> ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
+>>>>
+>>>> As the errors already come up on boot (during mount of partitions or
+>>>> even before the password for the disk has been provided): How can I
+>>>> disable NCQ during boot of the kernel? Is there a kernel option?
+>>>
+>>> See:
+>>> https://ata.wiki.kernel.org/index.php/Libata_FAQ#Enabling.2C_disabling_and_checking_NCQ
+>>>
+>>> alternatively, and likely easier, set this on the kernel commandline:
+>>>   libata.force=noncq
+>>
+>> ata2.00: FORCE: horkage modified (noncq)
+>> ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
+>> ata3.00: FORCE: horkage modified (noncq)
+>> ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
+>> ata5.00: FORCE: horkage modified (noncq)
+>> ata1.00: FORCE: horkage modified (noncq)
+>> ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (not used)
+>>
+>>
+>> Perfectly. Seems to work w/ 3.19.8 and your mentioned patches. But now,
+>> I'm getting another error, which I didn't see before w/ 3.x-kernels:
+>>
+>> [drm:btc_dpm_set_power_state [radeon]] *ERROR*
+>> rv770_restrict_performance_levels_before_switch failed
+>>
+>> It seams that your patches do have some unwanted side effects :-).
+>
+> That is a completely different issue.  drm and radeon is a graphics
+> issue.
 
-* Bjorn Helgaas <bhelgaas@google.com> wrote:
+Nothing changed on radeon code. I just applied your patches. Nothing 
+more. Why should radeon been suddenly broken if I apply your patches to 
+a stable 3.19.8 code?
 
-> > > > Let me know if these are OK or if there are any questions.
-> > > > 
-> > > > [0] http://lkml.kernel.org/r/20150625204703.GC4898@pd.tnic
-> > > > [1] http://lkml.kernel.org/r/20150707095012.GQ7021@wotan.suse.de
-> > > 
-> > > Ingo,
-> > > 
-> > > Just a friendly reminder. Let me know if there are any issues or questions.
-> > 
-> > It would be nice to get an Acked-by from Bjorn for the PCI API bits.
-> 
-> I think the actual code of pci_ioremap_wc() and pci_ioremap_wc_bar() is fine 
-> (although I might have named it pci_ioremap_bar_wc() for consistency).
-> 
-> I declined to merge or ack them myself because they're obvious extensions of 
-> pci_ioremap() and pci_ioremap_bar(), and I would prefer that they be exported 
-> the same way, i.e., with EXPORT_SYMBOL(), not EXPORT_SYMBOL_GPL().
+These patches trigger tons of AMD-Vi IO_PAGE_FAULTs w/ ncq enabled and 
+the IOMMU developers say, that it is not a problem of the iommu code.
 
-Huh? AFAICS pci_ioremap_bar() has been a _GPL export for a long time:
+>> Could you please reexamine your patch "dm crypt: don't allocate
+>> pages for a partial request" - after applying this patch all the
+>> problems are coming up here.
+>
+> More likely than not your hardware isn't very good.
 
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       126)#ifdef CONFIG_HAS_IOMEM
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       127)void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       128){
-1f7bf3bfb5d60   (Bjorn Helgaas  2015-03-12 12:30:11 -0500       129)    struct resource *res = &pdev->resource[bar];
-1f7bf3bfb5d60   (Bjorn Helgaas  2015-03-12 12:30:11 -0500       130)
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       131)    /*
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       132)     * Make sure the BAR is actually a memory resource, not an IO resource
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       133)     */
-646c0282df042   (Bjorn Helgaas  2015-03-12 12:30:15 -0500       134)    if (res->flags & IORESOURCE_UNSET || !(res->flags & IORESOURCE_MEM)) {
-1f7bf3bfb5d60   (Bjorn Helgaas  2015-03-12 12:30:11 -0500       135)            dev_warn(&pdev->dev, "can't ioremap BAR %d: %pR\n", bar, res);
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       136)            return NULL;
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       137)    }
-1f7bf3bfb5d60   (Bjorn Helgaas  2015-03-12 12:30:11 -0500       138)    return ioremap_nocache(res->start, resource_size(res));
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       139)}
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       140)EXPORT_SYMBOL_GPL(pci_ioremap_bar);
-1684f5ddd4c0c   (Andrew Morton  2008-12-01 14:30:30 -0800       141)#endif
+Maybe - maybe not. The only thing I know for sure, is: with these 
+patches applied, the machine doesn't work reliably any more. W/ ncq 
+disabled, the AMD-Vi IO_PAGE_FAULTs are gone, but a radeon error never 
+seen before came instead. Most probably chance. Most probably, it could 
+have been risen any other error, too.
 
-commit 1684f5ddd4c0c happened in 2008, well before you became PCI maintainer in 
-2012.
+I am willing to do tests if you have any idea to be tested - I can 
+reproduce it quite easily.
 
-and I'd prefer keeping the same EXPORT_SYMBOL_GPL() pattern for the new APIs.
-
-(ioremap_wc() is EXPORT_SYMBOL() mostly by accident, it's the odd one out.)
-
-Also, FWIIW: I personally got essentially zero feedback and help from proprietary 
-binary kernel module vendors in the past couple of years as x86 maintainer, 
-despite a fair chunk of kernel crashes reported on distro kernels occuring in 
-them...
-
-Based on that very negative experience, when we introduce something as complex and 
-as critical as new caching APIs, the last thing I want is to have obscure bugs in 
-binary modules I cannot fix in any reasonable fashion. So even if the parent APIs 
-of new APIs weren't already _GPL exports (as in this case), I'd export them as 
-_GPL in this case.
-
-> I think using EXPORT_SYMBOL_GPL to express individual political aims rather than 
-> as a hint about what might be derived work makes us look like zealots, and 
-> that's not my style.
-
-As far as I'm concerned it's a pure technological choice: I don't want to export 
-certain types of hard to fix and critical functionality to drivers that I cannot 
-then fix.
-
-But I also applied EXPORT_SYMBOL() patches in the past, so I'm not one-sided about 
-it.
 
 Thanks,
-
-	Ingo
+regards,
+Andreas
