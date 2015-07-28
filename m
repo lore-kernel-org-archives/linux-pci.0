@@ -1,93 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:21846 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932583AbbG0Xgz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:36:55 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 43/51] PCI: Treat optional as must in first try for bridge rescan
-Date: Mon, 27 Jul 2015 16:30:01 -0700
-Message-Id: <1438039809-24957-44-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: Duc Dang <dhdang@apm.com>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH v6 18/19] PCI/MSI: pci-xgene-msi: Get rid of struct msi_controller
+Date: Tue, 28 Jul 2015 14:46:25 +0100
+Message-Id: <1438091186-10244-19-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For rescan bridge/bus that children are removed before, we should treat
-optional as must just like root bus the boot time in 19aa7ee432ce
-(PCI: make re-allocation try harder by reassigning ranges higher in
-the heirarchy).
+The X-Gene MSI driver only uses the msi_controller structure as
+a way to match the host bridge  with its MSI HW, and thus the
+msi_domain.
 
-The reason: allocate must and expand to optional path do not
-put failed resource to fail list, so will lose must info before
-next try.
+But now that we can directly associate an msi_domain with a device,
+there is no use keeping this msi_controller around.
 
-So we are using following way:
-1. First and following try before last try:
-   We don't keep realloc list so treat every optional as must.
-   allocate for must+optional and put failed in the fail list.
-   then size info (include must and optonal separatedly) will be kept
-   for next try.
-2. last try:
-   a: try to allocate must+optional to see if all get allocated.
-   b: try to allocate must then expand to optional.
+Just remove all traces of msi_controller from the driver.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Duc Dang <dhdang@apm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/setup-bus.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ drivers/pci/host/pci-xgene-msi.c | 41 ++++++++++++++++------------------------
+ 1 file changed, 16 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 54f0261..541cea5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2361,25 +2361,34 @@ void __init pci_assign_unassigned_resources(void)
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+index 2d31d4d..ec5a14b 100644
+--- a/drivers/pci/host/pci-xgene-msi.c
++++ b/drivers/pci/host/pci-xgene-msi.c
+@@ -40,8 +40,8 @@ struct xgene_msi_group {
+ 
+ struct xgene_msi {
+ 	struct device_node	*node;
+-	struct msi_controller	mchip;
+-	struct irq_domain	*domain;
++	struct irq_domain	*inner_domain;
++	struct irq_domain	*msi_domain;
+ 	u64			msi_addr;
+ 	void __iomem		*msi_regs;
+ 	unsigned long		*bitmap;
+@@ -252,17 +252,17 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 
+ static int xgene_allocate_domains(struct xgene_msi *msi)
  {
- 	struct pci_bus *parent = bridge->subordinate;
--	LIST_HEAD(add_list); /* list of resources that
-+	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
-+	struct list_head *add_list = NULL;
- 	int tried_times = 0;
- 	LIST_HEAD(fail_head);
- 	struct pci_dev_resource *fail_res;
- 	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-+	int pci_try_num = 2;
+-	msi->domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+-					    &msi_domain_ops, msi);
+-	if (!msi->domain)
++	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
++						  &msi_domain_ops, msi);
++	if (!msi->inner_domain)
+ 		return -ENOMEM;
  
- again:
--	__pci_bus_size_bridges(parent, &add_list);
--	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	__pci_bus_check_realloc(&add_list);
-+	/*
-+	 * last try will use add_list, otherwise will try good to have as
-+	 * must have, so can realloc parent bridge resource
-+	 */
-+	if (tried_times + 1 == pci_try_num)
-+		add_list = &realloc_head;
-+	__pci_bus_size_bridges(parent, add_list);
-+	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
-+	if (add_list)
-+		__pci_bus_check_realloc(add_list);
- 	tried_times++;
+-	msi->mchip.domain = pci_msi_create_irq_domain(msi->mchip.of_node,
+-						      &xgene_msi_domain_info,
+-						      msi->domain);
++	msi->msi_domain = pci_msi_create_irq_domain(msi->node,
++						    &xgene_msi_domain_info,
++						    msi->inner_domain);
  
- 	if (list_empty(&fail_head))
- 		goto enable_all;
+-	if (!msi->mchip.domain) {
+-		irq_domain_remove(msi->domain);
++	if (!msi->msi_domain) {
++		irq_domain_remove(msi->inner_domain);
+ 		return -ENOMEM;
+ 	}
  
--	if (tried_times >= 2) {
-+	if (tried_times >= pci_try_num) {
- 		/* still fail, don't need to try more */
- 		free_list(&fail_head);
- 		goto enable_all;
+@@ -271,10 +271,10 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+ 
+ static void xgene_free_domains(struct xgene_msi *msi)
+ {
+-	if (msi->mchip.domain)
+-		irq_domain_remove(msi->mchip.domain);
+-	if (msi->domain)
+-		irq_domain_remove(msi->domain);
++	if (msi->msi_domain)
++		irq_domain_remove(msi->msi_domain);
++	if (msi->inner_domain)
++		irq_domain_remove(msi->inner_domain);
+ }
+ 
+ static int xgene_msi_init_allocator(struct xgene_msi *xgene_msi)
+@@ -340,7 +340,7 @@ static void xgene_msi_isr(unsigned int irq, struct irq_desc *desc)
+ 			 * CPU0
+ 			 */
+ 			hw_irq = hwirq_to_canonical_hwirq(hw_irq);
+-			virq = irq_find_mapping(xgene_msi->domain, hw_irq);
++			virq = irq_find_mapping(xgene_msi->inner_domain, hw_irq);
+ 			WARN_ON(!virq);
+ 			if (virq != 0)
+ 				generic_handle_irq(virq);
+@@ -497,7 +497,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+ 		goto error;
+ 	}
+ 	xgene_msi->msi_addr = res->start;
+-
++	xgene_msi->node = pdev->dev.of_node;
+ 	xgene_msi->num_cpus = num_possible_cpus();
+ 
+ 	rc = xgene_msi_init_allocator(xgene_msi);
+@@ -561,19 +561,10 @@ static int xgene_msi_probe(struct platform_device *pdev)
+ 
+ 	cpu_notifier_register_done();
+ 
+-	xgene_msi->mchip.of_node = pdev->dev.of_node;
+-	rc = of_pci_msi_chip_add(&xgene_msi->mchip);
+-	if (rc) {
+-		dev_err(&pdev->dev, "failed to add MSI controller chip\n");
+-		goto error_notifier;
+-	}
+-
+ 	dev_info(&pdev->dev, "APM X-Gene PCIe MSI driver loaded\n");
+ 
+ 	return 0;
+ 
+-error_notifier:
+-	unregister_hotcpu_notifier(&xgene_msi_cpu_notifier);
+ error:
+ 	xgene_msi_remove(pdev);
+ 	return rc;
 -- 
-1.8.4.5
+2.1.4
 
