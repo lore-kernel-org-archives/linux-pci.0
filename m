@@ -1,318 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36783 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750766AbbG3Go2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 02:44:28 -0400
-Received: by pachj5 with SMTP id hj5so18388645pac.3
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 23:44:28 -0700 (PDT)
-References: <1438169598-24490-1-git-send-email-lorenzo.pieralisi@arm.com> <1438169598-24490-2-git-send-email-lorenzo.pieralisi@arm.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <1438169598-24490-2-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <AB5FB03D-418E-4A70-B6E1-291D241C1567@gmail.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Russell King <linux@arm.linux.org.uk>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	James Morse <james.morse@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jayachandran C <jchandra@broadcom.com>, jingoohan1@gmail.com
-From: Jingoo Han <jingoohan1@gmail.com>
-Subject: Re: [PATCH v4 2/2] ARM: pci: kill pcibios_msi_controller
-Date: Thu, 30 Jul 2015 15:44:19 +0900
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Received: from foss.arm.com ([217.140.101.70]:59111 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932405AbbG1Nqv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 09:46:51 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH v6 08/19] platform: of: Assign MSI domain to platform device
+Date: Tue, 28 Jul 2015 14:46:15 +0100
+Message-Id: <1438091186-10244-9-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015. 7. 29., at PM 8:33, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> 
-> On ARM PCI systems relying on the pcibios API to initialize PCI host
-> controllers, the pcibios_msi_controller weak callback is used to look-up
-> the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
-> 
-> pci_sys_data is an ARM specific structure, which prevents using the
-> same mechanism (so same PCI host controller drivers) on ARM64 systems.
-> 
-> Since the struct pci_bus already contains an msi_controller pointer and
-> the kernel already uses it to look-up the msi controller,
-> this patch converts ARM host controller and related pcibios/host bridges
-> initialization routines so that the msi_controller pointer look-up can be
-> carried out by PCI core code through the struct pci_bus msi pointer,
-> removing the need for the arch specific pcibios_msi_controller callback
-> and the related pci_sys_data msi_ctrl pointer.
-> 
-> To simplify the conversion, this patch adds a new function in PCI
-> core code (pci_scan_root_bus_msi()) that takes the msi_controller
-> pointer as an additional parameter wrt pci_scan_root_bus() so that
-> the msi controller pointer can be effectively propagated at probe time
-> through the augmented API.
-> 
-> The existing pci_scan_root_bus() API is made to rely on the newly
-> introduced function, by passing a NULL msi pointer to it so
-> that it can be used when no msi controller pointer passing is required
-> without additional code (and API conversions) in the core PCI layer.
-> 
-> ARM is the only arch relying on the pcibios_msi_controller() weak
-> function, hence this patch also removes its default weak implementation
-> from PCI core code since it becomes of no use.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Suggested-by: Russell King <linux@arm.linux.org.uk>
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Jingoo Han <jingoohan1@gmail.com>
+As for PCI, we're able to populate the msi_domain field at probe time,
+provided that the device tree has an "msi-parent" property.
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/of/irq.c          | 21 +++++++++++++++++++++
+ drivers/of/platform.c     |  1 +
+ include/linux/irqdomain.h |  1 +
+ include/linux/of_irq.h    |  1 +
+ 4 files changed, 24 insertions(+)
 
-Best regards,
-Jingoo Han
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index 3cf7a01..2956d72 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -18,6 +18,7 @@
+  * driver.
+  */
+ 
++#include <linux/device.h>
+ #include <linux/errno.h>
+ #include <linux/list.h>
+ #include <linux/module.h>
+@@ -576,3 +577,23 @@ err:
+ 		kfree(desc);
+ 	}
+ }
++
++/**
++ * of_msi_configure - Set the msi_domain field of a device
++ * @dev: device structure to associate with an MSI irq domain
++ * @np: device node for that device
++ */
++void of_msi_configure(struct device *dev, struct device_node *np)
++{
++	struct device_node *msi_np;
++	struct irq_domain *d;
++
++	msi_np = of_parse_phandle(np, "msi-parent", 0);
++	if (!msi_np)
++		return;
++
++	d = irq_find_matching_host(msi_np, DOMAIN_BUS_PLATFORM_MSI);
++	if (!d)
++		d = irq_find_host(msi_np);
++	dev_set_msi_domain(dev, d);
++}
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index ddf8e42..8a002d6 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -184,6 +184,7 @@ static struct platform_device *of_platform_device_create_pdata(
+ 	dev->dev.bus = &platform_bus_type;
+ 	dev->dev.platform_data = platform_data;
+ 	of_dma_configure(&dev->dev, dev->dev.of_node);
++	of_msi_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	if (of_device_add(dev) != 0) {
+ 		of_dma_deconfigure(&dev->dev);
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index 25e9e66..b4a74f7 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -55,6 +55,7 @@ struct irq_data;
+ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_ANY		= 0,
+ 	DOMAIN_BUS_PCI_MSI,
++	DOMAIN_BUS_PLATFORM_MSI,
+ };
+ 
+ /**
+diff --git a/include/linux/of_irq.h b/include/linux/of_irq.h
+index d884929..4bcbd58 100644
+--- a/include/linux/of_irq.h
++++ b/include/linux/of_irq.h
+@@ -74,6 +74,7 @@ static inline int of_irq_to_resource_table(struct device_node *dev,
+  */
+ extern unsigned int irq_of_parse_and_map(struct device_node *node, int index);
+ extern struct device_node *of_irq_find_parent(struct device_node *child);
++extern void of_msi_configure(struct device *dev, struct device_node *np);
+ 
+ #else /* !CONFIG_OF */
+ static inline unsigned int irq_of_parse_and_map(struct device_node *dev,
+-- 
+2.1.4
 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Simon Horman <horms@verge.net.au>
-> Cc: Russell King <linux@arm.linux.org.uk>
-> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: Thierry Reding <thierry.reding@gmail.com>
-> Cc: Michal Simek <michal.simek@xilinx.com>
-> Cc: Marc Zyngier <marc.zyngier@arm.com>
-> ---
-> v3->v4
-> 
-> - Added conversion of designware and Xilinx PCI host controllers to
->  scan through pci_scan_root_bus_msi()
-> 
-> v3: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/360020.html
-> 
-> - Added pci_scan_root_bus_msi() in core PCI code and converted ARM bios32 to
->  use it
-> 
-> v2: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359183.html
-> 
-> v1->v2
-> 
-> - Added patch to replace panic statements with WARN
-> - Removed unused pcibios_msi_controller() and pci_msi_controller() from
->  core code
-> - Dropped RFT status
-> 
-> v1: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/356028.html
-> 
-> arch/arm/include/asm/mach/pci.h    |  5 -----
-> arch/arm/kernel/bios32.c           | 17 +++--------------
-> drivers/pci/host/pcie-designware.c |  6 +++---
-> drivers/pci/host/pcie-xilinx.c     |  5 ++---
-> drivers/pci/msi.c                  | 17 +----------------
-> drivers/pci/probe.c                | 15 +++++++++++++--
-> include/linux/pci.h                |  4 ++++
-> 7 files changed, 26 insertions(+), 43 deletions(-)
-> 
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> index 28b9bb3..8857d28 100644
-> --- a/arch/arm/include/asm/mach/pci.h
-> +++ b/arch/arm/include/asm/mach/pci.h
-> @@ -19,9 +19,7 @@ struct pci_bus;
-> struct device;
-> 
-> struct hw_pci {
-> -#ifdef CONFIG_PCI_MSI
->    struct msi_controller *msi_ctrl;
-> -#endif
->    struct pci_ops    *ops;
->    int        nr_controllers;
->    void        **private_data;
-> @@ -42,9 +40,6 @@ struct hw_pci {
->  * Per-controller structure
->  */
-> struct pci_sys_data {
-> -#ifdef CONFIG_PCI_MSI
-> -    struct msi_controller *msi_ctrl;
-> -#endif
->    struct list_head node;
->    int        busnr;        /* primary bus number            */
->    u64        mem_offset;    /* bus->cpu memory mapping offset    */
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index a5c782c..1a20076 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -18,15 +18,6 @@
-> 
-> static int debug_pci;
-> 
-> -#ifdef CONFIG_PCI_MSI
-> -struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-> -{
-> -    struct pci_sys_data *sysdata = dev->bus->sysdata;
-> -
-> -    return sysdata->msi_ctrl;
-> -}
-> -#endif
-> -
-> /*
->  * We can't use pci_get_device() here since we are
->  * called from interrupt context.
-> @@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->        if (WARN(!sys, "PCI: unable to allocate sys data!"))
->            break;
-> 
-> -#ifdef CONFIG_PCI_MSI
-> -        sys->msi_ctrl = hw->msi_ctrl;
-> -#endif
->        sys->busnr   = busnr;
->        sys->swizzle = hw->swizzle;
->        sys->map_irq = hw->map_irq;
-> @@ -486,8 +474,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->            if (hw->scan)
->                sys->bus = hw->scan(nr, sys);
->            else
-> -                sys->bus = pci_scan_root_bus(parent, sys->busnr,
-> -                        hw->ops, sys, &sys->resources);
-> +                sys->bus = pci_scan_root_bus_msi(parent,
-> +                    sys->busnr, hw->ops, sys,
-> +                    &sys->resources, hw->msi_ctrl);
-> 
->            if (WARN(!sys->bus, "PCI: unable to scan bus!")) {
->                kfree(sys);
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be..bd0aeec 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -526,7 +526,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> 
-> #ifdef CONFIG_PCI_MSI
->    dw_pcie_msi_chip.dev = pp->dev;
-> -    dw_pci.msi_ctrl = &dw_pcie_msi_chip;
-> #endif
-> 
->    dw_pci.nr_controllers = 1;
-> @@ -708,8 +707,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->    struct pcie_port *pp = sys_to_pcie(sys);
-> 
->    pp->root_bus_nr = sys->busnr;
-> -    bus = pci_scan_root_bus(pp->dev, sys->busnr,
-> -                  &dw_pcie_ops, sys, &sys->resources);
-> +    bus = pci_scan_root_bus_msi(pp->dev, sys->busnr, &dw_pcie_ops, sys,
-> +                    &sys->resources, &dw_pcie_msi_chip);
-> +
->    if (!bus)
->        return NULL;
-> 
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index f1a06a0..526807d 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -647,8 +647,8 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->    struct pci_bus *bus;
-> 
->    port->root_busno = sys->busnr;
-> -    bus = pci_scan_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
-> -                sys, &sys->resources);
-> +    bus = pci_scan_root_bus_msi(port->dev, sys->busnr, &xilinx_pcie_ops,
-> +                sys, &sys->resources, &xilinx_pcie_msi_chip);
-> 
->    return bus;
-> }
-> @@ -847,7 +847,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
-> 
-> #ifdef CONFIG_PCI_MSI
->    xilinx_pcie_msi_chip.dev = port->dev;
-> -    hw.msi_ctrl = &xilinx_pcie_msi_chip;
-> #endif
->    pci_common_init_dev(dev, &hw);
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index f66be86..0d20142 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -77,24 +77,9 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
-> 
-> /* Arch hooks */
-> 
-> -struct msi_controller * __weak pcibios_msi_controller(struct pci_dev *dev)
-> -{
-> -    return NULL;
-> -}
-> -
-> -static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
-> -{
-> -    struct msi_controller *msi_ctrl = dev->bus->msi;
-> -
-> -    if (msi_ctrl)
-> -        return msi_ctrl;
-> -
-> -    return pcibios_msi_controller(dev);
-> -}
-> -
-> int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
-> {
-> -    struct msi_controller *chip = pci_msi_controller(dev);
-> +    struct msi_controller *chip = dev->bus->msi;
->    int err;
-> 
->    if (!chip || !chip->setup_irq)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cefd636..4915c6d 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2096,8 +2096,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
->            res, ret ? "can not be" : "is");
-> }
-> 
-> -struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-> -        struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> +struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
-> +        struct pci_ops *ops, void *sysdata,
-> +        struct list_head *resources, struct msi_controller *msi)
-> {
->    struct resource_entry *window;
->    bool found = false;
-> @@ -2114,6 +2115,8 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
->    if (!b)
->        return NULL;
-> 
-> +    b->msi = msi;
-> +
->    if (!found) {
->        dev_info(&b->dev,
->         "No busn resource found for root bus, will use [bus %02x-ff]\n",
-> @@ -2128,6 +2131,14 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-> 
->    return b;
-> }
-> +EXPORT_SYMBOL(pci_scan_root_bus_msi);
-> +
-> +struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-> +        struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> +{
-> +    return pci_scan_root_bus_msi(parent, bus, ops, sysdata, resources,
-> +                     NULL);
-> +}
-> EXPORT_SYMBOL(pci_scan_root_bus);
-> 
-> struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8a0321a..4d4f9d2 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -787,6 +787,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
-> int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
-> void pci_bus_release_busn_res(struct pci_bus *b);
-> +struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
-> +                      struct pci_ops *ops, void *sysdata,
-> +                      struct list_head *resources,
-> +                      struct msi_controller *msi);
-> struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
->                         struct pci_ops *ops, void *sysdata,
->                         struct list_head *resources);
-> -- 
-> 2.2.1
-> 
