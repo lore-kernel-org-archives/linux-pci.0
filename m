@@ -1,72 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:2070 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698AbbGBHZO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jul 2015 03:25:14 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: James Morse <james.morse@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	"Arnd Bergmann" <arnd@arndb.de>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	"kishon@ti.com" <kishon@ti.com>,
-	"xobs@kosagi.com" <xobs@kosagi.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v3 2/5] PCI: designware: Add ARM64 support
-Date: Thu, 2 Jul 2015 07:24:40 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D4EC38@lhreml503-mbs>
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
- <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs>
- <5593F899.6050306@arm.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D4E6A2@lhreml503-mbs>
- <55942441.3050705@arm.com>
-In-Reply-To: <55942441.3050705@arm.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <tony@atomide.com>
+CC: <robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<bcousson@baylibre.com>, <linux@arm.linux.org.uk>, <kishon@ti.com>,
+	<nsekhar@ti.com>
+Subject: [PATCH 1/2] pci: host: pci-dra7xx: Add support to make gpio drive PERST# line
+Date: Tue, 28 Jul 2015 19:09:09 +0530
+Message-ID: <1438090750-11604-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1438090750-11604-1-git-send-email-kishon@ti.com>
+References: <1438090750-11604-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtcGNpLW93bmVy
-QHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJAdmdlci5rZXJuZWwu
-b3JnXSBPbiBCZWhhbGYgT2YgSmFtZXMgTW9yc2UNCj4gU2VudDogMDEgSnVseSAyMDE1IDE4OjMz
-DQo+IFRvOiBHYWJyaWVsZSBQYW9sb25pOyBXYW5nemhvdSAoQik7IEJqb3JuIEhlbGdhYXM7IEpp
-bmdvbyBIYW47IFByYXR5dXNoDQo+IEFuYW5kOyBBcm5kIEJlcmdtYW5uOyBMaXZpdSBEdWRhdTsg
-a2lzaG9uQHRpLmNvbTsgeG9ic0Brb3NhZ2kuY29tOyBtLQ0KPiBrYXJpY2hlcmkyQHRpLmNvbTsg
-TWluZ2h1YW4uTGlhbkBmcmVlc2NhbGUuY29tDQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwu
-b3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+IGRldmljZXRyZWVA
-dmdlci5rZXJuZWwub3JnOyBZdWFuemhpY2hhbmc7IFpodWRhY2FpOyB6aGFuZ2p1a3VvOw0KPiBx
-aXV6aGVuZmE7IExpZ3Vvemh1IChLZW5uZXRoKQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYzIDIv
-NV0gUENJOiBkZXNpZ253YXJlOiBBZGQgQVJNNjQgc3VwcG9ydA0KPiANCj4gR2FicmllbGUgUGFv
-bG9uaSB3cm90ZToNCj4gPj4gQm90aCBzZXJpZXMgYXJlIGFwcGxpZWQgdG8gdjQuMSwgdXNlIHRo
-ZSBzYW1lIC5jb25maWcgZmlsZSwgYW5kIHRoZQ0KPiA+PiBzYW1lIGR0Yi4NCj4gPj4gSSB3aWxs
-IGludmVzdGlnYXRlIGZ1cnRoZXIuDQo+ID4+DQo+ID4+IChSZS10ZXN0aW5nIHYyIHdvcmtzLCBz
-byB0aGlzIGlzbid0IGFuIGludGVyaW0gaGFyZHdhcmUgZmFpbHVyZSkNCj4gPg0KPiA+IFRoaXMg
-aXMgYSBiaXQgd2VpcmQuLi4uDQo+ID4NCj4gPiBQYXRjaCAyLzUgaXMgdGhlIG9ubHkgb25lIHRo
-YXQgYWZmZWN0IHBsYXRmb3JtcyBkaWZmZXJlbnQgZnJvbQ0KPiBIaXNpbGljb24NCj4gPg0KPiA+
-IFRoZSBvbmx5IGRpZmZlcmVuY2UgYmV0d2VlbiBWMyBwYXRjaFsyLzVdIGFuZCB2MiBwYXRjaFsy
-LzRdIGlzDQo+IA0KPiBCZXR3ZWVuIHYzOjIvNSBhbmQgeW91ciByZXBsYWNlbWVudCBmb3IgdjI6
-Mi80LCB3aGljaCBhcnJpdmVkIGFmdGVyIEkNCj4gaGFkDQo+IHRlc3RlZCB0aGUgdjIgc2VyaWVz
-LiBBcyB0aGUgcGF0Y2ggaGFzIGJlZW4gcmVwbGFjZWQgd2l0aCBhIGRpZmZlcmVudA0KPiBvbmUg
-LQ0KPiBuZWl0aGVyICd0ZXN0ZWQtYnknIGlzIHRydWUgYW55IG1vcmUuDQoNClNvcnJ5IEkgbWlz
-cmVhZCB5b3VyIHByZXZpb3VzIGVtYWlsDQoNCj4gDQo+IEl0IGxvb2tzIGxpa2UgdGhlIEJBUiBj
-b250YWluaW5nIHRoZSBicmlkZ2Ugd2luZG93IGlzIG5vdCBiZWluZyBhc3NpZ25lZCwNCj4gc28g
-bm8gZGV2aWNlcyBvbiBidXMgMSBhcmUgZGlzY292ZXJlZC4NCg0KQ2FuIHlvdSBjb25maXJtIHRo
-ZSBkdHNpIHlvdSBhcmUgdXNpbmcuLi4iaW14NnFkbC5kdHNpIiA/DQoNClRoYW5rcw0KDQpHYWIN
-Cg0KPiANCj4gSSB3aWxsIHNlbmQgdGhlIGZ1bGwgdjIgYW5kIHYzIGRtZXNnIG91dHB1dCBzZXBh
-cmF0ZWx5Lg0KPiANCj4gDQo+IFRoYW5rcywNCj4gDQo+IEphbWVzDQo+IA0KPiAtLQ0KPiBUbyB1
-bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGlu
-dXgtcGNpIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2Vy
-bmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3Jn
-L21ham9yZG9tby1pbmZvLmh0bWwNCg==
+The PERST# line in am57x-evm is connected to a gpio line and PERST#
+should be driven high to indicate the clocks are stable (As per
+Figure 2-10: Power Up of the PCIe CEM spec 3.0).
+
+Add support in pci-dra7xx driver to make gpio drive PERST#
+line here.
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/devicetree/bindings/pci/ti-pci.txt |    3 +++
+ drivers/pci/host/pci-dra7xx.c                    |   24 ++++++++++++++++++++--
+ 2 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index 3d21791..60e2516 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -23,6 +23,9 @@ PCIe Designware Controller
+    interrupt-map-mask,
+    interrupt-map : as specified in ../designware-pcie.txt
+ 
++Optional Property:
++ - gpios : Should be added if a gpio line is required to drive PERST# line
++
+ Example:
+ axi {
+ 	compatible = "simple-bus";
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 7acc833..d3d0faf 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -17,6 +17,7 @@
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/of_gpio.h>
+ #include <linux/pci.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+@@ -336,6 +337,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	char name[10];
++	int gpio_sel;
++	enum of_gpio_flags flags;
++	unsigned long gpio_flags;
+ 
+ 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
+ 	if (!dra7xx)
+@@ -398,6 +402,22 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		goto err_get_sync;
+ 	}
+ 
++	gpio_sel = of_get_gpio_flags(dev->of_node, 0, &flags);
++	if (gpio_is_valid(gpio_sel)) {
++		gpio_flags = (flags & OF_GPIO_ACTIVE_LOW) ?
++				GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
++		ret = devm_gpio_request_one(dev, gpio_sel, gpio_flags,
++					    "pcie_reset");
++		if (ret) {
++			dev_err(&pdev->dev, "gpio%d request failed, ret %d\n",
++				gpio_sel, ret);
++			goto err_gpio;
++		}
++	} else if (gpio_sel == -EPROBE_DEFER) {
++		ret = -EPROBE_DEFER;
++		goto err_gpio;
++	}
++
+ 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+ 	reg &= ~LTSSM_EN;
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+@@ -406,11 +426,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 
+ 	ret = dra7xx_add_pcie_port(dra7xx, pdev);
+ 	if (ret < 0)
+-		goto err_add_port;
++		goto err_gpio;
+ 
+ 	return 0;
+ 
+-err_add_port:
++err_gpio:
+ 	pm_runtime_put(dev);
+ 
+ err_get_sync:
+-- 
+1.7.9.5
+
