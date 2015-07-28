@@ -1,124 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f178.google.com ([209.85.160.178]:32881 "EHLO
-	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751392AbbGXF36 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 01:29:58 -0400
-Received: by ykfw194 with SMTP id w194so11849968ykf.0
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 22:29:57 -0700 (PDT)
-From: Kevin Hao <haokexin@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: [PATCH 1/4] PCI: imx6: Mark the msi cascade handler IRQF_NO_THREAD
-Date: Fri, 24 Jul 2015 13:29:33 +0800
-Message-Id: <1437715776-2243-2-git-send-email-haokexin@gmail.com>
-In-Reply-To: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
-References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
+Received: from mail-io0-f179.google.com ([209.85.223.179]:35739 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750722AbbG1V3t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 17:29:49 -0400
+Received: by iodd187 with SMTP id d187so1411779iod.2
+        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2015 14:29:48 -0700 (PDT)
+Date: Tue, 28 Jul 2015 16:29:44 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Duc Dang <dhdang@apm.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: X-Gene: Unhandled fault: synchronous external abort in
+ pci_generic_config_read32
+Message-ID: <20150728212944.GA12958@google.com>
+References: <20150724224258.GA23990@google.com>
+ <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com>
+ <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com>
+ <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The cascade handler must run in hard interrupt context, otherwise
-it will cause the following kernel warning if we force threading
-of all the interrupt handlers via kernel command parameter
-"threadirqs":
-   [ INFO: inconsistent lock state ]
-   4.2.0-rc3-next-20150723 #28 Not tainted
-   ---------------------------------
-   inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
-   irq/21-mx6-pcie/62 [HC0[0]:SC0[2]:HE1:SE0] takes:
-    (&irq_desc_lock_class){?.-...}, at: [<80078d94>] handle_simple_irq+0x1c/0xc0
-   {IN-HARDIRQ-W} state was registered at:
-     [<8006aa70>] lock_acquire+0x74/0x94
-     [<807acc6c>] _raw_spin_lock+0x34/0x44
-     [<8007900c>] handle_fasteoi_irq+0x20/0x1b8
-     [<80075720>] generic_handle_irq+0x28/0x38
-     [<80075864>] __handle_domain_irq+0x6c/0xe0
-     [<80009558>] gic_handle_irq+0x28/0x68
-     [<80013b64>] __irq_svc+0x44/0x5c
-     [<807ad400>] _raw_spin_unlock_irq+0x30/0x34
-     [<8004cffc>] finish_task_switch+0xc0/0x218
-     [<807a7a10>] __schedule+0x248/0x6e0
-     [<807a7fac>] schedule+0x38/0x9c
-     [<807a8240>] schedule_preempt_disabled+0x10/0x14
-     [<80063f8c>] cpu_startup_entry+0xfc/0x1f8
-     [<8079f640>] rest_init+0x130/0x16c
-     [<80a55ca4>] start_kernel+0x374/0x3e8
-     [<1000807c>] 0x1000807c
-   irq event stamp: 16
-   hardirqs last  enabled at (15): [<807ad3fc>] _raw_spin_unlock_irq+0x2c/0x34
-   hardirqs last disabled at (14): [<807acd80>] _raw_spin_lock_irq+0x20/0x58
-   softirqs last  enabled at (0): [<800283d8>] copy_process.isra.58+0x3bc/0x1504
-   softirqs last disabled at (16): [<80076f08>] irq_forced_thread_fn+0x0/0x68
+On Tue, Jul 28, 2015 at 10:45:26AM -0700, Duc Dang wrote:
+> On Tue, Jul 28, 2015 at 9:43 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Fri, Jul 24, 2015 at 7:05 PM, Duc Dang <dhdang@apm.com> wrote:
+> >> Hi Bjorn,
+> >>
+> >> On Fri, Jul 24, 2015 at 3:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >>>
+> >>> I regularly see faults like this on an APM X-Gene:
+> >>>
+> >>>   U-Boot 2013.04-mustang_sw_1.14.14 (Dec 16 2014 - 15:59:33)
+> >>>   CPU0: APM ARM 64-bit Potenza Rev B0 2400MHz PCP 2400MHz
+> >>>        32 KB ICACHE, 32 KB DCACHE
+> >>>        SOC 2000MHz IOBAXI 400MHz AXI 250MHz AHB 200MHz GFC 125MHz
+> >>>   ...
+> >>>   Unhandled fault: synchronous external abort (0x96000010) at 0xffffff8000110034
+> >>>   Internal error: : 96000010 [#1] SMP
+> >>>   Modules linked in:
+> >>>   CPU: 0 PID: 3723 Comm: ... 4.1.0-smp-DEV #3
+> >>>   Hardware name: APM X-Gene Mustang board (DT)
+> >>>   task: ffffffc7dc1a4140 ti: ffffffc7dc118000 task.ti: ffffffc7dc118000
+> >>>   PC is at pci_generic_config_read32+0x4c/0xb8
+> >>>   LR is at pci_generic_config_read32+0x40/0xb8
+> >>>   pc : [<ffffffc00033b90c>] lr : [<ffffffc00033b900>] pstate: 600001c5
+> >>>   ...
+> >>>   Call trace:
+> >>>   [<ffffffc00033b90c>] pci_generic_config_read32+0x4c/0xb8
+> >>>   [<ffffffc00033bf58>] pci_user_read_config_byte+0x60/0xc4
+> >>>   [<ffffffc0003496a8>] pci_read_config+0x15c/0x238
+> >>>   [<ffffffc0002393b4>] sysfs_kf_bin_read+0x68/0xa0
+> >>>   [<ffffffc00023896c>] kernfs_fop_read+0x9c/0x1ac
+> >>>   [<ffffffc0001c361c>] __vfs_read+0x44/0x128
+> >>>   [<ffffffc0001c3e28>] vfs_read+0x84/0x144
+> >>>   [<ffffffc0001c4764>] SyS_read+0x50/0xb0
+> >>
+> >> The log shows kernel gets an exception when trying to access Mellanox
+> >> card configuration space. This is usually due to suboptimal PCIe
+> >> SerDes parameters are using in your board, which will cause bad link
+> >> quality.
+> >> The PCIe SerDes programming is done in U-Boot, so I suggest you do a
+> >> U-Boot upgrade to our latest X-Gene U-Boot release.
+> >
+> > I installed U-Boot 1.15.12, which I thought was the latest.  I'm still
+> > seeing this issue regularly, approx once/hour.
+> 
+> Our latest U-Boot is 1.15.15, but U-Boot 1.15.12 is already a good
+> version to use. Are you running any PCIe traffic test when the error
+> happens? 
 
-   other info that might help us debug this:
-    Possible unsafe locking scenario:
+Nope, the machine was either idle or running a reboot test; no PCIe stress
+test or anything.
 
-          CPU0
-          ----
-     lock(&irq_desc_lock_class);
-     <Interrupt>
-       lock(&irq_desc_lock_class);
+> And it will be useful if you can share your "lspci -vvv" output when
+> the board is running, we can check to see if there is any error status
+> reported.
 
-    *** DEADLOCK ***
+Here's some lspci output and info about the firmware I'm running.
+Obviously this lspci output was collected before a crash.  I have also
+seen lspci output where "CESta: RxErr+" was set on the 00:00.0 Root Port.
 
-   no locks held by irq/21-mx6-pcie/62.
+U-Boot 2013.04-mustang_sw_1.15.12 (May 20 2015 - 10:03:33)
 
-   stack backtrace:
-   CPU: 0 PID: 62 Comm: irq/21-mx6-pcie Not tainted 4.2.0-rc3-next-20150723 #28
-   Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
-   Backtrace:
-   [<80012dc4>] (dump_backtrace) from [<80012f64>] (show_stack+0x18/0x1c)
-    r6:be3eeb78 r5:00000000 r4:00000000 r3:00000000
-   [<80012f4c>] (show_stack) from [<807a4b50>] (dump_stack+0x80/0x9c)
-   [<807a4ad0>] (dump_stack) from [<807a2efc>] (print_usage_bug+0x270/0x2e4)
-    r5:be3ee780 r4:80c579ec
-   [<807a2c8c>] (print_usage_bug) from [<8006874c>] (mark_lock+0x5b4/0x6e0)
-    r10:80c579ec r9:800678e0 r8:be3ee780 r7:00000000 r6:80c579ec r5:be3eeb78
-    r4:00000002
-   [<80068198>] (mark_lock) from [<80068f70>] (__lock_acquire+0x6f8/0x1e20)
-    r10:00000001 r9:be3eeb78 r8:be3ee780 r7:00000008 r6:000003f8 r5:be3ee780
-    r4:00000000
-   [<80068878>] (__lock_acquire) from [<8006aa70>] (lock_acquire+0x74/0x94)
-    r10:00000001 r9:00000001 r8:00000000 r7:00000001 r6:00000001 r5:60030013
-    r4:00000000
-   [<8006a9fc>] (lock_acquire) from [<807acc6c>] (_raw_spin_lock+0x34/0x44)
-    r6:0000012c r5:00000001 r4:be1f4d64
-   [<807acc38>] (_raw_spin_lock) from [<80078d94>] (handle_simple_irq+0x1c/0xc0)
-    r5:be1f4d64 r4:be1f4d00
-   [<80078d78>] (handle_simple_irq) from [<80075720>] (generic_handle_irq+0x28/0x38)
-    r5:be28ee20 r4:0000012c
-   [<800756f8>] (generic_handle_irq) from [<80321914>] (dw_handle_msi_irq+0x68/0x90)
-    r4:00000001 r3:00000002
-   [<803218ac>] (dw_handle_msi_irq) from [<8032265c>] (imx6_pcie_msi_handler+0x14/0x18)
-    r7:80076f08 r6:be39efc0 r5:be154000 r4:be39efc0
-   [<80322648>] (imx6_pcie_msi_handler) from [<80076f38>] (irq_forced_thread_fn+0x30/0x68)
-   [<80076f08>] (irq_forced_thread_fn) from [<80076cb4>] (irq_thread+0x14c/0x19c)
-    r6:be39efc0 r5:be154000 r4:be39efe0 r3:00000004
-   [<80076b68>] (irq_thread) from [<80047f80>] (kthread+0xdc/0xf8)
-    r10:00000000 r9:00000000 r8:00000000 r7:80076b68 r6:be39efc0 r5:be3a1000
-    r4:00000000
-   [<80047ea4>] (kthread) from [<8000fa38>] (ret_from_fork+0x14/0x3c)
-    r7:00000000 r6:00000000 r5:80047ea4 r4:be3a1000
+CPU0: APM ARM 64-bit Potenza Rev B0 2400MHz PCP 2400MHz
+     32 KB ICACHE, 32 KB DCACHE
+     SOC 2000MHz IOBAXI 400MHz AXI 250MHz AHB 200MHz GFC 125MHz
+Boot from SPI-NOR
+Slimpro FW:
+        Ver: 2.4 (build 01.15.12.00 2015/05/20)
+        PMD: 970 mV
+        SOC: 950 mV
+Board: Mustang - AppliedMicro APM883208-xNA24SPT Reference Board
+I2C:   ready
+DRAM:  ECC 32 GiB @ 1600MHz
+SF: Detected N25Q256 with page size 256 Bytes, total 32 MiB
+MMC:   X-Gene SD/SDIO/eMMC: 0
+PCIE0: (RC) X8 GEN-3 link up
+  00:00.0     - 10e8:e004 - Bridge device
+   01:00.0    - 15b3:1007 - Network controller
 
-Signed-off-by: Kevin Hao <haokexin@gmail.com>
----
- drivers/pci/host/pci-imx6.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+# lspci -vvv
+00:00.0 PCI bridge: Applied Micro Circuits Corp. Device e004 (rev 04) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+	I/O behind bridge: 0000f000-00000fff
+	Memory behind bridge: 80000000-82ffffff
+	Prefetchable memory behind bridge: 0000000083000000-00000000830fffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+		DevCap:	MaxPayload 512 bytes, PhantFunc 0, Latency L0s <1us, L1 unlimited
+			ExtTag- RBE+ FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported-
+			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+			MaxPayload 256 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr+ UncorrErr- FatalErr+ UnsuppReq- AuxPwr- TransPend+
+		LnkCap:	Port #0, Speed unknown, Width x8, ASPM L0s L1, Latency L0 unlimited, L1 unlimited
+			ClockPM- Surprise+ LLActRep+ BwNot+
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed unknown, Width x8, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+			Slot #1, PowerLimit 10.000W; Interlock- NoCompl-
+		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+			Control: AttnInd Off, PwrInd Off, Power- Interlock-
+		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+			Changed: MRL- PresDet- LinkState+
+		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+		RootCap: CRSVisible-
+		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+		DevCap2: Completion Timeout: Not Supported, TimeoutDis+ ARIFwd-
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- ARIFwd-
+		LnkCtl2: Target Link Speed: Unknown, EnterCompliance- SpeedDis-, Selectable De-emphasis: -3.5dB
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB
+	Capabilities: [80] Power Management version 3
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr+ BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Capabilities: [180 v1] #19
+	Capabilities: [150 v1] Vendor Specific Information: ID=0001 Rev=1 Len=010 <?>
+	Kernel driver in use: pcieport
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 233a196c6e66..fd5eb2e34fc0 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -544,7 +544,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
- 
- 		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
- 				       imx6_pcie_msi_handler,
--				       IRQF_SHARED, "mx6-pcie-msi", pp);
-+				       IRQF_SHARED | IRQF_NO_THREAD,
-+				       "mx6-pcie-msi", pp);
- 		if (ret) {
- 			dev_err(&pdev->dev, "failed to request MSI irq\n");
- 			return -ENODEV;
--- 
-2.1.0
-
+01:00.0 Ethernet controller: Mellanox Technologies MT27520 Family
+	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Interrupt: pin A routed to IRQ 226
+	Region 0: [virtual] Memory at e182000000 (32-bit, non-prefetchable) [size=1M]
+	Region 2: [virtual] Memory at e180000000 (32-bit, non-prefetchable) [size=32M]
+	[virtual] Expansion ROM at e183000000 [disabled] [size=1M]
+	Capabilities: [40] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [9c] MSI-X: Enable- Count=64 Masked-
+		Vector table: BAR=0 offset=0007c000
+		PBA: BAR=0 offset=0007d000
+	Capabilities: [60] Express (v2) Endpoint, MSI 00
+		DevCap:	MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 unlimited
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+		LnkCap:	Port #8, Speed unknown, Width x8, ASPM L0s, Latency L0 unlimited, L1 unlimited
+			ClockPM- Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed unknown, Width x8, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+		DevCap2: Completion Timeout: Range ABCD, TimeoutDis+
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+		LnkCtl2: Target Link Speed: Unknown, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB
+	Capabilities: [100 v1] Alternative Routing-ID Interpretation (ARI)
+		ARICap:	MFVC- ACS-, Next Function: 0
+		ARICtl:	MFVC- ACS-, Function Group: 0
+	Capabilities: [148 v1] Device Serial Number xx-xx-xx-xx-xx-xx-xx-xx
+	Capabilities: [154 v2] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Capabilities: [18c v1] #19
+	Kernel modules: mlx4_core
