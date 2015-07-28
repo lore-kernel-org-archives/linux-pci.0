@@ -1,139 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:37253 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758703AbbGHMzJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 08:55:09 -0400
-Date: Wed, 8 Jul 2015 14:55:00 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	x86@kernel.org
-Subject: Re: [PATCH v2 1/3] x86/pci/intel_mid_pci: work around for IRQ0
- assignment
-In-Reply-To: <1436354059-130135-2-git-send-email-andriy.shevchenko@linux.intel.com>
-Message-ID: <alpine.DEB.2.11.1507081453310.5134@nanos>
-References: <1436354059-130135-1-git-send-email-andriy.shevchenko@linux.intel.com> <1436354059-130135-2-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from mout1.freenet.de ([195.4.92.91]:56401 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752203AbbG1SYq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 14:24:46 -0400
+Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
+ QUEUED errors since Linux 4.0
+To: Mike Snitzer <snitzer@redhat.com>,
+	Andreas Hartmann <andihartmann@01019freenet.de>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com>
+Cc: dm-devel@redhat.com, mpatocka@redhat.com,
+	linux-pci <linux-pci@vger.kernel.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55B7C800.2070702@maya.org>
+Date: Tue, 28 Jul 2015 20:20:48 +0200
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <20150728175054.GB24782@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 8 Jul 2015, Andy Shevchenko wrote:
-> A few devices on Intel Edison board (Intel Tangier) has IRQ0 as an IRQ line in
-> the PCI configuration. The actual one which is using that is a first eMMC host
-> controller.
+On 07/28/2015 at 07:50 PM, Mike Snitzer wrote:
+[..]
+> Are your SATA devcies using NCQ?
 
-You fail to explain that the other devices have a bogus PCI configuration.
+Yes. It's enabled:
 
-> In case we compile sdhci-pci as a module and leave serial driver built-in,
-> first serial device not in use and has IRQ0 assigned as well, the latter takes
-> the interrupt allocation.
+dmesg| grep -i ncq
+ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
+ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
+ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
+ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
 
-We are really not interested in the details of whats compiled in or
-not and which other device is acquiring the interrupt. What matters
-is: It's an init ordering problem.
- 
-> The result of such behaviour is impossibility to
-> allocate the interrupt by sdhci-pci driver.
+As the errors already come up on boot (during mount of partitions or
+even before the password for the disk has been provided): How can I
+disable NCQ during boot of the kernel? Is there a kernel option?
+
+I'm trying to apply your mentioned patches to 3.19 and report back.
+
 > 
-> This patch introduces a quirk inside intel_mid_pci_irq_enable() to avoid
-> described behaviour.
+> Please see this dm-devl thread (and this post in particular):
+> https://www.redhat.com/archives/dm-devel/2015-June/msg00005.html
+> 
 
-That's pretty useless. You tell the reader that you add a quirk, which
-is hardly interesting because the subject line already talks about a
-workaround. You fail to tell WHAT the quirk is doing.
-
-Aside of that, starting a sentence in a changelog with "This patch" is
-silly. We already know that THIS is a patch.
-
-Let me rephrase the whole thing:
-
-"On Intel Tangier the MMC host controller is wired up to irq 0. But
- several other devices have irq 0 associated as well due to a bogus
- PCI configuration.
-
- The first initialized driver will acquire irq 0 and make it
- unavailable for other devices. If the sdhci driver is not the first
- one it will fail to acquire the interrupt and therefor be non
- functional.
-
- Add a quirk to the pci irq enable function which denies irq 0 to
- anything else than the MMC host controller driver on Tangier
- platforms."
-
-Can you see the difference?
- 
-> +#define PCI_DEVICE_ID_INTEL_MRFL_MMC	0x1190
-> +
-
-Please add defines at the top of the file, not just randomly in the
-middle of the code.
-
->  static int intel_mid_pci_irq_enable(struct pci_dev *dev)
->  {
->  	struct irq_alloc_info info;
->  	int polarity;
->  	int ret;
->  
-> -	if (dev->irq_managed && dev->irq > 0)
-> +	if (dev->irq_managed && dev->irq >= 0)
->  		return 0;
-
-What's the point here? Can dev->irq_managed be set and dev->irq be < 0?
-
-> +	/* Special treatment for IRQ0 */
-> +	if (dev->irq == 0) {
-> +		switch (intel_mid_identify_cpu()) {
-> +		case INTEL_MID_CPU_CHIP_TANGIER:
-> +			/*
-> +			 * TNG has IRQ0 assigned to eMMC controller. This makes
-> +			 * it happy to get an interrupt.
-
-It's nice that you want to make the eMMC controller happy, but I doubt
-that the silicon actually cares.
-
-Please add a proper comment explaining the issue at hand.
-
-> +			 */
-> +			if (dev->device != PCI_DEVICE_ID_INTEL_MRFL_MMC)
-> +				return -EBUSY;
-> +			break;
-> +		default:
-> +			break;
-> +		}
-> +	}
-> +
->  	/* Set IRQ polarity */
->  	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
->  		polarity = 0; /* active high */
-
-So now we have:
-
-       if (dev->irq == 0) {
-       	     switch(intel_mid_identify_cpu()) {
-	     case INTEL_MID_CPU_CHIP_TANGIER:
-  	     ....
-       }
-
-and right after that:
-
-       if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
-       	  ....
-
-That's just silly. Whats wrong with:
-
-       switch (intel_mid_identify_cpu()) {
-       case INTEL_MID_CPU_CHIP_TANGIER:
-       	    polarity = 0;
-	    if (dev->irq == 0) {
-	       ....
-	    }
-	    break;
-       default:
-            polarity = 1;
-       }
-
-Hmm?
-
-	tglx
+Thanks,
+Andreas
