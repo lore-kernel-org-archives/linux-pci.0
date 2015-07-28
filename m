@@ -1,48 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:48834 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751146AbbGNWZI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 14 Jul 2015 18:25:08 -0400
-Message-ID: <55A58C41.9000804@intel.com>
-Date: Wed, 15 Jul 2015 00:25:05 +0200
-From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:33295 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbbG1K4H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 06:56:07 -0400
+Received: by lbbyj8 with SMTP id yj8so71957610lbb.0
+        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2015 03:56:06 -0700 (PDT)
+Date: Tue, 28 Jul 2015 12:55:56 +0200
+From: Olof Johansson <olof@lixom.net>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, arm@kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 0/4] Add Broadcom North Star 2 support
+Message-ID: <20150728105556.GA16025@localhost>
+References: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-CC: Myron Stowe <myron.stowe@redhat.com>,
-	Jiang Liu <jiang.liu@huawei.com>
-Subject: Re: [PATCH 1/2] PCI: Fix pcie_port_device_resume() comment
-References: <20150714193757.13471.77973.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150714194503.13471.65928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150714194503.13471.65928.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/14/2015 9:45 PM, Bjorn Helgaas wrote:
-> The function comment claimed this was pcie_port_device_suspend(), but it's
-> really pcie_port_device_resume().  Perils of cut and paste.
->
-> Use the correct function name in the comment.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Mon, Jul 27, 2015 at 03:42:17PM -0700, Ray Jui wrote:
+> This patch series adds Broadcom North Star 2 (NS2) SoC support. NS2 is an ARMv8
+> based SoC and under the Broadcom iProc family.
+> 
+> Sorry for tying this with the Broadcom iProc PCIe driver fixes for ARM64. I
+> have to tie them together because iProc PCIe support is enabled by default
+> when ARCH_BCM_IPROC is enabled. Without the fixes in the iProc PCIe driver,
+> enabling CONFIG_ARCH_BCM_IPROC would break the build for arm64 defconfig. Let
+> me know if there's a better way to handle this.
 
-ACK
+One common way to handle it is that instead of sitting on the patch to fix PCI
+for months, you post that early such that when the rest is posted, it's been in
+the kernel for a long time.
 
-> ---
->   drivers/pci/pcie/portdrv_core.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 2f0ce66..88122dc 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -448,7 +448,7 @@ static int resume_iter(struct device *dev, void *data)
->   }
->   
->   /**
-> - * pcie_port_device_suspend - resume port services associated with a PCIe port
-> + * pcie_port_device_resume - resume port services associated with a PCIe port
->    * @dev: PCI Express port to handle
->    */
->   int pcie_port_device_resume(struct device *dev)
->
+In practice, that's sometimes hard to do, but it's the ideal situation.
+
+Anyway, I've queued up these patches for 4.3. Thanks!
+
+
+-Olof
 
