@@ -1,72 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 43/49] PCI: Get new realloc size for bridge for last try
-Date: Tue, 14 Jul 2015 15:47:14 -0700
-Message-Id: <1436914040-13206-44-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:36221 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753185AbbG1R6v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 13:58:51 -0400
+Received: by ykay190 with SMTP id y190so102142944yka.3
+        for <linux-pci@vger.kernel.org>; Tue, 28 Jul 2015 10:58:51 -0700 (PDT)
+Date: Tue, 28 Jul 2015 13:58:48 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Zhang Rui <rui.zhang@intel.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, chuansheng.liu@intel.com,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Aaron Lu <aaron.lu@intel.com>, MyMailClone@t-online.de,
+	mister.freeman@laposte.net, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+Message-ID: <20150728175848.GI5322@mtj.duckdns.org>
+References: <1438047747.1856.12.camel@rzhang1-mobl4>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438047747.1856.12.camel@rzhang1-mobl4>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current realloc path would not shrink bridge resource through
-pbus_size_mem() checking with the old size.
+On Tue, Jul 28, 2015 at 09:42:27AM +0800, Zhang Rui wrote:
+> From 57edba9c677e47354846db951014dc4d5b13ce54 Mon Sep 17 00:00:00 2001
+> From: Zhang Rui <rui.zhang@intel.com>
+> Date: Sun, 26 Jul 2015 14:15:36 +0800
+> Subject: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+> 
+> In https://bugzilla.kernel.org/show_bug.cgi?id=81551,
+> we found that Jmicron chip 361/363 is broken after resume if async noirq
+> (76569faa62 (PM / sleep: Asynchronous threads for resume_noirq)) is supported,
+> thus commit e6b7e41cdd (ata: Disabling the async PM for JMicron chip 363/361)
+> is introduced to fix this problem.
+> But then, we found that Jmicron chip 368 also has this problem, and it is decided
+> to disable the pm async feature for all the Jmicron chips.
+> 
+> But how to fix this was discussed in the mailing list for some time.
+> After some investigation, we believe that a proper fix is to disable
+> the async PM in PCI instead of ata driver, because, on this platform,
+> pci_resume_noirq() of IDE controller must happen after pci_resume_noirq()
+> of AHCI controller. But as .resume_noirq() of the pata_jmicron driver is
+> no-op, this suggests that it is the PCI common actions, aka,
+> pci_pm_default_resume_early(), have the dependency.
+> To fix this, using device_pm_wait_for_dev() in pata_jmicron driver can not
+> solve the dependency because pci_pm_default_resume_early() is invoked before
+> driver callback being invoked, plus, as it is the PCI common actions that
+> have the dependency, it is reasonable to fix it in PCI bus code,
+> rather than driver code.
+> 
+> This patch is made based on the patch from Liu Chuansheng at
+> https://lkml.org/lkml/2014/12/5/74
+> it reverts commit e6b7e41cdd ("ata: Disabling the async PM for JMicron
+> chip 363/361"), and introduces a PCI quirk to disable async PM for Jmicron
+> chips.
+> 
+> Reference: https://bugzilla.kernel.org/show_bug.cgi?id=81551
+> Tested-by: Jay <MyMailClone@t-online.de>
+> Tested-by: Barto <mister.freeman@laposte.net>
+> Signed-off-by: Zhang Rui <rui.zhang@intel.com>
 
-That cause problem: when "must+optional" resource allocation fails,
-the cached bridge resource size will prevent "must" resource to get
-allocated smaller resource.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Clear the old resource size for last try or third and later try.
+>  /*
+> + * For JMicron chips, we need to disable the async_suspend method, otherwise
+> + * they will hit the power-on issue when doing device resume, add one quick
+> + * solution to disable the async_suspend method.
+> + */
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+Maybe add a link to the bug report and/or discussion thread?
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index da0a259..7ffb113 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2327,8 +2327,15 @@ again:
- 		struct resource *res = fail_res->res;
- 
- 		restore_resource(fail_res, res);
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last or third times and later */
-+			if (tried_times + 1 == pci_try_num ||
-+			    tried_times + 1 > 2) {
-+				res->start = 0;
-+				res->end = res->start - 1;
-+			}
-+		}
- 	}
- 	free_list(&fail_head);
- 
-@@ -2400,8 +2407,12 @@ again:
- 		struct resource *res = fail_res->res;
- 
- 		restore_resource(fail_res, res);
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last time */
-+			res->start = 0;
-+			res->end = res->start - 1;
-+		}
- 	}
- 	free_list(&fail_head);
- 
+Thanks.
+
 -- 
-1.8.4.5
-
+tejun
