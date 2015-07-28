@@ -1,56 +1,51 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: [PATCH 29/36] of/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-Date: Mon,  6 Jul 2015 16:39:19 -0700
-Message-Id: <1436225966-27247-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH 2/6] arm: mach-socfpga: enable pci support
+Date: Tue, 28 Jul 2015 18:45:41 +0800
+Message-ID: <1438080345-7233-3-git-send-email-lftan@altera.com>
+In-Reply-To: <1438080345-7233-1-git-send-email-lftan@altera.com>
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-parsing.
+Enable CONFIG_ARCH_SUPPORT_MSI and CONFIG_PCI in SOCFPGA platform.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: devicetree@vger.kernel.org
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- drivers/of/address.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ arch/arm/mach-socfpga/Kconfig | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 8bfda6a..073125f 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -128,9 +128,11 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
- 		flags |= IORESOURCE_IO;
- 		break;
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-socfpga/Kconfig
+index 90efdeb..7ff4576 100644
+--- a/arch/arm/mach-socfpga/Kconfig
++++ b/arch/arm/mach-socfpga/Kconfig
+@@ -1,6 +1,7 @@
+ menuconfig ARCH_SOCFPGA
+ 	bool "Altera SOCFPGA family" if ARCH_MULTI_V7
+ 	select ARCH_SUPPORTS_BIG_ENDIAN
++	select ARCH_SUPPORTS_MSI
+ 	select ARM_AMBA
+ 	select ARM_GIC
+ 	select CACHE_L2X0
+@@ -9,6 +10,7 @@ menuconfig ARCH_SOCFPGA
+ 	select HAVE_ARM_SCU
+ 	select HAVE_ARM_TWD if SMP
+ 	select MFD_SYSCON
++	select PCI
+ 
+ if ARCH_SOCFPGA
+ config SOCFPGA_SUSPEND
 -- 
-1.8.4.5
+1.8.2.1
 
