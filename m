@@ -1,47 +1,97 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Spencer Baugh <sbaugh@catern.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Joern Engel <joern@logfs.org>,
-	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list)
-Cc: Joern Engel <joern@purestorage.com>,
-	Spencer Baugh <Spencer.baugh@purestorage.com>,
-	Spencer Baugh <sbaugh@catern.com>
-Subject: [PATCH] aer: add cond_resched to aer_isr
-Date: Thu, 23 Jul 2015 14:54:32 -0700
-Message-Id: <1437688476-3399-2-git-send-email-sbaugh@catern.com>
+From: Gerald Schaefer <gerald.schaefer@de.ibm.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Gerald Schaefer <gerald.schaefer@de.ibm.com>
+Subject: [RFC PATCH 0/1] iommu: Detach device from domain when removed from group
+Date: Tue, 28 Jul 2015 19:55:55 +0200
+Message-Id: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joern Engel <joern@logfs.org>
+Hi,
 
-Multiple nested loops.  I have observed 590ms scheduler latency caused
-by this loop and interrupts.  Interrupts were responsible for 190ms, the
-rest could have been avoided with a cond_resched.
+during IOMMU API function testing on s390 I hit the following scenario:
 
-Signed-off-by: Joern Engel <joern@logfs.org>
-Signed-off-by: Spencer Baugh <sbaugh@catern.com>
----
- drivers/pci/pcie/aer/aerdrv_core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+After binding a device to vfio-pci, the user completes the VFIO_SET_IOMMU
+ioctl and stops, see the sample C program below. Now the device is manually
+removed via "echo 1 > /sys/bus/pci/devices/.../remove".
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index 9803e3d..32b1b5c 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -780,8 +780,10 @@ void aer_isr(struct work_struct *work)
- 	struct aer_err_source uninitialized_var(e_src);
- 
- 	mutex_lock(&rpc->rpc_mutex);
--	while (get_e_source(rpc, &e_src))
-+	while (get_e_source(rpc, &e_src)) {
- 		aer_isr_one_error(p_device, &e_src);
-+		cond_resched();
-+	}
- 	mutex_unlock(&rpc->rpc_mutex);
- 
- 	wake_up(&rpc->wait_release);
+Although the SET_IOMMU ioctl triggered the attach_dev callback in the
+underlying IOMMU API, removing the device in this way won't trigger the
+detach_dev callback, neither during remove nor when the user program
+continues with closing group/container.
+
+On s390, this eventually leads to a kernel panic when binding the device
+again to its non-vfio PCI driver, because of the missing arch-specific
+cleanup in detach_dev. On x86, the detach_dev callback will also not be
+called directly, but there is a notifier that will catch
+BUS_NOTIFY_REMOVED_DEVICE and eventually do the cleanup. Other
+architectures w/o the notifier probably have at least some kind of memory
+leak in this scenario, so a general fix would be nice.
+
+My first approach was to try and fix this in VFIO code, but Alex Williamson
+pointed me to some asymmetry in the IOMMU code: iommu_group_add_device()
+will invoke the attach_dev callback, but iommu_group_remove_device() won't
+trigger detach_dev. Fixing this asymmetry would fix the issue for me, but
+is this the correct fix? Any thoughts?
+
+Regards,
+Gerald
+
+
+Here is the sample C program to trigger the ioctl:
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <linux/vfio.h>
+
+int main(void)
+{
+        int container, group, rc;
+
+        container = open("/dev/vfio/vfio", O_RDWR);
+        if (container < 0) {
+                perror("open /dev/vfio/vfio\n");
+                return -1;
+        }
+
+        group = open("/dev/vfio/0", O_RDWR);
+        if (group < 0) {
+                perror("open /dev/vfio/0\n");
+                return -1;
+        }
+
+        rc = ioctl(group, VFIO_GROUP_SET_CONTAINER, &container);
+        if (rc) {
+                perror("ioctl VFIO_GROUP_SET_CONTAINER\n");
+                return -1;
+        }
+
+        rc = ioctl(container, VFIO_SET_IOMMU, VFIO_TYPE1_IOMMU);
+        if (rc) {
+                perror("ioctl VFIO_SET_IOMMU\n");
+                return -1;
+        }
+
+        printf("Try device remove...\n");
+        getchar();
+
+        close(group);
+        close(container);
+        return 0;
+}
+
+Gerald Schaefer (1):
+  iommu: Detach device from domain when removed from group
+
+ drivers/iommu/iommu.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
 -- 
-2.5.0.rc3
+2.3.8
 
