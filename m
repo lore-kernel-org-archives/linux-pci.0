@@ -1,47 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:35543 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751368AbbG2MCA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 08:02:00 -0400
-MIME-Version: 1.0
-Date: Wed, 29 Jul 2015 17:31:59 +0530
-Message-ID: <CAHhAz+gJ3FKgLQLEjro8P+Dn+FPHykLur4fmEkAwFdrLPNoQng@mail.gmail.com>
-Subject: Virtex-5 FPGA PCIE single-function device
-From: Muni Sekhar <munisekharrms@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-mmc@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gerald Schaefer <gerald.schaefer@de.ibm.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	Gerald Schaefer <gerald.schaefer@de.ibm.com>
+Subject: [RFC PATCH 1/1] iommu: Detach device from domain when removed from group
+Date: Tue, 28 Jul 2015 19:55:56 +0200
+Message-Id: <1438106156-51847-2-git-send-email-gerald.schaefer@de.ibm.com>
+In-Reply-To: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
+References: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[ Please keep me in CC as I'm not subscribed to the list]
+This patch adds a call to __iommu_detach_device() to the
+iommu_group_remove_device() function, which will trigger a missing
+detach_dev callback in (at least) the following scenario:
 
-Hello,
+When a user completes the VFIO_SET_IOMMU ioctl for a vfio-pci device,
+and the corresponding device is removed thereafter (before any other
+ioctl like VFIO_GROUP_GET_DEVICE_FD), then the detach_dev callback of
+the underlying IOMMU API is never called.
 
-We are using the “Virtex-5 FPGA Integrated Endpoint Block for PCI
-Express” in Linux platform. It supports only a single-function(Header
-Type, Bit 7 is zero), but actually it is having different functions in
-different Bar’s.
+This also fixes an asymmetry with iommu_group_add_device() and
+iommu_group_remove_device(), where the former did an "attach_dev" but
+the latter did no "detach_dev".
 
-It has UART hardware module implemented in the first Base Address
-Register and MMC host controller in other Base Address Register.
+Signed-off-by: Gerald Schaefer <gerald.schaefer@de.ibm.com>
+---
+ drivers/iommu/iommu.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-We are planning to develop our own pcie based uart driver for UART
-hardware and planning to use the MMC kernel stack for MMC host
-controller.
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index f286090..82ac8b3 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -447,6 +447,9 @@ rename:
+ }
+ EXPORT_SYMBOL_GPL(iommu_group_add_device);
+ 
++static void __iommu_detach_device(struct iommu_domain *domain,
++				  struct device *dev);
++
+ /**
+  * iommu_group_remove_device - remove a device from it's current group
+  * @dev: device to be removed
+@@ -466,6 +469,8 @@ void iommu_group_remove_device(struct device *dev)
+ 				     IOMMU_GROUP_NOTIFY_DEL_DEVICE, dev);
+ 
+ 	mutex_lock(&group->mutex);
++	if (group->domain)
++		__iommu_detach_device(group->domain, dev);
+ 	list_for_each_entry(tmp_device, &group->devices, list) {
+ 		if (tmp_device->dev == dev) {
+ 			device = tmp_device;
+-- 
+2.3.8
 
-By default MMC kernel stack gets attached to this device. In the pcie
-based uart driver, tried configuring the uart module after getting the
-pci_dev structure with pci_get_device(not used the
-pci_register_driver). After that I could able to communicate with the
-UART registers even though MMC stack is attached to the device.
-
-Now I am puzzled and stuck with how to proceed further on UART
-Interrupt Service Routine for this kind of device. Can I use
-request_irq() for uart isr, do you have any suggestion on this?
-
-Any hint or help would be greatly appreciated.
-
-
-Regards,
-Sekhar
