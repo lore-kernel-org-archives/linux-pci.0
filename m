@@ -1,72 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36450 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932315AbbG0Xbf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:31:35 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from mail-by2on0064.outbound.protection.outlook.com ([207.46.100.64]:52608
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755305AbbG1LCS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 07:02:18 -0400
+From: Ley Foon Tan <lftan@altera.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 31/51] PCI: Kill macro checking for bus io port sizing
-Date: Mon, 27 Jul 2015 16:29:49 -0700
-Message-Id: <1438039809-24957-32-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH 5/6] Documentation: dt-bindings: pci: altera pcie device tree binding
+Date: Tue, 28 Jul 2015 18:45:44 +0800
+Message-ID: <1438080345-7233-6-git-send-email-lftan@altera.com>
+In-Reply-To: <1438080345-7233-1-git-send-email-lftan@altera.com>
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use new generic version skip_isa_ioresource_align() instead.
+This patch adds the bindings for Altera PCIe host controller driver and
+Altera PCIe MSI driver.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- drivers/pci/setup-bus.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ .../devicetree/bindings/pci/altera-pcie-msi.txt    | 27 ++++++++++++
+ .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
+ 2 files changed, 76 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d4610a8..f8f89cd 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1172,15 +1172,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
- 	return 0;
- }
- 
--static resource_size_t size_aligned_for_isa(resource_size_t size)
-+static resource_size_t size_aligned_for_isa(resource_size_t size,
-+					    struct pci_bus *bus)
- {
--	/*
--	 * To be fixed in 2.5: we should have sort of HAVE_ISA
--	 *  flag in the struct pci_bus.
--	 */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
-+	if (!skip_isa_ioresource_align(bus))
-+		size = (size & 0xff) + ((size & ~0xffUL) << 2);
+diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+new file mode 100644
+index 0000000..7f330c9
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+@@ -0,0 +1,27 @@
++* Altera PCIe MSI controller
 +
- 	return size;
- }
- 
-@@ -1249,12 +1246,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		}
- 	}
- 
--	size = size_aligned_for_isa(size);
-+	size = size_aligned_for_isa(size, bus);
- 	size += size1;
- 	if (size || min_size)
- 		size0 = calculate_size(size, min_size,
- 					resource_size(b_res), min_align);
--	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
++Required properties:
++- compatible:	should contain "altr,msi-1.0"
++- reg:		specifies the physical base address of the controller and
++		the length of the memory mapped region.
++- reg-names:	Must include the following entries:
++		"csr": CSR registers
++		"vector_slave": vectors region
++-interrupts:	specifies the interrupt source of the parent interrupt
++		controller. The format of the interrupt specifier depends on the
++		parent interrupt controller.
++- num-vectors:	Number of vectors, range 1 to 32.
++- msi-controller:	indicates that this is MSI controller node
++
++
++Example
++msi0: msi@0xFF200000 {
++	compatible = "altr,msi-1.0";
++	reg = <0xFF200000 0x00000010
++		0xFF200010 0x00000080>;
++	reg-names = "csr", "vector_slave";
++	interrupt-parent = <&hps_0_arm_gic_0>;
++	interrupts = <0 42 4>;
++	msi-controller = <1>;
++	num-vectors = <32>;
++};
+diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+new file mode 100644
+index 0000000..54c45f5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+@@ -0,0 +1,49 @@
++* Altera PCIe controller
++
++Required properties:
++- compatible :	should contain "altr,pcie-root-port-1.0"
++- reg:		A list of physical base address and length for TXS and CRA.
++- reg-names:	Must include the following entries:
++		"Txs": TXS region
++		"Cra": Control register access region
++-interrupts:	specifies the interrupt source of the parent interrupt controller.
++		The format of the interrupt specifier depends on the parent interrupt
++		controller.
++- device_type:	must be "pci"
++- #address-cells:	set to <3>
++- #size-cells:	set to <2>
++- #interrupt-cells:	set to <1>
++- ranges:		Describes the translation of addresses for root ports and standard
++		PCI regions.
++- interrupt-map-mask and interrupt-map: standard PCI properties
++	to define the mapping of the PCIe interface to interrupt
++	numbers.
++
++Optional properties:
++- msi-parent:	Link to the hardware entity that serves as the MSI controller for this PCIe
++		controller.
++- bus-range:	PCI bus numbers covered
++
++Example
++	pcie_0: pcie@0xc00000000 {
++		compatible = "altr,pcie-root-port-1.0";
++		reg = <0xc0000000 0x20000000>,
++			<0xff220000 0x00004000>;
++		reg-names = "Txs", "Cra";
++		interrupt-parent = <&hps_0_arm_gic_0>;
++		interrupts = <0 40 4>;
++		interrupt-controller;
++		#interrupt-cells = <1>;
++		bus-range = <0x0 0xFF>;
++		device_type = "pci";
++		msi-parent = <&msi_to_gic_gen_0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_0 1>,
++			            <0 0 0 2 &pcie_0 2>,
++			            <0 0 0 3 &pcie_0 3>,
++			            <0 0 0 4 &pcie_0 4>;
++		ranges = <0x82000000 0x00000000 0xc0000000 0xc0000000 0x00000000 0x10000000
++			    0x82000000 0x00000000 0xd0000000 0xd0000000 0x00000000 0x10000000>;
++	};
 -- 
-1.8.4.5
+1.8.2.1
 
