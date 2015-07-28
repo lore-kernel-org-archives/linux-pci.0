@@ -1,73 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:36396 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933142AbbGVOs1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 10:48:27 -0400
-Received: by wicgb10 with SMTP id gb10so101831719wic.1
-        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2015 07:48:26 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:45717 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754745AbbG1HOW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 03:14:22 -0400
+Date: Tue, 28 Jul 2015 09:14:18 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org,
+	Gregor Dick <gdick@solarflare.com>
+Subject: Re: [PATCH v2 01/11] iommu/vt-d: Cache PCI ATS state and Invalidate
+ Queue Depth
+Message-ID: <20150728071417.GK27614@suse.de>
+References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150721001357.28145.83631.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150727130810.GG27614@suse.de>
+ <20150727225453.GB24401@google.com>
 MIME-Version: 1.0
-In-Reply-To: <55AFABF3.5050303@arm.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
- <1436962613-17359-5-git-send-email-marc.zyngier@arm.com> <20150721212644.GB3691@google.com>
- <55AFABF3.5050303@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 22 Jul 2015 09:48:06 -0500
-Message-ID: <CAErSpo5GRHp0-51tj8XiXKLujkLmtdmhg+gJOy0szJpP3002cQ@mail.gmail.com>
-Subject: Re: [PATCH v4 04/19] PCI/MSI: Add hooks to populate the msi_domain field
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150727225453.GB24401@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 22, 2015 at 9:42 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> Hi Bjorn,
->
-> On 21/07/15 22:26, Bjorn Helgaas wrote:
->> On Wed, Jul 15, 2015 at 01:16:38PM +0100, Marc Zyngier wrote:
->>> In order to be able to populate the device msi_domain field,
->>> add the necesary hooks to propagate the host bridge msi_domain
->>> across secondary busses to devices.
->>>
->>> So far, nobody populates the initial msi_domain.
->>>
->>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->>> ---
->>>  drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
->>>  include/linux/pci.h |  1 +
->>>  2 files changed, 31 insertions(+)
->>>
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index cefd636..376f6fa 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -661,6 +661,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
->>>      }
->>>  }
->>>
->>> +void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
->>> +{
->>> +}
->>
->> I don't think there's anything in this series that requires this to be a
->> weak function, is there?  This is the only definition I see.
->
-> It looks like all the pcibios_* functions so far have a weak attribute,
-> and I've added it as a matter of consistency.
+Hi Bjorn,
 
-We've used pcibios_* names where we might need an arch-specific
-implementation.  I'm not sure that's the case here -- do you envision
-an implementation under arch/* someday?  If not, maybe it should just
-be a pci_* function instead of pcibios_*.
+On Mon, Jul 27, 2015 at 05:54:53PM -0500, Bjorn Helgaas wrote:
+> > Hmm, this is a place where the relaxed error handling in
+> > pci_enable_ats() can get problematic. 
+> 
+> By "relaxed error handling," do you mean the fact that in v4.1,
+> pci_enable_ats() has a BUG_ON(is_enabled), while now it merely
+> returns -EINVAL?
+> 
+> (BTW, I did change it to add a WARN_ON and return -EBUSY as you suggested.)
 
-Bjorn
+Okay, great.
+
+> > If ATS is (by accident or a bug
+> > elsewhere) already enabled an the function returns -EINVAL, the IOMMU
+> > driver considers ATS disabled and doesn't flush the IO/TLBs of the
+> > device. This can cause data corruption later on, so we should make sure
+> > that info->ats.enabled is consistent with pdev->ats_enabled.
+> 
+> I'm not quite sure I understand this.  In the patch above, we only set
+> "info->ats.enabled = 1" if pci_enable_ats() has succeeded.  The amd_iommu.c
+> code is similar.
+> 
+> Are you concerned about the case where future code enables ATS before
+> intel-iommu, the pci_enable_ats() in intel-iommu fails, intel-iommu
+> believes ATS is disabled, intel-iommu calls iommu_flush_dev_iotlb(), but it
+> doesn't flush the IOTLB?
+> 
+> I guess I could make intel-iommu handle -EBUSY differently from -EINVAL.
+> Would that help?  It seems sort of clumsy, but ...?
+
+I was concerned that it was harder now to spot bugs in ATS
+enabling/disabling, when pci_enable_ats just returns -EINVAL when ATS is
+already enabled.
+
+But with the WARN_ON now we will notice these bugs early again, thanks
+for adding it.
+
+
+
+	Joerg
+
