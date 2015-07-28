@@ -1,84 +1,91 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kashyap Desai <kashyap.desai@avagotech.com>
-References: <robbat2-20140712T111727-002806026Z@orbis-terrarum.net>
-	<CAErSpo5+=33byGqCjFCSfTpfKFtSAHRqYLzGF7yf5d18gEmWsQ@mail.gmail.com>
-	<robbat2-20140712T215640-831385120Z@orbis-terrarum.net>	<20150429172832.GB7888@google.com>
-	<20150528122443.GI10210@google.com>	<9e8b957da24d7b1f532ed83ffb86ca37@mail.gmail.com>
- <20150707104426.3d7e8697@endymion.delvare>
-In-Reply-To: <20150707104426.3d7e8697@endymion.delvare>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v4 3/3] PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
+Date: Tue, 28 Jul 2015 19:24:36 +0530
+Message-ID: <1438091676-21243-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1438091676-21243-1-git-send-email-kishon@ti.com>
+References: <1438091676-21243-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Date: Tue, 7 Jul 2015 14:48:14 +0530
-Message-ID: <a2dbe3edaba57bb78f0c3e22d6068178@mail.gmail.com>
-Subject: RE: megaraid_sas: "FW in FAULT state!!", how to get more debug
- output? [BKO63661]
-To: Jean Delvare <jdelvare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Robin H. Johnson" <robbat2@gentoo.org>,
-	Adam Radford <aradford@gmail.com>,
-	Neela Syam Kolli <megaraidlinux@lsi.com>,
-	linux-scsi@vger.kernel.org, arkadiusz.bubala@open-e.com,
-	Matthew Garrett <matthew.garrett@nebula.com>,
-	Sumit Saxena <sumit.saxena@avagotech.com>,
-	Uday Lingala <uday.lingala@avagotech.com>,
-	"PDL,MEGARAIDLINUX" <megaraidlinux.pdl@avagotech.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Jean Delvare [mailto:jdelvare@suse.de]
-> Sent: Tuesday, July 07, 2015 2:14 PM
-> To: Kashyap Desai
-> Cc: Bjorn Helgaas; Robin H. Johnson; Adam Radford; Neela Syam Kolli;
-linux-
-> scsi@vger.kernel.org; arkadiusz.bubala@open-e.com; Matthew Garrett;
-Sumit
-> Saxena; Uday Lingala; PDL,MEGARAIDLINUX; linux-pci@vger.kernel.org;
-linux-
-> kernel@vger.kernel.org; Myron Stowe
-> Subject: Re: megaraid_sas: "FW in FAULT state!!", how to get more debug
-> output? [BKO63661]
->
-> Hi Kashyap,
->
-> On Thu, 28 May 2015 19:05:35 +0530, Kashyap Desai wrote:
-> > Bjorn/Robin,
-> >
-> > Apologies for delay. Here is one quick suggestion as we have seen
-> > similar issue (not exactly similar, but high probably to have same
-> > issue) while controller is configured on VM as pass-through and VM
-reboot
-> abruptly.
-> > In that particular issue, driver interact with FW which may  require
-> > chip reset to bring controller to operation state.
-> >
-> > Relevant patch was submitted for only Older controller as it was only
-> > seen for few MegaRaid controller. Below patch already try to do chip
-> > reset, but only for limited controllers...I have attached one more
-> > patch which does chip reset from driver load time for
-> > Thunderbolt/Invader/Fury etc. (In your case you have Thunderbolt
-> > controller, so attached patch is required.)
-> >
-> > http://www.spinics.net/lists/linux-scsi/msg67288.html
-> >
-> > Please post the result with attached patch.
->
-> Good news! Customer tested your patch and said it fixed the problem :-)
->
-> I am now in the process of backporting the patch to the SLES 11 SP3
-kernel for
-> further testing. I'll let you know how it goes. Thank you very much for
-your
-> assistance.
+DRA7xx require MSE bit to be cleared to set the master in
+standby mode. (In DRA7xx TRM_vE, section 24.9.4.5.2.2.1 PCIe
+Controller Master Standby Behavior advises to use the clearing
+of the local MSE bit to set the master in standby. Without this
+some of the clocks do not idle).
 
-Thanks for confirmation. Whatever patch I submitted to you, we have added
-recently (as part of common interface approach to do chip reset at load
-time). We will be submitting that patch to mainline soon.
+Cleared the MSE bit on suspend and enabled it back on resume.
+Clearing MSE bit is required to get clocks to be idled after
+suspend.
 
-~ Kashyap
->
-> --
-> Jean Delvare
-> SUSE L3 Support
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+---
+ drivers/pci/host/pci-dra7xx.c |   39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 08b999a..773349f 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -83,6 +83,17 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
+ 	writel(value, pcie->base + offset);
+ }
+ 
++static inline u32 dra7xx_pcie_readl_rc(struct pcie_port *pp, u32 offset)
++{
++	return readl(pp->dbi_base + offset);
++}
++
++static inline void dra7xx_pcie_writel_rc(struct pcie_port *pp, u32 offset,
++					 u32 value)
++{
++	writel(value, pp->dbi_base + offset);
++}
++
+ static int dra7xx_pcie_link_up(struct pcie_port *pp)
+ {
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+@@ -434,6 +445,34 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
++static int dra7xx_pcie_suspend(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	struct pcie_port *pp = &dra7xx->pp;
++	u32 val;
++
++	/* clear MSE */
++	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
++	val &= ~PCI_COMMAND_MEMORY;
++	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
++
++	return 0;
++}
++
++static int dra7xx_pcie_resume(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	struct pcie_port *pp = &dra7xx->pp;
++	u32 val;
++
++	/* Set MSE */
++	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
++	val |= PCI_COMMAND_MEMORY;
++	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
++
++	return 0;
++}
++
+ static int dra7xx_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+-- 
+1.7.9.5
+
