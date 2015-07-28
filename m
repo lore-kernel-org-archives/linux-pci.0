@@ -1,70 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:34782 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751991AbbGOO7I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 10:59:08 -0400
-Received: by igvi1 with SMTP id i1so79094716igv.1
-        for <linux-pci@vger.kernel.org>; Wed, 15 Jul 2015 07:59:07 -0700 (PDT)
-Date: Wed, 15 Jul 2015 09:59:01 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Timothy Pearson <tpearson@raptorengineeringinc.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@avagotech.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	James Bottomley <jejb@kernel.org>, martin.petersen@oracle.com,
-	Linux-Scsi <linux-scsi@vger.kernel.org>,
-	"James E.J. Bottomley" <JBottomley@parallels.com>,
-	Sathya.Prakash@avagotech.com,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v3] [SCSI] mpt2sas, mpt3sas: Abort initialization if no
- memory I/O resources detected
-Message-ID: <20150715145901.GU24416@google.com>
-References: <1436935796-28995-1-git-send-email-Sreekanth.Reddy@avagotech.com>
- <CAE9FiQWzbwzQ7mrtyumhMFYg0-8N18+KZhjfvMfs5j5eV0C5wA@mail.gmail.com>
- <20150715062456.GB19028@dhcp-135-24-192-118.lsi.com>
- <55A6658D.6030802@raptorengineeringinc.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:56563 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753924AbbG1HRp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 03:17:45 -0400
+Message-ID: <55B72C7E.1020102@hisilicon.com>
+Date: Tue, 28 Jul 2015 15:17:18 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55A6658D.6030802@raptorengineeringinc.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
+	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
+	<Liviu.Dudau@arm.com>, <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<liguozhu@hisilicon.com>
+Subject: Re: [PATCH v5 1/5] ARM/PCI: remove align_resource in pci_sys_data
+References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com> <1437794486-21134-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1437794486-21134-2-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 15, 2015 at 08:52:13AM -0500, Timothy Pearson wrote:
-> On 07/15/2015 01:24 AM, Sreekanth Reddy wrote:
-> > On Tue, Jul 14, 2015 at 10:36:58PM -0700, Yinghai Lu wrote:
-> >> On Tue, Jul 14, 2015 at 9:49 PM, Sreekanth Reddy
-> >> <sreekanth.reddy@avagotech.com> wrote:
-> >>> Driver crashes if the BIOS do not set up at least one
-> >>> memory I/O resource. This failure can happen if the device is too
-> >>> slow to respond during POST and is missed by the BIOS, but Linux
-> >>> then detects the device later in the boot process.
-> >>
-> >> But pci subsystem should assign resources to those unassigned BAR.
-> >>
-> >> Do you mean even kernel can not assign resource to them? or it takes so long for
-> >> mpt FW to get ready?
-> > 
-> > This is not an issue from mpt FW.
-> > 
-> > I have just kept the same description provide by Timothy in his
-> > initial patch.
-> > 
-> > But I observe that their may be chance of getting "unable to handle
-> > kernel NULL pointer dereference" kernel panic if no Memory Resource
-> > available in the PCI subsystem. So agreed to the Timothy proposal of
-> > aborting the driver initialization if it doesn't detect any Memory
-> > resource instead of whole system get into panic state.
+On 2015/7/25 11:21, Zhou Wang wrote:
+> From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 > 
-> On some systems Linux is unable / unwilling to assign a BAR if the BIOS
-> does not assign one at startup.  I didn't look into the Linux allocator
-> side of things in much detail, but it is quite possible that Linux is
-> unaware the device only has partial resources assigned.
+> This patch is needed in order to unify the PCIe designware framework for ARM and
+> ARM64 architectures. In the PCIe designware unification process we are calling
+> pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+> ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+> cause a problem with the function pcibios_align_resource(); in fact this will
+> cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+> "struct pcie_port*" pointer.
+> 
+> This patch solves the issue by removing "align_resource" from "pci_sys_data"
+> struct and defining a static global function pointer in "bios32.c"
+> 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-There might be a Linux PCI core bug if we don't assign a BAR, although
-resource assignment can always fail, even in the absence of bugs.
+Hi Arnd and Rob,
 
-But there is definitely a driver bug if it uses ioc->chip when it hasn't
-been initialized.  That's what this patch seems to fix.
+What is your opinion about this patch? Gabriele adds a global pointer in bios32.c
+to store align_resource, so we could remove sys->align_resource in pcibios_align_resource.
 
-Bjorn
+As Lorenzo mentioned in v4 series, this is a temporary solution before moving
+align_resource to host bridge structure.
+
+Any comments welcome.
+
+Thanks,
+Zhou
+
+> ---
+>  arch/arm/include/asm/mach/pci.h |  5 -----
+>  arch/arm/kernel/bios32.c        | 12 ++++++++----
+>  2 files changed, 8 insertions(+), 9 deletions(-)
+> 
+> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> index 28b9bb3..8a4e4de 100644
+> --- a/arch/arm/include/asm/mach/pci.h
+> +++ b/arch/arm/include/asm/mach/pci.h
+> @@ -58,11 +58,6 @@ struct pci_sys_data {
+>  					/* IRQ mapping				*/
+>  	int		(*map_irq)(const struct pci_dev *, u8, u8);
+>  					/* Resource alignement requirements	*/
+> -	resource_size_t (*align_resource)(struct pci_dev *dev,
+> -					  const struct resource *res,
+> -					  resource_size_t start,
+> -					  resource_size_t size,
+> -					  resource_size_t align);
+>  	void		*private_data;	/* platform controller private data	*/
+>  };
+>  
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index fcbbbb1..4cdc64d 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -17,6 +17,11 @@
+>  #include <asm/mach/pci.h>
+>  
+>  static int debug_pci;
+> +static resource_size_t (*align_resource)(struct pci_dev *dev,
+> +		  const struct resource *res,
+> +		  resource_size_t start,
+> +		  resource_size_t size,
+> +		  resource_size_t align) = NULL;
+>  
+>  #ifdef CONFIG_PCI_MSI
+>  struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+> @@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  		sys->busnr   = busnr;
+>  		sys->swizzle = hw->swizzle;
+>  		sys->map_irq = hw->map_irq;
+> -		sys->align_resource = hw->align_resource;
+> +		align_resource = hw->align_resource;
+>  		INIT_LIST_HEAD(&sys->resources);
+>  
+>  		if (hw->private_data)
+> @@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  				resource_size_t size, resource_size_t align)
+>  {
+>  	struct pci_dev *dev = data;
+> -	struct pci_sys_data *sys = dev->sysdata;
+>  	resource_size_t start = res->start;
+>  
+>  	if (res->flags & IORESOURCE_IO && start & 0x300)
+> @@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  
+>  	start = (start + align - 1) & ~(align - 1);
+>  
+> -	if (sys->align_resource)
+> -		return sys->align_resource(dev, res, start, size, align);
+> +	if (align_resource)
+> +		return align_resource(dev, res, start, size, align);
+>  
+>  	return start;
+>  }
+> 
+
+
