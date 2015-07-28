@@ -1,41 +1,61 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
-	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
-	mmarek@suse.cz
-Cc: sean.stalley@intel.com, akpm@linux-foundation.org,
-	bigeasy@linutronix.de, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-mm@kvack.org,
-	cocci@systeme.lip6.fr
-Subject: [PATCH 3/4] pci: mm: Add pci_pool_zalloc() call
-Date: Wed, 15 Jul 2015 14:14:42 -0700
-Message-Id: <1436994883-16563-4-git-send-email-sean.stalley@intel.com>
-In-Reply-To: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
-References: <1436994883-16563-1-git-send-email-sean.stalley@intel.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH v6 19/19] PCI/MSI: Drop domain field from msi_controller
+Date: Tue, 28 Jul 2015 14:46:26 +0100
+Message-Id: <1438091186-10244-20-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a wrapper function for pci_pool_alloc() to get zeroed memory.
+The only three users of that field are not using the msi_controller
+structure anymore, so drop it altogether.
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- include/linux/pci.h | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/msi.c   | 3 ---
+ include/linux/msi.h | 3 ---
+ 2 files changed, 6 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 755a2cd..e6ec7d9 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1176,6 +1176,8 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
- 		dma_pool_create(name, &pdev->dev, size, align, allocation)
- #define	pci_pool_destroy(pool) dma_pool_destroy(pool)
- #define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
-+#define	pci_pool_zalloc(pool, flags, handle) \
-+		dma_pool_zalloc(pool, flags, handle)
- #define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 70afadc..e7038f1 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -45,9 +45,6 @@ static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
+ 	if (domain)
+ 		return domain;
  
- enum pci_dma_burst_strategy {
+-	if (dev->bus->msi && (domain = dev->bus->msi->domain))
+-		return domain;
+-
+ 	return arch_get_pci_msi_domain(dev);
+ }
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index c4e6e83..bf39b9c 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -124,9 +124,6 @@ struct msi_controller {
+ 	struct device *dev;
+ 	struct device_node *of_node;
+ 	struct list_head list;
+-#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
+-	struct irq_domain *domain;
+-#endif
+ 
+ 	int (*setup_irq)(struct msi_controller *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
 -- 
-1.9.1
+2.1.4
 
