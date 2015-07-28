@@ -1,42 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:59137 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932396AbbG1Nq4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 28 Jul 2015 09:46:56 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 37/51] PCI: Only treat non-pef mmio64 as pref if host-bridge has_mem64
-Date: Mon, 27 Jul 2015 16:29:55 -0700
-Message-Id: <1438039809-24957-38-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Jason Cooper <jason@lakedaemon.net>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Ma Jun <majun258@huawei.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [PATCH v6 10/19] genirq: Add DOMAIN_BUS_NEXUS irqdomain property
+Date: Tue, 28 Jul 2015 14:46:17 +0100
+Message-Id: <1438091186-10244-11-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If host bridge does not have mmio64 above 4G, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+Some IRQ domains are not designed to directly provide interrupts
+to devices, but strictly to be used by other domains. An example
+of this is the GICv3 ITS, which is completely bus agnostic, and
+on which it is possible to implement a PCI/MSI domain.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Just introduce the irq_domain_bus_token property for now.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/irqdomain.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c6c9d56..0269868 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1041,7 +1041,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
- {
- 	if (pci_is_root_bus(bus))
--		return true;
-+		return to_pci_host_bridge(bus->bridge)->has_mem64;
+diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
+index b4a74f7..d3ca792 100644
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -56,6 +56,7 @@ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_ANY		= 0,
+ 	DOMAIN_BUS_PCI_MSI,
+ 	DOMAIN_BUS_PLATFORM_MSI,
++	DOMAIN_BUS_NEXUS,
+ };
  
- 	if (bus->self && !(bus->self->resource[PCI_BRIDGE_RESOURCES + 2].flags &
- 			   IORESOURCE_MEM_64))
+ /**
 -- 
-1.8.4.5
+2.1.4
 
