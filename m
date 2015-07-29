@@ -1,83 +1,202 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:2541 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754133AbbGFRcB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 6 Jul 2015 13:32:01 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [PATCH V3 0/2] pci: Provide a flag to access
- VPD through function 0
-Date: Mon, 6 Jul 2015 17:31:59 +0000
-Message-ID: <C468F237-DBA2-4503-BA99-76CC1FC46999@intel.com>
-References: <20150603184445.109080.36387.stgit@mdrustad-wks.jf.intel.com>
- <051B68B4-3E77-4EB0-B9FE-8523631884A2@intel.com>
- <45099CC7-DDAB-41D9-AB74-5A81E2AAF64C@intel.com>
- <CAErSpo7e-QtQQTj2yh_jG07vqU1j1YBez_9wrcrzOQs7+eDFng@mail.gmail.com>
- <8CB0ECE7-CFE2-43CB-BA60-2E2E0A34D5D1@intel.com>
-In-Reply-To: <8CB0ECE7-CFE2-43CB-BA60-2E2E0A34D5D1@intel.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_E609F99B-3604-41C9-B72C-3A4D69904F95";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAL_JsqKc0Boc4oRY0wnH0Hb4pEd6U=2i+46A8Yj68sM0btshHQ@mail.gmail.com>
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+	<1438080345-7233-4-git-send-email-lftan@altera.com>
+	<CAL_JsqKc0Boc4oRY0wnH0Hb4pEd6U=2i+46A8Yj68sM0btshHQ@mail.gmail.com>
+Date: Wed, 29 Jul 2015 19:08:16 +0800
+Message-ID: <CAFiDJ59+ysG0Cm5p987+CQ3is-Yzvu7F+9r28J4NdJDD=RVPcg@mail.gmail.com>
+Subject: Re: [PATCH 3/6] pci:host: Add Altera PCIe host controller driver
+From: Ley Foon Tan <lftan@altera.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_E609F99B-3604-41C9-B72C-3A4D69904F95
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+On Wed, Jul 29, 2015 at 11:43 AM, Rob Herring <robherring2@gmail.com> wrote:
+> On Tue, Jul 28, 2015 at 5:45 AM, Ley Foon Tan <lftan@altera.com> wrote:
+>> This patch adds the Altera PCIe host controller driver.
+>>
+>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
 
-> On Jun 26, 2015, at 11:04 AM, Rustad, Mark D <mark.d.rustad@intel.com> =
-wrote:
->=20
->> Sorry, Mark, I've just been busy with other issues and haven't had a
->> chance to look at this yet.
->=20
-> Is there any chance of this getting into this merge window?
+>> +
+>> +static int altera_pcie_setup(int nr, struct pci_sys_data *sys)
+>> +{
+>> +       struct altera_pcie *pcie = sys->private_data;
+>> +
+>> +       list_splice_init(&pcie->resources, &sys->resources);
+>> +
+>> +       return 1;
+>> +}
+>> +
+>> +static int altera_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
+>> +{
+>> +       struct altera_pcie *pcie = sys_to_pcie(pdev->bus->sysdata);
+>> +       int irq;
+>> +
+>> +       irq = of_irq_parse_and_map_pci(pdev, slot, pin);
+>> +
+>> +       if (!irq)
+>> +               irq = pcie->hwirq;
+>> +
+>> +       return irq;
+>> +}
+>
+> This should not be needed as the core code should take care of this.
+Okay.
 
-Well, it has missed the merge window, but this really is a bug fix. =
-These patches address problems that, under race conditions, can corrupt =
-VPD data and under other conditions can cause hangs. In fact I would =
-submit that the reason that the VPD operations have been made =
-interruptible is directly related to hangs caused by the sharing of VPD =
-capability registers between functions. You see, if one function ever =
-performs a VPD write, any subsequent read on any other function that =
-shares those registers will definitely hang.
+>
+>> +
+>> +static struct pci_bus *altera_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+>> +{
+>> +       struct altera_pcie *pcie = sys_to_pcie(sys);
+>> +       struct pci_bus *bus;
+>> +
+>> +       pcie->root_bus_nr = sys->busnr;
+>> +       bus = pci_scan_root_bus(&pcie->pdev->dev, sys->busnr, &altera_pcie_ops,
+>> +                               sys, &sys->resources);
+>> +
+>> +       return bus;
+>> +}
+>> +
+>> +static struct hw_pci altera_pcie_hw __initdata = {
+>> +#ifdef CONFIG_PCI_DOMAINS
+>> +       .domain                 = 0,
+>> +#endif
+>> +       .nr_controllers         = 1,
+>> +       .ops                    = &altera_pcie_ops,
+>> +       .setup                  = altera_pcie_setup,
+>> +       .map_irq                        = altera_pcie_map_irq,
+>> +       .scan                   = altera_pcie_scan_bus,
+>
+> You should be able to only have an empty hw_pci struct now.
+Will remove this.
 
-I imagine that there are many devices beyond Intel's Ethernet devices =
-that would benefit from using the quirk that these patches introduce.
+>> +static void altera_pcie_free_irq_domain(struct altera_pcie *pcie)
+>> +{
+>> +       int i;
+>> +       u32 irq;
+>> +
+>> +       for (i = 0; i < INTX_NUM; i++) {
+>> +               irq = irq_find_mapping(pcie->irq_domain, i);
+>> +               if (irq > 0)
+>> +                       irq_dispose_mapping(irq);
+>> +       }
+>> +
+>> +       irq_domain_remove(pcie->irq_domain);
+>> +}
+>> +
+>> +static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
+>> +{
+>> +       struct device *dev = &pcie->pdev->dev;
+>> +       struct device_node *node = dev->of_node;
+>> +
+>> +       /* Setup INTx */
+>> +       pcie->irq_domain = irq_domain_add_linear(node, INTX_NUM,
+>> +                                       &intx_domain_ops, pcie);
+>> +       if (!pcie->irq_domain) {
+>> +               dev_err(dev, "Failed to get a INTx IRQ domain\n");
+>> +               return PTR_ERR(pcie->irq_domain);
+>> +       }
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+>> +{
+>> +       struct resource *cra;
+>> +       int ret;
+>> +       struct platform_device *pdev = pcie->pdev;
+>> +
+>> +       cra = platform_get_resource_byname(pdev, IORESOURCE_MEM, "Cra");
+>> +       pcie->cra_base = devm_ioremap_resource(&pdev->dev, cra);
+>> +       if (IS_ERR(pcie->cra_base)) {
+>> +               dev_err(&pdev->dev, "get Cra resource failed\n");
+>> +               return PTR_ERR(pcie->cra_base);
+>> +       }
+>> +
+>> +       /* setup IRQ */
+>> +       pcie->hwirq = platform_get_irq(pdev, 0);
+>> +       if (pcie->hwirq <= 0) {
+>> +               dev_err(&pdev->dev, "failed to get IRQ: %d\n", pcie->hwirq);
+>> +               return -EINVAL;
+>> +       }
+>> +       ret = devm_request_irq(&pdev->dev, pcie->hwirq, altera_pcie_isr,
+>> +                       IRQF_SHARED, pdev->name, pcie);
+>> +
+>> +       if (ret) {
+>> +               dev_err(&pdev->dev, "failed to request irq %d\n", pcie->hwirq);
+>> +               return ret;
+>> +       }
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +static int altera_pcie_probe(struct platform_device *pdev)
+>> +{
+>> +       struct altera_pcie *pcie;
+>> +       int ret;
+>> +
+>> +       pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+>> +       if (!pcie)
+>> +               return -ENOMEM;
+>> +
+>> +       pcie->pdev = pdev;
+>> +
+>> +       ret = altera_pcie_parse_dt(pcie);
+>> +       if (ret) {
+>> +               dev_err(&pdev->dev, "Parsing DT failed\n");
+>> +               return ret;
+>> +       }
+>> +
+>> +       INIT_LIST_HEAD(&pcie->resources);
+>> +
+>> +       ret = altera_pcie_parse_request_of_pci_ranges(pcie);
+>> +       if (ret) {
+>> +               dev_err(&pdev->dev, "Failed add resources\n");
+>> +               return ret;
+>> +       }
+>> +
+>> +       ret = altera_pcie_init_irq_domain(pcie);
+>
+> I don't think you need an irq domain here.
+The controller have one single interrupt  for INTx. So, we need IRQ
+domain for map and decode
+the 4 INTx interrupt and route them to this domain.
 
-Please apply it and consider it for -stable.
+>
+>> +       if (ret) {
+>> +               dev_err(&pdev->dev, "Failed creating IRQ Domain\n");
+>> +               return ret;
+>> +       }
+>> +
+>> +       pcie->root_bus_nr = -1;
+>> +
+>> +       /* clear all interrupts */
+>> +       cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
+>> +       /* enable all interrupts */
+>> +       cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
+>> +
+>> +       altera_pcie_hw.private_data = (void **)&pcie;
+>> +
+>> +       pci_common_init_dev(&pdev->dev, &altera_pcie_hw);
+>
+> You should not call this, but call pci_scan_root_bus directly. See
+> pci-host-generic.c or pci-versatile.c for examples.
+Okay, will change to pci_scan_root_bus.
 
---
-Mark Rustad, Networking Division, Intel Corporation
+Thanks.
 
-
---Apple-Mail=_E609F99B-3604-41C9-B72C-3A4D69904F95
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJVmruPAAoJEDwO/+eO4+5u5pUP/0QYadQsnrPmVE5MipgcRZ0X
-StIZbIASI3FnZvVQxqc2Os0Oe5QAX334/sneRR+3zs9S+jc5PdF9VxVK7UbHX1qk
-Ypn6FBYrWcYPz4ipkg7HmpwNTB5lbqObUqOcmMhN07WEsCvkhmvDhbYnwUH4i45W
-ikt8AzQRRWF9A/eiN66Y83H3ODOu6gXTFO8jGzS1scwlNHiCpuE4Z9/sKd42h9sv
-imosZ25X+6R6cgO6yEcm7UTTIjfZ/V9qqbAquZOyBZp0WBqYwh6ODvqVhJkmEPi+
-mjVKrueBoToZEf+6iQ2dTyxtJZRrerj2wvzDVh6OjNo+/JvmzVLjo5J0fGDqGPcl
-Yx5BYVtYR6UnoI0vEVnjFuQFixw7JoCCMelnA/EnPJzHwHRaY7+01LYylEyghEkl
-Qx/rKzpgIYo1Y2XhJi3XhaFVMIjapKG8N1thqLybOnG2abvxJgk5/GUVoI4HdQ5c
-BD/bvjovtszTpLMI3q7QDQ1JMkFR3ce476rj13YPI3/o3ytaK7XSm/8MnTiqkJsX
-rWjmPBXHIq/RHf67f1NOhBiVxu5cdgYhv5CeP4ekXA/FnUsjZjuUI1hspolwi3rl
-RS1vAiuT+Qk+eOmi/ZeS7vZIyW/Jl4I9i50DrvQ2nUH5gNaQeSHalFeGoQtNF2iS
-UgTeiunlvqVy3Kw9PCEI
-=GBnj
------END PGP SIGNATURE-----
-
---Apple-Mail=_E609F99B-3604-41C9-B72C-3A4D69904F95--
+Regards
+Ley Foon
