@@ -1,84 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0070.outbound.protection.outlook.com ([65.55.169.70]:51499
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755294AbbGPRAr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 16 Jul 2015 13:00:47 -0400
-Message-ID: <55A7E334.3030101@caviumnetworks.com>
-Date: Thu, 16 Jul 2015 10:00:36 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: David Daney <ddaney.cavm@gmail.com>,
+In-Reply-To: <CADhT+weU=VB=fQxXsXeF-0WjQj5rofeCDhV1LfbFWOm-7Oem0w@mail.gmail.com>
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+	<1438080345-7233-4-git-send-email-lftan@altera.com>
+	<CADhT+weU=VB=fQxXsXeF-0WjQj5rofeCDhV1LfbFWOm-7Oem0w@mail.gmail.com>
+Date: Wed, 29 Jul 2015 11:05:07 +0800
+Message-ID: <CAFiDJ5-c8h7ry4NWMCADbDgxaeEyOOHHWDSwJfRJuo-Vw7mOdw@mail.gmail.com>
+Subject: Re: [PATCH 3/6] pci:host: Add Altera PCIe host controller driver
+From: Ley Foon Tan <lftan@altera.com>
+To: Dinh Nguyen <dinh.linux@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	Linux List <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Jason Cooper" <jason@lakedaemon.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Robert Richter <rrichter@cavium.com>,
-	"David Daney" <david.daney@cavium.com>
-Subject: Re: [PATCH 3/5] arm64, pci: Allow RC drivers to supply pcibios_add_device()
- implementation.
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com> <1436979285-8177-4-git-send-email-ddaney.cavm@gmail.com> <20150716090426.GA17097@red-moon>
-In-Reply-To: <20150716090426.GA17097@red-moon>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/16/2015 02:04 AM, Lorenzo Pieralisi wrote:
-> Hi David,
+On Wed, Jul 29, 2015 at 12:45 AM, Dinh Nguyen <dinh.linux@gmail.com> wrote:
+> On Tue, Jul 28, 2015 at 5:45 AM, Ley Foon Tan <lftan@altera.com> wrote:
+>> This patch adds the Altera PCIe host controller driver.
+>>
+>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+>> ---
+>>  drivers/pci/host/Kconfig       |   9 +
+>>  drivers/pci/host/Makefile      |   1 +
+>>  drivers/pci/host/pcie-altera.c | 576 +++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 586 insertions(+)
+>>  create mode 100644 drivers/pci/host/pcie-altera.c
+>>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index 675c2d1..af19039 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -145,4 +145,13 @@ config PCIE_IPROC_BCMA
+>>           Say Y here if you want to use the Broadcom iProc PCIe controller
+>>           through the BCMA bus interface
+>>
+>> +config PCIE_ALTERA
+>> +       bool "Altera PCIe controller"
+>> +       depends on ARCH_SOCFPGA
+>> +       depends on OF
 >
-> On Wed, Jul 15, 2015 at 05:54:43PM +0100, David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
->>
-[...]
->> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> index 4095379..3356023 100644
->> --- a/arch/arm64/kernel/pci.c
->> +++ b/arch/arm64/kernel/pci.c
->> @@ -38,11 +38,21 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->>   	return res->start;
->>   }
->>
->> +static int (*pcibios_add_device_impl)(struct pci_dev *);
+> I don't think you need this, "depends on ARCH_SOCFPGA" should already
+> have taken care of this.
+Okay, will remove this.
+>
+>> +       select PCI_MSI_IRQ_DOMAIN if PCI_MSI
+>> +       help
+>> +         Say Y here if you want to enable PCIe controller support for Altera
+>> +         SoCFPGA family of SoCs.
 >> +
->> +void set_pcibios_add_device(int (*arg)(struct pci_dev *))
+>>  endmenu
+>
+> <snip>
+>
+>> +
+>> +static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
 >> +{
->> +	pcibios_add_device_impl = arg;
+>> +       u8 loop;
+>> +       struct tlp_rp_regpair_t tlp_rp_regdata;
+>> +
+>> +       for (loop = TLP_LOOP; loop > 0; loop--) {
+>> +
+>> +               tlp_read_rx(pcie, &tlp_rp_regdata);
+>> +
+>> +               if (tlp_rp_regdata.ctrl & RP_RXCPL_EOP) {
+>> +
+>> +                       if (value)
+>> +                               *value = tlp_rp_regdata.reg0;
+>> +
+>> +                       return PCIBIOS_SUCCESSFUL;
+>> +               }
+>
+> Remove all the unnecessary newlines in this function.
+Noted.
+
+>> +       }
+>> +
+>> +       return -ENOENT;
 >> +}
 >> +
->>   /*
->>    * Try to assign the IRQ number from DT when adding a new device
->>    */
->>   int pcibios_add_device(struct pci_dev *dev)
->>   {
->> +	if (pcibios_add_device_impl)
->> +		return pcibios_add_device_impl(dev);
 >
-> I am totally against this (and to be honest by reading the other
-> patches I failed to understand why you even need it), see above.
->
-
-It is because ...
-
-
-> Thanks,
-> Lorenzo
+> <snip>
 >
 >> +
->>   	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>> +static struct platform_driver altera_pcie_driver = {
+>> +       .probe          = altera_pcie_probe,
+>> +       .remove         = altera_pcie_remove,
+>> +       .driver = {
+>> +               .name   = "altera-pcie",
+>> +               .owner  = THIS_MODULE,
+>
+> Don't need to set owner anymore as this will get populated by the driver core.
 
+Will remove it.
 
-  ... this is total crap.  But I didn't want to break existing systems.
+Thanks for reviewing.
 
-The PCI RC drivers need a way to configure the legacy virtual-wire 
-interrupts, because the existing code doesn't do it.
-
-David Daney
-
-
-
+Regards
+Ley Foon
