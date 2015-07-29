@@ -1,143 +1,182 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:30470 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751403AbbGQBzL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 21:55:11 -0400
-Message-ID: <55A8605A.6000902@huawei.com>
-Date: Fri, 17 Jul 2015 09:54:34 +0800
-From: Yijing Wang <wangyijing@huawei.com>
+Received: from e28smtp03.in.ibm.com ([122.248.162.3]:49280 "EHLO
+	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752307AbbG2DRe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 23:17:34 -0400
+Received: from /spool/local
+	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 29 Jul 2015 08:47:30 +0530
+Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
+	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 9D0D0125804F
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 08:50:28 +0530 (IST)
+Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
+	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6T3HM5E45547530
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 08:47:23 +0530
+Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
+	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6T3HLlF024584
+	for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 08:47:21 +0530
+Date: Wed, 29 Jul 2015 11:17:18 +0800
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
+Message-ID: <20150729031718.GA18069@richard>
+Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatja@google.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid
- deadlock
-References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com> <20150716042203.GC25591@google.com> <55A76361.8070604@huawei.com> <20150716152548.GD25591@google.com> <55A856F2.1040900@huawei.com> <CAErSpo6UTEfBieOm3P4Ms45rXhp5SS80QqU_wcDjNswdBzzifg@mail.gmail.com>
-In-Reply-To: <CAErSpo6UTEfBieOm3P4Ms45rXhp5SS80QqU_wcDjNswdBzzifg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/7/17 9:35, Bjorn Helgaas wrote:
-> On Thu, Jul 16, 2015 at 8:14 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>>> If I'm mistaken, please correct me and explain why this patch is safe.
->>>>
->>>> Hi Bjorn, I think pci_bus_sem here was introduced to protect the bus->slots list, because it
->>>> use down_write() here, for bus->devices list, we only traverse it, won't add/remove it, for the latter, down_read() is enough.
->>>> When I posted this patch, I thought we should protect the bus when we start to register a slot,
->>>> something like a big lock at outermost routine to tell others not to touch its children devices, use pci_bus_sem to protect hotplug
->>>> cases is not a good idea, and actually in PCI code, we have found several deadlock caused by the pci_bus_sem.
->>>>
->>>> But for this patch, I know what you worried, what about add a down_read(&pci_bus_sem) to avoid to introduce a regression ?
->>>>
->>>>
->>>> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
->>>> index 396c200..a9079d9 100644
->>>> --- a/drivers/pci/slot.c
->>>> +++ b/drivers/pci/slot.c
->>>> @@ -14,6 +14,7 @@
->>>>
->>>>  struct kset *pci_slots_kset;
->>>>  EXPORT_SYMBOL_GPL(pci_slots_kset);
->>>> +static DEFINE_MUTEX(pci_slot_mutex);
->>>>
->>>>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
->>>>                                         struct attribute *attr, char *buf)
->>>> @@ -106,9 +107,11 @@ static void pci_slot_release(struct kobject *kobj)
->>>>         dev_dbg(&slot->bus->dev, "dev %02x, released physical slot %s\n",
->>>>                 slot->number, pci_slot_name(slot));
->>>>
->>>> +       down_read(&pci_bus_sem);
->>>>         list_for_each_entry(dev, &slot->bus->devices, bus_list)
->>>>                 if (PCI_SLOT(dev->devfn) == slot->number)
->>>>                         dev->slot = NULL;
->>>> +       up_read(&pci_bus_sem);
->>>>
->>>>         list_del(&slot->list);
->>>
->>> This list_del() updates the bus->slots list.
->>
->> It's safe here, because we have locked the pci_slot_mutex in pci_destroy_slot(), which is the only caller of pci_slot_release().
-> 
-> That doesn't protect anybody else who might be traversing the
-> bus->slots list while we're deleting this entry.
+Hi, Michael
 
-Hi Bjorn, sorry, I don't understand your point, before this patch, we use pci_bus_sem to protect the whole pci_slot_release(),
-in which, we would traverse the bus->devices list and update the bus->slots list. And now what we did is introduce a new pci_slot_mutex
-to protect the bus->slots here, and use down_read(pci_bus_sem) instead of down_write(pci_bus_sem).
-Could you explain it a little more ?
+Hope you didn't take this yet. We may change this patch a little.
 
-Thanks!
-Yijing.
-
-
-> 
->>>> @@ -195,7 +198,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
->>>>  {
->>>>         struct pci_slot *slot;
->>>>         /*
->>>> -        * We already hold pci_bus_sem so don't worry
->>>> +        * We already hold pci_slot_mutex so don't worry
->>>>          */
->>>>         list_for_each_entry(slot, &parent->slots, list)
->>>>                 if (slot->number == slot_nr) {
->>>> @@ -253,7 +256,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
->>>>         int err = 0;
->>>>         char *slot_name = NULL;
->>>>
->>>> -       down_write(&pci_bus_sem);
->>>> +       mutex_lock(&pci_slot_mutex);
->>>>
->>>>         if (slot_nr == -1)
->>>>                 goto placeholder;
->>>> @@ -301,16 +304,18 @@ placeholder:
->>>>         INIT_LIST_HEAD(&slot->list);
->>>>         list_add(&slot->list, &parent->slots);
->>>>
->>>> +       down_read(&pci_bus_sem);
->>>>         list_for_each_entry(dev, &parent->devices, bus_list)
->>>>                 if (PCI_SLOT(dev->devfn) == slot_nr)
->>>>                         dev->slot = slot;
->>>> +       up_read(&pci_bus_sem);
->>>>
->>>>         dev_dbg(&parent->dev, "dev %02x, created physical slot %s\n",
->>>>                 slot_nr, pci_slot_name(slot));
->>>>
->>>>  out:
->>>>         kfree(slot_name);
->>>> -       up_write(&pci_bus_sem);
->>>> +       mutex_unlock(&pci_slot_mutex);
->>>>         return slot;
->>>>  err:
->>>>         kfree(slot);
->>>> @@ -332,9 +337,9 @@ void pci_destroy_slot(struct pci_slot *slot)
->>>>         dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
->>>>                 slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
->>>>
->>>> -       down_write(&pci_bus_sem);
->>>> +       mutex_lock(&pci_slot_mutex);
->>>>         kobject_put(&slot->kobj);
->>>> -       up_write(&pci_bus_sem);
->>>> +       mutex_unlock(&pci_slot_mutex);
->>>>  }
->>>>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
->>>
->>> .
->>>
->>
->>
->> --
->> Thanks!
->> Yijing
->>
-> 
-> .
-> 
-
+On Fri, Jul 17, 2015 at 02:02:41PM +0800, Wei Yang wrote:
+>When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
+>which means those VFs in a group should form a compound PE.
+>
+>This patch links those VF PEs into compound PE in this case.
+>
+>[gwshan: code refactoring for a bit]
+>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>---
+> arch/powerpc/platforms/powernv/pci-ioda.c |   46 +++++++++++++++++++++++++----
+> arch/powerpc/platforms/powernv/pci.c      |   17 +++++++++--
+> 2 files changed, 56 insertions(+), 7 deletions(-)
+>
+>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>index 5738d31..d1530cb 100644
+>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>@@ -1359,9 +1359,20 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+> 	}
+>
+> 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
+>+		struct pnv_ioda_pe *s, *sn;
+> 		if (pe->parent_dev != pdev)
+> 			continue;
+>
+>+		if ((pe->flags & PNV_IODA_PE_MASTER) &&
+>+		    (pe->flags & PNV_IODA_PE_VF)) {
+>+			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
+>+				pnv_pci_ioda2_release_dma_pe(pdev, s);
+>+				list_del(&s->list);
+>+				pnv_ioda_deconfigure_pe(phb, s);
+>+				pnv_ioda_free_pe(phb, s->pe_number);
+>+			}
+>+		}
+>+
+> 		pnv_pci_ioda2_release_dma_pe(pdev, pe);
+>
+> 		/* Remove from list */
+>@@ -1414,7 +1425,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+> 	struct pci_bus        *bus;
+> 	struct pci_controller *hose;
+> 	struct pnv_phb        *phb;
+>-	struct pnv_ioda_pe    *pe;
+>+	struct pnv_ioda_pe    *pe, *master_pe;
+> 	int                    pe_num;
+> 	u16                    vf_index;
+> 	struct pci_dn         *pdn;
+>@@ -1456,10 +1467,13 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+> 			continue;
+> 		}
+>
+>-		/* Put PE to the list */
+>-		mutex_lock(&phb->ioda.pe_list_mutex);
+>-		list_add_tail(&pe->list, &phb->ioda.pe_list);
+>-		mutex_unlock(&phb->ioda.pe_list_mutex);
+>+		/* Put PE to the list, or postpone it for compound PEs */
+>+		if ((pdn->m64_per_iov != M64_PER_IOV) ||
+>+		    (num_vfs <= M64_PER_IOV)) {
+>+			mutex_lock(&phb->ioda.pe_list_mutex);
+>+			list_add_tail(&pe->list, &phb->ioda.pe_list);
+>+			mutex_unlock(&phb->ioda.pe_list_mutex);
+>+		}
+>
+> 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+> 	}
+>@@ -1472,10 +1486,32 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+> 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
+>
+> 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
+>+			master_pe = NULL;
+>+
+> 			for (vf_index = vf_group * vf_per_group;
+> 			     vf_index < (vf_group + 1) * vf_per_group &&
+> 			     vf_index < num_vfs;
+> 			     vf_index++) {
+>+
+>+				/*
+>+				 * Figure out the master PE and put all slave
+>+				 * PEs to master PE's list.
+>+				 */
+>+				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
+>+				if (!master_pe) {
+>+					pe->flags |= PNV_IODA_PE_MASTER;
+>+					INIT_LIST_HEAD(&pe->slaves);
+>+					master_pe = pe;
+>+					mutex_lock(&phb->ioda.pe_list_mutex);
+>+					list_add_tail(&pe->list, &phb->ioda.pe_list);
+>+					mutex_unlock(&phb->ioda.pe_list_mutex);
+>+				} else {
+>+					pe->flags |= PNV_IODA_PE_SLAVE;
+>+					pe->master = master_pe;
+>+					list_add_tail(&pe->list,
+>+						&master_pe->slaves);
+>+				}
+>+
+> 				for (vf_index1 = vf_group * vf_per_group;
+> 				     vf_index1 < (vf_group + 1) * vf_per_group &&
+> 				     vf_index1 < num_vfs;
+>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+>index 0e4f42e..f3aead0 100644
+>--- a/arch/powerpc/platforms/powernv/pci.c
+>+++ b/arch/powerpc/platforms/powernv/pci.c
+>@@ -739,7 +739,7 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
+> 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+> 	struct pnv_phb *phb = hose->private_data;
+> #ifdef CONFIG_PCI_IOV
+>-	struct pnv_ioda_pe *pe;
+>+	struct pnv_ioda_pe *pe, *slave;
+> 	struct pci_dn *pdn;
+>
+> 	/* Fix the VF pdn PE number */
+>@@ -751,10 +751,23 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
+> 			    (pdev->devfn & 0xff))) {
+> 				pdn->pe_number = pe->pe_number;
+> 				pe->pdev = pdev;
+>-				break;
+>+				goto found;
+>+			}
+>+
+>+			if ((pe->flags & PNV_IODA_PE_MASTER) &&
+>+			    (pe->flags & PNV_IODA_PE_VF)) {
+>+				list_for_each_entry(slave, &pe->slaves, list) {
+>+					if (slave->rid == ((pdev->bus->number << 8)
+>+					   | (pdev->devfn & 0xff))) {
+>+						pdn->pe_number = slave->pe_number;
+>+						slave->pdev = pdev;
+>+						goto found;
+>+					}
+>+				}
+> 			}
+> 		}
+> 	}
+>+found:
+> #endif /* CONFIG_PCI_IOV */
+>
+> 	if (phb && phb->dma_dev_setup)
+>-- 
+>1.7.9.5
 
 -- 
-Thanks!
-Yijing
+Richard Yang
+Help you, Help me
 
