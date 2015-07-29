@@ -1,75 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:33456 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753025AbbGNX3a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 19:29:30 -0400
-Received: by oige126 with SMTP id e126so17286957oig.0
-        for <linux-pci@vger.kernel.org>; Tue, 14 Jul 2015 16:29:29 -0700 (PDT)
-Date: Tue, 14 Jul 2015 18:29:24 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Rajat Jain <rajatxjain@gmail.com>,
-	"Chen, Gong" <gong.chen@linux.intel.com>,
-	Guenter Roeck <groeck@juniper.net>,
-	=?us-ascii?B?PT9VVEYtOD9xP1JhZmE9QzU9ODI9MjBNaT1DNT04MmVja2k/PQ==?=
-	<zajec5@gmail.com>, linux-api@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci_regs: reintroduce PCI_MSIX_FLAGS_BIRMASK
-Message-ID: <20150714232924.GS24416@google.com>
-References: <1435745608-21217-1-git-send-email-mst@redhat.com>
- <20150713181025-mutt-send-email-mst@redhat.com>
+Received: from mout2.freenet.de ([195.4.92.92]:57600 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751358AbbG2R1p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jul 2015 13:27:45 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Milan Broz <mbroz@redhat.com>, Ondrej Kozina <okozina@redhat.com>,
+	device-mapper development <dm-devel@redhat.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
+ <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
+ <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org>
+ <20150728212441.GA25761@redhat.com> <55B87005.7010409@redhat.com>
+ <55B8759B.8070400@redhat.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>, mpatocka@redhat.com,
+	Mike Snitzer <msnitzer@redhat.com>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55B90C25.8030502@maya.org>
+Date: Wed, 29 Jul 2015 19:23:49 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150713181025-mutt-send-email-mst@redhat.com>
+In-Reply-To: <55B8759B.8070400@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 13, 2015 at 06:11:38PM +0300, Michael S. Tsirkin wrote:
-> On Wed, Jul 01, 2015 at 12:14:10PM +0200, Michael S. Tsirkin wrote:
-> > This partially reverts commit 09a2c73ddfc7f173237fc7209a65b34dd5bcb5ed.
-> >     PCI: Remove unused PCI_MSIX_FLAGS_BIRMASK definition
-> > 
-> > That commit dropped a symbol from an exported header claiming "no one
-> > uses it". This isn't how Linux normally approaches userspace API though,
-> > and in fact QEMU build fails if trying to use updated headers from linux
-> > 3.12 and up.
-> > 
-> > Sure, userspace can be fixed to use the new symbol, but the cost
-> > of keeping the old one around is fairly low, too.
-> > 
-> > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+On 07/29/2015 at 08:41 AM Milan Broz wrote:
+> On 07/29/2015 08:17 AM, Ondrej Kozina wrote:
+>> On 07/28/2015 11:24 PM, Mike Snitzer wrote:
+>>>>
+>>>> I am willing to do tests if you have any idea to be tested - I can
+>>>> reproduce it quite easily.
+>>>
+>>> You can try disabling dm-crypt's parallelization by specifying these 2
+>>> features: same_cpu_crypt submit_from_crypt_cpus
+>>>
+>>
+>> Hi,
+>>
+>> please try adding follwoing cryptsetup perf. options while unlocking 
+>> your LUKS containers: --perf-submit_from_crypt_cpus and 
+>> --perf-same_cpu_crypt.
+>>
+>> Perhaps focus on SSD disk as previous unresolved report mentioned SSD too
 
-Sorry, I lost the original message somehow, so I can't reply to it.  I
-applied this by hand to my for-linus branch for v4.2, thanks!
+I'll next try to just boot from the rotational disk. If the problem
+doesn't show up here, it could be SSD related, too.
+
+> 
+> Just you need to use cryptsetup 1.6.7 version (older versions do not have this options yet).
+
+Thanks for this hint.
+
+I compiled this version and applied it and verified it, if it's really
+in initrd. It was in initrd and the additional options where applied, too.
+
+But: nothing changed with enabled ncq - exactly same problem as before
+(w/ linux 3.19.8 + additional patches and Linux 4.1 - no difference in
+behavior).
+
+> Anyway, it seems strange that one patch triggers such a problem (leading to a conclusion
+> that the patch is wrong) but dm-crypt is know to reveal many problems in other systems
+> exactly this way...
+
+Maybe - maybe not.
+
+> The patches were tested on so many systems without problem that I really believe
+> the dmcrypt patch is just trigger for a bug elsewhere.
+
+I'm having another machine, which doesn't show the problem - but this
+machine can't be compared w/ the failing machine, because the other
+machine does have a totally different and easy setup (1 ssd crypted lvm
+and 3 or 4 logical filesystems - that's it) - and it's much slower :-).
+
+Here I'm  having: 3 disks (1 ssd, 2 x 3 TB rotational), 1 crypted SW
+Raid 1 w/ LVM on the rotational disks, another LVM on the ssd and 29 (!)
+logical volumes each with xfs and 8 CPU cores, which guarantee high
+degree of parallelism. I'm not sure if this is a "usual" setup which is
+tested heavily. The error always comes up while mounting the partitions
+on boot. Reducing the amount of mounted partitions reduced the amount of
+errors (AMD-Vi IO_PAGE_FAULTs).
+
+> 
+> Anyway, if we can find configuration which fails here, I would like to help to find
+> the core problem... Papering here just means it will break data later elsewhere.
+> 
+> Thanks for testing it!
+
+I hope we can find the problem.
 
 
-commit c9ddbac9c89110f77cb0fa07e634aaf1194899aa
-Author: Michael S. Tsirkin <mst@redhat.com>
-Date:   Tue Jul 14 18:27:46 2015 -0500
-
-    PCI: Restore PCI_MSIX_FLAGS_BIRMASK definition
-    
-    09a2c73ddfc7 ("PCI: Remove unused PCI_MSIX_FLAGS_BIRMASK definition")
-    removed PCI_MSIX_FLAGS_BIRMASK from an exported header because it was
-    unused in the kernel.  But that breaks user programs that were using it
-    (QEMU in particular).
-    
-    Restore the PCI_MSIX_FLAGS_BIRMASK definition.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: stable@vger.kernel.org	# v3.13+
-
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index efe3443..413417f 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -319,6 +319,7 @@
- #define PCI_MSIX_PBA		8	/* Pending Bit Array offset */
- #define  PCI_MSIX_PBA_BIR	0x00000007 /* BAR index */
- #define  PCI_MSIX_PBA_OFFSET	0xfffffff8 /* Offset into specified BAR */
-+#define PCI_MSIX_FLAGS_BIRMASK	PCI_MSIX_PBA_BIR /* deprecated */
- #define PCI_CAP_MSIX_SIZEOF	12	/* size of MSIX registers */
- 
- /* MSI-X Table entry format */
+Regards,
+Andreas
