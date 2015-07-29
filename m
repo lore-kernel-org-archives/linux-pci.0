@@ -1,67 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <559FC098.6080606@arm.com>
-Date: Fri, 10 Jul 2015 13:54:48 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f175.google.com ([209.85.223.175]:34300 "EHLO
+	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753102AbbG2TxF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 15:53:05 -0400
+Received: by ioea135 with SMTP id a135so32633094ioe.1
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 12:53:04 -0700 (PDT)
 MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Borislav Petkov <bp@alien8.de>
-CC: Tony Luck <tony.luck@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+In-Reply-To: <55B92DA5.4030409@roeck-us.net>
+References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
+	<20150729160903.GD31170@google.com>
+	<CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>
+	<55B92DA5.4030409@roeck-us.net>
+Date: Wed, 29 Jul 2015 12:53:04 -0700
+Message-ID: <CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
+Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
+From: Yinghai Lu <yinghai@kernel.org>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC Patch V1 00/12] Reorganize struct msi_desc to prepare for
- support of generic MSI
-References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gerry,
+On Wed, Jul 29, 2015 at 12:46 PM, Guenter Roeck <linux@roeck-us.net> wrote:
+> On 07/29/2015 12:30 PM, Yinghai Lu wrote:
+>
+>>
+>> so PCI_BUS_FLAGS_SUPPORTS_IO will never get set.
+>>
+>
+> excellent catch. Unfortunately, I don't know how to make it
+> work with the reversed flag. The idea here was that the flag
+> propagates from parent to child. This makes sense for an
+> "it doesn't work" flag to be inherited from the child,
+> but not for an "it works" flag.
+>
 
-On 09/07/15 09:00, Jiang Liu wrote:
-> Recently Marc Zyngier <marc.zyngier@arm.com> has posted a patch set at
-> https://lkml.org/lkml/2015/7/7/712
-> to enhance PCI MSI code to support generic MSI.
-> 
-> This is a companion patch set to refine struct msi_desc and related data
-> structures to support generic MSI, and it would be better to combined with
-> Marc's patch set.  It's also requested by
-> Stuart Yoder <stuart.yoder@freescale.com>
-> 
-> It first introduces a helper function msi_desc_to_pci_sysdata(), and
-> convert current PCI drivers to use helper functions to access fields
-> in struct msi_desc.
-> Then it moves msi_list from struct pci_dev into struct device and
-> refines struct msi_desc.
-> At last it moves alloc_msi_entry() into kernel/irq/msi.c for reuse.
-> 
-> Currently msi_desc_to_pci_sysdata() and msi_desc_to_pci_dev() are
-> implemented as normal functions instead of inlines to avoid header file
-> inclusion issue. If inlined version is preferred for performance, we could
-> move all of first_pci_msi_entry, for_each_pci_msi_entry, msi_desc_to_pci_dev
-> and msi_desc_to_pci_sysdata from linxu/kernel/msi.h into linux/kernel/pci.h.
-> 
-> This patch set is based on v4.2-rc1 and passes 0day test suite. You
-> may access the code at:
-> https://github.com/jiangliu/linux.git msi_desc_v1
+also would be better if we can add has_ioport in hostbridge instead.
+like has_mem64 in https://patchwork.ozlabs.org/patch/500926/
+and use
 
-Thanks a lot for doing this, it looks much helpful. I have a good look
-at it, and apart from a small nit I commented on, I'm very happy with
-this move.
+to_pci_host_bridge(bus->bridge)->has_ioport
 
-For the whole set:
-Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+to replace pci_root_has_io_resource()
 
-Thanks,
+Thanks
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Yinghai
