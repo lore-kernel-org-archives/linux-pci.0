@@ -1,86 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:35054 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756713AbbGQGDJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:09 -0400
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 17 Jul 2015 11:33:07 +0530
-Received: from d28relay04.in.ibm.com (d28relay04.in.ibm.com [9.184.220.61])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 9C43C125805D
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:35:58 +0530 (IST)
-Received: from d28av02.in.ibm.com (d28av02.in.ibm.com [9.184.220.64])
-	by d28relay04.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H630cF18874400
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:01 +0530
-Received: from d28av02.in.ibm.com (localhost [127.0.0.1])
-	by d28av02.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H4jVP9028012
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 10:15:31 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 03/11] powerpc/pci: Cache VF index in pci_dn
-Date: Fri, 17 Jul 2015 14:02:33 +0800
-Message-Id: <1437112961-17275-4-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-la0-f53.google.com ([209.85.215.53]:32973 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750814AbbG2UK3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 16:10:29 -0400
+Received: by laah7 with SMTP id h7so13012459laa.0
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 13:10:28 -0700 (PDT)
+Date: Wed, 29 Jul 2015 22:10:14 +0200
+From: Olof Johansson <olof@lixom.net>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-arm-kernel@lists.infradead.org, arm@kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: iproc: Fix BCMA dependency in Kconfig
+Message-ID: <20150729201014.GA28206@localhost>
+References: <1438189973-5712-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438189973-5712-1-git-send-email-rjui@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch caches the VF index in pci_dn, which can be used to calculate
-VF's bus, device and function number. Those information helps to locate
-the VF's PCI device instance when doing hotplug during EEH recovery if
-necessary.
+On Wed, Jul 29, 2015 at 10:12:53AM -0700, Ray Jui wrote:
+> The current iProc BCMA front-end driver can only work on ARM32 based
+> platforms; therefore its config option in Kconfig should be changed to
+> reflect that. This fixes arm64 allmodconfig build failure when compiling
+> the the iProc BCMA driver that contains struct pci_sys_data that is
+> arm32 specific
+> 
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h |    1 +
- arch/powerpc/kernel/pci_dn.c          |    4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+Applied to next/arm64 together with the original series.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 712add5..7a72f68 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -210,6 +210,7 @@ struct pci_dn {
- #define IODA_INVALID_PE		(-1)
- #ifdef CONFIG_PPC_POWERNV
- 	int	pe_number;
-+	int     vf_index;		/* VF index in the PF */
- #ifdef CONFIG_PCI_IOV
- 	u16     vfs_expanded;		/* number of VFs IOV BAR expanded */
- 	u16     num_vfs;		/* number of VFs enabled*/
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index b3b4df9..f771130 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -139,6 +139,7 @@ struct pci_dn *pci_get_pdn(struct pci_dev *pdev)
- #ifdef CONFIG_PCI_IOV
- static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 					   struct pci_dev *pdev,
-+					   int vf_index,
- 					   int busno, int devfn)
- {
- 	struct pci_dn *pdn;
-@@ -157,6 +158,7 @@ static struct pci_dn *add_one_dev_pci_data(struct pci_dn *parent,
- 	pdn->parent = parent;
- 	pdn->busno = busno;
- 	pdn->devfn = devfn;
-+	pdn->vf_index = vf_index;
- #ifdef CONFIG_PPC_POWERNV
- 	pdn->pe_number = IODA_INVALID_PE;
- #endif
-@@ -196,7 +198,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
- 		return NULL;
- 
- 	for (i = 0; i < pci_sriov_get_totalvfs(pdev); i++) {
--		pdn = add_one_dev_pci_data(parent, NULL,
-+		pdn = add_one_dev_pci_data(parent, NULL, i,
- 					   pci_iov_virtfn_bus(pdev, i),
- 					   pci_iov_virtfn_devfn(pdev, i));
- 		if (!pdn) {
--- 
-1.7.9.5
 
+-Olof
