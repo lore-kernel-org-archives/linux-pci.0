@@ -1,55 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v5 1/4] PCI: iproc: enable arm64 support for iProc PCIe
-To: Olof Johansson <olof@lixom.net>
-References: <1438036941-27210-1-git-send-email-rjui@broadcom.com>
- <1438036941-27210-2-git-send-email-rjui@broadcom.com>
- <CAOesGMh2Dz2HWpAg0Yh71QYfnAyMRae929p=mqGmopGdrVWgxQ@mail.gmail.com>
-CC: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Broadcom Kernel Feedback List
-	<bcm-kernel-feedback-list@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"arm@kernel.org" <arm@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <55B7A461.5040807@broadcom.com>
-Date: Tue, 28 Jul 2015 08:48:49 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:36779 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752366AbbG2DiK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jul 2015 23:38:10 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAOesGMh2Dz2HWpAg0Yh71QYfnAyMRae929p=mqGmopGdrVWgxQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAFiDJ5_eeibeGwzYXGQnw2ZX8CT_usdz9DciZD+HpxboOfor=g@mail.gmail.com>
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+	<1438080345-7233-5-git-send-email-lftan@altera.com>
+	<CADhT+wf2oYVZHn1XAODYJUsxwu03TAzN6ZEQCkSBjU5ruKWCDQ@mail.gmail.com>
+	<CAFiDJ5_eeibeGwzYXGQnw2ZX8CT_usdz9DciZD+HpxboOfor=g@mail.gmail.com>
+Date: Tue, 28 Jul 2015 22:38:07 -0500
+Message-ID: <CADhT+we4fWzetjVbPPmjnbxBtp4Ngv+1h6HpQY8M8U6CBM11ow@mail.gmail.com>
+Subject: Re: [PATCH 4/6] pci: altera: Add Altera PCIe MSI driver
+From: Dinh Nguyen <dinh.linux@gmail.com>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	Linux List <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jul 28, 2015 at 10:07 PM, Ley Foon Tan <lftan@altera.com> wrote:
+> On Wed, Jul 29, 2015 at 1:00 AM, Dinh Nguyen <dinh.linux@gmail.com> wrote:
+>> On Tue, Jul 28, 2015 at 5:45 AM, Ley Foon Tan <lftan@altera.com> wrote:
+>>> This patch adds Altera PCIe MSI driver. This soft IP supports configurable
+>>> number of vectors, which is a dts parameter.
+>>> @@ -154,4 +154,11 @@ config PCIE_ALTERA
+>>>           Say Y here if you want to enable PCIe controller support for Altera
+>>>           SoCFPGA family of SoCs.
+>>>
+>>> +config PCIE_ALTERA_MSI
+>>> +       bool "Altera PCIe MSI feature"
+>>> +       depends on PCI_MSI && PCIE_ALTERA
+>>> +       help
+>>> +         Say Y here if you want PCIe MSI support for the Altera SocFPGA SoC.
+>>> +         This MSI driver supports Altera MSI to GIC controller IP.
+>>> +
+>>
+>> Couldn't this driver get combined with the pcie-altera driver?
+>
+> This MSI IP is a soft IP and it is optional to PCI system. So, we have
+> individual driver for it and user can disable it.
+>
 
+So why can't you use CONFIG_PCI_MSI in the pcie-altera driver? I see
+that most, if not
+all of the other drivers are combined with MSI.
 
-On 7/28/2015 6:24 AM, Olof Johansson wrote:
-> Hi Ray,
-> 
-> I get the following when building an allmodconfig on arm64:
-> 
-> drivers/pci/host/pcie-iproc-bcma.c: In function 'iproc_pcie_bcma_map_irq':
-> drivers/pci/host/pcie-iproc-bcma.c:37:31: error: dereferencing pointer
-> to incomplete type
->   struct iproc_pcie *pcie = sys->private_data;
->                                ^
-> 
-> Should be easy for you to reproduce, please send incremental fix.
-> 
-> 
-> -Olof
-
-This looks like a dependency issue of the iProc PCIe BCMA driver, which
-should really be disabled for arm64 as it's only available on legacy
-arm32 based Broadcom SoCs.
-
-I'll submit an incremental fix in Kconfig.
-
-Thanks,
-
-Ray
+Dinh
