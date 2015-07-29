@@ -1,86 +1,56 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 21 Jul 2015 16:30:29 -0500
+Date: Wed, 29 Jul 2015 15:54:17 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v4 05/19] PCI/MSI: of: Add support for OF-provided
- msi_domain
-Message-ID: <20150721213029.GJ21967@google.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
- <1436962613-17359-6-git-send-email-marc.zyngier@arm.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"x86 @ kernel . org" <x86@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [Patch v5 4/6] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+Message-ID: <20150729205417.GD9640@google.com>
+References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com>
+ <20150609161230.GC8591@red-moon>
+ <55771B27.1060509@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436962613-17359-6-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <55771B27.1060509@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 15, 2015 at 01:16:39PM +0100, Marc Zyngier wrote:
-> In order to populate the PHB msi_domain, use the "msi-parent"
-> attribute to lookup a corresponding irq domain. If found,
-> this is our MSI domain.
-> 
-> This gets plugged into the core PCI code.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  drivers/pci/of.c    | 19 +++++++++++++++++++
->  drivers/pci/probe.c |  1 +
->  include/linux/pci.h |  2 ++
->  3 files changed, 22 insertions(+)
-> 
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index f092993..09df465 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -9,6 +9,7 @@
->   * 2 of the License, or (at your option) any later version.
->   */
->  
-> +#include <linux/irqdomain.h>
->  #include <linux/kernel.h>
->  #include <linux/pci.h>
->  #include <linux/of.h>
-> @@ -59,3 +60,21 @@ struct device_node * __weak pcibios_get_phb_of_node(struct pci_bus *bus)
->  		return of_node_get(bus->bridge->parent->of_node);
->  	return NULL;
->  }
-> +
-> +void pci_set_phb_of_msi_domain(struct pci_bus *bus)
-> +{
-> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-> +	struct device_node *np;
-> +	struct irq_domain *d;
-> +
-> +	if (!bus->dev.of_node)
-> +		return;
-> +	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
-> +	if (!np)
-> +		return;
-> +	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
-> +	if (!d)
-> +		d = irq_find_host(np);
-> +	dev_set_msi_domain(&bus->dev, d);
-> +#endif
-> +}
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 376f6fa..c80626f 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -663,6 +663,7 @@ static void pci_set_bus_speed(struct pci_bus *bus)
->  
->  void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
->  {
-> +	pci_set_phb_of_msi_domain(bus);
+On Wed, Jun 10, 2015 at 12:58:15AM +0800, Jiang Liu wrote:
+> On 2015/6/10 0:12, Lorenzo Pieralisi wrote:
+> > On Mon, Jun 08, 2015 at 05:20:46PM +0100, Jiang Liu wrote:
 
-The code itself is OK with me, but "phb" is an abbreviation that we haven't
-really been using in the PCI core, so I'd prefer something else.  Maybe
-"pci_set_host_of_msi_domain()"?  Or even (for symmetry with the pcibios
-function), "pci_set_host_bridge_of_msi_domain()", although that is getting
-pretty wordy?
+> >> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> >> +				     struct acpi_pci_root_ops *ops,
+> >> +				     struct acpi_pci_root_info *info,
+> >> +				     void *sysdata, int segment, int node)
+> > 
+> > I do not think you need to pass segment and node, they clutter the
+> > function signature when you can retrieve them from root, I would
+> > make them local variables and use root->segment and acpi_get_node
+> > in the function body to retrieve them.
+> On x86, node and segment may be overridden under certain conditions.
+> For example, segment will always be 0 if 'pci_ignore_seg' is set.
+
+I agree we should drop the segment and node parameters.  Having the
+information in two places means we can make a mistake, and we can easily
+avoid that possibility by only keeping it in one place.
+
+I think it is a bug that we don't set root->segment to zero when we have
+pci_ignore_seg.  Sorry, that's my fault from 1f09b09b4de0 ("x86/PCI: Ignore
+_SEG on HP xw9300").
+
+I don't understand the issue about overriding the node number.  Can you
+explain it?
