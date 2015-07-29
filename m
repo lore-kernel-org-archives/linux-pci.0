@@ -1,195 +1,343 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39669 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755317AbbG3J1Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 30 Jul 2015 05:27:24 -0400
-Date: Thu, 30 Jul 2015 10:28:08 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jayachandran C <jchandra@broadcom.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Russell King <linux@arm.linux.org.uk>
-Cc: Will Deacon <Will.Deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 29 Jul 2015 15:24:40 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
 	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH v3 1/2] PCI: generic: remove dependency on hw_pci
-Message-ID: <20150730092808.GA4685@red-moon>
-References: <1438183681-30519-1-git-send-email-jchandra@broadcom.com>
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>, Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch v5 4/6] PCI/ACPI: Consolidate common PCI host bridge code
+ into ACPI core
+Message-ID: <20150729202440.GA9640@google.com>
+References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438183681-30519-1-git-send-email-jchandra@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1433780448-18636-5-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 29, 2015 at 04:28:00PM +0100, Jayachandran C wrote:
-> The current code in pci-host-generic.c uses pci_common_init_dev()
-> from ARM platform to do some of the PCI initializations, and this
-> prevents it from being used in ARM64.
-> 
-> The initialization done by pci_common_init_dev() that is needed
-> by pci-host-generic.c is really limited, and can be done easily
-> in the same file without using hw_pci API. The ARM platform
-> requires a pci_sys_data as sysdata for the PCI bus, this can be
-> handled by setting up gen_pci to have a pci_sys_data variable as
-> the first element.
+On Tue, Jun 09, 2015 at 12:20:46AM +0800, Jiang Liu wrote:
+> Introduce common interface acpi_pci_root_create() and related data
+> structures to create PCI root bus for ACPI PCI host bridges. It will
+> be used to kill duplicated arch specific code for IA64 and x86. It may
+> also help ARM64 in future.
 
-Ok, I still do not like leaving pci_sys_data there, and to remove
-it there is only one snag (+ one patch to prevent
-resources enablement on ARM64 PROBE_ONLY systems to have a
-consolidated ARM/ARM64 host generic), which consists in removing the
-align_resource pointer from pci_sys_data. A proposed solution (maybe
-not ideal, we can consider it a temporary step to make progress)
-here:
+I assume most of this code is copied from somewhere else.  You should
+mention where it came from.
 
-http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359273.html
-
-Comments very appreciated on the patch above, I do not have major
-concerns with this patch other than the pci_sys_data hack, because
-that's what it is.
-
-Thanks,
-Lorenzo
-
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> Tested-by: Tony Luck <tony.luck@intel.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 > ---
-> Here's v3 of the patchset.
+>  drivers/acpi/pci_root.c  |  198 ++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci-acpi.h |   23 ++++++
+>  2 files changed, 221 insertions(+)
 > 
-> v2-v3
->  - rebase to 4.2-rc
->  - fix PCI_PROBE_ONLY check before calling pcie configure
->  - added a comment above sysdata
->  - updated the commit message
-> 
-> v1->v2
->  - Address comments from Arnd Bergmann and Lorenzo Pieralisi
->     - move contents of gen_pci_init to gen_pci_probe
->     - assign resources only when !probe_only
->  - tested on ARM32 with qemu option -M virt
-> 
-> Notes:
->  - passing a zeroed out pci_sys_data for ARM looks ok, but I haven't
->    tested it on ARM.
->  - tested it on ARM64 fast model
->  - Any information on how this can be tested on arm is welcome.
->  - There is only one ifdef, and that can be removed when arm64 gets
->    a sysdata, or when arm loses its sysdata.
-> 
->  drivers/pci/host/pci-host-generic.c | 55 ++++++++++++++++++++++++-------------
->  1 file changed, 36 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index ba46e58..e9d9c80 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -38,7 +38,15 @@ struct gen_pci_cfg_windows {
->  	const struct gen_pci_cfg_bus_ops	*ops;
->  };
->  
-> +/*
-> + * ARM needs platform specific pci_sys_data as the sysdata for PCI.
-> + * We add the sys as the first field below to handle this. sys will
-> + * set to 0, so that the pci functions in do the right thing.
-> + */
->  struct gen_pci {
-> +#ifdef CONFIG_ARM
-> +	struct pci_sys_data			sys;
-> +#endif
->  	struct pci_host_bridge			host;
->  	struct gen_pci_cfg_windows		cfg;
->  	struct list_head			resources;
-> @@ -48,8 +56,7 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
->  					     unsigned int devfn,
->  					     int where)
->  {
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = bus->sysdata;
->  	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
->  
->  	return pci->cfg.win[idx] + ((devfn << 8) | where);
-> @@ -64,8 +71,7 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
->  					      unsigned int devfn,
->  					      int where)
->  {
-> -	struct pci_sys_data *sys = bus->sysdata;
-> -	struct gen_pci *pci = sys->private_data;
-> +	struct gen_pci *pci = bus->sysdata;
->  	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
->  
->  	return pci->cfg.win[idx] + ((devfn << 12) | where);
-> @@ -198,13 +204,6 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  	return 0;
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 1b5569c092c6..70f851dc0051 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -656,6 +656,204 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+>  	kfree(root);
 >  }
 >  
-> -static int gen_pci_setup(int nr, struct pci_sys_data *sys)
-> -{
-> -	struct gen_pci *pci = sys->private_data;
-> -	list_splice_init(&pci->resources, &sys->resources);
-> -	return 1;
-> -}
-> -
->  static int gen_pci_probe(struct platform_device *pdev)
->  {
->  	int err;
-> @@ -214,13 +213,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
->  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> -	struct hw_pci hw = {
-> -		.nr_controllers	= 1,
-> -		.private_data	= (void **)&pci,
-> -		.setup		= gen_pci_setup,
-> -		.map_irq	= of_irq_parse_and_map_pci,
-> -		.ops		= &gen_pci_ops,
-> -	};
+> +static void acpi_pci_root_validate_resources(struct device *dev,
+> +					     struct list_head *resources,
+> +					     unsigned long type)
+> +{
+> +	LIST_HEAD(list);
+> +	struct resource *res1, *res2, *root = NULL;
+> +	struct resource_entry *tmp, *entry, *entry2;
+> +
+> +	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
+> +	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
+> +
+> +	list_splice_init(resources, &list);
+> +	resource_list_for_each_entry_safe(entry, tmp, &list) {
+> +		bool free = false;
+> +		resource_size_t end;
+> +
+> +		res1 = entry->res;
+> +		if (!(res1->flags & type))
+> +			goto next;
+> +
+> +		/* Exclude non-addressable range or non-addressable portion */
+> +		end = min(res1->end, root->end);
+> +		if (end <= res1->start) {
+> +			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
+> +				 res1);
+> +			free = true;
+> +			goto next;
+> +		} else if (res1->end != end) {
+> +			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
+> +				 res1, (unsigned long long)end + 1,
+> +				 (unsigned long long)res1->end);
+> +			res1->end = end;
+> +		}
+> +
+> +		resource_list_for_each_entry(entry2, resources) {
+> +			res2 = entry2->res;
+> +			if (!(res2->flags & type))
+> +				continue;
+> +
+> +			/*
+> +			 * I don't like throwing away windows because then
+> +			 * our resources no longer match the ACPI _CRS, but
+> +			 * the kernel resource tree doesn't allow overlaps.
+> +			 */
+> +			if (resource_overlaps(res1, res2)) {
+> +				res2->start = min(res1->start, res2->start);
+> +				res2->end = max(res1->end, res2->end);
+> +				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
+> +					 res2, res1);
+> +				free = true;
+> +				goto next;
+> +			}
+> +		}
+> +
+> +next:
+> +		resource_list_del(entry);
+> +		if (free)
+> +			resource_list_free_entry(entry);
+> +		else
+> +			resource_list_add_tail(entry, resources);
+> +	}
+> +}
+> +
+> +static int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+> +{
+> +	int ret;
+> +	struct list_head *list = &info->resources;
+> +	struct acpi_device *device = info->bridge;
+> +	struct resource_entry *entry, *tmp;
+> +	unsigned long flags;
+> +
+> +	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
+> +	ret = acpi_dev_get_resources(device, list,
+> +				     acpi_dev_filter_resource_type_cb,
+> +				     (void *)flags);
+> +	if (ret < 0)
+> +		dev_warn(&device->dev,
+> +			 "failed to parse _CRS method, error code %d\n", ret);
+> +	else if (ret == 0)
+> +		dev_dbg(&device->dev,
+> +			"no IO and memory resources present in _CRS\n");
+> +	else {
+> +		resource_list_for_each_entry_safe(entry, tmp, list) {
+> +			if (entry->res->flags & IORESOURCE_DISABLED)
+> +				resource_list_destroy_entry(entry);
+> +			else
+> +				entry->res->name = info->name;
+> +		}
+> +		acpi_pci_root_validate_resources(&device->dev, list,
+> +						 IORESOURCE_MEM);
+> +		acpi_pci_root_validate_resources(&device->dev, list,
+> +						 IORESOURCE_IO);
+> +	}
+
+Please use this style to minimize indentation and return errors as soon as
+possible:
+
+    if (ret < 0) {
+	dev_warn(...)
+	return ret;
+    }
+
+    if (ret == 0) {
+	dev_dbg(...);
+	return 0;
+    }
+
+    resource_list_for_each_entry_safe(...) {
+    }
+    return ret;
+
+> +	return ret;
+> +}
+> +
+> +static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
+> +{
+> +	struct resource_entry *entry, *tmp;
+> +	struct resource *res, *conflict, *root = NULL;
+> +
+> +	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
+> +		res = entry->res;
+> +		if (res->flags & IORESOURCE_MEM)
+> +			root = &iomem_resource;
+> +		else if (res->flags & IORESOURCE_IO)
+> +			root = &ioport_resource;
+> +		else
+> +			continue;
+> +
+> +		conflict = insert_resource_conflict(root, res);
+> +		if (conflict) {
+> +			dev_info(&info->bridge->dev,
+> +				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
+> +				 res, conflict->name, conflict);
+> +			resource_list_destroy_entry(entry);
+> +		}
+> +	}
+> +}
+> +
+> +static void __acpi_pci_root_release_info(struct acpi_pci_root_info *info)
+> +{
+> +	struct resource *res;
+> +	struct resource_entry *entry, *tmp;
+> +
+> +	if (!info)
+> +		return;
+
+In what circumstance could "info" be NULL?  As far as I can tell, the only
+way it could be NULL is if we're called from acpi_pci_root_release_info()
+and the bridge->release_data element got scribbled on after we called
+pci_set_host_bridge_release().  In that case, I'd rather oops than silently
+return.
+
+> +	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
+> +		res = entry->res;
+> +		if (res->parent &&
+> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> +			release_resource(res);
+> +		resource_list_destroy_entry(entry);
+> +	}
+> +
+> +	info->ops->release_info(info);
+> +}
+> +
+> +static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
+> +{
+> +	struct resource *res;
+> +	struct resource_entry *entry;
+> +
+> +	resource_list_for_each_entry(entry, &bridge->windows) {
+> +		res = entry->res;
+> +		if (res->parent &&
+> +		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+> +			release_resource(res);
+> +	}
+> +	__acpi_pci_root_release_info(bridge->release_data);
+> +}
+> +
+> +struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> +				     struct acpi_pci_root_ops *ops,
+> +				     struct acpi_pci_root_info *info,
+> +				     void *sysdata, int segment, int node)
+> +{
+> +	int ret, busnum = root->secondary.start;
+> +	struct acpi_device *device = root->device;
 > +	struct pci_bus *bus;
->  
->  	if (!pci)
->  		return -ENOMEM;
-> @@ -258,7 +251,31 @@ static int gen_pci_probe(struct platform_device *pdev)
->  		return err;
->  	}
->  
-> -	pci_common_init_dev(dev, &hw);
-> +	/* do not reassign resource if probe only */
-> +	if (!pci_has_flag(PCI_PROBE_ONLY))
-> +		pci_add_flags(PCI_REASSIGN_ALL_RSRC);
 > +
-> +	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
-> +	if (!bus) {
-> +		dev_err(dev, "Scanning rootbus failed");
-> +		return -ENODEV;
+> +	info->root = root;
+> +	info->bridge = device;
+> +	info->ops = ops;
+> +	INIT_LIST_HEAD(&info->resources);
+> +	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
+> +		 segment, busnum);
+> +
+> +	if (ops->init_info && ops->init_info(info))
+> +		goto out_release_info;
+> +	ret = acpi_pci_probe_root_resources(info);
+> +	if (ops->prepare_resources)
+> +		ret = ops->prepare_resources(info, ret);
+
+It's goofy to pass the return value from acpi_pci_probe_root_resources()
+into prepare_resources(), especially since the local context gives no clue
+about what "ret" means.
+
+Neither the x86 nor the ia64 version of pci_acpi_root_prepare_resources()
+actually does anything useful with "ret" except return it.
+
+I think you should just make acpi_pci_probe_root_resources() void.  It will
+create a list of zero or more resources from _CRS.  If _CRS fails, you
+already print a diagnostic and the list will be empty.  If _CRS succeeds
+and there are no windows, you also print a (debug) diagnostic and the list
+will be empty.  The pci_acpi_root_prepare_resources() implementations will
+deal with empty lists just fine.
+
+I think the change from your code here is that we would create the root bus
+and enumerate it even if _CRS fails.  I think that's OK: we'll find devices
+and we'll learn what resources they want, but we won't have anything to
+assign them.  I think that's OK and it will make this code simpler.
+
+> +	if (ret < 0)
+> +		goto out_release_info;
+> +	else if (ret > 0)
+> +		pci_acpi_root_add_resources(info);
+> +	pci_add_resource(&info->resources, &root->secondary);
+> +
+> +	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+> +				  sysdata, &info->resources);
+> +	if (bus) {
+
+    if (!bus)
+	goto out_release_info;
+
+Then this code can be un-indented:
+
+> +		pci_scan_child_bus(bus);
+> +		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
+> +					    acpi_pci_root_release_info, info);
+> +		if (node != NUMA_NO_NODE)
+> +			dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n",
+> +				   node);
+> +		return bus;
 > +	}
 > +
-> +	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> +out_release_info:
+> +	__acpi_pci_root_release_info(info);
+> +	return NULL;
+> +}
 > +
-> +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> +		pci_bus_size_bridges(bus);
-> +		pci_bus_assign_resources(bus);
-> +	}
-> +	pci_bus_add_devices(bus);
-> +
-> +	/* Configure PCI Express settings */
-> +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> +		struct pci_bus *child;
-> +
-> +		list_for_each_entry(child, &bus->children, node)
-> +			pcie_bus_configure_settings(child);
-> +	}
->  	return 0;
+>  void __init acpi_pci_root_init(void)
+>  {
+>  	acpi_hest_init();
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index a965efa52152..a76cb6f24ca1 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -52,6 +52,29 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+>  	return ACPI_HANDLE(dev);
 >  }
+>  
+> +struct acpi_pci_root;
+> +struct acpi_pci_root_ops;
+> +
+> +struct acpi_pci_root_info {
+> +	struct acpi_pci_root		*root;
+> +	struct acpi_device		*bridge;
+> +	struct acpi_pci_root_ops	*ops;
+> +	struct list_head		resources;
+> +	char				name[16];
+> +};
+> +
+> +struct acpi_pci_root_ops {
+> +	struct pci_ops *pci_ops;
+> +	int (*init_info)(struct acpi_pci_root_info *info);
+> +	void (*release_info)(struct acpi_pci_root_info *info);
+> +	int (*prepare_resources)(struct acpi_pci_root_info *info, int status);
+> +};
+> +
+> +extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> +					    struct acpi_pci_root_ops *ops,
+> +					    struct acpi_pci_root_info *info,
+> +					    void *sd, int seg, int node);
+
+Drop the "extern" here to match the declarations below.  I know there's
+still a mix in this file, but my preference is to skip them in new code.
+
+>  void acpi_pci_add_bus(struct pci_bus *bus);
+>  void acpi_pci_remove_bus(struct pci_bus *bus);
 >  
 > -- 
-> 1.9.1
+> 1.7.10.4
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
