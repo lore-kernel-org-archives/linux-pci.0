@@ -1,47 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:43295 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755421AbbGUQa7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Jul 2015 12:30:59 -0400
-Date: Tue, 21 Jul 2015 18:30:58 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	iommu <iommu@lists.linux-foundation.org>
-Subject: Re: Since Linux 4.1: A lot of AMD-Vi IO_PAGE_FAULTs
-Message-ID: <20150721163058.GF10969@8bytes.org>
-References: <55AE5F84.5020204@01019freenet.de>
- <1437492886.1391.847.camel@redhat.com>
- <20150721155635.GE10969@8bytes.org>
- <55AE7147.7070902@maya.org>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:36935 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785AbbG2RnO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 13:43:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <55AE7147.7070902@maya.org>
+In-Reply-To: <1438158927.5106.20.camel@tiscali.nl>
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+	<1438080345-7233-4-git-send-email-lftan@altera.com>
+	<1438158927.5106.20.camel@tiscali.nl>
+Date: Thu, 30 Jul 2015 01:43:13 +0800
+Message-ID: <CAFiDJ5_yXoXJ+UUROX1aiNeTyxt6wDZ+h8DW=c4EdUiS5OkkJg@mail.gmail.com>
+Subject: Re: [PATCH 3/6] pci:host: Add Altera PCIe host controller driver
+From: Ley Foon Tan <lftan@altera.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 21, 2015 at 06:20:23PM +0200, Andreas Hartmann wrote:
-> Hi Jörg,
-> 
-> I attached the dmesg output of the boot seuqence. This time after
-> reboot, the amount of IO_PAGE_FAULTs is not that much, but now, I got a
-> few ata3.00 errors.
-> 
-> 
-> Am 21.07.2015 um 17:56 schrieb Joerg Roedel:
-> > Hi Andreas,
-> > 
-> > On Tue, Jul 21, 2015 at 09:34:46AM -0600, Alex Williamson wrote:
-> >>> Since Linux 4.1, I'm getting a lot of IO_PAGE_FAULT like this one
-> 
-> To be more precise: The last kernel w/o this problem is 3.18.x - I never
-> used 3.19 or 4.0.
+On Wed, Jul 29, 2015 at 4:35 PM, Paul Bolle <pebolle@tiscali.nl> wrote:
+> On di, 2015-07-28 at 18:45 +0800, Ley Foon Tan wrote:
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>
+>> +config PCIE_ALTERA
+>> +     bool "Altera PCIe controller"
+>> +     depends on ARCH_SOCFPGA
+>> +     depends on OF
+>> +     select PCI_MSI_IRQ_DOMAIN if PCI_MSI
+>> +     help
+>> +       Say Y here if you want to enable PCIe controller support for Altera
+>> +       SoCFPGA family of SoCs.
+>
+>> --- a/drivers/pci/host/Makefile
+>> +++ b/drivers/pci/host/Makefile
+>
+>> +obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+>
+>> --- /dev/null
+>> +++ b/drivers/pci/host/pcie-altera.c
+>
+>> +#include <linux/module.h>
+>
+>> +static const struct of_device_id altera_pcie_of_match[] = {
+>> +     { .compatible = "altr,pcie-root-port-1.0", },
+>> +     {},
+>> +};
+>> +MODULE_DEVICE_TABLE(of, altera_pcie_of_match);
+>
+>
+>> +static struct platform_driver altera_pcie_driver = {
+>> +     [...]
+>> +             .owner  = THIS_MODULE,
+>> +     ]...]
+>> +};
+>> +
+>> +module_platform_driver(altera_pcie_driver);
+>> +
+>> +MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
+>> +MODULE_DESCRIPTION("Altera PCIe host controller driver");
+>> +MODULE_LICENSE("GPL v2");
+>
+> PCIE_ALTERA is a bool symbol. So pcie-altera.o is built-in only. Yet
+> pcie-altera.c uses a number of module-specific constructs. Should
+> PCIE_ALTERA perhaps be tristate?
+Yes, PCIE_ALTERA can be changed to tristate after we remove call to
+pci_common_init_dev to now.
+pci_common_init_dev is not a exported symbol.
 
-Hmm, so you don't know whether 3.19 and 4.0 show the same problems? Can
-you find that out eventually? I look into your dmesg in the meantime.
 
+> Likewise for PCIE_ALTERA_MSI in 4/6.
+PCIE_ALTERA_MSI can only be built-in only. It depends on quite a
+number of non-exported symbols.
+Eg: pci_msi_mask_irq, pci_msi_create_irq_domain, irq_domain_set_info and etc..
 
-	Joerg
+Thanks.
 
-
+Regards
+Ley Foon
