@@ -1,122 +1,66 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v2 2/3] PCI: host: pci-dra7xx: add pm support to pci dra7xx
-Date: Fri, 24 Jul 2015 17:23:09 +0530
-Message-ID: <1437738790-11114-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1437738790-11114-1-git-send-email-kishon@ti.com>
-References: <1437738790-11114-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAL_JsqK8HbYMbQf+8vFuDiTe3j9THus+YwLZDdJpQM5faQTY3g@mail.gmail.com>
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+	<1438080345-7233-3-git-send-email-lftan@altera.com>
+	<CAL_JsqK8HbYMbQf+8vFuDiTe3j9THus+YwLZDdJpQM5faQTY3g@mail.gmail.com>
+Date: Wed, 29 Jul 2015 11:03:55 +0800
+Message-ID: <CAFiDJ584tv9od635_+AVObFAuwu7OZHeBDZ2DRdwCzDz40RjHg@mail.gmail.com>
+Subject: Re: [PATCH 2/6] arm: mach-socfpga: enable pci support
+From: Ley Foon Tan <lftan@altera.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PM support to pci-dra7xx so that PCI clocks can be disabled
-during suspend and enabled back during resume without affecting
-PCI functionality.
+On Tue, Jul 28, 2015 at 9:26 PM, Rob Herring <robherring2@gmail.com> wrote:
+> On Tue, Jul 28, 2015 at 5:45 AM, Ley Foon Tan <lftan@altera.com> wrote:
+>> Enable CONFIG_ARCH_SUPPORT_MSI and CONFIG_PCI in SOCFPGA platform.
+>>
+>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+>> ---
+>>  arch/arm/mach-socfpga/Kconfig | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/arch/arm/mach-socfpga/Kconfig b/arch/arm/mach-socfpga/Kconfig
+>> index 90efdeb..7ff4576 100644
+>> --- a/arch/arm/mach-socfpga/Kconfig
+>> +++ b/arch/arm/mach-socfpga/Kconfig
+>> @@ -1,6 +1,7 @@
+>>  menuconfig ARCH_SOCFPGA
+>>         bool "Altera SOCFPGA family" if ARCH_MULTI_V7
+>>         select ARCH_SUPPORTS_BIG_ENDIAN
+>> +       select ARCH_SUPPORTS_MSI
+>
+> This doesn't exist in mainline having been removed in 3.12.
+Will removed this.
+>
+>>         select ARM_AMBA
+>>         select ARM_GIC
+>>         select CACHE_L2X0
+>> @@ -9,6 +10,7 @@ menuconfig ARCH_SOCFPGA
+>>         select HAVE_ARM_SCU
+>>         select HAVE_ARM_TWD if SMP
+>>         select MFD_SYSCON
+>> +       select PCI
+>
+> This should not be selected by the platform, but be user selectable
+> unless perhaps you require PCI to boot.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/host/pci-dra7xx.c |   77 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 77 insertions(+)
+Will removed this as well.
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index d8b6d66..d3ee2ef 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -433,6 +433,82 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int dra7xx_pcie_suspend(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	struct pcie_port *pp = &dra7xx->pp;
-+
-+	dw_pcie_suspend_rc(pp);
-+
-+	return 0;
-+}
-+
-+static int dra7xx_pcie_resume(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	struct pcie_port *pp = &dra7xx->pp;
-+
-+	dw_pcie_resume_rc(pp);
-+
-+	return 0;
-+}
-+
-+static int dra7xx_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	int count = dra7xx->phy_count;
-+
-+	while (count--) {
-+		phy_power_off(dra7xx->phy[count]);
-+		phy_exit(dra7xx->phy[count]);
-+	}
-+
-+	return 0;
-+}
-+
-+static int dra7xx_pcie_resume_noirq(struct device *dev)
-+{
-+	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
-+	int phy_count = dra7xx->phy_count;
-+	int ret;
-+	int i;
-+
-+	for (i = 0; i < phy_count; i++) {
-+		ret = phy_init(dra7xx->phy[i]);
-+		if (ret < 0)
-+			goto err_phy;
-+
-+		ret = phy_power_on(dra7xx->phy[i]);
-+		if (ret < 0) {
-+			phy_exit(dra7xx->phy[i]);
-+			goto err_phy;
-+		}
-+	}
-+
-+	return 0;
-+
-+err_phy:
-+	while (--i >= 0) {
-+		phy_power_off(dra7xx->phy[i]);
-+		phy_exit(dra7xx->phy[i]);
-+	}
-+
-+	return ret;
-+}
-+
-+static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
-+	.suspend_noirq = dra7xx_pcie_suspend_noirq,
-+	.suspend = dra7xx_pcie_suspend,
-+	.resume_noirq = dra7xx_pcie_resume_noirq,
-+	.resume = dra7xx_pcie_resume,
-+};
-+
-+#define DEV_PM_OPS	(&dra7xx_pcie_pm_ops)
-+#else
-+#define DEV_PM_OPS	NULL
-+#endif
-+
- static const struct of_device_id of_dra7xx_pcie_match[] = {
- 	{ .compatible = "ti,dra7-pcie", },
- 	{},
-@@ -444,6 +520,7 @@ static struct platform_driver dra7xx_pcie_driver = {
- 	.driver = {
- 		.name	= "dra7-pcie",
- 		.of_match_table = of_dra7xx_pcie_match,
-+		.pm	= DEV_PM_OPS,
- 	},
- };
- 
--- 
-1.7.9.5
+Thanks for reviewing.
 
+Regards
+Ley Foon
