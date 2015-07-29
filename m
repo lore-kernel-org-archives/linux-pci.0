@@ -1,115 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:34353 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655AbbGIByg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 21:54:36 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: mingo@kernel.org
-Cc: bp@suse.de, arnd@arndb.de, bhelgaas@google.com,
-	luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Davidlohr Bueso <dbueso@suse.de>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Juergen Gross <jgross@suse.com>, Mel Gorman <mgorman@suse.de>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
-	Vlastimil Babka <vbabka@suse.cz>
-Subject: [PATCH v9 1/8] PCI: Add pci_ioremap_wc_bar()
-Date: Wed,  8 Jul 2015 18:54:12 -0700
-Message-Id: <1436406859-1280-2-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 29 Jul 2015 15:37:41 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Jakub Sitnicki <jsitnicki@gmail.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch v5 1/6] ACPI/PCI: Enhance ACPI core to support sparse IO
+ space
+Message-ID: <20150729203741.GC9640@google.com>
+References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433780448-18636-2-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1433780448-18636-2-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Tue, Jun 09, 2015 at 12:20:43AM +0800, Jiang Liu wrote:
+> Enhance ACPI resource parsing interfaces to support sparse IO space,
+> which will be used to share common code between x86 and IA64 later.
+> 
+> Tested-by: Tony Luck <tony.luck@intel.com>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+> ---
+>  drivers/acpi/resource.c |    9 ++++++---
+>  include/linux/ioport.h  |    1 +
+>  2 files changed, 7 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index 8244f013f210..fdcc73dad2c1 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+>  EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+>  
+>  static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+> -				      u8 io_decode)
+> +				      u8 io_decode, u8 translation_type)
+>  {
+>  	res->flags = IORESOURCE_IO;
+>  
+> @@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+>  
+>  	if (io_decode == ACPI_DECODE_16)
+>  		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+> +	if (translation_type == ACPI_SPARSE_TRANSLATION)
+> +		res->flags |= IORESOURCE_IO_SPARSE;
+>  }
+>  
+>  static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+> @@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+>  {
+>  	res->start = start;
+>  	res->end = start + len - 1;
+> -	acpi_dev_ioresource_flags(res, len, io_decode);
+> +	acpi_dev_ioresource_flags(res, len, io_decode, 0);
+>  }
+>  
+>  /**
+> @@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
+>  		acpi_dev_memresource_flags(res, len, wp);
+>  		break;
+>  	case ACPI_IO_RANGE:
+> -		acpi_dev_ioresource_flags(res, len, iodec);
+> +		acpi_dev_ioresource_flags(res, len, iodec,
+> +					  addr->info.io.translation_type);
+>  		break;
+>  	case ACPI_BUS_NUMBER_RANGE:
+>  		res->flags = IORESOURCE_BUS;
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 388e3ae94f7a..24bea087e7af 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -94,6 +94,7 @@ struct resource {
+>  /* PnP I/O specific bits (IORESOURCE_BITS) */
+>  #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
+>  #define IORESOURCE_IO_FIXED		(1<<1)
+> +#define IORESOURCE_IO_SPARSE		(1<<2)
 
-This lets drivers take advantage of PAT when available. It should help
-with the transition of converting video drivers over to ioremap_wc()
-to help with the goal of eventually using _PAGE_CACHE_UC over
-_PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache(), see:
+I don't really like this bit.  We adding a new generic IORESOURCE_* bit
+just for a special case, and it's only used in one place, for one arch,
+during enumeration.
 
-  de33c442ed2a ("x86 PAT: fix performance drop for glx, use UC minus for ioremap(),
-		ioremap_nocache() and pci_mmap_page_range()")
+Don't we have a similar problem (struct resource can't express all the
+information from an ACPI resource) for the _TRA value for bridge windows?
+If it's a similar issue, we should solve it in a similar way.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: benh@kernel.crashing.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: mst@redhat.com
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Ville Syrjälä <syrjala@sci.fi>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Link: http://lkml.kernel.org/r/1435195342-26879-2-git-send-email-mcgrof@do-not-panic.com
-Signed-off-by: Borislav Petkov <bp@suse.de>
----
- drivers/pci/pci.c   | 14 ++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 15 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0008c950452c..fdae37b473f8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -138,6 +138,20 @@ void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar)
- 	return ioremap_nocache(res->start, resource_size(res));
- }
- EXPORT_SYMBOL_GPL(pci_ioremap_bar);
-+
-+void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar)
-+{
-+	/*
-+	 * Make sure the BAR is actually a memory resource, not an IO resource
-+	 */
-+	if (!(pci_resource_flags(pdev, bar) & IORESOURCE_MEM)) {
-+		WARN_ON(1);
-+		return NULL;
-+	}
-+	return ioremap_wc(pci_resource_start(pdev, bar),
-+			  pci_resource_len(pdev, bar));
-+}
-+EXPORT_SYMBOL_GPL(pci_ioremap_wc_bar);
- #endif
- 
- #define PCI_FIND_CAP_TTL	48
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c0dd4ab5c2f5..1193975d20c3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1657,6 +1657,7 @@ static inline void pci_mmcfg_late_init(void) { }
- int pci_ext_cfg_avail(void);
- 
- void __iomem *pci_ioremap_bar(struct pci_dev *pdev, int bar);
-+void __iomem *pci_ioremap_wc_bar(struct pci_dev *pdev, int bar);
- 
- #ifdef CONFIG_PCI_IOV
- int pci_iov_virtfn_bus(struct pci_dev *dev, int id);
--- 
-2.3.2.209.gd67f9d5.dirty
-
+>  /* PCI ROM control bits (IORESOURCE_BITS) */
+>  #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
+> -- 
+> 1.7.10.4
+> 
