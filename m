@@ -1,65 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 36/51] PCI: Add has_mem64 for host_bridge
-Date: Mon, 27 Jul 2015 16:29:54 -0700
-Message-Id: <1438039809-24957-37-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:60078 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750803AbbG2USS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 16:18:18 -0400
+Message-ID: <55B93507.6070101@roeck-us.net>
+Date: Wed, 29 Jul 2015 13:18:15 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+MIME-Version: 1.0
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
+References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>	<20150729160903.GD31170@google.com>	<CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>	<55B92DA5.4030409@roeck-us.net> <CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
+In-Reply-To: <CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On system that does not support mmio64 above 4g, will not set that.
-We will use that info next two following patches:
-1. Don't treat non-pref mmio64 as pref mmio, so will not put
-   it under bridge's pref range when rescan the devices
-2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
+On 07/29/2015 12:53 PM, Yinghai Lu wrote:
+> On Wed, Jul 29, 2015 at 12:46 PM, Guenter Roeck <linux@roeck-us.net> wrote:
+>> On 07/29/2015 12:30 PM, Yinghai Lu wrote:
+>>
+>>>
+>>> so PCI_BUS_FLAGS_SUPPORTS_IO will never get set.
+>>>
+>>
+>> excellent catch. Unfortunately, I don't know how to make it
+>> work with the reversed flag. The idea here was that the flag
+>> propagates from parent to child. This makes sense for an
+>> "it doesn't work" flag to be inherited from the child,
+>> but not for an "it works" flag.
+>>
+>
+> also would be better if we can add has_ioport in hostbridge instead.
+> like has_mem64 in https://patchwork.ozlabs.org/patch/500926/
+> and use
+>
+> to_pci_host_bridge(bus->bridge)->has_ioport
+>
+> to replace pci_root_has_io_resource()
+>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c | 9 +++++++++
- include/linux/pci.h | 1 +
- 2 files changed, 10 insertions(+)
+Is there a function to get the root bus ? Otherwise I still need to
+find the root bus first.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 010d8d9..14bdbca 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2051,6 +2051,15 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 	}
- 
-+	resource_list_for_each_entry(window, &bridge->windows) {
-+		res = window->res;
-+		if (resource_type(res) == IORESOURCE_MEM &&
-+		    (res->end - window->offset) > 0xffffffff) {
-+			bridge->has_mem64 = 1;
-+			break;
-+		}
-+	}
-+
- 	down_write(&pci_bus_sem);
- 	list_add_tail(&b->node, &pci_root_buses);
- 	up_write(&pci_bus_sem);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33ef25f..0771b37 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -409,6 +409,7 @@ struct pci_host_bridge {
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-+	unsigned int has_mem64:1;
- };
- 
- #define	to_pci_host_bridge(n) container_of(n, struct pci_host_bridge, dev)
--- 
-1.8.4.5
+Guenter
 
