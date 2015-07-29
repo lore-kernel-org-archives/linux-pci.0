@@ -1,132 +1,304 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:33229 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753213AbbGXIXg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 04:23:36 -0400
-Message-ID: <1437726214.3071.44.camel@pengutronix.de>
-Subject: Re: [PATCH 1/4] PCI: imx6: Mark the msi cascade handler
- IRQF_NO_THREAD
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Kevin Hao <haokexin@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Richard Zhu <Richard.Zhu@freescale.com>
-Date: Fri, 24 Jul 2015 10:23:34 +0200
-In-Reply-To: <1437715776-2243-2-git-send-email-haokexin@gmail.com>
-References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
-	 <1437715776-2243-2-git-send-email-haokexin@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from foss.arm.com ([217.140.101.70]:35894 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750789AbbG2Lci (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jul 2015 07:32:38 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Russell King <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	James Morse <james.morse@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jayachandran C <jchandra@broadcom.com>
+Subject: [PATCH v4 2/2] ARM: pci: kill pcibios_msi_controller
+Date: Wed, 29 Jul 2015 12:33:18 +0100
+Message-Id: <1438169598-24490-2-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1438169598-24490-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1438169598-24490-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 24.07.2015, 13:29 +0800 schrieb Kevin Hao:
-> The cascade handler must run in hard interrupt context, otherwise
-> it will cause the following kernel warning if we force threading
-> of all the interrupt handlers via kernel command parameter
-> "threadirqs":
->    [ INFO: inconsistent lock state ]
->    4.2.0-rc3-next-20150723 #28 Not tainted
->    ---------------------------------
->    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
->    irq/21-mx6-pcie/62 [HC0[0]:SC0[2]:HE1:SE0] takes:
->     (&irq_desc_lock_class){?.-...}, at: [<80078d94>] handle_simple_irq+0x1c/0xc0
->    {IN-HARDIRQ-W} state was registered at:
->      [<8006aa70>] lock_acquire+0x74/0x94
->      [<807acc6c>] _raw_spin_lock+0x34/0x44
->      [<8007900c>] handle_fasteoi_irq+0x20/0x1b8
->      [<80075720>] generic_handle_irq+0x28/0x38
->      [<80075864>] __handle_domain_irq+0x6c/0xe0
->      [<80009558>] gic_handle_irq+0x28/0x68
->      [<80013b64>] __irq_svc+0x44/0x5c
->      [<807ad400>] _raw_spin_unlock_irq+0x30/0x34
->      [<8004cffc>] finish_task_switch+0xc0/0x218
->      [<807a7a10>] __schedule+0x248/0x6e0
->      [<807a7fac>] schedule+0x38/0x9c
->      [<807a8240>] schedule_preempt_disabled+0x10/0x14
->      [<80063f8c>] cpu_startup_entry+0xfc/0x1f8
->      [<8079f640>] rest_init+0x130/0x16c
->      [<80a55ca4>] start_kernel+0x374/0x3e8
->      [<1000807c>] 0x1000807c
->    irq event stamp: 16
->    hardirqs last  enabled at (15): [<807ad3fc>] _raw_spin_unlock_irq+0x2c/0x34
->    hardirqs last disabled at (14): [<807acd80>] _raw_spin_lock_irq+0x20/0x58
->    softirqs last  enabled at (0): [<800283d8>] copy_process.isra.58+0x3bc/0x1504
->    softirqs last disabled at (16): [<80076f08>] irq_forced_thread_fn+0x0/0x68
-> 
->    other info that might help us debug this:
->     Possible unsafe locking scenario:
-> 
->           CPU0
->           ----
->      lock(&irq_desc_lock_class);
->      <Interrupt>
->        lock(&irq_desc_lock_class);
-> 
->     *** DEADLOCK ***
-> 
->    no locks held by irq/21-mx6-pcie/62.
-> 
->    stack backtrace:
->    CPU: 0 PID: 62 Comm: irq/21-mx6-pcie Not tainted 4.2.0-rc3-next-20150723 #28
->    Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
->    Backtrace:
->    [<80012dc4>] (dump_backtrace) from [<80012f64>] (show_stack+0x18/0x1c)
->     r6:be3eeb78 r5:00000000 r4:00000000 r3:00000000
->    [<80012f4c>] (show_stack) from [<807a4b50>] (dump_stack+0x80/0x9c)
->    [<807a4ad0>] (dump_stack) from [<807a2efc>] (print_usage_bug+0x270/0x2e4)
->     r5:be3ee780 r4:80c579ec
->    [<807a2c8c>] (print_usage_bug) from [<8006874c>] (mark_lock+0x5b4/0x6e0)
->     r10:80c579ec r9:800678e0 r8:be3ee780 r7:00000000 r6:80c579ec r5:be3eeb78
->     r4:00000002
->    [<80068198>] (mark_lock) from [<80068f70>] (__lock_acquire+0x6f8/0x1e20)
->     r10:00000001 r9:be3eeb78 r8:be3ee780 r7:00000008 r6:000003f8 r5:be3ee780
->     r4:00000000
->    [<80068878>] (__lock_acquire) from [<8006aa70>] (lock_acquire+0x74/0x94)
->     r10:00000001 r9:00000001 r8:00000000 r7:00000001 r6:00000001 r5:60030013
->     r4:00000000
->    [<8006a9fc>] (lock_acquire) from [<807acc6c>] (_raw_spin_lock+0x34/0x44)
->     r6:0000012c r5:00000001 r4:be1f4d64
->    [<807acc38>] (_raw_spin_lock) from [<80078d94>] (handle_simple_irq+0x1c/0xc0)
->     r5:be1f4d64 r4:be1f4d00
->    [<80078d78>] (handle_simple_irq) from [<80075720>] (generic_handle_irq+0x28/0x38)
->     r5:be28ee20 r4:0000012c
->    [<800756f8>] (generic_handle_irq) from [<80321914>] (dw_handle_msi_irq+0x68/0x90)
->     r4:00000001 r3:00000002
->    [<803218ac>] (dw_handle_msi_irq) from [<8032265c>] (imx6_pcie_msi_handler+0x14/0x18)
->     r7:80076f08 r6:be39efc0 r5:be154000 r4:be39efc0
->    [<80322648>] (imx6_pcie_msi_handler) from [<80076f38>] (irq_forced_thread_fn+0x30/0x68)
->    [<80076f08>] (irq_forced_thread_fn) from [<80076cb4>] (irq_thread+0x14c/0x19c)
->     r6:be39efc0 r5:be154000 r4:be39efe0 r3:00000004
->    [<80076b68>] (irq_thread) from [<80047f80>] (kthread+0xdc/0xf8)
->     r10:00000000 r9:00000000 r8:00000000 r7:80076b68 r6:be39efc0 r5:be3a1000
->     r4:00000000
->    [<80047ea4>] (kthread) from [<8000fa38>] (ret_from_fork+0x14/0x3c)
->     r7:00000000 r6:00000000 r5:80047ea4 r4:be3a1000
-> 
-> Signed-off-by: Kevin Hao <haokexin@gmail.com>
+On ARM PCI systems relying on the pcibios API to initialize PCI host
+controllers, the pcibios_msi_controller weak callback is used to look-up
+the msi_controller pointer, through pci_sys_data msi_ctrl pointer.
 
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+pci_sys_data is an ARM specific structure, which prevents using the
+same mechanism (so same PCI host controller drivers) on ARM64 systems.
 
-> ---
->  drivers/pci/host/pci-imx6.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 233a196c6e66..fd5eb2e34fc0 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -544,7 +544,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->  
->  		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
->  				       imx6_pcie_msi_handler,
-> -				       IRQF_SHARED, "mx6-pcie-msi", pp);
-> +				       IRQF_SHARED | IRQF_NO_THREAD,
-> +				       "mx6-pcie-msi", pp);
->  		if (ret) {
->  			dev_err(&pdev->dev, "failed to request MSI irq\n");
->  			return -ENODEV;
+Since the struct pci_bus already contains an msi_controller pointer and
+the kernel already uses it to look-up the msi controller,
+this patch converts ARM host controller and related pcibios/host bridges
+initialization routines so that the msi_controller pointer look-up can be
+carried out by PCI core code through the struct pci_bus msi pointer,
+removing the need for the arch specific pcibios_msi_controller callback
+and the related pci_sys_data msi_ctrl pointer.
 
+To simplify the conversion, this patch adds a new function in PCI
+core code (pci_scan_root_bus_msi()) that takes the msi_controller
+pointer as an additional parameter wrt pci_scan_root_bus() so that
+the msi controller pointer can be effectively propagated at probe time
+through the augmented API.
+
+The existing pci_scan_root_bus() API is made to rely on the newly
+introduced function, by passing a NULL msi pointer to it so
+that it can be used when no msi controller pointer passing is required
+without additional code (and API conversions) in the core PCI layer.
+
+ARM is the only arch relying on the pcibios_msi_controller() weak
+function, hence this patch also removes its default weak implementation
+from PCI core code since it becomes of no use.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Suggested-by: Russell King <linux@arm.linux.org.uk>
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Russell King <linux@arm.linux.org.uk>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+---
+v3->v4
+
+- Added conversion of designware and Xilinx PCI host controllers to
+  scan through pci_scan_root_bus_msi()
+
+v3: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/360020.html
+
+- Added pci_scan_root_bus_msi() in core PCI code and converted ARM bios32 to
+  use it
+
+v2: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359183.html
+
+v1->v2
+
+- Added patch to replace panic statements with WARN
+- Removed unused pcibios_msi_controller() and pci_msi_controller() from
+  core code
+- Dropped RFT status
+
+v1: http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/356028.html
+
+ arch/arm/include/asm/mach/pci.h    |  5 -----
+ arch/arm/kernel/bios32.c           | 17 +++--------------
+ drivers/pci/host/pcie-designware.c |  6 +++---
+ drivers/pci/host/pcie-xilinx.c     |  5 ++---
+ drivers/pci/msi.c                  | 17 +----------------
+ drivers/pci/probe.c                | 15 +++++++++++++--
+ include/linux/pci.h                |  4 ++++
+ 7 files changed, 26 insertions(+), 43 deletions(-)
+
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 28b9bb3..8857d28 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -19,9 +19,7 @@ struct pci_bus;
+ struct device;
+ 
+ struct hw_pci {
+-#ifdef CONFIG_PCI_MSI
+ 	struct msi_controller *msi_ctrl;
+-#endif
+ 	struct pci_ops	*ops;
+ 	int		nr_controllers;
+ 	void		**private_data;
+@@ -42,9 +40,6 @@ struct hw_pci {
+  * Per-controller structure
+  */
+ struct pci_sys_data {
+-#ifdef CONFIG_PCI_MSI
+-	struct msi_controller *msi_ctrl;
+-#endif
+ 	struct list_head node;
+ 	int		busnr;		/* primary bus number			*/
+ 	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index a5c782c..1a20076 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -18,15 +18,6 @@
+ 
+ static int debug_pci;
+ 
+-#ifdef CONFIG_PCI_MSI
+-struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+-{
+-	struct pci_sys_data *sysdata = dev->bus->sysdata;
+-
+-	return sysdata->msi_ctrl;
+-}
+-#endif
+-
+ /*
+  * We can't use pci_get_device() here since we are
+  * called from interrupt context.
+@@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 		if (WARN(!sys, "PCI: unable to allocate sys data!"))
+ 			break;
+ 
+-#ifdef CONFIG_PCI_MSI
+-		sys->msi_ctrl = hw->msi_ctrl;
+-#endif
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+@@ -486,8 +474,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 			if (hw->scan)
+ 				sys->bus = hw->scan(nr, sys);
+ 			else
+-				sys->bus = pci_scan_root_bus(parent, sys->busnr,
+-						hw->ops, sys, &sys->resources);
++				sys->bus = pci_scan_root_bus_msi(parent,
++					sys->busnr, hw->ops, sys,
++					&sys->resources, hw->msi_ctrl);
+ 
+ 			if (WARN(!sys->bus, "PCI: unable to scan bus!")) {
+ 				kfree(sys);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 69486be..bd0aeec 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -526,7 +526,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ #ifdef CONFIG_PCI_MSI
+ 	dw_pcie_msi_chip.dev = pp->dev;
+-	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
+ #endif
+ 
+ 	dw_pci.nr_controllers = 1;
+@@ -708,8 +707,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	struct pcie_port *pp = sys_to_pcie(sys);
+ 
+ 	pp->root_bus_nr = sys->busnr;
+-	bus = pci_scan_root_bus(pp->dev, sys->busnr,
+-				  &dw_pcie_ops, sys, &sys->resources);
++	bus = pci_scan_root_bus_msi(pp->dev, sys->busnr, &dw_pcie_ops, sys,
++				    &sys->resources, &dw_pcie_msi_chip);
++
+ 	if (!bus)
+ 		return NULL;
+ 
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index f1a06a0..526807d 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -647,8 +647,8 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+ 	struct pci_bus *bus;
+ 
+ 	port->root_busno = sys->busnr;
+-	bus = pci_scan_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
+-				sys, &sys->resources);
++	bus = pci_scan_root_bus_msi(port->dev, sys->busnr, &xilinx_pcie_ops,
++				sys, &sys->resources, &xilinx_pcie_msi_chip);
+ 
+ 	return bus;
+ }
+@@ -847,7 +847,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 
+ #ifdef CONFIG_PCI_MSI
+ 	xilinx_pcie_msi_chip.dev = port->dev;
+-	hw.msi_ctrl = &xilinx_pcie_msi_chip;
+ #endif
+ 	pci_common_init_dev(dev, &hw);
+ 
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index f66be86..0d20142 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -77,24 +77,9 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
+ 
+ /* Arch hooks */
+ 
+-struct msi_controller * __weak pcibios_msi_controller(struct pci_dev *dev)
+-{
+-	return NULL;
+-}
+-
+-static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
+-{
+-	struct msi_controller *msi_ctrl = dev->bus->msi;
+-
+-	if (msi_ctrl)
+-		return msi_ctrl;
+-
+-	return pcibios_msi_controller(dev);
+-}
+-
+ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+-	struct msi_controller *chip = pci_msi_controller(dev);
++	struct msi_controller *chip = dev->bus->msi;
+ 	int err;
+ 
+ 	if (!chip || !chip->setup_irq)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..4915c6d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2096,8 +2096,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
+-struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata,
++		struct list_head *resources, struct msi_controller *msi)
+ {
+ 	struct resource_entry *window;
+ 	bool found = false;
+@@ -2114,6 +2115,8 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!b)
+ 		return NULL;
+ 
++	b->msi = msi;
++
+ 	if (!found) {
+ 		dev_info(&b->dev,
+ 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+@@ -2128,6 +2131,14 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 
+ 	return b;
+ }
++EXPORT_SYMBOL(pci_scan_root_bus_msi);
++
++struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	return pci_scan_root_bus_msi(parent, bus, ops, sysdata, resources,
++				     NULL);
++}
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a..4d4f9d2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -787,6 +787,10 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
++struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
++				      struct pci_ops *ops, void *sysdata,
++				      struct list_head *resources,
++				      struct msi_controller *msi);
+ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+2.2.1
 
