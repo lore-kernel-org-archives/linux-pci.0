@@ -1,156 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:33175 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751829AbbGQCF6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 22:05:58 -0400
-Received: by widic2 with SMTP id ic2so28624336wid.0
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jul 2015 19:05:57 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55B899BB.2090008@arm.com>
+Date: Wed, 29 Jul 2015 10:15:39 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <55A8605A.6000902@huawei.com>
-References: <1434021134-6519-1-git-send-email-wangyijing@huawei.com>
- <20150716042203.GC25591@google.com> <55A76361.8070604@huawei.com>
- <20150716152548.GD25591@google.com> <55A856F2.1040900@huawei.com>
- <CAErSpo6UTEfBieOm3P4Ms45rXhp5SS80QqU_wcDjNswdBzzifg@mail.gmail.com> <55A8605A.6000902@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 16 Jul 2015 21:05:37 -0500
-Message-ID: <CAErSpo56r2ZK59jWF9LhT=Vqy8E6FS_ozS2ye978=OfVjEi4iA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rajat Jain <rajatja@google.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Ley Foon Tan <lftan@altera.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 4/6] pci: altera: Add Altera PCIe MSI driver
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>	<1438080345-7233-5-git-send-email-lftan@altera.com>	<55B7C2D0.8080107@arm.com> <CAFiDJ59kb=tDbnktmdF5r1_ShUfwvpxDQUtWV8LieS5Y=iVi4w@mail.gmail.com>
+In-Reply-To: <CAFiDJ59kb=tDbnktmdF5r1_ShUfwvpxDQUtWV8LieS5Y=iVi4w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 16, 2015 at 8:54 PM, Yijing Wang <wangyijing@huawei.com> wrote:
-> On 2015/7/17 9:35, Bjorn Helgaas wrote:
->> On Thu, Jul 16, 2015 at 8:14 PM, Yijing Wang <wangyijing@huawei.com> wrote:
->>>>>> If I'm mistaken, please correct me and explain why this patch is safe.
->>>>>
->>>>> Hi Bjorn, I think pci_bus_sem here was introduced to protect the bus->slots list, because it
->>>>> use down_write() here, for bus->devices list, we only traverse it, won't add/remove it, for the latter, down_read() is enough.
->>>>> When I posted this patch, I thought we should protect the bus when we start to register a slot,
->>>>> something like a big lock at outermost routine to tell others not to touch its children devices, use pci_bus_sem to protect hotplug
->>>>> cases is not a good idea, and actually in PCI code, we have found several deadlock caused by the pci_bus_sem.
->>>>>
->>>>> But for this patch, I know what you worried, what about add a down_read(&pci_bus_sem) to avoid to introduce a regression ?
->>>>>
->>>>>
->>>>> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
->>>>> index 396c200..a9079d9 100644
->>>>> --- a/drivers/pci/slot.c
->>>>> +++ b/drivers/pci/slot.c
->>>>> @@ -14,6 +14,7 @@
->>>>>
->>>>>  struct kset *pci_slots_kset;
->>>>>  EXPORT_SYMBOL_GPL(pci_slots_kset);
->>>>> +static DEFINE_MUTEX(pci_slot_mutex);
->>>>>
->>>>>  static ssize_t pci_slot_attr_show(struct kobject *kobj,
->>>>>                                         struct attribute *attr, char *buf)
->>>>> @@ -106,9 +107,11 @@ static void pci_slot_release(struct kobject *kobj)
->>>>>         dev_dbg(&slot->bus->dev, "dev %02x, released physical slot %s\n",
->>>>>                 slot->number, pci_slot_name(slot));
->>>>>
->>>>> +       down_read(&pci_bus_sem);
->>>>>         list_for_each_entry(dev, &slot->bus->devices, bus_list)
->>>>>                 if (PCI_SLOT(dev->devfn) == slot->number)
->>>>>                         dev->slot = NULL;
->>>>> +       up_read(&pci_bus_sem);
->>>>>
->>>>>         list_del(&slot->list);
->>>>
->>>> This list_del() updates the bus->slots list.
->>>
->>> It's safe here, because we have locked the pci_slot_mutex in pci_destroy_slot(), which is the only caller of pci_slot_release().
+On 29/07/15 09:52, Ley Foon Tan wrote:
+> On Wed, Jul 29, 2015 at 1:58 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>> Hi Ley,
 >>
->> That doesn't protect anybody else who might be traversing the
->> bus->slots list while we're deleting this entry.
->
-> Hi Bjorn, sorry, I don't understand your point, before this patch, we use pci_bus_sem to protect the whole pci_slot_release(),
-> in which, we would traverse the bus->devices list and update the bus->slots list. And now what we did is introduce a new pci_slot_mutex
-> to protect the bus->slots here, and use down_read(pci_bus_sem) instead of down_write(pci_bus_sem).
-
-pci_setup_device() does this:
-
-        list_for_each_entry(slot, &dev->bus->slots, list)
-                if (PCI_SLOT(dev->devfn) == slot->number)
-                        dev->slot = slot;
-
-What keeps that code from running at the same time pci_slot_release()
-is removing something from the bus->slots list?
-
-It looks to me like the loop in pci_setup_device() is unsafe to begin
-with.  But the obvious thing to do would be to add
-down_read(&pci_bus_sem) there, and then you'd need a down_write() in
-pci_slot_release(), so you're back where we started.
-
->>>>> @@ -195,7 +198,7 @@ static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
->>>>>  {
->>>>>         struct pci_slot *slot;
->>>>>         /*
->>>>> -        * We already hold pci_bus_sem so don't worry
->>>>> +        * We already hold pci_slot_mutex so don't worry
->>>>>          */
->>>>>         list_for_each_entry(slot, &parent->slots, list)
->>>>>                 if (slot->number == slot_nr) {
->>>>> @@ -253,7 +256,7 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
->>>>>         int err = 0;
->>>>>         char *slot_name = NULL;
->>>>>
->>>>> -       down_write(&pci_bus_sem);
->>>>> +       mutex_lock(&pci_slot_mutex);
->>>>>
->>>>>         if (slot_nr == -1)
->>>>>                 goto placeholder;
->>>>> @@ -301,16 +304,18 @@ placeholder:
->>>>>         INIT_LIST_HEAD(&slot->list);
->>>>>         list_add(&slot->list, &parent->slots);
->>>>>
->>>>> +       down_read(&pci_bus_sem);
->>>>>         list_for_each_entry(dev, &parent->devices, bus_list)
->>>>>                 if (PCI_SLOT(dev->devfn) == slot_nr)
->>>>>                         dev->slot = slot;
->>>>> +       up_read(&pci_bus_sem);
->>>>>
->>>>>         dev_dbg(&parent->dev, "dev %02x, created physical slot %s\n",
->>>>>                 slot_nr, pci_slot_name(slot));
->>>>>
->>>>>  out:
->>>>>         kfree(slot_name);
->>>>> -       up_write(&pci_bus_sem);
->>>>> +       mutex_unlock(&pci_slot_mutex);
->>>>>         return slot;
->>>>>  err:
->>>>>         kfree(slot);
->>>>> @@ -332,9 +337,9 @@ void pci_destroy_slot(struct pci_slot *slot)
->>>>>         dev_dbg(&slot->bus->dev, "dev %02x, dec refcount to %d\n",
->>>>>                 slot->number, atomic_read(&slot->kobj.kref.refcount) - 1);
->>>>>
->>>>> -       down_write(&pci_bus_sem);
->>>>> +       mutex_lock(&pci_slot_mutex);
->>>>>         kobject_put(&slot->kobj);
->>>>> -       up_write(&pci_bus_sem);
->>>>> +       mutex_unlock(&pci_slot_mutex);
->>>>>  }
->>>>>  EXPORT_SYMBOL_GPL(pci_destroy_slot);
->>>>
->>>> .
->>>>
->>>
->>>
->>> --
->>> Thanks!
->>> Yijing
->>>
+>> On 28/07/15 11:45, Ley Foon Tan wrote:
+>>> This patch adds Altera PCIe MSI driver. This soft IP supports configurable
+>>> number of vectors, which is a dts parameter.
 >>
->> .
+>> Can't you read this configuration from the HW?
+> No, we can't read from HW.
+
+Ah, that's a shame. Specially on HW that is configurable by design.
+
+[...]
+
+>>> +
+>>> +                     irq = irq_find_mapping(msi->msi_domain->parent, offset);
 >>
->
->
-> --
-> Thanks!
-> Yijing
->
+>> This would tend to indicate that you don't really need to store the
+>> msi_domain pointer, but the inner_domain pointer instead.
+> Will store the inner_domain pointer. But, I think we still need
+> msi_domain for irq_domain_remove.
+> Or do we have any way to retrieve msi_domain from inner_domain?
+
+Do you have any case where you remove the domains, aside from the
+obvious error cases?
+
+[...]
+
+>>> +
+>>> +static struct msi_domain_info altera_msi_domain_info = {
+>>> +     .flags  = (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS),
+>>
+>> So you don't support MSIX? That's a bit weird.
+> Yes, this MSI IP doesn't support it.
+
+This is not really a function of the MSI IP, but of the PCI device. In
+your case, this is just a set of doorbells, so I hardly see what would
+prevent MSI-X to be supported. Multi-MSI, I can see why.
+
+[...]
+
+>>> +static int altera_msi_set_affinity(struct irq_data *irq_data,
+>>> +                              const struct cpumask *mask, bool force)
+>>> +{
+>>> +      return irq_set_affinity(irq_data->hwirq, mask);
+>>
+>> There is no way this can be right. irq_data->hwirq can *never* be passed
+>> as a Linux IRQ. This really should be the IRQ to the GIC.
+>>
+>> Which raises another issue: as you only have a single interrupt to the
+>> GIC, changing the affinity of a single MSI is going to affect all the
+>> other MSIs as well. This doesn't seem like a desirable behaviour.
+> Do we must provide '.irq_set_affinity" callback to msi domain? I have
+> tried set it to NULL,
+> but kernel got the NULL pointer deference error from msi_domain_set_affinity().
+> Recently, I saw this new patch for pci-tegra.c from [1], it doesn't
+> set the ".irq_set_affinity".
+> Just wonder how it can work.
+> 
+> Do you have any recommendation way for this?
+> 
+> [1] https://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/commit/drivers/pci/host?h=irq/gsi-irq-domain-v2&id=17c22fc4e60e6ad54c7e3b73868cbc057360fa63
+
+Please realize that I *never* tested this patch (I don't think I ever
+posted it officially, I just keep here for convenience), and I wouldn't
+take it as a reference.
+
+When it comes to msi_domain_set_affinity issue, this look more like an
+oversight. I'll cook a patch for that.
+
+Anyway, whichever way you want to do it, you need to fix this. You could
+always return -EINVAL in the meantime,
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
