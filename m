@@ -1,49 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:38814 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751769AbbGUVvI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 21 Jul 2015 17:51:08 -0400
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>,
-	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI: keystone: fix the boot noise for missing *config* reg space
-Date: Tue, 21 Jul 2015 17:51:05 -0400
-Message-ID: <1437515465-20739-1-git-send-email-m-karicheri2@ti.com>
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:34865 "EHLO
+	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752273AbbG2U0o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 16:26:44 -0400
+Received: by oihq81 with SMTP id q81so11524211oih.2
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 13:26:44 -0700 (PDT)
+Date: Wed, 29 Jul 2015 15:26:39 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
+Message-ID: <20150729202639.GA13239@google.com>
+References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
+ <20150729160903.GD31170@google.com>
+ <CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>
+ <55B92DA5.4030409@roeck-us.net>
+ <CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
+ <55B93151.8040608@roeck-us.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55B93151.8040608@roeck-us.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently on Keystone SoCs, boot up log shows an unnecessary boot
-noise as follows:-
+On Wed, Jul 29, 2015 at 01:02:25PM -0700, Guenter Roeck wrote:
+> On 07/29/2015 12:53 PM, Yinghai Lu wrote:
+> >On Wed, Jul 29, 2015 at 12:46 PM, Guenter Roeck <linux@roeck-us.net> wrote:
+> >>On 07/29/2015 12:30 PM, Yinghai Lu wrote:
+> >>
+> >>>
+> >>>so PCI_BUS_FLAGS_SUPPORTS_IO will never get set.
+> >>>
+> >>
+> >>excellent catch. Unfortunately, I don't know how to make it
+> >>work with the reversed flag. The idea here was that the flag
+> >>propagates from parent to child. This makes sense for an
+> >>"it doesn't work" flag to be inherited from the child,
+> >>but not for an "it works" flag.
+> >>
+> >
+> >also would be better if we can add has_ioport in hostbridge instead.
+> >like has_mem64 in https://patchwork.ozlabs.org/patch/500926/
+> >and use
+> >
+> >to_pci_host_bridge(bus->bridge)->has_ioport
+> >
+> >to replace pci_root_has_io_resource()
+> >
+> 
+> Sure, that would make sense.
+> 
+> Bjorn, how do you want to handle the flag problem ?
+> Do you have an idea on how to make it work with
+> the reversed definition ?
 
-[    0.365823] keystone-pcie 21021000.pcie: missing *config* reg space
-
-Keystone uses older version of designware h/w that doesn't have ATU
-support. So va_cfg0_base and va_cfg1_base are already set up in
-ks_dw_pcie_host_init() before calling dw_pcie_host_init() and
-they point to the remote config space address va (both same for Keystone).
-So add a check to avoid this boot noise on Keystone.
-
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/pci/host/pcie-designware.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be..b48b8a2 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -388,7 +388,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		addrp = of_get_address(np, index, NULL, NULL);
- 		pp->cfg0_mod_base = of_read_number(addrp, ns);
- 		pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
--	} else {
-+	} else if (!pp->va_cfg0_base) {
- 		dev_err(pp->dev, "missing *config* reg space\n");
- 	}
- 
--- 
-1.9.1
-
+I'll wait for the revised patch.  Sorry for screwing this up.
