@@ -1,227 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:34311 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752933AbbGIByk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jul 2015 21:54:40 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: mingo@kernel.org
-Cc: bp@suse.de, arnd@arndb.de, bhelgaas@google.com,
-	luto@amacapital.net, akpm@linux-foundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tomi.valkeinen@ti.com, mst@redhat.com, toshi.kani@hp.com,
-	linux-fbdev@vger.kernel.org, xen-devel@lists.xensource.com,
-	benh@kernel.crashing.org, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Benoit Taine <benoit.taine@lip6.fr>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>,
-	Dave Airlie <airlied@redhat.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Juergen Gross <jgross@suse.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH v9 2/8] drivers/video/fbdev/i740fb: Use arch_phys_wc_add() and pci_ioremap_wc_bar()
-Date: Wed,  8 Jul 2015 18:54:13 -0700
-Message-Id: <1436406859-1280-3-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1436406859-1280-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CADhT+wf2oYVZHn1XAODYJUsxwu03TAzN6ZEQCkSBjU5ruKWCDQ@mail.gmail.com>
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+	<1438080345-7233-5-git-send-email-lftan@altera.com>
+	<CADhT+wf2oYVZHn1XAODYJUsxwu03TAzN6ZEQCkSBjU5ruKWCDQ@mail.gmail.com>
+Date: Wed, 29 Jul 2015 16:53:57 +0800
+Message-ID: <CAFiDJ5-UebtEmj6vQ1Xn-eORDyJWtDVwOWz57XZtpq4GaYjDoQ@mail.gmail.com>
+Subject: Re: [PATCH 4/6] pci: altera: Add Altera PCIe MSI driver
+From: Ley Foon Tan <lftan@altera.com>
+To: Dinh Nguyen <dinh.linux@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	linux-pci@vger.kernel.org,
+	Linux List <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Wed, Jul 29, 2015 at 1:00 AM, Dinh Nguyen <dinh.linux@gmail.com> wrote:
+> On Tue, Jul 28, 2015 at 5:45 AM, Ley Foon Tan <lftan@altera.com> wrote:
+>> This patch adds Altera PCIe MSI driver. This soft IP supports configurable
+>> number of vectors, which is a dts parameter.
+>>
+>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+>> ---
+>>  drivers/pci/host/Kconfig           |   7 +
+>>  drivers/pci/host/Makefile          |   1 +
+>>  drivers/pci/host/pcie-altera-msi.c | 318 +++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 326 insertions(+)
+>>  create mode 100644 drivers/pci/host/pcie-altera-msi.c
+>>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index af19039..a8b87fd 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -154,4 +154,11 @@ config PCIE_ALTERA
+>>           Say Y here if you want to enable PCIe controller support for Altera
+>>           SoCFPGA family of SoCs.
+>>
+>> +config PCIE_ALTERA_MSI
+>> +       bool "Altera PCIe MSI feature"
+>> +       depends on PCI_MSI && PCIE_ALTERA
+>> +       help
+>> +         Say Y here if you want PCIe MSI support for the Altera SocFPGA SoC.
+>> +         This MSI driver supports Altera MSI to GIC controller IP.
+>> +
+>
+> Couldn't this driver get combined with the pcie-altera driver?
+Prefer to separate them, since they are 2 separate IPs.
+Theoretically, this MSI driver can work with other PCIe host as well.
 
-Convert the driver from using the x86-specific MTRR code to the
-architecture-agnostic arch_phys_wc_add(). It will avoid MTRR if
-write-combining is available, in order to take advantage of that also
-ensure the ioremapped area is requested as write-combining.
+Thanks.
 
-There are a few motivations for this:
-
-a) Take advantage of PAT when available
-
-b) Help bury MTRR code away, MTRR is architecture-specific and on
-   x86 it is being replaced by PAT.
-
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
-
-The conversion done is expressed by the following Coccinelle SmPL
-patch, it additionally required manual intervention to address all the
-ifdeffery and removal of redundant things which arch_phys_wc_add()
-already addresses such as verbose message about when MTRR fails and
-doing nothing when we didn't get an MTRR.
-
-@ mtrr_found @
-expression index, base, size;
-@@
-
--index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
-+index = arch_phys_wc_add(base, size);
-
-@ mtrr_rm depends on mtrr_found @
-expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
-@@
-
--mtrr_del(index, base, size);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_zero_arg depends on mtrr_found @
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, 0, 0);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_fb_info depends on mtrr_found @
-struct fb_info *info;
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
-+arch_phys_wc_del(index);
-
-@ ioremap_replace_nocache depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap_nocache(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-@ ioremap_replace_default depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: benh@kernel.crashing.org
-Cc: Benoit Taine <benoit.taine@lip6.fr>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: mst@redhat.com
-Cc: Rob Clark <robdclark@gmail.com>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: toshi.kani@hp.com
-Link: http://lkml.kernel.org/r/1435195342-26879-3-git-send-email-mcgrof@do-not-panic.com
-Signed-off-by: Borislav Petkov <bp@suse.de>
----
- drivers/video/fbdev/i740fb.c | 35 ++++++-----------------------------
- 1 file changed, 6 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/video/fbdev/i740fb.c b/drivers/video/fbdev/i740fb.c
-index a2b4204b42bb..452e1163ad02 100644
---- a/drivers/video/fbdev/i740fb.c
-+++ b/drivers/video/fbdev/i740fb.c
-@@ -27,24 +27,15 @@
- #include <linux/console.h>
- #include <video/vga.h>
- 
--#ifdef CONFIG_MTRR
--#include <asm/mtrr.h>
--#endif
--
- #include "i740_reg.h"
- 
- static char *mode_option;
--
--#ifdef CONFIG_MTRR
- static int mtrr = 1;
--#endif
- 
- struct i740fb_par {
- 	unsigned char __iomem *regs;
- 	bool has_sgram;
--#ifdef CONFIG_MTRR
--	int mtrr_reg;
--#endif
-+	int wc_cookie;
- 	bool ddc_registered;
- 	struct i2c_adapter ddc_adapter;
- 	struct i2c_algo_bit_data ddc_algo;
-@@ -1040,7 +1031,7 @@ static int i740fb_probe(struct pci_dev *dev, const struct pci_device_id *ent)
- 		goto err_request_regions;
- 	}
- 
--	info->screen_base = pci_ioremap_bar(dev, 0);
-+	info->screen_base = pci_ioremap_wc_bar(dev, 0);
- 	if (!info->screen_base) {
- 		dev_err(info->device, "error remapping base\n");
- 		ret = -ENOMEM;
-@@ -1144,13 +1135,9 @@ static int i740fb_probe(struct pci_dev *dev, const struct pci_device_id *ent)
- 
- 	fb_info(info, "%s frame buffer device\n", info->fix.id);
- 	pci_set_drvdata(dev, info);
--#ifdef CONFIG_MTRR
--	if (mtrr) {
--		par->mtrr_reg = -1;
--		par->mtrr_reg = mtrr_add(info->fix.smem_start,
--				info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
--	}
--#endif
-+	if (mtrr)
-+		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
-+						  info->fix.smem_len);
- 	return 0;
- 
- err_reg_framebuffer:
-@@ -1177,13 +1164,7 @@ static void i740fb_remove(struct pci_dev *dev)
- 
- 	if (info) {
- 		struct i740fb_par *par = info->par;
--
--#ifdef CONFIG_MTRR
--		if (par->mtrr_reg >= 0) {
--			mtrr_del(par->mtrr_reg, 0, 0);
--			par->mtrr_reg = -1;
--		}
--#endif
-+		arch_phys_wc_del(par->wc_cookie);
- 		unregister_framebuffer(info);
- 		fb_dealloc_cmap(&info->cmap);
- 		if (par->ddc_registered)
-@@ -1287,10 +1268,8 @@ static int  __init i740fb_setup(char *options)
- 	while ((opt = strsep(&options, ",")) != NULL) {
- 		if (!*opt)
- 			continue;
--#ifdef CONFIG_MTRR
- 		else if (!strncmp(opt, "mtrr:", 5))
- 			mtrr = simple_strtoul(opt + 5, NULL, 0);
--#endif
- 		else
- 			mode_option = opt;
- 	}
-@@ -1327,7 +1306,5 @@ MODULE_DESCRIPTION("fbdev driver for Intel740");
- module_param(mode_option, charp, 0444);
- MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
- 
--#ifdef CONFIG_MTRR
- module_param(mtrr, int, 0444);
- MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
--#endif
--- 
-2.3.2.209.gd67f9d5.dirty
-
+Regard
+Ley Foon
