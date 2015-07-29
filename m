@@ -1,121 +1,235 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:36081 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752072AbbGAQpZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 12:45:25 -0400
-Received: by igrv9 with SMTP id v9so78231079igr.1
-        for <linux-pci@vger.kernel.org>; Wed, 01 Jul 2015 09:45:24 -0700 (PDT)
-Date: Wed, 1 Jul 2015 11:45:20 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: wdavis@nvidia.com
-Cc: Joerg Roedel <joro@8bytes.org>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 7/7] x86: add pci-nommu implementation of map_resource
-Message-ID: <20150701164520.GC13409@google.com>
-References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
- <1432919686-32306-8-git-send-email-wdavis@nvidia.com>
+Received: from foss.arm.com ([217.140.101.70]:36314 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751101AbbG2NS5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jul 2015 09:18:57 -0400
+Date: Wed, 29 Jul 2015 14:19:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"lftan.linux@gmail.com" <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH 3/6] pci:host: Add Altera PCIe host controller driver
+Message-ID: <20150729131936.GA6376@red-moon>
+References: <1438080345-7233-1-git-send-email-lftan@altera.com>
+ <1438080345-7233-4-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432919686-32306-8-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1438080345-7233-4-git-send-email-lftan@altera.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 29, 2015 at 12:14:46PM -0500, wdavis@nvidia.com wrote:
-> From: Will Davis <wdavis@nvidia.com>
-> 
-> Lookup the bus address of the resource by finding the parent host bridge,
-> which may be different than the parent host bridge of the target device.
-> 
-> Signed-off-by: Will Davis <wdavis@nvidia.com>
-> ---
->  arch/x86/kernel/pci-nommu.c | 32 ++++++++++++++++++++++++++++++++
->  1 file changed, 32 insertions(+)
-> 
-> diff --git a/arch/x86/kernel/pci-nommu.c b/arch/x86/kernel/pci-nommu.c
-> index da15918..6384482 100644
-> --- a/arch/x86/kernel/pci-nommu.c
-> +++ b/arch/x86/kernel/pci-nommu.c
-> @@ -38,6 +38,37 @@ static dma_addr_t nommu_map_page(struct device *dev, struct page *page,
->  	return bus;
->  }
->  
-> +static dma_addr_t nommu_map_resource(struct device *dev, struct resource *res,
-> +				     unsigned long offset, size_t size,
-> +				     enum dma_data_direction dir,
-> +				     struct dma_attrs *attrs)
+On Tue, Jul 28, 2015 at 11:45:42AM +0100, Ley Foon Tan wrote:
+
+[...]
+
+> +static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
 > +{
-> +	struct pci_bus *bus;
-> +	struct pci_host_bridge *bridge;
-> +	struct resource_entry *window;
-> +	resource_size_t bus_offset = 0;
-> +	dma_addr_t dma_address;
+> +       int err, res_valid = 0;
+> +       struct device *dev = &pcie->pdev->dev;
+> +       struct device_node *np = dev->of_node;
+> +       resource_size_t iobase;
+> +       struct resource_entry *win;
+> +       int offset = 0;
 > +
-> +	/* Find the parent host bridge of the resource, and determine the
-> +	 * relative offset.
-> +	 */
-> +	list_for_each_entry(bus, &pci_root_buses, node) {
-> +		bridge = to_pci_host_bridge(bus->bridge);
-> +		resource_list_for_each_entry(window, &bridge->windows) {
-> +			if (resource_contains(window->res, res))
-> +				bus_offset = window->offset;
-> +		}
-> +	}
+> +       err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
+> +                                              &iobase);
+> +       if (err)
+> +               return err;
 
-I don't think this is safe.  Assume we have the following topology, and
-we want to set it up so 0000:00:00.0 can perform peer-to-peer DMA to
-0001:00:01.0:
+On top of Rob's comments on ARM bios32 dependency removal (ie rewrite
+the driver so that it does not use pci_common_init_dev()), if you need IO
+access you have to map iobase, see pci_remap_iospace() in pci-host-generic.c
 
-  pci_bus 0000:00: root bus resource [mem 0x80000000-0xffffffff] (bus address [0x80000000-0xffffffff])
-  pci 0000:00:00.0: ...
-  pci_bus 0001:00: root bus resource [mem 0x180000000-0x1ffffffff] (bus address [0x80000000-0xffffffff])
-  pci 0001:00:01.0: reg 0x10: [mem 0x180000000-0x1803fffff 64bit]
+Lorenzo
 
-I assume the way this works is that the driver for 0000:00:00.0 would call
-this function with 0001:00:01.0 and [mem 0x180000000-0x1803fffff 64bit].
-
-We'll figure out that the resource belongs to 0001:00, so we return a
-dma_addr of 0x80000000, which is the bus address as seen by 0001:00:01.0.
-But if 0000:00:00.0 uses that address, it refers to something in the
-0000:00 hierarchy, not the 0001:00 hierarchy.
-
-We talked about pci_bus_address() and pcibios_resource_to_bus() earlier.
-What's the subtlety that makes them unusable here?  I'd rather not add more
-uses of the pci_root_buses list if we can avoid it.
-
-> +	dma_address = (res->start - bus_offset) + offset;
-> +	WARN_ON(size == 0);
-> +	if (!check_addr("map_resource", dev, dma_address, size))
-> +		return DMA_ERROR_CODE;
-> +	flush_write_buffers();
-> +	return dma_address;
+> +
+> +       resource_list_for_each_entry(win, &pcie->resources) {
+> +               struct resource *parent, *res = win->res;
+> +
+> +               switch (resource_type(res)) {
+> +               case IORESOURCE_MEM:
+> +                       parent = &iomem_resource;
+> +                       res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+> +                       cra_writel(pcie, res->start,
+> +                               A2P_ADDR_MAP_LO0 + offset);
+> +                       cra_writel(pcie, 0,
+> +                               A2P_ADDR_MAP_HI0 + offset);
+> +                       offset += ATT_ENTRY_SIZE;
+> +                       break;
+> +               default:
+> +                       continue;
+> +               }
+> +
+> +               err = devm_request_resource(dev, parent, res);
+> +               if (err)
+> +                       goto out_release_res;
+> +       }
+> +
+> +       if (!res_valid) {
+> +               dev_err(dev, "non-prefetchable memory resource required\n");
+> +               err = -EINVAL;
+> +               goto out_release_res;
+> +       }
+> +
+> +       return 0;
+> +
+> +out_release_res:
+> +       altera_pcie_release_of_pci_ranges(pcie);
+> +       return err;
 > +}
 > +
+> +static void altera_pcie_free_irq_domain(struct altera_pcie *pcie)
+> +{
+> +       int i;
+> +       u32 irq;
 > +
-
-You added an extra blank line here (there was already an extra one before
-nommu_sync_sg_for_device(), which is probably what you copied).
-
->  /* Map a set of buffers described by scatterlist in streaming
->   * mode for DMA.  This is the scatter-gather version of the
->   * above pci_map_single interface.  Here the scatter gather list
-> @@ -93,6 +124,7 @@ struct dma_map_ops nommu_dma_ops = {
->  	.free			= dma_generic_free_coherent,
->  	.map_sg			= nommu_map_sg,
->  	.map_page		= nommu_map_page,
-> +	.map_resource		= nommu_map_resource,
->  	.sync_single_for_device = nommu_sync_single_for_device,
->  	.sync_sg_for_device	= nommu_sync_sg_for_device,
->  	.is_phys		= 1,
-> -- 
-> 2.4.0
+> +       for (i = 0; i < INTX_NUM; i++) {
+> +               irq = irq_find_mapping(pcie->irq_domain, i);
+> +               if (irq > 0)
+> +                       irq_dispose_mapping(irq);
+> +       }
+> +
+> +       irq_domain_remove(pcie->irq_domain);
+> +}
+> +
+> +static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
+> +{
+> +       struct device *dev = &pcie->pdev->dev;
+> +       struct device_node *node = dev->of_node;
+> +
+> +       /* Setup INTx */
+> +       pcie->irq_domain = irq_domain_add_linear(node, INTX_NUM,
+> +                                       &intx_domain_ops, pcie);
+> +       if (!pcie->irq_domain) {
+> +               dev_err(dev, "Failed to get a INTx IRQ domain\n");
+> +               return PTR_ERR(pcie->irq_domain);
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+> +{
+> +       struct resource *cra;
+> +       int ret;
+> +       struct platform_device *pdev = pcie->pdev;
+> +
+> +       cra = platform_get_resource_byname(pdev, IORESOURCE_MEM, "Cra");
+> +       pcie->cra_base = devm_ioremap_resource(&pdev->dev, cra);
+> +       if (IS_ERR(pcie->cra_base)) {
+> +               dev_err(&pdev->dev, "get Cra resource failed\n");
+> +               return PTR_ERR(pcie->cra_base);
+> +       }
+> +
+> +       /* setup IRQ */
+> +       pcie->hwirq = platform_get_irq(pdev, 0);
+> +       if (pcie->hwirq <= 0) {
+> +               dev_err(&pdev->dev, "failed to get IRQ: %d\n", pcie->hwirq);
+> +               return -EINVAL;
+> +       }
+> +       ret = devm_request_irq(&pdev->dev, pcie->hwirq, altera_pcie_isr,
+> +                       IRQF_SHARED, pdev->name, pcie);
+> +
+> +       if (ret) {
+> +               dev_err(&pdev->dev, "failed to request irq %d\n", pcie->hwirq);
+> +               return ret;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int altera_pcie_probe(struct platform_device *pdev)
+> +{
+> +       struct altera_pcie *pcie;
+> +       int ret;
+> +
+> +       pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+> +       if (!pcie)
+> +               return -ENOMEM;
+> +
+> +       pcie->pdev = pdev;
+> +
+> +       ret = altera_pcie_parse_dt(pcie);
+> +       if (ret) {
+> +               dev_err(&pdev->dev, "Parsing DT failed\n");
+> +               return ret;
+> +       }
+> +
+> +       INIT_LIST_HEAD(&pcie->resources);
+> +
+> +       ret = altera_pcie_parse_request_of_pci_ranges(pcie);
+> +       if (ret) {
+> +               dev_err(&pdev->dev, "Failed add resources\n");
+> +               return ret;
+> +       }
+> +
+> +       ret = altera_pcie_init_irq_domain(pcie);
+> +       if (ret) {
+> +               dev_err(&pdev->dev, "Failed creating IRQ Domain\n");
+> +               return ret;
+> +       }
+> +
+> +       pcie->root_bus_nr = -1;
+> +
+> +       /* clear all interrupts */
+> +       cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
+> +       /* enable all interrupts */
+> +       cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
+> +
+> +       altera_pcie_hw.private_data = (void **)&pcie;
+> +
+> +       pci_common_init_dev(&pdev->dev, &altera_pcie_hw);
+> +
+> +       platform_set_drvdata(pdev, pcie);
+> +       return ret;
+> +}
+> +
+> +static int __exit altera_pcie_remove(struct platform_device *pdev)
+> +{
+> +       struct altera_pcie *pcie = platform_get_drvdata(pdev);
+> +
+> +       altera_pcie_free_irq_domain(pcie);
+> +       platform_set_drvdata(pdev, NULL);
+> +       return 0;
+> +}
+> +
+> +static const struct of_device_id altera_pcie_of_match[] = {
+> +       { .compatible = "altr,pcie-root-port-1.0", },
+> +       {},
+> +};
+> +MODULE_DEVICE_TABLE(of, altera_pcie_of_match);
+> +
+> +static struct platform_driver altera_pcie_driver = {
+> +       .probe          = altera_pcie_probe,
+> +       .remove         = altera_pcie_remove,
+> +       .driver = {
+> +               .name   = "altera-pcie",
+> +               .owner  = THIS_MODULE,
+> +               .of_match_table = altera_pcie_of_match,
+> +       },
+> +};
+> +
+> +module_platform_driver(altera_pcie_driver);
+> +
+> +MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
+> +MODULE_DESCRIPTION("Altera PCIe host controller driver");
+> +MODULE_LICENSE("GPL v2");
+> --
+> 1.8.2.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 > 
