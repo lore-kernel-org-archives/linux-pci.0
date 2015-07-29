@@ -1,40 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:59842 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750780AbbG3ER1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 00:17:27 -0400
-Message-ID: <55B9A554.9020901@roeck-us.net>
-Date: Wed, 29 Jul 2015 21:17:24 -0700
-From: Guenter Roeck <linux@roeck-us.net>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <55B8C46F.4090109@linaro.org>
+Date: Wed, 29 Jul 2015 20:17:51 +0800
+From: Hanjun Guo <hanjun.guo@linaro.org>
 MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
-References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>	<20150729160903.GD31170@google.com>	<CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>	<55B92DA5.4030409@roeck-us.net>	<CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>	<55B93151.8040608@roeck-us.net>	<20150729202639.GA13239@google.com> <CAE9FiQVmek758ZG2MfPCK5RsgUAfuD6zW5zHWQkid1POALnZSQ@mail.gmail.com>
-In-Reply-To: <CAE9FiQVmek758ZG2MfPCK5RsgUAfuD6zW5zHWQkid1POALnZSQ@mail.gmail.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>
+CC: Lv Zheng <lv.zheng@intel.com>,
+	"lenb @ kernel . org" <lenb@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [Patch v5 0/6] Consolidate ACPI PCI root common code into ACPI
+ core
+References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
 Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/29/2015 08:59 PM, Yinghai Lu wrote:
-> On Wed, Jul 29, 2015 at 1:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Wed, Jul 29, 2015 at 01:02:25PM -0700, Guenter Roeck wrote:
->>> Bjorn, how do you want to handle the flag problem ?
->>> Do you have an idea on how to make it work with
->>> the reversed definition ?
->>
->> I'll wait for the revised patch.  Sorry for screwing this up.
+Hi Bjorn, Rafael,
+
+Just kindly ping for this patchset, it has been reviewed and tested,
+can it be merged in 4.3?
+
+ARM64 ACPI PCI patches is based on this one, if this patchset is merged,
+there will be less dependence for ARM64 ACPI PCI.
+
+Thanks
+Hanjun
+
+On 06/09/2015 12:20 AM, Jiang Liu wrote:
+> This patch set consolidates common code to support ACPI PCI root on x86
+> and IA64 platforms into ACPI core, to reproduce duplicated code and
+> simplify maintenance. And a patch set based on previous version to support
+> ACPI based PCIe host bridge on ARM64 has been posted at:
+> https://lkml.org/lkml/2015/5/26/207
 >
-> Please check attached updated version.
+> It's based on latest mainstream kernel. It passes Fengguang's 0day test
+> suite and has been tested on two IA64 platforms and one x86 platform.
 >
-> Yinghai
+> V4-V5:
+> 1) As suggested by Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, do not
+>     introduce "struct pci_controller" into generic drivers/acpi/pci_root.c,
+>     so ARM64 doesn't need to define a useless structure. And it simplifies
+>     code a little too.
 >
-
-My version is slightly different, but this one should work as well.
-
-The subject line got lost somehow.
-
-Guenter
-
+> V3->V4:
+> 1) Add patch[05/08] support solve building issue on ARM64
+> 2) Solve an implicitly pointer cast issue.
+> 3) Rebase to latest mainstream kernel
+>
+> V2->V3:
+> 1. Move memory allocation/free from ACPI core into arch
+> 2. Kill the field 'segment' in struct pci_root_info on x86
+>
+> Thanks!
+> Gerry
+>
+> Jiang Liu (6):
+>    ACPI/PCI: Enhance ACPI core to support sparse IO space
+>    ia64/PCI/ACPI: Use common ACPI resource parsing interface for host
+>      bridge
+>    ia64/PCI: Use common struct resource_entry to replace struct
+>      iospace_resource
+>    PCI/ACPI: Consolidate common PCI host bridge code into ACPI core
+>    x86/PCI/ACPI: Use common interface to support PCI host bridge
+>    ia64/PCI/ACPI: Use common interface to support PCI host bridge
+>
+>   arch/ia64/include/asm/pci.h |    5 -
+>   arch/ia64/pci/pci.c         |  366 ++++++++++++-------------------------------
+>   arch/x86/pci/acpi.c         |  294 ++++++++++------------------------
+>   drivers/acpi/pci_root.c     |  198 +++++++++++++++++++++++
+>   drivers/acpi/resource.c     |    9 +-
+>   include/linux/ioport.h      |    1 +
+>   include/linux/pci-acpi.h    |   23 +++
+>   7 files changed, 415 insertions(+), 481 deletions(-)
+>
