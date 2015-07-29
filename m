@@ -1,54 +1,81 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>, Hanjun Guo <hanjun.guo@linaro.org>
-Subject: [PATCH v6 06/19] PCI/MSI: of: Allow msi_domain lookup using the host bridge node
-Date: Tue, 28 Jul 2015 14:46:13 +0100
-Message-Id: <1438091186-10244-7-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
-References: <1438091186-10244-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:62911 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751015AbbG2JQx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jul 2015 05:16:53 -0400
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 1/3] x86/pci/intel_mid_pci: work around for IRQ0 assignment
+Date: Wed, 29 Jul 2015 12:16:47 +0300
+Message-Id: <1438161409-4671-2-git-send-email-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <1438161409-4671-1-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1438161409-4671-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A number of platforms do not need to use the msi-parent property,
-as the host bridge itself provides the MSI controller.
+On Intel Tangier the MMC host controller is wired up to irq 0. But several
+other devices have irq 0 associated as well due to a bogus PCI configuration.
 
-Allow this configuration by performing an irq domain lookup based
-on the host bridge node if it doesn't have a valid msi-parent property.
+The first initialized driver will acquire irq 0 and make it unavailable for
+other devices. If the sdhci driver is not the first one it will fail to acquire
+the interrupt and therefor be non functional.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Add a quirk to the pci irq enable function which denies irq 0 to anything else
+than the MMC host controller driver on Tangier platforms.
+
+Fixes: 90b9aacf912a (serial: 8250_pci: add Intel Tangier support)
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/pci/of.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ arch/x86/pci/intel_mid_pci.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 85844d8..2e99a50 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -72,8 +72,13 @@ struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 2706230..7553921 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -35,6 +35,9 @@
  
- 	/* Start looking for a phandle to an MSI controller. */
- 	np = of_parse_phandle(bus->dev.of_node, "msi-parent", 0);
+ #define PCIE_CAP_OFFSET	0x100
+ 
++/* Quirks for the listed devices */
++#define PCI_DEVICE_ID_INTEL_MRFL_MMC	0x1190
 +
-+	/*
-+	 * If we don't have an msi-parent property, look for a domain
-+	 * directly attached to the host bridge.
-+	 */
- 	if (!np)
--		return NULL;
-+		np = bus->dev.of_node;
+ /* Fixed BAR fields */
+ #define PCIE_VNDR_CAP_ID_FIXED_BAR 0x00	/* Fixed BAR (TBD) */
+ #define PCI_FIXED_BAR_0_SIZE	0x04
+@@ -214,10 +217,27 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	if (dev->irq_managed && dev->irq > 0)
+ 		return 0;
  
- 	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
- 	if (d)
+-	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
++	switch (intel_mid_identify_cpu()) {
++	case INTEL_MID_CPU_CHIP_TANGIER:
+ 		polarity = 0; /* active high */
+-	else
++
++		/* Special treatment for IRQ0 */
++		if (dev->irq == 0) {
++			/*
++			 * TNG has IRQ0 assigned to eMMC controller. But there
++			 * are also other devices with bogus PCI configuration
++			 * that have IRQ0 assigned. This check ensures that
++			 * eMMC gets it.
++			 */
++			if (dev->device != PCI_DEVICE_ID_INTEL_MRFL_MMC)
++				return -EBUSY;
++		}
++		break;
++	default:
+ 		polarity = 1; /* active low */
++		break;
++	}
++
+ 	ioapic_set_alloc_attr(&info, dev_to_node(&dev->dev), 1, polarity);
+ 
+ 	/*
 -- 
-2.1.4
+2.4.6
 
