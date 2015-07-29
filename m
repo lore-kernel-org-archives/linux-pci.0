@@ -1,128 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:35248 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754555AbbG0W1b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 18:27:31 -0400
-Received: by igr7 with SMTP id 7so92467866igr.0
-        for <linux-pci@vger.kernel.org>; Mon, 27 Jul 2015 15:27:30 -0700 (PDT)
-Date: Mon, 27 Jul 2015 17:27:26 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Don Dutile <ddutile@redhat.com>
-Cc: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org,
-	Gregor Dick <gdick@solarflare.com>
-Subject: Re: [PATCH v2 10/11] PCI: Stop caching ATS Invalidate Queue Depth
-Message-ID: <20150727222726.GA24401@google.com>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150721001511.28145.29144.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <55B63995.8000808@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44218 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750950AbbG2Khh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 29 Jul 2015 06:37:37 -0400
+Message-ID: <55B8ACEE.5080104@redhat.com>
+Date: Wed, 29 Jul 2015 12:37:34 +0200
+From: Milan Broz <mbroz@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55B63995.8000808@redhat.com>
+To: Mike Snitzer <snitzer@redhat.com>,
+	Andreas Hartmann <andihartmann@freenet.de>
+CC: dm-devel@redhat.com, mpatocka@redhat.com,
+	linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
+ QUEUED errors since Linux 4.0
+References: <55B7BEA2.30205@01019freenet.de> <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org> <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org> <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org> <20150728212441.GA25761@redhat.com>
+In-Reply-To: <20150728212441.GA25761@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Don,
-
-On Mon, Jul 27, 2015 at 10:00:53AM -0400, Don Dutile wrote:
-> On 07/20/2015 08:15 PM, Bjorn Helgaas wrote:
-> >Stop caching the Invalidate Queue Depth in struct pci_dev.
-> >pci_ats_queue_depth() is typically called only once per device, and it
-> >returns a fixed value per-device, so callers who need the value frequently
-> >can cache it themselves.
-> >
-> >Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >---
-> >  drivers/pci/ats.c   |    9 ++++-----
-> >  include/linux/pci.h |    1 -
-> >  2 files changed, 4 insertions(+), 6 deletions(-)
-> >
-> >diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> >index 67524a7..bdb1383 100644
-> >--- a/drivers/pci/ats.c
-> >+++ b/drivers/pci/ats.c
-> >@@ -20,16 +20,12 @@
-> >  void pci_ats_init(struct pci_dev *dev)
-> >  {
-> >  	int pos;
-> >-	u16 cap;
-> >
-> >  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
-> >  	if (!pos)
-> >  		return;
-> >
-> >  	dev->ats_cap = pos;
-> >-	pci_read_config_word(dev, dev->ats_cap + PCI_ATS_CAP, &cap);
-> >-	dev->ats_qdep = PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) :
-> >-					    PCI_ATS_MAX_QDEP;
-> >  }
-> >
-> >  /**
-> >@@ -131,13 +127,16 @@ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
-> >   */
-> >  int pci_ats_queue_depth(struct pci_dev *dev)
-> >  {
-> >+	u16 cap;
-> >+
-> >  	if (!dev->ats_cap)
-> >  		return -EINVAL;
-> >
-> >  	if (dev->is_virtfn)
-> >  		return 0;
-> >
-> hmmm, isn't one of the fixes in this patch set to
-> change the caching of ats queue depth ?  won't above
-> make it 0 for all VF's ?  is that correct, or desired (virtual) value?
-
-Per spec (SR-IOV r1.1., sec 3.7.4), the ATS queue depth register on a VF
-always contains zero.
-
-Here's the v4.1 code:
-
-    int pci_ats_queue_depth(struct pci_dev *dev)
-    {
-        if (dev->is_virtfn)
-                return 0;
-
-        if (dev->ats)
-                return dev->ats->qdep;
-
-	...
-
-
-In v4.1, pci_ats_queue_depth() always returned 0 for a VF.  For VFs, we
-didn't look at the dev->ats->qdep cache.  So I don't think this changes
-anything for the caller.
-
-A previous patch changed this path so we return -EINVAL instead of 0 for
-VFs that don't support ATS.  I think the previous behavior there was wrong,
-but I doubt anybody noticed.
-
-Bjorn
-
-> >-	return dev->ats_qdep;
-> >+	pci_read_config_word(dev, dev->ats_cap + PCI_ATS_CAP, &cap);
-> >+	return PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) : PCI_ATS_MAX_QDEP;
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
-> >
-> >diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >index 307f96a..4b484fd 100644
-> >--- a/include/linux/pci.h
-> >+++ b/include/linux/pci.h
-> >@@ -378,7 +378,6 @@ struct pci_dev {
-> >  	};
-> >  	u16		ats_cap;	/* ATS Capability offset */
-> >  	u8		ats_stu;	/* ATS Smallest Translation Unit */
-> >-	u8		ats_qdep;	/* ATS Invalidate Queue Depth */
-> >  	atomic_t	ats_ref_cnt;	/* number of VFs with ATS enabled */
-> >  #endif
-> >  	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
-> >
-> >--
-> >To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >the body of a message to majordomo@vger.kernel.org
-> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
+On 07/28/2015 11:24 PM, Mike Snitzer wrote:
+> On Tue, Jul 28 2015 at  4:08pm -0400,
+> Andreas Hartmann <andihartmann@freenet.de> wrote:
 > 
+>> On 07/28/2015 at 21:31 PM, Mike Snitzer wrote:
+>>> On Tue, Jul 28 2015 at  3:23pm -0400,
+>>> Andreas Hartmann <andihartmann@freenet.de> wrote:
+>>>
+>>>> On 07/28/2015 at 08:58 PM, Mike Snitzer wrote:
+>>>>> On Tue, Jul 28 2015 at  2:20pm -0400,
+>>>>> Andreas Hartmann <andihartmann@freenet.de> wrote:
+>>>>>
+>>>>>> On 07/28/2015 at 07:50 PM, Mike Snitzer wrote:
+>>>>>> [..]
+>>>>>>> Are your SATA devcies using NCQ?
+>>>>>>
+>>>>>> Yes. It's enabled:
+>>>>>>
+>>>>>> dmesg| grep -i ncq
+>>>>>> ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
+>>>>>> ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
+>>>>>> ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (depth 31/32), AA
+>>>>>> ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
+>>>>>>
+>>>>>> As the errors already come up on boot (during mount of partitions or
+>>>>>> even before the password for the disk has been provided): How can I
+>>>>>> disable NCQ during boot of the kernel? Is there a kernel option?
+>>>>>
+>>>>> See:
+>>>>> https://ata.wiki.kernel.org/index.php/Libata_FAQ#Enabling.2C_disabling_and_checking_NCQ
+>>>>>
+>>>>> alternatively, and likely easier, set this on the kernel commandline:
+>>>>>  libata.force=noncq
+>>>>
+>>>> ata2.00: FORCE: horkage modified (noncq)
+>>>> ata2.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
+>>>> ata3.00: FORCE: horkage modified (noncq)
+>>>> ata3.00: 5860533168 sectors, multi 0: LBA48 NCQ (not used)
+>>>> ata5.00: FORCE: horkage modified (noncq)
+>>>> ata1.00: FORCE: horkage modified (noncq)
+>>>> ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (not used)
+>>>>
+>>>>
+>>>> Perfectly. Seems to work w/ 3.19.8 and your mentioned patches. But now,
+>>>> I'm getting another error, which I didn't see before w/ 3.x-kernels:
+>>>>
+>>>> [drm:btc_dpm_set_power_state [radeon]] *ERROR*
+>>>> rv770_restrict_performance_levels_before_switch failed
+>>>>
+>>>> It seams that your patches do have some unwanted side effects :-).
+>>>
+>>> That is a completely different issue.  drm and radeon is a graphics
+>>> issue.
+>>
+>> Nothing changed on radeon code. I just applied your patches. Nothing
+>> more. Why should radeon been suddenly broken if I apply your patches
+>> to a stable 3.19.8 code?
+>>
+>> These patches trigger tons of AMD-Vi IO_PAGE_FAULTs w/ ncq enabled
+>> and the IOMMU developers say, that it is not a problem of the iommu
+>> code.
+>>
+>>>> Could you please reexamine your patch "dm crypt: don't allocate
+>>>> pages for a partial request" - after applying this patch all the
+>>>> problems are coming up here.
+>>>
+>>> More likely than not your hardware isn't very good.
+>>
+>> Maybe - maybe not. The only thing I know for sure, is: with these
+>> patches applied, the machine doesn't work reliably any more. W/ ncq
+>> disabled, the AMD-Vi IO_PAGE_FAULTs are gone, but a radeon error
+>> never seen before came instead. Most probably chance. Most probably,
+>> it could have been risen any other error, too.
+>>
+>> I am willing to do tests if you have any idea to be tested - I can
+>> reproduce it quite easily.
+> 
+> You can try disabling dm-crypt's parallelization by specifying these 2
+> features: same_cpu_crypt submit_from_crypt_cpus
+> 
+> It is my understanding that these can be set using the cryptsetup tool.
+> Milan can you clarify how these features can be set from a high-level
+> (on an existing crypt device)?
+
+Just one note - for me it seems that you are hitting an firmware problem
+related to NCQ implementation in your SSD see.
+
+Similar page what Mike already mentioned:
+https://wiki.archlinux.org/index.php/Solid_State_Drives#Resolving_NCQ_errors
+
+Anyway, I have myself SSD drive with NCQ active and I have never seen this problem
+(I am using these dmcrypt patches backported since 3.16 kernel or so).
+(And my system is very intensively used with this config.)
+
+Perhaps you could also check if there a new firmware for your SSD?
+(From log I see it is Corsair Force GT and there were some known problems.)
+
+Thanks,
+Milan
+
