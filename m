@@ -1,69 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:55541 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751140AbbGMSj6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 13 Jul 2015 14:39:58 -0400
-Subject: [PATCH V4 0/2] pci: Provide a flag to access VPD through function 0
-From: Mark D Rustad <mark.d.rustad@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	netdev@vger.kernel.org
-Date: Mon, 13 Jul 2015 11:39:54 -0700
-Message-ID: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
+Received: from dfwrgout.huawei.com ([206.16.17.72]:4146 "EHLO
+	dfwrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853AbbG2QGR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 12:06:17 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
+Date: Wed, 29 Jul 2015 16:04:29 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D6F175@lhreml503-mbs>
+References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Many multi-function devices provide shared registers in extended
-config space for accessing VPD. The behavior of these registers
-means that the state must be tracked and access locked correctly
-for accesses not to hang or worse. One way to meet these needs is
-to always perform the accesses through function 0, thereby using
-the state tracking and mutex that already exists.
-
-To provide this behavior, add a dev_flags bit to indicate that this
-should be done. This bit can then be set for any non-zero function
-that needs to redirect such VPD access to function 0. Do not set
-this bit on the zero function or there will be an infinite recursion.
-
-The second patch uses this new flag to invoke this behavior on all
-multi-function Intel Ethernet devices.
-
-Any hardware that shares VPD registers with multiple functions has
-been suffering these problems forever. The hangs result in the log
-message:
-
-vpd r/w failed.  This is likely a firmware bug on this device.
-
-Both read and write data corruption are also possible during
-overlapping accesses in addition to hangs.
-
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-
----
-Changes in V2:
-- Corrected a spelling error in a log message
-- Added checks to see that the referenced function 0 is reasonable
-Changes in V3:
-- Don't leak a device reference
-- Check that function 0 has VPD
-- Make a helper for the function 0 checks
-- Moved a multifunction check to the quirk patch
-Changes in V4:
-- Provide a more extensive commit log for patch 1
-
----
-
-Mark Rustad (2):
-      pci: Add dev_flags bit to access VPD through function 0
-      pci: Add VPD quirk for Intel Ethernet devices
-
-
- drivers/pci/access.c |   61 +++++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/pci/quirks.c |    9 +++++++
- include/linux/pci.h  |    2 ++
- 3 files changed, 71 insertions(+), 1 deletion(-)
-
--- 
-Mark Rustad, Network Division, Intel Corporation
+SGkgQmpvcm4NCg0KTGl2aXUgYW5kIFJvYiBhbHJlYWR5IGFja2VkLCBkbyB5b3UgdGhpbmsgaXQg
+aXMgb2sgdG8gbWVyZ2UgdGhpcz8NCg0KQ2hlZXJzDQoNCkdhYg0KDQo+IC0tLS0tT3JpZ2luYWwg
+TWVzc2FnZS0tLS0tDQo+IEZyb206IEdhYnJpZWxlIFBhb2xvbmkNCj4gU2VudDogTW9uZGF5LCBK
+dWx5IDI3LCAyMDE1IDQ6MTcgUE0NCj4gVG86IEdhYnJpZWxlIFBhb2xvbmk7IGFybmRAYXJuZGIu
+ZGU7IGxvcmVuem8ucGllcmFsaXNpQGFybS5jb207DQo+IFdhbmd6aG91IChCKTsgYmhlbGdhYXNA
+Z29vZ2xlLmNvbTsgcm9iaCtkdEBrZXJuZWwub3JnOw0KPiBqYW1lcy5tb3JzZUBhcm0uY29tOyBM
+aXZpdS5EdWRhdUBhcm0uY29tDQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51
+eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+IGRldmljZXRyZWVAdmdlci5rZXJu
+ZWwub3JnOyBZdWFuemhpY2hhbmc7IFpodWRhY2FpOyB6aGFuZ2p1a3VvOw0KPiBxaXV6aGVuZmE7
+IExpZ3Vvemh1IChLZW5uZXRoKQ0KPiBTdWJqZWN0OiBbUEFUQ0ggdjZdIFBDSTogU3RvcmUgUENJ
+ZSBidXMgYWRkcmVzcyBpbiBzdHJ1Y3Qgb2ZfcGNpX3JhbmdlDQo+IA0KPiBGcm9tOiBnYWJyaWVs
+ZSBwYW9sb25pIDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+DQo+IA0KPiAgICAgVGhpcyBw
+YXRjaCBpcyBuZWVkZWQgcG9ydCBQQ0llIGRlc2lnbndhcmUgdG8gbmV3IERUIHBhcnNpbmcgQVBJ
+DQo+ICAgICBBcyBkaXNjdXNzZWQgaW4NCj4gICAgIGh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3Jn
+L3BpcGVybWFpbC9saW51eC1hcm0ta2VybmVsLzIwMTUtDQo+IEphbnVhcnkvMzE3NzQzLmh0bWwN
+Cj4gICAgIGluIGRlc2lnbndhcmUgd2UgaGF2ZSBhIHByb2JsZW0gYXMgdGhlIFBDSSBhZGRyZXNz
+ZXMgaW4gdGhlIFBDSWUNCj4gY29udHJvbGxlcg0KPiAgICAgYWRkcmVzcyBzcGFjZSBhcmUgcmVx
+dWlyZWQgaW4gb3JkZXIgdG8gcGVyZm9ybSBjb3JyZWN0IEhXIG9wZXJhdGlvbi4NCj4gDQo+ICAg
+ICBJbiBvcmRlciB0byBzb2x2ZSB0aGlzIHByb2JsZW0gY29tbWl0IGY0YzU1YzVhMyAiUENJOiBk
+ZXNpZ253YXJlOg0KPiAgICAgUHJvZ3JhbSBBVFUgd2l0aCB1bnRyYW5zbGF0ZWQgYWRkcmVzcyIg
+YWRkZWQgY29kZSB0byByZWFkIHRoZSBQQ0llDQo+ICAgICBjb250cm9sbGVyIHN0YXJ0IGFkZHJl
+c3MgZGlyZWN0bHkgZnJvbSB0aGUgRFQgcmFuZ2VzLg0KPiANCj4gICAgIEluIHRoZSBuZXcgRFQg
+cGFyc2luZyBBUEkgb2ZfcGNpX2dldF9ob3N0X2JyaWRnZV9yZXNvdXJjZXMoKSBoaWRlcw0KPiB0
+aGUNCj4gICAgIERUIHBhcnNlciBmcm9tIHRoZSBob3N0IGNvbnRyb2xsZXIgZHJpdmVycywgc28g
+aXQgaXMgbm90IHBvc3NpYmxlDQo+ICAgICBmb3IgZHJpdmVycyB0byBwYXJzZSB2YWx1ZXMgZGly
+ZWN0bHkgZnJvbSB0aGUgRFQuDQo+IA0KPiAgICAgSW4gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9s
+aXN0cy9saW51eC1wY2kvbXNnNDI1NDAuaHRtbCB3ZSBhbHJlYWR5DQo+IHRyaWVkDQo+ICAgICB0
+byB1c2UgdGhlIG5ldyBEVCBwYXJzaW5nIEFQSSBidXQgdGhlcmUgaXMgYSBidWcgKG9idmlvdXNs
+eSkgaW4NCj4gc2V0dGluZw0KPiAgICAgdGhlIDwqPl9tb2RfYmFzZSBhZGRyZXNzZXMNCj4gICAg
+IEFwcGx5aW5nIHRoaXMgcGF0Y2ggd2UgY2FuIGVhc2lseSBzZXQgIjwqPl9tb2RfYmFzZSA9IHdp
+bi0NCj4gPl9fcmVzLnN0YXJ0Ig0KPiANCj4gICAgIFRoaXMgcGF0Y2ggYWRkcyBhIG5ldyBmaWVs
+ZCBpbiAic3RydWN0IG9mX3BjaV9yYW5nZSIgdG8gc3RvcmUgdGhlDQo+ICAgICBwY2kgYnVzIHN0
+YXJ0IGFkZHJlc3M7IGl0IGZpbGxzIHRoZSBmaWVsZCBpbg0KPiBvZl9wY2lfcmFuZ2VfcGFyc2Vy
+X29uZSgpOw0KPiAgICAgaW4gb2ZfcGNpX2dldF9ob3N0X2JyaWRnZV9yZXNvdXJjZXMoKSBpdCBy
+ZXRyaWV2ZXMgdGhlIHJlc291cmNlDQo+IGVudHJ5DQo+ICAgICBhZnRlciBpdCBpcyBjcmVhdGVk
+IGFuZCBhZGRlZCB0byB0aGUgcmVzb3VyY2UgbGlzdCBhbmQgdXNlcw0KPiAgICAgZW50cnktPl9f
+cmVzLnN0YXJ0IHRvIHN0b3JlIHRoZSBwY2kgY29udHJvbGxlciBhZGRyZXNzDQo+IA0KPiAgICAg
+dGhlIHBhdGNoIGlzIGJhc2VkIG9uIDQuMi1yYzENCj4gDQo+ICAgICBTaWduZWQtb2ZmLWJ5OiBH
+YWJyaWVsZSBQYW9sb25pIDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+DQo+ICAgICBBY2tl
+ZC1ieTogTGl2aXUgRHVkYXUgPExpdml1LkR1ZGF1QGFybS5jb20+DQo+ICAgICBBY2tlZC1ieTog
+Um9iIEhlcnJpbmcgPHJvYmhAa2VybmVsLm9yZz4NCj4gLS0tDQo+ICBkcml2ZXJzL29mL2FkZHJl
+c3MuYyAgICAgICB8IDIgKysNCj4gIGRyaXZlcnMvb2Yvb2ZfcGNpLmMgICAgICAgIHwgNCArKysr
+DQo+ICBpbmNsdWRlL2xpbnV4L29mX2FkZHJlc3MuaCB8IDEgKw0KPiAgMyBmaWxlcyBjaGFuZ2Vk
+LCA3IGluc2VydGlvbnMoKykNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL29mL2FkZHJlc3Mu
+YyBiL2RyaXZlcnMvb2YvYWRkcmVzcy5jDQo+IGluZGV4IDhiZmRhNmEuLjIzYTU3OTMgMTAwNjQ0
+DQo+IC0tLSBhL2RyaXZlcnMvb2YvYWRkcmVzcy5jDQo+ICsrKyBiL2RyaXZlcnMvb2YvYWRkcmVz
+cy5jDQo+IEBAIC0yNTMsNiArMjUzLDcgQEAgc3RydWN0IG9mX3BjaV9yYW5nZSAqb2ZfcGNpX3Jh
+bmdlX3BhcnNlcl9vbmUoc3RydWN0DQo+IG9mX3BjaV9yYW5nZV9wYXJzZXIgKnBhcnNlciwNCj4g
+IAkJCQkJCXN0cnVjdCBvZl9wY2lfcmFuZ2UgKnJhbmdlKQ0KPiAgew0KPiAgCWNvbnN0IGludCBu
+YSA9IDMsIG5zID0gMjsNCj4gKwljb25zdCBpbnQgcF9ucyA9IG9mX25fc2l6ZV9jZWxscyhwYXJz
+ZXItPm5vZGUpOw0KPiANCj4gIAlpZiAoIXJhbmdlKQ0KPiAgCQlyZXR1cm4gTlVMTDsNCj4gQEAg
+LTI2NSw2ICsyNjYsNyBAQCBzdHJ1Y3Qgb2ZfcGNpX3JhbmdlICpvZl9wY2lfcmFuZ2VfcGFyc2Vy
+X29uZShzdHJ1Y3QNCj4gb2ZfcGNpX3JhbmdlX3BhcnNlciAqcGFyc2VyLA0KPiAgCXJhbmdlLT5w
+Y2lfYWRkciA9IG9mX3JlYWRfbnVtYmVyKHBhcnNlci0+cmFuZ2UgKyAxLCBucyk7DQo+ICAJcmFu
+Z2UtPmNwdV9hZGRyID0gb2ZfdHJhbnNsYXRlX2FkZHJlc3MocGFyc2VyLT5ub2RlLA0KPiAgCQkJ
+CXBhcnNlci0+cmFuZ2UgKyBuYSk7DQo+ICsJcmFuZ2UtPmJ1c19hZGRyID0gb2ZfcmVhZF9udW1i
+ZXIocGFyc2VyLT5yYW5nZSArIG5hLCBwX25zKTsNCj4gIAlyYW5nZS0+c2l6ZSA9IG9mX3JlYWRf
+bnVtYmVyKHBhcnNlci0+cmFuZ2UgKyBwYXJzZXItPnBuYSArIG5hLA0KPiBucyk7DQo+IA0KPiAg
+CXBhcnNlci0+cmFuZ2UgKz0gcGFyc2VyLT5ucDsNCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvb2Yv
+b2ZfcGNpLmMgYi9kcml2ZXJzL29mL29mX3BjaS5jDQo+IGluZGV4IDU3NTFkYzUuLmZlNTcwMzAg
+MTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvb2Yvb2ZfcGNpLmMNCj4gKysrIGIvZHJpdmVycy9vZi9v
+Zl9wY2kuYw0KPiBAQCAtMTk4LDYgKzE5OCw3IEBAIGludCBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdl
+X3Jlc291cmNlcyhzdHJ1Y3QNCj4gZGV2aWNlX25vZGUgKmRldiwNCj4gDQo+ICAJcHJfZGVidWco
+IlBhcnNpbmcgcmFuZ2VzIHByb3BlcnR5Li4uXG4iKTsNCj4gIAlmb3JfZWFjaF9vZl9wY2lfcmFu
+Z2UoJnBhcnNlciwgJnJhbmdlKSB7DQo+ICsJCXN0cnVjdCByZXNvdXJjZV9lbnRyeSAqZW50cnk7
+DQo+ICAJCS8qIFJlYWQgbmV4dCByYW5nZXMgZWxlbWVudCAqLw0KPiAgCQlpZiAoKHJhbmdlLmZs
+YWdzICYgSU9SRVNPVVJDRV9UWVBFX0JJVFMpID09IElPUkVTT1VSQ0VfSU8pDQo+ICAJCQlzbnBy
+aW50ZihyYW5nZV90eXBlLCA0LCAiIElPIik7DQo+IEBAIC0yNDAsNiArMjQxLDkgQEAgaW50IG9m
+X3BjaV9nZXRfaG9zdF9icmlkZ2VfcmVzb3VyY2VzKHN0cnVjdA0KPiBkZXZpY2Vfbm9kZSAqZGV2
+LA0KPiAgCQl9DQo+IA0KPiAgCQlwY2lfYWRkX3Jlc291cmNlX29mZnNldChyZXNvdXJjZXMsIHJl
+cywJcmVzLT5zdGFydCAtDQo+IHJhbmdlLnBjaV9hZGRyKTsNCj4gKwkJZW50cnkgPSBsaXN0X2xh
+c3RfZW50cnkocmVzb3VyY2VzLCBzdHJ1Y3QgcmVzb3VyY2VfZW50cnksDQo+IG5vZGUpOw0KPiAr
+CQkvKiB3ZSBhcmUgdXNpbmcgX19yZXMgZm9yIHN0b3JpbmcgdGhlIFBDSSBjb250cm9sbGVyDQo+
+IGFkZHJlc3MgKi8NCj4gKwkJZW50cnktPl9fcmVzLnN0YXJ0ID0gcmFuZ2UuYnVzX2FkZHI7DQo+
+ICAJfQ0KPiANCj4gIAlyZXR1cm4gMDsNCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvb2Zf
+YWRkcmVzcy5oIGIvaW5jbHVkZS9saW51eC9vZl9hZGRyZXNzLmgNCj4gaW5kZXggZDg4ZTgxYi4u
+ODY1Zjk2ZSAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9saW51eC9vZl9hZGRyZXNzLmgNCj4gKysr
+IGIvaW5jbHVkZS9saW51eC9vZl9hZGRyZXNzLmgNCj4gQEAgLTE2LDYgKzE2LDcgQEAgc3RydWN0
+IG9mX3BjaV9yYW5nZSB7DQo+ICAJdTMyIHBjaV9zcGFjZTsNCj4gIAl1NjQgcGNpX2FkZHI7DQo+
+ICAJdTY0IGNwdV9hZGRyOw0KPiArCXU2NCBidXNfYWRkcjsNCj4gIAl1NjQgc2l6ZTsNCj4gIAl1
+MzIgZmxhZ3M7DQo+ICB9Ow0KPiAtLQ0KPiAxLjkuMQ0KDQo=
