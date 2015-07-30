@@ -1,964 +1,350 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:33547 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753287AbbGOQy7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 12:54:59 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-arm-kernel@lists.infradead.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>
-Cc: linux-kernel@vger.kernel.org, Robert Richter <rrichter@cavium.com>,
-	David Daney <david.daney@cavium.com>
-Subject: [PATCH 5/5] PCI: Add host drivers for Cavium ThunderX processors.
-Date: Wed, 15 Jul 2015 09:54:45 -0700
-Message-Id: <1436979285-8177-6-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:33465 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753241AbbG3ROv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 13:14:51 -0400
+Received: by igbpg9 with SMTP id pg9so15384792igb.0
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2015 10:14:51 -0700 (PDT)
+Date: Thu, 30 Jul 2015 12:14:45 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Rob Herring <robherring2@gmail.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>
+Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
+Message-ID: <20150730171445.GI9640@google.com>
+References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20150729172053.GE31170@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
+ <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs>
+ <20150730161447.GG9640@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+[+cc Jingoo, Pratyush]
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/host/Kconfig            |  12 +
- drivers/pci/host/Makefile           |   2 +
- drivers/pci/host/pcie-thunder-pem.c | 462 ++++++++++++++++++++++++++++++++++++
- drivers/pci/host/pcie-thunder.c     | 422 ++++++++++++++++++++++++++++++++
- 4 files changed, 898 insertions(+)
- create mode 100644 drivers/pci/host/pcie-thunder-pem.c
- create mode 100644 drivers/pci/host/pcie-thunder.c
+On Thu, Jul 30, 2015 at 04:50:55PM +0000, Gabriele Paoloni wrote:
+> > -----Original Message-----
+> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> > owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
+> > Sent: Thursday, July 30, 2015 5:15 PM
+> > To: Gabriele Paoloni
+> > Cc: Rob Herring; arnd@arndb.de; lorenzo.pieralisi@arm.com; Wangzhou (B);
+> > robh+dt@kernel.org; james.morse@arm.com; Liviu.Dudau@arm.com; linux-
+> > pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> > devicetree@vger.kernel.org; Yuanzhichang; Zhudacai; zhangjukuo;
+> > qiuzhenfa; Liguozhu (Kenneth)
+> > Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct
+> > of_pci_range
+> > 
+> > On Thu, Jul 30, 2015 at 01:52:13PM +0000, Gabriele Paoloni wrote:
+> > >
+> > >
+> > > > -----Original Message-----
+> > > > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> > > > owner@vger.kernel.org] On Behalf Of Rob Herring
+> > > > Sent: Thursday, July 30, 2015 2:43 PM
+> > > > To: Gabriele Paoloni
+> > > > Cc: Bjorn Helgaas; arnd@arndb.de; lorenzo.pieralisi@arm.com;
+> > Wangzhou
+> > > > (B); robh+dt@kernel.org; james.morse@arm.com; Liviu.Dudau@arm.com;
+> > > > linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> > > > devicetree@vger.kernel.org; Yuanzhichang; Zhudacai; zhangjukuo;
+> > > > qiuzhenfa; Liguozhu (Kenneth)
+> > > > Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct
+> > > > of_pci_range
+> > > >
+> > > > On Wed, Jul 29, 2015 at 2:44 PM, Gabriele Paoloni
+> > > > <gabriele.paoloni@huawei.com> wrote:
+> > > > > Hi Bjorn
+> > > > >
+> > > > > Many Thanks for your reply
+> > > > >
+> > > > > I have commented back inline with resolutions from my side.
+> > > > >
+> > > > > If you're ok with them I'll send it out a new version in the
+> > > > appropriate patchset
+> > > > >
+> > > > > Cheers
+> > > > >
+> > > > > Gab
+> > > > >
+> > > > >> -----Original Message-----
+> > > > >> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+> > > > >> Sent: Wednesday, July 29, 2015 6:21 PM
+> > > > >> To: Gabriele Paoloni
+> > > > >> Cc: arnd@arndb.de; lorenzo.pieralisi@arm.com; Wangzhou (B);
+> > > > >> robh+dt@kernel.org; james.morse@arm.com; Liviu.Dudau@arm.com;
+> > linux-
+> > > > >> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> > > > >> devicetree@vger.kernel.org; Yuanzhichang; Zhudacai; zhangjukuo;
+> > > > >> qiuzhenfa; Liguozhu (Kenneth)
+> > > > >> Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct
+> > > > >> of_pci_range
+> > > > >>
+> > > > >> Hi Gabriele,
+> > > > >>
+> > > > >> As far as I can tell, this is not specific to PCIe, so please
+> > use
+> > > > "PCI"
+> > > > >> in
+> > > > >> the subject as a generic term that includes both PCI and PCIe.
+> > > > >
+> > > > > sure agreed
+> > > > >
+> > > > >>
+> > > > >> On Mon, Jul 27, 2015 at 11:17:03PM +0800, Gabriele Paoloni wrote:
+> > > > >> > From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> > > > >> >
+> > > > >> >     This patch is needed port PCIe designware to new DT
+> > parsing
+> > > > API
+> > > > >> >     As discussed in
+> > > > >> >     http://lists.infradead.org/pipermail/linux-arm-
+> > kernel/2015-
+> > > > >> January/317743.html
+> > > > >> >     in designware we have a problem as the PCI addresses in
+> > the
+> > > > PCIe
+> > > > >> controller
+> > > > >> >     address space are required in order to perform correct HW
+> > > > >> operation.
+> > > > >> >
+> > > > >> >     In order to solve this problem commit f4c55c5a3 "PCI:
+> > > > designware:
+> > > > >> >     Program ATU with untranslated address" added code to read
+> > the
+> > > > >> PCIe
+> > > > >>
+> > > > >> Conventional reference is 12-char SHA1, like this:
+> > > > >>
+> > > > >>   f4c55c5a3f7f ("PCI: designware: Program ATU with untranslated
+> > > > >> address")
+> > > > >
+> > > > > Agreed, will change this
+> > > > >
+> > > > >>
+> > > > >> >     controller start address directly from the DT ranges.
+> > > > >> >
+> > > > >> >     In the new DT parsing API
+> > of_pci_get_host_bridge_resources()
+> > > > >> hides the
+> > > > >> >     DT parser from the host controller drivers, so it is not
+> > > > possible
+> > > > >> >     for drivers to parse values directly from the DT.
+> > > > >> >
+> > > > >> >     In http://www.spinics.net/lists/linux-pci/msg42540.html we
+> > > > >> already tried
+> > > > >> >     to use the new DT parsing API but there is a bug
+> > (obviously)
+> > > > in
+> > > > >> setting
+> > > > >> >     the <*>_mod_base addresses
+> > > > >> >     Applying this patch we can easily set "<*>_mod_base = win-
+> > > > >> >__res.start"
+> > > > >>
+> > > > >> By itself, this patch adds something.  It would help me
+> > understand
+> > > > it
+> > > > >> if
+> > > > >> the *user* of this new something were in the same patch series.
+> > > > >
+> > > > > the user is: "[PATCH v5 2/5] PCI: designware: Add ARM64 support"
+> > > > > I will ask Zhou Wang to include this patch in his patchset
+> > > > >
+> > > > >
+> > > > >>
+> > > > >> >     This patch adds a new field in "struct of_pci_range" to
+> > store
+> > > > the
+> > > > >> >     pci bus start address; it fills the field in
+> > > > >> of_pci_range_parser_one();
+> > > > >> >     in of_pci_get_host_bridge_resources() it retrieves the
+> > > > resource
+> > > > >> entry
+> > > > >> >     after it is created and added to the resource list and
+> > uses
+> > > > >> >     entry->__res.start to store the pci controller address
+> > > > >>
+> > > > >> struct of_pci_range is starting to get confusing to non-OF folks
+> > > > like
+> > > > >> me.
+> > > > >> It now contains:
+> > > > >>
+> > > > >>   u32 pci_space;
+> > > > >>   u64 pci_addr;
+> > > > >>   u64 cpu_addr;
+> > > > >>   u64 bus_addr;
+> > > > >>
+> > > > >> Can you explain what all these things mean, and maybe even add
+> > one-
+> > > > line
+> > > > >> comments to the structure?
+> > > > >
+> > > > > sure I can add comments inline in the code
+> > > > >
+> > > > >>
+> > > > >> pci_space: The only uses I see are to determine whether to print
+> > > > >> "Prefetch".  I don't see any real functionality that uses this.
+> > > > >
+> > > > > Looking at the code I agree. it's seems to be used only in
+> > powerpc
+> > > > > and microblaze to print out.
+> > > > > However from my understanding pci_space is the phys.hi field of
+> > the
+> > > > > ranges property: it defines the properties of the address space
+> > > > associated
+> > > > > to the PCI address. if you're curious you can find a nice and
+> > quick
+> > > > to read
+> > > > > "guide" in http://devicetree.org/MPC5200:PCI
+> > > > >
+> > > > >>
+> > > > >> pci_addr: I assume this is a PCI bus address, like what you
+> > would
+> > > > see
+> > > > >> if
+> > > > >> you put an analyzer on the bus/link.  This address could go in a
+> > BAR.
+> > > > >
+> > > > > Yes, this is the PCI start address of the range: phys.mid +
+> > phys.low
+> > > > in the
+> > > > > guide mentioned above
+> > > > >
+> > > > >>
+> > > > >> cpu_addr: I assume this is a CPU physical address, like what you
+> > > > would
+> > > > >> see
+> > > > >> in /proc/iomem and what you would pass to ioremap().
+> > > > >
+> > > > > Yes correct
+> > > > >
+> > > > >>
+> > > > >> bus_addr: ?
+> > > > >>
+> > > > >
+> > > > > According to the guide above, this is the address into which the
+> > > > pci_address
+> > > > > get translated to and that is passed to the root complex. Between
+> > the
+> > > > root
+> > > > > complex and the CPU there can be intermediate translation layers:
+> > see
+> > > > that to
+> > > > > get pci_address we call "of_translate_address"; this will apply
+> > all
+> > > > the
+> > > > > translation layers (ranges in the DT) that it finds till it comes
+> > to
+> > > > the root
+> > > > > node of the DT (thus retrieving the CPU address).
+> > > > > Now said that, for designware we need the first translated PCI
+> > > > address, that we call
+> > > >
+> > > > I think you mean "translated CPU address." The flow of addresses
+> > looks
+> > > > like this:
+> > > >
+> > > > CPU -> CPU bus address -> bus fabric address decoding -> bus
+> > address
+> > > > -> DW PCI -> PCI address
+> > > >
+> > > > This is quite common that an IP block does not see the full address.
+> > > > It is unusual that the IP block needs to know its full address on
+> > the
+> > > > slave side. It is quite common for the master side and the kernel
+> > > > deals with that all the time with DMA mapping
+> > > >
+> > > > > here bus_addr after Rob Herring suggested the name...honestly I
+> > > > cannot think of a
+> > > > > different name
+> > > >
+> > > > Thinking about this some more, is this really a translation versus
+> > > > just a stripping of high bits? Does the DW IP have less than 32-
+> > bits
+> > > > address? If so, we could express differently and just mask the CPU
+> > > > address within the driver instead.
+> > >
+> > > I don’t think we should rely on [CPU] addresses...what if the
+> > intermediate
+> > > translation layer changes the lower significant bits of the "bus
+> > address"
+> > > to translate into a cpu address?
+> > 
+> > Is it really a possiblity that the lower bits could be changed?
+> 
+> I've checked all the current deignware users DTs except "pci-layerscape" 
+> that I could not find:
+> spear1310.dtsi
+> spear1340.dtsi
+> dra7.dtsi
+> imx6qdl.dtsi
+> imx6sx.dtsi
+> keystone.dtsi
+> exynos5440.dtsi
+> 
+> None of them modifies the lower bits. To be more precise the only guy
+> that provides another translation layer is "dra7.dtsi":
+> axi0
+> http://lxr.free-electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L207
+> 
+> axi1
+> http://lxr.free-electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L241
+> 
+> For this case masking the top 4bits (bits28 to 31) should make the job.
+> 
+> Speaking in general terms so far I've always seen linear mappings
+> that differ by bitmask offset, however linear does not mean that you 
+> cannot affect the lower bits: e.g. <0x0> to <0x0 + size> can map to
+> <0x0000cafe to 0x0000cafe + size>, but I guess that for HW design reasons
+> it is much easier to remap directly using a bitmask...but I was not sure
+> and I didn't think about the problems that can arise with ACPI.
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index c132bdd..06e26ad 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -145,4 +145,16 @@ config PCIE_IPROC_BCMA
- 	  Say Y here if you want to use the Broadcom iProc PCIe controller
- 	  through the BCMA bus interface
- 
-+config PCI_THUNDER_PEM
-+	bool
-+
-+config PCI_THUNDER
-+	bool "Thunder PCIe host controller"
-+	depends on ARM64 || COMPILE_TEST
-+	depends on OF_PCI
-+	select PCI_MSI
-+	select PCI_THUNDER_PEM
-+	help
-+	  Say Y here if you want internal PCI support on Thunder SoC.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 140d66f..a355155 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -17,3 +17,5 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
- obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
- obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
-+obj-$(CONFIG_PCI_THUNDER) += pcie-thunder.o
-+obj-$(CONFIG_PCI_THUNDER_PEM) += pcie-thunder-pem.o
-diff --git a/drivers/pci/host/pcie-thunder-pem.c b/drivers/pci/host/pcie-thunder-pem.c
-new file mode 100644
-index 0000000..7861a8a
---- /dev/null
-+++ b/drivers/pci/host/pcie-thunder-pem.c
-@@ -0,0 +1,462 @@
-+/*
-+ * PCIe host controller driver for Cavium Thunder SOC
-+ *
-+ * Copyright (C) 2014,2015 Cavium Inc.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation; either version 2 of
-+ * the License, or (at your option) any later version.
-+ */
-+/* #define DEBUG 1 */
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/delay.h>
-+#include <linux/irq.h>
-+#include <linux/pci.h>
-+#include <linux/irqdomain.h>
-+#include <linux/msi.h>
-+#include <linux/irqchip/arm-gic-v3.h>
-+
-+#define THUNDER_SLI_S2M_REG_ACC_BASE	0x874001000000ull
-+
-+#define THUNDER_GIC			0x801000000000ull
-+#define THUNDER_GICD_SETSPI_NSR		0x801000000040ull
-+#define THUNDER_GICD_CLRSPI_NSR		0x801000000048ull
-+
-+#define THUNDER_GSER_PCIE_MASK		0x01
-+
-+#define PEM_CTL_STATUS	0x000
-+#define PEM_RD_CFG	0x030
-+#define P2N_BAR0_START	0x080
-+#define P2N_BAR1_START	0x088
-+#define P2N_BAR2_START	0x090
-+#define BAR_CTL		0x0a8
-+#define BAR2_MASK	0x0b0
-+#define BAR1_INDEX	0x100
-+#define PEM_CFG		0x410
-+#define PEM_ON		0x420
-+
-+struct thunder_pem {
-+	struct list_head list; /* on thunder_pem_buses */
-+	bool		connected;
-+	unsigned int	id;
-+	unsigned int	sli;
-+	unsigned int	sli_group;
-+	unsigned int	node;
-+	u64		sli_window_base;
-+	void __iomem	*bar0;
-+	void __iomem	*bar4;
-+	void __iomem	*sli_s2m;
-+	void __iomem	*cfgregion;
-+	struct pci_bus	*bus;
-+	int		vwire_irqs[4];
-+	u32		vwire_data[4];
-+};
-+
-+static LIST_HEAD(thunder_pem_buses);
-+
-+static struct pci_device_id thunder_pem_pci_table[] = {
-+	{PCI_VENDOR_ID_CAVIUM, 0xa020, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{0,}
-+};
-+MODULE_DEVICE_TABLE(pci, thunder_pem_pci_table);
-+
-+enum slix_s2m_ctype {
-+	CTYPE_MEMORY	= 0,
-+	CTYPE_CONFIG	= 1,
-+	CTYPE_IO	= 2
-+};
-+
-+static u64 slix_s2m_reg_val(unsigned mac, enum slix_s2m_ctype ctype,
-+			    bool merge, bool relaxed, bool snoop, u32 ba_msb)
-+{
-+	u64 v;
-+
-+	v = (u64)(mac % 3) << 49;
-+	v |= (u64)ctype << 53;
-+	if (!merge)
-+		v |= 1ull << 48;
-+	if (relaxed)
-+		v |= 5ull << 40;
-+	if (!snoop)
-+		v |= 5ull << 41;
-+	v |= (u64)ba_msb;
-+
-+	return v;
-+}
-+
-+static u32 thunder_pcierc_config_read(struct thunder_pem *pem, u32 reg, int size)
-+{
-+	unsigned int val;
-+
-+	writeq(reg & ~3u, pem->bar0 + PEM_RD_CFG);
-+	val = readq(pem->bar0 + PEM_RD_CFG) >> 32;
-+
-+	if (size == 1)
-+		val = (val >> (8 * (reg & 3))) & 0xff;
-+	else if (size == 2)
-+		val = (val >> (8 * (reg & 3))) & 0xffff;
-+
-+	return val;
-+}
-+
-+static int thunder_pem_read_config(struct pci_bus *bus, unsigned int devfn,
-+				   int reg, int size, u32 *val)
-+{
-+	void __iomem *addr;
-+	struct thunder_pem *pem = bus->sysdata;
-+	unsigned int busnr = bus->number;
-+
-+	if (busnr > 255 || devfn > 255 || reg > 4095)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	addr = pem->cfgregion + ((busnr << 24)  | (devfn << 16) | reg);
-+
-+	switch (size) {
-+	case 1:
-+		*val = readb(addr);
-+		break;
-+	case 2:
-+		*val = readw(addr);
-+		break;
-+	case 4:
-+		*val = readl(addr);
-+		break;
-+	default:
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int thunder_pem_write_config(struct pci_bus *bus, unsigned int devfn,
-+				    int reg, int size, u32 val)
-+{
-+	void __iomem *addr;
-+	struct thunder_pem *pem = bus->sysdata;
-+	unsigned int busnr = bus->number;
-+
-+	if (busnr > 255 || devfn > 255 || reg > 4095)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	addr = pem->cfgregion + ((busnr << 24)  | (devfn << 16) | reg);
-+
-+	switch (size) {
-+	case 1:
-+		writeb(val, addr);
-+		break;
-+	case 2:
-+		writew(val, addr);
-+		break;
-+	case 4:
-+		writel(val, addr);
-+		break;
-+	default:
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static struct pci_ops thunder_pem_ops = {
-+	.read	= thunder_pem_read_config,
-+	.write	= thunder_pem_write_config,
-+};
-+
-+static struct thunder_pem *thunder_pem_from_dev(struct pci_dev *dev)
-+{
-+	struct thunder_pem *pem;
-+	struct pci_bus *bus = dev->bus;
-+
-+	while (!pci_is_root_bus(bus))
-+		bus = bus->parent;
-+
-+	list_for_each_entry(pem, &thunder_pem_buses, list) {
-+		if (pem->bus == bus)
-+			return pem;
-+	}
-+	return NULL;
-+}
-+
-+int thunder_pem_requester_id(struct pci_dev *dev)
-+{
-+	struct thunder_pem *pem = thunder_pem_from_dev(dev);
-+
-+	if (!pem)
-+		return -ENODEV;
-+
-+	if (pem->id < 3)
-+		return ((1 << 16) |
-+			((dev)->bus->number << 8) |
-+			(dev)->devfn);
-+
-+	if (pem->id < 6)
-+		return ((3 << 16) |
-+			((dev)->bus->number << 8) |
-+			(dev)->devfn);
-+
-+	if (pem->id < 9)
-+		return ((1 << 19) | (1 << 16) |
-+			((dev)->bus->number << 8) |
-+			(dev)->devfn);
-+
-+	if (pem->id < 12)
-+		return ((1 << 19) |
-+			(3 << 16) |
-+			((dev)->bus->number << 8) |
-+			(dev)->devfn);
-+	return -ENODEV;
-+}
-+
-+static int thunder_pem_pcibios_add_device(struct pci_dev *dev)
-+{
-+	struct thunder_pem *pem;
-+	u8 pin;
-+
-+	pem = thunder_pem_from_dev(dev);
-+	if (!pem)
-+		return 0;
-+
-+	pci_read_config_byte(dev, PCI_INTERRUPT_PIN, &pin);
-+
-+	/* Cope with illegal. */
-+	if (pin > 4)
-+		pin = 1;
-+
-+	dev->irq = pin > 0 ? pem->vwire_irqs[pin - 1] : 0;
-+
-+	if (pin)
-+		dev_dbg(&dev->dev, "assigning IRQ %02d\n", dev->irq);
-+
-+	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, dev->irq);
-+
-+	return 0;
-+}
-+
-+static int thunder_pem_pci_probe(struct pci_dev *pdev,
-+				 const struct pci_device_id *ent)
-+{
-+	struct thunder_pem *pem;
-+	resource_size_t bar0_start;
-+	u64 regval;
-+	u64 sliaddr, pciaddr;
-+	u32 cfgval;
-+	int primary_bus;
-+	int i;
-+	int ret = 0;
-+	struct resource *res;
-+	LIST_HEAD(resources);
-+
-+	set_pcibios_add_device(thunder_pem_pcibios_add_device);
-+
-+	pem = devm_kzalloc(&pdev->dev, sizeof(*pem), GFP_KERNEL);
-+	if (!pem)
-+		return -ENOMEM;
-+
-+	pci_set_drvdata(pdev, pem);
-+
-+	bar0_start = pci_resource_start(pdev, 0);
-+	pem->node = (bar0_start >> 44) & 3;
-+	pem->id = ((bar0_start >> 24) & 7) + (6 * pem->node);
-+	pem->sli = pem->id % 3;
-+	pem->sli_group = (pem->id / 3) % 2;
-+	pem->sli_window_base = 0x880000000000ull | (((u64)pem->node) << 44) | ((u64)pem->sli_group << 40);
-+	pem->sli_window_base += 0x4000000000 * pem->sli;
-+
-+	ret = pci_enable_device_mem(pdev);
-+	if (ret)
-+		goto out;
-+
-+	pem->bar0 = pcim_iomap(pdev, 0, 0x100000);
-+	if (!pem->bar0) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	pem->bar4 = pcim_iomap(pdev, 4, 0x100000);
-+	if (!pem->bar0) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	sliaddr = THUNDER_SLI_S2M_REG_ACC_BASE | ((u64)pem->node << 44) | ((u64)pem->sli_group << 36);
-+
-+	regval = readq(pem->bar0 + PEM_ON);
-+	if (!(regval & 1)) {
-+		dev_notice(&pdev->dev, "PEM%u_ON not set, skipping...\n", pem->id);
-+		goto out;
-+	}
-+
-+	regval = readq(pem->bar0 + PEM_CTL_STATUS);
-+	regval |= 0x10; /* Set Link Enable bit */
-+	writeq(regval, pem->bar0 + PEM_CTL_STATUS);
-+
-+	udelay(1000);
-+
-+	cfgval = thunder_pcierc_config_read(pem, 32 * 4, 4); /* PCIERC_CFG032 */
-+
-+	if (((cfgval >> 29 & 0x1) == 0x0) || ((cfgval >> 27 & 0x1) == 0x1)) {
-+		dev_notice(&pdev->dev, "PEM%u Link Timeout, skipping...\n", pem->id);
-+		goto out;
-+	}
-+
-+	pem->sli_s2m = devm_ioremap(&pdev->dev, sliaddr, 0x1000);
-+	if (!pem->sli_s2m) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	pem->cfgregion = devm_ioremap(&pdev->dev, pem->sli_window_base, 0x100000000ull);
-+	if (!pem->cfgregion) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+	regval = slix_s2m_reg_val(pem->sli, CTYPE_CONFIG, false, false, false, 0);
-+	writeq(regval, pem->sli_s2m + 0x10 * ((0x40 * pem->sli) + 0));
-+
-+	cfgval = thunder_pcierc_config_read(pem, 6 * 4, 4); /* PCIERC_CFG006 */
-+	primary_bus = (cfgval >> 8) & 0xff;
-+
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+	res->start = primary_bus;
-+	res->end = 255;
-+	res->flags = IORESOURCE_BUS;
-+	pci_add_resource(&resources, res);
-+
-+
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+	res->start = 0x100000 * pem->id;
-+	res->end = res->start + 0x100000 - 1;
-+	res->flags = IORESOURCE_IO;
-+	pci_add_resource(&resources, res);
-+	regval = slix_s2m_reg_val(pem->sli, CTYPE_IO, false, false, false, 0);
-+	writeq(regval, pem->sli_s2m + 0x10 * ((0x40 * pem->sli) + 1));
-+
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+	pciaddr = 0x10000000ull;
-+	res->start = pem->sli_window_base + 0x1000000000ull + pciaddr;
-+	res->end = res->start + 0x1000000000ull - pciaddr - 1;
-+	res->flags = IORESOURCE_MEM;
-+	pci_add_resource_offset(&resources, res, res->start - pciaddr);
-+	for (i = 0; i < 16; i++) {
-+		regval = slix_s2m_reg_val(pem->sli, CTYPE_MEMORY, false, false, false, i);
-+		writeq(regval, pem->sli_s2m + 0x10 * ((0x40 * pem->sli) + (0x10 + i)));
-+	}
-+
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+	pciaddr = 0x1000000000ull;
-+	res->start = pem->sli_window_base + 0x1000000000ull + pciaddr;
-+	res->end = res->start + 0x1000000000ull - 1;
-+	res->flags = IORESOURCE_MEM | IORESOURCE_PREFETCH;
-+	pci_add_resource_offset(&resources, res, res->start - pciaddr);
-+	for (i = 0; i < 16; i++) {
-+		regval = slix_s2m_reg_val(pem->sli, CTYPE_MEMORY, true, true, true, i + 0x10);
-+		writeq(regval, pem->sli_s2m + 0x10 * ((0x40 * pem->sli) + (0x20 + i)));
-+	}
-+
-+	writeq(0, pem->bar0 + P2N_BAR0_START);
-+	writeq(0, pem->bar0 + P2N_BAR1_START);
-+	writeq(0, pem->bar0 + P2N_BAR2_START);
-+
-+	regval = 0x10;	/* BAR_CTL[BAR1_SIZ] = 1 (64MB) */
-+	regval |= 0x8;	/* BAR_CTL[BAR2_ENB] = 1 */
-+	writeq(regval, pem->bar0 + BAR_CTL);
-+
-+	/* 1st 4MB region -> GIC registers so 32-bit MSI can reach the GIC. */
-+	regval = (THUNDER_GIC + (((u64)pem->node) << 44)) >> 18;
-+	/* BAR1_INDEX[ADDR_V] = 1 */
-+	regval |= 1;
-+	writeq(regval, pem->bar0 + BAR1_INDEX);
-+	/* Remaining regions linear mapping to physical address space */
-+	for (i = 1; i < 16; i++) {
-+		regval = (i << 4) | 1;
-+		writeq(regval, pem->bar0 + BAR1_INDEX + 8 * i);
-+	}
-+
-+	pem->bus = pci_create_root_bus(&pdev->dev, primary_bus, &thunder_pem_ops, pem, &resources);
-+	if (!pem->bus) {
-+		ret = -ENODEV;
-+		goto err_root_bus;
-+	}
-+	pem->bus->is_pcierc = 1;
-+	list_add_tail(&pem->list, &thunder_pem_buses);
-+
-+	for (i = 0; i < 3; i++) {
-+		pem->vwire_data[i] = 40 + 4 * pem->id + i;
-+		pem->vwire_irqs[i] = irq_create_mapping(gic_get_irq_domain(), pem->vwire_data[i]);
-+		if (!pem->vwire_irqs[i]) {
-+			dev_err(&pdev->dev, "Error: No irq mapping for %u\n", pem->vwire_data[i]);
-+			continue;
-+		}
-+		irq_set_irq_type(pem->vwire_irqs[i], IRQ_TYPE_LEVEL_HIGH);
-+
-+		writeq(THUNDER_GICD_SETSPI_NSR,	pem->bar4 + 0 + (i + 2) * 32);
-+		writeq(pem->vwire_data[i],	pem->bar4 + 8 + (i + 2) * 32);
-+		writeq(THUNDER_GICD_CLRSPI_NSR,	pem->bar4 + 16 + (i + 2) * 32);
-+		writeq(pem->vwire_data[i],	pem->bar4 + 24 + (i + 2) * 32);
-+	}
-+	ret = pci_read_config_dword(pdev, 44 * 4, &cfgval);
-+	if (WARN_ON(ret))
-+		goto err_free_root_bus;
-+	cfgval &= ~0x40000000; /* Clear FUNM */
-+	cfgval |= 0x80000000;  /* Set MSIXEN */
-+	pci_write_config_dword(pdev, 44 * 4, cfgval);
-+	pem->bus->msi = pdev->bus->msi;
-+
-+	pci_scan_child_bus(pem->bus);
-+	pci_bus_add_devices(pem->bus);
-+	pci_assign_unassigned_root_bus_resources(pem->bus);
-+
-+	return 0;
-+
-+err_free_root_bus:
-+	pci_remove_root_bus(pem->bus);
-+err_root_bus:
-+	pci_free_resource_list(&resources);
-+out:
-+	return ret;
-+}
-+
-+static void thunder_pem_pci_remove(struct pci_dev *pdev)
-+{
-+}
-+
-+static struct pci_driver thunder_pem_driver = {
-+	.name		= "thunder_pem",
-+	.id_table	= thunder_pem_pci_table,
-+	.probe		= thunder_pem_pci_probe,
-+	.remove		= thunder_pem_pci_remove
-+};
-+
-+static int __init thunder_pcie_init(void)
-+{
-+	int ret;
-+
-+	ret = pci_register_driver(&thunder_pem_driver);
-+
-+	return ret;
-+}
-+module_init(thunder_pcie_init);
-+
-+static void __exit thunder_pcie_exit(void)
-+{
-+	pci_unregister_driver(&thunder_pem_driver);
-+}
-+module_exit(thunder_pcie_exit);
-diff --git a/drivers/pci/host/pcie-thunder.c b/drivers/pci/host/pcie-thunder.c
-new file mode 100644
-index 0000000..4abab5a
---- /dev/null
-+++ b/drivers/pci/host/pcie-thunder.c
-@@ -0,0 +1,422 @@
-+/*
-+ * PCIe host controller driver for Cavium Thunder SOC
-+ *
-+ * Copyright (C) 2014, 2015 Cavium Inc.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation; either version 2 of
-+ * the License, or (at your option) any later version.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_pci.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/msi.h>
-+#include <linux/irqchip/arm-gic-v3.h>
-+
-+#define PCI_DEVICE_ID_THUNDER_BRIDGE	0xa002
-+
-+#define THUNDER_PCIE_BUS_SHIFT		20
-+#define THUNDER_PCIE_DEV_SHIFT		15
-+#define THUNDER_PCIE_FUNC_SHIFT		12
-+
-+#define THUNDER_ECAM0_CFG_BASE		0x848000000000
-+#define THUNDER_ECAM1_CFG_BASE		0x849000000000
-+#define THUNDER_ECAM2_CFG_BASE		0x84a000000000
-+#define THUNDER_ECAM3_CFG_BASE		0x84b000000000
-+#define THUNDER_ECAM4_CFG_BASE		0x948000000000
-+#define THUNDER_ECAM5_CFG_BASE		0x949000000000
-+#define THUNDER_ECAM6_CFG_BASE		0x94a000000000
-+#define THUNDER_ECAM7_CFG_BASE		0x94b000000000
-+
-+struct thunder_pcie {
-+	struct device_node	*node;
-+	struct device		*dev;
-+	void __iomem		*cfg_base;
-+	struct msi_controller	*msi;
-+	int			ecam;
-+	bool			valid;
-+};
-+
-+int thunder_pem_requester_id(struct pci_dev *dev);
-+
-+static atomic_t thunder_pcie_ecam_probed;
-+
-+static u32 pci_requester_id_ecam(struct pci_dev *dev)
-+{
-+	return (((pci_domain_nr(dev->bus) >> 2) << 19) |
-+		((pci_domain_nr(dev->bus) % 4) << 16) |
-+		(dev->bus->number << 8) | dev->devfn);
-+}
-+
-+static u32 thunder_pci_requester_id(struct pci_dev *dev, u16 alias)
-+{
-+	int ret;
-+
-+	ret = thunder_pem_requester_id(dev);
-+	if (ret >= 0)
-+		return (u32)ret;
-+
-+	return pci_requester_id_ecam(dev);
-+}
-+
-+/*
-+ * This bridge is just for the sake of supporting ARI for
-+ * downstream devices. No resources are attached to it.
-+ * Copy upstream root bus resources to bridge which aide in
-+ * resource claiming for downstream devices
-+ */
-+static void pci_bridge_resource_fixup(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus;
-+	int resno;
-+
-+	bus = dev->subordinate;
-+	for (resno = 0; resno < PCI_BRIDGE_RESOURCE_NUM; resno++) {
-+		bus->resource[resno] = pci_bus_resource_n(bus->parent,
-+			PCI_BRIDGE_RESOURCE_NUM + resno);
-+	}
-+
-+	for (resno = PCI_BRIDGE_RESOURCES;
-+		resno <= PCI_BRIDGE_RESOURCE_END; resno++) {
-+		dev->resource[resno].start = dev->resource[resno].end = 0;
-+		dev->resource[resno].flags = 0;
-+	}
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, PCI_DEVICE_ID_THUNDER_BRIDGE,
-+			pci_bridge_resource_fixup);
-+
-+/*
-+ * All PCIe devices in Thunder have fixed resources, shouldn't be reassigned.
-+ * Also claim the device's valid resources to set 'res->parent' hierarchy.
-+ */
-+static void pci_dev_resource_fixup(struct pci_dev *dev)
-+{
-+	struct resource *res;
-+	int resno;
-+
-+	/*
-+	 * If the ECAM is not yet probed, we must be in a virtual
-+	 * machine.  In that case, don't mark things as
-+	 * IORESOURCE_PCI_FIXED
-+	 */
-+	if (!atomic_read(&thunder_pcie_ecam_probed))
-+		return;
-+
-+	for (resno = 0; resno < PCI_NUM_RESOURCES; resno++)
-+		dev->resource[resno].flags |= IORESOURCE_PCI_FIXED;
-+
-+	for (resno = 0; resno < PCI_BRIDGE_RESOURCES; resno++) {
-+		res = &dev->resource[resno];
-+		if (res->parent || !(res->flags & IORESOURCE_MEM))
-+			continue;
-+		pci_claim_resource(dev, resno);
-+	}
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID,
-+			pci_dev_resource_fixup);
-+
-+static void __iomem *thunder_pcie_get_cfg_addr(struct thunder_pcie *pcie,
-+					       unsigned int busnr,
-+					       unsigned int devfn, int reg)
-+{
-+	return  pcie->cfg_base +
-+		((busnr << THUNDER_PCIE_BUS_SHIFT)
-+		 | (PCI_SLOT(devfn) << THUNDER_PCIE_DEV_SHIFT)
-+		 | (PCI_FUNC(devfn) << THUNDER_PCIE_FUNC_SHIFT)) + reg;
-+}
-+
-+static int thunder_pcie_read_config(struct pci_bus *bus, unsigned int devfn,
-+				int reg, int size, u32 *val)
-+{
-+	struct thunder_pcie *pcie = bus->sysdata;
-+	void __iomem *addr;
-+	unsigned int busnr = bus->number;
-+
-+	if (busnr > 255 || devfn > 255 || reg > 4095)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	addr = thunder_pcie_get_cfg_addr(pcie, busnr, devfn, reg);
-+
-+	switch (size) {
-+	case 1:
-+		*val = readb(addr);
-+		break;
-+	case 2:
-+		*val = readw(addr);
-+		break;
-+	case 4:
-+		*val = readl(addr);
-+		break;
-+	default:
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int thunder_pcie_write_config(struct pci_bus *bus, unsigned int devfn,
-+				  int reg, int size, u32 val)
-+{
-+	struct thunder_pcie *pcie = bus->sysdata;
-+	void __iomem *addr;
-+	unsigned int busnr = bus->number;
-+
-+	if (busnr > 255 || devfn > 255 || reg > 4095)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	addr = thunder_pcie_get_cfg_addr(pcie, busnr, devfn, reg);
-+
-+	switch (size) {
-+	case 1:
-+		writeb(val, addr);
-+		break;
-+	case 2:
-+		writew(val, addr);
-+		break;
-+	case 4:
-+		writel(val, addr);
-+		break;
-+	default:
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static struct pci_ops thunder_pcie_ops = {
-+	.read	= thunder_pcie_read_config,
-+	.write	= thunder_pcie_write_config,
-+};
-+
-+static int thunder_pcie_msi_enable(struct thunder_pcie *pcie,
-+					struct pci_bus *bus)
-+{
-+	struct device_node *msi_node;
-+
-+	msi_node = of_parse_phandle(pcie->node, "msi-parent", 0);
-+	if (!msi_node)
-+		return -ENODEV;
-+
-+	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
-+	if (!pcie->msi)
-+		return -ENODEV;
-+
-+	pcie->msi->dev = pcie->dev;
-+	bus->msi = pcie->msi;
-+
-+	return 0;
-+}
-+
-+static void thunder_pcie_config(struct thunder_pcie *pcie, u64 addr)
-+{
-+	atomic_set(&thunder_pcie_ecam_probed, 1);
-+	set_its_pci_requester_id(thunder_pci_requester_id);
-+
-+	pcie->valid = true;
-+
-+	switch (addr) {
-+	case THUNDER_ECAM0_CFG_BASE:
-+		pcie->ecam = 0;
-+		break;
-+	case THUNDER_ECAM1_CFG_BASE:
-+		pcie->ecam = 1;
-+		break;
-+	case THUNDER_ECAM2_CFG_BASE:
-+		pcie->ecam = 2;
-+		break;
-+	case THUNDER_ECAM3_CFG_BASE:
-+		pcie->ecam = 3;
-+		break;
-+	case THUNDER_ECAM4_CFG_BASE:
-+		pcie->ecam = 4;
-+		break;
-+	case THUNDER_ECAM5_CFG_BASE:
-+		pcie->ecam = 5;
-+		break;
-+	case THUNDER_ECAM6_CFG_BASE:
-+		pcie->ecam = 6;
-+		break;
-+	case THUNDER_ECAM7_CFG_BASE:
-+		pcie->ecam = 7;
-+		break;
-+	default:
-+		pcie->valid = false;
-+		break;
-+	}
-+}
-+
-+static int thunder_pcie_probe(struct platform_device *pdev)
-+{
-+	struct thunder_pcie *pcie;
-+	struct resource *cfg_base;
-+	struct pci_bus *bus;
-+	int ret = 0;
-+	LIST_HEAD(res);
-+
-+	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->node = of_node_get(pdev->dev.of_node);
-+	pcie->dev = &pdev->dev;
-+
-+	/* Get controller's configuration space range */
-+	cfg_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+
-+	thunder_pcie_config(pcie, cfg_base->start);
-+
-+	pcie->cfg_base = devm_ioremap_resource(&pdev->dev, cfg_base);
-+	if (IS_ERR(pcie->cfg_base)) {
-+		ret = PTR_ERR(pcie->cfg_base);
-+		goto err_ioremap;
-+	}
-+
-+	dev_info(&pdev->dev, "ECAM%d CFG BASE 0x%llx\n",
-+		 pcie->ecam, (u64)cfg_base->start);
-+
-+	ret = of_pci_get_host_bridge_resources(pdev->dev.of_node,
-+					0, 255, &res, NULL);
-+	if (ret)
-+		goto err_root_bus;
-+
-+	bus = pci_create_root_bus(&pdev->dev, 0, &thunder_pcie_ops, pcie, &res);
-+	if (!bus) {
-+		ret = -ENODEV;
-+		goto err_root_bus;
-+	}
-+
-+	/* Set reference to MSI chip */
-+	ret = thunder_pcie_msi_enable(pcie, bus);
-+	if (ret) {
-+		dev_err(&pdev->dev,
-+			"Unable to set reference to MSI chip: ret=%d\n", ret);
-+		goto err_msi;
-+	}
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	pci_scan_child_bus(bus);
-+	pci_bus_add_devices(bus);
-+
-+	return 0;
-+err_msi:
-+	pci_remove_root_bus(bus);
-+err_root_bus:
-+	pci_free_resource_list(&res);
-+err_ioremap:
-+	of_node_put(pcie->node);
-+	return ret;
-+}
-+
-+static const struct of_device_id thunder_pcie_of_match[] = {
-+	{ .compatible = "cavium,thunder-pcie", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, thunder_pcie_of_match);
-+
-+static struct platform_driver thunder_pcie_driver = {
-+	.driver = {
-+		.name = "thunder-pcie",
-+		.owner = THIS_MODULE,
-+		.of_match_table = thunder_pcie_of_match,
-+	},
-+	.probe = thunder_pcie_probe,
-+};
-+module_platform_driver(thunder_pcie_driver);
-+
-+#ifdef CONFIG_ACPI
-+
-+static int
-+thunder_mmcfg_read_config(struct pci_mmcfg_region *cfg, unsigned int busnr,
-+			unsigned int devfn, int reg, int len, u32 *value)
-+{
-+	struct thunder_pcie *pcie = cfg->data;
-+	void __iomem *addr;
-+
-+	if (!pcie->valid) {
-+		/* Not support for now */
-+		pr_err("RC PEM not supported !!!\n");
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	addr = thunder_pcie_get_cfg_addr(pcie, busnr, devfn, reg);
-+
-+	switch (len) {
-+	case 1:
-+		*value = readb(addr);
-+		break;
-+	case 2:
-+		*value = readw(addr);
-+		break;
-+	case 4:
-+		*value = readl(addr);
-+		break;
-+	default:
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int thunder_mmcfg_write_config(struct pci_mmcfg_region *cfg,
-+		unsigned int busnr, unsigned int devfn, int reg, int len,
-+		u32 value) {
-+	struct thunder_pcie *pcie = cfg->data;
-+	void __iomem *addr;
-+
-+	if (!pcie->valid) {
-+		/* Not support for now */
-+		pr_err("RC PEM not supported !!!\n");
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	addr = thunder_pcie_get_cfg_addr(pcie, busnr, devfn, reg);
-+
-+	switch (len) {
-+	case 1:
-+		writeb(value, addr);
-+		break;
-+	case 2:
-+		writew(value, addr);
-+		break;
-+	case 4:
-+		writel(value, addr);
-+		break;
-+	default:
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int thunder_acpi_mcfg_fixup(struct acpi_pci_root *root,
-+				   struct pci_mmcfg_region *cfg)
-+{
-+	struct thunder_pcie *pcie;
-+
-+	pcie = kzalloc(sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->dev = &root->device->dev;
-+
-+	thunder_pcie_config(pcie, cfg->address);
-+
-+	pcie->cfg_base = cfg->virt;
-+	cfg->data = pcie;
-+	cfg->read = thunder_mmcfg_read_config;
-+	cfg->write = thunder_mmcfg_write_config;
-+
-+	return 0;
-+}
-+DECLARE_ACPI_MCFG_FIXUP("CAVIUM", "THUNDERX", thunder_acpi_mcfg_fixup);
-+#endif
-+
-+MODULE_AUTHOR("Sunil Goutham");
-+MODULE_DESCRIPTION("Cavium Thunder ECAM host controller driver");
-+MODULE_LICENSE("GPL v2");
--- 
-1.9.1
+As I said, it wouldn't make sense for the bits that comprise the
+offset into the window to change, so the mapping only has to be linear
+inside the window.
 
+For the bits outside the window offset, I don't know enough to say
+whether masking is sufficient or safe.
+
+> If you think the bitmask is Ok then I can directly define it in
+> designware and we can drop this patch.
+
+It's OK by me, but I know nothing about the actual hardware involved.
+For the DesignWare question, I think you would just have to convince
+Jingoo and Pratyush (cc'd).
+
+> > I think we're talking about MMIO here, and a bridge has an MMIO
+> > window.  A window is a range of CPU physical addresses that the
+> > bridge forwards to PCI.  The PCI core assumes that a CPU physical
+> > address range is linearly mapped to PCI bus addresses, i.e., if the
+> > window base is X and maps to PCI address Y, then as long as X+n is
+> > inside the window, it must map to Y+n.
+> > 
+> > That means the low-order bits (the ones that are the offset into the
+> > window) cannot change.
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
