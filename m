@@ -1,53 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:34796 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752966AbbGWNGn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 09:06:43 -0400
-Received: by iebmu5 with SMTP id mu5so191243232ieb.1
-        for <linux-pci@vger.kernel.org>; Thu, 23 Jul 2015 06:06:42 -0700 (PDT)
-Date: Thu, 23 Jul 2015 08:06:37 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v5 04/19] PCI/MSI: Add hooks to populate the msi_domain
- field
-Message-ID: <20150723130637.GR21967@google.com>
-References: <1437643598-19795-1-git-send-email-marc.zyngier@arm.com>
- <1437643598-19795-5-git-send-email-marc.zyngier@arm.com>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:49631 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754392AbbG3RGG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 13:06:06 -0400
+Date: Thu, 30 Jul 2015 10:06:03 -0700
+From: Guenter Roeck <linux@roeck-us.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
+Message-ID: <20150730170603.GA14610@roeck-us.net>
+References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
+ <20150729160903.GD31170@google.com>
+ <CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>
+ <55B92DA5.4030409@roeck-us.net>
+ <CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
+ <55B93151.8040608@roeck-us.net>
+ <20150729202639.GA13239@google.com>
+ <CAE9FiQVmek758ZG2MfPCK5RsgUAfuD6zW5zHWQkid1POALnZSQ@mail.gmail.com>
+ <55B9A554.9020901@roeck-us.net>
+ <CAErSpo6SGXp7zNYENmaUPPNcQjHcPEJwc5Ezbs6W29Y2_9z6_g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437643598-19795-5-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <CAErSpo6SGXp7zNYENmaUPPNcQjHcPEJwc5Ezbs6W29Y2_9z6_g@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 23, 2015 at 10:26:23AM +0100, Marc Zyngier wrote:
-> In order to be able to populate the device msi_domain field,
-> add the necessary hooks to propagate the host bridge msi_domain
-> across secondary busses to devices.
+On Thu, Jul 30, 2015 at 11:18:40AM -0500, Bjorn Helgaas wrote:
+> >
+> > My version is slightly different, but this one should work as well.
+> >
+> > The subject line got lost somehow.
 > 
-> So far, nobody populates the initial msi_domain.
+> Guenter, would you mind just sending me a fresh version of your patch
+> with whatever Yinghai tweaks you want to keep?
 > 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Sure, as soon as I completed testing. I am currently having trouble
+with our infrastructure [again :-(], so it may take a couple of days.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> It's a PITA for me to deal with attachments.
+> 
+Same here.
 
-> +static void pci_set_msi_domain(struct pci_dev *dev)
-> +{
-> +	/*
-> +	 * If no domain has been set through the pcibios callback,
-> +	 * inherit the default from the bus device.
-
-Nit: there isn't a pcibios callback anymore.
-
-> +	 */
-> +	if (!dev_get_msi_domain(&dev->dev))
-> +		dev_set_msi_domain(&dev->dev,
-> +				   dev_get_msi_domain(&dev->bus->dev));
-> +}
+Guenter
