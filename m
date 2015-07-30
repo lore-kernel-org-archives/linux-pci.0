@@ -1,110 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:1152 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916AbbGUGpN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jul 2015 02:45:13 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
+Received: from dfwrgout.huawei.com ([206.16.17.72]:4208 "EHLO
+	dfwrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbbG3Ny2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 09:54:28 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Rob Herring <robherring2@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v4 1/5] ARM/PCI: remove align_resource in pci_sys_data
-Date: Tue, 21 Jul 2015 14:48:39 +0800
-Message-ID: <1437461323-3531-2-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1437461323-3531-1-git-send-email-wangzhou1@hisilicon.com>
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
+Date: Thu, 30 Jul 2015 13:52:13 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs>
+References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20150729172053.GE31170@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
+ <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
+In-Reply-To: <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is needed in order to unify the PCIe designware framework for ARM and
-ARM64 architectures. In the PCIe designware unification process we are calling
-pci_create_root_bus() passing a "sysdata" parameter that is the same for both
-ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
-cause a problem with the function pcibios_align_resource(); in fact this will
-cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
-"struct pcie_port*" pointer.
-
-This patch solves the issue by removing "align_resource" from "pci_sys_data"
-struct and defining a static global function pointer in "bios32.c"
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni at huawei.com>
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- arch/arm/include/asm/mach/pci.h |  5 -----
- arch/arm/kernel/bios32.c        | 12 ++++++++----
- 2 files changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 28b9bb3..8a4e4de 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -58,11 +58,6 @@ struct pci_sys_data {
- 					/* IRQ mapping				*/
- 	int		(*map_irq)(const struct pci_dev *, u8, u8);
- 					/* Resource alignement requirements	*/
--	resource_size_t (*align_resource)(struct pci_dev *dev,
--					  const struct resource *res,
--					  resource_size_t start,
--					  resource_size_t size,
--					  resource_size_t align);
- 	void		*private_data;	/* platform controller private data	*/
- };
- 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index fcbbbb1..4cdc64d 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -17,6 +17,11 @@
- #include <asm/mach/pci.h>
- 
- static int debug_pci;
-+static resource_size_t (*align_resource)(struct pci_dev *dev,
-+		  const struct resource *res,
-+		  resource_size_t start,
-+		  resource_size_t size,
-+		  resource_size_t align) = NULL;
- 
- #ifdef CONFIG_PCI_MSI
- struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-@@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
--		sys->align_resource = hw->align_resource;
-+		align_resource = hw->align_resource;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
-@@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
- 	struct pci_dev *dev = data;
--	struct pci_sys_data *sys = dev->sysdata;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO && start & 0x300)
-@@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 
- 	start = (start + align - 1) & ~(align - 1);
- 
--	if (sys->align_resource)
--		return sys->align_resource(dev, res, start, size, align);
-+	if (align_resource)
-+		return align_resource(dev, res, start, size, align);
- 
- 	return start;
- }
--- 
-1.9.1
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtcGNpLW93bmVy
+QHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJAdmdlci5rZXJuZWwu
+b3JnXSBPbiBCZWhhbGYgT2YgUm9iIEhlcnJpbmcNCj4gU2VudDogVGh1cnNkYXksIEp1bHkgMzAs
+IDIwMTUgMjo0MyBQTQ0KPiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiBDYzogQmpvcm4gSGVsZ2Fh
+czsgYXJuZEBhcm5kYi5kZTsgbG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsgV2FuZ3pob3UNCj4g
+KEIpOyByb2JoK2R0QGtlcm5lbC5vcmc7IGphbWVzLm1vcnNlQGFybS5jb207IExpdml1LkR1ZGF1
+QGFybS5jb207DQo+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS1rZXJuZWxA
+bGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4gZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7IFl1YW56
+aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87DQo+IHFpdXpoZW5mYTsgTGlndW96aHUgKEtl
+bm5ldGgpDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjZdIFBDSTogU3RvcmUgUENJZSBidXMgYWRk
+cmVzcyBpbiBzdHJ1Y3QNCj4gb2ZfcGNpX3JhbmdlDQo+IA0KPiBPbiBXZWQsIEp1bCAyOSwgMjAx
+NSBhdCAyOjQ0IFBNLCBHYWJyaWVsZSBQYW9sb25pDQo+IDxnYWJyaWVsZS5wYW9sb25pQGh1YXdl
+aS5jb20+IHdyb3RlOg0KPiA+IEhpIEJqb3JuDQo+ID4NCj4gPiBNYW55IFRoYW5rcyBmb3IgeW91
+ciByZXBseQ0KPiA+DQo+ID4gSSBoYXZlIGNvbW1lbnRlZCBiYWNrIGlubGluZSB3aXRoIHJlc29s
+dXRpb25zIGZyb20gbXkgc2lkZS4NCj4gPg0KPiA+IElmIHlvdSdyZSBvayB3aXRoIHRoZW0gSSds
+bCBzZW5kIGl0IG91dCBhIG5ldyB2ZXJzaW9uIGluIHRoZQ0KPiBhcHByb3ByaWF0ZSBwYXRjaHNl
+dA0KPiA+DQo+ID4gQ2hlZXJzDQo+ID4NCj4gPiBHYWINCj4gPg0KPiA+PiAtLS0tLU9yaWdpbmFs
+IE1lc3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86YmhlbGdhYXNA
+Z29vZ2xlLmNvbV0NCj4gPj4gU2VudDogV2VkbmVzZGF5LCBKdWx5IDI5LCAyMDE1IDY6MjEgUE0N
+Cj4gPj4gVG86IEdhYnJpZWxlIFBhb2xvbmkNCj4gPj4gQ2M6IGFybmRAYXJuZGIuZGU7IGxvcmVu
+em8ucGllcmFsaXNpQGFybS5jb207IFdhbmd6aG91IChCKTsNCj4gPj4gcm9iaCtkdEBrZXJuZWwu
+b3JnOyBqYW1lcy5tb3JzZUBhcm0uY29tOyBMaXZpdS5EdWRhdUBhcm0uY29tOyBsaW51eC0NCj4g
+Pj4gcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQu
+b3JnOw0KPiA+PiBkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgWXVhbnpoaWNoYW5nOyBaaHVk
+YWNhaTsgemhhbmdqdWt1bzsNCj4gPj4gcWl1emhlbmZhOyBMaWd1b3podSAoS2VubmV0aCkNCj4g
+Pj4gU3ViamVjdDogUmU6IFtQQVRDSCB2Nl0gUENJOiBTdG9yZSBQQ0llIGJ1cyBhZGRyZXNzIGlu
+IHN0cnVjdA0KPiA+PiBvZl9wY2lfcmFuZ2UNCj4gPj4NCj4gPj4gSGkgR2FicmllbGUsDQo+ID4+
+DQo+ID4+IEFzIGZhciBhcyBJIGNhbiB0ZWxsLCB0aGlzIGlzIG5vdCBzcGVjaWZpYyB0byBQQ0ll
+LCBzbyBwbGVhc2UgdXNlDQo+ICJQQ0kiDQo+ID4+IGluDQo+ID4+IHRoZSBzdWJqZWN0IGFzIGEg
+Z2VuZXJpYyB0ZXJtIHRoYXQgaW5jbHVkZXMgYm90aCBQQ0kgYW5kIFBDSWUuDQo+ID4NCj4gPiBz
+dXJlIGFncmVlZA0KPiA+DQo+ID4+DQo+ID4+IE9uIE1vbiwgSnVsIDI3LCAyMDE1IGF0IDExOjE3
+OjAzUE0gKzA4MDAsIEdhYnJpZWxlIFBhb2xvbmkgd3JvdGU6DQo+ID4+ID4gRnJvbTogZ2Ficmll
+bGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiA+PiA+DQo+ID4+ID4g
+ICAgIFRoaXMgcGF0Y2ggaXMgbmVlZGVkIHBvcnQgUENJZSBkZXNpZ253YXJlIHRvIG5ldyBEVCBw
+YXJzaW5nDQo+IEFQSQ0KPiA+PiA+ICAgICBBcyBkaXNjdXNzZWQgaW4NCj4gPj4gPiAgICAgaHR0
+cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvcGlwZXJtYWlsL2xpbnV4LWFybS1rZXJuZWwvMjAxNS0N
+Cj4gPj4gSmFudWFyeS8zMTc3NDMuaHRtbA0KPiA+PiA+ICAgICBpbiBkZXNpZ253YXJlIHdlIGhh
+dmUgYSBwcm9ibGVtIGFzIHRoZSBQQ0kgYWRkcmVzc2VzIGluIHRoZQ0KPiBQQ0llDQo+ID4+IGNv
+bnRyb2xsZXINCj4gPj4gPiAgICAgYWRkcmVzcyBzcGFjZSBhcmUgcmVxdWlyZWQgaW4gb3JkZXIg
+dG8gcGVyZm9ybSBjb3JyZWN0IEhXDQo+ID4+IG9wZXJhdGlvbi4NCj4gPj4gPg0KPiA+PiA+ICAg
+ICBJbiBvcmRlciB0byBzb2x2ZSB0aGlzIHByb2JsZW0gY29tbWl0IGY0YzU1YzVhMyAiUENJOg0K
+PiBkZXNpZ253YXJlOg0KPiA+PiA+ICAgICBQcm9ncmFtIEFUVSB3aXRoIHVudHJhbnNsYXRlZCBh
+ZGRyZXNzIiBhZGRlZCBjb2RlIHRvIHJlYWQgdGhlDQo+ID4+IFBDSWUNCj4gPj4NCj4gPj4gQ29u
+dmVudGlvbmFsIHJlZmVyZW5jZSBpcyAxMi1jaGFyIFNIQTEsIGxpa2UgdGhpczoNCj4gPj4NCj4g
+Pj4gICBmNGM1NWM1YTNmN2YgKCJQQ0k6IGRlc2lnbndhcmU6IFByb2dyYW0gQVRVIHdpdGggdW50
+cmFuc2xhdGVkDQo+ID4+IGFkZHJlc3MiKQ0KPiA+DQo+ID4gQWdyZWVkLCB3aWxsIGNoYW5nZSB0
+aGlzDQo+ID4NCj4gPj4NCj4gPj4gPiAgICAgY29udHJvbGxlciBzdGFydCBhZGRyZXNzIGRpcmVj
+dGx5IGZyb20gdGhlIERUIHJhbmdlcy4NCj4gPj4gPg0KPiA+PiA+ICAgICBJbiB0aGUgbmV3IERU
+IHBhcnNpbmcgQVBJIG9mX3BjaV9nZXRfaG9zdF9icmlkZ2VfcmVzb3VyY2VzKCkNCj4gPj4gaGlk
+ZXMgdGhlDQo+ID4+ID4gICAgIERUIHBhcnNlciBmcm9tIHRoZSBob3N0IGNvbnRyb2xsZXIgZHJp
+dmVycywgc28gaXQgaXMgbm90DQo+IHBvc3NpYmxlDQo+ID4+ID4gICAgIGZvciBkcml2ZXJzIHRv
+IHBhcnNlIHZhbHVlcyBkaXJlY3RseSBmcm9tIHRoZSBEVC4NCj4gPj4gPg0KPiA+PiA+ICAgICBJ
+biBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXBjaS9tc2c0MjU0MC5odG1sIHdl
+DQo+ID4+IGFscmVhZHkgdHJpZWQNCj4gPj4gPiAgICAgdG8gdXNlIHRoZSBuZXcgRFQgcGFyc2lu
+ZyBBUEkgYnV0IHRoZXJlIGlzIGEgYnVnIChvYnZpb3VzbHkpDQo+IGluDQo+ID4+IHNldHRpbmcN
+Cj4gPj4gPiAgICAgdGhlIDwqPl9tb2RfYmFzZSBhZGRyZXNzZXMNCj4gPj4gPiAgICAgQXBwbHlp
+bmcgdGhpcyBwYXRjaCB3ZSBjYW4gZWFzaWx5IHNldCAiPCo+X21vZF9iYXNlID0gd2luLQ0KPiA+
+PiA+X19yZXMuc3RhcnQiDQo+ID4+DQo+ID4+IEJ5IGl0c2VsZiwgdGhpcyBwYXRjaCBhZGRzIHNv
+bWV0aGluZy4gIEl0IHdvdWxkIGhlbHAgbWUgdW5kZXJzdGFuZA0KPiBpdA0KPiA+PiBpZg0KPiA+
+PiB0aGUgKnVzZXIqIG9mIHRoaXMgbmV3IHNvbWV0aGluZyB3ZXJlIGluIHRoZSBzYW1lIHBhdGNo
+IHNlcmllcy4NCj4gPg0KPiA+IHRoZSB1c2VyIGlzOiAiW1BBVENIIHY1IDIvNV0gUENJOiBkZXNp
+Z253YXJlOiBBZGQgQVJNNjQgc3VwcG9ydCINCj4gPiBJIHdpbGwgYXNrIFpob3UgV2FuZyB0byBp
+bmNsdWRlIHRoaXMgcGF0Y2ggaW4gaGlzIHBhdGNoc2V0DQo+ID4NCj4gPg0KPiA+Pg0KPiA+PiA+
+ICAgICBUaGlzIHBhdGNoIGFkZHMgYSBuZXcgZmllbGQgaW4gInN0cnVjdCBvZl9wY2lfcmFuZ2Ui
+IHRvIHN0b3JlDQo+IHRoZQ0KPiA+PiA+ICAgICBwY2kgYnVzIHN0YXJ0IGFkZHJlc3M7IGl0IGZp
+bGxzIHRoZSBmaWVsZCBpbg0KPiA+PiBvZl9wY2lfcmFuZ2VfcGFyc2VyX29uZSgpOw0KPiA+PiA+
+ICAgICBpbiBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcygpIGl0IHJldHJpZXZlcyB0
+aGUNCj4gcmVzb3VyY2UNCj4gPj4gZW50cnkNCj4gPj4gPiAgICAgYWZ0ZXIgaXQgaXMgY3JlYXRl
+ZCBhbmQgYWRkZWQgdG8gdGhlIHJlc291cmNlIGxpc3QgYW5kIHVzZXMNCj4gPj4gPiAgICAgZW50
+cnktPl9fcmVzLnN0YXJ0IHRvIHN0b3JlIHRoZSBwY2kgY29udHJvbGxlciBhZGRyZXNzDQo+ID4+
+DQo+ID4+IHN0cnVjdCBvZl9wY2lfcmFuZ2UgaXMgc3RhcnRpbmcgdG8gZ2V0IGNvbmZ1c2luZyB0
+byBub24tT0YgZm9sa3MNCj4gbGlrZQ0KPiA+PiBtZS4NCj4gPj4gSXQgbm93IGNvbnRhaW5zOg0K
+PiA+Pg0KPiA+PiAgIHUzMiBwY2lfc3BhY2U7DQo+ID4+ICAgdTY0IHBjaV9hZGRyOw0KPiA+PiAg
+IHU2NCBjcHVfYWRkcjsNCj4gPj4gICB1NjQgYnVzX2FkZHI7DQo+ID4+DQo+ID4+IENhbiB5b3Ug
+ZXhwbGFpbiB3aGF0IGFsbCB0aGVzZSB0aGluZ3MgbWVhbiwgYW5kIG1heWJlIGV2ZW4gYWRkIG9u
+ZS0NCj4gbGluZQ0KPiA+PiBjb21tZW50cyB0byB0aGUgc3RydWN0dXJlPw0KPiA+DQo+ID4gc3Vy
+ZSBJIGNhbiBhZGQgY29tbWVudHMgaW5saW5lIGluIHRoZSBjb2RlDQo+ID4NCj4gPj4NCj4gPj4g
+cGNpX3NwYWNlOiBUaGUgb25seSB1c2VzIEkgc2VlIGFyZSB0byBkZXRlcm1pbmUgd2hldGhlciB0
+byBwcmludA0KPiA+PiAiUHJlZmV0Y2giLiAgSSBkb24ndCBzZWUgYW55IHJlYWwgZnVuY3Rpb25h
+bGl0eSB0aGF0IHVzZXMgdGhpcy4NCj4gPg0KPiA+IExvb2tpbmcgYXQgdGhlIGNvZGUgSSBhZ3Jl
+ZS4gaXQncyBzZWVtcyB0byBiZSB1c2VkIG9ubHkgaW4gcG93ZXJwYw0KPiA+IGFuZCBtaWNyb2Js
+YXplIHRvIHByaW50IG91dC4NCj4gPiBIb3dldmVyIGZyb20gbXkgdW5kZXJzdGFuZGluZyBwY2lf
+c3BhY2UgaXMgdGhlIHBoeXMuaGkgZmllbGQgb2YgdGhlDQo+ID4gcmFuZ2VzIHByb3BlcnR5OiBp
+dCBkZWZpbmVzIHRoZSBwcm9wZXJ0aWVzIG9mIHRoZSBhZGRyZXNzIHNwYWNlDQo+IGFzc29jaWF0
+ZWQNCj4gPiB0byB0aGUgUENJIGFkZHJlc3MuIGlmIHlvdSdyZSBjdXJpb3VzIHlvdSBjYW4gZmlu
+ZCBhIG5pY2UgYW5kIHF1aWNrDQo+IHRvIHJlYWQNCj4gPiAiZ3VpZGUiIGluIGh0dHA6Ly9kZXZp
+Y2V0cmVlLm9yZy9NUEM1MjAwOlBDSQ0KPiA+DQo+ID4+DQo+ID4+IHBjaV9hZGRyOiBJIGFzc3Vt
+ZSB0aGlzIGlzIGEgUENJIGJ1cyBhZGRyZXNzLCBsaWtlIHdoYXQgeW91IHdvdWxkDQo+IHNlZQ0K
+PiA+PiBpZg0KPiA+PiB5b3UgcHV0IGFuIGFuYWx5emVyIG9uIHRoZSBidXMvbGluay4gIFRoaXMg
+YWRkcmVzcyBjb3VsZCBnbyBpbiBhIEJBUi4NCj4gPg0KPiA+IFllcywgdGhpcyBpcyB0aGUgUENJ
+IHN0YXJ0IGFkZHJlc3Mgb2YgdGhlIHJhbmdlOiBwaHlzLm1pZCArIHBoeXMubG93DQo+IGluIHRo
+ZQ0KPiA+IGd1aWRlIG1lbnRpb25lZCBhYm92ZQ0KPiA+DQo+ID4+DQo+ID4+IGNwdV9hZGRyOiBJ
+IGFzc3VtZSB0aGlzIGlzIGEgQ1BVIHBoeXNpY2FsIGFkZHJlc3MsIGxpa2Ugd2hhdCB5b3UNCj4g
+d291bGQNCj4gPj4gc2VlDQo+ID4+IGluIC9wcm9jL2lvbWVtIGFuZCB3aGF0IHlvdSB3b3VsZCBw
+YXNzIHRvIGlvcmVtYXAoKS4NCj4gPg0KPiA+IFllcyBjb3JyZWN0DQo+ID4NCj4gPj4NCj4gPj4g
+YnVzX2FkZHI6ID8NCj4gPj4NCj4gPg0KPiA+IEFjY29yZGluZyB0byB0aGUgZ3VpZGUgYWJvdmUs
+IHRoaXMgaXMgdGhlIGFkZHJlc3MgaW50byB3aGljaCB0aGUNCj4gcGNpX2FkZHJlc3MNCj4gPiBn
+ZXQgdHJhbnNsYXRlZCB0byBhbmQgdGhhdCBpcyBwYXNzZWQgdG8gdGhlIHJvb3QgY29tcGxleC4g
+QmV0d2VlbiB0aGUNCj4gcm9vdA0KPiA+IGNvbXBsZXggYW5kIHRoZSBDUFUgdGhlcmUgY2FuIGJl
+IGludGVybWVkaWF0ZSB0cmFuc2xhdGlvbiBsYXllcnM6IHNlZQ0KPiB0aGF0IHRvDQo+ID4gZ2V0
+IHBjaV9hZGRyZXNzIHdlIGNhbGwgIm9mX3RyYW5zbGF0ZV9hZGRyZXNzIjsgdGhpcyB3aWxsIGFw
+cGx5IGFsbA0KPiB0aGUNCj4gPiB0cmFuc2xhdGlvbiBsYXllcnMgKHJhbmdlcyBpbiB0aGUgRFQp
+IHRoYXQgaXQgZmluZHMgdGlsbCBpdCBjb21lcyB0bw0KPiB0aGUgcm9vdA0KPiA+IG5vZGUgb2Yg
+dGhlIERUICh0aHVzIHJldHJpZXZpbmcgdGhlIENQVSBhZGRyZXNzKS4NCj4gPiBOb3cgc2FpZCB0
+aGF0LCBmb3IgZGVzaWdud2FyZSB3ZSBuZWVkIHRoZSBmaXJzdCB0cmFuc2xhdGVkIFBDSQ0KPiBh
+ZGRyZXNzLCB0aGF0IHdlIGNhbGwNCj4gDQo+IEkgdGhpbmsgeW91IG1lYW4gInRyYW5zbGF0ZWQg
+Q1BVIGFkZHJlc3MuIiBUaGUgZmxvdyBvZiBhZGRyZXNzZXMgbG9va3MNCj4gbGlrZSB0aGlzOg0K
+PiANCj4gQ1BVIC0+IENQVSBidXMgYWRkcmVzcyAtPiBidXMgZmFicmljIGFkZHJlc3MgZGVjb2Rp
+bmcgLT4gYnVzIGFkZHJlc3MNCj4gLT4gRFcgUENJIC0+IFBDSSBhZGRyZXNzDQo+IA0KPiBUaGlz
+IGlzIHF1aXRlIGNvbW1vbiB0aGF0IGFuIElQIGJsb2NrIGRvZXMgbm90IHNlZSB0aGUgZnVsbCBh
+ZGRyZXNzLg0KPiBJdCBpcyB1bnVzdWFsIHRoYXQgdGhlIElQIGJsb2NrIG5lZWRzIHRvIGtub3cg
+aXRzIGZ1bGwgYWRkcmVzcyBvbiB0aGUNCj4gc2xhdmUgc2lkZS4gSXQgaXMgcXVpdGUgY29tbW9u
+IGZvciB0aGUgbWFzdGVyIHNpZGUgYW5kIHRoZSBrZXJuZWwNCj4gZGVhbHMgd2l0aCB0aGF0IGFs
+bCB0aGUgdGltZSB3aXRoIERNQSBtYXBwaW5nDQo+IA0KPiA+IGhlcmUgYnVzX2FkZHIgYWZ0ZXIg
+Um9iIEhlcnJpbmcgc3VnZ2VzdGVkIHRoZSBuYW1lLi4uaG9uZXN0bHkgSQ0KPiBjYW5ub3QgdGhp
+bmsgb2YgYQ0KPiA+IGRpZmZlcmVudCBuYW1lDQo+IA0KPiBUaGlua2luZyBhYm91dCB0aGlzIHNv
+bWUgbW9yZSwgaXMgdGhpcyByZWFsbHkgYSB0cmFuc2xhdGlvbiB2ZXJzdXMNCj4ganVzdCBhIHN0
+cmlwcGluZyBvZiBoaWdoIGJpdHM/IERvZXMgdGhlIERXIElQIGhhdmUgbGVzcyB0aGFuIDMyLWJp
+dHMNCj4gYWRkcmVzcz8gSWYgc28sIHdlIGNvdWxkIGV4cHJlc3MgZGlmZmVyZW50bHkgYW5kIGp1
+c3QgbWFzayB0aGUgQ1BVDQo+IGFkZHJlc3Mgd2l0aGluIHRoZSBkcml2ZXIgaW5zdGVhZC4NCg0K
+SSBkb27igJl0IHRoaW5rIHdlIHNob3VsZCByZWx5IG9uIFBDSSBhZGRyZXNzZXMuLi53aGF0IGlm
+IHRoZSBpbnRlcm1lZGlhdGUgDQp0cmFuc2xhdGlvbiBsYXllciBjaGFuZ2VzIHRoZSBsb3dlciBz
+aWduaWZpY2FudCBiaXRzIG9mIHRoZSAiYnVzIGFkZHJlc3MiDQp0byB0cmFuc2xhdGUgaW50byBh
+IGNwdSBhZGRyZXNzPw0KDQpJbiB0aGF0IGNhc2Ugd2UncmUgZ29pbmcgdG8gcHJvZ3JhbSB0aGUg
+RFcgd2l0aCBhIHdyb25nIGFkZHJlc3MNCg0KV2hhdCBJIGFtIHNheWluZyBpcyB0aGF0IHRoZSBE
+VyBkcml2ZXIgc2hvdWxkIG5vdCByZWx5IG9uIHRoZSANCmJlaGF2aW9yIG9mIGV4dGVybmFsIEhX
+Li4uLndoYXQgZG8geW91IHRoaW5rPw0KDQo+IA0KPiBSb2INCj4gLS0NCj4gVG8gdW5zdWJzY3Jp
+YmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIg
+aW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcN
+Cj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRv
+bW8taW5mby5odG1sDQo=
