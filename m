@@ -1,192 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:2981 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753300AbbGVVyF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 17:54:05 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>
-CC: <iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	"Konrad Wilk" <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"Terence Ripperda" <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	"Jerome Glisse" <jglisse@redhat.com>
-Subject: [PATCH v4 06/12] DMA-API: Add peer resource mapping documentation
-Date: Wed, 22 Jul 2015 16:39:51 -0500
-Message-ID: <1437601197-6481-7-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
-References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:35799 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750754AbbG3Wse (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 18:48:34 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150728174406.GB19909@red-moon>
+References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
+ <1437794486-21134-2-git-send-email-wangzhou1@hisilicon.com>
+ <55B72C7E.1020102@hisilicon.com> <20150728174406.GB19909@red-moon>
+From: Rob Herring <robh@kernel.org>
+Date: Thu, 30 Jul 2015 17:48:14 -0500
+Message-ID: <CAL_JsqK5a7q=VfpKJkRtgoEVWo5zhCe+h2ouDeyZRj4oN=jH6w@mail.gmail.com>
+Subject: Re: [PATCH v5 1/5] ARM/PCI: remove align_resource in pci_sys_data
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	James Morse <James.Morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"yuanzhichang@hisilicon.com" <yuanzhichang@hisilicon.com>,
+	"zhudacai@hisilicon.com" <zhudacai@hisilicon.com>,
+	"zhangjukuo@huawei.com" <zhangjukuo@huawei.com>,
+	"qiuzhenfa@hisilicon.com" <qiuzhenfa@hisilicon.com>,
+	"liudongdong3@huawei.com" <liudongdong3@huawei.com>,
+	"qiujiang@huawei.com" <qiujiang@huawei.com>,
+	"kangfenglong@huawei.com" <kangfenglong@huawei.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add references to both the general API documentation, as well as the HOWTO,
-about the dma_(un)map_peer_resource() and dma_peer_mapping_error() APIs.
+On Tue, Jul 28, 2015 at 12:44 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> [CC'ing RMK]
+>
+> On Tue, Jul 28, 2015 at 08:17:18AM +0100, Zhou Wang wrote:
+>> On 2015/7/25 11:21, Zhou Wang wrote:
+>> > From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>> >
+>> > This patch is needed in order to unify the PCIe designware framework for ARM and
+>> > ARM64 architectures. In the PCIe designware unification process we are calling
+>> > pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+>> > ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+>> > cause a problem with the function pcibios_align_resource(); in fact this will
+>> > cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+>> > "struct pcie_port*" pointer.
+>> >
+>> > This patch solves the issue by removing "align_resource" from "pci_sys_data"
+>> > struct and defining a static global function pointer in "bios32.c"
+>> >
+>> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>>
+>> Hi Arnd and Rob,
+>>
+>> What is your opinion about this patch? Gabriele adds a global pointer in bios32.c
+>> to store align_resource, so we could remove sys->align_resource in pcibios_align_resource.
+>>
+>> As Lorenzo mentioned in v4 series, this is a temporary solution before moving
+>> align_resource to host bridge structure.
+>>
+>> Any comments welcome.
+>
+> The align_resource() pointer is just used in drivers/pci/host/pci-mvebu.c,
+> I would like the pci-mvebu.c maintainers to comment on this and test it, I
+> do not expect it to create any issue and might be a temporary solution to
+> make progress on ARM/ARM64 consolidation, it is a blocking point.
+>
+> It would be good if Russell can have a look too, I do not see what
+> issue this can trigger given that is just used in:
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
----
- Documentation/DMA-API-HOWTO.txt | 69 +++++++++++++++++++++++++++++++++++++++++
- Documentation/DMA-API.txt       | 38 ++++++++++++++++++++---
- 2 files changed, 102 insertions(+), 5 deletions(-)
+It's Russell's call on this if you want to touch bios32.c...
 
-diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
-index 55b70b9..053a18f 100644
---- a/Documentation/DMA-API-HOWTO.txt
-+++ b/Documentation/DMA-API-HOWTO.txt
-@@ -143,6 +143,10 @@ What about block I/O and networking buffers?  The block I/O and
- networking subsystems make sure that the buffers they use are valid
- for you to DMA from/to.
- 
-+In some systems, it may also be possible to DMA to and/or from a peer
-+device's MMIO region, as described by a 'struct resource'. This is
-+referred to as a peer-to-peer mapping.
-+
- 			DMA addressing limitations
- 
- Does your device have any DMA addressing limitations?  For example, is
-@@ -653,6 +657,45 @@ Every dma_map_{single,sg}() call should have its dma_unmap_{single,sg}()
- counterpart, because the DMA address space is a shared resource and
- you could render the machine unusable by consuming all DMA addresses.
- 
-+Peer-to-peer DMA mappings can be obtained using dma_map_peer_resource() to
-+map another device's MMIO region for the given device:
-+
-+	dma_peer_addr_t dma_handle = dma_map_peer_resource(dev, peer, res,
-+							   offset, size,
-+							   direction);
-+	if (dma_peer_mapping_error(dev, dma_handle))
-+	{
-+		/*
-+		 * reduce current DMA mapping usage,
-+		 * delay and try again later or
-+		 * reset driver. P2P DMA may not be
-+		 * supported between the devices.
-+		 */
-+		goto map_error_handling;
-+	}
-+
-+	...
-+
-+	dma_unmap_peer_resource(dev, dma_handle, size, direction);
-+
-+Here, "res" is the struct resource * of the MMIO region, and "offset" means
-+byte offset within the given resource.
-+
-+You should call dma_peer_mapping_error() as dma_map_peer_resource() could fail
-+and return error.
-+
-+Not all implementations support dma_map_peer_resource(), but those that do
-+should also implement dma_peer_mapping_error(). dma_map_peer_resource() may
-+fail for various reasons depending on the implementation, but generally
-+may fail for the same reasons as those outlined under the dma_map_single()
-+discussion. In addition, the success of dma_map_peer_resource() may depend
-+on the physical topology between the two devices. For example, in the x86
-+implementations, peer-to-peer mappings will fail if the devices are behind
-+different host bridges.
-+
-+You should call dma_unmap_peer_resource() when DMA activity is finished,
-+e.g., from the interrupt which told you that the DMA transfer is done.
-+
- If you need to use the same streaming DMA region multiple times and touch
- the data in between the DMA transfers, the buffer needs to be synced
- properly in order for the CPU and device to see the most up-to-date and
-@@ -785,6 +828,23 @@ failure can be determined by:
- 		goto map_error_handling;
- 	}
- 
-+- checking the dma_peer_addr_t returned from dma_map_peer_resource() by using
-+  dma_peer_mapping_error():
-+
-+  	dma_peer_addr_t dma_handle;
-+
-+	dma_handle = dma_map_peer_resource(dev, peer, res, offset, size,
-+					   direction);
-+	if (dma_peer_mapping_error(dev, dma_handle)) {
-+		/*
-+		 * reduce current DMA mapping usage,
-+		 * delay and try again later or
-+		 * reset driver. P2P DMA may not be
-+		 * supported between the devices.
-+		 */
-+		goto map_error_handling;
-+	}
-+
- - unmap pages that are already mapped, when mapping error occurs in the middle
-   of a multiple page mapping attempt. These example are applicable to
-   dma_map_page() as well.
-@@ -956,6 +1016,15 @@ to "Closing".
-    support multiple types of IOMMUs in a single system, the example of
-    x86 or powerpc helps.
- 
-+4) Peer-to-peer requirements.
-+
-+   If your platform can support peer-to-peer DMA, enable HAS_DMA_P2P to
-+   include the peer-resource mapping interfaces in the DMA API, and
-+   provide an implementation of dma_peer_mapping_error(). The latter part
-+   is necessary because on some platforms, the dma_addr_t is not as wide
-+   as the full bus address, and therefore the existing dma_mapping_error()
-+   API may not be sufficient.
-+
- 			   Closing
- 
- This document, and the API itself, would not be in its current
-diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
-index 7eba542..c6f11a1 100644
---- a/Documentation/DMA-API.txt
-+++ b/Documentation/DMA-API.txt
-@@ -283,14 +283,42 @@ and <size> parameters are provided to do partial page mapping, it is
- recommended that you never use these unless you really know what the
- cache width is.
- 
-+dma_peer_addr_t
-+dma_map_peer_resource(struct device *dev, struct device *peer,
-+		      struct resource *res, unsigned long offset,
-+		      size_t size, enum dma_data_direction_direction)
-+
-+API for mapping resources. This API allows a driver to map a peer
-+device's resource for DMA. All the notes and warnings for the other
-+APIs apply here. Also, the success of this API does not validate or
-+guarantee that peer-to-peer transactions between the device and its
-+peer will be functional. They only grant access so that if such
-+transactions are possible, an IOMMU will not prevent them from
-+succeeding. However, a failure of this API may indicate that peer-to-peer
-+transactions are not expected to succeed across the underlying topology
-+between the devices.
-+
-+void
-+dma_unmap_peer_resource(struct device *dev, dma_peer_addr_t dma_address,
-+			size_t size, enum dma_data_direction direction)
-+
-+Unmaps the resource previously mapped. All the parameters passed in
-+must be identical to those passed in to (and returned by) the mapping
-+API.
-+
- int
- dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
- 
--In some circumstances dma_map_single() and dma_map_page() will fail to create
--a mapping. A driver can check for these errors by testing the returned
--DMA address with dma_mapping_error(). A non-zero return value means the mapping
--could not be created and the driver should take appropriate action (e.g.
--reduce current DMA mapping usage or delay and try again later).
-+int
-+dma_peer_mapping_error(struct device *dev, dma_peer_addr_t dma_addr)
-+
-+In some circumstances dma_map_single(), dma_map_page() and
-+dma_map_peer_resource() will fail to create a mapping. A driver can check for
-+these errors by testing the returned DMA address with dma_mapping_error()
-+(or dma_peer_mapping_error() for dma_map_peer_resource()). A non-zero return
-+value means the mapping could not be created and the driver should take
-+appropriate action (e.g. reduce current DMA mapping usage or delay and try
-+again later).
- 
- 	int
- 	dma_map_sg(struct device *dev, struct scatterlist *sg,
--- 
-2.4.6
+>
+> drivers/pci/host/pci-mvebu.c
+>
+> and a global pointer (not saying it is elegant, but it should work)
+> might be ok.
+>
+> So yes, comments very welcome.
 
+I may be wrong, but I don't think even mvebu needs this as part of
+pcibios_align_resource. pcibios_align_resource is called for every
+device, but all mvebu should care about is the alignment of the root
+bus BARs (and corresponding MBus windows) which can be handled in
+probe. I can't see how regions within there matter. But that is just
+my 10 minute look at it.
+
+If not, then I think align_resource should be a common per host
+function ptr. In other words, think about how to provide a default
+implementation of pcibios_align_resource. They almost all look the
+same to me with the same I/O 0x3xx address handling.
+
+Rob
