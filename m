@@ -1,198 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:33788 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752586AbbGJJh1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jul 2015 05:37:27 -0400
-Message-ID: <559F9231.4080008@hisilicon.com>
-Date: Fri, 10 Jul 2015 17:36:49 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:35512 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752727AbbG3D7Q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 23:59:16 -0400
+Received: by igr7 with SMTP id 7so159443316igr.0
+        for <linux-pci@vger.kernel.org>; Wed, 29 Jul 2015 20:59:16 -0700 (PDT)
 MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: James Morse <james.morse@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"kishon@ti.com" <kishon@ti.com>,
-	"xobs@kosagi.com" <xobs@kosagi.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+In-Reply-To: <20150729202639.GA13239@google.com>
+References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
+	<20150729160903.GD31170@google.com>
+	<CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>
+	<55B92DA5.4030409@roeck-us.net>
+	<CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
+	<55B93151.8040608@roeck-us.net>
+	<20150729202639.GA13239@google.com>
+Date: Wed, 29 Jul 2015 20:59:16 -0700
+Message-ID: <CAE9FiQVmek758ZG2MfPCK5RsgUAfuD6zW5zHWQkid1POALnZSQ@mail.gmail.com>
+Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guenter Roeck <linux@roeck-us.net>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v3 2/5] PCI: designware: Add ARM64 support
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com> <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D4E4BB@lhreml503-mbs> <5593F899.6050306@arm.com> <559B4B0E.4060004@hisilicon.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D568F4@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D568F4@lhreml503-mbs>
-Content-Type: text/plain; charset="GB2312"
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: multipart/mixed; boundary=047d7bd758a2207787051c0fba9c
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/7/10 16:53, Gabriele Paoloni wrote:
-> I have just sent this patch "[PATCH] Store PCIe controllers address in struct of_pci_range".
-> 
-> It would be needed by "pcie_designware.c" to retrieve the PCI controller addresses from "win->__res.start".
-> 
-> So we do not need to retrieve info from the DT parser anymore and we can use the new PCI DT parsing API
-> 
-> This problem was already discussed in this thread:
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-January/317743.html
-> 
-> 
+--047d7bd758a2207787051c0fba9c
+Content-Type: text/plain; charset=UTF-8
 
-Hi Gab,
+On Wed, Jul 29, 2015 at 1:26 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Wed, Jul 29, 2015 at 01:02:25PM -0700, Guenter Roeck wrote:
+>> Bjorn, how do you want to handle the flag problem ?
+>> Do you have an idea on how to make it work with
+>> the reversed definition ?
+>
+> I'll wait for the revised patch.  Sorry for screwing this up.
 
-Thanks for your patch.
+Please check attached updated version.
 
-That means I can use something like: pp->io_mod_base = win->__res.start
-to get io_mod_base, mem_mod_base and cfg0_mod_base.
+Yinghai
 
-will send my v4 series based on your patch.
+--047d7bd758a2207787051c0fba9c
+Content-Type: text/x-patch; charset=US-ASCII; name="commit-4b59da5_x.patch"
+Content-Disposition: attachment; filename="commit-4b59da5_x.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_icpo901y0
 
-Best regards,
-Zhou
-
->> -----Original Message-----
->> From: Wangzhou (B)
->> Sent: Tuesday, July 07, 2015 4:44 AM
->> To: James Morse
->> Cc: Gabriele Paoloni; Bjorn Helgaas; Jingoo Han; Pratyush Anand; Arnd
->> Bergmann; Liviu Dudau; kishon@ti.com; xobs@kosagi.com; m-
->> karicheri2@ti.com; Minghuan.Lian@freescale.com; linux-
->> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
->> devicetree@vger.kernel.org; Yuanzhichang; Zhudacai; zhangjukuo;
->> qiuzhenfa; Liguozhu (Kenneth)
->> Subject: Re: [PATCH v3 2/5] PCI: designware: Add ARM64 support
->>
->> On 2015/7/1 22:26, James Morse wrote:
->>> Zhou Wang wrote:
->>>> I tested this patch on D02 board of Hisilicon. It works well.
->>>> I have compiled the driver with multi_v7_defconfig. However, I don't
->>>> have
->>>> ARM32 PCIe related board to do test. It will be appreciated if
->> someone
->>>> could
->>>> help to test it.
->>>>
->>>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->>>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->>>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->>>> Tested-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->>>> Tested-by: James Morse <james.morse@arm.com>
->>>
->>> Tests on this new series, using the same i.MX 6Quad board, are not
->> working.
->>>
->>> The network card is no longer detected, and I get a lockup when
->> removing
->>> the root bridge and rescanning.
->>>
->>> Partial dmesg output below. Significantly, the lines:
->>>> [    0.152128] PCI host bridge /soc/pcie@0x01000000 ranges:
->>>> [    0.152142]   No bus range found for /soc/pcie@0x01000000, using
->> [bus
->>> 00-ff]
->>> are new.
->>>
->>> Both series are applied to v4.1, use the same .config file, and the
->> same dtb.
->>> I will investigate further.
->>>
->>> (Re-testing v2 works, so this isn't an interim hardware failure)
->>>
->>> Thanks,
->>>
->>> James
->>>
->>
->> Hi James,
->>
->> There are something wrong with v3 patch.
->>
->> pp->io_mod_base = of_read_number(parser_range_end -
->> 		of_n_addr_cells(np) - 5 + na, ns);
->> pp->mem_mod_base = of_read_number(parser_range_end -
->> 		of_n_addr_cells(np) - 5 + na, ns);
->> pp->cfg0_mod_base = of_read_number(parser_range_end -
->> 		of_n_addr_cells(np) - 5 + na, ns);
->> are wrong.
->>
->> The ranges item in your dts is:
->> ranges = <0x800 0x0 0x1f00000 0x1f00000 0x0 0x80000
->> 	  0x81000000 0x0 0x0  0x1f80000 0x0 0x10000
->> 	  0x82000000 0x0 0x1000000 0x1000000 0x0 0xf00000>;
->> parser_range_end points to the end of ranges(0xf00000) directly. In v2
->> patch,
->> of_read_number is of_read_number(parser.range - parser.np + na, ns);
->> parser.range
->> points to the end of each line in ranges item.
->>
->> When I did test on D02 board with intel82599 card, I set ranges item as:
->> ranges = <0x03000000 0 0xb0000000 0x220 0x00000000 0 0xf000000>;
->> It is just one line. In this case, parser_range_end is same with
->> parser.range.
->> That is why it happened to work well on D02 board.
->>
->> very sorry to bother you about this problem.
->>
->> Thanks,
->> Zhou
->>
->>>
->>>
->>> root@localhost:~# dmesg | grep -i pci
->>> [    0.126184] PCI: CLS 0 bytes, default 64
->>> [    0.152128] PCI host bridge /soc/pcie@0x01000000 ranges:
->>> [    0.152142]   No bus range found for /soc/pcie@0x01000000, using
->> [bus 00-ff]
->>> [    0.154183] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus
->> 0000:00
->>> [    0.154201] pci_bus 0000:00: root bus resource [bus 00-ff]
->>> [    0.154215] pci_bus 0000:00: root bus resource [???
->>> 0x01f00000-0x01f7ffff flags 0x0]
->>> [    0.154228] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->>> [    0.154270] pci_bus 0000:00: root bus resource [mem 0x01000000-
->> 0x01efffff]
->>> [    0.154306] pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
->>> [    0.154333] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
->>> [    0.154352] pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff
->> pref]
->>> [    0.154377] pci 0000:00:00.0: IOMMU is currently not supported for
->> PCI
->>> [    0.154429] pci 0000:00:00.0: supports D1
->>> [    0.154440] pci 0000:00:00.0: PME# supported from D0 D1 D3hot
->> D3cold
->>> [    0.154683] PCI: bus0: Fast back to back transfers disabled
->>> [    0.154806] PCI: bus1: Fast back to back transfers enabled
->>> [    0.154884] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-
->> 0x010fffff]
->>> [    0.154903] pci 0000:00:00.0: BAR 6: assigned [mem 0x01100000-
->> 0x0110ffff
->>> pref]
->>> [    0.154917] pci 0000:00:00.0: PCI bridge to [bus 01]
->>> [    0.155145] pcieport 0000:00:00.0: Signaling PME through PCIe PME
->> interrupt
->>> [    0.155161] pcie_pme 0000:00:00.0:pcie01: service driver pcie_pme
->> loaded
->>> [    0.155279] aer 0000:00:00.0:pcie02: service driver aer loaded
->>> [    1.188840] ehci-pci: EHCI PCI platform driver
->>> [    1.232518] ohci-pci: OHCI PCI platform driver
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
->> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>> .
->>>
->>
-> 
-
-
+Y29tbWl0IDRiNTlkYTUyMWY3ZTBhZWRmZjc1YzJhYTkwYjZhNjUzNzI3Y2RmN2YKQXV0aG9yOiBH
+dWVudGVyIFJvZWNrIDxsaW51eEByb2Vjay11cy5uZXQ+CkRhdGU6ICAgVHVlIEp1bCA3IDExOjEx
+OjIwIDIwMTUgLTA3MDAKCiAgICBUaGUgUENJIHN1YnN5c3RlbSBhbHdheXMgYXNzdW1lcyB0aGF0
+IEkvTyBpcyBzdXBwb3J0ZWQgb24gUENJZSBicmlkZ2VzIGFuZAogICAgdHJpZXMgdG8gYXNzaWdu
+IGFuIEkvTyB3aW5kb3cgdG8gZWFjaCBjaGlsZCBidXMgZXZlbiBpZiB0aGF0IGlzIG5vdCB0aGUK
+ICAgIGNhc2UuCiAgICAKICAgIFRoaXMgbWF5IHJlc3VsdCBpbiBtZXNzYWdlcyBzdWNoIGFzOgog
+ICAgCiAgICAgIHBjaWVwb3J0IDAwMDA6MDI6MDAuMDogcmVzWzddPVtpbyAgMHgxMDAwLTB4MGZm
+Zl0gZ2V0X3Jlc19hZGRfc2l6ZSBhZGRfc2l6ZSAxMDAwCiAgICAgIHBjaWVwb3J0IDAwMDA6MDI6
+MDAuMDogQkFSIDc6IG5vIHNwYWNlIGZvciBbaW8gIHNpemUgMHgxMDAwXQogICAgICBwY2llcG9y
+dCAwMDAwOjAyOjAwLjA6IEJBUiA3OiBmYWlsZWQgdG8gYXNzaWduIFtpbyAgc2l6ZSAweDEwMDBd
+CiAgICAKICAgIGZvciBlYWNoIGJyaWRnZSBwb3J0LCBldmVuIGlmIGEgYnVzIG9yIGl0cyBwYXJl
+bnQgZG9lcyBub3Qgc3VwcG9ydCBJL08gaW4KICAgIHRoZSBmaXJzdCBwbGFjZS4KICAgIAogICAg
+VG8gYXZvaWQgdGhpcyBtZXNzYWdlLCBjaGVjayBpZiBhIGJ1cyBzdXBwb3J0cyBJL08gYmVmb3Jl
+IHRyeWluZyB0byBlbmFibGUKICAgIGl0LiAgQWxzbyBjaGVjayBpZiB0aGUgcm9vdCBidXMgaGFz
+IGFuIElPIHdpbmRvdyBhc3NpZ25lZDsgaWYgbm90LCBpdCBkb2VzCiAgICBub3QgbWFrZSBzZW5z
+ZSB0byB0cnkgdG8gYXNzaWduIG9uZSB0byBhbnkgb2YgaXRzIGNoaWxkIGJ1c3Nlcy4KICAgIAog
+ICAgW2JoZWxnYWFzOiByZXZlcnNlIHNlbnNlIG9mIG5ldyBwY2lfYnVzX2ZsYWdzX3QgdmFsdWVd
+CiAgICBbeWluZ2hhaTogc2ltcGxpZnkgcm9vdCBidXMgZmxhZyBjaGVjaywgZml4IGZsYWdzIGlu
+aXRpYWwgc2V0dGluZywgY2hhbmdlIHRvIGJvb2xdCiAgICBTaWduZWQtb2ZmLWJ5OiBHdWVudGVy
+IFJvZWNrIDxsaW51eEByb2Vjay11cy5uZXQ+CiAgICBTaWduZWQtb2ZmLWJ5OiBCam9ybiBIZWxn
+YWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPgogICAgQ0M6IExvcmVuem8gUGllcmFsaXNpIDxsb3Jl
+bnpvLnBpZXJhbGlzaUBhcm0uY29tPgoKLS0tCiBkcml2ZXJzL3BjaS9wcm9iZS5jICAgICB8ICAg
+NTEgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCiBkcml2
+ZXJzL3BjaS9zZXR1cC1idXMuYyB8ICAgMTEgKystLS0tLS0tLQogaW5jbHVkZS9saW51eC9wY2ku
+aCAgICAgfCAgICAxIAogMyBmaWxlcyBjaGFuZ2VkLCA1NSBpbnNlcnRpb25zKCspLCA4IGRlbGV0
+aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9wcm9iZS5jCj09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0K
+LS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3Byb2JlLmMKKysrIGxpbnV4LTIuNi9kcml2
+ZXJzL3BjaS9wcm9iZS5jCkBAIC0zMzIsNiArMzMyLDMyIEBAIHN0YXRpYyB2b2lkIHBjaV9yZWFk
+X2Jhc2VzKHN0cnVjdCBwY2lfZGUKIAl9CiB9CiAKK3N0YXRpYyBib29sIHBjaV9icmlkZ2Vfc3Vw
+cG9ydHNfaW8oc3RydWN0IHBjaV9kZXYgKmJyaWRnZSkKK3sKKwl1MTYgaW87CisKKwlwY2lfcmVh
+ZF9jb25maWdfd29yZChicmlkZ2UsIFBDSV9JT19CQVNFLCAmaW8pOworCWlmIChpbykKKwkJcmV0
+dXJuIHRydWU7CisKKwkvKiBJT19CQVNFL0xJTUlUIGlzIGVpdGhlciBoYXJkLXdpcmVkIHRvIHpl
+cm8gb3IgcHJvZ3JhbW1lZCB0byB6ZXJvICovCisJcGNpX3dyaXRlX2NvbmZpZ193b3JkKGJyaWRn
+ZSwgUENJX0lPX0JBU0UsIDB4ZTBmMCk7CisJcGNpX3JlYWRfY29uZmlnX3dvcmQoYnJpZGdlLCBQ
+Q0lfSU9fQkFTRSwgJmlvKTsKKwlwY2lfd3JpdGVfY29uZmlnX3dvcmQoYnJpZGdlLCBQQ0lfSU9f
+QkFTRSwgMHgwKTsKKwlpZiAoaW8pCisJCXJldHVybiB0cnVlOworCisJcmV0dXJuIGZhbHNlOwor
+fQorCitzdGF0aWMgYm9vbCBwY2lfcm9vdF9oYXNfaW9fcmVzb3VyY2Uoc3RydWN0IHBjaV9idXMg
+KmJ1cykKK3sKKwl3aGlsZSAoYnVzLT5wYXJlbnQpCisJCWJ1cyA9IGJ1cy0+cGFyZW50OworCisJ
+cmV0dXJuICEhKGJ1cy0+YnVzX2ZsYWdzICYgUENJX0JVU19GTEFHU19TVVBQT1JUU19JTyk7Cit9
+CisKIHN0YXRpYyB2b2lkIHBjaV9yZWFkX2JyaWRnZV9pbyhzdHJ1Y3QgcGNpX2J1cyAqY2hpbGQp
+CiB7CiAJc3RydWN0IHBjaV9kZXYgKmRldiA9IGNoaWxkLT5zZWxmOwpAQCAtMzQwLDYgKzM2Niwy
+MSBAQCBzdGF0aWMgdm9pZCBwY2lfcmVhZF9icmlkZ2VfaW8oc3RydWN0IHBjCiAJc3RydWN0IHBj
+aV9idXNfcmVnaW9uIHJlZ2lvbjsKIAlzdHJ1Y3QgcmVzb3VyY2UgKnJlczsKIAorCWlmICghKGNo
+aWxkLT5idXNfZmxhZ3MgJiBQQ0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPKSkKKwkJcmV0dXJuOwor
+CisJaWYgKCFwY2lfYnJpZGdlX3N1cHBvcnRzX2lvKGRldikpIHsKKwkJZGV2X3ByaW50ayhLRVJO
+X0RFQlVHLCAmZGV2LT5kZXYsICIgIG5vIEkvTyB3aW5kb3dcbiIpOworCQljaGlsZC0+YnVzX2Zs
+YWdzICY9IH5QQ0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPOworCQlyZXR1cm47CisJfQorCisJaWYg
+KCFwY2lfcm9vdF9oYXNfaW9fcmVzb3VyY2UoY2hpbGQpKSB7CisJCWRldl9wcmludGsoS0VSTl9E
+RUJVRywgJmRldi0+ZGV2LCAiICBubyBJL08gcmVzb3VyY2Ugb24gcm9vdCBidXNcbiIpOworCQlj
+aGlsZC0+YnVzX2ZsYWdzICY9IH5QQ0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPOworCQlyZXR1cm47
+CisJfQorCiAJaW9fbWFzayA9IFBDSV9JT19SQU5HRV9NQVNLOwogCWlvX2dyYW51bGFyaXR5ID0g
+MHgxMDAwOwogCWlmIChkZXYtPmlvX3dpbmRvd18xaykgewpAQCAtNDk2LDYgKzUzNyw3IEBAIHN0
+YXRpYyBzdHJ1Y3QgcGNpX2J1cyAqcGNpX2FsbG9jX2J1cyhzdHIKIAlJTklUX0xJU1RfSEVBRCgm
+Yi0+cmVzb3VyY2VzKTsKIAliLT5tYXhfYnVzX3NwZWVkID0gUENJX1NQRUVEX1VOS05PV047CiAJ
+Yi0+Y3VyX2J1c19zcGVlZCA9IFBDSV9TUEVFRF9VTktOT1dOOworCWItPmJ1c19mbGFncyB8PSBQ
+Q0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPOwogI2lmZGVmIENPTkZJR19QQ0lfRE9NQUlOU19HRU5F
+UklDCiAJaWYgKHBhcmVudCkKIAkJYi0+ZG9tYWluX25yID0gcGFyZW50LT5kb21haW5fbnI7CkBA
+IC0yMDU4LDYgKzIxMDAsMTUgQEAgaW50IHBjaV9idXNfaW5zZXJ0X2J1c25fcmVzKHN0cnVjdCBw
+Y2lfYgogCQlyZXMtPmZsYWdzIHw9IElPUkVTT1VSQ0VfUENJX0ZJWEVEOwogCX0KIAorCWItPmJ1
+c19mbGFncyAmPSB+UENJX0JVU19GTEFHU19TVVBQT1JUU19JTzsKKwlyZXNvdXJjZV9saXN0X2Zv
+cl9lYWNoX2VudHJ5KHdpbmRvdywgJmJyaWRnZS0+d2luZG93cykgeworCQlyZXMgPSB3aW5kb3ct
+PnJlczsKKwkJaWYgKHJlc291cmNlX3R5cGUocmVzKSA9PSBJT1JFU09VUkNFX0lPKSB7CisJCQli
+LT5idXNfZmxhZ3MgfD0gUENJX0JVU19GTEFHU19TVVBQT1JUU19JTzsKKwkJCWJyZWFrOworCQl9
+CisJfQorCiAJY29uZmxpY3QgPSByZXF1ZXN0X3Jlc291cmNlX2NvbmZsaWN0KHBhcmVudF9yZXMs
+IHJlcyk7CiAKIAlpZiAoY29uZmxpY3QpCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0
+dXAtYnVzLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9wY2kvc2V0dXAt
+YnVzLmMKKysrIGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtNzQ0LDcgKzc0
+NCw2IEBAIGludCBwY2lfY2xhaW1fYnJpZGdlX3Jlc291cmNlKHN0cnVjdCBwY2kKICAgIGJhc2Uv
+bGltaXQgcmVnaXN0ZXJzIG11c3QgYmUgcmVhZC1vbmx5IGFuZCByZWFkIGFzIDAuICovCiBzdGF0
+aWMgdm9pZCBwY2lfYnJpZGdlX2NoZWNrX3JhbmdlcyhzdHJ1Y3QgcGNpX2J1cyAqYnVzKQogewot
+CXUxNiBpbzsKIAl1MzIgcG1lbTsKIAlzdHJ1Y3QgcGNpX2RldiAqYnJpZGdlID0gYnVzLT5zZWxm
+OwogCXN0cnVjdCByZXNvdXJjZSAqYl9yZXM7CkBAIC03NTIsMTQgKzc1MSwxMCBAQCBzdGF0aWMg
+dm9pZCBwY2lfYnJpZGdlX2NoZWNrX3JhbmdlcyhzdHJ1CiAJYl9yZXMgPSAmYnJpZGdlLT5yZXNv
+dXJjZVtQQ0lfQlJJREdFX1JFU09VUkNFU107CiAJYl9yZXNbMV0uZmxhZ3MgfD0gSU9SRVNPVVJD
+RV9NRU07CiAKLQlwY2lfcmVhZF9jb25maWdfd29yZChicmlkZ2UsIFBDSV9JT19CQVNFLCAmaW8p
+OwotCWlmICghaW8pIHsKLQkJcGNpX3dyaXRlX2NvbmZpZ193b3JkKGJyaWRnZSwgUENJX0lPX0JB
+U0UsIDB4ZTBmMCk7Ci0JCXBjaV9yZWFkX2NvbmZpZ193b3JkKGJyaWRnZSwgUENJX0lPX0JBU0Us
+ICZpbyk7Ci0JCXBjaV93cml0ZV9jb25maWdfd29yZChicmlkZ2UsIFBDSV9JT19CQVNFLCAweDAp
+OwotCX0KLQlpZiAoaW8pCisJaWYgKGJ1cy0+YnVzX2ZsYWdzICYgUENJX0JVU19GTEFHU19TVVBQ
+T1JUU19JTykKIAkJYl9yZXNbMF0uZmxhZ3MgfD0gSU9SRVNPVVJDRV9JTzsKKwllbHNlCisJCWJf
+cmVzWzBdLmZsYWdzICY9IH5JT1JFU09VUkNFX0lPOwogCiAJLyogIERFQ2NoaXAgMjEwNTAgcGFz
+cyAyIGVycmF0YTogdGhlIGJyaWRnZSBtYXkgbWlzcyBhbiBhZGRyZXNzCiAJICAgIGRpc2Nvbm5l
+Y3QgYm91bmRhcnkgYnkgb25lIFBDSSBkYXRhIHBoYXNlLgpJbmRleDogbGludXgtMi42L2luY2x1
+ZGUvbGludXgvcGNpLmgKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvaW5jbHVkZS9saW51
+eC9wY2kuaAorKysgbGludXgtMi42L2luY2x1ZGUvbGludXgvcGNpLmgKQEAgLTE5Myw2ICsxOTMs
+NyBAQCB0eXBlZGVmIHVuc2lnbmVkIHNob3J0IF9fYml0d2lzZSBwY2lfYnVzCiBlbnVtIHBjaV9i
+dXNfZmxhZ3MgewogCVBDSV9CVVNfRkxBR1NfTk9fTVNJICAgPSAoX19mb3JjZSBwY2lfYnVzX2Zs
+YWdzX3QpIDEsCiAJUENJX0JVU19GTEFHU19OT19NTVJCQyA9IChfX2ZvcmNlIHBjaV9idXNfZmxh
+Z3NfdCkgMiwKKwlQQ0lfQlVTX0ZMQUdTX1NVUFBPUlRTX0lPID0gKF9fZm9yY2UgcGNpX2J1c19m
+bGFnc190KSA0LAogfTsKIAogLyogVGhlc2UgdmFsdWVzIGNvbWUgZnJvbSB0aGUgUENJIEV4cHJl
+c3MgU3BlYyAqLwo=
+--047d7bd758a2207787051c0fba9c--
