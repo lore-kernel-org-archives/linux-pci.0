@@ -1,147 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49874 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756338AbbGFXlo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:41:44 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 25/36] PCI: Restore pref mmio allocation logic for hostbridge without mmio64
-Date: Mon,  6 Jul 2015 16:39:15 -0700
-Message-Id: <1436225966-27247-26-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:47085 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759AbbG3EQu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 00:16:50 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, Yijing Wang <wangyijing@huawei.com>,
+	<stable@vger.kernel.org.#3.4+>
+Subject: [PATCH] PCI/ASPM: Don't remove pcie_link_state until we stop the last device
+Date: Thu, 30 Jul 2015 12:09:20 +0800
+Message-ID: <1438229360-370-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
-resources), we change the logic for pref mmio allocation:
-When bridge pref support mmio64, we will only put children pref
-that support mmio64 into it, and will put children pref mmio32
-into bridge's non-pref mmio32.
+Now we stop the pci_bus->devices in reverse order, but in
+pcie_aspm_exit_link_state(), we only would do something when
+the device is the last one.
 
-That could leave bridge pref bar not used when that pref bar is mmio64,
-and children res only has mmio32.
-Also could have allocation failure when non-pref mmio32 is not big
-enough space for those children pref mmio32.
+void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+{
+	...
+	if (!list_is_last(&pdev->bus_list, &parent->subordinate->devices))
+		goto out;
+	...
+}
 
-That is not rational when the host bridge does not 64bit mmio above 4g
-at all.
+So if we have the following pcie tree, system may crash.
 
-The patch restore to old logic:
-when hostbridge does not have has_mem64 so put children pref mmio64 and
-pref mmio32 all under bridges pref bars.
+[b7-bd]--+-02.0-[bb-bd]--+-00.0-[bc-bd]----01.0-[bd]----00.0  PLX Technology, Inc. Device 0002
+                         +-00.1  PLX Technology, Inc. Device 0002
+                         +-00.2  PLX Technology, Inc. Device 0002
+                         +-00.3  PLX Technology, Inc. Device 0002
+                         \-00.4  PLX Technology, Inc. Device 0002
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+In this case, we would stop bb:00.4 before bb:00.0, so when we touch bb:00.4,
+we would call pcie_aspm_exit_link_state(), and free the pcie_link_state.
+So when we want to stop bd:00.0 and free related pcie_link_state,
+it would try to access the parent pcie_link_state which has been freed.
+
+Part crash call trace:
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+CPU 16 Pid: 33262, comm: IVS_PowerOn
+RIP: 0010:[<ffffffffa0d7c14f>]  [<ffffffffa0d7c14f>] pcie_config_aspm_link+0x3f/0x100
+RSP: 0018:ffff8801bc577790  EFLAGS: 00010282
+RAX: 0000000000000000 RBX: 0000000000000001 RCX: 000000000000e7e6
+RDX: 000000000000e6e6 RSI: 00000000ffffc5ec RDI: 0000000000000246
+RBP: ffff8801bc5777d0 R08: ffff88007b001000 R09: 00000000003fffff
+...
+Call Trace:
+ [<ffffffff8124a542>] pcie_config_aspm_path+0x32/0x60
+ [<ffffffffa0d7cc00>] pcie_aspm_exit_link_state+0x160/0x560
+ [<ffffffffa0d7c0bc>] pci_stop_bus_device+0x8c/0xe0
+ [<ffffffffa0d7c068>] pci_stop_bus_device+0x38/0xe0
+ [<ffffffffa0d7c068>] pci_stop_bus_device+0x38/0xe0
+ [<ffffffffa0d7c068>] pci_stop_bus_device+0x38/0xe0
+ [<ffffffffa0d7c068>] pci_stop_bus_device+0x38/0xe0
+ [<ffffffff8123eca1>] pci_stop_and_remove_bus_device+0x11/0x20
+...
+
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+CC: stable@vger.kernel.org #3.4+
 ---
- drivers/pci/bus.c       |  4 +++-
- drivers/pci/setup-bus.c | 13 +++++++++----
- drivers/pci/setup-res.c |  9 ++++++---
- 3 files changed, 18 insertions(+), 8 deletions(-)
+ drivers/pci/pcie/aspm.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6fbd3f2..b043bdf 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -202,8 +202,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- {
- #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- 	int rc;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
- 
--	if (res->flags & IORESOURCE_MEM_64) {
-+	if (res->flags & mmio64) {
- 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
- 					       type_mask, alignf, alignf_data,
- 					       &pci_high);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e8e9029..8f8b4c7 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1821,7 +1821,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
- 		mask = IORESOURCE_MEM;
- 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
--		if (b_res[2].flags & IORESOURCE_MEM_64) {
-+		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
-+		    pci_find_host_bridge(bus)->has_mem64) {
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
-@@ -1980,17 +1981,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 *	  io port.
- 	 *     2. if there is non pref mmio assign fail, release bridge
- 	 *	  nonpref mmio.
--	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
-+	 *     3. if there is pref mmio assign fail, and host bridge does
-+	 *	  have 64bit mmio, release bridge pref mmio.
-+	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
- 	 *	  is 64bit, release bridge pref mmio.
--	 *     4. if there is pref mmio assign fail, and bridge pref is
-+	 *     5. if there is pref mmio assign fail, and bridge pref is
- 	 *	  32bit mmio, release bridge pref mmio
--	 *     5. if there is pref mmio assign fail, and bridge pref is not
-+	 *     6. if there is pref mmio assign fail, and bridge pref is not
- 	 *	  assigned, release bridge nonpref mmio.
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 317e355..c81f549 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -648,7 +648,8 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 	 * All PCIe functions are in one slot, remove one function will remove
+ 	 * the whole slot, so just wait until we are the last function left.
  	 */
- 	if (type & IORESOURCE_IO)
- 		idx = 0;
- 	else if (!(type & IORESOURCE_PREFETCH))
- 		idx = 1;
-+	else if (!pci_find_host_bridge(bus)->has_mem64)
-+		idx = 2;
- 	else if ((type & IORESOURCE_MEM_64) &&
- 		 (b_res[2].flags & IORESOURCE_MEM_64))
- 		idx = 2;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index b19aa5b..26aedde 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -205,6 +205,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t min;
- 	int ret;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
+-	if (!list_is_last(&pdev->bus_list, &parent->subordinate->devices))
++	if (!(pdev == list_first_entry(&parent->subordinate->devices,
++					struct pci_dev, bus_list)))
+ 		goto out;
  
- 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
- 
-@@ -216,7 +218,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * things differently than they were sized, not everything will fit.
- 	 */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
--				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
-+				     IORESOURCE_PREFETCH | mmio64,
- 				     pcibios_align_resource, dev);
- 	if (ret == 0)
- 		return 0;
-@@ -225,7 +227,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * If the prefetchable window is only 32 bits wide, we can put
- 	 * 64-bit prefetchable resources in it.
- 	 */
--	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
-+	if (mmio64 &&
-+	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
- 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 					     IORESOURCE_PREFETCH,
-@@ -240,7 +243,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * non-prefetchable, the first call already tried the only possibility
- 	 * so we don't need to try again.
- 	 */
--	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
-+	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
- 					     pcibios_align_resource, dev);
- 
+ 	link = parent->link_state;
 -- 
-1.8.4.5
+1.7.1
 
