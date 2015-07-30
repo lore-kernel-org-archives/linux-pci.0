@@ -1,66 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:34513 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752125AbbGNTAs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 14 Jul 2015 15:00:48 -0400
+Received: from mout3.freenet.de ([195.4.92.93]:45639 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751228AbbG3Uch (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Jul 2015 16:32:37 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>,
+	Ondrej Kozina <okozina@redhat.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
+ <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
+ <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org>
+ <20150728212441.GA25761@redhat.com> <55B87005.7010409@redhat.com>
+ <55B8759B.8070400@redhat.com> <55B90C25.8030502@maya.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Mike Snitzer <msnitzer@redhat.com>, mpatocka@redhat.com
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55BA895D.30509@maya.org>
+Date: Thu, 30 Jul 2015 22:30:21 +0200
 MIME-Version: 1.0
-In-Reply-To: <1436879588.1264.11.camel@intel.com>
-References: <1436879588.1264.11.camel@intel.com>
-Date: Tue, 14 Jul 2015 12:00:47 -0700
-Message-ID: <CAE9FiQUa_gK=NsUehCjKs=r7FfAqAj2J3aE_JXBRkPtBXkRSKg@mail.gmail.com>
-Subject: Re: [lkp] [PCI] c0d1a185278: EDAC sbridge: Couldn't enable 8086:6fa0
-From: Yinghai Lu <yinghai@kernel.org>
-To: Huang Ying <ying.huang@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKP ML <lkp@01.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <55B90C25.8030502@maya.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 14, 2015 at 6:13 AM, Huang Ying <ying.huang@intel.com> wrote:
-> FYI, we noticed the below changes on
->
-> git://internal_merge_and_test_tree revert-c0d1a18527806a3938e76a0e648cae690510b6a3-c0d1a18527806a3938e76a0e648cae690510b6a3
-> commit c0d1a18527806a3938e76a0e648cae690510b6a3 ("PCI: Don't set flags to 0 when assign resource fail")
->
->
-> [   30.350859] EDAC sbridge: Seeking for: PCI ID 8086:6fa0
-> [   30.350867] sbridge_edac 0000:ff:12.0: can't enable device: BAR 1 [mem size 0x00000010 disabled] not assigned
-> [   30.350867] EDAC sbridge: Couldn't enable 8086:6fa0
-> [   30.350901] EDAC sbridge: Some needed devices are missing
-> [   30.350904] EDAC sbridge: Couldn't find mci handler
->
-
-Hi Ying,
-
-I updated the branch, it should fix the problem.
-
-Can you test that again ?
-
-BTW, there should be BIOS problem with it.
-
-[    4.144987] pci 0000:ff:12.0: [8086:6fa0] type 00 class 0x088000
-[    4.151702] pci 0000:ff:12.0: reg 0x14: [mem 0x00000000-0x0000000f]
-[    4.158703] pci 0000:ff:12.0: reg 0x18: [mem 0x00000000-0x0000003f]
-[    4.165705] pci 0000:ff:12.0: reg 0x1c: [mem 0x00000000-0x0000000f]
-[    4.172706] pci 0000:ff:12.0: reg 0x20: [mem 0x00000000-0x0000003f]
-[    4.179708] pci 0000:ff:12.0: reg 0x24: [mem 0x00000000-0x0000000f]
-[    4.186739] pci 0000:ff:12.1: [8086:6f30] type 00 class 0x110100
-[    4.193493] pci 0000:ff:12.4: [8086:6f60] type 00 class 0x088000
-[    4.200208] pci 0000:ff:12.4: reg 0x14: [mem 0x00000000-0x0000000f]
-[    4.207210] pci 0000:ff:12.4: reg 0x18: [mem 0x00000000-0x0000003f]
-[    4.214212] pci 0000:ff:12.4: reg 0x1c: [mem 0x00000000-0x0000000f]
-[    4.221214] pci 0000:ff:12.4: reg 0x20: [mem 0x00000000-0x0000003f]
-[    4.228215] pci 0000:ff:12.4: reg 0x24: [mem 0x00000000-0x0000000f]
-
-but for bios 0xff, there is no _CRS mmio.
+On 07/29/2015 at 07:23 PM Andreas Hartmann wrote:
+> On 07/29/2015 at 08:41 AM Milan Broz wrote:
+>> On 07/29/2015 08:17 AM, Ondrej Kozina wrote:
+>>> On 07/28/2015 11:24 PM, Mike Snitzer wrote:
+>>>>>
+>>>>> I am willing to do tests if you have any idea to be tested - I can
+>>>>> reproduce it quite easily.
+>>>>
+>>>> You can try disabling dm-crypt's parallelization by specifying these 2
+>>>> features: same_cpu_crypt submit_from_crypt_cpus
+>>>>
+>>>
+>>> Hi,
+>>>
+>>> please try adding follwoing cryptsetup perf. options while unlocking 
+>>> your LUKS containers: --perf-submit_from_crypt_cpus and 
+>>> --perf-same_cpu_crypt.
+>>>
+>>> Perhaps focus on SSD disk as previous unresolved report mentioned SSD too
+> 
+> I'll next try to just boot from the rotational disk. If the problem
+> doesn't show up here, it could be SSD related, too.
+> 
+>>
+>> Just you need to use cryptsetup 1.6.7 version (older versions do not have this options yet).
+> 
+> Thanks for this hint.
+> 
+> I compiled this version and applied it and verified it, if it's really
+> in initrd. It was in initrd and the additional options where applied, too.
+> 
+> But: nothing changed with enabled ncq - exactly same problem as before
+> (w/ linux 3.19.8 + additional patches and Linux 4.1 - no difference in
+> behavior).
 
 
-also
-[    4.876484] pci 0000:7f:1e.3: [Firmware Bug]: reg 0x10: invalid BAR
-(can't size)
-so it has silicon problem ?
+Next tests:
+I didn't mount any filesystem on bootup located on the ssd (only the
+rotational based mounts) -> no problem.
 
-Thanks
+Next: I tried to add the partitions from the ssd to be mounted on boot -
+one by one. As there where 4 partitions to be mounted from the ssd, the
+errors came up again.
 
-Yinghai
+Next: You suspect the ssd as being bad. Therefore, I changed the ssd and
+tested with KINGSTON SV300S37A240G. Result: Same as above - errors are
+coming up if there are mounted more than 3 partitions at the same time.
+
+
+Summary:
+- --perf-submit_from_crypt_cpus --perf-same_cpu_crypt -> broken anyway
+- rotational disks alone: it's ok
+- more than 3 partitions on ssd Corsair Force GT -> broken
+- more than 3 partitions on ssd KINGSTON SV300S37A240G -> broken
+
+
+
+Regards,
+Andreas
