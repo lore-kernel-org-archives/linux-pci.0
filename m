@@ -1,532 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:58500 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752130AbbGAJhz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 05:37:55 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	James Morse <james.morse@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: <linux-pci@vger.kernel.org>,
+Received: from dfwrgout.huawei.com ([206.16.17.72]:4211 "EHLO
+	dfwrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753703AbbG3Qv0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 12:51:26 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Rob Herring <robherring2@gmail.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v3 2/5] PCI: designware: Add ARM64 support
-Date: Wed, 1 Jul 2015 17:43:34 +0800
-Message-ID: <1435743817-19083-3-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1435743817-19083-1-git-send-email-wangzhou1@hisilicon.com>
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
+Date: Thu, 30 Jul 2015 16:50:55 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs>
+References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20150729172053.GE31170@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
+ <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs>
+ <20150730161447.GG9640@google.com>
+In-Reply-To: <20150730161447.GG9640@google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
-function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
-move related operations to dw_pcie_host_init. Also set pp->root_bus_nr = 0 in
-each PCIe host driver which is based on pcie-designware. This patch also try
-to use of_pci_get_host_bridge_resources for ARM32 and ARM64 according to the
-suggestion for Gabriele[1]
-
-I tested this patch on D02 board of Hisilicon. It works well.
-I have compiled the driver with multi_v7_defconfig. However, I don't have
-ARM32 PCIe related board to do test. It will be appreciated if someone could
-help to test it.
-
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Tested-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-Tested-by: James Morse <james.morse@arm.com>
-
-[1] http://www.spinics.net/lists/linux-pci/msg42194.html
----
- drivers/pci/host/pci-dra7xx.c      |   1 +
- drivers/pci/host/pci-exynos.c      |   2 +-
- drivers/pci/host/pci-imx6.c        |   2 +-
- drivers/pci/host/pci-keystone-dw.c |   2 +-
- drivers/pci/host/pci-keystone.c    |   2 +-
- drivers/pci/host/pci-layerscape.c  |   2 +-
- drivers/pci/host/pcie-designware.c | 242 +++++++++++++++----------------------
- drivers/pci/host/pcie-designware.h |  10 +-
- drivers/pci/host/pcie-spear13xx.c  |   2 +-
- 9 files changed, 110 insertions(+), 155 deletions(-)
-
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 2d57e19..5c8b6ab 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -280,6 +280,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 
- 	pp = &dra7xx->pp;
- 	pp->dev = dev;
-+	pp->root_bus_nr = 0;
- 	pp->ops = &dra7xx_pcie_host_ops;
- 
- 	pp->irq = platform_get_irq(pdev, 1);
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index c139237..4b6db6c 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -534,7 +534,7 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
- 		}
- 	}
- 
--	pp->root_bus_nr = -1;
-+	pp->root_bus_nr = 0;
- 	pp->ops = &exynos_pcie_host_ops;
- 
- 	ret = dw_pcie_host_init(pp);
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index fdb9536..c4a80c5 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -541,7 +541,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
- 		}
- 	}
- 
--	pp->root_bus_nr = -1;
-+	pp->root_bus_nr = 0;
- 	pp->ops = &imx6_pcie_host_ops;
- 
- 	ret = dw_pcie_host_init(pp);
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index f34892e..b1e4135 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -327,7 +327,7 @@ static void ks_dw_pcie_clear_dbi_mode(void __iomem *reg_virt)
- void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
- {
- 	struct pcie_port *pp = &ks_pcie->pp;
--	u32 start = pp->mem.start, end = pp->mem.end;
-+	u32 start = pp->mem->start, end = pp->mem->end;
- 	int i, tr_size;
- 
- 	/* Disable BARs for inbound access */
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 75333b0..df91f5e 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -312,7 +312,7 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
- 			return ret;
- 	}
- 
--	pp->root_bus_nr = -1;
-+	pp->root_bus_nr = 0;
- 	pp->ops = &keystone_pcie_host_ops;
- 	ret = ks_dw_pcie_host_init(ks_pcie, ks_pcie->msi_intc_np);
- 	if (ret) {
-diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
-index 4a6e62f..5c7a9c4 100644
---- a/drivers/pci/host/pci-layerscape.c
-+++ b/drivers/pci/host/pci-layerscape.c
-@@ -101,7 +101,7 @@ static int ls_add_pcie_port(struct ls_pcie *pcie)
- 	pp = &pcie->pp;
- 	pp->dev = pcie->dev;
- 	pp->dbi_base = pcie->dbi;
--	pp->root_bus_nr = -1;
-+	pp->root_bus_nr = 0;
- 	pp->ops = &ls_pcie_host_ops;
- 
- 	ret = dw_pcie_host_init(pp);
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 2e9f84f..844febee 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -11,6 +11,7 @@
-  * published by the Free Software Foundation.
-  */
- 
-+#include <linux/hardirq.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-@@ -67,16 +68,7 @@
- #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
--static struct hw_pci dw_pci;
--
--static unsigned long global_io_offset;
--
--static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
--{
--	BUG_ON(!sys->private_data);
--
--	return sys->private_data;
--}
-+static struct pci_ops dw_pcie_ops;
- 
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
- {
-@@ -238,7 +230,7 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
- static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- {
- 	int irq, pos0, i;
--	struct pcie_port *pp = sys_to_pcie(desc->dev->bus->sysdata);
-+	struct pcie_port *pp = desc->dev->bus->sysdata;
- 
- 	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
- 				       order_base_2(no_irqs));
-@@ -281,7 +273,7 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
- {
- 	int irq, pos;
- 	struct msi_msg msg;
--	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-+	struct pcie_port *pp = pdev->bus->sysdata;
- 
- 	if (desc->msi_attrib.is_msix)
- 		return -EINVAL;
-@@ -310,7 +302,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
- {
- 	struct irq_data *data = irq_get_irq_data(irq);
- 	struct msi_desc *msi = irq_data_get_msi(data);
--	struct pcie_port *pp = sys_to_pcie(msi->dev->bus->sysdata);
-+	struct pcie_port *pp = msi->dev->bus->sysdata;
- 
- 	clear_irq_range(pp, irq, 1, data->hwirq);
- }
-@@ -342,16 +334,24 @@ static const struct irq_domain_ops msi_domain_ops = {
- 	.map = dw_pcie_msi_map,
- };
- 
--int dw_pcie_host_init(struct pcie_port *pp)
-+int __init dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct device_node *np = pp->dev->of_node;
- 	struct platform_device *pdev = to_platform_device(pp->dev);
--	struct of_pci_range range;
--	struct of_pci_range_parser parser;
-+	struct pci_bus *bus;
- 	struct resource *cfg_res;
-+	LIST_HEAD(res);
- 	u32 val, na, ns;
- 	const __be32 *addrp;
- 	int i, index, ret;
-+	int rlen;
-+	struct resource_entry *win;
-+	const __be32 *parser_range_end = of_get_property(np, "ranges", &rlen);
-+
-+	if (parser_range_end == NULL)
-+			return -ENOENT;
-+	parser_range_end += rlen/sizeof(__be32);
-+
- 
- 	/* Find the address cell size and the number of cells in order to get
- 	 * the untranslated address.
-@@ -375,78 +375,67 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		dev_err(pp->dev, "missing *config* reg space\n");
- 	}
- 
--	if (of_pci_range_parser_init(&parser, np)) {
--		dev_err(pp->dev, "missing ranges property\n");
--		return -EINVAL;
--	}
-+	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
-+	if (ret)
-+		return ret;
- 
- 	/* Get the I/O and memory ranges from DT */
--	for_each_of_pci_range(&parser, &range) {
--		unsigned long restype = range.flags & IORESOURCE_TYPE_BITS;
--
--		if (restype == IORESOURCE_IO) {
--			of_pci_range_to_resource(&range, np, &pp->io);
--			pp->io.name = "I/O";
--			pp->io.start = max_t(resource_size_t,
--					     PCIBIOS_MIN_IO,
--					     range.pci_addr + global_io_offset);
--			pp->io.end = min_t(resource_size_t,
--					   IO_SPACE_LIMIT,
--					   range.pci_addr + range.size
--					   + global_io_offset - 1);
--			pp->io_size = resource_size(&pp->io);
--			pp->io_bus_addr = range.pci_addr;
--			pp->io_base = range.cpu_addr;
--
--			/* Find the untranslated IO space address */
--			pp->io_mod_base = of_read_number(parser.range -
--							 parser.np + na, ns);
--		}
--		if (restype == IORESOURCE_MEM) {
--			of_pci_range_to_resource(&range, np, &pp->mem);
--			pp->mem.name = "MEM";
--			pp->mem_size = resource_size(&pp->mem);
--			pp->mem_bus_addr = range.pci_addr;
--
--			/* Find the untranslated MEM space address */
--			pp->mem_mod_base = of_read_number(parser.range -
--							  parser.np + na, ns);
--		}
--		if (restype == 0) {
--			of_pci_range_to_resource(&range, np, &pp->cfg);
--			pp->cfg0_size = resource_size(&pp->cfg)/2;
--			pp->cfg1_size = resource_size(&pp->cfg)/2;
--			pp->cfg0_base = pp->cfg.start;
--			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
-+	resource_list_for_each_entry(win, &res) {
-+		switch (resource_type(win->res)) {
-+		case IORESOURCE_IO:
-+			pp->io = win->res;
-+			pp->io->name = "I/O";
-+			pp->io_size = resource_size(pp->io);
-+			pp->io_bus_addr = pp->io->start - win->offset;
-+			/* magic 5 below comes from magic na and ns in
-+			 * of_pci_range_parser_init()                 */
-+			pp->io_mod_base = of_read_number(parser_range_end -
-+					of_n_addr_cells(np) - 5 + na, ns);
-+			ret = pci_remap_iospace(pp->io, pp->io_base);
-+			if (ret) {
-+				dev_warn(pp->dev, "error %d: failed to map resource %pR\n",
-+				ret, pp->io);
-+			continue;
-+			}
-+			break;
-+		case IORESOURCE_MEM:
-+			pp->mem = win->res;
-+			pp->mem->name = "MEM";
-+			pp->mem_size = resource_size(pp->mem);
-+			pp->mem_bus_addr = pp->mem->start - win->offset;
-+			pp->mem_mod_base = of_read_number(parser_range_end -
-+					of_n_addr_cells(np) - 5 + na, ns);
-+			break;
-+		case 0:
-+			pp->cfg = win->res;
-+			pp->cfg0_size = resource_size(pp->cfg)/2;
-+			pp->cfg1_size = resource_size(pp->cfg)/2;
-+			pp->cfg0_base = pp->cfg->start;
-+			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
- 
- 			/* Find the untranslated configuration space address */
--			pp->cfg0_mod_base = of_read_number(parser.range -
--							   parser.np + na, ns);
--			pp->cfg1_mod_base = pp->cfg0_mod_base +
--					    pp->cfg0_size;
-+			pp->cfg0_mod_base = of_read_number(parser_range_end -
-+					of_n_addr_cells(np) - 5 + na, ns);
-+			pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
-+			break;
-+		case IORESOURCE_BUS:
-+			pp->busn = win->res;
-+			break;
-+		default:
-+			continue;
- 		}
- 	}
- 
--	ret = of_pci_parse_bus_range(np, &pp->busn);
--	if (ret < 0) {
--		pp->busn.name = np->name;
--		pp->busn.start = 0;
--		pp->busn.end = 0xff;
--		pp->busn.flags = IORESOURCE_BUS;
--		dev_dbg(pp->dev, "failed to parse bus-range property: %d, using default %pR\n",
--			ret, &pp->busn);
--	}
--
- 	if (!pp->dbi_base) {
--		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg.start,
--					resource_size(&pp->cfg));
-+		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg->start,
-+					resource_size(pp->cfg));
- 		if (!pp->dbi_base) {
- 			dev_err(pp->dev, "error with ioremap\n");
- 			return -ENOMEM;
- 		}
- 	}
- 
--	pp->mem_base = pp->mem.start;
-+	pp->mem_base = pp->mem->start;
- 
- 	if (!pp->va_cfg0_base) {
- 		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
-@@ -493,24 +482,47 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (pp->ops->host_init)
- 		pp->ops->host_init(pp);
- 
--	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-+	if (dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0)
-+			!= PCIBIOS_SUCCESSFUL)
-+		return -EINVAL;
- 
- 	/* program correct class for RC */
--	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-+	if (dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI)
-+			!= PCIBIOS_SUCCESSFUL)
-+		return -EINVAL;
-+
-+	if (dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val)
-+			!= PCIBIOS_SUCCESSFUL)
-+		return -EINVAL;
- 
--	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
--	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
- 
--#ifdef CONFIG_PCI_MSI
--	dw_pcie_msi_chip.dev = pp->dev;
--	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
-+	if (dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val)
-+			!= PCIBIOS_SUCCESSFUL)
-+		return -EINVAL;
-+
-+	bus = pci_create_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
-+			      pp, &res);
-+	if (!bus)
-+		return -ENOMEM;
-+
-+#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-+	bus->msi = container_of(&pp->irq_domain, struct msi_controller, domain);
-+#else
-+	bus->msi = &dw_pcie_msi_chip;
- #endif
- 
--	dw_pci.nr_controllers = 1;
--	dw_pci.private_data = (void **)&pp;
-+	pci_scan_child_bus(bus);
-+	if (pp->ops->scan_bus)
-+		pp->ops->scan_bus(pp);
- 
--	pci_common_init_dev(pp->dev, &dw_pci);
-+#ifdef CONFIG_ARM
-+	/* support old dtbs that incorrectly describe IRQs */
-+	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-+#endif
-+
-+	pci_assign_unassigned_bus_resources(bus);
-+	pci_bus_add_devices(bus);
- 
- 	return 0;
- }
-@@ -653,7 +665,7 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
- static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 			int size, u32 *val)
- {
--	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
-+	struct pcie_port *pp = bus->sysdata;
- 	int ret;
- 
- 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
-@@ -677,7 +689,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 			int where, int size, u32 val)
- {
--	struct pcie_port *pp = sys_to_pcie(bus->sysdata);
-+	struct pcie_port *pp = bus->sysdata;
- 	int ret;
- 
- 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
-@@ -701,64 +713,6 @@ static struct pci_ops dw_pcie_ops = {
- 	.write = dw_pcie_wr_conf,
- };
- 
--static int dw_pcie_setup(int nr, struct pci_sys_data *sys)
--{
--	struct pcie_port *pp;
--
--	pp = sys_to_pcie(sys);
--
--	if (global_io_offset < SZ_1M && pp->io_size > 0) {
--		sys->io_offset = global_io_offset - pp->io_bus_addr;
--		pci_ioremap_io(global_io_offset, pp->io_base);
--		global_io_offset += SZ_64K;
--		pci_add_resource_offset(&sys->resources, &pp->io,
--					sys->io_offset);
--	}
--
--	sys->mem_offset = pp->mem.start - pp->mem_bus_addr;
--	pci_add_resource_offset(&sys->resources, &pp->mem, sys->mem_offset);
--	pci_add_resource(&sys->resources, &pp->busn);
--
--	return 1;
--}
--
--static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct pci_bus *bus;
--	struct pcie_port *pp = sys_to_pcie(sys);
--
--	pp->root_bus_nr = sys->busnr;
--	bus = pci_create_root_bus(pp->dev, sys->busnr,
--				  &dw_pcie_ops, sys, &sys->resources);
--	if (!bus)
--		return NULL;
--
--	pci_scan_child_bus(bus);
--
--	if (bus && pp->ops->scan_bus)
--		pp->ops->scan_bus(pp);
--
--	return bus;
--}
--
--static int dw_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
--{
--	struct pcie_port *pp = sys_to_pcie(dev->bus->sysdata);
--	int irq;
--
--	irq = of_irq_parse_and_map_pci(dev, slot, pin);
--	if (!irq)
--		irq = pp->irq;
--
--	return irq;
--}
--
--static struct hw_pci dw_pci = {
--	.setup		= dw_pcie_setup,
--	.scan		= dw_pcie_scan_bus,
--	.map_irq	= dw_pcie_map_irq,
--};
--
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
- 	u32 val;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index d0bbd27..ab78710 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -34,7 +34,7 @@ struct pcie_port {
- 	u64			cfg1_mod_base;
- 	void __iomem		*va_cfg1_base;
- 	u32			cfg1_size;
--	u64			io_base;
-+	resource_size_t			io_base;
- 	u64			io_mod_base;
- 	phys_addr_t		io_bus_addr;
- 	u32			io_size;
-@@ -42,10 +42,10 @@ struct pcie_port {
- 	u64			mem_mod_base;
- 	phys_addr_t		mem_bus_addr;
- 	u32			mem_size;
--	struct resource		cfg;
--	struct resource		io;
--	struct resource		mem;
--	struct resource		busn;
-+	struct resource		*cfg;
-+	struct resource		*io;
-+	struct resource		*mem;
-+	struct resource		*busn;
- 	int			irq;
- 	u32			lanes;
- 	struct pcie_host_ops	*ops;
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 020d788..e78ddf8 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -287,7 +287,7 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
- 		return ret;
- 	}
- 
--	pp->root_bus_nr = -1;
-+	pp->root_bus_nr = 0;
- 	pp->ops = &spear13xx_pcie_host_ops;
- 
- 	ret = dw_pcie_host_init(pp);
--- 
-1.9.1
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtcGNpLW93bmVy
+QHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJAdmdlci5rZXJuZWwu
+b3JnXSBPbiBCZWhhbGYgT2YgQmpvcm4gSGVsZ2Fhcw0KPiBTZW50OiBUaHVyc2RheSwgSnVseSAz
+MCwgMjAxNSA1OjE1IFBNDQo+IFRvOiBHYWJyaWVsZSBQYW9sb25pDQo+IENjOiBSb2IgSGVycmlu
+ZzsgYXJuZEBhcm5kYi5kZTsgbG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsgV2FuZ3pob3UgKEIp
+Ow0KPiByb2JoK2R0QGtlcm5lbC5vcmc7IGphbWVzLm1vcnNlQGFybS5jb207IExpdml1LkR1ZGF1
+QGFybS5jb207IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBZdWFu
+emhpY2hhbmc7IFpodWRhY2FpOyB6aGFuZ2p1a3VvOw0KPiBxaXV6aGVuZmE7IExpZ3Vvemh1IChL
+ZW5uZXRoKQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY2XSBQQ0k6IFN0b3JlIFBDSWUgYnVzIGFk
+ZHJlc3MgaW4gc3RydWN0DQo+IG9mX3BjaV9yYW5nZQ0KPiANCj4gT24gVGh1LCBKdWwgMzAsIDIw
+MTUgYXQgMDE6NTI6MTNQTSArMDAwMCwgR2FicmllbGUgUGFvbG9uaSB3cm90ZToNCj4gPg0KPiA+
+DQo+ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogbGludXgtcGNp
+LW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gPiA+IG93bmVyQHZn
+ZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIFJvYiBIZXJyaW5nDQo+ID4gPiBTZW50OiBUaHVy
+c2RheSwgSnVseSAzMCwgMjAxNSAyOjQzIFBNDQo+ID4gPiBUbzogR2FicmllbGUgUGFvbG9uaQ0K
+PiA+ID4gQ2M6IEJqb3JuIEhlbGdhYXM7IGFybmRAYXJuZGIuZGU7IGxvcmVuem8ucGllcmFsaXNp
+QGFybS5jb207DQo+IFdhbmd6aG91DQo+ID4gPiAoQik7IHJvYmgrZHRAa2VybmVsLm9yZzsgamFt
+ZXMubW9yc2VAYXJtLmNvbTsgTGl2aXUuRHVkYXVAYXJtLmNvbTsNCj4gPiA+IGxpbnV4LXBjaUB2
+Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4g
+PiA+IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBZdWFuemhpY2hhbmc7IFpodWRhY2FpOyB6
+aGFuZ2p1a3VvOw0KPiA+ID4gcWl1emhlbmZhOyBMaWd1b3podSAoS2VubmV0aCkNCj4gPiA+IFN1
+YmplY3Q6IFJlOiBbUEFUQ0ggdjZdIFBDSTogU3RvcmUgUENJZSBidXMgYWRkcmVzcyBpbiBzdHJ1
+Y3QNCj4gPiA+IG9mX3BjaV9yYW5nZQ0KPiA+ID4NCj4gPiA+IE9uIFdlZCwgSnVsIDI5LCAyMDE1
+IGF0IDI6NDQgUE0sIEdhYnJpZWxlIFBhb2xvbmkNCj4gPiA+IDxnYWJyaWVsZS5wYW9sb25pQGh1
+YXdlaS5jb20+IHdyb3RlOg0KPiA+ID4gPiBIaSBCam9ybg0KPiA+ID4gPg0KPiA+ID4gPiBNYW55
+IFRoYW5rcyBmb3IgeW91ciByZXBseQ0KPiA+ID4gPg0KPiA+ID4gPiBJIGhhdmUgY29tbWVudGVk
+IGJhY2sgaW5saW5lIHdpdGggcmVzb2x1dGlvbnMgZnJvbSBteSBzaWRlLg0KPiA+ID4gPg0KPiA+
+ID4gPiBJZiB5b3UncmUgb2sgd2l0aCB0aGVtIEknbGwgc2VuZCBpdCBvdXQgYSBuZXcgdmVyc2lv
+biBpbiB0aGUNCj4gPiA+IGFwcHJvcHJpYXRlIHBhdGNoc2V0DQo+ID4gPiA+DQo+ID4gPiA+IENo
+ZWVycw0KPiA+ID4gPg0KPiA+ID4gPiBHYWINCj4gPiA+ID4NCj4gPiA+ID4+IC0tLS0tT3JpZ2lu
+YWwgTWVzc2FnZS0tLS0tDQo+ID4gPiA+PiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86Ymhl
+bGdhYXNAZ29vZ2xlLmNvbV0NCj4gPiA+ID4+IFNlbnQ6IFdlZG5lc2RheSwgSnVseSAyOSwgMjAx
+NSA2OjIxIFBNDQo+ID4gPiA+PiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiA+ID4gPj4gQ2M6IGFy
+bmRAYXJuZGIuZGU7IGxvcmVuem8ucGllcmFsaXNpQGFybS5jb207IFdhbmd6aG91IChCKTsNCj4g
+PiA+ID4+IHJvYmgrZHRAa2VybmVsLm9yZzsgamFtZXMubW9yc2VAYXJtLmNvbTsgTGl2aXUuRHVk
+YXVAYXJtLmNvbTsNCj4gbGludXgtDQo+ID4gPiA+PiBwY2lAdmdlci5rZXJuZWwub3JnOyBsaW51
+eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+ID4gPiA+PiBkZXZpY2V0cmVlQHZn
+ZXIua2VybmVsLm9yZzsgWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsNCj4gPiA+
+ID4+IHFpdXpoZW5mYTsgTGlndW96aHUgKEtlbm5ldGgpDQo+ID4gPiA+PiBTdWJqZWN0OiBSZTog
+W1BBVENIIHY2XSBQQ0k6IFN0b3JlIFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0DQo+ID4gPiA+
+PiBvZl9wY2lfcmFuZ2UNCj4gPiA+ID4+DQo+ID4gPiA+PiBIaSBHYWJyaWVsZSwNCj4gPiA+ID4+
+DQo+ID4gPiA+PiBBcyBmYXIgYXMgSSBjYW4gdGVsbCwgdGhpcyBpcyBub3Qgc3BlY2lmaWMgdG8g
+UENJZSwgc28gcGxlYXNlDQo+IHVzZQ0KPiA+ID4gIlBDSSINCj4gPiA+ID4+IGluDQo+ID4gPiA+
+PiB0aGUgc3ViamVjdCBhcyBhIGdlbmVyaWMgdGVybSB0aGF0IGluY2x1ZGVzIGJvdGggUENJIGFu
+ZCBQQ0llLg0KPiA+ID4gPg0KPiA+ID4gPiBzdXJlIGFncmVlZA0KPiA+ID4gPg0KPiA+ID4gPj4N
+Cj4gPiA+ID4+IE9uIE1vbiwgSnVsIDI3LCAyMDE1IGF0IDExOjE3OjAzUE0gKzA4MDAsIEdhYnJp
+ZWxlIFBhb2xvbmkgd3JvdGU6DQo+ID4gPiA+PiA+IEZyb206IGdhYnJpZWxlIHBhb2xvbmkgPGdh
+YnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4NCj4gPiA+ID4+ID4NCj4gPiA+ID4+ID4gICAgIFRo
+aXMgcGF0Y2ggaXMgbmVlZGVkIHBvcnQgUENJZSBkZXNpZ253YXJlIHRvIG5ldyBEVA0KPiBwYXJz
+aW5nDQo+ID4gPiBBUEkNCj4gPiA+ID4+ID4gICAgIEFzIGRpc2N1c3NlZCBpbg0KPiA+ID4gPj4g
+PiAgICAgaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvcGlwZXJtYWlsL2xpbnV4LWFybS0NCj4g
+a2VybmVsLzIwMTUtDQo+ID4gPiA+PiBKYW51YXJ5LzMxNzc0My5odG1sDQo+ID4gPiA+PiA+ICAg
+ICBpbiBkZXNpZ253YXJlIHdlIGhhdmUgYSBwcm9ibGVtIGFzIHRoZSBQQ0kgYWRkcmVzc2VzIGlu
+DQo+IHRoZQ0KPiA+ID4gUENJZQ0KPiA+ID4gPj4gY29udHJvbGxlcg0KPiA+ID4gPj4gPiAgICAg
+YWRkcmVzcyBzcGFjZSBhcmUgcmVxdWlyZWQgaW4gb3JkZXIgdG8gcGVyZm9ybSBjb3JyZWN0IEhX
+DQo+ID4gPiA+PiBvcGVyYXRpb24uDQo+ID4gPiA+PiA+DQo+ID4gPiA+PiA+ICAgICBJbiBvcmRl
+ciB0byBzb2x2ZSB0aGlzIHByb2JsZW0gY29tbWl0IGY0YzU1YzVhMyAiUENJOg0KPiA+ID4gZGVz
+aWdud2FyZToNCj4gPiA+ID4+ID4gICAgIFByb2dyYW0gQVRVIHdpdGggdW50cmFuc2xhdGVkIGFk
+ZHJlc3MiIGFkZGVkIGNvZGUgdG8gcmVhZA0KPiB0aGUNCj4gPiA+ID4+IFBDSWUNCj4gPiA+ID4+
+DQo+ID4gPiA+PiBDb252ZW50aW9uYWwgcmVmZXJlbmNlIGlzIDEyLWNoYXIgU0hBMSwgbGlrZSB0
+aGlzOg0KPiA+ID4gPj4NCj4gPiA+ID4+ICAgZjRjNTVjNWEzZjdmICgiUENJOiBkZXNpZ253YXJl
+OiBQcm9ncmFtIEFUVSB3aXRoIHVudHJhbnNsYXRlZA0KPiA+ID4gPj4gYWRkcmVzcyIpDQo+ID4g
+PiA+DQo+ID4gPiA+IEFncmVlZCwgd2lsbCBjaGFuZ2UgdGhpcw0KPiA+ID4gPg0KPiA+ID4gPj4N
+Cj4gPiA+ID4+ID4gICAgIGNvbnRyb2xsZXIgc3RhcnQgYWRkcmVzcyBkaXJlY3RseSBmcm9tIHRo
+ZSBEVCByYW5nZXMuDQo+ID4gPiA+PiA+DQo+ID4gPiA+PiA+ICAgICBJbiB0aGUgbmV3IERUIHBh
+cnNpbmcgQVBJDQo+IG9mX3BjaV9nZXRfaG9zdF9icmlkZ2VfcmVzb3VyY2VzKCkNCj4gPiA+ID4+
+IGhpZGVzIHRoZQ0KPiA+ID4gPj4gPiAgICAgRFQgcGFyc2VyIGZyb20gdGhlIGhvc3QgY29udHJv
+bGxlciBkcml2ZXJzLCBzbyBpdCBpcyBub3QNCj4gPiA+IHBvc3NpYmxlDQo+ID4gPiA+PiA+ICAg
+ICBmb3IgZHJpdmVycyB0byBwYXJzZSB2YWx1ZXMgZGlyZWN0bHkgZnJvbSB0aGUgRFQuDQo+ID4g
+PiA+PiA+DQo+ID4gPiA+PiA+ICAgICBJbiBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xp
+bnV4LXBjaS9tc2c0MjU0MC5odG1sIHdlDQo+ID4gPiA+PiBhbHJlYWR5IHRyaWVkDQo+ID4gPiA+
+PiA+ICAgICB0byB1c2UgdGhlIG5ldyBEVCBwYXJzaW5nIEFQSSBidXQgdGhlcmUgaXMgYSBidWcN
+Cj4gKG9idmlvdXNseSkNCj4gPiA+IGluDQo+ID4gPiA+PiBzZXR0aW5nDQo+ID4gPiA+PiA+ICAg
+ICB0aGUgPCo+X21vZF9iYXNlIGFkZHJlc3Nlcw0KPiA+ID4gPj4gPiAgICAgQXBwbHlpbmcgdGhp
+cyBwYXRjaCB3ZSBjYW4gZWFzaWx5IHNldCAiPCo+X21vZF9iYXNlID0gd2luLQ0KPiA+ID4gPj4g
+Pl9fcmVzLnN0YXJ0Ig0KPiA+ID4gPj4NCj4gPiA+ID4+IEJ5IGl0c2VsZiwgdGhpcyBwYXRjaCBh
+ZGRzIHNvbWV0aGluZy4gIEl0IHdvdWxkIGhlbHAgbWUNCj4gdW5kZXJzdGFuZA0KPiA+ID4gaXQN
+Cj4gPiA+ID4+IGlmDQo+ID4gPiA+PiB0aGUgKnVzZXIqIG9mIHRoaXMgbmV3IHNvbWV0aGluZyB3
+ZXJlIGluIHRoZSBzYW1lIHBhdGNoIHNlcmllcy4NCj4gPiA+ID4NCj4gPiA+ID4gdGhlIHVzZXIg
+aXM6ICJbUEFUQ0ggdjUgMi81XSBQQ0k6IGRlc2lnbndhcmU6IEFkZCBBUk02NCBzdXBwb3J0Ig0K
+PiA+ID4gPiBJIHdpbGwgYXNrIFpob3UgV2FuZyB0byBpbmNsdWRlIHRoaXMgcGF0Y2ggaW4gaGlz
+IHBhdGNoc2V0DQo+ID4gPiA+DQo+ID4gPiA+DQo+ID4gPiA+Pg0KPiA+ID4gPj4gPiAgICAgVGhp
+cyBwYXRjaCBhZGRzIGEgbmV3IGZpZWxkIGluICJzdHJ1Y3Qgb2ZfcGNpX3JhbmdlIiB0bw0KPiBz
+dG9yZQ0KPiA+ID4gdGhlDQo+ID4gPiA+PiA+ICAgICBwY2kgYnVzIHN0YXJ0IGFkZHJlc3M7IGl0
+IGZpbGxzIHRoZSBmaWVsZCBpbg0KPiA+ID4gPj4gb2ZfcGNpX3JhbmdlX3BhcnNlcl9vbmUoKTsN
+Cj4gPiA+ID4+ID4gICAgIGluIG9mX3BjaV9nZXRfaG9zdF9icmlkZ2VfcmVzb3VyY2VzKCkgaXQg
+cmV0cmlldmVzIHRoZQ0KPiA+ID4gcmVzb3VyY2UNCj4gPiA+ID4+IGVudHJ5DQo+ID4gPiA+PiA+
+ICAgICBhZnRlciBpdCBpcyBjcmVhdGVkIGFuZCBhZGRlZCB0byB0aGUgcmVzb3VyY2UgbGlzdCBh
+bmQNCj4gdXNlcw0KPiA+ID4gPj4gPiAgICAgZW50cnktPl9fcmVzLnN0YXJ0IHRvIHN0b3JlIHRo
+ZSBwY2kgY29udHJvbGxlciBhZGRyZXNzDQo+ID4gPiA+Pg0KPiA+ID4gPj4gc3RydWN0IG9mX3Bj
+aV9yYW5nZSBpcyBzdGFydGluZyB0byBnZXQgY29uZnVzaW5nIHRvIG5vbi1PRiBmb2xrcw0KPiA+
+ID4gbGlrZQ0KPiA+ID4gPj4gbWUuDQo+ID4gPiA+PiBJdCBub3cgY29udGFpbnM6DQo+ID4gPiA+
+Pg0KPiA+ID4gPj4gICB1MzIgcGNpX3NwYWNlOw0KPiA+ID4gPj4gICB1NjQgcGNpX2FkZHI7DQo+
+ID4gPiA+PiAgIHU2NCBjcHVfYWRkcjsNCj4gPiA+ID4+ICAgdTY0IGJ1c19hZGRyOw0KPiA+ID4g
+Pj4NCj4gPiA+ID4+IENhbiB5b3UgZXhwbGFpbiB3aGF0IGFsbCB0aGVzZSB0aGluZ3MgbWVhbiwg
+YW5kIG1heWJlIGV2ZW4gYWRkDQo+IG9uZS0NCj4gPiA+IGxpbmUNCj4gPiA+ID4+IGNvbW1lbnRz
+IHRvIHRoZSBzdHJ1Y3R1cmU/DQo+ID4gPiA+DQo+ID4gPiA+IHN1cmUgSSBjYW4gYWRkIGNvbW1l
+bnRzIGlubGluZSBpbiB0aGUgY29kZQ0KPiA+ID4gPg0KPiA+ID4gPj4NCj4gPiA+ID4+IHBjaV9z
+cGFjZTogVGhlIG9ubHkgdXNlcyBJIHNlZSBhcmUgdG8gZGV0ZXJtaW5lIHdoZXRoZXIgdG8gcHJp
+bnQNCj4gPiA+ID4+ICJQcmVmZXRjaCIuICBJIGRvbid0IHNlZSBhbnkgcmVhbCBmdW5jdGlvbmFs
+aXR5IHRoYXQgdXNlcyB0aGlzLg0KPiA+ID4gPg0KPiA+ID4gPiBMb29raW5nIGF0IHRoZSBjb2Rl
+IEkgYWdyZWUuIGl0J3Mgc2VlbXMgdG8gYmUgdXNlZCBvbmx5IGluDQo+IHBvd2VycGMNCj4gPiA+
+ID4gYW5kIG1pY3JvYmxhemUgdG8gcHJpbnQgb3V0Lg0KPiA+ID4gPiBIb3dldmVyIGZyb20gbXkg
+dW5kZXJzdGFuZGluZyBwY2lfc3BhY2UgaXMgdGhlIHBoeXMuaGkgZmllbGQgb2YNCj4gdGhlDQo+
+ID4gPiA+IHJhbmdlcyBwcm9wZXJ0eTogaXQgZGVmaW5lcyB0aGUgcHJvcGVydGllcyBvZiB0aGUg
+YWRkcmVzcyBzcGFjZQ0KPiA+ID4gYXNzb2NpYXRlZA0KPiA+ID4gPiB0byB0aGUgUENJIGFkZHJl
+c3MuIGlmIHlvdSdyZSBjdXJpb3VzIHlvdSBjYW4gZmluZCBhIG5pY2UgYW5kDQo+IHF1aWNrDQo+
+ID4gPiB0byByZWFkDQo+ID4gPiA+ICJndWlkZSIgaW4gaHR0cDovL2RldmljZXRyZWUub3JnL01Q
+QzUyMDA6UENJDQo+ID4gPiA+DQo+ID4gPiA+Pg0KPiA+ID4gPj4gcGNpX2FkZHI6IEkgYXNzdW1l
+IHRoaXMgaXMgYSBQQ0kgYnVzIGFkZHJlc3MsIGxpa2Ugd2hhdCB5b3UNCj4gd291bGQNCj4gPiA+
+IHNlZQ0KPiA+ID4gPj4gaWYNCj4gPiA+ID4+IHlvdSBwdXQgYW4gYW5hbHl6ZXIgb24gdGhlIGJ1
+cy9saW5rLiAgVGhpcyBhZGRyZXNzIGNvdWxkIGdvIGluIGENCj4gQkFSLg0KPiA+ID4gPg0KPiA+
+ID4gPiBZZXMsIHRoaXMgaXMgdGhlIFBDSSBzdGFydCBhZGRyZXNzIG9mIHRoZSByYW5nZTogcGh5
+cy5taWQgKw0KPiBwaHlzLmxvdw0KPiA+ID4gaW4gdGhlDQo+ID4gPiA+IGd1aWRlIG1lbnRpb25l
+ZCBhYm92ZQ0KPiA+ID4gPg0KPiA+ID4gPj4NCj4gPiA+ID4+IGNwdV9hZGRyOiBJIGFzc3VtZSB0
+aGlzIGlzIGEgQ1BVIHBoeXNpY2FsIGFkZHJlc3MsIGxpa2Ugd2hhdCB5b3UNCj4gPiA+IHdvdWxk
+DQo+ID4gPiA+PiBzZWUNCj4gPiA+ID4+IGluIC9wcm9jL2lvbWVtIGFuZCB3aGF0IHlvdSB3b3Vs
+ZCBwYXNzIHRvIGlvcmVtYXAoKS4NCj4gPiA+ID4NCj4gPiA+ID4gWWVzIGNvcnJlY3QNCj4gPiA+
+ID4NCj4gPiA+ID4+DQo+ID4gPiA+PiBidXNfYWRkcjogPw0KPiA+ID4gPj4NCj4gPiA+ID4NCj4g
+PiA+ID4gQWNjb3JkaW5nIHRvIHRoZSBndWlkZSBhYm92ZSwgdGhpcyBpcyB0aGUgYWRkcmVzcyBp
+bnRvIHdoaWNoIHRoZQ0KPiA+ID4gcGNpX2FkZHJlc3MNCj4gPiA+ID4gZ2V0IHRyYW5zbGF0ZWQg
+dG8gYW5kIHRoYXQgaXMgcGFzc2VkIHRvIHRoZSByb290IGNvbXBsZXguIEJldHdlZW4NCj4gdGhl
+DQo+ID4gPiByb290DQo+ID4gPiA+IGNvbXBsZXggYW5kIHRoZSBDUFUgdGhlcmUgY2FuIGJlIGlu
+dGVybWVkaWF0ZSB0cmFuc2xhdGlvbiBsYXllcnM6DQo+IHNlZQ0KPiA+ID4gdGhhdCB0bw0KPiA+
+ID4gPiBnZXQgcGNpX2FkZHJlc3Mgd2UgY2FsbCAib2ZfdHJhbnNsYXRlX2FkZHJlc3MiOyB0aGlz
+IHdpbGwgYXBwbHkNCj4gYWxsDQo+ID4gPiB0aGUNCj4gPiA+ID4gdHJhbnNsYXRpb24gbGF5ZXJz
+IChyYW5nZXMgaW4gdGhlIERUKSB0aGF0IGl0IGZpbmRzIHRpbGwgaXQgY29tZXMNCj4gdG8NCj4g
+PiA+IHRoZSByb290DQo+ID4gPiA+IG5vZGUgb2YgdGhlIERUICh0aHVzIHJldHJpZXZpbmcgdGhl
+IENQVSBhZGRyZXNzKS4NCj4gPiA+ID4gTm93IHNhaWQgdGhhdCwgZm9yIGRlc2lnbndhcmUgd2Ug
+bmVlZCB0aGUgZmlyc3QgdHJhbnNsYXRlZCBQQ0kNCj4gPiA+IGFkZHJlc3MsIHRoYXQgd2UgY2Fs
+bA0KPiA+ID4NCj4gPiA+IEkgdGhpbmsgeW91IG1lYW4gInRyYW5zbGF0ZWQgQ1BVIGFkZHJlc3Mu
+IiBUaGUgZmxvdyBvZiBhZGRyZXNzZXMNCj4gbG9va3MNCj4gPiA+IGxpa2UgdGhpczoNCj4gPiA+
+DQo+ID4gPiBDUFUgLT4gQ1BVIGJ1cyBhZGRyZXNzIC0+IGJ1cyBmYWJyaWMgYWRkcmVzcyBkZWNv
+ZGluZyAtPiBidXMNCj4gYWRkcmVzcw0KPiA+ID4gLT4gRFcgUENJIC0+IFBDSSBhZGRyZXNzDQo+
+ID4gPg0KPiA+ID4gVGhpcyBpcyBxdWl0ZSBjb21tb24gdGhhdCBhbiBJUCBibG9jayBkb2VzIG5v
+dCBzZWUgdGhlIGZ1bGwgYWRkcmVzcy4NCj4gPiA+IEl0IGlzIHVudXN1YWwgdGhhdCB0aGUgSVAg
+YmxvY2sgbmVlZHMgdG8ga25vdyBpdHMgZnVsbCBhZGRyZXNzIG9uDQo+IHRoZQ0KPiA+ID4gc2xh
+dmUgc2lkZS4gSXQgaXMgcXVpdGUgY29tbW9uIGZvciB0aGUgbWFzdGVyIHNpZGUgYW5kIHRoZSBr
+ZXJuZWwNCj4gPiA+IGRlYWxzIHdpdGggdGhhdCBhbGwgdGhlIHRpbWUgd2l0aCBETUEgbWFwcGlu
+Zw0KPiA+ID4NCj4gPiA+ID4gaGVyZSBidXNfYWRkciBhZnRlciBSb2IgSGVycmluZyBzdWdnZXN0
+ZWQgdGhlIG5hbWUuLi5ob25lc3RseSBJDQo+ID4gPiBjYW5ub3QgdGhpbmsgb2YgYQ0KPiA+ID4g
+PiBkaWZmZXJlbnQgbmFtZQ0KPiA+ID4NCj4gPiA+IFRoaW5raW5nIGFib3V0IHRoaXMgc29tZSBt
+b3JlLCBpcyB0aGlzIHJlYWxseSBhIHRyYW5zbGF0aW9uIHZlcnN1cw0KPiA+ID4ganVzdCBhIHN0
+cmlwcGluZyBvZiBoaWdoIGJpdHM/IERvZXMgdGhlIERXIElQIGhhdmUgbGVzcyB0aGFuIDMyLQ0K
+PiBiaXRzDQo+ID4gPiBhZGRyZXNzPyBJZiBzbywgd2UgY291bGQgZXhwcmVzcyBkaWZmZXJlbnRs
+eSBhbmQganVzdCBtYXNrIHRoZSBDUFUNCj4gPiA+IGFkZHJlc3Mgd2l0aGluIHRoZSBkcml2ZXIg
+aW5zdGVhZC4NCj4gPg0KPiA+IEkgZG9u4oCZdCB0aGluayB3ZSBzaG91bGQgcmVseSBvbiBbQ1BV
+XSBhZGRyZXNzZXMuLi53aGF0IGlmIHRoZQ0KPiBpbnRlcm1lZGlhdGUNCj4gPiB0cmFuc2xhdGlv
+biBsYXllciBjaGFuZ2VzIHRoZSBsb3dlciBzaWduaWZpY2FudCBiaXRzIG9mIHRoZSAiYnVzDQo+
+IGFkZHJlc3MiDQo+ID4gdG8gdHJhbnNsYXRlIGludG8gYSBjcHUgYWRkcmVzcz8NCj4gDQo+IElz
+IGl0IHJlYWxseSBhIHBvc3NpYmxpdHkgdGhhdCB0aGUgbG93ZXIgYml0cyBjb3VsZCBiZSBjaGFu
+Z2VkPw0KDQpJJ3ZlIGNoZWNrZWQgYWxsIHRoZSBjdXJyZW50IGRlaWdud2FyZSB1c2VycyBEVHMg
+ZXhjZXB0ICJwY2ktbGF5ZXJzY2FwZSIgDQp0aGF0IEkgY291bGQgbm90IGZpbmQ6DQpzcGVhcjEz
+MTAuZHRzaQ0Kc3BlYXIxMzQwLmR0c2kNCmRyYTcuZHRzaQ0KaW14NnFkbC5kdHNpDQppbXg2c3gu
+ZHRzaQ0Ka2V5c3RvbmUuZHRzaQ0KZXh5bm9zNTQ0MC5kdHNpDQoNCk5vbmUgb2YgdGhlbSBtb2Rp
+ZmllcyB0aGUgbG93ZXIgYml0cy4gVG8gYmUgbW9yZSBwcmVjaXNlIHRoZSBvbmx5IGd1eQ0KdGhh
+dCBwcm92aWRlcyBhbm90aGVyIHRyYW5zbGF0aW9uIGxheWVyIGlzICJkcmE3LmR0c2kiOg0KYXhp
+MA0KaHR0cDovL2x4ci5mcmVlLWVsZWN0cm9ucy5jb20vc291cmNlL2FyY2gvYXJtL2Jvb3QvZHRz
+L2RyYTcuZHRzaSNMMjA3DQoNCmF4aTENCmh0dHA6Ly9seHIuZnJlZS1lbGVjdHJvbnMuY29tL3Nv
+dXJjZS9hcmNoL2FybS9ib290L2R0cy9kcmE3LmR0c2kjTDI0MQ0KDQpGb3IgdGhpcyBjYXNlIG1h
+c2tpbmcgdGhlIHRvcCA0Yml0cyAoYml0czI4IHRvIDMxKSBzaG91bGQgbWFrZSB0aGUgam9iLg0K
+DQpTcGVha2luZyBpbiBnZW5lcmFsIHRlcm1zIHNvIGZhciBJJ3ZlIGFsd2F5cyBzZWVuIGxpbmVh
+ciBtYXBwaW5ncw0KdGhhdCBkaWZmZXIgYnkgYml0bWFzayBvZmZzZXQsIGhvd2V2ZXIgbGluZWFy
+IGRvZXMgbm90IG1lYW4gdGhhdCB5b3UgDQpjYW5ub3QgYWZmZWN0IHRoZSBsb3dlciBiaXRzOiBl
+LmcuIDwweDA+IHRvIDwweDAgKyBzaXplPiBjYW4gbWFwIHRvDQo8MHgwMDAwY2FmZSB0byAweDAw
+MDBjYWZlICsgc2l6ZT4sIGJ1dCBJIGd1ZXNzIHRoYXQgZm9yIEhXIGRlc2lnbiByZWFzb25zDQpp
+dCBpcyBtdWNoIGVhc2llciB0byByZW1hcCBkaXJlY3RseSB1c2luZyBhIGJpdG1hc2suLi5idXQg
+SSB3YXMgbm90IHN1cmUNCmFuZCBJIGRpZG4ndCB0aGluayBhYm91dCB0aGUgcHJvYmxlbXMgdGhh
+dCBjYW4gYXJpc2Ugd2l0aCBBQ1BJLg0KDQpJZiB5b3UgdGhpbmsgdGhlIGJpdG1hc2sgaXMgT2sg
+dGhlbiBJIGNhbiBkaXJlY3RseSBkZWZpbmUgaXQgaW4NCmRlc2lnbndhcmUgYW5kIHdlIGNhbiBk
+cm9wIHRoaXMgcGF0Y2guDQoNClRoYW5rcw0KR2FiDQogDQo+IA0KPiBJIHRoaW5rIHdlJ3JlIHRh
+bGtpbmcgYWJvdXQgTU1JTyBoZXJlLCBhbmQgYSBicmlkZ2UgaGFzIGFuIE1NSU8NCj4gd2luZG93
+LiAgQSB3aW5kb3cgaXMgYSByYW5nZSBvZiBDUFUgcGh5c2ljYWwgYWRkcmVzc2VzIHRoYXQgdGhl
+DQo+IGJyaWRnZSBmb3J3YXJkcyB0byBQQ0kuICBUaGUgUENJIGNvcmUgYXNzdW1lcyB0aGF0IGEg
+Q1BVIHBoeXNpY2FsDQo+IGFkZHJlc3MgcmFuZ2UgaXMgbGluZWFybHkgbWFwcGVkIHRvIFBDSSBi
+dXMgYWRkcmVzc2VzLCBpLmUuLCBpZiB0aGUNCj4gd2luZG93IGJhc2UgaXMgWCBhbmQgbWFwcyB0
+byBQQ0kgYWRkcmVzcyBZLCB0aGVuIGFzIGxvbmcgYXMgWCtuIGlzDQo+IGluc2lkZSB0aGUgd2lu
+ZG93LCBpdCBtdXN0IG1hcCB0byBZK24uDQo+IA0KPiBUaGF0IG1lYW5zIHRoZSBsb3ctb3JkZXIg
+Yml0cyAodGhlIG9uZXMgdGhhdCBhcmUgdGhlIG9mZnNldCBpbnRvIHRoZQ0KPiB3aW5kb3cpIGNh
+bm5vdCBjaGFuZ2UuDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5k
+IHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVz
+c2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8g
+YXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
