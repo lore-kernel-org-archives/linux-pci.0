@@ -1,75 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([122.248.162.3]:50594 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756736AbbGQGDL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 02:03:11 -0400
-Received: from /spool/local
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 17 Jul 2015 11:33:09 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp01.in.ibm.com (Postfix) with ESMTP id 4F91CE005E
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:37:03 +0530 (IST)
-Received: from d28av05.in.ibm.com (d28av05.in.ibm.com [9.184.220.67])
-	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t6H633IM29556844
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:04 +0530
-Received: from d28av05.in.ibm.com (localhost [127.0.0.1])
-	by d28av05.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t6H632mS026936
-	for <linux-pci@vger.kernel.org>; Fri, 17 Jul 2015 11:33:03 +0530
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH V9 05/11] powerpc/eeh: Cache only BARs, not windows or IOV BARs
-Date: Fri, 17 Jul 2015 14:02:35 +0800
-Message-Id: <1437112961-17275-6-git-send-email-weiyang@linux.vnet.ibm.com>
-In-Reply-To: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:38549 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382AbbG3Q5v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 12:57:51 -0400
+Received: by iggf3 with SMTP id f3so108721igg.1
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2015 09:57:50 -0700 (PDT)
+Date: Thu, 30 Jul 2015 11:57:46 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Muni Sekhar <munisekharrms@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Naveen Kumar Parna <pnaveenkos@gmail.com>
+Subject: Re: Virtex-5 FPGA PCIE single-function device
+Message-ID: <20150730165746.GH9640@google.com>
+References: <CAHhAz+gJ3FKgLQLEjro8P+Dn+FPHykLur4fmEkAwFdrLPNoQng@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAHhAz+gJ3FKgLQLEjro8P+Dn+FPHykLur4fmEkAwFdrLPNoQng@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-EEH address cache, which helps to locate the PCI device according to
-the given (physical) MMIO address, didn't cover PCI bridges. Also, it
-shouldn't return PF with address in PF's IOV BARs. Instead, the VFs
-should be returned.
+[+cc Naveen]
 
-Also, by doing so, it removes the type check in
-eeh_addr_cache_insert_dev(), since bridge's window would not be cached.
+On Wed, Jul 29, 2015 at 05:31:59PM +0530, Muni Sekhar wrote:
+> [ Please keep me in CC as I'm not subscribed to the list]
+> 
+> Hello,
+> 
+> We are using the “Virtex-5 FPGA Integrated Endpoint Block for PCI
+> Express” in Linux platform. It supports only a single-function(Header
+> Type, Bit 7 is zero), but actually it is having different functions in
+> different Bar’s.
+> 
+> It has UART hardware module implemented in the first Base Address
+> Register and MMC host controller in other Base Address Register.
 
-The patch restricts the address cache to cover first 7 BARs for the
-above purposes.
+This is a really screwed up device.  Naveen asked about a similar
+device recently [1], and I answered:
 
-[gwshan: changelog]
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/eeh_cache.c |    6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+  The PCI infrastructure is designed such that a bus/device/function
+  address identifies a single device.  To that device, we can attach a
+  single driver, which manages all BARs on that device.  There is no
+  provision for attaching one driver to BAR0 and a different driver to
+  BAR1.
 
-diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
-index a1e86e1..e6887f0 100644
---- a/arch/powerpc/kernel/eeh_cache.c
-+++ b/arch/powerpc/kernel/eeh_cache.c
-@@ -196,7 +196,7 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
- 	}
- 
- 	/* Walk resources on this device, poke them into the tree */
--	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
- 		resource_size_t start = pci_resource_start(dev,i);
- 		resource_size_t end = pci_resource_end(dev,i);
- 		unsigned long flags = pci_resource_flags(dev,i);
-@@ -222,10 +222,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
- {
- 	unsigned long flags;
- 
--	/* Ignore PCI bridges */
--	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
--		return;
--
- 	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
- 	__eeh_addr_cache_insert_dev(dev);
- 	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
--- 
-1.7.9.5
+  To manage the device you describe, you'd have to have a driver that
+  claims the entire PCI device, including both BARs.  That driver
+  would internally deal with the UART, GPIO, 1-wire prom, and SD host
+  controller modules.
+
+> We are planning to develop our own pcie based uart driver for UART
+> hardware and planning to use the MMC kernel stack for MMC host
+> controller.
+> 
+> By default MMC kernel stack gets attached to this device. In the pcie
+> based uart driver, tried configuring the uart module after getting the
+> pci_dev structure with pci_get_device(not used the
+> pci_register_driver). After that I could able to communicate with the
+> UART registers even though MMC stack is attached to the device.
+
+This might work, but it's an ugly hack.  It's not at all how the PCI
+core is designed, and subverting the design like this may cause
+problems down the road.
+
+> Now I am puzzled and stuck with how to proceed further on UART
+> Interrupt Service Routine for this kind of device. Can I use
+> request_irq() for uart isr, do you have any suggestion on this?
+
+You'd either have to write some kind of wrapper driver that claims the
+whole device and make its ISR figure out which device is interrupting
+and call either the UART or the MMC ISR, or hack up the MMC ISR to do
+something similar.
+
+If you have a choice, I suggest switching to a better-designed device.
+This one sounds like it's just broken, and I think it's going to be a
+headache to deal with it in software.
+
+Bjorn
+
+[1] http://lkml.kernel.org/r/CAG0bkv+Sve7+XWtGk-kkQU=-64CPbpE=5RMbVq-RzWNgg--6ZQ@mail.gmail.com
 
