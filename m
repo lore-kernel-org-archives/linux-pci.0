@@ -1,117 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17346 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756282AbbGFXlG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jul 2015 19:41:06 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	David Ahern <david.ahern@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 11/36] PCI: Simplify res reference using in __assign_resourcs_sorted
-Date: Mon,  6 Jul 2015 16:39:01 -0700
-Message-Id: <1436225966-27247-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
-References: <1436225966-27247-1-git-send-email-yinghai@kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:40669 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750961AbbG3NtA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 30 Jul 2015 09:49:00 -0400
+Date: Thu, 30 Jul 2015 14:49:46 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Jayachandran C." <jchandra@broadcom.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Russell King <linux@arm.linux.org.uk>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v3 1/2] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150730134946.GB12999@red-moon>
+References: <1438183681-30519-1-git-send-email-jchandra@broadcom.com>
+ <20150730092808.GA4685@red-moon>
+ <20150730101351.GA31408@jayachandranc.netlogicmicro.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150730101351.GA31408@jayachandranc.netlogicmicro.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use res instead of dev_res->res.
+On Thu, Jul 30, 2015 at 11:13:52AM +0100, Jayachandran C. wrote:
+> On Thu, Jul 30, 2015 at 10:28:08AM +0100, Lorenzo Pieralisi wrote:
+> > On Wed, Jul 29, 2015 at 04:28:00PM +0100, Jayachandran C wrote:
+> > > The current code in pci-host-generic.c uses pci_common_init_dev()
+> > > from ARM platform to do some of the PCI initializations, and this
+> > > prevents it from being used in ARM64.
+> > > 
+> > > The initialization done by pci_common_init_dev() that is needed
+> > > by pci-host-generic.c is really limited, and can be done easily
+> > > in the same file without using hw_pci API. The ARM platform
+> > > requires a pci_sys_data as sysdata for the PCI bus, this can be
+> > > handled by setting up gen_pci to have a pci_sys_data variable as
+> > > the first element.
+> > 
+> > Ok, I still do not like leaving pci_sys_data there, and to remove
+> > it there is only one snag (+ one patch to prevent
+> > resources enablement on ARM64 PROBE_ONLY systems to have a
+> > consolidated ARM/ARM64 host generic), which consists in removing the
+> > align_resource pointer from pci_sys_data. A proposed solution (maybe
+> > not ideal, we can consider it a temporary step to make progress)
+> > here:
+> > 
+> > http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359273.html
+> > 
+> > Comments very appreciated on the patch above, I do not have major
+> > concerns with this patch other than the pci_sys_data hack, because
+> > that's what it is.
+> 
+> In may opinion, we have to leave ->sysdata on ARM pointing to a valid
+> pci_sys_data. Leaving it pointing to random stuff and hoping that it
+> will not be used is pretty bad - so I don't see why such a patch would
+> make it upstream.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+I really can't follow what you mean here, if we remove pci_sys_data
+dependency pci_sys_data will be an internal data structure for
+drivers still depending on bios32 to initialize hosts, it won't extend
+to all ARM PCI host controllers, so I struggle to see your point.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 62dd8b7..51085a8 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -448,6 +448,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
- 	resource_size_t add_align;
-+	struct resource *res;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -463,8 +464,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
--		dev_res->res->end += get_res_add_size(realloc_head,
--							dev_res->res);
-+		res = dev_res->res;
-+		res->end += get_res_add_size(realloc_head, res);
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
-@@ -473,16 +474,16 @@ static void __assign_resources_sorted(struct list_head *head,
- 		 * 2. resource with IORESOURCE_SIZEALIGN
- 		 *    update size above already change alignment.
- 		 */
--		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+		if (!(res->flags & IORESOURCE_STARTALIGN))
- 			continue;
- 
--		add_align = get_res_add_align(realloc_head, dev_res->res);
-+		add_align = get_res_add_align(realloc_head, res);
- 
- 		if (add_align) {
--			resource_size_t r_size = resource_size(dev_res->res);
-+			resource_size_t r_size = resource_size(res);
- 
--			dev_res->res->start = add_align;
--			dev_res->res->end = add_align + r_size - 1;
-+			res->start = add_align;
-+			res->end = add_align + r_size - 1;
-                }
- 	}
- 
-@@ -504,21 +505,21 @@ static void __assign_resources_sorted(struct list_head *head,
- 	/* check failed type */
- 	fail_type = pci_fail_res_type_mask(&local_fail_head);
- 	/* remove not need to be released assigned res from head list etc */
--	list_for_each_entry_safe(dev_res, tmp_res, head, list)
--		if (dev_res->res->parent &&
--		    !pci_need_to_release(fail_type, dev_res->res)) {
-+	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
-+		res = dev_res->res;
-+		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
--			remove_from_list(realloc_head, dev_res->res);
--			remove_from_list(&save_head, dev_res->res);
-+			remove_from_list(realloc_head, res);
-+			remove_from_list(&save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-+	}
- 
- 	free_list(&local_fail_head);
- 	/* Release assigned resource */
- 	list_for_each_entry(dev_res, head, list) {
--		struct resource *res = dev_res->res;
--
-+		res = dev_res->res;
- 		if (res->parent) {
- 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
- 				   "BAR %d: released %pR\n",
-@@ -529,8 +530,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	/* Restore start/end/flags from saved list */
- 	list_for_each_entry(save_res, &save_head, list) {
--		struct resource *res = save_res->res;
--
-+		res = save_res->res;
- 		res->start = save_res->start;
- 		res->end = save_res->end;
- 		res->flags = save_res->flags;
--- 
-1.8.4.5
+> The second issue I have is adding dependencies between patches that
+> enable basic functionality on arm64 with arm infrastructure cleanup
+> patches. Given the number of kernel releases the cleanups take [and
+> factoring in the amount of mess arm has :)], we will end up waiting
+> a long time for arm64.
 
+I agree, that's the reason why I think it is time to merge your changes,
+but this does not mean that the consolidation stops here, I made
+an exception since this patch has been hanging in the balance for
+a while, but the clean-up has to be completed anyway and I will take
+care of that.
+
+> BTW, I am not sure why there is a pushback on wrapping a structure in
+> another, container_of() is the linux way of doing things :)
+
+I think you are aware of my opinion by now, no point stating it again.
+
+Lorenzo
