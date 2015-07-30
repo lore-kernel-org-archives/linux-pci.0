@@ -1,52 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 22 Jul 2015 00:02:50 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Stuart Yoder <stuart.yoder@freescale.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joe Perches <joe@perches.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Joerg Roedel <jroedel@suse.de>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	Tony Luck <tony.luck@intel.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC Patch V1 09/12] genirq: Move msi_list from struct pci_dev
- to struct device
-In-Reply-To: <20150710001936.GD6957@windriver.com>
-Message-ID: <alpine.DEB.2.11.1507220000260.18576@nanos>
-References: <1436428847-8886-1-git-send-email-jiang.liu@linux.intel.com> <1436428847-8886-10-git-send-email-jiang.liu@linux.intel.com> <20150710001936.GD6957@windriver.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:36303 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752577AbbG3QTC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 12:19:02 -0400
+Received: by wicgb10 with SMTP id gb10so250958246wic.1
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jul 2015 09:19:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <55B9A554.9020901@roeck-us.net>
+References: <1436292680-25111-1-git-send-email-linux@roeck-us.net>
+ <20150729160903.GD31170@google.com> <CAE9FiQWr3-dw0FhgZjSq=pT-Cn3DaDV3E4QFjURJbQo_igQGNw@mail.gmail.com>
+ <55B92DA5.4030409@roeck-us.net> <CAE9FiQXC5P3qZC7CS0UBq4=Uz9mcvgguP0EgV7G0x-PnRZn9-w@mail.gmail.com>
+ <55B93151.8040608@roeck-us.net> <20150729202639.GA13239@google.com>
+ <CAE9FiQVmek758ZG2MfPCK5RsgUAfuD6zW5zHWQkid1POALnZSQ@mail.gmail.com> <55B9A554.9020901@roeck-us.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 30 Jul 2015 11:18:40 -0500
+Message-ID: <CAErSpo6SGXp7zNYENmaUPPNcQjHcPEJwc5Ezbs6W29Y2_9z6_g@mail.gmail.com>
+Subject: Re: [RFC PATCH v2] PCI: Only enable IO window if supported
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 9 Jul 2015, Paul Gortmaker wrote:
+On Wed, Jul 29, 2015 at 11:17 PM, Guenter Roeck <linux@roeck-us.net> wrote:
+> On 07/29/2015 08:59 PM, Yinghai Lu wrote:
+>>
+>> On Wed, Jul 29, 2015 at 1:26 PM, Bjorn Helgaas <bhelgaas@google.com>
+>> wrote:
+>>>
+>>> On Wed, Jul 29, 2015 at 01:02:25PM -0700, Guenter Roeck wrote:
+>>>>
+>>>> Bjorn, how do you want to handle the flag problem ?
+>>>> Do you have an idea on how to make it work with
+>>>> the reversed definition ?
+>>>
+>>>
+>>> I'll wait for the revised patch.  Sorry for screwing this up.
+>>
+>>
+>> Please check attached updated version.
+>>
+>> Yinghai
+>>
+>
+> My version is slightly different, but this one should work as well.
+>
+> The subject line got lost somehow.
 
-> [[RFC Patch V1 09/12] genirq: Move msi_list from struct pci_dev to struct device] On 09/07/2015 (Thu 16:00) Jiang Liu wrote:
-> 
-> > Move msi_list from struct pci_dev into struct device, so we could support
-> > non-PCI-device based generic MSI interrupts.
-> 
-> This is not just a simple move, as the new instances are within a
-> Kconfig option.  I did not get the 0/12 so I don't know if this is
-> expected, but the commit log here does not seem stand-alone enough
-> to get through on its own merits; it needs more details.
+Guenter, would you mind just sending me a fresh version of your patch
+with whatever Yinghai tweaks you want to keep?
 
-config PCI_MSI
-       select GENERIC_MSI_IRQ
+It's a PITA for me to deal with attachments.
 
-So it's not changing anything, but I agree it might be mentioned in
-the changelog.
- 
-Thanks,
-
-	tglx
+Bjorn
