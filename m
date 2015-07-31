@@ -1,22 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f171.google.com ([209.85.160.171]:33040 "EHLO
-	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750950AbbG3UmK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 16:42:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs>
-References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
- <20150729172053.GE31170@google.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
- <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs> <20150730161447.GG9640@google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs> <20150730171445.GI9640@google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs>
-From: Rob Herring <robherring2@gmail.com>
-Date: Thu, 30 Jul 2015 15:41:50 -0500
-Message-ID: <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com>
-Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from lhrrgout.huawei.com ([194.213.3.17]:10973 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753179AbbGaPKL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2015 11:10:11 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+	Rob Herring <robherring2@gmail.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
 	"arnd@arndb.de" <arnd@arndb.de>,
 	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
 	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
@@ -33,112 +23,98 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	qiuzhenfa <qiuzhenfa@hisilicon.com>,
 	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
 	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@linaro.org>, Arnd Bergmann <arnd@arndb.de>
+Subject: RE: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
+Date: Fri, 31 Jul 2015 15:09:41 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D70641@lhreml503-mbs>
+References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20150729172053.GE31170@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
+ <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs>
+ <20150730161447.GG9640@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs>
+ <20150730171445.GI9640@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs>
+ <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D70589@lhreml503-mbs>
+ <55BB8CC6.1080203@ti.com>
+In-Reply-To: <55BB8CC6.1080203@ti.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 30, 2015 at 12:34 PM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
->> -----Original Message-----
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
->> Sent: 30 July 2015 18:15
->> On Thu, Jul 30, 2015 at 04:50:55PM +0000, Gabriele Paoloni wrote:
->> > > -----Original Message-----
->> > > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
->> > > owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
->> > > Sent: Thursday, July 30, 2015 5:15 PM
->> > > On Thu, Jul 30, 2015 at 01:52:13PM +0000, Gabriele Paoloni wrote:
-
-[...]
-
->> > > > I don’t think we should rely on [CPU] addresses...what if the
->> > > intermediate
->> > > > translation layer changes the lower significant bits of the "bus
->> > > address"
->> > > > to translate into a cpu address?
->> > >
->> > > Is it really a possiblity that the lower bits could be changed?
->> >
->> > I've checked all the current deignware users DTs except "pci-
->> layerscape"
->> > that I could not find:
->> > spear1310.dtsi
->> > spear1340.dtsi
->> > dra7.dtsi
->> > imx6qdl.dtsi
->> > imx6sx.dtsi
->> > keystone.dtsi
->> > exynos5440.dtsi
->> >
->> > None of them modifies the lower bits. To be more precise the only guy
->> > that provides another translation layer is "dra7.dtsi":
->> > axi0
->> > http://lxr.free-electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L207
->> >
->> > axi1
->> > http://lxr.free-electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L241
->> >
->> > For this case masking the top 4bits (bits28 to 31) should make the job.
-
-IMO, we should just fix this case. After further study, I don't think
-this is a DW issue, but rather an SOC integration issue.
-
-I believe you can just fixup the address in the pp->ops->host_init hook.
-
-In looking at this, I'm curious why only 2 ATU viewports are used by
-default as this causes switching on config accesses. Probably some
-configuration only has 2 viewports. This would not even work on SMP
-systems! Memory and i/o accesses do not have any lock. A config access
-on one core will temporarily disable the i/o or memory viewport which
-will cause an abort, dropped, or garbage data on an i/o or memory
-access from another core. You would have to be accessing cfg space on
-a bus other than the root bus, so maybe no one is doing that.
-
->> >
->> > Speaking in general terms so far I've always seen linear mappings
->> > that differ by bitmask offset, however linear does not mean that you
->> > cannot affect the lower bits: e.g. <0x0> to <0x0 + size> can map to
->> > <0x0000cafe to 0x0000cafe + size>, but I guess that for HW design
->> reasons
->> > it is much easier to remap directly using a bitmask...but I was not
->> sure
->> > and I didn't think about the problems that can arise with ACPI.
-
-For higher speed buses, the h/w designs are not going to be doing
-complicated translations in order to meet timing requirements. At the
-top level only the highest order bits are going to be looked at. For
-downstream segments, the high order bits may get dropped to simplify
-routing. If an IP block has full address bits in this case, they could
-either be tied to 0 or tied off to the correct address. Either is
-reasonable, so I'm sure there is h/w doing both. That doesn't mean h/w
-designers haven't done something crazy, too.
-
->> As I said, it wouldn't make sense for the bits that comprise the
->> offset into the window to change, so the mapping only has to be linear
->> inside the window.
->>
->> For the bits outside the window offset, I don't know enough to say
->> whether masking is sufficient or safe.
->>
->> > If you think the bitmask is Ok then I can directly define it in
->> > designware and we can drop this patch.
->>
->> It's OK by me, but I know nothing about the actual hardware involved.
->> For the DesignWare question, I think you would just have to convince
->> Jingoo and Pratyush (cc'd).
->
-> Yes actually looking at
-> http://lxr.free-electrons.com/source/arch/arm/boot/dts/spear1310.dtsi#L99
-> I can see that pci_addr=0 is mapped to bus_addr 0x80020000, so clearing
-> the top 4 bits would alter the behaviour of the current designware
-> SW framework...now I don't know if DW needs only the low 28b of that
-> value or not....
-
-Given that most cases have same cpu and bus address, masking is not
-the right solution in general.
-
-There is also a bug here BTW. pcie0 and pcie2 have the same CPU
-address for the memory range.
-
-Rob
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS2lzaG9uIFZpamF5IEFi
+cmFoYW0gSSBbbWFpbHRvOmtpc2hvbkB0aS5jb21dDQo+IFNlbnQ6IEZyaWRheSwgSnVseSAzMSwg
+MjAxNSAzOjU3IFBNDQo+IFRvOiBHYWJyaWVsZSBQYW9sb25pOyBSb2IgSGVycmluZw0KPiBDYzog
+Qmpvcm4gSGVsZ2FhczsgYXJuZEBhcm5kYi5kZTsgbG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsg
+V2FuZ3pob3UNCj4gKEIpOyByb2JoK2R0QGtlcm5lbC5vcmc7IGphbWVzLm1vcnNlQGFybS5jb207
+IExpdml1LkR1ZGF1QGFybS5jb207DQo+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4
+LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4gZGV2aWNldHJlZUB2Z2VyLmtlcm5l
+bC5vcmc7IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87DQo+IHFpdXpoZW5mYTsg
+TGlndW96aHUgKEtlbm5ldGgpOyBKaW5nb28gSGFuOyBQcmF0eXVzaCBBbmFuZDsgQXJuZA0KPiBC
+ZXJnbWFubjsgQXJuZCBCZXJnbWFubg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY2XSBQQ0k6IFN0
+b3JlIFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0DQo+IG9mX3BjaV9yYW5nZQ0KPiANCj4gK0Fy
+bmQNCj4gDQo+IEhpLA0KPiANCj4gT24gRnJpZGF5IDMxIEp1bHkgMjAxNSAwNzo1NSBQTSwgR2Fi
+cmllbGUgUGFvbG9uaSB3cm90ZToNCj4gPiBbK2NjIEtpc2hvbl0NCj4gPg0KPiA+PiAtLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJu
+ZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiA+PiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9u
+IEJlaGFsZiBPZiBSb2IgSGVycmluZw0KPiA+PiBTZW50OiBUaHVyc2RheSwgSnVseSAzMCwgMjAx
+NSA5OjQyIFBNDQo+ID4+IFRvOiBHYWJyaWVsZSBQYW9sb25pDQo+ID4+IENjOiBCam9ybiBIZWxn
+YWFzOyBhcm5kQGFybmRiLmRlOyBsb3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tOw0KPiBXYW5nemhv
+dQ0KPiA+PiAoQik7IHJvYmgrZHRAa2VybmVsLm9yZzsgamFtZXMubW9yc2VAYXJtLmNvbTsgTGl2
+aXUuRHVkYXVAYXJtLmNvbTsNCj4gPj4gbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgt
+YXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiA+PiBkZXZpY2V0cmVlQHZnZXIua2Vy
+bmVsLm9yZzsgWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsNCj4gPj4gcWl1emhl
+bmZhOyBMaWd1b3podSAoS2VubmV0aCk7IEppbmdvbyBIYW47IFByYXR5dXNoIEFuYW5kDQo+ID4+
+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjZdIFBDSTogU3RvcmUgUENJZSBidXMgYWRkcmVzcyBpbiBz
+dHJ1Y3QNCj4gPj4gb2ZfcGNpX3JhbmdlDQo+ID4+DQo+ID4+IE9uIFRodSwgSnVsIDMwLCAyMDE1
+IGF0IDEyOjM0IFBNLCBHYWJyaWVsZSBQYW9sb25pDQo+ID4+IDxnYWJyaWVsZS5wYW9sb25pQGh1
+YXdlaS5jb20+IHdyb3RlOg0KPiA+Pj4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+
+Pj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4+
+Pj4gU2VudDogMzAgSnVseSAyMDE1IDE4OjE1DQo+ID4+Pj4gT24gVGh1LCBKdWwgMzAsIDIwMTUg
+YXQgMDQ6NTA6NTVQTSArMDAwMCwgR2FicmllbGUgUGFvbG9uaSB3cm90ZToNCj4gPj4+Pj4+IC0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+Pj4+PiBGcm9tOiBsaW51eC1wY2ktb3duZXJA
+dmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiA+Pj4+Pj4gb3duZXJAdmdlci5r
+ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQmpvcm4gSGVsZ2Fhcw0KPiA+Pj4+Pj4gU2VudDogVGh1
+cnNkYXksIEp1bHkgMzAsIDIwMTUgNToxNSBQTQ0KPiA+Pj4+Pj4gT24gVGh1LCBKdWwgMzAsIDIw
+MTUgYXQgMDE6NTI6MTNQTSArMDAwMCwgR2FicmllbGUgUGFvbG9uaSB3cm90ZToNCj4gPj4NCj4g
+Pj4gWy4uLl0NCj4gPj4NCj4gPj4+Pj4+PiBJIGRvbuKAmXQgdGhpbmsgd2Ugc2hvdWxkIHJlbHkg
+b24gW0NQVV0gYWRkcmVzc2VzLi4ud2hhdCBpZiB0aGUNCj4gPj4+Pj4+IGludGVybWVkaWF0ZQ0K
+PiA+Pj4+Pj4+IHRyYW5zbGF0aW9uIGxheWVyIGNoYW5nZXMgdGhlIGxvd2VyIHNpZ25pZmljYW50
+IGJpdHMgb2YgdGhlDQo+ID4+ICJidXMNCj4gPj4+Pj4+IGFkZHJlc3MiDQo+ID4+Pj4+Pj4gdG8g
+dHJhbnNsYXRlIGludG8gYSBjcHUgYWRkcmVzcz8NCj4gPj4+Pj4+DQo+ID4+Pj4+PiBJcyBpdCBy
+ZWFsbHkgYSBwb3NzaWJsaXR5IHRoYXQgdGhlIGxvd2VyIGJpdHMgY291bGQgYmUgY2hhbmdlZD8N
+Cj4gPj4+Pj4NCj4gPj4+Pj4gSSd2ZSBjaGVja2VkIGFsbCB0aGUgY3VycmVudCBkZWlnbndhcmUg
+dXNlcnMgRFRzIGV4Y2VwdCAicGNpLQ0KPiA+Pj4+IGxheWVyc2NhcGUiDQo+ID4+Pj4+IHRoYXQg
+SSBjb3VsZCBub3QgZmluZDoNCj4gPj4+Pj4gc3BlYXIxMzEwLmR0c2kNCj4gPj4+Pj4gc3BlYXIx
+MzQwLmR0c2kNCj4gPj4+Pj4gZHJhNy5kdHNpDQo+ID4+Pj4+IGlteDZxZGwuZHRzaQ0KPiA+Pj4+
+PiBpbXg2c3guZHRzaQ0KPiA+Pj4+PiBrZXlzdG9uZS5kdHNpDQo+ID4+Pj4+IGV4eW5vczU0NDAu
+ZHRzaQ0KPiA+Pj4+Pg0KPiA+Pj4+PiBOb25lIG9mIHRoZW0gbW9kaWZpZXMgdGhlIGxvd2VyIGJp
+dHMuIFRvIGJlIG1vcmUgcHJlY2lzZSB0aGUgb25seQ0KPiA+PiBndXkNCj4gPj4+Pj4gdGhhdCBw
+cm92aWRlcyBhbm90aGVyIHRyYW5zbGF0aW9uIGxheWVyIGlzICJkcmE3LmR0c2kiOg0KPiA+Pj4+
+PiBheGkwDQo+ID4+Pj4+IGh0dHA6Ly9seHIuZnJlZS0NCj4gPj4gZWxlY3Ryb25zLmNvbS9zb3Vy
+Y2UvYXJjaC9hcm0vYm9vdC9kdHMvZHJhNy5kdHNpI0wyMDcNCj4gPj4+Pj4NCj4gPj4+Pj4gYXhp
+MQ0KPiA+Pj4+PiBodHRwOi8vbHhyLmZyZWUtDQo+ID4+IGVsZWN0cm9ucy5jb20vc291cmNlL2Fy
+Y2gvYXJtL2Jvb3QvZHRzL2RyYTcuZHRzaSNMMjQxDQo+ID4+Pj4+DQo+ID4+Pj4+IEZvciB0aGlz
+IGNhc2UgbWFza2luZyB0aGUgdG9wIDRiaXRzIChiaXRzMjggdG8gMzEpIHNob3VsZCBtYWtlDQo+
+IHRoZQ0KPiA+PiBqb2IuDQo+ID4+DQo+ID4+IElNTywgd2Ugc2hvdWxkIGp1c3QgZml4IHRoaXMg
+Y2FzZS4gQWZ0ZXIgZnVydGhlciBzdHVkeSwgSSBkb24ndA0KPiB0aGluaw0KPiA+PiB0aGlzIGlz
+IGEgRFcgaXNzdWUsIGJ1dCByYXRoZXIgYW4gU09DIGludGVncmF0aW9uIGlzc3VlLg0KPiA+Pg0K
+PiA+PiBJIGJlbGlldmUgeW91IGNhbiBqdXN0IGZpeHVwIHRoZSBhZGRyZXNzIGluIHRoZSBwcC0+
+b3BzLT5ob3N0X2luaXQNCj4gaG9vay4NCj4gPj4NCj4gPg0KPiA+IFllcyBJIGd1ZXNzIHRoYXQg
+SSBjb3VsZCBqdXN0IGFzc2lnbiBwcC0+KCopX21vZF9iYXNlIHRvIHRoZSBDUFUNCj4gYWRkcmVz
+cw0KPiA+IGluIERXIGFuZCBtYXNrIGl0IG91dCBpbiBkcmE3eHhfcGNpZV9ob3N0X2luaXQoKS4u
+Lg0KPiA+DQo+ID4gS2lzaG9uLCB3b3VsZCB5b3UgYmUgb2sgd2l0aCB0aGF0Pw0KPiANCj4gSW5p
+dGlhbGx5IEkgd2FzIHVzaW5nICpiYXNlLW1hc2sqIHByb3BlcnR5IGZyb20gZHQuIE1lIGFuZCBB
+cm5kIChjYydlZCkNCj4gaGFkDQo+IHRoaXMgZGlzY3Vzc2lvbiBbMV0gYmVmb3JlIHdlIGRlY2lk
+ZWQgdGhlIGN1cnJlbnQgYXBwcm9hY2guIEl0J2xsIGJlDQo+IGdvb2QgdG8NCj4gY2hlY2sgd2l0
+aCBBcm5kIHRvby4NCj4gDQo+IFsxXSAtPiAgaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvcGlw
+ZXJtYWlsL2xpbnV4LWFybS1rZXJuZWwvMjAxNC0NCj4gTWF5LzI1MzUyOC5odG1sDQoNCg0KSW4g
+dGhpcyBwYXRjaCB5b3UgdXNlIHRoZSBtYXNrIGludG8gZGVzaWdud2FyZS4uLi5pbnN0ZWFkIHRo
+ZSBhcHByb2FjaCANCnByb3Bvc2VkIGJ5IFJvYiBtZWFucyB0byBoYXZlIHRoZSBtYXNrIGRlY2xh
+cmVkIGluIHRoZSBkcmE3IGRyaXZlciBhbmQNCnlvdSBtb2RpZmllZCB0aGUgcHAgbWVtYmVycyBp
+biBkcmE3eHhfcGNpZV9ob3N0X2luaXQgYnkgbWFza2luZyB0aGVtLi4uDQoNCkJUVyBnb29kIHRv
+IGhhdmUgQXJuZCBvcGluaW9uIHRvby4uDQo+IA0KPiBUaGFua3MNCj4gS2lzaG9uDQo=
