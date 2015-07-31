@@ -1,155 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37176 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932312AbbG0Xc4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jul 2015 19:32:56 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 06/51] PCI: Don't add too much optional size for hotplug bridge mmio
-Date: Mon, 27 Jul 2015 16:29:24 -0700
-Message-Id: <1438039809-24957-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+Received: from mail-yk0-f181.google.com ([209.85.160.181]:34930 "EHLO
+	mail-yk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752813AbbGaQx0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2015 12:53:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <55BB8CC6.1080203@ti.com>
+References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20150729172053.GE31170@google.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
+ <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs> <20150730161447.GG9640@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs> <20150730171445.GI9640@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs> <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D70589@lhreml503-mbs> <55BB8CC6.1080203@ti.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 31 Jul 2015 11:53:06 -0500
+Message-ID: <CAL_JsqJqjiWVaKs-3ghQ1EBQzRRQ38GzkMV+FELPj53bSF-yXQ@mail.gmail.com>
+Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will always add 2M for hotplug bridge mmio even
-there is child device under it.
+On Fri, Jul 31, 2015 at 9:57 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> +Arnd
+>
+> Hi,
+>
+> On Friday 31 July 2015 07:55 PM, Gabriele Paoloni wrote:
+>> [+cc Kishon]
+>>
+>>> -----Original Message-----
+>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>>> owner@vger.kernel.org] On Behalf Of Rob Herring
+>>> Sent: Thursday, July 30, 2015 9:42 PM
+>>> To: Gabriele Paoloni
+>>> Cc: Bjorn Helgaas; arnd@arndb.de; lorenzo.pieralisi@arm.com; Wangzhou
+>>> (B); robh+dt@kernel.org; james.morse@arm.com; Liviu.Dudau@arm.com;
+>>> linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+>>> devicetree@vger.kernel.org; Yuanzhichang; Zhudacai; zhangjukuo;
+>>> qiuzhenfa; Liguozhu (Kenneth); Jingoo Han; Pratyush Anand
+>>> Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct
+>>> of_pci_range
+>>>
+>>> On Thu, Jul 30, 2015 at 12:34 PM, Gabriele Paoloni
+>>> <gabriele.paoloni@huawei.com> wrote:
+>>>>> -----Original Message-----
+>>>>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>>>>> Sent: 30 July 2015 18:15
+>>>>> On Thu, Jul 30, 2015 at 04:50:55PM +0000, Gabriele Paoloni wrote:
+>>>>>>> -----Original Message-----
+>>>>>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>>>>>>> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
+>>>>>>> Sent: Thursday, July 30, 2015 5:15 PM
+>>>>>>> On Thu, Jul 30, 2015 at 01:52:13PM +0000, Gabriele Paoloni wrote:
+>>>
+>>> [...]
+>>>
+>>>>>>>> I don’t think we should rely on [CPU] addresses...what if the
+>>>>>>> intermediate
+>>>>>>>> translation layer changes the lower significant bits of the
+>>> "bus
+>>>>>>> address"
+>>>>>>>> to translate into a cpu address?
+>>>>>>>
+>>>>>>> Is it really a possiblity that the lower bits could be changed?
+>>>>>>
+>>>>>> I've checked all the current deignware users DTs except "pci-
+>>>>> layerscape"
+>>>>>> that I could not find:
+>>>>>> spear1310.dtsi
+>>>>>> spear1340.dtsi
+>>>>>> dra7.dtsi
+>>>>>> imx6qdl.dtsi
+>>>>>> imx6sx.dtsi
+>>>>>> keystone.dtsi
+>>>>>> exynos5440.dtsi
+>>>>>>
+>>>>>> None of them modifies the lower bits. To be more precise the only
+>>> guy
+>>>>>> that provides another translation layer is "dra7.dtsi":
+>>>>>> axi0
+>>>>>> http://lxr.free-
+>>> electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L207
+>>>>>>
+>>>>>> axi1
+>>>>>> http://lxr.free-
+>>> electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L241
+>>>>>>
+>>>>>> For this case masking the top 4bits (bits28 to 31) should make the
+>>> job.
+>>>
+>>> IMO, we should just fix this case. After further study, I don't think
+>>> this is a DW issue, but rather an SOC integration issue.
+>>>
+>>> I believe you can just fixup the address in the pp->ops->host_init hook.
+>>>
+>>
+>> Yes I guess that I could just assign pp->(*)_mod_base to the CPU address
+>> in DW and mask it out in dra7xx_pcie_host_init()...
+>>
+>> Kishon, would you be ok with that?
+>
+> Initially I was using *base-mask* property from dt. Me and Arnd (cc'ed) had
+> this discussion [1] before we decided the current approach. It'll be good to
+> check with Arnd too.
+>
+> [1] ->  http://lists.infradead.org/pipermail/linux-arm-kernel/2014-May/253528.html
 
-For example:
-	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
-					 \- 45:00.1
+The problem I have here is the use of ranges does not necessarily mean
+fewer address bits are available. It can be used just for convenience
+of not putting the full address into every node's reg property. And
+vice versa, there are probably plenty of cases where we have the full
+address in the nodes, but really only some of the address bits are
+decoded at the IP block. Whether the address bits are present is
+rarely cared about or known by s/w folks until you hit a problem like
+this. Given this is an isolated case ATM, I would fix it in an
+isolated way. It does not affect the binding and could be changed in
+the kernel later if this becomes a common need.
 
-44:02.0 will need 1M as must for 45:00.0 and 45:00.1
-When we calculate add_size for 44:02.0, we pass 2M as additional
-size for hotplug bridge, total will be 3M.
-
-That is different from code before changes for optional support,
-or even current code that treat optional as must directly by
-not passing realloc head. We only need 2M as total.
-
-The optional size should be 1M, and total size should be 2M.
-
-This patch change to comparing must+optional with min_sum_size to
-get smaller optional size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4c7f25f..7346bbf 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1156,7 +1156,6 @@ out:
-  * @type2: second match type
-  * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-- * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-  *
-  * Calculate the size of the bus and minimal alignment which
-@@ -1169,10 +1168,11 @@ out:
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 unsigned long type, unsigned long type2,
- 			 unsigned long type3,
--			 resource_size_t min_size, resource_size_t add_size,
-+			 resource_size_t min_size,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
- 	resource_size_t min_align = 0, min_add_align = 0;
- 	resource_size_t max_align = 0, max_add_align = 0;
- 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
-@@ -1184,6 +1184,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (!b_res)
- 		return -ENOSPC;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1254,8 +1259,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	free_align_test_list(&align_test_list);
- 
--	if ((sum_add_size - size) < add_size)
--		sum_add_size = size + add_size;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
-@@ -1392,7 +1397,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, additional_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1426,7 +1431,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
-@@ -1445,8 +1450,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				  min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1469,8 +1473,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+					 min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1479,7 +1482,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				min_mem_size += min_mem_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1500,8 +1503,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+				min_mem_size, realloc_head);
- 		break;
- 	}
- }
--- 
-1.8.4.5
-
+Rob
