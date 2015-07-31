@@ -1,69 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:59874 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752208AbbGXDGd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 23 Jul 2015 23:06:33 -0400
-Message-ID: <55B1ABA9.90207@roeck-us.net>
-Date: Thu, 23 Jul 2015 20:06:17 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:36728 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037AbbGaH7E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2015 03:59:04 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Rob Herring <robh@kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>
 CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>, Arnd Bergmann <arnd@arndb.de>,
-	Krzysztof Halasa <khalasa@piap.pl>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
 	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Simon Horman <horms@verge.net.au>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>
-Subject: Re: [RFT PATCH v3] PCI: move pci_read_bridge_bases to the generic
- PCI layer
-References: <1436439557-21075-1-git-send-email-lorenzo.pieralisi@arm.com> <20150723161257.GZ21967@google.com> <55B11AB0.7050002@roeck-us.net> <20150723175258.GC23324@red-moon>
-In-Reply-To: <20150723175258.GC23324@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	James Morse <James.Morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	Kangfenglong <kangfenglong@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v5 1/5] ARM/PCI: remove align_resource in pci_sys_data
+Date: Fri, 31 Jul 2015 07:57:51 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D7023A@lhreml503-mbs>
+References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
+ <1437794486-21134-2-git-send-email-wangzhou1@hisilicon.com>
+ <55B72C7E.1020102@hisilicon.com> <20150728174406.GB19909@red-moon>
+ <CAL_JsqK5a7q=VfpKJkRtgoEVWo5zhCe+h2ouDeyZRj4oN=jH6w@mail.gmail.com>
+In-Reply-To: <CAL_JsqK5a7q=VfpKJkRtgoEVWo5zhCe+h2ouDeyZRj4oN=jH6w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/23/2015 10:52 AM, Lorenzo Pieralisi wrote:
->>
->> For alpha, PCI_PROBE_ONLY is set for two platforms, marvel and titan,
->> out of ~20. mips sets the flag for 6 platforms out of >25.
->> Unlikely that those are the only relevant ones.
->>
->> I could try to run some qemu tests for both architectures, but I have
->> no idea what to look out for. Ideas, anyone ?
->
-> As I replied to Bjorn, I would not expect pci_read_bridge_bases() to
-> be a disruptive operation on !PCI_PROBE_ONLY systems, I will check
-> again alpha and mips code but it is really hard to say, I will
-> inspect the code again to try to figure it out.
->
-
-I finally got around to apply the patch to our system (ppc and x86).
-I also applied it on top of Linus' tree and ran it through my test
-farm. No problems found, works fine as far as I can see.
-
-Guenter
-
+SGkgUm9iLCBUaGFua3MgZm9yIHJldmlld2luZw0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
+LS0tDQo+IEZyb206IHJvYmhlcnJpbmcyQGdtYWlsLmNvbSBbbWFpbHRvOnJvYmhlcnJpbmcyQGdt
+YWlsLmNvbV0gT24gQmVoYWxmIE9mIFJvYg0KPiBIZXJyaW5nDQo+IFNlbnQ6IDMwIEp1bHkgMjAx
+NSAyMzo0OA0KPiBUbzogTG9yZW56byBQaWVyYWxpc2k7IFJ1c3NlbGwgS2luZyAtIEFSTSBMaW51
+eDsgV2FuZ3pob3UgKEIpDQo+IENjOiBCam9ybiBIZWxnYWFzOyBKaW5nb28gSGFuOyBQcmF0eXVz
+aCBBbmFuZDsgQXJuZCBCZXJnbWFubjsgR2FicmllbGUgUGFvbG9uaTsNCj4gSmFtZXMgTW9yc2U7
+IExpdml1IER1ZGF1OyB0aG9tYXMucGV0YXp6b25pQGZyZWUtZWxlY3Ryb25zLmNvbTsgSmFzb24g
+Q29vcGVyOw0KPiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxp
+c3RzLmluZnJhZGVhZC5vcmc7DQo+IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBZdWFuemhp
+Y2hhbmc7IFpodWRhY2FpOyB6aGFuZ2p1a3VvOyBxaXV6aGVuZmE7DQo+IGxpdWRvbmdkb25nIChD
+KTsgcWl1amlhbmc7IEthbmdmZW5nbG9uZzsgTGlndW96aHUgKEtlbm5ldGgpDQo+IFN1YmplY3Q6
+IFJlOiBbUEFUQ0ggdjUgMS81XSBBUk0vUENJOiByZW1vdmUgYWxpZ25fcmVzb3VyY2UgaW4gcGNp
+X3N5c19kYXRhDQo+IA0KPiBPbiBUdWUsIEp1bCAyOCwgMjAxNSBhdCAxMjo0NCBQTSwgTG9yZW56
+byBQaWVyYWxpc2kNCj4gPGxvcmVuem8ucGllcmFsaXNpQGFybS5jb20+IHdyb3RlOg0KPiA+IFtD
+QydpbmcgUk1LXQ0KPiA+DQo+ID4gT24gVHVlLCBKdWwgMjgsIDIwMTUgYXQgMDg6MTc6MThBTSAr
+MDEwMCwgWmhvdSBXYW5nIHdyb3RlOg0KPiA+PiBPbiAyMDE1LzcvMjUgMTE6MjEsIFpob3UgV2Fu
+ZyB3cm90ZToNCj4gPj4gPiBGcm9tOiBHYWJyaWVsZSBQYW9sb25pIDxnYWJyaWVsZS5wYW9sb25p
+QGh1YXdlaS5jb20+DQo+ID4+ID4NCj4gPj4gPiBUaGlzIHBhdGNoIGlzIG5lZWRlZCBpbiBvcmRl
+ciB0byB1bmlmeSB0aGUgUENJZSBkZXNpZ253YXJlIGZyYW1ld29yayBmb3INCj4gQVJNIGFuZA0K
+PiA+PiA+IEFSTTY0IGFyY2hpdGVjdHVyZXMuIEluIHRoZSBQQ0llIGRlc2lnbndhcmUgdW5pZmlj
+YXRpb24gcHJvY2VzcyB3ZSBhcmUNCj4gY2FsbGluZw0KPiA+PiA+IHBjaV9jcmVhdGVfcm9vdF9i
+dXMoKSBwYXNzaW5nIGEgInN5c2RhdGEiIHBhcmFtZXRlciB0aGF0IGlzIHRoZSBzYW1lIGZvcg0K
+PiBib3RoDQo+ID4+ID4gQVJNIGFuZCBBUk02NCBhbmQgaXMgb2YgdHlwZSAic3RydWN0IHBjaWVf
+cG9ydCoiLiBJbiB0aGUgQVJNIGNhc2UgdGhpcw0KPiB3aWxsDQo+ID4+ID4gY2F1c2UgYSBwcm9i
+bGVtIHdpdGggdGhlIGZ1bmN0aW9uIHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UoKTsgaW4gZmFjdCB0
+aGlzDQo+IHdpbGwNCj4gPj4gPiBjYXN0ICJkZXYtPnN5c2RhdGEiIHRvICJzdHJ1Y3QgcGNpX3N5
+c19kYXRhKiIsIHdoZXJlYXMgZGVzaWdud2FyZSBoYWQNCj4gcGFzc2VkIGENCj4gPj4gPiAic3Ry
+dWN0IHBjaWVfcG9ydCoiIHBvaW50ZXIuDQo+ID4+ID4NCj4gPj4gPiBUaGlzIHBhdGNoIHNvbHZl
+cyB0aGUgaXNzdWUgYnkgcmVtb3ZpbmcgImFsaWduX3Jlc291cmNlIiBmcm9tDQo+ICJwY2lfc3lz
+X2RhdGEiDQo+ID4+ID4gc3RydWN0IGFuZCBkZWZpbmluZyBhIHN0YXRpYyBnbG9iYWwgZnVuY3Rp
+b24gcG9pbnRlciBpbiAiYmlvczMyLmMiDQo+ID4+ID4NCj4gPj4gPiBTaWduZWQtb2ZmLWJ5OiBH
+YWJyaWVsZSBQYW9sb25pIDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+DQo+ID4+DQo+ID4+
+IEhpIEFybmQgYW5kIFJvYiwNCj4gPj4NCj4gPj4gV2hhdCBpcyB5b3VyIG9waW5pb24gYWJvdXQg
+dGhpcyBwYXRjaD8gR2FicmllbGUgYWRkcyBhIGdsb2JhbCBwb2ludGVyIGluDQo+IGJpb3MzMi5j
+DQo+ID4+IHRvIHN0b3JlIGFsaWduX3Jlc291cmNlLCBzbyB3ZSBjb3VsZCByZW1vdmUgc3lzLT5h
+bGlnbl9yZXNvdXJjZSBpbg0KPiBwY2liaW9zX2FsaWduX3Jlc291cmNlLg0KPiA+Pg0KPiA+PiBB
+cyBMb3JlbnpvIG1lbnRpb25lZCBpbiB2NCBzZXJpZXMsIHRoaXMgaXMgYSB0ZW1wb3Jhcnkgc29s
+dXRpb24gYmVmb3JlDQo+IG1vdmluZw0KPiA+PiBhbGlnbl9yZXNvdXJjZSB0byBob3N0IGJyaWRn
+ZSBzdHJ1Y3R1cmUuDQo+ID4+DQo+ID4+IEFueSBjb21tZW50cyB3ZWxjb21lLg0KPiA+DQo+ID4g
+VGhlIGFsaWduX3Jlc291cmNlKCkgcG9pbnRlciBpcyBqdXN0IHVzZWQgaW4gZHJpdmVycy9wY2kv
+aG9zdC9wY2ktbXZlYnUuYywNCj4gPiBJIHdvdWxkIGxpa2UgdGhlIHBjaS1tdmVidS5jIG1haW50
+YWluZXJzIHRvIGNvbW1lbnQgb24gdGhpcyBhbmQgdGVzdCBpdCwgSQ0KPiA+IGRvIG5vdCBleHBl
+Y3QgaXQgdG8gY3JlYXRlIGFueSBpc3N1ZSBhbmQgbWlnaHQgYmUgYSB0ZW1wb3Jhcnkgc29sdXRp
+b24gdG8NCj4gPiBtYWtlIHByb2dyZXNzIG9uIEFSTS9BUk02NCBjb25zb2xpZGF0aW9uLCBpdCBp
+cyBhIGJsb2NraW5nIHBvaW50Lg0KPiA+DQo+ID4gSXQgd291bGQgYmUgZ29vZCBpZiBSdXNzZWxs
+IGNhbiBoYXZlIGEgbG9vayB0b28sIEkgZG8gbm90IHNlZSB3aGF0DQo+ID4gaXNzdWUgdGhpcyBj
+YW4gdHJpZ2dlciBnaXZlbiB0aGF0IGlzIGp1c3QgdXNlZCBpbjoNCj4gDQo+IEl0J3MgUnVzc2Vs
+bCdzIGNhbGwgb24gdGhpcyBpZiB5b3Ugd2FudCB0byB0b3VjaCBiaW9zMzIuYy4uLg0KPiANCj4g
+Pg0KPiA+IGRyaXZlcnMvcGNpL2hvc3QvcGNpLW12ZWJ1LmMNCj4gPg0KPiA+IGFuZCBhIGdsb2Jh
+bCBwb2ludGVyIChub3Qgc2F5aW5nIGl0IGlzIGVsZWdhbnQsIGJ1dCBpdCBzaG91bGQgd29yaykN
+Cj4gPiBtaWdodCBiZSBvay4NCj4gPg0KPiA+IFNvIHllcywgY29tbWVudHMgdmVyeSB3ZWxjb21l
+Lg0KPiANCj4gSSBtYXkgYmUgd3JvbmcsIGJ1dCBJIGRvbid0IHRoaW5rIGV2ZW4gbXZlYnUgbmVl
+ZHMgdGhpcyBhcyBwYXJ0IG9mDQo+IHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UuIHBjaWJpb3NfYWxp
+Z25fcmVzb3VyY2UgaXMgY2FsbGVkIGZvciBldmVyeQ0KPiBkZXZpY2UsIGJ1dCBhbGwgbXZlYnUg
+c2hvdWxkIGNhcmUgYWJvdXQgaXMgdGhlIGFsaWdubWVudCBvZiB0aGUgcm9vdA0KPiBidXMgQkFS
+cyAoYW5kIGNvcnJlc3BvbmRpbmcgTUJ1cyB3aW5kb3dzKSB3aGljaCBjYW4gYmUgaGFuZGxlZCBp
+bg0KPiBwcm9iZS4gSSBjYW4ndCBzZWUgaG93IHJlZ2lvbnMgd2l0aGluIHRoZXJlIG1hdHRlci4g
+QnV0IHRoYXQgaXMganVzdA0KPiBteSAxMCBtaW51dGUgbG9vayBhdCBpdC4NCg0KSSB0aGluayBU
+aG9tYXMgUGV0YXp6b25pIHNob3VsZCBhbnN3ZXIgdGhpcy4uLnJpZ2h0PyAgDQoNCj4gDQo+IElm
+IG5vdCwgdGhlbiBJIHRoaW5rIGFsaWduX3Jlc291cmNlIHNob3VsZCBiZSBhIGNvbW1vbiBwZXIg
+aG9zdA0KPiBmdW5jdGlvbiBwdHIuIEluIG90aGVyIHdvcmRzLCB0aGluayBhYm91dCBob3cgdG8g
+cHJvdmlkZSBhIGRlZmF1bHQNCj4gaW1wbGVtZW50YXRpb24gb2YgcGNpYmlvc19hbGlnbl9yZXNv
+dXJjZS4gVGhleSBhbG1vc3QgYWxsIGxvb2sgdGhlDQo+IHNhbWUgdG8gbWUgd2l0aCB0aGUgc2Ft
+ZSBJL08gMHgzeHggYWRkcmVzcyBoYW5kbGluZy4NCg0KcGNpYmlvc19hbGlnbl9yZXNvdXJjZSBh
+bHJlYWR5IHByb3ZpZGVzIHRoZSBkZWZhdWx0IGFsaWdubWVudCBqb2IuDQpBcmUgeW91IHN1Z2dl
+c3RpbmcgdG8gcmVwbGFjZSBwY2liaW9zX2FsaWduX3Jlc291cmNlcyBpbXBsZW1lbnRhdGlvbg0K
+d2l0aCBhIHN0dWIgYW5kIG1vdmUgdGhlIGFsaWdubWVudCBqb2Igc29tZXdoZXJlIGVsc2UuLi4/
+DQoNCj4gDQo+IFJvYg0K
