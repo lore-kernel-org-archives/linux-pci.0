@@ -1,63 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:7432 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbbG2PR3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jul 2015 11:17:29 -0400
-From: Jayachandran C <jchandra@broadcom.com>
-To: Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH v3 2/2] PCI: generic: add arm64 support
-Date: Wed, 29 Jul 2015 20:58:01 +0530
-Message-ID: <1438183681-30519-2-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1438183681-30519-1-git-send-email-jchandra@broadcom.com>
-References: <1438183681-30519-1-git-send-email-jchandra@broadcom.com>
+Received: from mout0.freenet.de ([195.4.92.90]:60373 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751123AbbGaIRt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jul 2015 04:17:49 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Milan Broz <mbroz@redhat.com>,
+	device-mapper development <dm-devel@redhat.com>,
+	Ondrej Kozina <okozina@redhat.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
+ <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
+ <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org>
+ <20150728212441.GA25761@redhat.com> <55B87005.7010409@redhat.com>
+ <55B8759B.8070400@redhat.com> <55B90C25.8030502@maya.org>
+ <55BA895D.30509@maya.org> <55BB2284.1060706@redhat.com>
+ <55BB2A02.70700@maya.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Mike Snitzer <msnitzer@redhat.com>, mpatocka@redhat.com
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55BB2E95.7000601@maya.org>
+Date: Fri, 31 Jul 2015 10:15:17 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <55BB2A02.70700@maya.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable pci-host-generic driver available in arm64. This needs
-drivers/pci/setup-irq.o as well.
+On 07/31/2015 at 09:55 AM Andreas Hartmann wrote:
+> On 07/31/2015 at 09:23 AM, Milan Broz wrote:
+>> On 07/30/2015 10:30 PM, Andreas Hartmann wrote:
+[...]
+>>> - rotational disks alone: it's ok
+>>> - more than 3 partitions on ssd Corsair Force GT -> broken
+>>> - more than 3 partitions on ssd KINGSTON SV300S37A240G -> broken
+>>
+>> - if you disable NCQ, the problems goes away?
+> 
+> As I already wrote in another post - than other error came up instead
+> (radeon). But I will try it especially again in conjunction w/
+> --perf-submit_from_crypt_cpus --perf-same_cpu_crypt.
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
- drivers/pci/Makefile     | 1 +
- drivers/pci/host/Kconfig | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+Combining all three options (noncq, --perf-submit_from_crypt_cpus and
+--perf-same_cpu_crypt) seem to "work".
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 73e4af4..be3f631 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -33,6 +33,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
- #
- obj-$(CONFIG_ALPHA) += setup-irq.o
- obj-$(CONFIG_ARM) += setup-irq.o
-+obj-$(CONFIG_ARM64) += setup-irq.o
- obj-$(CONFIG_UNICORE32) += setup-irq.o
- obj-$(CONFIG_SUPERH) += setup-irq.o
- obj-$(CONFIG_MIPS) += setup-irq.o
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index c132bdd..675c2d1 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -53,7 +53,7 @@ config PCI_RCAR_GEN2_PCIE
- 
- config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
--	depends on ARM && OF
-+	depends on (ARM || ARM64) && OF
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
--- 
-1.9.1
 
+Regards,
+Andreas
