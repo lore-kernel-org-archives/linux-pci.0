@@ -1,84 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v3 3/3] PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
-Date: Mon, 27 Jul 2015 11:54:54 +0530
-Message-ID: <1437978294-22317-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1437978294-22317-1-git-send-email-kishon@ti.com>
-References: <1437978294-22317-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:47859 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752410AbbGaTjL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jul 2015 15:39:11 -0400
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
+	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
+	mmarek@suse.cz, akpm@linux-foundation.org
+Cc: sean.stalley@intel.com, bigeasy@linutronix.de,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org, cocci@systeme.lip6.fr
+Subject: [PATCH v2 2/4] mm: Add dma_pool_zalloc() call to DMA API
+Date: Fri, 31 Jul 2015 12:36:42 -0700
+Message-Id: <1438371404-3219-3-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1438371404-3219-1-git-send-email-sean.stalley@intel.com>
+References: <1438371404-3219-1-git-send-email-sean.stalley@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DRA7xx require MSE bit to be cleared to set the master in
-standby mode. (In DRA7xx TRM_vE, section 24.9.4.5.2.2.1 PCIe
-Controller Master Standby Behavior advises to use the clearing
-of the local MSE bit to set the master in standby. Without this
-some of the clocks do not idle).
+Add a wrapper function for dma_pool_alloc() to get zeroed memory.
 
-Cleared the MSE bit on suspend and enabled it back on resume.
-Clearing MSE bit is required to get clocks to be idled after
-suspend.
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
 ---
- drivers/pci/host/pci-dra7xx.c |   23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+ Documentation/DMA-API.txt | 7 +++++++
+ include/linux/dmapool.h   | 6 ++++++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 7599201..7acc833 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -83,6 +83,17 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
- }
+diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
+index 5208840..988f757 100644
+--- a/Documentation/DMA-API.txt
++++ b/Documentation/DMA-API.txt
+@@ -104,6 +104,13 @@ crossing restrictions, pass 0 for alloc; passing 4096 says memory allocated
+ from this pool must not cross 4KByte boundaries.
  
-+static inline u32 dra7xx_pcie_readl_rc(struct pcie_port *pp, u32 offset)
+ 
++	void *dma_pool_zalloc(struct dma_pool *pool, gfp_t mem_flags,
++			      dma_addr_t *handle)
++
++Wraps dma_pool_alloc() and also zeroes the returned memory if the
++allocation attempt succeeded.
++
++
+ 	void *dma_pool_alloc(struct dma_pool *pool, gfp_t gfp_flags,
+ 			dma_addr_t *dma_handle);
+ 
+diff --git a/include/linux/dmapool.h b/include/linux/dmapool.h
+index 022e34f..6d8079b 100644
+--- a/include/linux/dmapool.h
++++ b/include/linux/dmapool.h
+@@ -22,6 +22,12 @@ void dma_pool_destroy(struct dma_pool *pool);
+ void *dma_pool_alloc(struct dma_pool *pool, gfp_t mem_flags,
+ 		     dma_addr_t *handle);
+ 
++static inline void *dma_pool_zalloc(struct dma_pool *pool, gfp_t mem_flags,
++				    dma_addr_t *handle)
 +{
-+	return readl(pp->dbi_base + offset);
++	return dma_pool_alloc(pool, mem_flags | __GFP_ZERO, handle);
 +}
 +
-+static inline void dra7xx_pcie_writel_rc(struct pcie_port *pp, u32 offset,
-+					 u32 value)
-+{
-+	writel(value, pp->dbi_base + offset);
-+}
-+
- static int dra7xx_pcie_link_up(struct pcie_port *pp)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-@@ -438,8 +449,12 @@ static int dra7xx_pcie_suspend(struct device *dev)
- {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
- 	struct pcie_port *pp = &dra7xx->pp;
-+	u32 val;
+ void dma_pool_free(struct dma_pool *pool, void *vaddr, dma_addr_t addr);
  
--	dw_pcie_suspend_rc(pp);
-+	/* clear MSE */
-+	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
-+	val &= ~PCI_COMMAND_MEMORY;
-+	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
- 
- 	return 0;
- }
-@@ -448,8 +463,12 @@ static int dra7xx_pcie_resume(struct device *dev)
- {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
- 	struct pcie_port *pp = &dra7xx->pp;
-+	u32 val;
- 
--	dw_pcie_resume_rc(pp);
-+	/* clear MSE */
-+	val = dra7xx_pcie_readl_rc(pp, PCI_COMMAND);
-+	val |= PCI_COMMAND_MEMORY;
-+	dra7xx_pcie_writel_rc(pp, PCI_COMMAND, val);
- 
- 	return 0;
- }
+ /*
 -- 
-1.7.9.5
+1.9.1
 
