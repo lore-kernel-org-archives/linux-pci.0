@@ -1,115 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:42363 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754035AbbGYDPg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jul 2015 23:15:36 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <gabriele.paoloni@huawei.com>,
-	<lorenzo.pieralisi@arm.com>, James Morse <james.morse@arm.com>,
-	<Liviu.Dudau@arm.com>, <thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v5 0/5] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-Date: Sat, 25 Jul 2015 11:21:21 +0800
-Message-ID: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:35534 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982AbbGaIS4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2015 04:18:56 -0400
+References: <1437515651-20883-1-git-send-email-m-karicheri2@ti.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <1437515651-20883-1-git-send-email-m-karicheri2@ti.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <81A7634D-6946-45CB-9DFF-4FD728632D14@gmail.com>
+Cc: "<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
+	"<bhelgaas@google.com>" <bhelgaas@google.com>,
+	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
+	"<linux-kernel@vger.kernel.org>" <linux-kernel@vger.kernel.org>,
+	jingoohan1@gmail.com
+From: Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [Resend: PATCH] PCI: designware: fix the boot noise for missing *config* reg space
+Date: Fri, 31 Jul 2015 17:18:49 +0900
+To: Murali Karicheri <m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset adds PCIe host support for HiSilicon SoC Hip05. The PCIe hosts
-use PCIe IP core from Synopsys, So this driver is base on designware PCIe driver.
+On 2015. 7. 22., at AM 6:54, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> 
+> Currently on Keystone SoCs, boot up log shows an unnecessary boot
+> noise as follows:-
+> 
+> [    0.365823] keystone-pcie 21021000.pcie: missing *config* reg space
+> 
+> Keystone uses older version of designware h/w that doesn't have ATU
+> support. So va_cfg0_base and va_cfg1_base are already set up in
+> ks_dw_pcie_host_init() before calling dw_pcie_host_init() and
+> they point to the remote config space address va (both same for Keystone).
+> So add a check to avoid this boot noise on Keystone.
+> 
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 
-Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64 PCIe API in
-designeware PCIe driver. So this patch also adds ARM64 support for designware
-pcie.
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-This patchset is based on v4.2-rc1 and Gabriele's patch about of_pci_range
-fix[1].
+Best regards,
+Jingoo Han
 
-Change from v4:
-- Change the author of 1/5 to Gabriele.
-- Modify problems in 3/5 pointed by Bjorn.
-- Modify spelling problems in 4/5.
-
-Change from v3:
-- Change 1/5 to what Gabriele suggested.
-- Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3 series.
-
-Change from v2:
-- Move struct pci_dev *dev and struct pci_sys_data *sys in
-  pcibios_align_resource in 1/5.
-- Add Gabriele's codes in 2/5 which delete unnecessary information parse and
-  use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
-- Add maintainer patch 5/5.
-
-Change from RFC v1:
-- Add 1/4 patch by Arnd which removes align_resource callback in ARM
-  pcibios_align_resource.
-- Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
-- Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
-  spear13xx.
-- Remove unnecessary parentheses of some macros in pcie-hisi.
-- Use macro to replace some magic values.
-- Merge two loops together and add some comments about it in context_config
-  function in pcie-hisi.
-- Modify some value of items in pcie node example in binding document. 
-
-Change from RFC:
-- delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
-  merge related operations into dw_pcie_host_init.
-
-Link of v4:
-- http://www.spinics.net/lists/arm-kernel/msg433050.html
-Link of v3:
-- http://www.spinics.net/lists/linux-pci/msg42539.html
-Link of v2:
-- http://www.spinics.net/lists/linux-pci/msg41844.html
-Link of RFC v1:
-- http://www.spinics.net/lists/linux-pci/msg41305.html
-Link of RFC:
-- http://www.spinics.net/lists/linux-pci/msg40434.html
-
-[1] https://patchwork.ozlabs.org/patch/495018/
-
-Gabriele Paoloni (1):
-  ARM/PCI: remove align_resource in pci_sys_data
-
-Zhou Wang (4):
-  PCI: designware: Add ARM64 support
-  PCI: hisi: Add PCIe host support for Hisilicon Soc Hip05
-  Documentation: DT: Add Hisilicon PCIe host binding
-  MAINTAINERS: Add pcie-hisi maintainer
-
- .../devicetree/bindings/pci/hisilicon-pcie.txt     |  46 ++++
- MAINTAINERS                                        |   7 +
- arch/arm/include/asm/mach/pci.h                    |   5 -
- arch/arm/kernel/bios32.c                           |  12 +-
- drivers/pci/host/Kconfig                           |   8 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-dra7xx.c                      |   1 +
- drivers/pci/host/pci-exynos.c                      |   2 +-
- drivers/pci/host/pci-imx6.c                        |   2 +-
- drivers/pci/host/pci-keystone-dw.c                 |   2 +-
- drivers/pci/host/pci-keystone.c                    |   2 +-
- drivers/pci/host/pci-layerscape.c                  |   2 +-
- drivers/pci/host/pcie-designware.c                 | 217 ++++++------------
- drivers/pci/host/pcie-designware.h                 |  10 +-
- drivers/pci/host/pcie-hisi.c                       | 254 +++++++++++++++++++++
- drivers/pci/host/pcie-spear13xx.c                  |   2 +-
- 16 files changed, 410 insertions(+), 163 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- create mode 100644 drivers/pci/host/pcie-hisi.c
-
--- 
-1.9.1
-
+> ---
+> - Resend with "PCI: designware" prefix in subject
+> drivers/pci/host/pcie-designware.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 69486be..b48b8a2 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -388,7 +388,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>        addrp = of_get_address(np, index, NULL, NULL);
+>        pp->cfg0_mod_base = of_read_number(addrp, ns);
+>        pp->cfg1_mod_base = pp->cfg0_mod_base + pp->cfg0_size;
+> -    } else {
+> +    } else if (!pp->va_cfg0_base) {
+>        dev_err(pp->dev, "missing *config* reg space\n");
+>    }
+> 
+> -- 
+> 1.9.1
+> 
