@@ -1,42 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57756 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751333AbbGTODV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 20 Jul 2015 10:03:21 -0400
-Date: Mon, 20 Jul 2015 16:03:18 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Gregor Dick <gdick@solarflare.com>
-Subject: Re: [PATCH 2/8] PCI: Embed ATS info directly into struct pci_dev
-Message-ID: <20150720140318.GC13082@suse.de>
-References: <20150717212759.18379.44858.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150717213200.18379.96435.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:36162 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754470AbbGaPbu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2015 11:31:50 -0400
+Received: by wicgj17 with SMTP id gj17so22860477wic.1
+        for <linux-pci@vger.kernel.org>; Fri, 31 Jul 2015 08:31:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150717213200.18379.96435.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <55BAD14E.9020300@roeck-us.net>
+References: <1437124592-2070-1-git-send-email-wangyijing@huawei.com>
+ <20150730212026.GK9640@google.com> <55BAD14E.9020300@roeck-us.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 31 Jul 2015 10:31:29 -0500
+Message-ID: <CAErSpo4o_U1CO2AwbtrMttvfS0Gk7i_tBSCpH-2r-YbGwxeu+g@mail.gmail.com>
+Subject: Re: [PATCH v2 0/2] Fix a deadlock for aer and pciehp driver
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rajat Jain <rajatja@google.com>,
+	Rafael Wysocki <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 17, 2015 at 04:32:00PM -0500, Bjorn Helgaas wrote:
-> @@ -98,13 +81,13 @@ void pci_disable_ats(struct pci_dev *dev)
->  {
->  	u16 ctrl;
->  
-> -	BUG_ON(!dev->ats || !dev->ats->is_enabled);
-> +	BUG_ON(!dev->ats_cap || !dev->ats_enabled);
+On Thu, Jul 30, 2015 at 8:37 PM, Guenter Roeck <linux@roeck-us.net> wrote:
+> On 07/30/2015 02:20 PM, Bjorn Helgaas wrote:
+>>
+>> On Fri, Jul 17, 2015 at 05:16:30PM +0800, Yijing Wang wrote:
+>>>
+>>> Yijing Wang (2):
+>>>    PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
+>>>    PCI: Lock pci_slot_mutex when traverse bus->slots
+>>
+>>
+>> Applied to pci/hotplug for v4.3 with changelogs as follows, thanks!
+>>
+>
+> Hi Bjorn,
+>
+> I don't see pci/hotplug in
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/.
+>
+> Is that a different repository ?
 
-So since dev->ats_enabled can only get set to 1 of dev->ats_cap != 0,
-wouldn't it be sufficient to just do a BUG_ON(!dev->ats_enabled)?
+Sorry, I just hadn't pushed it because I have some more hotplug
+patches and thought I'd push them all at once.  I pushed it now (and
+will probably push some more updates soon).
 
->  static inline int pci_ats_enabled(struct pci_dev *dev)
->  {
-> -	return dev->ats && dev->ats->is_enabled;
-> +	return dev->ats_cap && dev->ats_enabled;
->  }
-
-Here too, can't we just return dev->ats_enabled?
-
-
-
-	Joerg
-
+Bjorn
