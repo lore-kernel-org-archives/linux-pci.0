@@ -1,116 +1,63 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 17/51] PCI: Separate out save_resources/restore_resource
-Date: Mon, 27 Jul 2015 16:29:35 -0700
-Message-Id: <1438039809-24957-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH v2 5/5] MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+Date: Fri, 31 Jul 2015 18:15:15 +0800
+Message-ID: <1438337715-22594-6-git-send-email-lftan@altera.com>
+In-Reply-To: <1438337715-22594-1-git-send-email-lftan@altera.com>
+References: <1438337715-22594-1-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-will reuse it in alt_size support.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 30 insertions(+), 19 deletions(-)
+ MAINTAINERS | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1622ad2..2e3d00b 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -436,6 +436,29 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index fd60784..32f5287 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7759,6 +7759,14 @@ F:	include/linux/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
  
-+static bool save_resources(struct list_head *head,
-+			   struct list_head *save_head)
-+{
-+	struct pci_dev_resource *dev_res;
++PCI DRIVER FOR ALTERA PCIE IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
++F:	drivers/pci/host/pcie-altera.c
 +
-+	/* Save original start, end, flags etc at first */
-+	list_for_each_entry(dev_res, head, list)
-+		if (add_to_list(save_head, dev_res->dev, dev_res->res)) {
-+			free_list(save_head);
-+			return false;
-+		}
+ PCI DRIVER FOR ARM VERSATILE PLATFORM
+ M:	Rob Herring <robh@kernel.org>
+ L:	linux-pci@vger.kernel.org
+@@ -7860,6 +7868,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
+ 
++PCI MSI DRIVER FOR ALTERA MSI IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
++F:	drivers/pci/host/pcie-altera-msi.c
 +
-+	return true;
-+}
-+
-+static void restore_resource(struct pci_dev_resource *save_res,
-+			     struct resource *res)
-+{
-+	res->start = save_res->start;
-+	res->end = save_res->end;
-+	res->flags = save_res->flags;
-+}
-+
- static void __assign_resources_sorted(struct list_head *head,
- 				 struct list_head *realloc_head,
- 				 struct list_head *fail_head)
-@@ -473,13 +496,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	if (!realloc_head || list_empty(realloc_head))
- 		goto requested_and_reassign;
- 
--	/* Save original start, end, flags etc at first */
--	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
--			free_list(&save_head);
--			goto requested_and_reassign;
--		}
--	}
-+	if (!save_resources(head, &save_head))
-+		goto requested_and_reassign;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -548,12 +566,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 		}
- 	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list) {
--		res = save_res->res;
--		res->start = save_res->start;
--		res->end = save_res->end;
--		res->flags = save_res->flags;
--	}
-+	list_for_each_entry(save_res, &save_head, list)
-+		restore_resource(save_res, save_res->res);
-+
- 	free_list(&save_head);
- 
- requested_and_reassign:
-@@ -1917,9 +1932,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate)
- 			res->flags = 0;
- 	}
-@@ -1983,9 +1996,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate)
- 			res->flags = 0;
- 	}
+ PCI MSI DRIVER FOR APPLIEDMICRO XGENE
+ M:	Duc Dang <dhdang@apm.com>
+ L:	linux-pci@vger.kernel.org
 -- 
-1.8.4.5
+1.8.2.1
 
