@@ -1,47 +1,40 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v3 2/4] PCI: iproc: Fix ARM64 dependency in Kconfig
-Date: Wed, 15 Jul 2015 21:39:21 -0700
-Message-ID: <1437021563-29139-3-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
-References: <1437021563-29139-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
+	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
+	mmarek@suse.cz, akpm@linux-foundation.org
+Cc: sean.stalley@intel.com, bigeasy@linutronix.de,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org, cocci@systeme.lip6.fr
+Subject: [PATCH v2 3/4] pci: mm: Add pci_pool_zalloc() call
+Date: Fri, 31 Jul 2015 12:36:43 -0700
+Message-Id: <1438371404-3219-4-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1438371404-3219-1-git-send-email-sean.stalley@intel.com>
+References: <1438371404-3219-1-git-send-email-sean.stalley@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow Broadcom iProc PCIe core driver to be compiled for ARM64
+Add a wrapper function for pci_pool_alloc() to get zeroed memory.
 
-Signed-off-by: Ray Jui <rjui@broadcom.com>
-Reviewed-by: Vikram Prakash <vikramp@broadcom.com>
-Reviewed-by: Scott Branden <sbranden@broadcom.com>
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
 ---
- drivers/pci/host/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/pci.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index c132bdd..d2c6144 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -117,7 +117,7 @@ config PCI_VERSATILE
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 755a2cd..e6ec7d9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1176,6 +1176,8 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ 		dma_pool_create(name, &pdev->dev, size, align, allocation)
+ #define	pci_pool_destroy(pool) dma_pool_destroy(pool)
+ #define	pci_pool_alloc(pool, flags, handle) dma_pool_alloc(pool, flags, handle)
++#define	pci_pool_zalloc(pool, flags, handle) \
++		dma_pool_zalloc(pool, flags, handle)
+ #define	pci_pool_free(pool, vaddr, addr) dma_pool_free(pool, vaddr, addr)
  
- config PCIE_IPROC
- 	tristate "Broadcom iProc PCIe controller"
--	depends on OF && ARM
-+	depends on OF && (ARM || ARM64)
- 	default n
- 	help
- 	  This enables the iProc PCIe core controller support for Broadcom's
+ enum pci_dma_burst_strategy {
 -- 
-1.7.9.5
+1.9.1
 
