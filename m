@@ -1,62 +1,41 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:30312 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758064AbbGHLOo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 8 Jul 2015 07:14:44 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, x86@kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 2/3] x86/pci/intel_mid_pci: propagate actual return code
-Date: Wed,  8 Jul 2015 14:14:18 +0300
-Message-Id: <1436354059-130135-3-git-send-email-andriy.shevchenko@linux.intel.com>
-In-Reply-To: <1436354059-130135-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1436354059-130135-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20150729155509.GA31170@google.com>
+References: <20150724224258.GA23990@google.com> <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com>
+ <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com>
+ <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com>
+ <20150728212944.GA12958@google.com> <CADaLNDkOLiyPmVC3VwpnbrfAKFmNwSVJKdChjQFdQqs7XP-Ddg@mail.gmail.com>
+ <20150729012255.GA18606@google.com> <20150729155509.GA31170@google.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Fri, 31 Jul 2015 10:00:06 -0700
+Message-ID: <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com>
+Subject: Re: X-Gene: Unhandled fault: synchronous external abort in pci_generic_config_read32
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mp_map_gsi_to_irq() returns different codes if it fails.
-intel_mid_pci_irq_enable() hides this under -EBUSY. The patch replaces it by
-what is actually returned.
+On Wed, Jul 29, 2015 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Tue, Jul 28, 2015 at 08:22:55PM -0500, Bjorn Helgaas wrote:
+>> On Tue, Jul 28, 2015 at 02:50:39PM -0700, Duc Dang wrote:
+>
+>> > Do you have another PCIe card to try on the same reboot test on this board?
+>>
+>> I've seen this on at least two Mellanox cards.  I'm running similar tests
+>> on a different type of card now.
+>
+> FWIW, reboot tests on two machines with Mellanox cards failed, while the
+> same test on a machine with a different proprietary card succeeded.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- arch/x86/pci/intel_mid_pci.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Thanks, Bjorn.
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 5d7f4afe..4739834 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -212,6 +212,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- {
- 	struct irq_alloc_info info;
- 	int polarity;
-+	int ret;
- 
- 	if (dev->irq_managed && dev->irq > 0)
- 		return 0;
-@@ -232,6 +233,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 		}
- 	}
- 
-+	/* Set IRQ polarity */
- 	if (intel_mid_identify_cpu() == INTEL_MID_CPU_CHIP_TANGIER)
- 		polarity = 0; /* active high */
- 	else
-@@ -242,8 +244,9 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	 * MRST only have IOAPIC, the PCI irq lines are 1:1 mapped to
- 	 * IOAPIC RTE entries, so we just enable RTE for the device.
- 	 */
--	if (mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC, &info) < 0)
--		return -EBUSY;
-+	ret = mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC, &info);
-+	if (ret < 0)
-+		return ret;
- 
- 	dev->irq_managed = 1;
- 
+I don't have the same Mellanox card as yours, but I will also run
+similar reboot test to see if I hit the same issue with my card.
+
 -- 
-2.1.4
-
+Regards,
+Duc Dang.
