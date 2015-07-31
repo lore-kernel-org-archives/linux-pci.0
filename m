@@ -1,97 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:36168 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965657AbbGVQxX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 22 Jul 2015 12:53:23 -0400
-Received: by iehx8 with SMTP id x8so92276957ieh.3
-        for <linux-pci@vger.kernel.org>; Wed, 22 Jul 2015 09:53:23 -0700 (PDT)
-Date: Wed, 22 Jul 2015 11:53:18 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Ma Jun <majun258@huawei.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Duc Dang <dhdang@apm.com>
-Subject: Re: [PATCH v4 04/19] PCI/MSI: Add hooks to populate the msi_domain
- field
-Message-ID: <20150722165318.GA27197@google.com>
-References: <1436962613-17359-1-git-send-email-marc.zyngier@arm.com>
- <1436962613-17359-5-git-send-email-marc.zyngier@arm.com>
- <20150721212644.GB3691@google.com>
- <55AFABF3.5050303@arm.com>
- <CAErSpo5GRHp0-51tj8XiXKLujkLmtdmhg+gJOy0szJpP3002cQ@mail.gmail.com>
- <55AFAE96.4070401@arm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55732 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751410AbbGaHXw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jul 2015 03:23:52 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Andreas Hartmann <andihartmann@freenet.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Ondrej Kozina <okozina@redhat.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7C800.2070702@maya.org>
+ <20150728185811.GA25060@redhat.com> <55B7D6BE.5010203@maya.org>
+ <20150728193101.GB25264@redhat.com> <55B7E14A.4050500@maya.org>
+ <20150728212441.GA25761@redhat.com> <55B87005.7010409@redhat.com>
+ <55B8759B.8070400@redhat.com> <55B90C25.8030502@maya.org>
+ <55BA895D.30509@maya.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	Mike Snitzer <msnitzer@redhat.com>, mpatocka@redhat.com
+From: Milan Broz <mbroz@redhat.com>
+Message-ID: <55BB2284.1060706@redhat.com>
+Date: Fri, 31 Jul 2015 09:23:48 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55AFAE96.4070401@arm.com>
+In-Reply-To: <55BA895D.30509@maya.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 22, 2015 at 03:54:14PM +0100, Marc Zyngier wrote:
-> On 22/07/15 15:48, Bjorn Helgaas wrote:
-> > On Wed, Jul 22, 2015 at 9:42 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> >> Hi Bjorn,
-> >>
-> >> On 21/07/15 22:26, Bjorn Helgaas wrote:
-> >>> On Wed, Jul 15, 2015 at 01:16:38PM +0100, Marc Zyngier wrote:
-> >>>> In order to be able to populate the device msi_domain field,
-> >>>> add the necesary hooks to propagate the host bridge msi_domain
-> >>>> across secondary busses to devices.
-> >>>>
-> >>>> So far, nobody populates the initial msi_domain.
-> >>>>
-> >>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> >>>> ---
-> >>>>  drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
-> >>>>  include/linux/pci.h |  1 +
-> >>>>  2 files changed, 31 insertions(+)
-> >>>>
-> >>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >>>> index cefd636..376f6fa 100644
-> >>>> --- a/drivers/pci/probe.c
-> >>>> +++ b/drivers/pci/probe.c
-> >>>> @@ -661,6 +661,20 @@ static void pci_set_bus_speed(struct pci_bus *bus)
-> >>>>      }
-> >>>>  }
-> >>>>
-> >>>> +void __weak pcibios_set_host_bridge_msi_domain(struct pci_bus *bus)
-> >>>> +{
-> >>>> +}
-> >>>
-> >>> I don't think there's anything in this series that requires this to be a
-> >>> weak function, is there?  This is the only definition I see.
-> >>
-> >> It looks like all the pcibios_* functions so far have a weak attribute,
-> >> and I've added it as a matter of consistency.
-> > 
-> > We've used pcibios_* names where we might need an arch-specific
-> > implementation.  I'm not sure that's the case here -- do you envision
-> > an implementation under arch/* someday?  If not, maybe it should just
-> > be a pci_* function instead of pcibios_*.
+On 07/30/2015 10:30 PM, Andreas Hartmann wrote:
+...
+
+> Next tests:
+> I didn't mount any filesystem on bootup located on the ssd (only the
+> rotational based mounts) -> no problem.
 > 
-> I could definitely see non-OF driven architectures wanting to override this.
+> Next: I tried to add the partitions from the ssd to be mounted on boot -
+> one by one. As there where 4 partitions to be mounted from the ssd, the
+> errors came up again.
+
+This is strange... Do I understand it correctly that this bug appears only
+if you mount more than 3 encrypted partitions? (IOW if you mount only 2 or 3
+there is no problem?)
+
+> Next: You suspect the ssd as being bad. Therefore, I changed the ssd and
+> tested with KINGSTON SV300S37A240G. Result: Same as above - errors are
+> coming up if there are mounted more than 3 partitions at the same time.
+
+ok. I guess it was just image of the same disk on different hw, correct?
+
 > 
-> Or maybe we should turn it the other way around and make it call the
-> various firmware interfaces (OF, ACPI...) until one of them succeeds. In
-> which case your suggestion of making it a pci_* function makes a lot of
-> sense.
+> Summary:
+> - --perf-submit_from_crypt_cpus --perf-same_cpu_crypt -> broken anyway
 
-Here's my advice, FWIW:
+That is even more interesting because these should effectively disable
+the parralel submit code in dmcrypt.
 
-  - remove __weak
+Could you please verify that these flags are really applied when you used
+them? (I am just trying to eliminate possible cryptsetup bug, the code is new).
+(Run dmsetup table, you should see submit_from_crypt_cpus/same_cpu_crypt
+on the dmcrypt mappping table line according to commandline.)
 
-  - rename pcibios_set_host_bridge_msi_domain() to
-    pci_host_bridge_msi_domain() and have it return a struct irq_domain *
+> - rotational disks alone: it's ok
+> - more than 3 partitions on ssd Corsair Force GT -> broken
+> - more than 3 partitions on ssd KINGSTON SV300S37A240G -> broken
 
-  - pci_host_bridge_msi_domain() can call whatever firmware- or
-    arch-specific code you need to look up the irq_domain
+- if you disable NCQ, the problems goes away?
 
-  - move the dev_set_msi_domain() call from pci_set_phb_of_msi_domain() to
-    pci_set_bus_msi_domain()
+Could you please post "lsblk" and dmesg output from the situation which fails,
+(with mounted >3 partition on boot)?
+I think someone should defititely try to reproduce it on some development hw here,
+configured storage stack should be visible from the lsblk output.
+
+Thanks for for the info & tests!
+
+Milan
+
