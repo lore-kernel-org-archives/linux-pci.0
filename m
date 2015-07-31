@@ -1,74 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:55270 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861AbbGOEmU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jul 2015 00:42:20 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-kernel@vger.kernel.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, Ray Jui <rjui@broadcom.com>
-Subject: [PATCH v2 0/4] Add Broadcom North Star 2 support
-Date: Tue, 14 Jul 2015 21:42:19 -0700
-Message-ID: <1436935343-4437-1-git-send-email-rjui@broadcom.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<jingoohan1@gmail.com>, <nsekhar@ti.com>
+CC: <kishon@ti.com>
+Subject: [PATCH v5 1/3] PCI: host: pci-dra7xx: Disable pm_runtime on get_sync failure
+Date: Fri, 31 Jul 2015 17:55:10 +0530
+Message-ID: <1438345512-28973-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1438345512-28973-1-git-send-email-kishon@ti.com>
+References: <1438345512-28973-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series adds Broadcom North Star 2 (NS2) SoC support. NS2 is an ARMv8
-based SoC and under the Broadcom iProc family.
+Fix the error handling code in case pm_runtime_get_sync fails. Now
+when pm_runtime_get_sync fails pm_runtime_disable is invoked so that
+there is no unbalanced pm_runtime_enable calls.
 
-Sorry for tying this with the Broadcom iProc PCIe driver fixes for ARM64. I
-have to tie them together because iProc PCIe support is enabled by default
-when ARCH_BCM_IPROC is enabled. Without the fixes in the iProc PCIe driver,
-enabling CONFIG_ARCH_BCM_IPROC would break the build for arm64 defconfig. Let
-me know if there's a better way to handle this.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/host/pci-dra7xx.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This patch series is generated based on v4.2-rc2 and tested on Broadcom NS2 SVK
-
-Code available on GITHUB: https://github.com/Broadcom/arm64-linux.git
-branch is ns2-core-v2
-
-Changes from V1:
-- Took Arnd's advice to tweak the location of struct pci_sys_data within
-struct iproc_pcie. This helps to get rid of most of the CONFIG_ARM wrap in
-iProc PCIe core driver
-- Use stdout-path and alias for serial console in NS2 SVK dts
-- Add all 4 CPU descriptions in NS2 dtsi
-- Remove "clock-frequency" property in the armv8 timer node so timer frequency
-can be determined based on readings from CNTFRQ_EL0
-- Remove config flag ARCH_BCM_NS2. Leave only ARCH_BCM_IPROC for all Broadcom
-arm64 SoCs as advised
-
-Ray Jui (4):
-  PCI: iproc: enable arm64 support for iProc PCIe
-  PCI: iproc: Fix ARM64 dependency in Kconfig
-  arm64: Add Broadcom iProc family support
-  arm64: dts: Add Broadcom North Star 2 support
-
- Documentation/devicetree/bindings/arm/bcm/ns2.txt |    9 ++
- arch/arm64/Kconfig                                |    5 +
- arch/arm64/boot/dts/Makefile                      |    1 +
- arch/arm64/boot/dts/broadcom/Makefile             |    5 +
- arch/arm64/boot/dts/broadcom/ns2-svk.dts          |   60 +++++++++++
- arch/arm64/boot/dts/broadcom/ns2.dtsi             |  118 +++++++++++++++++++++
- arch/arm64/configs/defconfig                      |    2 +
- drivers/pci/host/Kconfig                          |    2 +-
- drivers/pci/host/pcie-iproc.c                     |   15 +--
- drivers/pci/host/pcie-iproc.h                     |    8 +-
- 10 files changed, 211 insertions(+), 14 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/bcm/ns2.txt
- create mode 100644 arch/arm64/boot/dts/broadcom/Makefile
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2-svk.dts
- create mode 100644 arch/arm64/boot/dts/broadcom/ns2.dtsi
-
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 80db09e..d8b6d66 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -384,7 +384,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	ret = pm_runtime_get_sync(dev);
+ 	if (IS_ERR_VALUE(ret)) {
+ 		dev_err(dev, "pm_runtime_get_sync failed\n");
+-		goto err_phy;
++		goto err_get_sync;
+ 	}
+ 
+ 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
+@@ -401,6 +401,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 
+ err_add_port:
+ 	pm_runtime_put(dev);
++
++err_get_sync:
+ 	pm_runtime_disable(dev);
+ 
+ err_phy:
 -- 
 1.7.9.5
 
