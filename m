@@ -1,160 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0079.outbound.protection.outlook.com ([65.55.169.79]:62056
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757715AbbGQN1o convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jul 2015 09:27:44 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:1444 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753539AbbGaOZd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 31 Jul 2015 10:25:33 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Rob Herring <robherring2@gmail.com>
 CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
 	Pratyush Anand <pratyush.anand@gmail.com>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: PCIe support for ARM64
-Date: Fri, 17 Jul 2015 13:27:38 +0000
-Message-ID: <8520D5D51A55D047800579B094147198C7BFE7@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <loom.20150619T074145-299@post.gmane.org>
- <CAErSpo52WYqB9hfNKo-ADrJF1LASUz5y9vWzsmp2FaCNc9WZfg@mail.gmail.com>
- <loom.20150710T130734-815@post.gmane.org>
- <20150711201634.GA24416@google.com>
- <A12CBBFFEB35D84DABCB166110D762215E41B2C5@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20150717124454.GA19824@red-moon>
-In-Reply-To: <20150717124454.GA19824@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+	"kishon@ti.com" <kishon@ti.com>
+Subject: RE: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
+Date: Fri, 31 Jul 2015 14:25:09 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D70589@lhreml503-mbs>
+References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20150729172053.GE31170@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
+ <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs>
+ <20150730161447.GG9640@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs>
+ <20150730171445.GI9640@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs>
+ <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com>
+In-Reply-To: <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
-
-Thanks for the input. But pci_fixup_irqs is defined in drivers/pci/setup-irq.c and when I see its Makefile (drivers/pci/Makefile), it shows that this function is available for ARM and not for ARM64 in v4.2-rc1 kernel.
-
-#
-# Some architectures use the generic PCI setup functions
-#
-obj-$(CONFIG_ALPHA) += setup-irq.o
-obj-$(CONFIG_ARM) += setup-irq.o
-obj-$(CONFIG_UNICORE32) += setup-irq.o
-obj-$(CONFIG_SUPERH) += setup-irq.o
-obj-$(CONFIG_MIPS) += setup-irq.o
-obj-$(CONFIG_TILE) += setup-irq.o
-obj-$(CONFIG_SPARC_LEON) += setup-irq.o
-obj-$(CONFIG_M68K) += setup-irq.o
-
-
-Regards
-Bharat Kumar Gogada
-
-
------Original Message-----
-From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
-Sent: Friday, July 17, 2015 6:15 PM
-To: Ravikiran Gummaluri
-Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; Pratyush Anand; Bharat Kumar Gogada
-Subject: Re: PCIe support for ARM64
-
-On Fri, Jul 17, 2015 at 12:43:42PM +0100, Ravikiran Gummaluri wrote:
-> HI Bjorn/Pratyush,
->       Thanks for your inputs. We were able to do modify our driver according to V4.2-rc1. We were only be able to bring up MSI related changes but not Legacy. Can you point us how to handle Legacy interrupts in new approach (previously in ARM32 handled by map_irq method in hw_pci structure).
-
-Call pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-
-in your now ARM/ARM64 common host controller driver.
-
-Lorenzo
-
->
-> Thanks & Regards
-> Ravi Kiran G
->
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-> Sent: Sunday, July 12, 2015 1:47 AM
-> To: Ravikiran Gummaluri
-> Cc: linux-pci@vger.kernel.org; Pratyush Anand; Bharat Kumar Gogada
-> Subject: Re: PCIe support for ARM64
->
-> [+cc Pratyush, Bharat]
->
-> On Fri, Jul 10, 2015 at 11:18:10AM +0000, ravikiran gummaluri wrote:
-> > Bjorn Helgaas <bhelgaas <at> google.com> writes:
-> >
-> > >
-> > > On Fri, Jun 19, 2015 at 12:43 AM, ravikiran gummaluri <rgummal
-> > > <at> xilinx.com> wrote:
-> > > > HI
-> > > >
-> > > > I am developing PCIe root port driver for Xilinx device. We have
-> > > > used following patch for ARM64 bit support
-> > > > "https://lkml.org/lkml/2014/7/3/764". The link explains it as
-> > > > temporary patch and main line will be updated soon with those
-> > > > changes. We have not seen the changes till now. Can you let us
-> > > > know when we can expect the changes in mainline? We are planning to push our drivers to mainline.
-> > >
-> > > There is PCI support for ARM64 in mainline:
-> > > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?
-> > id=d1e6dc91b532
-> > >
-> > > There is also a Xilinx driver already:
-> > >
-> > http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/
-> > dr
-> > ivers/
-> > pci/host/pcie-xilinx.c
-> > >
-> > > I don't know if your device is similar to the AXI device, but it
-> > > would be good if you can share or modify that driver instead of
-> > > adding a new one.
-> > >
-> > > As with several other drivers, the current pcie-xilinx.c uses
-> > > pci_common_init_dev(), so it only works on ARM (not ARM64).  This
-> > > is a known issue, and people are working on making these drivers
-> > > less arch-specific.
-> > >
-> > > Bjorn
-> > >
-> >
-> > Thanks Bjorn. pcie-xilinx.c is AXI device. Now we are developing for
-> > different device using pcie-xilinx.c as reference. When we trying to
-> > compile our new driver with latest kernel we are getting compilation
-> > problems for struct hw_pci and struct pci_sys_data for ARM64. These
-> > structures are not defined in ARM64. The following patch has the
-> > structure definitions "https://lkml.org/lkml/2014/7/3/764". We have
-> > used this patch and able complete our development. Now for up
-> > streaming it we need this patch in main line. From your discursion
-> > we understood that some work is going on ARCH independent API and
-> > structure. When can we expect them in mainline?
->
-> Pratyush already answered this:
->
->     Please have a look to the latest kernel and try to see what is
->     available for ARM64 PCIe.
->
->     You may see drivers/pci/host/pci-xgene.c as reference.
->
->     I see that there is already a driver for xilinx PCIe controller with
->     ARM platform.
->     drivers/pci/host/pcie-xilinx.c
->
->     If it is the same device on ARM64, then you need to take similar
->     approach what is being discussed
->     for designware on ARM64.
->
->     http://marc.info/?l=devicetree&m=143394380815743&w=2
->
-> My advice is to adapt your driver so it works using the interfaces and structures in v4.2-rc1 and post that.  As Pratyush mentioned, the X-Gene driver should be a good place to start.
->
-> There will likely be changes to the way we handle arch- and platform- specific data, but you don't need to wait for those to be completed.  When people make changes like that, it is always their responsibility to update all the code in the tree to match.  So once your code is in the tree, you don't have to worry about updating your driver to follow those changes.
->
-> On the other hand, if you do wait for those changes to be completed, you never know when or if they ever will be done, and you'll have to do your own updates before posting your driver.
->
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> in the body of a message to majordomo@vger.kernel.org More majordomo
-> info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-This email and any attachments are intended for the sole use of the named recipient(s) and contain(s) confidential information that may be proprietary, privileged or copyrighted under applicable law. If you are not the intended recipient, do not read, copy, or forward this email message or any attachments. Delete this email message and any attachments immediately.
-
+WytjYyBLaXNob25dDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGlu
+dXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gb3duZXJA
+dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgUm9iIEhlcnJpbmcNCj4gU2VudDogVGh1cnNk
+YXksIEp1bHkgMzAsIDIwMTUgOTo0MiBQTQ0KPiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiBDYzog
+Qmpvcm4gSGVsZ2FhczsgYXJuZEBhcm5kYi5kZTsgbG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsg
+V2FuZ3pob3UNCj4gKEIpOyByb2JoK2R0QGtlcm5lbC5vcmc7IGphbWVzLm1vcnNlQGFybS5jb207
+IExpdml1LkR1ZGF1QGFybS5jb207DQo+IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4
+LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4gZGV2aWNldHJlZUB2Z2VyLmtlcm5l
+bC5vcmc7IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87DQo+IHFpdXpoZW5mYTsg
+TGlndW96aHUgKEtlbm5ldGgpOyBKaW5nb28gSGFuOyBQcmF0eXVzaCBBbmFuZA0KPiBTdWJqZWN0
+OiBSZTogW1BBVENIIHY2XSBQQ0k6IFN0b3JlIFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0DQo+
+IG9mX3BjaV9yYW5nZQ0KPiANCj4gT24gVGh1LCBKdWwgMzAsIDIwMTUgYXQgMTI6MzQgUE0sIEdh
+YnJpZWxlIFBhb2xvbmkNCj4gPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4gd3JvdGU6DQo+
+ID4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZyb206IEJqb3JuIEhlbGdhYXMg
+W21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUuY29tXQ0KPiA+PiBTZW50OiAzMCBKdWx5IDIwMTUgMTg6
+MTUNCj4gPj4gT24gVGh1LCBKdWwgMzAsIDIwMTUgYXQgMDQ6NTA6NTVQTSArMDAwMCwgR2Ficmll
+bGUgUGFvbG9uaSB3cm90ZToNCj4gPj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+
+ID4+ID4gPiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGlu
+dXgtcGNpLQ0KPiA+PiA+ID4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQmpv
+cm4gSGVsZ2Fhcw0KPiA+PiA+ID4gU2VudDogVGh1cnNkYXksIEp1bHkgMzAsIDIwMTUgNToxNSBQ
+TQ0KPiA+PiA+ID4gT24gVGh1LCBKdWwgMzAsIDIwMTUgYXQgMDE6NTI6MTNQTSArMDAwMCwgR2Fi
+cmllbGUgUGFvbG9uaSB3cm90ZToNCj4gDQo+IFsuLi5dDQo+IA0KPiA+PiA+ID4gPiBJIGRvbuKA
+mXQgdGhpbmsgd2Ugc2hvdWxkIHJlbHkgb24gW0NQVV0gYWRkcmVzc2VzLi4ud2hhdCBpZiB0aGUN
+Cj4gPj4gPiA+IGludGVybWVkaWF0ZQ0KPiA+PiA+ID4gPiB0cmFuc2xhdGlvbiBsYXllciBjaGFu
+Z2VzIHRoZSBsb3dlciBzaWduaWZpY2FudCBiaXRzIG9mIHRoZQ0KPiAiYnVzDQo+ID4+ID4gPiBh
+ZGRyZXNzIg0KPiA+PiA+ID4gPiB0byB0cmFuc2xhdGUgaW50byBhIGNwdSBhZGRyZXNzPw0KPiA+
+PiA+ID4NCj4gPj4gPiA+IElzIGl0IHJlYWxseSBhIHBvc3NpYmxpdHkgdGhhdCB0aGUgbG93ZXIg
+Yml0cyBjb3VsZCBiZSBjaGFuZ2VkPw0KPiA+PiA+DQo+ID4+ID4gSSd2ZSBjaGVja2VkIGFsbCB0
+aGUgY3VycmVudCBkZWlnbndhcmUgdXNlcnMgRFRzIGV4Y2VwdCAicGNpLQ0KPiA+PiBsYXllcnNj
+YXBlIg0KPiA+PiA+IHRoYXQgSSBjb3VsZCBub3QgZmluZDoNCj4gPj4gPiBzcGVhcjEzMTAuZHRz
+aQ0KPiA+PiA+IHNwZWFyMTM0MC5kdHNpDQo+ID4+ID4gZHJhNy5kdHNpDQo+ID4+ID4gaW14NnFk
+bC5kdHNpDQo+ID4+ID4gaW14NnN4LmR0c2kNCj4gPj4gPiBrZXlzdG9uZS5kdHNpDQo+ID4+ID4g
+ZXh5bm9zNTQ0MC5kdHNpDQo+ID4+ID4NCj4gPj4gPiBOb25lIG9mIHRoZW0gbW9kaWZpZXMgdGhl
+IGxvd2VyIGJpdHMuIFRvIGJlIG1vcmUgcHJlY2lzZSB0aGUgb25seQ0KPiBndXkNCj4gPj4gPiB0
+aGF0IHByb3ZpZGVzIGFub3RoZXIgdHJhbnNsYXRpb24gbGF5ZXIgaXMgImRyYTcuZHRzaSI6DQo+
+ID4+ID4gYXhpMA0KPiA+PiA+IGh0dHA6Ly9seHIuZnJlZS0NCj4gZWxlY3Ryb25zLmNvbS9zb3Vy
+Y2UvYXJjaC9hcm0vYm9vdC9kdHMvZHJhNy5kdHNpI0wyMDcNCj4gPj4gPg0KPiA+PiA+IGF4aTEN
+Cj4gPj4gPiBodHRwOi8vbHhyLmZyZWUtDQo+IGVsZWN0cm9ucy5jb20vc291cmNlL2FyY2gvYXJt
+L2Jvb3QvZHRzL2RyYTcuZHRzaSNMMjQxDQo+ID4+ID4NCj4gPj4gPiBGb3IgdGhpcyBjYXNlIG1h
+c2tpbmcgdGhlIHRvcCA0Yml0cyAoYml0czI4IHRvIDMxKSBzaG91bGQgbWFrZSB0aGUNCj4gam9i
+Lg0KPiANCj4gSU1PLCB3ZSBzaG91bGQganVzdCBmaXggdGhpcyBjYXNlLiBBZnRlciBmdXJ0aGVy
+IHN0dWR5LCBJIGRvbid0IHRoaW5rDQo+IHRoaXMgaXMgYSBEVyBpc3N1ZSwgYnV0IHJhdGhlciBh
+biBTT0MgaW50ZWdyYXRpb24gaXNzdWUuDQo+IA0KPiBJIGJlbGlldmUgeW91IGNhbiBqdXN0IGZp
+eHVwIHRoZSBhZGRyZXNzIGluIHRoZSBwcC0+b3BzLT5ob3N0X2luaXQgaG9vay4NCj4gDQoNClll
+cyBJIGd1ZXNzIHRoYXQgSSBjb3VsZCBqdXN0IGFzc2lnbiBwcC0+KCopX21vZF9iYXNlIHRvIHRo
+ZSBDUFUgYWRkcmVzcyANCmluIERXIGFuZCBtYXNrIGl0IG91dCBpbiBkcmE3eHhfcGNpZV9ob3N0
+X2luaXQoKS4uLg0KDQpLaXNob24sIHdvdWxkIHlvdSBiZSBvayB3aXRoIHRoYXQ/IA0KDQoNCj4g
+SW4gbG9va2luZyBhdCB0aGlzLCBJJ20gY3VyaW91cyB3aHkgb25seSAyIEFUVSB2aWV3cG9ydHMg
+YXJlIHVzZWQgYnkNCj4gZGVmYXVsdCBhcyB0aGlzIGNhdXNlcyBzd2l0Y2hpbmcgb24gY29uZmln
+IGFjY2Vzc2VzLiBQcm9iYWJseSBzb21lDQo+IGNvbmZpZ3VyYXRpb24gb25seSBoYXMgMiB2aWV3
+cG9ydHMuIFRoaXMgd291bGQgbm90IGV2ZW4gd29yayBvbiBTTVANCj4gc3lzdGVtcyEgTWVtb3J5
+IGFuZCBpL28gYWNjZXNzZXMgZG8gbm90IGhhdmUgYW55IGxvY2suIEEgY29uZmlnIGFjY2Vzcw0K
+PiBvbiBvbmUgY29yZSB3aWxsIHRlbXBvcmFyaWx5IGRpc2FibGUgdGhlIGkvbyBvciBtZW1vcnkg
+dmlld3BvcnQgd2hpY2gNCj4gd2lsbCBjYXVzZSBhbiBhYm9ydCwgZHJvcHBlZCwgb3IgZ2FyYmFn
+ZSBkYXRhIG9uIGFuIGkvbyBvciBtZW1vcnkNCj4gYWNjZXNzIGZyb20gYW5vdGhlciBjb3JlLiBZ
+b3Ugd291bGQgaGF2ZSB0byBiZSBhY2Nlc3NpbmcgY2ZnIHNwYWNlIG9uDQo+IGEgYnVzIG90aGVy
+IHRoYW4gdGhlIHJvb3QgYnVzLCBzbyBtYXliZSBubyBvbmUgaXMgZG9pbmcgdGhhdC4NCj4gDQo+
+ID4+ID4NCj4gPj4gPiBTcGVha2luZyBpbiBnZW5lcmFsIHRlcm1zIHNvIGZhciBJJ3ZlIGFsd2F5
+cyBzZWVuIGxpbmVhciBtYXBwaW5ncw0KPiA+PiA+IHRoYXQgZGlmZmVyIGJ5IGJpdG1hc2sgb2Zm
+c2V0LCBob3dldmVyIGxpbmVhciBkb2VzIG5vdCBtZWFuIHRoYXQNCj4geW91DQo+ID4+ID4gY2Fu
+bm90IGFmZmVjdCB0aGUgbG93ZXIgYml0czogZS5nLiA8MHgwPiB0byA8MHgwICsgc2l6ZT4gY2Fu
+IG1hcA0KPiB0bw0KPiA+PiA+IDwweDAwMDBjYWZlIHRvIDB4MDAwMGNhZmUgKyBzaXplPiwgYnV0
+IEkgZ3Vlc3MgdGhhdCBmb3IgSFcgZGVzaWduDQo+ID4+IHJlYXNvbnMNCj4gPj4gPiBpdCBpcyBt
+dWNoIGVhc2llciB0byByZW1hcCBkaXJlY3RseSB1c2luZyBhIGJpdG1hc2suLi5idXQgSSB3YXMN
+Cj4gbm90DQo+ID4+IHN1cmUNCj4gPj4gPiBhbmQgSSBkaWRuJ3QgdGhpbmsgYWJvdXQgdGhlIHBy
+b2JsZW1zIHRoYXQgY2FuIGFyaXNlIHdpdGggQUNQSS4NCj4gDQo+IEZvciBoaWdoZXIgc3BlZWQg
+YnVzZXMsIHRoZSBoL3cgZGVzaWducyBhcmUgbm90IGdvaW5nIHRvIGJlIGRvaW5nDQo+IGNvbXBs
+aWNhdGVkIHRyYW5zbGF0aW9ucyBpbiBvcmRlciB0byBtZWV0IHRpbWluZyByZXF1aXJlbWVudHMu
+IEF0IHRoZQ0KPiB0b3AgbGV2ZWwgb25seSB0aGUgaGlnaGVzdCBvcmRlciBiaXRzIGFyZSBnb2lu
+ZyB0byBiZSBsb29rZWQgYXQuIEZvcg0KPiBkb3duc3RyZWFtIHNlZ21lbnRzLCB0aGUgaGlnaCBv
+cmRlciBiaXRzIG1heSBnZXQgZHJvcHBlZCB0byBzaW1wbGlmeQ0KPiByb3V0aW5nLiBJZiBhbiBJ
+UCBibG9jayBoYXMgZnVsbCBhZGRyZXNzIGJpdHMgaW4gdGhpcyBjYXNlLCB0aGV5IGNvdWxkDQo+
+IGVpdGhlciBiZSB0aWVkIHRvIDAgb3IgdGllZCBvZmYgdG8gdGhlIGNvcnJlY3QgYWRkcmVzcy4g
+RWl0aGVyIGlzDQo+IHJlYXNvbmFibGUsIHNvIEknbSBzdXJlIHRoZXJlIGlzIGgvdyBkb2luZyBi
+b3RoLiBUaGF0IGRvZXNuJ3QgbWVhbiBoL3cNCj4gZGVzaWduZXJzIGhhdmVuJ3QgZG9uZSBzb21l
+dGhpbmcgY3JhenksIHRvby4NCj4gDQo+ID4+IEFzIEkgc2FpZCwgaXQgd291bGRuJ3QgbWFrZSBz
+ZW5zZSBmb3IgdGhlIGJpdHMgdGhhdCBjb21wcmlzZSB0aGUNCj4gPj4gb2Zmc2V0IGludG8gdGhl
+IHdpbmRvdyB0byBjaGFuZ2UsIHNvIHRoZSBtYXBwaW5nIG9ubHkgaGFzIHRvIGJlDQo+IGxpbmVh
+cg0KPiA+PiBpbnNpZGUgdGhlIHdpbmRvdy4NCj4gPj4NCj4gPj4gRm9yIHRoZSBiaXRzIG91dHNp
+ZGUgdGhlIHdpbmRvdyBvZmZzZXQsIEkgZG9uJ3Qga25vdyBlbm91Z2ggdG8gc2F5DQo+ID4+IHdo
+ZXRoZXIgbWFza2luZyBpcyBzdWZmaWNpZW50IG9yIHNhZmUuDQo+ID4+DQo+ID4+ID4gSWYgeW91
+IHRoaW5rIHRoZSBiaXRtYXNrIGlzIE9rIHRoZW4gSSBjYW4gZGlyZWN0bHkgZGVmaW5lIGl0IGlu
+DQo+ID4+ID4gZGVzaWdud2FyZSBhbmQgd2UgY2FuIGRyb3AgdGhpcyBwYXRjaC4NCj4gPj4NCj4g
+Pj4gSXQncyBPSyBieSBtZSwgYnV0IEkga25vdyBub3RoaW5nIGFib3V0IHRoZSBhY3R1YWwgaGFy
+ZHdhcmUgaW52b2x2ZWQuDQo+ID4+IEZvciB0aGUgRGVzaWduV2FyZSBxdWVzdGlvbiwgSSB0aGlu
+ayB5b3Ugd291bGQganVzdCBoYXZlIHRvIGNvbnZpbmNlDQo+ID4+IEppbmdvbyBhbmQgUHJhdHl1
+c2ggKGNjJ2QpLg0KPiA+DQo+ID4gWWVzIGFjdHVhbGx5IGxvb2tpbmcgYXQNCj4gPiBodHRwOi8v
+bHhyLmZyZWUtDQo+IGVsZWN0cm9ucy5jb20vc291cmNlL2FyY2gvYXJtL2Jvb3QvZHRzL3NwZWFy
+MTMxMC5kdHNpI0w5OQ0KPiA+IEkgY2FuIHNlZSB0aGF0IHBjaV9hZGRyPTAgaXMgbWFwcGVkIHRv
+IGJ1c19hZGRyIDB4ODAwMjAwMDAsIHNvDQo+IGNsZWFyaW5nDQo+ID4gdGhlIHRvcCA0IGJpdHMg
+d291bGQgYWx0ZXIgdGhlIGJlaGF2aW91ciBvZiB0aGUgY3VycmVudCBkZXNpZ253YXJlDQo+ID4g
+U1cgZnJhbWV3b3JrLi4ubm93IEkgZG9uJ3Qga25vdyBpZiBEVyBuZWVkcyBvbmx5IHRoZSBsb3cg
+MjhiIG9mIHRoYXQNCj4gPiB2YWx1ZSBvciBub3QuLi4uDQo+IA0KPiBHaXZlbiB0aGF0IG1vc3Qg
+Y2FzZXMgaGF2ZSBzYW1lIGNwdSBhbmQgYnVzIGFkZHJlc3MsIG1hc2tpbmcgaXMgbm90DQo+IHRo
+ZSByaWdodCBzb2x1dGlvbiBpbiBnZW5lcmFsLg0KPiANCj4gVGhlcmUgaXMgYWxzbyBhIGJ1ZyBo
+ZXJlIEJUVy4gcGNpZTAgYW5kIHBjaWUyIGhhdmUgdGhlIHNhbWUgQ1BVDQo+IGFkZHJlc3MgZm9y
+IHRoZSBtZW1vcnkgcmFuZ2UuDQo+IA0KPiBSb2INCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJv
+bSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4NCj4g
+dGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9y
+ZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5m
+by5odG1sDQo=
