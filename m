@@ -1,177 +1,390 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp09.in.ibm.com ([122.248.162.9]:53751 "EHLO
-	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbbGQBvo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jul 2015 21:51:44 -0400
-Received: from /spool/local
-	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Fri, 17 Jul 2015 07:21:41 +0530
-Date: Fri, 17 Jul 2015 09:51:34 +0800
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 00/49] PCI: Resource allocation cleanup for v4.3
-Message-ID: <20150717015134.GA9087@richard>
-Reply-To: Wei Yang <weiyang@linux.vnet.ibm.com>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH v2 3/5] pci: altera: Add Altera PCIe MSI driver
+Date: Fri, 31 Jul 2015 18:15:13 +0800
+Message-ID: <1438337715-22594-4-git-send-email-lftan@altera.com>
+In-Reply-To: <1438337715-22594-1-git-send-email-lftan@altera.com>
+References: <1438337715-22594-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai,
+This patch adds Altera PCIe MSI driver. This soft IP supports configurable
+number of vectors, which is a dts parameter.
 
-Tested your latest for for-pci-v4.3-next branch, it works fine on my P8
-machine.
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ drivers/pci/host/Kconfig           |   7 +
+ drivers/pci/host/Makefile          |   1 +
+ drivers/pci/host/pcie-altera-msi.c | 324 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 332 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-altera-msi.c
 
-BTW, the SRIOV works fine too. Previously failure is based on my mistake, I
-have disabled SRIOV :-(
-
-On Tue, Jul 14, 2015 at 03:46:31PM -0700, Yinghai Lu wrote:
->Hi,
->
->After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
->to 64-bit resources), we have several reports on resource allocation
->failure, and we try to fix the problem with resource clip, and get
->more problems.
->
->One is realloc fail with two graphics cards above 4G.
->One is from sparc that have problem with clip as we don't parse
->mem64 for it.
->
->Other report is about pci remove/rescan does not work on some setup
->when BIOS tend to allocate small bus size.
->
->This patchset enhance resource allocation to address those problems.
->1. optimize bus mmio alignment calculation.
->2. optimize bus mmio optional alignment calculation.
->3. add support for alt size to prefer small bus size to small bus alignment.
->   when we have small resource window on parent bridges.
->4. treat ROM bar as optional resource.
->5. during allocation, will pick up just fit resource.
->6. parse MEM64 for sparc and other system with OF.
->7. treat non-pref mmio64 if parent bridges are all pcie.
->8. restore old pref allocation logic if hostbridge does not support mmio64 really.
->9. don't realloc resource if device firmware does not support bar change.
->10. add pci=assign_pref_bars to clear and assign pref bars.
->11. don't clear resource when allocation fails.
->
->I put latest copy at:
->  git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-v4.3-next
->
->That is based on kind of v4.2-rc2.
->
->v2:
->    - fix resource_disabled allocation from powerpc
->    - other warnings that were found by Fengguang's build robot.
->    - io port alignment clean up.
->    - rebased to v4.2-rc2
->    - better for two alt_size support.
->
->Thanks
->
->Yinghai
->
->Yinghai Lu (49):
->  PCI: Cleanup res_to_dev_res() printout for addon resources
->  PCI: Reuse res_to_dev_res in reassign_resources_sorted
->  PCI: Use correct align for optional only resources during sorting
->  PCI: Optimize bus align/size calculation during sizing
->  PCI: Optimize bus align/size calculation for optional during sizing
->  PCI: Don't add too much optional size for hotplug bridge mmio
->  PCI: Reorder resources list for must/optional resources
->  PCI: Remove duplicated code for resource sorting
->  PCI: Rename pdev_sort_resources to pdev_check_resources
->  PCI: Treat ROM resource as optional during realloc
->  PCI: Add debug printout during releasing partial assigned resources
->  PCI: Simplify res reference using in __assign_resourcs_sorted
->  PCI: Separate realloc list checking after allocation
->  PCI: Add __add_to_list()
->  PCI: Cache window alignment value
->  PCI: Check if resource is allocated before pci_assign
->  PCI: Separate out save_resources/restore_resource
->  PCI: Move comment to pci_need_to_release()
->  PCI: Separate must+optional assigning to another function
->  PCI: Skip must+optional if there is no optional addon
->  PCI: Move saved required resource list out of must+optional assigning
->  PCI: Add alt_size allocation support
->  PCI: Add support for more than two alt_size under same bridge
->  PCI: Better support for two alt_size
->  PCI: Don't add too much optional size for hotplug bridge io
->  PCI: Move ISA ioport align out of calculate_iosize
->  PCI: Unifiy calculate_size for io port and mmio
->  PCI: Allow optional only io resource must size to be 0
->  PCI: Unify skip_ioresource_align()
->  PCI: Kill macro checking for bus io port sizing
->  resources: Split out __allocate_resource()
->  resources: Make allocate_resource return just fit resource
->  PCI: Check pref compatible bit for mem64 resource of pcie device
->  PCI: Only treat non-pef mmio64 as pref if all bridges has MEM_64
->  PCI: Add has_mem64 for host_bridge
->  PCI: Only treat non-pef mmio64 as pref if host-bridge has_mem64
->  PCI: Restore pref mmio allocation logic for hostbridge without mmio64
->  sparc/PCI: Add mem64 resource parsing for root bus
->  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
->  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in of parsing
->  of/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
->  PCI: Treat optional as must in first try for bridge rescan
->  PCI: Get new realloc size for bridge for last try
->  PCI: Don't release sibiling bridge resources during hotplug
->  PCI: Don't release fixed resource for realloc
->  PCI: Set resource to FIXED for lsi devices
->  PCI, x86: Add pci=assign_pref_bars to re-allocate pref bars
->  PCI: Introduce resource_disabled()
->  PCI: Don't set flags to 0 when assign resource fail
->
-> arch/alpha/kernel/pci.c                   |    2 +-
-> arch/ia64/pci/pci.c                       |    4 +-
-> arch/microblaze/pci/pci-common.c          |   23 +-
-> arch/mn10300/unit-asb2305/pci-asb2305.c   |    4 +-
-> arch/mn10300/unit-asb2305/pci.c           |    4 +-
-> arch/powerpc/kernel/pci-common.c          |   27 +-
-> arch/powerpc/kernel/pci_of_scan.c         |    4 +-
-> arch/powerpc/platforms/powernv/pci-ioda.c |   12 +-
-> arch/s390/pci/pci.c                       |    2 +-
-> arch/sparc/kernel/of_device_32.c          |    5 +-
-> arch/sparc/kernel/of_device_64.c          |    5 +-
-> arch/sparc/kernel/pci.c                   |    9 +-
-> arch/sparc/kernel/pci_common.c            |   15 +-
-> arch/sparc/kernel/pci_impl.h              |    1 +
-> arch/x86/include/asm/pci_x86.h            |    2 +-
-> arch/x86/pci/common.c                     |    7 +-
-> arch/x86/pci/i386.c                       |   72 +-
-> arch/xtensa/kernel/pci.c                  |    4 +-
-> drivers/iommu/intel-iommu.c               |    3 +-
-> drivers/of/address.c                      |    4 +-
-> drivers/pci/bus.c                         |    6 +-
-> drivers/pci/host/pcie-rcar.c              |    2 +-
-> drivers/pci/hotplug/acpiphp_glue.c        |    1 +
-> drivers/pci/iov.c                         |    2 +-
-> drivers/pci/pci.c                         |    3 +-
-> drivers/pci/pci.h                         |    4 +
-> drivers/pci/probe.c                       |   44 +-
-> drivers/pci/quirks.c                      |   20 +
-> drivers/pci/rom.c                         |    2 +-
-> drivers/pci/setup-bus.c                   | 1302 +++++++++++++++++++++--------
-> drivers/pci/setup-res.c                   |   18 +-
-> include/asm-generic/pci-bridge.h          |    2 +
-> include/linux/ioport.h                    |    6 +-
-> include/linux/pci.h                       |    2 +
-> kernel/resource.c                         |  175 +++-
-> 35 files changed, 1325 insertions(+), 473 deletions(-)
->
->-- 
->1.8.4.5
-
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 108500a..51d0468 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -153,4 +153,11 @@ config PCIE_ALTERA
+ 	  Say Y here if you want to enable PCIe controller support for Altera
+ 	  SoCFPGA family of SoCs.
+ 
++config PCIE_ALTERA_MSI
++	bool "Altera PCIe MSI feature"
++	depends on PCI_MSI
++	help
++	  Say Y here if you want PCIe MSI support for the Altera SocFPGA SoC.
++	  This MSI driver supports Altera MSI to GIC controller IP.
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 6954f76..6c4913d 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -18,3 +18,4 @@ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
++obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
+new file mode 100644
+index 0000000..6014719
+--- /dev/null
++++ b/drivers/pci/host/pcie-altera-msi.c
+@@ -0,0 +1,324 @@
++/*
++ * Copyright Altera Corporation (C) 2013-2015. All rights reserved
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++#include <linux/interrupt.h>
++#include <linux/irqchip/chained_irq.h>
++#include <linux/module.h>
++#include <linux/msi.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++
++#define MSI_STATUS		0x0
++#define MSI_ERROR		0x4
++#define MSI_INTMASK		0x8
++
++#define MAX_MSI_VECTORS		32
++struct altera_msi {
++	DECLARE_BITMAP(used, MAX_MSI_VECTORS);
++	struct mutex		lock;	/* proctect used variable */
++	struct platform_device	*pdev;
++	struct irq_domain		*msi_domain;
++	struct irq_domain		*inner_domain;
++	void __iomem		*csr_base;
++	void __iomem		*vector_base;
++	phys_addr_t		vector_phy;
++	u32			num_of_vectors;
++	int			irq;
++};
++
++static inline void msi_writel(struct altera_msi *msi, u32 value, u32 reg)
++{
++	writel_relaxed(value, msi->csr_base + reg);
++}
++
++static inline u32 msi_readl(struct altera_msi *msi, u32 reg)
++{
++	return readl_relaxed(msi->csr_base + reg);
++}
++
++static void altera_msi_isr(unsigned int irq, struct irq_desc *desc)
++{
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct altera_msi *msi;
++	unsigned long status;
++	u32 num_of_vectors;
++	u32 bit;
++
++	chained_irq_enter(chip, desc);
++	msi = irq_desc_get_handler_data(desc);
++	num_of_vectors = msi->num_of_vectors;
++
++	do {
++		status = msi_readl(msi, MSI_STATUS);
++		if (!status)
++			break;
++
++		do {
++			bit = find_first_bit(&status, num_of_vectors);
++			/* Dummy read from vector to clear the interrupt */
++			readl_relaxed(msi->vector_base + (bit * sizeof(u32)));
++
++			irq = irq_find_mapping(msi->inner_domain, bit);
++			if (irq) {
++				if (test_bit(bit, msi->used))
++					generic_handle_irq(irq);
++				else
++					dev_info(&msi->pdev->dev, "unhandled MSI\n");
++			} else
++				dev_info(&msi->pdev->dev, "unexpected MSI\n");
++
++			/* Clear the bit from status and repeat without reading
++			 * again status register. */
++			clear_bit(bit, &status);
++		} while (status);
++	} while (1);
++
++	chained_irq_exit(chip, desc);
++}
++
++static struct irq_chip altera_msi_irq_chip = {
++	.name = "Altera PCIe MSI",
++	.irq_enable = pci_msi_unmask_irq,
++	.irq_disable = pci_msi_mask_irq,
++	.irq_mask = pci_msi_mask_irq,
++	.irq_unmask = pci_msi_unmask_irq,
++};
++
++static struct msi_domain_info altera_msi_domain_info = {
++	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++		     MSI_FLAG_PCI_MSIX),
++	.chip	= &altera_msi_irq_chip,
++};
++
++static void altera_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	u32 mask;
++	struct altera_msi *msi = irq_data_get_irq_chip_data(data);
++	u64 addr = msi->vector_phy + (data->hwirq * sizeof(u32));
++
++	msg->address_lo = lower_32_bits(addr);
++	msg->address_hi = upper_32_bits(addr);
++	msg->data = data->hwirq;
++
++	mask = msi_readl(msi, MSI_INTMASK);
++	mask |= 1 << data->hwirq;
++	msi_writel(msi, mask, MSI_INTMASK);
++	dev_dbg(&msi->pdev->dev, "msi#%d address_lo 0x%x\n", (int)data->hwirq,
++		msg->address_lo);
++}
++
++static int altera_msi_set_affinity(struct irq_data *irq_data,
++				 const struct cpumask *mask, bool force)
++{
++	 return -EINVAL;
++}
++
++static struct irq_chip altera_msi_bottom_irq_chip = {
++	.name			= "Altera MSI",
++	.irq_compose_msi_msg	= altera_compose_msi_msg,
++	.irq_set_affinity	= altera_msi_set_affinity,
++};
++
++static int altera_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
++				  unsigned int nr_irqs, void *args)
++{
++	struct altera_msi *msi = domain->host_data;
++	int bit;
++
++	mutex_lock(&msi->lock);
++
++	bit = find_first_zero_bit(msi->used, msi->num_of_vectors);
++	if (bit < msi->num_of_vectors)
++		set_bit(bit, msi->used);
++
++	mutex_unlock(&msi->lock);
++
++	if (bit < 0)
++		return bit;
++	else if (bit >= msi->num_of_vectors)
++		return -ENOSPC;
++
++	irq_domain_set_info(domain, virq, bit, &altera_msi_bottom_irq_chip,
++			    domain->host_data, handle_simple_irq,
++			    NULL, NULL);
++	set_irq_flags(virq, IRQF_VALID);
++
++	return 0;
++}
++
++static void altera_irq_domain_free(struct irq_domain *domain,
++				  unsigned int virq, unsigned int nr_irqs)
++{
++	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
++	struct altera_msi *msi = irq_data_get_irq_chip_data(d);
++	u32 mask;
++
++	mutex_lock(&msi->lock);
++
++	if (!test_bit(d->hwirq, msi->used))
++		dev_err(&msi->pdev->dev, "trying to free unused MSI#%lu\n",
++		d->hwirq);
++	else {
++		clear_bit(d->hwirq, msi->used);
++		mask = msi_readl(msi, MSI_INTMASK);
++		mask &= ~(1 << d->hwirq);
++		msi_writel(msi, mask, MSI_INTMASK);
++	}
++
++	mutex_unlock(&msi->lock);
++}
++
++static const struct irq_domain_ops msi_domain_ops = {
++	.alloc	= altera_irq_domain_alloc,
++	.free	= altera_irq_domain_free,
++};
++
++static int altera_allocate_domains(struct altera_msi *msi)
++{
++	msi->inner_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
++					     &msi_domain_ops, msi);
++	if (!msi->inner_domain) {
++		dev_err(&msi->pdev->dev, "failed to create IRQ domain\n");
++		return -ENOMEM;
++	}
++
++	msi->msi_domain = pci_msi_create_irq_domain(
++				msi->pdev->dev.of_node,
++				&altera_msi_domain_info, msi->inner_domain);
++	if (!msi->msi_domain) {
++		dev_err(&msi->pdev->dev, "failed to create MSI domain\n");
++		irq_domain_remove(msi->inner_domain);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++static void altera_free_domains(struct altera_msi *msi)
++{
++	irq_domain_remove(msi->msi_domain);
++	irq_domain_remove(msi->inner_domain);
++}
++
++
++static int altera_msi_remove(struct platform_device *pdev)
++{
++	struct altera_msi *msi = platform_get_drvdata(pdev);
++
++	msi_writel(msi, 0, MSI_INTMASK);
++	irq_set_chained_handler(msi->irq, NULL);
++	irq_set_handler_data(msi->irq, NULL);
++
++	altera_free_domains(msi);
++
++	platform_set_drvdata(pdev, NULL);
++	return 0;
++}
++
++int altera_msi_probe(struct platform_device *pdev)
++{
++	struct altera_msi *msi;
++	struct device_node *np = pdev->dev.of_node;
++	struct resource *res;
++	int ret;
++
++	msi = devm_kzalloc(&pdev->dev, sizeof(struct altera_msi),
++		GFP_KERNEL);
++	if (!msi)
++		return -ENOMEM;
++
++	mutex_init(&msi->lock);
++	msi->pdev = pdev;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
++	msi->csr_base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(msi->csr_base)) {
++		dev_err(&pdev->dev, "get csr resource failed\n");
++		return PTR_ERR(msi->csr_base);
++	}
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++			"vector_slave");
++	msi->vector_base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(msi->vector_base)) {
++		dev_err(&pdev->dev, "get vector slave resource failed\n");
++		return PTR_ERR(msi->vector_base);
++	}
++
++	msi->vector_phy = res->start;
++
++	if (of_property_read_u32(np, "num-vectors", &msi->num_of_vectors)) {
++		dev_err(&pdev->dev, "failed to parse the number of vectors\n");
++		return -EINVAL;
++	}
++
++	ret = altera_allocate_domains(msi);
++	if (ret)
++		return ret;
++
++	msi->irq = platform_get_irq(pdev, 0);
++	if (msi->irq <= 0) {
++		dev_err(&pdev->dev, "failed to map IRQ: %d\n", msi->irq);
++		ret = -ENODEV;
++		goto err;
++	}
++
++	irq_set_chained_handler(msi->irq, altera_msi_isr);
++	ret = irq_set_handler_data(msi->irq, msi);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to register IRQ handler: %d\n",
++			ret);
++		goto err;
++	}
++
++	platform_set_drvdata(pdev, msi);
++
++	return 0;
++
++err:
++	altera_msi_remove(pdev);
++	return ret;
++}
++
++static const struct of_device_id altera_msi_of_match[] = {
++	{ .compatible = "altr,msi-1.0", NULL },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, altera_msi_of_match);
++
++static struct platform_driver altera_msi_driver = {
++	.driver = {
++		.name = "altera-msi",
++		.owner = THIS_MODULE,
++		.of_match_table = altera_msi_of_match,
++	},
++	.probe = altera_msi_probe,
++	.remove = altera_msi_remove,
++};
++
++static int __init altera_msi_init(void)
++{
++	return platform_driver_register(&altera_msi_driver);
++}
++
++subsys_initcall(altera_msi_init);
++
++MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
++MODULE_DESCRIPTION("Altera PCIe MSI support");
++MODULE_LICENSE("GPL v2");
 -- 
-Richard Yang
-Help you, Help me
+1.8.2.1
 
