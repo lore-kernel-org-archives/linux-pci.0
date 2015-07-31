@@ -1,79 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:35906 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293AbbGAQGM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jul 2015 12:06:12 -0400
-Received: by iecvh10 with SMTP id vh10so37950605iec.3
-        for <linux-pci@vger.kernel.org>; Wed, 01 Jul 2015 09:06:11 -0700 (PDT)
-Date: Wed, 1 Jul 2015 11:06:06 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: wdavis@nvidia.com
-Cc: Joerg Roedel <joro@8bytes.org>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Mark Hounschell <markh@compro.net>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 3/7] dma-mapping: pci: add pci_(un)map_resource
-Message-ID: <20150701160606.GA13409@google.com>
-References: <1432919686-32306-1-git-send-email-wdavis@nvidia.com>
- <1432919686-32306-4-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1432919686-32306-4-git-send-email-wdavis@nvidia.com>
+Received: from mga11.intel.com ([192.55.52.93]:46592 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751069AbbGaTi4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 31 Jul 2015 15:38:56 -0400
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
+	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
+	mmarek@suse.cz, akpm@linux-foundation.org
+Cc: sean.stalley@intel.com, bigeasy@linutronix.de,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-mm@kvack.org, cocci@systeme.lip6.fr
+Subject: [PATCH v2 0/4] mm: add dma_pool_zalloc() & pci_pool_zalloc()
+Date: Fri, 31 Jul 2015 12:36:40 -0700
+Message-Id: <1438371404-3219-1-git-send-email-sean.stalley@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 29, 2015 at 12:14:42PM -0500, wdavis@nvidia.com wrote:
-> From: Will Davis <wdavis@nvidia.com>
-> 
-> Simply route these through to the new dma_(un)map_resource APIs.
-> 
-> Signed-off-by: Will Davis <wdavis@nvidia.com>
-> Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-> Reviewed-by: John Hubbard <jhubbard@nvidia.com>
-> ---
->  include/asm-generic/pci-dma-compat.h | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
-> index c110843..ac4a4ad 100644
-> --- a/include/asm-generic/pci-dma-compat.h
-> +++ b/include/asm-generic/pci-dma-compat.h
-> @@ -61,6 +61,20 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
->  	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
->  }
->  
-> +static inline dma_addr_t
-> +pci_map_resource(struct pci_dev *hwdev, struct resource *resource,
-> +		 unsigned long offset, size_t size, int direction)
+Currently a call to dma_pool_alloc() with a ___GFP_ZERO flag returns
+a non-zeroed memory region.
 
-After 3a9ad0b4fdcd ("PCI: Add pci_bus_addr_t"), which will appear in
-v4.2-rc1, there is a pci_bus_addr_t, and I think you need that instead
-of dma_addr_t.
+This patchset adds support for the __GFP_ZERO flag to dma_pool_alloc(),
+adds 2 wrapper functions for allocing zeroed memory from a pool, 
+and provides a coccinelle script for finding & replacing instances of
+dma_pool_alloc() followed by memset(0) with a single dma_pool_zalloc() call.
 
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd
+Changes from v1 to v2:
+	- don't memset() POOL_POISON_ALLOCATED in dma_pool_alloc() if
+	  __GFP_ZERO is set
+	- Ran test to see how often pool_alloc_page() is called
 
-> +{
-> +	return dma_map_resource(hwdev == NULL ? NULL : &hwdev->dev, resource, offset, size, (enum dma_data_direction)direction);
-> +}
-> +
-> +static inline void
-> +pci_unmap_resource(struct pci_dev *hwdev, dma_addr_t dma_address, size_t size,
-> +		   int direction)
-> +{
-> +	dma_unmap_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
-> +}
-> +
->  static inline int
->  pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
->  	   int nents, int direction)
-> -- 
-> 2.4.0
-> 
+
+There was some concern that this always calls memset() to zero,
+instead of passing __GFP_ZERO into the page allocator.
+[https://lkml.org/lkml/2015/7/15/881]
+
+I ran a test on my system to get an idea of how often dma_pool_alloc()
+calls into pool_alloc_page().
+
+After Boot:	[   30.119863] alloc_calls:541, page_allocs:7
+After an hour:	[ 3600.951031] alloc_calls:9566, page_allocs:12
+After copying 1GB file onto a USB drive:
+		[ 4260.657148] alloc_calls:17225, page_allocs:12
+
+It doesn't look like dma_pool_alloc() calls down to the page allocator
+very often (at least on my system).
+
+
+Sean O. Stalley (4):
+  mm: Add support for __GFP_ZERO flag to dma_pool_alloc()
+  mm: Add dma_pool_zalloc() call to DMA API
+  pci: mm: Add pci_pool_zalloc() call
+  coccinelle: mm: scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
+
+ Documentation/DMA-API.txt                          |  7 ++
+ include/linux/dmapool.h                            |  6 ++
+ include/linux/pci.h                                |  2 +
+ mm/dmapool.c                                       |  9 ++-
+ .../coccinelle/api/alloc/pool_zalloc-simple.cocci  | 84 ++++++++++++++++++++++
+ 5 files changed, 106 insertions(+), 2 deletions(-)
+ create mode 100644 scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
+
+-- 
+1.9.1
+
