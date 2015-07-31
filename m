@@ -1,123 +1,177 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:33960 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752107AbbGaCPN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jul 2015 22:15:13 -0400
+From: Guenter Roeck <linux@roeck-us.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Guenter Roeck <linux@roeck-us.net>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 21/49] PCI: Move saved required resource list out of must+optional assigning
-Date: Tue, 14 Jul 2015 15:46:52 -0700
-Message-Id: <1436914040-13206-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-References: <1436914040-13206-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v3] PCI: Only enable IO window if supported
+Date: Thu, 30 Jul 2015 19:15:08 -0700
+Message-Id: <1438308908-12259-1-git-send-email-linux@roeck-us.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We will need to share that saved list for alt_size support.
+The PCI subsystem always assumes that I/O is supported on PCIe bridges
+and tries to assign an I/O window to each child bus even if that is not
+the case.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+This may result in messages such as:
+
+  pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
+  pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
+  pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
+
+for each bridge port, even if a bus or its parent does not support I/O in
+the first place.
+
+To avoid this message, check if a bus supports I/O before trying to enable
+it.  Also check if the root bus has an IO window assigned; if not, it does
+not make sense to try to assign one to any of its child busses.
+
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 ---
- drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+v3: Reverse order of new flag, and name it PCI_BUS_FLAGS_SUPPORTS_IO
+    instead of PCI_BUS_FLAGS_NO_IO.
+    Don't use bool in pci_bridge_supports_io.
+    Drop pci_root_has_io_resource(). Instead, determine if the root bus
+    has an io window in pci_create_root_bus(), and clear
+    PCI_BUS_FLAGS_SUPPORTS_IO in its bus flags if it doesn't.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 64ef516..1c0b4c5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -456,6 +456,9 @@ static bool __has_addon(struct list_head *head,
- 	int add_count = 0;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 
-+	if (!realloc_head)
-+		return false;
-+
- 	/* check if we have add really */
- 	list_for_each_entry(dev_res, head, list) {
- 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-@@ -492,9 +495,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+v2: Use a new bus flag to indicate if IO is supported on a bus or not.
+    Using IORESOURCE_DISABLED in resource flags turned out to be futile,
+    since the term "!res->flags" is widely used to detect if a resource
+    window is enabled or not, and setting IORESOURCE_DISABLED would
+    affect all this code.
+
+This patch depends on 'PCI: move pci_read_bridge_bases to the generic
+PCI layer' by Lorenzo Pieralisi; without it, pci_read_bridge_io()
+is not always called.
+---
+ drivers/pci/probe.c     | 34 ++++++++++++++++++++++++++++++++++
+ drivers/pci/setup-bus.c |  9 +--------
+ include/linux/pci.h     |  1 +
+ 3 files changed, 36 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636681b6..d9e02ba34035 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -332,6 +332,24 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
+ 	}
  }
  
- static bool __assign_resources_must_add_sorted(struct list_head *head,
-+				 struct list_head *save_head,
- 				 struct list_head *realloc_head)
++static int pci_bridge_supports_io(struct pci_dev *bridge)
++{
++	u16 io;
++
++	pci_read_config_word(bridge, PCI_IO_BASE, &io);
++	if (io)
++		return 1;
++
++	/* IO_BASE/LIMIT is either hard-wired to zero or programmed to zero */
++	pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
++	pci_read_config_word(bridge, PCI_IO_BASE, &io);
++	pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
++	if (io)
++		return 1;
++
++	return 0;
++}
++
+ static void pci_read_bridge_io(struct pci_bus *child)
  {
--	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
-@@ -502,12 +505,6 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
- 	resource_size_t add_align, add_size;
+ 	struct pci_dev *dev = child->self;
+@@ -340,6 +358,15 @@ static void pci_read_bridge_io(struct pci_bus *child)
+ 	struct pci_bus_region region;
  	struct resource *res;
  
--	if (!__has_addon(head, realloc_head))
--		return false;
--
--	if (!save_resources(head, &save_head))
--		return false;
--
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
-@@ -548,7 +545,6 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
- 		/* Remove head list from realloc_head list */
- 		list_for_each_entry(dev_res, head, list)
- 			remove_from_list(realloc_head, dev_res->res);
--		free_list(&save_head);
- 		free_list(head);
- 
- 		return true;
-@@ -562,7 +558,7 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
- 		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
- 			remove_from_list(realloc_head, res);
--			remove_from_list(&save_head, res);
-+			remove_from_list(save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-@@ -581,11 +577,9 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
- 		}
- 	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list)
-+	list_for_each_entry(save_res, save_head, list)
- 		restore_resource(save_res, save_res->res);
- 
--	free_list(&save_head);
--
- 	return false;
- }
- 
-@@ -603,16 +597,24 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *    then try to reassign add_size for some resources.
- 	 */
- 
-+	LIST_HEAD(save_head);
++	if (!(child->bus_flags & PCI_BUS_FLAGS_SUPPORTS_IO))
++		return;
 +
- 	/* Check must+optional add */
--	if (realloc_head &&
--	    __assign_resources_must_add_sorted(head, realloc_head))
-+	if (__has_addon(head, realloc_head) &&
-+	    save_resources(head, &save_head) &&
-+	    __assign_resources_must_add_sorted(head, &save_head,
-+					       realloc_head)) {
-+		free_list(&save_head);
- 		return;
++	if (!pci_bridge_supports_io(dev)) {
++		dev_printk(KERN_DEBUG, &dev->dev, "  no I/O window\n");
++		child->bus_flags &= ~PCI_BUS_FLAGS_SUPPORTS_IO;
++		return;
 +	}
- 
- 	__sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
- 
-+	free_list(&save_head);
 +
- 	/* Try to satisfy any additional optional resource
- 		requests */
- 	if (realloc_head)
+ 	io_mask = PCI_IO_RANGE_MASK;
+ 	io_granularity = 0x1000;
+ 	if (dev->io_window_1k) {
+@@ -496,6 +523,7 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
+ 	INIT_LIST_HEAD(&b->resources);
+ 	b->max_bus_speed = PCI_SPEED_UNKNOWN;
+ 	b->cur_bus_speed = PCI_SPEED_UNKNOWN;
++	b->bus_flags = PCI_BUS_FLAGS_SUPPORTS_IO;
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+ 	if (parent)
+ 		b->domain_nr = parent->domain_nr;
+@@ -1938,6 +1966,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	resource_size_t offset;
+ 	char bus_addr[64];
+ 	char *fmt;
++	bool has_io = false;
+ 
+ 	b = pci_alloc_bus(NULL);
+ 	if (!b)
+@@ -2016,8 +2045,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		} else
+ 			bus_addr[0] = '\0';
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
++		if (resource_type(res) == IORESOURCE_IO)
++			has_io = true;
+ 	}
+ 
++	if (!has_io)
++		b->bus_flags &= ~PCI_BUS_FLAGS_SUPPORTS_IO;
++
+ 	down_write(&pci_bus_sem);
+ 	list_add_tail(&b->node, &pci_root_buses);
+ 	up_write(&pci_bus_sem);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 508cc56130e3..c3fdace30faf 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -744,7 +744,6 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+    base/limit registers must be read-only and read as 0. */
+ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ {
+-	u16 io;
+ 	u32 pmem;
+ 	struct pci_dev *bridge = bus->self;
+ 	struct resource *b_res;
+@@ -752,13 +751,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+ 	b_res[1].flags |= IORESOURCE_MEM;
+ 
+-	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+-	if (!io) {
+-		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
+-		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+-		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+-	}
+-	if (io)
++	if (bus->bus_flags & PCI_BUS_FLAGS_SUPPORTS_IO)
+ 		b_res[0].flags |= IORESOURCE_IO;
+ 
+ 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a8fb59..3bbabf344bfc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -191,6 +191,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
+ enum pci_bus_flags {
+ 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
+ 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
++	PCI_BUS_FLAGS_SUPPORTS_IO = (__force pci_bus_flags_t) 4,
+ };
+ 
+ /* These values come from the PCI Express Spec */
 -- 
-1.8.4.5
+2.1.4
 
