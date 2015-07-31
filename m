@@ -1,66 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46592 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751069AbbGaTi4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 31 Jul 2015 15:38:56 -0400
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
-	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
-	mmarek@suse.cz, akpm@linux-foundation.org
-Cc: sean.stalley@intel.com, bigeasy@linutronix.de,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org, cocci@systeme.lip6.fr
-Subject: [PATCH v2 0/4] mm: add dma_pool_zalloc() & pci_pool_zalloc()
-Date: Fri, 31 Jul 2015 12:36:40 -0700
-Message-Id: <1438371404-3219-1-git-send-email-sean.stalley@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<jingoohan1@gmail.com>, <nsekhar@ti.com>
+CC: <kishon@ti.com>
+Subject: [PATCH v5 2/3] PCI: host: pci-dra7xx: add pm support to pci dra7xx
+Date: Fri, 31 Jul 2015 17:55:11 +0530
+Message-ID: <1438345512-28973-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1438345512-28973-1-git-send-email-kishon@ti.com>
+References: <1438345512-28973-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently a call to dma_pool_alloc() with a ___GFP_ZERO flag returns
-a non-zeroed memory region.
+Add PM support to pci-dra7xx so that PCI clocks can be disabled
+during suspend and enabled back during resume without affecting
+PCI functionality.
 
-This patchset adds support for the __GFP_ZERO flag to dma_pool_alloc(),
-adds 2 wrapper functions for allocing zeroed memory from a pool, 
-and provides a coccinelle script for finding & replacing instances of
-dma_pool_alloc() followed by memset(0) with a single dma_pool_zalloc() call.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/host/pci-dra7xx.c |   51 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-Changes from v1 to v2:
-	- don't memset() POOL_POISON_ALLOCATED in dma_pool_alloc() if
-	  __GFP_ZERO is set
-	- Ran test to see how often pool_alloc_page() is called
-
-
-There was some concern that this always calls memset() to zero,
-instead of passing __GFP_ZERO into the page allocator.
-[https://lkml.org/lkml/2015/7/15/881]
-
-I ran a test on my system to get an idea of how often dma_pool_alloc()
-calls into pool_alloc_page().
-
-After Boot:	[   30.119863] alloc_calls:541, page_allocs:7
-After an hour:	[ 3600.951031] alloc_calls:9566, page_allocs:12
-After copying 1GB file onto a USB drive:
-		[ 4260.657148] alloc_calls:17225, page_allocs:12
-
-It doesn't look like dma_pool_alloc() calls down to the page allocator
-very often (at least on my system).
-
-
-Sean O. Stalley (4):
-  mm: Add support for __GFP_ZERO flag to dma_pool_alloc()
-  mm: Add dma_pool_zalloc() call to DMA API
-  pci: mm: Add pci_pool_zalloc() call
-  coccinelle: mm: scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-
- Documentation/DMA-API.txt                          |  7 ++
- include/linux/dmapool.h                            |  6 ++
- include/linux/pci.h                                |  2 +
- mm/dmapool.c                                       |  9 ++-
- .../coccinelle/api/alloc/pool_zalloc-simple.cocci  | 84 ++++++++++++++++++++++
- 5 files changed, 106 insertions(+), 2 deletions(-)
- create mode 100644 scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index d8b6d66..08b999a 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -433,6 +433,56 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
++static int dra7xx_pcie_suspend_noirq(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	int count = dra7xx->phy_count;
++
++	while (count--) {
++		phy_power_off(dra7xx->phy[count]);
++		phy_exit(dra7xx->phy[count]);
++	}
++
++	return 0;
++}
++
++static int dra7xx_pcie_resume_noirq(struct device *dev)
++{
++	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
++	int phy_count = dra7xx->phy_count;
++	int ret;
++	int i;
++
++	for (i = 0; i < phy_count; i++) {
++		ret = phy_init(dra7xx->phy[i]);
++		if (ret < 0)
++			goto err_phy;
++
++		ret = phy_power_on(dra7xx->phy[i]);
++		if (ret < 0) {
++			phy_exit(dra7xx->phy[i]);
++			goto err_phy;
++		}
++	}
++
++	return 0;
++
++err_phy:
++	while (--i >= 0) {
++		phy_power_off(dra7xx->phy[i]);
++		phy_exit(dra7xx->phy[i]);
++	}
++
++	return ret;
++}
++#endif
++
++static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(dra7xx_pcie_suspend_noirq,
++				      dra7xx_pcie_resume_noirq)
++};
++
+ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ 	{ .compatible = "ti,dra7-pcie", },
+ 	{},
+@@ -444,6 +494,7 @@ static struct platform_driver dra7xx_pcie_driver = {
+ 	.driver = {
+ 		.name	= "dra7-pcie",
+ 		.of_match_table = of_dra7xx_pcie_match,
++		.pm	= &dra7xx_pcie_pm_ops,
+ 	},
+ };
+ 
 -- 
-1.9.1
+1.7.9.5
 
