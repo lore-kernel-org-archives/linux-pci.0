@@ -1,146 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:35636 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbbHCEdg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 00:33:36 -0400
-Received: by pasy3 with SMTP id y3so4616244pas.2
-        for <linux-pci@vger.kernel.org>; Sun, 02 Aug 2015 21:33:36 -0700 (PDT)
-From: Adam Lee <adam.lee@canonical.com>
-To: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 2/2] serial: 8250_pci: Add support for Pericom PI7C9X795[1248]
-Date: Mon,  3 Aug 2015 12:33:21 +0800
-Message-Id: <1438576401-24921-2-git-send-email-adam.lee@canonical.com>
-In-Reply-To: <1438576401-24921-1-git-send-email-adam.lee@canonical.com>
-References: <1438576401-24921-1-git-send-email-adam.lee@canonical.com>
+Received: from mout0.freenet.de ([195.4.92.90]:43407 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751231AbbHAOXo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 1 Aug 2015 10:23:44 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: device-mapper development <dm-devel@redhat.com>,
+	mpatocka@redhat.com, Milan Broz <mbroz@redhat.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
+ <20150728192908.GA25264@redhat.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55BCD5A7.2080708@maya.org>
+Date: Sat, 1 Aug 2015 16:20:23 +0200
+MIME-Version: 1.0
+In-Reply-To: <20150728192908.GA25264@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pericom PI7C9X795[1248] are Uno/Dual/Quad/Octal UART devices, this
-patch enables them.
+On 07/28/2015 at 09:29 PM, Mike Snitzer wrote:
+[...]
+> Mikulas was saying to biect what is causing ATA to fail.
 
-Signed-off-by: Adam Lee <adam.lee@canonical.com>
----
- drivers/tty/serial/8250/8250_pci.c | 76 +++++++++++++++++++++++++++-----------
- 1 file changed, 55 insertions(+), 21 deletions(-)
+Some good news and some bad news. The good news first:
 
-diff --git a/drivers/tty/serial/8250/8250_pci.c b/drivers/tty/serial/8250/8250_pci.c
-index e55f18b..353112c 100644
---- a/drivers/tty/serial/8250/8250_pci.c
-+++ b/drivers/tty/serial/8250/8250_pci.c
-@@ -2331,27 +2331,12 @@ static struct pci_serial_quirk pci_serial_quirks[] __refdata = {
- 	 * Pericom
- 	 */
- 	{
--		.vendor		= 0x12d8,
--		.device		= 0x7952,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.setup		= pci_pericom_setup,
--	},
--	{
--		.vendor		= 0x12d8,
--		.device		= 0x7954,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.setup		= pci_pericom_setup,
--	},
--	{
--		.vendor		= 0x12d8,
--		.device		= 0x7958,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.setup		= pci_pericom_setup,
-+		.vendor         = PCI_VENDOR_ID_PERICOM,
-+		.device         = PCI_ANY_ID,
-+		.subvendor      = PCI_ANY_ID,
-+		.subdevice      = PCI_ANY_ID,
-+		.setup          = pci_pericom_setup,
- 	},
--
- 	/*
- 	 * PLX
- 	 */
-@@ -3056,6 +3041,10 @@ enum pci_board_num_t {
- 	pbn_fintek_8,
- 	pbn_fintek_12,
- 	pbn_wch384_4,
-+	pbn_pericom_PI7C9X7951,
-+	pbn_pericom_PI7C9X7952,
-+	pbn_pericom_PI7C9X7954,
-+	pbn_pericom_PI7C9X7958,
- };
- 
- /*
-@@ -3881,7 +3870,6 @@ static struct pciserial_board pci_boards[] = {
- 		.base_baud	= 115200,
- 		.first_offset	= 0x40,
- 	},
--
- 	[pbn_wch384_4] = {
- 		.flags		= FL_BASE0,
- 		.num_ports	= 4,
-@@ -3889,6 +3877,33 @@ static struct pciserial_board pci_boards[] = {
- 		.uart_offset    = 8,
- 		.first_offset   = 0xC0,
- 	},
-+	/*
-+	 * Pericom PI7C9X795[1248] Uno/Dual/Quad/Octal UART
-+	 */
-+	[pbn_pericom_PI7C9X7951] = {
-+		.flags          = FL_BASE0,
-+		.num_ports      = 1,
-+		.base_baud      = 921600,
-+		.uart_offset	= 0x8,
-+	},
-+	[pbn_pericom_PI7C9X7952] = {
-+		.flags          = FL_BASE0,
-+		.num_ports      = 2,
-+		.base_baud      = 921600,
-+		.uart_offset	= 0x8,
-+	},
-+	[pbn_pericom_PI7C9X7954] = {
-+		.flags          = FL_BASE0,
-+		.num_ports      = 4,
-+		.base_baud      = 921600,
-+		.uart_offset	= 0x8,
-+	},
-+	[pbn_pericom_PI7C9X7958] = {
-+		.flags          = FL_BASE0,
-+		.num_ports      = 8,
-+		.base_baud      = 921600,
-+		.uart_offset	= 0x8,
-+	},
- };
- 
- static const struct pci_device_id blacklist[] = {
-@@ -5154,6 +5169,25 @@ static struct pci_device_id serial_pci_tbl[] = {
- 		0,
- 		0, pbn_exar_XR17V8358 },
- 	/*
-+	 * Pericom PI7C9X795[1248] Uno/Dual/Quad/Octal UART
-+	 */
-+	{   PCI_VENDOR_ID_PERICOM, PCI_DEVICE_ID_PERICOM_PI7C9X7951,
-+		PCI_ANY_ID, PCI_ANY_ID,
-+		0,
-+		0, pbn_pericom_PI7C9X7951 },
-+	{   PCI_VENDOR_ID_PERICOM, PCI_DEVICE_ID_PERICOM_PI7C9X7952,
-+		PCI_ANY_ID, PCI_ANY_ID,
-+		0,
-+		0, pbn_pericom_PI7C9X7952 },
-+	{   PCI_VENDOR_ID_PERICOM, PCI_DEVICE_ID_PERICOM_PI7C9X7954,
-+		PCI_ANY_ID, PCI_ANY_ID,
-+		0,
-+		0, pbn_pericom_PI7C9X7954 },
-+	{   PCI_VENDOR_ID_PERICOM, PCI_DEVICE_ID_PERICOM_PI7C9X7958,
-+		PCI_ANY_ID, PCI_ANY_ID,
-+		0,
-+		0, pbn_pericom_PI7C9X7958 },
-+	/*
- 	 * Topic TP560 Data/Fax/Voice 56k modem (reported by Evan Clarke)
- 	 */
- 	{	PCI_VENDOR_ID_TOPIC, PCI_DEVICE_ID_TOPIC_TP560,
--- 
-2.5.0
+Your patchset
 
+f3396c58fd8442850e759843457d78b6ec3a9589,
+cf2f1abfbd0dba701f7f16ef619e4d2485de3366,
+7145c241a1bf2841952c3e297c4080b357b3e52d,
+94f5e0243c48aa01441c987743dc468e2d6eaca2,
+dc2676210c425ee8e5cb1bec5bc84d004ddf4179,
+0f5d8e6ee758f7023e4353cca75d785b2d4f6abe,
+b3c5fd3052492f1b8d060799d4f18be5a5438add
+
+seems to works fine w/ 3.18.19 !!
+
+Why did I test it with 3.18.x now? Because I suddenly got two ata errors
+(ata1 and ata2) with clean 3.19.8 (w/o the AMD-Vi IO_PAGE_FAULTs) during
+normal operation. This means: 3.19 must already be broken, too.
+
+Therefore, I applied your patchset to 3.18.x and it seems to work like a
+charme - I don't get any AMD-Vi IO_PAGE_FAULTs on boot and no ata errors
+(until now).
+
+
+Next I did: I tried to bisect between 3.18 and 3.19 with your patchset
+applied, because w/ this patchset applied, the problem can be seen
+easily and directly on boot. Unfortunately, this does work only a few
+git bisect rounds until I got stuck because of interferences with your
+extra patches applied:
+
+git bisect start
+# good: [b2776bf7149bddd1f4161f14f79520f17fc1d71d] Linux 3.18
+git bisect good b2776bf7149bddd1f4161f14f79520f17fc1d71d
+# bad: [bfa76d49576599a4b9f9b7a71f23d73d6dcff735] Linux 3.19
+git bisect bad bfa76d49576599a4b9f9b7a71f23d73d6dcff735
+# good: [54850e73e86e3bc092680d1bdb84eb322f982ab1] zram: change
+parameter from vaild_io_request()
+git bisect good 54850e73e86e3bc092680d1bdb84eb322f982ab1
+# bad: [dab363f938a53ddaee60bfecc1aebdbb3d3af5f0] Merge tag
+'staging-3.19-rc1' of
+git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging
+git bisect bad dab363f938a53ddaee60bfecc1aebdbb3d3af5f0
+# bad: [26178ec11ef3c6c814bf16a0a2b9c2f7242e3c64] x86: mm: consolidate
+VM_FAULT_RETRY handling
+git bisect bad 26178ec11ef3c6c814bf16a0a2b9c2f7242e3c64
+# bad: [e7cf773d431a63a2417902696fcc9e0ebdc83bbe] Merge tag
+'usb-3.19-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb
+git bisect bad e7cf773d431a63a2417902696fcc9e0ebdc83bbe
+# good: [9ea18f8cab5f1c36cdd0f09717e35ceb48c36a87] Merge branch
+'for-3.19/drivers' of git://git.kernel.dk/linux-block
+git bisect good 9ea18f8cab5f1c36cdd0f09717e35ceb48c36a87
+Bisecting: 251 revisions left to test after this (roughly 8 steps)
+error: Your local changes to the following files would be overwritten by
+checkout:
+        drivers/md/dm-crypt.c
+Please, commit your changes or stash them before you can switch branches.
+Aborting
+
+
+Do you have any idea how to proceed at this point?
+
+
+Thanks,
+Andreas
