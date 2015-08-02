@@ -1,191 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:59971 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932670AbbHKA37 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:29:59 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 11 Aug 2015 05:59:57 +0530
-Date: Tue, 11 Aug 2015 10:29:49 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-Subject: Re: [PATCH v6 10/42] powerpc/powernv: pnv_ioda_setup_dma() configure
- one PE only
-Message-ID: <20150811002949.GA16482@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-11-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C86F5F.70603@ozlabs.ru>
+Received: from mout0.freenet.de ([195.4.92.90]:41660 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751875AbbHBSu5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 2 Aug 2015 14:50:57 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Mikulas Patocka <mpatocka@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
+ <20150728192908.GA25264@redhat.com> <55BCD5A7.2080708@maya.org>
+ <55BE1D5E.6020709@maya.org>
+ <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55BE65E6.7060901@maya.org>
+Date: Sun, 2 Aug 2015 20:48:06 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55C86F5F.70603@ozlabs.ru>
+In-Reply-To: <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 07:31:11PM +1000, Alexey Kardashevskiy wrote:
->On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>The original implementation of pnv_ioda_setup_dma() iterates the
->>list of PEs and configures the DMA32 space for them one by one.
->>The function was designed to be called during PHB fixup time.
->>When configuring PE's DMA32 space in pcibios_setup_bridge(), in
->>order to support PCI hotplug, we have to have the function PE
->>oriented.
->>
->>This renames pnv_ioda_setup_dma() to pnv_ioda1_setup_dma() and
->>adds one more argument "struct pnv_ioda_pe *pe" to it. The caller,
->>pnv_pci_ioda_setup_DMA(), gets PE from the list and passes to it
->>or pnv_pci_ioda2_setup_dma_pe(). The patch shouldn't cause behavioral
->>changes.
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 75 +++++++++++++++----------------
->>  1 file changed, 36 insertions(+), 39 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 8456f37..cd22002 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -2443,52 +2443,29 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->>  		pnv_ioda_setup_bus_dma(pe, pe->pbus);
->>  }
->>
->>-static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->>+static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
->>+					struct pnv_ioda_pe *pe,
->>+					unsigned int base)
->>  {
->>  	struct pci_controller *hose = phb->hose;
->>-	struct pnv_ioda_pe *pe;
->>-	unsigned int dma_weight;
->>+	unsigned int dma_weight, segs;
->>
->>  	/* Calculate the PHB's DMA weight */
->>  	dma_weight = pnv_ioda_phb_dma_weight(phb);
->>  	pr_info("PCI%04x has %ld DMA32 segments, total weight %d\n",
->>  		hose->global_number, phb->ioda.dma32_segcount, dma_weight);
->>
->>-	pnv_pci_ioda_setup_opal_tce_kill(phb);
->>-
->>-	/* Walk our PE list and configure their DMA segments, hand them
->>-	 * out one base segment plus any residual segments based on
->>-	 * weight
->>-	 */
->>-	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
->>-		if (!pe->dma32_weight)
->>-			continue;
->>-
->>-		/*
->>-		 * For IODA2 compliant PHB3, we needn't care about the weight.
->>-		 * The all available 32-bits DMA space will be assigned to
->>-		 * the specific PE.
->>-		 */
->>-		if (phb->type == PNV_PHB_IODA1) {
->>-			unsigned int segs, base = 0;
->>-
->>-			if (pe->dma32_weight <
->>-			    dma_weight / phb->ioda.dma32_segcount)
->>-				segs = 1;
->>-			else
->>-				segs = (pe->dma32_weight *
->>-					phb->ioda.dma32_segcount) / dma_weight;
->>-
->>-			pe_info(pe, "DMA32 weight %d, assigned %d segments\n",
->>-				pe->dma32_weight, segs);
->>-			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
->>+	if (pe->dma32_weight <
->>+	    dma_weight / phb->ioda.dma32_segcount)
+On 08/01/2015 at 19:57, Mikulas Patocka wrote:
 >
->Can be one line now.
 >
+> On Sun, 2 Aug 2015, Andreas Hartmann wrote:
+>
+>> On 08/01/2015 at 04:20 PM Andreas Hartmann wrote:
+>>> On 07/28/2015 at 09:29 PM, Mike Snitzer wrote:
+>>> [...]
+>>>> Mikulas was saying to biect what is causing ATA to fail.
+>>>
+>>> Some good news and some bad news. The good news first:
+>>>
+>>> Your patchset
+>>>
+>>> f3396c58fd8442850e759843457d78b6ec3a9589,
+>>> cf2f1abfbd0dba701f7f16ef619e4d2485de3366,
+>>> 7145c241a1bf2841952c3e297c4080b357b3e52d,
+>>> 94f5e0243c48aa01441c987743dc468e2d6eaca2,
+>>> dc2676210c425ee8e5cb1bec5bc84d004ddf4179,
+>>> 0f5d8e6ee758f7023e4353cca75d785b2d4f6abe,
+>>> b3c5fd3052492f1b8d060799d4f18be5a5438add
+>>>
+>>> seems to work fine w/ 3.18.19 !!
+>>>
+>>> Why did I test it with 3.18.x now? Because I suddenly got two ata errors
+>>> (ata1 and ata2) with clean 3.19.8 (w/o the AMD-Vi IO_PAGE_FAULTs) during
+>>> normal operation. This means: 3.19 must already be broken, too.
+>>>
+>>> Therefore, I applied your patchset to 3.18.x and it seems to work like a
+>>> charme - I don't get any AMD-Vi IO_PAGE_FAULTs on boot and no ata errors
+>>> (until now).
+>>>
+>>>
+>>> Next I did: I tried to bisect between 3.18 and 3.19 with your patchset
+>>> applied, because w/ this patchset applied, the problem can be seen
+>>> easily and directly on boot. Unfortunately, this does work only a few
+>>> git bisect rounds until I got stuck because of interferences with your
+>>> extra patches applied:
+>>
+>> [Resolved the problems written at the last post.]
+>>
+>> Bisecting ended here:
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
+>>
+>> block: remove artifical max_hw_sectors cap
+>>
+>>
+>> Removing this patch on 3.19 and 4.1 make things working again. Didn't
+>> test 4.0, but I think it's the same. No more AMD-Vi IO_PAGE_FAULTS  with
+>> that patch reverted.
+>>
+>>
+>> Please check why this patch triggers AMD-Vi IO_PAGE_FAULTS.
+>>
+>>
+>> Thanks,
+>> kind regards,
+>> Andreas Hartmann
+>
+> I would submit this bug to maintainers of AMD-Vi. They understand the
+> hardware, so they should tell why do large I/O requests result in
+> IO_PAGE_FAULTs.
 
-Indeed.
+You forgot the ata errors ... . They are gone, too. I got these ata 
+errors on 3.19 w/o your patchset and w/o AMD-Vi IO_PAGES_FAULTs, too.
 
->>+		segs = 1;
->>+	else
->>+		segs = (pe->dma32_weight *
->>+			phb->ioda.dma32_segcount) / dma_weight;
->>+	pe_info(pe, "DMA weight %d, assigned %d segments\n",
->>+		pe->dma32_weight, segs);
->>+	pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
->
->
->Why not to merge pnv_ioda1_setup_dma() to pnv_pci_ioda_setup_dma_pe()?
->
 
-There're two reasons:
-- They're separate logically. One is calculating number of DMA32 segments required.
-  Another one is allocate TCE32 tables and configure devices with them.
-- In PCI hotplug path, I need pnv_ioda1_setup_dma() which has "pe" as parameter.
 
->>
->>-			base += segs;
->>-		} else {
->>-			pe_info(pe, "Assign DMA32 space\n");
->>-			pnv_pci_ioda2_setup_dma_pe(phb, pe);
->>-		}
->>-	}
->>+	return segs;
->>  }
->>
->>  #ifdef CONFIG_PCI_MSI
->>@@ -2955,12 +2932,32 @@ static void pnv_pci_ioda_setup_DMA(void)
->>  {
->>  	struct pci_controller *hose, *tmp;
->>  	struct pnv_phb *phb;
->>+	struct pnv_ioda_pe *pe;
->>+	unsigned int base;
->>
->>  	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
->>-		pnv_ioda_setup_dma(hose->private_data);
->>+		phb = hose->private_data;
->>+		pnv_pci_ioda_setup_opal_tce_kill(phb);
->>+
->>+		base = 0;
->>+		list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
->>+			if (!pe->dma32_weight)
->>+				continue;
->>+
->>+			switch (phb->type) {
->>+			case PNV_PHB_IODA1:
->>+				base += pnv_ioda1_setup_dma(phb, pe, base);
->
->
->This @base handling seems never be tested between 8..11 as "[PATCH v6 11/42]
->powerpc/powernv: Trace DMA32 segments consumed by PE"
->removes it and I suspect you only tested the final version. Which is ok for
->the final result but not ok for bisectability.
->
->Looks like 8/42, 9/42, 10/42, 11/42 need to be rearranged or merged to remove
->this multiple @base touching.
->
-
-Why ?
-
->
->>+				break;
->>+			case PNV_PHB_IODA2:
->>+				pnv_pci_ioda2_setup_dma_pe(phb, pe);
->>+				break;
->>+			default:
->>+				pr_warn("%s: No DMA for PHB type %d\n",
->>+					__func__, phb->type);
->>+			}
->>+		}
->>
->>  		/* Mark the PHB initialization done */
->>-		phb = hose->private_data;
->>  		phb->initialized = 1;
->>  	}
->>  }
->>
-
-Thanks,
-Gavin
+Regards,
+Andreas
 
