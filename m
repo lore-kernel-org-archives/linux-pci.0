@@ -1,70 +1,52 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: [PATCH 2/3] powerpc: PCI: Fix lookup of linux,pci-probe-only property
-Date: Fri, 14 Aug 2015 15:41:07 +0100
-Message-Id: <1439563268-13418-3-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1439563268-13418-1-git-send-email-marc.zyngier@arm.com>
-References: <1439563268-13418-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:36636 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753486AbbHBBGb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 1 Aug 2015 21:06:31 -0400
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH 0/4] New Paravirtual front-end for PCI in a Hyper-V VM
+Date: Sun,  2 Aug 2015 00:54:45 +0000
+Message-Id: <1438476889-19220-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When find_and_init_phbs() looks for the probe-only property, it seems
-to trust the firmware to be correctly written, and assumes that there
-is a parameter to the property.
+From: Jake Oshins <jakeo@microsoft.com>
 
-It is conceivable that the firmware could not be that perfect, and it
-could expose this property naked (at least one arm64 platform seems to
-exhibit this exact behaviour). The setup code the ends up making
-a decision based on whatever the property pointer points to, which
-is likely to be junk.
+This patch series exposes the primitives necessary for an interrupt domain
+in a module and then introduces a new driver.  This driver exposes a root
+PCI bus when running in a Hyper-V VM for each device which is passed through
+to the VM from the physical host.
 
-Instead, let's check for the validity of the property, and ignore
-it if the firmware couldn't make up its mind.
+This patch series differs from an earlier patch series in that the way
+interrupts are managed for the devices has been rewritten, this time to use
+IRQ domains, which allows the patches to be applied to the linux-next tree.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- arch/powerpc/platforms/pseries/setup.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+Jake Oshins (4):
+  drivers:hv: Export a function that maps Linux CPU num onto Hyper-V
+    proc num
+  drivers:hv: Define the channel type for Hyper-V PCI Express
+    pass-through
+  drivers:x86:pci: Make it possible to implement a PCI MSI IRQ Domain in
+    a module.
+  drivers:pci:hv: New paravirtual PCI front-end for Hyper-V VMs
 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index df6a704..6bdc1f9 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -490,14 +490,19 @@ static void __init find_and_init_phbs(void)
- 	 */
- 	if (of_chosen) {
- 		const int *prop;
-+		int len;
- 
- 		prop = of_get_property(of_chosen,
--				"linux,pci-probe-only", NULL);
-+				"linux,pci-probe-only", &len);
- 		if (prop) {
--			if (*prop)
--				pci_add_flags(PCI_PROBE_ONLY);
--			else
--				pci_clear_flags(PCI_PROBE_ONLY);
-+			if (len) {
-+				if (be32_to_cpup(prop))
-+					pci_add_flags(PCI_PROBE_ONLY);
-+				else
-+					pci_clear_flags(PCI_PROBE_ONLY);
-+			} else {
-+				pr_warn("linux,pci-probe-only set without value, ignoring\n");
-+			}
- 		}
- 	}
- }
+ MAINTAINERS                    |    1 +
+ arch/x86/kernel/apic/vector.c  |    2 +
+ drivers/hv/vmbus_drv.c         |   17 +
+ drivers/pci/Kconfig            |    7 +
+ drivers/pci/host/Makefile      |    1 +
+ drivers/pci/host/hv_pcifront.c | 2228 ++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/msi.c              |    1 +
+ include/linux/hyperv.h         |   13 +
+ kernel/irq/chip.c              |    1 +
+ 9 files changed, 2271 insertions(+)
+ create mode 100644 drivers/pci/host/hv_pcifront.c
+
 -- 
-2.1.4
+1.9.1
 
