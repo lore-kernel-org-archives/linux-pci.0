@@ -1,81 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34496 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751460AbbHMH5V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Aug 2015 03:57:21 -0400
-Date: Thu, 13 Aug 2015 09:57:17 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
-	Gregor Dick <gdick@solarflare.com>,
-	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v3 08/11] PCI: Clean up ATS error handling
-Message-ID: <20150813075717.GG12342@suse.de>
-References: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150811155202.21078.33427.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150811155202.21078.33427.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH 1/4] drivers:hv: Export a function that maps Linux CPU num onto Hyper-V proc num
+Date: Sun,  2 Aug 2015 00:54:46 +0000
+Message-Id: <1438476889-19220-2-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1438476889-19220-1-git-send-email-jakeo@microsoft.com>
+References: <1438476889-19220-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjoern,
+From: Jake Oshins <jakeo@microsoft.com>
 
-On Tue, Aug 11, 2015 at 10:52:02AM -0500, Bjorn Helgaas wrote:
-> There's no need to BUG() if we enable ATS when it's already enabled.  We
-> don't need to BUG() when disabling ATS on a device that doesn't support ATS
-> or if it's already disabled.  If ATS is enabled, certainly we found an ATS
-> capability in the past, so it should still be there now.
-> 
-> Clean up these error paths.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+This patch exposes the mapping between Linux CPU number and Hyper-V virtual
+processor number.  This is necessary because the hypervisor needs to know which
+virtual processors to target when making a mapping in the Interrupt Redirection
+Table in the I/O MMU.
 
-Two comments inline. With these changes:
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 17 +++++++++++++++++
+ include/linux/hyperv.h |  2 ++
+ 2 files changed, 19 insertions(+)
 
-Reviewed-by: Joerg Roedel <jroedel@suse.de>
-
-> ---
->  drivers/pci/ats.c |   11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index 0b5b0ed..0f05274 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -44,11 +44,13 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
->  	u16 ctrl;
->  	struct pci_dev *pdev;
->  
-> -	BUG_ON(dev->ats_cap && dev->ats_enabled);
-> -
->  	if (!dev->ats_cap)
->  		return -EINVAL;
->  
-> +	WARN_ON(pci_ats_enabled(dev));
-> +	if (pci_ats_enabled(dev))
-> +		return -EBUSY;
-> +
-
-Could be written as
-
-	if (WARN_ON(pci_ats_enabled(dev)))
-		return -EBUSY;
-
->  	if (ps < PCI_ATS_MIN_STU)
->  		return -EINVAL;
->  
-> @@ -83,7 +85,8 @@ void pci_disable_ats(struct pci_dev *dev)
->  	struct pci_dev *pdev;
->  	u16 ctrl;
->  
-> -	BUG_ON(!dev->ats_cap || !dev->ats_enabled);
-> +	if (!pci_ats_enabled(dev))
-> +		return;
-
-Probably also:
-
-	if (WARN_ON(!pci_ats_enabled(dev)))
-
-?
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 2064f31..5b1a019 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1153,6 +1153,23 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ }
+ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+ 
++/**
++ * vmbus_cpu_number_to_vp_number() - Map CPU to VP.
++ * @cpu_number: CPU number in Linux terms
++ *
++ * This function returns the mapping between the Linux processor
++ * number and the hypervisor's virtual processor number, useful
++ * in making hypercalls and such that talk about specific
++ * processors.
++ *
++ * Return: Virtual processor number in Hyper-V terms
++ */
++int vmbus_cpu_number_to_vp_number(int cpu_number)
++{
++	return hv_context.vp_index[cpu_number];
++}
++EXPORT_SYMBOL_GPL(vmbus_cpu_number_to_vp_number);
++
+ static int vmbus_acpi_add(struct acpi_device *device)
+ {
+ 	acpi_status result;
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 54733d5..02393b6 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -982,6 +982,8 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			resource_size_t size, resource_size_t align,
+ 			bool fb_overlap_ok);
+ 
++int vmbus_cpu_number_to_vp_number(int cpu_number);
++
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
+  *
+-- 
+1.9.1
 
