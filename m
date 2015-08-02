@@ -1,255 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:33783 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753187AbbHGBox (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 21:44:53 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 7 Aug 2015 11:44:50 +1000
-Date: Fri, 7 Aug 2015 11:43:50 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pantelis Antoniou <panto@antoniou-consulting.com>,
-	aik@ozlabs.ru
-Subject: Re: [PATCH v6 41/42] drivers/of: Export OF changeset functions
-Message-ID: <20150807014350.GA23647@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-42-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_JsqK5NhRz4Pg3m=OJMHa5rxV9O5F74Ew-xGjyNgbW=SwDLg@mail.gmail.com>
+Received: from mout1.freenet.de ([195.4.92.91]:42204 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751337AbbHBNn0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 2 Aug 2015 09:43:26 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	mpatocka@redhat.com, Milan Broz <mbroz@redhat.com>,
+	Jens Axboe <axboe@fb.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
+ <20150728192908.GA25264@redhat.com> <55BCD5A7.2080708@maya.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55BE1D5E.6020709@maya.org>
+Date: Sun, 2 Aug 2015 15:38:38 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqK5NhRz4Pg3m=OJMHa5rxV9O5F74Ew-xGjyNgbW=SwDLg@mail.gmail.com>
+In-Reply-To: <55BCD5A7.2080708@maya.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 06, 2015 at 08:48:10AM -0500, Rob Herring wrote:
->On Wed, Aug 5, 2015 at 11:11 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+On 08/01/2015 at 04:20 PM Andreas Hartmann wrote:
+> On 07/28/2015 at 09:29 PM, Mike Snitzer wrote:
+> [...]
+>> Mikulas was saying to biect what is causing ATA to fail.
+> 
+> Some good news and some bad news. The good news first:
+> 
+> Your patchset
+> 
+> f3396c58fd8442850e759843457d78b6ec3a9589,
+> cf2f1abfbd0dba701f7f16ef619e4d2485de3366,
+> 7145c241a1bf2841952c3e297c4080b357b3e52d,
+> 94f5e0243c48aa01441c987743dc468e2d6eaca2,
+> dc2676210c425ee8e5cb1bec5bc84d004ddf4179,
+> 0f5d8e6ee758f7023e4353cca75d785b2d4f6abe,
+> b3c5fd3052492f1b8d060799d4f18be5a5438add
+> 
+> seems to work fine w/ 3.18.19 !!
+> 
+> Why did I test it with 3.18.x now? Because I suddenly got two ata errors
+> (ata1 and ata2) with clean 3.19.8 (w/o the AMD-Vi IO_PAGE_FAULTs) during
+> normal operation. This means: 3.19 must already be broken, too.
+> 
+> Therefore, I applied your patchset to 3.18.x and it seems to work like a
+> charme - I don't get any AMD-Vi IO_PAGE_FAULTs on boot and no ata errors
+> (until now).
+> 
+> 
+> Next I did: I tried to bisect between 3.18 and 3.19 with your patchset
+> applied, because w/ this patchset applied, the problem can be seen
+> easily and directly on boot. Unfortunately, this does work only a few
+> git bisect rounds until I got stuck because of interferences with your
+> extra patches applied:
 
-Thanks, Rob. All your comments will be covered in next revision.
+[Resolved the problems written at the last post.]
+
+Bisecting ended here:
+
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
+
+block: remove artifical max_hw_sectors cap
+
+
+Removing this patch on 3.19 and 4.1 make things working again. Didn't
+test 4.0, but I think it's the same. No more AMD-Vi IO_PAGE_FAULTS  with
+that patch reverted.
+
+
+Please check why this patch triggers AMD-Vi IO_PAGE_FAULTS.
+
 
 Thanks,
-Gavin
-
->> The PowerNV PCI hotplug driver is going to use the OF changeset
->> to manage the changed device sub-tree, which requires those OF
->> changeset functions are exported.
->>
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  drivers/of/dynamic.c  | 65 ++++++++++++++++++++++++++++++++++++---------------
->>  drivers/of/overlay.c  |  8 +++----
->>  drivers/of/unittest.c |  4 ++--
->>  include/linux/of.h    |  2 ++
->>  4 files changed, 54 insertions(+), 25 deletions(-)
->>
->> diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
->> index 53826b8..af65b5b 100644
->> --- a/drivers/of/dynamic.c
->> +++ b/drivers/of/dynamic.c
->> @@ -646,6 +646,7 @@ void of_changeset_init(struct of_changeset *ocs)
->>         memset(ocs, 0, sizeof(*ocs));
->>         INIT_LIST_HEAD(&ocs->entries);
->>  }
->> +EXPORT_SYMBOL(of_changeset_init);
->
->We probably want these to be the _GPL variant.
->
->>
->>  /**
->>   * of_changeset_destroy - Destroy a changeset
->> @@ -662,20 +663,9 @@ void of_changeset_destroy(struct of_changeset *ocs)
->>         list_for_each_entry_safe_reverse(ce, cen, &ocs->entries, node)
->>                 __of_changeset_entry_destroy(ce);
->>  }
->> +EXPORT_SYMBOL(of_changeset_destroy);
->>
->> -/**
->> - * of_changeset_apply - Applies a changeset
->> - *
->> - * @ocs:       changeset pointer
->> - *
->> - * Applies a changeset to the live tree.
->> - * Any side-effects of live tree state changes are applied here on
->> - * sucess, like creation/destruction of devices and side-effects
->> - * like creation of sysfs properties and directories.
->> - * Returns 0 on success, a negative error value in case of an error.
->> - * On error the partially applied effects are reverted.
->> - */
->> -int of_changeset_apply(struct of_changeset *ocs)
->> +int __of_changeset_apply(struct of_changeset *ocs)
->>  {
->>         struct of_changeset_entry *ce;
->>         int ret;
->> @@ -704,17 +694,30 @@ int of_changeset_apply(struct of_changeset *ocs)
->>  }
->>
->>  /**
->> - * of_changeset_revert - Reverts an applied changeset
->> + * of_changeset_apply - Applies a changeset
->>   *
->>   * @ocs:       changeset pointer
->>   *
->> - * Reverts a changeset returning the state of the tree to what it
->> - * was before the application.
->> - * Any side-effects like creation/destruction of devices and
->> - * removal of sysfs properties and directories are applied.
->> + * Applies a changeset to the live tree.
->> + * Any side-effects of live tree state changes are applied here on
->> + * sucess, like creation/destruction of devices and side-effects
->
->s/sucess/success/
->
->> + * like creation of sysfs properties and directories.
->>   * Returns 0 on success, a negative error value in case of an error.
->> + * On error the partially applied effects are reverted.
->>   */
->> -int of_changeset_revert(struct of_changeset *ocs)
->> +int of_changeset_apply(struct of_changeset *ocs)
->> +{
->> +       int ret;
->> +
->> +       mutex_lock(&of_mutex);
->> +       ret = __of_changeset_apply(ocs);
->> +       mutex_unlock(&of_mutex);
->> +
->> +       return ret;
->> +}
->> +EXPORT_SYMBOL(of_changeset_apply);
->> +
->> +int __of_changeset_revert(struct of_changeset *ocs)
->>  {
->>         struct of_changeset_entry *ce;
->>         int ret;
->> @@ -742,6 +745,29 @@ int of_changeset_revert(struct of_changeset *ocs)
->>  }
->>
->>  /**
->> + * of_changeset_revert - Reverts an applied changeset
->> + *
->> + * @ocs:       changeset pointer
->> + *
->> + * Reverts a changeset returning the state of the tree to what it
->> + * was before the application.
->> + * Any side-effects like creation/destruction of devices and
->> + * removal of sysfs properties and directories are applied.
->> + * Returns 0 on success, a negative error value in case of an error.
->> + */
->> +int of_changeset_revert(struct of_changeset *ocs)
->> +{
->> +       int ret;
->> +
->> +       mutex_lock(&of_mutex);
->> +       ret = __of_changeset_revert(ocs);
->> +       mutex_unlock(&of_mutex);
->> +
->> +       return ret;
->> +}
->> +EXPORT_SYMBOL(of_changeset_revert);
->> +
->> +/**
->>   * of_changeset_action - Perform a changeset action
->>   *
->>   * @ocs:       changeset pointer
->> @@ -779,3 +805,4 @@ int of_changeset_action(struct of_changeset *ocs, unsigned long action,
->>         list_add_tail(&ce->node, &ocs->entries);
->>         return 0;
->>  }
->> +EXPORT_SYMBOL(of_changeset_action);
->> diff --git a/drivers/of/overlay.c b/drivers/of/overlay.c
->> index 24e025f..804ea33 100644
->> --- a/drivers/of/overlay.c
->> +++ b/drivers/of/overlay.c
->> @@ -378,9 +378,9 @@ int of_overlay_create(struct device_node *tree)
->>         }
->>
->>         /* apply the changeset */
->> -       err = of_changeset_apply(&ov->cset);
->> +       err = __of_changeset_apply(&ov->cset);
->>         if (err) {
->> -               pr_err("%s: of_changeset_apply() failed for tree@%s\n",
->> +               pr_err("%s: __of_changeset_apply() failed for tree@%s\n",
->>                                 __func__, tree->full_name);
->>                 goto err_revert_overlay;
->>         }
->> @@ -508,7 +508,7 @@ int of_overlay_destroy(int id)
->>
->>
->>         list_del(&ov->node);
->> -       of_changeset_revert(&ov->cset);
->> +       __of_changeset_revert(&ov->cset);
->>         of_free_overlay_info(ov);
->>         idr_remove(&ov_idr, id);
->>         of_changeset_destroy(&ov->cset);
->> @@ -539,7 +539,7 @@ int of_overlay_destroy_all(void)
->>         /* the tail of list is guaranteed to be safe to remove */
->>         list_for_each_entry_safe_reverse(ov, ovn, &ov_list, node) {
->>                 list_del(&ov->node);
->> -               of_changeset_revert(&ov->cset);
->> +               __of_changeset_revert(&ov->cset);
->>                 of_free_overlay_info(ov);
->>                 idr_remove(&ov_idr, ov->id);
->>                 kfree(ov);
->> diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
->> index 2270830..06eb3e5 100644
->> --- a/drivers/of/unittest.c
->> +++ b/drivers/of/unittest.c
->> @@ -527,7 +527,7 @@ static void __init of_unittest_changeset(void)
->>         unittest(!of_changeset_update_property(&chgset, parent, ppupdate), "fail update prop\n");
->>         unittest(!of_changeset_remove_property(&chgset, parent, ppremove), "fail remove prop\n");
->>         mutex_lock(&of_mutex);
->> -       unittest(!of_changeset_apply(&chgset), "apply failed\n");
->> +       unittest(!__of_changeset_apply(&chgset), "apply failed\n");
->
->You can just remove the mutex here.
->
->>         mutex_unlock(&of_mutex);
->>
->>         /* Make sure node names are constructed correctly */
->> @@ -536,7 +536,7 @@ static void __init of_unittest_changeset(void)
->>         of_node_put(np);
->>
->>         mutex_lock(&of_mutex);
->> -       unittest(!of_changeset_revert(&chgset), "revert failed\n");
->> +       unittest(!__of_changeset_revert(&chgset), "revert failed\n");
->
->And here.
->
->>         mutex_unlock(&of_mutex);
->>
->>         of_changeset_destroy(&chgset);
->> diff --git a/include/linux/of.h b/include/linux/of.h
->> index edc068d..5c030e1 100644
->> --- a/include/linux/of.h
->> +++ b/include/linux/of.h
->> @@ -1001,7 +1001,9 @@ extern int of_reconfig_get_state_change(unsigned long action,
->>
->>  extern void of_changeset_init(struct of_changeset *ocs);
->>  extern void of_changeset_destroy(struct of_changeset *ocs);
->> +extern int __of_changeset_apply(struct of_changeset *ocs);
->>  extern int of_changeset_apply(struct of_changeset *ocs);
->> +extern int __of_changeset_revert(struct of_changeset *ocs);
->
->These should go in of_private.h.
->
->>  extern int of_changeset_revert(struct of_changeset *ocs);
->>  extern int of_changeset_action(struct of_changeset *ocs,
->>                 unsigned long action, struct device_node *np,
->> --
->> 2.1.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe devicetree" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+kind regards,
+Andreas Hartmann
