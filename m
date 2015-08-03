@@ -1,112 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 12/52] PCI: Simplify res reference using in __assign_resources_sorted()
-Date: Thu, 20 Aug 2015 23:20:27 -0700
-Message-Id: <1440138067-4314-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20150803191340.GM7557@n2100.arm.linux.org.uk>
+References: <1437514519-18545-1-git-send-email-m-karicheri2@ti.com> <20150803191340.GM7557@n2100.arm.linux.org.uk>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 3 Aug 2015 17:34:36 -0500
+Message-ID: <CAErSpo4PBKL9KFf80C6n8CwGRB6zq02rJ9i-LhG5RQYaYKcsWg@mail.gmail.com>
+Subject: Re: [PATCH] ARM/PCI: set MPS before pci_bus_add_devices()
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use res instead of dev_res->res.
+On Mon, Aug 3, 2015 at 2:13 PM, Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
+> On Tue, Jul 21, 2015 at 05:35:19PM -0400, Murali Karicheri wrote:
+>> The MPS configuration should be done *before* pci_bus_add_devices().
+>> After pci_bus_add_devices(), drivers may be bound to devices, and
+>> the PCI core shouldn't touch device configuration while a driver
+>> owns the device.
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
+>> ---
+>>  arch/arm/kernel/bios32.c | 19 +++++--------------
+>>  1 file changed, 5 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+>> index fcbbbb1..17efde7 100644
+>> --- a/arch/arm/kernel/bios32.c
+>> +++ b/arch/arm/kernel/bios32.c
+>> @@ -520,7 +520,8 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>>       list_for_each_entry(sys, &head, node) {
+>>               struct pci_bus *bus = sys->bus;
+>>
+>> -             if (!pci_has_flag(PCI_PROBE_ONLY)) {
+>> +             if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>
+> Let's get rid of that useless check.  bus can't be NULL here.
+>
+> In the original code (below) if bus was NULL, then we would've already
+> oopsed before we got here.  As we don't oops here, no one is ever
+> seeing it being NULL, so the test is redundant.
+>
+>> -     list_for_each_entry(sys, &head, node) {
+>> -             struct pci_bus *bus = sys->bus;
+>> -
+>> -             /* Configure PCI Express settings */
+>> -             if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+Sorry, I had forgotten to push this branch, but I did already get rid
+of the check for bus being NULL:
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a3d48ef..9d7adab 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -452,6 +452,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
- 	resource_size_t add_align;
-+	struct resource *res;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -467,8 +468,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
--		dev_res->res->end += get_res_add_size(realloc_head,
--							dev_res->res);
-+		res = dev_res->res;
-+		res->end += get_res_add_size(realloc_head, res);
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
-@@ -477,16 +478,16 @@ static void __assign_resources_sorted(struct list_head *head,
- 		 * 2. resource with IORESOURCE_SIZEALIGN
- 		 *    update size above already change alignment.
- 		 */
--		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+		if (!(res->flags & IORESOURCE_STARTALIGN))
- 			continue;
- 
--		add_align = get_res_add_align(realloc_head, dev_res->res);
-+		add_align = get_res_add_align(realloc_head, res);
- 
- 		if (add_align) {
--			resource_size_t r_size = resource_size(dev_res->res);
-+			resource_size_t r_size = resource_size(res);
- 
--			dev_res->res->start = add_align;
--			dev_res->res->end = add_align + r_size - 1;
-+			res->start = add_align;
-+			res->end = add_align + r_size - 1;
-                }
- 	}
- 
-@@ -508,21 +509,21 @@ static void __assign_resources_sorted(struct list_head *head,
- 	/* check failed type */
- 	fail_type = pci_fail_res_type_mask(&local_fail_head);
- 	/* remove not need to be released assigned res from head list etc */
--	list_for_each_entry_safe(dev_res, tmp_res, head, list)
--		if (dev_res->res->parent &&
--		    !pci_need_to_release(fail_type, dev_res->res)) {
-+	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
-+		res = dev_res->res;
-+		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
--			remove_from_list(realloc_head, dev_res->res);
--			remove_from_list(&save_head, dev_res->res);
-+			remove_from_list(realloc_head, res);
-+			remove_from_list(&save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-+	}
- 
- 	free_list(&local_fail_head);
- 	/* Release assigned resource */
- 	list_for_each_entry(dev_res, head, list) {
--		struct resource *res = dev_res->res;
--
-+		res = dev_res->res;
- 		if (res->parent) {
- 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
- 				   "BAR %d: released %pR\n",
-@@ -533,8 +534,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	/* Restore start/end/flags from saved list */
- 	list_for_each_entry(save_res, &save_head, list) {
--		struct resource *res = save_res->res;
--
-+		res = save_res->res;
- 		res->start = save_res->start;
- 		res->end = save_res->end;
- 		res->flags = save_res->flags;
--- 
-1.8.4.5
-
+http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=808b27a5ae05
