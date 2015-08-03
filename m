@@ -1,61 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:33236 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751549AbbHDX7U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 19:59:20 -0400
-Received: by igbpg9 with SMTP id pg9so104140804igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 16:59:19 -0700 (PDT)
-Received: from localhost ([69.71.1.1])
-        by smtp.gmail.com with ESMTPSA id b1sm768714iob.18.2015.08.04.16.59.17
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
-        Tue, 04 Aug 2015 16:59:18 -0700 (PDT)
-Subject: [PATCH 1/2] PCI: pciehp: Remove unused interrupt events
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 04 Aug 2015 18:59:17 -0500
-Message-ID: <20150804235917.15421.15816.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150804235823.15421.71342.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150804235823.15421.71342.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from e06smtp14.uk.ibm.com ([195.75.94.110]:60051 "EHLO
+	e06smtp14.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754576AbbHCRE2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 13:04:28 -0400
+Received: from /spool/local
+	by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gerald.schaefer@de.ibm.com>;
+	Mon, 3 Aug 2015 18:04:26 +0100
+Date: Mon, 3 Aug 2015 19:04:20 +0200
+From: Gerald Schaefer <gerald.schaefer@de.ibm.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	Sebastian Ott <sebott@linux.vnet.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>
+Subject: Re: [RFC PATCH 0/1] iommu: Detach device from domain when removed
+ from group
+Message-ID: <20150803190420.74396481@thinkpad>
+In-Reply-To: <20150803154855.GI14980@8bytes.org>
+References: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
+	<20150803154855.GI14980@8bytes.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The list of interrupt events (INT_BUTTON_IGNORE, INT_PRESENCE_ON, etc.) was
-copied from other hotplug drivers, but pciehp doesn't use them all.
+On Mon, 3 Aug 2015 17:48:55 +0200
+Joerg Roedel <joro@8bytes.org> wrote:
 
-Remove the interrupt events that aren't used by pciehp.
+> On Tue, Jul 28, 2015 at 07:55:55PM +0200, Gerald Schaefer wrote:
+> > On s390, this eventually leads to a kernel panic when binding the device
+> > again to its non-vfio PCI driver, because of the missing arch-specific
+> > cleanup in detach_dev. On x86, the detach_dev callback will also not be
+> > called directly, but there is a notifier that will catch
+> > BUS_NOTIFY_REMOVED_DEVICE and eventually do the cleanup. Other
+> > architectures w/o the notifier probably have at least some kind of memory
+> > leak in this scenario, so a general fix would be nice.
+> 
+> This notifier is not arch-specific, but registered against the bus the
+> iommu-ops are set for. Why does it not run on s390?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/hotplug/pciehp.h |   10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+Adding the notifier would of course also work on s390 (and all other affected
+architectures). However, it seems that the "missing detach_dev" issue in this
+scenario is not fundamentally fixed by using this notifier, it just seems to
+hide the symptom by chance.
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 57cd132..aca84e1 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -101,18 +101,14 @@ struct controller {
- 	unsigned int power_fault_detected;
- };
- 
--#define INT_BUTTON_IGNORE		0
- #define INT_PRESENCE_ON			1
- #define INT_PRESENCE_OFF		2
- #define INT_SWITCH_CLOSE		3
- #define INT_SWITCH_OPEN			4
- #define INT_POWER_FAULT			5
--#define INT_POWER_FAULT_CLEAR		6
--#define INT_BUTTON_PRESS		7
--#define INT_BUTTON_RELEASE		8
--#define INT_BUTTON_CANCEL		9
--#define INT_LINK_UP			10
--#define INT_LINK_DOWN			11
-+#define INT_BUTTON_PRESS		6
-+#define INT_LINK_UP			7
-+#define INT_LINK_DOWN			8
- 
- #define STATIC_STATE			0
- #define BLINKINGON_STATE		1
+Adding the otherwise unneeded notifier just to work around this issue somehow
+doesn't seem right, also given that x86 is so far the only user of it. At
+least I thought it would be cleaner to fix it in common code and for all
+architectures. Not sure what's wrong with fixing the asymmetry as suggested
+in my patch, but I guess there are good reasons for having this asymmetry.
+
+For now, I'll just add the notifier to my s390 implementation and post it
+soon.
+
+> 
+> 
+> 	Joerg
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
