@@ -1,71 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:57029 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755405AbbHDKkk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Aug 2015 06:40:40 -0400
-Message-ID: <55C09694.30506@arm.com>
-Date: Tue, 04 Aug 2015 11:40:20 +0100
-From: James Morse <james.morse@arm.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:34868 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbbHCEoh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 00:44:37 -0400
+Received: by pasy3 with SMTP id y3so4816378pas.2
+        for <linux-pci@vger.kernel.org>; Sun, 02 Aug 2015 21:44:37 -0700 (PDT)
+Date: Mon, 3 Aug 2015 12:44:28 +0800
+From: Adam Lee <adam.lee@canonical.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/2] pci_ids: Add Pericom vendor and device ids
+Message-ID: <20150803044428.GD19820@adam-laptop>
+References: <1438576401-24921-1-git-send-email-adam.lee@canonical.com>
+ <20150803043647.GA20605@kroah.com>
 MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	Kangfenglong <kangfenglong@huawei.com>,
-	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v5 2/5] PCI: designware: Add ARM64 support
-References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com> <1437794486-21134-3-git-send-email-wangzhou1@hisilicon.com> <55B71F75.5030907@hisilicon.com> <55C0872E.9060507@arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D719E9@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D719E9@lhreml503-mbs>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150803043647.GA20605@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/08/15 11:23, Gabriele Paoloni wrote:
-> Hi James
+On Sun, Aug 02, 2015 at 09:36:47PM -0700, Greg Kroah-Hartman wrote:
+> On Mon, Aug 03, 2015 at 12:33:20PM +0800, Adam Lee wrote:
+> > This patch add Pericom's vendor id and Pericom PI7C9X795[1248] chips'
+> > device ids.
+> > 
+> > Signed-off-by: Adam Lee <adam.lee@canonical.com>
+> > ---
+> >  include/linux/pci_ids.h | 6 ++++++
+> >  1 file changed, 6 insertions(+)
+> > 
+> > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> > index fcff8f8..c4a93cf 100644
+> > --- a/include/linux/pci_ids.h
+> > +++ b/include/linux/pci_ids.h
+> > @@ -2995,4 +2995,10 @@
+> >  
+> >  #define PCI_VENDOR_ID_OCZ		0x1b85
+> >  
+> > +#define PCI_VENDOR_ID_PERICOM			0x12D8
+> > +#define PCI_DEVICE_ID_PERICOM_PI7C9X7951	0x7951
+> > +#define PCI_DEVICE_ID_PERICOM_PI7C9X7952	0x7952
+> > +#define PCI_DEVICE_ID_PERICOM_PI7C9X7954	0x7954
+> > +#define PCI_DEVICE_ID_PERICOM_PI7C9X7958	0x7958
 > 
-> Please see "[PATCH v6] PCI: Store PCIe bus address in struct of_pci_range"
+> Please read the top of this file, this isn't needed...
 > 
-> I think if you apply this patch your problem should be solved...
+> thanks,
 > 
-> If you follow the discussion you see that this patch is going to be part 
-> of the next designware patchset...
+> greg k-h
 
-Yes I just spotted that series after continuing through my email backlog.
+Oops. Pericom also has other products than serial card, so is it OK if I
+still leave PCI_VENDOR_ID_PERICOM in pci_ids.h and move device ids to
+particular driver? Thanks.
 
-> Wang Zhou said "You need apply Gabriele's patch before applying this patch."
-> but he didn't specify which one and obviously this patch should have been part
-> of the patch-set
-
-I assumed he meant your patch 1 in the same series, (given the reply was to
-patch 2).
-
-With the '[PATCH v6] PCI: Store PCIe bus address in struct of_pci_range'
-applied before patches and 1 and 2 of this series - pcie on the
-'Freescale i.MX6 Quad SABRE Lite Board' works fine.
-
-I can rescan the bus, load firmware, list nearby APs, and even get MSIs
-coming from the card.
-
-Tested-by: James Morse <james.morse@arm.com>
-
-
-
-James
+-- 
+Adam Lee
