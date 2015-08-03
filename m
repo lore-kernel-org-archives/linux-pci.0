@@ -1,56 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:35305 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751576AbbHRVYl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 17:24:41 -0400
+Received: from mail.linuxfoundation.org ([140.211.169.12]:39939 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282AbbHCEgs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 00:36:48 -0400
+Date: Sun, 2 Aug 2015 21:36:47 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Adam Lee <adam.lee@canonical.com>
+Cc: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/2] pci_ids: Add Pericom vendor and device ids
+Message-ID: <20150803043647.GA20605@kroah.com>
+References: <1438576401-24921-1-git-send-email-adam.lee@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <55D38BE6.6080302@gmx.de>
-References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee>
-	<trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71>
-	<trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
-	<alpine.LRH.2.20.1508182141200.24742@math.ut.ee>
-	<55D38BE6.6080302@gmx.de>
-Date: Tue, 18 Aug 2015 14:24:40 -0700
-Message-ID: <CAE9FiQVUUN-SLO0U4G5CC6MEoXfb=bGd+f3bRgQprtaMHjsvpA@mail.gmail.com>
-Subject: Re: Aw: A500 boot crash in 4.2.0-rc3-00246-g763e326
-From: Yinghai Lu <yinghai@kernel.org>
-To: Helge Deller <deller@gmx.de>
-Cc: Meelis Roos <mroos@linux.ee>, linux-parisc@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Ahern <david.ahern@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	James Bottomley <James.Bottomley@hansenpartnership.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438576401-24921-1-git-send-email-adam.lee@canonical.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 18, 2015 at 12:47 PM, Helge Deller <deller@gmx.de> wrote:
-> On 18.08.2015 20:44, Meelis Roos wrote:
->>> I did a bisect and commit 3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d ("PCI:
->>> Add pci_bus_addr_t") seems to be the culprit:
->>>
->>> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d
->>
->> CC: patch author and linux-pci.
->
->
-> I think this is the problem:
->
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -1,6 +1,10 @@
->  #
->  # PCI configuration
->  #
-> +config PCI_BUS_ADDR_T_64BIT
-> +       def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
-> +       depends on PCI
+On Mon, Aug 03, 2015 at 12:33:20PM +0800, Adam Lee wrote:
+> This patch add Pericom's vendor id and Pericom PI7C9X795[1248] chips'
+> device ids.
+> 
+> Signed-off-by: Adam Lee <adam.lee@canonical.com>
+> ---
+>  include/linux/pci_ids.h | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index fcff8f8..c4a93cf 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2995,4 +2995,10 @@
+>  
+>  #define PCI_VENDOR_ID_OCZ		0x1b85
+>  
+> +#define PCI_VENDOR_ID_PERICOM			0x12D8
+> +#define PCI_DEVICE_ID_PERICOM_PI7C9X7951	0x7951
+> +#define PCI_DEVICE_ID_PERICOM_PI7C9X7952	0x7952
+> +#define PCI_DEVICE_ID_PERICOM_PI7C9X7954	0x7954
+> +#define PCI_DEVICE_ID_PERICOM_PI7C9X7958	0x7958
 
-Thanks for bisecting.
+Please read the top of this file, this isn't needed...
 
-Then we should change to
+thanks,
 
-config PCI_BUS_ADDR_T_64BIT
-       def_bool y if (ARCH_DMA_ADDR_T_64BIT || SPARC64)
-       depends on PCI
+greg k-h
