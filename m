@@ -1,101 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:35776 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752140AbbHDPLR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 11:11:17 -0400
-Received: by labsr2 with SMTP id sr2so9462713lab.2
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 08:11:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1437662976-27188-2-git-send-email-l.stach@pengutronix.de>
-References: <1437662976-27188-1-git-send-email-l.stach@pengutronix.de>
-	<1437662976-27188-2-git-send-email-l.stach@pengutronix.de>
-Date: Tue, 4 Aug 2015 20:41:15 +0530
-Message-ID: <CAHM4w1=Sz1xJ1OGc9xAMVCv8hMLwnWmGrkRLHdqpdC7EgzEbpQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] PCI: designware: implement multivector MSI irq setup
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
+Received: from foss.arm.com ([217.140.101.70]:53466 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753232AbbHCNLe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 3 Aug 2015 09:11:34 -0400
+Date: Mon, 3 Aug 2015 14:11:32 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "Jayachandran C." <jchandra@broadcom.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	patchwork-lst@pengutronix.de
-Content-Type: text/plain; charset=UTF-8
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>, agraf@suse.de
+Subject: Re: [PATCH v3 1/2] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150803131131.GF10501@arm.com>
+References: <1438183681-30519-1-git-send-email-jchandra@broadcom.com>
+ <20150730133521.GA12999@red-moon>
+ <20150731160654.GB31408@jayachandranc.netlogicmicro.com>
+ <20150731162716.GA7182@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150731162716.GA7182@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 23, 2015 at 8:19 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Allows to set up and use multiple MSI irqs per device.
->
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> The ifdef is needed to avoid a compile error on
-> !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
-> when the kernel is compiled with MSI support.
->
-> v2: move ifdeffery inside single function
-> ---
->  drivers/pci/host/pcie-designware.c | 43 ++++++++++++++++++++++++++++++++++++++
->  1 file changed, 43 insertions(+)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be7181e..52c600327805 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
->         }
->
->         *pos = pos0;
-> +       desc->nvec_used = no_irqs;
-> +       desc->msi_attrib.multiple = order_base_2(no_irqs);
-> +
->         return irq;
->
->  no_valid_irq:
-> @@ -323,6 +326,45 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
->         return 0;
->  }
->
-> +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
-> +                            int nvec, int type)
-> +{
-> +#ifdef CONFIG_PCI_MSI
-> +       int irq, pos;
-> +       struct msi_desc *desc;
-> +       struct msi_msg msg;
-> +       struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-> +
-> +       /* MSI-X interrupts are not supported */
-> +       if (type == PCI_CAP_ID_MSIX)
-> +               return -EINVAL;
-> +
-> +       WARN_ON(!list_is_singular(&pdev->msi_list));
-> +       desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
-> +
+Hi Jayachandran, Bjorn,
 
-Probably existing function dw_msi_setup_irq() can be re-factored and code after
-this line can be reused from refactored function, as they are almost same.
+On Fri, Jul 31, 2015 at 05:27:16PM +0100, Lorenzo Pieralisi wrote:
+> On Fri, Jul 31, 2015 at 05:07:01PM +0100, Jayachandran C. wrote:
+> > On Thu, Jul 30, 2015 at 02:35:21PM +0100, Lorenzo Pieralisi wrote:
+> > > On Wed, Jul 29, 2015 at 04:28:00PM +0100, Jayachandran C wrote:
+> > > > -	pci_common_init_dev(dev, &hw);
+> > > > +	/* do not reassign resource if probe only */
+> > > > +	if (!pci_has_flag(PCI_PROBE_ONLY))
+> > > > +		pci_add_flags(PCI_REASSIGN_ALL_RSRC);
+> > > 
+> > > You should add PCI_REASSIGN_ALL_BUS here. As I said in patch 2 comment,
+> > 
+> > The idea is to do exactly what pci_common_init_dev does on ARM. There is
+> > not need to change behavior on ARM and deal with the fallout in this
+> > patchset.
+> 
+> You are enabling this driver on ARM64, and on ARM64 that flag does
+> make a difference, it does not on ARM as far as I can tell, but you do
+> not seem to care.
+> 
+> Actually Rob asked you to put together a function since most of
+> this code is replicated across ARM drivers eg:
+> 
+> drivers/pci/host/pci-versatile.c
+> 
+> Leave the code as it is and I will consolidate the code later.
+> 
+> > > please enable setup-irq.c in an explicit commit, re-sequence the
+> > > series and fold the Kconfig ARM64 enablement in this patch.
+> > 
+> > I would think that the Makefile and Kconfig changes should be
+> > togethter as the arm64 enablement patch. The previous patch is
+> > to update the gen_pci driver, and it really makes sense in that
+> > order.  I am not sure why you suggest this change.
+> 
+> Because this is not the only driver that requires compiling
+> drivers/pci/setup-irq.c on ARM64, I thought it made more sense
+> to do it in a separate patch to make that change standalone.
+> 
+> If for any reason we have to revert your patch that enables
+> PCI host generic on ARM64 (and we remove with it the compilation
+> of setup-irq.c) we would break other ARM64 PCI hosts that require it,
+> right ?
+> 
+> I leave the decision to Bjorn since I am away next week, I am fine
+> with the code as it is so please go ahead.
 
-> +       irq = assign_irq(nvec, desc, &pos);
-> +       if (irq < 0)
-> +               return irq;
-> +
-> +       if (pp->ops->get_msi_addr)
-> +               msg.address_lo = pp->ops->get_msi_addr(pp);
-> +       else
-> +               msg.address_lo = virt_to_phys((void *)pp->msi_data);
-> +       msg.address_hi = 0x0;
-> +
+In the interest of getting something merged, can I suggest you
+(Jayachandran) repost the patches with Lorenzo's suggestions to reorder
+the series and split up the setup-irq compilation into a separate patch?
 
-Although, not specific to this patch, but since we are now going to have
-ARM64 support for DW as well, so it would be nice to fill msg.address_hi
-with upper bytes rather hard-coding as 0.
+You can also add his ack to this patch.
 
-> +       if (pp->ops->get_msi_data)
-> +               msg.data = pp->ops->get_msi_data(pp, pos);
-> +       else
-> +               msg.data = pos;
-> +
-> +       pci_write_msi_msg(irq, &msg);
-> +
-> +       return 0;
+It's a pity that the code isn't quite how we'd like it to end up, but
+this at least enables people for 4.3 and I know that Lorenzo is working
+on tidying up the loose ends as additional patches (but he's on holiday
+this week). That includes removal of the PROBE_ONLY bodge that I've got
+queued in arch/arm64/kernel/pci.c.
 
-~Pratyush
+Bjorn, does that sound ok to you? I'm keen to have something working, as
+I'm starting to get beaten up about the lack of generic PCI on arm64.
+
+Cheers,
+
+Will
