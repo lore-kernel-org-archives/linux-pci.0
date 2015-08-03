@@ -1,114 +1,98 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55BFB06A.3040904@ti.com>
+Date: Mon, 3 Aug 2015 14:18:18 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <55C3FC93.6090008@roeck-us.net>
-References: <1438308908-12259-1-git-send-email-linux@roeck-us.net>
-	<CAE9FiQXuTKmXXCFsKUiMK43U+LpOzfa3oV0iNWS+Jh879EDNsw@mail.gmail.com>
-	<CAE9FiQVGhfbFW5-5deYcU2bDWE9k0-4+V+cepwdqZ661sLWOFA@mail.gmail.com>
-	<55C2C4F4.1040600@roeck-us.net>
-	<CAE9FiQXtSDBFy1rf4TPHwD-JjoB+5Wii1MBMBfGTaNosqnRJGg@mail.gmail.com>
-	<55C2E79E.3090809@roeck-us.net>
-	<CAE9FiQVDwX_-bX9sH2qv3thkKzOosFR3WvkUYWM=TsU-4oOSzA@mail.gmail.com>
-	<55C388CF.4090501@roeck-us.net>
-	<CAE9FiQUeY-aocR=vwRUopuERJc0uUWKMwDafqLHo2baeVG7cKg@mail.gmail.com>
-	<55C3FC93.6090008@roeck-us.net>
-Date: Thu, 6 Aug 2015 18:12:29 -0700
-Message-ID: <CAE9FiQXd3MKjHWzauEiKxHQPeYCL0bqP_YUdD-sj1y3GZMPAHw@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: Only enable IO window if supported
-From: Yinghai Lu <yinghai@kernel.org>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: multipart/mixed; boundary=001a113f8bb66ffabb051cae5418
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux@arm.linux.org.uk>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] ARM/PCI: set MPS before pci_bus_add_devices()
+References: <1437514519-18545-1-git-send-email-m-karicheri2@ti.com> <20150723145936.GX21967@google.com>
+In-Reply-To: <20150723145936.GX21967@google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a113f8bb66ffabb051cae5418
-Content-Type: text/plain; charset=UTF-8
-
-On Thu, Aug 6, 2015 at 5:32 PM, Guenter Roeck <linux@roeck-us.net> wrote:
-> Assuming case 1) includes case 3), root bridge does not support IO,
-> I have both case 1 and 2.
+On 07/23/2015 10:59 AM, Bjorn Helgaas wrote:
+> On Tue, Jul 21, 2015 at 05:35:19PM -0400, Murali Karicheri wrote:
+>> The MPS configuration should be done *before* pci_bus_add_devices().
+>> After pci_bus_add_devices(), drivers may be bound to devices, and
+>> the PCI core shouldn't touch device configuration while a driver
+>> owns the device.
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> Reported-by: Bjorn Helgaas <bhelgaas@google.com>
 >
-> Anyway, I think I am giving up. Sorry, I just fail to understand the
-> use case(s) you are trying to cover.
+> Applied to pci/enumeration for v4.3, thanks!  I removed the "bus" test; let
+> me know if you think that's incorrect.
+Ok. Will do. Thanks.
+
+Murali
+
 >
-> Why don't you submit a patch, I'll test it if it works for my use
-> case, and if it works we ask Bjorn to apply it. My problem is quite
-> simple: I don't want to get flooded with useless "no IO window" messages.
-> How it is solved doesn't matter to me, as long as it is solved.
-> Since you have a strong opinion on how it should be solved, we should
-> go with your solution and not keep turning in circles forever.
+>> ---
+>>   arch/arm/kernel/bios32.c | 19 +++++--------------
+>>   1 file changed, 5 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+>> index fcbbbb1..17efde7 100644
+>> --- a/arch/arm/kernel/bios32.c
+>> +++ b/arch/arm/kernel/bios32.c
+>> @@ -520,7 +520,8 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>>   	list_for_each_entry(sys, &head, node) {
+>>   		struct pci_bus *bus = sys->bus;
+>>
+>> -		if (!pci_has_flag(PCI_PROBE_ONLY)) {
+>> +		if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>
+> I think the test for "bus" being non-NULL is superfluous here.  If "bus"
+> were NULL, we would already oops in pci_bus_add_devices().
+>
+>> +			struct pci_bus *child;
+>>   			/*
+>>   			 * Size the bridge windows.
+>>   			 */
+>> @@ -530,25 +531,15 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>>   			 * Assign resources.
+>>   			 */
+>>   			pci_bus_assign_resources(bus);
+>> -		}
+>>
+>> +			list_for_each_entry(child, &bus->children, node)
+>> +				pcie_bus_configure_settings(child);
+>> +		}
+>>   		/*
+>>   		 * Tell drivers about devices found.
+>>   		 */
+>>   		pci_bus_add_devices(bus);
+>>   	}
+>> -
+>> -	list_for_each_entry(sys, &head, node) {
+>> -		struct pci_bus *bus = sys->bus;
+>> -
+>> -		/* Configure PCI Express settings */
+>> -		if (bus && !pci_has_flag(PCI_PROBE_ONLY)) {
+>> -			struct pci_bus *child;
+>> -
+>> -			list_for_each_entry(child, &bus->children, node)
+>> -				pcie_bus_configure_settings(child);
+>> -		}
+>> -	}
+>>   }
+>>
+>>   #ifndef CONFIG_PCI_HOST_ITE8152
+>> --
+>> 1.9.1
+>>
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
 
-Please check attached patch and post boot log.
 
-Thanks
-
-Yinghai
-
---001a113f8bb66ffabb051cae5418
-Content-Type: text/x-patch; charset=US-ASCII; name="pci_root_bus_no_ioport.patch"
-Content-Disposition: attachment; filename="pci_root_bus_no_ioport.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_id0xt0re0
-
-RnJvbTogR3VlbnRlciBSb2VjayA8bGludXhAcm9lY2stdXMubmV0PgpTdWJqZWN0OiBbUEFUQ0hd
-IFBDSTogT25seSB0cnkgdG8gYXNzaWduIGlvIHBvcnQgb25seSBpZiByb290IGJ1cyBzdXBwb3J0
-IHRoYXQKClRoZSBQQ0kgc3Vic3lzdGVtIGFsd2F5cyBhc3N1bWVzIHRoYXQgSS9PIGlzIHN1cHBv
-cnRlZCBvbiByb290IGJ1cyBhbmQKdHJpZXMgdG8gYXNzaWduIGFuIEkvTyB3aW5kb3cgdG8gZWFj
-aCBjaGlsZCBidXMgZXZlbiBpZiB0aGF0IGlzIG5vdCB0aGUKY2FzZS4KClRoaXMgbWF5IHJlc3Vs
-dCBpbiBtZXNzYWdlcyBzdWNoIGFzOgoKICBwY2llcG9ydCAwMDAwOjAyOjAwLjA6IHJlc1s3XT1b
-aW8gIDB4MTAwMC0weDBmZmZdIGdldF9yZXNfYWRkX3NpemUgYWRkX3NpemUgMTAwMAogIHBjaWVw
-b3J0IDAwMDA6MDI6MDAuMDogQkFSIDc6IG5vIHNwYWNlIGZvciBbaW8gIHNpemUgMHgxMDAwXQog
-IHBjaWVwb3J0IDAwMDA6MDI6MDAuMDogQkFSIDc6IGZhaWxlZCB0byBhc3NpZ24gW2lvICBzaXpl
-IDB4MTAwMF0KCmZvciBlYWNoIGJyaWRnZSBwb3J0LCBldmVuIGlmIHJvb3QgZG9lcyBub3Qgc3Vw
-cG9ydCBJL08gaW4gdGhlIGZpcnN0IHBsYWNlLgoKVG8gYXZvaWQgdGhpcyBtZXNzYWdlLCBjaGVj
-ayBpZiByb290IGJ1cyBzdXBwb3J0cyBJL08sIHRoZW4gY2hpbGQgYnVzCndpbGwgaW5oZXJpdCB0
-aGUgc2V0dGluZyBmcm9tIHBhcmVudCBidXMsIGFuZCBsYXRlciBkdXJpbmcgc2l6aW5nIGFuZAph
-c3NpZ25pbmcsIGNoZWNrIHRoYXQgYnVzIGZsYWdzIGFuZCBza2lwIHRob3NlIHJlc291cmNlcy4K
-CltiaGVsZ2FhczogcmV2ZXJzZSBzZW5zZSBvZiBuZXcgcGNpX2J1c19mbGFnc190IHZhbHVlXQpb
-eWluZ2hhaTogb25seSBjaGVjayByb290IGJ1cyBpbyBwb3J0LCBhbmQgdXNlIGZsYWcgb24gc2l6
-aW5nIGFuZCBhc3NpZ25pbmddClNpZ25lZC1vZmYtYnk6IEd1ZW50ZXIgUm9lY2sgPGxpbnV4QHJv
-ZWNrLXVzLm5ldD4KU2lnbmVkLW9mZi1ieTogWWluZ2hhaSBMdSA8eWluZ2hhaUBrZXJuZWwub3Jn
-PgpDYzogQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4KQ0M6IExvcmVuem8gUGll
-cmFsaXNpIDxsb3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tPgoKLS0tCiBkcml2ZXJzL3BjaS9wcm9i
-ZS5jICAgICB8ICAgIDUgKysrKysKIGRyaXZlcnMvcGNpL3NldHVwLWJ1cy5jIHwgICAgOSArKysr
-KysrKysKIGluY2x1ZGUvbGludXgvcGNpLmggICAgIHwgICAgMSArCiAzIGZpbGVzIGNoYW5nZWQs
-IDE1IGluc2VydGlvbnMoKykKCkluZGV4OiBsaW51eC0yLjYvZHJpdmVycy9wY2kvcHJvYmUuYwo9
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09Ci0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL3BjaS9wcm9iZS5jCisrKyBsaW51
-eC0yLjYvZHJpdmVycy9wY2kvcHJvYmUuYwpAQCAtMzQwLDYgKzM0MCw5IEBAIHN0YXRpYyB2b2lk
-IHBjaV9yZWFkX2JyaWRnZV9pbyhzdHJ1Y3QgcGMKIAlzdHJ1Y3QgcGNpX2J1c19yZWdpb24gcmVn
-aW9uOwogCXN0cnVjdCByZXNvdXJjZSAqcmVzOwogCisJaWYgKCEoY2hpbGQtPmJ1c19mbGFncyAm
-IFBDSV9CVVNfRkxBR1NfUk9PVF9TVVBQT1JUU19JTykpCisJCXJldHVybjsKKwogCWlvX21hc2sg
-PSBQQ0lfSU9fUkFOR0VfTUFTSzsKIAlpb19ncmFudWxhcml0eSA9IDB4MTAwMDsKIAlpZiAoZGV2
-LT5pb193aW5kb3dfMWspIHsKQEAgLTIwNzAsNiArMjA3Myw4IEBAIHN0cnVjdCBwY2lfYnVzICpw
-Y2lfY3JlYXRlX3Jvb3RfYnVzKHN0cnUKIAkJfSBlbHNlCiAJCQlidXNfYWRkclswXSA9ICdcMCc7
-CiAJCWRldl9pbmZvKCZiLT5kZXYsICJyb290IGJ1cyByZXNvdXJjZSAlcFIlc1xuIiwgcmVzLCBi
-dXNfYWRkcik7CisJCWlmIChyZXNvdXJjZV90eXBlKHJlcykgPT0gSU9SRVNPVVJDRV9JTykKKwkJ
-CWItPmJ1c19mbGFncyB8PSBQQ0lfQlVTX0ZMQUdTX1JPT1RfU1VQUE9SVFNfSU87CiAJfQogCiAJ
-ZG93bl93cml0ZSgmcGNpX2J1c19zZW0pOwpJbmRleDogbGludXgtMi42L2RyaXZlcnMvcGNpL3Nl
-dHVwLWJ1cy5jCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2RyaXZlcnMvcGNpL3NldHVw
-LWJ1cy5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMKQEAgLTE1Niw2ICsx
-NTYsMTAgQEAgc3RhdGljIHZvaWQgcGRldl9zb3J0X3Jlc291cmNlcyhzdHJ1Y3QgcAogCQlpZiAo
-ci0+ZmxhZ3MgJiBJT1JFU09VUkNFX1BDSV9GSVhFRCkKIAkJCWNvbnRpbnVlOwogCisJCWlmICgo
-ci0+ZmxhZ3MgJiBJT1JFU09VUkNFX0lPKSAmJgorCQkgICAgIShkZXYtPmJ1cy0+YnVzX2ZsYWdz
-ICYgUENJX0JVU19GTEFHU19ST09UX1NVUFBPUlRTX0lPKSkKKwkJCWNvbnRpbnVlOworCiAJCWlm
-ICghKHItPmZsYWdzKSB8fCByLT5wYXJlbnQpCiAJCQljb250aW51ZTsKIApAQCAtOTEyLDYgKzkx
-NiwxMSBAQCBzdGF0aWMgdm9pZCBwYnVzX3NpemVfaW8oc3RydWN0IHBjaV9idXMKIAlpZiAoIWJf
-cmVzKQogCQlyZXR1cm47CiAKKwlpZiAoIShidXMtPmJ1c19mbGFncyAmIFBDSV9CVVNfRkxBR1Nf
-Uk9PVF9TVVBQT1JUU19JTykpIHsKKwkJYl9yZXMtPmZsYWdzID0gMDsKKwkJcmV0dXJuOworCX0K
-KwogCW1pbl9hbGlnbiA9IHdpbmRvd19hbGlnbm1lbnQoYnVzLCBJT1JFU09VUkNFX0lPKTsKIAls
-aXN0X2Zvcl9lYWNoX2VudHJ5KGRldiwgJmJ1cy0+ZGV2aWNlcywgYnVzX2xpc3QpIHsKIAkJaW50
-IGk7CkluZGV4OiBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9wY2kuaAo9PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBs
-aW51eC0yLjYub3JpZy9pbmNsdWRlL2xpbnV4L3BjaS5oCisrKyBsaW51eC0yLjYvaW5jbHVkZS9s
-aW51eC9wY2kuaApAQCAtMTkzLDYgKzE5Myw3IEBAIHR5cGVkZWYgdW5zaWduZWQgc2hvcnQgX19i
-aXR3aXNlIHBjaV9idXMKIGVudW0gcGNpX2J1c19mbGFncyB7CiAJUENJX0JVU19GTEFHU19OT19N
-U0kgICA9IChfX2ZvcmNlIHBjaV9idXNfZmxhZ3NfdCkgMSwKIAlQQ0lfQlVTX0ZMQUdTX05PX01N
-UkJDID0gKF9fZm9yY2UgcGNpX2J1c19mbGFnc190KSAyLAorCVBDSV9CVVNfRkxBR1NfUk9PVF9T
-VVBQT1JUU19JTyA9IChfX2ZvcmNlIHBjaV9idXNfZmxhZ3NfdCkgNCwKIH07CiAKIC8qIFRoZXNl
-IHZhbHVlcyBjb21lIGZyb20gdGhlIFBDSSBFeHByZXNzIFNwZWMgKi8K
---001a113f8bb66ffabb051cae5418--
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
