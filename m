@@ -1,117 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:12642 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472AbbHJQGy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 12:06:54 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: Re: [PATCH v4 00/12] DMA-API/PCI map_peer_resource support for peer-to-peer
-Date: Mon, 10 Aug 2015 10:52:22 -0500
-Message-ID: <1439221942-1799-1-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:38433 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752274AbbHDVMJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 17:12:09 -0400
+Received: by wibxm9 with SMTP id xm9so40289819wib.1
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 14:12:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <55C11F14.3080803@redhat.com>
+References: <1437495930-7723-1-git-send-email-jarod@redhat.com>
+ <20150803041451.GA11144@google.com> <CAKfmpSdrdjyiQ-WWBdXFuPuTyo0WkTTsTX5ByHBt7haZeF0w=g@mail.gmail.com>
+ <20150804165642.GB17327@google.com> <55C0F493.7080604@redhat.com>
+ <20150804175141.GC17327@google.com> <55C10890.2070201@redhat.com>
+ <CAErSpo4JoBxmwwscckH+hrSYFbqKgX4KAiRGS2ZDQxxZ_So63Q@mail.gmail.com> <55C11F14.3080803@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 4 Aug 2015 16:11:49 -0500
+Message-ID: <CAErSpo7td6_KXpYodNUBy5hrGuGF9TmjVSGjrV1aapqXaSuQQw@mail.gmail.com>
+Subject: Re: [PATCH] pci/pciehp: bail on bogus pcie reads from removed devices
+To: Jarod Wilson <jarod@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Hi,
-> 
-> This is the fourth version of a patchset to add the DMA APIs necessary to
-> map and unmap a PCI device's BAR to and from another PCI device's IOVA
-> domain. This enables PCI peer-to-peer traffic on x86 platforms where an
-> IOMMU is enabled (this requires that peer-to-peer traffic be supported by
-> the underlying chipset as well, of course).
-> 
+On Tue, Aug 4, 2015 at 3:22 PM, Jarod Wilson <jarod@redhat.com> wrote:
+> On 8/4/2015 3:27 PM, Bjorn Helgaas wrote:
+>>
+>> On Tue, Aug 4, 2015 at 1:46 PM, Jarod Wilson <jarod@redhat.com> wrote:
+>>>
+>>> On 8/4/2015 1:51 PM, Bjorn Helgaas wrote:
+>
+> ...
+>
+>>>>>> Can you try the version I posted, with the additional tests in
+>>>>>> pcie_poll_cmd() and pcie_do_write_cmd()?  We should try to read from
+>>>>>> the device there, even before we free the IRQ, so we might see several
+>>>>>> messages.  Maybe there's a way we can be smarter about bailing out
+>>>>>> there.
+>>>>>
+>>>>>
+>>>>>
+>>>>> The above was with your additions munged in with the older patch, I
+>>>>> actually do see "pcie_do_write_cmd: no response from device" just
+>>>>> two lines ahead of each "Device has gone away" message from
+>>>>> pcie_isr().
+>>>>>
+>>>>> pciehp 0000:06:00.0:pcie24: pcie_do_write_cmd: no response from device
+>>>>> pciehp 0000:06:00.0:pcie24: pcie_disable_notification: SLOTCTRL d8
+>>>>> write cmd 0
+>>>>> pciehp 0000:06:00.0:pcie24: Device has gone away <- from pcie_isr()
+>>>>
+>>>>
+>>>>
+>>>> Oh, sorry!  I should have noticed that.  I just wanted to make sure I
+>>>> didn't cause a flood of extra messages.
+>>>>
+>>>> I think I'll merge this version (with all three checks).  We still have
+>>>> a
+>>>> slot lifetime issue, but that's a separate problem.
+>>>
+>>>
+>>>
+>>> Sounds good to me, thanks much for your help on this.
+>>>
+>>> Do we really still have a slot lifetime issue though? It looks to be the
+>>> path from pciehp_release_ctrl that leads to free_irq and __free_irq
+>>> calling
+>>> pcie_isr one last time, and there's a ctrl_info("Latch %s on Slot(%s)",
+>>> open
+>>> ? ..., slot_name(slot)); in pcie_isr *if* we aren't bailing when we read
+>>> all
+>>> 1's from PCI_EXP_SLTSTA. I think when we bail early, we should never see
+>>> the
+>>> subsequent attempt to read the freed slot.
+>>
+>>
+>> It's possible that we avoid referencing the freed data, but I don't
+>> have warm fuzzies because it's hard to prove that by analyzing the
+>> source code.  It's hard to even know what to look for -- there's no
+>> clue in the code that says "don't reference slot->hotplug_slot after
+>> this point."  And it feels like a poor design to hang on to that
+>> pointer after the slot has been freed.
+>>
+>> IIRC, your initial report mentioned possible memory corruption, and I
+>> don't even have a theory about where that happened.  The
+>> slot->hotplug_slot references I saw were all reads where we printed
+>> junk but shouldn't have actually corrupted anything.
+>
+>
+> Looking at the output I was seeing, it looks like one of the ~0 reads is
+> interpreted as a switch interrupt received, data link layer state change,
+> etc., followed by "Enabling domain:bus:device=0000:0x:00" from
+> pciehp_power_thread. Subsequently, we're calling pciehp_enable_slot, which
+> calls board_added, and in the output I've got, its tripping over
+> board_added's call to pciehp_check_link_status ("Failed to check link
+> status"), which means going to err_exit and calling set_slot_off.
+>
+> Next up, set_slot_off is calling pciehp_power_off_slot, which does a
+> pcie_write_cmd(). Is it possible that write might lead to memory corruption?
 
-Bjorn, does this patch series adequately address the concerns with the
-previous versions?
+I doubt it; pcie_write_cmd() by itself just writes to a bridge
+register.  Even if the device is gone, that shouldn't corrupt memory.
+But I don't know what really happened, and I don't remember what led
+to the corruption hypothesis in the first place.  I think the
+corrupted-looking slot name strings are just a consequence of reading
+memory that had already been freed.  With some work, we might be able
+to confirm that by matching it with a poison pattern or something.
 
-> Thanks,
-> Will
-> 
-> v4:
-> - added HAS_DMA_P2P Kconfig option to guard new APIs, which are only
->   supported on x86 with this patch series
-> - added a new dma_peer_addr_t type to handle future platform support
->   where the dma_peer_addr_t needs to have the same width as the bus
->   address, which can be wider than the dma_addr_t returned by other
->   DMA APIs
-> - added a new dma_peer_mapping_error() and associated PCI wrapper to
->   detect errors returned via dma_map_peer_resource() API and its
->   PCI wrapper
-> - modified the interface of the new API to explicitly take the peer
->   device as an argument
-> - renamed the (un)map_resource APIs to (un)map_peer_resource, since
->   they directly receive a 'peer' argument now
-> - modified the new PCI interface to take the BAR index instead of the
->   actual struct resource
-> - modified the pci-nommu implementation to perform topology and ACS
->   checks before allowing
-> - modified both the AMD and Intel IOMMU implementations to require
->   that both devices be behind the same host bridge
-> - exposed a couple of preexisting PCI utility functions to aid in the
->   topology checks for all of the x86 implementations
-> 
-> v3: http://www.spinics.net/lists/linux-pci/msg41703.html
-> - changed dma_map_resource() to BUG() if the map_resource DMA op is not
->   provided, instead of returning 0
-> - updated documentation to remove requirement to check for 0 return value
->   as an error
-> - remove const keyword from struct dma_map_ops in new DMA APIs for
->   consistency with other APIs
-> 
-> v2: http://www.spinics.net/lists/linux-pci/msg41192.html
-> - added documentation for the new DMA APIs
-> - fixed physical-to-bus address conversion in the nommu implementation
-> 
-> v1: http://www.spinics.net/lists/linux-pci/msg40747.html
-> 
-> 
-> 
-> Will Davis (12):
->   lib/Kconfig: add HAS_DMA_P2P for peer-to-peer support
->   linux/types.h: Add dma_peer_addr_t type
->   dma-debug: add checking for map/unmap_peer_resource
->   DMA-API: Introduce dma_(un)map_peer_resource
->   dma-mapping: pci: add pci_(un)map_peer_resource
->   DMA-API: Add peer resource mapping documentation
->   pci: expose pci_find_host_bridge()
->   iommu/amd: Implement (un)map_peer_resource
->   iommu/vt-d: implement (un)map_peer_resource
->   pci: add pci_find_common_upstream_dev()
->   x86: add pci-nommu implementation of map_peer_resource
->   x86: declare support for DMA P2P
-> 
->  Documentation/DMA-API-HOWTO.txt          | 46 ++++++++++++++-
->  Documentation/DMA-API.txt                | 36 ++++++++++--
->  arch/x86/Kconfig                         |  1 +
->  arch/x86/include/asm/dma-mapping.h       | 18 +++++-
->  arch/x86/kernel/pci-nommu.c              | 96 +++++++++++++++++++++++++++++++
->  drivers/iommu/amd_iommu.c                | 99 +++++++++++++++++++++++++++-----
->  drivers/iommu/intel-iommu.c              | 38 ++++++++++++
->  drivers/pci/host-bridge.c                | 19 +-----
->  drivers/pci/search.c                     | 25 ++++++++
->  include/asm-generic/dma-mapping-common.h | 43 ++++++++++++++
->  include/asm-generic/pci-dma-compat.h     | 23 ++++++++
->  include/linux/dma-debug.h                | 39 ++++++++++++-
->  include/linux/dma-mapping.h              | 12 ++++
->  include/linux/pci.h                      |  9 +++
->  include/linux/types.h                    | 13 ++++-
->  lib/Kconfig                              |  5 ++
->  lib/dma-debug.c                          | 86 ++++++++++++++++++++++++++-
->  17 files changed, 564 insertions(+), 44 deletions(-)
-> 
-> -- 
-> 2.4.6
-
+Bjorn
