@@ -1,84 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33618 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751062AbbHSWaR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Aug 2015 18:30:17 -0400
-Message-ID: <1440023349.2737.21.camel@kernel.crashing.org>
-Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>
-Cc: wangyijing@huawei.com, linux-pci@vger.kernel.org, mroos@linux.ee,
-	sparclinux@vger.kernel.org, eric.snowberg@oracle.com
-Date: Thu, 20 Aug 2015 08:29:09 +1000
-In-Reply-To: <20150819221624.GA8150@google.com>
-References: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
-	 <20150818184943.GA26431@google.com>
-	 <20150818.121004.1891242587946602543.davem@davemloft.net>
-	 <20150819221624.GA8150@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-la0-f52.google.com ([209.85.215.52]:35776 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752140AbbHDPLR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 11:11:17 -0400
+Received: by labsr2 with SMTP id sr2so9462713lab.2
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 08:11:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1437662976-27188-2-git-send-email-l.stach@pengutronix.de>
+References: <1437662976-27188-1-git-send-email-l.stach@pengutronix.de>
+	<1437662976-27188-2-git-send-email-l.stach@pengutronix.de>
+Date: Tue, 4 Aug 2015 20:41:15 +0530
+Message-ID: <CAHM4w1=Sz1xJ1OGc9xAMVCv8hMLwnWmGrkRLHdqpdC7EgzEbpQ@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] PCI: designware: implement multivector MSI irq setup
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	patchwork-lst@pengutronix.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-08-19 at 17:16 -0500, Bjorn Helgaas wrote:
-> On Tue, Aug 18, 2015 at 12:10:04PM -0700, David Miller wrote:
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> > Date: Tue, 18 Aug 2015 13:49:43 -0500
-> > 
-> > > [+cc Dave, Eric, Ben, sparclinux]
-> > > 
-> > > On Mon, Aug 17, 2015 at 06:47:58PM +0800, Yijing Wang wrote:
-> > > > Commit d0751b98dfa3 ("PCI: Add dev->has_secondary_link to
-> > > > track downstream PCIe links")assumed root port is always
-> > > > the top device in pcie tree. But on sparc64 V245 and T2000tthe
-> > > > pcie tree has no root port device in top level, the
-> > > > upstream port device is connected directly to root bus.
-> > > > So we may get NULL parent for this upstream port device.
+On Thu, Jul 23, 2015 at 8:19 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Allows to set up and use multiple MSI irqs per device.
+>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> The ifdef is needed to avoid a compile error on
+> !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
+> when the kernel is compiled with MSI support.
+>
+> v2: move ifdeffery inside single function
+> ---
+>  drivers/pci/host/pcie-designware.c | 43 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 43 insertions(+)
+>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 69486be7181e..52c600327805 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>         }
+>
+>         *pos = pos0;
+> +       desc->nvec_used = no_irqs;
+> +       desc->msi_attrib.multiple = order_base_2(no_irqs);
+> +
+>         return irq;
+>
+>  no_valid_irq:
+> @@ -323,6 +326,45 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+>         return 0;
+>  }
+>
+> +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+> +                            int nvec, int type)
+> +{
+> +#ifdef CONFIG_PCI_MSI
+> +       int irq, pos;
+> +       struct msi_desc *desc;
+> +       struct msi_msg msg;
+> +       struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> +
+> +       /* MSI-X interrupts are not supported */
+> +       if (type == PCI_CAP_ID_MSIX)
+> +               return -EINVAL;
+> +
+> +       WARN_ON(!list_is_singular(&pdev->msi_list));
+> +       desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
+> +
 
-Picking up that thread half way through...
+Probably existing function dw_msi_setup_irq() can be re-factored and code after
+this line can be reused from refactored function, as they are almost same.
 
-> > > > Upstream port ------ Downstream port ------PCIe-PCI bridge
-> > > 
-> > > This is an unusual, possibly even illegal, PCIe topology because 
-> > > it lacks a Root Port at the top of the hierarchy.  From lspci
-> > > output
-> > > [1]
-> > > collected by Meelis, the top-level devices are:
+> +       irq = assign_irq(nvec, desc, &pos);
+> +       if (irq < 0)
+> +               return irq;
+> +
+> +       if (pp->ops->get_msi_addr)
+> +               msg.address_lo = pp->ops->get_msi_addr(pp);
+> +       else
+> +               msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> +       msg.address_hi = 0x0;
+> +
 
-Nobody cares what is "illegal", what matters is what HW actually does :
--) Specs only matter as far as they get followed. In any case, it also
-happens on powerpc, when running under a hypervisor such as IBM
-PowerVM, PCIe devices appear directly under a virtual host bridge which
-is not exposed as a PCIe root complex.
+Although, not specific to this patch, but since we are now going to have
+ARM64 support for DW as well, so it would be nice to fill msg.address_hi
+with upper bytes rather hard-coding as 0.
 
-> > The root port is in the PCI controller on sparc64, and PCI
-> > controllers
-> > don't have actual real PCI configuration space available.
-> > 
-> > I used to put dummy PCI bus nodes into the tree and do provide
-> > dummy
-> > software PCI config space methods, but that caused more harm than
-> > good.
-> 
-> I guess you're talking about what you removed with c26d3c013897
-> ("sparc64: Stop creating dummy root PCI host controller devices."),
-> which talks about duplicate sysfs and procfs nodes.  Removing the
-> dummy devices avoids the duplicate node problem, but it doesn't fix
-> the root cause, so it's probably not the only possible resolution.
-> 
-> We'll probably have to do something ugly like Yijing's patch just
-> because v4.2 is imminent and I don't want it to be broken.
-> 
-> I don't like it because we have these PCIe links where we only know
-> about devices on one end of the link, and then we can't manage
-> ASPM/MPS/etc.  But we've had this situation for several years, so
-> I guess nobody cares too much about those things on the affected
-> mahines.
+> +       if (pp->ops->get_msi_data)
+> +               msg.data = pp->ops->get_msi_data(pp, pos);
+> +       else
+> +               msg.data = pos;
+> +
+> +       pci_write_msi_msg(irq, &msg);
+> +
+> +       return 0;
 
-Correct, we have this situation on more than just sparc64 and we
-shouldn't crash. Just don't touch ASPM/MPS/etc... in those cases.
-
-Cheers,
-Ben.
-
+~Pratyush
