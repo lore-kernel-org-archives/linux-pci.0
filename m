@@ -1,128 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29959 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbbHUGie (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:38:34 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 27/52] PCI: Move ISA io port align out of calculate_iosize()
-Date: Thu, 20 Aug 2015 23:20:42 -0700
-Message-Id: <1440138067-4314-28-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36333 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756945AbbHDOrN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Aug 2015 10:47:13 -0400
+Date: Tue, 4 Aug 2015 10:47:11 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Andreas Hartmann <andihartmann@freenet.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	device-mapper development <dm-devel@redhat.com>,
+	Jens Axboe <axboe@fb.com>, iommu@lists.linux-foundation.org,
+	Leo Duran <leo.duran@amd.com>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Christoph Hellwig <hch@lst.de>, Milan Broz <mbroz@redhat.com>,
+	Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
+ QUEUED errors since Linux 4.0
+Message-ID: <20150804144711.GB24716@redhat.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com>
+ <55B7D054.4070308@maya.org>
+ <20150728192908.GA25264@redhat.com>
+ <55BCD5A7.2080708@maya.org>
+ <55BE1D5E.6020709@maya.org>
+ <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+ <55BE65E6.7060901@maya.org>
+ <20150803081249.GF14980@8bytes.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150803081249.GF14980@8bytes.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can move ISA io port align out of calculate_iosize(),
-so we could unify calculate_iosize and calculate_memsize later.
+On Mon, Aug 03 2015 at  4:12am -0400,
+Joerg Roedel <joro@8bytes.org> wrote:
 
-That extra aligning or offset is to work around ISA devices:
-When one bridge have several children devices, and every device
-has several io port resources and resource size < 0x400.
-We need to check size, and add extra size to make sure bit8/9
-to be zero.
+> On Sun, Aug 02, 2015 at 08:48:06PM +0200, Andreas Hartmann wrote:
+> > >>https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
+> > >>
+> > >>block: remove artifical max_hw_sectors cap
+> 
+> Looking at the patch, it seems to me that it just uncovered a bug
+> elsewhere. It looks like an underlying driver doesn't expect the
+> big io-requests that the patch enables and does not dma-map the whole
+> target buffer, causing the IO_PAGE_FAULTs later.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
+That patch has caused issues elsewhere too, see this 'Revert "block:
+remove artifical max_hw_sectors cap"' thread (if/when lkml.org
+cooperates): https://lkml.org/lkml/2015/7/20/572
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 372a182..8f11cd1 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1120,11 +1120,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
--	/* To be fixed in 2.5: we should have sort of HAVE_ISA
--	   flag in the struct pci_bus. */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
- 	size = ALIGN(size + size1, align);
- 	if (size < old_size)
- 		size = old_size;
-@@ -1178,6 +1173,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
- 	return max(align, arch_align);
- }
- 
-+static resource_size_t size_aligned_for_isa(resource_size_t size)
-+{
-+	/*
-+	 * To be fixed in 2.5: we should have sort of HAVE_ISA
-+	 *  flag in the struct pci_bus.
-+	 */
-+#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
-+	size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+#endif
-+	return size;
-+}
-+
- /**
-  * pbus_size_io() - size the io window of a given bus
-  *
-@@ -1195,11 +1202,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_sum_size = 0;
--	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
--	resource_size_t children_add_size = 0;
-+	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
- 	resource_size_t min_align, align;
- 
- 	if (!b_res)
-@@ -1216,7 +1222,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
--			unsigned long r_size;
-+			unsigned long r_size, r_add_size;
- 
- 			if (r->parent || !(r->flags & IORESOURCE_IO))
- 				continue;
-@@ -1232,18 +1238,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			if (align > min_align)
- 				min_align = align;
- 
--			if (realloc_head)
--				children_add_size += get_res_add_size(realloc_head, r);
-+			if (realloc_head) {
-+				r_add_size = get_res_add_size(realloc_head, r);
-+				r_add_size += r_size;
-+				if (r_add_size < 0x400)
-+					/* Might be re-aligned for ISA */
-+					sum_add_size += r_add_size;
-+				else
-+					sum_add_size1 += r_add_size;
-+			}
- 		}
- 	}
- 
-+	size = size_aligned_for_isa(size);
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	sum_add_size = children_add_size + size + size1;
-+	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(size, min_size, sum_add_size - size,
-+		calculate_iosize(sum_add_size, min_size, 0,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
--- 
-1.8.4.5
+But it could be that there is a need for a horkage fix for this specific
+hardware? something comparable to this?:
+http://git.kernel.org/linus/af34d637637eabaf49406eb35c948cd51ba262a6
 
+We are running out of time to fix these whack-a-mole issues in 4.2
+though.
