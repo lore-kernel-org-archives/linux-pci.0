@@ -1,122 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:3496 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752940AbbHRTTH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:07 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v5 00/13] DMA-API/PCI map_peer_resource support for peer-to-peer
-Date: Tue, 18 Aug 2015 14:03:56 -0500
-Message-ID: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:33991 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905AbbHDW6U (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 18:58:20 -0400
+Received: by igk11 with SMTP id 11so103271889igk.1
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 15:58:20 -0700 (PDT)
+Date: Tue, 4 Aug 2015 17:58:12 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Duc Dang <dhdang@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	James Morse <james.morse@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH v5 7/9] PCI: xgene: Set msi_controller->dev to
+ platform_device, not pci_bus
+Message-ID: <20150804225812.GD17327@google.com>
+References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150804215442.9189.83038.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150804215442.9189.83038.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, Aug 04, 2015 at 04:54:42PM -0500, Bjorn Helgaas wrote:
+> Other users of struct msi_controller set msi->dev to the platform_device of
+> the PCI host controller, not the device of the pci_bus for the root bus.
+> 
+> Set X-Gene's msi_controller->dev to the PCI host controller platform_device
+> as other platforms do.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pci-xgene.c |    7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index 4c2fb1f..5e0d6de 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -501,7 +501,8 @@ static int xgene_pcie_setup(struct xgene_pcie_port *port,
+>  	return 0;
+>  }
+>  
+> -static int xgene_pcie_msi_enable(struct pci_bus *bus)
+> +static int xgene_pcie_msi_enable(struct xgene_pcie_port *port,
+> +				 struct pci_bus *bus)
+>  {
+>  	struct device_node *msi_node;
+>  
+> @@ -515,7 +516,7 @@ static int xgene_pcie_msi_enable(struct pci_bus *bus)
+>  		return -ENODEV;
+>  
+>  	of_node_put(msi_node);
+> -	bus->msi->dev = &bus->dev;
+> +	bus->msi->dev = &port->dev;
 
-This is the fifth version of a patchset to add the DMA APIs necessary to
-map and unmap a PCI device's BAR to and from another PCI device's IOVA
-domain. This enables PCI peer-to-peer traffic on x86 platforms where an
-IOMMU is enabled (this requires that peer-to-peer traffic be supported by
-the underlying chipset as well, of course).
+Thomas, the surrounding code here and in mvebu_pcie_msi_enable() looks like
+this:
 
-Thanks,
-Will
+  pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
+  pcie->msi->dev = &pcie->pdev->dev;
 
-v5:
-- moved topology and ACS checks into a separate
-  pci_peer_traffic_supported() API, which determines whether PCI peer-
-  to-peer traffic may work based on language in the PCI and PCI Express
-  specifications (excerpts included in comments)
-- added CONFIG_HAS_DMA_P2P guards to x86 PCI no-mmu implementation of
-  map_peer_resource
-- modified a few patch descriptions for style
+It seems sort of strange to search for a struct msi_controller, then set
+the "dev" field inside it.  This code isn't really the owner of the
+msi_controller, and it seems like in principle at least, the
+of_pci_find_msi_chip_by_node() interface could be used by several clients.
+Then it's not clear which one of them should update msi->dev.
 
-v4: http://www.spinics.net/lists/linux-pci/msg43136.html
-- added HAS_DMA_P2P Kconfig option to guard new APIs, which are only
-  supported on x86 with this patch series
-- added a new dma_peer_addr_t type to handle future platform support
-  where the dma_peer_addr_t needs to have the same width as the bus
-  address, which can be wider than the dma_addr_t returned by other
-  DMA APIs
-- added a new dma_peer_mapping_error() and associated PCI wrapper to
-  detect errors returned via dma_map_peer_resource() API and its
-  PCI wrapper
-- modified the interface of the new API to explicitly take the peer
-  device as an argument
-- renamed the (un)map_resource APIs to (un)map_peer_resource, since
-  they directly receive a 'peer' argument now
-- modified the new PCI interface to take the BAR index instead of the
-  actual struct resource
-- modified the pci-nommu implementation to perform topology and ACS
-  checks before allowing
-- modified both the AMD and Intel IOMMU implementations to require
-  that both devices be behind the same host bridge
-- exposed a couple of preexisting PCI utility functions to aid in the
-  topology checks for all of the x86 implementations
+It would make more sense to me if the caller of of_pci_msi_chip_add() set
+the msi->dev field.  But I don't know whether that's feasible.  I don't
+even know what msi->dev is used for.
 
-v3: http://www.spinics.net/lists/linux-pci/msg41703.html
-- changed dma_map_resource() to BUG() if the map_resource DMA op is not
-  provided, instead of returning 0
-- updated documentation to remove requirement to check for 0 return value
-  as an error
-- remove const keyword from struct dma_map_ops in new DMA APIs for
-  consistency with other APIs
-
-v2: http://www.spinics.net/lists/linux-pci/msg41192.html
-- added documentation for the new DMA APIs
-- fixed physical-to-bus address conversion in the nommu implementation
-
-v1: http://www.spinics.net/lists/linux-pci/msg40747.html
-
-
-Will Davis (13):
-  lib/Kconfig: add HAS_DMA_P2P for peer-to-peer support
-  linux/types.h: Add dma_peer_addr_t type
-  dma-debug: add checking for map/unmap_peer_resource
-  DMA-API: Introduce dma_(un)map_peer_resource
-  dma-mapping: pci: add pci_(un)map_peer_resource
-  DMA-API: Add peer resource mapping documentation
-  PCI: Export pci_find_host_bridge()
-  PCI: Add pci_find_common_upstream_dev()
-  PCI: Add pci_peer_traffic_supported()
-  iommu/amd: Implement (un)map_peer_resource
-  iommu/vt-d: implement (un)map_peer_resource
-  x86: add pci-nommu implementation of map_peer_resource
-  x86: declare support for DMA P2P
-
- Documentation/DMA-API-HOWTO.txt          | 69 ++++++++++++++++++++++
- Documentation/DMA-API.txt                | 38 ++++++++++--
- arch/x86/Kconfig                         |  1 +
- arch/x86/include/asm/dma-mapping.h       | 18 +++++-
- arch/x86/kernel/pci-nommu.c              | 36 ++++++++++++
- drivers/iommu/amd_iommu.c                | 99 +++++++++++++++++++++++++++-----
- drivers/iommu/intel-iommu.c              | 38 ++++++++++++
- drivers/pci/host-bridge.c                | 19 +-----
- drivers/pci/pci.c                        | 99 ++++++++++++++++++++++++++++++++
- drivers/pci/search.c                     | 25 ++++++++
- include/asm-generic/dma-mapping-common.h | 43 ++++++++++++++
- include/asm-generic/pci-dma-compat.h     | 23 ++++++++
- include/linux/dma-debug.h                | 39 ++++++++++++-
- include/linux/dma-mapping.h              | 12 ++++
- include/linux/pci.h                      | 12 ++++
- include/linux/types.h                    | 13 ++++-
- lib/Kconfig                              |  5 ++
- lib/dma-debug.c                          | 86 ++++++++++++++++++++++++++-
- 18 files changed, 633 insertions(+), 42 deletions(-)
-
--- 
-2.5.0
-
+Bjorn
