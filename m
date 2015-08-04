@@ -1,100 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:41660 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751875AbbHBSu5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Aug 2015 14:50:57 -0400
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-To: Mikulas Patocka <mpatocka@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
- <20150728192908.GA25264@redhat.com> <55BCD5A7.2080708@maya.org>
- <55BE1D5E.6020709@maya.org>
- <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
-	linux-pci <linux-pci@vger.kernel.org>
-From: Andreas Hartmann <andihartmann@freenet.de>
-Message-ID: <55BE65E6.7060901@maya.org>
-Date: Sun, 2 Aug 2015 20:48:06 +0200
+Received: from mail-io0-f176.google.com ([209.85.223.176]:32988 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549AbbHDX71 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 19:59:27 -0400
+Received: by ioii16 with SMTP id i16so33583547ioi.0
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 16:59:27 -0700 (PDT)
+Received: from localhost ([69.71.1.1])
+        by smtp.gmail.com with ESMTPSA id 29sm780780iom.2.2015.08.04.16.59.25
+        for <linux-pci@vger.kernel.org>
+        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
+        Tue, 04 Aug 2015 16:59:25 -0700 (PDT)
+Subject: [PATCH 2/2] PCI: pciehp: Remove ignored MRL sensor interrupt events
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 04 Aug 2015 18:59:24 -0500
+Message-ID: <20150804235924.15421.63546.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150804235823.15421.71342.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150804235823.15421.71342.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/01/2015 at 19:57, Mikulas Patocka wrote:
->
->
-> On Sun, 2 Aug 2015, Andreas Hartmann wrote:
->
->> On 08/01/2015 at 04:20 PM Andreas Hartmann wrote:
->>> On 07/28/2015 at 09:29 PM, Mike Snitzer wrote:
->>> [...]
->>>> Mikulas was saying to biect what is causing ATA to fail.
->>>
->>> Some good news and some bad news. The good news first:
->>>
->>> Your patchset
->>>
->>> f3396c58fd8442850e759843457d78b6ec3a9589,
->>> cf2f1abfbd0dba701f7f16ef619e4d2485de3366,
->>> 7145c241a1bf2841952c3e297c4080b357b3e52d,
->>> 94f5e0243c48aa01441c987743dc468e2d6eaca2,
->>> dc2676210c425ee8e5cb1bec5bc84d004ddf4179,
->>> 0f5d8e6ee758f7023e4353cca75d785b2d4f6abe,
->>> b3c5fd3052492f1b8d060799d4f18be5a5438add
->>>
->>> seems to work fine w/ 3.18.19 !!
->>>
->>> Why did I test it with 3.18.x now? Because I suddenly got two ata errors
->>> (ata1 and ata2) with clean 3.19.8 (w/o the AMD-Vi IO_PAGE_FAULTs) during
->>> normal operation. This means: 3.19 must already be broken, too.
->>>
->>> Therefore, I applied your patchset to 3.18.x and it seems to work like a
->>> charme - I don't get any AMD-Vi IO_PAGE_FAULTs on boot and no ata errors
->>> (until now).
->>>
->>>
->>> Next I did: I tried to bisect between 3.18 and 3.19 with your patchset
->>> applied, because w/ this patchset applied, the problem can be seen
->>> easily and directly on boot. Unfortunately, this does work only a few
->>> git bisect rounds until I got stuck because of interferences with your
->>> extra patches applied:
->>
->> [Resolved the problems written at the last post.]
->>
->> Bisecting ended here:
->>
->> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
->>
->> block: remove artifical max_hw_sectors cap
->>
->>
->> Removing this patch on 3.19 and 4.1 make things working again. Didn't
->> test 4.0, but I think it's the same. No more AMD-Vi IO_PAGE_FAULTS  with
->> that patch reverted.
->>
->>
->> Please check why this patch triggers AMD-Vi IO_PAGE_FAULTS.
->>
->>
->> Thanks,
->> kind regards,
->> Andreas Hartmann
->
-> I would submit this bug to maintainers of AMD-Vi. They understand the
-> hardware, so they should tell why do large I/O requests result in
-> IO_PAGE_FAULTs.
+We queued interrupt events for the MRL being opened or closed, but the code
+in interrupt_event_handler() that handles these events ignored them.
 
-You forgot the ata errors ... . They are gone, too. I got these ata 
-errors on 3.19 w/o your patchset and w/o AMD-Vi IO_PAGES_FAULTs, too.
+Stop enabling MRL interrupts and remove the ignored events.
 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/pciehp.h     |   10 ++++------
+ drivers/pci/hotplug/pciehp_hpc.c |   17 +++--------------
+ 2 files changed, 7 insertions(+), 20 deletions(-)
 
-
-Regards,
-Andreas
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index aca84e1..62d6fe6 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -103,12 +103,10 @@ struct controller {
+ 
+ #define INT_PRESENCE_ON			1
+ #define INT_PRESENCE_OFF		2
+-#define INT_SWITCH_CLOSE		3
+-#define INT_SWITCH_OPEN			4
+-#define INT_POWER_FAULT			5
+-#define INT_BUTTON_PRESS		6
+-#define INT_LINK_UP			7
+-#define INT_LINK_DOWN			8
++#define INT_POWER_FAULT			3
++#define INT_BUTTON_PRESS		4
++#define INT_LINK_UP			5
++#define INT_LINK_DOWN			6
+ 
+ #define STATIC_STATE			0
+ #define BLINKINGON_STATE		1
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 8f3d3cf..5c24e93 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -543,7 +543,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	struct pci_dev *dev;
+ 	struct slot *slot = ctrl->slot;
+ 	u16 detected, intr_loc;
+-	u8 open, present;
++	u8 present;
+ 	bool link;
+ 
+ 	/*
+@@ -561,7 +561,7 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 		}
+ 
+ 		detected &= (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+-			     PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_PDC |
++			     PCI_EXP_SLTSTA_PDC |
+ 			     PCI_EXP_SLTSTA_CC | PCI_EXP_SLTSTA_DLLSC);
+ 		detected &= ~intr_loc;
+ 		intr_loc |= detected;
+@@ -594,15 +594,6 @@ static irqreturn_t pcie_isr(int irq, void *dev_id)
+ 	if (!(intr_loc & ~PCI_EXP_SLTSTA_CC))
+ 		return IRQ_HANDLED;
+ 
+-	/* Check MRL Sensor Changed */
+-	if (intr_loc & PCI_EXP_SLTSTA_MRLSC) {
+-		pciehp_get_latch_status(slot, &open);
+-		ctrl_info(ctrl, "Latch %s on Slot(%s)\n",
+-			  open ? "open" : "close", slot_name(slot));
+-		pciehp_queue_interrupt_event(slot, open ? INT_SWITCH_OPEN :
+-					     INT_SWITCH_CLOSE);
+-	}
+-
+ 	/* Check Attention Button Pressed */
+ 	if (intr_loc & PCI_EXP_SLTSTA_ABP) {
+ 		ctrl_info(ctrl, "Button pressed on Slot(%s)\n",
+@@ -662,13 +653,11 @@ void pcie_enable_notification(struct controller *ctrl)
+ 		cmd |= PCI_EXP_SLTCTL_ABPE;
+ 	else
+ 		cmd |= PCI_EXP_SLTCTL_PDCE;
+-	if (MRL_SENS(ctrl))
+-		cmd |= PCI_EXP_SLTCTL_MRLSCE;
+ 	if (!pciehp_poll_mode)
+ 		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
+ 
+ 	mask = (PCI_EXP_SLTCTL_PDCE | PCI_EXP_SLTCTL_ABPE |
+-		PCI_EXP_SLTCTL_MRLSCE | PCI_EXP_SLTCTL_PFDE |
++		PCI_EXP_SLTCTL_PFDE |
+ 		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
+ 		PCI_EXP_SLTCTL_DLLSCE);
+ 
 
