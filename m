@@ -1,47 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com>
-References: <20150724224258.GA23990@google.com> <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com>
- <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com>
- <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com>
- <20150728212944.GA12958@google.com> <CADaLNDkOLiyPmVC3VwpnbrfAKFmNwSVJKdChjQFdQqs7XP-Ddg@mail.gmail.com>
- <20150729012255.GA18606@google.com> <20150729155509.GA31170@google.com> <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 10 Aug 2015 11:18:23 -0500
-Message-ID: <CAErSpo4VFh7rv81sCAG-eCXVyZh4ub8Trh-ntZhyfy7BzqTr5g@mail.gmail.com>
-Subject: Re: X-Gene: Unhandled fault: synchronous external abort in pci_generic_config_read32
-To: Duc Dang <dhdang@apm.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:47016 "EHLO
+	mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752167AbbHDHgE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 03:36:04 -0400
+Received: from eucpsbgm2.samsung.com (unknown [203.254.199.245])
+ by mailout1.w1.samsung.com
+ (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
+ with ESMTP id <0NSJ00M34RS1R290@mailout1.w1.samsung.com> for
+ linux-pci@vger.kernel.org; Tue, 04 Aug 2015 08:36:01 +0100 (BST)
+From: Pavel Fedin <p.fedin@samsung.com>
+To: 'Jayachandran C' <jchandra@broadcom.com>,
+	'Will Deacon' <will.deacon@arm.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	'Arnd Bergmann' <arnd@arndb.de>,
+	'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
+	'Liviu Dudau' <Liviu.Dudau@arm.com>
+Cc: 'Suravee Suthikulpanit' <Suravee.Suthikulpanit@amd.com>,
+	'Ming Lei' <ming.lei@canonical.com>
+References: <1438183681-30519-1-git-send-email-jchandra@broadcom.com>
+In-reply-to: <1438183681-30519-1-git-send-email-jchandra@broadcom.com>
+Subject: RE: [PATCH v3 1/2] PCI: generic: remove dependency on hw_pci
+Date: Tue, 04 Aug 2015 10:35:59 +0300
+Message-id: <00b601d0ce88$35b2f8a0$a118e9e0$@samsung.com>
+MIME-version: 1.0
+Content-type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 31, 2015 at 12:00 PM, Duc Dang <dhdang@apm.com> wrote:
-> On Wed, Jul 29, 2015 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> On Tue, Jul 28, 2015 at 08:22:55PM -0500, Bjorn Helgaas wrote:
->>> On Tue, Jul 28, 2015 at 02:50:39PM -0700, Duc Dang wrote:
->>
->>> > Do you have another PCIe card to try on the same reboot test on this board?
->>>
->>> I've seen this on at least two Mellanox cards.  I'm running similar tests
->>> on a different type of card now.
->>
->> FWIW, reboot tests on two machines with Mellanox cards failed, while the
->> same test on a machine with a different proprietary card succeeded.
->
-> Thanks, Bjorn.
->
-> I don't have the same Mellanox card as yours, but I will also run
-> similar reboot test to see if I hit the same issue with my card.
+ Hello!
 
-Any more hints on this?  Nothing has changed on my end, so of course
-I'm still seeing this, always on machines with Mellanox, and never on
-other machines.  Could this be a hardware issue like a signal
-integrity or margin issue?  I don't know where to go from here because
-I'm not a hardware person, and I don't know anything to do in
-software.
+> Notes:
+>  - passing a zeroed out pci_sys_data for ARM looks ok, but I haven't
+>    tested it on ARM.
+>  - tested it on ARM64 fast model
+>  - Any information on how this can be tested on arm is welcome.
 
-Bjorn
+ I have tested it on SMDK5410, works OK. By the way, PCI generic is missing MSI support, i had to
+add it. I can share the patch if interested, it's very small.
+
+Tested-by: Pavel Fedin <p.fedin@samsung.com>
+
+Kind regards,
+Pavel Fedin
+Expert Engineer
+Samsung Electronics Research center Russia
+
+
