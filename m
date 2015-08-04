@@ -1,166 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	"Murali Karicheri" <m-karicheri2@ti.com>
-Subject: [PATCH] pci: acpi: Generic function for setting up PCI device DMA coherency
-Date: Thu, 13 Aug 2015 16:58:45 +0700
-Message-ID: <1439459925-2361-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:38201 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753049AbbHDVyi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 17:54:38 -0400
+Received: by iggf3 with SMTP id f3so20780324igg.1
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 14:54:37 -0700 (PDT)
+Subject: [PATCH v5 6/9] PCI: Drop references acquired by of_parse_phandle()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Duc Dang <dhdang@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	James Morse <james.morse@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>
+Date: Tue, 04 Aug 2015 16:54:35 -0500
+Message-ID: <20150804215435.9189.94410.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch refactors of_pci_dma_configure() into a more generic
-pci_dma_configure(), which can be reused by non-OF code.
-Then, it adds support for setting up PCI device DMA coherency from
-ACPI _CCA object that should normally be specified in the DSDT node
-of its PCI host bridge..
+of_parse_phandle() returns a device_node pointer with the refcount
+incremented.  We should dispose of this reference when we're finished.
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Catalin Marinas <catalin.marinas@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
-CC: Rafael J. Wysocki <rjw@rjwysocki.net>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Murali Karicheri <m-karicheri2@ti.com>
+Drop the reference acquired by of_parse_phandle().
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-Note: According to the ACPI spec, the _CCA attribute is required
-      for ARM64. Therefore, this patch is a pre-req for ACPI PCI
-      support for ARM64 which is currently in development.
+ drivers/pci/host/pci-mvebu.c |    1 +
+ drivers/pci/host/pci-xgene.c |    1 +
+ 2 files changed, 2 insertions(+)
 
-      Also, this should not affect other architectures since
-      if CCA is not required, the default value is coherent.
-      Please see include/acpi/acpi_bus.h: acpi_check_dma() and
-      drivers/acpi/scan.c: acpi_init_coherency() for more information
-
- drivers/of/of_pci.c    | 20 --------------------
- drivers/pci/probe.c    | 35 +++++++++++++++++++++++++++++++++--
- include/linux/of_pci.h |  3 ---
- 3 files changed, 33 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 5751dc5..b66ee4e 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -117,26 +117,6 @@ int of_get_pci_domain_nr(struct device_node *node)
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 70aa095..67ec5e1 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -879,6 +879,7 @@ static void mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
+ 		return;
+ 
+ 	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
++	of_node_put(msi_node);
+ 
+ 	if (pcie->msi)
+ 		pcie->msi->dev = &pcie->pdev->dev;
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index a9dfb70..4c2fb1f 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -514,6 +514,7 @@ static int xgene_pcie_msi_enable(struct pci_bus *bus)
+ 	if (!bus->msi)
+ 		return -ENODEV;
+ 
++	of_node_put(msi_node);
+ 	bus->msi->dev = &bus->dev;
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
- 
--/**
-- * of_pci_dma_configure - Setup DMA configuration
-- * @dev: ptr to pci_dev struct of the PCI device
-- *
-- * Function to update PCI devices's DMA configuration using the same
-- * info from the OF node of host bridge's parent (if any).
-- */
--void of_pci_dma_configure(struct pci_dev *pci_dev)
--{
--	struct device *dev = &pci_dev->dev;
--	struct device *bridge = pci_get_host_bridge_device(pci_dev);
--
--	if (!bridge->parent)
--		return;
--
--	of_dma_configure(dev, bridge->parent->of_node);
--	pci_put_host_bridge_device(bridge);
--}
--EXPORT_SYMBOL_GPL(of_pci_dma_configure);
--
- #if defined(CONFIG_OF_ADDRESS)
- /**
-  * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..e2fcd3b 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -6,12 +6,14 @@
- #include <linux/delay.h>
- #include <linux/init.h>
- #include <linux/pci.h>
--#include <linux/of_pci.h>
-+#include <linux/of_device.h>
- #include <linux/pci_hotplug.h>
- #include <linux/slab.h>
- #include <linux/module.h>
- #include <linux/cpumask.h>
- #include <linux/pci-aspm.h>
-+#include <linux/acpi.h>
-+#include <linux/property.h>
- #include <asm-generic/pci-bridge.h>
- #include "pci.h"
- 
-@@ -1544,6 +1546,35 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_enable_acs(dev);
- }
- 
-+/**
-+ * pci_dma_configure - Setup DMA configuration
-+ * @pci_dev: ptr to pci_dev struct of the PCI device
-+ *
-+ * Function to update PCI devices's DMA configuration using the same
-+ * info from the OF node or ACPI node of host bridge's parent (if any).
-+ */
-+static void pci_dma_configure(struct pci_dev *pci_dev)
-+{
-+	struct device *dev = &pci_dev->dev;
-+	struct device *bridge = pci_get_host_bridge_device(pci_dev);
-+	struct acpi_device *adev;
-+	bool coherent;
-+
-+	if (has_acpi_companion(bridge)) {
-+		adev = to_acpi_node(bridge->fwnode);
-+		if (acpi_check_dma(adev, &coherent))
-+			arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
-+	} else {
-+		struct device *host = bridge->parent;
-+		if (!host)
-+			return;
-+
-+		of_dma_configure(dev, host->of_node);
-+	}
-+
-+	pci_put_host_bridge_device(bridge);
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
-@@ -1557,7 +1588,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	dev->dev.dma_mask = &dev->dma_mask;
- 	dev->dev.dma_parms = &dev->dma_parms;
- 	dev->dev.coherent_dma_mask = 0xffffffffull;
--	of_pci_dma_configure(dev);
-+	pci_dma_configure(dev);
- 
- 	pci_set_dma_max_seg_size(dev, 65536);
- 	pci_set_dma_seg_boundary(dev, 0xffffffff);
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 29fd3fe..ce0e5ab 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -16,7 +16,6 @@ int of_pci_get_devfn(struct device_node *np);
- int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
--void of_pci_dma_configure(struct pci_dev *pci_dev);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -51,8 +50,6 @@ of_get_pci_domain_nr(struct device_node *node)
- {
- 	return -1;
- }
--
--static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
- #endif
- 
- #if defined(CONFIG_OF_ADDRESS)
--- 
-2.1.0
 
