@@ -1,92 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: mingo@kernel.org
-Cc: bp@suse.de, bhelgaas@google.com, tomi.valkeinen@ti.com,
-	airlied@linux.ie, linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	vinod.koul@intel.com, dan.j.williams@intel.com, toshi.kani@hp.com,
-	benh@kernel.crashing.org, mst@redhat.com,
-	akpm@linux-foundation.org, daniel.vetter@ffwll.ch,
-	konrad.wilk@oracle.com, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	xen-devel@lists.xensource.com,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Antonino Daplas <adaplas@gmail.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f181.google.com ([209.85.223.181]:36329 "EHLO
+	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752489AbbHDVxw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 17:53:52 -0400
+Received: by ioeg141 with SMTP id g141so31169833ioe.3
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 14:53:52 -0700 (PDT)
+Subject: [PATCH v5 0/9] ARM: PCI: kill pcibios_msi_controller()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Dave Airlie <airlied@redhat.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Juergen Gross <jgross@suse.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH v4 04/11] drivers/video/fbdev/gxt4500: Use pci_ioremap_wc_bar() to map framebuffer
-Date: Mon, 24 Aug 2015 12:13:26 -0700
-Message-Id: <1440443613-13696-5-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Duc Dang <dhdang@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	James Morse <james.morse@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>
+Date: Tue, 04 Aug 2015 16:53:48 -0500
+Message-ID: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+The first 5 patches here are essentially the same as Lorenzo's v4 posting
+at
+http://lkml.kernel.org/1438169598-24490-1-git-send-email-lorenzo.pieralisi@arm.com
 
-The driver doesn't use mtrr_add() or arch_phys_wc_add() but since we
-know the framebuffer is isolated already on an ioremap() we can take
-advantage of write combining for performance where possible.
+I added some at the end to fix what look like some X-Gene bugs to me, and
+to make X-Gene use pci_scan_root_bus_msi() like the other drivers that use
+msi_controller.
 
-In this case there are a few motivations for this:
+v4->v5 changes:
+- Declare pci_scan_root_bus_msi() in drivers/pci/pci.h instead of
+  include/linux/pci.h.  I like the idea, but I hope we can replace this and
+  other "scan_root_bus" interfaces with a single, more-generic interface,
+  so I'd rather not expose this one widely.
+- Split "kill pcibios_msi_controller" into several patches.  My intent was
+  to make it easier to review; I don't think I made any actual code
+  changes.  I did drop Marc's ack because I fiddled with stuff enough
+  that I wasn't comfortable keeping it.
+- I added of_node_put() after of_parse_phandle() in MVEBU and X-Gene.
+  I'm not an OF guy, so tell me if this is the wrong thing.
+- I changed a couple X-Gene OF "msi-parent" things to match (I think) what
+  MVEBU does.  Again, tell me if I got this wrong.
+- I used pci_scan_root_bus_msi() in X-Gene to follow what Lorenzo already
+  did in DesignWare and Xilinx.
 
-a) Take advantage of PAT when available.
-
-b) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()").
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: benh@kernel.crashing.org
-Cc: bhelgaas@google.com
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: mst@redhat.com
-Cc: Rob Clark <robdclark@gmail.com>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: toshi.kani@hp.com
-Link: http://lkml.kernel.org/r/1435195342-26879-5-git-send-email-mcgrof@do-not-panic.com
-Signed-off-by: Borislav Petkov <bp@suse.de>
 ---
- drivers/video/fbdev/gxt4500.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/video/fbdev/gxt4500.c b/drivers/video/fbdev/gxt4500.c
-index 135d78a02588..f19133a80e8c 100644
---- a/drivers/video/fbdev/gxt4500.c
-+++ b/drivers/video/fbdev/gxt4500.c
-@@ -662,7 +662,7 @@ static int gxt4500_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	info->fix.smem_start = fb_phys;
- 	info->fix.smem_len = pci_resource_len(pdev, 1);
--	info->screen_base = pci_ioremap_bar(pdev, 1);
-+	info->screen_base = pci_ioremap_wc_bar(pdev, 1);
- 	if (!info->screen_base) {
- 		dev_err(&pdev->dev, "gxt4500: cannot map framebuffer\n");
- 		goto err_unmap_regs;
--- 
-2.4.3
+Lorenzo Pieralisi (5):
+      ARM/PCI: Replace panic with WARN messages on failures
+      PCI: Add pci_scan_root_bus_msi()
+      ARM/PCI, designware, xilinx: Use pci_scan_root_bus_msi()
+      ARM/PCI: Remove msi_controller from struct pci_sys_data
+      PCI/MSI: Remove unused pcibios_msi_controller() hook
 
+Bjorn Helgaas (4):
+      PCI: Drop references acquired by of_parse_phandle()
+      PCI: xgene: Set msi_controller->dev to platform_device, not pci_bus
+      PCI: xgene: Look for OF "msi-parent" in host controller, not root bus
+      PCI: xgene: Use pci_scan_root_bus_msi()
+
+
+ arch/arm/include/asm/mach/pci.h    |    5 -----
+ arch/arm/kernel/bios32.c           |   27 +++++++++------------------
+ drivers/pci/host/pci-mvebu.c       |    1 +
+ drivers/pci/host/pci-xgene.c       |   26 +++++++++++++-------------
+ drivers/pci/host/pcie-designware.c |    6 +++---
+ drivers/pci/host/pcie-xilinx.c     |    5 ++---
+ drivers/pci/msi.c                  |   17 +----------------
+ drivers/pci/pci.h                  |    5 +++++
+ drivers/pci/probe.c                |   14 ++++++++++++--
+ 9 files changed, 46 insertions(+), 60 deletions(-)
