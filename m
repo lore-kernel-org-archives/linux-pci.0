@@ -1,58 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:59180 "EHLO smtp1.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751187AbbHSErw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Aug 2015 00:47:52 -0400
-Date: Wed, 19 Aug 2015 07:48:14 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Helge Deller <deller@gmx.de>, linux-parisc@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Ahern <david.ahern@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	James Bottomley <James.Bottomley@hansenpartnership.com>
-Subject: Re: Aw: A500 boot crash in 4.2.0-rc3-00246-g763e326
-In-Reply-To: <CAE9FiQVUUN-SLO0U4G5CC6MEoXfb=bGd+f3bRgQprtaMHjsvpA@mail.gmail.com>
-Message-ID: <alpine.LRH.2.20.1508190747360.5154@math.ut.ee>
-References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee> <trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71> <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02> <alpine.LRH.2.20.1508182141200.24742@math.ut.ee>
- <55D38BE6.6080302@gmx.de> <CAE9FiQVUUN-SLO0U4G5CC6MEoXfb=bGd+f3bRgQprtaMHjsvpA@mail.gmail.com>
+Received: from mail-io0-f177.google.com ([209.85.223.177]:36814 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753049AbbHDVya (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 17:54:30 -0400
+Received: by ioeg141 with SMTP id g141so31183172ioe.3
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 14:54:30 -0700 (PDT)
+Subject: [PATCH v5 5/9] PCI/MSI: Remove unused pcibios_msi_controller() hook
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Duc Dang <dhdang@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	James Morse <james.morse@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>
+Date: Tue, 04 Aug 2015 16:54:28 -0500
+Message-ID: <20150804215428.9189.60846.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Tue, Aug 18, 2015 at 12:47 PM, Helge Deller <deller@gmx.de> wrote:
-> > On 18.08.2015 20:44, Meelis Roos wrote:
-> >>> I did a bisect and commit 3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d ("PCI:
-> >>> Add pci_bus_addr_t") seems to be the culprit:
-> >>>
-> >>> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d
-> >>
-> >> CC: patch author and linux-pci.
-> >
-> >
-> > I think this is the problem:
-> >
-> > --- a/drivers/pci/Kconfig
-> > +++ b/drivers/pci/Kconfig
-> > @@ -1,6 +1,10 @@
-> >  #
-> >  # PCI configuration
-> >  #
-> > +config PCI_BUS_ADDR_T_64BIT
-> > +       def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
-> > +       depends on PCI
-> 
-> Thanks for bisecting.
-> 
-> Then we should change to
-> 
-> config PCI_BUS_ADDR_T_64BIT
->        def_bool y if (ARCH_DMA_ADDR_T_64BIT || SPARC64)
->        depends on PCI
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-Why SPARC64? The problem happened on parisc.
+The pcibios_msi_controller() hook was only implemented by ARM, and it sets
+pci_bus->msi now, so it doesn't need this hook anymore.
 
--- 
-Meelis Roos (mroos@linux.ee)
+Remove the unused pcibios_msi_controller() hook.
+
+[bhelgaas: changelog, split into separate patch]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/msi.c |   17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index f66be868..0d20142 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -77,24 +77,9 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
+ 
+ /* Arch hooks */
+ 
+-struct msi_controller * __weak pcibios_msi_controller(struct pci_dev *dev)
+-{
+-	return NULL;
+-}
+-
+-static struct msi_controller *pci_msi_controller(struct pci_dev *dev)
+-{
+-	struct msi_controller *msi_ctrl = dev->bus->msi;
+-
+-	if (msi_ctrl)
+-		return msi_ctrl;
+-
+-	return pcibios_msi_controller(dev);
+-}
+-
+ int __weak arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc)
+ {
+-	struct msi_controller *chip = pci_msi_controller(dev);
++	struct msi_controller *chip = dev->bus->msi;
+ 	int err;
+ 
+ 	if (!chip || !chip->setup_irq)
+
