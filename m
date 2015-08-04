@@ -1,125 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:34527 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbbHJRCW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 13:02:22 -0400
-Received: by igui7 with SMTP id i7so22980900igu.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 10:02:21 -0700 (PDT)
-Date: Mon, 10 Aug 2015 12:02:17 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Will Davis <wdavis@nvidia.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [PATCH v4 09/12] iommu/vt-d: implement (un)map_peer_resource
-Message-ID: <20150810170217.GB32452@google.com>
-References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
- <1437601197-6481-10-git-send-email-wdavis@nvidia.com>
+Received: from mout1.freenet.de ([195.4.92.91]:46793 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755441AbbHDSQf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Aug 2015 14:16:35 -0400
+From: Andreas Hartmann <andihartmann@freenet.de>
+Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
+ QUEUED errors since Linux 4.0
+To: Jeff Moyer <jmoyer@redhat.com>, Mike Snitzer <snitzer@redhat.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
+ <20150728192908.GA25264@redhat.com> <55BCD5A7.2080708@maya.org>
+ <55BE1D5E.6020709@maya.org>
+ <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+ <55BE65E6.7060901@maya.org> <20150803081249.GF14980@8bytes.org>
+ <20150804144711.GB24716@redhat.com>
+ <x4937zzm3uc.fsf@segfault.boston.devel.redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>,
+	Andreas Hartmann <andihartmann@freenet.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	device-mapper development <dm-devel@redhat.com>,
+	Jens Axboe <axboe@fb.com>, iommu@lists.linux-foundation.org,
+	Leo Duran <leo.duran@amd.com>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	Christoph Hellwig <hch@lst.de>, Milan Broz <mbroz@redhat.com>,
+	linux-ide@vger.kernel.org
+Message-ID: <55C10069.6060303@maya.org>
+Date: Tue, 4 Aug 2015 20:11:53 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437601197-6481-10-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <x4937zzm3uc.fsf@segfault.boston.devel.redhat.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 22, 2015 at 04:39:54PM -0500, Will Davis wrote:
-> Implement 'map_peer_resource' for the Intel IOMMU driver. Simply translate
-> the resource to a physical address and route it to the same handlers used
-> by the 'map_page' API.
+On 08/04/2015 at 06:10 PM Jeff Moyer wrote:
+> Mike Snitzer <snitzer@redhat.com> writes:
 > 
-> This allows a device to map another's resource, to enable peer-to-peer
-> transactions.
+>> On Mon, Aug 03 2015 at  4:12am -0400,
+>> Joerg Roedel <joro@8bytes.org> wrote:
+>>
+>>> On Sun, Aug 02, 2015 at 08:48:06PM +0200, Andreas Hartmann wrote:
+>>>>>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
+>>>>>>
+>>>>>> block: remove artifical max_hw_sectors cap
+>>>
+>>> Looking at the patch, it seems to me that it just uncovered a bug
+>>> elsewhere. It looks like an underlying driver doesn't expect the
+>>> big io-requests that the patch enables and does not dma-map the whole
+>>> target buffer, causing the IO_PAGE_FAULTs later.
+>>
+>> That patch has caused issues elsewhere too, see this 'Revert "block:
+>> remove artifical max_hw_sectors cap"' thread (if/when lkml.org
+>> cooperates): https://lkml.org/lkml/2015/7/20/572
+>>
+>> But it could be that there is a need for a horkage fix for this specific
+>> hardware? something comparable to this?:
+>> http://git.kernel.org/linus/af34d637637eabaf49406eb35c948cd51ba262a6
+>>
+>> We are running out of time to fix these whack-a-mole issues in 4.2
+>> though.
 > 
-> These functions are guarded behind CONFIG_HAS_DMA_P2P, since the
-> dma_map_ops members are as well.
+> CC-ing linux-ide.  Original dm-devel posting:
+>   https://www.redhat.com/archives/dm-devel/2015-July/msg00178.html
 > 
-> Signed-off-by: Will Davis <wdavis@nvidia.com>
-> Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-> Reviewed-by: John Hubbard <jhubbard@nvidia.com>
-> ---
->  drivers/iommu/intel-iommu.c | 38 ++++++++++++++++++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
-> 
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index a98a7b2..66b371c 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -3544,6 +3544,40 @@ static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
->  	intel_unmap(dev, dev_addr);
->  }
->  
-> +#ifdef CONFIG_HAS_DMA_P2P
-> +static dma_peer_addr_t intel_map_peer_resource(struct device *dev,
-> +					       struct device *peer,
-> +					       struct resource *res,
-> +					       unsigned long offset,
-> +					       size_t size,
-> +					       enum dma_data_direction dir,
-> +					       struct dma_attrs *attrs)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	struct pci_dev *ppeer = to_pci_dev(peer);
+> Andreas, I would be curious to know what the value of
+> /sys/block/sdX/queue/max_hw_sectors_kb is for the affected disks.
 
-You got "struct device" pointers, so they might not be PCI devices.  You
-should probably return an error if one is not PCI.
 
-> +	struct pci_host_bridge *hbdev = pci_find_host_bridge(pdev->bus);
-> +	struct pci_host_bridge *hbpeer = pci_find_host_bridge(ppeer->bus);
-> +
-> +	/*
-> +	 * Disallow the peer-to-peer mapping if the devices do not share a host
-> +	 * bridge.
-> +	 */
-> +	if (hbdev != hbpeer)
-> +		return 0;
+It's always 32767.
 
-I think the only thing guaranteed by the spec is peer-to-peer between
-devices in the same hierarchy, where the hierarchy is rooted at a PCIe Root
-Port or a conventional PCI host bridge.  I don't remember anything about
-transactions between Root Ports or conventional PCI host bridges.
+Where does this value come from? Is it empirical or is it calculated (on
+base of which parameters)?
 
-If there is some language in the spec about those transactions, a citation
-here would be nice.
 
-This decision might be better made by a PCI interface.  This same basic
-logic is repeated here, in the AMD equivalent, and in the x86 code, and I
-suspect it will end up being a little more complicated for the reasons
-above.
+Devices are:
 
-> +
-> +	return __intel_map_single(dev, res->start + offset, size,
-> +				  dir, *dev->dma_mask);
-> +}
-> +
-> +static void intel_unmap_peer_resource(struct device *dev,
-> +				      dma_peer_addr_t dev_addr,
-> +				      size_t size, enum dma_data_direction dir,
-> +				      struct dma_attrs *attrs)
-> +{
-> +	intel_unmap(dev, dev_addr);
-> +}
-> +#endif
-> +
->  static void *intel_alloc_coherent(struct device *dev, size_t size,
->  				  dma_addr_t *dma_handle, gfp_t flags,
->  				  struct dma_attrs *attrs)
-> @@ -3700,6 +3734,10 @@ struct dma_map_ops intel_dma_ops = {
->  	.unmap_sg = intel_unmap_sg,
->  	.map_page = intel_map_page,
->  	.unmap_page = intel_unmap_page,
-> +#ifdef CONFIG_HAS_DMA_P2P
-> +	.map_peer_resource = intel_map_peer_resource,
-> +	.unmap_peer_resource = intel_unmap_peer_resource,
-> +#endif
->  	.mapping_error = intel_mapping_error,
->  };
->  
-> -- 
-> 2.4.6
-> 
+1 x Corsair Force GT (SSD)
+2 x ST3000DM001-1CH166 (rotational) (WD)
+
+
+How can I set a higher max_sectors_kb on boot before the partitions are
+mounted (-> as kernel option)? Mounting the partitions here (w/ systemd)
+is the easiest and best way to trigger the problem!
+
+
+
+Thanks,
+Andreas
