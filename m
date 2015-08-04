@@ -1,565 +1,216 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, linux-alpha@vger.kernel.org,
-	linux-ia64@vger.kernel.org, linux-am33-list@redhat.com,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	sparclinux@vger.kernel.org, linux-xtensa@linux-xtensa.org,
-	iommu@lists.linux-foundation.org, linux-sh@vger.kernel.org
-Subject: [PATCH v4 51/52] PCI: Introduce resource_disabled()
-Date: Thu, 20 Aug 2015 23:21:06 -0700
-Message-Id: <1440138067-4314-52-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:34997 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755405AbbHDKYa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 06:24:30 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: James Morse <james.morse@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	Kangfenglong <kangfenglong@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v5 2/5] PCI: designware: Add ARM64 support
+Date: Tue, 4 Aug 2015 10:23:58 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D719E9@lhreml503-mbs>
+References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
+ <1437794486-21134-3-git-send-email-wangzhou1@hisilicon.com>
+ <55B71F75.5030907@hisilicon.com> <55C0872E.9060507@arm.com>
+In-Reply-To: <55C0872E.9060507@arm.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current is using !flags, and we are going to use
-IORESOURCE_DISABLED instead of clearing resource flags.
+Hi James
 
-Let's convert all !flags to helper function resource_disabled().
-resource_disabled will check !flags and IORESOURCE_DISABLED both.
+Please see "[PATCH v6] PCI: Store PCIe bus address in struct of_pci_range"
 
-Cc: linux-alpha@vger.kernel.org
-Cc: linux-ia64@vger.kernel.org
-Cc: linux-am33-list@redhat.com
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-s390@vger.kernel.org
-Cc: sparclinux@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-xtensa@linux-xtensa.org
-Cc: iommu@lists.linux-foundation.org
-Cc: linux-sh@vger.kernel.org
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/alpha/kernel/pci.c                   |  2 +-
- arch/ia64/pci/pci.c                       |  4 ++--
- arch/microblaze/pci/pci-common.c          | 15 ++++++++-------
- arch/mn10300/unit-asb2305/pci-asb2305.c   |  4 ++--
- arch/mn10300/unit-asb2305/pci.c           |  4 ++--
- arch/powerpc/kernel/pci-common.c          | 16 +++++++++-------
- arch/powerpc/platforms/powernv/pci-ioda.c | 12 ++++++------
- arch/s390/pci/pci.c                       |  2 +-
- arch/sparc/kernel/pci.c                   |  2 +-
- arch/x86/pci/i386.c                       |  4 ++--
- arch/xtensa/kernel/pci.c                  |  4 ++--
- drivers/iommu/intel-iommu.c               |  3 ++-
- drivers/pci/host/pcie-rcar.c              |  2 +-
- drivers/pci/iov.c                         |  2 +-
- drivers/pci/probe.c                       |  2 +-
- drivers/pci/quirks.c                      |  4 ++--
- drivers/pci/rom.c                         |  2 +-
- drivers/pci/setup-bus.c                   |  8 ++++----
- drivers/pci/setup-res.c                   |  2 +-
- include/linux/ioport.h                    |  4 ++++
- 20 files changed, 53 insertions(+), 45 deletions(-)
+I think if you apply this patch your problem should be solved...
 
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 82f738e..91a7153 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -282,7 +282,7 @@ pcibios_claim_one_bus(struct pci_bus *b)
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 
--			if (r->parent || !r->start || !r->flags)
-+			if (r->parent || !r->start || resource_disabled(r))
- 				continue;
- 			if (pci_has_flag(PCI_PROBE_ONLY) ||
- 			    (r->flags & IORESOURCE_PCI_FIXED)) {
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 7cc3be9..cc293ea 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -501,7 +501,7 @@ void pcibios_fixup_device_resources(struct pci_dev *dev)
- 	for (idx = 0; idx < PCI_BRIDGE_RESOURCES; idx++) {
- 		struct resource *r = &dev->resource[idx];
- 
--		if (!r->flags || r->parent || !r->start)
-+		if (resource_disabled(r) || r->parent || !r->start)
- 			continue;
- 
- 		pci_claim_resource(dev, idx);
-@@ -519,7 +519,7 @@ static void pcibios_fixup_bridge_resources(struct pci_dev *dev)
- 	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
- 		struct resource *r = &dev->resource[idx];
- 
--		if (!r->flags || r->parent || !r->start)
-+		if (resource_disabled(r) || r->parent || !r->start)
- 			continue;
- 
- 		pci_claim_bridge_resource(dev, idx);
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 09b1af6..c123d3c 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -705,7 +705,7 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
- 	}
- 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
- 		struct resource *res = dev->resource + i;
--		if (!res->flags)
-+		if (resource_disabled(res))
- 			continue;
- 		if (res->start == 0) {
- 			pr_debug("PCI:%s Resource %d %016llx-%016llx [%x]",
-@@ -806,7 +806,7 @@ static void pcibios_fixup_bridge(struct pci_bus *bus)
- 	pci_bus_for_each_resource(bus, res, i) {
- 		if (!res)
- 			continue;
--		if (!res->flags)
-+		if (resource_disabled(res))
- 			continue;
- 		if (i >= 3 && bus->self->transparent)
- 			continue;
-@@ -985,7 +985,7 @@ static void pcibios_allocate_bus_resources(struct pci_bus *bus)
- 		 pci_domain_nr(bus), bus->number);
- 
- 	pci_bus_for_each_resource(bus, res, i) {
--		if (!res || !res->flags
-+		if (!res || resource_disabled(res)
- 		    || res->start > res->end || res->parent)
- 			continue;
- 		if (bus->parent == NULL)
-@@ -1087,7 +1087,8 @@ static void __init pcibios_allocate_resources(int pass)
- 			r = &dev->resource[idx];
- 			if (r->parent)		/* Already allocated */
- 				continue;
--			if (!r->flags || (r->flags & IORESOURCE_UNSET))
-+			if (resource_disabled(r) ||
-+			    (r->flags & IORESOURCE_UNSET))
- 				continue;	/* Not assigned at all */
- 			/* We only allocate ROMs on pass 1 just in case they
- 			 * have been screwed up by firmware
-@@ -1218,7 +1219,7 @@ void pcibios_claim_one_bus(struct pci_bus *bus)
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 
--			if (r->parent || !r->start || !r->flags)
-+			if (r->parent || !r->start || resource_disabled(r))
- 				continue;
- 
- 			pr_debug("PCI: Claiming %s: ", pci_name(dev));
-@@ -1278,7 +1279,7 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
- 	res->start = (res->start + io_offset) & 0xffffffffu;
- 	res->end = (res->end + io_offset) & 0xffffffffu;
- 
--	if (!res->flags) {
-+	if (resource_disabled(res)) {
- 		pr_warn("PCI: I/O resource not set for host ");
- 		pr_cont("bridge %s (domain %d)\n",
- 			hose->dn->full_name, hose->global_number);
-@@ -1298,7 +1299,7 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
- 	/* Hookup PHB Memory resources */
- 	for (i = 0; i < 3; ++i) {
- 		res = &hose->mem_resources[i];
--		if (!res->flags) {
-+		if (resource_disabled(res)) {
- 			if (i > 0)
- 				continue;
- 			pr_err("PCI: Memory resource 0 not set for ");
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
-index b5b036f..a249821 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.c
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
-@@ -103,7 +103,7 @@ static void __init pcibios_allocate_bus_resources(struct list_head *bus_list)
- 			     idx < PCI_NUM_RESOURCES;
- 			     idx++) {
- 				r = &dev->resource[idx];
--				if (!r->flags)
-+				if (resource_disabled(r))
- 					continue;
- 				if (!r->start ||
- 				    pci_claim_bridge_resource(dev, idx) < 0) {
-@@ -189,7 +189,7 @@ static int __init pcibios_assign_resources(void)
- 		   addresses. */
- 		for_each_pci_dev(dev) {
- 			r = &dev->resource[PCI_ROM_RESOURCE];
--			if (!r->flags || !r->start)
-+			if (resource_disabled(r) || !r->start)
- 				continue;
- 			if (pci_claim_resource(dev, PCI_ROM_RESOURCE) < 0) {
- 				r->end -= r->start;
-diff --git a/arch/mn10300/unit-asb2305/pci.c b/arch/mn10300/unit-asb2305/pci.c
-index 3dfe2d3..ad77b18 100644
---- a/arch/mn10300/unit-asb2305/pci.c
-+++ b/arch/mn10300/unit-asb2305/pci.c
-@@ -291,7 +291,7 @@ static void pcibios_fixup_device_resources(struct pci_dev *dev)
- 	for (idx = 0; idx < PCI_BRIDGE_RESOURCES; idx++) {
- 		struct resource *r = &dev->resource[idx];
- 
--		if (!r->flags || r->parent || !r->start)
-+		if (resource_disabled(r) || r->parent || !r->start)
- 			continue;
- 
- 		pci_claim_resource(dev, idx);
-@@ -308,7 +308,7 @@ static void pcibios_fixup_bridge_resources(struct pci_dev *dev)
- 	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
- 		struct resource *r = &dev->resource[idx];
- 
--		if (!r->flags || r->parent || !r->start)
-+		if (resource_disabled(r) || r->parent || !r->start)
- 			continue;
- 
- 		pci_claim_bridge_resource(dev, idx);
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 2d8d654..10bb5cd 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -810,7 +810,7 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
- 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
- 		struct resource *res = dev->resource + i;
- 		struct pci_bus_region reg;
--		if (!res->flags)
-+		if (resource_disabled(res))
- 			continue;
- 
- 		/* If we're going to re-assign everything, we mark all resources
-@@ -927,7 +927,7 @@ static void pcibios_fixup_bridge(struct pci_bus *bus)
- 	struct pci_dev *dev = bus->self;
- 
- 	pci_bus_for_each_resource(bus, res, i) {
--		if (!res || !res->flags)
-+		if (!res || resource_disabled(res))
- 			continue;
- 		if (i >= 3 && bus->self->transparent)
- 			continue;
-@@ -1174,7 +1174,8 @@ static void pcibios_allocate_bus_resources(struct pci_bus *bus)
- 		 pci_domain_nr(bus), bus->number);
- 
- 	pci_bus_for_each_resource(bus, res, i) {
--		if (!res || !res->flags || res->start > res->end || res->parent)
-+		if (!res || resource_disabled(res) ||
-+		    res->start > res->end || res->parent)
- 			continue;
- 
- 		/* If the resource was left unset at this point, we clear it */
-@@ -1281,7 +1282,8 @@ static void __init pcibios_allocate_resources(int pass)
- 			r = &dev->resource[idx];
- 			if (r->parent)		/* Already allocated */
- 				continue;
--			if (!r->flags || (r->flags & IORESOURCE_UNSET))
-+			if (resource_disabled(r) ||
-+			    (r->flags & IORESOURCE_UNSET))
- 				continue;	/* Not assigned at all */
- 			/* We only allocate ROMs on pass 1 just in case they
- 			 * have been screwed up by firmware
-@@ -1419,7 +1421,7 @@ void pcibios_claim_one_bus(struct pci_bus *bus)
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 
--			if (r->parent || !r->start || !r->flags)
-+			if (r->parent || !r->start || resource_disabled(r))
- 				continue;
- 
- 			pr_debug("PCI: Claiming %s: "
-@@ -1504,7 +1506,7 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
- 	/* Hookup PHB IO resource */
- 	res = &hose->io_resource;
- 
--	if (!res->flags) {
-+	if (resource_disabled(res)) {
- 		pr_info("PCI: I/O resource not set for host"
- 		       " bridge %s (domain %d)\n",
- 		       hose->dn->full_name, hose->global_number);
-@@ -1522,7 +1524,7 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
- 	/* Hookup PHB Memory resources */
- 	for (i = 0; i < 3; ++i) {
- 		res = &hose->mem_resources[i];
--		if (!res->flags) {
-+		if (resource_disabled(res)) {
- 			if (i == 0)
- 				printk(KERN_ERR "PCI: Memory resource 0 not set for "
- 				       "host bridge %s (domain %d)\n",
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 85cbc96..7146c8f 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -905,7 +905,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- 	num_vfs = pdn->num_vfs;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
--		if (!res->flags || !res->parent)
-+		if (resource_disabled(res) || !res->parent)
- 			continue;
- 
- 		if (!pnv_pci_is_mem_pref_64(res->flags))
-@@ -936,7 +936,7 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- 	 */
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
--		if (!res->flags || !res->parent)
-+		if (resource_disabled(res) || !res->parent)
- 			continue;
- 
- 		if (!pnv_pci_is_mem_pref_64(res->flags))
-@@ -1218,7 +1218,7 @@ static int pnv_pci_vf_assign_m64(struct pci_dev *pdev, u16 num_vfs)
- 
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
--		if (!res->flags || !res->parent)
-+		if (resource_disabled(res) || !res->parent)
- 			continue;
- 
- 		if (!pnv_pci_is_mem_pref_64(res->flags))
-@@ -2772,7 +2772,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
--		if (!res->flags || res->parent)
-+		if (resource_disabled(res) || res->parent)
- 			continue;
- 		if (!pnv_pci_is_mem_pref_64(res->flags)) {
- 			dev_warn(&pdev->dev, " non M64 VF BAR%d: %pR\n",
-@@ -2794,7 +2794,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
- 
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &pdev->resource[i + PCI_IOV_RESOURCES];
--		if (!res->flags || res->parent)
-+		if (resource_disabled(res) || res->parent)
- 			continue;
- 		if (!pnv_pci_is_mem_pref_64(res->flags)) {
- 			dev_warn(&pdev->dev, "Skipping expanding VF BAR%d: %pR\n",
-@@ -2835,7 +2835,7 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
- 	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
- 
- 	pci_bus_for_each_resource(pe->pbus, res, i) {
--		if (!res || !res->flags ||
-+		if (!res || resource_disabled(res) ||
- 		    res->start > res->end)
- 			continue;
- 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 598f023..d850749 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -658,7 +658,7 @@ int pcibios_add_device(struct pci_dev *pdev)
- 
- 	for (i = 0; i < PCI_BAR_COUNT; i++) {
- 		res = &pdev->resource[i];
--		if (res->parent || !res->flags)
-+		if (res->parent || resource_disabled(res))
- 			continue;
- 		pci_claim_resource(pdev, i);
- 	}
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index bfd0b70..f5e9536 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -630,7 +630,7 @@ static void pci_claim_bus_resources(struct pci_bus *bus)
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 
--			if (r->parent || !r->start || !r->flags)
-+			if (r->parent || !r->start || resource_disabled(r))
- 				continue;
- 
- 			if (ofpci_verbose)
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 0b74efe..8538edb 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -204,7 +204,7 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
- 
- 	for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
- 		r = &dev->resource[idx];
--		if (!r->flags)
-+		if (resource_disabled(r))
- 			continue;
- 		if (r->parent)	/* Already allocated */
- 			continue;
-@@ -333,7 +333,7 @@ static void pcibios_allocate_dev_rom_resource(struct pci_dev *dev)
- 	 * addresses.
- 	 */
- 	r = &dev->resource[PCI_ROM_RESOURCE];
--	if (!r->flags || !r->start)
-+	if (resource_disabled(r) || !r->start)
- 		return;
- 	if (r->parent) /* Already allocated */
- 		return;
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index b848cc3..f34d061 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -142,7 +142,7 @@ static void __init pci_controller_apertures(struct pci_controller *pci_ctrl,
- 
- 	io_offset = (unsigned long)pci_ctrl->io_space.base;
- 	res = &pci_ctrl->io_resource;
--	if (!res->flags) {
-+	if (resource_disabled(res)) {
- 		if (io_offset)
- 			printk (KERN_ERR "I/O resource not set for host"
- 				" bridge %d\n", pci_ctrl->index);
-@@ -156,7 +156,7 @@ static void __init pci_controller_apertures(struct pci_controller *pci_ctrl,
- 
- 	for (i = 0; i < 3; i++) {
- 		res = &pci_ctrl->mem_resources[i];
--		if (!res->flags) {
-+		if (resource_disabled(res)) {
- 			if (i > 0)
- 				continue;
- 			printk(KERN_ERR "Memory resource not set for "
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 0649b94..ee9bdbf 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -1743,7 +1743,8 @@ static int dmar_init_reserved_ranges(void)
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			r = &pdev->resource[i];
--			if (!r->flags || !(r->flags & IORESOURCE_MEM))
-+			if (resource_disabled(r) ||
-+			    !(r->flags & IORESOURCE_MEM))
- 				continue;
- 			iova = reserve_iova(&reserved_iova_list,
- 					    IOVA_PFN(r->start),
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index c086210..a6d6bd0 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -365,7 +365,7 @@ static int rcar_pcie_setup(int nr, struct pci_sys_data *sys)
- 	for (i = 0; i < RCAR_PCI_MAX_RESOURCES; i++) {
- 
- 		res = &pcie->res[i];
--		if (!res->flags)
-+		if (resource_disabled(res))
- 			continue;
- 
- 		rcar_pcie_setup_window(i, pcie);
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..808d08b 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -438,7 +438,7 @@ found:
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
- 		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
- 					pos + PCI_SRIOV_BAR + i * 4);
--		if (!res->flags)
-+		if (resource_disabled(res))
- 			continue;
- 		if (resource_size(res) & (PAGE_SIZE - 1)) {
- 			rc = -EIO;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 14bdbca..5440fb1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2129,7 +2129,7 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- 	struct resource *res = &b->busn_res;
- 	int ret;
- 
--	if (!res->flags || !res->parent)
-+	if (resource_disabled(res) || !res->parent)
- 		return;
- 
- 	ret = release_resource(res);
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index a2945a4..abbc2ac 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -337,7 +337,7 @@ static void quirk_bar_fixed(struct pci_dev *dev)
- 	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
- 		struct resource *r = &dev->resource[i];
- 
--		if (!r->start || !r->flags)
-+		if (!r->start || resource_disabled(r))
- 			continue;
- 		r->flags |= IORESOURCE_PCI_FIXED;
- 	}
-@@ -351,7 +351,7 @@ static void quirk_allocate_fixed(struct pci_dev *dev)
- 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 		struct resource *r = &dev->resource[i];
- 
--		if (r->parent ||
-+		if (r->parent || resource_disabled(r) ||
- 		    !(r->flags & IORESOURCE_PCI_FIXED) ||
- 		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
- 			continue;
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index eb0ad53..585a9d3 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -28,7 +28,7 @@ int pci_enable_rom(struct pci_dev *pdev)
- 	struct pci_bus_region region;
- 	u32 rom_addr;
- 
--	if (!res->flags)
-+	if (resource_disabled(res))
- 		return -1;
- 
- 	pcibios_resource_to_bus(pdev->bus, &region, res);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 32ce700..0374446 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -247,7 +247,7 @@ static void pdev_assign_resources_prepare(struct pci_dev *dev,
- 		if (r->flags & IORESOURCE_PCI_FIXED)
- 			continue;
- 
--		if (!(r->flags) || r->parent)
-+		if (resource_disabled(r) || r->parent)
- 			continue;
- 
- 		r_align = __pci_resource_alignment(dev, r, realloc_head);
-@@ -379,7 +379,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
- 		res = add_res->res;
- 		/* skip resource that has been reset */
--		if (!res->flags)
-+		if (resource_disabled(res))
- 			goto out;
- 
- 		/* skip this resource if not found in head list */
-@@ -2138,7 +2138,7 @@ static void pci_bus_dump_res(struct pci_bus *bus)
- 	int i;
- 
- 	pci_bus_for_each_resource(bus, res, i) {
--		if (!res || !res->end || !res->flags)
-+		if (!res || !res->end || resource_disabled(res))
- 			continue;
- 
- 		dev_printk(KERN_DEBUG, &bus->dev, "resource %d %pR\n", i, res);
-@@ -2221,7 +2221,7 @@ static int iov_resources_unassigned(struct pci_dev *dev, void *data)
- 		struct pci_bus_region region;
- 
- 		/* Not assigned or rejected by kernel? */
--		if (!r->flags)
-+		if (resource_disabled(r))
- 			continue;
- 
- 		pcibios_resource_to_bus(dev->bus, &region, r);
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 26aedde..55caf7a 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -40,7 +40,7 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	 * Ignore resources for unimplemented BARs and unused resource slots
- 	 * for 64 bit BARs.
- 	 */
--	if (!res->flags)
-+	if (resource_disabled(res))
- 		return;
- 
- 	if (res->flags & IORESOURCE_UNSET)
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 27dbb18..fb21179 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -179,6 +179,10 @@ static inline bool resource_contains(struct resource *r1, struct resource *r2)
- 	return r1->start <= r2->start && r1->end >= r2->end;
- }
- 
-+static inline bool resource_disabled(struct resource *r)
-+{
-+	return !r->flags || (r->flags & IORESOURCE_DISABLED);
-+}
- 
- /* Convenience shorthand with allocation */
- #define request_region(start,n,name)		__request_region(&ioport_resource, (start), (n), (name), 0)
--- 
-1.8.4.5
+If you follow the discussion you see that this patch is going to be part 
+of the next designware patchset...
+
+Wang Zhou said "You need apply Gabriele's patch before applying this patch."
+but he didn't specify which one and obviously this patch should have been part
+of the patch-set
+
+Sorry for the confusion 
+
+Gab
+
+> -----Original Message-----
+> From: James Morse [mailto:james.morse@arm.com]
+> Sent: Tuesday, August 04, 2015 10:35 AM
+> To: Wangzhou (B)
+> Cc: Bjorn Helgaas; Jingoo Han; Pratyush Anand; Arnd Bergmann; Gabriele
+> Paoloni; Lorenzo Pieralisi; Liviu Dudau; thomas.petazzoni@free-
+> electrons.com; Jason Cooper; robh@kernel.org; linux-pci@vger.kernel.org;
+> linux-arm-kernel@lists.infradead.org; devicetree@vger.kernel.org;
+> Yuanzhichang; Zhudacai; zhangjukuo; qiuzhenfa; liudongdong (C);
+> qiujiang; Kangfenglong; Liguozhu (Kenneth)
+> Subject: Re: [PATCH v5 2/5] PCI: designware: Add ARM64 support
+> 
+> On 28/07/15 07:21, Zhou Wang wrote:
+> > On 2015/7/25 11:21, Zhou Wang wrote:
+> >> This patch tries to unify ARM32 and ARM64 PCIe in designware driver.
+> Delete
+> >> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct
+> hw_pci,
+> >> move related operations to dw_pcie_host_init. Also set pp-
+> >root_bus_nr = 0 in
+> >> each PCIe host driver which is based on pcie-designware. This patch
+> also try
+> >> to use of_pci_get_host_bridge_resources for ARM32 and ARM64
+> according to the
+> >> suggestion for Gabriele[1]
+> >>
+> >> This patch is based on Gabriele's patch about of_pci_range fix[2]
+> >>
+> >> I have compiled the driver with multi_v7_defconfig. However, I don't
+> have
+> >> ARM32 PCIe related board to do test. It will be appreciated if
+> someone could
+> >> help to test it.
+> >>
+> >
+> > Hi James,
+> >
+> > If you have time, could you help to test this patch on i.MX 6Quad
+> board?
+> > You need apply Gabriele's patch before applying this patch.
+> >
+> > It will be very appreciate and helpful if we can get test result from
+> you.
+> 
+> Applying patches 1 and 2, from v5, onto 4.2-rc5, I still get the same
+> problem as before: config cycles to enumerate the second bus aren't
+> working. (good news - I have a workaround)
+> 
+> Output from dmesg below, the lines 'dw_pcie_cfg_read(0xf0180000, 0x0,
+> 0x4,
+> =0x8878086)' were added by me, 0x8878086 is the intel wireless card
+> attached to the board.
+> 
+> From v4.2-rc5:
+> -----------------------------------------------------------------------
+> -----------
+> imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io 0x1000-0xffff]
+> pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
+> pci_bus 0000:00: root bus resource [bus 00-ff]
+> pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
+> pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
+> pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
+> pci 0000:00:00.0: IOMMU is currently not supported for PCI
+> pci 0000:00:00.0: supports D1
+> pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+> PCI: bus0: Fast back to back transfers disabled
+> dw_pcie_cfg_read(0xf0180000, 0x0, 0x4, =0x8878086)
+> pci 0000:01:00.0: [8086:0887] type 00 class 0x028000
+> dw_pcie_cfg_read(0xf0180000, 0x0, 0x4, =0x8878086)
+> pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00001fff 64bit]
+> pci 0000:01:00.0: IOMMU is currently not supported for PCI
+> pci 0000:01:00.0: PME# supported from D0 D3hot D3cold
+> PCI: bus1: Fast back to back transfers disabled
+> pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+> pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
+> pci 0000:00:00.0: BAR 8: assigned [mem 0x01100000-0x011fffff]
+> pci 0000:00:00.0: BAR 6: assigned [mem 0x01200000-0x0120ffff pref
+> ]
+> pci 0000:01:00.0: BAR 0: assigned [mem 0x01100000-0x01101fff 64bi
+> t]
+> pci 0000:00:00.0: PCI bridge to [bus 01]
+> pci 0000:00:00.0:bridge window [mem 0x01100000-0x011fffff]
+> pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
+> pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+> pcie_pme 0000:00:00.0:pcie01: service driver pcie_pme loaded
+> -----------------------------------------------------------------------
+> -----------
+> 
+> And then with your two patches:
+> -----------------------------------------------------------------------
+> -----------
+> PCI host bridge /soc/pcie@0x01000000 ranges:
+> No bus range found for /soc/pcie@0x01000000, using [bus 00-ff]
+> err 0x01f00000..0x01f7ffff -> 0x01f00000
+> IO 0x01f80000..0x01f8ffff -> 0x00000000
+> MEM 0x01000000..0x01efffff -> 0x01000000
+> imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [bus 00-ff]
+> pci_bus 0000:00: root bus resource [??? 0x01f00000-0x01f7ffff fla
+> gs 0x0]
+> pci_bus 0000:00: root bus resource [io 0x0000-0xffff]
+> pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
+> pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
+> pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
+> pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
+> pci 0000:00:00.0: IOMMU is currently not supported for PCI
+> pci 0000:00:00.0: supports D1
+> pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+> PCI: bus0: Fast back to back transfers disabled
+> dw_pcie_cfg_read(0xf0180000, 0x0, 0x4, =0x0)
+> PCI: bus1: Fast back to back transfers enabled
+> pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
+> pci 0000:00:00.0: BAR 6: assigned [mem 0x01100000-0x0110ffff pref
+> ]
+> pci 0000:00:00.0: PCI bridge to [bus 01]
+> pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
+> pcie_pme 0000:00:00.0:pcie01: service driver pcie_pme loaded
+> -----------------------------------------------------------------------
+> -----------
+> 
+> Root-cause appears to be that the designware driver relies on ATU for
+> config and IO accesses. dw_pcie_rd_other_conf() does the appropriate
+> magic,
+> but with your patches 'pp->cfg0_base' is NULL, despite being correctly
+> initialised in dw_pcie_host_init().
+> 
+> dw_pcie_host_init() initialises the pp->cfg* values correctly after its
+> call:
+> >  platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+> 
+> But the new code introduced by patch 2 then walks the whole
+> resource_list
+> and re-initialises the pp->cfg* values. The fault occurs at:
+> > /* Find the untranslated configuration space address */
+> > pp->cfg0_mod_base = win->__res.start
+> 
+> where win->__res is uninitialised. The comment in linux/resource_ext.h
+> says
+> this is the 'default storage for res', so its not valid to assume it
+> contains different values to win->res. (in this case, it contains no
+> useful
+> values).
+> 
+> The workaround is to remove the re-initialisation of the pp->cfg*
+> values,
+> as they were already correctly initialised earlier. However, other
+> resource
+> types are accessing __res directly ... which is probably not correct.
+> 
+> I need to read-up on what these 'untranslated' addresses are for...
+> 
+> 
+> 
+> James
+> 
 
