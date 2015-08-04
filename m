@@ -1,59 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp2.it.da.ut.ee ([193.40.5.67]:46582 "EHLO smtp2.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750780AbbHRTRC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Aug 2015 15:17:02 -0400
-Date: Tue, 18 Aug 2015 21:44:13 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Helge Deller <deller@gmx.de>, Yinghai Lu <yinghai@kernel.org>
-cc: linux-parisc@vger.kernel.org, linux-pci@vger.kernel.org,
-	David Ahern <david.ahern@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, sparclinux@vger.kernel.org
-Subject: Re: Aw: A500 boot crash in 4.2.0-rc3-00246-g763e326
-In-Reply-To: <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
-Message-ID: <alpine.LRH.2.20.1508182141200.24742@math.ut.ee>
-References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee>, <trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71> <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:13468 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752351AbbHDUmb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 16:42:31 -0400
+From: Jayachandran C <jchandra@broadcom.com>
+To: Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Arnd Bergmann" <arnd@arndb.de>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: [PATCH v4 2/3] PCI: Add setup-irq.o when compiling for arm64
+Date: Wed, 5 Aug 2015 02:23:39 +0530
+Message-ID: <1438721620-15493-2-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
+References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(CC-s added)
+ARM64 requires setup-irq.o to provide pci_fixup_irqs() implementation.
+We are adding this now to support the pci-host-generic host controller,
+but we enable it for ARM64 PCI so that other host controllers can use
+this as well.
 
-> > > Tried 4.2.0-rc3-00246-g763e326 on A500 but it crashes on boot. This is 
-> > > still present in todays 4.2.0-rc6+git. 4.1 was fine, I Will bisect but 
-> > > it takes time.
-> > > 
-> > > PDC Stable Storage facility v0.30
-> > > STI GSC/PCI core graphics driver Version 0.9b
-> > > Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-> > > serial 0000:00:04.0: enabling device (0146 -> 0147)
-> > > console [ttyS0] disabled
-> > > 0000:00:04.0: ttyS0 at MMIO 0xfffffffff8000000 (irq = 21, base_baud = 115200) is a 16550A
-> > > console [ttyS0] enabled
-> > > console [ttyS0] enabled
-> > > bootconsole [ttyB0] disabled
-> > > bootconsole [ttyB0] disabled
-> > > 0000:00:04.0: ttyS1 at MMIO 0xfffffffff8000008 (irq = 21, base_baud = 115200) is a 16550A
-> > > 0000:00:04.0: ttyS2 at MMIO 0xfffffffff8000010 (irq = 21, base_baud = 115200) is a 16550A
-> > > serial 0000:00:05.0: enabling device (0000 -> 0003)
-> > > serial 0000:00:05.0: enabling SERR and PARITY (0003 -> 0143)
-> > > 0000:00:05.0: ttyS3 at MMIO 0xfffffffff8003000 (irq = 22, base_baud = 115200) is a 16550A
-> > > serial 0000:00:05.0: Couldn't register serial port 0, irq 22, type 2, error -28
-> > > sym53c8xx 0000:00:01.0: enabling device (0000 -> 0003)
-> > > sym53c8xx 0000:00:01.0: enabling SERR and PARITY (0003 -> 0143)
-> > 
-> > I'm seeing the same problem on my rp5470 with Kernel 4.2-rc7. My machine just hangs though and doesn't crash.
-> 
-> I did a bisect and commit 3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d ("PCI: Add pci_bus_addr_t") seems to be the culprit:
-> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d
-> 
-> Since the patch has "CC: stable@vger.kernel.org  # v3.19+", it might be the reason why you see kernel 3.19 failing too...
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+ drivers/pci/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
 
-I just found the same commit breaking my A500 parisc machine by 
-bisecting.
-
-CC: patch author and linux-pci.
-
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 73e4af4..be3f631 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -33,6 +33,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
+ #
+ obj-$(CONFIG_ALPHA) += setup-irq.o
+ obj-$(CONFIG_ARM) += setup-irq.o
++obj-$(CONFIG_ARM64) += setup-irq.o
+ obj-$(CONFIG_UNICORE32) += setup-irq.o
+ obj-$(CONFIG_SUPERH) += setup-irq.o
+ obj-$(CONFIG_MIPS) += setup-irq.o
 -- 
-Meelis Roos (mroos@linux.ee)
+1.9.1
+
