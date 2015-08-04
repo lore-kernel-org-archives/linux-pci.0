@@ -1,73 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0071.outbound.protection.outlook.com ([207.46.100.71]:37833
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755376AbbHYJgh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Aug 2015 05:36:37 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>
-Subject: [PATCH v5 5/5] MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
-Date: Tue, 25 Aug 2015 17:35:48 +0800
-Message-ID: <1440495348-2666-6-git-send-email-lftan@altera.com>
-In-Reply-To: <1440495348-2666-1-git-send-email-lftan@altera.com>
-References: <1440495348-2666-1-git-send-email-lftan@altera.com>
+Received: from foss.arm.com ([217.140.101.70]:57029 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755405AbbHDKkk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 4 Aug 2015 06:40:40 -0400
+Message-ID: <55C09694.30506@arm.com>
+Date: Tue, 04 Aug 2015 11:40:20 +0100
+From: James Morse <james.morse@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	Kangfenglong <kangfenglong@huawei.com>,
+	"liguozhu@hisilicon.com" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH v5 2/5] PCI: designware: Add ARM64 support
+References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com> <1437794486-21134-3-git-send-email-wangzhou1@hisilicon.com> <55B71F75.5030907@hisilicon.com> <55C0872E.9060507@arm.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D719E9@lhreml503-mbs>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D719E9@lhreml503-mbs>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- MAINTAINERS | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+On 04/08/15 11:23, Gabriele Paoloni wrote:
+> Hi James
+> 
+> Please see "[PATCH v6] PCI: Store PCIe bus address in struct of_pci_range"
+> 
+> I think if you apply this patch your problem should be solved...
+> 
+> If you follow the discussion you see that this patch is going to be part 
+> of the next designware patchset...
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 569568f..c87e451 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7779,6 +7779,14 @@ F:	include/linux/pci*
- F:	arch/x86/pci/
- F:	arch/x86/kernel/quirks.c
- 
-+PCI DRIVER FOR ALTERA PCIE IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
-+F:	drivers/pci/host/pcie-altera.c
-+
- PCI DRIVER FOR ARM VERSATILE PLATFORM
- M:	Rob Herring <robh@kernel.org>
- L:	linux-pci@vger.kernel.org
-@@ -7880,6 +7888,14 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*spear*
- 
-+PCI MSI DRIVER FOR ALTERA MSI IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-+F:	drivers/pci/host/pcie-altera-msi.c
-+
- PCI MSI DRIVER FOR APPLIEDMICRO XGENE
- M:	Duc Dang <dhdang@apm.com>
- L:	linux-pci@vger.kernel.org
--- 
-1.8.2.1
+Yes I just spotted that series after continuing through my email backlog.
 
+> Wang Zhou said "You need apply Gabriele's patch before applying this patch."
+> but he didn't specify which one and obviously this patch should have been part
+> of the patch-set
+
+I assumed he meant your patch 1 in the same series, (given the reply was to
+patch 2).
+
+With the '[PATCH v6] PCI: Store PCIe bus address in struct of_pci_range'
+applied before patches and 1 and 2 of this series - pcie on the
+'Freescale i.MX6 Quad SABRE Lite Board' works fine.
+
+I can rescan the bus, load firmware, list nearby APs, and even get MSIs
+coming from the card.
+
+Tested-by: James Morse <james.morse@arm.com>
+
+
+
+James
