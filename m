@@ -1,137 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52904 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752755AbbHCKxn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Aug 2015 06:53:43 -0400
-Message-ID: <55BF4830.9050104@arm.com>
-Date: Mon, 03 Aug 2015 11:53:36 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Ley Foon Tan <lftan@altera.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:35325 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752729AbbHDVyH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 17:54:07 -0400
+Received: by igr7 with SMTP id 7so83734186igr.0
+        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 14:54:06 -0700 (PDT)
+Subject: [PATCH v5 2/9] PCI: Add pci_scan_root_bus_msi()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
 	Russell King <linux@arm.linux.org.uk>,
 	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2 3/5] pci: altera: Add Altera PCIe MSI driver
-References: <1438337715-22594-1-git-send-email-lftan@altera.com>	<1438337715-22594-4-git-send-email-lftan@altera.com>	<55BB6621.9060505@arm.com> <CAFiDJ5-5eZEBFwbuzrPB+XKX_E2Fd0qEeP-_H3Wz2jT8pcbJfQ@mail.gmail.com>
-In-Reply-To: <CAFiDJ5-5eZEBFwbuzrPB+XKX_E2Fd0qEeP-_H3Wz2jT8pcbJfQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Duc Dang <dhdang@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	James Morse <james.morse@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>
+Date: Tue, 04 Aug 2015 16:54:04 -0500
+Message-ID: <20150804215404.9189.41823.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/15 11:37, Ley Foon Tan wrote:
-> On Fri, Jul 31, 2015 at 8:12 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->> On 31/07/15 11:15, Ley Foon Tan wrote:
->>> This patch adds Altera PCIe MSI driver. This soft IP supports configurable
->>> number of vectors, which is a dts parameter.
->>
->> I've reviewed the initial drop of this code; basic courtesy would be to
->> keep me CCed on the follow-up series.
-> Will keep you in CC for the following revision. Sorry about this.
-> 
->>>
->>> Signed-off-by: Ley Foon Tan <lftan@altera.com>
->>> ---
->>>  drivers/pci/host/Kconfig           |   7 +
->>>  drivers/pci/host/Makefile          |   1 +
->>>  drivers/pci/host/pcie-altera-msi.c | 324 +++++++++++++++++++++++++++++++++++++
->>>  3 files changed, 332 insertions(+)
->>>  create mode 100644 drivers/pci/host/pcie-altera-msi.c
->>>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-[...]
+Add a pci_scan_root_bus_msi() interface so an arch can specify the MSI
+controller up front.  This removes the need for a pcibios callback to set
+the MSI controller later.
 
->>> +
->>> +     msg->address_lo = lower_32_bits(addr);
->>> +     msg->address_hi = upper_32_bits(addr);
->>> +     msg->data = data->hwirq;
->>> +
->>> +     mask = msi_readl(msi, MSI_INTMASK);
->>> +     mask |= 1 << data->hwirq;
->>> +     msi_writel(msi, mask, MSI_INTMASK);
->>
->> It feels a bit weird to unmask the interrupt when you compose the
->> message. I'd expect this to be done in the mask/unmask methods.
-> Do you refer to these 2 callbacks?
-> .irq_mask = pci_msi_mask_irq,
-> .irq_unmask = pci_msi_unmask_irq,
-> 
-> How about we move this INTMASK code above to altera_irq_domain_alloc()?
-> We have unmask code in altera_irq_domain_free() now.
+This is not exported because I'd like to replace the variety of "scan root
+bus" interfaces with a single, more extensible interface that can handle
+the MSI controller, domain, pci_ops, resources, etc.  I hope this interface
+is temporary.
 
-Either you move the mask/unmask code to local irq_mask/irq_unmask
-methods (and call pci_msi_(un)mask_irq from there), or you move it
-entierely to alloc/free.
+[bhelgaas: changelog, split into separate patch, move to drivers/pci/pci.h]
+Suggested-by: Russell King <linux@arm.linux.org.uk>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.h   |    5 +++++
+ drivers/pci/probe.c |   14 ++++++++++++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
 
-Some level of symmetry helps following what is going on in the code.
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4ff0ff1..1d4c95c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -223,6 +223,11 @@ enum pci_bar_type {
+ 	pci_bar_mem64,		/* A 64-bit memory BAR */
+ };
+ 
++struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
++				      struct pci_ops *ops, void *sysdata,
++				      struct list_head *resources,
++				      struct msi_controller *msi);
++
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int crs_timeout);
+ int pci_setup_device(struct pci_dev *dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..9ff4df0 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2096,8 +2096,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
+ }
+ 
+-struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata,
++		struct list_head *resources, struct msi_controller *msi)
+ {
+ 	struct resource_entry *window;
+ 	bool found = false;
+@@ -2114,6 +2115,8 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 	if (!b)
+ 		return NULL;
+ 
++	b->msi = msi;
++
+ 	if (!found) {
+ 		dev_info(&b->dev,
+ 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
+@@ -2128,6 +2131,13 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 
+ 	return b;
+ }
++
++struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
++{
++	return pci_scan_root_bus_msi(parent, bus, ops, sysdata, resources,
++				     NULL);
++}
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
 
-[...]
-
->>> +static int altera_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
->>> +                               unsigned int nr_irqs, void *args)
->>> +{
->>> +     struct altera_msi *msi = domain->host_data;
->>> +     int bit;
->>> +
->>> +     mutex_lock(&msi->lock);
->>> +
->>> +     bit = find_first_zero_bit(msi->used, msi->num_of_vectors);
->>> +     if (bit < msi->num_of_vectors)
->>> +             set_bit(bit, msi->used);
->>> +
->>> +     mutex_unlock(&msi->lock);
->>> +
->>> +     if (bit < 0)
->>> +             return bit;
->>
->> How can "bit" be negative here? find_first_zero_bit returns an unsigned
->> long... You probably want to change the type of "bit" to reflect that.
-> Okay, will change to "unsigned long" type.
->>
->>> +     else if (bit >= msi->num_of_vectors)
->>
->> Useless "else" anyway.
-> 
-> I think we still need to check for failing case, if we don't have
-> available unused bit.
-> This could be rewritten  as below:
-> 
-> bit = find_first_zero_bit(msi->used, msi->num_of_vectors);
-> if (bit < msi->num_of_vectors)
->       set_bit(bit, msi->used);
-> else
->       return -ENOSPC;
-
-The more logical to write this is:
-
-	if (bit >= msi->num_of_vectors)
-		return -ENOSPC;
-
-	set_bit(bit, msi->used);
-
-which gets rid of the error case early and streamlines the normal case.
-
-> 
->>
->>> +             return -ENOSPC;
->>> +
->>> +     irq_domain_set_info(domain, virq, bit, &altera_msi_bottom_irq_chip,
->>> +                         domain->host_data, handle_simple_irq,
->>> +                         NULL, NULL);
->>> +     set_irq_flags(virq, IRQF_VALID);
->>> +
->>> +     return 0;
->>> +}
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
