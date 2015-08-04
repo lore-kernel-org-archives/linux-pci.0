@@ -1,146 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:56712 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933633AbbHKAxk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:53:40 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 11 Aug 2015 10:53:37 +1000
-Date: Tue, 11 Aug 2015 10:52:43 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Frank Rowand <frowand.list@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com, aik@ozlabs.ru
-Subject: Re: [PATCH v6 39/42] drivers/of: Allow to specify root node in
- of_fdt_unflatten_tree()
-Message-ID: <20150811005243.GB20729@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-40-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C928C5.2080305@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 4 Aug 2015 11:56:42 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jarod Wilson <jarod@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci/pciehp: bail on bogus pcie reads from removed devices
+Message-ID: <20150804165642.GB17327@google.com>
+References: <1437495930-7723-1-git-send-email-jarod@redhat.com>
+ <20150803041451.GA11144@google.com>
+ <CAKfmpSdrdjyiQ-WWBdXFuPuTyo0WkTTsTX5ByHBt7haZeF0w=g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55C928C5.2080305@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAKfmpSdrdjyiQ-WWBdXFuPuTyo0WkTTsTX5ByHBt7haZeF0w=g@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 03:42:13PM -0700, Frank Rowand wrote:
->On 8/5/2015 9:11 PM, Gavin Shan wrote:
->> This introduces one more argument to of_fdt_unflatten_tree()
->> to specify the root node for the FDT blob, which is going to be
->> unflattened. In the result, the function can be used to unflatten
->> FDT blob, which represents device sub-tree in PowerNV hotplug
->> driver.
->> 
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  drivers/of/fdt.c       | 13 ++++++++-----
->>  drivers/of/unittest.c  |  2 +-
->>  include/linux/of_fdt.h |  1 +
->>  3 files changed, 10 insertions(+), 6 deletions(-)
->> 
->> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
->> index a18a2ce..074870a 100644
->> --- a/drivers/of/fdt.c
->> +++ b/drivers/of/fdt.c
->> @@ -388,10 +388,11 @@ static void *unflatten_dt_node(const void *blob,
->>  			       struct device_node **nodepp,
->>  			       bool dryrun)
->>  {
->> +	unsigned long fpsize = dad ? strlen(of_node_full_name(dad)) : 0;
->>  	int depth = 1;
->>  
->>  	return __unflatten_dt_node(blob, mem, poffset,
->> -				   dad, nodepp, 0,
->> +				   dad, nodepp, fpsize,
->>  				   dryrun, &depth);
->>  }
->>  
->> @@ -408,6 +409,7 @@ static void *unflatten_dt_node(const void *blob,
->>   * for the resulting tree
->>   */
->>  static void __unflatten_device_tree(const void *blob,
->> +			     struct device_node *dad,
->>  			     struct device_node **mynodes,
->>  			     void * (*dt_alloc)(u64 size, u64 align))
->>  {
->
->Please add @dad to the documentation header for the function.
->
+On Tue, Aug 04, 2015 at 10:05:18AM -0400, Jarod Wilson wrote:
+> On Mon, Aug 3, 2015 at 12:14 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> 
+> > On Tue, Jul 21, 2015 at 12:25:30PM -0400, Jarod Wilson wrote:
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=99841
+> > >
+> > > Seems like a read of all 1's from a register of a device that has gone
+> > > away should be taken as a sign that the device has gone away.
+> > > Section 6.2.10 of the PCIE spec (v4.0, rev 0.3, Feb 19, 2014) suggests as
+> > > much with this snippet:
+> > >
+> > > |IMPLEMENTATION NOTE
+> > > |Data Value of All 1’s
+> > > |Many platforms, including those supporting RP Extensions for DPC, can
+> > > |return a data value of all 1’s to software when an error is associated
+> > > |with a PCI Express Configuration, I/O, or Memory Read Request. During
+> > DPC,
+> > > |the Downstream Port discards Requests destined for the Link and
+> > completes
+> > > |them with an error (i.e., either with an Unsupported Request (UR) or
+> > > |Completer Abort (CA) Completion Status). By ending a series of MMIO or
+> > > |configuration space operations with a read to an address with a known
+> > > |data value not equal to all 1’s, software may determine if a Completer
+> > > |has been removed or DPC has been triggered.
+> > >
+> > > I'm not sure the above is directly relevant to this case, but the same
+> > > principle (reading all 1's means the device is probably gone) seems to
+> > > hold.
+> > >
+> > > This is based on part of a debugging patch Bjorn posted in the referenced
+> > > bugzilla, and its required to make the HP ZBook G2 I've got here not barf
+> > > when disconnecting a thunderbolt ethernet adapter and corrupt memory.
+> > >
+> > > Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > CC: Bjorn Helgaas <bhelgaas@google.com>
+> > > CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > CC: linux-pci@vger.kernel.org
+> > > Signed-off-by: Jarod Wilson <jarod@redhat.com>
+> >
+> > Hi Jarod,
+> >
+> > I think there are two issues here:
+> >
+> >   1) pciehp doesn't handle all 1's correctly
+> >   2) use-after-free of hotplug_slot
+> >
+> > This patch is for the first issue.  I think it's correct, but I still
+> > have a question or two.   I attached an updated version of the patch
+> > and changelog.
+> >
+> > Here's the path I think we're taking: 03:03.0 receives pciehp
+> > interrupt for removal (link down and card not present), and we call
+> > pciehp_unconfigure_device() for 05:00.0 and everything downstream from
+> > it.  Part of this is removing 06:00.0.  I expected this would use this
+> > path:
+> >
+> >   pcie_port_remove_service            # .remove method for 06:00.0
+> >     dev_printk("unloading service driver ...")
+> >     pciehp_remove                     # hpdriver_portdrv.remove
+> >       pciehp_release_ctrl
+> >         pcie_shutdown_notification
+> >           pcie_disable_notification
+> >             pcie_write_cmd
+> >               pcie_do_write_cmd(..., true)    # wait
+> >                 pcie_wait_cmd
+> >                   pcie_poll_cmd
+> >                     read PCI_EXP_SLTSTA        # would get 0xffff
+> >                 read PCI_EXPT_SLTCTL        # would get 0xffff
+> >
+> > so I added checks for ~0 data in pcie_poll_cmd() and
+> > pcie_do_write_cmd().
+> >
+> > But the dmesg log shows that we were in pcie_isr(), and I don't
+> > understand yet how we got there.  Can you help figure that out?  Maybe
+> > put a dump_stack() in pcie_isr() or something?
+> 
+> [ 1949.102247] pciehp 0000:03:03.0:pcie24: pcie_isr: intr_loc 108
+> [ 1949.102252] pciehp 0000:03:03.0:pcie24: Presence/Notify input change
+> [ 1949.102256] pciehp 0000:03:03.0:pcie24: Card not present on Slot(3)
+> [ 1949.102262] pciehp 0000:03:03.0:pcie24: Data Link Layer State change
+> [ 1949.102266] pciehp 0000:03:03.0:pcie24: slot(3): Link Down event
+> [ 1949.102281] pciehp 0000:03:03.0:pcie24: Surprise Removal
+> [ 1949.102286] pciehp 0000:03:03.0:pcie24: Link Down event ignored on
+> slot(3): already powering off
+> [ 1949.102288] pciehp 0000:03:03.0:pcie24: Disabling
+> domain:bus:device=0000:05:00
+> [ 1949.102290] pciehp 0000:03:03.0:pcie24: pciehp_unconfigure_device:
+> domain:bus:dev = 0000:05:00
+> [ 1950.321907] tg3 0000:07:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE
+> will not clear MAC_TX_MODE=ffffffff
+> [ 1950.525986] [sched_delayed] sched: RT throttling activated
+> [ 1950.544164] pciehp 0000:06:00.0:pcie24: unloading service driver pciehp
+> [ 1950.544170] pciehp 0000:06:00.0:pcie24: release_slot: physical_slot = 9
+> [ 1950.545016] pciehp 0000:06:00.0:pcie24: Timeout on hotplug command
+> 0x1038 (issued 19092 msec ago)
+> [ 1950.545020] pciehp 0000:06:00.0:pcie24: pcie_do_write_cmd: no response
+> from device
+> [ 1950.545021] pciehp 0000:06:00.0:pcie24: pcie_disable_notification:
+> SLOTCTRL d8 write cmd 0
+> [ 1950.545025] pciehp 0000:06:00.0:pcie24: Device has gone away
+> [ 1950.545027] CPU: 0 PID: 12361 Comm: kworker/0:2 Not tainted
+> 3.10.0-302.el7.hp.x86_64 #1
+> [ 1950.545028] Hardware name: Hewlett-Packard HP ZBook 15 G2/2253, BIOS M70
+> Ver. 01.07 02/26/2015
+> [ 1950.545033] Workqueue: pciehp-3 pciehp_power_thread
+> [ 1950.545034]  0000000000000000 00000000f721dd13 ffff8804822ffa78
+> ffffffff81632729
+> [ 1950.545036]  ffff8804822ffac0 ffffffff8133bf64 ffff00000000002e
+> 00000000f721dd13
+> [ 1950.545038]  ffff8804818fab00 ffff880468f70cc0 000000000000002e
+> 0000000000000282
+> [ 1950.545039] Call Trace:
+> [ 1950.545044]  [<ffffffff81632729>] dump_stack+0x19/0x1b
+> [ 1950.545046]  [<ffffffff8133bf64>] pcie_isr+0x264/0x280
+> [ 1950.545048]  [<ffffffff8111b6b9>] __free_irq+0x189/0x220
+> [ 1950.545049]  [<ffffffff8111b7e9>] free_irq+0x49/0xb0
+> [ 1950.545051]  [<ffffffff8133d3b9>] pciehp_release_ctrl+0xb9/0xe0
+> [ 1950.545053]  [<ffffffff81339db3>] pciehp_remove+0x23/0x30
+> [ 1950.545055]  [<ffffffff8133442e>] pcie_port_remove_service+0x4e/0x60
 
-Yes, it will be included in next revision.
+Do you have CONFIG_DEBUG_SHIRQ set?  When CONFIG_DEBUG_SHIRQ is set,
+__free_irq() calls the ISR one last time.  It does make sense that the
+driver must be prepared for the ISR to be called at any time before
+free_irq() returns.  I just didn't see a path for the already-removed
+device to generate an actual interrupt.
 
+Can you try the version I posted, with the additional tests in
+pcie_poll_cmd() and pcie_do_write_cmd()?  We should try to read from
+the device there, even before we free the IRQ, so we might see several
+messages.  Maybe there's a way we can be smarter about bailing out
+there.
 
->> @@ -435,7 +437,7 @@ static void __unflatten_device_tree(const void *blob,
->>  	/* First pass, scan for size */
->>  	start = 0;
->>  	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
->> -						NULL, NULL, true);
->> +						dad, NULL, true);
->>  	size = ALIGN(size, 4);
->>  
->>  	pr_debug("  size is %lx, allocating...\n", size);
->> @@ -450,7 +452,7 @@ static void __unflatten_device_tree(const void *blob,
->>  
->>  	/* Second pass, do actual unflattening */
->>  	start = 0;
->> -	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
->> +	unflatten_dt_node(blob, mem, &start, dad, mynodes, false);
->>  	if (be32_to_cpup(mem + size) != 0xdeadbeef)
->>  		pr_warning("End of tree marker overwritten: %08x\n",
->>  			   be32_to_cpup(mem + size));
->> @@ -472,9 +474,10 @@ static void *kernel_tree_alloc(u64 size, u64 align)
->>   * can be used.
->>   */
->>  void of_fdt_unflatten_tree(const unsigned long *blob,
->> +			struct device_node *dad,
->>  			struct device_node **mynodes)
->>  {
->> -	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
->> +	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
->>  }
->>  EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
->>  
->> @@ -1125,7 +1128,7 @@ bool __init early_init_dt_scan(void *params)
->>   */
->>  void __init unflatten_device_tree(void)
->>  {
->> -	__unflatten_device_tree(initial_boot_params, &of_root,
->> +	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
->>  				early_init_dt_alloc_memory_arch);
->>  
->>  	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
->> diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
->> index 1801634..2270830 100644
->> --- a/drivers/of/unittest.c
->> +++ b/drivers/of/unittest.c
->> @@ -907,7 +907,7 @@ static int __init unittest_data_add(void)
->>  			"not running tests\n", __func__);
->>  		return -ENOMEM;
->>  	}
->> -	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
->> +	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
->>  	if (!unittest_data_node) {
->>  		pr_warn("%s: No tree to attach; not running tests\n", __func__);
->>  		return -ENODATA;
->> diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
->> index df9ef38..3644960 100644
->> --- a/include/linux/of_fdt.h
->> +++ b/include/linux/of_fdt.h
->> @@ -38,6 +38,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
->>  extern int of_fdt_match(const void *blob, unsigned long node,
->>  			const char *const *compat);
->>  extern void of_fdt_unflatten_tree(const unsigned long *blob,
->> +			       struct device_node *dad,
->>  			       struct device_node **mynodes);
->>  
->>  /* TBD: Temporary export of fdt globals - remove when code fully merged */
->> 
-
-Thanks,
-Gavin
-
+Bjorn
