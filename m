@@ -1,55 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:59776 "EHLO mga14.intel.com"
+Received: from foss.arm.com ([217.140.101.70]:32945 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751634AbbHRPm7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Aug 2015 11:42:59 -0400
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Mark Brown <broonie@kernel.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Srikanth Thokala <sthokal@xilinx.com>,
-	Rob Herring <robh@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [Bugfix] PCI: Fix a typo in file pcie-xilinx.c caused by commit e39758e0ea76
-Date: Tue, 18 Aug 2015 23:45:55 +0800
-Message-Id: <1439912763-10645-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <CAErSpo6aryRYOJpfXfY6SuJoVe72MYd8RKgPhiDZ9pt5+zmXBQ@mail.gmail.com>
-References: <CAErSpo6aryRYOJpfXfY6SuJoVe72MYd8RKgPhiDZ9pt5+zmXBQ@mail.gmail.com>
+	id S1750989AbbHEJXV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Aug 2015 05:23:21 -0400
+Date: Wed, 5 Aug 2015 10:23:19 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v4 1/3] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150805092318.GB6092@arm.com>
+References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
+ <20150804234956.GF17327@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150804234956.GF17327@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's a typo in commit e39758e0ea76 ("PCI: Use helper functions to access
-fields in struct msi_desc") in linux-next, which incorrectly spells
-"msi_desc_to_pci_sysdata()" as "msi_desc_to_pci_sys_data()" and causes
-buidling failure:
-> ../drivers/pci/host/pcie-xilinx.c:235:3: error: implicit declaration of function 'msi_desc_to_pci_sys_data' [-Werror=implicit-function-declaration]
+On Wed, Aug 05, 2015 at 12:49:56AM +0100, Bjorn Helgaas wrote:
+> On Wed, Aug 05, 2015 at 02:23:38AM +0530, Jayachandran C wrote:
+> > The current code in pci-host-generic.c uses pci_common_init_dev()
+> > from arm architecture to do some part of the PCI setup, and this
+> > prevents it from being used with arm64 architecture.
+> > 
+> > The part of pci_common_init_dev() that is really needed by
+> > pci-host-generic.c is very limited and can be done in the same
+> > file without using hw_pci API of ARM. The ARM platform requires
+> > a pci_sys_data as sysdata for the PCI bus, this can be handled by
+> > setting up gen_pci to have a pci_sys_data variable as the first
+> > element.
+> > 
+> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Tested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Tested-by: Pavel Fedin <p.fedin@samsung.com>
+> 
+> I applied all three of these to my pci/enumeration branch for v4.3.
+> 
+> I made a few changes, the most important being to call
+> pcie_bus_configure_settings() before pci_bus_add_devices(), because drivers
+> may claim devices in pci_bus_add_devices(), and the PCI core shouldn't
+> touch devices after drivers claim them.
+> 
+> I dropped the acks and tested-by because of that change, but I'll happily
+> add them back if Lorenzo and Pavel confirm.  The patches are here if you
+> want to review/test them:
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/enumeration
+> 
+> I'm sure the other patches on that branch will need some tweaks, too, so I
+> don't have any problem with updating these.
 
-Links: https://lkml.org/lkml/2015/7/9/100
+Excellent, thanks Bjorn! Marc and I will take these for a spin in
+conjunction with tip/irq/core and the arm64 queue.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
----
- drivers/pci/host/pcie-xilinx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That said, I just tried to build this and it fails to compile the x-gene
+PCI host driver. Fixup below.
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 64454f416639..be494e46bbd1 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -232,7 +232,7 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
+Will
+
+--->8
+
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 514f41b86c49..57ac0c7108a8 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -506,7 +506,7 @@ static int xgene_pcie_msi_enable(struct xgene_pcie_port *port)
+ {
+ 	struct device_node *msi_node;
  
- 	if (!test_bit(irq, msi_irq_in_use)) {
- 		msi = irq_get_msi_desc(irq);
--		port = sys_to_pcie(msi_desc_to_pci_sys_data(msi));
-+		port = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
- 		dev_err(port->dev, "Trying to free unused MSI#%d\n", irq);
- 	} else {
- 		clear_bit(irq, msi_irq_in_use);
--- 
-1.7.10.4
-
+-	msi_node = of_parse_phandle(port->dev.of_node, "msi-parent", 0);
++	msi_node = of_parse_phandle(port->dev->of_node, "msi-parent", 0);
+ 	if (!msi_node)
+ 		return -ENODEV;
+ 
