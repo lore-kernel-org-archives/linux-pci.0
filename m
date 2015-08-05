@@ -1,39 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:32826 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752584AbbHJOVZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 10:21:25 -0400
-Received: by pabyb7 with SMTP id yb7so107689954pab.0
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 07:21:25 -0700 (PDT)
-Subject: Re: [PATCH v6 17/42] powerpc/powernv: Rename PE# fields in PHB
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-18-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C8B35C.4040501@ozlabs.ru>
-Date: Tue, 11 Aug 2015 00:21:16 +1000
+Received: from foss.arm.com ([217.140.101.70]:32964 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752507AbbHEJZg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 5 Aug 2015 05:25:36 -0400
+Date: Wed, 5 Aug 2015 10:25:34 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v4 1/3] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150805092533.GC6092@arm.com>
+References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
+ <20150804234956.GF17327@google.com>
+ <20150805092318.GB6092@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1438834307-26960-18-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150805092318.GB6092@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2015 02:11 PM, Gavin Shan wrote:
-> This renames the fields related to PE# in "struct pnv_phb" for
-> better reflecting of their usages as Alexey suggested. It doesn't
-> introduce behavioural changes.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On Wed, Aug 05, 2015 at 10:23:18AM +0100, Will Deacon wrote:
+> That said, I just tried to build this and it fails to compile the x-gene
+> PCI host driver. Fixup below.
 
+Wait, there's more!
 
-Makes sense to move this to the beginning of the patchset as patches prior 
-this are changing the same lines as this patch changes.
+Will
 
+--->8
 
--- 
-Alexey
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 514f41b86c49..8ab3bd098424 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -506,7 +506,7 @@ static int xgene_pcie_msi_enable(struct xgene_pcie_port *port)
+ {
+ 	struct device_node *msi_node;
+ 
+-	msi_node = of_parse_phandle(port->dev.of_node, "msi-parent", 0);
++	msi_node = of_parse_phandle(port->dev->of_node, "msi-parent", 0);
+ 	if (!msi_node)
+ 		return -ENODEV;
+ 
+@@ -515,7 +515,7 @@ static int xgene_pcie_msi_enable(struct xgene_pcie_port *port)
+ 		return -ENODEV;
+ 
+ 	of_node_put(msi_node);
+-	port->msi->dev = &port->dev;
++	port->msi->dev = port->dev;
+ 	return 0;
+ }
+ 
+
