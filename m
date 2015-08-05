@@ -1,102 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24208 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364AbbHUGV6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:21:58 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 20/52] PCI: Skip required+optional if there is no optional
-Date: Thu, 20 Aug 2015 23:20:35 -0700
-Message-Id: <1440138067-4314-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:34467 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750980AbbHELwH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Aug 2015 07:52:07 -0400
+Received: by wicne3 with SMTP id ne3so1307256wic.1
+        for <linux-pci@vger.kernel.org>; Wed, 05 Aug 2015 04:52:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150805092533.GC6092@arm.com>
+References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
+ <20150804234956.GF17327@google.com> <20150805092318.GB6092@arm.com> <20150805092533.GC6092@arm.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 5 Aug 2015 06:51:47 -0500
+Message-ID: <CAErSpo5g0VGeQeHArys+h_6eQuQnV+dH+bHBaLmJC1EdA-q4Hw@mail.gmail.com>
+Subject: Re: [PATCH v4 1/3] PCI: generic: remove dependency on hw_pci
+To: Will Deacon <will.deacon@arm.com>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Ming Lei <ming.lei@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the bridge does not support hotplug and no child with sriov support,
-We will not have optional resources. We could get out early and
-don't try required+optional allocation.
+On Wed, Aug 5, 2015 at 4:25 AM, Will Deacon <will.deacon@arm.com> wrote:
+> On Wed, Aug 05, 2015 at 10:23:18AM +0100, Will Deacon wrote:
+>> That said, I just tried to build this and it fails to compile the x-gene
+>> PCI host driver. Fixup below.
+>
+> Wait, there's more!
 
-Also in the loop that update res with optional add info, skip resource
-that add_size is 0.
+Thanks!  I fixed these two and updated pci/enumeration.  But the 0-day
+build also found this:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
+commit: cc44fbb49d995ad2348d530300abf7877105094f [4/13] ARM/PCI,
+designware, xilinx: Use pci_scan_root_bus_msi()
+   drivers/built-in.o: In function `dw_msi_setup_irq':
+>> :(.text+0x2a3c8): undefined reference to `pci_write_msi_msg'
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8195929..7d2420d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -444,6 +444,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
- }
- 
-+static bool has_addon(struct list_head *head,
-+			struct list_head *realloc_head)
-+{
-+	int add_count = 0;
-+	struct pci_dev_resource *dev_res, *tmp_res;
-+
-+	/* check if we have add really */
-+	list_for_each_entry(dev_res, head, list) {
-+		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-+		if (!tmp_res || !tmp_res->add_size)
-+			continue;
-+
-+		add_count++;
-+	}
-+
-+	return add_count != 0;
-+}
-+
- static bool save_resources(struct list_head *head,
- 			   struct list_head *save_head)
- {
-@@ -475,16 +493,24 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align;
-+	resource_size_t add_align, add_size;
- 	struct resource *res;
- 
-+	if (!has_addon(head, realloc_head))
-+		return false;
-+
- 	if (!save_resources(head, &save_head))
- 		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
--		res->end += get_res_add_size(realloc_head, res);
-+		add_size = get_res_add_size(realloc_head, res);
-+
-+		if (!add_size)
-+			continue;
-+
-+		res->end += add_size;
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
-@@ -572,7 +598,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 */
- 
- 	/* Check required+optional add */
--	if (realloc_head && !list_empty(realloc_head) &&
-+	if (realloc_head &&
- 	    __assign_resources_required_optional_sorted(head, realloc_head))
- 		return;
- 
--- 
-1.8.4.5
+I don't see the problem there yet, and I'm going on vacation until
+Monday, so I won't be able to do anything with this until then.
 
+Bjorn
+
+
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index 514f41b86c49..8ab3bd098424 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -506,7 +506,7 @@ static int xgene_pcie_msi_enable(struct xgene_pcie_port *port)
+>  {
+>         struct device_node *msi_node;
+>
+> -       msi_node = of_parse_phandle(port->dev.of_node, "msi-parent", 0);
+> +       msi_node = of_parse_phandle(port->dev->of_node, "msi-parent", 0);
+>         if (!msi_node)
+>                 return -ENODEV;
+>
+> @@ -515,7 +515,7 @@ static int xgene_pcie_msi_enable(struct xgene_pcie_port *port)
+>                 return -ENODEV;
+>
+>         of_node_put(msi_node);
+> -       port->msi->dev = &port->dev;
+> +       port->msi->dev = port->dev;
+>         return 0;
+>  }
+>
+>
