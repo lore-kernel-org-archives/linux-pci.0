@@ -1,198 +1,194 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:33753 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbbHOVqS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Aug 2015 17:46:18 -0400
-Received: by wijp15 with SMTP id p15so46471537wij.0
-        for <linux-pci@vger.kernel.org>; Sat, 15 Aug 2015 14:46:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1439657841.22971.35.camel@rzhang1-mobl4>
-References: <1438047747.1856.12.camel@rzhang1-mobl4> <20150728175848.GI5322@mtj.duckdns.org>
- <1438133951.1856.23.camel@rzhang1-mobl4> <20150814201752.GG26431@google.com> <1439657841.22971.35.camel@rzhang1-mobl4>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 15 Aug 2015 16:45:56 -0500
-Message-ID: <CAErSpo4tkqLAjaR87L9JMyvdd4bsPFwt-v7Vd+w8N1i8JNMHOw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-To: Zhang Rui <rui.zhang@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Chuansheng Liu <chuansheng.liu@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Aaron Lu <aaron.lu@intel.com>, Jay <MyMailClone@t-online.de>,
-	Barto <mister.freeman@laposte.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:36667 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbbHFEMx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:12:53 -0400
+Received: from /spool/local
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:12:50 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 00/42] powerpc/powernv: PCI hotplug suppport
+Date: Thu,  6 Aug 2015 14:11:05 +1000
+Message-Id: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 15, 2015 at 11:57 AM, Zhang Rui <rui.zhang@intel.com> wrote:
-> Hi, Bjorn,
->
-> On Fri, 2015-08-14 at 15:17 -0500, Bjorn Helgaas wrote:
->> Hi Zhang,
->>
->> On Wed, Jul 29, 2015 at 09:39:11AM +0800, Zhang Rui wrote:
->> > From c6b063b2874b62466362a10b53097216b16e400d Mon Sep 17 00:00:00 2001
->> > From: Zhang Rui <rui.zhang@intel.com>
->> > Date: Sun, 26 Jul 2015 14:15:36 +0800
->> > Subject: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
->> >
->> > In https://bugzilla.kernel.org/show_bug.cgi?id=81551,
->> > we found that Jmicron chip 361/363 is broken after resume if async noirq
->> > (76569faa62 (PM / sleep: Asynchronous threads for resume_noirq)) is supported,
->> > thus commit e6b7e41cdd (ata: Disabling the async PM for JMicron chip 363/361)
->> > is introduced to fix this problem.
->> > But then, we found that Jmicron chip 368 also has this problem, and it is decided
->> > to disable the pm async feature for all the Jmicron chips.
->> >
->> > But how to fix this was discussed in the mailing list for some time.
->> > After some investigation, we believe that a proper fix is to disable
->> > the async PM in PCI instead of ata driver, because, on this platform,
->> > pci_resume_noirq() of IDE controller must happen after pci_resume_noirq()
->> > of AHCI controller. But as .resume_noirq() of the pata_jmicron driver is
->> > no-op, this suggests that it is the PCI common actions, aka,
->> > pci_pm_default_resume_early(), have the dependency.
->> > To fix this, using device_pm_wait_for_dev() in pata_jmicron driver can not
->> > solve the dependency because pci_pm_default_resume_early() is invoked before
->> > driver callback being invoked, plus, as it is the PCI common actions that
->> > have the dependency, it is reasonable to fix it in PCI bus code,
->> > rather than driver code.
->> >
->> > This patch is made based on the patch from Liu Chuansheng at
->> > https://lkml.org/lkml/2014/12/5/74
->> > it reverts commit e6b7e41cdd ("ata: Disabling the async PM for JMicron
->> > chip 363/361"), and introduces a PCI quirk to disable async PM for Jmicron
->> > chips.
->>
->> This changelog has a lot of text, but doesn't tell me what I really
->> want to know.
->>
->> We need to know what the problem is from the *device* point of view,
->> not in terms of kernel function names.  Function names are only
->> meaningful to a handful of experts, but a concrete problem description
->> may be useful to hardware designers and firmware writers who can
->> potentially fix the root issue.
->>
-> Well, I sent this patch just because there is a regression since 3.15,
-> and we already have two patches that have been verified to fix the
-> problem, but none of them are pushed for upstream. I don't have many PCI
-> background, thus I chose to use function names to make myself precise
-> enough but apparently I failed :p
+The series of patches intend to support PCI slot for PowerPC PowerNV platform,
+which is running on top of skiboot firmware. The patchset requires corresponding
+changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
+for review. The PCI slots are exposed by skiboot with device node properties,
+and kernel utilizes those properties to populated PCI slots accordingly.
 
-Yep.  If you use function names, they have to be real function names,
-not "almost" function names.
+The original PCI infrastructure on PowerNV platform can't support hotplug
+because the PE is assigned during PHB fixup time, which is called for once
+during system boot time. For this, the PCI infrastructure on PowerNV platform
+has been reworked for a lot. After that, the PE and its corresponding resources
+(IODT, M32DT, M64 segments, DMA32 and bypass window) are assigned upon updating
+PCI bridge's resources, which might decide PE# assigned to the PE (e.g. M64
+resources, on P8 strictly speaking). Each PE will maintain a reference count,
+which is (number of child PCI devices + 1). That indicates when last child PCI
+device leaves the PE, the PE and its included resources will be relased and put
+back into free pool again. With this design, the PE will be released when EEH PE
+is released. PATCH[1 - 23] are related to this part.
 
-> Maybe I should send this patch as a RFC patch to get a perfect fix.
+>From skiboot perspective, PCI slot is providing (hot/fundamental/complete)
+resets to EEH. The kernel gets to know if skiboot supports various reset on one
+particular PCI slot through device-tree node. If it does, EEH will utilize the
+functionality provided by skiboot. Besides, the device-tree nodes have to change
+in order to support PCI hotplug. For example, when one PCI adapter inserted to
+one slot, its device-tree node should be added to the system dynamically. Conversely,
+the device-tree node should be removed from the system when the PCI adapter is going
+to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
+they should be added/removed accordingly during PCI hotplug. PATCH[24 - 36] are
+doing the related work.
 
-RFC has nothing to do with it.  The problem is that the changelog
-doesn't say what the problem is or how we're fixing it (except in such
-abstract terms as to be useless).
+The OF driver is changed to support unflattening FDT blob for sub-stree, which
+is covered by PATCH[37 - 41].
 
->> This patch doesn't change the workaround: we still use
->> device_disable_async_suspend() on these devices.  This patch merely:
->>
->>   1) Changes the workaround so instead of doing this only for 361 and
->>   363 devices, we turn off async suspend on *all* JMicron devices, and
->>
->>   2) Moves the workaround from the AHCI and PATA drivers to the PCI
->>   core.
->>
->> For 1), I think it is probably overkill to penalize all JMicron
->> devices.  There's no reason to think NICs and SD/MMC/etc controllers
->> have the same issue.  Or if there *is* reason to think that, you
->> should give evidence for it.
->
-> No, I don't have any evidence. It's just because the previous fix
-> becomes insufficient, which makes people wondering if we should disable
-> all of them.
+The last patch is the standalone PCI hotplug driver for PowerNV platform. When
+removing PCI adapter from one PCI slot, which is invoked by command in userland,
+the skiboot will power off the slot to save power and remove all device-tree
+nodes for all PCI devices behind the slot. Conversely, the Power to the slot
+is turned on, the PCI devices behind the slot is rescanned, and the device-tree
+nodes for those newly detected PCI devices will be built in skiboot. For both
+of cases, one message will be sent to kernel by skiboot so that the kernel
+can adjust the device-tree accordingly. At the same time, the kernel also have
+to deallocate or allocate PE# and its related resources (PE# and so on) for the
+removed/added PCI devices.
 
-It's reasonable to say "JMicron multi-function PATA controllers X, Y,
-and Z have this problem; let's assume all JMicron multi-function PATA
-controllers have it."  All those controllers are likely to share some
-silicon design.  Saying "all JMicron adapters, even single-function
-and NIC and SD/etc. adapters, have this problem" is not nearly such an
-obvious conclusion.
+Changelog
+=========
+v6:
+   * Patch reorder, split, squash - Alexey.
+   * Minor coding style - Alexey.
+   * Better function names for pcibios_{add,remove}_pci_devices - Bjorn
+   * Replace pr_warn() with dev_warn() in PowerNV hotplug driver - Bjorn
+   * Concurrent depth as paramter passed to __unflatten_dt_node() - Grant / Alexey
+   * Replace overlay with of_changeset - Grant
+v5:
+   * Rebased to 4.1.rc6 and some unmerged patches as below:
+     Alexey's DDW patchset (v11);
+     Gavin's EEH error injection support (in mpe's next branch);
+     Richard's EEH cleanup patches (in mpe's next branch);
+     Richard's EEH support for VF (v7);
+     Gavin's misc EEH fixes for 4.2;
+   * The revision bases on skiboot corresponding patches (v7):
+     https://patchwork.ozlabs.org/patch/480437/
+   * Utilize OF overlay to update device-tree with help of newly introduced
+     OPAL API opal_get_overlay_dt().
+   * Split patches for easy review according to aik's comments.
+   * Fix coding style from checkpatchc.pl as pointed by aik.
+   * Code cleanup and misc fixup according to aik's input.
+v4:
+   * Rebased to 4.1.RC1
+   * Added API to unflatten FDT blob to device node sub-tree, which is attached
+     the indicated parent device node. The original mechanism based on formatted
+     string stream has been dropped.
+   * The PATCH[v3 09/21] ("powerpc/eeh: Delay probing EEH device during hotplug")
+     was picked up sent to linux-ppc@ separately for review as Richard's "VF EEH
+     Support" depends on that.
+v3:
+   * Rebased to 4.1.RC0
+   * PowerNV PCI infrasturcture is total refactored in order to support PCI
+     hotplug. The PowerNV hotplug driver is also reworked a lot because of
+     the changes in skiboot in order to support PCI hotplug.
 
->> For 2), you have not made a convincing argument for why the workaround
->> needs to be in the PCI core.  Such an argument would be of the form
->> "we need this quirk even if the driver hasn't been loaded yet
->> because ..."
->
-> Good point, Jay and Barto, can you please verify this?
 
-I don't know Jay or Barto, but I don't even know what you're asking
-them to verify, so I think you are asking too much of them.  What
-exactly would you like them to do?
+Gavin Shan (42):
+  PCI: Add pcibios_setup_bridge()
+  powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
+  powerpc/powernv: Enable M64 on P7IOC
+  powerpc/powernv: Reorder fields in struct pnv_phb
+  powerpc/powernv: Track IO/M32/M64 segments from PE
+  powerpc/powernv: Simplify pnv_ioda_setup_pe_seg()
+  powerpc/powernv: Improve IO and M32 mapping
+  powerpc/powernv: Calculate PHB's DMA weight dynamically
+  powerpc/powernv: DMA32 cleanup
+  powerpc/powernv: pnv_ioda_setup_dma() configure one PE only
+  powerpc/powernv: Trace DMA32 segments consumed by PE
+  powerpc/powernv: Increase PE# capacity
+  powerpc/pci: Cleanup on pci_controller_ops
+  powerpc/pci: Override pcibios_setup_bridge()
+  powerpc/powernv: PE oriented during configuration
+  powerpc/powernv: Helper function pnv_ioda_init_pe()
+  powerpc/powernv: Rename PE# fields in PHB
+  powerpc/powernv: Allocate PE# in deasending order
+  powerpc/powernv: Reserve PE# for root bus
+  powerpc/powernv: Create PEs dynamically
+  powerpc/powernv: Remove DMA32 list of PEs
+  powerpc/powernv: Move functions around
+  powerpc/powernv: Release PEs dynamically
+  powerpc/powernv: Supports slot ID
+  powerpc/powernv: Use PCI slot reset infrastructure
+  powerpc/powernv: Simplify pnv_eeh_reset()
+  powerpc/powernv: Don't cover root bus in pnv_pci_reset_secondary_bus()
+  powerpc/powernv: Fundamental reset in pnv_pci_reset_secondary_bus()
+  powerpc/pci: Don't scan empty slot
+  powerpc/pci: Move pcibios_find_pci_bus() around
+  powerpc/pci: Rename pcibios_{add,remove}_pci_devices
+  powerpc/powernv: Introduce pnv_pci_poll()
+  powerpc/powernv: Functions to get/reset PCI slot status
+  powerpc/pci: Delay creating pci_dn
+  powerpc/pci: Export traverse_pci_device_nodes()
+  powerpc/pci: Update bridge windows on PCI plugging
+  powerpc/powernv: Select OF_DYNAMIC
+  drivers/of: Unflatten subordinate nodes after specified level
+  drivers/of: Allow to specify root node in of_fdt_unflatten_tree()
+  drivers/of: Return allocated memory chunk from of_fdt_unflatten_tree()
+  drivers/of: Export OF changeset functions
+  pci/hotplug: PowerPC PowerNV PCI hotplug driver
 
-The scenario where I can imagine the quirk would need to be in the
-core is the following, and if I were you, this is the scenario I would
-be asking them to test:
+ MAINTAINERS                                    |    6 +
+ arch/powerpc/include/asm/eeh.h                 |    2 +-
+ arch/powerpc/include/asm/opal-api.h            |    8 +-
+ arch/powerpc/include/asm/opal.h                |    9 +-
+ arch/powerpc/include/asm/pci-bridge.h          |   25 +-
+ arch/powerpc/include/asm/pnv-pci.h             |    7 +
+ arch/powerpc/include/asm/ppc-pci.h             |    9 +-
+ arch/powerpc/kernel/eeh_dev.c                  |   19 +-
+ arch/powerpc/kernel/eeh_driver.c               |   12 +-
+ arch/powerpc/kernel/pci-common.c               |   16 +-
+ arch/powerpc/kernel/pci-hotplug.c              |   48 +-
+ arch/powerpc/kernel/pci_dn.c                   |   71 +-
+ arch/powerpc/platforms/maple/pci.c             |   34 +-
+ arch/powerpc/platforms/pasemi/pci.c            |    3 -
+ arch/powerpc/platforms/powermac/pci.c          |   40 +-
+ arch/powerpc/platforms/powernv/Kconfig         |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c   |  181 +--
+ arch/powerpc/platforms/powernv/opal-wrappers.S |    4 +
+ arch/powerpc/platforms/powernv/pci-ioda.c      | 1661 ++++++++++++++----------
+ arch/powerpc/platforms/powernv/pci.c           |   92 +-
+ arch/powerpc/platforms/powernv/pci.h           |   63 +-
+ arch/powerpc/platforms/pseries/pci_dlpar.c     |   32 -
+ arch/powerpc/platforms/pseries/setup.c         |    9 +-
+ drivers/of/dynamic.c                           |   65 +-
+ drivers/of/fdt.c                               |   69 +-
+ drivers/of/overlay.c                           |    8 +-
+ drivers/of/unittest.c                          |    6 +-
+ drivers/pci/hotplug/Kconfig                    |   12 +
+ drivers/pci/hotplug/Makefile                   |    4 +
+ drivers/pci/hotplug/powernv_php.c              |  140 ++
+ drivers/pci/hotplug/powernv_php.h              |   92 ++
+ drivers/pci/hotplug/powernv_php_slot.c         |  722 ++++++++++
+ drivers/pci/hotplug/rpadlpar_core.c            |    8 +-
+ drivers/pci/hotplug/rpaphp_core.c              |    4 +-
+ drivers/pci/hotplug/rpaphp_pci.c               |    4 +-
+ drivers/pci/setup-bus.c                        |    5 +
+ include/linux/of.h                             |    2 +
+ include/linux/of_fdt.h                         |    3 +-
+ include/linux/pci.h                            |    1 +
+ 39 files changed, 2536 insertions(+), 961 deletions(-)
+ create mode 100644 drivers/pci/hotplug/powernv_php.c
+ create mode 100644 drivers/pci/hotplug/powernv_php.h
+ create mode 100644 drivers/pci/hotplug/powernv_php_slot.c
 
-  - cold boot system with comment #72 patch (quirks in ahci & pata_jmicron)
-  - load ahci driver to claim JMicron SATA device
-  - suspend system, which powers down both SATA and PATA devices
-  - resume system, which powers up PATA (function 1), then SATA (function 0)
-  - verify that SATA works fine
-  - load pata_jmicron driver to claim PATA
-  - see whether PATA works
+-- 
+2.1.0
 
-Now, the question is whether PATA works after resuming and loading
-pata_jmicron.  If it does, then it should be fine to keep the quirks
-in ahci and pata_jmicron.
-
-If it doesn't work (and I think it's actually likely that it *won't*
-work), then we probably need to put the quirks in the PCI core so they
-will happen even before ahci and pata_jmicron are loaded.
-
->> Since you didn't say anything like that, I assume the patch in comment
->> #72 of bug #81551 (https://bugzilla.kernel.org/attachment.cgi?id=156301)
->> would work as well.  That has the advantage that it wouldn't penalize
->> non-storage controllers.
->>
-> Yes, the fix in driver code also works. But let's wait for the test
-> results from Jay and Barto because this problem really sounds like a
-> dependency in PCI code.
-
-It might "sound like" a dependency in PCI code, but that sort of
-hand-waving makes me think you don't really understand the problem.
-There might be something in the PCI specs that says you have to power
-up function 0 before function 1.  I don't think that's the case,
-because we don't see this problem with other multi-function devices.
-But if it were the case, you should write a PCI patch to enforce that
-ordering and include a spec citation in the changelog.  That would fix
-this device as well as potentially others.
-
-If the spec doesn't require that ordering, then it's probably a
-hardware defect.  It's possible there's a way to describe the ordering
-via ACPI; if there is, you could argue that the lack of that
-description is a BIOS defect.  Either way, it's not a PCI core
-problem.  We might still want a workaround in the PCI core, but we
-need to be clear about what the problem is.
-
->> Other minor nits:
->>
->> - The function "pci_resume_noirq()" does not exist.  I assume you meant
->>   pci_pm_resume_noirq().  And as I mentioned earlier, I don't think the
->>   name is relevant in the changelog anyway.
->>
->> - You have a mix of SHA1 lengths and summary quoting above.  Please use
->>   the conventional commit reference style (with 12-char SHA-1)
->>   consistently, e.g.,
->>
->>     76569faa62c4 ("PM / sleep: Asynchronous threads for resume_noirq")
->>
->> - Please use http://lkml.kernel.org/r/... references when possible,
->>   not https://lkml.org/....
->>
-> Thanks for pointing these out. I was not aware of such mistakes before.
-
-I forgot to mention that your changelog has random line lengths.  New
-paragraphs start after a blank line.  A new sentence does not start a
-new line.  Fill the lines so they fit in 75 columns so they fit in 80
-columns after git indents them.
-
-Usually I fix things like that myself.  But there were other issues,
-and your SHA-1 citations weren't even consistent with each other,
-which I think is sloppy, and I get grumpy when people ask me to merge
-sloppy work.
-
-Bjorn
