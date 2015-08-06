@@ -1,257 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40625 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175AbbHZUtZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2015 16:49:25 -0400
-Date: Wed, 26 Aug 2015 13:49:23 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Tony Luck <tony.luck@gmail.com>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"the arch/x86 maintainers" <x86@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>
-Subject: Re: [PATCH v4 4/4] Use 2GB memory block size on large-memory x86-64
- systems
-Message-Id: <20150826134923.9d8fad571de4be237a84ff50@linux-foundation.org>
-In-Reply-To: <CAE9FiQXFHWNR41yEDjj=tAteanbngXQNQcwZvvVVexRmAQTTeA@mail.gmail.com>
-References: <CAE9FiQXWXPexLM8xma8Cb9R9hpR2+tOwzGtmJxzH5uuyPraDpQ@mail.gmail.com>
-	<20150821202707.GA920@agluck-desk.sc.intel.com>
-	<CAE9FiQU-=oAzi_benuEm=x_Y_LUp48uND6cGnx9osbYyPWySdw@mail.gmail.com>
-	<CA+8MBbL4nqTxi14Lz92PRFZeobHBLimSfcTH=9HaZBcEUpLVOg@mail.gmail.com>
-	<CAE9FiQVJozeJ9R9GgMEVPfJaSJL+J+M3ULu2VXPjrdDqnYGwvw@mail.gmail.com>
-	<CA+8MBb+yJ9ywFnmfCAEPF0ZBQfH1R9b8hzmwVpM8+rsyJkEW5Q@mail.gmail.com>
-	<CAE9FiQUDb=uNKV9Bj34v3vvMT04MiuoRHqTq6=KTMd+DVrMVNg@mail.gmail.com>
-	<CA+8MBbK6wu+7-M+fP8_GMmhUDSMZ4akOVRkW8xaP8x0pqJN0bQ@mail.gmail.com>
-	<CAE9FiQUAAQZ4RF9rTxthBCJAJyDkw1g3dckfeJ870gqK9Dzg9A@mail.gmail.com>
-	<CAE9FiQXH0SxTCaw-J=nEhYtbuZfBDU3R+v_XRZYF6ymeXnPsgg@mail.gmail.com>
-	<20150826041716.GA14102@gmail.com>
-	<CAE9FiQXFHWNR41yEDjj=tAteanbngXQNQcwZvvVVexRmAQTTeA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from szxga03-in.huawei.com ([119.145.14.66]:62823 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754029AbbHFICu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 04:02:50 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v6 1/6] PCI: designware: move calculation of bus addresses to DRA7xx
+Date: Thu, 6 Aug 2015 16:09:14 +0800
+Message-ID: <1438848559-232109-2-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 25 Aug 2015 22:42:05 -0700 Yinghai Lu <yinghai@kernel.org> wrote:
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-> On Tue, Aug 25, 2015 at 9:17 PM, Ingo Molnar <mingo@kernel.org> wrote:
-> > NAK due to lack of cleanliness: the two loops look almost identical - this sure
-> > can be factored out...
-> 
-> Please check complete version at
-> 
-> https://patchwork.kernel.org/patch/7074341/
+Commit f4c55c5a3f7f "PCI: designware: Program ATU with untranslated
+address" added the calculation of PCI BUS addresses in designware,
+storing them in new fields added in "struct pcie_port". This
+calculation is done for every designware user even if is only
+applicable to DRA7xx.
+This patch moves the calculation of the bus addresses to the DRA7xx
+driver and is needed to allow the rework of designware to use
+the new DT parsing API.
 
-That doesn't do what Ingo suggested: "can be factored out...".
-
-Please review this?
-
---- a/drivers/base/node.c~mm-check-if-section-present-during-memory-block-unregistering-v2-fix
-+++ a/drivers/base/node.c
-@@ -375,6 +375,22 @@ static int __init_refok get_nid_for_pfn(
- 	return pfn_to_nid(pfn);
- }
- 
-+/*
-+ * A memory block can have several absent sections.  A helper function for
-+ * skipping over these holes.
-+ *
-+ * If an absent section is detected, skip_absent_section() will advance *pfn
-+ * to the final page in that section and will return true.
-+ */
-+static bool skip_absent_section(unsigned long *pfn)
-+{
-+	if (present_section_nr(pfn_to_section_nr(*pfn)))
-+		return false;
-+
-+	*pfn = round_down(*pfn + PAGES_PER_SECTION, PAGES_PER_SECTION) - 1;
-+	return true;
-+}
-+
- /* register memory section under specified node if it spans that node */
- int register_mem_sect_under_node(struct memory_block *mem_blk, int nid)
- {
-@@ -390,18 +406,10 @@ int register_mem_sect_under_node(struct
- 	sect_end_pfn = section_nr_to_pfn(mem_blk->end_section_nr);
- 	sect_end_pfn += PAGES_PER_SECTION - 1;
- 	for (pfn = sect_start_pfn; pfn <= sect_end_pfn; pfn++) {
--		int page_nid, scn_nr;
-+		int page_nid;
- 
--		/*
--		 * memory block could have several absent sections from start.
--		 * skip pfn range from absent section
--		 */
--		scn_nr = pfn_to_section_nr(pfn);
--		if (!present_section_nr(scn_nr)) {
--			pfn = round_down(pfn + PAGES_PER_SECTION,
--					 PAGES_PER_SECTION) - 1;
-+		if (skip_absent_section(&pfn))
- 			continue;
--		}
- 
- 		page_nid = get_nid_for_pfn(pfn);
- 		if (page_nid < 0)
-@@ -441,18 +449,10 @@ int unregister_mem_sect_under_nodes(stru
- 	sect_end_pfn = section_nr_to_pfn(mem_blk->end_section_nr);
- 	sect_end_pfn += PAGES_PER_SECTION - 1;
- 	for (pfn = sect_start_pfn; pfn <= sect_end_pfn; pfn++) {
--		int nid, scn_nr;
-+		int nid;
- 
--		/*
--		 * memory block could have several absent sections from start.
--		 * skip pfn range from absent section
--		 */
--		scn_nr = pfn_to_section_nr(pfn);
--		if (!present_section_nr(scn_nr)) {
--			pfn = round_down(pfn + PAGES_PER_SECTION,
--					 PAGES_PER_SECTION) - 1;
-+		if (skip_absent_section(&pfn))
- 			continue;
--		}
- 
- 		nid = get_nid_for_pfn(pfn);
- 		if (nid < 0)
-_
-
-
-> Andrew,
-> Ingo NAKed raw version of this patch, so you may need to remove it
-> from -mm tree.
-
-I don't know what that means.  We have multiple patches under at least
-two different Subject:s.  Please be very careful and very specific when
-identifying patches.  Otherwise mistakes will be made.
-
-
-I presently have three patches:
-
-mm-check-if-section-present-during-memory-block-unregistering.patch
-mm-check-if-section-present-during-memory-block-unregistering-v2.patch
-mm-check-if-section-present-during-memory-block-unregistering-v2-fix.patch
-
-When these are consolidated together, this is the result:
-
-
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: mm: check if section present during memory block (un)registering
-
-Tony Luck found on his setup, if memory block size 512M will cause crash
-during booting.
-
- BUG: unable to handle kernel paging request at ffffea0074000020
- IP: [<ffffffff81670527>] get_nid_for_pfn+0x17/0x40
- PGD 128ffcb067 PUD 128ffc9067 PMD 0
- Oops: 0000 [#1] SMP
- Modules linked in:
- CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.2.0-rc8 #1
-...
- Call Trace:
-  [<ffffffff81453b56>] ? register_mem_sect_under_node+0x66/0xe0
-  [<ffffffff81453eeb>] register_one_node+0x17b/0x240
-  [<ffffffff81b1f1ed>] ? pci_iommu_alloc+0x6e/0x6e
-  [<ffffffff81b1f229>] topology_init+0x3c/0x95
-  [<ffffffff8100213d>] do_one_initcall+0xcd/0x1f0
-
-The system has non continuous RAM address:
- BIOS-e820: [mem 0x0000001300000000-0x0000001cffffffff] usable
- BIOS-e820: [mem 0x0000001d70000000-0x0000001ec7ffefff] usable
- BIOS-e820: [mem 0x0000001f00000000-0x0000002bffffffff] usable
- BIOS-e820: [mem 0x0000002c18000000-0x0000002d6fffefff] usable
- BIOS-e820: [mem 0x0000002e00000000-0x00000039ffffffff] usable
-
-So there are start sections in memory block not present.
-For example:
-memory block : [0x2c18000000, 0x2c20000000) 512M
-first three sections are not present.
-
-Current register_mem_sect_under_node() assume first section is present,
-but memory block section number range [start_section_nr, end_section_nr]
-would include not present section.
-
-For arch that support vmemmap, we don't setup memmap for struct page area
-within not present sections area.
-
-So skip the pfn range that belong to not present section.
-
-Also fixes unregister_mem_sect_under_nodes().
-
-Fixes: bdee237c0343 ("x86: mm: Use 2GB memory block size on large memory x86-64 systems")
-Fixes: 982792c782ef ("x86, mm: probe memory block size for generic x86 64bit")
-[akpm@linux-foundation.org: factor out common code]
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Reported-by: Tony Luck <tony.luck@intel.com>
-Tested-by: Tony Luck <tony.luck@intel.com>
-Cc: Greg KH <greg@kroah.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: <stable@vger.kernel.org>	[3.15+]
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 ---
+ drivers/pci/host/pci-dra7xx.c      | 13 +++++++++++++
+ drivers/pci/host/pcie-designware.c | 15 ++++-----------
+ 2 files changed, 17 insertions(+), 11 deletions(-)
 
- drivers/base/node.c |   27 +++++++++++++++++++++++++--
- 1 file changed, 25 insertions(+), 2 deletions(-)
-
-diff -puN drivers/base/node.c~mm-check-if-section-present-during-memory-block-unregistering drivers/base/node.c
---- a/drivers/base/node.c~mm-check-if-section-present-during-memory-block-unregistering
-+++ a/drivers/base/node.c
-@@ -375,6 +375,22 @@ static int __init_refok get_nid_for_pfn(
- 	return pfn_to_nid(pfn);
- }
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 80db09e..18ae7ff 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -61,6 +61,7 @@
  
-+/*
-+ * A memory block can have several absent sections.  A helper function for
-+ * skipping over these holes.
-+ *
-+ * If an absent section is detected, skip_absent_section() will advance *pfn
-+ * to the final page in that section and will return true.
-+ */
-+static bool skip_absent_section(unsigned long *pfn)
-+{
-+	if (present_section_nr(pfn_to_section_nr(*pfn)))
-+		return false;
-+
-+	*pfn = round_down(*pfn + PAGES_PER_SECTION, PAGES_PER_SECTION) - 1;
-+	return true;
-+}
-+
- /* register memory section under specified node if it spans that node */
- int register_mem_sect_under_node(struct memory_block *mem_blk, int nid)
+ #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
+ #define	LINK_UP						BIT(16)
++#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
+ 
+ struct dra7xx_pcie {
+ 	void __iomem		*base;
+@@ -139,6 +140,18 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+ static void dra7xx_pcie_host_init(struct pcie_port *pp)
  {
-@@ -392,6 +408,9 @@ int register_mem_sect_under_node(struct
- 	for (pfn = sect_start_pfn; pfn <= sect_end_pfn; pfn++) {
- 		int page_nid;
- 
-+		if (skip_absent_section(&pfn))
-+			continue;
+ 	dw_pcie_setup_rc(pp);
 +
- 		page_nid = get_nid_for_pfn(pfn);
- 		if (page_nid < 0)
- 			continue;
-@@ -426,11 +445,15 @@ int unregister_mem_sect_under_nodes(stru
- 		return -ENOMEM;
- 	nodes_clear(*unlinked_nodes);
- 
--	sect_start_pfn = section_nr_to_pfn(phys_index);
--	sect_end_pfn = sect_start_pfn + PAGES_PER_SECTION - 1;
-+	sect_start_pfn = section_nr_to_pfn(mem_blk->start_section_nr);
-+	sect_end_pfn = section_nr_to_pfn(mem_blk->end_section_nr);
-+	sect_end_pfn += PAGES_PER_SECTION - 1;
- 	for (pfn = sect_start_pfn; pfn <= sect_end_pfn; pfn++) {
- 		int nid;
- 
-+		if (skip_absent_section(&pfn))
-+			continue;
++	if (pp->io_mod_base)
++		pp->io_mod_base &= CPU_TO_BUS_ADDR;
 +
- 		nid = get_nid_for_pfn(pfn);
- 		if (nid < 0)
- 			continue;
-_
++	if (pp->mem_mod_base)
++		pp->mem_mod_base &= CPU_TO_BUS_ADDR;
++
++	if (pp->cfg0_mod_base) {
++		pp->cfg0_mod_base &= CPU_TO_BUS_ADDR;
++		pp->cfg1_mod_base &= CPU_TO_BUS_ADDR;
++	}
++
+ 	dra7xx_pcie_establish_link(pp);
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 69486be..c5d407c 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -366,14 +366,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
+ 	struct resource *cfg_res;
+-	u32 val, na, ns;
++	u32 val, ns;
+ 	const __be32 *addrp;
+ 	int i, index, ret;
+ 
+-	/* Find the address cell size and the number of cells in order to get
+-	 * the untranslated address.
+-	 */
+-	of_property_read_u32(np, "#address-cells", &na);
+ 	ns = of_n_size_cells(np);
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+@@ -416,8 +412,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->io_base = range.cpu_addr;
+ 
+ 			/* Find the untranslated IO space address */
+-			pp->io_mod_base = of_read_number(parser.range -
+-							 parser.np + na, ns);
++			pp->io_mod_base = range.cpu_addr;
+ 		}
+ 		if (restype == IORESOURCE_MEM) {
+ 			of_pci_range_to_resource(&range, np, &pp->mem);
+@@ -426,8 +421,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->mem_bus_addr = range.pci_addr;
+ 
+ 			/* Find the untranslated MEM space address */
+-			pp->mem_mod_base = of_read_number(parser.range -
+-							  parser.np + na, ns);
++			pp->mem_mod_base = range.cpu_addr;
+ 		}
+ 		if (restype == 0) {
+ 			of_pci_range_to_resource(&range, np, &pp->cfg);
+@@ -437,8 +431,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+ 
+ 			/* Find the untranslated configuration space address */
+-			pp->cfg0_mod_base = of_read_number(parser.range -
+-							   parser.np + na, ns);
++			pp->cfg0_mod_base = range.cpu_addr;
+ 			pp->cfg1_mod_base = pp->cfg0_mod_base +
+ 					    pp->cfg0_size;
+ 		}
+-- 
+1.9.1
 
