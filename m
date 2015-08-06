@@ -1,67 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp14.uk.ibm.com ([195.75.94.110]:60051 "EHLO
-	e06smtp14.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754576AbbHCRE2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 13:04:28 -0400
-Received: from /spool/local
-	by e06smtp14.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gerald.schaefer@de.ibm.com>;
-	Mon, 3 Aug 2015 18:04:26 +0100
-Date: Mon, 3 Aug 2015 19:04:20 +0200
-From: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>
-Subject: Re: [RFC PATCH 0/1] iommu: Detach device from domain when removed
- from group
-Message-ID: <20150803190420.74396481@thinkpad>
-In-Reply-To: <20150803154855.GI14980@8bytes.org>
-References: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
-	<20150803154855.GI14980@8bytes.org>
+Received: from foss.arm.com ([217.140.101.70]:39021 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753671AbbHFP0Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 6 Aug 2015 11:26:16 -0400
+Message-ID: <55C37C92.1020509@arm.com>
+Date: Thu, 06 Aug 2015 16:26:10 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Duc Dang <dhdang@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	James Morse <James.Morse@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH v5 9/9] PCI: xgene: Use pci_scan_root_bus_msi()
+References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150804215457.9189.27595.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150804215457.9189.27595.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 3 Aug 2015 17:48:55 +0200
-Joerg Roedel <joro@8bytes.org> wrote:
+Hi Bjorn,
 
-> On Tue, Jul 28, 2015 at 07:55:55PM +0200, Gerald Schaefer wrote:
-> > On s390, this eventually leads to a kernel panic when binding the device
-> > again to its non-vfio PCI driver, because of the missing arch-specific
-> > cleanup in detach_dev. On x86, the detach_dev callback will also not be
-> > called directly, but there is a notifier that will catch
-> > BUS_NOTIFY_REMOVED_DEVICE and eventually do the cleanup. Other
-> > architectures w/o the notifier probably have at least some kind of memory
-> > leak in this scenario, so a general fix would be nice.
+On 04/08/15 22:54, Bjorn Helgaas wrote:
+> Previously there was no way to specify the MSI controller when creating a
+> new PCI root bus, so we had to create the bus, set its MSI controller, then
+> scan the bus.  With the new pci_scan_root_bus_msi() interface, we can
+> specify the MSI controller up front and get rid of that intermediate step.
 > 
-> This notifier is not arch-specific, but registered against the bus the
-> iommu-ops are set for. Why does it not run on s390?
+> Look up the MSI controller first, then use pci_scan_root_bus_msi() to
+> create and scan the root PCI bus.
 
-Adding the notifier would of course also work on s390 (and all other affected
-architectures). However, it seems that the "missing detach_dev" issue in this
-scenario is not fundamentally fixed by using this notifier, it just seems to
-hide the symptom by chance.
+I'm wondering about these XGene patches.
 
-Adding the otherwise unneeded notifier just to work around this issue somehow
-doesn't seem right, also given that x86 is so far the only user of it. At
-least I thought it would be cleaner to fix it in common code and for all
-architectures. Not sure what's wrong with fixing the asymmetry as suggested
-in my patch, but I guess there are good reasons for having this asymmetry.
+With the code that is queued for v4.3 in tip/irq/core, the X-Gene MSI
+driver doesn't export a struct msi_controller anymore, and entirely
+relies on IRQ domains to identify to be matched with the actual PCI driver.
 
-For now, I'll just add the notifier to my s390 implementation and post it
-soon.
+Do you intend this as a cleanup until everything lands in mainline? At
+that point, we'd be able to remove all traces of struct msi_controller
+from this driver.
 
-> 
-> 
-> 	Joerg
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Alternatively, we could ask tglx to add an extra patch to the existing
+queue in order to clean up pci-xgene.c (nuking the whole
+xgene_pcie_msi_enable function).
 
+Thoughts?
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
