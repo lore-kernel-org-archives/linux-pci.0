@@ -1,67 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47024 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753974AbbHYXZm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 19:25:42 -0400
-Date: Tue, 25 Aug 2015 16:25:40 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: "Luis R. Rodriguez" <mcgrof@suse.com>
-Cc: David Howells <dhowells@redhat.com>,
-	Ingo Molnar <mingo@kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bp@suse.de,
-	bhelgaas@google.com, tomi.valkeinen@ti.com, airlied@linux.ie,
-	linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	vinod.koul@intel.com, dan.j.williams@intel.com, toshi.kani@hp.com,
-	benh@kernel.crashing.org, mst@redhat.com, daniel.vetter@ffwll.ch,
-	konrad.wilk@oracle.com, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	xen-devel@lists.xensource.com
-Subject: Re: [PATCH v4 10/11] dma: rename dma_*_writecombine() to dma_*_wc()
-Message-Id: <20150825162540.0591c8c8276b1ff279785e49@linux-foundation.org>
-In-Reply-To: <20150825231912.GW8051@wotan.suse.de>
-References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
-	<1440443613-13696-11-git-send-email-mcgrof@do-not-panic.com>
-	<20150825075318.GA2735@gmail.com>
-	<20150825154837.GL8051@wotan.suse.de>
-	<20150825134358.990073a55012c60a638b3144@linux-foundation.org>
-	<20150825231912.GW8051@wotan.suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-yk0-f172.google.com ([209.85.160.172]:36057 "EHLO
+	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753324AbbHFOJb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 10:09:31 -0400
+MIME-Version: 1.0
+In-Reply-To: <1438834307-26960-39-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com> <1438834307-26960-39-git-send-email-gwshan@linux.vnet.ibm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Thu, 6 Aug 2015 09:09:11 -0500
+Message-ID: <CAL_JsqJsfQjUiPFToyhkLYPbmxppb9BgWysgg46DrifFUqtQsw@mail.gmail.com>
+Subject: Re: [PATCH v6 38/42] drivers/of: Unflatten subordinate nodes after
+ specified level
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	aik@ozlabs.ru
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 26 Aug 2015 01:19:13 +0200 "Luis R. Rodriguez" <mcgrof@suse.com> wrote:
+On Wed, Aug 5, 2015 at 11:11 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> unflatten_dt_node() is called recursively to unflatten FDT nodes
+> with the assumption that FDT blob has only one root node, which
+> isn't true when the FDT blob represents device sub-tree. This
+> improves the function to supporting device sub-tree that have
+> multiple nodes in the first level:
+>
+>    * Rename original unflatten_dt_node() to __unflatten_dt_node().
+>    * Wrapper unflatten_dt_node() calls __unflatten_dt_node() with
+>      adjusted current node depth to 1 to avoid underflow.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-> On Tue, Aug 25, 2015 at 01:43:58PM -0700, Andrew Morton wrote:
-> > On Tue, 25 Aug 2015 17:48:37 +0200 "Luis R. Rodriguez" <mcgrof@suse.com> wrote:
-> > 
-> > > On Tue, Aug 25, 2015 at 09:53:18AM +0200, Ingo Molnar wrote:
-> > > > Which kernel is this against? It has conflicts in 3 files with Linus's latest: 
-> > > > v4.2-rc8.
-> > > 
-> > > Sorry I based it on linux-next, will respin the rename patch onto tip/auto-latest
-> > > 
-> > 
-> > Doing that will make the patch kinda useless, because then the patch
-> > will trash more mature work which is pending in linux-next, one week
-> > before the merge window opens.
-> > 
-> > A better plan would be to base the patches on linux-next then wait for
-> > 4.3-rc1.
-> 
-> There's a catch-22 issue here either way, for instance this rename
-> patch has been being baked for probably 2 releases already but the
-> difficulty has been trying to find the appropriate time to merge it
-> without conflict.
-> 
-> If you do it in the beginning of the merge window, you have to ask
-> yourself in what tree it will be done. Since subsystems are topic
-> specific that means that subsystem will end up having a conflict
-> at the end of the merge window.
+Acked-by: Rob Herring <robh@kernel.org>
 
-Yes it's a special case.  I think the best way of handling such things
-is to get them in to Linus either right at the end of the merge window
-or the day after he releases -rc1.  This is when most people's trees
-are mostly empty.
-
-
+> ---
+>  drivers/of/fdt.c | 53 ++++++++++++++++++++++++++++++++++++++++-------------
+>  1 file changed, 40 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+> index 0749656..a18a2ce 100644
+> --- a/drivers/of/fdt.c
+> +++ b/drivers/of/fdt.c
+> @@ -161,7 +161,7 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
+>  }
+>
+>  /**
+> - * unflatten_dt_node - Alloc and populate a device_node from the flat tree
+> + * __unflatten_dt_node - Alloc and populate a device_node from the flat tree
+>   * @blob: The parent device tree blob
+>   * @mem: Memory chunk to use for allocating device nodes and properties
+>   * @poffset: pointer to node in flat tree
+> @@ -171,20 +171,20 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
+>   * @dryrun: If true, do not allocate device nodes but still calculate needed
+>   * memory size
+>   */
+> -static void * unflatten_dt_node(const void *blob,
+> +static void *__unflatten_dt_node(const void *blob,
+>                                 void *mem,
+>                                 int *poffset,
+>                                 struct device_node *dad,
+>                                 struct device_node **nodepp,
+>                                 unsigned long fpsize,
+> -                               bool dryrun)
+> +                               bool dryrun,
+> +                               int *depth)
+>  {
+>         const __be32 *p;
+>         struct device_node *np;
+>         struct property *pp, **prev_pp = NULL;
+>         const char *pathp;
+>         unsigned int l, allocl;
+> -       static int depth = 0;
+>         int old_depth;
+>         int offset;
+>         int has_name = 0;
+> @@ -337,13 +337,25 @@ static void * unflatten_dt_node(const void *blob,
+>                         np->type = "<NULL>";
+>         }
+>
+> -       old_depth = depth;
+> -       *poffset = fdt_next_node(blob, *poffset, &depth);
+> -       if (depth < 0)
+> -               depth = 0;
+> -       while (*poffset > 0 && depth > old_depth)
+> -               mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+> -                                       fpsize, dryrun);
+> +       /* Multiple nodes might be in the first depth level if
+> +        * the device tree is sub-tree. All nodes in current
+> +        * or deeper depth are unflattened after it returns.
+> +        */
+> +       old_depth = *depth;
+> +       *poffset = fdt_next_node(blob, *poffset, depth);
+> +       while (*poffset > 0) {
+> +               if (*depth < old_depth)
+> +                       break;
+> +
+> +               if (*depth == old_depth)
+> +                       mem = __unflatten_dt_node(blob, mem, poffset,
+> +                                                 dad, NULL, fpsize,
+> +                                                 dryrun, depth);
+> +               else if (*depth > old_depth)
+> +                       mem = __unflatten_dt_node(blob, mem, poffset,
+> +                                                 np, NULL, fpsize,
+> +                                                 dryrun, depth);
+> +       }
+>
+>         if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+>                 pr_err("unflatten: error %d processing FDT\n", *poffset);
+> @@ -369,6 +381,20 @@ static void * unflatten_dt_node(const void *blob,
+>         return mem;
+>  }
+>
+> +static void *unflatten_dt_node(const void *blob,
+> +                              void *mem,
+> +                              int *poffset,
+> +                              struct device_node *dad,
+> +                              struct device_node **nodepp,
+> +                              bool dryrun)
+> +{
+> +       int depth = 1;
+> +
+> +       return __unflatten_dt_node(blob, mem, poffset,
+> +                                  dad, nodepp, 0,
+> +                                  dryrun, &depth);
+> +}
+> +
+>  /**
+>   * __unflatten_device_tree - create tree of device_nodes from flat blob
+>   *
+> @@ -408,7 +434,8 @@ static void __unflatten_device_tree(const void *blob,
+>
+>         /* First pass, scan for size */
+>         start = 0;
+> -       size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
+> +       size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
+> +                                               NULL, NULL, true);
+>         size = ALIGN(size, 4);
+>
+>         pr_debug("  size is %lx, allocating...\n", size);
+> @@ -423,7 +450,7 @@ static void __unflatten_device_tree(const void *blob,
+>
+>         /* Second pass, do actual unflattening */
+>         start = 0;
+> -       unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
+> +       unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
+>         if (be32_to_cpup(mem + size) != 0xdeadbeef)
+>                 pr_warning("End of tree marker overwritten: %08x\n",
+>                            be32_to_cpup(mem + size));
+> --
+> 2.1.0
+>
