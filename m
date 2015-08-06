@@ -1,148 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:37146 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752976AbbHDVyP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 17:54:15 -0400
-Received: by igbpg9 with SMTP id pg9so20830430igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 14:54:15 -0700 (PDT)
-Subject: [PATCH v5 3/9] ARM/PCI, designware,
- xilinx: Use pci_scan_root_bus_msi()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Duc Dang <dhdang@apm.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Simon Horman <horms@verge.net.au>,
-	James Morse <james.morse@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>
-Date: Tue, 04 Aug 2015 16:54:11 -0500
-Message-ID: <20150804215411.9189.53901.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:44560 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754137AbbHFENk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:40 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:38 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 28/42] powerpc/powernv: Fundamental reset in pnv_pci_reset_secondary_bus()
+Date: Thu,  6 Aug 2015 14:11:33 +1000
+Message-Id: <1438834307-26960-29-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Some subordinate PCI devices of one particular PCI bus might ask
+for fundamental reset because the default (hot) reset isn't enough
+for those PCI devices to be up successfully after reset.
 
-ARM previously stored the msi_controller pointer in its sysdata, struct
-pci_sys_data, and implemented pcibios_msi_controller() to retrieve it.
-That made PCI host controller drivers specific to ARM because they had to
-put the msi_controller pointer in the ARM-specific pci_sys_data.
+This iterates all PCI devices behind the specified PCI bus and issues
+fundamental reset if any one PCI device is asking for that. Otherwise,
+hot reset is still issued.
 
-There is now a generic mechanism, pci_scan_root_bus_msi(), for giving the
-msi_controller pointer to the PCI core.  Use this for all ARM systems and
-for the DesignWare and Xilinx PCI host controller drivers.
-
-This removes an ARM dependency from the DesignWare, DRA7xx, EXYNOS, i.MX6,
-Keystone, Layerscape, SPEAr13xx, and Xilinx drivers.
-
-[bhelgaas: changelog, split into separate patch]
-Suggested-by: Russell King <linux@arm.linux.org.uk>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Pratyush Anand <pratyush.anand@gmail.com>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Jingoo Han <jingoohan1@gmail.com>
-CC: Simon Horman <horms@verge.net.au>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-CC: Thierry Reding <thierry.reding@gmail.com>
-CC: Michal Simek <michal.simek@xilinx.com>
-CC: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/arm/include/asm/mach/pci.h    |    2 --
- arch/arm/kernel/bios32.c           |    5 +++--
- drivers/pci/host/pcie-designware.c |    6 +++---
- drivers/pci/host/pcie-xilinx.c     |    5 ++---
- 4 files changed, 8 insertions(+), 10 deletions(-)
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 28b9bb3..c074e7a 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -19,9 +19,7 @@ struct pci_bus;
- struct device;
- 
- struct hw_pci {
--#ifdef CONFIG_PCI_MSI
- 	struct msi_controller *msi_ctrl;
--#endif
- 	struct pci_ops	*ops;
- 	int		nr_controllers;
- 	void		**private_data;
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 4e95260..283bc1c 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -486,8 +486,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 			if (hw->scan)
- 				sys->bus = hw->scan(nr, sys);
- 			else
--				sys->bus = pci_scan_root_bus(parent, sys->busnr,
--						hw->ops, sys, &sys->resources);
-+				sys->bus = pci_scan_root_bus_msi(parent,
-+					sys->busnr, hw->ops, sys,
-+					&sys->resources, hw->msi_ctrl);
- 
- 			if (WARN(!sys->bus, "PCI: unable to scan bus!")) {
- 				kfree(sys);
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be..bd0aeec 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -526,7 +526,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- #ifdef CONFIG_PCI_MSI
- 	dw_pcie_msi_chip.dev = pp->dev;
--	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
- #endif
- 
- 	dw_pci.nr_controllers = 1;
-@@ -708,8 +707,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	struct pcie_port *pp = sys_to_pcie(sys);
- 
- 	pp->root_bus_nr = sys->busnr;
--	bus = pci_scan_root_bus(pp->dev, sys->busnr,
--				  &dw_pcie_ops, sys, &sys->resources);
-+	bus = pci_scan_root_bus_msi(pp->dev, sys->busnr, &dw_pcie_ops, sys,
-+				    &sys->resources, &dw_pcie_msi_chip);
-+
- 	if (!bus)
- 		return NULL;
- 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index f1a06a0..526807d 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -647,8 +647,8 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	struct pci_bus *bus;
- 
- 	port->root_busno = sys->busnr;
--	bus = pci_scan_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
--				sys, &sys->resources);
-+	bus = pci_scan_root_bus_msi(port->dev, sys->busnr, &xilinx_pcie_ops,
-+				sys, &sys->resources, &xilinx_pcie_msi_chip);
- 
- 	return bus;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 19cb947..4ae48ff 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1057,8 +1057,31 @@ static int pnv_eeh_vf_pe_reset(struct eeh_pe *pe, int option)
+ 	return 0;
  }
-@@ -847,7 +847,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
  
- #ifdef CONFIG_PCI_MSI
- 	xilinx_pcie_msi_chip.dev = port->dev;
--	hw.msi_ctrl = &xilinx_pcie_msi_chip;
- #endif
- 	pci_common_init_dev(dev, &hw);
- 
++static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
++{
++	int *freset = data;
++
++	/*
++	 * Stop the iteration immediately if there is any
++	 * one PCI device requesting fundamental reset
++	 */
++	*freset |= pdev->needs_freset;
++	return *freset;
++}
++
+ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+ {
++	int option = EEH_RESET_HOT;
++
++	if (dev->subordinate) {
++		int freset = 0;
++
++		pci_walk_bus(dev->subordinate,
++			     pnv_pci_dev_reset_type,
++			     &freset);
++		option = freset ? EEH_RESET_FUNDAMENTAL : EEH_RESET_HOT;
++	}
++
+ 	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
+ 	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+ }
+-- 
+2.1.0
 
