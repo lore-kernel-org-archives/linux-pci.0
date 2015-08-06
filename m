@@ -1,12 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:44172 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753690AbbHFENT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:36758 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752466AbbHFENR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:17 -0400
 Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:18 +1000
+	Thu, 6 Aug 2015 14:13:15 +1000
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 To: linuxppc-dev@lists.ozlabs.org
 Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
@@ -14,170 +14,139 @@ Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 	grant.likely@linaro.org, robherring2@gmail.com,
 	panto@antoniou-consulting.com, aik@ozlabs.ru,
 	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 30/42] powerpc/pci: Move pcibios_find_pci_bus() around
-Date: Thu,  6 Aug 2015 14:11:35 +1000
-Message-Id: <1438834307-26960-31-git-send-email-gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 38/42] drivers/of: Unflatten subordinate nodes after specified level
+Date: Thu,  6 Aug 2015 14:11:43 +1000
+Message-Id: <1438834307-26960-39-git-send-email-gwshan@linux.vnet.ibm.com>
 In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This moves pcibios_find_pci_bus() to PowerPC kernel directory
-so that it can be reused by hotplug code for pSeries and PowerNV
-platform at the same time. Also, the function is renamed to
-of_node_to_pci_bus().
+unflatten_dt_node() is called recursively to unflatten FDT nodes
+with the assumption that FDT blob has only one root node, which
+isn't true when the FDT blob represents device sub-tree. This
+improves the function to supporting device sub-tree that have
+multiple nodes in the first level:
+
+   * Rename original unflatten_dt_node() to __unflatten_dt_node().
+   * Wrapper unflatten_dt_node() calls __unflatten_dt_node() with
+     adjusted current node depth to 1 to avoid underflow.
 
 Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 ---
- arch/powerpc/include/asm/pci-bridge.h      |  2 +-
- arch/powerpc/kernel/pci-hotplug.c          | 30 ++++++++++++++++++++++++++++
- arch/powerpc/platforms/pseries/pci_dlpar.c | 32 ------------------------------
- drivers/pci/hotplug/rpadlpar_core.c        |  6 +++---
- drivers/pci/hotplug/rpaphp_pci.c           |  2 +-
- 5 files changed, 35 insertions(+), 37 deletions(-)
+ drivers/of/fdt.c | 53 ++++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 40 insertions(+), 13 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 65357a9..84dee1e 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -259,7 +259,7 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
- #endif
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 0749656..a18a2ce 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -161,7 +161,7 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
+ }
  
- /** Find the bus corresponding to the indicated device node */
--extern struct pci_bus *pcibios_find_pci_bus(struct device_node *dn);
-+extern struct pci_bus *of_node_to_pci_bus(struct device_node *dn);
+ /**
+- * unflatten_dt_node - Alloc and populate a device_node from the flat tree
++ * __unflatten_dt_node - Alloc and populate a device_node from the flat tree
+  * @blob: The parent device tree blob
+  * @mem: Memory chunk to use for allocating device nodes and properties
+  * @poffset: pointer to node in flat tree
+@@ -171,20 +171,20 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
+  * @dryrun: If true, do not allocate device nodes but still calculate needed
+  * memory size
+  */
+-static void * unflatten_dt_node(const void *blob,
++static void *__unflatten_dt_node(const void *blob,
+ 				void *mem,
+ 				int *poffset,
+ 				struct device_node *dad,
+ 				struct device_node **nodepp,
+ 				unsigned long fpsize,
+-				bool dryrun)
++				bool dryrun,
++				int *depth)
+ {
+ 	const __be32 *p;
+ 	struct device_node *np;
+ 	struct property *pp, **prev_pp = NULL;
+ 	const char *pathp;
+ 	unsigned int l, allocl;
+-	static int depth = 0;
+ 	int old_depth;
+ 	int offset;
+ 	int has_name = 0;
+@@ -337,13 +337,25 @@ static void * unflatten_dt_node(const void *blob,
+ 			np->type = "<NULL>";
+ 	}
  
- /** Remove all of the PCI devices under this bus */
- extern void pcibios_remove_pci_devices(struct pci_bus *bus);
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index c307d9a..692beca 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -21,6 +21,36 @@
- #include <asm/firmware.h>
- #include <asm/eeh.h>
- 
-+static struct pci_bus *find_pci_bus(struct pci_bus *bus,
-+				    struct device_node *dn)
-+{
-+	struct pci_bus *tmp, *child = NULL;
-+	struct device_node *busdn;
-+
-+	busdn = pci_bus_to_OF_node(bus);
-+	if (busdn == dn)
-+		return bus;
-+
-+	list_for_each_entry(tmp, &bus->children, node) {
-+		child = find_pci_bus(tmp, dn);
-+		if (child)
+-	old_depth = depth;
+-	*poffset = fdt_next_node(blob, *poffset, &depth);
+-	if (depth < 0)
+-		depth = 0;
+-	while (*poffset > 0 && depth > old_depth)
+-		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+-					fpsize, dryrun);
++	/* Multiple nodes might be in the first depth level if
++	 * the device tree is sub-tree. All nodes in current
++	 * or deeper depth are unflattened after it returns.
++	 */
++	old_depth = *depth;
++	*poffset = fdt_next_node(blob, *poffset, depth);
++	while (*poffset > 0) {
++		if (*depth < old_depth)
 +			break;
++
++		if (*depth == old_depth)
++			mem = __unflatten_dt_node(blob, mem, poffset,
++						  dad, NULL, fpsize,
++						  dryrun, depth);
++		else if (*depth > old_depth)
++			mem = __unflatten_dt_node(blob, mem, poffset,
++						  np, NULL, fpsize,
++						  dryrun, depth);
 +	}
-+
-+	return child;
-+}
-+
-+struct pci_bus *of_node_to_pci_bus(struct device_node *dn)
+ 
+ 	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+ 		pr_err("unflatten: error %d processing FDT\n", *poffset);
+@@ -369,6 +381,20 @@ static void * unflatten_dt_node(const void *blob,
+ 	return mem;
+ }
+ 
++static void *unflatten_dt_node(const void *blob,
++			       void *mem,
++			       int *poffset,
++			       struct device_node *dad,
++			       struct device_node **nodepp,
++			       bool dryrun)
 +{
-+	struct pci_dn *pdn = dn->data;
++	int depth = 1;
 +
-+	if (!pdn  || !pdn->phb || !pdn->phb->bus)
-+		return NULL;
-+
-+	return find_pci_bus(pdn->phb->bus, dn);
++	return __unflatten_dt_node(blob, mem, poffset,
++				   dad, nodepp, 0,
++				   dryrun, &depth);
 +}
-+EXPORT_SYMBOL_GPL(of_node_to_pci_bus);
 +
  /**
-  * pcibios_release_device - release PCI device
-  * @dev: PCI device
-diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-index 5d4a3df..906dbaa 100644
---- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-+++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-@@ -34,38 +34,6 @@
+  * __unflatten_device_tree - create tree of device_nodes from flat blob
+  *
+@@ -408,7 +434,8 @@ static void __unflatten_device_tree(const void *blob,
  
- #include "pseries.h"
+ 	/* First pass, scan for size */
+ 	start = 0;
+-	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
++	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
++						NULL, NULL, true);
+ 	size = ALIGN(size, 4);
  
--static struct pci_bus *
--find_bus_among_children(struct pci_bus *bus,
--                        struct device_node *dn)
--{
--	struct pci_bus *child = NULL;
--	struct pci_bus *tmp;
--	struct device_node *busdn;
--
--	busdn = pci_bus_to_OF_node(bus);
--	if (busdn == dn)
--		return bus;
--
--	list_for_each_entry(tmp, &bus->children, node) {
--		child = find_bus_among_children(tmp, dn);
--		if (child)
--			break;
--	};
--	return child;
--}
--
--struct pci_bus *
--pcibios_find_pci_bus(struct device_node *dn)
--{
--	struct pci_dn *pdn = dn->data;
--
--	if (!pdn  || !pdn->phb || !pdn->phb->bus)
--		return NULL;
--
--	return find_bus_among_children(pdn->phb->bus, dn);
--}
--EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
--
- struct pci_controller *init_phb_dynamic(struct device_node *dn)
- {
- 	struct pci_controller *phb;
-diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-index e12bafd..f57a293 100644
---- a/drivers/pci/hotplug/rpadlpar_core.c
-+++ b/drivers/pci/hotplug/rpadlpar_core.c
-@@ -176,7 +176,7 @@ static int dlpar_add_pci_slot(char *drc_name, struct device_node *dn)
- 	struct pci_dev *dev;
- 	struct pci_controller *phb;
+ 	pr_debug("  size is %lx, allocating...\n", size);
+@@ -423,7 +450,7 @@ static void __unflatten_device_tree(const void *blob,
  
--	if (pcibios_find_pci_bus(dn))
-+	if (of_node_to_pci_bus(dn))
- 		return -EINVAL;
- 
- 	/* Add pci bus */
-@@ -213,7 +213,7 @@ static int dlpar_remove_phb(char *drc_name, struct device_node *dn)
- 	struct pci_dn *pdn;
- 	int rc = 0;
- 
--	if (!pcibios_find_pci_bus(dn))
-+	if (!of_node_to_pci_bus(dn))
- 		return -EINVAL;
- 
- 	/* If pci slot is hotpluggable, use hotplug to remove it */
-@@ -357,7 +357,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
- 
- 	pci_lock_rescan_remove();
- 
--	bus = pcibios_find_pci_bus(dn);
-+	bus = of_node_to_pci_bus(dn);
- 	if (!bus) {
- 		ret = -EINVAL;
- 		goto out;
-diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
-index 9243f3e7..293bd86 100644
---- a/drivers/pci/hotplug/rpaphp_pci.c
-+++ b/drivers/pci/hotplug/rpaphp_pci.c
-@@ -93,7 +93,7 @@ int rpaphp_enable_slot(struct slot *slot)
- 	if (rc)
- 		return rc;
- 
--	bus = pcibios_find_pci_bus(slot->dn);
-+	bus = of_node_to_pci_bus(slot->dn);
- 	if (!bus) {
- 		err("%s: no pci_bus for dn %s\n", __func__, slot->dn->full_name);
- 		return -EINVAL;
+ 	/* Second pass, do actual unflattening */
+ 	start = 0;
+-	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
++	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
+ 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+ 		pr_warning("End of tree marker overwritten: %08x\n",
+ 			   be32_to_cpup(mem + size));
 -- 
 2.1.0
 
