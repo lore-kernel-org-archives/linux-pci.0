@@ -1,12 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:44263 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754113AbbHFENk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:40 -0400
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:50891 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753059AbbHFENS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:18 -0400
 Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:39 +1000
+	Thu, 6 Aug 2015 14:13:16 +1000
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 To: linuxppc-dev@lists.ozlabs.org
 Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
@@ -14,354 +14,90 @@ Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 	grant.likely@linaro.org, robherring2@gmail.com,
 	panto@antoniou-consulting.com, aik@ozlabs.ru,
 	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 20/42] powerpc/powernv: Create PEs dynamically
-Date: Thu,  6 Aug 2015 14:11:25 +1000
-Message-Id: <1438834307-26960-21-git-send-email-gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 40/42] drivers/of: Return allocated memory chunk from of_fdt_unflatten_tree()
+Date: Thu,  6 Aug 2015 14:11:45 +1000
+Message-Id: <1438834307-26960-41-git-send-email-gwshan@linux.vnet.ibm.com>
 In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, the PEs and their associated resources are assigned
-in ppc_md.pcibios_fixup() except those consumed by SRIOV VFs.
-The function is called for once after PCI probing and resources
-assignment is finished which isn't hotplug friendly.
-
-The patch creates PEs dynamically by ppc_md.pcibios_setup_bridge(),
-which is called on the event during system bootup and PCI hotplug:
-updating PCI bridge's windows after resource assignment/reassignment
-are finished. For partial hotplug case, where not all PCI devices
-belonging to the PE are unplugged and plugged again, we just need
-unbinding/binding the affected PCI devices with the corresponding
-PE without creating new one.
-
-Besides, it might require additional resources (e.g. M32) to the
-windows of the PCI bridge when unplugging current adapter, and
-insert a different adapter if there is one PCI slot, which is
-assumed behind root port, or the downstream bridge of the PCIE
-switch behind root port. The parent bridge of the newly plugged
-adapter would reject the request to add more resources, leading
-to hotplug failure. For the issue, the patch extends the windows
-of root port, or the upstream port of the PCIe switch behind root
-port to PHB's windows when ppc_md.pcibios_setup_bridge() is called.
-
-There is no upstream bridge for root bus, so we have to fix it up
-before any PE is created because the root bus PE is the ancestor
-to anyone else.
+This changes of_fdt_unflatten_tree() so that it returns the allocated
+memory chunk for unflattened device-tree, which can be released once
+it's obsoleted.
 
 Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 226 ++++++++++++++++++------------
- arch/powerpc/platforms/powernv/pci.h      |   1 +
- 2 files changed, 137 insertions(+), 90 deletions(-)
+ drivers/of/fdt.c       | 11 ++++++-----
+ include/linux/of_fdt.h |  2 +-
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 8aa6ab8..37847a3 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1083,6 +1083,13 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 				pci_name(dev));
- 			continue;
- 		}
-+
-+		/* The PCI device might be not detached from the
-+		 * PE in partial hotplug case.
-+		 */
-+		if (pdn->pe_number != IODA_INVALID_PE)
-+			continue;
-+
- 		pdn->pe_number = pe->pe_number;
- 		pe->dma32_weight += pnv_ioda_dma_weight(dev);
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
-@@ -1101,9 +1108,27 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 	struct pci_controller *hose = pci_bus_to_host(bus);
- 	struct pnv_phb *phb = hose->private_data;
- 	struct pnv_ioda_pe *pe = NULL;
-+	int pe_num;
-+
-+	/* For partial hotplug case, the PE instance hasn't been destroyed
-+	 * yet. We shouldn't allocated a new one and assign resources to
-+	 * it. The existing PE instance should be reused, but we should
-+	 * associate the devices to the PE.
-+	 */
-+	pe_num = phb->ioda.pe_rmap[bus->number << 8];
-+	if (pe_num != IODA_INVALID_PE) {
-+		pe = &phb->ioda.pe_array[pe_num];
-+		pnv_ioda_setup_same_PE(bus, pe);
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 074870a..8e1ba7e 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -408,7 +408,7 @@ static void *unflatten_dt_node(const void *blob,
+  * @dt_alloc: An allocator that provides a virtual address to memory
+  * for the resulting tree
+  */
+-static void __unflatten_device_tree(const void *blob,
++static void *__unflatten_device_tree(const void *blob,
+ 			     struct device_node *dad,
+ 			     struct device_node **mynodes,
+ 			     void * (*dt_alloc)(u64 size, u64 align))
+@@ -421,7 +421,7 @@ static void __unflatten_device_tree(const void *blob,
+ 
+ 	if (!blob) {
+ 		pr_debug("No device tree pointer\n");
+-		return;
 +		return NULL;
-+	}
-+
-+	/* PE number for root bus should have been reserved */
-+	if (pci_is_root_bus(bus) &&
-+	    phb->ioda.root_pe_idx != IODA_INVALID_PE)
-+		pe = &phb->ioda.pe_array[phb->ioda.root_pe_idx];
- 
- 	/* Check if PE is determined by M64 */
--	if (phb->pick_m64_pe)
-+	if (!pe && phb->pick_m64_pe)
- 		pe = phb->pick_m64_pe(bus, all);
- 
- 	/* The PE number isn't pinned by M64 */
-@@ -1150,46 +1175,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 	return pe;
- }
- 
--static void pnv_ioda_setup_PEs(struct pci_bus *bus)
--{
--	struct pci_dev *dev;
--
--	pnv_ioda_setup_bus_PE(bus, false);
--
--	list_for_each_entry(dev, &bus->devices, bus_list) {
--		if (dev->subordinate) {
--			if (pci_pcie_type(dev) == PCI_EXP_TYPE_PCI_BRIDGE)
--				pnv_ioda_setup_bus_PE(dev->subordinate, true);
--			else
--				pnv_ioda_setup_PEs(dev->subordinate);
--		}
--	}
--}
--
--/*
-- * Configure PEs so that the downstream PCI buses and devices
-- * could have their associated PE#. Unfortunately, we didn't
-- * figure out the way to identify the PLX bridge yet. So we
-- * simply put the PCI bus and the subordinate behind the root
-- * port to PE# here. The game rule here is expected to be changed
-- * as soon as we can detected PLX bridge correctly.
-- */
--static void pnv_pci_ioda_setup_PEs(void)
--{
--	struct pci_controller *hose, *tmp;
--	struct pnv_phb *phb;
--
--	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
--		phb = hose->private_data;
--
--		/* M64 layout might affect PE allocation */
--		if (phb->reserve_m64_pe)
--			phb->reserve_m64_pe(hose->bus, NULL, true);
--
--		pnv_ioda_setup_PEs(hose->bus);
--	}
--}
--
- #ifdef CONFIG_PCI_IOV
- static int pnv_pci_vf_release_m64(struct pci_dev *pdev)
- {
-@@ -2962,52 +2947,6 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
  	}
+ 
+ 	pr_debug("Unflattening device tree:\n");
+@@ -431,7 +431,7 @@ static void __unflatten_device_tree(const void *blob,
+ 
+ 	if (fdt_check_header(blob)) {
+ 		pr_err("Invalid device tree blob header\n");
+-		return;
++		return NULL;
+ 	}
+ 
+ 	/* First pass, scan for size */
+@@ -458,6 +458,7 @@ static void __unflatten_device_tree(const void *blob,
+ 			   be32_to_cpup(mem + size));
+ 
+ 	pr_debug(" <- unflatten_device_tree()\n");
++	return mem;
  }
  
--static void pnv_pci_ioda_setup_seg(void)
--{
--	struct pci_controller *tmp, *hose;
--	struct pnv_phb *phb;
--	struct pnv_ioda_pe *pe;
--
--	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
--		phb = hose->private_data;
--		list_for_each_entry(pe, &phb->ioda.pe_list, list) {
--			pnv_ioda_setup_pe_seg(hose, pe);
--		}
--	}
--}
--
--static void pnv_pci_ioda_setup_DMA(void)
--{
--	struct pci_controller *hose, *tmp;
--	struct pnv_phb *phb;
--	struct pnv_ioda_pe *pe;
--
--	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
--		phb = hose->private_data;
--		pnv_pci_ioda_setup_opal_tce_kill(phb);
--
--		list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
--			if (!pe->dma32_weight)
--				continue;
--
--			switch (phb->type) {
--			case PNV_PHB_IODA1:
--				pnv_ioda1_setup_dma(phb, pe);
--				break;
--			case PNV_PHB_IODA2:
--				pnv_pci_ioda2_setup_dma_pe(phb, pe);
--				break;
--			default:
--				pr_warn("%s: No DMA for PHB type %d\n",
--					__func__, phb->type);
--			}
--		}
--
--		/* Mark the PHB initialization done */
--		phb->initialized = 1;
--	}
--}
--
- static void pnv_pci_ioda_create_dbgfs(void)
+ static void *kernel_tree_alloc(u64 size, u64 align)
+@@ -473,11 +474,11 @@ static void *kernel_tree_alloc(u64 size, u64 align)
+  * pointers of the nodes so the normal device-tree walking functions
+  * can be used.
+  */
+-void of_fdt_unflatten_tree(const unsigned long *blob,
++void *of_fdt_unflatten_tree(const unsigned long *blob,
+ 			struct device_node *dad,
+ 			struct device_node **mynodes)
  {
- #ifdef CONFIG_DEBUG_FS
-@@ -3029,9 +2968,8 @@ static void pnv_pci_ioda_create_dbgfs(void)
- 
- static void pnv_pci_ioda_fixup(void)
- {
--	pnv_pci_ioda_setup_PEs();
--	pnv_pci_ioda_setup_seg();
--	pnv_pci_ioda_setup_DMA();
-+	struct pci_controller *hose, *tmp;
-+	struct pnv_phb *phb;
- 
- 	pnv_pci_ioda_create_dbgfs();
- 
-@@ -3039,6 +2977,12 @@ static void pnv_pci_ioda_fixup(void)
- 	eeh_init();
- 	eeh_addr_cache_build();
- #endif
-+
-+	/* Notify initialization of PHB done */
-+	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
-+		phb = hose->private_data;
-+		phb->initialized = 1;
-+	}
+-	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
++	return __unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
  }
+ EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
  
- /*
-@@ -3082,6 +3026,105 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
- 	return phb->ioda.io_segsize;
- }
+diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+index 3644960..00db279 100644
+--- a/include/linux/of_fdt.h
++++ b/include/linux/of_fdt.h
+@@ -37,7 +37,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
+ 				 unsigned long node);
+ extern int of_fdt_match(const void *blob, unsigned long node,
+ 			const char *const *compat);
+-extern void of_fdt_unflatten_tree(const unsigned long *blob,
++extern void *of_fdt_unflatten_tree(const unsigned long *blob,
+ 			       struct device_node *dad,
+ 			       struct device_node **mynodes);
  
-+/*
-+ * We are updating root port or the upstream bridge behind the
-+ * root port with PHB's windows in order to accommodate the
-+ * changes on required resources during PCI (slot) hotplug,
-+ * which is connected to either root port or the downstream
-+ * ports of PCIe switch behind the root port.
-+ */
-+static void pnv_pci_fixup_bridge_resources(struct pci_bus *bus,
-+					   unsigned long type)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bus);
-+	struct pnv_phb *phb = hose->private_data;
-+	struct pci_dev *bridge = bus->self;
-+	struct resource *r, *w;
-+	int i;
-+
-+	/* Check if we need apply fixup to the bridge's windows */
-+	if (!pci_is_root_bus(bridge->bus) &&
-+	    !pci_is_root_bus(bridge->bus->self->bus))
-+		return;
-+
-+	/* Fixup the resoureces */
-+	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
-+		r = &bridge->resource[PCI_BRIDGE_RESOURCES + i];
-+		if (!r->flags || !r->parent)
-+			continue;
-+
-+		w = NULL;
-+		if (r->flags & type & IORESOURCE_IO)
-+			w = &hose->io_resource;
-+		else if (pnv_pci_is_mem_pref_64(r->flags) &&
-+			 (type & IORESOURCE_PREFETCH) &&
-+			 phb->ioda.m64_segsize)
-+			w = &hose->mem_resources[1];
-+		else if (r->flags & type & IORESOURCE_MEM)
-+			w = &hose->mem_resources[0];
-+
-+		r->start = w->start;
-+		r->end = w->end;
-+	}
-+}
-+
-+static void pnv_pci_setup_bridge(struct pci_bus *bus,
-+				 unsigned long type)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bus);
-+	struct pnv_phb *phb = hose->private_data;
-+	struct pci_dev *bridge = bus->self;
-+	struct pnv_ioda_pe *pe;
-+	bool all = (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE);
-+
-+	/* The root bus (ancestor PE) should be finalized
-+	 * before anyone else
-+	 */
-+	if (!phb->ioda.root_pe_is_populated) {
-+		pe = pnv_ioda_setup_bus_PE(phb->hose->bus, false);
-+		if (pe && phb->ioda.root_pe_idx == IODA_INVALID_PE)
-+			phb->ioda.root_pe_idx = pe->pe_number;
-+			phb->ioda.root_pe_is_populated = true;
-+		}
-+
-+	/* Extend bridge's windows if necessary */
-+	pnv_pci_fixup_bridge_resources(bus, type);
-+
-+	/* Don't assign PE to bus which doesn't have any
-+	 * subordinate PCI devices.
-+	 */
-+	if (list_empty(&bus->devices))
-+		return;
-+
-+	/* Reserve PEs for M64 resource */
-+	if (phb->reserve_m64_pe)
-+		phb->reserve_m64_pe(bus, NULL, all);
-+
-+	/* Assign PE. We might run here because of partial hotplug.
-+	 * For the case, we just pick up the existing PE and should
-+	 * not allocate resources again.
-+	 */
-+	pe = pnv_ioda_setup_bus_PE(bus, all);
-+	if (!pe)
-+		return;
-+
-+	/* Setup MMIO mapping */
-+	pnv_ioda_setup_pe_seg(hose, pe);
-+
-+	/* Setup DMA */
-+	switch (phb->type) {
-+	case PNV_PHB_IODA1:
-+		pnv_ioda1_setup_dma(phb, pe);
-+		break;
-+	case PNV_PHB_IODA2:
-+		pnv_pci_ioda2_setup_dma_pe(phb, pe);
-+		break;
-+	default:
-+		pr_warn("%s: No DMA for PHB type %d\n",
-+			__func__, phb->type);
-+	}
-+}
-+
- #ifdef CONFIG_PCI_IOV
- static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
- 						      int resno)
-@@ -3147,6 +3190,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
- #endif
-        .enable_device_hook = pnv_pci_enable_device_hook,
-        .window_alignment = pnv_pci_window_alignment,
-+	.setup_bridge = pnv_pci_setup_bridge,
-        .reset_secondary_bus = pnv_pci_reset_secondary_bus,
-        .dma_set_mask = pnv_pci_ioda_dma_set_mask,
-        .shutdown = pnv_pci_ioda_shutdown,
-@@ -3218,6 +3262,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	if (phb->regs == NULL)
- 		pr_err("  Failed to map registers !\n");
- 
-+	pnv_pci_ioda_setup_opal_tce_kill(phb);
-+
- 	/* Initialize more IODA stuff */
- 	phb->ioda.total_pe_num = 1;
- 	prop32 = of_get_property(np, "ibm,opal-num-pes", NULL);
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index e93a489..a160491 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -136,6 +136,7 @@ struct pnv_phb {
- 			/* Global bridge info */
- 			unsigned int		total_pe_num;
- 			unsigned int		root_pe_idx;
-+			bool			root_pe_is_populated;
- 			unsigned int		reserved_pe_idx;
- 
- 			/* 32-bit MMIO window */
 -- 
 2.1.0
 
