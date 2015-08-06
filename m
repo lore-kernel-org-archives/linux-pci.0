@@ -1,79 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:5859 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753388AbbHRTTN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:13 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	"Mark Hounschell" <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	"Will Davis" <wdavis@nvidia.com>
-Subject: [PATCH v5 05/13] dma-mapping: pci: add pci_(un)map_peer_resource
-Date: Tue, 18 Aug 2015 14:04:01 -0500
-Message-ID: <1439924649-29698-6-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
-References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59202 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752682AbbHFENR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:17 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:15 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 18/42] powerpc/powernv: Allocate PE# in deasending order
+Date: Thu,  6 Aug 2015 14:11:23 +1000
+Message-Id: <1438834307-26960-19-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simply route these through to the new dma_(un)map_peer_resource APIs.
+The available PE#, represented by a bitmap in the PHB, is allocated
+in ascending order. It conflicts with the fact that M64 segments are
+assigned in same order. In order to avoid the conflict, the patch
+allocates PE# in descending order.
 
-Also route pci_peer_mapping_error through to the new dma_peer_mapping_error
-API.
-
-Guard these new functions behind CONFIG_HAS_DMA_P2P.
-
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- include/asm-generic/pci-dma-compat.h | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
-index c110843..7baf09e 100644
---- a/include/asm-generic/pci-dma-compat.h
-+++ b/include/asm-generic/pci-dma-compat.h
-@@ -61,6 +61,29 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
- 	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
- }
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 56b058c..1c950e8 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -161,13 +161,18 @@ static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+ static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+ {
+ 	unsigned long pe;
++	unsigned long limit = phb->ioda.total_pe_num - 1;
  
-+#ifdef CONFIG_HAS_DMA_P2P
-+static inline dma_peer_addr_t
-+pci_map_peer_resource(struct pci_dev *hwdev, struct pci_dev *peer,
-+		      int res, unsigned long offset, size_t size,
-+		      int direction)
-+{
-+	return dma_map_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, peer == NULL ? NULL : &peer->dev, peer == NULL ? NULL : &peer->resource[res], offset, size, (enum dma_data_direction)direction);
-+}
+ 	do {
+ 		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+-					phb->ioda.total_pe_num, 0);
+-		if (pe >= phb->ioda.total_pe_num)
++					phb->ioda.total_pe_num, limit);
++		if (pe < phb->ioda.total_pe_num &&
++		    !test_and_set_bit(pe, phb->ioda.pe_alloc))
++			break;
 +
-+static inline int
-+pci_dma_peer_mapping_error(struct pci_dev *pdev, dma_peer_addr_t dma_addr)
-+{
-+	return dma_peer_mapping_error(&pdev->dev, dma_addr);
-+}
-+
-+static inline void
-+pci_unmap_peer_resource(struct pci_dev *hwdev, dma_peer_addr_t dma_address,
-+			size_t size, int direction)
-+{
-+	dma_unmap_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
-+}
-+#endif
-+
- static inline int
- pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
- 	   int nents, int direction)
++		if (--limit >= phb->ioda.total_pe_num)
+ 			return NULL;
+-	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
++	} while (1);
+ 
+ 	return pnv_ioda_init_pe(phb, pe);
+ }
 -- 
-2.5.0
+2.1.0
 
