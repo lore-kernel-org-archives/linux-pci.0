@@ -1,100 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:33689 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751841AbbHaN4F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Aug 2015 09:56:05 -0400
-Received: by iods203 with SMTP id s203so158650808iod.0
-        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2015 06:56:05 -0700 (PDT)
-Date: Mon, 31 Aug 2015 08:56:01 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: wangyijing <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/ASPM: Don't remove pcie_link_state until we stop the
- last device
-Message-ID: <20150831135601.GC647@google.com>
-References: <1438229360-370-1-git-send-email-wangyijing@huawei.com>
- <20150829122020.GD27890@google.com>
- <55E3ACE8.20002@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <55E3ACE8.20002@huawei.com>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59075 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150AbbHFEMx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:12:53 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:12:51 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 04/42] powerpc/powernv: Reorder fields in struct pnv_phb
+Date: Thu,  6 Aug 2015 14:11:09 +1000
+Message-Id: <1438834307-26960-5-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 31, 2015 at 09:24:56AM +0800, wangyijing wrote:
-> 在 2015/8/29 20:20, Bjorn Helgaas 写道:
-> > On Thu, Jul 30, 2015 at 12:09:20PM +0800, Yijing Wang wrote:
-> >> Now we stop the pci_bus->devices in reverse order, but in
-> >> pcie_aspm_exit_link_state(), we only would do something when
-> >> the device is the last one.
-> >>
-> >> void pcie_aspm_exit_link_state(struct pci_dev *pdev)
-> >> {
-> >> 	...
-> >> 	if (!list_is_last(&pdev->bus_list, &parent->subordinate->devices))
-> ...
+The patches moves those fields of struct pnv_phb that are related
+to PE# allocation around. No logical change.
 
-> > What seems wrong to me is that when we're removing device X, we free the
-> > link_state for a *parent* of X.  I think the code would be much simpler and
-> 
-> What I am worried about here is if we hot remove a endpoint device here, and leave
-> the parent device, so we don't call pci_aspm_exit_link_state() for this link anymore ?
-> 
->                   pcie link
-> downstream port ---------- endpoint device
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci.h | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-If we remove the endpoint and leave the parent, we do call
-pcie_aspm_exit_link_state() for the endpoint.  I'm proposing to change
-that path so that when the endpoint is removed, we do whatever is
-necessary for changing the ASPM configuration on the link, but leave
-the ASPM structure allocated, since the parent still exists.
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index e891ff4..62239b1 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -145,15 +145,14 @@ struct pnv_phb {
+ 			unsigned int		io_segsize;
+ 			unsigned int		io_pci_base;
+ 
+-			/* PE allocation bitmap */
+-			unsigned long		*pe_alloc;
+-			/* PE allocation mutex */
++			/* PE allocation */
+ 			struct mutex		pe_alloc_mutex;
++			unsigned long		*pe_alloc;
++			struct pnv_ioda_pe	*pe_array;
+ 
+ 			/* M32 & IO segment maps */
+ 			unsigned int		*m32_segmap;
+ 			unsigned int		*io_segmap;
+-			struct pnv_ioda_pe	*pe_array;
+ 
+ 			/* IRQ chip */
+ 			int			irq_chip_init;
+-- 
+2.1.0
 
-Today we allocate link_state only when a port has a downstream link
-*and* there's a device on the other end of the link.  I'm proposing
-that we allocate link_state even if there's no downstream device.
-
-Then the alloc/free path is always tied directly to the parent.  We
-can still change ASPM configuration as needed when downstream devices
-are added or removed.  It's not a trivial change, but it seems
-possible.
-
-> > easier to get right if we freed the link_state for X when we remove X.
-> > 
-> > Can you look at fixing the problem that way?
-> 
-> I'm sorry, I don't have the platform now, this issue was found in product department, and they moved
-> the platform away.
-
-OK.  I'll drop this patch for now.  I definitely agree this is a
-problem, but the fact that you don't have the platform any more
-doesn't mean we need to throw in a band-aid instead of designing a
-better solution.
-
-This problem should be pretty easy to reproduce on any platform,
-possibly with a little bit of scaffolding to tweak the topology.
-
-> >> 		goto out;
-> >> 	...
-> >> }
-> >>
-> >> So if we have the following pcie tree, system may crash.
-> >>
-> >> [b7-bd]--+-02.0-[bb-bd]--+-00.0-[bc-bd]----01.0-[bd]----00.0  PLX Technology, Inc. Device 0002
-> >>                          +-00.1  PLX Technology, Inc. Device 0002
-> >>                          +-00.2  PLX Technology, Inc. Device 0002
-> >>                          +-00.3  PLX Technology, Inc. Device 0002
-> ...
-> >> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> >> CC: stable@vger.kernel.org #3.4+
-> > 
-> > I need a clue about why you picked v3.4 here.  Is it because ac205b7bb72f
-> > ("PCI: make sriov work with hotplug remove") appeared in v3.4?
-> 
-> Actually, this issue was found at v3.4 stable kernel, which was introduced in
-> 3419c75e15f8 ("PCI: properly clean up ASPM link state on device remove") I think.
-
-Did you bisect to this or figure it out by analysis?  It's good to
-mention the actual commit that broke it so people backporting can
-figure out if they need the fix.
-
-Bjorn
