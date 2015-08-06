@@ -1,90 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:12986 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753342AbbHRTTV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:21 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v5 13/13] x86: declare support for DMA P2P
-Date: Tue, 18 Aug 2015 14:04:09 -0500
-Message-ID: <1439924649-29698-14-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
-References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:44428 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150AbbHFENT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:16 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 12/42] powerpc/powernv: Increase PE# capacity
+Date: Thu,  6 Aug 2015 14:11:17 +1000
+Message-Id: <1438834307-26960-13-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use CONFIG_HAS_DMA_P2P to declare that we want the DMA peer resource APIs
-enabled on x86, and provide the requisite dma_peer_mapping_error()
-implementation.
+Each PHB maintains an array helping to translate RID (Request
+ID) to PE# with the assumption that PE# takes 8 bits, indicating
+that we can't have more than 256 PEs. However, pci_dn->pe_number
+already had 4-bytes for the PE#.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
+The patch extends the PE# capacity so that each of them will be
+4-bytes long. Then we can use IODA_INVALID_PE to check one entry
+in phb->pe_rmap[] is valid or not.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/x86/Kconfig                   |  1 +
- arch/x86/include/asm/dma-mapping.h | 18 ++++++++++++++++--
- 2 files changed, 17 insertions(+), 2 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 8 ++++++--
+ arch/powerpc/platforms/powernv/pci.h      | 7 +++----
+ 2 files changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 3dbb7e7..581d1ad 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -149,6 +149,7 @@ config X86
- 	select VIRT_TO_BUS
- 	select X86_DEV_DMA_OPS			if X86_64
- 	select X86_FEATURE_NAMES		if PROC_FS
-+	select HAS_DMA_P2P
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 57ba8fd..3094c61 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -786,7 +786,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
  
- config INSTRUCTION_DECODER
- 	def_bool y
-diff --git a/arch/x86/include/asm/dma-mapping.h b/arch/x86/include/asm/dma-mapping.h
-index 1f5b728..64472d8 100644
---- a/arch/x86/include/asm/dma-mapping.h
-+++ b/arch/x86/include/asm/dma-mapping.h
-@@ -44,16 +44,30 @@ static inline struct dma_map_ops *get_dma_ops(struct device *dev)
- #include <asm-generic/dma-mapping-common.h>
+ 	/* Clear the reverse map */
+ 	for (rid = pe->rid; rid < rid_end; rid++)
+-		phb->ioda.pe_rmap[rid] = 0;
++		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
  
- /* Make sure we keep the same behaviour */
--static inline int dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
-+static inline int dma_mapping_error_common(struct device *dev, u64 dma_addr)
- {
- 	struct dma_map_ops *ops = get_dma_ops(dev);
--	debug_dma_mapping_error(dev, dma_addr);
- 	if (ops->mapping_error)
- 		return ops->mapping_error(dev, dma_addr);
+ 	/* Release from all parents PELT-V */
+ 	while (parent) {
+@@ -3134,7 +3134,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	unsigned long size, pemap_off;
+ 	const __be64 *prop64;
+ 	const __be32 *prop32;
+-	int len;
++	int len, i;
+ 	u64 phb_id;
+ 	void *aux;
+ 	long rc;
+@@ -3201,6 +3201,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	if (prop32)
+ 		phb->ioda.reserved_pe = be32_to_cpup(prop32);
  
- 	return (dma_addr == DMA_ERROR_CODE);
- }
- 
-+static inline int dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
-+{
-+	debug_dma_mapping_error(dev, dma_addr);
-+	return dma_mapping_error_common(dev, (u64)dma_addr);
-+}
++	/* Invalidate RID to PE# mapping */
++	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
++		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
 +
-+#ifdef CONFIG_HAS_DMA_P2P
-+static inline int dma_peer_mapping_error(struct device *dev,
-+					 dma_peer_addr_t dma_addr)
-+{
-+	debug_dma_peer_mapping_error(dev, dma_addr);
-+	return dma_mapping_error_common(dev, (u64)dma_addr);
-+}
-+#endif
-+
- #define dma_alloc_noncoherent(d, s, h, f) dma_alloc_coherent(d, s, h, f)
- #define dma_free_noncoherent(d, s, v, h) dma_free_coherent(d, s, v, h)
+ 	/* Parse 64-bit MMIO range */
+ 	pnv_ioda_parse_m64_window(phb);
  
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 1dc9578..6f8568e 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -175,11 +175,10 @@ struct pnv_phb {
+ 			struct list_head	pe_list;
+ 			struct mutex            pe_list_mutex;
+ 
+-			/* Reverse map of PEs, will have to extend if
+-			 * we are to support more than 256 PEs, indexed
+-			 * bus { bus, devfn }
++			/* Reverse map of PEs, indexed by
++			 * { bus, devfn }
+ 			 */
+-			unsigned char		pe_rmap[0x10000];
++			int			pe_rmap[0x10000];
+ 
+ 			/* 32-bit TCE tables allocation */
+ 			unsigned long		dma32_segcount;
 -- 
-2.5.0
+2.1.0
 
