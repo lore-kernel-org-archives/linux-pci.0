@@ -1,109 +1,164 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:37128 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752232AbbHUUwW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 16:52:22 -0400
-Received: by igui7 with SMTP id i7so22432593igu.0
-        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2015 13:52:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150821200545.GC14810@google.com>
-References: <20150821150557.7525.58923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20150821150751.7525.81766.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<CAE9FiQWL_6i5o7Jx5__JdhCU0xcpE-96XRxx3eS29k2jdq1Hwg@mail.gmail.com>
-	<20150821200545.GC14810@google.com>
-Date: Fri, 21 Aug 2015 13:52:21 -0700
-Message-ID: <CAE9FiQUewzHaSP_y2aFAGk66TnD9ePXGmvakOg5nokUZf5SAyw@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: Set MPS to match upstream bridge
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Austin Bolen <Austin_Bolen@dell.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Myron Stowe <mstowe@redhat.com>, Jon Mason <jdmason@kudzu.us>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:60303 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752794AbbHFENV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:21 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:19 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 11/42] powerpc/powernv: Trace DMA32 segments consumed by PE
+Date: Thu,  6 Aug 2015 14:11:16 +1000
+Message-Id: <1438834307-26960-12-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 21, 2015 at 1:05 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Aug 21, 2015 at 12:14:40PM -0700, Yinghai Lu wrote:
->> On Fri, Aug 21, 2015 at 8:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> > From: Keith Busch <keith.busch@intel.com>
->> >
->> > Firmware typically configures the PCIe fabric with a consistent Max Payload
->> > Size setting based on the devices present at boot.  A hot-added device
->> > typically has the power-on default MPS setting (128 bytes), which may not
->> > match the fabric.
->> >
->> > When adding a new device via pci_device_add(), set its Max Payload Size to
->> > match the upstream bridge (unless PCIe bus tuning is disabled).  Note that
->> > pcie_bus_configure_settings() may further change MPS based on the tuning
->> > policy.
->> >
->> > This makes it more likely that a hot-added device will work in a system
->> > with optimized MPS configuration.
->> >
->> > If we hot-add a device that only supports 128-byte MPS, it still likely
->> > won't work because we don't reconfigure the rest of the fabric.  Booting
->> > with "pci=pcie_bus_peer2peer" is a workaround for this because it sets MPS
->> > to 128 for everything.
->> >
->> > Signed-off-by: Keith Busch <keith.busch@intel.com>
->> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->> > ---
->> >  drivers/pci/probe.c |   12 +++++++++++-
->> >  1 file changed, 11 insertions(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> > index eb32395..f73dd7a 100644
->> > --- a/drivers/pci/probe.c
->> > +++ b/drivers/pci/probe.c
->> > @@ -1278,7 +1278,7 @@ int pci_setup_device(struct pci_dev *dev)
->> >  static void pci_configure_mps(struct pci_dev *dev)
->> >  {
->> >         struct pci_dev *bridge = pci_upstream_bridge(dev);
->> > -       int mps, p_mps;
->> > +       int mps, p_mps, rc;
->> >
->> >         if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
->> >                 return;
->> > @@ -1294,6 +1294,16 @@ static void pci_configure_mps(struct pci_dev *dev)
->> >                          mps, pci_name(bridge), p_mps);
->> >                 return;
->> >         }
->> > +
->>
->> you may need add if the pcie_bus_config == PCIE_BUS_DEFAULT here.
->>
->> we should not  could set mps extra for _SAFE, _PERFORMANCE, _PEER2PEER
->
-> How about this?
+On P7IOC, the whole DMA32 space is divided evenly to 256MB segments.
+Each PE can consume one or multiple DMA32 segments. Current code
+doesn't trace the available DMA32 segments and those consumed by
+one particular PE. It's conflicting with PCI hotplug.
 
-> @@ -1294,6 +1294,23 @@ static void pci_configure_mps(struct pci_dev *dev)
->                          mps, pci_name(bridge), p_mps);
->                 return;
->         }
-> +
-> +       /*
-> +        * Fancier MPS configuration is done later by
-> +        * pcie_bus_configure_settings()
-> +        */
-> +       if (pcie_bus_config != PCIE_BUS_DEFAULT)
-> +               return;
-> +
-> +       rc = pcie_set_mps(dev, p_mps);
-> +       if (rc) {
-> +               dev_warn(&dev->dev, "can't set Max Payload Size to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
-> +                        p_mps);
-> +               return;
-> +       }
-> +
-> +       dev_info(&dev->dev, "Max Payload Size set to %d (was %d, max %d)\n",
-> +                p_mps, mps, 128 << dev->pcie_mpss);
->  }
+The patch introduces one bitmap to PHB to trace the available
+DMA32 segments for allocation, more fields to "struct pnv_ioda_pe"
+to trace the consumed DMA32 segments by the PE, which is going to
+be released when the PE is destroyed at PCI unplugging time.
 
-Good to me.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 40 +++++++++++++++++++++++--------
+ arch/powerpc/platforms/powernv/pci.h      |  4 +++-
+ 2 files changed, 33 insertions(+), 11 deletions(-)
 
-Thanks
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index cd22002..57ba8fd 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -1946,6 +1946,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 
+ 	/* Grab a 32-bit TCE table */
+ 	pe->dma32_seg = base;
++	pe->dma32_segcount = segs;
+ 	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
+ 		(base << 28), ((base + segs) << 28) - 1);
+ 
+@@ -2006,8 +2007,13 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+ 	return;
+  fail:
+ 	/* XXX Failure: Try to fallback to 64-bit only ? */
+-	if (pe->dma32_seg >= 0)
++	if (pe->dma32_seg >= 0) {
++		bitmap_clear(phb->ioda.dma32_segmap,
++			     pe->dma32_seg, pe->dma32_segcount);
+ 		pe->dma32_seg = -1;
++		pe->dma32_segcount = 0;
++	}
++
+ 	if (tce_mem)
+ 		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
+ 	if (tbl) {
+@@ -2443,12 +2449,11 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+ 		pnv_ioda_setup_bus_dma(pe, pe->pbus);
+ }
+ 
+-static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
+-					struct pnv_ioda_pe *pe,
+-					unsigned int base)
++static void pnv_ioda1_setup_dma(struct pnv_phb *phb,
++					struct pnv_ioda_pe *pe)
+ {
+ 	struct pci_controller *hose = phb->hose;
+-	unsigned int dma_weight, segs;
++	unsigned int dma_weight, base, segs;
+ 
+ 	/* Calculate the PHB's DMA weight */
+ 	dma_weight = pnv_ioda_phb_dma_weight(phb);
+@@ -2461,11 +2466,28 @@ static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
+ 	else
+ 		segs = (pe->dma32_weight *
+ 			phb->ioda.dma32_segcount) / dma_weight;
++
++	/*
++	 * Allocate DMA32 segments. We might not have enough
++	 * resources available. However we expect at least one
++	 * to be available.
++	 */
++	do {
++		base = bitmap_find_next_zero_area(phb->ioda.dma32_segmap,
++						  phb->ioda.dma32_segcount,
++						  0, segs, 0);
++		if (base < phb->ioda.dma32_segcount) {
++			bitmap_set(phb->ioda.dma32_segmap, base, segs);
++			break;
++		}
++	} while (--segs);
++
++	if (WARN_ON(!segs))
++		return;
++
+ 	pe_info(pe, "DMA weight %d, assigned %d segments\n",
+ 		pe->dma32_weight, segs);
+ 	pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
+-
+-	return segs;
+ }
+ 
+ #ifdef CONFIG_PCI_MSI
+@@ -2933,20 +2955,18 @@ static void pnv_pci_ioda_setup_DMA(void)
+ 	struct pci_controller *hose, *tmp;
+ 	struct pnv_phb *phb;
+ 	struct pnv_ioda_pe *pe;
+-	unsigned int base;
+ 
+ 	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+ 		phb = hose->private_data;
+ 		pnv_pci_ioda_setup_opal_tce_kill(phb);
+ 
+-		base = 0;
+ 		list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
+ 			if (!pe->dma32_weight)
+ 				continue;
+ 
+ 			switch (phb->type) {
+ 			case PNV_PHB_IODA1:
+-				base += pnv_ioda1_setup_dma(phb, pe, base);
++				pnv_ioda1_setup_dma(phb, pe);
+ 				break;
+ 			case PNV_PHB_IODA2:
+ 				pnv_pci_ioda2_setup_dma_pe(phb, pe);
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 574fe43..1dc9578 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -65,6 +65,7 @@ struct pnv_ioda_pe {
+ 
+ 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+ 	int			dma32_seg;
++	int			dma32_segcount;
+ 	struct iommu_table_group table_group;
+ 
+ 	/* 64-bit TCE bypass region */
+@@ -153,10 +154,11 @@ struct pnv_phb {
+ 			unsigned int		io_segsize;
+ 			unsigned int		io_pci_base;
+ 
+-			/* IO, M32, M64 segment maps */
++			/* IO, M32, M64, DMA32 segment maps */
+ 			unsigned long		io_segmap[8];
+ 			unsigned long		m32_segmap[8];
+ 			unsigned long		m64_segmap[8];
++			unsigned long		dma32_segmap[8];
+ 
+ 			/* PE allocation */
+ 			struct mutex		pe_alloc_mutex;
+-- 
+2.1.0
 
-Yinghai
