@@ -1,155 +1,216 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47841 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754019AbbHUG1R (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:27:17 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 06/52] PCI: Don't add too much optional size for hotplug bridge MMIO
-Date: Thu, 20 Aug 2015 23:20:21 -0700
-Message-Id: <1440138067-4314-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:49984 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447AbbHFENT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:17 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 41/42] drivers/of: Export OF changeset functions
+Date: Thu,  6 Aug 2015 14:11:46 +1000
+Message-Id: <1438834307-26960-42-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will always add 2M for hotplug bridge MMIO even
-there is child device under it already.
+The PowerNV PCI hotplug driver is going to use the OF changeset
+to manage the changed device sub-tree, which requires those OF
+changeset functions are exported.
 
-For example:
-	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
-					 \- 45:00.1
-
-44:02.0 will need 1M as must for 45:00.0 and 45:00.1
-When we calculate add_size for 44:02.0, we pass 2M as additional
-size for hotplug bridge, total will be 3M.
-
-That is different from code before changes for optional support,
-or even current code that treat optional as required directly by
-not passing realloc head. We only need 2M as total.
-
-The optional size should be 1M, and total size should be 2M.
-
-This patch change to comparing required+optional with min_sum_size to
-get smaller optional size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
+ drivers/of/dynamic.c  | 65 ++++++++++++++++++++++++++++++++++++---------------
+ drivers/of/overlay.c  |  8 +++----
+ drivers/of/unittest.c |  4 ++--
+ include/linux/of.h    |  2 ++
+ 4 files changed, 54 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6cccbe4..e4aa93e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1155,7 +1155,6 @@ out:
-  * @type2: second match type
-  * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-- * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-  *
-  * Calculate the size of the bus and minimal alignment which
-@@ -1168,10 +1167,11 @@ out:
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 unsigned long type, unsigned long type2,
- 			 unsigned long type3,
--			 resource_size_t min_size, resource_size_t add_size,
-+			 resource_size_t min_size,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
- 	resource_size_t min_align = 0, min_add_align = 0;
- 	resource_size_t max_align = 0, max_add_align = 0;
- 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
-@@ -1183,6 +1183,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (!b_res)
- 		return -ENOSPC;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1253,8 +1258,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	free_align_test_list(&align_test_list);
- 
--	if ((sum_add_size - size) < add_size)
--		sum_add_size = size + add_size;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
-@@ -1391,7 +1396,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, additional_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1425,7 +1430,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
-@@ -1444,8 +1449,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				  min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1468,8 +1472,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+					 min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1478,7 +1481,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				min_mem_size += min_mem_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1499,8 +1502,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+				min_mem_size, realloc_head);
- 		break;
- 	}
+diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
+index 53826b8..af65b5b 100644
+--- a/drivers/of/dynamic.c
++++ b/drivers/of/dynamic.c
+@@ -646,6 +646,7 @@ void of_changeset_init(struct of_changeset *ocs)
+ 	memset(ocs, 0, sizeof(*ocs));
+ 	INIT_LIST_HEAD(&ocs->entries);
  }
++EXPORT_SYMBOL(of_changeset_init);
+ 
+ /**
+  * of_changeset_destroy - Destroy a changeset
+@@ -662,20 +663,9 @@ void of_changeset_destroy(struct of_changeset *ocs)
+ 	list_for_each_entry_safe_reverse(ce, cen, &ocs->entries, node)
+ 		__of_changeset_entry_destroy(ce);
+ }
++EXPORT_SYMBOL(of_changeset_destroy);
+ 
+-/**
+- * of_changeset_apply - Applies a changeset
+- *
+- * @ocs:	changeset pointer
+- *
+- * Applies a changeset to the live tree.
+- * Any side-effects of live tree state changes are applied here on
+- * sucess, like creation/destruction of devices and side-effects
+- * like creation of sysfs properties and directories.
+- * Returns 0 on success, a negative error value in case of an error.
+- * On error the partially applied effects are reverted.
+- */
+-int of_changeset_apply(struct of_changeset *ocs)
++int __of_changeset_apply(struct of_changeset *ocs)
+ {
+ 	struct of_changeset_entry *ce;
+ 	int ret;
+@@ -704,17 +694,30 @@ int of_changeset_apply(struct of_changeset *ocs)
+ }
+ 
+ /**
+- * of_changeset_revert - Reverts an applied changeset
++ * of_changeset_apply - Applies a changeset
+  *
+  * @ocs:	changeset pointer
+  *
+- * Reverts a changeset returning the state of the tree to what it
+- * was before the application.
+- * Any side-effects like creation/destruction of devices and
+- * removal of sysfs properties and directories are applied.
++ * Applies a changeset to the live tree.
++ * Any side-effects of live tree state changes are applied here on
++ * sucess, like creation/destruction of devices and side-effects
++ * like creation of sysfs properties and directories.
+  * Returns 0 on success, a negative error value in case of an error.
++ * On error the partially applied effects are reverted.
+  */
+-int of_changeset_revert(struct of_changeset *ocs)
++int of_changeset_apply(struct of_changeset *ocs)
++{
++	int ret;
++
++	mutex_lock(&of_mutex);
++	ret = __of_changeset_apply(ocs);
++	mutex_unlock(&of_mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL(of_changeset_apply);
++
++int __of_changeset_revert(struct of_changeset *ocs)
+ {
+ 	struct of_changeset_entry *ce;
+ 	int ret;
+@@ -742,6 +745,29 @@ int of_changeset_revert(struct of_changeset *ocs)
+ }
+ 
+ /**
++ * of_changeset_revert - Reverts an applied changeset
++ *
++ * @ocs:	changeset pointer
++ *
++ * Reverts a changeset returning the state of the tree to what it
++ * was before the application.
++ * Any side-effects like creation/destruction of devices and
++ * removal of sysfs properties and directories are applied.
++ * Returns 0 on success, a negative error value in case of an error.
++ */
++int of_changeset_revert(struct of_changeset *ocs)
++{
++	int ret;
++
++	mutex_lock(&of_mutex);
++	ret = __of_changeset_revert(ocs);
++	mutex_unlock(&of_mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL(of_changeset_revert);
++
++/**
+  * of_changeset_action - Perform a changeset action
+  *
+  * @ocs:	changeset pointer
+@@ -779,3 +805,4 @@ int of_changeset_action(struct of_changeset *ocs, unsigned long action,
+ 	list_add_tail(&ce->node, &ocs->entries);
+ 	return 0;
+ }
++EXPORT_SYMBOL(of_changeset_action);
+diff --git a/drivers/of/overlay.c b/drivers/of/overlay.c
+index 24e025f..804ea33 100644
+--- a/drivers/of/overlay.c
++++ b/drivers/of/overlay.c
+@@ -378,9 +378,9 @@ int of_overlay_create(struct device_node *tree)
+ 	}
+ 
+ 	/* apply the changeset */
+-	err = of_changeset_apply(&ov->cset);
++	err = __of_changeset_apply(&ov->cset);
+ 	if (err) {
+-		pr_err("%s: of_changeset_apply() failed for tree@%s\n",
++		pr_err("%s: __of_changeset_apply() failed for tree@%s\n",
+ 				__func__, tree->full_name);
+ 		goto err_revert_overlay;
+ 	}
+@@ -508,7 +508,7 @@ int of_overlay_destroy(int id)
+ 
+ 
+ 	list_del(&ov->node);
+-	of_changeset_revert(&ov->cset);
++	__of_changeset_revert(&ov->cset);
+ 	of_free_overlay_info(ov);
+ 	idr_remove(&ov_idr, id);
+ 	of_changeset_destroy(&ov->cset);
+@@ -539,7 +539,7 @@ int of_overlay_destroy_all(void)
+ 	/* the tail of list is guaranteed to be safe to remove */
+ 	list_for_each_entry_safe_reverse(ov, ovn, &ov_list, node) {
+ 		list_del(&ov->node);
+-		of_changeset_revert(&ov->cset);
++		__of_changeset_revert(&ov->cset);
+ 		of_free_overlay_info(ov);
+ 		idr_remove(&ov_idr, ov->id);
+ 		kfree(ov);
+diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+index 2270830..06eb3e5 100644
+--- a/drivers/of/unittest.c
++++ b/drivers/of/unittest.c
+@@ -527,7 +527,7 @@ static void __init of_unittest_changeset(void)
+ 	unittest(!of_changeset_update_property(&chgset, parent, ppupdate), "fail update prop\n");
+ 	unittest(!of_changeset_remove_property(&chgset, parent, ppremove), "fail remove prop\n");
+ 	mutex_lock(&of_mutex);
+-	unittest(!of_changeset_apply(&chgset), "apply failed\n");
++	unittest(!__of_changeset_apply(&chgset), "apply failed\n");
+ 	mutex_unlock(&of_mutex);
+ 
+ 	/* Make sure node names are constructed correctly */
+@@ -536,7 +536,7 @@ static void __init of_unittest_changeset(void)
+ 	of_node_put(np);
+ 
+ 	mutex_lock(&of_mutex);
+-	unittest(!of_changeset_revert(&chgset), "revert failed\n");
++	unittest(!__of_changeset_revert(&chgset), "revert failed\n");
+ 	mutex_unlock(&of_mutex);
+ 
+ 	of_changeset_destroy(&chgset);
+diff --git a/include/linux/of.h b/include/linux/of.h
+index edc068d..5c030e1 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -1001,7 +1001,9 @@ extern int of_reconfig_get_state_change(unsigned long action,
+ 
+ extern void of_changeset_init(struct of_changeset *ocs);
+ extern void of_changeset_destroy(struct of_changeset *ocs);
++extern int __of_changeset_apply(struct of_changeset *ocs);
+ extern int of_changeset_apply(struct of_changeset *ocs);
++extern int __of_changeset_revert(struct of_changeset *ocs);
+ extern int of_changeset_revert(struct of_changeset *ocs);
+ extern int of_changeset_action(struct of_changeset *ocs,
+ 		unsigned long action, struct device_node *np,
 -- 
-1.8.4.5
+2.1.0
 
