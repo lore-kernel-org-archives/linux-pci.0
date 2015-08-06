@@ -1,71 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:38201 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753049AbbHDVyi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 17:54:38 -0400
-Received: by iggf3 with SMTP id f3so20780324igg.1
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 14:54:37 -0700 (PDT)
-Subject: [PATCH v5 6/9] PCI: Drop references acquired by of_parse_phandle()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Duc Dang <dhdang@apm.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Simon Horman <horms@verge.net.au>,
-	James Morse <james.morse@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>
-Date: Tue, 04 Aug 2015 16:54:35 -0500
-Message-ID: <20150804215435.9189.94410.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1434128306.11808.97.camel@misato.fc.hp.com>
+References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+ <1434064996.11808.64.camel@misato.fc.hp.com> <557AAD910200007800084014@mail.emea.novell.com>
+ <1434128306.11808.97.camel@misato.fc.hp.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 6 Aug 2015 12:53:03 -0700
+Message-ID: <CAB=NE6W3=SFTqabeD6gq7JCqFZ7+SBZh7Xa=RteO_8-3P7fbdw@mail.gmail.com>
+Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: Jan Beulich <JBeulich@suse.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
+	X86 ML <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	xen-devel@lists.xenproject.org, Dave Airlie <airlied@redhat.com>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
+	Juergen Gross <JGross@suse.com>, Borislav Petkov <bp@suse.de>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-media@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-of_parse_phandle() returns a device_node pointer with the refcount
-incremented.  We should dispose of this reference when we're finished.
+On Fri, Jun 12, 2015 at 9:58 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+> On Fri, 2015-06-12 at 08:59 +0100, Jan Beulich wrote:
+>> >>> On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
+>> > There are two usages on MTRRs:
+>> >  1) MTRR entries set by firmware
+>> >  2) MTRR entries set by OS drivers
+>> >
+>> > We can obsolete 2), but we have no control over 1).  As UEFI firmwares
+>> > also set this up, this usage will continue to stay.  So, we should not
+>> > get rid of the MTRR code that looks up the MTRR entries, while we have
+>> > no need to modify them.
+>> >
+>> > Such MTRR entries provide safe guard to /dev/mem, which allows
+>> > privileged user to access a range that may require UC mapping while
+>> > the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
+>> > such a case.
+>>
+>> But it wouldn't be impossible to simply read the MTRRs upon boot,
+>> store the information, disable MTRRs, and correctly use PAT to
+>> achieve the same effect (i.e. the "blindly maps" part of course
+>> would need fixing).
+>
+> It could be done, but I do not see much benefit of doing it.  One of the
+> reasons platform vendors set MTRRs is so that a system won't hit a
+> machine check when an OS bug leads an access with a wrong cache type.
+>
+> A machine check is hard to analyze and can be seen as a hardware issue by
+> customers.  Emulating MTRRs with PAT won't protect from such a bug.
 
-Drop the reference acquired by of_parse_phandle().
+That's seems like a fair and valid concern. This could only happen if
+the OS would have code that would use MTRR, in the case of Linux we'll
+soon be able to vet that this cannot happen. For those type of OSes...
+could it be possible to negotiate or hint to the platform through an
+attribute somehow that the OS has such capability to not use MTRR?
+Then, only if this bit is set, the platform could then avoid such MTRR
+settings, and if we have issues you can throw rocks at us.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-mvebu.c |    1 +
- drivers/pci/host/pci-xgene.c |    1 +
- 2 files changed, 2 insertions(+)
+Could this also be used to prevent SMIs with MTRRs?
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index 70aa095..67ec5e1 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -879,6 +879,7 @@ static void mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
- 		return;
- 
- 	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
-+	of_node_put(msi_node);
- 
- 	if (pcie->msi)
- 		pcie->msi->dev = &pcie->pdev->dev;
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index a9dfb70..4c2fb1f 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -514,6 +514,7 @@ static int xgene_pcie_msi_enable(struct pci_bus *bus)
- 	if (!bus->msi)
- 		return -ENODEV;
- 
-+	of_node_put(msi_node);
- 	bus->msi->dev = &bus->dev;
- 	return 0;
- }
-
+ Luis
