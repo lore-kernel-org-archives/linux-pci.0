@@ -1,61 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44631 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750759AbbHQJBi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 17 Aug 2015 05:01:38 -0400
-Date: Mon, 17 Aug 2015 10:01:32 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] PCI: pci-host-generic: Fix lookup of
- linux,pci-probe-only property
-Message-ID: <20150817090132.GC1688@arm.com>
-References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
- <1439569159-10051-3-git-send-email-marc.zyngier@arm.com>
- <20150814164051.GF26431@google.com>
- <20150814164324.GC22809@arm.com>
- <CAErSpo5abs2Qj25Bs+JVg87ve346f_RVz7jhNwqdv856+WvXQA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo5abs2Qj25Bs+JVg87ve346f_RVz7jhNwqdv856+WvXQA@mail.gmail.com>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:41463 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098AbbHFENQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:16 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:14 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 21/42] powerpc/powernv: Remove DMA32 list of PEs
+Date: Thu,  6 Aug 2015 14:11:26 +1000
+Message-Id: <1438834307-26960-22-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 14, 2015 at 09:26:21PM +0100, Bjorn Helgaas wrote:
-> On Fri, Aug 14, 2015 at 11:43 AM, Will Deacon <will.deacon@arm.com> wrote:
-> > On Fri, Aug 14, 2015 at 05:40:51PM +0100, Bjorn Helgaas wrote:
-> >> Do we need support for pci-probe-only in pci-host-generic at all?
-> >> You're removing the use in amd-overdrive.dts, and there are no other
-> >> DTs in the kernel tree that mention it.
-> >>
-> >> If we can live without it, that would be nice.  It seems like a relic from
-> >> days when we couldn't reliably assign resources.  (I'm not saying we can do
-> >> that reliably even today, but I'd rather make it reliable than turn it
-> >> off.)
-> >
-> > Kvmtool certainly uses it (and generates its own DT, hence why you don't
-> > see it in mainline). Not sure about qemu, though.
-> 
-> Do you know why kvmtool wants probe-only?  Would something break if we
-> didn't support probe-only?  I guess we'd be looking for a case where
-> Linux assigns resources and that assignment doesn't work with kvmtool?
+Every PHB maintains a list of PEs based on their DMA32 weight. After
+patch "powerpc/powernv: Create PEs dynamically", the list is useless
+and it's safe to remove it.
 
-It's basically because the BARs aren't writable other than to find the
-region size. It could fixed with a bit of pain, but it doesn't help older
-kvmtools that do work with mainline today.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 18 ------------------
+ arch/powerpc/platforms/powernv/pci.h      |  6 ------
+ 2 files changed, 24 deletions(-)
 
-Will
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 37847a3..84b771e 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -938,20 +938,6 @@ out:
+ 	return 0;
+ }
+ 
+-static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
+-				       struct pnv_ioda_pe *pe)
+-{
+-	struct pnv_ioda_pe *lpe;
+-
+-	list_for_each_entry(lpe, &phb->ioda.pe_dma_list, dma_link) {
+-		if (lpe->dma32_weight < pe->dma32_weight) {
+-			list_add_tail(&pe->dma_link, &lpe->dma_link);
+-			return;
+-		}
+-	}
+-	list_add_tail(&pe->dma_link, &phb->ioda.pe_dma_list);
+-}
+-
+ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+@@ -1169,9 +1155,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+ 	/* Put PE to the list */
+ 	list_add_tail(&pe->list, &phb->ioda.pe_list);
+ 
+-	/* Link the PE */
+-	pnv_ioda_link_pe_by_weight(phb, pe);
+-
+ 	return pe;
+ }
+ 
+@@ -3313,7 +3296,6 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 		phb->ioda.root_pe_idx = IODA_INVALID_PE;
+ 	}
+ 
+-	INIT_LIST_HEAD(&phb->ioda.pe_dma_list);
+ 	INIT_LIST_HEAD(&phb->ioda.pe_list);
+ 	mutex_init(&phb->ioda.pe_list_mutex);
+ 
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index a160491..f8e6022 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -83,7 +83,6 @@ struct pnv_ioda_pe {
+ 	struct list_head	slaves;
+ 
+ 	/* Link in list of PE#s */
+-	struct list_head	dma_link;
+ 	struct list_head	list;
+ };
+ 
+@@ -185,11 +184,6 @@ struct pnv_phb {
+ 			/* 32-bit TCE tables allocation */
+ 			unsigned long		dma32_segcount;
+ 
+-			/* Sorted list of used PE's, sorted at
+-			 * boot for resource allocation purposes
+-			 */
+-			struct list_head	pe_dma_list;
+-
+ 			/* TCE cache invalidate registers (physical and
+ 			 * remapped)
+ 			 */
+-- 
+2.1.0
+
