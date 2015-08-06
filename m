@@ -1,75 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 18/52] PCI: Move comment to pci_need_to_release()
-Date: Thu, 20 Aug 2015 23:20:33 -0700
-Message-Id: <1440138067-4314-19-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:50892 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753067AbbHFENS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:18 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:17 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 36/42] powerpc/pci: Update bridge windows on PCI plugging
+Date: Thu,  6 Aug 2015 14:11:41 +1000
+Message-Id: <1438834307-26960-37-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move comment from caller to pci_need_to_release(), as we will have one new
-caller for alt_size support.
+During the PCI plugging event, the PCI devices are rescanned and
+their IO and MMIO resources are reassigned. However, the PowerNV
+platform will assign PE# based on that, which depends on updating
+to window of bridge of the PE's primary bus.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+The patch updates the windows of bridge of PE's primary bus if
+we have valid bridge. Otherwise, we assume it's root bus or SRIOV
+virtual bus and PE won't be assigned during PCI plugging time.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/setup-bus.c | 27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+ arch/powerpc/kernel/pci-common.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4a1fb4f..e4b4b55 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -409,6 +409,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 9c88dcd1..713559d 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1473,8 +1473,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+ 	/* Allocate bus and devices resources */
+ 	pcibios_allocate_bus_resources(bus);
+ 	pcibios_claim_one_bus(bus);
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_assign_unassigned_bus_resources(bus);
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		if (bus->self)
++			pci_assign_unassigned_bridge_resources(bus->self);
++		else
++			pci_assign_unassigned_bus_resources(bus);
++	}
  
- static bool pci_need_to_release(unsigned long mask, struct resource *res)
- {
-+	/*
-+	 * Separate three resource type checking if we need to release
-+	 * assigned resource.
-+	 *	1. if there is io port assign fail, will release assigned
-+	 *	   io port.
-+	 *	2. if there is pref mmio assign fail, release assigned
-+	 *	   pref mmio.
-+	 *	   if assigned pref mmio's parent is non-pref mmio and there
-+	 *	   is non-pref mmio assign fail, will release that assigned
-+	 *	   pref mmio.
-+	 *	3. if there is non-pref mmio assign fail or pref mmio
-+	 *	   assigned fail, will release assigned non-pref mmio.
-+	 */
-+
- 	if (res->flags & IORESOURCE_IO)
- 		return !!(mask & IORESOURCE_IO);
- 
-@@ -465,19 +479,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *  if could do that, could get out early.
- 	 *  if could not do that, we still try to assign requested at first,
- 	 *    then try to reassign add_size for some resources.
--	 *
--	 * Separate three resource type checking if we need to release
--	 * assigned resource after requested + add_size try.
--	 *	1. if there is io port assign fail, will release assigned
--	 *	   io port.
--	 *	2. if there is pref mmio assign fail, release assigned
--	 *	   pref mmio.
--	 *	   if assigned pref mmio's parent is non-pref mmio and there
--	 *	   is non-pref mmio assign fail, will release that assigned
--	 *	   pref mmio.
--	 *	3. if there is non-pref mmio assign fail or pref mmio
--	 *	   assigned fail, will release assigned non-pref mmio.
- 	 */
-+
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
+ 	/* Fixup EEH */
+ 	eeh_add_device_tree_late(bus);
 -- 
-1.8.4.5
+2.1.0
 
