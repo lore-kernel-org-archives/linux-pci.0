@@ -1,291 +1,276 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36418 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932991AbbHKCXu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 22:23:50 -0400
-Received: by pacrr5 with SMTP id rr5so116189978pac.3
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 19:23:48 -0700 (PDT)
-Subject: Re: [PATCH v6 05/42] powerpc/powernv: Track IO/M32/M64 segments from
- PE
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-6-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C84FD8.302@ozlabs.ru> <20150811000342.GB10753@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C95CAE.1090908@ozlabs.ru>
-Date: Tue, 11 Aug 2015 12:23:42 +1000
+Received: from lhrrgout.huawei.com ([194.213.3.17]:52537 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753096AbbHFNxB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 09:53:01 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jingoo Han <jingoohan1@gmail.com>
+CC: Rob Herring <robherring2@gmail.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	"Arnd Bergmann" <arnd@linaro.org>
+Subject: RE: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
+Date: Thu, 6 Aug 2015 13:52:35 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D72CFE@lhreml503-mbs>
+References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
+ <20150729172053.GE31170@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
+ <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs>
+ <20150730161447.GG9640@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs>
+ <20150730171445.GI9640@google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs>
+ <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D70589@lhreml503-mbs>
+ <55BB8CC6.1080203@ti.com>
+ <CAL_JsqJqjiWVaKs-3ghQ1EBQzRRQ38GzkMV+FELPj53bSF-yXQ@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D712E7@lhreml503-mbs>
+ <7F6386B4-D2F5-4840-AC72-F8C76CBC3B94@gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E01D719D1@lhreml503-mbs>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D719D1@lhreml503-mbs>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20150811000342.GB10753@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/11/2015 10:03 AM, Gavin Shan wrote:
-> On Mon, Aug 10, 2015 at 05:16:40PM +1000, Alexey Kardashevskiy wrote:
->> On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>> The patch is adding 6 bitmaps, three to PE and three to PHB, to track
->>
->> The patch is also removing 2 arrays (io_segmap and m32_segmap), what is that
->> all about? Also, there was no m64_segmap, now there is, needs an explanation
->> may be.
->>
->
-> Originally, the bitmaps (io_segmap and m32_segmap) are allocated dynamically.
-> Now, they have fixed sizes - 512 bits.
->
-> The subject "powerpc/powernv: Track IO/M32/M64 segments from PE" indicates
-> why m64_segmap is added.
-
-
-But before this patch, you somehow managed to keep it working without a map 
-for M64, by the same time you needed map for IO and M32. It seems you are 
-making things consistent in this patch but it also feels like you do not 
-have to do so as M64 did not need a map before and I cannot see why it 
-needs one now.
-
-
->>
->>> the consumed by one particular PE, which can be released once the PE
->>> is destroyed during PCI unplugging time. Also, we're using fixed
->>> quantity of bits to trace the used IO, M32 and M64 segments by PEs
->>> in one particular PHB.
->>>
->>
->> Out of curiosity - have you considered having just 3 arrays, in PHB, storing
->> PE numbers, and ditching PE's arrays? Does PE itself need to know what PEs it
->> is using? Not sure about this master/slave PEs though.
->>
->
-> I don't follow your suggestion. Can you rephrase and explain it a bit more?
-
-
-Please explains in what situations you need same map in both PHB and PE and 
-how you are going to use them. For example, pe::m64_segmap and phb::m64_segmap.
-
-I believe you need to know what segment is used by what PE and that's it 
-and having 2 bitmaps is overcomplicated hard to follow. Is there anything 
-else what I am missing?
-
-
-
->> It would be easier to read patches if this one was right before
->> [PATCH v6 23/42] powerpc/powernv: Release PEs dynamically
->>
->
-> I'll try to reoder the patch, but not expect too much...
->
->>
->>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>   arch/powerpc/platforms/powernv/pci-ioda.c | 29 +++++++++++++++--------------
->>>   arch/powerpc/platforms/powernv/pci.h      | 18 ++++++++++++++----
->>>   2 files changed, 29 insertions(+), 18 deletions(-)
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> index e4ac703..78b49a1 100644
->>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> @@ -388,6 +388,12 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
->>>   			list_add_tail(&pe->list, &master_pe->slaves);
->>>   		}
->>>
->>> +		/* M64 segments consumed by slave PEs are tracked
->>> +		 * by master PE
->>> +		 */
->>> +		set_bit(pe->pe_number, master_pe->m64_segmap);
->>> +		set_bit(pe->pe_number, phb->ioda.m64_segmap);
->>> +
->>>   		/* P7IOC supports M64DT, which helps mapping M64 segment
->>>   		 * to one particular PE#. However, PHB3 has fixed mapping
->>>   		 * between M64 segment and PE#. In order to have same logic
->>> @@ -2871,9 +2877,11 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->>>
->>>   			while (index < phb->ioda.total_pe &&
->>>   			       region.start <= region.end) {
->>> -				phb->ioda.io_segmap[index] = pe->pe_number;
->>> +				set_bit(index, pe->io_segmap);
->>> +				set_bit(index, phb->ioda.io_segmap);
->>>   				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
->>> -					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
->>> +					pe->pe_number, OPAL_IO_WINDOW_TYPE,
->>> +					0, index);
->>
->> Unrelated change.
->>
->
-> True, will drop. However, checkpatch.pl will complain wtih:
-> exceeding 80 characters.
-
-It will not as you are not changing these lines, it only complains on changes.
-
-
-
->
->>>   				if (rc != OPAL_SUCCESS) {
->>>   					pr_err("%s: OPAL error %d when mapping IO "
->>>   					       "segment #%d to PE#%d\n",
->>> @@ -2896,9 +2904,11 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->>>
->>>   			while (index < phb->ioda.total_pe &&
->>>   			       region.start <= region.end) {
->>> -				phb->ioda.m32_segmap[index] = pe->pe_number;
->>> +				set_bit(index, pe->m32_segmap);
->>> +				set_bit(index, phb->ioda.m32_segmap);
->>>   				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
->>> -					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
->>> +					pe->pe_number, OPAL_M32_WINDOW_TYPE,
->>> +					0, index);
->>
->> Unrelated change.
->>
->
-> same as above.
->
->>>   				if (rc != OPAL_SUCCESS) {
->>>   					pr_err("%s: OPAL error %d when mapping M32 "
->>>   					       "segment#%d to PE#%d",
->>> @@ -3090,7 +3100,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>>   {
->>>   	struct pci_controller *hose;
->>>   	struct pnv_phb *phb;
->>> -	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
->>> +	unsigned long size, pemap_off;
->>>   	const __be64 *prop64;
->>>   	const __be32 *prop32;
->>>   	int len;
->>> @@ -3175,19 +3185,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>>
->>>   	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
->>
->>
->> This comment came with if(IODA1) below, since you are removing the condition
->> below, makes sense to remove the comment as well or move it where people will
->> look for it (arch/powerpc/platforms/powernv/pci.h ?)
->>
->
-> Yes, will do.
->
->>
->>>   	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
->>> -	m32map_off = size;
->>> -	size += phb->ioda.total_pe * sizeof(phb->ioda.m32_segmap[0]);
->>> -	if (phb->type == PNV_PHB_IODA1) {
->>> -		iomap_off = size;
->>> -		size += phb->ioda.total_pe * sizeof(phb->ioda.io_segmap[0]);
->>> -	}
->>>   	pemap_off = size;
->>>   	size += phb->ioda.total_pe * sizeof(struct pnv_ioda_pe);
->>>   	aux = memblock_virt_alloc(size, 0);
->>
->>
->> After adding static arrays to PE and PHB, do you still need this "aux"?
->>
->
-> "aux" is still needed to tell the boundary of pe_alloc_bitmap and pe_array.
->>
->>>   	phb->ioda.pe_alloc = aux;
->>> -	phb->ioda.m32_segmap = aux + m32map_off;
->>> -	if (phb->type == PNV_PHB_IODA1)
->>> -		phb->ioda.io_segmap = aux + iomap_off;
->>>   	phb->ioda.pe_array = aux + pemap_off;
->>>   	set_bit(phb->ioda.reserved_pe, phb->ioda.pe_alloc);
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->>> index 62239b1..08a4e57 100644
->>> --- a/arch/powerpc/platforms/powernv/pci.h
->>> +++ b/arch/powerpc/platforms/powernv/pci.h
->>> @@ -49,6 +49,15 @@ struct pnv_ioda_pe {
->>>   	/* PE number */
->>>   	unsigned int		pe_number;
->>>
->>> +	/* IO/M32/M64 segments consumed by the PE. Each PE can
->>> +	 * have one M64 segment at most, but M64 segments consumed
->>> +	 * by slave PEs will be contributed to the master PE. One
->>> +	 * PE can own multiple IO and M32 segments.
->>
->>
->> A PE can have multiple IO and M32 segments but just one M64 segment? Is this
->> correct for IODA1 or IODA2 or both? Is this a limitation of this
->> implementation or it comes from P7IOC/PHB3 hardware?
->>
->
-> It's correct for IO and M32. However, on IODA1 or IODA2, one PE can have
-> multiple M64 segments as well.
-
-
-But the comment says "Each PE can have one M64 segment at most". Which 
-statement is correct?
-
-
->>> +	 */
->>> +	unsigned long		io_segmap[8];
->>> +	unsigned long		m32_segmap[8];
->>> +	unsigned long		m64_segmap[8];
->>
->> Magic constant "8", 64bit*8 = 512 PEs - where did this come from?
->>
->> Anyway,
->>
->> #define PNV_IODA_MAX_PE_NUM	512
->>
->> unsigned long io_segmap[PNV_IODA_MAX_PE_NUM/BITS_PER_LONG]
->>
->
-> I prefer "8", not macro for 3 reasons:
-> - The macro won't be used in the code.
-
-You will use it 6 times in the header, if you give it a good name, people 
-won't have to guess if the meaning of all these "8"s is the same and you 
-won't have to comment every use of it in this header file (now you have).
-
-Also, using BITS_PER_LONG tells the reader that this is a bitmask for sure.
-
-
-> - The total segment number of specific resource is variable
->    on IODA1 and IODA2. I just choosed the max value with margin.
-> - PNV_IODA_MAX_PE_NUM, indicating max PE number, isn't 512 on
->    IODA1 or IODA2.
-
-Give it a better name.
-
-
->
->>> +
->>>   	/* "Weight" assigned to the PE for the sake of DMA resource
->>>   	 * allocations
->>>   	 */
->>> @@ -145,15 +154,16 @@ struct pnv_phb {
->>>   			unsigned int		io_segsize;
->>>   			unsigned int		io_pci_base;
->>>
->>> +			/* IO, M32, M64 segment maps */
->>> +			unsigned long		io_segmap[8];
->>> +			unsigned long		m32_segmap[8];
->>> +			unsigned long		m64_segmap[8];
->>> +
->>>   			/* PE allocation */
->>>   			struct mutex		pe_alloc_mutex;
->>>   			unsigned long		*pe_alloc;
->>>   			struct pnv_ioda_pe	*pe_array;
->>>
->>> -			/* M32 & IO segment maps */
->>> -			unsigned int		*m32_segmap;
->>> -			unsigned int		*io_segmap;
->>> -
->>>   			/* IRQ chip */
->>>   			int			irq_chip_init;
->>>   			struct irq_chip		irq_chip;
->>>
->
-> Thanks,
-> Gavin
->
-
-
--- 
-Alexey
+SGkgYWxsDQoNClRoaXMgcGF0Y2ggaGFzIG5vdyBiZWVuIG1vdmVkIGluICJbUEFUQ0ggdjYgMS82
+XSBQQ0k6IGRlc2lnbndhcmU6IG1vdmUgY2FsY3VsYXRpb24gb2YgYnVzIGFkZHJlc3NlcyB0byBE
+UkE3eHgiDQoNCmNvbW1pdCAiZjRjNTVjNWEzZjdmIChQQ0k6IGRlc2lnbndhcmU6IFByb2dyYW0g
+QVRVIHdpdGggdW50cmFuc2xhdGVkIGFkZHJlc3MpIiBoYXMgYmVlbiByZXZlcnRlZCBpbg0KIltQ
+QVRDSCB2NiAzLzZdIFBDSTogZGVzaWdud2FyZTogQWRkIEFSTTY0IHN1cHBvcnQiDQoNCkdhYg0K
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBjaS1vd25lckB2
+Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIEdhYnJpZWxlIFBhb2xvbmkNCj4gU2VudDogVHVlc2RheSwgQXVndXN0
+IDA0LCAyMDE1IDExOjEyIEFNDQo+IFRvOiBKaW5nb28gSGFuDQo+IENjOiBSb2IgSGVycmluZzsg
+S2lzaG9uIFZpamF5IEFicmFoYW0gSTsgQmpvcm4gSGVsZ2FhczsgYXJuZEBhcm5kYi5kZTsNCj4g
+bG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsgV2FuZ3pob3UgKEIpOyByb2JoK2R0QGtlcm5lbC5v
+cmc7DQo+IGphbWVzLm1vcnNlQGFybS5jb207IExpdml1LkR1ZGF1QGFybS5jb207IGxpbnV4LXBj
+aUB2Z2VyLmtlcm5lbC5vcmc7DQo+IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9y
+ZzsgZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7DQo+IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7
+IHpoYW5nanVrdW87IHFpdXpoZW5mYTsgTGlndW96aHUgKEtlbm5ldGgpOw0KPiBQcmF0eXVzaCBB
+bmFuZDsgQXJuZCBCZXJnbWFubg0KPiBTdWJqZWN0OiBSRTogW1BBVENIIHY2XSBQQ0k6IFN0b3Jl
+IFBDSWUgYnVzIGFkZHJlc3MgaW4gc3RydWN0DQo+IG9mX3BjaV9yYW5nZQ0KPiANCj4gDQo+IA0K
+PiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gRnJvbTogSmluZ29vIEhhbiBbbWFp
+bHRvOmppbmdvb2hhbjFAZ21haWwuY29tXQ0KPiA+IFNlbnQ6IFR1ZXNkYXksIEF1Z3VzdCAwNCwg
+MjAxNSA1OjIwIEFNDQo+ID4gVG86IEdhYnJpZWxlIFBhb2xvbmkNCj4gPiBDYzogUm9iIEhlcnJp
+bmc7IEtpc2hvbiBWaWpheSBBYnJhaGFtIEk7IEJqb3JuIEhlbGdhYXM7IGFybmRAYXJuZGIuZGU7
+DQo+ID4gbG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsgV2FuZ3pob3UgKEIpOyByb2JoK2R0QGtl
+cm5lbC5vcmc7DQo+ID4gamFtZXMubW9yc2VAYXJtLmNvbTsgTGl2aXUuRHVkYXVAYXJtLmNvbTsg
+bGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gPiBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmlu
+ZnJhZGVhZC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOw0KPiA+IFl1YW56aGljaGFu
+ZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpoZW5mYTsgTGlndW96aHUgKEtlbm5ldGgpOw0K
+PiA+IFByYXR5dXNoIEFuYW5kOyBBcm5kIEJlcmdtYW5uOyBqaW5nb29oYW4xQGdtYWlsLmNvbQ0K
+PiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjZdIFBDSTogU3RvcmUgUENJZSBidXMgYWRkcmVzcyBp
+biBzdHJ1Y3QNCj4gPiBvZl9wY2lfcmFuZ2UNCj4gPg0KPiA+IE9uIDIwMTUuIDguIDMuLCBhdCBQ
+TSA4OjE4LCBHYWJyaWVsZSBQYW9sb25pDQo+ID4gPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNv
+bT4gd3JvdGU6DQo+ID4gPg0KPiA+ID4gUm9iLCBLaXNob24gd2hhdCBhYm91dCB0aGUgZm9sbG93
+aW5nIHNvbHV0aW9uPy4uLi4NCj4gPiA+DQo+ID4gPiAtLS0NCj4gPiA+IGRyaXZlcnMvcGNpL2hv
+c3QvcGNpLWRyYTd4eC5jICAgICAgfCAxMiArKysrKysrKysrKysNCj4gPiA+IGRyaXZlcnMvcGNp
+L2hvc3QvcGNpZS1kZXNpZ253YXJlLmMgfCAgOSArKystLS0tLS0NCj4gPg0KPiA+IEhpIFBhb2xv
+bmksDQo+ID4NCj4gPiBPSywgaXQgbG9va3MgZ29vZC4NCj4gPiBJIHdhbnQgeW91IHRvIHJldmVy
+dCB0aGUgZm9sbG93aW5nIHBhdGNoLg0KPiA+DQo+ID4gY29tbWl0ICJmNGM1NWM1YTNmN2YgKFBD
+STogZGVzaWdud2FyZTogUHJvZ3JhbSBBVFUgd2l0aCB1bnRyYW5zbGF0ZWQNCj4gPiBhZGRyZXNz
+KSINCj4gPg0KPiA+IFdvdWxkIHlvdSByZW1vdmUgYWxsICcqX21vZGVfYmFzZSdzPw0KPiANCj4g
+SGkgSmluZ29vIEhhbiwNCj4gDQo+IElmIEkgcmV2ZXJ0ZWQgdGhlIGNvbW1pdCwgaW4gb3JkZXIg
+dG8gZ2V0IGRlc2lnbndhcmUgd29ya2luZywgZHJhNw0KPiBzaG91bGQgbWFzayBkaXJlY3RseSB0
+aGUgQ1BVIGFkZHJlc3NlcyBzdG9yZWQgaW4gcHAtPmNmZzBfYmFzZSwNCj4gcHAtPmNmZzFfYmFz
+ZSwgcHAtPm1lbV9iYXNlIGFuZCBwcC0+aW9fYmFzZS4NCj4gDQo+IFRoZSBtYXNraW5nIHdvdWxk
+IGhhcHBlbiBhdCB0aGlzIHBvaW50Og0KPiBodHRwOi8vbHhyLmZyZWUtZWxlY3Ryb25zLmNvbS9z
+b3VyY2UvZHJpdmVycy9wY2kvaG9zdC9wY2llLQ0KPiBkZXNpZ253YXJlLmMjTDQ5Mw0KPiANCj4g
+Tm93Og0KPiAtIEkgc2VlIHRoYXQgcHAtPmNmZzwwLzE+X2Jhc2UgYXJlIHVzZWQgaW4gZGV2bV9p
+b3JlbWFwIGJlZm9yZSB0aGF0DQo+ICAgcG9pbnQgYW5kIG5vd2hlcmUgZWxzZSwgc28gdGhleSBz
+aG91bGQgYmUgb2suDQo+IC0gcHAtPm1lbV9iYXNlIGlzIHVzZWQgaW4gZHdfcGNpZV9zZXR1cF9y
+YygpOyBkd19wY2llX3NldHVwX3JjKCkgaXMNCj4gY2FsbGVkDQo+ICAgaW4gZHJhN3h4X3BjaWVf
+aG9zdF9pbml0KCkuLi5zbyBoZXJlIEkgc2hvdWxkIG1vdmUgdGhlIG1hc2tpbmcgYWZ0ZXINCj4g
+ICBkd19wY2llX3NldHVwKCkgcmV0dW5lZCwgYnV0IEkgdGhpbmsgaXQgc2hvdWxkIGJlIG9rDQo+
+IC0gcHAtPmlvX2Jhc2UgaXMgdXNlZCBpbiBwY2lfaW9yZW1hcF9pbygpIGluIGR3X3BjaWVfc2V0
+dXAoKS4gTm93DQo+IGN1cnJlbnRseQ0KPiAgIGluIGRlc2lnbndhcmUgdGhpcyBpcyBjYWxsZWQg
+YnkgcGNpX2Jpb3NfaW5pdF9odygpOyB0aGlzIGlzIGFmdGVyIHRoZQ0KPiAgIG1hc2tpbmcuLi4u
+c28gaGVyZSB3ZSB3b3VsZCBoYXZlIGEgdGhlIHdyb25nIHZhbHVlIHBhc3NlZA0KPiANCj4gU2Fp
+ZCB0aGF0IGlmIHlvdSBsb29rIGF0ICJbUEFUQ0ggdjUgMi81XSBQQ0k6IGRlc2lnbndhcmU6IEFk
+ZCBBUk02NA0KPiBzdXBwb3J0IiwNCj4gdGhhdCBpcyB0aGUgcGF0Y2hzZXQgd2hlcmUgdGhpcyBw
+YXRjaCBpcyBuZWVkZWQsIHlvdSBjYW4gc2VlIHRoYXQNCj4gZHdfcGNpZV9zZXR1cCgpIGlzIHJl
+bW92ZWQgYW5kIHBwLT5pb19iYXNlIGlzIHVzZWQgaW4NCj4gcGNpX3JlbWFwX2lvc3BhY2UoKSBi
+ZWZvcmUNCj4gdGhlIG1hc2tpbmcgd291bGQgaGFwcGVuIGluIGRyYTd4eF9wY2llX2hvc3RfaW5p
+dCgpLi4uc28gZm9yIHRoaXMNCj4gcGF0Y2hzZXQgd2UNCj4gc2hvdWxkIGJlIGdvb2QgdG8gcmV2
+ZXJ0IHRoZSBjb21taXQuDQo+IA0KPiBJIHByb3Bvc2UgdG8gYWRkIGEgbmV3IHBhdGNoIGluIHRo
+ZSBwYXRjaHNldCAiW1BBVENIIHY1IDAvNV0gUENJOiBoaXNpOg0KPiBBZGQgUENJZQ0KPiBob3N0
+IHN1cHBvcnQgZm9yIEhpU2lsaWNvbiBTb0MgSGlwMDUiIGFzIHRoZSBvbmUgSSBqdXN0IHBvc3Rl
+ZCBpbiB0aGlzDQo+IHRocmVhZCAodGhpcyB3b3VsZCBub3QgcmV2ZXJ0IHRoZSBjb21taXQgYnV0
+IGp1c3QgbW92ZXMgdGhlIG1hc2tpbmcgdG8NCj4gZHJhN3h4KQ0KPiANCj4gSSB3b3VsZCByZXZl
+cnQgdGhlIGNvbW1pdCBpbiAiW1BBVENIIHY1IDIvNV0gUENJOiBkZXNpZ253YXJlOiBBZGQgQVJN
+NjQNCj4gc3VwcG9ydCINCj4gdG9nZXRoZXIgd2l0aCB0aGUgcmVzdCBvZiBkZXNpZ253YXJlIHJl
+d29yay4NCj4gDQo+IFNvIHdlIHdvdWxkIGhhdmUgYWx3YXlzIGEgd29ya2luZyB2ZXJzaW9uIG9m
+IGRlc2lnbndhcmUuLi4NCj4gDQo+IEFyZSB5b3Ugb2sgd2l0aCB0aGlzPw0KPiANCj4gPg0KPiA+
+IEJlc3QgcmVnYXJkcywNCj4gPiBKaW5nb28gSGFuDQo+ID4NCj4gPiA+IDIgZmlsZXMgY2hhbmdl
+ZCwgMTUgaW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkNCj4gPiA+DQo+ID4gPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9wY2kvaG9zdC9wY2ktZHJhN3h4LmMgYi9kcml2ZXJzL3BjaS9ob3N0L3Bj
+aS0NCj4gPiBkcmE3eHguYw0KPiA+ID4gaW5kZXggODBkYjA5ZS4uYmIyNjM1ZiAxMDA2NDQNCj4g
+PiA+IC0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWRyYTd4eC5jDQo+ID4gPiArKysgYi9kcml2
+ZXJzL3BjaS9ob3N0L3BjaS1kcmE3eHguYw0KPiA+ID4gQEAgLTYxLDYgKzYxLDcgQEANCj4gPiA+
+DQo+ID4gPiAjZGVmaW5lICAgIFBDSUVDVFJMX0RSQTdYWF9DT05GX1BIWV9DUyAgICAgICAgICAg
+IDB4MDEwQw0KPiA+ID4gI2RlZmluZSAgICBMSU5LX1VQICAgICAgICAgICAgICAgICAgICAgICAg
+QklUKDE2KQ0KPiA+ID4gKyNkZWZpbmUgQ1BVX1RPX0JVU19BRERSICAgICAgICAgICAgIDB4MEZG
+RkZGRkYNCj4gPiA+DQo+ID4gPiBzdHJ1Y3QgZHJhN3h4X3BjaWUgew0KPiA+ID4gICAgdm9pZCBf
+X2lvbWVtICAgICAgICAqYmFzZTsNCj4gPiA+IEBAIC0xMzgsNiArMTM5LDE3IEBAIHN0YXRpYyB2
+b2lkDQo+IGRyYTd4eF9wY2llX2VuYWJsZV9pbnRlcnJ1cHRzKHN0cnVjdA0KPiA+IHBjaWVfcG9y
+dCAqcHApDQo+ID4gPg0KPiA+ID4gc3RhdGljIHZvaWQgZHJhN3h4X3BjaWVfaG9zdF9pbml0KHN0
+cnVjdCBwY2llX3BvcnQgKnBwKQ0KPiA+ID4gew0KPiA+ID4gKyAgICBpZiAocHAtPmlvX21vZF9i
+YXNlKQ0KPiA+ID4gKyAgICAgICAgcHAtPmlvX21vZF9iYXNlICY9IENQVV9UT19CVVNfQUREUjsN
+Cj4gPiA+ICsNCj4gPiA+ICsgICAgaWYgKHBwLT5tZW1fbW9kX2Jhc2UpDQo+ID4gPiArICAgICAg
+ICBwcC0+bWVtX21vZF9iYXNlICY9IENQVV9UT19CVVNfQUREUjsNCj4gPiA+ICsNCj4gPiA+ICsg
+ICAgaWYgKHBwLT5jZmcwX21vZF9iYXNlKSB7DQo+ID4gPiArICAgICAgICBwcC0+Y2ZnMF9tb2Rf
+YmFzZSAmPSBDUFVfVE9fQlVTX0FERFI7DQo+ID4gPiArICAgICAgICBwcC0+Y2ZnMV9tb2RfYmFz
+ZSAmPSBDUFVfVE9fQlVTX0FERFI7DQo+ID4gPiArICAgIH0NCj4gPiA+ICsNCj4gPiA+ICAgIGR3
+X3BjaWVfc2V0dXBfcmMocHApOw0KPiA+ID4gICAgZHJhN3h4X3BjaWVfZXN0YWJsaXNoX2xpbmso
+cHApOw0KPiA+ID4gICAgaWYgKElTX0VOQUJMRUQoQ09ORklHX1BDSV9NU0kpKQ0KPiA+ID4gZGlm
+ZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gPiBiL2RyaXZl
+cnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gPiA+IGluZGV4IDY5NDg2YmUuLjA2YzY4
+MmIgMTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5j
+DQo+ID4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+ID4gPiBA
+QCAtNDE2LDggKzQxNiw3IEBAIGludCBkd19wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0
+ICpwcCkNCj4gPiA+ICAgICAgICAgICAgcHAtPmlvX2Jhc2UgPSByYW5nZS5jcHVfYWRkcjsNCj4g
+PiA+DQo+ID4gPiAgICAgICAgICAgIC8qIEZpbmQgdGhlIHVudHJhbnNsYXRlZCBJTyBzcGFjZSBh
+ZGRyZXNzICovDQo+ID4gPiAtICAgICAgICAgICAgcHAtPmlvX21vZF9iYXNlID0gb2ZfcmVhZF9u
+dW1iZXIocGFyc2VyLnJhbmdlIC0NCj4gPiA+IC0gICAgICAgICAgICAgICAgICAgICAgICAgICAg
+IHBhcnNlci5ucCArIG5hLCBucyk7DQo+ID4gPiArICAgICAgICAgICAgcHAtPmlvX21vZF9iYXNl
+ID0gcmFuZ2UuY3B1X2FkZHI7Ow0KPiA+ID4gICAgICAgIH0NCj4gPiA+ICAgICAgICBpZiAocmVz
+dHlwZSA9PSBJT1JFU09VUkNFX01FTSkgew0KPiA+ID4gICAgICAgICAgICBvZl9wY2lfcmFuZ2Vf
+dG9fcmVzb3VyY2UoJnJhbmdlLCBucCwgJnBwLT5tZW0pOw0KPiA+ID4gQEAgLTQyNiw4ICs0MjUs
+NyBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ID4gPiAg
+ICAgICAgICAgIHBwLT5tZW1fYnVzX2FkZHIgPSByYW5nZS5wY2lfYWRkcjsNCj4gPiA+DQo+ID4g
+PiAgICAgICAgICAgIC8qIEZpbmQgdGhlIHVudHJhbnNsYXRlZCBNRU0gc3BhY2UgYWRkcmVzcyAq
+Lw0KPiA+ID4gLSAgICAgICAgICAgIHBwLT5tZW1fbW9kX2Jhc2UgPSBvZl9yZWFkX251bWJlcihw
+YXJzZXIucmFuZ2UgLQ0KPiA+ID4gLSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHBhcnNl
+ci5ucCArIG5hLCBucyk7DQo+ID4gPiArICAgICAgICAgICAgcHAtPm1lbV9tb2RfYmFzZSA9IHJh
+bmdlLmNwdV9hZGRyOw0KPiA+ID4gICAgICAgIH0NCj4gPiA+ICAgICAgICBpZiAocmVzdHlwZSA9
+PSAwKSB7DQo+ID4gPiAgICAgICAgICAgIG9mX3BjaV9yYW5nZV90b19yZXNvdXJjZSgmcmFuZ2Us
+IG5wLCAmcHAtPmNmZyk7DQo+ID4gPiBAQCAtNDM3LDggKzQzNSw3IEBAIGludCBkd19wY2llX2hv
+c3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCj4gPiA+ICAgICAgICAgICAgcHAtPmNmZzFf
+YmFzZSA9IHBwLT5jZmcuc3RhcnQgKyBwcC0+Y2ZnMF9zaXplOw0KPiA+ID4NCj4gPiA+ICAgICAg
+ICAgICAgLyogRmluZCB0aGUgdW50cmFuc2xhdGVkIGNvbmZpZ3VyYXRpb24gc3BhY2UgYWRkcmVz
+cyAqLw0KPiA+ID4gLSAgICAgICAgICAgIHBwLT5jZmcwX21vZF9iYXNlID0gb2ZfcmVhZF9udW1i
+ZXIocGFyc2VyLnJhbmdlIC0NCj4gPiA+IC0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+cGFyc2VyLm5wICsgbmEsIG5zKTsNCj4gPiA+ICsgICAgICAgICAgICBwcC0+Y2ZnMF9tb2RfYmFz
+ZSA9IHJhbmdlLmNwdV9hZGRyOw0KPiA+ID4gICAgICAgICAgICBwcC0+Y2ZnMV9tb2RfYmFzZSA9
+IHBwLT5jZmcwX21vZF9iYXNlICsNCj4gPiA+ICAgICAgICAgICAgICAgICAgICAgICAgcHAtPmNm
+ZzBfc2l6ZTsNCj4gPiA+ICAgICAgICB9DQo+ID4gPiAtLQ0KPiA+ID4gMS45LjENCj4gPiA+DQo+
+ID4gPg0KPiA+ID4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPj4gRnJvbTogbGlu
+dXgtcGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gPiA+PiBv
+d25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBSb2IgSGVycmluZw0KPiA+ID4+IFNl
+bnQ6IEZyaWRheSwgSnVseSAzMSwgMjAxNSA1OjUzIFBNDQo+ID4gPj4gVG86IEtpc2hvbiBWaWph
+eSBBYnJhaGFtIEkNCj4gPiA+PiBDYzogR2FicmllbGUgUGFvbG9uaTsgQmpvcm4gSGVsZ2Fhczsg
+YXJuZEBhcm5kYi5kZTsNCj4gPiA+PiBsb3JlbnpvLnBpZXJhbGlzaUBhcm0uY29tOyBXYW5nemhv
+dSAoQik7IHJvYmgrZHRAa2VybmVsLm9yZzsNCj4gPiA+PiBqYW1lcy5tb3JzZUBhcm0uY29tOyBM
+aXZpdS5EdWRhdUBhcm0uY29tOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+
+PiBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGRldmljZXRyZWVAdmdlci5r
+ZXJuZWwub3JnOw0KPiA+ID4+IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFp
+dXpoZW5mYTsgTGlndW96aHUgKEtlbm5ldGgpOw0KPiA+ID4+IEppbmdvbyBIYW47IFByYXR5dXNo
+IEFuYW5kOyBBcm5kIEJlcmdtYW5uDQo+ID4gPj4gU3ViamVjdDogUmU6IFtQQVRDSCB2Nl0gUENJ
+OiBTdG9yZSBQQ0llIGJ1cyBhZGRyZXNzIGluIHN0cnVjdA0KPiA+ID4+IG9mX3BjaV9yYW5nZQ0K
+PiA+ID4+DQo+ID4gPj4gT24gRnJpLCBKdWwgMzEsIDIwMTUgYXQgOTo1NyBBTSwgS2lzaG9uIFZp
+amF5IEFicmFoYW0gSQ0KPiA+IDxraXNob25AdGkuY29tPg0KPiA+ID4+IHdyb3RlOg0KPiA+ID4+
+PiArQXJuZA0KPiA+ID4+Pg0KPiA+ID4+PiBIaSwNCj4gPiA+Pj4NCj4gPiA+Pj4+IE9uIEZyaWRh
+eSAzMSBKdWx5IDIwMTUgMDc6NTUgUE0sIEdhYnJpZWxlIFBhb2xvbmkgd3JvdGU6DQo+ID4gPj4+
+PiBbK2NjIEtpc2hvbl0NCj4gPiA+Pj4+DQo+ID4gPj4+Pj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdl
+LS0tLS0NCj4gPiA+Pj4+PiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFtt
+YWlsdG86bGludXgtcGNpLQ0KPiA+ID4+Pj4+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
+YWxmIE9mIFJvYiBIZXJyaW5nDQo+ID4gPj4+Pj4gU2VudDogVGh1cnNkYXksIEp1bHkgMzAsIDIw
+MTUgOTo0MiBQTQ0KPiA+ID4+Pj4+IFRvOiBHYWJyaWVsZSBQYW9sb25pDQo+ID4gPj4+Pj4gQ2M6
+IEJqb3JuIEhlbGdhYXM7IGFybmRAYXJuZGIuZGU7IGxvcmVuem8ucGllcmFsaXNpQGFybS5jb207
+DQo+ID4gPj4gV2FuZ3pob3UNCj4gPiA+Pj4+PiAoQik7IHJvYmgrZHRAa2VybmVsLm9yZzsgamFt
+ZXMubW9yc2VAYXJtLmNvbTsNCj4gTGl2aXUuRHVkYXVAYXJtLmNvbTsNCj4gPiA+Pj4+PiBsaW51
+eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5v
+cmc7DQo+ID4gPj4+Pj4gZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7IFl1YW56aGljaGFuZzsg
+Wmh1ZGFjYWk7IHpoYW5nanVrdW87DQo+ID4gPj4+Pj4gcWl1emhlbmZhOyBMaWd1b3podSAoS2Vu
+bmV0aCk7IEppbmdvbyBIYW47IFByYXR5dXNoIEFuYW5kDQo+ID4gPj4+Pj4gU3ViamVjdDogUmU6
+IFtQQVRDSCB2Nl0gUENJOiBTdG9yZSBQQ0llIGJ1cyBhZGRyZXNzIGluIHN0cnVjdA0KPiA+ID4+
+Pj4+IG9mX3BjaV9yYW5nZQ0KPiA+ID4+Pj4+DQo+ID4gPj4+Pj4gT24gVGh1LCBKdWwgMzAsIDIw
+MTUgYXQgMTI6MzQgUE0sIEdhYnJpZWxlIFBhb2xvbmkNCj4gPiA+Pj4+PiA8Z2FicmllbGUucGFv
+bG9uaUBodWF3ZWkuY29tPiB3cm90ZToNCj4gPiA+Pj4+Pj4+IC0tLS0tT3JpZ2luYWwgTWVzc2Fn
+ZS0tLS0tDQo+ID4gPj4+Pj4+PiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86YmhlbGdhYXNA
+Z29vZ2xlLmNvbV0NCj4gPiA+Pj4+Pj4+IFNlbnQ6IDMwIEp1bHkgMjAxNSAxODoxNQ0KPiA+ID4+
+Pj4+Pj4gT24gVGh1LCBKdWwgMzAsIDIwMTUgYXQgMDQ6NTA6NTVQTSArMDAwMCwgR2FicmllbGUg
+UGFvbG9uaQ0KPiA+IHdyb3RlOg0KPiA+ID4+Pj4+Pj4+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2Ut
+LS0tLQ0KPiA+ID4+Pj4+Pj4+PiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3Jn
+IFttYWlsdG86bGludXgtcGNpLQ0KPiA+ID4+Pj4+Pj4+PiBvd25lckB2Z2VyLmtlcm5lbC5vcmdd
+IE9uIEJlaGFsZiBPZiBCam9ybiBIZWxnYWFzDQo+ID4gPj4+Pj4+Pj4+IFNlbnQ6IFRodXJzZGF5
+LCBKdWx5IDMwLCAyMDE1IDU6MTUgUE0NCj4gPiA+Pj4+Pj4+Pj4gT24gVGh1LCBKdWwgMzAsIDIw
+MTUgYXQgMDE6NTI6MTNQTSArMDAwMCwgR2FicmllbGUgUGFvbG9uaQ0KPiA+ID4+IHdyb3RlOg0K
+PiA+ID4+Pj4+DQo+ID4gPj4+Pj4gWy4uLl0NCj4gPiA+Pj4+Pg0KPiA+ID4+Pj4+Pj4+Pj4gSSBk
+b27igJl0IHRoaW5rIHdlIHNob3VsZCByZWx5IG9uIFtDUFVdIGFkZHJlc3Nlcy4uLndoYXQgaWYN
+Cj4gPiB0aGUNCj4gPiA+Pj4+Pj4+Pj4gaW50ZXJtZWRpYXRlDQo+ID4gPj4+Pj4+Pj4+PiB0cmFu
+c2xhdGlvbiBsYXllciBjaGFuZ2VzIHRoZSBsb3dlciBzaWduaWZpY2FudCBiaXRzIG9mDQo+IHRo
+ZQ0KPiA+ID4+Pj4+ICJidXMNCj4gPiA+Pj4+Pj4+Pj4gYWRkcmVzcyINCj4gPiA+Pj4+Pj4+Pj4+
+IHRvIHRyYW5zbGF0ZSBpbnRvIGEgY3B1IGFkZHJlc3M/DQo+ID4gPj4+Pj4+Pj4+DQo+ID4gPj4+
+Pj4+Pj4+IElzIGl0IHJlYWxseSBhIHBvc3NpYmxpdHkgdGhhdCB0aGUgbG93ZXIgYml0cyBjb3Vs
+ZCBiZQ0KPiA+IGNoYW5nZWQ/DQo+ID4gPj4+Pj4+Pj4NCj4gPiA+Pj4+Pj4+PiBJJ3ZlIGNoZWNr
+ZWQgYWxsIHRoZSBjdXJyZW50IGRlaWdud2FyZSB1c2VycyBEVHMgZXhjZXB0DQo+ICJwY2ktDQo+
+ID4gPj4+Pj4+PiBsYXllcnNjYXBlIg0KPiA+ID4+Pj4+Pj4+IHRoYXQgSSBjb3VsZCBub3QgZmlu
+ZDoNCj4gPiA+Pj4+Pj4+PiBzcGVhcjEzMTAuZHRzaQ0KPiA+ID4+Pj4+Pj4+IHNwZWFyMTM0MC5k
+dHNpDQo+ID4gPj4+Pj4+Pj4gZHJhNy5kdHNpDQo+ID4gPj4+Pj4+Pj4gaW14NnFkbC5kdHNpDQo+
+ID4gPj4+Pj4+Pj4gaW14NnN4LmR0c2kNCj4gPiA+Pj4+Pj4+PiBrZXlzdG9uZS5kdHNpDQo+ID4g
+Pj4+Pj4+Pj4gZXh5bm9zNTQ0MC5kdHNpDQo+ID4gPj4+Pj4+Pj4NCj4gPiA+Pj4+Pj4+PiBOb25l
+IG9mIHRoZW0gbW9kaWZpZXMgdGhlIGxvd2VyIGJpdHMuIFRvIGJlIG1vcmUgcHJlY2lzZSB0aGUN
+Cj4gPiA+PiBvbmx5DQo+ID4gPj4+Pj4gZ3V5DQo+ID4gPj4+Pj4+Pj4gdGhhdCBwcm92aWRlcyBh
+bm90aGVyIHRyYW5zbGF0aW9uIGxheWVyIGlzICJkcmE3LmR0c2kiOg0KPiA+ID4+Pj4+Pj4+IGF4
+aTANCj4gPiA+Pj4+Pj4+PiBodHRwOi8vbHhyLmZyZWUtDQo+ID4gPj4+Pj4gZWxlY3Ryb25zLmNv
+bS9zb3VyY2UvYXJjaC9hcm0vYm9vdC9kdHMvZHJhNy5kdHNpI0wyMDcNCj4gPiA+Pj4+Pj4+Pg0K
+PiA+ID4+Pj4+Pj4+IGF4aTENCj4gPiA+Pj4+Pj4+PiBodHRwOi8vbHhyLmZyZWUtDQo+ID4gPj4+
+Pj4gZWxlY3Ryb25zLmNvbS9zb3VyY2UvYXJjaC9hcm0vYm9vdC9kdHMvZHJhNy5kdHNpI0wyNDEN
+Cj4gPiA+Pj4+Pj4+Pg0KPiA+ID4+Pj4+Pj4+IEZvciB0aGlzIGNhc2UgbWFza2luZyB0aGUgdG9w
+IDRiaXRzIChiaXRzMjggdG8gMzEpIHNob3VsZA0KPiBtYWtlDQo+ID4gPj4gdGhlDQo+ID4gPj4+
+Pj4gam9iLg0KPiA+ID4+Pj4+DQo+ID4gPj4+Pj4gSU1PLCB3ZSBzaG91bGQganVzdCBmaXggdGhp
+cyBjYXNlLiBBZnRlciBmdXJ0aGVyIHN0dWR5LCBJIGRvbid0DQo+ID4gPj4gdGhpbmsNCj4gPiA+
+Pj4+PiB0aGlzIGlzIGEgRFcgaXNzdWUsIGJ1dCByYXRoZXIgYW4gU09DIGludGVncmF0aW9uIGlz
+c3VlLg0KPiA+ID4+Pj4+DQo+ID4gPj4+Pj4gSSBiZWxpZXZlIHlvdSBjYW4ganVzdCBmaXh1cCB0
+aGUgYWRkcmVzcyBpbiB0aGUgcHAtPm9wcy0NCj4gPiA+aG9zdF9pbml0DQo+ID4gPj4gaG9vay4N
+Cj4gPiA+Pj4+DQo+ID4gPj4+PiBZZXMgSSBndWVzcyB0aGF0IEkgY291bGQganVzdCBhc3NpZ24g
+cHAtPigqKV9tb2RfYmFzZSB0byB0aGUgQ1BVDQo+ID4gPj4gYWRkcmVzcw0KPiA+ID4+Pj4gaW4g
+RFcgYW5kIG1hc2sgaXQgb3V0IGluIGRyYTd4eF9wY2llX2hvc3RfaW5pdCgpLi4uDQo+ID4gPj4+
+Pg0KPiA+ID4+Pj4gS2lzaG9uLCB3b3VsZCB5b3UgYmUgb2sgd2l0aCB0aGF0Pw0KPiA+ID4+Pg0K
+PiA+ID4+PiBJbml0aWFsbHkgSSB3YXMgdXNpbmcgKmJhc2UtbWFzayogcHJvcGVydHkgZnJvbSBk
+dC4gTWUgYW5kIEFybmQNCj4gPiA+PiAoY2MnZWQpIGhhZA0KPiA+ID4+PiB0aGlzIGRpc2N1c3Np
+b24gWzFdIGJlZm9yZSB3ZSBkZWNpZGVkIHRoZSBjdXJyZW50IGFwcHJvYWNoLiBJdCdsbA0KPiA+
+IGJlDQo+ID4gPj4gZ29vZCB0bw0KPiA+ID4+PiBjaGVjayB3aXRoIEFybmQgdG9vLg0KPiA+ID4+
+Pg0KPiA+ID4+PiBbMV0gLT4gIGh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL3BpcGVybWFpbC9s
+aW51eC1hcm0tDQo+IGtlcm5lbC8yMDE0LQ0KPiA+ID4+IE1heS8yNTM1MjguaHRtbA0KPiA+ID4+
+DQo+ID4gPj4gVGhlIHByb2JsZW0gSSBoYXZlIGhlcmUgaXMgdGhlIHVzZSBvZiByYW5nZXMgZG9l
+cyBub3QgbmVjZXNzYXJpbHkNCj4gPiBtZWFuDQo+ID4gPj4gZmV3ZXIgYWRkcmVzcyBiaXRzIGFy
+ZSBhdmFpbGFibGUuIEl0IGNhbiBiZSB1c2VkIGp1c3QgZm9yDQo+ID4gY29udmVuaWVuY2UNCj4g
+PiA+PiBvZiBub3QgcHV0dGluZyB0aGUgZnVsbCBhZGRyZXNzIGludG8gZXZlcnkgbm9kZSdzIHJl
+ZyBwcm9wZXJ0eS4NCj4gQW5kDQo+ID4gPj4gdmljZSB2ZXJzYSwgdGhlcmUgYXJlIHByb2JhYmx5
+IHBsZW50eSBvZiBjYXNlcyB3aGVyZSB3ZSBoYXZlIHRoZQ0KPiA+IGZ1bGwNCj4gPiA+PiBhZGRy
+ZXNzIGluIHRoZSBub2RlcywgYnV0IHJlYWxseSBvbmx5IHNvbWUgb2YgdGhlIGFkZHJlc3MgYml0
+cyBhcmUNCj4gPiA+PiBkZWNvZGVkIGF0IHRoZSBJUCBibG9jay4gV2hldGhlciB0aGUgYWRkcmVz
+cyBiaXRzIGFyZSBwcmVzZW50IGlzDQo+ID4gPj4gcmFyZWx5IGNhcmVkIGFib3V0IG9yIGtub3du
+IGJ5IHMvdyBmb2xrcyB1bnRpbCB5b3UgaGl0IGEgcHJvYmxlbQ0KPiA+IGxpa2UNCj4gPiA+PiB0
+aGlzLiBHaXZlbiB0aGlzIGlzIGFuIGlzb2xhdGVkIGNhc2UgQVRNLCBJIHdvdWxkIGZpeCBpdCBp
+biBhbg0KPiA+ID4+IGlzb2xhdGVkIHdheS4gSXQgZG9lcyBub3QgYWZmZWN0IHRoZSBiaW5kaW5n
+IGFuZCBjb3VsZCBiZSBjaGFuZ2VkDQo+IGluDQo+ID4gPj4gdGhlIGtlcm5lbCBsYXRlciBpZiB0
+aGlzIGJlY29tZXMgYSBjb21tb24gbmVlZC4NCj4gPiA+Pg0KPiA+ID4+IFJvYg0KPiA+ID4+IC0t
+DQo+ID4gPj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVu
+c3Vic2NyaWJlIGxpbnV4LQ0KPiBwY2kiDQo+ID4gaW4NCj4gPiA+PiB0aGUgYm9keSBvZiBhIG1l
+c3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiA+ID4+IE1vcmUgbWFqb3Jkb21v
+IGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPiAT
+P+enuz8/Pz8/7LWUKy3quYHosqAX7KqQd+y4qT/qtp0/P+yajmlyKOOOjRfsjbPorop97LCg6ry/
+7J+6P2o6K3brj6M/7LOt5ZapelorwoA/embvvIINCj4g7YaS7ImxP+uEruuFrGnvo7fpjqx6P+y3
+v+KFsT/shrPpiLo/P+WIqhtmDQo=
