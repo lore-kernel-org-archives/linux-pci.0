@@ -1,12 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:41463 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098AbbHFENQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:16 -0400
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:44170 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752678AbbHFENT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
 Received: from /spool/local
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:14 +1000
+	Thu, 6 Aug 2015 14:13:18 +1000
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 To: linuxppc-dev@lists.ozlabs.org
 Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
@@ -14,91 +14,119 @@ Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 	grant.likely@linaro.org, robherring2@gmail.com,
 	panto@antoniou-consulting.com, aik@ozlabs.ru,
 	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 21/42] powerpc/powernv: Remove DMA32 list of PEs
-Date: Thu,  6 Aug 2015 14:11:26 +1000
-Message-Id: <1438834307-26960-22-git-send-email-gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 06/42] powerpc/powernv: Simplify pnv_ioda_setup_pe_seg()
+Date: Thu,  6 Aug 2015 14:11:11 +1000
+Message-Id: <1438834307-26960-7-git-send-email-gwshan@linux.vnet.ibm.com>
 In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Every PHB maintains a list of PEs based on their DMA32 weight. After
-patch "powerpc/powernv: Create PEs dynamically", the list is useless
-and it's safe to remove it.
+The original implementation of pnv_ioda_setup_pe_seg() configures
+IO and M32 segments by separate logics, which can be merged by
+by caching @seg_bitmap, @seg_size, @win in advance. The patch
+shouldn't cause any behavioural changes.
 
 Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 18 ------------------
- arch/powerpc/platforms/powernv/pci.h      |  6 ------
- 2 files changed, 24 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 68 ++++++++++++++-----------------
+ 1 file changed, 31 insertions(+), 37 deletions(-)
 
 diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 37847a3..84b771e 100644
+index 78b49a1..488a53e 100644
 --- a/arch/powerpc/platforms/powernv/pci-ioda.c
 +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -938,20 +938,6 @@ out:
- 	return 0;
- }
+@@ -2856,7 +2856,10 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+ 	int i, index;
+-	int rc;
++	unsigned int segsize;
++	unsigned long *segmap, *pe_segmap;
++	uint16_t win;
++	int64_t rc;
  
--static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
--				       struct pnv_ioda_pe *pe)
--{
--	struct pnv_ioda_pe *lpe;
+ 	/*
+ 	 * NOTE: We only care PCI bus based PE for now. For PCI
+@@ -2873,25 +2876,10 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+ 		if (res->flags & IORESOURCE_IO) {
+ 			region.start = res->start - phb->ioda.io_pci_base;
+ 			region.end   = res->end - phb->ioda.io_pci_base;
+-			index = region.start / phb->ioda.io_segsize;
 -
--	list_for_each_entry(lpe, &phb->ioda.pe_dma_list, dma_link) {
--		if (lpe->dma32_weight < pe->dma32_weight) {
--			list_add_tail(&pe->dma_link, &lpe->dma_link);
--			return;
--		}
--	}
--	list_add_tail(&pe->dma_link, &phb->ioda.pe_dma_list);
--}
+-			while (index < phb->ioda.total_pe &&
+-			       region.start <= region.end) {
+-				set_bit(index, pe->io_segmap);
+-				set_bit(index, phb->ioda.io_segmap);
+-				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+-					pe->pe_number, OPAL_IO_WINDOW_TYPE,
+-					0, index);
+-				if (rc != OPAL_SUCCESS) {
+-					pr_err("%s: OPAL error %d when mapping IO "
+-					       "segment #%d to PE#%d\n",
+-					       __func__, rc, index, pe->pe_number);
+-					break;
+-				}
 -
- static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
- {
- 	struct pci_controller *hose = pci_bus_to_host(dev->bus);
-@@ -1169,9 +1155,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 	/* Put PE to the list */
- 	list_add_tail(&pe->list, &phb->ioda.pe_list);
+-				region.start += phb->ioda.io_segsize;
+-				index++;
+-			}
++			segsize      = phb->ioda.io_segsize;
++			segmap       = phb->ioda.io_segmap;
++			pe_segmap    = pe->io_segmap;
++			win          = OPAL_IO_WINDOW_TYPE;
+ 		} else if ((res->flags & IORESOURCE_MEM) &&
+ 			   !pnv_pci_is_mem_pref_64(res->flags)) {
+ 			region.start = res->start -
+@@ -2900,25 +2888,31 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+ 			region.end   = res->end -
+ 				       hose->mem_offset[0] -
+ 				       phb->ioda.m32_pci_base;
+-			index = region.start / phb->ioda.m32_segsize;
+-
+-			while (index < phb->ioda.total_pe &&
+-			       region.start <= region.end) {
+-				set_bit(index, pe->m32_segmap);
+-				set_bit(index, phb->ioda.m32_segmap);
+-				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+-					pe->pe_number, OPAL_M32_WINDOW_TYPE,
+-					0, index);
+-				if (rc != OPAL_SUCCESS) {
+-					pr_err("%s: OPAL error %d when mapping M32 "
+-					       "segment#%d to PE#%d",
+-					       __func__, rc, index, pe->pe_number);
+-					break;
+-				}
++			segsize      = phb->ioda.m32_segsize;
++			segmap       = phb->ioda.m32_segmap;
++			pe_segmap    = pe->m32_segmap;
++			win          = OPAL_M32_WINDOW_TYPE;
++		} else {
++			continue;
++		}
  
--	/* Link the PE */
--	pnv_ioda_link_pe_by_weight(phb, pe);
--
- 	return pe;
- }
- 
-@@ -3313,7 +3296,6 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 		phb->ioda.root_pe_idx = IODA_INVALID_PE;
+-				region.start += phb->ioda.m32_segsize;
+-				index++;
++		index = region.start / phb->ioda.io_segsize;
++		while (index < phb->ioda.total_pe &&
++		       region.start <= region.end) {
++			set_bit(index, segmap);
++			set_bit(index, pe_segmap);
++			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
++					pe->pe_number, win, 0, index);
++			if (rc != OPAL_SUCCESS) {
++				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
++					__func__, rc, win, index,
++					pe->phb->hose->global_number,
++					pe->pe_number);
++				break;
+ 			}
++
++			region.start += segsize;
++			index++;
+ 		}
  	}
- 
--	INIT_LIST_HEAD(&phb->ioda.pe_dma_list);
- 	INIT_LIST_HEAD(&phb->ioda.pe_list);
- 	mutex_init(&phb->ioda.pe_list_mutex);
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index a160491..f8e6022 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -83,7 +83,6 @@ struct pnv_ioda_pe {
- 	struct list_head	slaves;
- 
- 	/* Link in list of PE#s */
--	struct list_head	dma_link;
- 	struct list_head	list;
- };
- 
-@@ -185,11 +184,6 @@ struct pnv_phb {
- 			/* 32-bit TCE tables allocation */
- 			unsigned long		dma32_segcount;
- 
--			/* Sorted list of used PE's, sorted at
--			 * boot for resource allocation purposes
--			 */
--			struct list_head	pe_dma_list;
--
- 			/* TCE cache invalidate registers (physical and
- 			 * remapped)
- 			 */
+ }
 -- 
 2.1.0
 
