@@ -1,12 +1,12 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:36758 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752466AbbHFENR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:17 -0400
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:50904 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753584AbbHFENT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
 Received: from /spool/local
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:15 +1000
+	Thu, 6 Aug 2015 14:13:17 +1000
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 To: linuxppc-dev@lists.ozlabs.org
 Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
@@ -14,139 +14,87 @@ Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 	grant.likely@linaro.org, robherring2@gmail.com,
 	panto@antoniou-consulting.com, aik@ozlabs.ru,
 	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 38/42] drivers/of: Unflatten subordinate nodes after specified level
-Date: Thu,  6 Aug 2015 14:11:43 +1000
-Message-Id: <1438834307-26960-39-git-send-email-gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 25/42] powerpc/powernv: Use PCI slot reset infrastructure
+Date: Thu,  6 Aug 2015 14:11:30 +1000
+Message-Id: <1438834307-26960-26-git-send-email-gwshan@linux.vnet.ibm.com>
 In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-unflatten_dt_node() is called recursively to unflatten FDT nodes
-with the assumption that FDT blob has only one root node, which
-isn't true when the FDT blob represents device sub-tree. This
-improves the function to supporting device sub-tree that have
-multiple nodes in the first level:
-
-   * Rename original unflatten_dt_node() to __unflatten_dt_node().
-   * Wrapper unflatten_dt_node() calls __unflatten_dt_node() with
-     adjusted current node depth to 1 to avoid underflow.
+The skiboot firmware might provide the capability of resetting PCI
+slot by property "ibm,reset-by-firmware" on the PCI slot associated
+device node. The patch checks on the property and route the reset
+to firmware if the property exists. Otherwise, we fail back to the
+old path as before.
 
 Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/of/fdt.c | 53 ++++++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 40 insertions(+), 13 deletions(-)
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 44 +++++++++++++++++++++++++++-
+ 1 file changed, 43 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index 0749656..a18a2ce 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -161,7 +161,7 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 0350dab..7be2ebf 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -843,7 +843,7 @@ out:
+ 	return 0;
  }
  
- /**
-- * unflatten_dt_node - Alloc and populate a device_node from the flat tree
-+ * __unflatten_dt_node - Alloc and populate a device_node from the flat tree
-  * @blob: The parent device tree blob
-  * @mem: Memory chunk to use for allocating device nodes and properties
-  * @poffset: pointer to node in flat tree
-@@ -171,20 +171,20 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
-  * @dryrun: If true, do not allocate device nodes but still calculate needed
-  * memory size
-  */
--static void * unflatten_dt_node(const void *blob,
-+static void *__unflatten_dt_node(const void *blob,
- 				void *mem,
- 				int *poffset,
- 				struct device_node *dad,
- 				struct device_node **nodepp,
- 				unsigned long fpsize,
--				bool dryrun)
-+				bool dryrun,
-+				int *depth)
+-static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
++static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
  {
- 	const __be32 *p;
- 	struct device_node *np;
- 	struct property *pp, **prev_pp = NULL;
- 	const char *pathp;
- 	unsigned int l, allocl;
--	static int depth = 0;
- 	int old_depth;
- 	int offset;
- 	int has_name = 0;
-@@ -337,13 +337,25 @@ static void * unflatten_dt_node(const void *blob,
- 			np->type = "<NULL>";
- 	}
- 
--	old_depth = depth;
--	*poffset = fdt_next_node(blob, *poffset, &depth);
--	if (depth < 0)
--		depth = 0;
--	while (*poffset > 0 && depth > old_depth)
--		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
--					fpsize, dryrun);
-+	/* Multiple nodes might be in the first depth level if
-+	 * the device tree is sub-tree. All nodes in current
-+	 * or deeper depth are unflattened after it returns.
-+	 */
-+	old_depth = *depth;
-+	*poffset = fdt_next_node(blob, *poffset, depth);
-+	while (*poffset > 0) {
-+		if (*depth < old_depth)
-+			break;
-+
-+		if (*depth == old_depth)
-+			mem = __unflatten_dt_node(blob, mem, poffset,
-+						  dad, NULL, fpsize,
-+						  dryrun, depth);
-+		else if (*depth > old_depth)
-+			mem = __unflatten_dt_node(blob, mem, poffset,
-+						  np, NULL, fpsize,
-+						  dryrun, depth);
-+	}
- 
- 	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
- 		pr_err("unflatten: error %d processing FDT\n", *poffset);
-@@ -369,6 +381,20 @@ static void * unflatten_dt_node(const void *blob,
- 	return mem;
+ 	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -894,6 +894,48 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	return 0;
  }
  
-+static void *unflatten_dt_node(const void *blob,
-+			       void *mem,
-+			       int *poffset,
-+			       struct device_node *dad,
-+			       struct device_node **nodepp,
-+			       bool dryrun)
++static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
 +{
-+	int depth = 1;
++	struct pci_controller *hose;
++	struct pnv_phb *phb;
++	struct device_node *dn = pdev ? pci_device_to_OF_node(pdev) : NULL;
++	uint64_t id = (0x1ul << 60);
++	uint8_t scope;
++	int64_t rc;
 +
-+	return __unflatten_dt_node(blob, mem, poffset,
-+				   dad, nodepp, 0,
-+				   dryrun, &depth);
++	/*
++	 * If the firmware can't handle it, we will issue hot reset
++	 * on the secondary bus despite the requested reset type.
++	 */
++	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
++		return __pnv_eeh_bridge_reset(pdev, option);
++
++	/* The firmware can handle the request */
++	switch (option) {
++	case EEH_RESET_HOT:
++		scope = OPAL_RESET_PCI_HOT;
++		break;
++	case EEH_RESET_FUNDAMENTAL:
++		scope = OPAL_RESET_PCI_FUNDAMENTAL;
++		break;
++	case EEH_RESET_DEACTIVATE:
++		return 0;
++	default:
++		dev_warn(&pdev->dev, "%s: Unsupported reset %d\n",
++			 __func__, option);
++		return -EINVAL;
++	}
++
++	hose = pci_bus_to_host(pdev->bus);
++	phb = hose->private_data;
++	id |= (pdev->bus->number << 24) | (pdev->devfn << 16) | phb->opal_id;
++	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
++	if (rc > 0)
++		rc = pnv_eeh_poll(id);
++
++	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
 +}
 +
- /**
-  * __unflatten_device_tree - create tree of device_nodes from flat blob
-  *
-@@ -408,7 +434,8 @@ static void __unflatten_device_tree(const void *blob,
- 
- 	/* First pass, scan for size */
- 	start = 0;
--	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
-+	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
-+						NULL, NULL, true);
- 	size = ALIGN(size, 4);
- 
- 	pr_debug("  size is %lx, allocating...\n", size);
-@@ -423,7 +450,7 @@ static void __unflatten_device_tree(const void *blob,
- 
- 	/* Second pass, do actual unflattening */
- 	start = 0;
--	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
-+	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
- 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
- 		pr_warning("End of tree marker overwritten: %08x\n",
- 			   be32_to_cpup(mem + size));
+ static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
+ 				     u16 mask, bool af_flr_rst)
+ {
 -- 
 2.1.0
 
