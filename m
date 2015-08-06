@@ -1,153 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 24/52] PCI: Better support for two alt_size
-Date: Thu, 20 Aug 2015 23:20:39 -0700
-Message-Id: <1440138067-4314-25-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:36572 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753969AbbHFOq1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 10:46:27 -0400
+Received: by pdco4 with SMTP id o4so33210513pdc.3
+        for <linux-pci@vger.kernel.org>; Thu, 06 Aug 2015 07:46:27 -0700 (PDT)
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>
+Cc: "'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
+	"'Jayachandran C'" <jchandra@broadcom.com>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Russell King'" <linux@arm.linux.org.uk>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
+	"'Marc Zyngier'" <marc.zyngier@arm.com>,
+	<linux-pci@vger.kernel.org>, "'Duc Dang'" <dhdang@apm.com>,
+	"'Michal Simek'" <michal.simek@xilinx.com>,
+	"'Simon Horman'" <horms@verge.net.au>,
+	"'James Morse'" <james.morse@arm.com>,
+	"'Tanmay Inamdar'" <tinamdar@apm.com>,
+	"'Thierry Reding'" <thierry.reding@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"'Jason Cooper'" <jason@lakedaemon.net>,
+	"'Jingoo Han'" <jingoohan1@gmail.com>
+References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150804215357.9189.11942.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150804215357.9189.11942.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Subject: Re: [PATCH v5 1/9] ARM/PCI: Replace panic with WARN messages on failures
+Date: Thu, 6 Aug 2015 23:46:16 +0900
+Message-ID: <000301d0d056$abf8f990$03eaecb0$@com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Need to put aligned with max align before not aligned, to get
-smaller alt_size.
+On Wednesday, August 05, 2015 6:54 AM, Bjorn Helgaas wrote:
+> 
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> In the ARM PCI bios32 layer, failures to dynamically allocate pci_sys_data
+> for a PCI bus, or a PCI bus scan failure have to be considered serious
+> warnings but they should not trigger a system panic so that at least the
+> system is given a chance to be debugged.
+> 
+> This patch replaces the panic statements with WARN() messages to improve
+> error reporting in the ARM PCI bios32 layer.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> CC: Russell King <linux@arm.linux.org.uk>
+> CC: Marc Zyngier <marc.zyngier@arm.com>
 
-For example:
-alt align/size: 8M/9M, 4M/8M
-before this patch we have 8M/20M.
-After this patch we will have 8M/17M.
+Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 80 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 78 insertions(+), 2 deletions(-)
+In ARM, WARN message looks good.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index baf9900..42552b2 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -58,6 +58,20 @@ static inline bool is_before(resource_size_t align1, resource_size_t size1,
- 	return false;
- }
- 
-+static inline bool is_before_alt(resource_size_t align, resource_size_t size1,
-+			     resource_size_t size2)
-+{
-+	resource_size_t size1_left, size2_left;
-+
-+	/*  aligned is before not aligned */
-+	size1_left = size1 & (align - 1);
-+	size2_left = size2 & (align - 1);
-+	if (!size1_left && size2_left)
-+		return true;
-+
-+	return false;
-+}
-+
- struct pci_dev_resource {
- 	struct list_head list;
- 	struct resource *res;
-@@ -306,6 +320,42 @@ static void sort_resources(struct list_head *head)
- 	}
- }
- 
-+static void sort_resources_alt(struct list_head *head)
-+{
-+	struct pci_dev_resource *res1, *tmp_res, *res2;
-+	resource_size_t align = 0;
-+
-+
-+	sort_resources(head);
-+
-+	/* get max align at first */
-+	list_for_each_entry(res1, head, list) {
-+		resource_size_t align1;
-+
-+		align1 = pci_resource_alignment(res1->dev, res1->res);
-+		if (align1 > align)
-+			align = align1;
-+	}
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		resource_size_t size1, size2;
-+
-+		size1 = resource_size(res1->res);
-+
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			size2 = resource_size(res2->res);
-+			if (is_before_alt(align, size1, size2)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- /**
-  * reassign_resources_sorted() - satisfy any additional resource requests
-  *
-@@ -667,7 +717,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
- 		res->end = res->start + alt_res->alt_size - 1;
- 	}
- 
--	sort_resources(head);
-+	sort_resources_alt(head);
- 	/* Satisfy the alt resource requests */
- 	assign_requested_resources_sorted(head, &local_alt_fail_head);
- 
-@@ -1261,6 +1311,32 @@ static void sort_align_test(struct list_head *head)
- 	}
- }
- 
-+static void sort_align_test_alt(struct list_head *head)
-+{
-+	struct align_test_res *res1, *tmp_res, *res2;
-+	resource_size_t align = 0;
-+
-+	sort_align_test(head);
-+
-+	/* get max align at first */
-+	list_for_each_entry(res1, head, list)
-+		if (res1->align > align)
-+			align = res1->align;
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			if (is_before_alt(align, res1->size, res2->size)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- static bool is_align_size_good(struct list_head *head,
- 			resource_size_t min_align, resource_size_t size,
- 			resource_size_t start)
-@@ -1346,7 +1422,7 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
- 	if (count <= 1)
- 		goto out;
- 
--	sort_align_test(head);
-+	sort_align_test_alt(head);
- 
- 	tmp = max(size, max_align);
- 	order = __fls(count);
--- 
-1.8.4.5
+Best regards,
+Jingoo Han
+
+> ---
+>  arch/arm/kernel/bios32.c |   10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index bf370bc..4e95260 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -459,8 +459,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+> 
+>  	for (nr = busnr = 0; nr < hw->nr_controllers; nr++) {
+>  		sys = kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL);
+> -		if (!sys)
+> -			panic("PCI: unable to allocate sys data!");
+> +		if (WARN(!sys, "PCI: unable to allocate sys data!"))
+> +			break;
+> 
+>  #ifdef CONFIG_PCI_MSI
+>  		sys->msi_ctrl = hw->msi_ctrl;
+> @@ -489,8 +489,10 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  				sys->bus = pci_scan_root_bus(parent, sys->busnr,
+>  						hw->ops, sys, &sys->resources);
+> 
+> -			if (!sys->bus)
+> -				panic("PCI: unable to scan bus!");
+> +			if (WARN(!sys->bus, "PCI: unable to scan bus!")) {
+> +				kfree(sys);
+> +				break;
+> +			}
+> 
+>  			busnr = sys->bus->busn_res.end + 1;
+> 
 
