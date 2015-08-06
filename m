@@ -1,45 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47794 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751769AbbHUJxp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 05:53:45 -0400
-From: Ethan Zhao <ethan.zhao@oracle.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Ethan Zhao <ethan.zhao@oracle.com>
-Subject: [PATCH] iov: initialize NumVFs register to 0 at the end of sriov_init()
-Date: Fri, 21 Aug 2015 18:51:25 +0900
-Message-Id: <1440150685-6690-1-git-send-email-ethan.zhao@oracle.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:62814 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753998AbbHFICu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 04:02:50 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v6 6/6] MAINTAINERS: Add pcie-hisi maintainer
+Date: Thu, 6 Aug 2015 16:09:19 +0800
+Message-ID: <1438848559-232109-7-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After commit 4449f079722c ("PCI: Calculate maximum number of buses
-required for VFs"),the initial value of NumVFs register was set to
-non-zero after sriov_init() and no VFs was enabled in device driver.
-this changed the behaviour of kernel exported by lspci and sysfs etc.
-so this patch initialize the NumVFs register to zero after the
-calculation of max_VF_buses was done.
-
-Tested on stable 4.1 and passed building on stable 4.2-rc7
-
-Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
-Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 ---
- drivers/pci/iov.c | 1 +
- 1 file changed, 1 insertion(+)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..6969084 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -476,6 +476,7 @@ found:
- 	dev->is_physfn = 1;
- 	iov->max_VF_buses = virtfn_max_buses(dev);
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8133cef..7cd8e47 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7854,6 +7854,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ F:	drivers/pci/host/pci-xgene-msi.c
  
-+	pci_iov_set_numvfs(dev, 0);
- 	return 0;
- 
- failed:
++PCIE DRIVER FOR HISILICON
++M:	Zhou Wang <wangzhou1@hisilicon.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++F:	drivers/pci/host/pcie-hisi.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-1.8.3.1
+1.9.1
 
