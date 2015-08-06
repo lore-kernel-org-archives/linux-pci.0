@@ -1,104 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55CADC62.7060007@ti.com>
-Date: Wed, 12 Aug 2015 11:10:50 +0530
-From: Kishon Vijay Abraham I <kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:62800 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753652AbbHFICu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 04:02:50 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v6 5/6] Documentation: DT: Add HiSilicon PCIe host binding
+Date: Thu, 6 Aug 2015 16:09:18 +0800
+Message-ID: <1438848559-232109-6-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <jingoohan1@gmail.com>,
-	<nsekhar@ti.com>
-Subject: Re: [PATCH v5 0/3] dra7xx: Add PM support to PCIe
-References: <1438345512-28973-1-git-send-email-kishon@ti.com> <20150811205205.GJ13982@google.com>
-In-Reply-To: <20150811205205.GJ13982@google.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch adds related DTS binding document for HiSilicon PCIe host driver.
 
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
 
-On Wednesday 12 August 2015 02:22 AM, Bjorn Helgaas wrote:
-> On Fri, Jul 31, 2015 at 05:55:09PM +0530, Kishon Vijay Abraham I wrote:
->> This series adds PM support to pci-dra7xx so that PCI clocks can be disabled
->> during suspend and enabled back during resume without affecting
->> PCI functionality.
->>
->> Changes from v4:
->> *) Fixed a bug caused by sending incomplete patch.
->>
->> Changes from v3:
->> *) Fix compilation errors when individual patches are applied
->>
->> Changes from v2:
->> *) Used SET_SYSTEM_SLEEP_PM_OPS and SET_NOIRQ_SYSTEM_SLEEP_PM_OPS for
->>    populating PM ops.
->>
->> Changes from v1:
->> *) Moved resetting and setting of MSE bit to pci-dra7xx.
->>
->> The comment to reset and set ISE is not done now since I don't have a card
->> with IO space. Once I get to test that, I'll post a separate patch for
->> handling that.
->>
->> Kishon Vijay Abraham I (3):
->>   PCI: host: pci-dra7xx: Disable pm_runtime on get_sync failure
->>   PCI: host: pci-dra7xx: add pm support to pci dra7xx
->>   PCI: host: pci-dra7xx: Idle the module by disabling MSE bit
->>
->>  drivers/pci/host/pci-dra7xx.c |   95 ++++++++++++++++++++++++++++++++++++++++-
->>  1 file changed, 94 insertions(+), 1 deletion(-)
-> 
-> Applied with Jingoo's Reviewed-by to pci/host-dra7xx for v4.3, thanks!
-> 
-> I tweaked the changelogs as follows:
-> 
-> 
-> commit 0e2bdb0e7abf4b5170874e415ec42df547916dd3
-> Author: Kishon Vijay Abraham I <kishon@ti.com>
-> Date:   Fri Jul 31 17:55:10 2015 +0530
-> 
->     PCI: dra7xx: Disable pm_runtime on get_sync failure
->     
->     Fix the error handling when pm_runtime_get_sync() fails.
->     
->     If pm_runtime_get_sync() fails, call pm_runtime_disable() so there are no
->     unbalanced pm_runtime_enable() calls.
->     
->     Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
-> 
-> commit e52eb445ea1d97bf7fb92d2297e487a305392136
-> Author: Kishon Vijay Abraham I <kishon@ti.com>
-> Date:   Fri Jul 31 17:55:11 2015 +0530
-> 
->     PCI: dra7xx: Add PM support
->     
->     Add PM support to pci-dra7xx so PCI clocks can be disabled during suspend
->     and enabled during resume without affecting PCI functionality.
->     
->     Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
-> 
-> commit 389c7094ec241ee8ebe358ba10fe392018692c8c
-> Author: Kishon Vijay Abraham I <kishon@ti.com>
-> Date:   Fri Jul 31 17:55:12 2015 +0530
-> 
->     PCI: dra7xx: Clear MSE bit during suspend so clocks will idle
->     
->     DRA7xx requires the MSE bit to be cleared to set the master in standby
->     mode.  (In DRA7xx TRM_vE, section 24.9.4.5.2.2.1 PCIe Controller Master
->     Standby Behavior advises to use the clearing of the local MSE bit to set
->     the master in standby.  Without this some of the clocks do not idle).
->     
->     Clear the MSE bit on suspend and enable it on resume.  Clearing MSE bit is
->     required to get clocks to be idled after suspend.
->     
->     Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->     Signed-off-by: Sekhar Nori <nsekhar@ti.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+new file mode 100644
+index 0000000..2afc9d1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -0,0 +1,46 @@
++HiSilicon PCIe host bridge DT description
++
++HiSilicon PCIe host controller is based on Designware PCI core.
++It shares common functions with PCIe Designware core driver and inherits
++common properties defined in
++Documentation/devicetree/bindings/pci/designware-pci.txt.
++
++Additional properties are described here:
++
++Required properties:
++- compatible: Should contain "hisilicon,hip05-pcie".
++- reg: Should contain rc_dbi, subctrl, config registers location and length.
++- reg-names: Must include the following entries:
++  "rc_dbi": controller configuration registers;
++  "subctrl": whole PCIe hosts configuration registers;
++  "config": PCIe configuration space registers.
++- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
++- port-id: Should be 0, 1, 2 or 3.
++
++Optional properties:
++- status: Either "ok" or "disabled".
++- dma-coherent: Present if DMA operations are coherent.
++
++Example:
++	pcie@0xb0080000 {
++		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
++		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
++		      <0x220 0x00000000 0 0x2000>;
++		reg-names = "rc_dbi", "subctrl", "config";
++		bus-range = <0  15>;
++		msi-parent = <&its_pcie>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		dma-coherent;
++		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
++		num-lanes = <8>;
++		port-id = <1>;
++		#interrupts-cells = <1>;
++		interrupts-map-mask = <0xf800 0 0 7>;
++		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
++				  0x0 0 0 2 &mbigen_pcie 2 11
++				  0x0 0 0 3 &mbigen_pcie 3 12
++				  0x0 0 0 4 &mbigen_pcie 4 13>;
++		status = "ok";
++	};
+-- 
+1.9.1
 
-Thanks Bjorn!
-
--Kishon
