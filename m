@@ -1,83 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39437 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753128AbbHFQxz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 6 Aug 2015 12:53:55 -0400
-Message-ID: <55C3911E.9090907@arm.com>
-Date: Thu, 06 Aug 2015 17:53:50 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Ley Foon Tan <lftan.linux@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Duc Dang <dhdang@apm.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Simon Horman <horms@verge.net.au>,
-	James Morse <James.Morse@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH v5 9/9] PCI: xgene: Use pci_scan_root_bus_msi()
-References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>	<20150804215457.9189.27595.stgit@bhelgaas-glaptop2.roam.corp.google.com>	<55C37C92.1020509@arm.com> <CAFiDJ58U9u0YOzqVbty8+z+sF82h=F09Y0q-Ks8zMDokdiSEbg@mail.gmail.com>
-In-Reply-To: <CAFiDJ58U9u0YOzqVbty8+z+sF82h=F09Y0q-Ks8zMDokdiSEbg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:44172 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753690AbbHFENT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:18 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 30/42] powerpc/pci: Move pcibios_find_pci_bus() around
+Date: Thu,  6 Aug 2015 14:11:35 +1000
+Message-Id: <1438834307-26960-31-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/08/15 17:41, Ley Foon Tan wrote:
-> On Thu, Aug 6, 2015 at 11:26 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->> Hi Bjorn,
->>
->> On 04/08/15 22:54, Bjorn Helgaas wrote:
->>> Previously there was no way to specify the MSI controller when creating a
->>> new PCI root bus, so we had to create the bus, set its MSI controller, then
->>> scan the bus.  With the new pci_scan_root_bus_msi() interface, we can
->>> specify the MSI controller up front and get rid of that intermediate step.
->>>
->>> Look up the MSI controller first, then use pci_scan_root_bus_msi() to
->>> create and scan the root PCI bus.
->>
->> I'm wondering about these XGene patches.
->>
->> With the code that is queued for v4.3 in tip/irq/core, the X-Gene MSI
->> driver doesn't export a struct msi_controller anymore, and entirely
->> relies on IRQ domains to identify to be matched with the actual PCI driver.
->>
->> Do you intend this as a cleanup until everything lands in mainline? At
->> that point, we'd be able to remove all traces of struct msi_controller
->> from this driver.
->>
->> Alternatively, we could ask tglx to add an extra patch to the existing
->> queue in order to clean up pci-xgene.c (nuking the whole
->> xgene_pcie_msi_enable function).
->>
->> Thoughts?
-> 
-> In pcie-altera driver, it uses pci_scan_root_bus() and it doesn't call
-> to of_pci_find_msi_chip_by_node() to retrieve msi_controller struct as
-> well.
-> But, the msi domain stuff is still working. Should I change it to
-> pci_scan_root_bus_msi()?
+This moves pcibios_find_pci_bus() to PowerPC kernel directory
+so that it can be reused by hotplug code for pSeries and PowerNV
+platform at the same time. Also, the function is renamed to
+of_node_to_pci_bus().
 
-If you're not using struct msi_controller, I don't see a reason to use
-pci_scan_root_bus_msi(). The MSI irq domain patches are queued for 4.3,
-and I don't believe your driver will be merged before that.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
+ arch/powerpc/include/asm/pci-bridge.h      |  2 +-
+ arch/powerpc/kernel/pci-hotplug.c          | 30 ++++++++++++++++++++++++++++
+ arch/powerpc/platforms/pseries/pci_dlpar.c | 32 ------------------------------
+ drivers/pci/hotplug/rpadlpar_core.c        |  6 +++---
+ drivers/pci/hotplug/rpaphp_pci.c           |  2 +-
+ 5 files changed, 35 insertions(+), 37 deletions(-)
 
-Eventually, I'd like to kill msi_controller entirely. It is completely
-redundant with the use of irq domains.
-
-Thanks,
-
-	M.
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 65357a9..84dee1e 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -259,7 +259,7 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
+ #endif
+ 
+ /** Find the bus corresponding to the indicated device node */
+-extern struct pci_bus *pcibios_find_pci_bus(struct device_node *dn);
++extern struct pci_bus *of_node_to_pci_bus(struct device_node *dn);
+ 
+ /** Remove all of the PCI devices under this bus */
+ extern void pcibios_remove_pci_devices(struct pci_bus *bus);
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index c307d9a..692beca 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -21,6 +21,36 @@
+ #include <asm/firmware.h>
+ #include <asm/eeh.h>
+ 
++static struct pci_bus *find_pci_bus(struct pci_bus *bus,
++				    struct device_node *dn)
++{
++	struct pci_bus *tmp, *child = NULL;
++	struct device_node *busdn;
++
++	busdn = pci_bus_to_OF_node(bus);
++	if (busdn == dn)
++		return bus;
++
++	list_for_each_entry(tmp, &bus->children, node) {
++		child = find_pci_bus(tmp, dn);
++		if (child)
++			break;
++	}
++
++	return child;
++}
++
++struct pci_bus *of_node_to_pci_bus(struct device_node *dn)
++{
++	struct pci_dn *pdn = dn->data;
++
++	if (!pdn  || !pdn->phb || !pdn->phb->bus)
++		return NULL;
++
++	return find_pci_bus(pdn->phb->bus, dn);
++}
++EXPORT_SYMBOL_GPL(of_node_to_pci_bus);
++
+ /**
+  * pcibios_release_device - release PCI device
+  * @dev: PCI device
+diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
+index 5d4a3df..906dbaa 100644
+--- a/arch/powerpc/platforms/pseries/pci_dlpar.c
++++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
+@@ -34,38 +34,6 @@
+ 
+ #include "pseries.h"
+ 
+-static struct pci_bus *
+-find_bus_among_children(struct pci_bus *bus,
+-                        struct device_node *dn)
+-{
+-	struct pci_bus *child = NULL;
+-	struct pci_bus *tmp;
+-	struct device_node *busdn;
+-
+-	busdn = pci_bus_to_OF_node(bus);
+-	if (busdn == dn)
+-		return bus;
+-
+-	list_for_each_entry(tmp, &bus->children, node) {
+-		child = find_bus_among_children(tmp, dn);
+-		if (child)
+-			break;
+-	};
+-	return child;
+-}
+-
+-struct pci_bus *
+-pcibios_find_pci_bus(struct device_node *dn)
+-{
+-	struct pci_dn *pdn = dn->data;
+-
+-	if (!pdn  || !pdn->phb || !pdn->phb->bus)
+-		return NULL;
+-
+-	return find_bus_among_children(pdn->phb->bus, dn);
+-}
+-EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
+-
+ struct pci_controller *init_phb_dynamic(struct device_node *dn)
+ {
+ 	struct pci_controller *phb;
+diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+index e12bafd..f57a293 100644
+--- a/drivers/pci/hotplug/rpadlpar_core.c
++++ b/drivers/pci/hotplug/rpadlpar_core.c
+@@ -176,7 +176,7 @@ static int dlpar_add_pci_slot(char *drc_name, struct device_node *dn)
+ 	struct pci_dev *dev;
+ 	struct pci_controller *phb;
+ 
+-	if (pcibios_find_pci_bus(dn))
++	if (of_node_to_pci_bus(dn))
+ 		return -EINVAL;
+ 
+ 	/* Add pci bus */
+@@ -213,7 +213,7 @@ static int dlpar_remove_phb(char *drc_name, struct device_node *dn)
+ 	struct pci_dn *pdn;
+ 	int rc = 0;
+ 
+-	if (!pcibios_find_pci_bus(dn))
++	if (!of_node_to_pci_bus(dn))
+ 		return -EINVAL;
+ 
+ 	/* If pci slot is hotpluggable, use hotplug to remove it */
+@@ -357,7 +357,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
+ 
+ 	pci_lock_rescan_remove();
+ 
+-	bus = pcibios_find_pci_bus(dn);
++	bus = of_node_to_pci_bus(dn);
+ 	if (!bus) {
+ 		ret = -EINVAL;
+ 		goto out;
+diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
+index 9243f3e7..293bd86 100644
+--- a/drivers/pci/hotplug/rpaphp_pci.c
++++ b/drivers/pci/hotplug/rpaphp_pci.c
+@@ -93,7 +93,7 @@ int rpaphp_enable_slot(struct slot *slot)
+ 	if (rc)
+ 		return rc;
+ 
+-	bus = pcibios_find_pci_bus(slot->dn);
++	bus = of_node_to_pci_bus(slot->dn);
+ 	if (!bus) {
+ 		err("%s: no pci_bus for dn %s\n", __func__, slot->dn->full_name);
+ 		return -EINVAL;
 -- 
-Jazz is not dead. It just smells funny...
+2.1.0
+
