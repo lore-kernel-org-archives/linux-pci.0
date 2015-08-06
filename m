@@ -1,77 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:37919 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751087AbbHTGQ1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 02:16:27 -0400
-Received: by wicja10 with SMTP id ja10so26551459wic.1
-        for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2015 23:16:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55CBCF96.7060102@intel.com>
-References: <20150812233914.451d1fcf@canb.auug.org.au> <55CB8AF0.4060905@infradead.org>
- <20150813075322.064035f8@canb.auug.org.au> <55CBCF96.7060102@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Aug 2015 23:16:06 -0700
-Message-ID: <CAErSpo4+H6AJs9shVGN8fm9=GwPL9EzNcyMNt5FW81JGEA1sDA@mail.gmail.com>
-Subject: Re: linux-next: Tree for Aug 12 (include/linux/pci.h)
-To: Tadeusz Struk <tadeusz.struk@intel.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	linux-next list <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Michal Marek <mmarek@suse.cz>,
-	"Yann E. MORIN" <yann.morin.1998@free.fr>,
-	linux-kbuild <linux-kbuild@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:49978 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753071AbbHFENS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:18 -0400
+Received: from /spool/local
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:17 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 26/42] powerpc/powernv: Simplify pnv_eeh_reset()
+Date: Thu,  6 Aug 2015 14:11:31 +1000
+Message-Id: <1438834307-26960-27-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yann, linux-kbuild]
+This simplifies pnv_eeh_reset() by avoiding the unnecessary nested
+"if" statement. No logicial changes introduced by this.
 
-On Wed, Aug 12, 2015 at 3:58 PM, Tadeusz Struk <tadeusz.struk@intel.com> wrote:
-> On 08/12/2015 02:53 PM, Stephen Rothwell wrote:
->> On Wed, 12 Aug 2015 11:05:36 -0700 Randy Dunlap <rdunlap@infradead.org> wrote:
->>> >
->>> > on i386 or x86_64:
->>> >
->>> > Many (repeated) errors like this one:
->>> >
->>> > ../include/linux/pci.h:390:12: error: â€˜struct pci_devâ€™ has no member named â€˜physfnâ€™
->>> >
->>> > when CONFIG_PCI_ATS is not enabled.
->> Maybe caused by commit
->>
->>   dd0f368398ea ("crypto: qat - Add qat dh895xcc VF driver")
->>
->> from the crypto tree Which adds a
->>
->>   select PCI_IOV
->>
->> to drivers/crypto/qat/Kconfig without the necessary
->>
->>   select PCI
->>
->> but PCI_IOV selects PCI_ATS, so I am not sure what happened here.  I am
->> assuming that your config has PCI_IOV enabled?  What about PCI?
->
-> There is a patch submitted, but not yet applied
-> https://patchwork.kernel.org/patch/6994171/
-> maybe it will help?
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 65 +++++++++++++---------------
+ 1 file changed, 31 insertions(+), 34 deletions(-)
 
-I don't understand this.  In drivers/pci/Kconfig, we have:
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 7be2ebf..95332e9 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1086,7 +1086,9 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+ {
+ 	struct pci_controller *hose = pe->phb;
++	struct pnv_phb *phb = hose->private_data;
+ 	struct pci_bus *bus;
++	int64_t rc;
+ 	int ret;
+ 
+ 	/*
+@@ -1103,44 +1105,39 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
+ 	 * reset. The side effect is that EEH core has to clear the frozen
+ 	 * state explicitly after BAR restore.
+ 	 */
+-	if (pe->type & EEH_PE_PHB) {
+-		ret = pnv_eeh_phb_reset(hose, option);
+-	} else {
+-		struct pnv_phb *phb;
+-		s64 rc;
++	if (pe->type & EEH_PE_PHB)
++		return pnv_eeh_phb_reset(hose, option);
+ 
+-		/*
+-		 * The frozen PE might be caused by PAPR error injection
+-		 * registers, which are expected to be cleared after hitting
+-		 * frozen PE as stated in the hardware spec. Unfortunately,
+-		 * that's not true on P7IOC. So we have to clear it manually
+-		 * to avoid recursive EEH errors during recovery.
+-		 */
+-		phb = hose->private_data;
+-		if (phb->model == PNV_PHB_MODEL_P7IOC &&
+-		    (option == EEH_RESET_HOT ||
+-		    option == EEH_RESET_FUNDAMENTAL)) {
+-			rc = opal_pci_reset(phb->opal_id,
+-					    OPAL_RESET_PHB_ERROR,
+-					    OPAL_ASSERT_RESET);
+-			if (rc != OPAL_SUCCESS) {
+-				pr_warn("%s: Failure %lld clearing "
+-					"error injection registers\n",
+-					__func__, rc);
+-				return -EIO;
+-			}
++	/*
++	 * The frozen PE might be caused by PAPR error injection
++	 * registers, which are expected to be cleared after hitting
++	 * frozen PE as stated in the hardware spec. Unfortunately,
++	 * that's not true on P7IOC. So we have to clear it manually
++	 * to avoid recursive EEH errors during recovery.
++	 */
++	phb = hose->private_data;
++	if (phb->model == PNV_PHB_MODEL_P7IOC &&
++	    (option == EEH_RESET_HOT ||
++	    option == EEH_RESET_FUNDAMENTAL)) {
++		rc = opal_pci_reset(phb->opal_id,
++				    OPAL_RESET_PHB_ERROR,
++				    OPAL_ASSERT_RESET);
++		if (rc != OPAL_SUCCESS) {
++			pr_warn("%s: Error %lld clearing errinjct registers\n",
++				__func__, rc);
++			return -EIO;
+ 		}
+-
+-		bus = eeh_pe_bus_get(pe);
+-		if (pe->type & EEH_PE_VF)
+-			ret = pnv_eeh_vf_pe_reset(pe, option);
+-		else if (pci_is_root_bus(bus) ||
+-			pci_is_root_bus(bus->parent))
+-			ret = pnv_eeh_root_reset(hose, option);
+-		else
+-			ret = pnv_eeh_bridge_reset(bus->self, option);
+ 	}
+ 
++	bus = eeh_pe_bus_get(pe);
++	if (pe->type & EEH_PE_VF)
++		ret = pnv_eeh_vf_pe_reset(pe, option);
++	else if (pci_is_root_bus(bus) ||
++		 pci_is_root_bus(bus->parent))
++		ret = pnv_eeh_root_reset(hose, option);
++	else
++		ret = pnv_eeh_bridge_reset(bus->self, option);
++
+ 	return ret;
+ }
+ 
+-- 
+2.1.0
 
-  config PCI_IOV
-    depends on PCI
-
-and in drivers/crypto/qat/Kconfig, dd0f368398ea adds:
-
-  config CRYPTO_DEV_QAT_DH895xCCVF
-    select PCI_IOV
-
-And apparently it's possible to end up with a .config with
-CONFIG_PCI_IOV=y but CONFIG_PCI is not set?  That seems wrong, since
-we declared that PCI_IOV depends on PCI.  Does select ignore that
-dependency somehow?
-
-Bjorn
