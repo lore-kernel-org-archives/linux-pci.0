@@ -1,41 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: x86@kernel.org, linux-kernel@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:59660 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753813AbbHFRxt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 13:53:49 -0400
+Date: Thu, 6 Aug 2015 18:53:22 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Michal Simek <michal.simek@xilinx.com>
+Cc: kernel-build-reports@lists.linaro.org,
+	linaro-kernel@lists.linaro.org, linux-next@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [RFC PATCH 0/2] Driver for new PCI-e device
-Date: Thu, 27 Aug 2015 16:39:04 -0600
-Message-Id: <1440715146-16578-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <20150806175322.GB20873@sirena.org.uk>
+References: <E1ZNIul-0007IF-Ev@optimist>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="A/AdVN8FDkvpDdxN"
+In-Reply-To: <E1ZNIul-0007IF-Ev@optimist>
+Subject: Re: next-20150806 build: 2 failures 52 warnings (next-20150806)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Intel Volume Management Device (VMD) is an integrated endpoint on the
-platform's PCIe root complex that acts as a host bridge to a secondary
-PCIe domain. BIOS can reassign one or more root ports to appear within
-VMD domains instead of the primary domain. This driver enables and
-enumerates the VMD domain using the root bus configuration interface
-provided by the PCI subsystem.
 
-CC: Bryan Veal <bryan.e.veal@intel.com>
-CC: Dan Williams <dan.j.williams@intel.com>
-CC: x86@kernel.org
-CC: linux-kernel@vger.kernel.org
-CC: linux-pci@vger.kernel.org
+--A/AdVN8FDkvpDdxN
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Keith Busch (2):
-  x86: PCI bus specific MSI operations
-  x86/pci: Initial commit for new VMD device driver
+On Thu, Aug 06, 2015 at 12:00:47PM +0100, Build bot for Mark Brown wrote:
 
- arch/x86/Kconfig           |   11 ++
- arch/x86/include/asm/pci.h |    3 +
- arch/x86/kernel/x86_init.c |   19 ++
- arch/x86/pci/Makefile      |    2 +
- arch/x86/pci/vmd.c         |  412 ++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 447 insertions(+)
- create mode 100644 arch/x86/pci/vmd.c
+Today's linux-next fails to build an ARM allmodconfig due to:
 
--- 
-1.7.10.4
+> ../drivers/pci/host/pcie-xilinx.c:235:3: error: implicit declaration of function 'msi_desc_to_pci_sys_data' [-Werror=implicit-function-declaration]
 
+msi_desc_to_pci_sys_data doesn't appear to exist anywhere else in
+current -next, the usage was introduced by e39758e0ea769e632e (PCI: Use
+helper functions to access fields in struct msi_desc) at which time it
+looks like it did exist but I can't immediately see where it was removed.
+
+--A/AdVN8FDkvpDdxN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJVw58RAAoJECTWi3JdVIfQSNAH/2++6pgRoyaBNUvxPLZeFza+
+UeW4WWSRIPsW6Bmrh3Y5weeN5npLKO2ZwiUdAfsDPsDvOlbGWWDdIvVibF5xpf8V
+lHc0ihPgPMuzJTNHjzETwXV+4mUDdkUv0FsWxgwzhv0bhe9w9z8uznEY5XiIxs5A
+Ptuvo8cvqRNwHIUoln64SWd3zMOSois/EXqX/+UcmUjKMMzQ4csk6BOjQZgPneGt
+ZnMPQgp8O8e2lSPDIne+O2+3c2U9j34FRsi6/SQAExG4z91Ti2JaVoZzx4kVh0H2
+krcql/myy6/k783zuOTkvqEdG5cdGb7j2KrNoumfQtve9jbMns604ExWagIEcls=
+=n1TH
+-----END PGP SIGNATURE-----
+
+--A/AdVN8FDkvpDdxN--
