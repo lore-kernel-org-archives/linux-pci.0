@@ -1,81 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39281 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755536AbbHNQTf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Aug 2015 12:19:35 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v2 3/4] powerpc: PCI: Fix lookup of linux,pci-probe-only property
-Date: Fri, 14 Aug 2015 17:19:18 +0100
-Message-Id: <1439569159-10051-4-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
-References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:44432 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753178AbbHFENT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
+Received: from /spool/local
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:16 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Daniel Axtens <dja@axtens.net>
+Subject: [PATCH v6 13/42] powerpc/pci: Cleanup on pci_controller_ops
+Date: Thu,  6 Aug 2015 14:11:18 +1000
+Message-Id: <1438834307-26960-14-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When find_and_init_phbs() looks for the probe-only property, it seems
-to trust the firmware to be correctly written, and assumes that there
-is a parameter to the property.
+Each PHB maintains one instance of "struct pci_controller_ops",
+which includes various callbacks called by PCI subsystem. In the
+definition of this struct, some callbacks have explicit names for
+its arguments, but the left don't have.
 
-It is conceivable that the firmware could not be that perfect, and it
-could expose this property naked (at least one arm64 platform seems to
-exhibit this exact behaviour). The setup code the ends up making
-a decision based on whatever the property pointer points to, which
-is likely to be junk.
+This adds all explicit names of the arguments to the callbacks in
+"struct pci_controller_ops" so that the code looks consistent.
 
-Instead, switch to the common of_pci.c implementation that doesn't
-suffer from this problem and ignore the property if the firmware
-couldn't make up its mind.
-
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Daniel Axtens <dja@axtens.net>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/powerpc/platforms/pseries/setup.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index df6a704..8434953 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -40,6 +40,7 @@
- #include <linux/seq_file.h>
- #include <linux/root_dev.h>
- #include <linux/of.h>
-+#include <linux/of_pci.h>
- #include <linux/kexec.h>
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index c927d5b..d627abf 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -21,18 +21,19 @@ struct pci_controller_ops {
+ 	void		(*dma_dev_setup)(struct pci_dev *dev);
+ 	void		(*dma_bus_setup)(struct pci_bus *bus);
  
- #include <asm/mmu.h>
-@@ -488,18 +489,7 @@ static void __init find_and_init_phbs(void)
- 	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
- 	 * in chosen.
- 	 */
--	if (of_chosen) {
--		const int *prop;
--
--		prop = of_get_property(of_chosen,
--				"linux,pci-probe-only", NULL);
--		if (prop) {
--			if (*prop)
--				pci_add_flags(PCI_PROBE_ONLY);
--			else
--				pci_clear_flags(PCI_PROBE_ONLY);
--		}
--	}
-+	of_pci_check_probe_only(of_chosen);
- }
+-	int		(*probe_mode)(struct pci_bus *);
++	int		(*probe_mode)(struct pci_bus *bus);
  
- static void __init pSeries_setup_arch(void)
+ 	/* Called when pci_enable_device() is called. Returns true to
+ 	 * allow assignment/enabling of the device. */
+-	bool		(*enable_device_hook)(struct pci_dev *);
++	bool		(*enable_device_hook)(struct pci_dev *dev);
+ 
+-	void		(*disable_device)(struct pci_dev *);
++	void		(*disable_device)(struct pci_dev *dev);
+ 
+-	void		(*release_device)(struct pci_dev *);
++	void		(*release_device)(struct pci_dev *dev);
+ 
+ 	/* Called during PCI resource reassignment */
+-	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
++	resource_size_t (*window_alignment)(struct pci_bus *bus,
++					    unsigned long type);
+ 	void		(*reset_secondary_bus)(struct pci_dev *dev);
+ 
+ #ifdef CONFIG_PCI_MSI
+@@ -43,7 +44,7 @@ struct pci_controller_ops {
+ 
+ 	int             (*dma_set_mask)(struct pci_dev *dev, u64 dma_mask);
+ 
+-	void		(*shutdown)(struct pci_controller *);
++	void		(*shutdown)(struct pci_controller *hose);
+ };
+ 
+ /*
 -- 
-2.1.4
+2.1.0
 
