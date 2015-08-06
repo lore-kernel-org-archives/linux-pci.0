@@ -1,60 +1,204 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: mingo@kernel.org
-Cc: bp@suse.de, bhelgaas@google.com, tomi.valkeinen@ti.com,
-	airlied@linux.ie, linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	vinod.koul@intel.com, dan.j.williams@intel.com, toshi.kani@hp.com,
-	benh@kernel.crashing.org, mst@redhat.com,
-	akpm@linux-foundation.org, daniel.vetter@ffwll.ch,
-	konrad.wilk@oracle.com, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	xen-devel@lists.xensource.com,
-	"Luis R. Rodriguez" <mcgrof@suse.com>, dmaengine@vger.kernel.org
-Subject: [PATCH v4 09/11] drivers/dma/iop-adma: Use dma_alloc_writecombine() kernel-style
-Date: Mon, 24 Aug 2015 12:13:31 -0700
-Message-Id: <1440443613-13696-10-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59248 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764AbbHFENU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:20 -0400
+Received: from /spool/local
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 6 Aug 2015 14:13:18 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com, aik@ozlabs.ru,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v6 07/42] powerpc/powernv: Improve IO and M32 mapping
+Date: Thu,  6 Aug 2015 14:11:12 +1000
+Message-Id: <1438834307-26960-8-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+There're 3 windows (IO, M32 and M64) for PHB, root port and upstream
+port of the PCIE switch behind root port. In order to support PCI
+hotplug, we extend the start/end address of those 3 windows of root
+port or upstream port to the start/end address of the 3 PHB's windows.
+The current implementation, assigning IO or M32 segment based on the
+bridge's windows, isn't reliable.
 
-dma_alloc_writecombine()'s call and return value check is tangled in all
-in one call. Untangle both calls according to kernel coding style.
+The patch fixes above issue by calculating PE's consumed IO or M32
+segments from its contained devices, no PCI bridge windows involved
+if the PE doesn't contain all the subordinate PCI buses. Otherwise,
+the PCI bridge windows still contribute to PE's consumed IO or M32
+segments.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-Acked-by: Vinod Koul <vinod.koul@intel.com>
-Cc: Vinod Koul <vinod.koul@intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: dmaengine@vger.kernel.org
-Cc: x86@kernel.org
-Link: http://lkml.kernel.org/r/1435258191-543-2-git-send-email-mcgrof@do-not-panic.com
-Signed-off-by: Borislav Petkov <bp@suse.de>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/dma/iop-adma.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ arch/powerpc/platforms/powernv/pci-ioda.c | 136 +++++++++++++++++-------------
+ 1 file changed, 79 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/dma/iop-adma.c b/drivers/dma/iop-adma.c
-index 998826854fdd..e4f43125e0fb 100644
---- a/drivers/dma/iop-adma.c
-+++ b/drivers/dma/iop-adma.c
-@@ -1300,10 +1300,11 @@ static int iop_adma_probe(struct platform_device *pdev)
- 	 * note: writecombine gives slightly better performance, but
- 	 * requires that we explicitly flush the writes
- 	 */
--	if ((adev->dma_desc_pool_virt = dma_alloc_writecombine(&pdev->dev,
--					plat_data->pool_size,
--					&adev->dma_desc_pool,
--					GFP_KERNEL)) == NULL) {
-+	adev->dma_desc_pool_virt = dma_alloc_writecombine(&pdev->dev,
-+							  plat_data->pool_size,
-+							  &adev->dma_desc_pool,
-+							  GFP_KERNEL);
-+	if (!adev->dma_desc_pool_virt) {
- 		ret = -ENOMEM;
- 		goto err_free_adev;
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 488a53e..713f4b4 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2844,75 +2844,97 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+ }
+ #endif /* CONFIG_PCI_IOV */
+ 
+-/*
+- * This function is supposed to be called on basis of PE from top
+- * to bottom style. So the the I/O or MMIO segment assigned to
+- * parent PE could be overrided by its child PEs if necessary.
+- */
+-static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+-				  struct pnv_ioda_pe *pe)
++static int pnv_ioda_setup_one_res(struct pci_controller *hose,
++				  struct pnv_ioda_pe *pe,
++				  struct resource *res)
+ {
+ 	struct pnv_phb *phb = hose->private_data;
+ 	struct pci_bus_region region;
+-	struct resource *res;
+-	int i, index;
+-	unsigned int segsize;
++	unsigned int index, segsize;
+ 	unsigned long *segmap, *pe_segmap;
+ 	uint16_t win;
+ 	int64_t rc;
+ 
+-	/*
+-	 * NOTE: We only care PCI bus based PE for now. For PCI
+-	 * device based PE, for example SRIOV sensitive VF should
+-	 * be figured out later.
+-	 */
+-	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
++	/* Check if we need map the resource */
++	if (!res->parent || !res->flags || res->start > res->end)
++		return 0;
+ 
+-	pci_bus_for_each_resource(pe->pbus, res, i) {
+-		if (!res || !res->flags ||
+-		    res->start > res->end)
+-			continue;
++	if (res->flags & IORESOURCE_IO) {
++		region.start = res->start - phb->ioda.io_pci_base;
++		region.end   = res->end - phb->ioda.io_pci_base;
++		segsize      = phb->ioda.io_segsize;
++		segmap       = phb->ioda.io_segmap;
++		pe_segmap    = pe->io_segmap;
++		win          = OPAL_IO_WINDOW_TYPE;
++	} else if ((res->flags & IORESOURCE_MEM) &&
++		   !pnv_pci_is_mem_pref_64(res->flags)) {
++		region.start = res->start -
++			       hose->mem_offset[0] -
++			       phb->ioda.m32_pci_base;
++		region.end   = res->end -
++			       hose->mem_offset[0] -
++			       phb->ioda.m32_pci_base;
++		segsize      = phb->ioda.m32_segsize;
++		segmap       = phb->ioda.m32_segmap;
++		pe_segmap    = pe->m32_segmap;
++		win          = OPAL_M32_WINDOW_TYPE;
++	} else {
++		return 0;
++	}
+ 
+-		if (res->flags & IORESOURCE_IO) {
+-			region.start = res->start - phb->ioda.io_pci_base;
+-			region.end   = res->end - phb->ioda.io_pci_base;
+-			segsize      = phb->ioda.io_segsize;
+-			segmap       = phb->ioda.io_segmap;
+-			pe_segmap    = pe->io_segmap;
+-			win          = OPAL_IO_WINDOW_TYPE;
+-		} else if ((res->flags & IORESOURCE_MEM) &&
+-			   !pnv_pci_is_mem_pref_64(res->flags)) {
+-			region.start = res->start -
+-				       hose->mem_offset[0] -
+-				       phb->ioda.m32_pci_base;
+-			region.end   = res->end -
+-				       hose->mem_offset[0] -
+-				       phb->ioda.m32_pci_base;
+-			segsize      = phb->ioda.m32_segsize;
+-			segmap       = phb->ioda.m32_segmap;
+-			pe_segmap    = pe->m32_segmap;
+-			win          = OPAL_M32_WINDOW_TYPE;
+-		} else {
+-			continue;
++	region.start = _ALIGN_DOWN(region.start, segsize);
++	region.end   = _ALIGN_UP(region.end, segsize);
++	index = region.start / segsize;
++	while (index < phb->ioda.total_pe &&
++	       region.start < region.end) {
++		rc = opal_pci_map_pe_mmio_window(phb->opal_id,
++				pe->pe_number, win, 0, index);
++		if (rc != OPAL_SUCCESS) {
++			pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
++				__func__, rc, win, index,
++				pe->phb->hose->global_number,
++				pe->pe_number);
++			return -EIO;
+ 		}
+ 
+-		index = region.start / phb->ioda.io_segsize;
+-		while (index < phb->ioda.total_pe &&
+-		       region.start <= region.end) {
+-			set_bit(index, segmap);
+-			set_bit(index, pe_segmap);
+-			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+-					pe->pe_number, win, 0, index);
+-			if (rc != OPAL_SUCCESS) {
+-				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
+-					__func__, rc, win, index,
+-					pe->phb->hose->global_number,
+-					pe->pe_number);
+-				break;
+-			}
++		set_bit(index, segmap);
++		set_bit(index, pe_segmap);
++		region.start += segsize;
++		index++;
++	}
++
++	return 0;
++}
++
++static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
++				  struct pnv_ioda_pe *pe)
++{
++	struct pci_dev *pdev;
++	struct resource *res;
++	int i;
++
++	/* This function only works for bus dependent PE */
++	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
++
++	list_for_each_entry(pdev, &pe->pbus->devices, bus_list) {
++		for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
++			res = &pdev->resource[i];
++			if (pnv_ioda_setup_one_res(hose, pe, res))
++				return;
++		}
++
++		/* If the PE contains all subordinate PCI buses, the
++		 * resources of the child bridges should be mapped
++		 * to the PE as well.
++		 */
++		if (!(pe->flags & PNV_IODA_PE_BUS_ALL) ||
++		    (pdev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
++			continue;
+ 
+-			region.start += segsize;
+-			index++;
++		for (i = 0; i <= PCI_BRIDGE_RESOURCE_NUM; i++) {
++			res = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
++			if (pnv_ioda_setup_one_res(hose, pe, res))
++				return;
+ 		}
  	}
+ }
 -- 
-2.4.3
+2.1.0
 
