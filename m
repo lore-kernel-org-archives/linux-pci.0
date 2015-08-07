@@ -1,57 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:3352 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752066AbbHUByg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 21:54:36 -0400
-Message-ID: <55D68405.1000901@hisilicon.com>
-Date: Fri, 21 Aug 2015 09:51:01 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mail-la0-f66.google.com ([209.85.215.66]:34485 "EHLO
+	mail-la0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbbHGCSq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 22:18:46 -0400
+Received: by labnv2 with SMTP id nv2so4741342lab.1
+        for <linux-pci@vger.kernel.org>; Thu, 06 Aug 2015 19:18:45 -0700 (PDT)
 MIME-Version: 1.0
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<jingoohan1@gmail.com>, <pratyush.anand@gmail.com>,
-	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liguozhu@hisilicon.com>
-Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
-References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <55C3911E.9090907@arm.com>
+References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<20150804215457.9189.27595.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<55C37C92.1020509@arm.com>
+	<CAFiDJ58U9u0YOzqVbty8+z+sF82h=F09Y0q-Ks8zMDokdiSEbg@mail.gmail.com>
+	<55C3911E.9090907@arm.com>
+Date: Fri, 7 Aug 2015 10:18:45 +0800
+Message-ID: <CAFiDJ5-Xm1E1eJ6NjCYtryOaWsS__U8wuEDLzhBhfShEjj=VhQ@mail.gmail.com>
+Subject: Re: [PATCH v5 9/9] PCI: xgene: Use pci_scan_root_bus_msi()
+From: Ley Foon Tan <lftan.linux@gmail.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Duc Dang <dhdang@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	James Morse <James.Morse@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/8/20 21:58, Gabriele Paoloni wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> 
-> Currently in dw_pcie_cfg_write() if the input size is 2 bytes
-> the address offset is wrongly calculated as we mask also bit0
-> of "where" input parameter. Instead we should mask all bits of
-> "where" except bit0 and bit1.
-> 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> ---
->  drivers/pci/host/pcie-designware.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be..a27f536 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -99,7 +99,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
->  	if (size == 4)
->  		writel(val, addr);
->  	else if (size == 2)
-> -		writew(val, addr + (where & 2));
-> +		writew(val, addr + (where & 3));
->  	else if (size == 1)
->  		writeb(val, addr + (where & 3));
->  	else
-> 
+On Fri, Aug 7, 2015 at 12:53 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> On 06/08/15 17:41, Ley Foon Tan wrote:
+>> On Thu, Aug 6, 2015 at 11:26 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>>> Hi Bjorn,
+>>>
+>>> On 04/08/15 22:54, Bjorn Helgaas wrote:
+>>>> Previously there was no way to specify the MSI controller when creating a
+>>>> new PCI root bus, so we had to create the bus, set its MSI controller, then
+>>>> scan the bus.  With the new pci_scan_root_bus_msi() interface, we can
+>>>> specify the MSI controller up front and get rid of that intermediate step.
+>>>>
+>>>> Look up the MSI controller first, then use pci_scan_root_bus_msi() to
+>>>> create and scan the root PCI bus.
+>>>
+>>> I'm wondering about these XGene patches.
+>>>
+>>> With the code that is queued for v4.3 in tip/irq/core, the X-Gene MSI
+>>> driver doesn't export a struct msi_controller anymore, and entirely
+>>> relies on IRQ domains to identify to be matched with the actual PCI driver.
+>>>
+>>> Do you intend this as a cleanup until everything lands in mainline? At
+>>> that point, we'd be able to remove all traces of struct msi_controller
+>>> from this driver.
+>>>
+>>> Alternatively, we could ask tglx to add an extra patch to the existing
+>>> queue in order to clean up pci-xgene.c (nuking the whole
+>>> xgene_pcie_msi_enable function).
+>>>
+>>> Thoughts?
+>>
+>> In pcie-altera driver, it uses pci_scan_root_bus() and it doesn't call
+>> to of_pci_find_msi_chip_by_node() to retrieve msi_controller struct as
+>> well.
+>> But, the msi domain stuff is still working. Should I change it to
+>> pci_scan_root_bus_msi()?
+>
+> If you're not using struct msi_controller, I don't see a reason to use
+> pci_scan_root_bus_msi(). The MSI irq domain patches are queued for 4.3,
+> and I don't believe your driver will be merged before that.
+>
+> Eventually, I'd like to kill msi_controller entirely. It is completely
+> redundant with the use of irq domains.
+>
+Got it. It doesn't require struct msi_controller.
+Thanks.
 
-Hi Jingoo,
-
-Is there some special consideration? If we miss something, please let us know.
-
-Thanks,
-Zhou
-
+Regards
+Ley Foon
