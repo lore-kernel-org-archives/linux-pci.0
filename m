@@ -1,86 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:33888 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753540AbbHLPJM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 11:09:12 -0400
-Received: by lbbtg9 with SMTP id tg9so11345885lbb.1
-        for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2015 08:09:10 -0700 (PDT)
+Received: from mail-by2on0079.outbound.protection.outlook.com ([207.46.100.79]:64834
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752245AbbHGHnV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Aug 2015 03:43:21 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH v3 1/5] arm: add msi.h to Kbuild
+Date: Fri, 7 Aug 2015 15:42:58 +0800
+Message-ID: <1438933382-2936-2-git-send-email-lftan@altera.com>
+In-Reply-To: <1438933382-2936-1-git-send-email-lftan@altera.com>
+References: <1438933382-2936-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-In-Reply-To: <1439372036-15303-3-git-send-email-l.stach@pengutronix.de>
-References: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
-	<1439372036-15303-3-git-send-email-l.stach@pengutronix.de>
-Date: Wed, 12 Aug 2015 20:39:10 +0530
-Message-ID: <CAHM4w1mnt__D-hOWqPFGHCYu5YFtVQqfAcYSb1Qdm4H6kbrKuA@mail.gmail.com>
-Subject: Re: [PATCH v3 2/5] PCI: designware: factor out MSI msg setup
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	patchwork-lst@pengutronix.de, kernel@pengutronix.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 12, 2015 at 3:03 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Factor out the PCI MSI message setup from the single MSI setup
-> function. This will be reused by the multivector MSI setup.
->
-> No functional change yet.
->
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  drivers/pci/host/pcie-designware.c | 28 +++++++++++++++++-----------
->  1 file changed, 17 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be7181e..0ec435c56a8b 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -293,19 +293,9 @@ no_valid_irq:
->         return -ENOSPC;
->  }
->
-> -static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
-> -                       struct msi_desc *desc)
-> +static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
->  {
-> -       int irq, pos;
->         struct msi_msg msg;
-> -       struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-> -
-> -       if (desc->msi_attrib.is_msix)
-> -               return -EINVAL;
-> -
-> -       irq = assign_irq(1, desc, &pos);
-> -       if (irq < 0)
-> -               return irq;
->
->         if (pp->ops->get_msi_addr)
->                 msg.address_lo = pp->ops->get_msi_addr(pp);
-> @@ -319,6 +309,22 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
->                 msg.data = pos;
->
->         pci_write_msi_msg(irq, &msg);
-> +}
-> +
-> +static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
-> +                       struct msi_desc *desc)
-> +{
-> +       int irq, pos;
-> +       struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-> +
-> +       if (desc->msi_attrib.is_msix)
-> +               return -EINVAL;
-> +
-> +       irq = assign_irq(1, desc, &pos);
-> +       if (irq < 0)
-> +               return irq;
-> +
-> +       dw_msi_setup_msg(pp, irq, pos);
+Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
+This to fix compilation error:
+"include/linux/msi.h:123:21: fatal error: asm/msi.h:
+No such file or directory"
 
-I had thought of assign_irq also as part of new function with
-an additional argument nvec.
-But then dw_msi_setup_msg name would not be justified.So.
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ arch/arm/include/asm/Kbuild | 1 +
+ 1 file changed, 1 insertion(+)
 
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+diff --git a/arch/arm/include/asm/Kbuild b/arch/arm/include/asm/Kbuild
+index 83c5019..ddc2761 100644
+--- a/arch/arm/include/asm/Kbuild
++++ b/arch/arm/include/asm/Kbuild
+@@ -14,6 +14,7 @@ generic-y += local.h
+ generic-y += local64.h
+ generic-y += mcs_spinlock.h
+ generic-y += msgbuf.h
++generic-y += msi.h
+ generic-y += param.h
+ generic-y += parport.h
+ generic-y += poll.h
+-- 
+1.8.2.1
+
