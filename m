@@ -1,118 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e06smtp12.uk.ibm.com ([195.75.94.108]:60864 "EHLO
-	e06smtp12.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570AbbHCMZr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 08:25:47 -0400
-Received: from /spool/local
-	by e06smtp12.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gerald.schaefer@de.ibm.com>;
-	Mon, 3 Aug 2015 13:25:42 +0100
-Date: Mon, 3 Aug 2015 14:25:35 +0200
-From: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>
-Subject: Re: [RFC PATCH 0/1] iommu: Detach device from domain when removed
- from group
-Message-ID: <20150803142535.583677b7@thinkpad>
-In-Reply-To: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
-References: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
+Received: from mga14.intel.com ([192.55.52.115]:10963 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945937AbbHGSfP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Aug 2015 14:35:15 -0400
+Subject: [PATCH 0/5] crypto: qat - Add support for SRIOV
+From: Tadeusz Struk <tadeusz.struk@intel.com>
+To: herbert@gondor.apana.org.au
+Cc: linux-crypto@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, qat-linux@intel.com,
+	tadeusz.struk@intel.com
+Date: Fri, 07 Aug 2015 11:34:14 -0700
+Message-ID: <20150807183414.630.25889.stgit@tstruk-mobl1>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 28 Jul 2015 19:55:55 +0200
-Gerald Schaefer <gerald.schaefer@de.ibm.com> wrote:
+The following series adds SRIOV support for qat dh895xcc HW accelerator.
+First patch moves admin code and hw arbiter code that can be reused by PF
+and VF to common code in qat/qat_common/
+Second patch enables SRIOV support on dh895xcc PF.
+Third patch adds dh895xcc VF specific code.
+Fourth patch adds FW const table initialization,
+which may be required by VFs.
+Fifth patch adds pci quirk for a HW issue on VF.
 
-> Hi,
-> 
-> during IOMMU API function testing on s390 I hit the following scenario:
-> 
-> After binding a device to vfio-pci, the user completes the VFIO_SET_IOMMU
-> ioctl and stops, see the sample C program below. Now the device is manually
-> removed via "echo 1 > /sys/bus/pci/devices/.../remove".
-> 
-> Although the SET_IOMMU ioctl triggered the attach_dev callback in the
-> underlying IOMMU API, removing the device in this way won't trigger the
-> detach_dev callback, neither during remove nor when the user program
-> continues with closing group/container.
-> 
-> On s390, this eventually leads to a kernel panic when binding the device
-> again to its non-vfio PCI driver, because of the missing arch-specific
-> cleanup in detach_dev. On x86, the detach_dev callback will also not be
-> called directly, but there is a notifier that will catch
-> BUS_NOTIFY_REMOVED_DEVICE and eventually do the cleanup. Other
-> architectures w/o the notifier probably have at least some kind of memory
-> leak in this scenario, so a general fix would be nice.
-> 
-> My first approach was to try and fix this in VFIO code, but Alex Williamson
-> pointed me to some asymmetry in the IOMMU code: iommu_group_add_device()
-> will invoke the attach_dev callback, but iommu_group_remove_device() won't
-> trigger detach_dev. Fixing this asymmetry would fix the issue for me, but
-> is this the correct fix? Any thoughts?
+---
 
-Ping.
-
-The suggested fix may be completely wrong, but not having detach_dev called
-seems like like a serious issue, any feedback would be greatly appreciated.
+Tadeusz Struk (5):
+      crypto: qat - Move adf admin and adf hw arbitrer to common code
+      crypto: qat - Add support for SRIOV
+      crypto: qat - Add qat dh895xcc VF driver
+      crypto: qat - Add FW const table
+      PCI: Add quirk for Intel DH895xCC VF PCI config erratum
 
 
-> 
-> Regards,
-> Gerald
-> 
-> 
-> Here is the sample C program to trigger the ioctl:
-> 
-> #include <stdio.h>
-> #include <fcntl.h>
-> #include <linux/vfio.h>
-> 
-> int main(void)
-> {
->         int container, group, rc;
-> 
->         container = open("/dev/vfio/vfio", O_RDWR);
->         if (container < 0) {
->                 perror("open /dev/vfio/vfio\n");
->                 return -1;
->         }
-> 
->         group = open("/dev/vfio/0", O_RDWR);
->         if (group < 0) {
->                 perror("open /dev/vfio/0\n");
->                 return -1;
->         }
-> 
->         rc = ioctl(group, VFIO_GROUP_SET_CONTAINER, &container);
->         if (rc) {
->                 perror("ioctl VFIO_GROUP_SET_CONTAINER\n");
->                 return -1;
->         }
-> 
->         rc = ioctl(container, VFIO_SET_IOMMU, VFIO_TYPE1_IOMMU);
->         if (rc) {
->                 perror("ioctl VFIO_SET_IOMMU\n");
->                 return -1;
->         }
-> 
->         printf("Try device remove...\n");
->         getchar();
-> 
->         close(group);
->         close(container);
->         return 0;
-> }
-> 
-> Gerald Schaefer (1):
->   iommu: Detach device from domain when removed from group
-> 
->  drivers/iommu/iommu.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
+ drivers/crypto/qat/Kconfig                         |   11 +
+ drivers/crypto/qat/Makefile                        |    1 
+ drivers/crypto/qat/qat_common/Makefile             |    3 
+ drivers/crypto/qat/qat_common/adf_accel_devices.h  |   42 ++
+ drivers/crypto/qat/qat_common/adf_admin.c          |  290 ++++++++++++++
+ drivers/crypto/qat/qat_common/adf_aer.c            |    3 
+ drivers/crypto/qat/qat_common/adf_cfg.c            |    3 
+ drivers/crypto/qat/qat_common/adf_cfg_common.h     |    3 
+ drivers/crypto/qat/qat_common/adf_common_drv.h     |   44 ++
+ drivers/crypto/qat/qat_common/adf_ctl_drv.c        |    6 
+ drivers/crypto/qat/qat_common/adf_dev_mgr.c        |  283 +++++++++++++-
+ drivers/crypto/qat/qat_common/adf_hw_arbiter.c     |  168 ++++++++
+ drivers/crypto/qat/qat_common/adf_init.c           |   94 +----
+ drivers/crypto/qat/qat_common/adf_pf2vf_msg.c      |  336 +++++++++++++++++
+ drivers/crypto/qat/qat_common/adf_pf2vf_msg.h      |  144 +++++++
+ drivers/crypto/qat/qat_common/adf_sriov.c          |  406 ++++++++++++++++++++
+ drivers/crypto/qat/qat_common/adf_transport.c      |    7 
+ drivers/crypto/qat/qat_common/qat_crypto.c         |    7 
+ drivers/crypto/qat/qat_dh895xcc/Makefile           |    5 
+ drivers/crypto/qat/qat_dh895xcc/adf_admin.c        |  145 -------
+ .../crypto/qat/qat_dh895xcc/adf_dh895xcc_hw_data.c |   30 +
+ .../crypto/qat/qat_dh895xcc/adf_dh895xcc_hw_data.h |    9 
+ drivers/crypto/qat/qat_dh895xcc/adf_drv.c          |   83 ++--
+ drivers/crypto/qat/qat_dh895xcc/adf_drv.h          |    9 
+ drivers/crypto/qat/qat_dh895xcc/adf_hw_arbiter.c   |  159 --------
+ drivers/crypto/qat/qat_dh895xcc/adf_isr.c          |  139 +++++--
+ drivers/crypto/qat/qat_dh895xcc/qat_admin.c        |  107 -----
+ drivers/crypto/qat/qat_dh895xccvf/Makefile         |    5 
+ .../qat/qat_dh895xccvf/adf_dh895xccvf_hw_data.c    |  172 ++++++++
+ .../qat/qat_dh895xccvf/adf_dh895xccvf_hw_data.h    |   68 +++
+ drivers/crypto/qat/qat_dh895xccvf/adf_drv.c        |  393 +++++++++++++++++++
+ drivers/crypto/qat/qat_dh895xccvf/adf_drv.h        |   57 +++
+ drivers/crypto/qat/qat_dh895xccvf/adf_isr.c        |  258 +++++++++++++
+ drivers/pci/quirks.c                               |   85 ++++
+ 34 files changed, 2959 insertions(+), 616 deletions(-)
+ create mode 100644 drivers/crypto/qat/qat_common/adf_admin.c
+ create mode 100644 drivers/crypto/qat/qat_common/adf_hw_arbiter.c
+ create mode 100644 drivers/crypto/qat/qat_common/adf_pf2vf_msg.c
+ create mode 100644 drivers/crypto/qat/qat_common/adf_pf2vf_msg.h
+ create mode 100644 drivers/crypto/qat/qat_common/adf_sriov.c
+ delete mode 100644 drivers/crypto/qat/qat_dh895xcc/adf_admin.c
+ delete mode 100644 drivers/crypto/qat/qat_dh895xcc/adf_hw_arbiter.c
+ delete mode 100644 drivers/crypto/qat/qat_dh895xcc/qat_admin.c
+ create mode 100644 drivers/crypto/qat/qat_dh895xccvf/Makefile
+ create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_dh895xccvf_hw_data.c
+ create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_dh895xccvf_hw_data.h
+ create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_drv.c
+ create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_drv.h
+ create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_isr.c
 
+--
