@@ -1,266 +1,194 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33689 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932670AbbHKCcW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 22:32:22 -0400
-Received: by pabyb7 with SMTP id yb7so118988230pab.0
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 19:32:22 -0700 (PDT)
-Subject: Re: [PATCH v6 07/42] powerpc/powernv: Improve IO and M32 mapping
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-8-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C85558.2050300@ozlabs.ru> <20150811001259.GC10753@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C95EAD.5070603@ozlabs.ru>
-Date: Tue, 11 Aug 2015 12:32:13 +1000
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:35378 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946280AbbHGWYR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2015 18:24:17 -0400
 MIME-Version: 1.0
-In-Reply-To: <20150811001259.GC10753@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+In-Reply-To: <1438984574.3109.151.camel@hp.com>
+References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+ <1434064996.11808.64.camel@misato.fc.hp.com> <557AAD910200007800084014@mail.emea.novell.com>
+ <1434128306.11808.97.camel@misato.fc.hp.com> <CAB=NE6W3=SFTqabeD6gq7JCqFZ7+SBZh7Xa=RteO_8-3P7fbdw@mail.gmail.com>
+ <1438901893.3109.72.camel@hp.com> <CAB=NE6VnspTPfrn5+ZFSdgKb3uh_4g7LsuZVwe2FET=noijr5Q@mail.gmail.com>
+ <1438984574.3109.151.camel@hp.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 7 Aug 2015 15:23:56 -0700
+Message-ID: <CAB=NE6V+dAq1u52c3tDhBOYWU1BNMBVL3KzDdM=C-zTkLEx4xA@mail.gmail.com>
+Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
+To: Toshi Kani <toshi.kani@hp.com>
+Cc: Jan Beulich <JBeulich@suse.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
+	X86 ML <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	xen-devel@lists.xenproject.org, Dave Airlie <airlied@redhat.com>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
+	Juergen Gross <JGross@suse.com>, Borislav Petkov <bp@suse.de>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-media@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/11/2015 10:12 AM, Gavin Shan wrote:
-> On Mon, Aug 10, 2015 at 05:40:08PM +1000, Alexey Kardashevskiy wrote:
->> On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>> There're 3 windows (IO, M32 and M64) for PHB, root port and upstream
+On Fri, Aug 7, 2015 at 2:56 PM, Toshi Kani <toshi.kani@hp.com> wrote:
+> On Fri, 2015-08-07 at 13:25 -0700, Luis R. Rodriguez wrote:
+>> On Thu, Aug 6, 2015 at 3:58 PM, Toshi Kani <toshi.kani@hp.com> wrote:
+>> > On Thu, 2015-08-06 at 12:53 -0700, Luis R. Rodriguez wrote:
+>> > > On Fri, Jun 12, 2015 at 9:58 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+>> > > > On Fri, 2015-06-12 at 08:59 +0100, Jan Beulich wrote:
+>> > > > > > > > On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
+>> > > > > > There are two usages on MTRRs:
+>> > > > > >  1) MTRR entries set by firmware
+>> > > > > >  2) MTRR entries set by OS drivers
+>> > > > > >
+>> > > > > > We can obsolete 2), but we have no control over 1).  As UEFI
+>> > > > > > firmwares also set this up, this usage will continue to stay.
+>> > > > > >  So, we should not get rid of the MTRR code that looks up the
+>> > > > > > MTRR entries, while we have no need to modify them.
+>> > > > > >
+>> > > > > > Such MTRR entries provide safe guard to /dev/mem, which allows
+>> > > > > > privileged user to access a range that may require UC mapping
+>> > > > > > while the /dev/mem driver blindly maps it with WB.  MTRRs
+>> > > > > > converts WB to UC in such a case.
+>> > > > >
+>> > > > > But it wouldn't be impossible to simply read the MTRRs upon boot,
+>> > > > > store the information, disable MTRRs, and correctly use PAT to
+>> > > > > achieve the same effect (i.e. the "blindly maps" part of course
+>> > > > > would need fixing).
+>> > > >
+>> > > > It could be done, but I do not see much benefit of doing it.  One of
+>> > > > the reasons platform vendors set MTRRs is so that a system won't hit
+>> > > > a machine check when an OS bug leads an access with a wrong cache
+>> > > > type.
+>> > > >
+>> > > > A machine check is hard to analyze and can be seen as a hardware
+>> > > > issue by customers.  Emulating MTRRs with PAT won't protect from
+>> > > > such a bug.
+>> > >
+>> > > That's seems like a fair and valid concern. This could only happen if
+>> > > the OS would have code that would use MTRR, in the case of Linux we'll
+>> > > soon be able to vet that this cannot happen.
+>> >
+>> > No, there is no OS support necessary to use MTRR.  After firmware sets
+>> > it up, CPUs continue to use it without any OS support.  I think the
+>> > Linux change you are referring is to obsolete legacy interfaces that
+>> > modify the MTRR setup.  I agree that Linux should not modify MTRR.
 >>
->> These are actually IO, non-prefetchable and prefetchable windows which happen
->> to be IO, 32bit and 64bit windows but this has nothing to do with the M32/M64
->> BAR registers in P7IOC/PHB3, do I understand this correctly?
+>> Its a bit more than that though. Since you agree that the OS can live
+>> without MTRR code I was hoping to then see if we can fold out PAT
+>> Linux code from under the MTRR dependency on Linux and make PAT a
+>> first class citizen, maybe at least for x86-64. Right now you can only
+>> get PAT support on Linux if you have MTRR code, but I'd like to see if
+>> instead we can rip MTRR code out completely under its own Kconfig and
+>> let it start rotting away.
 >>
+>> Code-wise the only issue I saw was that PAT code also relies on
+>> mtrr_type_lookup(), see pat_x_mtrr_type(), but other than this I found
+>> no other obvious issues.
 >
-> In pci-ioda.c, we have below definiations that are defined when
-> developing the code, not from any specification:
+> We can rip of the MTTR code that modifies the MTRR setup, but not
+> mtrr_type_lookup().  This function provides necessary checks per documented
+> in commit 7f0431e3dc89 as follows.
 >
-> IO  - resources with IO property
-> M32 - 32-bits or non-prefetchable resources
-> M64 - 64-bits and prefetchable resources
-
-
-This what I am saying - it is incorrect and confusing. M32/M64 are PHB3 
-register names and associated windows (with "M" in the beginning) but not 
-device resources.
-
-
->>> port of the PCIE switch behind root port. In order to support PCI
->>> hotplug, we extend the start/end address of those 3 windows of root
->>> port or upstream port to the start/end address of the 3 PHB's windows.
->>> The current implementation, assigning IO or M32 segment based on the
->>> bridge's windows, isn't reliable.
->>>
->>> The patch fixes above issue by calculating PE's consumed IO or M32
->>> segments from its contained devices, no PCI bridge windows involved
->>> if the PE doesn't contain all the subordinate PCI buses.
->>
->> Please, rephrase it. How can PCI bridges be involved in PE consumption?
->>
+>     1) reserve_memtype() tracks an effective memory type in case
+>        a request type is WB (ex. /dev/mem blindly uses WB). Missing
+>        to track with its effective type causes a subsequent request
+>        to map the same range with the effective type to fail.
 >
-> Ok. Will add something like below:
+>     2) pud_set_huge() and pmd_set_huge() check if a requested range
+>        has any overlap with MTRRs. Missing to detect an overlap may
+>        cause a performance penalty or undefined behavior.
 >
-> if the PE, corresponding to the PCI bus, doesn't contain all the subordinate
-> PCI buses.
+> mtrr_type_lookup() is still admittedly awkward, but I do not think we have
+> an immediate issue in PAT code calling it.  I do not think it makes PAT code
+> a second class citizen.
 
+OK since we know that if MTRR set up code ends up disabled and would
+return MTRR_TYPE_INVALID what if we just static inline this for the
+no-MTRR Kconfig build option immediately, and only then have the full
+blown implementation for the case where MTRR Kconfig option is
+enabled?
 
-No, my question was about "PCI bridge windows involved" - what do you do to 
-the windows if PE does not own all child buses?
-
-
-
+>> Platform firmware and SMIs seems to be the only other possible issue.
+>> More on this below.
 >>
->>> Otherwise,
->>> the PCI bridge windows still contribute to PE's consumed IO or M32
->>> segments.
+>> > > For those type of OSes...
+>> > > could it be possible to negotiate or hint to the platform through an
+>> > > attribute somehow that the OS has such capability to not use MTRR?
+>> >
+>> > The OS can disable MTRR.  However, this can also cause a problem in
+>> > firmware, which may rely on MTRR.
 >>
->> PCI bridge windows themselves consume PEs? Is that correct?
->>
+>> Can you describe what type of issues we could expect ? I tend to care
+>> more about this for 64-bit systems so if 32-bit platforms would be
+>> more of the ones which could cause an issue would restricting
+>> disabling MTRR only for 64-bit help?
 >
-> PCI bridge windows consume IO, M32, M64 segments, not PEs.
+> The SMI handler runs in real-mode and relies on MTRR being effective to
+> provide right cache types.  It does not matter if it is 64-bit or not.
 
-Ah, right.
+I see... since I have no visibility to what goes under the hood, can
+you provide one example use case where an SMI handler would require
+getting a cache type through MTRR ? I realize this can vary, vendor by
+vendor, but any example would do just to satisfy my curiosity.
 
-
->>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>   arch/powerpc/platforms/powernv/pci-ioda.c | 136 +++++++++++++++++-------------
->>>   1 file changed, 79 insertions(+), 57 deletions(-)
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> index 488a53e..713f4b4 100644
->>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> @@ -2844,75 +2844,97 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
->>>   }
->>>   #endif /* CONFIG_PCI_IOV */
->>>
->>> -/*
->>> - * This function is supposed to be called on basis of PE from top
->>> - * to bottom style. So the the I/O or MMIO segment assigned to
->>> - * parent PE could be overrided by its child PEs if necessary.
->>> - */
->>> -static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->>> -				  struct pnv_ioda_pe *pe)
->>> +static int pnv_ioda_setup_one_res(struct pci_controller *hose,
->>> +				  struct pnv_ioda_pe *pe,
->>> +				  struct resource *res)
->>>   {
->>>   	struct pnv_phb *phb = hose->private_data;
->>>   	struct pci_bus_region region;
->>> -	struct resource *res;
->>> -	int i, index;
->>> -	unsigned int segsize;
->>> +	unsigned int index, segsize;
->>>   	unsigned long *segmap, *pe_segmap;
->>>   	uint16_t win;
->>>   	int64_t rc;
->>>
->>> -	/*
->>> -	 * NOTE: We only care PCI bus based PE for now. For PCI
->>> -	 * device based PE, for example SRIOV sensitive VF should
->>> -	 * be figured out later.
->>> -	 */
->>> -	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
->>> +	/* Check if we need map the resource */
->>> +	if (!res->parent || !res->flags || res->start > res->end)
+>> > > Then, only if this bit is set, the platform could then avoid such MTRR
+>> > > settings, and if we have issues you can throw rocks at us.
+>> >
+>> > > And if that's not possible how about a new platform setting that would
+>> > > need to be set at the platform level to enable disabling this junk?
+>> > > Then only folks who know what they are doing would enable it, and if
+>> > > the customer set it, the issue would not be on the platform.
+>> >
+>> > > Could this also be used to prevent SMIs with MTRRs?
+>> >
+>> > ACPI _OSI could be used for firmware to implement some OS-specific
+>> > features, but it may be too late for firmware to make major changes and
+>> > is generally useless unless OS requirements are described in a spec
+>> > backed by logo certification.
 >>
->> res->start >= res->end ?
+>> I see.. So there are no guarantees that platform firmware would not
+>> expect OS MTRR support.
 >>
->
-> No, res->start == res->end is valid.
->
+>> >  SMIs are also used for platform management, such as fan
+>> > speed control.
 >>
->>> +		return 0;
->>>
->>> -	pci_bus_for_each_resource(pe->pbus, res, i) {
->>> -		if (!res || !res->flags ||
->>> -		    res->start > res->end)
->>> -			continue;
->>> +	if (res->flags & IORESOURCE_IO) {
->>> +		region.start = res->start - phb->ioda.io_pci_base;
->>> +		region.end   = res->end - phb->ioda.io_pci_base;
->>> +		segsize      = phb->ioda.io_segsize;
->>> +		segmap       = phb->ioda.io_segmap;
->>> +		pe_segmap    = pe->io_segmap;
->>> +		win          = OPAL_IO_WINDOW_TYPE;
->>> +	} else if ((res->flags & IORESOURCE_MEM) &&
->>> +		   !pnv_pci_is_mem_pref_64(res->flags)) {
->>> +		region.start = res->start -
->>> +			       hose->mem_offset[0] -
->>> +			       phb->ioda.m32_pci_base;
->>> +		region.end   = res->end -
->>> +			       hose->mem_offset[0] -
->>> +			       phb->ioda.m32_pci_base;
->>> +		segsize      = phb->ioda.m32_segsize;
->>> +		segmap       = phb->ioda.m32_segmap;
->>> +		pe_segmap    = pe->m32_segmap;
->>> +		win          = OPAL_M32_WINDOW_TYPE;
->>> +	} else {
->>> +		return 0;
->>> +	}
->>>
->>> -		if (res->flags & IORESOURCE_IO) {
->>> -			region.start = res->start - phb->ioda.io_pci_base;
->>> -			region.end   = res->end - phb->ioda.io_pci_base;
->>> -			segsize      = phb->ioda.io_segsize;
->>> -			segmap       = phb->ioda.io_segmap;
->>> -			pe_segmap    = pe->io_segmap;
->>> -			win          = OPAL_IO_WINDOW_TYPE;
->>> -		} else if ((res->flags & IORESOURCE_MEM) &&
->>> -			   !pnv_pci_is_mem_pref_64(res->flags)) {
->>> -			region.start = res->start -
->>> -				       hose->mem_offset[0] -
->>> -				       phb->ioda.m32_pci_base;
->>> -			region.end   = res->end -
->>> -				       hose->mem_offset[0] -
->>> -				       phb->ioda.m32_pci_base;
->>> -			segsize      = phb->ioda.m32_segsize;
->>> -			segmap       = phb->ioda.m32_segmap;
->>> -			pe_segmap    = pe->m32_segmap;
->>> -			win          = OPAL_M32_WINDOW_TYPE;
->>> -		} else {
->>> -			continue;
->>> +	region.start = _ALIGN_DOWN(region.start, segsize);
->>> +	region.end   = _ALIGN_UP(region.end, segsize);
->>> +	index = region.start / segsize;
->>> +	while (index < phb->ioda.total_pe &&
->>> +	       region.start < region.end) {
->>> +		rc = opal_pci_map_pe_mmio_window(phb->opal_id,
->>> +				pe->pe_number, win, 0, index);
->>> +		if (rc != OPAL_SUCCESS) {
->>> +			pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
->>> +				__func__, rc, win, index,
->>> +				pe->phb->hose->global_number,
->>> +				pe->pe_number);
->>> +			return -EIO;
->>>   		}
->>>
->>> -		index = region.start / phb->ioda.io_segsize;
->>> -		while (index < phb->ioda.total_pe &&
->>> -		       region.start <= region.end) {
->>> -			set_bit(index, segmap);
->>> -			set_bit(index, pe_segmap);
->>> -			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
->>> -					pe->pe_number, win, 0, index);
->>> -			if (rc != OPAL_SUCCESS) {
->>> -				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
->>> -					__func__, rc, win, index,
->>> -					pe->phb->hose->global_number,
->>> -					pe->pe_number);
->>> -				break;
->>> -			}
->>> +		set_bit(index, segmap);
->>> +		set_bit(index, pe_segmap);
->>> +		region.start += segsize;
->>> +		index++;
->>> +	}
->>> +
->>> +	return 0;
->>> +}
->>> +
->>> +static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->>> +				  struct pnv_ioda_pe *pe)
->>> +{
->>> +	struct pci_dev *pdev;
->>> +	struct resource *res;
->>> +	int i;
->>> +
->>> +	/* This function only works for bus dependent PE */
->>> +	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
->>> +
->>> +	list_for_each_entry(pdev, &pe->pbus->devices, bus_list) {
->>> +		for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
->>> +			res = &pdev->resource[i];
->>> +			if (pnv_ioda_setup_one_res(hose, pe, res))
->>> +				return;
->>> +		}
->>> +
->>> +		/* If the PE contains all subordinate PCI buses, the
->>> +		 * resources of the child bridges should be mapped
->>> +		 * to the PE as well.
->>> +		 */
->>> +		if (!(pe->flags & PNV_IODA_PE_BUS_ALL) ||
->>> +		    (pdev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
->>> +			continue;
->>>
->>> -			region.start += segsize;
->>> -			index++;
->>> +		for (i = 0; i <= PCI_BRIDGE_RESOURCE_NUM; i++) {
->>> +			res = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
->>> +			if (pnv_ioda_setup_one_res(hose, pe, res))
->>> +				return;
->>>   		}
->>>   	}
->>>   }
->>>
+>> And its conceivable that some devices, or the platform itself, may
+>> trigger SMIs to have the platform firmware poke with MTRRs?
 >
-> Thanks,
-> Gavin
+> SMIs are outside of OS control.  SMI handler relies on MTRR being set.  SMI
+> must be quick, so the handler should not be required to initialize MTRR or
+> page tables.
+
+Right makes sense.
+
+>> > Is there any issue for Linux to use MTRR set by firmware?
+>>
+>> Even though we don't have the Kconfig option right now to disable MTRR
+>> cod explicitly I'll note that there are a few other cases that could
+>> flip Linux to note use MTRR:
+>>
+>>   a) Some BIOSes could let MTRR get disabled
+>>   b) As of Xen 4.4, the hypervisor disables X86_FEATURE_MTRR which
+>> disables MTRR on Linux
+>>
+>> If these environments can exist it'd be good to understand possible
+>> issues that could creep up as a result of the OS not having MTRR
+>> enabled. If this is a reasonable thing for x86-64 I was hoping we
+>> could just let users opt-in to a similar build configuration through
+>> the OS by letting PAT not depend on MTRR.
 >
+> Case a) and b) do not cause any issue.  They simply lead mtrr_type_lookup()
+> to return immediately with MTRR_TYPE_INVALID (i.e. MTRR disable), and the
+> callers handle this value properly.  These cases are only problematic when
+> the OS tries to modify MTRR.
 
+OK if the OS returns MTRR_TYPE_INVALID, for folks who do not want MTRR
+code on their kernel, we should be OK?
 
--- 
-Alexey
+ Luis
