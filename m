@@ -1,50 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33001 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751859AbbHXXIS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2015 19:08:18 -0400
-Received: by pacti10 with SMTP id ti10so34159612pac.0
-        for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2015 16:08:18 -0700 (PDT)
-From: Ameya Palande <2ameya@gmail.com>
-To: mj@ucw.cz
-Cc: linux-pci@vger.kernel.org, Ameya Palande <2ameya@gmail.com>
-Subject: [PATCH] pciutils: Fix sysfs_get_string to handle invalid read
-Date: Mon, 24 Aug 2015 16:08:10 -0700
-Message-Id: <1440457690-14955-1-git-send-email-2ameya@gmail.com>
-In-Reply-To: <mj+md-20150824.200753.5883.nikam@ucw.cz>
-References: <mj+md-20150824.200753.5883.nikam@ucw.cz>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:7152 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbbHGGJz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2015 02:09:55 -0400
+Message-ID: <55C44B63.9000409@hisilicon.com>
+Date: Fri, 7 Aug 2015 14:08:35 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: Zhou Wang <wangzhou1@hisilicon.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	<jingoohan1@gmail.com>
+Subject: Re: [PATCH v6 5/6] Documentation: DT: Add HiSilicon PCIe host binding
+References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com> <1438848559-232109-6-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1438848559-232109-6-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ameya Palande <2ameya@gmail.com>
----
- lib/sysfs.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+[+cc jingoohan1@gmail.com]
 
-diff --git a/lib/sysfs.c b/lib/sysfs.c
-index 9f348bb..8f0cabe 100644
---- a/lib/sysfs.c
-+++ b/lib/sysfs.c
-@@ -105,9 +105,17 @@ sysfs_get_string(struct pci_dev *d, char *object, char *buf, int mandatory)
-   n = read(fd, buf, OBJBUFSIZE);
-   close(fd);
-   if (n < 0)
--    a->error("Error reading %s: %s", namebuf, strerror(errno));
-+    {
-+      if (mandatory)
-+        a->error("Error reading %s: %s", namebuf, strerror(errno));
-+      return 0;
-+    }
-   if (n >= OBJBUFSIZE)
--    a->error("Value in %s too long", namebuf);
-+    {
-+      if (mandatory)
-+        a->error("Value in %s too long", namebuf);
-+      return 0;
-+    }
-   buf[n] = 0;
-   return 1;
- }
--- 
-1.8.3.1
+On 2015/8/6 16:09, Zhou Wang wrote:
+> This patch adds related DTS binding document for HiSilicon PCIe host driver.
+> 
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+> ---
+>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
+>  1 file changed, 46 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> new file mode 100644
+> index 0000000..2afc9d1
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> @@ -0,0 +1,46 @@
+> +HiSilicon PCIe host bridge DT description
+> +
+> +HiSilicon PCIe host controller is based on Designware PCI core.
+> +It shares common functions with PCIe Designware core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties:
+> +- compatible: Should contain "hisilicon,hip05-pcie".
+> +- reg: Should contain rc_dbi, subctrl, config registers location and length.
+> +- reg-names: Must include the following entries:
+> +  "rc_dbi": controller configuration registers;
+> +  "subctrl": whole PCIe hosts configuration registers;
+> +  "config": PCIe configuration space registers.
+> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
+> +- port-id: Should be 0, 1, 2 or 3.
+> +
+> +Optional properties:
+> +- status: Either "ok" or "disabled".
+> +- dma-coherent: Present if DMA operations are coherent.
+> +
+> +Example:
+> +	pcie@0xb0080000 {
+> +		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+> +		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
+> +		      <0x220 0x00000000 0 0x2000>;
+> +		reg-names = "rc_dbi", "subctrl", "config";
+> +		bus-range = <0  15>;
+> +		msi-parent = <&its_pcie>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		dma-coherent;
+> +		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
+> +		num-lanes = <8>;
+> +		port-id = <1>;
+> +		#interrupts-cells = <1>;
+> +		interrupts-map-mask = <0xf800 0 0 7>;
+> +		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
+> +				  0x0 0 0 2 &mbigen_pcie 2 11
+> +				  0x0 0 0 3 &mbigen_pcie 3 12
+> +				  0x0 0 0 4 &mbigen_pcie 4 13>;
+> +		status = "ok";
+> +	};
+> 
+
 
