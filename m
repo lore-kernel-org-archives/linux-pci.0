@@ -1,238 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f169.google.com ([209.85.160.169]:34306 "EHLO
-	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753654AbbHFNsa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 09:48:30 -0400
+Received: from mail-bn1on0083.outbound.protection.outlook.com ([157.56.110.83]:17536
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752544AbbHGHnO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Aug 2015 03:43:14 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH v3 0/5] Altera PCIe host controller driver with MSI support
+Date: Fri, 7 Aug 2015 15:42:57 +0800
+Message-ID: <1438933382-2936-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-In-Reply-To: <1438834307-26960-42-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com> <1438834307-26960-42-git-send-email-gwshan@linux.vnet.ibm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Thu, 6 Aug 2015 08:48:10 -0500
-Message-ID: <CAL_JsqK5NhRz4Pg3m=OJMHa5rxV9O5F74Ew-xGjyNgbW=SwDLg@mail.gmail.com>
-Subject: Re: [PATCH v6 41/42] drivers/of: Export OF changeset functions
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pantelis Antoniou <panto@antoniou-consulting.com>,
-	aik@ozlabs.ru
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 5, 2015 at 11:11 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> The PowerNV PCI hotplug driver is going to use the OF changeset
-> to manage the changed device sub-tree, which requires those OF
-> changeset functions are exported.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  drivers/of/dynamic.c  | 65 ++++++++++++++++++++++++++++++++++++---------------
->  drivers/of/overlay.c  |  8 +++----
->  drivers/of/unittest.c |  4 ++--
->  include/linux/of.h    |  2 ++
->  4 files changed, 54 insertions(+), 25 deletions(-)
->
-> diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
-> index 53826b8..af65b5b 100644
-> --- a/drivers/of/dynamic.c
-> +++ b/drivers/of/dynamic.c
-> @@ -646,6 +646,7 @@ void of_changeset_init(struct of_changeset *ocs)
->         memset(ocs, 0, sizeof(*ocs));
->         INIT_LIST_HEAD(&ocs->entries);
->  }
-> +EXPORT_SYMBOL(of_changeset_init);
+This is the 3rd version of patch set to add support for Altera PCIe host
+controller with MSI feature on Altera FPGA device families. This patchset
+mainly resolve comments from Marc Zyngier in v2.
 
-We probably want these to be the _GPL variant.
+It is based on patch series from Marc Zyngier "Per-device MSI domain &
+platform MSI" [1] to get rid of struct msi_controller.
 
->
->  /**
->   * of_changeset_destroy - Destroy a changeset
-> @@ -662,20 +663,9 @@ void of_changeset_destroy(struct of_changeset *ocs)
->         list_for_each_entry_safe_reverse(ce, cen, &ocs->entries, node)
->                 __of_changeset_entry_destroy(ce);
->  }
-> +EXPORT_SYMBOL(of_changeset_destroy);
->
-> -/**
-> - * of_changeset_apply - Applies a changeset
-> - *
-> - * @ocs:       changeset pointer
-> - *
-> - * Applies a changeset to the live tree.
-> - * Any side-effects of live tree state changes are applied here on
-> - * sucess, like creation/destruction of devices and side-effects
-> - * like creation of sysfs properties and directories.
-> - * Returns 0 on success, a negative error value in case of an error.
-> - * On error the partially applied effects are reverted.
-> - */
-> -int of_changeset_apply(struct of_changeset *ocs)
-> +int __of_changeset_apply(struct of_changeset *ocs)
->  {
->         struct of_changeset_entry *ce;
->         int ret;
-> @@ -704,17 +694,30 @@ int of_changeset_apply(struct of_changeset *ocs)
->  }
->
->  /**
-> - * of_changeset_revert - Reverts an applied changeset
-> + * of_changeset_apply - Applies a changeset
->   *
->   * @ocs:       changeset pointer
->   *
-> - * Reverts a changeset returning the state of the tree to what it
-> - * was before the application.
-> - * Any side-effects like creation/destruction of devices and
-> - * removal of sysfs properties and directories are applied.
-> + * Applies a changeset to the live tree.
-> + * Any side-effects of live tree state changes are applied here on
-> + * sucess, like creation/destruction of devices and side-effects
+[1]: https://lkml.org/lkml/2015/7/23/172
 
-s/sucess/success/
+v2->v3 changes:
+- pci: host: move depends on PCI_MSI_IRQ_DOMAIN to PCIE_ALTERA_MSI in Kconfig
+- pcie-altera: change to use find_first_bit in isr
+- pcie-altera: change to use chained irq handler
+- pcie-altera: rename hwirq to irq
+- pcie-altera: rename irq to virq
+- pcie-altera-msi: update isr handling
+- pcie-altera-msi: change u64 to phys_addr_t
+- pcie-altera-msi: fix find_first_zero_bit error handle
+- pcie-altera-msi: change altera_msi_probe to static function
+- pcie-altera-msi: remove .owner
+- pcie-altera-msi: remove MODULE_DEVICE_TABLE
+- pcie-altera-msi: move INTMASK to _alloc()
+- change from clear_bit to __clear_bit
+- change to use irq_set_chained_handler_and_data
+- fix coding style
 
-> + * like creation of sysfs properties and directories.
->   * Returns 0 on success, a negative error value in case of an error.
-> + * On error the partially applied effects are reverted.
->   */
-> -int of_changeset_revert(struct of_changeset *ocs)
-> +int of_changeset_apply(struct of_changeset *ocs)
-> +{
-> +       int ret;
-> +
-> +       mutex_lock(&of_mutex);
-> +       ret = __of_changeset_apply(ocs);
-> +       mutex_unlock(&of_mutex);
-> +
-> +       return ret;
-> +}
-> +EXPORT_SYMBOL(of_changeset_apply);
-> +
-> +int __of_changeset_revert(struct of_changeset *ocs)
->  {
->         struct of_changeset_entry *ce;
->         int ret;
-> @@ -742,6 +745,29 @@ int of_changeset_revert(struct of_changeset *ocs)
->  }
->
->  /**
-> + * of_changeset_revert - Reverts an applied changeset
-> + *
-> + * @ocs:       changeset pointer
-> + *
-> + * Reverts a changeset returning the state of the tree to what it
-> + * was before the application.
-> + * Any side-effects like creation/destruction of devices and
-> + * removal of sysfs properties and directories are applied.
-> + * Returns 0 on success, a negative error value in case of an error.
-> + */
-> +int of_changeset_revert(struct of_changeset *ocs)
-> +{
-> +       int ret;
-> +
-> +       mutex_lock(&of_mutex);
-> +       ret = __of_changeset_revert(ocs);
-> +       mutex_unlock(&of_mutex);
-> +
-> +       return ret;
-> +}
-> +EXPORT_SYMBOL(of_changeset_revert);
-> +
-> +/**
->   * of_changeset_action - Perform a changeset action
->   *
->   * @ocs:       changeset pointer
-> @@ -779,3 +805,4 @@ int of_changeset_action(struct of_changeset *ocs, unsigned long action,
->         list_add_tail(&ce->node, &ocs->entries);
->         return 0;
->  }
-> +EXPORT_SYMBOL(of_changeset_action);
-> diff --git a/drivers/of/overlay.c b/drivers/of/overlay.c
-> index 24e025f..804ea33 100644
-> --- a/drivers/of/overlay.c
-> +++ b/drivers/of/overlay.c
-> @@ -378,9 +378,9 @@ int of_overlay_create(struct device_node *tree)
->         }
->
->         /* apply the changeset */
-> -       err = of_changeset_apply(&ov->cset);
-> +       err = __of_changeset_apply(&ov->cset);
->         if (err) {
-> -               pr_err("%s: of_changeset_apply() failed for tree@%s\n",
-> +               pr_err("%s: __of_changeset_apply() failed for tree@%s\n",
->                                 __func__, tree->full_name);
->                 goto err_revert_overlay;
->         }
-> @@ -508,7 +508,7 @@ int of_overlay_destroy(int id)
->
->
->         list_del(&ov->node);
-> -       of_changeset_revert(&ov->cset);
-> +       __of_changeset_revert(&ov->cset);
->         of_free_overlay_info(ov);
->         idr_remove(&ov_idr, id);
->         of_changeset_destroy(&ov->cset);
-> @@ -539,7 +539,7 @@ int of_overlay_destroy_all(void)
->         /* the tail of list is guaranteed to be safe to remove */
->         list_for_each_entry_safe_reverse(ov, ovn, &ov_list, node) {
->                 list_del(&ov->node);
-> -               of_changeset_revert(&ov->cset);
-> +               __of_changeset_revert(&ov->cset);
->                 of_free_overlay_info(ov);
->                 idr_remove(&ov_idr, ov->id);
->                 kfree(ov);
-> diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
-> index 2270830..06eb3e5 100644
-> --- a/drivers/of/unittest.c
-> +++ b/drivers/of/unittest.c
-> @@ -527,7 +527,7 @@ static void __init of_unittest_changeset(void)
->         unittest(!of_changeset_update_property(&chgset, parent, ppupdate), "fail update prop\n");
->         unittest(!of_changeset_remove_property(&chgset, parent, ppremove), "fail remove prop\n");
->         mutex_lock(&of_mutex);
-> -       unittest(!of_changeset_apply(&chgset), "apply failed\n");
-> +       unittest(!__of_changeset_apply(&chgset), "apply failed\n");
+History:
+-------
+[v1]: https://lkml.org/lkml/2015/7/28/395
+[v2]: https://lkml.org/lkml/2015/7/31/267
 
-You can just remove the mutex here.
 
->         mutex_unlock(&of_mutex);
->
->         /* Make sure node names are constructed correctly */
-> @@ -536,7 +536,7 @@ static void __init of_unittest_changeset(void)
->         of_node_put(np);
->
->         mutex_lock(&of_mutex);
-> -       unittest(!of_changeset_revert(&chgset), "revert failed\n");
-> +       unittest(!__of_changeset_revert(&chgset), "revert failed\n");
+Ley Foon Tan (5):
+  arm: add msi.h to Kbuild
+  pci:host: Add Altera PCIe host controller driver
+  pci: altera: Add Altera PCIe MSI driver
+  Documentation: dt-bindings: pci: altera pcie device tree binding
+  MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
 
-And here.
+ .../devicetree/bindings/pci/altera-pcie-msi.txt    |  27 ++
+ .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
+ MAINTAINERS                                        |  16 +
+ arch/arm/include/asm/Kbuild                        |   1 +
+ drivers/pci/host/Kconfig                           |  15 +
+ drivers/pci/host/Makefile                          |   2 +
+ drivers/pci/host/pcie-altera-msi.c                 | 309 ++++++++++++
+ drivers/pci/host/pcie-altera.c                     | 532 +++++++++++++++++++++
+ 8 files changed, 951 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-altera-msi.c
+ create mode 100644 drivers/pci/host/pcie-altera.c
 
->         mutex_unlock(&of_mutex);
->
->         of_changeset_destroy(&chgset);
-> diff --git a/include/linux/of.h b/include/linux/of.h
-> index edc068d..5c030e1 100644
-> --- a/include/linux/of.h
-> +++ b/include/linux/of.h
-> @@ -1001,7 +1001,9 @@ extern int of_reconfig_get_state_change(unsigned long action,
->
->  extern void of_changeset_init(struct of_changeset *ocs);
->  extern void of_changeset_destroy(struct of_changeset *ocs);
-> +extern int __of_changeset_apply(struct of_changeset *ocs);
->  extern int of_changeset_apply(struct of_changeset *ocs);
-> +extern int __of_changeset_revert(struct of_changeset *ocs);
+-- 
+1.8.2.1
 
-These should go in of_private.h.
-
->  extern int of_changeset_revert(struct of_changeset *ocs);
->  extern int of_changeset_action(struct of_changeset *ocs,
->                 unsigned long action, struct device_node *np,
-> --
-> 2.1.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
