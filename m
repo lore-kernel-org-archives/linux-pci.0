@@ -1,107 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:32951 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932203AbbHZCRb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 22:17:31 -0400
-Received: by pacti10 with SMTP id ti10so70398088pac.0
-        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2015 19:17:30 -0700 (PDT)
-References: <1440498929-44519-1-git-send-email-wangzhou1@hisilicon.com> <5DE197E3-8F25-4EAD-B21B-BE3220C6C21B@gmail.com> <55DD1CF1.4050706@hisilicon.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <55DD1CF1.4050706@hisilicon.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <24A4D961-E9D6-4DDD-968B-7DE2E44398D0@gmail.com>
-Cc: "<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
-	"<gabriele.paoloni@huawei.com>" <gabriele.paoloni@huawei.com>,
-	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
-	"<qiuzhenfa@hisilicon.com>" <qiuzhenfa@hisilicon.com>,
-	"<zhangjukuo@huawei.com>" <zhangjukuo@huawei.com>,
-	"<liudongdong3@huawei.com>" <liudongdong3@huawei.com>,
-	"<qiujiang@huawei.com>" <qiujiang@huawei.com>,
-	"<xuwei5@hisilicon.com>" <xuwei5@hisilicon.com>,
-	"<liguozhu@hisilicon.com>" <liguozhu@hisilicon.com>,
-	jingoohan1@gmail.com
-From: Jingoo Han <jingoohan1@gmail.com>
-Subject: Re: [PATCH] PCI: designware: Fix PORT_LOGIC_LINK_WIDTH_MASK
-Date: Wed, 26 Aug 2015 11:17:21 +0900
-To: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:35870 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753059AbbHGBGf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 21:06:35 -0400
+Received: by igbij6 with SMTP id ij6so22278672igb.1
+        for <linux-pci@vger.kernel.org>; Thu, 06 Aug 2015 18:06:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQWBuTq2gH_-UjrCrOgtgFw05=RLXXAqkWFz4cTxHPCcdA@mail.gmail.com>
+References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<20150729160701.GC31170@google.com>
+	<CAE9FiQWBuTq2gH_-UjrCrOgtgFw05=RLXXAqkWFz4cTxHPCcdA@mail.gmail.com>
+Date: Thu, 6 Aug 2015 18:06:34 -0700
+Message-ID: <CAE9FiQXcj7Y+tqXPoFmYAuw-cTdpg1rzVzbkuGd-hA9O=QveXw@mail.gmail.com>
+Subject: Re: [PATCH v2 00/11] PCI: Fix ATS deadlock
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu <iommu@lists.linux-foundation.org>,
+	Gregor Dick <gdick@solarflare.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015. 8. 26., at AM 10:57, Zhou Wang <wangzhou1@hisilicon.com> wrote:
-> 
-> Hi Jingoo,
-> 
->> On 2015/8/25 19:14, Jingoo Han wrote:
->>> On 2015. 8. 25., at PM 7:35, Zhou Wang <wangzhou1@hisilicon.com> wrote:
->>> 
->>> The value under PORT_LOGIC_LINK_WIDTH_MASK is 0x1, 0x2, 0x4, 0x8. Here change
->>> this mask to proper value.
->>> 
->>> In fact, for DesignWare PCIe IP version 4.4, it only uses bit8~12 to indicate
->>> number of lanes. Original mask will bring a mistake.
->> 
->> NAK
-> 
-> Sorry, maybe above commit message is no very clear. Will explain it below.
-> 
->> 
->> The definitions of bits of registers should be defined based on hardware manual such as datasheet, databook.
->> 
->> According to the databook, the bits [16:8] are defined for NUM_OF_LANES.
-> 
-> Yes, according to databook of v4.2, bits [16:8] are defined for NUM_OF_LANES.
-> 
->> 
->> In the future, if 16 lanes or 32 lanes is supported and 12th bit or 13th bit is used, what will you do?
->> 
->> Then, in the version 4.4 IP, the bits[16:13] are used for other usage?
-> 
-> Yes, according to databook of v4.4, bits [12:8] are defined for NUM_OF_LANES.
-> [16:13] are for other usages(bit16 is AUTO_LANE_FLIP_CTRL_EN, bits [15:13] are
-> PRE_DET_LANE). For details, maybe you can refer to v4.4 databook :)
-> 
-> My opinion is that there is no conflict about NUM_OF_LANES between v4.2 and v4.4.
-> We can change this mask to avoid future problem.
+On Thu, Aug 6, 2015 at 9:03 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Jul 29, 2015 at 9:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>
+>>> Bjorn Helgaas (11):
+>>>       iommu/vt-d: Cache PCI ATS state and Invalidate Queue Depth
+>>>       PCI: Allocate ATS struct during enumeration
+>>>       PCI: Embed ATS info directly into struct pci_dev
+>>>       PCI: Reduce size of ATS structure elements
+>>>       PCI: Rationalize pci_ats_queue_depth() error checking
+>>>       PCI: Inline the ATS setup code into pci_ats_init()
+>>>       PCI: Use pci_physfn() rather than looking up physfn by hand
+>>>       PCI: Clean up ATS error handling
+>>>       PCI: Move ATS declarations to linux/pci.h so they're all together
+>>>       PCI: Stop caching ATS Invalidate Queue Depth
+>>>       PCI: Remove pci_ats_enabled()
+>>
+>> I applied these to a pci/iommu branch for v4.3.  Let me know if you see any
+>> issues.
+>
+> looks like this branch causes hang on system with qlogic/emulex cards.
+>
+> exclude the branch, will make kernel work again.
 
-OK, I see.
-I got what you want to say. :-)
+first patch has problem:
 
-I think that there is no conflict between v4.2 and v4.4.
-So, this patch can be accepted.
+7b98d2d02887f8d422e05323241a5fa36b2a371e is the first bad commit
+commit 7b98d2d02887f8d422e05323241a5fa36b2a371e
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Mon Jul 20 09:10:36 2015 -0500
 
-Then, would you send v2 patch with more detailed commit message above mentioned?
+    iommu/vt-d: Cache PCI ATS state and Invalidate Queue Depth
 
-Best regards,
-Jingoo Han
+    We check the ATS state (enabled/disabled) and fetch the PCI ATS Invalidate
+    Queue Depth in performance-sensitive paths.  It's easy to cache these,
+    which removes dependencies on PCI.
 
-> Thanks
-> Zhou
-> 
->> Best regards,
->> Jingoo Han
->> 
->>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
->>> ---
->>> drivers/pci/host/pcie-designware.c | 2 +-
->>> 1 file changed, 1 insertion(+), 1 deletion(-)
->>> 
->>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->>> index 69486be..eb549b9 100644
->>> --- a/drivers/pci/host/pcie-designware.c
->>> +++ b/drivers/pci/host/pcie-designware.c
->>> @@ -35,7 +35,7 @@
->>> 
->>> #define PCIE_LINK_WIDTH_SPEED_CONTROL    0x80C
->>> #define PORT_LOGIC_SPEED_CHANGE (0x1 << 17)
->>> -#define PORT_LOGIC_LINK_WIDTH_MASK    (0x1ff << 8)
->>> +#define PORT_LOGIC_LINK_WIDTH_MASK    (0x1f << 8)
->>> #define PORT_LOGIC_LINK_WIDTH_1_LANES    (0x1 << 8)
->>> #define PORT_LOGIC_LINK_WIDTH_2_LANES    (0x2 << 8)
->>> #define PORT_LOGIC_LINK_WIDTH_4_LANES    (0x4 << 8)
->>> -- 
->>> 1.9.1
->> 
->> .
-> 
-> 
+    Remember the ATS enabled state.  When enabling, read the queue depth once
+    and cache it in the device_domain_info struct.  This is similar to what
+    amd_iommu.c does.
+
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+:040000 040000 e8597ffc4955b097ff3c80cbfa0e074c71761521
+33b5491120a2aa89437b43d8020c7cce5339ab41 M    drivers
