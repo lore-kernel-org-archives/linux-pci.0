@@ -1,61 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bbn0106.outbound.protection.outlook.com ([157.56.111.106]:45671
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751400AbbHYRdo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Aug 2015 13:33:44 -0400
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH V2 0/4] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
-Date: Wed, 26 Aug 2015 00:33:25 +0700
-Message-ID: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:5354 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751129AbbHGGHB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2015 02:07:01 -0400
+Message-ID: <55C44AF2.8040807@hisilicon.com>
+Date: Fri, 7 Aug 2015 14:06:42 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH v6 2/6] ARM/PCI: remove align_resource in pci_sys_data
+References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com> <1438848559-232109-3-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1438848559-232109-3-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds support to setup DMA coherency for PCI device using
-the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
-is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
-support for ARM64 which is currently in development.
+[+cc jingoohan1@gmail.com]
 
-Also, this should not affect other architectures that does not define 
-CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
+On 2015/8/6 16:09, Zhou Wang wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> 
+> This patch is needed in order to unify the PCIe designware framework for ARM and
+> ARM64 architectures. In the PCIe designware unification process we are calling
+> pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+> ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+> cause a problem with the function pcibios_align_resource(); in fact this will
+> cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+> "struct pcie_port*" pointer.
+> 
+> This patch solves the issue by removing "align_resource" from "pci_sys_data"
+> struct and defining a static global function pointer in "bios32.c"
+> 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> ---
+>  arch/arm/include/asm/mach/pci.h |  5 -----
+>  arch/arm/kernel/bios32.c        | 12 ++++++++----
+>  2 files changed, 8 insertions(+), 9 deletions(-)
+> 
+> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+> index 28b9bb3..8a4e4de 100644
+> --- a/arch/arm/include/asm/mach/pci.h
+> +++ b/arch/arm/include/asm/mach/pci.h
+> @@ -58,11 +58,6 @@ struct pci_sys_data {
+>  					/* IRQ mapping				*/
+>  	int		(*map_irq)(const struct pci_dev *, u8, u8);
+>  					/* Resource alignement requirements	*/
+> -	resource_size_t (*align_resource)(struct pci_dev *dev,
+> -					  const struct resource *res,
+> -					  resource_size_t start,
+> -					  resource_size_t size,
+> -					  resource_size_t align);
+>  	void		*private_data;	/* platform controller private data	*/
+>  };
+>  
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index fcbbbb1..4cdc64d 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -17,6 +17,11 @@
+>  #include <asm/mach/pci.h>
+>  
+>  static int debug_pci;
+> +static resource_size_t (*align_resource)(struct pci_dev *dev,
+> +		  const struct resource *res,
+> +		  resource_size_t start,
+> +		  resource_size_t size,
+> +		  resource_size_t align) = NULL;
+>  
+>  #ifdef CONFIG_PCI_MSI
+>  struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+> @@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  		sys->busnr   = busnr;
+>  		sys->swizzle = hw->swizzle;
+>  		sys->map_irq = hw->map_irq;
+> -		sys->align_resource = hw->align_resource;
+> +		align_resource = hw->align_resource;
+>  		INIT_LIST_HEAD(&sys->resources);
+>  
+>  		if (hw->private_data)
+> @@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  				resource_size_t size, resource_size_t align)
+>  {
+>  	struct pci_dev *dev = data;
+> -	struct pci_sys_data *sys = dev->sysdata;
+>  	resource_size_t start = res->start;
+>  
+>  	if (res->flags & IORESOURCE_IO && start & 0x300)
+> @@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  
+>  	start = (start + align - 1) & ~(align - 1);
+>  
+> -	if (sys->align_resource)
+> -		return sys->align_resource(dev, res, start, size, align);
+> +	if (align_resource)
+> +		return align_resource(dev, res, start, size, align);
+>  
+>  	return start;
+>  }
+> 
 
-In the V2 of this patch series, I have pulled in the following patch from Jeremy
-before cleaning up the acpi_check_dma() function (in patch 2).
-
-    http://www.spinics.net/lists/linux-usb/msg128582.html)
-
-Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
-    * Include patch 1 from Jeremy to enable support for _CCA=0
-    * Clean up acpi_check_dma() per Bjorn suggestions
-    * Split the original V1 patch into two patches (patch 3 and 4)
-
-Jeremy Linton (1):
-  Honor ACPI _CCA attribute setting
-
-Suravee Suthikulpanit (3):
-  ACPI/scan: Clean up acpi_check_dma
-  PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
-  PCI: ACPI: Add support for PCI device DMA coherency
-
- drivers/acpi/acpi_platform.c |  7 ++++++-
- drivers/acpi/glue.c          |  5 +++--
- drivers/acpi/scan.c          | 39 +++++++++++++++++++++++++++++++++++++++
- drivers/base/property.c      |  8 ++++++--
- drivers/of/of_pci.c          | 20 --------------------
- drivers/pci/probe.c          | 32 ++++++++++++++++++++++++++++++--
- include/acpi/acpi_bus.h      | 35 ++---------------------------------
- include/linux/acpi.h         |  4 ++--
- include/linux/of_pci.h       |  3 ---
- 9 files changed, 88 insertions(+), 65 deletions(-)
-
--- 
-2.1.0
 
