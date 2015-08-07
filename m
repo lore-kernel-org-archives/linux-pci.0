@@ -1,191 +1,181 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:38056 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965056AbbHKOim (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 10:38:42 -0400
-Received: by wicja10 with SMTP id ja10so71311159wic.1
-        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 07:38:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150811080352.GB30310@pek-khao-d1.corp.ad.wrs.com>
-References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
- <1437715776-2243-2-git-send-email-haokexin@gmail.com> <20150810232615.GD13982@google.com>
- <20150811080352.GB30310@pek-khao-d1.corp.ad.wrs.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 11 Aug 2015 09:38:15 -0500
-Message-ID: <CAErSpo6FRBsXx0APnXcMTt9_Hejcr4zObreP+DLVG2wG3TvDoQ@mail.gmail.com>
-Subject: Re: [PATCH 1/4] PCI: imx6: Mark the msi cascade handler IRQF_NO_THREAD
-To: Kevin Hao <haokexin@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Thomas Gleixner <tglx@linutronix.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from g9t5008.houston.hp.com ([15.240.92.66]:49967 "EHLO
+	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946136AbbHGV6I (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2015 17:58:08 -0400
+Message-ID: <1438984574.3109.151.camel@hp.com>
+Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
+From: Toshi Kani <toshi.kani@hp.com>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Jan Beulich <JBeulich@suse.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
+	X86 ML <x86@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?=
+	<ville.syrjala@linux.intel.com>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	xen-devel@lists.xenproject.org, Dave Airlie <airlied@redhat.com>,
+	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
+	Juergen Gross <JGross@suse.com>, Borislav Petkov <bp@suse.de>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-media@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date: Fri, 07 Aug 2015 15:56:14 -0600
+In-Reply-To: <CAB=NE6VnspTPfrn5+ZFSdgKb3uh_4g7LsuZVwe2FET=noijr5Q@mail.gmail.com>
+References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
+	 <1434064996.11808.64.camel@misato.fc.hp.com>
+	 <557AAD910200007800084014@mail.emea.novell.com>
+	 <1434128306.11808.97.camel@misato.fc.hp.com>
+	 <CAB=NE6W3=SFTqabeD6gq7JCqFZ7+SBZh7Xa=RteO_8-3P7fbdw@mail.gmail.com>
+	 <1438901893.3109.72.camel@hp.com>
+	 <CAB=NE6VnspTPfrn5+ZFSdgKb3uh_4g7LsuZVwe2FET=noijr5Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 11, 2015 at 3:03 AM, Kevin Hao <haokexin@gmail.com> wrote:
-> On Mon, Aug 10, 2015 at 06:26:15PM -0500, Bjorn Helgaas wrote:
->> [+cc Thomas]
->>
->> On Fri, Jul 24, 2015 at 01:29:33PM +0800, Kevin Hao wrote:
->> > The cascade handler must run in hard interrupt context, otherwise
->> > it will cause the following kernel warning if we force threading
->> > of all the interrupt handlers via kernel command parameter
->> > "threadirqs":
->>
->> I guess imx6_pcie_msi_handler() is the cascade handler?
+On Fri, 2015-08-07 at 13:25 -0700, Luis R. Rodriguez wrote:
+> On Thu, Aug 6, 2015 at 3:58 PM, Toshi Kani <toshi.kani@hp.com> wrote:
+> > On Thu, 2015-08-06 at 12:53 -0700, Luis R. Rodriguez wrote:
+> > > On Fri, Jun 12, 2015 at 9:58 AM, Toshi Kani <toshi.kani@hp.com> wrote:
+> > > > On Fri, 2015-06-12 at 08:59 +0100, Jan Beulich wrote:
+> > > > > > > > On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
+> > > > > > There are two usages on MTRRs:
+> > > > > >  1) MTRR entries set by firmware
+> > > > > >  2) MTRR entries set by OS drivers
+> > > > > > 
+> > > > > > We can obsolete 2), but we have no control over 1).  As UEFI
+> > > > > > firmwares also set this up, this usage will continue to stay. 
+> > > > > >  So, we should not get rid of the MTRR code that looks up the 
+> > > > > > MTRR entries, while we have no need to modify them.
+> > > > > > 
+> > > > > > Such MTRR entries provide safe guard to /dev/mem, which allows
+> > > > > > privileged user to access a range that may require UC mapping 
+> > > > > > while the /dev/mem driver blindly maps it with WB.  MTRRs 
+> > > > > > converts WB to UC in such a case.
+> > > > > 
+> > > > > But it wouldn't be impossible to simply read the MTRRs upon boot,
+> > > > > store the information, disable MTRRs, and correctly use PAT to
+> > > > > achieve the same effect (i.e. the "blindly maps" part of course
+> > > > > would need fixing).
+> > > > 
+> > > > It could be done, but I do not see much benefit of doing it.  One of 
+> > > > the reasons platform vendors set MTRRs is so that a system won't hit 
+> > > > a machine check when an OS bug leads an access with a wrong cache
+> > > > type.
+> > > > 
+> > > > A machine check is hard to analyze and can be seen as a hardware 
+> > > > issue by customers.  Emulating MTRRs with PAT won't protect from 
+> > > > such a bug.
+> > > 
+> > > That's seems like a fair and valid concern. This could only happen if
+> > > the OS would have code that would use MTRR, in the case of Linux we'll
+> > > soon be able to vet that this cannot happen.
+> > 
+> > No, there is no OS support necessary to use MTRR.  After firmware sets 
+> > it up, CPUs continue to use it without any OS support.  I think the 
+> > Linux change you are referring is to obsolete legacy interfaces that 
+> > modify the MTRR setup.  I agree that Linux should not modify MTRR.
+> 
+> Its a bit more than that though. Since you agree that the OS can live
+> without MTRR code I was hoping to then see if we can fold out PAT
+> Linux code from under the MTRR dependency on Linux and make PAT a
+> first class citizen, maybe at least for x86-64. Right now you can only
+> get PAT support on Linux if you have MTRR code, but I'd like to see if
+> instead we can rip MTRR code out completely under its own Kconfig and
+> let it start rotting away.
 >
-> Yes.
->
->>  What makes it
->> special so that it needs IRQF_NO_THREAD?
->
-> Because it will cascade into another irq primary handler (PCIe device irq
-> handler in this case). The irq primary handler must run in hard irq
-> context. But if imx6_pcie_msi_handler() run in a thread context, it
-> will cause the PCIe device primary irq handler also run in the same
-> thread context. That is why we get the kernel warning.
->
->>  I'm not doubting you; it's
->> just that it's a very simple handler with no obvious clue that it
->> needs anything special:
->>
->>   static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
->>   {
->>     struct pcie_port *pp = arg;
->>
->>     return dw_handle_msi_irq(pp);
->>   }
->>
->> So I guess whatever is special must be in dw_handle_msi_irq().  Is it
->> because dw_handle_msi_irq() calls generic_handle_irq()?
->
-> Yes.
->
->>
->> I notice that several other users of generic_handle_irq() are
->> registered via irq_set_chained_handler_and_data() instead of
->> devm_request_irq().  Should we be using that here, too?
->
-> I know that irq_set_chained_handler_and_data() is used by many drivers
-> when setting a cascade handler e.g. gpio and msi. But as you can see,
-> the imx driver (the same for dra7xx, exynos and spear) does set IRQF_SHARED
-> when requesting irq. This flag implies that this irq may be shared with
-> other device or function and irq_set_chained_handler_and_data() definitely
-> should not be used for a situation like this. Of course this maybe just a
-> paste error, but I am not sure about this. So I choose to still use
-> devm_request_irq(). There are other pros when using devm_request_irq() here
-> such as:
->   * simple error and exit path
->   * kstats update
->
->>
->> There are similar one-line patches for dra7xx, exynos, and spear.  I
->> would squash all of them into a single patch, since the change is so
->> trivial.  Then all of them would benefit from the detailed changelog
->> here.
+> Code-wise the only issue I saw was that PAT code also relies on
+> mtrr_type_lookup(), see pat_x_mtrr_type(), but other than this I found
+> no other obvious issues.
 
-Thanks.   I will update the changelog with some of this background.
-I'll respond with the patch as applied.
+We can rip of the MTTR code that modifies the MTRR setup, but not
+mtrr_type_lookup().  This function provides necessary checks per documented
+in commit 7f0431e3dc89 as follows.
 
->> >    [ INFO: inconsistent lock state ]
->> >    4.2.0-rc3-next-20150723 #28 Not tainted
->> >    ---------------------------------
->> >    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
->> >    irq/21-mx6-pcie/62 [HC0[0]:SC0[2]:HE1:SE0] takes:
->> >     (&irq_desc_lock_class){?.-...}, at: [<80078d94>] handle_simple_irq+0x1c/0xc0
->> >    {IN-HARDIRQ-W} state was registered at:
->> >      [<8006aa70>] lock_acquire+0x74/0x94
->> >      [<807acc6c>] _raw_spin_lock+0x34/0x44
->> >      [<8007900c>] handle_fasteoi_irq+0x20/0x1b8
->> >      [<80075720>] generic_handle_irq+0x28/0x38
->> >      [<80075864>] __handle_domain_irq+0x6c/0xe0
->> >      [<80009558>] gic_handle_irq+0x28/0x68
->> >      [<80013b64>] __irq_svc+0x44/0x5c
->> >      [<807ad400>] _raw_spin_unlock_irq+0x30/0x34
->> >      [<8004cffc>] finish_task_switch+0xc0/0x218
->> >      [<807a7a10>] __schedule+0x248/0x6e0
->> >      [<807a7fac>] schedule+0x38/0x9c
->> >      [<807a8240>] schedule_preempt_disabled+0x10/0x14
->> >      [<80063f8c>] cpu_startup_entry+0xfc/0x1f8
->> >      [<8079f640>] rest_init+0x130/0x16c
->> >      [<80a55ca4>] start_kernel+0x374/0x3e8
->> >      [<1000807c>] 0x1000807c
->> >    irq event stamp: 16
->> >    hardirqs last  enabled at (15): [<807ad3fc>] _raw_spin_unlock_irq+0x2c/0x34
->> >    hardirqs last disabled at (14): [<807acd80>] _raw_spin_lock_irq+0x20/0x58
->> >    softirqs last  enabled at (0): [<800283d8>] copy_process.isra.58+0x3bc/0x1504
->> >    softirqs last disabled at (16): [<80076f08>] irq_forced_thread_fn+0x0/0x68
->> >
->> >    other info that might help us debug this:
->> >     Possible unsafe locking scenario:
->> >
->> >           CPU0
->> >           ----
->> >      lock(&irq_desc_lock_class);
->> >      <Interrupt>
->> >        lock(&irq_desc_lock_class);
->> >
->> >     *** DEADLOCK ***
->> >
->> >    no locks held by irq/21-mx6-pcie/62.
->> >
->> >    stack backtrace:
->> >    CPU: 0 PID: 62 Comm: irq/21-mx6-pcie Not tainted 4.2.0-rc3-next-20150723 #28
->> >    Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
->> >    Backtrace:
->> >    [<80012dc4>] (dump_backtrace) from [<80012f64>] (show_stack+0x18/0x1c)
->> >     r6:be3eeb78 r5:00000000 r4:00000000 r3:00000000
->> >    [<80012f4c>] (show_stack) from [<807a4b50>] (dump_stack+0x80/0x9c)
->> >    [<807a4ad0>] (dump_stack) from [<807a2efc>] (print_usage_bug+0x270/0x2e4)
->> >     r5:be3ee780 r4:80c579ec
->> >    [<807a2c8c>] (print_usage_bug) from [<8006874c>] (mark_lock+0x5b4/0x6e0)
->> >     r10:80c579ec r9:800678e0 r8:be3ee780 r7:00000000 r6:80c579ec r5:be3eeb78
->> >     r4:00000002
->> >    [<80068198>] (mark_lock) from [<80068f70>] (__lock_acquire+0x6f8/0x1e20)
->> >     r10:00000001 r9:be3eeb78 r8:be3ee780 r7:00000008 r6:000003f8 r5:be3ee780
->> >     r4:00000000
->> >    [<80068878>] (__lock_acquire) from [<8006aa70>] (lock_acquire+0x74/0x94)
->> >     r10:00000001 r9:00000001 r8:00000000 r7:00000001 r6:00000001 r5:60030013
->> >     r4:00000000
->> >    [<8006a9fc>] (lock_acquire) from [<807acc6c>] (_raw_spin_lock+0x34/0x44)
->> >     r6:0000012c r5:00000001 r4:be1f4d64
->> >    [<807acc38>] (_raw_spin_lock) from [<80078d94>] (handle_simple_irq+0x1c/0xc0)
->> >     r5:be1f4d64 r4:be1f4d00
->> >    [<80078d78>] (handle_simple_irq) from [<80075720>] (generic_handle_irq+0x28/0x38)
->> >     r5:be28ee20 r4:0000012c
->> >    [<800756f8>] (generic_handle_irq) from [<80321914>] (dw_handle_msi_irq+0x68/0x90)
->> >     r4:00000001 r3:00000002
->> >    [<803218ac>] (dw_handle_msi_irq) from [<8032265c>] (imx6_pcie_msi_handler+0x14/0x18)
->> >     r7:80076f08 r6:be39efc0 r5:be154000 r4:be39efc0
->> >    [<80322648>] (imx6_pcie_msi_handler) from [<80076f38>] (irq_forced_thread_fn+0x30/0x68)
->> >    [<80076f08>] (irq_forced_thread_fn) from [<80076cb4>] (irq_thread+0x14c/0x19c)
->> >     r6:be39efc0 r5:be154000 r4:be39efe0 r3:00000004
->> >    [<80076b68>] (irq_thread) from [<80047f80>] (kthread+0xdc/0xf8)
->> >     r10:00000000 r9:00000000 r8:00000000 r7:80076b68 r6:be39efc0 r5:be3a1000
->> >     r4:00000000
->> >    [<80047ea4>] (kthread) from [<8000fa38>] (ret_from_fork+0x14/0x3c)
->> >     r7:00000000 r6:00000000 r5:80047ea4 r4:be3a1000
->> >
->> > Signed-off-by: Kevin Hao <haokexin@gmail.com>
->> > ---
->> >  drivers/pci/host/pci-imx6.c | 3 ++-
->> >  1 file changed, 2 insertions(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
->> > index 233a196c6e66..fd5eb2e34fc0 100644
->> > --- a/drivers/pci/host/pci-imx6.c
->> > +++ b/drivers/pci/host/pci-imx6.c
->> > @@ -544,7 +544,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->> >
->> >             ret = devm_request_irq(&pdev->dev, pp->msi_irq,
->> >                                    imx6_pcie_msi_handler,
->> > -                                  IRQF_SHARED, "mx6-pcie-msi", pp);
->> > +                                  IRQF_SHARED | IRQF_NO_THREAD,
->> > +                                  "mx6-pcie-msi", pp);
->> >             if (ret) {
->> >                     dev_err(&pdev->dev, "failed to request MSI irq\n");
->> >                     return -ENODEV;
->> > --
->> > 2.1.0
->> >
+    1) reserve_memtype() tracks an effective memory type in case
+       a request type is WB (ex. /dev/mem blindly uses WB). Missing
+       to track with its effective type causes a subsequent request
+       to map the same range with the effective type to fail.
+    
+    2) pud_set_huge() and pmd_set_huge() check if a requested range
+       has any overlap with MTRRs. Missing to detect an overlap may
+       cause a performance penalty or undefined behavior.
+
+mtrr_type_lookup() is still admittedly awkward, but I do not think we have
+an immediate issue in PAT code calling it.  I do not think it makes PAT code
+a second class citizen. 
+
+> Platform firmware and SMIs seems to be the only other possible issue.
+> More on this below.
+> 
+> > > For those type of OSes...
+> > > could it be possible to negotiate or hint to the platform through an
+> > > attribute somehow that the OS has such capability to not use MTRR?
+> > 
+> > The OS can disable MTRR.  However, this can also cause a problem in
+> > firmware, which may rely on MTRR.
+> 
+> Can you describe what type of issues we could expect ? I tend to care
+> more about this for 64-bit systems so if 32-bit platforms would be
+> more of the ones which could cause an issue would restricting
+> disabling MTRR only for 64-bit help?
+
+The SMI handler runs in real-mode and relies on MTRR being effective to
+provide right cache types.  It does not matter if it is 64-bit or not.
+
+> > > Then, only if this bit is set, the platform could then avoid such MTRR
+> > > settings, and if we have issues you can throw rocks at us.
+> > 
+> > > And if that's not possible how about a new platform setting that would
+> > > need to be set at the platform level to enable disabling this junk?
+> > > Then only folks who know what they are doing would enable it, and if
+> > > the customer set it, the issue would not be on the platform.
+> > 
+> > > Could this also be used to prevent SMIs with MTRRs?
+> > 
+> > ACPI _OSI could be used for firmware to implement some OS-specific 
+> > features, but it may be too late for firmware to make major changes and 
+> > is generally useless unless OS requirements are described in a spec 
+> > backed by logo certification.
+> 
+> I see.. So there are no guarantees that platform firmware would not
+> expect OS MTRR support.
+>
+> >  SMIs are also used for platform management, such as fan
+> > speed control.
+> 
+> And its conceivable that some devices, or the platform itself, may
+> trigger SMIs to have the platform firmware poke with MTRRs?
+
+SMIs are outside of OS control.  SMI handler relies on MTRR being set.  SMI
+must be quick, so the handler should not be required to initialize MTRR or
+page tables.
+
+> > Is there any issue for Linux to use MTRR set by firmware?
+> 
+> Even though we don't have the Kconfig option right now to disable MTRR
+> cod explicitly I'll note that there are a few other cases that could
+> flip Linux to note use MTRR:
+> 
+>   a) Some BIOSes could let MTRR get disabled
+>   b) As of Xen 4.4, the hypervisor disables X86_FEATURE_MTRR which
+> disables MTRR on Linux
+> 
+> If these environments can exist it'd be good to understand possible
+> issues that could creep up as a result of the OS not having MTRR
+> enabled. If this is a reasonable thing for x86-64 I was hoping we
+> could just let users opt-in to a similar build configuration through
+> the OS by letting PAT not depend on MTRR.
+
+Case a) and b) do not cause any issue.  They simply lead mtrr_type_lookup()
+to return immediately with MTRR_TYPE_INVALID (i.e. MTRR disable), and the
+callers handle this value properly.  These cases are only problematic when
+the OS tries to modify MTRR.
+
+Thanks,
+-Toshi
