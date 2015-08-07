@@ -1,193 +1,387 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:12968 "EHLO
-	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752940AbbHRTTN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:13 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v5 06/13] DMA-API: Add peer resource mapping documentation
-Date: Tue, 18 Aug 2015 14:04:02 -0500
-Message-ID: <1439924649-29698-7-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
-References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:47532 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbbHGFr0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2015 01:47:26 -0400
+Message-ID: <55C4461A.8040506@hisilicon.com>
+Date: Fri, 7 Aug 2015 13:46:02 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jingoo Han <jingoohan1@gmail.com>
+CC: "'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
+	"'Rob Herring'" <robherring2@gmail.com>,
+	"'Kishon Vijay Abraham I'" <kishon@ti.com>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>, <arnd@arndb.de>,
+	<lorenzo.pieralisi@arm.com>, <robh+dt@kernel.org>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>,
+	"'Yuanzhichang'" <yuanzhichang@hisilicon.com>,
+	"'Zhudacai'" <zhudacai@hisilicon.com>,
+	"'zhangjukuo'" <zhangjukuo@huawei.com>,
+	"'qiuzhenfa'" <qiuzhenfa@hisilicon.com>,
+	"'Liguozhu (Kenneth)'" <liguozhu@hisilicon.com>,
+	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Arnd Bergmann'" <arnd@linaro.org>
+Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
+References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com> <20150729172053.GE31170@google.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs> <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs> <20150730161447.GG9640@google.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs> <20150730171445.GI9640@google.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs> <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D70589@lhreml503-mbs> <55BB8CC6.1080203@ti.com> <CAL_JsqJqjiWVaKs-3ghQ1EBQzRRQ38GzkMV+FELPj53bSF-yXQ@mail.gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D712E7@lhreml503-mbs> <7F6386B4-D2F5-4840-AC72-F8C76CBC3B94@gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D719D1@lhreml503-mbs> <EE11001F9E5DDD47B7634E2F8A612F2E01D72CFE@lhreml503-mbs> <000701d0d059$7810fb70$6832f250$@com>
+In-Reply-To: <000701d0d059$7810fb70$6832f250$@com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add references to both the general API documentation, as well as the HOWTO,
-about the dma_(un)map_peer_resource() and dma_peer_mapping_error() APIs.
+On 2015/8/6 23:06, Jingoo Han wrote:
+> On Thursday, August 06, 2015 10:53 PM, Gabriele Paoloni wrote:
+>>
+>> Hi all
+>>
+>> This patch has now been moved in "[PATCH v6 1/6] PCI: designware: move calculation of bus addresses to
+>> DRA7xx"
+> 
+> To Zhou Wang,
+> 
+> Please send your patches to 'jingoohan1@gmail.com', instead of 'jg1.han@samsung.com'.
+> Even though, I have done mainline works for Samsung SoCs, Samsung does not support me
+> as a maintainer. So, please don't send your patches to my Samsung e-mail.
+> 
+> Best regards,
+> Jingoo Han
+>
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
----
- Documentation/DMA-API-HOWTO.txt | 69 +++++++++++++++++++++++++++++++++++++++++
- Documentation/DMA-API.txt       | 38 ++++++++++++++++++++---
- 2 files changed, 102 insertions(+), 5 deletions(-)
+Hi Jingoo,
 
-diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
-index 55b70b9..053a18f 100644
---- a/Documentation/DMA-API-HOWTO.txt
-+++ b/Documentation/DMA-API-HOWTO.txt
-@@ -143,6 +143,10 @@ What about block I/O and networking buffers?  The block I/O and
- networking subsystems make sure that the buffers they use are valid
- for you to DMA from/to.
- 
-+In some systems, it may also be possible to DMA to and/or from a peer
-+device's MMIO region, as described by a 'struct resource'. This is
-+referred to as a peer-to-peer mapping.
-+
- 			DMA addressing limitations
- 
- Does your device have any DMA addressing limitations?  For example, is
-@@ -653,6 +657,45 @@ Every dma_map_{single,sg}() call should have its dma_unmap_{single,sg}()
- counterpart, because the DMA address space is a shared resource and
- you could render the machine unusable by consuming all DMA addresses.
- 
-+Peer-to-peer DMA mappings can be obtained using dma_map_peer_resource() to
-+map another device's MMIO region for the given device:
-+
-+	dma_peer_addr_t dma_handle = dma_map_peer_resource(dev, peer, res,
-+							   offset, size,
-+							   direction);
-+	if (dma_peer_mapping_error(dev, dma_handle))
-+	{
-+		/*
-+		 * reduce current DMA mapping usage,
-+		 * delay and try again later or
-+		 * reset driver. P2P DMA may not be
-+		 * supported between the devices.
-+		 */
-+		goto map_error_handling;
-+	}
-+
-+	...
-+
-+	dma_unmap_peer_resource(dev, dma_handle, size, direction);
-+
-+Here, "res" is the struct resource * of the MMIO region, and "offset" means
-+byte offset within the given resource.
-+
-+You should call dma_peer_mapping_error() as dma_map_peer_resource() could fail
-+and return error.
-+
-+Not all implementations support dma_map_peer_resource(), but those that do
-+should also implement dma_peer_mapping_error(). dma_map_peer_resource() may
-+fail for various reasons depending on the implementation, but generally
-+may fail for the same reasons as those outlined under the dma_map_single()
-+discussion. In addition, the success of dma_map_peer_resource() may depend
-+on the physical topology between the two devices. For example, in the x86
-+implementations, peer-to-peer mappings will fail if the devices are behind
-+different host bridges.
-+
-+You should call dma_unmap_peer_resource() when DMA activity is finished,
-+e.g., from the interrupt which told you that the DMA transfer is done.
-+
- If you need to use the same streaming DMA region multiple times and touch
- the data in between the DMA transfers, the buffer needs to be synced
- properly in order for the CPU and device to see the most up-to-date and
-@@ -785,6 +828,23 @@ failure can be determined by:
- 		goto map_error_handling;
- 	}
- 
-+- checking the dma_peer_addr_t returned from dma_map_peer_resource() by using
-+  dma_peer_mapping_error():
-+
-+  	dma_peer_addr_t dma_handle;
-+
-+	dma_handle = dma_map_peer_resource(dev, peer, res, offset, size,
-+					   direction);
-+	if (dma_peer_mapping_error(dev, dma_handle)) {
-+		/*
-+		 * reduce current DMA mapping usage,
-+		 * delay and try again later or
-+		 * reset driver. P2P DMA may not be
-+		 * supported between the devices.
-+		 */
-+		goto map_error_handling;
-+	}
-+
- - unmap pages that are already mapped, when mapping error occurs in the middle
-   of a multiple page mapping attempt. These example are applicable to
-   dma_map_page() as well.
-@@ -956,6 +1016,15 @@ to "Closing".
-    support multiple types of IOMMUs in a single system, the example of
-    x86 or powerpc helps.
- 
-+4) Peer-to-peer requirements.
-+
-+   If your platform can support peer-to-peer DMA, enable HAS_DMA_P2P to
-+   include the peer-resource mapping interfaces in the DMA API, and
-+   provide an implementation of dma_peer_mapping_error(). The latter part
-+   is necessary because on some platforms, the dma_addr_t is not as wide
-+   as the full bus address, and therefore the existing dma_mapping_error()
-+   API may not be sufficient.
-+
- 			   Closing
- 
- This document, and the API itself, would not be in its current
-diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
-index 7eba542..c6f11a1 100644
---- a/Documentation/DMA-API.txt
-+++ b/Documentation/DMA-API.txt
-@@ -283,14 +283,42 @@ and <size> parameters are provided to do partial page mapping, it is
- recommended that you never use these unless you really know what the
- cache width is.
- 
-+dma_peer_addr_t
-+dma_map_peer_resource(struct device *dev, struct device *peer,
-+		      struct resource *res, unsigned long offset,
-+		      size_t size, enum dma_data_direction_direction)
-+
-+API for mapping resources. This API allows a driver to map a peer
-+device's resource for DMA. All the notes and warnings for the other
-+APIs apply here. Also, the success of this API does not validate or
-+guarantee that peer-to-peer transactions between the device and its
-+peer will be functional. They only grant access so that if such
-+transactions are possible, an IOMMU will not prevent them from
-+succeeding. However, a failure of this API may indicate that peer-to-peer
-+transactions are not expected to succeed across the underlying topology
-+between the devices.
-+
-+void
-+dma_unmap_peer_resource(struct device *dev, dma_peer_addr_t dma_address,
-+			size_t size, enum dma_data_direction direction)
-+
-+Unmaps the resource previously mapped. All the parameters passed in
-+must be identical to those passed in to (and returned by) the mapping
-+API.
-+
- int
- dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
- 
--In some circumstances dma_map_single() and dma_map_page() will fail to create
--a mapping. A driver can check for these errors by testing the returned
--DMA address with dma_mapping_error(). A non-zero return value means the mapping
--could not be created and the driver should take appropriate action (e.g.
--reduce current DMA mapping usage or delay and try again later).
-+int
-+dma_peer_mapping_error(struct device *dev, dma_peer_addr_t dma_addr)
-+
-+In some circumstances dma_map_single(), dma_map_page() and
-+dma_map_peer_resource() will fail to create a mapping. A driver can check for
-+these errors by testing the returned DMA address with dma_mapping_error()
-+(or dma_peer_mapping_error() for dma_map_peer_resource()). A non-zero return
-+value means the mapping could not be created and the driver should take
-+appropriate action (e.g. reduce current DMA mapping usage or delay and try
-+again later).
- 
- 	int
- 	dma_map_sg(struct device *dev, struct scatterlist *sg,
--- 
-2.5.0
+Sorry for that, I will add jingoohan1@gmail.com to v6 thread.
+
+Thanks for reminding,
+Zhou
+
+>>
+>> commit "f4c55c5a3f7f (PCI: designware: Program ATU with untranslated address)" has been reverted in
+>> "[PATCH v6 3/6] PCI: designware: Add ARM64 support"
+>>
+>> Gab
+>>
+>>> -----Original Message-----
+>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>>> owner@vger.kernel.org] On Behalf Of Gabriele Paoloni
+>>> Sent: Tuesday, August 04, 2015 11:12 AM
+>>> To: Jingoo Han
+>>> Cc: Rob Herring; Kishon Vijay Abraham I; Bjorn Helgaas; arnd@arndb.de;
+>>> lorenzo.pieralisi@arm.com; Wangzhou (B); robh+dt@kernel.org;
+>>> james.morse@arm.com; Liviu.Dudau@arm.com; linux-pci@vger.kernel.org;
+>>> linux-arm-kernel@lists.infradead.org; devicetree@vger.kernel.org;
+>>> Yuanzhichang; Zhudacai; zhangjukuo; qiuzhenfa; Liguozhu (Kenneth);
+>>> Pratyush Anand; Arnd Bergmann
+>>> Subject: RE: [PATCH v6] PCI: Store PCIe bus address in struct
+>>> of_pci_range
+>>>
+>>>
+>>>
+>>>> -----Original Message-----
+>>>> From: Jingoo Han [mailto:jingoohan1@gmail.com]
+>>>> Sent: Tuesday, August 04, 2015 5:20 AM
+>>>> To: Gabriele Paoloni
+>>>> Cc: Rob Herring; Kishon Vijay Abraham I; Bjorn Helgaas; arnd@arndb.de;
+>>>> lorenzo.pieralisi@arm.com; Wangzhou (B); robh+dt@kernel.org;
+>>>> james.morse@arm.com; Liviu.Dudau@arm.com; linux-pci@vger.kernel.org;
+>>>> linux-arm-kernel@lists.infradead.org; devicetree@vger.kernel.org;
+>>>> Yuanzhichang; Zhudacai; zhangjukuo; qiuzhenfa; Liguozhu (Kenneth);
+>>>> Pratyush Anand; Arnd Bergmann; jingoohan1@gmail.com
+>>>> Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct
+>>>> of_pci_range
+>>>>
+>>>> On 2015. 8. 3., at PM 8:18, Gabriele Paoloni
+>>>> <gabriele.paoloni@huawei.com> wrote:
+>>>>>
+>>>>> Rob, Kishon what about the following solution?....
+>>>>>
+>>>>> ---
+>>>>> drivers/pci/host/pci-dra7xx.c      | 12 ++++++++++++
+>>>>> drivers/pci/host/pcie-designware.c |  9 +++------
+>>>>
+>>>> Hi Paoloni,
+>>>>
+>>>> OK, it looks good.
+>>>> I want you to revert the following patch.
+>>>>
+>>>> commit "f4c55c5a3f7f (PCI: designware: Program ATU with untranslated
+>>>> address)"
+>>>>
+>>>> Would you remove all '*_mode_base's?
+>>>
+>>> Hi Jingoo Han,
+>>>
+>>> If I reverted the commit, in order to get designware working, dra7
+>>> should mask directly the CPU addresses stored in pp->cfg0_base,
+>>> pp->cfg1_base, pp->mem_base and pp->io_base.
+>>>
+>>> The masking would happen at this point:
+>>> http://lxr.free-electrons.com/source/drivers/pci/host/pcie-
+>>> designware.c#L493
+>>>
+>>> Now:
+>>> - I see that pp->cfg<0/1>_base are used in devm_ioremap before that
+>>>   point and nowhere else, so they should be ok.
+>>> - pp->mem_base is used in dw_pcie_setup_rc(); dw_pcie_setup_rc() is
+>>> called
+>>>   in dra7xx_pcie_host_init()...so here I should move the masking after
+>>>   dw_pcie_setup() retuned, but I think it should be ok
+>>> - pp->io_base is used in pci_ioremap_io() in dw_pcie_setup(). Now
+>>> currently
+>>>   in designware this is called by pci_bios_init_hw(); this is after the
+>>>   masking....so here we would have a the wrong value passed
+>>>
+>>> Said that if you look at "[PATCH v5 2/5] PCI: designware: Add ARM64
+>>> support",
+>>> that is the patchset where this patch is needed, you can see that
+>>> dw_pcie_setup() is removed and pp->io_base is used in
+>>> pci_remap_iospace() before
+>>> the masking would happen in dra7xx_pcie_host_init()...so for this
+>>> patchset we
+>>> should be good to revert the commit.
+>>>
+>>> I propose to add a new patch in the patchset "[PATCH v5 0/5] PCI: hisi:
+>>> Add PCIe
+>>> host support for HiSilicon SoC Hip05" as the one I just posted in this
+>>> thread (this would not revert the commit but just moves the masking to
+>>> dra7xx)
+>>>
+>>> I would revert the commit in "[PATCH v5 2/5] PCI: designware: Add ARM64
+>>> support"
+>>> together with the rest of designware rework.
+>>>
+>>> So we would have always a working version of designware...
+>>>
+>>> Are you ok with this?
+>>>
+>>>>
+>>>> Best regards,
+>>>> Jingoo Han
+>>>>
+>>>>> 2 files changed, 15 insertions(+), 6 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-
+>>>> dra7xx.c
+>>>>> index 80db09e..bb2635f 100644
+>>>>> --- a/drivers/pci/host/pci-dra7xx.c
+>>>>> +++ b/drivers/pci/host/pci-dra7xx.c
+>>>>> @@ -61,6 +61,7 @@
+>>>>>
+>>>>> #define    PCIECTRL_DRA7XX_CONF_PHY_CS            0x010C
+>>>>> #define    LINK_UP                        BIT(16)
+>>>>> +#define CPU_TO_BUS_ADDR             0x0FFFFFFF
+>>>>>
+>>>>> struct dra7xx_pcie {
+>>>>>    void __iomem        *base;
+>>>>> @@ -138,6 +139,17 @@ static void
+>>> dra7xx_pcie_enable_interrupts(struct
+>>>> pcie_port *pp)
+>>>>>
+>>>>> static void dra7xx_pcie_host_init(struct pcie_port *pp)
+>>>>> {
+>>>>> +    if (pp->io_mod_base)
+>>>>> +        pp->io_mod_base &= CPU_TO_BUS_ADDR;
+>>>>> +
+>>>>> +    if (pp->mem_mod_base)
+>>>>> +        pp->mem_mod_base &= CPU_TO_BUS_ADDR;
+>>>>> +
+>>>>> +    if (pp->cfg0_mod_base) {
+>>>>> +        pp->cfg0_mod_base &= CPU_TO_BUS_ADDR;
+>>>>> +        pp->cfg1_mod_base &= CPU_TO_BUS_ADDR;
+>>>>> +    }
+>>>>> +
+>>>>>    dw_pcie_setup_rc(pp);
+>>>>>    dra7xx_pcie_establish_link(pp);
+>>>>>    if (IS_ENABLED(CONFIG_PCI_MSI))
+>>>>> diff --git a/drivers/pci/host/pcie-designware.c
+>>>> b/drivers/pci/host/pcie-designware.c
+>>>>> index 69486be..06c682b 100644
+>>>>> --- a/drivers/pci/host/pcie-designware.c
+>>>>> +++ b/drivers/pci/host/pcie-designware.c
+>>>>> @@ -416,8 +416,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>>>>            pp->io_base = range.cpu_addr;
+>>>>>
+>>>>>            /* Find the untranslated IO space address */
+>>>>> -            pp->io_mod_base = of_read_number(parser.range -
+>>>>> -                             parser.np + na, ns);
+>>>>> +            pp->io_mod_base = range.cpu_addr;;
+>>>>>        }
+>>>>>        if (restype == IORESOURCE_MEM) {
+>>>>>            of_pci_range_to_resource(&range, np, &pp->mem);
+>>>>> @@ -426,8 +425,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>>>>            pp->mem_bus_addr = range.pci_addr;
+>>>>>
+>>>>>            /* Find the untranslated MEM space address */
+>>>>> -            pp->mem_mod_base = of_read_number(parser.range -
+>>>>> -                              parser.np + na, ns);
+>>>>> +            pp->mem_mod_base = range.cpu_addr;
+>>>>>        }
+>>>>>        if (restype == 0) {
+>>>>>            of_pci_range_to_resource(&range, np, &pp->cfg);
+>>>>> @@ -437,8 +435,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>>>>            pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+>>>>>
+>>>>>            /* Find the untranslated configuration space address */
+>>>>> -            pp->cfg0_mod_base = of_read_number(parser.range -
+>>>>> -                               parser.np + na, ns);
+>>>>> +            pp->cfg0_mod_base = range.cpu_addr;
+>>>>>            pp->cfg1_mod_base = pp->cfg0_mod_base +
+>>>>>                        pp->cfg0_size;
+>>>>>        }
+>>>>> --
+>>>>> 1.9.1
+>>>>>
+>>>>>
+>>>>>> -----Original Message-----
+>>>>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>>>>>> owner@vger.kernel.org] On Behalf Of Rob Herring
+>>>>>> Sent: Friday, July 31, 2015 5:53 PM
+>>>>>> To: Kishon Vijay Abraham I
+>>>>>> Cc: Gabriele Paoloni; Bjorn Helgaas; arnd@arndb.de;
+>>>>>> lorenzo.pieralisi@arm.com; Wangzhou (B); robh+dt@kernel.org;
+>>>>>> james.morse@arm.com; Liviu.Dudau@arm.com; linux-
+>>> pci@vger.kernel.org;
+>>>>>> linux-arm-kernel@lists.infradead.org; devicetree@vger.kernel.org;
+>>>>>> Yuanzhichang; Zhudacai; zhangjukuo; qiuzhenfa; Liguozhu (Kenneth);
+>>>>>> Jingoo Han; Pratyush Anand; Arnd Bergmann
+>>>>>> Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct
+>>>>>> of_pci_range
+>>>>>>
+>>>>>> On Fri, Jul 31, 2015 at 9:57 AM, Kishon Vijay Abraham I
+>>>> <kishon@ti.com>
+>>>>>> wrote:
+>>>>>>> +Arnd
+>>>>>>>
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>>> On Friday 31 July 2015 07:55 PM, Gabriele Paoloni wrote:
+>>>>>>>> [+cc Kishon]
+>>>>>>>>
+>>>>>>>>> -----Original Message-----
+>>>>>>>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>>>>>>>>> owner@vger.kernel.org] On Behalf Of Rob Herring
+>>>>>>>>> Sent: Thursday, July 30, 2015 9:42 PM
+>>>>>>>>> To: Gabriele Paoloni
+>>>>>>>>> Cc: Bjorn Helgaas; arnd@arndb.de; lorenzo.pieralisi@arm.com;
+>>>>>> Wangzhou
+>>>>>>>>> (B); robh+dt@kernel.org; james.morse@arm.com;
+>>> Liviu.Dudau@arm.com;
+>>>>>>>>> linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+>>>>>>>>> devicetree@vger.kernel.org; Yuanzhichang; Zhudacai; zhangjukuo;
+>>>>>>>>> qiuzhenfa; Liguozhu (Kenneth); Jingoo Han; Pratyush Anand
+>>>>>>>>> Subject: Re: [PATCH v6] PCI: Store PCIe bus address in struct
+>>>>>>>>> of_pci_range
+>>>>>>>>>
+>>>>>>>>> On Thu, Jul 30, 2015 at 12:34 PM, Gabriele Paoloni
+>>>>>>>>> <gabriele.paoloni@huawei.com> wrote:
+>>>>>>>>>>> -----Original Message-----
+>>>>>>>>>>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
+>>>>>>>>>>> Sent: 30 July 2015 18:15
+>>>>>>>>>>> On Thu, Jul 30, 2015 at 04:50:55PM +0000, Gabriele Paoloni
+>>>> wrote:
+>>>>>>>>>>>>> -----Original Message-----
+>>>>>>>>>>>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>>>>>>>>>>>>> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
+>>>>>>>>>>>>> Sent: Thursday, July 30, 2015 5:15 PM
+>>>>>>>>>>>>> On Thu, Jul 30, 2015 at 01:52:13PM +0000, Gabriele Paoloni
+>>>>>> wrote:
+>>>>>>>>>
+>>>>>>>>> [...]
+>>>>>>>>>
+>>>>>>>>>>>>>> I don’t think we should rely on [CPU] addresses...what if
+>>>> the
+>>>>>>>>>>>>> intermediate
+>>>>>>>>>>>>>> translation layer changes the lower significant bits of
+>>> the
+>>>>>>>>> "bus
+>>>>>>>>>>>>> address"
+>>>>>>>>>>>>>> to translate into a cpu address?
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> Is it really a possiblity that the lower bits could be
+>>>> changed?
+>>>>>>>>>>>>
+>>>>>>>>>>>> I've checked all the current deignware users DTs except
+>>> "pci-
+>>>>>>>>>>> layerscape"
+>>>>>>>>>>>> that I could not find:
+>>>>>>>>>>>> spear1310.dtsi
+>>>>>>>>>>>> spear1340.dtsi
+>>>>>>>>>>>> dra7.dtsi
+>>>>>>>>>>>> imx6qdl.dtsi
+>>>>>>>>>>>> imx6sx.dtsi
+>>>>>>>>>>>> keystone.dtsi
+>>>>>>>>>>>> exynos5440.dtsi
+>>>>>>>>>>>>
+>>>>>>>>>>>> None of them modifies the lower bits. To be more precise the
+>>>>>> only
+>>>>>>>>> guy
+>>>>>>>>>>>> that provides another translation layer is "dra7.dtsi":
+>>>>>>>>>>>> axi0
+>>>>>>>>>>>> http://lxr.free-
+>>>>>>>>> electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L207
+>>>>>>>>>>>>
+>>>>>>>>>>>> axi1
+>>>>>>>>>>>> http://lxr.free-
+>>>>>>>>> electrons.com/source/arch/arm/boot/dts/dra7.dtsi#L241
+>>>>>>>>>>>>
+>>>>>>>>>>>> For this case masking the top 4bits (bits28 to 31) should
+>>> make
+>>>>>> the
+>>>>>>>>> job.
+>>>>>>>>>
+>>>>>>>>> IMO, we should just fix this case. After further study, I don't
+>>>>>> think
+>>>>>>>>> this is a DW issue, but rather an SOC integration issue.
+>>>>>>>>>
+>>>>>>>>> I believe you can just fixup the address in the pp->ops-
+>>>>> host_init
+>>>>>> hook.
+>>>>>>>>
+>>>>>>>> Yes I guess that I could just assign pp->(*)_mod_base to the CPU
+>>>>>> address
+>>>>>>>> in DW and mask it out in dra7xx_pcie_host_init()...
+>>>>>>>>
+>>>>>>>> Kishon, would you be ok with that?
+>>>>>>>
+>>>>>>> Initially I was using *base-mask* property from dt. Me and Arnd
+>>>>>> (cc'ed) had
+>>>>>>> this discussion [1] before we decided the current approach. It'll
+>>>> be
+>>>>>> good to
+>>>>>>> check with Arnd too.
+>>>>>>>
+>>>>>>> [1] ->  http://lists.infradead.org/pipermail/linux-arm-
+>>> kernel/2014-
+>>>>>> May/253528.html
+>>>>>>
+>>>>>> The problem I have here is the use of ranges does not necessarily
+>>>> mean
+>>>>>> fewer address bits are available. It can be used just for
+>>>> convenience
+>>>>>> of not putting the full address into every node's reg property.
+>>> And
+>>>>>> vice versa, there are probably plenty of cases where we have the
+>>>> full
+>>>>>> address in the nodes, but really only some of the address bits are
+>>>>>> decoded at the IP block. Whether the address bits are present is
+>>>>>> rarely cared about or known by s/w folks until you hit a problem
+>>>> like
+>>>>>> this. Given this is an isolated case ATM, I would fix it in an
+>>>>>> isolated way. It does not affect the binding and could be changed
+>>> in
+>>>>>> the kernel later if this becomes a common need.
+>>>>>>
+>>>>>> Rob
+>>>>>> --
+>>>>>> To unsubscribe from this list: send the line "unsubscribe linux-
+>>> pci"
+>>>> in
+>>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> .
+> 
+
 
