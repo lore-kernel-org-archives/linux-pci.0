@@ -1,103 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:44048 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926AbbHSSp3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Aug 2015 14:45:29 -0400
-Received: from /spool/local
-	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Wed, 19 Aug 2015 15:45:27 -0300
-Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 41783352007E
-	for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2015 14:44:18 -0400 (EDT)
-Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
-	by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7JIhgNm30212492
-	for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2015 15:43:43 -0300
-Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
-	by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7JIjMF9004431
-	for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2015 15:45:23 -0300
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-To: mpe@ellerman.id.au
-Cc: gpiccoli@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	benh@kernel.crashing.org, paulus@samba.org, bhelgaas@google.com,
-	mst@redhat.com
-Subject: [PATCH v2 1/2] PCI: Make pci_msi_setup_pci_dev() non-static for use by arch code
-Date: Wed, 19 Aug 2015 15:45:22 -0300
-Message-Id: <1440009922-30248-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-In-Reply-To: <1439945086.23217.5.camel@ellerman.id.au>,<1439932077-11427-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
-References: <1439945086.23217.5.camel@ellerman.id.au>,<1439932077-11427-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Received: from mail-bl2on0100.outbound.protection.outlook.com ([65.55.169.100]:11454
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755677AbbHGHnq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Aug 2015 03:43:46 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH v3 5/5] MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+Date: Fri, 7 Aug 2015 15:43:02 +0800
+Message-ID: <1438933382-2936-6-git-send-email-lftan@altera.com>
+In-Reply-To: <1438933382-2936-1-git-send-email-lftan@altera.com>
+References: <1438933382-2936-1-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks very much for your suggestions Michael. I agree with them all,
-so I'm sending the patch v2 (see below).
-
-About the relevant mailing lists, I already sent to the linux-pci and
-already cc'ed Bjorn Helgaas - the problem is that I made a mistake and
-sent 2 different emails using git send-email. I'm really sorry about
-this.
-
-Now I'm trying to correct my mistake sending this message
-simultaneously to both lists (and to a bunch of cc's) using two
-Message-IDs in my reply. Hope it works...
-
-Cheers
-
-
-Changes since v2:
- * Made commit message more clear
- * Added "Fixes" line
- * Improved commit reference by using 12 first chars of SHA
-
->8----------8<
-
-Commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
-doesn't support MSI") changed the location of the code that disables
-MSI/MSI-X interrupts at PCI probe time in devices that have this flag
-set. It moved the code from pci_msi_init_pci_dev() to a new function
-named pci_msi_setup_pci_dev(), called by pci_setup_device().
-
-The pseries PCI probing code does not call pci_setup_device(), so since
-the aforementioned commit the function pci_msi_setup_pci_dev() is not
-called and MSI/MSI-X interrupts are left enabled, which is a bug. To fix
-this, the pseries PCI probe should manually call pci_msi_setup_pci_dev(),
-so this patch makes it non-static.
-
-Fixes: 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
-doesn't support MSI")
-
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- drivers/pci/probe.c | 2 +-
- include/linux/pci.h | 1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ MAINTAINERS | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..520c5b6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1103,7 +1103,7 @@ int pci_cfg_space_size(struct pci_dev *dev)
+diff --git a/MAINTAINERS b/MAINTAINERS
+index fd60784..32f5287 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7759,6 +7759,14 @@ F:	include/linux/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
  
- #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
++PCI DRIVER FOR ALTERA PCIE IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
++F:	drivers/pci/host/pcie-altera.c
++
+ PCI DRIVER FOR ARM VERSATILE PLATFORM
+ M:	Rob Herring <robh@kernel.org>
+ L:	linux-pci@vger.kernel.org
+@@ -7860,6 +7868,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
  
--static void pci_msi_setup_pci_dev(struct pci_dev *dev)
-+void pci_msi_setup_pci_dev(struct pci_dev *dev)
- {
- 	/*
- 	 * Disable the MSI hardware to avoid screaming interrupts
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a..860c751 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1202,6 +1202,7 @@ struct msix_entry {
- 	u16	entry;	/* driver uses to specify entry, OS writes */
- };
- 
-+void pci_msi_setup_pci_dev(struct pci_dev *dev);
- 
- #ifdef CONFIG_PCI_MSI
- int pci_msi_vec_count(struct pci_dev *dev);
++PCI MSI DRIVER FOR ALTERA MSI IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
++F:	drivers/pci/host/pcie-altera-msi.c
++
+ PCI MSI DRIVER FOR APPLIEDMICRO XGENE
+ M:	Duc Dang <dhdang@apm.com>
+ L:	linux-pci@vger.kernel.org
 -- 
-2.1.0
+1.8.2.1
 
