@@ -1,238 +1,603 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0081.outbound.protection.outlook.com ([65.55.169.81]:9792
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752245AbbHGHn2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 7 Aug 2015 03:43:28 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH v3 2/5] pci:host: Add Altera PCIe host controller driver
+Date: Fri, 7 Aug 2015 15:42:59 +0800
+Message-ID: <1438933382-2936-3-git-send-email-lftan@altera.com>
+In-Reply-To: <1438933382-2936-1-git-send-email-lftan@altera.com>
+References: <1438933382-2936-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-In-Reply-To: <55C10890.2070201@redhat.com>
-References: <1437495930-7723-1-git-send-email-jarod@redhat.com>
- <20150803041451.GA11144@google.com> <CAKfmpSdrdjyiQ-WWBdXFuPuTyo0WkTTsTX5ByHBt7haZeF0w=g@mail.gmail.com>
- <20150804165642.GB17327@google.com> <55C0F493.7080604@redhat.com>
- <20150804175141.GC17327@google.com> <55C10890.2070201@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 4 Aug 2015 14:27:27 -0500
-Message-ID: <CAErSpo4JoBxmwwscckH+hrSYFbqKgX4KAiRGS2ZDQxxZ_So63Q@mail.gmail.com>
-Subject: Re: [PATCH] pci/pciehp: bail on bogus pcie reads from removed devices
-To: Jarod Wilson <jarod@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 4, 2015 at 1:46 PM, Jarod Wilson <jarod@redhat.com> wrote:
-> On 8/4/2015 1:51 PM, Bjorn Helgaas wrote:
->>
->> On Tue, Aug 04, 2015 at 01:21:23PM -0400, Jarod Wilson wrote:
->>>
->>> On 8/4/2015 12:56 PM, Bjorn Helgaas wrote:
->>>>
->>>> On Tue, Aug 04, 2015 at 10:05:18AM -0400, Jarod Wilson wrote:
->>>>>
->>>>> On Mon, Aug 3, 2015 at 12:14 AM, Bjorn Helgaas <bhelgaas@google.com>
->>>>> wrote:
->>>>>
->>>>>> On Tue, Jul 21, 2015 at 12:25:30PM -0400, Jarod Wilson wrote:
->>>>>>>
->>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=99841
->>>>>>>
->>>>>>> Seems like a read of all 1's from a register of a device that has
->>>>>>> gone
->>>>>>> away should be taken as a sign that the device has gone away.
->>>>>>> Section 6.2.10 of the PCIE spec (v4.0, rev 0.3, Feb 19, 2014)
->>>>>>> suggests as
->>>>>>> much with this snippet:
->>>>>>>
->>>>>>> |IMPLEMENTATION NOTE
->>>>>>> |Data Value of All 1’s
->>>>>>> |Many platforms, including those supporting RP Extensions for DPC,
->>>>>>> can
->>>>>>> |return a data value of all 1’s to software when an error is
->>>>>>> associated
->>>>>>> |with a PCI Express Configuration, I/O, or Memory Read Request.
->>>>>>> During
->>>>>>
->>>>>> DPC,
->>>>>>>
->>>>>>> |the Downstream Port discards Requests destined for the Link and
->>>>>>
->>>>>> completes
->>>>>>>
->>>>>>> |them with an error (i.e., either with an Unsupported Request (UR) or
->>>>>>> |Completer Abort (CA) Completion Status). By ending a series of MMIO
->>>>>>> or
->>>>>>> |configuration space operations with a read to an address with a
->>>>>>> known
->>>>>>> |data value not equal to all 1’s, software may determine if a
->>>>>>> Completer
->>>>>>> |has been removed or DPC has been triggered.
->>>>>>>
->>>>>>> I'm not sure the above is directly relevant to this case, but the
->>>>>>> same
->>>>>>> principle (reading all 1's means the device is probably gone) seems
->>>>>>> to
->>>>>>> hold.
->>>>>>>
->>>>>>> This is based on part of a debugging patch Bjorn posted in the
->>>>>>> referenced
->>>>>>> bugzilla, and its required to make the HP ZBook G2 I've got here not
->>>>>>> barf
->>>>>>> when disconnecting a thunderbolt ethernet adapter and corrupt memory.
->>>>>>>
->>>>>>> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
->>>>>>> CC: Bjorn Helgaas <bhelgaas@google.com>
->>>>>>> CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>>>>>> CC: linux-pci@vger.kernel.org
->>>>>>> Signed-off-by: Jarod Wilson <jarod@redhat.com>
->>>>>>
->>>>>>
->>>>>> Hi Jarod,
->>>>>>
->>>>>> I think there are two issues here:
->>>>>>
->>>>>>    1) pciehp doesn't handle all 1's correctly
->>>>>>    2) use-after-free of hotplug_slot
->>>>>>
->>>>>> This patch is for the first issue.  I think it's correct, but I still
->>>>>> have a question or two.   I attached an updated version of the patch
->>>>>> and changelog.
->>>>>>
->>>>>> Here's the path I think we're taking: 03:03.0 receives pciehp
->>>>>> interrupt for removal (link down and card not present), and we call
->>>>>> pciehp_unconfigure_device() for 05:00.0 and everything downstream from
->>>>>> it.  Part of this is removing 06:00.0.  I expected this would use this
->>>>>> path:
->>>>>>
->>>>>>    pcie_port_remove_service            # .remove method for 06:00.0
->>>>>>      dev_printk("unloading service driver ...")
->>>>>>      pciehp_remove                     # hpdriver_portdrv.remove
->>>>>>        pciehp_release_ctrl
->>>>>>          pcie_shutdown_notification
->>>>>>            pcie_disable_notification
->>>>>>              pcie_write_cmd
->>>>>>                pcie_do_write_cmd(..., true)    # wait
->>>>>>                  pcie_wait_cmd
->>>>>>                    pcie_poll_cmd
->>>>>>                      read PCI_EXP_SLTSTA        # would get 0xffff
->>>>>>                  read PCI_EXPT_SLTCTL        # would get 0xffff
->>>>>>
->>>>>> so I added checks for ~0 data in pcie_poll_cmd() and
->>>>>> pcie_do_write_cmd().
->>>>>>
->>>>>> But the dmesg log shows that we were in pcie_isr(), and I don't
->>>>>> understand yet how we got there.  Can you help figure that out?  Maybe
->>>>>> put a dump_stack() in pcie_isr() or something?
->>>>>
->>>>>
->>>>> [ 1949.102247] pciehp 0000:03:03.0:pcie24: pcie_isr: intr_loc 108
->>>>> [ 1949.102252] pciehp 0000:03:03.0:pcie24: Presence/Notify input change
->>>>> [ 1949.102256] pciehp 0000:03:03.0:pcie24: Card not present on Slot(3)
->>>>> [ 1949.102262] pciehp 0000:03:03.0:pcie24: Data Link Layer State change
->>>>> [ 1949.102266] pciehp 0000:03:03.0:pcie24: slot(3): Link Down event
->>>>> [ 1949.102281] pciehp 0000:03:03.0:pcie24: Surprise Removal
->>>>> [ 1949.102286] pciehp 0000:03:03.0:pcie24: Link Down event ignored on
->>>>> slot(3): already powering off
->>>>> [ 1949.102288] pciehp 0000:03:03.0:pcie24: Disabling
->>>>> domain:bus:device=0000:05:00
->>>>> [ 1949.102290] pciehp 0000:03:03.0:pcie24: pciehp_unconfigure_device:
->>>>> domain:bus:dev = 0000:05:00
->>>>> [ 1950.321907] tg3 0000:07:00.0: tg3_abort_hw timed out, TX_MODE_ENABLE
->>>>> will not clear MAC_TX_MODE=ffffffff
->>>>> [ 1950.525986] [sched_delayed] sched: RT throttling activated
->>>>> [ 1950.544164] pciehp 0000:06:00.0:pcie24: unloading service driver
->>>>> pciehp
->>>>> [ 1950.544170] pciehp 0000:06:00.0:pcie24: release_slot: physical_slot
->>>>> = 9
->>>>> [ 1950.545016] pciehp 0000:06:00.0:pcie24: Timeout on hotplug command
->>>>> 0x1038 (issued 19092 msec ago)
->>>>> [ 1950.545020] pciehp 0000:06:00.0:pcie24: pcie_do_write_cmd: no
->>>>> response
->>>>
->>>> >from device
->>>>>
->>>>> [ 1950.545021] pciehp 0000:06:00.0:pcie24: pcie_disable_notification:
->>>>> SLOTCTRL d8 write cmd 0
->>>>> [ 1950.545025] pciehp 0000:06:00.0:pcie24: Device has gone away
->>>>> [ 1950.545027] CPU: 0 PID: 12361 Comm: kworker/0:2 Not tainted
->>>>> 3.10.0-302.el7.hp.x86_64 #1
->>>>> [ 1950.545028] Hardware name: Hewlett-Packard HP ZBook 15 G2/2253, BIOS
->>>>> M70
->>>>> Ver. 01.07 02/26/2015
->>>>> [ 1950.545033] Workqueue: pciehp-3 pciehp_power_thread
->>>>> [ 1950.545034]  0000000000000000 00000000f721dd13 ffff8804822ffa78
->>>>> ffffffff81632729
->>>>> [ 1950.545036]  ffff8804822ffac0 ffffffff8133bf64 ffff00000000002e
->>>>> 00000000f721dd13
->>>>> [ 1950.545038]  ffff8804818fab00 ffff880468f70cc0 000000000000002e
->>>>> 0000000000000282
->>>>> [ 1950.545039] Call Trace:
->>>>> [ 1950.545044]  [<ffffffff81632729>] dump_stack+0x19/0x1b
->>>>> [ 1950.545046]  [<ffffffff8133bf64>] pcie_isr+0x264/0x280
->>>>> [ 1950.545048]  [<ffffffff8111b6b9>] __free_irq+0x189/0x220
->>>>> [ 1950.545049]  [<ffffffff8111b7e9>] free_irq+0x49/0xb0
->>>>> [ 1950.545051]  [<ffffffff8133d3b9>] pciehp_release_ctrl+0xb9/0xe0
->>>>> [ 1950.545053]  [<ffffffff81339db3>] pciehp_remove+0x23/0x30
->>>>> [ 1950.545055]  [<ffffffff8133442e>] pcie_port_remove_service+0x4e/0x60
->>>>
->>>>
->>>> Do you have CONFIG_DEBUG_SHIRQ set?  When CONFIG_DEBUG_SHIRQ is set,
->>>> __free_irq() calls the ISR one last time.  It does make sense that the
->>>> driver must be prepared for the ISR to be called at any time before
->>>> free_irq() returns.  I just didn't see a path for the already-removed
->>>> device to generate an actual interrupt.
->>>
->>>
->>> Yup, I've got CONFIG_DEBUG_SHIRQ=y in my config. So I take it we're
->>> hitting the action->handler(irq, dev_id) bit in __free_irq(), after
->>> we've already done a bunch of teardown/removal?
->>
->>
->> OK, good, that explains why we called pcie_isr().
->>
->>>> Can you try the version I posted, with the additional tests in
->>>> pcie_poll_cmd() and pcie_do_write_cmd()?  We should try to read from
->>>> the device there, even before we free the IRQ, so we might see several
->>>> messages.  Maybe there's a way we can be smarter about bailing out
->>>> there.
->>>
->>>
->>> The above was with your additions munged in with the older patch, I
->>> actually do see "pcie_do_write_cmd: no response from device" just
->>> two lines ahead of each "Device has gone away" message from
->>> pcie_isr().
->>>
->>> pciehp 0000:06:00.0:pcie24: pcie_do_write_cmd: no response from device
->>> pciehp 0000:06:00.0:pcie24: pcie_disable_notification: SLOTCTRL d8
->>> write cmd 0
->>> pciehp 0000:06:00.0:pcie24: Device has gone away <- from pcie_isr()
->>
->>
->> Oh, sorry!  I should have noticed that.  I just wanted to make sure I
->> didn't cause a flood of extra messages.
->>
->> I think I'll merge this version (with all three checks).  We still have a
->> slot lifetime issue, but that's a separate problem.
->
->
-> Sounds good to me, thanks much for your help on this.
->
-> Do we really still have a slot lifetime issue though? It looks to be the
-> path from pciehp_release_ctrl that leads to free_irq and __free_irq calling
-> pcie_isr one last time, and there's a ctrl_info("Latch %s on Slot(%s)", open
-> ? ..., slot_name(slot)); in pcie_isr *if* we aren't bailing when we read all
-> 1's from PCI_EXP_SLTSTA. I think when we bail early, we should never see the
-> subsequent attempt to read the freed slot.
+This patch adds the Altera PCIe host controller driver.
 
-It's possible that we avoid referencing the freed data, but I don't
-have warm fuzzies because it's hard to prove that by analyzing the
-source code.  It's hard to even know what to look for -- there's no
-clue in the code that says "don't reference slot->hotplug_slot after
-this point."  And it feels like a poor design to hang on to that
-pointer after the slot has been freed.
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ drivers/pci/host/Kconfig       |   7 +
+ drivers/pci/host/Makefile      |   1 +
+ drivers/pci/host/pcie-altera.c | 532 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 540 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-altera.c
 
-IIRC, your initial report mentioned possible memory corruption, and I
-don't even have a theory about where that happened.  The
-slot->hotplug_slot references I saw were all reads where we printed
-junk but shouldn't have actually corrupted anything.
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 675c2d1..4b4754a 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -145,4 +145,11 @@ config PCIE_IPROC_BCMA
+ 	  Say Y here if you want to use the Broadcom iProc PCIe controller
+ 	  through the BCMA bus interface
+ 
++config PCIE_ALTERA
++	tristate "Altera PCIe controller"
++	depends on ARCH_SOCFPGA
++	help
++	  Say Y here if you want to enable PCIe controller support for Altera
++	  SoCFPGA family of SoCs.
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 140d66f..6954f76 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -17,3 +17,4 @@ obj-$(CONFIG_PCI_VERSATILE) += pci-versatile.o
+ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
++obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+new file mode 100644
+index 0000000..37bed81
+--- /dev/null
++++ b/drivers/pci/host/pcie-altera.c
+@@ -0,0 +1,532 @@
++/*
++ * Copyright Altera Corporation (C) 2013-2015. All rights reserved
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++#include <linux/interrupt.h>
++#include <linux/irqchip/chained_irq.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++
++#define A2P_ADDR_MAP_LO0		0x1000
++#define A2P_ADDR_MAP_HI0		0x1004
++#define RP_TX_REG0			0x2000
++#define RP_TX_REG1			0x2004
++#define RP_TX_CNTRL			0x2008
++#define RP_TX_EOP			0x2
++#define RP_TX_SOP			0x1
++#define RP_RXCPL_STATUS		0x2010
++#define RP_RXCPL_EOP			0x2
++#define RP_RXCPL_SOP			0x1
++#define RP_RXCPL_REG0			0x2014
++#define RP_RXCPL_REG1			0x2018
++#define P2A_INT_STATUS			0x3060
++#define P2A_INT_STS_ALL			0xF
++#define P2A_INT_ENABLE			0x3070
++#define P2A_INT_ENA_ALL			0xF
++#define RP_LTSSM			0x3C64
++#define LTSSM_L0			0xF
++
++/* TLP configuration type 0 and 1 */
++#define TLP_FMTTYPE_CFGRD0		0x04	/* Configuration Read Type 0 */
++#define TLP_FMTTYPE_CFGWR0		0x44	/* Configuration Write Type 0 */
++#define TLP_FMTTYPE_CFGRD1		0x05	/* Configuration Read Type 1 */
++#define TLP_FMTTYPE_CFGWR1		0x45	/* Configuration Write Type 1 */
++#define TLP_PAYLOAD_SIZE		0x01
++#define TLP_READ_TAG			0x1D
++#define TLP_WRITE_TAG			0x10
++#define TLP_CFG_DW0(fmttype)		(((fmttype) << 24) | TLP_PAYLOAD_SIZE)
++#define TLP_CFG_DW1(reqid, tag)		(((reqid) << 16) | (tag << 8) | 0xF)
++#define TLP_CFG_DW2(bus, devfn, offset)	\
++				(((bus) << 24) | ((devfn) << 16) | (offset))
++#define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
++#define TLP_COMPL_STATUS(hdr)		(((hdr) & 0xE0) >> 13)
++#define TLP_HDR_SIZE			3
++#define TLP_LOOP			10
++
++#define INTX_NUM		4
++
++/* Address translation table entry size */
++#define ATT_ENTRY_SIZE		8
++
++#define DWORD_MASK		3
++
++struct altera_pcie {
++	struct platform_device	*pdev;
++	struct resource		*txs;
++	void __iomem		*cra_base;
++	int			irq;
++	u8			root_bus_nr;
++	struct irq_domain		*irq_domain;
++	struct resource		bus_range;
++	struct list_head		resources;
++};
++
++struct tlp_rp_regpair_t {
++	u32 ctrl;
++	u32 reg0;
++	u32 reg1;
++};
++
++static void altera_pcie_retrain(struct pci_dev *dev)
++{
++	u16 linkcap, linkstat;
++
++	/*
++	 * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
++	 * current speed is 2.5 GB/s.
++	 */
++	pcie_capability_read_word(dev, PCI_EXP_LNKCAP, &linkcap);
++
++	if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
++		return;
++
++	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &linkstat);
++	if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB)
++		pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
++					 PCI_EXP_LNKCTL_RL);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, altera_pcie_retrain);
++
++static inline void cra_writel(struct altera_pcie *pcie, u32 value, u32 reg)
++{
++	writel_relaxed(value, pcie->cra_base + reg);
++}
++
++static inline u32 cra_readl(struct altera_pcie *pcie, u32 reg)
++{
++	return readl_relaxed(pcie->cra_base + reg);
++}
++
++static void tlp_read_rx(struct altera_pcie *pcie,
++			struct tlp_rp_regpair_t *tlp_rp_regdata)
++{
++	tlp_rp_regdata->ctrl = cra_readl(pcie, RP_RXCPL_STATUS);
++	tlp_rp_regdata->reg0 = cra_readl(pcie, RP_RXCPL_REG0);
++	tlp_rp_regdata->reg1 = cra_readl(pcie, RP_RXCPL_REG1);
++}
++
++static void tlp_write_tx(struct altera_pcie *pcie,
++			 struct tlp_rp_regpair_t *tlp_rp_regdata)
++{
++	cra_writel(pcie, tlp_rp_regdata->reg0, RP_TX_REG0);
++	cra_writel(pcie, tlp_rp_regdata->reg1, RP_TX_REG1);
++	cra_writel(pcie, tlp_rp_regdata->ctrl, RP_TX_CNTRL);
++}
++
++static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
++{
++	return !!(cra_readl(pcie, RP_LTSSM) & LTSSM_L0);
++}
++
++static bool altera_pcie_valid_config(struct altera_pcie *pcie,
++				     struct pci_bus *bus, int dev)
++{
++	/* If there is no link, then there is no device */
++	if (bus->number != pcie->root_bus_nr) {
++		if (!altera_pcie_link_is_up(pcie))
++			return false;
++	}
++
++	/* access only one slot on each root port */
++	if (bus->number == pcie->root_bus_nr && dev > 0)
++		return false;
++
++	/*
++	 * Do not read more than one device on the bus directly attached
++	 * to RC.
++	 */
++	if (bus->primary == pcie->root_bus_nr && dev > 0)
++		return false;
++
++	 return true;
++}
++
++static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
++{
++	u8 loop;
++	struct tlp_rp_regpair_t tlp_rp_regdata;
++
++	for (loop = TLP_LOOP; loop > 0; loop--) {
++		tlp_read_rx(pcie, &tlp_rp_regdata);
++		if (tlp_rp_regdata.ctrl & RP_RXCPL_EOP) {
++			if (value)
++				*value = tlp_rp_regdata.reg0;
++			return PCIBIOS_SUCCESSFUL;
++		}
++	}
++
++	return -ENOENT;
++}
++
++static void tlp_write_packet(struct altera_pcie *pcie, u32 *headers, u32 data)
++{
++	struct tlp_rp_regpair_t tlp_rp_regdata;
++
++	tlp_rp_regdata.reg0 = headers[0];
++	tlp_rp_regdata.reg1 = headers[1];
++	tlp_rp_regdata.ctrl = RP_TX_SOP;
++	tlp_write_tx(pcie, &tlp_rp_regdata);
++
++	tlp_rp_regdata.reg0 = headers[2];
++	tlp_rp_regdata.reg1 = data;
++	tlp_rp_regdata.ctrl = RP_TX_EOP;
++	tlp_write_tx(pcie, &tlp_rp_regdata);
++}
++
++static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
++			      int where, u32 *value)
++{
++	int ret;
++	u32 headers[TLP_HDR_SIZE];
++
++	if (bus == pcie->root_bus_nr)
++		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD0);
++	else
++		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD1);
++
++	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
++					TLP_READ_TAG);
++	headers[2] = TLP_CFG_DW2(bus, devfn, where);
++
++	tlp_write_packet(pcie, headers, 0);
++
++	ret = tlp_read_packet(pcie, value);
++	if (ret)
++		*value = ~0UL;	/* return 0xFFFFFFFF if error */
++
++	return ret;
++}
++
++static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
++			       int where, u32 value)
++{
++	u32 headers[TLP_HDR_SIZE];
++
++	if (bus == pcie->root_bus_nr)
++		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR0);
++	else
++		headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR1);
++
++	headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
++					TLP_WRITE_TAG);
++	headers[2] = TLP_CFG_DW2(bus, devfn, where);
++
++	tlp_write_packet(pcie, headers, value);
++
++	tlp_read_packet(pcie, NULL);
++
++	/* Keep an eye out for changes to the root bus number */
++	if ((bus == pcie->root_bus_nr) && (where == PCI_PRIMARY_BUS))
++		pcie->root_bus_nr = (u8)(value);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
++				int where, int size, u32 *value)
++{
++	struct altera_pcie *pcie = bus->sysdata;
++	int ret;
++
++	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn))) {
++		*value = ~0UL;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
++				 (where & ~DWORD_MASK), value);
++	if (ret != PCIBIOS_SUCCESSFUL)
++		return ret;
++
++	if (size == 1)
++		*value = (*value >> (8 * (where & 0x3))) & 0xff;
++	else if (size == 2)
++		*value = (*value >> (8 * (where & 0x2))) & 0xffff;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
++				 int where, int size, u32 value)
++{
++	struct altera_pcie *pcie = bus->sysdata;
++	u32 data32 = value;
++	u32 shift = 8 * (where & 3);
++	int ret;
++
++	if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	/* write partial */
++	if (size != sizeof(u32)) {
++		ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
++					 where & ~DWORD_MASK, &data32);
++		if (ret)
++			return ret;
++
++		if (size == 2)
++			data32 = (data32 & ~(0xffff << shift)) |
++					((value & 0xffff) << shift);
++		 else if (size == 1)
++			data32 = (data32 & ~(0xff << shift)) |
++					((value & 0xff) << shift);
++	}
++
++	return tlp_cfg_dword_write(pcie, bus->number, devfn,
++		(where & ~DWORD_MASK), data32);
++}
++
++static struct pci_ops altera_pcie_ops = {
++	.read = altera_pcie_cfg_read,
++	.write = altera_pcie_cfg_write,
++};
++
++static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
++				irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
++	irq_set_chip_data(irq, domain->host_data);
++	set_irq_flags(irq, IRQF_VALID);
++
++	return 0;
++}
++
++static const struct irq_domain_ops intx_domain_ops = {
++	.map = altera_pcie_intx_map,
++};
++
++static void altera_pcie_isr(unsigned int irq, struct irq_desc *desc)
++{
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct altera_pcie *pcie;
++	unsigned long status;
++	u32 bit;
++	u32 virq;
++
++	chained_irq_enter(chip, desc);
++	pcie = irq_desc_get_handler_data(desc);
++
++	do {
++		status = cra_readl(pcie, P2A_INT_STATUS) & P2A_INT_STS_ALL;
++		if (!status)
++			break;
++
++		do {
++			bit = find_first_bit(&status, INTX_NUM);
++			/* clear interrupts */
++			cra_writel(pcie, 1 << bit, P2A_INT_STATUS);
++
++			virq = irq_find_mapping(pcie->irq_domain, bit + 1);
++			if (virq)
++				generic_handle_irq(virq);
++			else
++				dev_info(&pcie->pdev->dev, "unexpected IRQ\n");
++
++			/* Clear the bit from status and repeat without reading
++			 * again status register. */
++			__clear_bit(bit, &status);
++		} while (status);
++	} while (1);
++
++	chained_irq_exit(chip, desc);
++}
++
++static void altera_pcie_release_of_pci_ranges(struct altera_pcie *pcie)
++{
++	pci_free_resource_list(&pcie->resources);
++}
++
++static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
++{
++	int err, res_valid = 0;
++	struct device *dev = &pcie->pdev->dev;
++	struct device_node *np = dev->of_node;
++	resource_size_t iobase;
++	struct resource_entry *win;
++
++	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pcie->resources,
++					       &iobase);
++	if (err)
++		return err;
++
++	resource_list_for_each_entry(win, &pcie->resources) {
++		struct resource *parent, *res = win->res;
++
++		switch (resource_type(res)) {
++		case IORESOURCE_MEM:
++			parent = &iomem_resource;
++			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
++			break;
++		default:
++			continue;
++		}
++
++		err = devm_request_resource(dev, parent, res);
++		if (err)
++			goto out_release_res;
++	}
++
++	if (!res_valid) {
++		dev_err(dev, "non-prefetchable memory resource required\n");
++		err = -EINVAL;
++		goto out_release_res;
++	}
++
++	return 0;
++
++out_release_res:
++	altera_pcie_release_of_pci_ranges(pcie);
++	return err;
++}
++
++static void altera_pcie_free_irq_domain(struct altera_pcie *pcie)
++{
++	int i;
++	u32 irq;
++
++	for (i = 0; i < INTX_NUM; i++) {
++		irq = irq_find_mapping(pcie->irq_domain, i);
++		if (irq > 0)
++			irq_dispose_mapping(irq);
++	}
++
++	irq_domain_remove(pcie->irq_domain);
++}
++
++static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
++{
++	struct device *dev = &pcie->pdev->dev;
++	struct device_node *node = dev->of_node;
++
++	/* Setup INTx */
++	pcie->irq_domain = irq_domain_add_linear(node, INTX_NUM,
++					&intx_domain_ops, pcie);
++	if (!pcie->irq_domain) {
++		dev_err(dev, "Failed to get a INTx IRQ domain\n");
++		return PTR_ERR(pcie->irq_domain);
++	}
++
++	return 0;
++}
++
++static int altera_pcie_parse_dt(struct altera_pcie *pcie)
++{
++	struct resource *cra;
++	struct platform_device *pdev = pcie->pdev;
++
++	cra = platform_get_resource_byname(pdev, IORESOURCE_MEM, "Cra");
++	pcie->cra_base = devm_ioremap_resource(&pdev->dev, cra);
++	if (IS_ERR(pcie->cra_base)) {
++		dev_err(&pdev->dev, "get Cra resource failed\n");
++		return PTR_ERR(pcie->cra_base);
++	}
++
++	/* setup IRQ */
++	pcie->irq = platform_get_irq(pdev, 0);
++	if (pcie->irq <= 0) {
++		dev_err(&pdev->dev, "failed to get IRQ: %d\n", pcie->irq);
++		return -EINVAL;
++	}
++
++	irq_set_chained_handler_and_data(pcie->irq, altera_pcie_isr, pcie);
++
++	return 0;
++}
++
++static int altera_pcie_probe(struct platform_device *pdev)
++{
++	struct altera_pcie *pcie;
++	struct pci_bus *bus;
++	int ret;
++
++	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
++	if (!pcie)
++		return -ENOMEM;
++
++	pcie->pdev = pdev;
++
++	ret = altera_pcie_parse_dt(pcie);
++	if (ret) {
++		dev_err(&pdev->dev, "Parsing DT failed\n");
++		return ret;
++	}
++
++	INIT_LIST_HEAD(&pcie->resources);
++
++	ret = altera_pcie_parse_request_of_pci_ranges(pcie);
++	if (ret) {
++		dev_err(&pdev->dev, "Failed add resources\n");
++		return ret;
++	}
++
++	ret = altera_pcie_init_irq_domain(pcie);
++	if (ret) {
++		dev_err(&pdev->dev, "Failed creating IRQ Domain\n");
++		return ret;
++	}
++
++	pcie->root_bus_nr = 0;
++
++	/* clear all interrupts */
++	cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
++	/* enable all interrupts */
++	cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
++
++	bus = pci_scan_root_bus(&pdev->dev, pcie->root_bus_nr, &altera_pcie_ops,
++				pcie, &pcie->resources);
++	if (!bus)
++		return -ENOMEM;
++
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_assign_unassigned_bus_resources(bus);
++	pci_bus_add_devices(bus);
++
++	platform_set_drvdata(pdev, pcie);
++	return ret;
++}
++
++static int __exit altera_pcie_remove(struct platform_device *pdev)
++{
++	struct altera_pcie *pcie = platform_get_drvdata(pdev);
++
++	altera_pcie_free_irq_domain(pcie);
++	platform_set_drvdata(pdev, NULL);
++	return 0;
++}
++
++static const struct of_device_id altera_pcie_of_match[] = {
++	{ .compatible = "altr,pcie-root-port-1.0", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, altera_pcie_of_match);
++
++static struct platform_driver altera_pcie_driver = {
++	.probe		= altera_pcie_probe,
++	.remove		= altera_pcie_remove,
++	.driver = {
++		.name	= "altera-pcie",
++		.of_match_table = altera_pcie_of_match,
++	},
++};
++
++module_platform_driver(altera_pcie_driver);
++
++MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
++MODULE_DESCRIPTION("Altera PCIe host controller driver");
++MODULE_LICENSE("GPL v2");
+-- 
+1.8.2.1
 
-Anyway, I don't know what to do about it, and I don't have time right
-now to poke at it, but it does worry me a bit.
-
-Bjorn
