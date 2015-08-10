@@ -1,174 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:25218 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753261AbbHKHkP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 03:40:15 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: "Wangzhou (B)" <wangzhou1@hisilicon.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	James Morse <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"Jason Cooper" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:36225 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788AbbHJWjD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 18:39:03 -0400
+Received: by igbij6 with SMTP id ij6so79474047igb.1
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 15:39:01 -0700 (PDT)
+Date: Mon, 10 Aug 2015 17:38:57 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	Kangfenglong <kangfenglong@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v6 0/6] PCI: hisi: Add PCIe host support for HiSilicon
- SoC Hip05
-Date: Tue, 11 Aug 2015 07:39:16 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D79B34@lhreml503-mbs>
-References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
- <55C449AF.3030303@hisilicon.com>
-In-Reply-To: <55C449AF.3030303@hisilicon.com>
-Content-Type: text/plain; charset="Windows-1252"
+	patchwork-lst@pengutronix.de
+Subject: Re: [PATCH v2 2/2] PCI: designware: implement multivector MSI irq
+ setup
+Message-ID: <20150810223857.GC13982@google.com>
+References: <1437662976-27188-1-git-send-email-l.stach@pengutronix.de>
+ <1437662976-27188-2-git-send-email-l.stach@pengutronix.de>
+ <CAHM4w1=Sz1xJ1OGc9xAMVCv8hMLwnWmGrkRLHdqpdC7EgzEbpQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHM4w1=Sz1xJ1OGc9xAMVCv8hMLwnWmGrkRLHdqpdC7EgzEbpQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn and all
+On Tue, Aug 04, 2015 at 08:41:15PM +0530, Pratyush Anand wrote:
+> On Thu, Jul 23, 2015 at 8:19 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> > Allows to set up and use multiple MSI irqs per device.
+> >
+> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 
-Any comment on this patchset?
+Thanks Lucas, I'm hoping for a little refactoring as Pratyush suggests
+and maybe a third patch to fill in the upper bytes of the message?  Or
+do those look not feasible?
 
-Thanks
+Bjorn
 
-Gab
-
-> -----Original Message-----
-> From: Wangzhou (B)
-> Sent: Friday, August 07, 2015 7:01 AM
-> To: Wangzhou (B)
-> Cc: Bjorn Helgaas; Jingoo Han; Pratyush Anand; Arnd Bergmann;
-> linux@arm.linux.org.uk; thomas.petazzoni@free-electrons.com; Gabriele
-> Paoloni; lorenzo.pieralisi@arm.com; James Morse; Liviu.Dudau@arm.com;
-> Jason Cooper; robh@kernel.org; linux-pci@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; devicetree@vger.kernel.org; Yuanzhichang;
-> Zhudacai; zhangjukuo; qiuzhenfa; liudongdong (C); qiujiang;
-> Kangfenglong; xuwei (O); Liguozhu (Kenneth)
-> Subject: Re: [PATCH v6 0/6] PCI: hisi: Add PCIe host support for
-> HiSilicon SoC Hip05
+> > ---
+> > The ifdef is needed to avoid a compile error on
+> > !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
+> > when the kernel is compiled with MSI support.
+> >
+> > v2: move ifdeffery inside single function
+> > ---
+> >  drivers/pci/host/pcie-designware.c | 43 ++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 43 insertions(+)
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 69486be7181e..52c600327805 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+> >         }
+> >
+> >         *pos = pos0;
+> > +       desc->nvec_used = no_irqs;
+> > +       desc->msi_attrib.multiple = order_base_2(no_irqs);
+> > +
+> >         return irq;
+> >
+> >  no_valid_irq:
+> > @@ -323,6 +326,45 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+> >         return 0;
+> >  }
+> >
+> > +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+> > +                            int nvec, int type)
+> > +{
+> > +#ifdef CONFIG_PCI_MSI
+> > +       int irq, pos;
+> > +       struct msi_desc *desc;
+> > +       struct msi_msg msg;
+> > +       struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> > +
+> > +       /* MSI-X interrupts are not supported */
+> > +       if (type == PCI_CAP_ID_MSIX)
+> > +               return -EINVAL;
+> > +
+> > +       WARN_ON(!list_is_singular(&pdev->msi_list));
+> > +       desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
+> > +
 > 
-> [+cc jingoohan1@gmail.com]
+> Probably existing function dw_msi_setup_irq() can be re-factored and code after
+> this line can be reused from refactored function, as they are almost same.
 > 
-> On 2015/8/6 16:09, Zhou Wang wrote:
-> > This patchset adds PCIe host support for HiSilicon SoC Hip05. The
-> PCIe hosts
-> > use PCIe IP core from Synopsys, So this driver is base on designware
-> PCIe driver.
-> >
-> > Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64
-> PCIe API in
-> > designeware PCIe driver. So this patch also adds ARM64 support for
-> designware
-> > pcie.
-> >
-> > This patchset is based on v4.2-rc1.
-> >
-> > Change from v5:
-> > - Merge 1/6 in this series, discussion about this can be found in [1]
-> >
-> > Change from v4:
-> > - Change the author of 1/5 to Gabriele.
-> > - Modify problems in 3/5 pointed by Bjorn.
-> > - Modify spelling problems in 4/5.
-> >
-> > Change from v3:
-> > - Change 1/5 to what Gabriele suggested.
-> > - Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3
-> series.
-> >
-> > Change from v2:
-> > - Move struct pci_dev *dev and struct pci_sys_data *sys in
-> >   pcibios_align_resource in 1/5.
-> > - Add Gabriele's codes in 2/5 which delete unnecessary information
-> parse and
-> >   use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
-> > - Add maintainer patch 5/5.
-> >
-> > Change from RFC v1:
-> > - Add 1/4 patch by Arnd which removes align_resource callback in ARM
-> >   pcibios_align_resource.
-> > - Change head file in pcie-designware from asm/hardirq.h to
-> linux/hardirq.h.
-> > - Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone,
-> layerscape,
-> >   spear13xx.
-> > - Remove unnecessary parentheses of some macros in pcie-hisi.
-> > - Use macro to replace some magic values.
-> > - Merge two loops together and add some comments about it in
-> context_config
-> >   function in pcie-hisi.
-> > - Modify some value of items in pcie node example in binding document.
-> >
-> > Change from RFC:
-> > - delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct
-> hw_pci,
-> >   merge related operations into dw_pcie_host_init.
-> >
-> > Link of v5:
-> > - http://www.spinics.net/lists/devicetree/msg87959.html
-> > Link of v4:
-> > - http://www.spinics.net/lists/arm-kernel/msg433050.html
-> > Link of v3:
-> > - http://www.spinics.net/lists/linux-pci/msg42539.html
-> > Link of v2:
-> > - http://www.spinics.net/lists/linux-pci/msg41844.html
-> > Link of RFC v1:
-> > - http://www.spinics.net/lists/linux-pci/msg41305.html
-> > Link of RFC:
-> > - http://www.spinics.net/lists/linux-pci/msg40434.html
-> >
-> > [1] http://lists.infradead.org/pipermail/linux-arm-kernel/2015-
-> July/359741.html
-> >
-> > Zhou Wang (4):
-> >   PCI: designware: Add ARM64 support
-> >   PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
-> >   Documentation: DT: Add HiSilicon PCIe host binding
-> >   MAINTAINERS: Add pcie-hisi maintainer
-> >
-> > gabriele paoloni (2):
-> >   PCI: designware: move calculation of bus addresses to DRA7xx
-> >   ARM/PCI: remove align_resource in pci_sys_data
-> >
-> >  .../devicetree/bindings/pci/hisilicon-pcie.txt     |  46 ++++
-> >  MAINTAINERS                                        |   7 +
-> >  arch/arm/include/asm/mach/pci.h                    |   5 -
-> >  arch/arm/kernel/bios32.c                           |  12 +-
-> >  drivers/pci/host/Kconfig                           |   8 +
-> >  drivers/pci/host/Makefile                          |   1 +
-> >  drivers/pci/host/pci-dra7xx.c                      |  14 ++
-> >  drivers/pci/host/pci-exynos.c                      |   2 +-
-> >  drivers/pci/host/pci-imx6.c                        |   2 +-
-> >  drivers/pci/host/pci-keystone-dw.c                 |   2 +-
-> >  drivers/pci/host/pci-keystone.c                    |   2 +-
-> >  drivers/pci/host/pci-layerscape.c                  |   2 +-
-> >  drivers/pci/host/pcie-designware.c                 | 236 ++++++-----
-> --------
-> >  drivers/pci/host/pcie-designware.h                 |  14 +-
-> >  drivers/pci/host/pcie-hisi.c                       | 254
-> +++++++++++++++++++++
-> >  drivers/pci/host/pcie-spear13xx.c                  |   2 +-
-> >  16 files changed, 425 insertions(+), 184 deletions(-)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-
-> pcie.txt
-> >  create mode 100644 drivers/pci/host/pcie-hisi.c
-> >
+> > +       irq = assign_irq(nvec, desc, &pos);
+> > +       if (irq < 0)
+> > +               return irq;
+> > +
+> > +       if (pp->ops->get_msi_addr)
+> > +               msg.address_lo = pp->ops->get_msi_addr(pp);
+> > +       else
+> > +               msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> > +       msg.address_hi = 0x0;
+> > +
 > 
-
+> Although, not specific to this patch, but since we are now going to have
+> ARM64 support for DW as well, so it would be nice to fill msg.address_hi
+> with upper bytes rather hard-coding as 0.
+> 
+> > +       if (pp->ops->get_msi_data)
+> > +               msg.data = pp->ops->get_msi_data(pp, pos);
+> > +       else
+> > +               msg.data = pos;
+> > +
+> > +       pci_write_msi_msg(irq, &msg);
+> > +
+> > +       return 0;
+> 
+> ~Pratyush
