@@ -1,211 +1,256 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:49944 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150AbbHFENQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:16 -0400
-Received: from /spool/local
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:13 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:34353 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbbHJIHf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 04:07:35 -0400
+Received: by pawu10 with SMTP id u10so135100172paw.1
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 01:07:35 -0700 (PDT)
+Subject: Re: [PATCH v6 09/42] powerpc/powernv: DMA32 cleanup
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-10-git-send-email-gwshan@linux.vnet.ibm.com>
 Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
 	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 15/42] powerpc/powernv: PE oriented during configuration
-Date: Thu,  6 Aug 2015 14:11:20 +1000
-Message-Id: <1438834307-26960-16-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	panto@antoniou-consulting.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <55C85BBF.4070802@ozlabs.ru>
+Date: Mon, 10 Aug 2015 18:07:27 +1000
+MIME-Version: 1.0
+In-Reply-To: <1438834307-26960-10-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several functions used to configure PE take pe_number to indentify
-PE instance. As the pe_number is included in PE instance after it
-is reserved or allocated. It's convienent for those functions to
-return PE instance which includes the required pe_number.
+On 08/06/2015 02:11 PM, Gavin Shan wrote:
+> The patch cleans up DMA32 in pci-ioda.c. It shouldn't introduce
+> behavioural changes:
+>
+>     * Rename various fields in "struct pnv_phb" and "struct pnv_ioda_pe"
+>       as 32-bits DMA should be related to "DMA", not "TCE".
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 51 ++++++++++++++++---------------
- arch/powerpc/platforms/powernv/pci.h      |  2 +-
- 2 files changed, 27 insertions(+), 26 deletions(-)
+s/dma_weight/dma32_weight/ is ok (does not add much though_ but the rest is 
+not. The "tce32_" fields are still TCEs (translation entries) while DMA is 
+a process initiated by a device which does not know about how exactly DMA 
+addresses are translated later. Since we are on the host side and we 
+actually manage TCE tables here, I suggest keeping the "tce32_" prefix for 
+TCE tables and memory they use.
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 3094c61..9f53682 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -132,12 +132,12 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
- 		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
- }
- 
--static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
-+static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
- {
- 	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe)) {
- 		pr_warn("%s: Invalid PE %d on PHB#%x\n",
- 			__func__, pe_no, phb->hose->global_number);
--		return;
-+		return NULL;
- 	}
- 
- 	if (test_and_set_bit(pe_no, phb->ioda.pe_alloc))
-@@ -146,9 +146,11 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
- 
- 	phb->ioda.pe_array[pe_no].phb = phb;
- 	phb->ioda.pe_array[pe_no].pe_number = pe_no;
-+
-+	return &phb->ioda.pe_array[pe_no];
- }
- 
--static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
-+static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
- {
- 	unsigned long pe;
- 
-@@ -156,12 +158,12 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
- 		pe = find_next_zero_bit(phb->ioda.pe_alloc,
- 					phb->ioda.total_pe, 0);
- 		if (pe >= phb->ioda.total_pe)
--			return IODA_INVALID_PE;
-+			return NULL;
- 	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
- 
- 	phb->ioda.pe_array[pe].phb = phb;
- 	phb->ioda.pe_array[pe].pe_number = pe;
--	return pe;
-+	return &phb->ioda.pe_array[pe];
- }
- 
- static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
-@@ -334,7 +336,7 @@ static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
- 	}
- }
- 
--static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
-+static struct pnv_ioda_pe *pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- {
- 	struct pci_controller *hose = pci_bus_to_host(bus);
- 	struct pnv_phb *phb = hose->private_data;
-@@ -344,7 +346,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 
- 	/* Root bus shouldn't use M64 */
- 	if (pci_is_root_bus(bus))
--		return IODA_INVALID_PE;
-+		return NULL;
- 
- 	/* Allocate bitmap */
- 	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
-@@ -352,7 +354,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 	if (!pe_alloc) {
- 		pr_warn("%s: Out of memory !\n",
- 			__func__);
--		return IODA_INVALID_PE;
-+		return NULL;
- 	}
- 
- 	/* Figure out reserved PE numbers by the PE */
-@@ -365,7 +367,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 	 */
- 	if (bitmap_empty(pe_alloc, phb->ioda.total_pe)) {
- 		kfree(pe_alloc);
--		return IODA_INVALID_PE;
-+		return NULL;
- 	}
- 
- 	/*
-@@ -416,7 +418,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 	}
- 
- 	kfree(pe_alloc);
--	return master_pe->pe_number;
-+	return master_pe;
- }
- 
- static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
-@@ -1069,28 +1071,26 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
-  * subordinate PCI devices and buses. The second type of PE is normally
-  * orgiriated by PCIe-to-PCI bridge or PLX switch downstream ports.
-  */
--static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
-+static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- {
- 	struct pci_controller *hose = pci_bus_to_host(bus);
- 	struct pnv_phb *phb = hose->private_data;
--	struct pnv_ioda_pe *pe;
--	int pe_num = IODA_INVALID_PE;
-+	struct pnv_ioda_pe *pe = NULL;
- 
- 	/* Check if PE is determined by M64 */
- 	if (phb->pick_m64_pe)
--		pe_num = phb->pick_m64_pe(bus, all);
-+		pe = phb->pick_m64_pe(bus, all);
- 
- 	/* The PE number isn't pinned by M64 */
--	if (pe_num == IODA_INVALID_PE)
--		pe_num = pnv_ioda_alloc_pe(phb);
-+	if (!pe)
-+		pe = pnv_ioda_alloc_pe(phb);
- 
--	if (pe_num == IODA_INVALID_PE) {
--		pr_warning("%s: Not enough PE# available for PCI bus %04x:%02x\n",
-+	if (!pe) {
-+		pr_warning("%s: No enough PE# for PCI bus %04x:%02x\n",
- 			__func__, pci_domain_nr(bus), bus->number);
--		return;
-+		return NULL;
- 	}
- 
--	pe = &phb->ioda.pe_array[pe_num];
- 	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
- 	pe->pbus = bus;
- 	pe->pdev = NULL;
-@@ -1101,17 +1101,16 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 
- 	if (all)
- 		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
--			bus->busn_res.start, bus->busn_res.end, pe_num);
-+			bus->busn_res.start, bus->busn_res.end, pe->pe_number);
- 	else
- 		pe_info(pe, "Secondary bus %d associated with PE#%d\n",
--			bus->busn_res.start, pe_num);
-+			bus->busn_res.start, pe->pe_number);
- 
- 	if (pnv_ioda_configure_pe(phb, pe)) {
- 		/* XXX What do we do here ? */
--		if (pe_num)
--			pnv_ioda_free_pe(phb, pe_num);
-+		pnv_ioda_free_pe(phb, pe->pe_number);
- 		pe->pbus = NULL;
--		return;
-+		return NULL;
- 	}
- 
- 	/* Associate it with all child devices */
-@@ -1122,6 +1121,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 
- 	/* Link the PE */
- 	pnv_ioda_link_pe_by_weight(phb, pe);
-+
-+	return pe;
- }
- 
- static void pnv_ioda_setup_PEs(struct pci_bus *bus)
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 6f8568e..c0bc57f 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -121,7 +121,7 @@ struct pnv_phb {
- 	int (*init_m64)(struct pnv_phb *phb);
- 	void (*reserve_m64_pe)(struct pci_bus *bus,
- 			       unsigned long *pe_bitmap, bool all);
--	int (*pick_m64_pe)(struct pci_bus *bus, bool all);
-+	struct pnv_ioda_pe* (*pick_m64_pe)(struct pci_bus *bus, bool all);
- 	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
- 	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
- 	int (*unfreeze_pe)(struct pnv_phb *phb, int pe_no, int opt);
+>     * Removed struct pnv_ioda_pe::tce32_segcount.
+
+That's confusing - I had to walk through patches to find out where you 
+stopped using it. It would be simpler if you put this particular change to
+
+[PATCH v6 02/42] powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
+
+where you remove dead code.
+
+
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 48 +++++++++++++++----------------
+>   arch/powerpc/platforms/powernv/pci.h      |  7 ++---
+>   2 files changed, 27 insertions(+), 28 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 7342cfd..8456f37 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -917,7 +917,7 @@ static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
+>   	struct pnv_ioda_pe *lpe;
+>
+>   	list_for_each_entry(lpe, &phb->ioda.pe_dma_list, dma_link) {
+> -		if (lpe->dma_weight < pe->dma_weight) {
+> +		if (lpe->dma32_weight < pe->dma32_weight) {
+>   			list_add_tail(&pe->dma_link, &lpe->dma_link);
+>   			return;
+>   		}
+> @@ -942,14 +942,14 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
+>   	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
+>   	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
+>   	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
+> -		return 3 * phb->ioda.tce32_count;
+> +		return 3 * phb->ioda.dma32_segcount;
+>
+>   	/* Increase the weight of RAID (includes Obsidian) */
+>   	if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
+> -		return 15 * phb->ioda.tce32_count;
+> +		return 15 * phb->ioda.dma32_segcount;
+>
+>   	/* Default */
+> -	return 10 * phb->ioda.tce32_count;
+> +	return 10 * phb->ioda.dma32_segcount;
+>   }
+>
+>   static int __pnv_ioda_phb_dma_weight(struct pci_dev *pdev, void *data)
+> @@ -1057,7 +1057,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>   			continue;
+>   		}
+>   		pdn->pe_number = pe->pe_number;
+> -		pe->dma_weight += pnv_ioda_dma_weight(dev);
+> +		pe->dma32_weight += pnv_ioda_dma_weight(dev);
+>   		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+>   			pnv_ioda_setup_same_PE(dev->subordinate, pe);
+>   	}
+> @@ -1094,10 +1094,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>   	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
+>   	pe->pbus = bus;
+>   	pe->pdev = NULL;
+> -	pe->tce32_seg = -1;
+> +	pe->dma32_seg = -1;
+>   	pe->mve_number = -1;
+>   	pe->rid = bus->busn_res.start << 8;
+> -	pe->dma_weight = 0;
+> +	pe->dma32_weight = 0;
+>
+>   	if (all)
+>   		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
+> @@ -1460,7 +1460,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+>   		pe->flags = PNV_IODA_PE_VF;
+>   		pe->pbus = NULL;
+>   		pe->parent_dev = pdev;
+> -		pe->tce32_seg = -1;
+> +		pe->dma32_seg = -1;
+>   		pe->mve_number = -1;
+>   		pe->rid = (pci_iov_virtfn_bus(pdev, vf_index) << 8) |
+>   			   pci_iov_virtfn_devfn(pdev, vf_index);
+> @@ -1936,7 +1936,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>   	/* XXX FIXME: Allocate multi-level tables on PHB3 */
+>
+>   	/* We shouldn't already have a 32-bit DMA associated */
+> -	if (WARN_ON(pe->tce32_seg >= 0))
+> +	if (WARN_ON(pe->dma32_seg >= 0))
+>   		return;
+>
+>   	tbl = pnv_pci_table_alloc(phb->hose->node);
+> @@ -1945,7 +1945,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>   	pnv_pci_link_table_and_group(phb->hose->node, 0, tbl, &pe->table_group);
+>
+>   	/* Grab a 32-bit TCE table */
+> -	pe->tce32_seg = base;
+> +	pe->dma32_seg = base;
+>   	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
+>   		(base << 28), ((base + segs) << 28) - 1);
+>
+> @@ -2006,8 +2006,8 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>   	return;
+>    fail:
+>   	/* XXX Failure: Try to fallback to 64-bit only ? */
+> -	if (pe->tce32_seg >= 0)
+> -		pe->tce32_seg = -1;
+> +	if (pe->dma32_seg >= 0)
+> +		pe->dma32_seg = -1;
+>   	if (tce_mem)
+>   		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
+>   	if (tbl) {
+> @@ -2405,7 +2405,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   	int64_t rc;
+>
+>   	/* We shouldn't already have a 32-bit DMA associated */
+> -	if (WARN_ON(pe->tce32_seg >= 0))
+> +	if (WARN_ON(pe->dma32_seg >= 0))
+>   		return;
+>
+>   	/* TVE #1 is selected by PCI address bit 59 */
+> @@ -2415,7 +2415,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   			pe->pe_number);
+>
+>   	/* The PE will reserve all possible 32-bits space */
+> -	pe->tce32_seg = 0;
+> +	pe->dma32_seg = 0;
+>   	pe_info(pe, "Setting up 32-bit TCE table at 0..%08x\n",
+>   		phb->ioda.m32_pci_base);
+>
+> @@ -2432,8 +2432,8 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>
+>   	rc = pnv_pci_ioda2_setup_default_config(pe);
+>   	if (rc) {
+> -		if (pe->tce32_seg >= 0)
+> -			pe->tce32_seg = -1;
+> +		if (pe->dma32_seg >= 0)
+> +			pe->dma32_seg = -1;
+>   		return;
+>   	}
+>
+> @@ -2452,7 +2452,7 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+>   	/* Calculate the PHB's DMA weight */
+>   	dma_weight = pnv_ioda_phb_dma_weight(phb);
+>   	pr_info("PCI%04x has %ld DMA32 segments, total weight %d\n",
+> -		hose->global_number, phb->ioda.tce32_count, dma_weight);
+> +		hose->global_number, phb->ioda.dma32_segcount, dma_weight);
+>
+>   	pnv_pci_ioda_setup_opal_tce_kill(phb);
+>
+> @@ -2461,7 +2461,7 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+>   	 * weight
+>   	 */
+>   	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
+> -		if (!pe->dma_weight)
+> +		if (!pe->dma32_weight)
+>   			continue;
+>
+>   		/*
+> @@ -2472,15 +2472,15 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+>   		if (phb->type == PNV_PHB_IODA1) {
+>   			unsigned int segs, base = 0;
+>
+> -			if (pe->dma_weight <
+> -			    dma_weight / phb->ioda.tce32_count)
+> +			if (pe->dma32_weight <
+> +			    dma_weight / phb->ioda.dma32_segcount)
+>   				segs = 1;
+>   			else
+> -				segs = (pe->dma_weight *
+> -					phb->ioda.tce32_count) / dma_weight;
+> +				segs = (pe->dma32_weight *
+> +					phb->ioda.dma32_segcount) / dma_weight;
+>
+>   			pe_info(pe, "DMA32 weight %d, assigned %d segments\n",
+> -				pe->dma_weight, segs);
+> +				pe->dma32_weight, segs);
+>   			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
+>
+>   			base += segs;
+> @@ -3211,7 +3211,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   	mutex_init(&phb->ioda.pe_list_mutex);
+>
+>   	/* Calculate how many 32-bit TCE segments we have */
+> -	phb->ioda.tce32_count = phb->ioda.m32_pci_base >> 28;
+> +	phb->ioda.dma32_segcount = phb->ioda.m32_pci_base >> 28;
+>
+>   #if 0 /* We should really do that ... */
+>   	rc = opal_pci_set_phb_mem_window(opal->phb_id,
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index addd3f7..574fe43 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -61,11 +61,10 @@ struct pnv_ioda_pe {
+>   	/* "Weight" assigned to the PE for the sake of DMA resource
+>   	 * allocations
+>   	 */
+> -	unsigned int		dma_weight;
+> +	unsigned int		dma32_weight;
+>
+>   	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+> -	int			tce32_seg;
+> -	int			tce32_segcount;
+> +	int			dma32_seg;
+>   	struct iommu_table_group table_group;
+>
+>   	/* 64-bit TCE bypass region */
+> @@ -181,7 +180,7 @@ struct pnv_phb {
+>   			unsigned char		pe_rmap[0x10000];
+>
+>   			/* 32-bit TCE tables allocation */
+> -			unsigned long		tce32_count;
+> +			unsigned long		dma32_segcount;
+>
+>   			/* Sorted list of used PE's, sorted at
+>   			 * boot for resource allocation purposes
+>
+
+
 -- 
-2.1.0
-
+Alexey
