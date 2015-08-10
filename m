@@ -1,78 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout1.freenet.de ([195.4.92.91]:42204 "EHLO mout1.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751337AbbHBNn0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 2 Aug 2015 09:43:26 -0400
-Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
- READ FPDMA QUEUED errors since Linux 4.0
-To: Christoph Hellwig <hch@lst.de>,
-	device-mapper development <dm-devel@redhat.com>,
-	mpatocka@redhat.com, Milan Broz <mbroz@redhat.com>,
-	Jens Axboe <axboe@fb.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
- <20150728192908.GA25264@redhat.com> <55BCD5A7.2080708@maya.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>
-From: Andreas Hartmann <andihartmann@freenet.de>
-Message-ID: <55BE1D5E.6020709@maya.org>
-Date: Sun, 2 Aug 2015 15:38:38 +0200
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:35478 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933261AbbHJWmP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 18:42:15 -0400
+Message-ID: <55C928C5.2080305@gmail.com>
+Date: Mon, 10 Aug 2015 15:42:13 -0700
+From: Frank Rowand <frowand.list@gmail.com>
+Reply-To: frowand.list@gmail.com
 MIME-Version: 1.0
-In-Reply-To: <55BCD5A7.2080708@maya.org>
-Content-Type: text/plain; charset=windows-1252
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+CC: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com, aik@ozlabs.ru
+Subject: Re: [PATCH v6 39/42] drivers/of: Allow to specify root node in of_fdt_unflatten_tree()
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com> <1438834307-26960-40-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-40-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/01/2015 at 04:20 PM Andreas Hartmann wrote:
-> On 07/28/2015 at 09:29 PM, Mike Snitzer wrote:
-> [...]
->> Mikulas was saying to biect what is causing ATA to fail.
+On 8/5/2015 9:11 PM, Gavin Shan wrote:
+> This introduces one more argument to of_fdt_unflatten_tree()
+> to specify the root node for the FDT blob, which is going to be
+> unflattened. In the result, the function can be used to unflatten
+> FDT blob, which represents device sub-tree in PowerNV hotplug
+> driver.
 > 
-> Some good news and some bad news. The good news first:
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  drivers/of/fdt.c       | 13 ++++++++-----
+>  drivers/of/unittest.c  |  2 +-
+>  include/linux/of_fdt.h |  1 +
+>  3 files changed, 10 insertions(+), 6 deletions(-)
 > 
-> Your patchset
+> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+> index a18a2ce..074870a 100644
+> --- a/drivers/of/fdt.c
+> +++ b/drivers/of/fdt.c
+> @@ -388,10 +388,11 @@ static void *unflatten_dt_node(const void *blob,
+>  			       struct device_node **nodepp,
+>  			       bool dryrun)
+>  {
+> +	unsigned long fpsize = dad ? strlen(of_node_full_name(dad)) : 0;
+>  	int depth = 1;
+>  
+>  	return __unflatten_dt_node(blob, mem, poffset,
+> -				   dad, nodepp, 0,
+> +				   dad, nodepp, fpsize,
+>  				   dryrun, &depth);
+>  }
+>  
+> @@ -408,6 +409,7 @@ static void *unflatten_dt_node(const void *blob,
+>   * for the resulting tree
+>   */
+>  static void __unflatten_device_tree(const void *blob,
+> +			     struct device_node *dad,
+>  			     struct device_node **mynodes,
+>  			     void * (*dt_alloc)(u64 size, u64 align))
+>  {
+
+Please add @dad to the documentation header for the function.
+
+
+> @@ -435,7 +437,7 @@ static void __unflatten_device_tree(const void *blob,
+>  	/* First pass, scan for size */
+>  	start = 0;
+>  	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
+> -						NULL, NULL, true);
+> +						dad, NULL, true);
+>  	size = ALIGN(size, 4);
+>  
+>  	pr_debug("  size is %lx, allocating...\n", size);
+> @@ -450,7 +452,7 @@ static void __unflatten_device_tree(const void *blob,
+>  
+>  	/* Second pass, do actual unflattening */
+>  	start = 0;
+> -	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
+> +	unflatten_dt_node(blob, mem, &start, dad, mynodes, false);
+>  	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+>  		pr_warning("End of tree marker overwritten: %08x\n",
+>  			   be32_to_cpup(mem + size));
+> @@ -472,9 +474,10 @@ static void *kernel_tree_alloc(u64 size, u64 align)
+>   * can be used.
+>   */
+>  void of_fdt_unflatten_tree(const unsigned long *blob,
+> +			struct device_node *dad,
+>  			struct device_node **mynodes)
+>  {
+> -	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
+> +	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+>  }
+>  EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+>  
+> @@ -1125,7 +1128,7 @@ bool __init early_init_dt_scan(void *params)
+>   */
+>  void __init unflatten_device_tree(void)
+>  {
+> -	__unflatten_device_tree(initial_boot_params, &of_root,
+> +	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
+>  				early_init_dt_alloc_memory_arch);
+>  
+>  	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
+> diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+> index 1801634..2270830 100644
+> --- a/drivers/of/unittest.c
+> +++ b/drivers/of/unittest.c
+> @@ -907,7 +907,7 @@ static int __init unittest_data_add(void)
+>  			"not running tests\n", __func__);
+>  		return -ENOMEM;
+>  	}
+> -	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
+> +	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
+>  	if (!unittest_data_node) {
+>  		pr_warn("%s: No tree to attach; not running tests\n", __func__);
+>  		return -ENODATA;
+> diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+> index df9ef38..3644960 100644
+> --- a/include/linux/of_fdt.h
+> +++ b/include/linux/of_fdt.h
+> @@ -38,6 +38,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
+>  extern int of_fdt_match(const void *blob, unsigned long node,
+>  			const char *const *compat);
+>  extern void of_fdt_unflatten_tree(const unsigned long *blob,
+> +			       struct device_node *dad,
+>  			       struct device_node **mynodes);
+>  
+>  /* TBD: Temporary export of fdt globals - remove when code fully merged */
 > 
-> f3396c58fd8442850e759843457d78b6ec3a9589,
-> cf2f1abfbd0dba701f7f16ef619e4d2485de3366,
-> 7145c241a1bf2841952c3e297c4080b357b3e52d,
-> 94f5e0243c48aa01441c987743dc468e2d6eaca2,
-> dc2676210c425ee8e5cb1bec5bc84d004ddf4179,
-> 0f5d8e6ee758f7023e4353cca75d785b2d4f6abe,
-> b3c5fd3052492f1b8d060799d4f18be5a5438add
-> 
-> seems to work fine w/ 3.18.19 !!
-> 
-> Why did I test it with 3.18.x now? Because I suddenly got two ata errors
-> (ata1 and ata2) with clean 3.19.8 (w/o the AMD-Vi IO_PAGE_FAULTs) during
-> normal operation. This means: 3.19 must already be broken, too.
-> 
-> Therefore, I applied your patchset to 3.18.x and it seems to work like a
-> charme - I don't get any AMD-Vi IO_PAGE_FAULTs on boot and no ata errors
-> (until now).
-> 
-> 
-> Next I did: I tried to bisect between 3.18 and 3.19 with your patchset
-> applied, because w/ this patchset applied, the problem can be seen
-> easily and directly on boot. Unfortunately, this does work only a few
-> git bisect rounds until I got stuck because of interferences with your
-> extra patches applied:
 
-[Resolved the problems written at the last post.]
-
-Bisecting ended here:
-
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
-
-block: remove artifical max_hw_sectors cap
-
-
-Removing this patch on 3.19 and 4.1 make things working again. Didn't
-test 4.0, but I think it's the same. No more AMD-Vi IO_PAGE_FAULTS  with
-that patch reverted.
-
-
-Please check why this patch triggers AMD-Vi IO_PAGE_FAULTS.
-
-
-Thanks,
-kind regards,
-Andreas Hartmann
