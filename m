@@ -1,221 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59209 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752773AbbHFENR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:17 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:15 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 31/42] powerpc/pci: Rename pcibios_{add,remove}_pci_devices
-Date: Thu,  6 Aug 2015 14:11:36 +1000
-Message-Id: <1438834307-26960-32-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36633 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932929AbbHJW3N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 18:29:13 -0400
+Received: by oiev193 with SMTP id v193so65174232oie.3
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 15:29:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150810220413.GA13982@google.com>
+References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150804215457.9189.27595.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <55C37C92.1020509@arm.com> <20150810220413.GA13982@google.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Mon, 10 Aug 2015 15:28:43 -0700
+Message-ID: <CADaLNDmAzFhqWcR4mD3+Oi=eTu6zaSeNzZrc186_3Va2QaXw2g@mail.gmail.com>
+Subject: Re: [PATCH v5 9/9] PCI: xgene: Use pci_scan_root_bus_msi()
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	James Morse <James.Morse@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Jason Cooper <jason@lakedaemon.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This renames pcibios_{add,remove}_pci_devices to avoid conflicts
-with names of weak functions in PCI subsystem. This doesn't
-introduce logicial changes.
+On Mon, Aug 10, 2015 at 3:04 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Hi Marc,
+>
+> On Thu, Aug 06, 2015 at 04:26:10PM +0100, Marc Zyngier wrote:
+>> On 04/08/15 22:54, Bjorn Helgaas wrote:
+>> > Previously there was no way to specify the MSI controller when creating a
+>> > new PCI root bus, so we had to create the bus, set its MSI controller, then
+>> > scan the bus.  With the new pci_scan_root_bus_msi() interface, we can
+>> > specify the MSI controller up front and get rid of that intermediate step.
+>> >
+>> > Look up the MSI controller first, then use pci_scan_root_bus_msi() to
+>> > create and scan the root PCI bus.
+>>
+>> I'm wondering about these XGene patches.
+>>
+>> With the code that is queued for v4.3 in tip/irq/core, the X-Gene MSI
+>> driver doesn't export a struct msi_controller anymore, and entirely
+>> relies on IRQ domains to identify to be matched with the actual PCI driver.
+>>
+>> Do you intend this as a cleanup until everything lands in mainline? At
+>> that point, we'd be able to remove all traces of struct msi_controller
+>> from this driver.
+>
+> I haven't been following the IRQ domain stuff or tip/irq/core, so I
+> really don't know how this relates to that.  I took a look, and I see
+> 8d63bc7beaee ("PCI/MSI: pci-xgene-msi: Get rid of struct
+> msi_controller"), which removes an msi_controller pointer from
+> pci-xgene-msi.c, but I don't see any pci-xgene.c changes in
+> tip/irq/core.
+>
+> Are you saying that xgene_pcie_msi_enable() will go away eventually?
+> And the OF "msi-parent" lookup will go away, or at least be moved
+> elsewhere?  We currently have:
+>
+>   xgene_pcie_probe_bridge(...)
+>   {
+>     ...
+>     bus = pci_create_root_bus(...);
+>     xgene_pcie_msi_enable(...);
+>     pci_scan_child_bus(bus);
+>     ...
+>   }
+>
+> I'd like to get rid of that arch-specific MSI enable stuff because
+> then we can use a higher level interface, e.g., pci_scan_root_bus(),
+> and make the X-Gene code slightly simpler.
+>
+>> Alternatively, we could ask tglx to add an extra patch to the existing
+>> queue in order to clean up pci-xgene.c (nuking the whole
+>> xgene_pcie_msi_enable function).
+>
+> Ah, I guess you *are* saying that xgene_pcie_msi_enable() will go away
+> eventually.  I don't know how to do that, but apparently you do, so
+> I'll just drop these X-Gene-related patches for now.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h |  4 ++--
- arch/powerpc/kernel/eeh_driver.c      | 12 ++++++------
- arch/powerpc/kernel/pci-hotplug.c     | 15 +++++++--------
- drivers/pci/hotplug/rpadlpar_core.c   |  2 +-
- drivers/pci/hotplug/rpaphp_core.c     |  4 ++--
- drivers/pci/hotplug/rpaphp_pci.c      |  2 +-
- 6 files changed, 19 insertions(+), 20 deletions(-)
+Hi Bjorn,
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index 84dee1e..787a879 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -262,10 +262,10 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
- extern struct pci_bus *of_node_to_pci_bus(struct device_node *dn);
- 
- /** Remove all of the PCI devices under this bus */
--extern void pcibios_remove_pci_devices(struct pci_bus *bus);
-+extern void pci_remove_pci_devices(struct pci_bus *bus);
- 
- /** Discover new pci devices under this bus, and add them */
--extern void pcibios_add_pci_devices(struct pci_bus *bus);
-+extern void pci_add_pci_devices(struct pci_bus *bus);
- 
- 
- extern void isa_bridge_find_early(struct pci_controller *hose);
-diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-index 99868e2..290a9df 100644
---- a/arch/powerpc/kernel/eeh_driver.c
-+++ b/arch/powerpc/kernel/eeh_driver.c
-@@ -600,7 +600,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 	 * We don't remove the corresponding PE instances because
- 	 * we need the information afterwords. The attached EEH
- 	 * devices are expected to be attached soon when calling
--	 * into pcibios_add_pci_devices().
-+	 * into pci_add_pci_devices().
- 	 */
- 	eeh_pe_state_mark(pe, EEH_PE_KEEP);
- 	if (bus) {
-@@ -608,7 +608,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 			eeh_pe_dev_traverse(pe, eeh_rmv_device, NULL);
- 		else {
- 			pci_lock_rescan_remove();
--			pcibios_remove_pci_devices(bus);
-+			pci_remove_pci_devices(bus);
- 			pci_unlock_rescan_remove();
- 		}
- 	} else if (frozen_bus)
-@@ -658,7 +658,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 		if (pe->type & EEH_PE_VF)
- 			eeh_add_virt_device(edev, NULL);
- 		else
--			pcibios_add_pci_devices(bus);
-+			pci_add_pci_devices(bus);
- 	} else if (frozen_bus && removed) {
- 		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
- 		ssleep(5);
-@@ -668,7 +668,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus)
- 		if (pe->type & EEH_PE_VF)
- 			eeh_add_virt_device(edev, NULL);
- 		else
--			pcibios_add_pci_devices(frozen_bus);
-+			pci_add_pci_devices(frozen_bus);
- 	}
- 	eeh_pe_state_clear(pe, EEH_PE_KEEP);
- 
-@@ -852,7 +852,7 @@ perm_error:
- 		} else {
- 			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
- 			pci_lock_rescan_remove();
--			pcibios_remove_pci_devices(frozen_bus);
-+			pci_remove_pci_devices(frozen_bus);
- 			pci_unlock_rescan_remove();
- 		}
- 	}
-@@ -936,7 +936,7 @@ static void eeh_handle_special_event(void)
- 				bus = eeh_pe_bus_get(phb_pe);
- 				eeh_pe_dev_traverse(pe,
- 					eeh_report_failure, NULL);
--				pcibios_remove_pci_devices(bus);
-+				pci_remove_pci_devices(bus);
- 			}
- 			pci_unlock_rescan_remove();
- 		}
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 692beca..00f193b 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -68,20 +68,20 @@ void pcibios_release_device(struct pci_dev *dev)
- }
- 
- /**
-- * pcibios_remove_pci_devices - remove all devices under this bus
-+ * pci_remove_pci_devices - remove all devices under this bus
-  * @bus: the indicated PCI bus
-  *
-  * Remove all of the PCI devices under this bus both from the
-  * linux pci device tree, and from the powerpc EEH address cache.
-  */
--void pcibios_remove_pci_devices(struct pci_bus *bus)
-+void pci_remove_pci_devices(struct pci_bus *bus)
- {
- 	struct pci_dev *dev, *tmp;
- 	struct pci_bus *child_bus;
- 
- 	/* First go down child busses */
- 	list_for_each_entry(child_bus, &bus->children, node)
--		pcibios_remove_pci_devices(child_bus);
-+		pci_remove_pci_devices(child_bus);
- 
- 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
- 		 pci_domain_nr(bus),  bus->number);
-@@ -90,11 +90,10 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
- 		pci_stop_and_remove_bus_device(dev);
- 	}
- }
--
--EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
-+EXPORT_SYMBOL_GPL(pci_remove_pci_devices);
- 
- /**
-- * pcibios_add_pci_devices - adds new pci devices to bus
-+ * pci_add_pci_devices - adds new pci devices to bus
-  * @bus: the indicated PCI bus
-  *
-  * This routine will find and fixup new pci devices under
-@@ -104,7 +103,7 @@ EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
-  * is how this routine differs from other, similar pcibios
-  * routines.)
-  */
--void pcibios_add_pci_devices(struct pci_bus * bus)
-+void pci_add_pci_devices(struct pci_bus *bus)
- {
- 	int slotno, mode, pass, max;
- 	struct pci_dev *dev;
-@@ -145,4 +144,4 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
- 	}
- 	pcibios_finish_adding_to_bus(bus);
- }
--EXPORT_SYMBOL_GPL(pcibios_add_pci_devices);
-+EXPORT_SYMBOL_GPL(pci_add_pci_devices);
-diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-index f57a293..8870557 100644
---- a/drivers/pci/hotplug/rpadlpar_core.c
-+++ b/drivers/pci/hotplug/rpadlpar_core.c
-@@ -381,7 +381,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
- 	}
- 
- 	/* Remove all devices below slot */
--	pcibios_remove_pci_devices(bus);
-+	pci_remove_pci_devices(bus);
- 
- 	/* Unmap PCI IO space */
- 	if (pcibios_unmap_io_space(bus)) {
-diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-index f2945fa..3034693 100644
---- a/drivers/pci/hotplug/rpaphp_core.c
-+++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -405,7 +405,7 @@ static int enable_slot(struct hotplug_slot *hotplug_slot)
- 
- 	if (state == PRESENT) {
- 		pci_lock_rescan_remove();
--		pcibios_add_pci_devices(slot->bus);
-+		pci_add_pci_devices(slot->bus);
- 		pci_unlock_rescan_remove();
- 		slot->state = CONFIGURED;
- 	} else if (state == EMPTY) {
-@@ -427,7 +427,7 @@ static int disable_slot(struct hotplug_slot *hotplug_slot)
- 		return -EINVAL;
- 
- 	pci_lock_rescan_remove();
--	pcibios_remove_pci_devices(slot->bus);
-+	pci_remove_pci_devices(slot->bus);
- 	pci_unlock_rescan_remove();
- 	vm_unmap_aliases();
- 
-diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
-index 293bd86..2b99d48 100644
---- a/drivers/pci/hotplug/rpaphp_pci.c
-+++ b/drivers/pci/hotplug/rpaphp_pci.c
-@@ -116,7 +116,7 @@ int rpaphp_enable_slot(struct slot *slot)
- 		}
- 
- 		if (list_empty(&bus->devices))
--			pcibios_add_pci_devices(bus);
-+			pci_add_pci_devices(bus);
- 
- 		if (!list_empty(&bus->devices)) {
- 			info->adapter_status = CONFIGURED;
+I tested PCIe MSI with Marc's patch on X-Gene platform and it was working fine.
+xgene_pcie_msi_enable will go away. I will post clean up patch to
+remove these msi_controller traces
+for X-Gene.
+
+>
+> Bjorn
+
+
+
 -- 
-2.1.0
-
+Regards,
+Duc Dang.
