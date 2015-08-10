@@ -1,157 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:32931 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752466AbbHFOt2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 10:49:28 -0400
-Received: by pdrh1 with SMTP id h1so15306479pdr.0
-        for <linux-pci@vger.kernel.org>; Thu, 06 Aug 2015 07:49:27 -0700 (PDT)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>
-Cc: "'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
-	"'Jayachandran C'" <jchandra@broadcom.com>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Russell King'" <linux@arm.linux.org.uk>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
-	"'Marc Zyngier'" <marc.zyngier@arm.com>,
-	<linux-pci@vger.kernel.org>, "'Duc Dang'" <dhdang@apm.com>,
-	"'Michal Simek'" <michal.simek@xilinx.com>,
-	"'Simon Horman'" <horms@verge.net.au>,
-	"'James Morse'" <james.morse@arm.com>,
-	"'Tanmay Inamdar'" <tinamdar@apm.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"'Jason Cooper'" <jason@lakedaemon.net>,
-	"'Jingoo Han'" <jingoohan1@gmail.com>
-References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150804215411.9189.53901.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150804215411.9189.53901.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Subject: Re: [PATCH v5 3/9] ARM/PCI, designware, xilinx: Use pci_scan_root_bus_msi()
-Date: Thu, 6 Aug 2015 23:49:16 +0900
-Message-ID: <000501d0d057$177e4df0$467ae9d0$@com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:35612 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932161AbbHJJn4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 05:43:56 -0400
+Received: by pacgr6 with SMTP id gr6so23554818pac.2
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 02:43:55 -0700 (PDT)
+Subject: Re: [PATCH v6 11/42] powerpc/powernv: Trace DMA32 segments consumed
+ by PE
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-12-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <55C87254.3020204@ozlabs.ru>
+Date: Mon, 10 Aug 2015 19:43:48 +1000
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+In-Reply-To: <1438834307-26960-12-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 05, 2015 6:54 AM, Bjorn Helgaas wrote:
-> 
-> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> 
-> ARM previously stored the msi_controller pointer in its sysdata, struct
-> pci_sys_data, and implemented pcibios_msi_controller() to retrieve it.
-> That made PCI host controller drivers specific to ARM because they had to
-> put the msi_controller pointer in the ARM-specific pci_sys_data.
-> 
-> There is now a generic mechanism, pci_scan_root_bus_msi(), for giving the
-> msi_controller pointer to the PCI core.  Use this for all ARM systems and
-> for the DesignWare and Xilinx PCI host controller drivers.
-> 
-> This removes an ARM dependency from the DesignWare, DRA7xx, EXYNOS, i.MX6,
-> Keystone, Layerscape, SPEAr13xx, and Xilinx drivers.
-> 
-> [bhelgaas: changelog, split into separate patch]
-> Suggested-by: Russell King <linux@arm.linux.org.uk>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Pratyush Anand <pratyush.anand@gmail.com>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Jingoo Han <jingoohan1@gmail.com>
-
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
-> CC: Simon Horman <horms@verge.net.au>
-> CC: Russell King <linux@arm.linux.org.uk>
-> CC: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> CC: Thierry Reding <thierry.reding@gmail.com>
-> CC: Michal Simek <michal.simek@xilinx.com>
-> CC: Marc Zyngier <marc.zyngier@arm.com>
+On 08/06/2015 02:11 PM, Gavin Shan wrote:
+> On P7IOC, the whole DMA32 space is divided evenly to 256MB segments.
+> Each PE can consume one or multiple DMA32 segments. Current code
+> doesn't trace the available DMA32 segments and those consumed by
+> one particular PE. It's conflicting with PCI hotplug.
+>
+> The patch introduces one bitmap to PHB to trace the available
+> DMA32 segments for allocation, more fields to "struct pnv_ioda_pe"
+> to trace the consumed DMA32 segments by the PE, which is going to
+> be released when the PE is destroyed at PCI unplugging time.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 > ---
->  arch/arm/include/asm/mach/pci.h    |    2 --
->  arch/arm/kernel/bios32.c           |    5 +++--
->  drivers/pci/host/pcie-designware.c |    6 +++---
->  drivers/pci/host/pcie-xilinx.c     |    5 ++---
->  4 files changed, 8 insertions(+), 10 deletions(-)
-> 
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> index 28b9bb3..c074e7a 100644
-> --- a/arch/arm/include/asm/mach/pci.h
-> +++ b/arch/arm/include/asm/mach/pci.h
-> @@ -19,9 +19,7 @@ struct pci_bus;
->  struct device;
-> 
->  struct hw_pci {
-> -#ifdef CONFIG_PCI_MSI
->  	struct msi_controller *msi_ctrl;
-> -#endif
->  	struct pci_ops	*ops;
->  	int		nr_controllers;
->  	void		**private_data;
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 4e95260..283bc1c 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -486,8 +486,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  			if (hw->scan)
->  				sys->bus = hw->scan(nr, sys);
->  			else
-> -				sys->bus = pci_scan_root_bus(parent, sys->busnr,
-> -						hw->ops, sys, &sys->resources);
-> +				sys->bus = pci_scan_root_bus_msi(parent,
-> +					sys->busnr, hw->ops, sys,
-> +					&sys->resources, hw->msi_ctrl);
-> 
->  			if (WARN(!sys->bus, "PCI: unable to scan bus!")) {
->  				kfree(sys);
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be..bd0aeec 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -526,7 +526,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> 
->  #ifdef CONFIG_PCI_MSI
->  	dw_pcie_msi_chip.dev = pp->dev;
-> -	dw_pci.msi_ctrl = &dw_pcie_msi_chip;
->  #endif
-> 
->  	dw_pci.nr_controllers = 1;
-> @@ -708,8 +707,9 @@ static struct pci_bus *dw_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->  	struct pcie_port *pp = sys_to_pcie(sys);
-> 
->  	pp->root_bus_nr = sys->busnr;
-> -	bus = pci_scan_root_bus(pp->dev, sys->busnr,
-> -				  &dw_pcie_ops, sys, &sys->resources);
-> +	bus = pci_scan_root_bus_msi(pp->dev, sys->busnr, &dw_pcie_ops, sys,
-> +				    &sys->resources, &dw_pcie_msi_chip);
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 40 +++++++++++++++++++++++--------
+>   arch/powerpc/platforms/powernv/pci.h      |  4 +++-
+>   2 files changed, 33 insertions(+), 11 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index cd22002..57ba8fd 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -1946,6 +1946,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>
+>   	/* Grab a 32-bit TCE table */
+>   	pe->dma32_seg = base;
+> +	pe->dma32_segcount = segs;
+>   	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
+>   		(base << 28), ((base + segs) << 28) - 1);
+>
+> @@ -2006,8 +2007,13 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>   	return;
+>    fail:
+>   	/* XXX Failure: Try to fallback to 64-bit only ? */
+> -	if (pe->dma32_seg >= 0)
+> +	if (pe->dma32_seg >= 0) {
+> +		bitmap_clear(phb->ioda.dma32_segmap,
+> +			     pe->dma32_seg, pe->dma32_segcount);
+>   		pe->dma32_seg = -1;
+> +		pe->dma32_segcount = 0;
+> +	}
 > +
->  	if (!bus)
->  		return NULL;
-> 
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index f1a06a0..526807d 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -647,8 +647,8 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
->  	struct pci_bus *bus;
-> 
->  	port->root_busno = sys->busnr;
-> -	bus = pci_scan_root_bus(port->dev, sys->busnr, &xilinx_pcie_ops,
-> -				sys, &sys->resources);
-> +	bus = pci_scan_root_bus_msi(port->dev, sys->busnr, &xilinx_pcie_ops,
-> +				sys, &sys->resources, &xilinx_pcie_msi_chip);
-> 
->  	return bus;
->  }
-> @@ -847,7 +847,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
-> 
->  #ifdef CONFIG_PCI_MSI
->  	xilinx_pcie_msi_chip.dev = port->dev;
-> -	hw.msi_ctrl = &xilinx_pcie_msi_chip;
->  #endif
->  	pci_common_init_dev(dev, &hw);
-> 
+>   	if (tce_mem)
+>   		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
+>   	if (tbl) {
+> @@ -2443,12 +2449,11 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   		pnv_ioda_setup_bus_dma(pe, pe->pbus);
+>   }
+>
+> -static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
+> -					struct pnv_ioda_pe *pe,
+> -					unsigned int base)
+> +static void pnv_ioda1_setup_dma(struct pnv_phb *phb,
+> +					struct pnv_ioda_pe *pe)
+>   {
+>   	struct pci_controller *hose = phb->hose;
+> -	unsigned int dma_weight, segs;
+> +	unsigned int dma_weight, base, segs;
+>
+>   	/* Calculate the PHB's DMA weight */
+>   	dma_weight = pnv_ioda_phb_dma_weight(phb);
+> @@ -2461,11 +2466,28 @@ static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
+>   	else
+>   		segs = (pe->dma32_weight *
+>   			phb->ioda.dma32_segcount) / dma_weight;
+> +
+> +	/*
+> +	 * Allocate DMA32 segments. We might not have enough
+> +	 * resources available. However we expect at least one
+> +	 * to be available.
+> +	 */
+> +	do {
+> +		base = bitmap_find_next_zero_area(phb->ioda.dma32_segmap,
+> +						  phb->ioda.dma32_segcount,
+> +						  0, segs, 0);
+> +		if (base < phb->ioda.dma32_segcount) {
+> +			bitmap_set(phb->ioda.dma32_segmap, base, segs);
+> +			break;
+> +		}
+> +	} while (--segs);
 
+
+If segs==0 before entering the loop, the loop will execute 0xfffffffe 
+times. Make it for(;segs;--segs){ }.
+
+
+> +
+> +	if (WARN_ON(!segs))
+> +		return;
+> +
+>   	pe_info(pe, "DMA weight %d, assigned %d segments\n",
+>   		pe->dma32_weight, segs);
+>   	pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
+> -
+> -	return segs;
+>   }
+>
+>   #ifdef CONFIG_PCI_MSI
+> @@ -2933,20 +2955,18 @@ static void pnv_pci_ioda_setup_DMA(void)
+>   	struct pci_controller *hose, *tmp;
+>   	struct pnv_phb *phb;
+>   	struct pnv_ioda_pe *pe;
+> -	unsigned int base;
+>
+>   	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
+>   		phb = hose->private_data;
+>   		pnv_pci_ioda_setup_opal_tce_kill(phb);
+>
+> -		base = 0;
+>   		list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
+>   			if (!pe->dma32_weight)
+>   				continue;
+>
+>   			switch (phb->type) {
+>   			case PNV_PHB_IODA1:
+> -				base += pnv_ioda1_setup_dma(phb, pe, base);
+> +				pnv_ioda1_setup_dma(phb, pe);
+>   				break;
+>   			case PNV_PHB_IODA2:
+>   				pnv_pci_ioda2_setup_dma_pe(phb, pe);
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index 574fe43..1dc9578 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -65,6 +65,7 @@ struct pnv_ioda_pe {
+>
+>   	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
+>   	int			dma32_seg;
+> +	int			dma32_segcount;
+>   	struct iommu_table_group table_group;
+>
+>   	/* 64-bit TCE bypass region */
+> @@ -153,10 +154,11 @@ struct pnv_phb {
+>   			unsigned int		io_segsize;
+>   			unsigned int		io_pci_base;
+>
+> -			/* IO, M32, M64 segment maps */
+> +			/* IO, M32, M64, DMA32 segment maps */
+>   			unsigned long		io_segmap[8];
+>   			unsigned long		m32_segmap[8];
+>   			unsigned long		m64_segmap[8];
+> +			unsigned long		dma32_segmap[8];
+>
+>   			/* PE allocation */
+>   			struct mutex		pe_alloc_mutex;
+>
+
+
+-- 
+Alexey
