@@ -1,131 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:26944 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753266AbbHYJy1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 05:54:27 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v8 1/6] PCI: designware: move calculation of bus addresses to DRA7xx
-Date: Tue, 25 Aug 2015 17:58:49 +0800
-Message-ID: <1440496734-18417-2-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:34477 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933261AbbHJWme (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 18:42:34 -0400
+Message-ID: <55C928D8.3040200@gmail.com>
+Date: Mon, 10 Aug 2015 15:42:32 -0700
+From: Frank Rowand <frowand.list@gmail.com>
+Reply-To: frowand.list@gmail.com
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+CC: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com, aik@ozlabs.ru
+Subject: Re: [PATCH v6 40/42] drivers/of: Return allocated memory chunk from
+ of_fdt_unflatten_tree()
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com> <1438834307-26960-41-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1438834307-26960-41-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On 8/5/2015 9:11 PM, Gavin Shan wrote:
+> This changes of_fdt_unflatten_tree() so that it returns the allocated
+> memory chunk for unflattened device-tree, which can be released once
+> it's obsoleted.
+> 
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  drivers/of/fdt.c       | 11 ++++++-----
+>  include/linux/of_fdt.h |  2 +-
+>  2 files changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+> index 074870a..8e1ba7e 100644
+> --- a/drivers/of/fdt.c
+> +++ b/drivers/of/fdt.c
+> @@ -408,7 +408,7 @@ static void *unflatten_dt_node(const void *blob,
+>   * @dt_alloc: An allocator that provides a virtual address to memory
+>   * for the resulting tree
+>   */
+> -static void __unflatten_device_tree(const void *blob,
+> +static void *__unflatten_device_tree(const void *blob,
+>  			     struct device_node *dad,
+>  			     struct device_node **mynodes,
+>  			     void * (*dt_alloc)(u64 size, u64 align))
 
-Commit f4c55c5a3f7f "PCI: designware: Program ATU with untranslated
-address" added the calculation of PCI BUS addresses in designware,
-storing them in new fields added in "struct pcie_port". This
-calculation is done for every designware user even if is only
-applicable to DRA7xx.
-This patch moves the calculation of the bus addresses to the DRA7xx
-driver and is needed to allow the rework of designware to use
-the new DT parsing API.
+Please add a description of the return value to the documentation header.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
----
- drivers/pci/host/pci-dra7xx.c      | 13 +++++++++++++
- drivers/pci/host/pcie-designware.c | 15 ++++-----------
- 2 files changed, 17 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 80db09e..18ae7ff 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -61,6 +61,7 @@
- 
- #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
- #define	LINK_UP						BIT(16)
-+#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
- 
- struct dra7xx_pcie {
- 	void __iomem		*base;
-@@ -139,6 +140,18 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
- static void dra7xx_pcie_host_init(struct pcie_port *pp)
- {
- 	dw_pcie_setup_rc(pp);
-+
-+	if (pp->io_mod_base)
-+		pp->io_mod_base &= CPU_TO_BUS_ADDR;
-+
-+	if (pp->mem_mod_base)
-+		pp->mem_mod_base &= CPU_TO_BUS_ADDR;
-+
-+	if (pp->cfg0_mod_base) {
-+		pp->cfg0_mod_base &= CPU_TO_BUS_ADDR;
-+		pp->cfg1_mod_base &= CPU_TO_BUS_ADDR;
-+	}
-+
- 	dra7xx_pcie_establish_link(pp);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		dw_pcie_msi_init(pp);
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be..c5d407c 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -366,14 +366,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
- 	struct resource *cfg_res;
--	u32 val, na, ns;
-+	u32 val, ns;
- 	const __be32 *addrp;
- 	int i, index, ret;
- 
--	/* Find the address cell size and the number of cells in order to get
--	 * the untranslated address.
--	 */
--	of_property_read_u32(np, "#address-cells", &na);
- 	ns = of_n_size_cells(np);
- 
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-@@ -416,8 +412,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->io_base = range.cpu_addr;
- 
- 			/* Find the untranslated IO space address */
--			pp->io_mod_base = of_read_number(parser.range -
--							 parser.np + na, ns);
-+			pp->io_mod_base = range.cpu_addr;
- 		}
- 		if (restype == IORESOURCE_MEM) {
- 			of_pci_range_to_resource(&range, np, &pp->mem);
-@@ -426,8 +421,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->mem_bus_addr = range.pci_addr;
- 
- 			/* Find the untranslated MEM space address */
--			pp->mem_mod_base = of_read_number(parser.range -
--							  parser.np + na, ns);
-+			pp->mem_mod_base = range.cpu_addr;
- 		}
- 		if (restype == 0) {
- 			of_pci_range_to_resource(&range, np, &pp->cfg);
-@@ -437,8 +431,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
- 
- 			/* Find the untranslated configuration space address */
--			pp->cfg0_mod_base = of_read_number(parser.range -
--							   parser.np + na, ns);
-+			pp->cfg0_mod_base = range.cpu_addr;
- 			pp->cfg1_mod_base = pp->cfg0_mod_base +
- 					    pp->cfg0_size;
- 		}
--- 
-1.9.1
+> @@ -421,7 +421,7 @@ static void __unflatten_device_tree(const void *blob,
+>  
+>  	if (!blob) {
+>  		pr_debug("No device tree pointer\n");
+> -		return;
+> +		return NULL;
+>  	}
+>  
+>  	pr_debug("Unflattening device tree:\n");
+> @@ -431,7 +431,7 @@ static void __unflatten_device_tree(const void *blob,
+>  
+>  	if (fdt_check_header(blob)) {
+>  		pr_err("Invalid device tree blob header\n");
+> -		return;
+> +		return NULL;
+>  	}
+>  
+>  	/* First pass, scan for size */
+> @@ -458,6 +458,7 @@ static void __unflatten_device_tree(const void *blob,
+>  			   be32_to_cpup(mem + size));
+>  
+>  	pr_debug(" <- unflatten_device_tree()\n");
+> +	return mem;
+>  }
+>  
+>  static void *kernel_tree_alloc(u64 size, u64 align)
+> @@ -473,11 +474,11 @@ static void *kernel_tree_alloc(u64 size, u64 align)
+>   * pointers of the nodes so the normal device-tree walking functions
+>   * can be used.
+>   */
+> -void of_fdt_unflatten_tree(const unsigned long *blob,
+> +void *of_fdt_unflatten_tree(const unsigned long *blob,
+
+Please add a description of the return value to the documentation header.
+
+
+>  			struct device_node *dad,
+>  			struct device_node **mynodes)
+>  {
+> -	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+> +	return __unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+>  }
+>  EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+>  
+> diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+> index 3644960..00db279 100644
+> --- a/include/linux/of_fdt.h
+> +++ b/include/linux/of_fdt.h
+> @@ -37,7 +37,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
+>  				 unsigned long node);
+>  extern int of_fdt_match(const void *blob, unsigned long node,
+>  			const char *const *compat);
+> -extern void of_fdt_unflatten_tree(const unsigned long *blob,
+> +extern void *of_fdt_unflatten_tree(const unsigned long *blob,
+>  			       struct device_node *dad,
+>  			       struct device_node **mynodes);
+>  
+> 
 
