@@ -1,81 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15015 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750911AbbHQWuR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 17 Aug 2015 18:50:17 -0400
-From: "Jiang, Dave" <dave.jiang@intel.com>
-To: "Busch, Keith" <keith.busch@intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-	infinipath <infinipath@intel.com>
-Subject: Re: [PATCH 2/3] QIB: Removing usage of pcie_set_mps()
-Date: Mon, 17 Aug 2015 22:50:11 +0000
-Message-ID: <1439851811.3253.18.camel@intel.com>
-References: <1438208335-19457-1-git-send-email-keith.busch@intel.com>
-	 <1438208335-19457-3-git-send-email-keith.busch@intel.com>
-	 <20150817223039.GK26431@google.com>
-In-Reply-To: <20150817223039.GK26431@google.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-io0-f179.google.com ([209.85.223.179]:32806 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932742AbbHJVjE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 17:39:04 -0400
+Received: by ioii16 with SMTP id i16so183405218ioi.0
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 14:39:04 -0700 (PDT)
+Date: Mon, 10 Aug 2015 16:39:00 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+	Duc Dang <dhdang@apm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	James Morse <james.morse@arm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v5 6/9] PCI: Drop references acquired by
+ of_parse_phandle()
+Message-ID: <20150810213900.GA9805@google.com>
+References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150804215435.9189.94410.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150804215435.9189.94410.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gTW9uLCAyMDE1LTA4LTE3IGF0IDE3OjMwIC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
-PiBbK2NjIE1pa2UsIGxpbnV4LXJkbWFdDQo+IA0KPiBPbiBXZWQsIEp1bCAyOSwgMjAxNSBhdCAw
-NDoxODo1NFBNIC0wNjAwLCBLZWl0aCBCdXNjaCB3cm90ZToNCj4gPiBGcm9tOiBEYXZlIEppYW5n
-IDxkYXZlLmppYW5nQGludGVsLmNvbT4NCj4gPiANCj4gPiBUaGlzIGlzIGluIHBlcnBlcmF0aW9u
-IG9mIHVuLWV4cG9ydGluZyB0aGUgcGNpZV9zZXRfbXBzKCkgZnVuY3Rpb24NCj4gPiBzeW1ib2wu
-IEEgZHJpdmVyIHNob3VsZCBub3QgYmUgY2hhbmdpbmcgdGhlIE1QUyBhcyB0aGF0IGlzIHRoZQ0K
-PiA+IHJlc3BvbnNpYmlsaXR5IG9mIHRoZSBQQ0kgc3Vic3lzdGVtLg0KPiANCj4gUGxlYXNlIGV4
-cGxhaW4gdGhlIGltcGxpY2F0aW9ucyBvZiByZW1vdmluZyB0aGlzIGNvZGUuICBEb2VzIHRoaXMg
-DQo+IGFmZmVjdA0KPiBwZXJmb3JtYW5jZSBvZiB0aGUgZGV2aWNlPyAgSWYgc28sIGhvdyBkbyB3
-ZSBnZXQgdGhhdCBwZXJmb3JtYW5jZSANCj4gYmFjaz8NCg0KSG9uZXN0bHkgSSBkb24ndCBrbm93
-LiBCdXQgYXQgdGhlIHNhbWUgdGltZSBJIHRoaW5rIHRoZSBkcml2ZXINCnNob3VsZG4ndCBiZSB0
-b3VjaGluZyB0aGUgTVBTIGF0IGFsbC4gU2hvdWxkbid0IHRoYXQgYmUgbGVmdCB0byB0aGUNClBD
-SWUgc3Vic3lzdGVtIGFuZCByZWx5IG9uIHRoZSBQQ0llIHN1YnN5c3RlbSB0byBzZXQgdGhpcyB0
-byBhIHNhbmUNCnZhbHVlPyANCg0KPiANCj4gSSBhbHNvIGNjJ2QgdGhlIFFJQiBtYWludGFpbmVy
-cyBmb3IgeW91Og0KPiANCj4gICBRSUIgRFJJVkVSDQo+ICAgTTogICAgICBNaWtlIE1hcmNpbmlz
-enluIDxpbmZpbmlwYXRoQGludGVsLmNvbT4NCj4gICBMOiAgICAgIGxpbnV4LXJkbWFAdmdlci5r
-ZXJuZWwub3JnDQo+ICAgRjogICAgICBkcml2ZXJzL2luZmluaWJhbmQvaHcvcWliLw0KPiANCj4g
-PiBTaWduZWQtb2ZmLWJ5OiBEYXZlIEppYW5nIDxkYXZlLmppYW5nQGludGVsLmNvbT4NCj4gPiAt
-LS0NCj4gPiAgZHJpdmVycy9pbmZpbmliYW5kL2h3L3FpYi9xaWJfcGNpZS5jIHwgICAyNyArLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tDQo+ID4gLS0tLS0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5z
-ZXJ0aW9uKCspLCAyNiBkZWxldGlvbnMoLSkNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9pbmZpbmliYW5kL2h3L3FpYi9xaWJfcGNpZS5jIA0KPiA+IGIvZHJpdmVycy9pbmZpbmliYW5k
-L2h3L3FpYi9xaWJfcGNpZS5jDQo+ID4gaW5kZXggNDc1OGEzOC4uYjhhMmRjZCAxMDA2NDQNCj4g
-PiAtLS0gYS9kcml2ZXJzL2luZmluaWJhbmQvaHcvcWliL3FpYl9wY2llLmMNCj4gPiArKysgYi9k
-cml2ZXJzL2luZmluaWJhbmQvaHcvcWliL3FpYl9wY2llLmMNCj4gPiBAQCAtNTU3LDEyICs1NTcs
-MTEgQEAgc3RhdGljIHZvaWQgcWliX3R1bmVfcGNpZV9jb2FsZXNjZShzdHJ1Y3QgDQo+ID4gcWli
-X2RldmRhdGEgKmRkKQ0KPiA+ICAgKi8NCj4gPiAgc3RhdGljIGludCBxaWJfcGNpZV9jYXBzOw0K
-PiA+ICBtb2R1bGVfcGFyYW1fbmFtZWQocGNpZV9jYXBzLCBxaWJfcGNpZV9jYXBzLCBpbnQsIFNf
-SVJVR08pOw0KPiA+IC1NT0RVTEVfUEFSTV9ERVNDKHBjaWVfY2FwcywgIk1heCBQQ0llIHR1bmlu
-ZzogUGF5bG9hZCAoMC4uMyksIA0KPiA+IFJlYWRSZXEgKDQuLjcpIik7DQo+ID4gK01PRFVMRV9Q
-QVJNX0RFU0MocGNpZV9jYXBzLCAiTWF4IFBDSWUgdHVuaW5nOiBSZWFkUmVxICg0Li43KSIpOw0K
-PiA+ICANCj4gPiAgc3RhdGljIHZvaWQgcWliX3R1bmVfcGNpZV9jYXBzKHN0cnVjdCBxaWJfZGV2
-ZGF0YSAqZGQpDQo+ID4gIHsNCj4gPiAgCXN0cnVjdCBwY2lfZGV2ICpwYXJlbnQ7DQo+ID4gLQl1
-MTYgcmNfbXBzcywgcmNfbXBzLCBlcF9tcHNzLCBlcF9tcHM7DQo+ID4gIAl1MTYgcmNfbXJycywg
-ZXBfbXJycywgbWF4X21ycnM7DQo+ID4gIA0KPiA+ICAJLyogRmluZCBvdXQgc3VwcG9ydGVkIGFu
-ZCBjb25maWd1cmVkIHZhbHVlcyBmb3IgcGFyZW50IA0KPiA+IChyb290KSAqLw0KPiA+IEBAIC01
-NzUsMzAgKzU3NCw2IEBAIHN0YXRpYyB2b2lkIHFpYl90dW5lX3BjaWVfY2FwcyhzdHJ1Y3QgDQo+
-ID4gcWliX2RldmRhdGEgKmRkKQ0KPiA+ICAJaWYgKCFwY2lfaXNfcGNpZShwYXJlbnQpIHx8ICFw
-Y2lfaXNfcGNpZShkZC0+cGNpZGV2KSkNCj4gPiAgCQlyZXR1cm47DQo+ID4gIA0KPiA+IC0JcmNf
-bXBzcyA9IHBhcmVudC0+cGNpZV9tcHNzOw0KPiA+IC0JcmNfbXBzID0gZmZzKHBjaWVfZ2V0X21w
-cyhwYXJlbnQpKSAtIDg7DQo+ID4gLQkvKiBGaW5kIG91dCBzdXBwb3J0ZWQgYW5kIGNvbmZpZ3Vy
-ZWQgdmFsdWVzIGZvciBlbmRwb2ludCANCj4gPiAodXMpICovDQo+ID4gLQllcF9tcHNzID0gZGQt
-PnBjaWRldi0+cGNpZV9tcHNzOw0KPiA+IC0JZXBfbXBzID0gZmZzKHBjaWVfZ2V0X21wcyhkZC0+
-cGNpZGV2KSkgLSA4Ow0KPiA+IC0NCj4gPiAtCS8qIEZpbmQgbWF4IHBheWxvYWQgc3VwcG9ydGVk
-IGJ5IHJvb3QsIGVuZHBvaW50ICovDQo+ID4gLQlpZiAocmNfbXBzcyA+IGVwX21wc3MpDQo+ID4g
-LQkJcmNfbXBzcyA9IGVwX21wc3M7DQo+ID4gLQ0KPiA+IC0JLyogSWYgU3VwcG9ydGVkIGdyZWF0
-ZXIgdGhhbiBsaW1pdCBpbiBtb2R1bGUgcGFyYW0sIGxpbWl0IA0KPiA+IGl0ICovDQo+ID4gLQlp
-ZiAocmNfbXBzcyA+IChxaWJfcGNpZV9jYXBzICYgNykpDQo+ID4gLQkJcmNfbXBzcyA9IHFpYl9w
-Y2llX2NhcHMgJiA3Ow0KPiA+IC0JLyogSWYgbGVzcyB0aGFuIChhbGxvd2VkLCBzdXBwb3J0ZWQp
-LCBidW1wIHJvb3QgcGF5bG9hZCAqLw0KPiA+IC0JaWYgKHJjX21wc3MgPiByY19tcHMpIHsNCj4g
-PiAtCQlyY19tcHMgPSByY19tcHNzOw0KPiA+IC0JCXBjaWVfc2V0X21wcyhwYXJlbnQsIDEyOCA8
-PCByY19tcHMpOw0KPiA+IC0JfQ0KPiA+IC0JLyogSWYgbGVzcyB0aGFuIChhbGxvd2VkLCBzdXBw
-b3J0ZWQpLCBidW1wIGVuZHBvaW50IA0KPiA+IHBheWxvYWQgKi8NCj4gPiAtCWlmIChyY19tcHNz
-ID4gZXBfbXBzKSB7DQo+ID4gLQkJZXBfbXBzID0gcmNfbXBzczsNCj4gPiAtCQlwY2llX3NldF9t
-cHMoZGQtPnBjaWRldiwgMTI4IDw8IGVwX21wcyk7DQo+ID4gLQl9DQo+ID4gLQ0KPiA+ICAJLyoN
-Cj4gPiAgCSAqIE5vdyB0aGUgUmVhZCBSZXF1ZXN0IHNpemUuDQo+ID4gIAkgKiBObyBmaWVsZCBm
-b3IgbWF4IHN1cHBvcnRlZCwgYnV0IFBDSWUgc3BlYyBsaW1pdHMgaXQgdG8gDQo+ID4gNDA5Niw=
+[+cc Ben, Rob]
+
+On Tue, Aug 04, 2015 at 04:54:35PM -0500, Bjorn Helgaas wrote:
+> of_parse_phandle() returns a device_node pointer with the refcount
+> incremented.  We should dispose of this reference when we're finished.
+> 
+> Drop the reference acquired by of_parse_phandle().
+
+I cc'd everybody who wrote or signed off on 0d5a6db3aa46 ("of: pci: add
+registry of MSI chips"), which added of_pci_find_msi_chip_by_node().
+
+The existing code (before this patch) looks wrong to me, but I'm not an OF
+person.
+
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pci-mvebu.c |    1 +
+>  drivers/pci/host/pci-xgene.c |    1 +
+>  2 files changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 70aa095..67ec5e1 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -879,6 +879,7 @@ static void mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
+>  		return;
+>  
+>  	pcie->msi = of_pci_find_msi_chip_by_node(msi_node);
+> +	of_node_put(msi_node);
+>  
+>  	if (pcie->msi)
+>  		pcie->msi->dev = &pcie->pdev->dev;
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index a9dfb70..4c2fb1f 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -514,6 +514,7 @@ static int xgene_pcie_msi_enable(struct pci_bus *bus)
+>  	if (!bus->msi)
+>  		return -ENODEV;
+>  
+> +	of_node_put(msi_node);
+>  	bus->msi->dev = &bus->dev;
+>  	return 0;
+>  }
+> 
