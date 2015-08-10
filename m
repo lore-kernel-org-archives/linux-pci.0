@@ -1,34 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:34467 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932741AbbHJWHO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 18:07:14 -0400
-Received: by igui7 with SMTP id i7so28433494igu.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 15:07:13 -0700 (PDT)
-Received: from google.com ([2620:0:1007:b:254d:7b22:9adf:e278])
-        by smtp.gmail.com with ESMTPSA id vk8sm6745738igb.4.2015.08.10.15.07.11
-        for <linux-pci@vger.kernel.org>
-        (version=TLSv1.2 cipher=RC4-SHA bits=128/128);
-        Mon, 10 Aug 2015 15:07:12 -0700 (PDT)
-Date: Mon, 10 Aug 2015 17:07:09 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36079 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932106AbbHJScF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 10 Aug 2015 14:32:05 -0400
+Subject: [PATCH] PCI: Add ACS quirks for Intel I219-LM/V
+From: Alex Williamson <alex.williamson@redhat.com>
 To: linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: pciehp: Remove unused interrupt stuff
-Message-ID: <20150810220709.GB13982@google.com>
-References: <20150804235823.15421.71342.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: bhelgaas@google.com, john.ronciak@intel.com,
+	linux-kernel@vger.kernel.org
+Date: Mon, 10 Aug 2015 12:32:04 -0600
+Message-ID: <20150810183055.5714.12998.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150804235823.15421.71342.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 04, 2015 at 06:59:09PM -0500, Bjorn Helgaas wrote:
-> These are pretty trivial; they just remove some unused interrupt things.
-> 
-> ---
-> 
-> Bjorn Helgaas (2):
->       PCI: pciehp: Remove unused interrupt events
->       PCI: pciehp: Remove ignored MRL sensor interrupt events
+The Intel 100-series chipset now includes the integrated Ethernet as
+part of a multifunction package.  The Ethernet function does not
+include native ACS support, but Intel confirms that the device is not
+capable of peer-to-peer within the package.  We can therefore quirk it
+to expose the isolation.
 
-I applied these to pci/hotplug for v4.3.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: John Ronciak <john.ronciak@intel.com>
+---
+ drivers/pci/quirks.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e9fd0e9..a914848 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3848,6 +3848,9 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_INTEL, 0x105F, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x1060, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x10D9, pci_quirk_mf_endpoint_acs },
++	/* I219 */
++	{ PCI_VENDOR_ID_INTEL, 0x15b7, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15b8, pci_quirk_mf_endpoint_acs },
+ 	/* Intel PCH root ports */
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+ 	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+
