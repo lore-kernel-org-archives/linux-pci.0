@@ -1,88 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24198 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753115AbbHUGV5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:21:57 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 08/52] PCI: Remove duplicated code for resource sorting
-Date: Thu, 20 Aug 2015 23:20:23 -0700
-Message-Id: <1440138067-4314-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36109 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917AbbHJOjJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 10:39:09 -0400
+Received: by pacrr5 with SMTP id rr5so105201963pac.3
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 07:39:09 -0700 (PDT)
+Subject: Re: [PATCH v6 18/42] powerpc/powernv: Allocate PE# in deasending
+ order
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-19-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	panto@antoniou-consulting.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <55C8B786.1050702@ozlabs.ru>
+Date: Tue, 11 Aug 2015 00:39:02 +1000
+MIME-Version: 1.0
+In-Reply-To: <1438834307-26960-19-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now sort_resources() and pdev_sort_resources() all have sorting
-code.
+On 08/06/2015 02:11 PM, Gavin Shan wrote:
+> The available PE#, represented by a bitmap in the PHB, is allocated
+> in ascending order.
 
-As we are going to call sort_resources() several places later, so
-choose to keep sort_resources(), and remove related code in
-pdev_sort_resources().
+Available PE# is available exactly because it is not allocated ;)
+
+> It conflicts with the fact that M64 segments are
+> assigned in same order. In order to avoid the conflict, the patch
+> allocates PE# in descending order.
+
+What kind of conflict?
 
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 22 +++-------------------
- 1 file changed, 3 insertions(+), 19 deletions(-)
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 11 ++++++++---
+>   1 file changed, 8 insertions(+), 3 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 56b058c..1c950e8 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -161,13 +161,18 @@ static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>   static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>   {
+>   	unsigned long pe;
+> +	unsigned long limit = phb->ioda.total_pe_num - 1;
+>
+>   	do {
+>   		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+> -					phb->ioda.total_pe_num, 0);
+> -		if (pe >= phb->ioda.total_pe_num)
+> +					phb->ioda.total_pe_num, limit);
+> +		if (pe < phb->ioda.total_pe_num &&
+> +		    !test_and_set_bit(pe, phb->ioda.pe_alloc))
+> +			break;
+> +
+> +		if (--limit >= phb->ioda.total_pe_num)
+>   			return NULL;
+> -	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+> +	} while (1);
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 555a7a3..44d63c0 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -214,9 +214,8 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 
- 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 		struct resource *r;
--		struct pci_dev_resource *dev_res, *tmp;
-+		struct pci_dev_resource *tmp;
- 		resource_size_t r_align;
--		struct list_head *n;
- 
- 		r = &dev->resource[i];
- 
-@@ -239,22 +238,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 		tmp->res = r;
- 		tmp->dev = dev;
- 
--		/* fallback is smallest one or list is empty*/
--		n = head;
--		list_for_each_entry(dev_res, head, list) {
--			resource_size_t align;
--
--			align = __pci_resource_alignment(dev_res->dev,
--							 dev_res->res,
--							 realloc_head);
--
--			if (r_align > align) {
--				n = &dev_res->list;
--				break;
--			}
--		}
--		/* Insert it just before n*/
--		list_add_tail(&tmp->list, n);
-+		list_add_tail(&tmp->list, head);
- 	}
- }
- 
-@@ -557,9 +541,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
- 
-+requested_and_reassign:
- 	sort_resources(head);
- 
--requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
- 
+
+Usually, if it is "while(1)", then it is "while(1){}" rather than 
+"do{}while(1)" :)
+
+
+>
+>   	return pnv_ioda_init_pe(phb, pe);
+>   }
+>
+
+
 -- 
-1.8.4.5
-
+Alexey
