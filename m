@@ -1,46 +1,34 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 16/52] PCI: Check if resource is allocated before trying to assign one
-Date: Thu, 20 Aug 2015 23:20:31 -0700
-Message-Id: <1440138067-4314-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from helcar.hengli.com.au ([209.40.204.226]:52270 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752474AbbHJPlw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 11:41:52 -0400
+Date: Mon, 10 Aug 2015 23:41:47 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: linux-crypto@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, qat-linux@intel.com
+Subject: Re: [PATCH 0/5] crypto: qat - Add support for SRIOV
+Message-ID: <20150810154147.GD21143@gondor.apana.org.au>
+References: <20150807183414.630.25889.stgit@tstruk-mobl1>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150807183414.630.25889.stgit@tstruk-mobl1>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In following alt_size support, we will call pci_assign_resource()
-on one resource list several times, and some resources could have been
-assigned already.
+On Fri, Aug 07, 2015 at 11:34:14AM -0700, Tadeusz Struk wrote:
+> The following series adds SRIOV support for qat dh895xcc HW accelerator.
+> First patch moves admin code and hw arbiter code that can be reused by PF
+> and VF to common code in qat/qat_common/
+> Second patch enables SRIOV support on dh895xcc PF.
+> Third patch adds dh895xcc VF specific code.
+> Fourth patch adds FW const table initialization,
+> which may be required by VFs.
+> Fifth patch adds pci quirk for a HW issue on VF.
 
-Skip allocated resource in the list, as pci_assign_resource()
-only can handle not assigned resource.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b17ee2d..ccc6f9d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -380,7 +380,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
- 		idx = res - &dev_res->dev->resource[0];
--		if (resource_size(res) &&
-+		if (!res->parent && resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
- 				add_to_list(fail_head, dev_res->dev, res);
+All applied.
 -- 
-1.8.4.5
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
