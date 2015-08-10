@@ -1,83 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20150817235416.GS26431@google.com>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-	<1438039809-24957-14-git-send-email-yinghai@kernel.org>
-	<20150817235416.GS26431@google.com>
-Date: Tue, 18 Aug 2015 14:58:06 -0700
-Message-ID: <CAE9FiQVDRFvzadNz6HkEgShuJdfWWvF_tu-fT982WVp9ZEkxeA@mail.gmail.com>
-Subject: Re: [PATCH v3 13/51] PCI: Separate realloc list checking after allocation
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+In-Reply-To: <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com>
+References: <20150724224258.GA23990@google.com> <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com>
+ <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com>
+ <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com>
+ <20150728212944.GA12958@google.com> <CADaLNDkOLiyPmVC3VwpnbrfAKFmNwSVJKdChjQFdQqs7XP-Ddg@mail.gmail.com>
+ <20150729012255.GA18606@google.com> <20150729155509.GA31170@google.com> <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 10 Aug 2015 11:18:23 -0500
+Message-ID: <CAErSpo4VFh7rv81sCAG-eCXVyZh4ub8Trh-ntZhyfy7BzqTr5g@mail.gmail.com>
+Subject: Re: X-Gene: Unhandled fault: synchronous external abort in pci_generic_config_read32
+To: Duc Dang <dhdang@apm.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 4:54 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jul 27, 2015 at 04:29:31PM -0700, Yinghai Lu wrote:
->> We check the realloc list, as list must be empty after allocation.
+On Fri, Jul 31, 2015 at 12:00 PM, Duc Dang <dhdang@apm.com> wrote:
+> On Wed, Jul 29, 2015 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Tue, Jul 28, 2015 at 08:22:55PM -0500, Bjorn Helgaas wrote:
+>>> On Tue, Jul 28, 2015 at 02:50:39PM -0700, Duc Dang wrote:
 >>
->> Separate the realloc list checking to another function.
+>>> > Do you have another PCIe card to try on the same reboot test on this board?
+>>>
+>>> I've seen this on at least two Mellanox cards.  I'm running similar tests
+>>> on a different type of card now.
 >>
->> Add checking that is missed in acpiphp driver.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
->> Cc: Len Brown <lenb@kernel.org>
->> Cc: linux-acpi@vger.kernel.org
->> ---
->>  drivers/pci/hotplug/acpiphp_glue.c |  1 +
->>  drivers/pci/pci.h                  |  1 +
->>  drivers/pci/setup-bus.c            | 11 ++++++++---
->>  3 files changed, 10 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index ff53856..134caee 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
->>               }
->>       }
->>       __pci_bus_assign_resources(bus, &add_list, NULL);
->> +     __pci_bus_check_realloc(&add_list);
->>
->>       acpiphp_sanitize_bus(bus);
->>       pcie_bus_configure_settings(bus);
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index 4ff0ff1..2b83977 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -235,6 +235,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
->>  void __pci_bus_assign_resources(const struct pci_bus *bus,
->>                               struct list_head *realloc_head,
->>                               struct list_head *fail_head);
->> +void __pci_bus_check_realloc(struct list_head *realloc_head);
->>  bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
->>
->>  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 06664db..f30225c 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -350,6 +350,11 @@ out:
->>       }
->>  }
->>
->> +void __pci_bus_check_realloc(struct list_head *realloc_head)
->> +{
->> +     BUG_ON(!list_empty(realloc_head));
+>> FWIW, reboot tests on two machines with Mellanox cards failed, while the
+>> same test on a machine with a different proprietary card succeeded.
 >
-> I don't think this really improves readability.  At least before, we could
-> see what we were looking for and we knew it might BUG().
+> Thanks, Bjorn.
+>
+> I don't have the same Mellanox card as yours, but I will also run
+> similar reboot test to see if I hit the same issue with my card.
 
-ok, will only missing BUG_ON into acpiphp_glue.c.
+Any more hints on this?  Nothing has changed on my end, so of course
+I'm still seeing this, always on machines with Mellanox, and never on
+other machines.  Could this be a hardware issue like a signal
+integrity or margin issue?  I don't know where to go from here because
+I'm not a hardware person, and I don't know anything to do in
+software.
+
+Bjorn
