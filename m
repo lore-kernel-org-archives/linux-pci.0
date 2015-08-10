@@ -1,138 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34356 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932991AbbHKCrd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 22:47:33 -0400
-Received: by pawu10 with SMTP id u10so153225663paw.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 19:47:33 -0700 (PDT)
-Subject: Re: [PATCH v6 12/42] powerpc/powernv: Increase PE# capacity
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-13-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C8747E.9090908@ozlabs.ru> <20150811003804.GA18283@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C9623D.6070409@ozlabs.ru>
-Date: Tue, 11 Aug 2015 12:47:25 +1000
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:36998 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754360AbbHJT3K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 15:29:10 -0400
+Received: by igbpg9 with SMTP id pg9so76430261igb.0
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 12:29:09 -0700 (PDT)
+Date: Mon, 10 Aug 2015 14:29:06 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, rajatja@google.com, linux@roeck-us.net,
+	rjw@rjwysocki.net
+Subject: Re: [PATCH v2 0/2] Fix a deadlock for aer and pciehp driver
+Message-ID: <20150810192906.GE32452@google.com>
+References: <1437124592-2070-1-git-send-email-wangyijing@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20150811003804.GA18283@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1437124592-2070-1-git-send-email-wangyijing@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/11/2015 10:38 AM, Gavin Shan wrote:
-> On Mon, Aug 10, 2015 at 07:53:02PM +1000, Alexey Kardashevskiy wrote:
->> On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>> Each PHB maintains an array helping to translate RID (Request
->>> ID) to PE# with the assumption that PE# takes 8 bits, indicating
->>> that we can't have more than 256 PEs. However, pci_dn->pe_number
->>> already had 4-bytes for the PE#.
->>>
->>> The patch extends the PE# capacity so that each of them will be
->>> 4-bytes long. Then we can use IODA_INVALID_PE to check one entry
->>> in phb->pe_rmap[] is valid or not.
->>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>   arch/powerpc/platforms/powernv/pci-ioda.c | 8 ++++++--
->>>   arch/powerpc/platforms/powernv/pci.h      | 7 +++----
->>>   2 files changed, 9 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> index 57ba8fd..3094c61 100644
->>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> @@ -786,7 +786,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
->>>
->>>   	/* Clear the reverse map */
->>>   	for (rid = pe->rid; rid < rid_end; rid++)
->>> -		phb->ioda.pe_rmap[rid] = 0;
->>> +		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
->>>
->>>   	/* Release from all parents PELT-V */
->>>   	while (parent) {
->>> @@ -3134,7 +3134,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>>   	unsigned long size, pemap_off;
->>>   	const __be64 *prop64;
->>>   	const __be32 *prop32;
->>> -	int len;
->>> +	int len, i;
->>>   	u64 phb_id;
->>>   	void *aux;
->>>   	long rc;
->>> @@ -3201,6 +3201,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>>   	if (prop32)
->>>   		phb->ioda.reserved_pe = be32_to_cpup(prop32);
->>>
->>> +	/* Invalidate RID to PE# mapping */
->>> +	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
->>> +		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
->>> +
->>>   	/* Parse 64-bit MMIO range */
->>>   	pnv_ioda_parse_m64_window(phb);
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->>> index 1dc9578..6f8568e 100644
->>> --- a/arch/powerpc/platforms/powernv/pci.h
->>> +++ b/arch/powerpc/platforms/powernv/pci.h
->>> @@ -175,11 +175,10 @@ struct pnv_phb {
->>>   			struct list_head	pe_list;
->>>   			struct mutex            pe_list_mutex;
->>>
->>> -			/* Reverse map of PEs, will have to extend if
->>> -			 * we are to support more than 256 PEs, indexed
->>> -			 * bus { bus, devfn }
->>> +			/* Reverse map of PEs, indexed by
->>> +			 * { bus, devfn }
->>>   			 */
->>> -			unsigned char		pe_rmap[0x10000];
->>> +			int			pe_rmap[0x10000];
->>
->>
->> 256k seems to be waste when only tiny fraction of it will ever be used. Using
->> include/linux/hashtable.h makes sense here, and if you use a hashtable, you
->> won't have to initialize anything with IODA_INVALID_PE.
->>
->
-> I'm not sure if I follow your idea completely. With hash table to trace
-> RID mapping here, won't more memory needed if all PCI buse numbers (0
-> to 255) are all valid? It means hash table doesn't have advantage in
-> memory consumption.
+On Fri, Jul 17, 2015 at 05:16:30PM +0800, Yijing Wang wrote:
+> Yijing Wang (2):
+>   PCI: Use a local mutex instead of pci_bus_sem to avoid deadlock
+>   PCI: Lock pci_slot_mutex when traverse bus->slots
+> 
+>  arch/powerpc/kernel/pci_of_scan.c |    6 +-----
+>  arch/sparc/kernel/pci.c           |    6 +-----
+>  drivers/pci/probe.c               |    6 +-----
+>  drivers/pci/slot.c                |   26 +++++++++++++++++++++-----
+>  include/linux/pci.h               |    4 +++-
+>  5 files changed, 27 insertions(+), 21 deletions(-)
+> 
 
-You need 3 bytes - one for a bus and two for devfn - which makes it a 
-perfect 32bit has key and you only store existing devices in a hash so you 
-do not waste memory.
+I squashed the following fix from Yijing into the second patch to fix a
+build issue:
 
-
-> On the other hand, searching in hash table buckets
-> have to iterate list of conflicting items (keys), which is slow comparing
-> to what we have.
-
-How often do you expect this code to execute? Is not it setup-type and 
-hotplug only? Unless it is thousands times per second, it is not an issue here.
-
-
-> Actually, I like the idea, using array to map RID to PE#,
-> which was implemented by Ben.
-
-Where?
-
-
-
->
->>
->>>
->>>   			/* 32-bit TCE tables allocation */
->>>   			unsigned long		dma32_segcount;
->>>
->
-> Thanks,
-> Gavin
->
-
-
--- 
-Alexey
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 214bf3f..b3ba7fe 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -798,7 +798,11 @@ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+ 				 const char *name,
+ 				 struct hotplug_slot *hotplug);
+ void pci_destroy_slot(struct pci_slot *slot);
++#ifdef CONFIG_SYSFS
+ void pci_dev_assign_slot(struct pci_dev *dev);
++#else
++static inline void pci_dev_assign_slot(struct pci_dev *dev) { }
++#endif
+ int pci_scan_slot(struct pci_bus *bus, int devfn);
+ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus);
