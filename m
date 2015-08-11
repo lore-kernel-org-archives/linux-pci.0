@@ -1,86 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:59673 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754927AbbHLJd6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 05:33:58 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	patchwork-lst@pengutronix.de, kernel@pengutronix.de
-Subject: [PATCH v3 3/5] PCI: designware: implement multivector MSI irq setup
-Date: Wed, 12 Aug 2015 11:33:54 +0200
-Message-Id: <1439372036-15303-4-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
-References: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:33931 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965045AbbHKPvf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 11:51:35 -0400
+Received: by iodb91 with SMTP id b91so146687657iod.1
+        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 08:51:34 -0700 (PDT)
+Subject: [PATCH v3 04/11] PCI: Reduce size of ATS structure elements
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gregor Dick <gdick@solarflare.com>,
+	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 11 Aug 2015 10:51:30 -0500
+Message-ID: <20150811155130.21078.57080.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allows to set up and use multiple MSI irqs per device.
+The extended capabilities list is linked with 12-bit pointers, and the ATS
+Smallest Translation Unit and Invalidate Queue Depth fields are both 5
+bits.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
-v3: use new MSI msg setup function.
----
- drivers/pci/host/pcie-designware.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+Use u16 and u8 to hold the extended capability address and the stu and qdep
+values.  No functional change.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 0ec435c56a8b..74034395cf2a 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- 	}
- 
- 	*pos = pos0;
-+	desc->nvec_used = no_irqs;
-+	desc->msi_attrib.multiple = order_base_2(no_irqs);
-+
- 	return irq;
- 
- no_valid_irq:
-@@ -329,6 +332,33 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
- 	return 0;
- }
- 
-+static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
-+			     int nvec, int type)
-+{
-+#ifdef CONFIG_PCI_MSI
-+	int irq, pos;
-+	struct msi_desc *desc;
-+	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-+
-+	/* MSI-X interrupts are not supported */
-+	if (type == PCI_CAP_ID_MSIX)
-+		return -EINVAL;
-+
-+	WARN_ON(!list_is_singular(&pdev->msi_list));
-+	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
-+
-+	irq = assign_irq(nvec, desc, &pos);
-+	if (irq < 0)
-+		return irq;
-+
-+	dw_msi_setup_msg(pp, irq, pos);
-+
-+	return 0;
-+#else
-+	return -ENOSYS;
-+#endif
-+}
-+
- static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
- {
- 	struct irq_data *data = irq_get_irq_data(irq);
-@@ -340,6 +370,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
- 
- static struct msi_controller dw_pcie_msi_chip = {
- 	.setup_irq = dw_msi_setup_irq,
-+	.setup_irqs = dw_msi_setup_irqs,
- 	.teardown_irq = dw_msi_teardown_irq,
- };
- 
--- 
-2.4.6
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
+---
+ include/linux/pci.h |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8bc16b5..238b77e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -376,9 +376,9 @@ struct pci_dev {
+ 		struct pci_sriov *sriov;	/* SR-IOV capability related */
+ 		struct pci_dev *physfn;	/* the PF this VF is associated with */
+ 	};
+-	int		ats_cap;	/* ATS Capability offset */
+-	int		ats_stu;	/* ATS Smallest Translation Unit */
+-	int		ats_qdep;	/* ATS Invalidate Queue Depth */
++	u16		ats_cap;	/* ATS Capability offset */
++	u8		ats_stu;	/* ATS Smallest Translation Unit */
++	u8		ats_qdep;	/* ATS Invalidate Queue Depth */
+ 	atomic_t	ats_ref_cnt;	/* number of VFs with ATS enabled */
+ #endif
+ 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
 
