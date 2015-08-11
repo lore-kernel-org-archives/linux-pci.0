@@ -1,62 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp01.br.ibm.com ([32.104.18.85]:60750 "EHLO
-	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048AbbHRVIG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 17:08:06 -0400
-Received: from /spool/local
-	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Tue, 18 Aug 2015 18:08:02 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 0B8471DC006D
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 17:06:58 -0400 (EDT)
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7IL8N1b5152890
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 18:08:23 -0300
-Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
-	by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7IL7xoZ011346
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 18:07:59 -0300
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: gpiccoli@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com
-Subject: [PATCH 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI probe time in OF case
-Date: Tue, 18 Aug 2015 18:07:57 -0300
-Message-Id: <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
-In-Reply-To: <1439932077-11427-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-References: <1439932077-11427-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:44377 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752978AbbHKH4F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 03:56:05 -0400
+Message-ID: <1439279761.3080.39.camel@pengutronix.de>
+Subject: Re: [PATCH v2 2/2] PCI: designware: implement multivector MSI irq
+ setup
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	patchwork-lst@pengutronix.de
+Date: Tue, 11 Aug 2015 09:56:01 +0200
+In-Reply-To: <20150810223857.GC13982@google.com>
+References: <1437662976-27188-1-git-send-email-l.stach@pengutronix.de>
+	 <1437662976-27188-2-git-send-email-l.stach@pengutronix.de>
+	 <CAHM4w1=Sz1xJ1OGc9xAMVCv8hMLwnWmGrkRLHdqpdC7EgzEbpQ@mail.gmail.com>
+	 <20150810223857.GC13982@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since the commit 1851617cd2 ("PCI/MSI: Disable MSI at enumeration even if
-kernel doesn't support MSI"), MSI/MSI-X interrupts aren't being disabled
-at PCI probe time, as the logic responsible for this was moved in the
-aforementioned commit from pci_device_add() to pci_setup_device(). The
-latter function is not reachable on PowerPC pSeries platform during
-Open Firmware PCI probing time.
+Am Montag, den 10.08.2015, 17:38 -0500 schrieb Bjorn Helgaas:
+> On Tue, Aug 04, 2015 at 08:41:15PM +0530, Pratyush Anand wrote:
+> > On Thu, Jul 23, 2015 at 8:19 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> > > Allows to set up and use multiple MSI irqs per device.
+> > >
+> > > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> 
+> Thanks Lucas, I'm hoping for a little refactoring as Pratyush suggests
+> and maybe a third patch to fill in the upper bytes of the message?  Or
+> do those look not feasible?
+> 
+Pratyush suggestion looks okay and I have that on my TODO. Expect
+updated patches shortly.
 
-This patch calls pci_msi_setup_pci_dev() explicitly to disable MSI/MSI-X
-during PCI probe time on pSeries platform.
+Regards,
+Lucas
 
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci_of_scan.c | 3 +++
- 1 file changed, 3 insertions(+)
+> Bjorn
+> 
+> > > ---
+> > > The ifdef is needed to avoid a compile error on
+> > > !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
+> > > when the kernel is compiled with MSI support.
+> > >
+> > > v2: move ifdeffery inside single function
+> > > ---
+> > >  drivers/pci/host/pcie-designware.c | 43 ++++++++++++++++++++++++++++++++++++++
+> > >  1 file changed, 43 insertions(+)
+> > >
+> > > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > > index 69486be7181e..52c600327805 100644
+> > > --- a/drivers/pci/host/pcie-designware.c
+> > > +++ b/drivers/pci/host/pcie-designware.c
+> > > @@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+> > >         }
+> > >
+> > >         *pos = pos0;
+> > > +       desc->nvec_used = no_irqs;
+> > > +       desc->msi_attrib.multiple = order_base_2(no_irqs);
+> > > +
+> > >         return irq;
+> > >
+> > >  no_valid_irq:
+> > > @@ -323,6 +326,45 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+> > >         return 0;
+> > >  }
+> > >
+> > > +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+> > > +                            int nvec, int type)
+> > > +{
+> > > +#ifdef CONFIG_PCI_MSI
+> > > +       int irq, pos;
+> > > +       struct msi_desc *desc;
+> > > +       struct msi_msg msg;
+> > > +       struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+> > > +
+> > > +       /* MSI-X interrupts are not supported */
+> > > +       if (type == PCI_CAP_ID_MSIX)
+> > > +               return -EINVAL;
+> > > +
+> > > +       WARN_ON(!list_is_singular(&pdev->msi_list));
+> > > +       desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
+> > > +
+> > 
+> > Probably existing function dw_msi_setup_irq() can be re-factored and code after
+> > this line can be reused from refactored function, as they are almost same.
+> > 
+> > > +       irq = assign_irq(nvec, desc, &pos);
+> > > +       if (irq < 0)
+> > > +               return irq;
+> > > +
+> > > +       if (pp->ops->get_msi_addr)
+> > > +               msg.address_lo = pp->ops->get_msi_addr(pp);
+> > > +       else
+> > > +               msg.address_lo = virt_to_phys((void *)pp->msi_data);
+> > > +       msg.address_hi = 0x0;
+> > > +
+> > 
+> > Although, not specific to this patch, but since we are now going to have
+> > ARM64 support for DW as well, so it would be nice to fill msg.address_hi
+> > with upper bytes rather hard-coding as 0.
+> > 
+> > > +       if (pp->ops->get_msi_data)
+> > > +               msg.data = pp->ops->get_msi_data(pp, pos);
+> > > +       else
+> > > +               msg.data = pos;
+> > > +
+> > > +       pci_write_msi_msg(irq, &msg);
+> > > +
+> > > +       return 0;
+> > 
+> > ~Pratyush
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 42e02a2..0e920f3 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -191,6 +191,9 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
- 
- 	pci_device_add(dev, bus);
- 
-+	/* Disable MSI/MSI-X here to avoid bogus interrupts */
-+	pci_msi_setup_pci_dev(dev);
-+
- 	return dev;
- }
- EXPORT_SYMBOL(of_create_pci_dev);
 -- 
-2.1.0
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
