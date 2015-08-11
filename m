@@ -1,113 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:43925 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751387AbbHTBCb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Aug 2015 21:02:31 -0400
-Message-ID: <1440032549.13406.3.camel@ellerman.id.au>
-Subject: Re: [PATCH v2 1/2] PCI: Make pci_msi_setup_pci_dev() non-static for
- use by arch code
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-	paulus@samba.org, bhelgaas@google.com, mst@redhat.com
-Date: Thu, 20 Aug 2015 11:02:29 +1000
-In-Reply-To: <1440009922-30248-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-References: <1439945086.23217.5.camel@ellerman.id.au>
-	,<1439932077-11427-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
-	 <1440009922-30248-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:34257 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965045AbbHKPvL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 11:51:11 -0400
+Received: by igui7 with SMTP id i7so43098522igu.1
+        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 08:51:10 -0700 (PDT)
+Subject: [PATCH v3 01/11] iommu/vt-d: Cache PCI ATS state and Invalidate
+ Queue Depth
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gregor Dick <gdick@solarflare.com>,
+	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 11 Aug 2015 10:51:07 -0500
+Message-ID: <20150811155107.21078.24884.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-08-19 at 15:45 -0300, Guilherme G. Piccoli wrote:
-> Thanks very much for your suggestions Michael. I agree with them all,
-> so I'm sending the patch v2 (see below).
-> 
-> About the relevant mailing lists, I already sent to the linux-pci and
-> already cc'ed Bjorn Helgaas - the problem is that I made a mistake and
-> sent 2 different emails using git send-email. I'm really sorry about
-> this.
-> 
-> Now I'm trying to correct my mistake sending this message
-> simultaneously to both lists (and to a bunch of cc's) using two
-> Message-IDs in my reply. Hope it works...
+We check the ATS state (enabled/disabled) and fetch the PCI ATS Invalidate
+Queue Depth in performance-sensitive paths.  It's easy to cache these,
+which removes dependencies on PCI.
 
-OK.
+Remember the ATS enabled state.  When enabling, read the queue depth once
+and cache it in the device_domain_info struct.  This is similar to what
+amd_iommu.c does.
 
-In future you should send a reply like the above to my mail, and then
-separately send the new patch series. My preference is that the new series is
-not a reply to anything, though some other maintainers may disagree on that
-point.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/iommu/intel-iommu.c |   28 ++++++++++++++++++----------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
 
-The other question, which I neglected to ask yesterday, is what is the symptom
-of the bug? ie. does the system fail to boot or otherwise crash etc.?
-
-
-> Changes since v2:
-
-This is changes *in* v2, or since v1.
-
-And it doesn't go here, it goes below ...
-
->  * Made commit message more clear
->  * Added "Fixes" line
->  * Improved commit reference by using 12 first chars of SHA
-> 
-> >8----------8<
-> 
-> Commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
-> doesn't support MSI") changed the location of the code that disables
-> MSI/MSI-X interrupts at PCI probe time in devices that have this flag
-> set. It moved the code from pci_msi_init_pci_dev() to a new function
-> named pci_msi_setup_pci_dev(), called by pci_setup_device().
-> 
-> The pseries PCI probing code does not call pci_setup_device(), so since
-> the aforementioned commit the function pci_msi_setup_pci_dev() is not
-> called and MSI/MSI-X interrupts are left enabled, which is a bug. To fix
-> this, the pseries PCI probe should manually call pci_msi_setup_pci_dev(),
-> so this patch makes it non-static.
-> 
-> Fixes: 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
-> doesn't support MSI")
-> 
-> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-> ---
-
-Here.
-
-Or anywhere after the first '---', which means the version commentary is
-discarded in the final commit.
-
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cefd636..520c5b6 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1103,7 +1103,7 @@ int pci_cfg_space_size(struct pci_dev *dev)
->  
->  #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
->  
-> -static void pci_msi_setup_pci_dev(struct pci_dev *dev)
-> +void pci_msi_setup_pci_dev(struct pci_dev *dev)
->  {
->  	/*
->  	 * Disable the MSI hardware to avoid screaming interrupts
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8a0321a..860c751 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1202,6 +1202,7 @@ struct msix_entry {
->  	u16	entry;	/* driver uses to specify entry, OS writes */
->  };
->  
-> +void pci_msi_setup_pci_dev(struct pci_dev *dev);
->  
->  #ifdef CONFIG_PCI_MSI
->  int pci_msi_vec_count(struct pci_dev *dev);
-
-
-cheers
-
-
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index a98a7b2..c22a549 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -408,6 +408,10 @@ struct device_domain_info {
+ 	struct list_head global; /* link to global list */
+ 	u8 bus;			/* PCI bus number */
+ 	u8 devfn;		/* PCI devfn number */
++	struct {
++		u8 enabled:1;
++		u8 qdep;
++	} ats;			/* ATS state */
+ 	struct device *dev; /* it's NULL for PCIe-to-PCI bridge */
+ 	struct intel_iommu *iommu; /* IOMMU used by this device */
+ 	struct dmar_domain *domain; /* pointer to domain */
+@@ -1391,19 +1395,26 @@ iommu_support_dev_iotlb (struct dmar_domain *domain, struct intel_iommu *iommu,
+ 
+ static void iommu_enable_dev_iotlb(struct device_domain_info *info)
+ {
++	struct pci_dev *pdev;
++
+ 	if (!info || !dev_is_pci(info->dev))
+ 		return;
+ 
+-	pci_enable_ats(to_pci_dev(info->dev), VTD_PAGE_SHIFT);
++	pdev = to_pci_dev(info->dev);
++	if (pci_enable_ats(pdev, VTD_PAGE_SHIFT))
++		return;
++
++	info->ats.enabled = 1;
++	info->ats.qdep = pci_ats_queue_depth(pdev);
+ }
+ 
+ static void iommu_disable_dev_iotlb(struct device_domain_info *info)
+ {
+-	if (!info->dev || !dev_is_pci(info->dev) ||
+-	    !pci_ats_enabled(to_pci_dev(info->dev)))
++	if (!info->ats.enabled)
+ 		return;
+ 
+ 	pci_disable_ats(to_pci_dev(info->dev));
++	info->ats.enabled = 0;
+ }
+ 
+ static void iommu_flush_dev_iotlb(struct dmar_domain *domain,
+@@ -1415,16 +1426,11 @@ static void iommu_flush_dev_iotlb(struct dmar_domain *domain,
+ 
+ 	spin_lock_irqsave(&device_domain_lock, flags);
+ 	list_for_each_entry(info, &domain->devices, link) {
+-		struct pci_dev *pdev;
+-		if (!info->dev || !dev_is_pci(info->dev))
+-			continue;
+-
+-		pdev = to_pci_dev(info->dev);
+-		if (!pci_ats_enabled(pdev))
++		if (!info->ats.enabled)
+ 			continue;
+ 
+ 		sid = info->bus << 8 | info->devfn;
+-		qdep = pci_ats_queue_depth(pdev);
++		qdep = info->ats.qdep;
+ 		qi_flush_dev_iotlb(info->iommu, sid, qdep, addr, mask);
+ 	}
+ 	spin_unlock_irqrestore(&device_domain_lock, flags);
+@@ -2272,6 +2278,8 @@ static struct dmar_domain *dmar_insert_dev_info(struct intel_iommu *iommu,
+ 
+ 	info->bus = bus;
+ 	info->devfn = devfn;
++	info->ats.enabled = 0;
++	info->ats.qdep = 0;
+ 	info->dev = dev;
+ 	info->domain = domain;
+ 	info->iommu = iommu;
 
