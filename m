@@ -1,188 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3425.houston.hp.com ([15.201.208.53]:26158 "EHLO
-	g4t3425.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946338AbbHGXuj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2015 19:50:39 -0400
-Message-ID: <1438991330.3109.196.camel@hp.com>
-Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
-From: Toshi Kani <toshi.kani@hp.com>
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: Jan Beulich <JBeulich@suse.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jej B <James.Bottomley@hansenpartnership.com>,
-	X86 ML <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?=
-	<ville.syrjala@linux.intel.com>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	xen-devel@lists.xenproject.org, Dave Airlie <airlied@redhat.com>,
-	Ville =?ISO-8859-1?Q?Syrj=E4l=E4?= <syrjala@sci.fi>,
-	Juergen Gross <JGross@suse.com>, Borislav Petkov <bp@suse.de>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-media@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Fri, 07 Aug 2015 17:48:50 -0600
-In-Reply-To: <CAB=NE6VmpBchJQ=Bfi1qbc+_aSMzcBe1xCqVvJpgbDw8gdrwwQ@mail.gmail.com>
-References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
-	 <1434064996.11808.64.camel@misato.fc.hp.com>
-	 <557AAD910200007800084014@mail.emea.novell.com>
-	 <1434128306.11808.97.camel@misato.fc.hp.com>
-	 <CAB=NE6W3=SFTqabeD6gq7JCqFZ7+SBZh7Xa=RteO_8-3P7fbdw@mail.gmail.com>
-	 <1438901893.3109.72.camel@hp.com>
-	 <CAB=NE6VnspTPfrn5+ZFSdgKb3uh_4g7LsuZVwe2FET=noijr5Q@mail.gmail.com>
-	 <1438984574.3109.151.camel@hp.com>
-	 <CAB=NE6V+dAq1u52c3tDhBOYWU1BNMBVL3KzDdM=C-zTkLEx4xA@mail.gmail.com>
-	 <1438988915.3109.175.camel@hp.com>
-	 <CAB=NE6VmpBchJQ=Bfi1qbc+_aSMzcBe1xCqVvJpgbDw8gdrwwQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:56712 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933633AbbHKAxk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:53:40 -0400
+Received: from /spool/local
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 11 Aug 2015 10:53:37 +1000
+Date: Tue, 11 Aug 2015 10:52:43 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Frank Rowand <frowand.list@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com, aik@ozlabs.ru
+Subject: Re: [PATCH v6 39/42] drivers/of: Allow to specify root node in
+ of_fdt_unflatten_tree()
+Message-ID: <20150811005243.GB20729@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-40-git-send-email-gwshan@linux.vnet.ibm.com>
+ <55C928C5.2080305@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55C928C5.2080305@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2015-08-07 at 16:26 -0700, Luis R. Rodriguez wrote:
-> On Fri, Aug 7, 2015 at 4:08 PM, Toshi Kani <toshi.kani@hp.com> wrote:
-> > On Fri, 2015-08-07 at 15:23 -0700, Luis R. Rodriguez wrote:
-> > > On Fri, Aug 7, 2015 at 2:56 PM, Toshi Kani <toshi.kani@hp.com> wrote:
-> > > > On Fri, 2015-08-07 at 13:25 -0700, Luis R. Rodriguez wrote:
-> > > > > On Thu, Aug 6, 2015 at 3:58 PM, Toshi Kani <toshi.kani@hp.com> 
-> > > > > wrote:
-> > > > > > On Thu, 2015-08-06 at 12:53 -0700, Luis R. Rodriguez wrote:
-> > > > > > > On Fri, Jun 12, 2015 at 9:58 AM, Toshi Kani <toshi.kani@hp.com
-> > > > > > > >
-> > > > > > > wrote:
- :
-> > > > > 
-> > > > > Its a bit more than that though. Since you agree that the OS can 
-> > > > > live without MTRR code I was hoping to then see if we can fold out 
-> > > > > PAT Linux code from under the MTRR dependency on Linux and make 
-> > > > > PAT a first class citizen, maybe at least for x86-64. Right now 
-> > > > > you can only get PAT support on Linux if you have MTRR code, but 
-> > > > > I'd like to see if instead we can rip MTRR code out completely 
-> > > > > under its own Kconfig and let it start rotting away.
-> > > > > 
-> > > > > Code-wise the only issue I saw was that PAT code also relies on
-> > > > > mtrr_type_lookup(), see pat_x_mtrr_type(), but other than this I 
-> > > > > found no other obvious issues.
-> > > > 
-> > > > We can rip of the MTTR code that modifies the MTRR setup, but not
-> > > > mtrr_type_lookup().  This function provides necessary checks per
-> > > > documented
-> > > > in commit 7f0431e3dc89 as follows.
-> > > > 
-> > > >     1) reserve_memtype() tracks an effective memory type in case
-> > > >        a request type is WB (ex. /dev/mem blindly uses WB). Missing
-> > > >        to track with its effective type causes a subsequent request
-> > > >        to map the same range with the effective type to fail.
-> > > > 
-> > > >     2) pud_set_huge() and pmd_set_huge() check if a requested range
-> > > >        has any overlap with MTRRs. Missing to detect an overlap may
-> > > >        cause a performance penalty or undefined behavior.
-> > > > 
-> > > > mtrr_type_lookup() is still admittedly awkward, but I do not think 
-> > > > we
-> > > > have an immediate issue in PAT code calling it.  I do not think it 
-> > > > makes
-> > > > PAT code a second class citizen.
-> > > 
-> > > OK since we know that if MTRR set up code ends up disabled and would
-> > > return MTRR_TYPE_INVALID what if we just static inline this for the
-> > > no-MTRR Kconfig build option immediately, and only then have the full
-> > > blown implementation for the case where MTRR Kconfig option is
-> > > enabled?
-> > 
-> > Yes, the MTRR code could be disabled by Kconfig with such inline stubs
-> 
-> OK thanks.
-> 
-> > as
-> > long as the kernel is built specifically for a particular platform with 
-> > MTRR disabled, such as Xen guest kernel.
-> 
-> Sure.
-> 
-> > However, since MTRR is a CPU feature enabled on most of the systems, I 
-> > am not sure if it makes sense to be configurable with Kconfig, though.
-> 
-> To me this is about making PAT a first class citizen in code though
-> and validating through Kconfig the option then to opt-out of MTRR from
-> OS code. Perhaps we can recommend to enable it but having the options
-> to split out PAT from MTRR is what I was aiming for.
+On Mon, Aug 10, 2015 at 03:42:13PM -0700, Frank Rowand wrote:
+>On 8/5/2015 9:11 PM, Gavin Shan wrote:
+>> This introduces one more argument to of_fdt_unflatten_tree()
+>> to specify the root node for the FDT blob, which is going to be
+>> unflattened. In the result, the function can be used to unflatten
+>> FDT blob, which represents device sub-tree in PowerNV hotplug
+>> driver.
+>> 
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  drivers/of/fdt.c       | 13 ++++++++-----
+>>  drivers/of/unittest.c  |  2 +-
+>>  include/linux/of_fdt.h |  1 +
+>>  3 files changed, 10 insertions(+), 6 deletions(-)
+>> 
+>> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+>> index a18a2ce..074870a 100644
+>> --- a/drivers/of/fdt.c
+>> +++ b/drivers/of/fdt.c
+>> @@ -388,10 +388,11 @@ static void *unflatten_dt_node(const void *blob,
+>>  			       struct device_node **nodepp,
+>>  			       bool dryrun)
+>>  {
+>> +	unsigned long fpsize = dad ? strlen(of_node_full_name(dad)) : 0;
+>>  	int depth = 1;
+>>  
+>>  	return __unflatten_dt_node(blob, mem, poffset,
+>> -				   dad, nodepp, 0,
+>> +				   dad, nodepp, fpsize,
+>>  				   dryrun, &depth);
+>>  }
+>>  
+>> @@ -408,6 +409,7 @@ static void *unflatten_dt_node(const void *blob,
+>>   * for the resulting tree
+>>   */
+>>  static void __unflatten_device_tree(const void *blob,
+>> +			     struct device_node *dad,
+>>  			     struct device_node **mynodes,
+>>  			     void * (*dt_alloc)(u64 size, u64 align))
+>>  {
+>
+>Please add @dad to the documentation header for the function.
+>
 
-Since we have CONFIG_MTRR already, we do not need to argue over this option.
-:-)  It makes sense since when MTRR code was introduced, there were CPUs
-without this capability...
-
-> > > > > Platform firmware and SMIs seems to be the only other possible 
-> > > > > issue. More on this below.
-> > > > > 
-> > > > > > > For those type of OSes...
-> > > > > > > could it be possible to negotiate or hint to the platform 
-> > > > > > > through an attribute somehow that the OS has such capability 
-> > > > > > > to not use MTRR?
-> > > > > > 
-> > > > > > The OS can disable MTRR.  However, this can also cause a problem 
-> > > > > > in firmware, which may rely on MTRR.
-> > > > > 
-> > > > > Can you describe what type of issues we could expect ? I tend to 
-> > > > > care more about this for 64-bit systems so if 32-bit platforms 
-> > > > > would be more of the ones which could cause an issue would 
-> > > > > restricting disabling MTRR only for 64-bit help?
-> > > > 
-> > > > The SMI handler runs in real-mode and relies on MTRR being effective 
-> > > > to provide right cache types.  It does not matter if it is 64-bit or
-> > > > not.
-> > > 
-> > > I see... since I have no visibility to what goes under the hood, can
-> > > you provide one example use case where an SMI handler would require
-> > > getting a cache type through MTRR ? I realize this can vary, vendor by
-> > > vendor, but any example would do just to satisfy my curiosity.
-> > 
-> > For fan control, it would need UC access to its registers.
-> 
-> OK thanks! To follow up with the example, since the platform firmware
-> would have set up the MTRRs anyway, the SMI should still work, even if
-> the OS didn't do anything, right?
-
-Yes, MTRR works without the OS code.  However, mtrr_type_lookup() is
-necessary to make sure that OS mapping requests are aligned with with the
-MTRR setup.
+Yes, it will be included in next revision.
 
 
-> > > > > > Is there any issue for Linux to use MTRR set by firmware?
-> > > > > 
-> > > > > Even though we don't have the Kconfig option right now to disable 
-> > > > > MTRR cod explicitly I'll note that there are a few other cases 
-> > > > > that could flip Linux to note use MTRR:
-> > > > > 
-> > > > >   a) Some BIOSes could let MTRR get disabled
-> > > > >   b) As of Xen 4.4, the hypervisor disables X86_FEATURE_MTRR which
-> > > > > disables MTRR on Linux
-> > > > > 
-> > > > > If these environments can exist it'd be good to understand 
-> > > > > possible issues that could creep up as a result of the OS not 
-> > > > > having MTRR enabled. If this is a reasonable thing for x86-64 I 
-> > > > > was hoping we could just let users opt-in to a similar build 
-> > > > > configuration through the OS by letting PAT not depend on MTRR.
-> > > > 
-> > > > Case a) and b) do not cause any issue.  They simply lead
-> > > > mtrr_type_lookup() to return immediately with MTRR_TYPE_INVALID 
-> > > > (i.e. MTRR disable), and the callers handle this value properly. 
-> > > >  These cases are only problematic when the OS tries to modify MTRR.
-> > > 
-> > > OK if the OS returns MTRR_TYPE_INVALID, for folks who do not want MTRR
-> > > code on their kernel, we should be OK?
-> > 
-> > Technically OK.  Not sure if we want such a Kconfig option, though.
-> 
-> Its more of me wanting to get PAT out from under MTRR. Does that make 
-> sense?
-
-It makes sense if you need to make the kernel size a bit smaller, and you
-build kernels specific to Xen guests.  Leaving the MTRR code enabled on Xen
-guests does not cause you any issue, though.
+>> @@ -435,7 +437,7 @@ static void __unflatten_device_tree(const void *blob,
+>>  	/* First pass, scan for size */
+>>  	start = 0;
+>>  	size = (unsigned long)unflatten_dt_node(blob, NULL, &start,
+>> -						NULL, NULL, true);
+>> +						dad, NULL, true);
+>>  	size = ALIGN(size, 4);
+>>  
+>>  	pr_debug("  size is %lx, allocating...\n", size);
+>> @@ -450,7 +452,7 @@ static void __unflatten_device_tree(const void *blob,
+>>  
+>>  	/* Second pass, do actual unflattening */
+>>  	start = 0;
+>> -	unflatten_dt_node(blob, mem, &start, NULL, mynodes, false);
+>> +	unflatten_dt_node(blob, mem, &start, dad, mynodes, false);
+>>  	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+>>  		pr_warning("End of tree marker overwritten: %08x\n",
+>>  			   be32_to_cpup(mem + size));
+>> @@ -472,9 +474,10 @@ static void *kernel_tree_alloc(u64 size, u64 align)
+>>   * can be used.
+>>   */
+>>  void of_fdt_unflatten_tree(const unsigned long *blob,
+>> +			struct device_node *dad,
+>>  			struct device_node **mynodes)
+>>  {
+>> -	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
+>> +	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+>>  }
+>>  EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+>>  
+>> @@ -1125,7 +1128,7 @@ bool __init early_init_dt_scan(void *params)
+>>   */
+>>  void __init unflatten_device_tree(void)
+>>  {
+>> -	__unflatten_device_tree(initial_boot_params, &of_root,
+>> +	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
+>>  				early_init_dt_alloc_memory_arch);
+>>  
+>>  	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
+>> diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+>> index 1801634..2270830 100644
+>> --- a/drivers/of/unittest.c
+>> +++ b/drivers/of/unittest.c
+>> @@ -907,7 +907,7 @@ static int __init unittest_data_add(void)
+>>  			"not running tests\n", __func__);
+>>  		return -ENOMEM;
+>>  	}
+>> -	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
+>> +	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
+>>  	if (!unittest_data_node) {
+>>  		pr_warn("%s: No tree to attach; not running tests\n", __func__);
+>>  		return -ENODATA;
+>> diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+>> index df9ef38..3644960 100644
+>> --- a/include/linux/of_fdt.h
+>> +++ b/include/linux/of_fdt.h
+>> @@ -38,6 +38,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
+>>  extern int of_fdt_match(const void *blob, unsigned long node,
+>>  			const char *const *compat);
+>>  extern void of_fdt_unflatten_tree(const unsigned long *blob,
+>> +			       struct device_node *dad,
+>>  			       struct device_node **mynodes);
+>>  
+>>  /* TBD: Temporary export of fdt globals - remove when code fully merged */
+>> 
 
 Thanks,
--Toshi
+Gavin
+
