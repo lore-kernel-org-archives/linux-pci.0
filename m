@@ -1,132 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:21550 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750972AbbHBTaF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 2 Aug 2015 15:30:05 -0400
-Date: Sun, 2 Aug 2015 21:30:00 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-cc: corbet@lwn.net, vinod.koul@intel.com, bhelgaas@google.com,
-	Julia.Lawall@lip6.fr, Gilles.Muller@lip6.fr, nicolas.palix@imag.fr,
-	mmarek@suse.cz, akpm@linux-foundation.org, bigeasy@linutronix.de,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-mm@kvack.org, cocci@systeme.lip6.fr
-Subject: Re: [PATCH v2 4/4] coccinelle: mm:
- scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-In-Reply-To: <1438371404-3219-5-git-send-email-sean.stalley@intel.com>
-Message-ID: <alpine.DEB.2.02.1508022129500.2044@localhost6.localdomain6>
-References: <1438371404-3219-1-git-send-email-sean.stalley@intel.com> <1438371404-3219-5-git-send-email-sean.stalley@intel.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:34143 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965208AbbHKPvD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 11:51:03 -0400
+Received: by igui7 with SMTP id i7so43095480igu.1
+        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 08:51:02 -0700 (PDT)
+Subject: [PATCH v3 00/11] PCI: Fix ATS deadlock
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gregor Dick <gdick@solarflare.com>,
+	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 11 Aug 2015 10:50:59 -0500
+Message-ID: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+Gregor reported a deadlock [1] when enabling a VF that supports ATS.
+This series is intended to fix that.  The second patch should be enough to
+fix the deadlock; the rest are simplification and cleanup.
 
-On Fri, 31 Jul 2015, Sean O. Stalley wrote:
+These are based on v4.2-rc2.
 
-> add [pci|dma]_pool_zalloc coccinelle check.
-> replaces instances of [pci|dma]_pool_alloc() followed by memset(0)
-> with [pci|dma]_pool_zalloc().
-> 
-> Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-> ---
->  .../coccinelle/api/alloc/pool_zalloc-simple.cocci  | 84 ++++++++++++++++++++++
->  1 file changed, 84 insertions(+)
->  create mode 100644 scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-> 
-> diff --git a/scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci b/scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-> new file mode 100644
-> index 0000000..9b7eb32
-> --- /dev/null
-> +++ b/scripts/coccinelle/api/alloc/pool_zalloc-simple.cocci
-> @@ -0,0 +1,84 @@
-> +///
-> +/// Use *_pool_zalloc rather than *_pool_alloc followed by memset with 0
-> +///
-> +// Copyright: (C) 2015 Intel Corp.  GPLv2.
-> +// Options: --no-includes --include-headers
-> +//
-> +// Keywords: dma_pool_zalloc, pci_pool_zalloc
-> +//
-> +
-> +virtual context
-> +virtual patch
-> +virtual org
-> +virtual report
-> +
-> +//----------------------------------------------------------
-> +//  For context mode
-> +//----------------------------------------------------------
-> +
-> +@depends on context@
-> +expression x;
-> +statement S;
-> +@@
-> +
-> +* x = \(dma_pool_alloc\|pci_pool_alloc\)(...);
-> +  if ((x==NULL) || ...) S
-> +* memset(x,0, ...);
-> +
-> +//----------------------------------------------------------
-> +//  For patch mode
-> +//----------------------------------------------------------
-> +
-> +@depends on patch@
-> +expression x;
-> +expression a,b,c;
-> +statement S;
-> +@@
-> +
-> +- x = dma_pool_alloc(a,b,c);
-> ++ x = dma_pool_zalloc(a,b,c);
-> +  if ((x==NULL) || ...) S
-> +- memset(x,0,...);
-> +
-> +@depends on patch@
-> +expression x;
-> +expression a,b,c;
-> +statement S;
-> +@@
-> +
-> +- x = pci_pool_alloc(a,b,c);
-> ++ x = pci_pool_zalloc(a,b,c);
-> +  if ((x==NULL) || ...) S
-> +- memset(x,0,...);
-> +
-> +//----------------------------------------------------------
-> +//  For org and report mode
-> +//----------------------------------------------------------
-> +
-> +@r depends on org || report@
-> +expression x;
-> +expression a,b,c;
-> +statement S;
-> +position p;
-> +@@
-> +
-> + x = @p\(dma_pool_alloc\|pci_pool_alloc\)(a,b,c);
-> + if ((x==NULL) || ...) S
-> + memset(x,0, ...);
-> +
-> +@script:python depends on org@
-> +p << r.p;
-> +x << r.x;
-> +@@
-> +
-> +msg="%s" % (x)
-> +msg_safe=msg.replace("[","@(").replace("]",")")
-> +coccilib.org.print_todo(p[0], msg_safe)
-> +
-> +@script:python depends on report@
-> +p << r.p;
-> +x << r.x;
-> +@@
-> +
-> +msg="WARNING: *_pool_zalloc should be used for %s, instead of *_pool_alloc/memset" % (x)
-> +coccilib.report.print_report(p[0], msg)
-> -- 
-> 1.9.1
-> 
-> 
+[1] http://permalink.gmane.org/gmane.linux.kernel.iommu/9433
+
+Changes between v2 and v3:
+  - Initialize info->ats.enabled, qdep in intel-iommu.c (Yinghai)
+  - Use "u8 enabled:1", not "int enabled:1" in intel-iommu.c state
+  - WARN_ON() if enabling ATS when already enabled (Joerg)
+  - Return -EBUSY, not -EINVAL if enabling ATS when already enabled
+  - Added Reviewed-by from Joerg
+
+Changes between v1 and v2:
+  - Remove use of pci_ats_enabled() (intel-iommu.c)
+  - Call pci_ats_queue_depth() only once per device and cache result
+    (intel-iommu.c)
+  - Remove pci_ats_enabled() interface
+  - Stop caching queue depth in pci_dev to save space
+  - Add PF refcount of how many associated VFs have ATS enabled
+  - Add comment that ATS must be enabled on PF before on VFs
+  - Require ATS to be disabled on all VFs and PF before changing STU
+
+---
+
+Bjorn Helgaas (11):
+      iommu/vt-d: Cache PCI ATS state and Invalidate Queue Depth
+      PCI: Allocate ATS struct during enumeration
+      PCI: Embed ATS info directly into struct pci_dev
+      PCI: Reduce size of ATS structure elements
+      PCI: Rationalize pci_ats_queue_depth() error checking
+      PCI: Inline the ATS setup code into pci_ats_init()
+      PCI: Use pci_physfn() rather than looking up physfn by hand
+      PCI: Clean up ATS error handling
+      PCI: Move ATS declarations to linux/pci.h so they're all together
+      PCI: Stop caching ATS Invalidate Queue Depth
+      PCI: Remove pci_ats_enabled()
+
+
+ drivers/iommu/intel-iommu.c |   28 ++++++---
+ drivers/pci/ats.c           |  132 +++++++++++++++----------------------------
+ drivers/pci/probe.c         |    3 +
+ include/linux/pci-ats.h     |   49 ----------------
+ include/linux/pci.h         |   18 ++++++
+ 5 files changed, 85 insertions(+), 145 deletions(-)
