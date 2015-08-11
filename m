@@ -1,122 +1,251 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <55E4340D.6050004@linaro.org>
-Date: Mon, 31 Aug 2015 13:01:33 +0200
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp08.in.ibm.com ([122.248.162.8]:52973 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932984AbbHKADv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:03:51 -0400
+Received: from /spool/local
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 11 Aug 2015 05:33:49 +0530
+Date: Tue, 11 Aug 2015 10:03:42 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com
+Subject: Re: [PATCH v6 05/42] powerpc/powernv: Track IO/M32/M64 segments from
+ PE
+Message-ID: <20150811000342.GB10753@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-6-git-send-email-gwshan@linux.vnet.ibm.com>
+ <55C84FD8.302@ozlabs.ru>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>
-CC: Will Deacon <Will.Deacon@arm.com>, Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org> <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org> <20150526170817.GU1565@arm.com> <55657B02.5090805@linaro.org> <20150602133215.GC23650@red-moon> <55701A31.808@linaro.org> <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org> <557504A2.3060203@linaro.org> <20150608151443.GA16151@red-moon>
-In-Reply-To: <20150608151443.GA16151@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55C84FD8.302@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08.06.2015 17:14, Lorenzo Pieralisi wrote:
-> On Mon, Jun 08, 2015 at 03:57:38AM +0100, Hanjun Guo wrote:
+On Mon, Aug 10, 2015 at 05:16:40PM +1000, Alexey Kardashevskiy wrote:
+>On 08/06/2015 02:11 PM, Gavin Shan wrote:
+>>The patch is adding 6 bitmaps, three to PE and three to PHB, to track
 >
-> [...]
+>The patch is also removing 2 arrays (io_segmap and m32_segmap), what is that
+>all about? Also, there was no m64_segmap, now there is, needs an explanation
+>may be.
 >
->>>>>>>> Why can't we make use of the ECAM implementation used by
->>>>>>>> pci-host-generic
->>>>>>>> and drivers/pci/access.c?
->>>>>>>
->>>>>>> We had that question when I had posted MMCFG patch set separately,
->>>>>>> please see:
->>>>>>> https://lkml.org/lkml/2015/3/11/492
->>>>>>
->>>>>> Yes, but the real question is, why do we need to have PCI config space
->>>>>> up and running before a bus struct is even created ? I think the
->>>>>> reason is
->>>>>> the PCI configuration address space format (ACPI 6.0, Table 5-27, page
->>>>>> 108):
->>>>>>
->>>>>> "PCI Configuration space addresses must be confined to devices on
->>>>>> PCI Segment Group 0, bus 0. This restriction exists to accommodate
->>>>>> access to fixed hardware prior to PCI bus enumeration".
->>>>>>
->>>>>> On HW reduced platforms I do not even think this is required at all,
->>>>>> we have to look into this to avoid code duplication that might well
->>>>>> turn out useless.
->>>>>
->>>>> This is only for the fixed hardware, which will be not available for
->>>>> ARM64 (reduced hardware mode), but in Generic Hardware Programming
->>>>> Model, we using OEM-provided ACPI Machine Language (AML) code to access
->>>>> generic hardware registers, this will be available for reduced hardware
->>>>> too.
->>>>>
->>>>> So in ACPI spec, it says: (ACPI 6.0 page 66, last paragraph)
->>>>>
->>>>> ACPI defines eight address spaces that may be accessed by generic
->>>>> hardware implementations. These include:
->>>>> * System I/O space
->>>>> * System memory space
->>>>> * PCI configuration space
->>>>> * Embedded controller space
->>>>> * System Management Bus (SMBus) space
->>>>> * CMOS
->>>>> * PCI BAR Target
->>>>> * IPMI space
->>>>>
->>>>> So if any device using the PCI address space for control, such
->>>>> as a system reset control device, its address space can be reside
->>>>> in PCI configuration space (who can prevent a OEM do that crazy
->>>>> thing? :) ), and it should be accessible before the PCI bus is
->>>>> created.
->>>>
->>>> Us, by changing attitude and questioning features whose usefulness
->>>> is questionable. I will look into this and raise the point, I am not
->>>> thrilled by the idea of adding another set of PCI accessor functions
->>>> and drivers because we have to access a register through PCI before
->>>> enumerating the bus (and on arm64 this is totally useless since
->>>> we are not meant to support fixed HW anyway). Maybe we can make acpica
->>>> code use a "special" stub (ACPI specific, PCI configuration space address
->>>> space has restrictions anyway), I have to review this set in its
->>>> entirety to see how to do that (and I would kindly ask you to do
->>>> it too, before saying it is not possible to implement it).
->>>
->>> I'm willing to do that, actually, if we don't need a mechanism to
->>> access PCI config space before the bus is created, the code can be
->>> simplified a lot.
+
+Originally, the bitmaps (io_segmap and m32_segmap) are allocated dynamically.
+Now, they have fixed sizes - 512 bits.
+
+The subject "powerpc/powernv: Track IO/M32/M64 segments from PE" indicates
+why m64_segmap is added.
+
+>
+>>the consumed by one particular PE, which can be released once the PE
+>>is destroyed during PCI unplugging time. Also, we're using fixed
+>>quantity of bits to trace the used IO, M32 and M64 segments by PEs
+>>in one particular PHB.
 >>
->> After more investigation on the spec and the ACPI core code, I'm
->> still not convinced that accessing to PCI config space before PCI
->> bus creating is impossible, also there is no enough ARM64 hardware
->> to prove that too. But I think we can go in this way, reuse the
->> ECAM implementation by pci-host-generic for now, and implement the PCI
->> accessor functions before enumerating PCI bus when needed in the
->> future, does it make sense?
 >
-> You mean we rewrite the patch to make sure we can use the PCI host generic
-> driver with MCFG and we leave the acpica PCI config call empty stubs on
-> arm64 (as they are now) ?
+>Out of curiosity - have you considered having just 3 arrays, in PHB, storing
+>PE numbers, and ditching PE's arrays? Does PE itself need to know what PEs it
+>is using? Not sure about this master/slave PEs though.
 >
 
-Hi Bjorn, Rafael,
+I don't follow your suggestion. Can you rephrase and explain it a bit more?
 
-Lorenzo pointed out very important problem we are having with PCI config 
-space access for ARM64. Please refer to the above discussion and add 
-your 2 cents. Can we forget about accessing PCI config space (for 
-Hardware Reduced profile) before PCI bus creation? If not, do you see a 
-way to use drivers/pci/access.c accessors here, like acpica change? Any 
-opinion is very appreciated.
+>It would be easier to read patches if this one was right before
+>[PATCH v6 23/42] powerpc/powernv: Release PEs dynamically
+>
 
-Regards,
-Tomasz
+I'll try to reoder the patch, but not expect too much...
+
+>
+>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 29 +++++++++++++++--------------
+>>  arch/powerpc/platforms/powernv/pci.h      | 18 ++++++++++++++----
+>>  2 files changed, 29 insertions(+), 18 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index e4ac703..78b49a1 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -388,6 +388,12 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>  			list_add_tail(&pe->list, &master_pe->slaves);
+>>  		}
+>>
+>>+		/* M64 segments consumed by slave PEs are tracked
+>>+		 * by master PE
+>>+		 */
+>>+		set_bit(pe->pe_number, master_pe->m64_segmap);
+>>+		set_bit(pe->pe_number, phb->ioda.m64_segmap);
+>>+
+>>  		/* P7IOC supports M64DT, which helps mapping M64 segment
+>>  		 * to one particular PE#. However, PHB3 has fixed mapping
+>>  		 * between M64 segment and PE#. In order to have same logic
+>>@@ -2871,9 +2877,11 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>
+>>  			while (index < phb->ioda.total_pe &&
+>>  			       region.start <= region.end) {
+>>-				phb->ioda.io_segmap[index] = pe->pe_number;
+>>+				set_bit(index, pe->io_segmap);
+>>+				set_bit(index, phb->ioda.io_segmap);
+>>  				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>-					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
+>>+					pe->pe_number, OPAL_IO_WINDOW_TYPE,
+>>+					0, index);
+>
+>Unrelated change.
+>
+
+True, will drop. However, checkpatch.pl will complain wtih:
+exceeding 80 characters.
+
+>>  				if (rc != OPAL_SUCCESS) {
+>>  					pr_err("%s: OPAL error %d when mapping IO "
+>>  					       "segment #%d to PE#%d\n",
+>>@@ -2896,9 +2904,11 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>
+>>  			while (index < phb->ioda.total_pe &&
+>>  			       region.start <= region.end) {
+>>-				phb->ioda.m32_segmap[index] = pe->pe_number;
+>>+				set_bit(index, pe->m32_segmap);
+>>+				set_bit(index, phb->ioda.m32_segmap);
+>>  				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>-					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
+>>+					pe->pe_number, OPAL_M32_WINDOW_TYPE,
+>>+					0, index);
+>
+>Unrelated change.
+>
+
+same as above.
+
+>>  				if (rc != OPAL_SUCCESS) {
+>>  					pr_err("%s: OPAL error %d when mapping M32 "
+>>  					       "segment#%d to PE#%d",
+>>@@ -3090,7 +3100,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  {
+>>  	struct pci_controller *hose;
+>>  	struct pnv_phb *phb;
+>>-	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
+>>+	unsigned long size, pemap_off;
+>>  	const __be64 *prop64;
+>>  	const __be32 *prop32;
+>>  	int len;
+>>@@ -3175,19 +3185,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>
+>>  	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
+>
+>
+>This comment came with if(IODA1) below, since you are removing the condition
+>below, makes sense to remove the comment as well or move it where people will
+>look for it (arch/powerpc/platforms/powernv/pci.h ?)
+>
+
+Yes, will do.
+
+>
+>>  	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
+>>-	m32map_off = size;
+>>-	size += phb->ioda.total_pe * sizeof(phb->ioda.m32_segmap[0]);
+>>-	if (phb->type == PNV_PHB_IODA1) {
+>>-		iomap_off = size;
+>>-		size += phb->ioda.total_pe * sizeof(phb->ioda.io_segmap[0]);
+>>-	}
+>>  	pemap_off = size;
+>>  	size += phb->ioda.total_pe * sizeof(struct pnv_ioda_pe);
+>>  	aux = memblock_virt_alloc(size, 0);
+>
+>
+>After adding static arrays to PE and PHB, do you still need this "aux"?
+>
+
+"aux" is still needed to tell the boundary of pe_alloc_bitmap and pe_array.
+
+>
+>>  	phb->ioda.pe_alloc = aux;
+>>-	phb->ioda.m32_segmap = aux + m32map_off;
+>>-	if (phb->type == PNV_PHB_IODA1)
+>>-		phb->ioda.io_segmap = aux + iomap_off;
+>>  	phb->ioda.pe_array = aux + pemap_off;
+>>  	set_bit(phb->ioda.reserved_pe, phb->ioda.pe_alloc);
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index 62239b1..08a4e57 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -49,6 +49,15 @@ struct pnv_ioda_pe {
+>>  	/* PE number */
+>>  	unsigned int		pe_number;
+>>
+>>+	/* IO/M32/M64 segments consumed by the PE. Each PE can
+>>+	 * have one M64 segment at most, but M64 segments consumed
+>>+	 * by slave PEs will be contributed to the master PE. One
+>>+	 * PE can own multiple IO and M32 segments.
+>
+>
+>A PE can have multiple IO and M32 segments but just one M64 segment? Is this
+>correct for IODA1 or IODA2 or both? Is this a limitation of this
+>implementation or it comes from P7IOC/PHB3 hardware?
+>
+
+It's correct for IO and M32. However, on IODA1 or IODA2, one PE can have
+multiple M64 segments as well.
+
+>>+	 */
+>>+	unsigned long		io_segmap[8];
+>>+	unsigned long		m32_segmap[8];
+>>+	unsigned long		m64_segmap[8];
+>
+>Magic constant "8", 64bit*8 = 512 PEs - where did this come from?
+>
+>Anyway,
+>
+>#define PNV_IODA_MAX_PE_NUM	512
+>
+>unsigned long io_segmap[PNV_IODA_MAX_PE_NUM/BITS_PER_LONG]
+>
+
+I prefer "8", not macro for 3 reasons:
+- The macro won't be used in the code.
+- The total segment number of specific resource is variable
+  on IODA1 and IODA2. I just choosed the max value with margin.
+- PNV_IODA_MAX_PE_NUM, indicating max PE number, isn't 512 on
+  IODA1 or IODA2.
+
+>>+
+>>  	/* "Weight" assigned to the PE for the sake of DMA resource
+>>  	 * allocations
+>>  	 */
+>>@@ -145,15 +154,16 @@ struct pnv_phb {
+>>  			unsigned int		io_segsize;
+>>  			unsigned int		io_pci_base;
+>>
+>>+			/* IO, M32, M64 segment maps */
+>>+			unsigned long		io_segmap[8];
+>>+			unsigned long		m32_segmap[8];
+>>+			unsigned long		m64_segmap[8];
+>>+
+>>  			/* PE allocation */
+>>  			struct mutex		pe_alloc_mutex;
+>>  			unsigned long		*pe_alloc;
+>>  			struct pnv_ioda_pe	*pe_array;
+>>
+>>-			/* M32 & IO segment maps */
+>>-			unsigned int		*m32_segmap;
+>>-			unsigned int		*io_segmap;
+>>-
+>>  			/* IRQ chip */
+>>  			int			irq_chip_init;
+>>  			struct irq_chip		irq_chip;
+>>
+
+Thanks,
+Gavin
+
