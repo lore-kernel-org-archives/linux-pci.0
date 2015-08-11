@@ -1,315 +1,176 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp3.tech.numericable.fr ([82.216.111.39]:54286 "EHLO
-	smtp3.tech.numericable.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751787AbbH1Sbh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Aug 2015 14:31:37 -0400
-Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-To: Zhang Rui <rui.zhang@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1438047747.1856.12.camel@rzhang1-mobl4>
- <20150825024941.GA25829@google.com> <1440750106.5982.2.camel@rzhang1-mobl4>
-Cc: linux-pci <linux-pci@vger.kernel.org>, chuansheng.liu@intel.com,
-	Tejun Heo <tj@kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Aaron Lu <aaron.lu@intel.com>, MyMailClone@t-online.de,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-From: Barto <mister.freeman@laposte.net>
-Message-ID: <55E0A8BB.6020904@laposte.net>
-Date: Fri, 28 Aug 2015 20:30:19 +0200
-MIME-Version: 1.0
-In-Reply-To: <1440750106.5982.2.camel@rzhang1-mobl4>
-Content-Type: text/plain; charset=utf-8
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:36164 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933752AbbHKIB5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 04:01:57 -0400
+Message-ID: <1439280115.3080.45.camel@pengutronix.de>
+Subject: Re: [PATCH 1/4] PCI: imx6: Mark the msi cascade handler
+ IRQF_NO_THREAD
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kevin Hao <haokexin@gmail.com>, linux-pci@vger.kernel.org,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+Date: Tue, 11 Aug 2015 10:01:55 +0200
+In-Reply-To: <20150810232615.GD13982@google.com>
+References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
+	 <1437715776-2243-2-git-send-email-haokexin@gmail.com>
+	 <20150810232615.GD13982@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I tried the new patch made by Zhang Rui,
-
-and there is a problem, I can not compile the kernel 4.6.1 with this
-patch, I get an error related to quirks.c file :
-
-drivers/pci/quirks.c:1586:189: error: ‘PCI_ANY’ undeclared here (not in
-a function)
-
-gcc doesn't know what is "PCI_ANY", this patch seems incomplete and
-needs some modifications :
-
- commit 09981db5b0c9a6865aa39126b71bc87718577e4b
- Author: Zhang Rui <rui.zhang@intel.com>
- Date:   Mon Aug 24 15:27:11 2015 -0500
-
-     PCI: Disable async suspend/resume for JMicron multi-function SATA/AHCI
-
-     On multi-function JMicron SATA/PATA/AHCI devices, the PATA
-controller at
-     function 1 doesn't work if it is powered on before the SATA
-controller at
-     function 0.  The result is that PATA doesn't work after resume, and
-     messages like this:
-
-       pata_jmicron 0000:02:00.1: Refused to change power state,
-currently in D3
-       irq 17: nobody cared (try booting with the "irqpoll" option)
-
-     e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361")
-     solved this problem for JMicron 361 and 363 devices.  With async
-suspend
-     disabled, we always power on function 0 before function 1.
-
-     Barto then reported the same problem with a JMicron 368 (see
-comment #57 in
-     the bugzilla).
-
-     Rather than extending the blacklist piecemeal, disable async
-suspend for
-     all JMicron multi-function SATA/PATA/AHCI devices.
-
-     This quirk could stay in the ahci and pata_jmicron drivers, but
-it's likely
-     the problem will occur even if pata_jmicron isn't loaded until
-after the
-     suspend/resume.  Making it a PCI quirk ensures that we'll preserve the
-     power-on order even if the drivers aren't loaded.
-
-     [bhelgaas: changelog, limit to multi-function, limit to IDE/ATA]
-     Link: https://bugzilla.kernel.org/show_bug.cgi?id=81551
-     Reported-by: Barto <mister.freeman@laposte.net>
-     Signed-off-by: Zhang Rui <rui.zhang@intel.com>
-     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
- diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
- index 7e62751..a466602 100644
- --- a/drivers/ata/ahci.c
- +++ b/drivers/ata/ahci.c
- @@ -351,6 +351,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
-  	/* JMicron 362B and 362C have an AHCI function with IDE class code */
-  	{ PCI_VDEVICE(JMICRON, 0x2362), board_ahci_ign_iferr },
-  	{ PCI_VDEVICE(JMICRON, 0x236f), board_ahci_ign_iferr },
- +	/* May need to update quirk_jmicron_async_suspend() for additions */
-
-  	/* ATI */
-  	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
- @@ -1451,18 +1452,6 @@ static int ahci_init_one(struct pci_dev *pdev,
-const struct pci_device_id *ent)
-  	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
-  		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
-
- -	/*
- -	 * The JMicron chip 361/363 contains one SATA controller and one
- -	 * PATA controller,for powering on these both controllers, we must
- -	 * follow the sequence one by one, otherwise one of them can not be
- -	 * powered on successfully, so here we disable the async suspend
- -	 * method for these chips.
- -	 */
- -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
- -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
- -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
- -		device_disable_async_suspend(&pdev->dev);
- -
-  	/* acquire resources */
-  	rc = pcim_enable_device(pdev);
-  	if (rc)
- diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
- index 47e418b..4d1a5d2 100644
- --- a/drivers/ata/pata_jmicron.c
- +++ b/drivers/ata/pata_jmicron.c
- @@ -143,18 +143,6 @@ static int jmicron_init_one (struct pci_dev *pdev,
-const struct pci_device_id *i
-  	};
-  	const struct ata_port_info *ppi[] = { &info, NULL };
-
- -	/*
- -	 * The JMicron chip 361/363 contains one SATA controller and one
- -	 * PATA controller,for powering on these both controllers, we must
- -	 * follow the sequence one by one, otherwise one of them can not be
- -	 * powered on successfully, so here we disable the async suspend
- -	 * method for these chips.
- -	 */
- -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
- -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
- -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
- -		device_disable_async_suspend(&pdev->dev);
- -
-  	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
-  }
-
- diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
- index b6af4b0..5e35a9d 100644
- --- a/drivers/pci/quirks.c
- +++ b/drivers/pci/quirks.c
- @@ -1570,6 +1570,18 @@
-DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON,
-PCI_DEVICE_ID_JMICRON_JMB3
-
-  #endif
-
- +static void quirk_jmicron_async_suspend(struct pci_dev *dev)
- +{
- +	if (dev->multifunction) {
- +		device_disable_async_suspend(&dev->dev);
- +		dev_info(&dev->dev, "async suspend disabled to avoid multi-function
-power-on ordering issue\n");
- +	}
- +}
- +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY,
-PCI_CLASS_STORAGE_IDE, 8, quirk_jmicron_async_suspend);
- +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY,
-PCI_CLASS_STORAGE_SATA_AHCI, 0, quirk_jmicron_async_suspend);
- +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x2362,
-quirk_jmicron_async_suspend);
- +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x236f,
-quirk_jmicron_async_suspend);
- +
-  #ifdef CONFIG_X86_IO_APIC
-  static void quirk_alder_ioapic(struct pci_dev *pdev)
-  {
-
-
-
-
-Le 28/08/2015 10:21, Zhang Rui a écrit :
-> Hi, Bjorn,
+Am Montag, den 10.08.2015, 18:26 -0500 schrieb Bjorn Helgaas:
+> [+cc Thomas]
 > 
-> On Mon, 2015-08-24 at 21:49 -0500, Bjorn Helgaas wrote:
->> On Tue, Jul 28, 2015 at 09:42:27AM +0800, Zhang Rui wrote:
->>> From 57edba9c677e47354846db951014dc4d5b13ce54 Mon Sep 17 00:00:00 2001
->>> From: Zhang Rui <rui.zhang@intel.com>
->>> Date: Sun, 26 Jul 2015 14:15:36 +0800
->>> Subject: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
->>
->> ...
->>
->> In the interest of making progress on this, I reworked this to be what I'm
->> looking for.  It's not significantly different code-wise from what you
->> posted originally, so I left your Signed-off-by.  But let me know if I
->> messed it up.
->>
-> thanks for the follow up. Sorry for my late response as I was traveling
-> and then took some vacation in the last two weeks.
-> The patch looks fine to me.
+> On Fri, Jul 24, 2015 at 01:29:33PM +0800, Kevin Hao wrote:
+> > The cascade handler must run in hard interrupt context, otherwise
+> > it will cause the following kernel warning if we force threading
+> > of all the interrupt handlers via kernel command parameter
+> > "threadirqs":
 > 
-> thanks,
-> rui
->> We don't actually *know* whether the quirk needs to be applied before
->> pata_jmicron is loaded, but my guess is that is does, so I left it as a PCI
->> quirk rather than as a driver quirk.
+> I guess imx6_pcie_msi_handler() is the cascade handler?  What makes it
+> special so that it needs IRQF_NO_THREAD?  I'm not doubting you; it's
+> just that it's a very simple handler with no obvious clue that it
+> needs anything special:
 > 
->> Comments welcome!
->>
->> Bjorn
->>
->>
->> commit 09981db5b0c9a6865aa39126b71bc87718577e4b
->> Author: Zhang Rui <rui.zhang@intel.com>
->> Date:   Mon Aug 24 15:27:11 2015 -0500
->>
->>     PCI: Disable async suspend/resume for JMicron multi-function SATA/AHCI
->>     
->>     On multi-function JMicron SATA/PATA/AHCI devices, the PATA controller at
->>     function 1 doesn't work if it is powered on before the SATA controller at
->>     function 0.  The result is that PATA doesn't work after resume, and
->>     messages like this:
->>     
->>       pata_jmicron 0000:02:00.1: Refused to change power state, currently in D3
->>       irq 17: nobody cared (try booting with the "irqpoll" option)
->>     
->>     e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361")
->>     solved this problem for JMicron 361 and 363 devices.  With async suspend
->>     disabled, we always power on function 0 before function 1.
->>     
->>     Barto then reported the same problem with a JMicron 368 (see comment #57 in
->>     the bugzilla).
->>     
->>     Rather than extending the blacklist piecemeal, disable async suspend for
->>     all JMicron multi-function SATA/PATA/AHCI devices.
->>     
->>     This quirk could stay in the ahci and pata_jmicron drivers, but it's likely
->>     the problem will occur even if pata_jmicron isn't loaded until after the
->>     suspend/resume.  Making it a PCI quirk ensures that we'll preserve the
->>     power-on order even if the drivers aren't loaded.
->>     
->>     [bhelgaas: changelog, limit to multi-function, limit to IDE/ATA]
->>     Link: https://bugzilla.kernel.org/show_bug.cgi?id=81551
->>     Reported-by: Barto <mister.freeman@laposte.net>
->>     Signed-off-by: Zhang Rui <rui.zhang@intel.com>
->>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>
->> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->> index 7e62751..a466602 100644
->> --- a/drivers/ata/ahci.c
->> +++ b/drivers/ata/ahci.c
->> @@ -351,6 +351,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->>  	/* JMicron 362B and 362C have an AHCI function with IDE class code */
->>  	{ PCI_VDEVICE(JMICRON, 0x2362), board_ahci_ign_iferr },
->>  	{ PCI_VDEVICE(JMICRON, 0x236f), board_ahci_ign_iferr },
->> +	/* May need to update quirk_jmicron_async_suspend() for additions */
->>  
->>  	/* ATI */
->>  	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
->> @@ -1451,18 +1452,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->>  	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
->>  		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
->>  
->> -	/*
->> -	 * The JMicron chip 361/363 contains one SATA controller and one
->> -	 * PATA controller,for powering on these both controllers, we must
->> -	 * follow the sequence one by one, otherwise one of them can not be
->> -	 * powered on successfully, so here we disable the async suspend
->> -	 * method for these chips.
->> -	 */
->> -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
->> -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
->> -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
->> -		device_disable_async_suspend(&pdev->dev);
->> -
->>  	/* acquire resources */
->>  	rc = pcim_enable_device(pdev);
->>  	if (rc)
->> diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
->> index 47e418b..4d1a5d2 100644
->> --- a/drivers/ata/pata_jmicron.c
->> +++ b/drivers/ata/pata_jmicron.c
->> @@ -143,18 +143,6 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
->>  	};
->>  	const struct ata_port_info *ppi[] = { &info, NULL };
->>  
->> -	/*
->> -	 * The JMicron chip 361/363 contains one SATA controller and one
->> -	 * PATA controller,for powering on these both controllers, we must
->> -	 * follow the sequence one by one, otherwise one of them can not be
->> -	 * powered on successfully, so here we disable the async suspend
->> -	 * method for these chips.
->> -	 */
->> -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
->> -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
->> -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
->> -		device_disable_async_suspend(&pdev->dev);
->> -
->>  	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
->>  }
->>  
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index b6af4b0..5e35a9d 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -1570,6 +1570,18 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB3
->>  
->>  #endif
->>  
->> +static void quirk_jmicron_async_suspend(struct pci_dev *dev)
->> +{
->> +	if (dev->multifunction) {
->> +		device_disable_async_suspend(&dev->dev);
->> +		dev_info(&dev->dev, "async suspend disabled to avoid multi-function power-on ordering issue\n");
->> +	}
->> +}
->> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY, PCI_CLASS_STORAGE_IDE, 8, quirk_jmicron_async_suspend);
->> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY, PCI_CLASS_STORAGE_SATA_AHCI, 0, quirk_jmicron_async_suspend);
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x2362, quirk_jmicron_async_suspend);
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x236f, quirk_jmicron_async_suspend);
->> +
->>  #ifdef CONFIG_X86_IO_APIC
->>  static void quirk_alder_ioapic(struct pci_dev *pdev)
->>  {
+>   static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
+>   {
+>     struct pcie_port *pp = arg;
 > 
+>     return dw_handle_msi_irq(pp);
+>   }
 > 
+> So I guess whatever is special must be in dw_handle_msi_irq().  Is it
+> because dw_handle_msi_irq() calls generic_handle_irq()?
 > 
+We could either add more locking to the cascade handler, so it protects
+itself from being interrupted by another IRQ or we do what this patch
+does and run things in the primary irq handler.
+
+Given that the handler is lean I agree with the latter option.
+
+> I notice that several other users of generic_handle_irq() are
+> registered via irq_set_chained_handler_and_data() instead of
+> devm_request_irq().  Should we be using that here, too?
+> 
+No, this isn't possible here. irq_set_chained_handler_and_data() claims
+the IRQ exclusively for the chained handler, but on i.MX6 the MSI IRQ
+line is shared with PCI legacy INTD, so we must use a normal IRQ handler
+to trigger the chain.
+
+Regards,
+Lucas
+
+> There are similar one-line patches for dra7xx, exynos, and spear.  I
+> would squash all of them into a single patch, since the change is so
+> trivial.  Then all of them would benefit from the detailed changelog
+> here.
+> 
+> >    [ INFO: inconsistent lock state ]
+> >    4.2.0-rc3-next-20150723 #28 Not tainted
+> >    ---------------------------------
+> >    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
+> >    irq/21-mx6-pcie/62 [HC0[0]:SC0[2]:HE1:SE0] takes:
+> >     (&irq_desc_lock_class){?.-...}, at: [<80078d94>] handle_simple_irq+0x1c/0xc0
+> >    {IN-HARDIRQ-W} state was registered at:
+> >      [<8006aa70>] lock_acquire+0x74/0x94
+> >      [<807acc6c>] _raw_spin_lock+0x34/0x44
+> >      [<8007900c>] handle_fasteoi_irq+0x20/0x1b8
+> >      [<80075720>] generic_handle_irq+0x28/0x38
+> >      [<80075864>] __handle_domain_irq+0x6c/0xe0
+> >      [<80009558>] gic_handle_irq+0x28/0x68
+> >      [<80013b64>] __irq_svc+0x44/0x5c
+> >      [<807ad400>] _raw_spin_unlock_irq+0x30/0x34
+> >      [<8004cffc>] finish_task_switch+0xc0/0x218
+> >      [<807a7a10>] __schedule+0x248/0x6e0
+> >      [<807a7fac>] schedule+0x38/0x9c
+> >      [<807a8240>] schedule_preempt_disabled+0x10/0x14
+> >      [<80063f8c>] cpu_startup_entry+0xfc/0x1f8
+> >      [<8079f640>] rest_init+0x130/0x16c
+> >      [<80a55ca4>] start_kernel+0x374/0x3e8
+> >      [<1000807c>] 0x1000807c
+> >    irq event stamp: 16
+> >    hardirqs last  enabled at (15): [<807ad3fc>] _raw_spin_unlock_irq+0x2c/0x34
+> >    hardirqs last disabled at (14): [<807acd80>] _raw_spin_lock_irq+0x20/0x58
+> >    softirqs last  enabled at (0): [<800283d8>] copy_process.isra.58+0x3bc/0x1504
+> >    softirqs last disabled at (16): [<80076f08>] irq_forced_thread_fn+0x0/0x68
+> > 
+> >    other info that might help us debug this:
+> >     Possible unsafe locking scenario:
+> > 
+> >           CPU0
+> >           ----
+> >      lock(&irq_desc_lock_class);
+> >      <Interrupt>
+> >        lock(&irq_desc_lock_class);
+> > 
+> >     *** DEADLOCK ***
+> > 
+> >    no locks held by irq/21-mx6-pcie/62.
+> > 
+> >    stack backtrace:
+> >    CPU: 0 PID: 62 Comm: irq/21-mx6-pcie Not tainted 4.2.0-rc3-next-20150723 #28
+> >    Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+> >    Backtrace:
+> >    [<80012dc4>] (dump_backtrace) from [<80012f64>] (show_stack+0x18/0x1c)
+> >     r6:be3eeb78 r5:00000000 r4:00000000 r3:00000000
+> >    [<80012f4c>] (show_stack) from [<807a4b50>] (dump_stack+0x80/0x9c)
+> >    [<807a4ad0>] (dump_stack) from [<807a2efc>] (print_usage_bug+0x270/0x2e4)
+> >     r5:be3ee780 r4:80c579ec
+> >    [<807a2c8c>] (print_usage_bug) from [<8006874c>] (mark_lock+0x5b4/0x6e0)
+> >     r10:80c579ec r9:800678e0 r8:be3ee780 r7:00000000 r6:80c579ec r5:be3eeb78
+> >     r4:00000002
+> >    [<80068198>] (mark_lock) from [<80068f70>] (__lock_acquire+0x6f8/0x1e20)
+> >     r10:00000001 r9:be3eeb78 r8:be3ee780 r7:00000008 r6:000003f8 r5:be3ee780
+> >     r4:00000000
+> >    [<80068878>] (__lock_acquire) from [<8006aa70>] (lock_acquire+0x74/0x94)
+> >     r10:00000001 r9:00000001 r8:00000000 r7:00000001 r6:00000001 r5:60030013
+> >     r4:00000000
+> >    [<8006a9fc>] (lock_acquire) from [<807acc6c>] (_raw_spin_lock+0x34/0x44)
+> >     r6:0000012c r5:00000001 r4:be1f4d64
+> >    [<807acc38>] (_raw_spin_lock) from [<80078d94>] (handle_simple_irq+0x1c/0xc0)
+> >     r5:be1f4d64 r4:be1f4d00
+> >    [<80078d78>] (handle_simple_irq) from [<80075720>] (generic_handle_irq+0x28/0x38)
+> >     r5:be28ee20 r4:0000012c
+> >    [<800756f8>] (generic_handle_irq) from [<80321914>] (dw_handle_msi_irq+0x68/0x90)
+> >     r4:00000001 r3:00000002
+> >    [<803218ac>] (dw_handle_msi_irq) from [<8032265c>] (imx6_pcie_msi_handler+0x14/0x18)
+> >     r7:80076f08 r6:be39efc0 r5:be154000 r4:be39efc0
+> >    [<80322648>] (imx6_pcie_msi_handler) from [<80076f38>] (irq_forced_thread_fn+0x30/0x68)
+> >    [<80076f08>] (irq_forced_thread_fn) from [<80076cb4>] (irq_thread+0x14c/0x19c)
+> >     r6:be39efc0 r5:be154000 r4:be39efe0 r3:00000004
+> >    [<80076b68>] (irq_thread) from [<80047f80>] (kthread+0xdc/0xf8)
+> >     r10:00000000 r9:00000000 r8:00000000 r7:80076b68 r6:be39efc0 r5:be3a1000
+> >     r4:00000000
+> >    [<80047ea4>] (kthread) from [<8000fa38>] (ret_from_fork+0x14/0x3c)
+> >     r7:00000000 r6:00000000 r5:80047ea4 r4:be3a1000
+> > 
+> > Signed-off-by: Kevin Hao <haokexin@gmail.com>
+> > ---
+> >  drivers/pci/host/pci-imx6.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > index 233a196c6e66..fd5eb2e34fc0 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -544,7 +544,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+> >  
+> >  		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+> >  				       imx6_pcie_msi_handler,
+> > -				       IRQF_SHARED, "mx6-pcie-msi", pp);
+> > +				       IRQF_SHARED | IRQF_NO_THREAD,
+> > +				       "mx6-pcie-msi", pp);
+> >  		if (ret) {
+> >  			dev_err(&pdev->dev, "failed to request MSI irq\n");
+> >  			return -ENODEV;
+> > -- 
+> > 2.1.0
+> > 
+
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
