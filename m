@@ -1,48 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:34984 "EHLO
-	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753518AbbHKUgN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 16:36:13 -0400
-Received: by iodt126 with SMTP id t126so23826591iod.2
-        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 13:36:12 -0700 (PDT)
-Date: Tue, 11 Aug 2015 15:36:08 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 11 Aug 2015 15:28:34 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-pci@vger.kernel.org, zajec5@gmail.com, rjui@broadcom.com
-Subject: Re: [PATCH] PCI: iproc_bcma: allow build as module
-Message-ID: <20150811203608.GI13982@google.com>
-References: <1437851724-10519-1-git-send-email-hauke@hauke-m.de>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, john.ronciak@intel.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add ACS quirks for Intel I219-LM/V
+Message-ID: <20150811202834.GH13982@google.com>
+References: <20150810183055.5714.12998.stgit@gimli.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437851724-10519-1-git-send-email-hauke@hauke-m.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150810183055.5714.12998.stgit@gimli.home>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 25, 2015 at 09:15:24PM +0200, Hauke Mehrtens wrote:
-> Changes this to tristate to make it possible to build this driver as a
-> module.
+On Mon, Aug 10, 2015 at 12:32:04PM -0600, Alex Williamson wrote:
+> The Intel 100-series chipset now includes the integrated Ethernet as
+> part of a multifunction package.  The Ethernet function does not
+> include native ACS support, but Intel confirms that the device is not
+> capable of peer-to-peer within the package.  We can therefore quirk it
+> to expose the isolation.
 > 
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: John Ronciak <john.ronciak@intel.com>
 
-Applied with Ray's ack to pci/host-iproc for v4.3, thanks!
+Applied with John's ack to pci/virtualization for v4.3, thanks!
 
 > ---
->  drivers/pci/host/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/pci/quirks.c |    3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index c132bdd..e339a8c 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -135,7 +135,7 @@ config PCIE_IPROC_PLATFORM
->  	  through the generic platform bus interface
->  
->  config PCIE_IPROC_BCMA
-> -	bool "Broadcom iProc PCIe BCMA bus driver"
-> +	tristate "Broadcom iProc PCIe BCMA bus driver"
->  	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
->  	select PCIE_IPROC
->  	select BCMA
-> -- 
-> 2.1.4
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index e9fd0e9..a914848 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3848,6 +3848,9 @@ static const struct pci_dev_acs_enabled {
+>  	{ PCI_VENDOR_ID_INTEL, 0x105F, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x1060, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x10D9, pci_quirk_mf_endpoint_acs },
+> +	/* I219 */
+> +	{ PCI_VENDOR_ID_INTEL, 0x15b7, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15b8, pci_quirk_mf_endpoint_acs },
+>  	/* Intel PCH root ports */
+>  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+>  	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
 > 
