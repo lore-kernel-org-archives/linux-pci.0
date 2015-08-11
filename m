@@ -1,113 +1,174 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:33390 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752237AbbHTVVQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 17:21:16 -0400
-Received: by padfo6 with SMTP id fo6so30540340pad.0
-        for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 14:21:16 -0700 (PDT)
-Date: Thu, 20 Aug 2015 16:21:09 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: David Miller <davem@davemloft.net>
-Cc: wangyijing@huawei.com, linux-pci@vger.kernel.org, mroos@linux.ee,
-	sparclinux@vger.kernel.org, eric.snowberg@oracle.com,
-	benh@kernel.crashing.org
-Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
-Message-ID: <20150820212109.GB14810@google.com>
-References: <CAErSpo5SApFYWOs8Q2ZH2vpnEW6jY0XWAgeiyhMk4aCNtON46w@mail.gmail.com>
- <20150820.114042.1327127338658980319.davem@davemloft.net>
- <20150820202135.GA14810@google.com>
- <20150820.135832.47467691959908917.davem@davemloft.net>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:25218 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753261AbbHKHkP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 03:40:15 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: "Wangzhou (B)" <wangzhou1@hisilicon.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	James Morse <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"Jason Cooper" <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	Kangfenglong <kangfenglong@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v6 0/6] PCI: hisi: Add PCIe host support for HiSilicon
+ SoC Hip05
+Date: Tue, 11 Aug 2015 07:39:16 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D79B34@lhreml503-mbs>
+References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+ <55C449AF.3030303@hisilicon.com>
+In-Reply-To: <55C449AF.3030303@hisilicon.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150820.135832.47467691959908917.davem@davemloft.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 20, 2015 at 01:58:32PM -0700, David Miller wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> Date: Thu, 20 Aug 2015 15:21:35 -0500
+Hi Bjorn and all
+
+Any comment on this patchset?
+
+Thanks
+
+Gab
+
+> -----Original Message-----
+> From: Wangzhou (B)
+> Sent: Friday, August 07, 2015 7:01 AM
+> To: Wangzhou (B)
+> Cc: Bjorn Helgaas; Jingoo Han; Pratyush Anand; Arnd Bergmann;
+> linux@arm.linux.org.uk; thomas.petazzoni@free-electrons.com; Gabriele
+> Paoloni; lorenzo.pieralisi@arm.com; James Morse; Liviu.Dudau@arm.com;
+> Jason Cooper; robh@kernel.org; linux-pci@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org; devicetree@vger.kernel.org; Yuanzhichang;
+> Zhudacai; zhangjukuo; qiuzhenfa; liudongdong (C); qiujiang;
+> Kangfenglong; xuwei (O); Liguozhu (Kenneth)
+> Subject: Re: [PATCH v6 0/6] PCI: hisi: Add PCIe host support for
+> HiSilicon SoC Hip05
 > 
-> > On Thu, Aug 20, 2015 at 11:40:42AM -0700, David Miller wrote:
-> >> From: Bjorn Helgaas <bhelgaas@google.com>
-> >> Date: Thu, 20 Aug 2015 11:23:43 -0700
-> >> 
-> >> > On Thu, Aug 20, 2015 at 10:47 AM, David Miller <davem@davemloft.net> wrote:
-> >> >> From: Bjorn Helgaas <bhelgaas@google.com>
-> >> >> Date: Thu, 20 Aug 2015 00:48:00 -0500
-> >> >>
-> >> >>> [+cc Dave, Eric, Ben, sparclinux]
-> >> >>
-> >> >> I think the comment is terrible.
-> >> > 
-> >> > I'll update the comment if you suggest some text.  Do you object
-> >> > mainly to the mention of the specific systems?
-> >> 
-> >> "PCI root complex can not be assumed to be instantiated in the PCI bus
-> >>  hierarchy."
-> > 
-> > AIUI, the root complex itself (as distinct from root ports) doesn't
-> > normally appear in the PCI hierarchy, so I reworded it as follows.  I hope
-> > this helps address your objection, but if not, I can try again.
+> [+cc jingoohan1@gmail.com]
 > 
-> This is fine, but it was the comment we were talking about adjusting not
-> the commit message :-)
+> On 2015/8/6 16:09, Zhou Wang wrote:
+> > This patchset adds PCIe host support for HiSilicon SoC Hip05. The
+> PCIe hosts
+> > use PCIe IP core from Synopsys, So this driver is base on designware
+> PCIe driver.
+> >
+> > Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64
+> PCIe API in
+> > designeware PCIe driver. So this patch also adds ARM64 support for
+> designware
+> > pcie.
+> >
+> > This patchset is based on v4.2-rc1.
+> >
+> > Change from v5:
+> > - Merge 1/6 in this series, discussion about this can be found in [1]
+> >
+> > Change from v4:
+> > - Change the author of 1/5 to Gabriele.
+> > - Modify problems in 3/5 pointed by Bjorn.
+> > - Modify spelling problems in 4/5.
+> >
+> > Change from v3:
+> > - Change 1/5 to what Gabriele suggested.
+> > - Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3
+> series.
+> >
+> > Change from v2:
+> > - Move struct pci_dev *dev and struct pci_sys_data *sys in
+> >   pcibios_align_resource in 1/5.
+> > - Add Gabriele's codes in 2/5 which delete unnecessary information
+> parse and
+> >   use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
+> > - Add maintainer patch 5/5.
+> >
+> > Change from RFC v1:
+> > - Add 1/4 patch by Arnd which removes align_resource callback in ARM
+> >   pcibios_align_resource.
+> > - Change head file in pcie-designware from asm/hardirq.h to
+> linux/hardirq.h.
+> > - Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone,
+> layerscape,
+> >   spear13xx.
+> > - Remove unnecessary parentheses of some macros in pcie-hisi.
+> > - Use macro to replace some magic values.
+> > - Merge two loops together and add some comments about it in
+> context_config
+> >   function in pcie-hisi.
+> > - Modify some value of items in pcie node example in binding document.
+> >
+> > Change from RFC:
+> > - delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct
+> hw_pci,
+> >   merge related operations into dw_pcie_host_init.
+> >
+> > Link of v5:
+> > - http://www.spinics.net/lists/devicetree/msg87959.html
+> > Link of v4:
+> > - http://www.spinics.net/lists/arm-kernel/msg433050.html
+> > Link of v3:
+> > - http://www.spinics.net/lists/linux-pci/msg42539.html
+> > Link of v2:
+> > - http://www.spinics.net/lists/linux-pci/msg41844.html
+> > Link of RFC v1:
+> > - http://www.spinics.net/lists/linux-pci/msg41305.html
+> > Link of RFC:
+> > - http://www.spinics.net/lists/linux-pci/msg40434.html
+> >
+> > [1] http://lists.infradead.org/pipermail/linux-arm-kernel/2015-
+> July/359741.html
+> >
+> > Zhou Wang (4):
+> >   PCI: designware: Add ARM64 support
+> >   PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+> >   Documentation: DT: Add HiSilicon PCIe host binding
+> >   MAINTAINERS: Add pcie-hisi maintainer
+> >
+> > gabriele paoloni (2):
+> >   PCI: designware: move calculation of bus addresses to DRA7xx
+> >   ARM/PCI: remove align_resource in pci_sys_data
+> >
+> >  .../devicetree/bindings/pci/hisilicon-pcie.txt     |  46 ++++
+> >  MAINTAINERS                                        |   7 +
+> >  arch/arm/include/asm/mach/pci.h                    |   5 -
+> >  arch/arm/kernel/bios32.c                           |  12 +-
+> >  drivers/pci/host/Kconfig                           |   8 +
+> >  drivers/pci/host/Makefile                          |   1 +
+> >  drivers/pci/host/pci-dra7xx.c                      |  14 ++
+> >  drivers/pci/host/pci-exynos.c                      |   2 +-
+> >  drivers/pci/host/pci-imx6.c                        |   2 +-
+> >  drivers/pci/host/pci-keystone-dw.c                 |   2 +-
+> >  drivers/pci/host/pci-keystone.c                    |   2 +-
+> >  drivers/pci/host/pci-layerscape.c                  |   2 +-
+> >  drivers/pci/host/pcie-designware.c                 | 236 ++++++-----
+> --------
+> >  drivers/pci/host/pcie-designware.h                 |  14 +-
+> >  drivers/pci/host/pcie-hisi.c                       | 254
+> +++++++++++++++++++++
+> >  drivers/pci/host/pcie-spear13xx.c                  |   2 +-
+> >  16 files changed, 425 insertions(+), 184 deletions(-)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-
+> pcie.txt
+> >  create mode 100644 drivers/pci/host/pcie-hisi.c
+> >
+> 
 
-Oh, sorry!  I totally misread that.  Here's another try.
-
-commit 27ff9f3e0ab34a75a3420bffd3eb5316de2e4d92
-Author: Yijing Wang <wangyijing@huawei.com>
-Date:   Mon Aug 17 18:47:58 2015 +0800
-
-    PCI: Tolerate hierarchies with no Root Port
-    
-    We should not assume any particular hardware topology.  Commit d0751b98dfa3
-    ("PCI: Add dev->has_secondary_link to track downstream PCIe links") relied
-    on the assumption that every PCIe hierarchy is rooted at a Root Port.  But
-    we can't rely on any assumption about what hardware we will find; we just
-    have to deal with the world as it is.
-    
-    On some platforms, PCIe devices (endpoints, switch upstream ports, etc.)
-    appear directly on the root bus, and there is no Root Port in the PCI bus
-    hierarchy.  For example, Meelis observed these top-level devices on a
-    Sparc V245:
-    
-      0000:02:00.0 PCI bridge to [bus 03-0d]    Switch Upstream Port
-      0001:02:00.0 PCI bridge to [bus 03]       PCIe to PCI/PCI-X Bridge
-    
-    These devices *look* like they have links going upstream, but there really
-    are no upstream devices.
-    
-    In set_pcie_port_type(), we used the parent device to figure out which side
-    of a switch port has a link, so if the parent device did not exist, we
-    dereferenced a NULL parent pointer.
-    
-    Check whether the parent device exists before dereferencing it.
-    
-    Meelis observed this oops on Sparc V245 and T2000.  Ben Herrenschmidt says
-    this is also possible on IBM PowerVM guests on PowerPC.
-    
-    [bhelgaas: changelog, comment]
-    Link: http://lkml.kernel.org/r/alpine.LRH.2.20.1508122118210.18637@math.ut.ee
-    Reported-by: Meelis Roos <mroos@linux.ee>
-    Tested-by: Meelis Roos <mroos@linux.ee>
-    Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..b978bbf 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -997,7 +997,12 @@ void set_pcie_port_type(struct pci_dev *pdev)
- 	else if (type == PCI_EXP_TYPE_UPSTREAM ||
- 		 type == PCI_EXP_TYPE_DOWNSTREAM) {
- 		parent = pci_upstream_bridge(pdev);
--		if (!parent->has_secondary_link)
-+
-+		/*
-+		 * Usually there's a parent device (Root Port or Switch
-+		 * Downstream Port), but we can't assume one exists.
-+		 */
-+		if (parent && !parent->has_secondary_link)
- 			pdev->has_secondary_link = 1;
- 	}
- }
