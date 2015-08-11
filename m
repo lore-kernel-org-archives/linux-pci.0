@@ -1,78 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:35288 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754224AbbHCXbH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 19:31:07 -0400
-Received: by obbop1 with SMTP id op1so111064559obb.2
-        for <linux-pci@vger.kernel.org>; Mon, 03 Aug 2015 16:31:07 -0700 (PDT)
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:35696 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965209AbbHKPw3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 11:52:29 -0400
+Received: by igbjg10 with SMTP id jg10so24762538igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 08:52:29 -0700 (PDT)
+Subject: [PATCH v3 11/11] PCI: Remove pci_ats_enabled()
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gregor Dick <gdick@solarflare.com>,
+	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 11 Aug 2015 10:52:26 -0500
+Message-ID: <20150811155226.21078.27244.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20150803222726.GB11144@google.com>
-References: <CABLseQ6HhaozD6D0Y-gPpjz1R5Ass_-mumn9jfcWReAVvrdjHQ@mail.gmail.com>
-	<CAErSpo4f_BLrnq7T2foOA2HAySPTDVYn61dfyOfZahyiyzGTdg@mail.gmail.com>
-	<CABLseQ4eR5DyzSar+TwTOOJkq2_za2t47j-4RYPgQnNrZXmWiA@mail.gmail.com>
-	<20150803222726.GB11144@google.com>
-Date: Mon, 3 Aug 2015 16:31:06 -0700
-Message-ID: <CABLseQ56naxmEHupwjKLQE0J_w6oTGqC=ox_0J4CV1eisK=5Dg@mail.gmail.com>
-Subject: Re: Failure to HotPlug if devices not present at boot - no memory space
-From: Barry Grussling <barry@grussling.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 3, 2015 at 3:27 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->
-> You might have a host bridge driver that knows how to set up the
-> windows.  Your dmesg logs mention altera_hps2fpga_bridge, which
-> doesn't seem to be in the upstream kernel, so I don't know what it
-> does.
+Remove pci_ats_enabled().  There are no callers outside the ATS code
+itself.  We don't need to check ats_cap, because if we don't find an ATS
+capability, we'll never set ats_enabled.
 
-Sorry.  Forgot to tell you it is based on the driver available at:
-http://rocketboards.org/foswiki/view/Projects/PCIeRootPortWithMSI
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
+---
+ drivers/pci/ats.c   |    8 ++++----
+ include/linux/pci.h |    2 --
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-I figured/hoped it was a general PCIe lack of understanding on
-my part and not something specifically related to the PCIe root complex
-driver.
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 4b17cf5..94976b4 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -43,8 +43,8 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
+ 	if (!dev->ats_cap)
+ 		return -EINVAL;
+ 
+-	WARN_ON(pci_ats_enabled(dev));
+-	if (pci_ats_enabled(dev))
++	WARN_ON(dev->ats_enabled);
++	if (dev->ats_enabled)
+ 		return -EBUSY;
+ 
+ 	if (ps < PCI_ATS_MIN_STU)
+@@ -81,7 +81,7 @@ void pci_disable_ats(struct pci_dev *dev)
+ 	struct pci_dev *pdev;
+ 	u16 ctrl;
+ 
+-	if (!pci_ats_enabled(dev))
++	if (!dev->ats_enabled)
+ 		return;
+ 
+ 	if (atomic_read(&dev->ats_ref_cnt))
+@@ -104,7 +104,7 @@ void pci_restore_ats_state(struct pci_dev *dev)
+ {
+ 	u16 ctrl;
+ 
+-	if (!pci_ats_enabled(dev))
++	if (!dev->ats_enabled)
+ 		return;
+ 
+ 	ctrl = PCI_ATS_CTRL_ENABLE;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4b484fd..806da76 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1303,13 +1303,11 @@ void pci_ats_init(struct pci_dev *dev);
+ int pci_enable_ats(struct pci_dev *dev, int ps);
+ void pci_disable_ats(struct pci_dev *dev);
+ int pci_ats_queue_depth(struct pci_dev *dev);
+-static inline int pci_ats_enabled(struct pci_dev *dev) { return dev->ats_cap && dev->ats_enabled; }
+ #else
+ static inline void pci_ats_init(struct pci_dev *d) { }
+ static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
+ static inline void pci_disable_ats(struct pci_dev *d) { }
+ static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
+-static inline int pci_ats_enabled(struct pci_dev *d) { return 0; }
+ #endif
+ 
+ void pci_cfg_access_lock(struct pci_dev *dev);
 
-> In the other log ("08:00.0 not present at boot"), we actually *do*
-> enumerate an 08:00.0 device:
->
->   pci 0000:08:00.0: [1d00:0000] type 00 class 0x00001d
->   pci 0000:08:00.0: reg 0x30: [mem 0x00001800-0x00001fff pref]
-
-Yea.  Not sure what that is since there is no device physically present.
-PLX must be reserving the spot or something.
-
-> I don't know what this device is (lspci says "non-VGA unclassified
-> device") and it only requests 2K of space for an option ROM.  And the
-> log doesn't include the part where you hot-add the real device --
-> that's the interesting information should be.
-
-I added the dmesg for enumeration after hot-adding the device
-to the bugzilla entry.  Don't want to omit the interesting
-part.
-
-> I see that you already boot with "pcie=hpmemsize=256M", but that
-> doesn't help in this case because it's only used for hotplug bridges,
-> and 02:0f.0 (the Downstream Port leading to bus 08) is not marked as
-> hotplug-capable:
->
->   02:0f.0 PCI bridge: PLX Technology, Inc. PEX 8619
->     Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
->       SltCap:   AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
->
-> I think if you could get the PCI_EXP_SLTCAP_HPC bit set for 02:0f.0,
-> and you booted with "pcie=hpmemsize=256M", it would likely work.  It's
-> possible it could be made to work even without that, but in general
-> it's hard to reserve the right amount of space for a bridge if you
-> don't know what might be plugged in later.
-
-This makes sense to me.  I think I have enough information now to
-try to massage the PLX port into being a hotplug port and maybe
-everything will work.
-
-Thanks for yor help Bjorn!  I have something to try now.
-
-Barry
