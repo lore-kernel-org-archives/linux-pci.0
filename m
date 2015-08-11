@@ -1,175 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35612 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932161AbbHJJn4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 05:43:56 -0400
-Received: by pacgr6 with SMTP id gr6so23554818pac.2
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 02:43:55 -0700 (PDT)
-Subject: Re: [PATCH v6 11/42] powerpc/powernv: Trace DMA32 segments consumed
- by PE
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-12-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C87254.3020204@ozlabs.ru>
-Date: Mon, 10 Aug 2015 19:43:48 +1000
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:43312 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753435AbbHKUXD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 16:23:03 -0400
+Subject: Re: [PATCH] PCI: iproc_bcma: allow build as module
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+References: <1437851724-10519-1-git-send-email-hauke@hauke-m.de>
+ <20150811201215.GF13982@google.com>
+CC: <linux-pci@vger.kernel.org>, <zajec5@gmail.com>,
+	<rjui@broadcom.com.com>, Scott Branden <sbranden@broadcom.com>,
+	<bcm-kernel-feedback-list@broadcom.com>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <55CA598D.2080704@broadcom.com>
+Date: Tue, 11 Aug 2015 13:22:37 -0700
 MIME-Version: 1.0
-In-Reply-To: <1438834307-26960-12-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+In-Reply-To: <20150811201215.GF13982@google.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2015 02:11 PM, Gavin Shan wrote:
-> On P7IOC, the whole DMA32 space is divided evenly to 256MB segments.
-> Each PE can consume one or multiple DMA32 segments. Current code
-> doesn't trace the available DMA32 segments and those consumed by
-> one particular PE. It's conflicting with PCI hotplug.
->
-> The patch introduces one bitmap to PHB to trace the available
-> DMA32 segments for allocation, more fields to "struct pnv_ioda_pe"
-> to trace the consumed DMA32 segments by the PE, which is going to
-> be released when the PE is destroyed at PCI unplugging time.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 40 +++++++++++++++++++++++--------
->   arch/powerpc/platforms/powernv/pci.h      |  4 +++-
->   2 files changed, 33 insertions(+), 11 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index cd22002..57ba8fd 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -1946,6 +1946,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->
->   	/* Grab a 32-bit TCE table */
->   	pe->dma32_seg = base;
-> +	pe->dma32_segcount = segs;
->   	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
->   		(base << 28), ((base + segs) << 28) - 1);
->
-> @@ -2006,8 +2007,13 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
->   	return;
->    fail:
->   	/* XXX Failure: Try to fallback to 64-bit only ? */
-> -	if (pe->dma32_seg >= 0)
-> +	if (pe->dma32_seg >= 0) {
-> +		bitmap_clear(phb->ioda.dma32_segmap,
-> +			     pe->dma32_seg, pe->dma32_segcount);
->   		pe->dma32_seg = -1;
-> +		pe->dma32_segcount = 0;
-> +	}
-> +
->   	if (tce_mem)
->   		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
->   	if (tbl) {
-> @@ -2443,12 +2449,11 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->   		pnv_ioda_setup_bus_dma(pe, pe->pbus);
->   }
->
-> -static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
-> -					struct pnv_ioda_pe *pe,
-> -					unsigned int base)
-> +static void pnv_ioda1_setup_dma(struct pnv_phb *phb,
-> +					struct pnv_ioda_pe *pe)
->   {
->   	struct pci_controller *hose = phb->hose;
-> -	unsigned int dma_weight, segs;
-> +	unsigned int dma_weight, base, segs;
->
->   	/* Calculate the PHB's DMA weight */
->   	dma_weight = pnv_ioda_phb_dma_weight(phb);
-> @@ -2461,11 +2466,28 @@ static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
->   	else
->   		segs = (pe->dma32_weight *
->   			phb->ioda.dma32_segcount) / dma_weight;
-> +
-> +	/*
-> +	 * Allocate DMA32 segments. We might not have enough
-> +	 * resources available. However we expect at least one
-> +	 * to be available.
-> +	 */
-> +	do {
-> +		base = bitmap_find_next_zero_area(phb->ioda.dma32_segmap,
-> +						  phb->ioda.dma32_segcount,
-> +						  0, segs, 0);
-> +		if (base < phb->ioda.dma32_segcount) {
-> +			bitmap_set(phb->ioda.dma32_segmap, base, segs);
-> +			break;
-> +		}
-> +	} while (--segs);
 
+On 8/11/2015 1:12 PM, Bjorn Helgaas wrote:
+> [+cc Scott, bcm-kernel-feedback-list]
+> 
+> On Sat, Jul 25, 2015 at 09:15:24PM +0200, Hauke Mehrtens wrote:
+>> Changes this to tristate to make it possible to build this driver as a
+>> module.
+>>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> 
+> Waiting for an ack from Ray or Scott.
+> 
+>> ---
+>>  drivers/pci/host/Kconfig | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index c132bdd..e339a8c 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -135,7 +135,7 @@ config PCIE_IPROC_PLATFORM
+>>  	  through the generic platform bus interface
+>>  
+>>  config PCIE_IPROC_BCMA
+>> -	bool "Broadcom iProc PCIe BCMA bus driver"
+>> +	tristate "Broadcom iProc PCIe BCMA bus driver"
 
-If segs==0 before entering the loop, the loop will execute 0xfffffffe 
-times. Make it for(;segs;--segs){ }.
+This looks fine. I also build test it to make sure there's no export
+symbol related issues.
 
+Acked-by: Ray Jui <rjui@broadcom.com>
 
-> +
-> +	if (WARN_ON(!segs))
-> +		return;
-> +
->   	pe_info(pe, "DMA weight %d, assigned %d segments\n",
->   		pe->dma32_weight, segs);
->   	pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
-> -
-> -	return segs;
->   }
->
->   #ifdef CONFIG_PCI_MSI
-> @@ -2933,20 +2955,18 @@ static void pnv_pci_ioda_setup_DMA(void)
->   	struct pci_controller *hose, *tmp;
->   	struct pnv_phb *phb;
->   	struct pnv_ioda_pe *pe;
-> -	unsigned int base;
->
->   	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
->   		phb = hose->private_data;
->   		pnv_pci_ioda_setup_opal_tce_kill(phb);
->
-> -		base = 0;
->   		list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
->   			if (!pe->dma32_weight)
->   				continue;
->
->   			switch (phb->type) {
->   			case PNV_PHB_IODA1:
-> -				base += pnv_ioda1_setup_dma(phb, pe, base);
-> +				pnv_ioda1_setup_dma(phb, pe);
->   				break;
->   			case PNV_PHB_IODA2:
->   				pnv_pci_ioda2_setup_dma_pe(phb, pe);
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 574fe43..1dc9578 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -65,6 +65,7 @@ struct pnv_ioda_pe {
->
->   	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
->   	int			dma32_seg;
-> +	int			dma32_segcount;
->   	struct iommu_table_group table_group;
->
->   	/* 64-bit TCE bypass region */
-> @@ -153,10 +154,11 @@ struct pnv_phb {
->   			unsigned int		io_segsize;
->   			unsigned int		io_pci_base;
->
-> -			/* IO, M32, M64 segment maps */
-> +			/* IO, M32, M64, DMA32 segment maps */
->   			unsigned long		io_segmap[8];
->   			unsigned long		m32_segmap[8];
->   			unsigned long		m64_segmap[8];
-> +			unsigned long		dma32_segmap[8];
->
->   			/* PE allocation */
->   			struct mutex		pe_alloc_mutex;
->
+Thanks,
 
+Ray
 
--- 
-Alexey
+>>  	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
+>>  	select PCIE_IPROC
+>>  	select BCMA
+>> -- 
+>> 2.1.4
+>>
