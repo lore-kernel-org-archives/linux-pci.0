@@ -1,87 +1,231 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:35431 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754304AbbHNO6A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 10:58:00 -0400
-Received: by igbjg10 with SMTP id jg10so13710091igb.0
-        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2015 07:57:59 -0700 (PDT)
-Date: Fri, 14 Aug 2015 09:57:55 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3] powerpc: PCI: Fix lookup of linux,pci-probe-only
- property
-Message-ID: <20150814145755.GE26431@google.com>
-References: <1439563268-13418-1-git-send-email-marc.zyngier@arm.com>
- <1439563268-13418-3-git-send-email-marc.zyngier@arm.com>
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:37273 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932991AbbHKAjk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:39:40 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 11 Aug 2015 06:09:38 +0530
+Date: Tue, 11 Aug 2015 10:39:30 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com
+Subject: Re: [PATCH v6 15/42] powerpc/powernv: PE oriented during
+ configuration
+Message-ID: <20150811003930.GA18981@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-16-git-send-email-gwshan@linux.vnet.ibm.com>
+ <55C876AC.5060205@ozlabs.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1439563268-13418-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <55C876AC.5060205@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
+On Mon, Aug 10, 2015 at 08:02:20PM +1000, Alexey Kardashevskiy wrote:
+>On 08/06/2015 02:11 PM, Gavin Shan wrote:
+>>Several functions used to configure PE take pe_number to indentify
+>>PE instance. As the pe_number is included in PE instance after it
+>>is reserved or allocated. It's convienent for those functions to
+>>return PE instance which includes the required pe_number.
+>
+>This is a description for the half of the patch but this patch also adds a
+>return value to functions which did not have it before and I am not sure you
+>need all of them to return something. It would be cleaner if you added
+>"return" when/where you really need it, not just because it seems that it may
+>be convenient later.
+>
 
-On Fri, Aug 14, 2015 at 03:41:07PM +0100, Marc Zyngier wrote:
-> When find_and_init_phbs() looks for the probe-only property, it seems
-> to trust the firmware to be correctly written, and assumes that there
-> is a parameter to the property.
-> 
-> It is conceivable that the firmware could not be that perfect, and it
-> could expose this property naked (at least one arm64 platform seems to
-> exhibit this exact behaviour). The setup code the ends up making
-> a decision based on whatever the property pointer points to, which
-> is likely to be junk.
-> 
-> Instead, let's check for the validity of the property, and ignore
-> it if the firmware couldn't make up its mind.
-> 
-> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
->  arch/powerpc/platforms/pseries/setup.c | 15 ++++++++++-----
->  1 file changed, 10 insertions(+), 5 deletions(-)
-> 
-> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-> index df6a704..6bdc1f9 100644
-> --- a/arch/powerpc/platforms/pseries/setup.c
-> +++ b/arch/powerpc/platforms/pseries/setup.c
-> @@ -490,14 +490,19 @@ static void __init find_and_init_phbs(void)
->  	 */
->  	if (of_chosen) {
->  		const int *prop;
-> +		int len;
->  
->  		prop = of_get_property(of_chosen,
-> -				"linux,pci-probe-only", NULL);
-> +				"linux,pci-probe-only", &len);
->  		if (prop) {
-> -			if (*prop)
-> -				pci_add_flags(PCI_PROBE_ONLY);
-> -			else
-> -				pci_clear_flags(PCI_PROBE_ONLY);
-> +			if (len) {
-> +				if (be32_to_cpup(prop))
-> +					pci_add_flags(PCI_PROBE_ONLY);
-> +				else
-> +					pci_clear_flags(PCI_PROBE_ONLY);
-> +			} else {
-> +				pr_warn("linux,pci-probe-only set without value, ignoring\n");
-> +			}
+Fair enough. I'll change the commit log accordingly.
 
-This seems essentially identical to the pci-host-generic version.
-Is there a way we can factor it out so there's only one copy?
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 51 ++++++++++++++++---------------
+>>  arch/powerpc/platforms/powernv/pci.h      |  2 +-
+>>  2 files changed, 27 insertions(+), 26 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 3094c61..9f53682 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -132,12 +132,12 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>>  		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+>>  }
+>>
+>>-static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>+static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>  {
+>>  	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe)) {
+>>  		pr_warn("%s: Invalid PE %d on PHB#%x\n",
+>>  			__func__, pe_no, phb->hose->global_number);
+>>-		return;
+>>+		return NULL;
+>>  	}
+>>
+>>  	if (test_and_set_bit(pe_no, phb->ioda.pe_alloc))
+>>@@ -146,9 +146,11 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>
+>>  	phb->ioda.pe_array[pe_no].phb = phb;
+>>  	phb->ioda.pe_array[pe_no].pe_number = pe_no;
+>>+
+>>+	return &phb->ioda.pe_array[pe_no];
+>>  }
+>>
+>>-static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>+static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>  {
+>>  	unsigned long pe;
+>>
+>>@@ -156,12 +158,12 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>  		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+>>  					phb->ioda.total_pe, 0);
+>>  		if (pe >= phb->ioda.total_pe)
+>>-			return IODA_INVALID_PE;
+>>+			return NULL;
+>>  	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+>>
+>>  	phb->ioda.pe_array[pe].phb = phb;
+>>  	phb->ioda.pe_array[pe].pe_number = pe;
+>>-	return pe;
+>>+	return &phb->ioda.pe_array[pe];
+>>  }
+>>
+>>  static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
+>>@@ -334,7 +336,7 @@ static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
+>>  	}
+>>  }
+>>
+>>-static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>+static struct pnv_ioda_pe *pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>  {
+>>  	struct pci_controller *hose = pci_bus_to_host(bus);
+>>  	struct pnv_phb *phb = hose->private_data;
+>>@@ -344,7 +346,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>
+>>  	/* Root bus shouldn't use M64 */
+>>  	if (pci_is_root_bus(bus))
+>>-		return IODA_INVALID_PE;
+>>+		return NULL;
+>>
+>>  	/* Allocate bitmap */
+>>  	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
+>>@@ -352,7 +354,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>  	if (!pe_alloc) {
+>>  		pr_warn("%s: Out of memory !\n",
+>>  			__func__);
+>>-		return IODA_INVALID_PE;
+>>+		return NULL;
+>>  	}
+>>
+>>  	/* Figure out reserved PE numbers by the PE */
+>>@@ -365,7 +367,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>  	 */
+>>  	if (bitmap_empty(pe_alloc, phb->ioda.total_pe)) {
+>>  		kfree(pe_alloc);
+>>-		return IODA_INVALID_PE;
+>>+		return NULL;
+>>  	}
+>>
+>>  	/*
+>>@@ -416,7 +418,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>  	}
+>>
+>>  	kfree(pe_alloc);
+>>-	return master_pe->pe_number;
+>>+	return master_pe;
+>>  }
+>>
+>>  static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+>>@@ -1069,28 +1071,26 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>>   * subordinate PCI devices and buses. The second type of PE is normally
+>>   * orgiriated by PCIe-to-PCI bridge or PLX switch downstream ports.
+>>   */
+>>-static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>+static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>  {
+>>  	struct pci_controller *hose = pci_bus_to_host(bus);
+>>  	struct pnv_phb *phb = hose->private_data;
+>>-	struct pnv_ioda_pe *pe;
+>>-	int pe_num = IODA_INVALID_PE;
+>>+	struct pnv_ioda_pe *pe = NULL;
+>>
+>>  	/* Check if PE is determined by M64 */
+>>  	if (phb->pick_m64_pe)
+>>-		pe_num = phb->pick_m64_pe(bus, all);
+>>+		pe = phb->pick_m64_pe(bus, all);
+>>
+>>  	/* The PE number isn't pinned by M64 */
+>>-	if (pe_num == IODA_INVALID_PE)
+>>-		pe_num = pnv_ioda_alloc_pe(phb);
+>>+	if (!pe)
+>>+		pe = pnv_ioda_alloc_pe(phb);
+>>
+>>-	if (pe_num == IODA_INVALID_PE) {
+>>-		pr_warning("%s: Not enough PE# available for PCI bus %04x:%02x\n",
+>>+	if (!pe) {
+>>+		pr_warning("%s: No enough PE# for PCI bus %04x:%02x\n",
+>>  			__func__, pci_domain_nr(bus), bus->number);
+>>-		return;
+>>+		return NULL;
+>>  	}
+>>
+>>-	pe = &phb->ioda.pe_array[pe_num];
+>>  	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
+>>  	pe->pbus = bus;
+>>  	pe->pdev = NULL;
+>>@@ -1101,17 +1101,16 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>
+>>  	if (all)
+>>  		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
+>>-			bus->busn_res.start, bus->busn_res.end, pe_num);
+>>+			bus->busn_res.start, bus->busn_res.end, pe->pe_number);
+>>  	else
+>>  		pe_info(pe, "Secondary bus %d associated with PE#%d\n",
+>>-			bus->busn_res.start, pe_num);
+>>+			bus->busn_res.start, pe->pe_number);
+>>
+>>  	if (pnv_ioda_configure_pe(phb, pe)) {
+>>  		/* XXX What do we do here ? */
+>>-		if (pe_num)
+>>-			pnv_ioda_free_pe(phb, pe_num);
+>>+		pnv_ioda_free_pe(phb, pe->pe_number);
+>>  		pe->pbus = NULL;
+>>-		return;
+>>+		return NULL;
+>>  	}
+>>
+>>  	/* Associate it with all child devices */
+>>@@ -1122,6 +1121,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>>
+>>  	/* Link the PE */
+>>  	pnv_ioda_link_pe_by_weight(phb, pe);
+>>+
+>>+	return pe;
+>>  }
+>>
+>>  static void pnv_ioda_setup_PEs(struct pci_bus *bus)
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index 6f8568e..c0bc57f 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -121,7 +121,7 @@ struct pnv_phb {
+>>  	int (*init_m64)(struct pnv_phb *phb);
+>>  	void (*reserve_m64_pe)(struct pci_bus *bus,
+>>  			       unsigned long *pe_bitmap, bool all);
+>>-	int (*pick_m64_pe)(struct pci_bus *bus, bool all);
+>>+	struct pnv_ioda_pe* (*pick_m64_pe)(struct pci_bus *bus, bool all);
+>>  	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
+>>  	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
+>>  	int (*unfreeze_pe)(struct pnv_phb *phb, int pe_no, int opt);
+>>
 
->  		}
->  	}
->  }
-> -- 
-> 2.1.4
-> 
+Thanks,
+Gavin
+
