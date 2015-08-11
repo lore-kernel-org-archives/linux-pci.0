@@ -1,51 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:41393 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbbHZDKz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 23:10:55 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>,
-	<gabriele.paoloni@huawei.com>
-CC: <linux-pci@vger.kernel.org>, <qiuzhenfa@hisilicon.com>,
-	<zhangjukuo@huawei.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v2] PCI: designware: Fix PORT_LOGIC_LINK_WIDTH_MASK
-Date: Wed, 26 Aug 2015 11:17:34 +0800
-Message-ID: <1440559054-231033-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:36639 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933277AbbHKAiO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:38:14 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 11 Aug 2015 06:08:12 +0530
+Date: Tue, 11 Aug 2015 10:38:05 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com
+Subject: Re: [PATCH v6 12/42] powerpc/powernv: Increase PE# capacity
+Message-ID: <20150811003804.GA18283@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-13-git-send-email-gwshan@linux.vnet.ibm.com>
+ <55C8747E.9090908@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55C8747E.9090908@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The value under PORT_LOGIC_LINK_WIDTH_MASK is 0x1, 0x2, 0x4, 0x8. Here change
-this mask to proper value.
+On Mon, Aug 10, 2015 at 07:53:02PM +1000, Alexey Kardashevskiy wrote:
+>On 08/06/2015 02:11 PM, Gavin Shan wrote:
+>>Each PHB maintains an array helping to translate RID (Request
+>>ID) to PE# with the assumption that PE# takes 8 bits, indicating
+>>that we can't have more than 256 PEs. However, pci_dn->pe_number
+>>already had 4-bytes for the PE#.
+>>
+>>The patch extends the PE# capacity so that each of them will be
+>>4-bytes long. Then we can use IODA_INVALID_PE to check one entry
+>>in phb->pe_rmap[] is valid or not.
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 8 ++++++--
+>>  arch/powerpc/platforms/powernv/pci.h      | 7 +++----
+>>  2 files changed, 9 insertions(+), 6 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 57ba8fd..3094c61 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -786,7 +786,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>>
+>>  	/* Clear the reverse map */
+>>  	for (rid = pe->rid; rid < rid_end; rid++)
+>>-		phb->ioda.pe_rmap[rid] = 0;
+>>+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
+>>
+>>  	/* Release from all parents PELT-V */
+>>  	while (parent) {
+>>@@ -3134,7 +3134,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	unsigned long size, pemap_off;
+>>  	const __be64 *prop64;
+>>  	const __be32 *prop32;
+>>-	int len;
+>>+	int len, i;
+>>  	u64 phb_id;
+>>  	void *aux;
+>>  	long rc;
+>>@@ -3201,6 +3201,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>  	if (prop32)
+>>  		phb->ioda.reserved_pe = be32_to_cpup(prop32);
+>>
+>>+	/* Invalidate RID to PE# mapping */
+>>+	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
+>>+		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
+>>+
+>>  	/* Parse 64-bit MMIO range */
+>>  	pnv_ioda_parse_m64_window(phb);
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index 1dc9578..6f8568e 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -175,11 +175,10 @@ struct pnv_phb {
+>>  			struct list_head	pe_list;
+>>  			struct mutex            pe_list_mutex;
+>>
+>>-			/* Reverse map of PEs, will have to extend if
+>>-			 * we are to support more than 256 PEs, indexed
+>>-			 * bus { bus, devfn }
+>>+			/* Reverse map of PEs, indexed by
+>>+			 * { bus, devfn }
+>>  			 */
+>>-			unsigned char		pe_rmap[0x10000];
+>>+			int			pe_rmap[0x10000];
+>
+>
+>256k seems to be waste when only tiny fraction of it will ever be used. Using
+>include/linux/hashtable.h makes sense here, and if you use a hashtable, you
+>won't have to initialize anything with IODA_INVALID_PE.
+>
 
-In IP v4.2, bits [16:8] are defined for NUM_OF_LANES. But in IP v4.4, bits[12:8]
-are defined for NUM_OF_LANES, bits [16:13] are for other usages(bit 16 is
-AUTO_LANE_FLIP_CTRL_EN, bits [15:13] are PRE_DET_LANE).
+I'm not sure if I follow your idea completely. With hash table to trace
+RID mapping here, won't more memory needed if all PCI buse numbers (0
+to 255) are all valid? It means hash table doesn't have advantage in
+memory consumption. On the other hand, searching in hash table buckets
+have to iterate list of conflicting items (keys), which is slow comparing
+to what we have. Actually, I like the idea, using array to map RID to PE#,
+which was implemented by Ben.
 
-As there is no conflict about NUM_OF_LANES between v4.2 and v4.4, this patch
-change above mask value to avoid future problem.
+>
+>>
+>>  			/* 32-bit TCE tables allocation */
+>>  			unsigned long		dma32_segcount;
+>>
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- drivers/pci/host/pcie-designware.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be..eb549b9 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -35,7 +35,7 @@
- 
- #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
- #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
--#define PORT_LOGIC_LINK_WIDTH_MASK	(0x1ff << 8)
-+#define PORT_LOGIC_LINK_WIDTH_MASK	(0x1f << 8)
- #define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
- #define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
- #define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
--- 
-1.9.1
+Thanks,
+Gavin
 
