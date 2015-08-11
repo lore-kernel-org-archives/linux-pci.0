@@ -1,135 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54254 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751946AbbH2Mo6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 29 Aug 2015 08:44:58 -0400
-Date: Sat, 29 Aug 2015 13:44:57 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH] ARM64: PCI: do not enable resources on PROBE_ONLY systems
-Message-ID: <20150829124457.GA18125@red-moon>
-References: <1438262039-32085-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20150828211444.GA27890@google.com>
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:36111 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965225AbbHKPvt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 11:51:49 -0400
+Received: by igbij6 with SMTP id ij6so93528390igb.1
+        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 08:51:48 -0700 (PDT)
+Subject: [PATCH v3 06/11] PCI: Inline the ATS setup code into pci_ats_init()
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gregor Dick <gdick@solarflare.com>,
+	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 11 Aug 2015 10:51:46 -0500
+Message-ID: <20150811155146.21078.16008.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150828211444.GA27890@google.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+The ATS setup code in ats_alloc_one() is only used by pci_ats_init(), so
+inline it there.  No functional change.
 
-On Fri, Aug 28, 2015 at 10:14:44PM +0100, Bjorn Helgaas wrote:
-> Hi Lorenzo,
-> 
-> On Thu, Jul 30, 2015 at 02:13:59PM +0100, Lorenzo Pieralisi wrote:
-> > On ARM64 PROBE_ONLY PCI systems resources are not currently claimed,
-> > therefore they can't be enabled since they do not have a valid
-> > parent pointer; this in turn prevents enabling PCI devices on
-> > ARM64 PROBE_ONLY systems, causing PCI devices initialization to
-> > fail.
-> 
-> Where does arm64 claim PCI BAR resources for the non-PROBE_ONLY case?
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
+---
+ drivers/pci/ats.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-arm64 (and arm) does not claim resources in arch code, they are always
-assigned in the respective host controllers (or the pcibios on arm),
-except for the PCI generic host when in PROBE_ONLY mode, where resources
-are neither claimed nor assigned (the reason for this patch to exist).
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 9a98b3a..95905f3 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -17,7 +17,7 @@
+ 
+ #include "pci.h"
+ 
+-static void ats_alloc_one(struct pci_dev *dev)
++void pci_ats_init(struct pci_dev *dev)
+ {
+ 	int pos;
+ 	u16 cap;
+@@ -32,11 +32,6 @@ static void ats_alloc_one(struct pci_dev *dev)
+ 					    PCI_ATS_MAX_QDEP;
+ }
+ 
+-void pci_ats_init(struct pci_dev *dev)
+-{
+-	ats_alloc_one(dev);
+-}
+-
+ /**
+  * pci_enable_ats - enable the ATS capability
+  * @dev: the PCI device
 
-Certainly something to consolidate as part of the rework we talked
-about at LPC (PCI ACPI probing is yet another reason to consolidate it).
-
-I am working on this, in particular I want to test how claiming the
-resources by default will impact ARM systems.
-
-For the records, Will kindly provided me with an Alpha box so that I can
-test on it too.
-
-> I know it must be there somewhere, but I don't see it.
-
-It is not there, it is done in the host controllers by assigning the
-resources (which also "claim" them by assigning the parent pointer).
-
-Thanks,
-Lorenzo
-
-> 
-> > To solve this issue, resources must be claimed when devices are
-> > added on PROBE_ONLY systems, which ensures that the resource hierarchy
-> > is validated and the resource tree is sane, but this requires changes
-> > in the ARM64 resource management that can affect adversely existing
-> > PCI set-ups (claiming resources on !PROBE_ONLY systems might break
-> > existing ARM64 PCI platform implementations).
-> > 
-> > As a temporary solution in preparation for a proper resources claiming
-> > implementation in ARM64 core, to enable PCI PROBE_ONLY systems on ARM64,
-> > this patch adds a pcibios_enable_device() arch implementation that
-> > simply prevents enabling resources on PROBE_ONLY systems (mirroring ARM
-> > behaviour).
-> > 
-> > This is always a safe thing to do because on PROBE_ONLY systems the
-> > configuration space set-up can be considered immutable, and it is in
-> > preparation of proper resource claiming that would finally validate
-> > the PCI resources tree in the ARM64 arch implementation on PROBE_ONLY
-> > systems.
-> > 
-> > For !PROBE_ONLY systems resources enablement in pcibios_enable_device()
-> > on ARM64 is implemented as in current PCI core, leaving the behaviour
-> > unchanged.
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Catalin Marinas <catalin.marinas@arm.com>
-> > ---
-> > Bjorn, all,
-> > 
-> > as I mention in the commit log, this patch is a temporary solution
-> > in preparation for proper resources claiming in ARM64, so that
-> > we can safely enable the PCI generic host controller on ARM64 systems.
-> > 
-> > It mirrors ARM implementation and I will work on changing both
-> > ARM and ARM64 to convert them to proper resources claiming in
-> > the respective implementations.
-> > 
-> > Lorenzo
-> > 
-> >  arch/arm64/kernel/pci.c | 13 +++++++++++++
-> >  1 file changed, 13 insertions(+)
-> > 
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > index 4095379..b3d098b 100644
-> > --- a/arch/arm64/kernel/pci.c
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -38,6 +38,19 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> >  	return res->start;
-> >  }
-> >  
-> > +/**
-> > + * pcibios_enable_device - Enable I/O and memory.
-> > + * @dev: PCI device to be enabled
-> > + * @mask: bitmask of BARs to enable
-> > + */
-> > +int pcibios_enable_device(struct pci_dev *dev, int mask)
-> > +{
-> > +	if (pci_has_flag(PCI_PROBE_ONLY))
-> > +		return 0;
-> > +
-> > +	return pci_enable_resources(dev, mask);
-> > +}
-> > +
-> >  /*
-> >   * Try to assign the IRQ number from DT when adding a new device
-> >   */
-> > -- 
-> > 2.2.1
-> > 
-> 
