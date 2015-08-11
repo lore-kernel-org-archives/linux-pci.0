@@ -1,60 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:37482 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753570AbbHRSnz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 14:43:55 -0400
+Received: from mail-io0-f169.google.com ([209.85.223.169]:36577 "EHLO
+	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752250AbbHKVCO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 17:02:14 -0400
+Received: by ioeg141 with SMTP id g141so590538ioe.3
+        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 14:02:14 -0700 (PDT)
+Date: Tue, 11 Aug 2015 16:02:10 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, tony@atomide.com,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	bcousson@baylibre.com, linux@arm.linux.org.uk, nsekhar@ti.com
+Subject: Re: [PATCH 0/2] pci: am57xx-evm: Fix PCIe card enumeration issue
+Message-ID: <20150811210210.GK13982@google.com>
+References: <1438090750-11604-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20150817224850.GM26431@google.com>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-	<20150817224850.GM26431@google.com>
-Date: Tue, 18 Aug 2015 11:43:54 -0700
-Message-ID: <CAE9FiQVbnQSiCcXoKGoGZ+WvW7fB+Z8guY=J3WJ8GEpovy=n0Q@mail.gmail.com>
-Subject: Re: [PATCH v3 00/51] PCI: Resource allocation cleanup for v4.3
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438090750-11604-1-git-send-email-kishon@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 3:48 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Overall comments:
->
-> Thanks for paying attention to your subject lines.  They are
-> capitalized and punctuated quite consistently.
->
-> The one-line subject is a summary.  The body of the changelog is not a
-> continuation of it.  The body should stand alone even if you don't
-> read the subject.  Sometimes that means you have to repeat the subject
-> line in the body.  That's OK.
->
-> Please use "()" when referring to functions.  You do it sometimes, but
-> not always.
+On Tue, Jul 28, 2015 at 07:09:08PM +0530, Kishon Vijay Abraham I wrote:
+> This series fixes PCIe card enumeration issue in am57xx-evm.
+> 
+> In the case of am57xx-evm, the PERST# line is connected to a gpio line
+> and this has to be driven low in order to perform a fundamental reset
+> of the card. If the gpio line is driven high, there is no way the card
+> can come out of reset.
+> 
+> Add support in the pcie-dra7xx driver to make gpio drive PERST# line.
+> 
+> The PERST# line can be used to perform reset not during the power on
+> sequence too (warm reset) but we are not adding support for this as the
+> PCIe express base sepcification doesn't explain how to perform warm
+> reset
+> 
+> "In some cases, it may be possible for the Fundamental Reset mechanism
+> to be triggered by hardware without the removal and re-application of
+> power to the component. This is called a warm reset. This document does
+> not specify a means for generating a warm reset."
+> 
+> Kishon Vijay Abraham I (2):
+>   pci: host: pci-dra7xx: Add support to make gpio drive PERST# line
+>   ARM: dts: am57xx-evm: Add 'gpios' property with gpio2_8
+> 
+>  Documentation/devicetree/bindings/pci/ti-pci.txt |    3 +++
+>  arch/arm/boot/dts/am57xx-beagle-x15.dts          |    5 +++++
+>  arch/arm/boot/dts/dra7.dtsi                      |    2 +-
+>  drivers/pci/host/pci-dra7xx.c                    |   24 ++++++++++++++++++++--
+>  4 files changed, 31 insertions(+), 3 deletions(-)
 
-Thanks for checking them. Will update those changelog.
-
->
-> I think we should talk about "required/optional" resources instead of
-> "must/optional" ones.  Is "addon" a third, separate, thing?
-
-yes, addon should be same as optional.
-
-Actually for devices resources, could safely use required/optional resources.
-those resources either required only or optional only resources.
-for bridge resources, that is little confusing, as those resources could
-have required part only or optional part only or have required part +
-optional part.
-
-will update changelog to make them consistent.
-
-also will check code/comment...
-
-Thanks
-
-Yinghai
+Applied with Tony's ack (for patch 2) to pci/host-dra7xx for v4.3, thanks!
