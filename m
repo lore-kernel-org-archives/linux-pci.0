@@ -1,227 +1,314 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:34972 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbbHJHsb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 03:48:31 -0400
-Received: by pacgr6 with SMTP id gr6so21375965pac.2
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 00:48:30 -0700 (PDT)
-Subject: Re: [PATCH v6 08/42] powerpc/powernv: Calculate PHB's DMA weight
- dynamically
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-9-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C85748.4080308@ozlabs.ru>
-Date: Mon, 10 Aug 2015 17:48:24 +1000
+Received: from mail-io0-f180.google.com ([209.85.223.180]:35453 "EHLO
+	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965045AbbHKPvS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 11:51:18 -0400
+Received: by iodt126 with SMTP id t126so15321037iod.2
+        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 08:51:18 -0700 (PDT)
+Subject: [PATCH v3 02/11] PCI: Allocate ATS struct during enumeration
+To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gregor Dick <gdick@solarflare.com>,
+	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 11 Aug 2015 10:51:15 -0500
+Message-ID: <20150811155115.21078.16417.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1438834307-26960-9-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2015 02:11 PM, Gavin Shan wrote:
-> For P7IOC, the whole available DMA32 space, which is below the
-> MEM32 space, is divided evenly into 256MB segments. The number
-> of continuous segments assigned to one particular PE depends on
-> the PE's DMA weight that is calculated based on the type of each
-> PCI devices contained in the PE, and PHB's DMA weight which is
-> accumulative DMA weight of PEs contained in the PHB. It means
-> that the PHB's DMA weight calculation depends on existing PEs,
-> which works perfectly now, but not hotplug friendly. As the
-> whole available DMA32 space can be assigned to one PE on PHB3,
-> so we don't have the issue on PHB3.
->
-> The patch calculates PHB's DMA weight based on the PCI devices
-> contained in the PHB dynamically so that it's hotplug friendly.
+Previously, we allocated pci_ats structures when an IOMMU driver called
+pci_enable_ats().  An SR-IOV VF shares the STU setting with its PF, so when
+enabling ATS on the VF, we allocated a pci_ats struct for the PF if it
+didn't already have one.  We held the sriov->lock to serialize threads
+concurrently enabling ATS on several VFS so only one would allocate the PF
+pci_ats.
 
-It does not look like the patch changed anything about when to calculate 
-weights, it was and is pnv_ioda_setup_dma().
+Gregor reported a deadlock here:
 
-What the patch seems to be doing is changing weights by multiplying them by 
-phb->ioda.tce32_count but it is unclear why you do this.
+  pci_enable_sriov
+    sriov_enable
+      virtfn_add
+        mutex_lock(dev->sriov->lock)      # acquire sriov->lock
+        pci_device_add
+          device_add
+            BUS_NOTIFY_ADD_DEVICE notifier chain
+            iommu_bus_notifier
+              amd_iommu_add_device        # iommu_ops.add_device
+                init_iommu_group
+                  iommu_group_get_for_dev
+                    iommu_group_add_device
+                      __iommu_attach_device
+                        amd_iommu_attach_device  # iommu_ops.attach_device
+                          attach_device
+                            pci_enable_ats
+                              mutex_lock(dev->sriov->lock) # deadlock
 
+There's no reason to delay allocating the pci_ats struct, and if we
+allocate it for each device at enumeration-time, there's no need for
+locking in pci_enable_ats().
 
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 88 +++++++++++++++----------------
->   arch/powerpc/platforms/powernv/pci.h      |  6 ---
->   2 files changed, 43 insertions(+), 51 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 713f4b4..7342cfd 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -927,6 +927,9 @@ static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
->
->   static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
->   {
-> +	struct pci_controller *hose = pci_bus_to_host(dev->bus);
-> +	struct pnv_phb *phb = hose->private_data;
-> +
->   	/* This is quite simplistic. The "base" weight of a device
->   	 * is 10. 0 means no DMA is to be accounted for it.
->   	 */
-> @@ -939,14 +942,34 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
->   	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
->   	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
->   	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
-> -		return 3;
-> +		return 3 * phb->ioda.tce32_count;
->
->   	/* Increase the weight of RAID (includes Obsidian) */
->   	if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
-> -		return 15;
-> +		return 15 * phb->ioda.tce32_count;
->
->   	/* Default */
-> -	return 10;
-> +	return 10 * phb->ioda.tce32_count;
-> +}
-> +
-> +static int __pnv_ioda_phb_dma_weight(struct pci_dev *pdev, void *data)
-> +{
-> +	unsigned int *dma_weight = data;
-> +
-> +	*dma_weight += pnv_ioda_dma_weight(pdev);
-> +	return 0;
-> +}
-> +
-> +static unsigned int pnv_ioda_phb_dma_weight(struct pnv_phb *phb)
-> +{
-> +	unsigned int dma_weight = 0;
-> +
-> +	if (!phb->hose->bus)
-> +		return 0;
-> +
-> +	pci_walk_bus(phb->hose->bus,
-> +		     __pnv_ioda_phb_dma_weight, &dma_weight);
-> +	return dma_weight;
->   }
->
->   #ifdef CONFIG_PCI_IOV
-> @@ -1097,14 +1120,6 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
->   	/* Put PE to the list */
->   	list_add_tail(&pe->list, &phb->ioda.pe_list);
->
-> -	/* Account for one DMA PE if at least one DMA capable device exist
-> -	 * below the bridge
-> -	 */
-> -	if (pe->dma_weight != 0) {
-> -		phb->ioda.dma_weight += pe->dma_weight;
-> -		phb->ioda.dma_pe_count++;
-> -	}
-> -
->   	/* Link the PE */
->   	pnv_ioda_link_pe_by_weight(phb, pe);
->   }
-> @@ -2431,24 +2446,13 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->   static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   {
->   	struct pci_controller *hose = phb->hose;
-> -	unsigned int residual, remaining, segs, tw, base;
->   	struct pnv_ioda_pe *pe;
-> +	unsigned int dma_weight;
->
-> -	/* If we have more PE# than segments available, hand out one
-> -	 * per PE until we run out and let the rest fail. If not,
-> -	 * then we assign at least one segment per PE, plus more based
-> -	 * on the amount of devices under that PE
-> -	 */
-> -	if (phb->ioda.dma_pe_count > phb->ioda.tce32_count)
-> -		residual = 0;
-> -	else
-> -		residual = phb->ioda.tce32_count -
-> -			phb->ioda.dma_pe_count;
-> -
-> -	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
-> -		hose->global_number, phb->ioda.tce32_count);
-> -	pr_info("PCI: %d PE# for a total weight of %d\n",
-> -		phb->ioda.dma_pe_count, phb->ioda.dma_weight);
-> +	/* Calculate the PHB's DMA weight */
-> +	dma_weight = pnv_ioda_phb_dma_weight(phb);
-> +	pr_info("PCI%04x has %ld DMA32 segments, total weight %d\n",
-> +		hose->global_number, phb->ioda.tce32_count, dma_weight);
->
->   	pnv_pci_ioda_setup_opal_tce_kill(phb);
->
-> @@ -2456,22 +2460,9 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   	 * out one base segment plus any residual segments based on
->   	 * weight
->   	 */
-> -	remaining = phb->ioda.tce32_count;
-> -	tw = phb->ioda.dma_weight;
-> -	base = 0;
->   	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
->   		if (!pe->dma_weight)
->   			continue;
-> -		if (!remaining) {
-> -			pe_warn(pe, "No DMA32 resources available\n");
-> -			continue;
-> -		}
-> -		segs = 1;
-> -		if (residual) {
-> -			segs += ((pe->dma_weight * residual)  + (tw / 2)) / tw;
-> -			if (segs > remaining)
-> -				segs = remaining;
-> -		}
->
->   		/*
->   		 * For IODA2 compliant PHB3, we needn't care about the weight.
-> @@ -2479,17 +2470,24 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   		 * the specific PE.
->   		 */
->   		if (phb->type == PNV_PHB_IODA1) {
-> -			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
-> +			unsigned int segs, base = 0;
-> +
-> +			if (pe->dma_weight <
-> +			    dma_weight / phb->ioda.tce32_count)
-> +				segs = 1;
-> +			else
-> +				segs = (pe->dma_weight *
-> +					phb->ioda.tce32_count) / dma_weight;
-> +
-> +			pe_info(pe, "DMA32 weight %d, assigned %d segments\n",
->   				pe->dma_weight, segs);
->   			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
-> +
-> +			base += segs;
->   		} else {
->   			pe_info(pe, "Assign DMA32 space\n");
-> -			segs = 0;
->   			pnv_pci_ioda2_setup_dma_pe(phb, pe);
->   		}
-> -
-> -		remaining -= segs;
-> -		base += segs;
->   	}
->   }
->
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 08a4e57..addd3f7 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -183,12 +183,6 @@ struct pnv_phb {
->   			/* 32-bit TCE tables allocation */
->   			unsigned long		tce32_count;
->
-> -			/* Total "weight" for the sake of DMA resources
-> -			 * allocation
-> -			 */
-> -			unsigned int		dma_weight;
-> -			unsigned int		dma_pe_count;
-> -
->   			/* Sorted list of used PE's, sorted at
->   			 * boot for resource allocation purposes
->   			 */
->
+Allocate pci_ats struct during enumeration, when we initialize other
+capabilities.
 
+Note that this implementation requires ATS to be enabled on the PF first,
+before on any of the VFs because the PF controls the STU for all the VFs.
 
--- 
-Alexey
+Link: http://permalink.gmane.org/gmane.linux.kernel.iommu/9433
+Reported-by: Gregor Dick <gdick@solarflare.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Joerg Roedel <jroedel@suse.de>
+---
+ drivers/pci/ats.c       |   98 ++++++++++++++++++++---------------------------
+ drivers/pci/probe.c     |    3 +
+ drivers/pci/remove.c    |    1 
+ include/linux/pci-ats.h |    2 -
+ include/linux/pci.h     |    9 ++++
+ 5 files changed, 56 insertions(+), 57 deletions(-)
+
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index a8099d4..2026f53 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -17,7 +17,7 @@
+ 
+ #include "pci.h"
+ 
+-static int ats_alloc_one(struct pci_dev *dev, int ps)
++static void ats_alloc_one(struct pci_dev *dev)
+ {
+ 	int pos;
+ 	u16 cap;
+@@ -25,20 +25,19 @@ static int ats_alloc_one(struct pci_dev *dev, int ps)
+ 
+ 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+ 	if (!pos)
+-		return -ENODEV;
++		return;
+ 
+ 	ats = kzalloc(sizeof(*ats), GFP_KERNEL);
+-	if (!ats)
+-		return -ENOMEM;
++	if (!ats) {
++		dev_warn(&dev->dev, "can't allocate space for ATS state\n");
++		return;
++	}
+ 
+ 	ats->pos = pos;
+-	ats->stu = ps;
+ 	pci_read_config_word(dev, pos + PCI_ATS_CAP, &cap);
+ 	ats->qdep = PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) :
+ 					    PCI_ATS_MAX_QDEP;
+ 	dev->ats = ats;
+-
+-	return 0;
+ }
+ 
+ static void ats_free_one(struct pci_dev *dev)
+@@ -47,6 +46,16 @@ static void ats_free_one(struct pci_dev *dev)
+ 	dev->ats = NULL;
+ }
+ 
++void pci_ats_init(struct pci_dev *dev)
++{
++	ats_alloc_one(dev);
++}
++
++void pci_ats_free(struct pci_dev *dev)
++{
++	ats_free_one(dev);
++}
++
+ /**
+  * pci_enable_ats - enable the ATS capability
+  * @dev: the PCI device
+@@ -56,43 +65,35 @@ static void ats_free_one(struct pci_dev *dev)
+  */
+ int pci_enable_ats(struct pci_dev *dev, int ps)
+ {
+-	int rc;
+ 	u16 ctrl;
+ 
+ 	BUG_ON(dev->ats && dev->ats->is_enabled);
+ 
++	if (!dev->ats)
++		return -EINVAL;
++
+ 	if (ps < PCI_ATS_MIN_STU)
+ 		return -EINVAL;
+ 
+-	if (dev->is_physfn || dev->is_virtfn) {
+-		struct pci_dev *pdev = dev->is_physfn ? dev : dev->physfn;
++	/*
++	 * Note that enabling ATS on a VF fails unless it's already enabled
++	 * with the same STU on the PF.
++	 */
++	ctrl = PCI_ATS_CTRL_ENABLE;
++	if (dev->is_virtfn) {
++		struct pci_dev *pdev = dev->physfn;
+ 
+-		mutex_lock(&pdev->sriov->lock);
+-		if (pdev->ats)
+-			rc = pdev->ats->stu == ps ? 0 : -EINVAL;
+-		else
+-			rc = ats_alloc_one(pdev, ps);
++		if (pdev->ats->stu != ps)
++			return -EINVAL;
+ 
+-		if (!rc)
+-			pdev->ats->ref_cnt++;
+-		mutex_unlock(&pdev->sriov->lock);
+-		if (rc)
+-			return rc;
+-	}
+-
+-	if (!dev->is_physfn) {
+-		rc = ats_alloc_one(dev, ps);
+-		if (rc)
+-			return rc;
++		atomic_inc(&pdev->ats->ref_cnt);  /* count enabled VFs */
++	} else {
++		dev->ats->stu = ps;
++		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
+ 	}
+-
+-	ctrl = PCI_ATS_CTRL_ENABLE;
+-	if (!dev->is_virtfn)
+-		ctrl |= PCI_ATS_CTRL_STU(ps - PCI_ATS_MIN_STU);
+ 	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl);
+ 
+ 	dev->ats->is_enabled = 1;
+-
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(pci_enable_ats);
+@@ -107,24 +108,20 @@ void pci_disable_ats(struct pci_dev *dev)
+ 
+ 	BUG_ON(!dev->ats || !dev->ats->is_enabled);
+ 
++	if (atomic_read(&dev->ats->ref_cnt))
++		return;		/* VFs still enabled */
++
++	if (dev->is_virtfn) {
++		struct pci_dev *pdev = dev->physfn;
++
++		atomic_dec(&pdev->ats->ref_cnt);
++	}
++
+ 	pci_read_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, &ctrl);
+ 	ctrl &= ~PCI_ATS_CTRL_ENABLE;
+ 	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl);
+ 
+ 	dev->ats->is_enabled = 0;
+-
+-	if (dev->is_physfn || dev->is_virtfn) {
+-		struct pci_dev *pdev = dev->is_physfn ? dev : dev->physfn;
+-
+-		mutex_lock(&pdev->sriov->lock);
+-		pdev->ats->ref_cnt--;
+-		if (!pdev->ats->ref_cnt)
+-			ats_free_one(pdev);
+-		mutex_unlock(&pdev->sriov->lock);
+-	}
+-
+-	if (!dev->is_physfn)
+-		ats_free_one(dev);
+ }
+ EXPORT_SYMBOL_GPL(pci_disable_ats);
+ 
+@@ -140,7 +137,6 @@ void pci_restore_ats_state(struct pci_dev *dev)
+ 	ctrl = PCI_ATS_CTRL_ENABLE;
+ 	if (!dev->is_virtfn)
+ 		ctrl |= PCI_ATS_CTRL_STU(dev->ats->stu - PCI_ATS_MIN_STU);
+-
+ 	pci_write_config_word(dev, dev->ats->pos + PCI_ATS_CTRL, ctrl);
+ }
+ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
+@@ -159,23 +155,13 @@ EXPORT_SYMBOL_GPL(pci_restore_ats_state);
+  */
+ int pci_ats_queue_depth(struct pci_dev *dev)
+ {
+-	int pos;
+-	u16 cap;
+-
+ 	if (dev->is_virtfn)
+ 		return 0;
+ 
+ 	if (dev->ats)
+ 		return dev->ats->qdep;
+ 
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+-	if (!pos)
+-		return -ENODEV;
+-
+-	pci_read_config_word(dev, pos + PCI_ATS_CAP, &cap);
+-
+-	return PCI_ATS_CAP_QDEP(cap) ? PCI_ATS_CAP_QDEP(cap) :
+-				       PCI_ATS_MAX_QDEP;
++	return -ENODEV;
+ }
+ EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..c206398 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1540,6 +1540,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	/* Single Root I/O Virtualization */
+ 	pci_iov_init(dev);
+ 
++	/* Address Translation Services */
++	pci_ats_init(dev);
++
+ 	/* Enable ACS P2P upstream forwarding */
+ 	pci_enable_acs(dev);
+ }
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8a280e9..27617b8 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -26,6 +26,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 		dev->is_added = 0;
+ 	}
+ 
++	pci_ats_free(dev);
+ 	if (dev->bus->self)
+ 		pcie_aspm_exit_link_state(dev);
+ }
+diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+index 7203178..e2dcc2f 100644
+--- a/include/linux/pci-ats.h
++++ b/include/linux/pci-ats.h
+@@ -8,7 +8,7 @@ struct pci_ats {
+ 	int pos;        /* capability position */
+ 	int stu;        /* Smallest Translation Unit */
+ 	int qdep;       /* Invalidate Queue Depth */
+-	int ref_cnt;    /* Physical Function reference count */
++	atomic_t ref_cnt; /* number of VFs with ATS enabled */
+ 	unsigned int is_enabled:1;      /* Enable bit is set */
+ };
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a..1817819 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1294,6 +1294,15 @@ int  ht_create_irq(struct pci_dev *dev, int idx);
+ void ht_destroy_irq(unsigned int irq);
+ #endif /* CONFIG_HT_IRQ */
+ 
++#ifdef CONFIG_PCI_ATS
++/* Address Translation Service */
++void pci_ats_init(struct pci_dev *dev);
++void pci_ats_free(struct pci_dev *dev);
++#else
++static inline void pci_ats_init(struct pci_dev *dev) { }
++static inline void pci_ats_free(struct pci_dev *dev) { }
++#endif
++
+ void pci_cfg_access_lock(struct pci_dev *dev);
+ bool pci_cfg_access_trylock(struct pci_dev *dev);
+ void pci_cfg_access_unlock(struct pci_dev *dev);
+
