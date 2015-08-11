@@ -1,121 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/5] gic-its: Allow pci_requester_id to be overridden.
-To: Pavel Fedin <p.fedin@samsung.com>,
-	'David Daney' <ddaney.cavm@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	'Catalin Marinas' <catalin.marinas@arm.com>,
-	'Will Deacon' <will.deacon@arm.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	'Thomas Gleixner' <tglx@linutronix.de>,
-	'Jason Cooper' <jason@lakedaemon.net>
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
- <1436979285-8177-3-git-send-email-ddaney.cavm@gmail.com>
- <01a101d0db52$2d23b360$876b1a20$@samsung.com>
-CC: <linux-kernel@vger.kernel.org>,
-	'Robert Richter' <rrichter@cavium.com>,
-	'David Daney' <david.daney@cavium.com>
-From: David Daney <ddaney@caviumnetworks.com>
-Message-ID: <55D5F0E1.30702@caviumnetworks.com>
-Date: Thu, 20 Aug 2015 08:23:13 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36132 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933181AbbHKCul (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 22:50:41 -0400
+Received: by pacrr5 with SMTP id rr5so116659516pac.3
+        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 19:50:40 -0700 (PDT)
+Subject: Re: [PATCH v6 18/42] powerpc/powernv: Allocate PE# in deasending
+ order
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-19-git-send-email-gwshan@linux.vnet.ibm.com>
+ <55C8B786.1050702@ozlabs.ru> <20150811004339.GC18981@gwshan>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <55C962F9.2080105@ozlabs.ru>
+Date: Tue, 11 Aug 2015 12:50:33 +1000
 MIME-Version: 1.0
-In-Reply-To: <01a101d0db52$2d23b360$876b1a20$@samsung.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20150811004339.GC18981@gwshan>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/20/2015 07:11 AM, Pavel Fedin wrote:
+On 08/11/2015 10:43 AM, Gavin Shan wrote:
+> On Tue, Aug 11, 2015 at 12:39:02AM +1000, Alexey Kardashevskiy wrote:
+>> On 08/06/2015 02:11 PM, Gavin Shan wrote:
+>>> The available PE#, represented by a bitmap in the PHB, is allocated
+>>> in ascending order.
+>>
+>> Available PE# is available exactly because it is not allocated ;)
+>>
 >
->   Hello!
+> Yeah, will correct it.
 >
->> -----Original Message-----
->> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of David
->> Daney
->> Sent: Wednesday, July 15, 2015 7:55 PM
->> To: linux-arm-kernel@lists.infradead.org; Catalin Marinas; Will Deacon; Bjorn Helgaas; linux-
->> pci@vger.kernel.org; Thomas Gleixner; Jason Cooper
->> Cc: linux-kernel@vger.kernel.org; Robert Richter; David Daney
->> Subject: [PATCH 2/5] gic-its: Allow pci_requester_id to be overridden.
+>>> It conflicts with the fact that M64 segments are
+>>> assigned in same order. In order to avoid the conflict, the patch
+>>> allocates PE# in descending order.
 >>
->> From: David Daney <david.daney@cavium.com>
+>> What kind of conflict?
 >>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->> ---
->>   drivers/irqchip/irq-gic-v3-its.c   | 14 +++++++++++++-
->>   include/linux/irqchip/arm-gic-v3.h |  2 ++
->>   2 files changed, 15 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
->> index 1b7e155..4580970 100644
->> --- a/drivers/irqchip/irq-gic-v3-its.c
->> +++ b/drivers/irqchip/irq-gic-v3-its.c
->> @@ -1189,11 +1189,23 @@ static int its_pci_msi_vec_count(struct pci_dev *pdev)
->>   	return max(msi, msix);
->>   }
->>
->> +static u32 its_dflt_pci_requester_id(struct pci_dev *pdev, u16 alias)
->> +{
->> +	return alias;
->> +}
->> +
->> +static its_pci_requester_id_t its_pci_requester_id = its_dflt_pci_requester_id;
->> +void set_its_pci_requester_id(its_pci_requester_id_t fn)
->> +{
->> +	its_pci_requester_id = fn;
->> +}
->> +EXPORT_SYMBOL(set_its_pci_requester_id);
 >
->   IMHO having a globally defined function is a horrible approach. What if some HW has two different
-> PCI host controllers, each of them wants to provide different form of IDs? I know, this is just
-> imaginary, but still...
-
-It is not imaginary, such systems exist.
-
->   What if instead of this function we simply add a field to a struct pci_bus ? Then bus driver would
-> fill in HW-specific ID bits for every bus.
->   I can send a patch if interested.
-
-There is a lot of work being done in the upstream to extract the proper 
-information from the device tree.  We are going to piggyback on that for 
-the next versions of the patch.
-
-ACPI will have to be made to work as well.
-
-David Daney
+> On PHB3, the M64 segment is assigned to one PE whose PE number is
+> determined. M64 segment are allocated in ascending order. It's why
+> I would like to allocate PE# in deascending order.
 
 
+ From previous lessons, I thought M64 segment number is PE# number as well :-/
+Seems this is not the case, so what does store this seg#<->PE# mapping in PHB?
 
 
 >
->> +
->>   static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
->>   {
->>   	struct its_pci_alias *dev_alias = data;
+>>>
+>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> ---
+>>>   arch/powerpc/platforms/powernv/pci-ioda.c | 11 ++++++++---
+>>>   1 file changed, 8 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> index 56b058c..1c950e8 100644
+>>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> @@ -161,13 +161,18 @@ static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>>   static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>>   {
+>>>   	unsigned long pe;
+>>> +	unsigned long limit = phb->ioda.total_pe_num - 1;
+>>>
+>>>   	do {
+>>>   		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+>>> -					phb->ioda.total_pe_num, 0);
+>>> -		if (pe >= phb->ioda.total_pe_num)
+>>> +					phb->ioda.total_pe_num, limit);
+>>> +		if (pe < phb->ioda.total_pe_num &&
+>>> +		    !test_and_set_bit(pe, phb->ioda.pe_alloc))
+>>> +			break;
+>>> +
+>>> +		if (--limit >= phb->ioda.total_pe_num)
+>>>   			return NULL;
+>>> -	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+>>> +	} while (1);
 >>
->> -	dev_alias->dev_id = alias;
->> +	dev_alias->dev_id = its_pci_requester_id(pdev, alias);
->>   	if (pdev != dev_alias->pdev)
->>   		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
 >>
->> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
->> index ffbc034..18e3757 100644
->> --- a/include/linux/irqchip/arm-gic-v3.h
->> +++ b/include/linux/irqchip/arm-gic-v3.h
->> @@ -389,6 +389,8 @@ int its_cpu_init(void);
->>   int its_init(struct device_node *node, struct rdists *rdists,
->>   	     struct irq_domain *domain);
+>> Usually, if it is "while(1)", then it is "while(1){}" rather than
+>> "do{}while(1)" :)
+>
+> Agree, will change it.
+>
 >>
->> +typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
->> +void set_its_pci_requester_id(its_pci_requester_id_t fn);
->>   #endif
 >>
->>   #endif
->> --
+>>>
+>>>   	return pnv_ioda_init_pe(phb, pe);
+>>>   }
+>>>
 >
-> Kind regards,
-> Pavel Fedin
-> Expert Engineer
-> Samsung Electronics Research center Russia
+> Thanks,
+> Gavin
 >
->
->
+
+
+-- 
+Alexey
