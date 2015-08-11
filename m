@@ -1,68 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>
-Subject: [PATCH v4 0/5] Altera PCIe host controller driver with MSI support
-Date: Mon, 17 Aug 2015 17:09:34 +0800
-Message-ID: <1439802579-22651-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:42280 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932864AbbHKAog (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:44:36 -0400
+Received: from /spool/local
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 11 Aug 2015 10:44:33 +1000
+Date: Tue, 11 Aug 2015 10:43:39 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com
+Subject: Re: [PATCH v6 18/42] powerpc/powernv: Allocate PE# in deasending
+ order
+Message-ID: <20150811004339.GC18981@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-19-git-send-email-gwshan@linux.vnet.ibm.com>
+ <55C8B786.1050702@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55C8B786.1050702@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the 4th version of patch set to add support for Altera PCIe host
-controller with MSI feature on Altera FPGA device families. This patchset
-mainly resolve comments from Marc Zyngier in v3.
+On Tue, Aug 11, 2015 at 12:39:02AM +1000, Alexey Kardashevskiy wrote:
+>On 08/06/2015 02:11 PM, Gavin Shan wrote:
+>>The available PE#, represented by a bitmap in the PHB, is allocated
+>>in ascending order.
+>
+>Available PE# is available exactly because it is not allocated ;)
+>
 
-It is based on patch series from Marc Zyngier "Per-device MSI domain &
-platform MSI" [1] to get rid of struct msi_controller.
+Yeah, will correct it.
 
-v3->v4 changes:
-- pcie-altera: change to incremental count for loop
-- pcie-altera: add udelay when polling
-- pcie-altera: return -ENOMEM for irq_domain_add_linear error
-- pcie-altera-msi: add WARN_ON(nr_irq) != 1
-- update error handling for platform_get_resource_byname
+>>It conflicts with the fact that M64 segments are
+>>assigned in same order. In order to avoid the conflict, the patch
+>>allocates PE# in descending order.
+>
+>What kind of conflict?
+>
 
-History:
--------
-[v1]: https://lkml.org/lkml/2015/7/28/395
-[v2]: https://lkml.org/lkml/2015/7/31/267
-[v3]: http://www.kernelhub.org/?msg=811940&p=2
+On PHB3, the M64 segment is assigned to one PE whose PE number is
+determined. M64 segment are allocated in ascending order. It's why
+I would like to allocate PE# in deascending order.
 
-Ley Foon Tan (5):
-  arm: add msi.h to Kbuild
-  pci:host: Add Altera PCIe host controller driver
-  pci: altera: Add Altera PCIe MSI driver
-  Documentation: dt-bindings: pci: altera pcie device tree binding
-  MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 11 ++++++++---
+>>  1 file changed, 8 insertions(+), 3 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 56b058c..1c950e8 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -161,13 +161,18 @@ static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>  static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>  {
+>>  	unsigned long pe;
+>>+	unsigned long limit = phb->ioda.total_pe_num - 1;
+>>
+>>  	do {
+>>  		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+>>-					phb->ioda.total_pe_num, 0);
+>>-		if (pe >= phb->ioda.total_pe_num)
+>>+					phb->ioda.total_pe_num, limit);
+>>+		if (pe < phb->ioda.total_pe_num &&
+>>+		    !test_and_set_bit(pe, phb->ioda.pe_alloc))
+>>+			break;
+>>+
+>>+		if (--limit >= phb->ioda.total_pe_num)
+>>  			return NULL;
+>>-	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+>>+	} while (1);
+>
+>
+>Usually, if it is "while(1)", then it is "while(1){}" rather than
+>"do{}while(1)" :)
 
- .../devicetree/bindings/pci/altera-pcie-msi.txt    |  27 +
- .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
- MAINTAINERS                                        |  16 +
- arch/arm/include/asm/Kbuild                        |   1 +
- drivers/pci/host/Kconfig                           |  15 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pcie-altera-msi.c                 | 322 ++++++++++++
- drivers/pci/host/pcie-altera.c                     | 543 +++++++++++++++++++++
- 8 files changed, 975 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
- create mode 100644 drivers/pci/host/pcie-altera.c
+Agree, will change it.
 
--- 
-1.8.2.1
+>
+>
+>>
+>>  	return pnv_ioda_init_pe(phb, pe);
+>>  }
+>>
+
+Thanks,
+Gavin
 
