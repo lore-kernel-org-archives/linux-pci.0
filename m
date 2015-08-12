@@ -1,240 +1,313 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33260 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755121AbbHKIEF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 04:04:05 -0400
-Received: by pabyb7 with SMTP id yb7so124976441pab.0
-        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 01:04:04 -0700 (PDT)
-Date: Tue, 11 Aug 2015 16:03:52 +0800
-From: Kevin Hao <haokexin@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH 1/4] PCI: imx6: Mark the msi cascade handler
- IRQF_NO_THREAD
-Message-ID: <20150811080352.GB30310@pek-khao-d1.corp.ad.wrs.com>
-References: <1437715776-2243-1-git-send-email-haokexin@gmail.com>
- <1437715776-2243-2-git-send-email-haokexin@gmail.com>
- <20150810232615.GD13982@google.com>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:35413 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753675AbbHLKwy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 06:52:54 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 12 Aug 2015 20:52:52 +1000
+Date: Wed, 12 Aug 2015 20:45:02 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com
+Subject: Re: [PATCH v6 05/42] powerpc/powernv: Track IO/M32/M64 segments from
+ PE
+Message-ID: <20150812104502.GB7690@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-6-git-send-email-gwshan@linux.vnet.ibm.com>
+ <55C84FD8.302@ozlabs.ru>
+ <20150811000342.GB10753@gwshan>
+ <55C95CAE.1090908@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="MfFXiAuoTsnnDAfZ"
-In-Reply-To: <20150810232615.GD13982@google.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55C95CAE.1090908@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Aug 11, 2015 at 12:23:42PM +1000, Alexey Kardashevskiy wrote:
+>On 08/11/2015 10:03 AM, Gavin Shan wrote:
+>>On Mon, Aug 10, 2015 at 05:16:40PM +1000, Alexey Kardashevskiy wrote:
+>>>On 08/06/2015 02:11 PM, Gavin Shan wrote:
+>>>>The patch is adding 6 bitmaps, three to PE and three to PHB, to track
+>>>
+>>>The patch is also removing 2 arrays (io_segmap and m32_segmap), what is that
+>>>all about? Also, there was no m64_segmap, now there is, needs an explanation
+>>>may be.
+>>>
+>>
+>>Originally, the bitmaps (io_segmap and m32_segmap) are allocated dynamically.
+>>Now, they have fixed sizes - 512 bits.
+>>
+>>The subject "powerpc/powernv: Track IO/M32/M64 segments from PE" indicates
+>>why m64_segmap is added.
+>
+>
+>But before this patch, you somehow managed to keep it working without a map
+>for M64, by the same time you needed map for IO and M32. It seems you are
+>making things consistent in this patch but it also feels like you do not have
+>to do so as M64 did not need a map before and I cannot see why it needs one
+>now.
+>
 
---MfFXiAuoTsnnDAfZ
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The M64 map is used by [PATCH v6 23/42] powerpc/powernv: Release PEs dynamically
+where the M64 segments consumed by one particular PE will be released.
 
-On Mon, Aug 10, 2015 at 06:26:15PM -0500, Bjorn Helgaas wrote:
-> [+cc Thomas]
->=20
-> On Fri, Jul 24, 2015 at 01:29:33PM +0800, Kevin Hao wrote:
-> > The cascade handler must run in hard interrupt context, otherwise
-> > it will cause the following kernel warning if we force threading
-> > of all the interrupt handlers via kernel command parameter
-> > "threadirqs":
->=20
-> I guess imx6_pcie_msi_handler() is the cascade handler?
+>>>
+>>>>the consumed by one particular PE, which can be released once the PE
+>>>>is destroyed during PCI unplugging time. Also, we're using fixed
+>>>>quantity of bits to trace the used IO, M32 and M64 segments by PEs
+>>>>in one particular PHB.
+>>>>
+>>>
+>>>Out of curiosity - have you considered having just 3 arrays, in PHB, storing
+>>>PE numbers, and ditching PE's arrays? Does PE itself need to know what PEs it
+>>>is using? Not sure about this master/slave PEs though.
+>>>
+>>
+>>I don't follow your suggestion. Can you rephrase and explain it a bit more?
+>
+>
+>Please explains in what situations you need same map in both PHB and PE and
+>how you are going to use them. For example, pe::m64_segmap and
+>phb::m64_segmap.
+>
+>I believe you need to know what segment is used by what PE and that's it and
+>having 2 bitmaps is overcomplicated hard to follow. Is there anything else
+>what I am missing?
+>
 
-Yes.
+The situation is same to all (IO, M32 and M64) segment maps. Taking m64_segmap
+as an example, it will be used when creating or destroying the PE who consumes
+M64 segments. phb::m64_segmap is recording the M64 segment usage in PHB's domain.
+It's used to check same M64 segment won't be used for towice. pe::m64_segmap tracks
+the M64 segments consumed by the PE.
 
->  What makes it
-> special so that it needs IRQF_NO_THREAD?
+>>>It would be easier to read patches if this one was right before
+>>>[PATCH v6 23/42] powerpc/powernv: Release PEs dynamically
+>>>
+>>
+>>I'll try to reoder the patch, but not expect too much...
+>>
+>>>
+>>>
+>>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>>---
+>>>>  arch/powerpc/platforms/powernv/pci-ioda.c | 29 +++++++++++++++--------------
+>>>>  arch/powerpc/platforms/powernv/pci.h      | 18 ++++++++++++++----
+>>>>  2 files changed, 29 insertions(+), 18 deletions(-)
+>>>>
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>index e4ac703..78b49a1 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>@@ -388,6 +388,12 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>>>  			list_add_tail(&pe->list, &master_pe->slaves);
+>>>>  		}
+>>>>
+>>>>+		/* M64 segments consumed by slave PEs are tracked
+>>>>+		 * by master PE
+>>>>+		 */
+>>>>+		set_bit(pe->pe_number, master_pe->m64_segmap);
+>>>>+		set_bit(pe->pe_number, phb->ioda.m64_segmap);
+>>>>+
+>>>>  		/* P7IOC supports M64DT, which helps mapping M64 segment
+>>>>  		 * to one particular PE#. However, PHB3 has fixed mapping
+>>>>  		 * between M64 segment and PE#. In order to have same logic
+>>>>@@ -2871,9 +2877,11 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>>>
+>>>>  			while (index < phb->ioda.total_pe &&
+>>>>  			       region.start <= region.end) {
+>>>>-				phb->ioda.io_segmap[index] = pe->pe_number;
+>>>>+				set_bit(index, pe->io_segmap);
+>>>>+				set_bit(index, phb->ioda.io_segmap);
+>>>>  				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>>>-					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
+>>>>+					pe->pe_number, OPAL_IO_WINDOW_TYPE,
+>>>>+					0, index);
+>>>
+>>>Unrelated change.
+>>>
+>>
+>>True, will drop. However, checkpatch.pl will complain wtih:
+>>exceeding 80 characters.
+>
+>It will not as you are not changing these lines, it only complains on changes.
+>
+>
+>
+>>
+>>>>  				if (rc != OPAL_SUCCESS) {
+>>>>  					pr_err("%s: OPAL error %d when mapping IO "
+>>>>  					       "segment #%d to PE#%d\n",
+>>>>@@ -2896,9 +2904,11 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>>>>
+>>>>  			while (index < phb->ioda.total_pe &&
+>>>>  			       region.start <= region.end) {
+>>>>-				phb->ioda.m32_segmap[index] = pe->pe_number;
+>>>>+				set_bit(index, pe->m32_segmap);
+>>>>+				set_bit(index, phb->ioda.m32_segmap);
+>>>>  				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>>>-					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
+>>>>+					pe->pe_number, OPAL_M32_WINDOW_TYPE,
+>>>>+					0, index);
+>>>
+>>>Unrelated change.
+>>>
+>>
+>>same as above.
+>>
+>>>>  				if (rc != OPAL_SUCCESS) {
+>>>>  					pr_err("%s: OPAL error %d when mapping M32 "
+>>>>  					       "segment#%d to PE#%d",
+>>>>@@ -3090,7 +3100,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>>>  {
+>>>>  	struct pci_controller *hose;
+>>>>  	struct pnv_phb *phb;
+>>>>-	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
+>>>>+	unsigned long size, pemap_off;
+>>>>  	const __be64 *prop64;
+>>>>  	const __be32 *prop32;
+>>>>  	int len;
+>>>>@@ -3175,19 +3185,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>>>
+>>>>  	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
+>>>
+>>>
+>>>This comment came with if(IODA1) below, since you are removing the condition
+>>>below, makes sense to remove the comment as well or move it where people will
+>>>look for it (arch/powerpc/platforms/powernv/pci.h ?)
+>>>
+>>
+>>Yes, will do.
+>>
+>>>
+>>>>  	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
+>>>>-	m32map_off = size;
+>>>>-	size += phb->ioda.total_pe * sizeof(phb->ioda.m32_segmap[0]);
+>>>>-	if (phb->type == PNV_PHB_IODA1) {
+>>>>-		iomap_off = size;
+>>>>-		size += phb->ioda.total_pe * sizeof(phb->ioda.io_segmap[0]);
+>>>>-	}
+>>>>  	pemap_off = size;
+>>>>  	size += phb->ioda.total_pe * sizeof(struct pnv_ioda_pe);
+>>>>  	aux = memblock_virt_alloc(size, 0);
+>>>
+>>>
+>>>After adding static arrays to PE and PHB, do you still need this "aux"?
+>>>
+>>
+>>"aux" is still needed to tell the boundary of pe_alloc_bitmap and pe_array.
+>>>
+>>>>  	phb->ioda.pe_alloc = aux;
+>>>>-	phb->ioda.m32_segmap = aux + m32map_off;
+>>>>-	if (phb->type == PNV_PHB_IODA1)
+>>>>-		phb->ioda.io_segmap = aux + iomap_off;
+>>>>  	phb->ioda.pe_array = aux + pemap_off;
+>>>>  	set_bit(phb->ioda.reserved_pe, phb->ioda.pe_alloc);
+>>>>
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>>>index 62239b1..08a4e57 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>>>@@ -49,6 +49,15 @@ struct pnv_ioda_pe {
+>>>>  	/* PE number */
+>>>>  	unsigned int		pe_number;
+>>>>
+>>>>+	/* IO/M32/M64 segments consumed by the PE. Each PE can
+>>>>+	 * have one M64 segment at most, but M64 segments consumed
+>>>>+	 * by slave PEs will be contributed to the master PE. One
+>>>>+	 * PE can own multiple IO and M32 segments.
+>>>
+>>>
+>>>A PE can have multiple IO and M32 segments but just one M64 segment? Is this
+>>>correct for IODA1 or IODA2 or both? Is this a limitation of this
+>>>implementation or it comes from P7IOC/PHB3 hardware?
+>>>
+>>
+>>It's correct for IO and M32. However, on IODA1 or IODA2, one PE can have
+>>multiple M64 segments as well.
+>
+>
+>But the comment says "Each PE can have one M64 segment at most". Which
+>statement is correct?
+>
 
-Because it will cascade into another irq primary handler (PCIe device irq
-handler in this case). The irq primary handler must run in hard irq
-context. But if imx6_pcie_msi_handler() run in a thread context, it
-will cause the PCIe device primary irq handler also run in the same
-thread context. That is why we get the kernel warning.
+The comment is correct regarding PHB's 15th M64 BAR: Each PE can have one
+M64 segment at post. It's from hardware limitation. However, once one PE
+consumes multiple M64 segments. all those M64 segments will be tracked in
+"master" PE and it's determined by software implementation.
 
->  I'm not doubting you; it's
-> just that it's a very simple handler with no obvious clue that it
-> needs anything special:
->=20
->   static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
->   {
->     struct pcie_port *pp =3D arg;
->=20
->     return dw_handle_msi_irq(pp);
->   }
->=20
-> So I guess whatever is special must be in dw_handle_msi_irq().  Is it
-> because dw_handle_msi_irq() calls generic_handle_irq()?
+>>>>+	 */
+>>>>+	unsigned long		io_segmap[8];
+>>>>+	unsigned long		m32_segmap[8];
+>>>>+	unsigned long		m64_segmap[8];
+>>>
+>>>Magic constant "8", 64bit*8 = 512 PEs - where did this come from?
+>>>
+>>>Anyway,
+>>>
+>>>#define PNV_IODA_MAX_PE_NUM	512
+>>>
+>>>unsigned long io_segmap[PNV_IODA_MAX_PE_NUM/BITS_PER_LONG]
+>>>
+>>
+>>I prefer "8", not macro for 3 reasons:
+>>- The macro won't be used in the code.
+>
+>You will use it 6 times in the header, if you give it a good name, people
+>won't have to guess if the meaning of all these "8"s is the same and you
+>won't have to comment every use of it in this header file (now you have).
+>
+>Also, using BITS_PER_LONG tells the reader that this is a bitmask for sure.
+>
+>
+>>- The total segment number of specific resource is variable
+>>   on IODA1 and IODA2. I just choosed the max value with margin.
+>>- PNV_IODA_MAX_PE_NUM, indicating max PE number, isn't 512 on
+>>   IODA1 or IODA2.
+>
+>Give it a better name.
+>
 
-Yes.
+Ok. It it has to be a macro, then it's as below:
 
->=20
-> I notice that several other users of generic_handle_irq() are
-> registered via irq_set_chained_handler_and_data() instead of
-> devm_request_irq().  Should we be using that here, too?
+#define PNV_IODA_MAX_SEG_NUM	512
 
-I know that irq_set_chained_handler_and_data() is used by many drivers
-when setting a cascade handler e.g. gpio and msi. But as you can see,
-the imx driver (the same for dra7xx, exynos and spear) does set IRQF_SHARED
-when requesting irq. This flag implies that this irq may be shared with
-other device or function and irq_set_chained_handler_and_data() definitely
-should not be used for a situation like this. Of course this maybe just a
-paste error, but I am not sure about this. So I choose to still use
-devm_request_irq(). There are other pros when using devm_request_irq() here
-such as:
-  * simple error and exit path
-  * kstats update
-
->=20
-> There are similar one-line patches for dra7xx, exynos, and spear.  I
-> would squash all of them into a single patch, since the change is so
-> trivial.  Then all of them would benefit from the detailed changelog
-> here.
-
-OK.
+>
+>>
+>>>>+
+>>>>  	/* "Weight" assigned to the PE for the sake of DMA resource
+>>>>  	 * allocations
+>>>>  	 */
+>>>>@@ -145,15 +154,16 @@ struct pnv_phb {
+>>>>  			unsigned int		io_segsize;
+>>>>  			unsigned int		io_pci_base;
+>>>>
+>>>>+			/* IO, M32, M64 segment maps */
+>>>>+			unsigned long		io_segmap[8];
+>>>>+			unsigned long		m32_segmap[8];
+>>>>+			unsigned long		m64_segmap[8];
+>>>>+
+>>>>  			/* PE allocation */
+>>>>  			struct mutex		pe_alloc_mutex;
+>>>>  			unsigned long		*pe_alloc;
+>>>>  			struct pnv_ioda_pe	*pe_array;
+>>>>
+>>>>-			/* M32 & IO segment maps */
+>>>>-			unsigned int		*m32_segmap;
+>>>>-			unsigned int		*io_segmap;
+>>>>-
+>>>>  			/* IRQ chip */
+>>>>  			int			irq_chip_init;
+>>>>  			struct irq_chip		irq_chip;
+>>>>
 
 Thanks,
-Kevin
+Gavin
 
->=20
-> >    [ INFO: inconsistent lock state ]
-> >    4.2.0-rc3-next-20150723 #28 Not tainted
-> >    ---------------------------------
-> >    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
-> >    irq/21-mx6-pcie/62 [HC0[0]:SC0[2]:HE1:SE0] takes:
-> >     (&irq_desc_lock_class){?.-...}, at: [<80078d94>] handle_simple_irq+=
-0x1c/0xc0
-> >    {IN-HARDIRQ-W} state was registered at:
-> >      [<8006aa70>] lock_acquire+0x74/0x94
-> >      [<807acc6c>] _raw_spin_lock+0x34/0x44
-> >      [<8007900c>] handle_fasteoi_irq+0x20/0x1b8
-> >      [<80075720>] generic_handle_irq+0x28/0x38
-> >      [<80075864>] __handle_domain_irq+0x6c/0xe0
-> >      [<80009558>] gic_handle_irq+0x28/0x68
-> >      [<80013b64>] __irq_svc+0x44/0x5c
-> >      [<807ad400>] _raw_spin_unlock_irq+0x30/0x34
-> >      [<8004cffc>] finish_task_switch+0xc0/0x218
-> >      [<807a7a10>] __schedule+0x248/0x6e0
-> >      [<807a7fac>] schedule+0x38/0x9c
-> >      [<807a8240>] schedule_preempt_disabled+0x10/0x14
-> >      [<80063f8c>] cpu_startup_entry+0xfc/0x1f8
-> >      [<8079f640>] rest_init+0x130/0x16c
-> >      [<80a55ca4>] start_kernel+0x374/0x3e8
-> >      [<1000807c>] 0x1000807c
-> >    irq event stamp: 16
-> >    hardirqs last  enabled at (15): [<807ad3fc>] _raw_spin_unlock_irq+0x=
-2c/0x34
-> >    hardirqs last disabled at (14): [<807acd80>] _raw_spin_lock_irq+0x20=
-/0x58
-> >    softirqs last  enabled at (0): [<800283d8>] copy_process.isra.58+0x3=
-bc/0x1504
-> >    softirqs last disabled at (16): [<80076f08>] irq_forced_thread_fn+0x=
-0/0x68
-> >=20
-> >    other info that might help us debug this:
-> >     Possible unsafe locking scenario:
-> >=20
-> >           CPU0
-> >           ----
-> >      lock(&irq_desc_lock_class);
-> >      <Interrupt>
-> >        lock(&irq_desc_lock_class);
-> >=20
-> >     *** DEADLOCK ***
-> >=20
-> >    no locks held by irq/21-mx6-pcie/62.
-> >=20
-> >    stack backtrace:
-> >    CPU: 0 PID: 62 Comm: irq/21-mx6-pcie Not tainted 4.2.0-rc3-next-2015=
-0723 #28
-> >    Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
-> >    Backtrace:
-> >    [<80012dc4>] (dump_backtrace) from [<80012f64>] (show_stack+0x18/0x1=
-c)
-> >     r6:be3eeb78 r5:00000000 r4:00000000 r3:00000000
-> >    [<80012f4c>] (show_stack) from [<807a4b50>] (dump_stack+0x80/0x9c)
-> >    [<807a4ad0>] (dump_stack) from [<807a2efc>] (print_usage_bug+0x270/0=
-x2e4)
-> >     r5:be3ee780 r4:80c579ec
-> >    [<807a2c8c>] (print_usage_bug) from [<8006874c>] (mark_lock+0x5b4/0x=
-6e0)
-> >     r10:80c579ec r9:800678e0 r8:be3ee780 r7:00000000 r6:80c579ec r5:be3=
-eeb78
-> >     r4:00000002
-> >    [<80068198>] (mark_lock) from [<80068f70>] (__lock_acquire+0x6f8/0x1=
-e20)
-> >     r10:00000001 r9:be3eeb78 r8:be3ee780 r7:00000008 r6:000003f8 r5:be3=
-ee780
-> >     r4:00000000
-> >    [<80068878>] (__lock_acquire) from [<8006aa70>] (lock_acquire+0x74/0=
-x94)
-> >     r10:00000001 r9:00000001 r8:00000000 r7:00000001 r6:00000001 r5:600=
-30013
-> >     r4:00000000
-> >    [<8006a9fc>] (lock_acquire) from [<807acc6c>] (_raw_spin_lock+0x34/0=
-x44)
-> >     r6:0000012c r5:00000001 r4:be1f4d64
-> >    [<807acc38>] (_raw_spin_lock) from [<80078d94>] (handle_simple_irq+0=
-x1c/0xc0)
-> >     r5:be1f4d64 r4:be1f4d00
-> >    [<80078d78>] (handle_simple_irq) from [<80075720>] (generic_handle_i=
-rq+0x28/0x38)
-> >     r5:be28ee20 r4:0000012c
-> >    [<800756f8>] (generic_handle_irq) from [<80321914>] (dw_handle_msi_i=
-rq+0x68/0x90)
-> >     r4:00000001 r3:00000002
-> >    [<803218ac>] (dw_handle_msi_irq) from [<8032265c>] (imx6_pcie_msi_ha=
-ndler+0x14/0x18)
-> >     r7:80076f08 r6:be39efc0 r5:be154000 r4:be39efc0
-> >    [<80322648>] (imx6_pcie_msi_handler) from [<80076f38>] (irq_forced_t=
-hread_fn+0x30/0x68)
-> >    [<80076f08>] (irq_forced_thread_fn) from [<80076cb4>] (irq_thread+0x=
-14c/0x19c)
-> >     r6:be39efc0 r5:be154000 r4:be39efe0 r3:00000004
-> >    [<80076b68>] (irq_thread) from [<80047f80>] (kthread+0xdc/0xf8)
-> >     r10:00000000 r9:00000000 r8:00000000 r7:80076b68 r6:be39efc0 r5:be3=
-a1000
-> >     r4:00000000
-> >    [<80047ea4>] (kthread) from [<8000fa38>] (ret_from_fork+0x14/0x3c)
-> >     r7:00000000 r6:00000000 r5:80047ea4 r4:be3a1000
-> >=20
-> > Signed-off-by: Kevin Hao <haokexin@gmail.com>
-> > ---
-> >  drivers/pci/host/pci-imx6.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> >=20
-> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > index 233a196c6e66..fd5eb2e34fc0 100644
-> > --- a/drivers/pci/host/pci-imx6.c
-> > +++ b/drivers/pci/host/pci-imx6.c
-> > @@ -544,7 +544,8 @@ static int __init imx6_add_pcie_port(struct pcie_po=
-rt *pp,
-> > =20
-> >  		ret =3D devm_request_irq(&pdev->dev, pp->msi_irq,
-> >  				       imx6_pcie_msi_handler,
-> > -				       IRQF_SHARED, "mx6-pcie-msi", pp);
-> > +				       IRQF_SHARED | IRQF_NO_THREAD,
-> > +				       "mx6-pcie-msi", pp);
-> >  		if (ret) {
-> >  			dev_err(&pdev->dev, "failed to request MSI irq\n");
-> >  			return -ENODEV;
-> > --=20
-> > 2.1.0
-> >=20
-
---MfFXiAuoTsnnDAfZ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJVyaxoAAoJEJNY7TDerrFxQa4H/0MNWzN1qK2WPlkaRXLszk+H
-+irnHnSJ62kiFtYBxHJ7Uk9438+xdG2Z6621pRx8kXj0KpCfR9vIKYOBgeQVt8Oo
-Pb16oFBHZEYzoJqgnIOBR+5kyfrBWlGwYQTFVUqmaSpp60CLDcQXqvwql+pzC3de
-JW09AiGuyfdkehwgGhJAZQzMNvGlTfX2VOhoqw4zoMTxvEWP4kDjW1097UIgMZFr
-3YnTRwhwQL+B9gkPydFaS3TmrDGhQ8Eiw1cd/sK2HssWoWKMFK308sObA9PX0uum
-LvabAXYud4ZqtkwOXVR50v9p/tp4900Y78pSm6Di5AmdGEPSwE8j8LpHzmBmz5w=
-=i8NZ
------END PGP SIGNATURE-----
-
---MfFXiAuoTsnnDAfZ--
