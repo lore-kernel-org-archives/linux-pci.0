@@ -1,109 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:35077 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbbHNU0m (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 16:26:42 -0400
-Received: by wicne3 with SMTP id ne3so28583257wic.0
-        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2015 13:26:41 -0700 (PDT)
+Received: from casper.infradead.org ([85.118.1.10]:52269 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751259AbbHLSFk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 14:05:40 -0400
+Subject: Re: linux-next: Tree for Aug 12 (include/linux/pci.h)
+To: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org
+References: <20150812233914.451d1fcf@canb.auug.org.au>
+Cc: linux-kernel@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <55CB8AF0.4060905@infradead.org>
+Date: Wed, 12 Aug 2015 11:05:36 -0700
 MIME-Version: 1.0
-In-Reply-To: <20150814164324.GC22809@arm.com>
-References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
- <1439569159-10051-3-git-send-email-marc.zyngier@arm.com> <20150814164051.GF26431@google.com>
- <20150814164324.GC22809@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Aug 2015 15:26:21 -0500
-Message-ID: <CAErSpo5abs2Qj25Bs+JVg87ve346f_RVz7jhNwqdv856+WvXQA@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] PCI: pci-host-generic: Fix lookup of
- linux,pci-probe-only property
-To: Will Deacon <will.deacon@arm.com>
-Cc: Marc Zyngier <Marc.Zyngier@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"agraf@suse.de" <agraf@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+In-Reply-To: <20150812233914.451d1fcf@canb.auug.org.au>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 14, 2015 at 11:43 AM, Will Deacon <will.deacon@arm.com> wrote:
-> On Fri, Aug 14, 2015 at 05:40:51PM +0100, Bjorn Helgaas wrote:
->> On Fri, Aug 14, 2015 at 05:19:17PM +0100, Marc Zyngier wrote:
->> > When pci-host-generic looks for the probe-only property, it seems
->> > to trust the DT to be correctly written, and assumes that there
->> > is a parameter to the property.
->> >
->> > Unfortunately, this is not always the case, and some firmware expose
->> > this property naked. The driver ends up making a decision based on
->> > whatever the property pointer points to, which is likely to be junk.
->> >
->> > Switch to the common of_pci.c implementation that doesn't suffer
->> > from this problem.
->> >
->> > Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->> > ---
->> >  drivers/pci/host/pci-host-generic.c | 9 +--------
->> >  1 file changed, 1 insertion(+), 8 deletions(-)
->> >
->> > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
->> > index 265dd25..545ff4e 100644
->> > --- a/drivers/pci/host/pci-host-generic.c
->> > +++ b/drivers/pci/host/pci-host-generic.c
->> > @@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
->> >     int err;
->> >     const char *type;
->> >     const struct of_device_id *of_id;
->> > -   const int *prop;
->> >     struct device *dev = &pdev->dev;
->> >     struct device_node *np = dev->of_node;
->> >     struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
->> > @@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->> >             return -EINVAL;
->> >     }
->> >
->> > -   prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
->> > -   if (prop) {
->> > -           if (*prop)
->> > -                   pci_add_flags(PCI_PROBE_ONLY);
->> > -           else
->> > -                   pci_clear_flags(PCI_PROBE_ONLY);
->> > -   }
->> > +   of_pci_check_probe_only(of_chosen);
->>
->> Do we need support for pci-probe-only in pci-host-generic at all?
->> You're removing the use in amd-overdrive.dts, and there are no other
->> DTs in the kernel tree that mention it.
->>
->> If we can live without it, that would be nice.  It seems like a relic from
->> days when we couldn't reliably assign resources.  (I'm not saying we can do
->> that reliably even today, but I'd rather make it reliable than turn it
->> off.)
->
-> Kvmtool certainly uses it (and generates its own DT, hence why you don't
-> see it in mainline). Not sure about qemu, though.
+On 08/12/15 06:39, Stephen Rothwell wrote:
+> Hi all,
+> 
+> Changes since 20150810:
+> 
 
-Do you know why kvmtool wants probe-only?  Would something break if we
-didn't support probe-only?  I guess we'd be looking for a case where
-Linux assigns resources and that assignment doesn't work with kvmtool?
+on i386 or x86_64:
 
-"pci-probe-only" doesn't appear in qemu
-(git://git.qemu-project.org/qemu.git).  (I guess Alexander confirmed
-that later.)
+Many (repeated) errors like this one:
 
-Alexander wrote:
-> QEMU definitely doesn't do proble-only.
-> Is this driver used on real PPC machines too?
+../include/linux/pci.h:390:12: error: âstruct pci_devâ has no member named âphysfnâ
 
-I think you're asking about pci-host-generic.c, and the answer is
-"no," because pci-host-generic.c currently depends on CONFIG_ARM.
+when CONFIG_PCI_ATS is not enabled.
 
-Bjorn
+
+-- 
+~Randy
