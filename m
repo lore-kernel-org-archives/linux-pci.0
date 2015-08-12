@@ -1,70 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:37509 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752777AbbHRVTT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 17:19:19 -0400
+Received: from mail-la0-f46.google.com ([209.85.215.46]:32812 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753570AbbHLPmD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 11:42:03 -0400
 MIME-Version: 1.0
-In-Reply-To: <20150817225041.GN26431@google.com>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-	<1438039809-24957-2-git-send-email-yinghai@kernel.org>
-	<20150817225041.GN26431@google.com>
-Date: Tue, 18 Aug 2015 14:19:18 -0700
-Message-ID: <CAE9FiQVz1zLTSKX6=LfRxRTTU0VmOzY4DDbn18_ABFsmaTAcHg@mail.gmail.com>
-Subject: Re: [PATCH v3 01/51] PCI: Cleanup res_to_dev_res() printout for addon resources
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+In-Reply-To: <55C44AF2.8040807@hisilicon.com>
+References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+	<1438848559-232109-3-git-send-email-wangzhou1@hisilicon.com>
+	<55C44AF2.8040807@hisilicon.com>
+Date: Wed, 12 Aug 2015 21:12:01 +0530
+Message-ID: <CAHM4w1=s_3A8L+XXyLCoxUphOed13CzShUiWwkK7vv8XJCBgjg@mail.gmail.com>
+Subject: Re: [PATCH v6 2/6] ARM/PCI: remove align_resource in pci_sys_data
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	lorenzo.pieralisi@arm.com, James Morse <james.morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>, robh@kernel.org,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Zhichang Yuan <yuanzhichang@hisilicon.com>,
+	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa@hisilicon.com, liudongdong3@huawei.com,
+	qiujiang@huawei.com, kangfenglong@huawei.com, xuwei5@hisilicon.com,
+	Liguozhu <liguozhu@hisilicon.com>,
+	Jingoo Han <jingoohan1@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 3:50 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jul 27, 2015 at 04:29:19PM -0700, Yinghai Lu wrote:
->> Now get_res_add_size and get_res_add_align all have same printout
->> from res_to_dev_res(), and it is confusing.
->>
->> Move out debug messages printout from res_to_dev_res(),
->> and later we will reuse res_to_dev_res() in other functions.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/setup-bus.c | 34 ++++++++++++++++++++--------------
->>  1 file changed, 20 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 508cc56..f0fa705 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -104,19 +104,9 @@ static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
->>  {
->>       struct pci_dev_resource *dev_res;
->>
->> -     list_for_each_entry(dev_res, head, list) {
->> -             if (dev_res->res == res) {
->> -                     int idx = res - &dev_res->dev->resource[0];
->> -
->> -                     dev_printk(KERN_DEBUG, &dev_res->dev->dev,
->> -                              "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
->> -                              idx, dev_res->res,
->> -                              (unsigned long long)dev_res->add_size,
->> -                              (unsigned long long)dev_res->min_align);
->> -...
-
->> +
->> +     dev_printk(KERN_DEBUG, &dev_res->dev->dev,
->> +                "BAR %d: %pR get_res_add_align min_align %llx\n",
->> +                (int)(res - &dev_res->dev->resource[0]),
->> +                res, (unsigned long long)dev_res->min_align);
+On Fri, Aug 7, 2015 at 11:36 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+> [+cc jingoohan1@gmail.com]
 >
-> Please use %#llx so we have a "0x" prefix like other hex numbers.
->
+> On 2015/8/6 16:09, Zhou Wang wrote:
+>> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>>
+>> This patch is needed in order to unify the PCIe designware framework for ARM and
+>> ARM64 architectures. In the PCIe designware unification process we are calling
+>> pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+>> ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+>> cause a problem with the function pcibios_align_resource(); in fact this will
+>> cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+>> "struct pcie_port*" pointer.
+>>
+>> This patch solves the issue by removing "align_resource" from "pci_sys_data"
+>> struct and defining a static global function pointer in "bios32.c"
+>>
+>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-ok.
-Later i'd like to just kill those debug printout if all get settled
-after this patchset.
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
