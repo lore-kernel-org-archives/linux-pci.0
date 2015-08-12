@@ -1,205 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 34/52] resources: Make allocate_resource() return best fit resource
-Date: Thu, 20 Aug 2015 23:20:49 -0700
-Message-Id: <1440138067-4314-35-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:35322 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbbHLPkX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 11:40:23 -0400
+MIME-Version: 1.0
+In-Reply-To: <55C44A80.20308@hisilicon.com>
+References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+	<1438848559-232109-2-git-send-email-wangzhou1@hisilicon.com>
+	<55C44A80.20308@hisilicon.com>
+Date: Wed, 12 Aug 2015 21:10:20 +0530
+Message-ID: <CAHM4w1muj4+OBcsDQ9ePjV77t+iPh7TYY8h5MF66GjD=2ktRew@mail.gmail.com>
+Subject: Re: [PATCH v6 1/6] PCI: designware: move calculation of bus addresses
+ to DRA7xx
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	lorenzo.pieralisi@arm.com, James Morse <james.morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>, robh@kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Zhichang Yuan <yuanzhichang@hisilicon.com>,
+	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa@hisilicon.com, liudongdong3@huawei.com,
+	qiujiang@huawei.com, kangfenglong@huawei.com, xuwei5@hisilicon.com,
+	Liguozhu <liguozhu@hisilicon.com>,
+	Jingoo Han <jingoohan1@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Find all suitable empty slots and pick one with smallest size, so we could
-save the big slot for needed ones later when we have several pci bridges under
-parent bridge and some bridges get assigned from bios and we need to assign
-others in kernel.
+On Fri, Aug 7, 2015 at 11:34 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+> [+cc jingoohan1@gmail.com]
+>
+> On 2015/8/6 16:09, Zhou Wang wrote:
+>> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>>
+>> Commit f4c55c5a3f7f "PCI: designware: Program ATU with untranslated
+>> address" added the calculation of PCI BUS addresses in designware,
+>> storing them in new fields added in "struct pcie_port". This
+>> calculation is done for every designware user even if is only
+>> applicable to DRA7xx.
+>> This patch moves the calculation of the bus addresses to the DRA7xx
+>> driver and is needed to allow the rework of designware to use
+>> the new DT parsing API.
+>>
+>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 
-For examples: we have window
-[0xc0000000, 0xd0000000), and [0xe0000000,0xe1000000)
 
-and we try allocate 0x200000 size resource.
-
-in this patch will reserve [0xc0000000, 0xd0000000) and
-[0xe0000000,0xe1000000) at first, then pick [0xe0000000,0xe1000000)
-to allocate 0x200000 size.
-
--v2: updated after __allocate_resource change, and add field in constraint
-	instead of passing it directly.
--v3: Use best fit instead of just fit according to Bjorn.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 68 insertions(+), 13 deletions(-)
-
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 67b58a5..697b8ca 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -48,6 +48,7 @@ struct resource_constraint {
- 	resource_size_t (*alignf)(void *, const struct resource *,
- 			resource_size_t, resource_size_t);
- 	void *alignf_data;
-+	bool fit;
- };
- 
- static DEFINE_RWLOCK(resource_lock);
-@@ -554,12 +555,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
-  * alignment constraints
-  */
- static int __find_resource(struct resource *root, struct resource *old,
--			 struct resource *new,
-+			 struct resource *new, struct resource *avail,
- 			 resource_size_t  size,
- 			 struct resource_constraint *constraint)
- {
- 	struct resource *this = root->child;
--	struct resource tmp = *new, avail, alloc;
-+	struct resource tmp = *new, availx, alloc;
-+
-+	if (!avail || avail == new)
-+		avail = &availx;
- 
- 	tmp.start = root->start;
- 	/*
-@@ -583,15 +587,16 @@ static int __find_resource(struct resource *root, struct resource *old,
- 		arch_remove_reservations(&tmp);
- 
- 		/* Check for overflow after ALIGN() */
--		avail.start = ALIGN(tmp.start, constraint->align);
--		avail.end = tmp.end;
--		avail.flags = new->flags & ~IORESOURCE_UNSET;
--		if (avail.start >= tmp.start) {
--			alloc.flags = avail.flags;
--			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
-+		avail->start = ALIGN(tmp.start, constraint->align);
-+		avail->end = tmp.end;
-+		avail->flags = new->flags & ~IORESOURCE_UNSET;
-+		if (avail->start >= tmp.start) {
-+			alloc.flags = avail->flags;
-+			alloc.start = constraint->alignf(
-+					constraint->alignf_data, avail,
- 					size, constraint->align);
- 			alloc.end = alloc.start + size - 1;
--			if (resource_contains(&avail, &alloc)) {
-+			if (resource_contains(avail, &alloc)) {
- 				new->start = alloc.start;
- 				new->end = alloc.end;
- 				return 0;
-@@ -608,6 +613,11 @@ next:		if (!this || this->end == root->end)
- 	return -EBUSY;
- }
- 
-+struct good_resource {
-+	struct list_head list;
-+	struct resource avail;
-+	struct resource new;
-+};
- /*
-  * Find empty slot in the resource tree given range and alignment.
-  */
-@@ -615,7 +625,49 @@ static int find_resource(struct resource *root, struct resource *new,
- 			resource_size_t size,
- 			struct resource_constraint  *constraint)
- {
--	return  __find_resource(root, NULL, new, size, constraint);
-+	int ret = -1;
-+	LIST_HEAD(head);
-+	struct good_resource *good, *tmp;
-+	resource_size_t avail_size = (resource_size_t)-1ULL;
-+
-+	if (!constraint->fit)
-+		return __find_resource(root, NULL, new, NULL, size,
-+					constraint);
-+
-+	/* find all suitable ones and add to the list */
-+	for (;;) {
-+		good = kzalloc(sizeof(*good), GFP_KERNEL);
-+		if (!good)
-+			break;
-+
-+		good->new.start = new->start;
-+		good->new.end = new->end;
-+		good->new.flags = new->flags;
-+		ret = __find_resource(root, NULL, &good->new, &good->avail,
-+					size, constraint);
-+		if (ret || __request_resource(root, &good->avail)) {
-+			ret = -EBUSY;
-+			kfree(good);
-+			break;
-+		}
-+
-+		list_add(&good->list, &head);
-+	}
-+
-+	/* pick up the smallest one and delete the list */
-+	list_for_each_entry_safe(good, tmp, &head, list) {
-+		if (resource_size(&good->avail) < avail_size) {
-+			avail_size = resource_size(&good->avail);
-+			new->start = good->new.start;
-+			new->end = good->new.end;
-+			ret = 0;
-+		}
-+		list_del(&good->list);
-+		__release_resource(&good->avail);
-+		kfree(good);
-+	}
-+
-+	return ret;
- }
- 
- /**
-@@ -636,7 +688,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
- 	struct resource new = *old;
- 	struct resource *conflict;
- 
--	if ((err = __find_resource(root, old, &new, newsize, constraint)))
-+	err = __find_resource(root, old, &new, NULL, newsize, constraint);
-+	if (err)
- 		goto out;
- 
- 	if (resource_contains(&new, old)) {
-@@ -675,6 +728,7 @@ out:
-  * @align: alignment requested, in bytes
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-+ * @fit: only allocate fit range.
-  *
-  * Caller need to hold resource_lock if needed.
-  */
-@@ -685,7 +739,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 						  const struct resource *,
- 						  resource_size_t,
- 						  resource_size_t),
--				void *alignf_data)
-+				void *alignf_data, bool fit)
- {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -698,6 +752,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 	constraint.align = align;
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
-+	constraint.fit = fit;
- 
- 	if (new->parent) {
- 		/* resource is already allocated, try reallocating with
-@@ -738,7 +793,7 @@ int allocate_resource(struct resource *root, struct resource *new,
- 
- 	write_lock(&resource_lock);
- 	ret = __allocate_resource(root, new, size, min, max, align,
--				   alignf, alignf_data);
-+				   alignf, alignf_data, true);
- 	write_unlock(&resource_lock);
- 
- 	return ret;
--- 
-1.8.4.5
-
+Looks fine to me
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
