@@ -1,60 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:34555 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178AbbHCPls (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 11:41:48 -0400
-Received: by wibud3 with SMTP id ud3so141457757wib.1
-        for <linux-pci@vger.kernel.org>; Mon, 03 Aug 2015 08:41:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABLseQ6HhaozD6D0Y-gPpjz1R5Ass_-mumn9jfcWReAVvrdjHQ@mail.gmail.com>
-References: <CABLseQ6HhaozD6D0Y-gPpjz1R5Ass_-mumn9jfcWReAVvrdjHQ@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 3 Aug 2015 10:41:27 -0500
-Message-ID: <CAErSpo4f_BLrnq7T2foOA2HAySPTDVYn61dfyOfZahyiyzGTdg@mail.gmail.com>
-Subject: Re: Failure to HotPlug if devices not present at boot - no memory space
-To: Barry Grussling <barry@grussling.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:43637 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754936AbbHLJd6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 05:33:58 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: [PATCH v3 5/5] PCI: designware: set up high part of MSI target address
+Date: Wed, 12 Aug 2015 11:33:56 +0200
+Message-Id: <1439372036-15303-6-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
+References: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Barry,
+Set up the high part of the MSI target address in order to allow the
+MSI target to reside above the 4GB mark on 64bit and PAE systems.
 
-On Mon, Aug 3, 2015 at 10:28 AM, Barry Grussling <barry@grussling.com> wrote:
-> Hello,
->
-> I am having some issues with PCIe hotplug on Linux.  Bottom
-> line is if PCIe endpoints are present and enabled on boot,
-> things work fine.  I can disable/enable endpoints and rescan
-> the PCI chain great and everything is found and loaded.
->
-> If PCIe endpoints are not present on boot and instead
-> are added later, I get "no space" and "failed to assign"
-> when I try to rescan the PCIe bus.
->
-> Booting with pci=realloc=on seems to have no effect.
->
-> I have verified I have CONFIG_PCI_REALLOC_ENABLE_AUTO=y
-> and CONFIG_PCI_IOV=y in my config.
->
-> The root complex is an ARM Cortex A9 SoC.  There is
-> a PLX PEX 8619 16-lane PCIe switch chip hooked up to
-> the root complex of the SoC.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/host/pcie-designware.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Can you attach complete dmesg logs and "lspci -vv" output for both
-cases?  (You can attach them to a kernel.org bugzilla if they're too
-big for email.)
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 74034395cf2a..fcb798e47c30 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -299,12 +299,15 @@ no_valid_irq:
+ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ {
+ 	struct msi_msg msg;
++	u64 msi_target;
+ 
+ 	if (pp->ops->get_msi_addr)
+-		msg.address_lo = pp->ops->get_msi_addr(pp);
++		msi_target = pp->ops->get_msi_addr(pp);
+ 	else
+-		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+-	msg.address_hi = 0x0;
++		msi_target = virt_to_phys((void *)pp->msi_data);
++
++	msg.address_lo = (u32)(msi_target & 0xffffffff);
++	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+ 
+ 	if (pp->ops->get_msi_data)
+ 		msg.data = pp->ops->get_msi_data(pp, pos);
+-- 
+2.4.6
 
-> ...
-> Note the working system allocates 0xc0000000 to 0xc7dfffff to
-> the PCI subsystem but the failing boot only allocates 0xc0000000
-> to 0xc59fffff.
-
-The dmesg logs will tell us what space is allocated to the host
-bridge.  That is generally done by firmware or the bootloader, and
-Linux doesn't change it.  So if firmware only assigns 0xc0000000 to
-0xc59fffff to the host bridge, the current Linux kernel will only
-assign PCI devices inside that region; it will never expand the
-region.
-
-Bjorn
