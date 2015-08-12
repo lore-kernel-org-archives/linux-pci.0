@@ -1,59 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:57342 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbbHTViQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 17:38:16 -0400
-Date: Thu, 20 Aug 2015 14:38:15 -0700 (PDT)
-Message-Id: <20150820.143815.1802014224351735588.davem@davemloft.net>
-To: bhelgaas@google.com
-Cc: wangyijing@huawei.com, linux-pci@vger.kernel.org, mroos@linux.ee,
-	sparclinux@vger.kernel.org, eric.snowberg@oracle.com,
-	benh@kernel.crashing.org
-Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20150820212109.GB14810@google.com>
-References: <20150820202135.GA14810@google.com>
-	<20150820.135832.47467691959908917.davem@davemloft.net>
-	<20150820212109.GB14810@google.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:52552 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754929AbbHLJd6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 05:33:58 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: [PATCH v3 2/5] PCI: designware: factor out MSI msg setup
+Date: Wed, 12 Aug 2015 11:33:53 +0200
+Message-Id: <1439372036-15303-3-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
+References: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 20 Aug 2015 16:21:09 -0500
+Factor out the PCI MSI message setup from the single MSI setup
+function. This will be reused by the multivector MSI setup.
 
-> On Thu, Aug 20, 2015 at 01:58:32PM -0700, David Miller wrote:
->> From: Bjorn Helgaas <bhelgaas@google.com>
->> Date: Thu, 20 Aug 2015 15:21:35 -0500
->> 
->> > On Thu, Aug 20, 2015 at 11:40:42AM -0700, David Miller wrote:
->> >> From: Bjorn Helgaas <bhelgaas@google.com>
->> >> Date: Thu, 20 Aug 2015 11:23:43 -0700
->> >> 
->> >> > On Thu, Aug 20, 2015 at 10:47 AM, David Miller <davem@davemloft.net> wrote:
->> >> >> From: Bjorn Helgaas <bhelgaas@google.com>
->> >> >> Date: Thu, 20 Aug 2015 00:48:00 -0500
->> >> >>
->> >> >>> [+cc Dave, Eric, Ben, sparclinux]
->> >> >>
->> >> >> I think the comment is terrible.
->> >> > 
->> >> > I'll update the comment if you suggest some text.  Do you object
->> >> > mainly to the mention of the specific systems?
->> >> 
->> >> "PCI root complex can not be assumed to be instantiated in the PCI bus
->> >>  hierarchy."
->> > 
->> > AIUI, the root complex itself (as distinct from root ports) doesn't
->> > normally appear in the PCI hierarchy, so I reworded it as follows.  I hope
->> > this helps address your objection, but if not, I can try again.
->> 
->> This is fine, but it was the comment we were talking about adjusting not
->> the commit message :-)
-> 
-> Oh, sorry!  I totally misread that.  Here's another try.
+No functional change yet.
 
-This also looks fine:
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/host/pcie-designware.c | 28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
-Acked-by: David S. Miller <davem@davemloft.net>
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 69486be7181e..0ec435c56a8b 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -293,19 +293,9 @@ no_valid_irq:
+ 	return -ENOSPC;
+ }
+ 
+-static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+-			struct msi_desc *desc)
++static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ {
+-	int irq, pos;
+ 	struct msi_msg msg;
+-	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+-
+-	if (desc->msi_attrib.is_msix)
+-		return -EINVAL;
+-
+-	irq = assign_irq(1, desc, &pos);
+-	if (irq < 0)
+-		return irq;
+ 
+ 	if (pp->ops->get_msi_addr)
+ 		msg.address_lo = pp->ops->get_msi_addr(pp);
+@@ -319,6 +309,22 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+ 		msg.data = pos;
+ 
+ 	pci_write_msi_msg(irq, &msg);
++}
++
++static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
++			struct msi_desc *desc)
++{
++	int irq, pos;
++	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
++
++	if (desc->msi_attrib.is_msix)
++		return -EINVAL;
++
++	irq = assign_irq(1, desc, &pos);
++	if (irq < 0)
++		return irq;
++
++	dw_msi_setup_msg(pp, irq, pos);
+ 
+ 	return 0;
+ }
+-- 
+2.4.6
+
