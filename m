@@ -1,94 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:36072 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932867AbbHJWES (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 18:04:18 -0400
-Received: by igbij6 with SMTP id ij6so79020912igb.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 15:04:17 -0700 (PDT)
-Date: Mon, 10 Aug 2015 17:04:13 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+Received: from foss.arm.com ([217.140.101.70]:56721 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964840AbbHLJFA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Aug 2015 05:05:00 -0400
+Date: Wed, 12 Aug 2015 10:04:50 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Pavel Fedin <p.fedin@samsung.com>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+	'Jayachandran C' <jchandra@broadcom.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Duc Dang <dhdang@apm.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Simon Horman <horms@verge.net.au>,
-	James Morse <James.Morse@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH v5 9/9] PCI: xgene: Use pci_scan_root_bus_msi()
-Message-ID: <20150810220413.GA13982@google.com>
-References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150804215457.9189.27595.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <55C37C92.1020509@arm.com>
+	'Arnd Bergmann' <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	'Ming Lei' <ming.lei@canonical.com>, marc.zyngier@arm.com
+Subject: Re: [PATCH v4 1/3] PCI: generic: remove dependency on hw_pci
+Message-ID: <20150812090449.GA22485@arm.com>
+References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
+ <20150804234956.GF17327@google.com>
+ <007501d0d4ce$1d2dd9c0$57898d40$@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55C37C92.1020509@arm.com>
+In-Reply-To: <007501d0d4ce$1d2dd9c0$57898d40$@samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
+On Wed, Aug 12, 2015 at 08:11:29AM +0100, Pavel Fedin wrote:
+>  Hello!
 
-On Thu, Aug 06, 2015 at 04:26:10PM +0100, Marc Zyngier wrote:
-> On 04/08/15 22:54, Bjorn Helgaas wrote:
-> > Previously there was no way to specify the MSI controller when creating a
-> > new PCI root bus, so we had to create the bus, set its MSI controller, then
-> > scan the bus.  With the new pci_scan_root_bus_msi() interface, we can
-> > specify the MSI controller up front and get rid of that intermediate step.
-> > 
-> > Look up the MSI controller first, then use pci_scan_root_bus_msi() to
-> > create and scan the root PCI bus.
+Hi Pavel,
+
+> > I dropped the acks and tested-by because of that change, but I'll happily
+> > add them back if Lorenzo and Pavel confirm.  
 > 
-> I'm wondering about these XGene patches.
+>  Confirm.
+>  Tested-by: Pavel Fedin <p.fedin@samsung.com>
 > 
-> With the code that is queued for v4.3 in tip/irq/core, the X-Gene MSI
-> driver doesn't export a struct msi_controller anymore, and entirely
-> relies on IRQ domains to identify to be matched with the actual PCI driver.
-> 
-> Do you intend this as a cleanup until everything lands in mainline? At
-> that point, we'd be able to remove all traces of struct msi_controller
-> from this driver.
+>  I also added MSI support. Can i post it as patch on top of your branch?
 
-I haven't been following the IRQ domain stuff or tip/irq/core, so I
-really don't know how this relates to that.  I took a look, and I see
-8d63bc7beaee ("PCI/MSI: pci-xgene-msi: Get rid of struct
-msi_controller"), which removes an msi_controller pointer from
-pci-xgene-msi.c, but I don't see any pci-xgene.c changes in
-tip/irq/core.
+There shouldn't be any need with the changes queued in tip/irq/core. Can
+you give the following branch a go, please (it doesn't look like Bjorn's
+stuff is in linux-next, unfortunately)?
 
-Are you saying that xgene_pcie_msi_enable() will go away eventually?
-And the OF "msi-parent" lookup will go away, or at least be moved
-elsewhere?  We currently have:
+  git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git devel
 
-  xgene_pcie_probe_bridge(...)
-  {
-    ...
-    bus = pci_create_root_bus(...);
-    xgene_pcie_msi_enable(...);
-    pci_scan_child_bus(bus);
-    ...
-  }
+It's a temporary testing branch (subject to rebasing), but it should be
+indicative of what's queued for 4.3.
 
-I'd like to get rid of that arch-specific MSI enable stuff because
-then we can use a higher level interface, e.g., pci_scan_root_bus(),
-and make the X-Gene code slightly simpler.
-
-> Alternatively, we could ask tglx to add an extra patch to the existing
-> queue in order to clean up pci-xgene.c (nuking the whole
-> xgene_pcie_msi_enable function).
-
-Ah, I guess you *are* saying that xgene_pcie_msi_enable() will go away
-eventually.  I don't know how to do that, but apparently you do, so
-I'll just drop these X-Gene-related patches for now.
-
-Bjorn
+Will
