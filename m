@@ -1,69 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0100.outbound.protection.outlook.com ([65.55.169.100]:11454
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755677AbbHGHnq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Aug 2015 03:43:46 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH v3 5/5] MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
-Date: Fri, 7 Aug 2015 15:43:02 +0800
-Message-ID: <1438933382-2936-6-git-send-email-lftan@altera.com>
-In-Reply-To: <1438933382-2936-1-git-send-email-lftan@altera.com>
-References: <1438933382-2936-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:59673 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754927AbbHLJd6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 05:33:58 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: [PATCH v3 3/5] PCI: designware: implement multivector MSI irq setup
+Date: Wed, 12 Aug 2015 11:33:54 +0200
+Message-Id: <1439372036-15303-4-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
+References: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- MAINTAINERS | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Allows to set up and use multiple MSI irqs per device.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fd60784..32f5287 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7759,6 +7759,14 @@ F:	include/linux/pci*
- F:	arch/x86/pci/
- F:	arch/x86/kernel/quirks.c
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+v3: use new MSI msg setup function.
+---
+ drivers/pci/host/pcie-designware.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 0ec435c56a8b..74034395cf2a 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+ 	}
  
-+PCI DRIVER FOR ALTERA PCIE IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
-+F:	drivers/pci/host/pcie-altera.c
+ 	*pos = pos0;
++	desc->nvec_used = no_irqs;
++	desc->msi_attrib.multiple = order_base_2(no_irqs);
 +
- PCI DRIVER FOR ARM VERSATILE PLATFORM
- M:	Rob Herring <robh@kernel.org>
- L:	linux-pci@vger.kernel.org
-@@ -7860,6 +7868,14 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*spear*
+ 	return irq;
  
-+PCI MSI DRIVER FOR ALTERA MSI IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-+F:	drivers/pci/host/pcie-altera-msi.c
+ no_valid_irq:
+@@ -329,6 +332,33 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+ 	return 0;
+ }
+ 
++static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
++			     int nvec, int type)
++{
++#ifdef CONFIG_PCI_MSI
++	int irq, pos;
++	struct msi_desc *desc;
++	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
 +
- PCI MSI DRIVER FOR APPLIEDMICRO XGENE
- M:	Duc Dang <dhdang@apm.com>
- L:	linux-pci@vger.kernel.org
++	/* MSI-X interrupts are not supported */
++	if (type == PCI_CAP_ID_MSIX)
++		return -EINVAL;
++
++	WARN_ON(!list_is_singular(&pdev->msi_list));
++	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
++
++	irq = assign_irq(nvec, desc, &pos);
++	if (irq < 0)
++		return irq;
++
++	dw_msi_setup_msg(pp, irq, pos);
++
++	return 0;
++#else
++	return -ENOSYS;
++#endif
++}
++
+ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+ {
+ 	struct irq_data *data = irq_get_irq_data(irq);
+@@ -340,6 +370,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+ 
+ static struct msi_controller dw_pcie_msi_chip = {
+ 	.setup_irq = dw_msi_setup_irq,
++	.setup_irqs = dw_msi_setup_irqs,
+ 	.teardown_irq = dw_msi_teardown_irq,
+ };
+ 
 -- 
-1.8.2.1
+2.4.6
 
