@@ -1,90 +1,200 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] pci/pciehp: bail on bogus pcie reads from removed devices
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <1437495930-7723-1-git-send-email-jarod@redhat.com>
- <20150803041451.GA11144@google.com>
- <CAKfmpSdrdjyiQ-WWBdXFuPuTyo0WkTTsTX5ByHBt7haZeF0w=g@mail.gmail.com>
- <20150804165642.GB17327@google.com> <55C0F493.7080604@redhat.com>
- <20150804175141.GC17327@google.com> <55C10890.2070201@redhat.com>
- <CAErSpo4JoBxmwwscckH+hrSYFbqKgX4KAiRGS2ZDQxxZ_So63Q@mail.gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Jarod Wilson <jarod@redhat.com>
-Message-ID: <55C11F14.3080803@redhat.com>
-Date: Tue, 4 Aug 2015 16:22:44 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37310 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753788AbbHLPPE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 11:15:04 -0400
+Received: by wibhh20 with SMTP id hh20so34184944wib.0
+        for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2015 08:15:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo4JoBxmwwscckH+hrSYFbqKgX4KAiRGS2ZDQxxZ_So63Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1439377457-3296-1-git-send-email-haokexin@gmail.com>
+References: <1439377457-3296-1-git-send-email-haokexin@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 12 Aug 2015 10:14:43 -0500
+Message-ID: <CAErSpo7cZerVmMimru5o8WYaecPx5h=yUD4EvuYXPYLYj4namw@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: designware: Mark the msi cascade handler IRQF_NO_THREAD
+To: Kevin Hao <haokexin@gmail.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/4/2015 3:27 PM, Bjorn Helgaas wrote:
-> On Tue, Aug 4, 2015 at 1:46 PM, Jarod Wilson <jarod@redhat.com> wrote:
->> On 8/4/2015 1:51 PM, Bjorn Helgaas wrote:
-...
->>>>> Can you try the version I posted, with the additional tests in
->>>>> pcie_poll_cmd() and pcie_do_write_cmd()?  We should try to read from
->>>>> the device there, even before we free the IRQ, so we might see several
->>>>> messages.  Maybe there's a way we can be smarter about bailing out
->>>>> there.
->>>>
->>>>
->>>> The above was with your additions munged in with the older patch, I
->>>> actually do see "pcie_do_write_cmd: no response from device" just
->>>> two lines ahead of each "Device has gone away" message from
->>>> pcie_isr().
->>>>
->>>> pciehp 0000:06:00.0:pcie24: pcie_do_write_cmd: no response from device
->>>> pciehp 0000:06:00.0:pcie24: pcie_disable_notification: SLOTCTRL d8
->>>> write cmd 0
->>>> pciehp 0000:06:00.0:pcie24: Device has gone away <- from pcie_isr()
->>>
->>>
->>> Oh, sorry!  I should have noticed that.  I just wanted to make sure I
->>> didn't cause a flood of extra messages.
->>>
->>> I think I'll merge this version (with all three checks).  We still have a
->>> slot lifetime issue, but that's a separate problem.
->>
->>
->> Sounds good to me, thanks much for your help on this.
->>
->> Do we really still have a slot lifetime issue though? It looks to be the
->> path from pciehp_release_ctrl that leads to free_irq and __free_irq calling
->> pcie_isr one last time, and there's a ctrl_info("Latch %s on Slot(%s)", open
->> ? ..., slot_name(slot)); in pcie_isr *if* we aren't bailing when we read all
->> 1's from PCI_EXP_SLTSTA. I think when we bail early, we should never see the
->> subsequent attempt to read the freed slot.
+On Wed, Aug 12, 2015 at 6:04 AM, Kevin Hao <haokexin@gmail.com> wrote:
+> The primary irq handler is supposed to run in hard irq context and
+> the desc->lock also need to be acquired with irq disabled. Violating
+> these rules will definitely cause deadlock or weird things.
+
+This is a start.  But this is still just assertions that I can't tie
+back to the actual code.  I want to know how somebody looking at the
+*code* is supposed to know to use IRQF_NO_THREAD (hints in comments
+are OK, too, and if callers of generic_handle_irq() have to use
+IRQF_NO_THREAD, a comment to that effect might be useful).
+
+I gave a specific example of what I'm looking for, including the two
+exact places where desc->lock is acquired that lead to the deadlock.
+Please read that again and include those details.
+
+I don't want to read about "weird things".  That's not useful for
+understanding or debugging.
+
+> For a cascade irq handler we must make sure that it can't be threaded,
+> otherwise the primary irq handler of the second level will be executed
+> in the thread context. The following is the kernel waring after we
+> force threading of all the irq handlers vi kernel command parameter
+> "threadirqs" on a imx6q-sabresd board:
+>    [ INFO: inconsistent lock state ]
+>    4.2.0-rc3-next-20150723 #28 Not tainted
+>    ---------------------------------
+>    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
+>    irq/21-mx6-pcie/62 [HC0[0]:SC0[2]:HE1:SE0] takes:
+>     (&irq_desc_lock_class){?.-...}, at: [<80078d94>] handle_simple_irq+0x1c/0xc0
+>    {IN-HARDIRQ-W} state was registered at:
+>      [<8006aa70>] lock_acquire+0x74/0x94
+>      [<807acc6c>] _raw_spin_lock+0x34/0x44
+>      [<8007900c>] handle_fasteoi_irq+0x20/0x1b8
+>      [<80075720>] generic_handle_irq+0x28/0x38
+>      [<80075864>] __handle_domain_irq+0x6c/0xe0
+>      [<80009558>] gic_handle_irq+0x28/0x68
+>      [<80013b64>] __irq_svc+0x44/0x5c
+>      [<807ad400>] _raw_spin_unlock_irq+0x30/0x34
+>      [<8004cffc>] finish_task_switch+0xc0/0x218
+>      [<807a7a10>] __schedule+0x248/0x6e0
+>      [<807a7fac>] schedule+0x38/0x9c
+>      [<807a8240>] schedule_preempt_disabled+0x10/0x14
+>      [<80063f8c>] cpu_startup_entry+0xfc/0x1f8
+>      [<8079f640>] rest_init+0x130/0x16c
+>      [<80a55ca4>] start_kernel+0x374/0x3e8
+>      [<1000807c>] 0x1000807c
+>    irq event stamp: 16
+>    hardirqs last  enabled at (15): [<807ad3fc>] _raw_spin_unlock_irq+0x2c/0x34
+>    hardirqs last disabled at (14): [<807acd80>] _raw_spin_lock_irq+0x20/0x58
+>    softirqs last  enabled at (0): [<800283d8>] copy_process.isra.58+0x3bc/0x1504
+>    softirqs last disabled at (16): [<80076f08>] irq_forced_thread_fn+0x0/0x68
 >
-> It's possible that we avoid referencing the freed data, but I don't
-> have warm fuzzies because it's hard to prove that by analyzing the
-> source code.  It's hard to even know what to look for -- there's no
-> clue in the code that says "don't reference slot->hotplug_slot after
-> this point."  And it feels like a poor design to hang on to that
-> pointer after the slot has been freed.
+>    other info that might help us debug this:
+>     Possible unsafe locking scenario:
 >
-> IIRC, your initial report mentioned possible memory corruption, and I
-> don't even have a theory about where that happened.  The
-> slot->hotplug_slot references I saw were all reads where we printed
-> junk but shouldn't have actually corrupted anything.
-
-Looking at the output I was seeing, it looks like one of the ~0 reads is 
-interpreted as a switch interrupt received, data link layer state 
-change, etc., followed by "Enabling domain:bus:device=0000:0x:00" from 
-pciehp_power_thread. Subsequently, we're calling pciehp_enable_slot, 
-which calls board_added, and in the output I've got, its tripping over 
-board_added's call to pciehp_check_link_status ("Failed to check link 
-status"), which means going to err_exit and calling set_slot_off.
-
-Next up, set_slot_off is calling pciehp_power_off_slot, which does a 
-pcie_write_cmd(). Is it possible that write might lead to memory corruption?
-
-> Anyway, I don't know what to do about it, and I don't have time right
-> now to poke at it, but it does worry me a bit.
-
-Definitely a bit worrying, still trying to comprehend it all here myself...
-
--- 
-Jarod Wilson
-jarod@redhat.com
+>           CPU0
+>           ----
+>      lock(&irq_desc_lock_class);
+>      <Interrupt>
+>        lock(&irq_desc_lock_class);
+>
+>     *** DEADLOCK ***
+>
+>    no locks held by irq/21-mx6-pcie/62.
+>
+>    stack backtrace:
+>    CPU: 0 PID: 62 Comm: irq/21-mx6-pcie Not tainted 4.2.0-rc3-next-20150723 #28
+>    Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+>    Backtrace:
+>    [<80012dc4>] (dump_backtrace) from [<80012f64>] (show_stack+0x18/0x1c)
+>     r6:be3eeb78 r5:00000000 r4:00000000 r3:00000000
+>    [<80012f4c>] (show_stack) from [<807a4b50>] (dump_stack+0x80/0x9c)
+>    [<807a4ad0>] (dump_stack) from [<807a2efc>] (print_usage_bug+0x270/0x2e4)
+>     r5:be3ee780 r4:80c579ec
+>    [<807a2c8c>] (print_usage_bug) from [<8006874c>] (mark_lock+0x5b4/0x6e0)
+>     r10:80c579ec r9:800678e0 r8:be3ee780 r7:00000000 r6:80c579ec r5:be3eeb78
+>     r4:00000002
+>    [<80068198>] (mark_lock) from [<80068f70>] (__lock_acquire+0x6f8/0x1e20)
+>     r10:00000001 r9:be3eeb78 r8:be3ee780 r7:00000008 r6:000003f8 r5:be3ee780
+>     r4:00000000
+>    [<80068878>] (__lock_acquire) from [<8006aa70>] (lock_acquire+0x74/0x94)
+>     r10:00000001 r9:00000001 r8:00000000 r7:00000001 r6:00000001 r5:60030013
+>     r4:00000000
+>    [<8006a9fc>] (lock_acquire) from [<807acc6c>] (_raw_spin_lock+0x34/0x44)
+>     r6:0000012c r5:00000001 r4:be1f4d64
+>    [<807acc38>] (_raw_spin_lock) from [<80078d94>] (handle_simple_irq+0x1c/0xc0)
+>     r5:be1f4d64 r4:be1f4d00
+>    [<80078d78>] (handle_simple_irq) from [<80075720>] (generic_handle_irq+0x28/0x38)
+>     r5:be28ee20 r4:0000012c
+>    [<800756f8>] (generic_handle_irq) from [<80321914>] (dw_handle_msi_irq+0x68/0x90)
+>     r4:00000001 r3:00000002
+>    [<803218ac>] (dw_handle_msi_irq) from [<8032265c>] (imx6_pcie_msi_handler+0x14/0x18)
+>     r7:80076f08 r6:be39efc0 r5:be154000 r4:be39efc0
+>    [<80322648>] (imx6_pcie_msi_handler) from [<80076f38>] (irq_forced_thread_fn+0x30/0x68)
+>    [<80076f08>] (irq_forced_thread_fn) from [<80076cb4>] (irq_thread+0x14c/0x19c)
+>     r6:be39efc0 r5:be154000 r4:be39efe0 r3:00000004
+>    [<80076b68>] (irq_thread) from [<80047f80>] (kthread+0xdc/0xf8)
+>     r10:00000000 r9:00000000 r8:00000000 r7:80076b68 r6:be39efc0 r5:be3a1000
+>     r4:00000000
+>    [<80047ea4>] (kthread) from [<8000fa38>] (ret_from_fork+0x14/0x3c)
+>     r7:00000000 r6:00000000 r5:80047ea4 r4:be3a1000
+>
+> In general, we can use function irq_set_chained_handler_and_data()
+> to prevent the above happen. But for a irq which may be shared with
+> other device or function, we have no choice but use the
+> devm_request_irq() with IRQF_NO_THREAD set explicitly.
+>
+> Signed-off-by: Kevin Hao <haokexin@gmail.com>
+> ---
+> v2:
+>   - Update commit log
+>   - Squash the changes for other drivers into this one
+>
+>  drivers/pci/host/pci-dra7xx.c     | 3 ++-
+>  drivers/pci/host/pci-exynos.c     | 3 ++-
+>  drivers/pci/host/pci-imx6.c       | 3 ++-
+>  drivers/pci/host/pcie-spear13xx.c | 3 ++-
+>  4 files changed, 8 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index 80db09e47800..66aa9286cfc8 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -284,7 +284,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>         }
+>
+>         ret = devm_request_irq(&pdev->dev, pp->irq,
+> -                              dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
+> +                              dra7xx_pcie_msi_irq_handler,
+> +                              IRQF_SHARED | IRQF_NO_THREAD,
+>                                "dra7-pcie-msi", pp);
+>         if (ret) {
+>                 dev_err(&pdev->dev, "failed to request irq\n");
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index f9f468d9a819..7b6be7791d33 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -523,7 +523,8 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
+>
+>                 ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+>                                         exynos_pcie_msi_irq_handler,
+> -                                       IRQF_SHARED, "exynos-pcie", pp);
+> +                                       IRQF_SHARED | IRQF_NO_THREAD,
+> +                                       "exynos-pcie", pp);
+>                 if (ret) {
+>                         dev_err(&pdev->dev, "failed to request msi irq\n");
+>                         return ret;
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 233a196c6e66..fd5eb2e34fc0 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -544,7 +544,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+>
+>                 ret = devm_request_irq(&pdev->dev, pp->msi_irq,
+>                                        imx6_pcie_msi_handler,
+> -                                      IRQF_SHARED, "mx6-pcie-msi", pp);
+> +                                      IRQF_SHARED | IRQF_NO_THREAD,
+> +                                      "mx6-pcie-msi", pp);
+>                 if (ret) {
+>                         dev_err(&pdev->dev, "failed to request MSI irq\n");
+>                         return -ENODEV;
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index c49fbdc0f6e4..338788b28631 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -280,7 +280,8 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
+>                 return -ENODEV;
+>         }
+>         ret = devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
+> -                              IRQF_SHARED, "spear1340-pcie", pp);
+> +                              IRQF_SHARED | IRQF_NO_THREAD,
+> +                              "spear1340-pcie", pp);
+>         if (ret) {
+>                 dev_err(dev, "failed to request irq %d\n", pp->irq);
+>                 return ret;
+> --
+> 2.1.0
+>
