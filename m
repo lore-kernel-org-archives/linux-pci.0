@@ -1,143 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f196.google.com ([209.85.217.196]:34846 "EHLO
-	mail-lb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932290AbbHJLD7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 07:03:59 -0400
-MIME-Version: 1.0
-In-Reply-To: <1438933382-2936-5-git-send-email-lftan@altera.com>
-References: <1438933382-2936-1-git-send-email-lftan@altera.com>
-	<1438933382-2936-5-git-send-email-lftan@altera.com>
-Date: Mon, 10 Aug 2015 19:03:57 +0800
-Message-ID: <CAFiDJ58b62Q7CnoU1+h2dSf7xBPAhjaY5kaeeOrxRVRZ84WJxw@mail.gmail.com>
-Subject: Re: [PATCH v3 4/5] Documentation: dt-bindings: pci: altera pcie
- device tree binding
-From: Ley Foon Tan <lftan.linux@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:20088 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933789AbbHLIVc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 12 Aug 2015 04:21:32 -0400
+Subject: Re: next-20150806 build: 2 failures 52 warnings (next-20150806)
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Ley Foon Tan <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+	Mark Brown <broonie@kernel.org>
+References: <E1ZNIul-0007IF-Ev@optimist>
+ <20150806175322.GB20873@sirena.org.uk>
+ <20150807073954.3d19fc69@canb.auug.org.au>
+ <20150807094957.GK20873@sirena.org.uk>
+ <CAErSpo6aryRYOJpfXfY6SuJoVe72MYd8RKgPhiDZ9pt5+zmXBQ@mail.gmail.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Michal Simek <michal.simek@xilinx.com>,
+	kernel-build-reports@lists.linaro.org,
+	linaro-kernel <linaro-kernel@lists.linaro.org>,
+	linux-next list <linux-next@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <55CB0205.2020408@linux.intel.com>
+Date: Wed, 12 Aug 2015 16:21:25 +0800
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo6aryRYOJpfXfY6SuJoVe72MYd8RKgPhiDZ9pt5+zmXBQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 7, 2015 at 3:43 PM, Ley Foon Tan <lftan@altera.com> wrote:
-> This patch adds the bindings for Altera PCIe host controller driver and
-> Altera PCIe MSI driver.
->
-> Signed-off-by: Ley Foon Tan <lftan@altera.com>
-> ---
->  .../devicetree/bindings/pci/altera-pcie-msi.txt    | 27 ++++++++++++
->  .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
->  2 files changed, 76 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
->  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
->
-> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-> new file mode 100644
-> index 0000000..7f330c9
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-> @@ -0,0 +1,27 @@
-> +* Altera PCIe MSI controller
-> +
-> +Required properties:
-> +- compatible:  should contain "altr,msi-1.0"
-> +- reg:         specifies the physical base address of the controller and
-> +               the length of the memory mapped region.
-> +- reg-names:   Must include the following entries:
-> +               "csr": CSR registers
-> +               "vector_slave": vectors region
-> +-interrupts:   specifies the interrupt source of the parent interrupt
-> +               controller. The format of the interrupt specifier depends on the
-> +               parent interrupt controller.
-> +- num-vectors: Number of vectors, range 1 to 32.
-> +- msi-controller:      indicates that this is MSI controller node
-> +
-> +
-> +Example
-> +msi0: msi@0xFF200000 {
-> +       compatible = "altr,msi-1.0";
-> +       reg = <0xFF200000 0x00000010
-> +               0xFF200010 0x00000080>;
-> +       reg-names = "csr", "vector_slave";
-> +       interrupt-parent = <&hps_0_arm_gic_0>;
-> +       interrupts = <0 42 4>;
-> +       msi-controller = <1>;
-> +       num-vectors = <32>;
-> +};
-> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-> new file mode 100644
-> index 0000000..729193d
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-> @@ -0,0 +1,49 @@
-> +* Altera PCIe controller
-> +
-> +Required properties:
-> +- compatible : should contain "altr,pcie-root-port-1.0"
-> +- reg:         A list of physical base address and length for TXS and CRA.
-> +- reg-names:   Must include the following entries:
-> +               "Txs": TXS region
-> +               "Cra": Control register access region
-> +-interrupts:   specifies the interrupt source of the parent interrupt controller.
-> +               The format of the interrupt specifier depends on the parent interrupt
-> +               controller.
-> +- device_type: must be "pci"
-> +- #address-cells:      set to <3>
-> +- #size-cells: set to <2>
-> +- #interrupt-cells:    set to <1>
-> +- ranges:              Describes the translation of addresses for root ports and standard
-> +               PCI regions.
-> +- interrupt-map-mask and interrupt-map: standard PCI properties
-> +       to define the mapping of the PCIe interface to interrupt
-> +       numbers.
-> +
-> +Optional properties:
-> +- msi-parent:  Link to the hardware entity that serves as the MSI controller for this PCIe
-> +               controller.
-> +- bus-range:   PCI bus numbers covered
-> +
-> +Example
-> +       pcie_0: pcie@0xc00000000 {
-> +               compatible = "altr,pcie-root-port-1.0";
-> +               reg = <0xc0000000 0x20000000>,
-> +                       <0xff220000 0x00004000>;
-> +               reg-names = "Txs", "Cra";
-> +               interrupt-parent = <&hps_0_arm_gic_0>;
-> +               interrupts = <0 40 4>;
-> +               interrupt-controller;
-> +               #interrupt-cells = <1>;
-> +               bus-range = <0x0 0xFF>;
-> +               device_type = "pci";
-> +               msi-parent = <&msi_to_gic_gen_0>;
-> +               #address-cells = <3>;
-> +               #size-cells = <2>;
-> +               interrupt-map-mask = <0 0 0 7>;
-> +               interrupt-map = <0 0 0 1 &pcie_0 1>,
-> +                                   <0 0 0 2 &pcie_0 2>,
-> +                                   <0 0 0 3 &pcie_0 3>,
-> +                                   <0 0 0 4 &pcie_0 4>;
-> +               ranges = <0x82000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x10000000
-> +                           0x82000000 0x00000000 0x10000000 0xd0000000 0x00000000 0x10000000>;
-> +       };
-> --
-
-Added DT maintainers to CC list. Please help to review if anything
-need to be changed.
-
-Thanks.
-
-Regards
-Ley Foon
+On 2015/8/11 2:31, Bjorn Helgaas wrote:
+> On Fri, Aug 7, 2015 at 4:49 AM, Mark Brown <broonie@kernel.org> wrote:
+>> On Fri, Aug 07, 2015 at 07:39:54AM +1000, Stephen Rothwell wrote:
+>>> On Thu, 6 Aug 2015 18:53:22 +0100 Mark Brown <broonie@kernel.org> wrote:
+>>
+>>>> msi_desc_to_pci_sys_data doesn't appear to exist anywhere else in
+>>>> current -next, the usage was introduced by e39758e0ea769e632e (PCI: Use
+>>>> helper functions to access fields in struct msi_desc) at which time it
+>>>> looks like it did exist but I can't immediately see where it was removed.
+>>
+>>> Actually, it is a typo ... all other uses are spelt msi_desc_to_pci_sysdata.
+> 
+> c179c9b978b9 ("PCI: Add helper function msi_desc_to_pci_sysdata()")
+> added msi_desc_to_pci_sysdata().
+> 
+> e39758e0ea76 ("PCI: Use helper functions to access fields in struct
+> msi_desc") added calls to msi_desc_to_pci_sysdata() in
+> pci-keystone-dw.c and pcie-designware.c, but to
+> msi_desc_to_pci_sys_data() (note extra "_") in pcie-xilinx.c.
+> 
+> These were both merged by Thomas, so I assume he and Jiang will sort this out.
+Hi Bjorn and Mark,
+	Thomas is on vocation this two weeks, so I will send him a
+patch to fix this issue once Thomas is back.
+Thanks!
+Gerry
