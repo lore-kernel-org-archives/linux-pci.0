@@ -1,90 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:3524 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753388AbbHRTTO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:14 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH v5 07/13] PCI: Export pci_find_host_bridge()
-Date: Tue, 18 Aug 2015 14:04:03 -0500
-Message-ID: <1439924649-29698-8-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
-References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+Received: from casper.infradead.org ([85.118.1.10]:53726 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953AbbHMAQr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 20:16:47 -0400
+Subject: Re: linux-next: Tree for Aug 12 (include/linux/pci.h)
+To: Tadeusz Struk <tadeusz.struk@intel.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>
+References: <20150812233914.451d1fcf@canb.auug.org.au>
+ <55CB8AF0.4060905@infradead.org> <20150813075322.064035f8@canb.auug.org.au>
+ <55CBCF96.7060102@intel.com>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Michal Marek <mmarek@suse.cz>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <55CBE1E7.60904@infradead.org>
+Date: Wed, 12 Aug 2015 17:16:39 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <55CBCF96.7060102@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Return the struct pci_host_bridge corresponding to the given
-struct pci_bus.
+On 08/12/15 15:58, Tadeusz Struk wrote:
+> Hi,
+> On 08/12/2015 02:53 PM, Stephen Rothwell wrote:
+>> On Wed, 12 Aug 2015 11:05:36 -0700 Randy Dunlap <rdunlap@infradead.org> wrote:
+>>>>
+>>>> on i386 or x86_64:
+>>>>
+>>>> Many (repeated) errors like this one:
+>>>>
+>>>> ../include/linux/pci.h:390:12: error: âstruct pci_devâ has no member named âphysfnâ
+>>>>
+>>>> when CONFIG_PCI_ATS is not enabled.
+>> Maybe caused by commit
+>>
+>>   dd0f368398ea ("crypto: qat - Add qat dh895xcc VF driver")
+>>
+>> from the crypto tree Which adds a
+>>
+>>   select PCI_IOV
+>>
+>> to drivers/crypto/qat/Kconfig without the necessary
+>>
+>>   select PCI
+>>
+>> but PCI_IOV selects PCI_ATS, so I am not sure what happened here.  I am
+>> assuming that your config has PCI_IOV enabled?  What about PCI?
+> 
+> There is a patch submitted, but not yet applied
+> https://patchwork.kernel.org/patch/6994171/
+> maybe it will help?
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
----
- drivers/pci/host-bridge.c | 19 ++-----------------
- include/linux/pci.h       |  7 +++++++
- 2 files changed, 9 insertions(+), 17 deletions(-)
+Yes, that works for me.  Thanks.
 
-diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-index 5f4a2e0..6c2c82a 100644
---- a/drivers/pci/host-bridge.c
-+++ b/drivers/pci/host-bridge.c
-@@ -8,25 +8,10 @@
- 
- #include "pci.h"
- 
--static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
--{
--	while (bus->parent)
--		bus = bus->parent;
--
--	return bus;
--}
--
--struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
--{
--	struct pci_bus *root_bus = find_pci_root_bus(bus);
--
--	return to_pci_host_bridge(root_bus->bridge);
--}
--
- struct device *pci_get_host_bridge_device(struct pci_dev *dev)
- {
--	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
--	struct device *bridge = root_bus->bridge;
-+	struct pci_host_bridge *host_bridge = pci_find_host_bridge(dev->bus);
-+	struct device *bridge = &host_bridge->dev;
- 
- 	kobject_get(&bridge->kobj);
- 	return bridge;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a..d58063e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -512,6 +512,13 @@ static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
- 	return dev->bus->self;
- }
- 
-+static inline struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
-+{
-+	while (bus->parent)
-+		bus = bus->parent;
-+	return to_pci_host_bridge(bus->bridge);
-+}
-+
- struct device *pci_get_host_bridge_device(struct pci_dev *dev);
- void pci_put_host_bridge_device(struct device *dev);
- 
+
 -- 
-2.5.0
-
+~Randy
