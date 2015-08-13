@@ -1,103 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:50891 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753059AbbHFENS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:18 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:16 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 40/42] drivers/of: Return allocated memory chunk from of_fdt_unflatten_tree()
-Date: Thu,  6 Aug 2015 14:11:45 +1000
-Message-Id: <1438834307-26960-41-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	"Murali Karicheri" <m-karicheri2@ti.com>
+Subject: [PATCH] pci: acpi: Generic function for setting up PCI device DMA coherency
+Date: Thu, 13 Aug 2015 16:58:45 +0700
+Message-ID: <1439459925-2361-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This changes of_fdt_unflatten_tree() so that it returns the allocated
-memory chunk for unflattened device-tree, which can be released once
-it's obsoleted.
+This patch refactors of_pci_dma_configure() into a more generic
+pci_dma_configure(), which can be reused by non-OF code.
+Then, it adds support for setting up PCI device DMA coherency from
+ACPI _CCA object that should normally be specified in the DSDT node
+of its PCI host bridge..
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Will Deacon <will.deacon@arm.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Murali Karicheri <m-karicheri2@ti.com>
 ---
- drivers/of/fdt.c       | 11 ++++++-----
- include/linux/of_fdt.h |  2 +-
- 2 files changed, 7 insertions(+), 6 deletions(-)
+Note: According to the ACPI spec, the _CCA attribute is required
+      for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+      support for ARM64 which is currently in development.
 
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index 074870a..8e1ba7e 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -408,7 +408,7 @@ static void *unflatten_dt_node(const void *blob,
-  * @dt_alloc: An allocator that provides a virtual address to memory
-  * for the resulting tree
-  */
--static void __unflatten_device_tree(const void *blob,
-+static void *__unflatten_device_tree(const void *blob,
- 			     struct device_node *dad,
- 			     struct device_node **mynodes,
- 			     void * (*dt_alloc)(u64 size, u64 align))
-@@ -421,7 +421,7 @@ static void __unflatten_device_tree(const void *blob,
+      Also, this should not affect other architectures since
+      if CCA is not required, the default value is coherent.
+      Please see include/acpi/acpi_bus.h: acpi_check_dma() and
+      drivers/acpi/scan.c: acpi_init_coherency() for more information
+
+ drivers/of/of_pci.c    | 20 --------------------
+ drivers/pci/probe.c    | 35 +++++++++++++++++++++++++++++++++--
+ include/linux/of_pci.h |  3 ---
+ 3 files changed, 33 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 5751dc5..b66ee4e 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -117,26 +117,6 @@ int of_get_pci_domain_nr(struct device_node *node)
+ }
+ EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
  
- 	if (!blob) {
- 		pr_debug("No device tree pointer\n");
+-/**
+- * of_pci_dma_configure - Setup DMA configuration
+- * @dev: ptr to pci_dev struct of the PCI device
+- *
+- * Function to update PCI devices's DMA configuration using the same
+- * info from the OF node of host bridge's parent (if any).
+- */
+-void of_pci_dma_configure(struct pci_dev *pci_dev)
+-{
+-	struct device *dev = &pci_dev->dev;
+-	struct device *bridge = pci_get_host_bridge_device(pci_dev);
+-
+-	if (!bridge->parent)
 -		return;
-+		return NULL;
- 	}
+-
+-	of_dma_configure(dev, bridge->parent->of_node);
+-	pci_put_host_bridge_device(bridge);
+-}
+-EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+-
+ #if defined(CONFIG_OF_ADDRESS)
+ /**
+  * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..e2fcd3b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -6,12 +6,14 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
+-#include <linux/of_pci.h>
++#include <linux/of_device.h>
+ #include <linux/pci_hotplug.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/cpumask.h>
+ #include <linux/pci-aspm.h>
++#include <linux/acpi.h>
++#include <linux/property.h>
+ #include <asm-generic/pci-bridge.h>
+ #include "pci.h"
  
- 	pr_debug("Unflattening device tree:\n");
-@@ -431,7 +431,7 @@ static void __unflatten_device_tree(const void *blob,
- 
- 	if (fdt_check_header(blob)) {
- 		pr_err("Invalid device tree blob header\n");
--		return;
-+		return NULL;
- 	}
- 
- 	/* First pass, scan for size */
-@@ -458,6 +458,7 @@ static void __unflatten_device_tree(const void *blob,
- 			   be32_to_cpup(mem + size));
- 
- 	pr_debug(" <- unflatten_device_tree()\n");
-+	return mem;
+@@ -1544,6 +1546,35 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
  }
  
- static void *kernel_tree_alloc(u64 size, u64 align)
-@@ -473,11 +474,11 @@ static void *kernel_tree_alloc(u64 size, u64 align)
-  * pointers of the nodes so the normal device-tree walking functions
-  * can be used.
-  */
--void of_fdt_unflatten_tree(const unsigned long *blob,
-+void *of_fdt_unflatten_tree(const unsigned long *blob,
- 			struct device_node *dad,
- 			struct device_node **mynodes)
++/**
++ * pci_dma_configure - Setup DMA configuration
++ * @pci_dev: ptr to pci_dev struct of the PCI device
++ *
++ * Function to update PCI devices's DMA configuration using the same
++ * info from the OF node or ACPI node of host bridge's parent (if any).
++ */
++static void pci_dma_configure(struct pci_dev *pci_dev)
++{
++	struct device *dev = &pci_dev->dev;
++	struct device *bridge = pci_get_host_bridge_device(pci_dev);
++	struct acpi_device *adev;
++	bool coherent;
++
++	if (has_acpi_companion(bridge)) {
++		adev = to_acpi_node(bridge->fwnode);
++		if (acpi_check_dma(adev, &coherent))
++			arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
++	} else {
++		struct device *host = bridge->parent;
++		if (!host)
++			return;
++
++		of_dma_configure(dev, host->of_node);
++	}
++
++	pci_put_host_bridge_device(bridge);
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
  {
--	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
-+	return __unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+ 	int ret;
+@@ -1557,7 +1588,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
+-	of_pci_dma_configure(dev);
++	pci_dma_configure(dev);
+ 
+ 	pci_set_dma_max_seg_size(dev, 65536);
+ 	pci_set_dma_seg_boundary(dev, 0xffffffff);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 29fd3fe..ce0e5ab 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -16,7 +16,6 @@ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_get_pci_domain_nr(struct device_node *node);
+-void of_pci_dma_configure(struct pci_dev *pci_dev);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+ {
+@@ -51,8 +50,6 @@ of_get_pci_domain_nr(struct device_node *node)
+ {
+ 	return -1;
  }
- EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+-
+-static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
+ #endif
  
-diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
-index 3644960..00db279 100644
---- a/include/linux/of_fdt.h
-+++ b/include/linux/of_fdt.h
-@@ -37,7 +37,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
- 				 unsigned long node);
- extern int of_fdt_match(const void *blob, unsigned long node,
- 			const char *const *compat);
--extern void of_fdt_unflatten_tree(const unsigned long *blob,
-+extern void *of_fdt_unflatten_tree(const unsigned long *blob,
- 			       struct device_node *dad,
- 			       struct device_node **mynodes);
- 
+ #if defined(CONFIG_OF_ADDRESS)
 -- 
 2.1.0
 
