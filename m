@@ -1,73 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:34467 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980AbbHELwH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Aug 2015 07:52:07 -0400
-Received: by wicne3 with SMTP id ne3so1307256wic.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Aug 2015 04:52:06 -0700 (PDT)
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:60734 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953AbbHMAYD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 20:24:03 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 13 Aug 2015 10:24:01 +1000
+Date: Thu, 13 Aug 2015 10:23:00 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com
+Subject: Re: [PATCH v6 12/42] powerpc/powernv: Increase PE# capacity
+Message-ID: <20150813002300.GA5761@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-13-git-send-email-gwshan@linux.vnet.ibm.com>
+ <55C8747E.9090908@ozlabs.ru>
+ <20150811003804.GA18283@gwshan>
+ <55C9623D.6070409@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <20150805092533.GC6092@arm.com>
-References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
- <20150804234956.GF17327@google.com> <20150805092318.GB6092@arm.com> <20150805092533.GC6092@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 5 Aug 2015 06:51:47 -0500
-Message-ID: <CAErSpo5g0VGeQeHArys+h_6eQuQnV+dH+bHBaLmJC1EdA-q4Hw@mail.gmail.com>
-Subject: Re: [PATCH v4 1/3] PCI: generic: remove dependency on hw_pci
-To: Will Deacon <will.deacon@arm.com>
-Cc: Jayachandran C <jchandra@broadcom.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55C9623D.6070409@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 5, 2015 at 4:25 AM, Will Deacon <will.deacon@arm.com> wrote:
-> On Wed, Aug 05, 2015 at 10:23:18AM +0100, Will Deacon wrote:
->> That said, I just tried to build this and it fails to compile the x-gene
->> PCI host driver. Fixup below.
+On Tue, Aug 11, 2015 at 12:47:25PM +1000, Alexey Kardashevskiy wrote:
+>On 08/11/2015 10:38 AM, Gavin Shan wrote:
+>>On Mon, Aug 10, 2015 at 07:53:02PM +1000, Alexey Kardashevskiy wrote:
+>>>On 08/06/2015 02:11 PM, Gavin Shan wrote:
+>>>>Each PHB maintains an array helping to translate RID (Request
+>>>>ID) to PE# with the assumption that PE# takes 8 bits, indicating
+>>>>that we can't have more than 256 PEs. However, pci_dn->pe_number
+>>>>already had 4-bytes for the PE#.
+>>>>
+>>>>The patch extends the PE# capacity so that each of them will be
+>>>>4-bytes long. Then we can use IODA_INVALID_PE to check one entry
+>>>>in phb->pe_rmap[] is valid or not.
+>>>>
+>>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>>---
+>>>>  arch/powerpc/platforms/powernv/pci-ioda.c | 8 ++++++--
+>>>>  arch/powerpc/platforms/powernv/pci.h      | 7 +++----
+>>>>  2 files changed, 9 insertions(+), 6 deletions(-)
+>>>>
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>index 57ba8fd..3094c61 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>@@ -786,7 +786,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>>>>
+>>>>  	/* Clear the reverse map */
+>>>>  	for (rid = pe->rid; rid < rid_end; rid++)
+>>>>-		phb->ioda.pe_rmap[rid] = 0;
+>>>>+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
+>>>>
+>>>>  	/* Release from all parents PELT-V */
+>>>>  	while (parent) {
+>>>>@@ -3134,7 +3134,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>>>  	unsigned long size, pemap_off;
+>>>>  	const __be64 *prop64;
+>>>>  	const __be32 *prop32;
+>>>>-	int len;
+>>>>+	int len, i;
+>>>>  	u64 phb_id;
+>>>>  	void *aux;
+>>>>  	long rc;
+>>>>@@ -3201,6 +3201,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>>>  	if (prop32)
+>>>>  		phb->ioda.reserved_pe = be32_to_cpup(prop32);
+>>>>
+>>>>+	/* Invalidate RID to PE# mapping */
+>>>>+	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
+>>>>+		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
+>>>>+
+>>>>  	/* Parse 64-bit MMIO range */
+>>>>  	pnv_ioda_parse_m64_window(phb);
+>>>>
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>>>index 1dc9578..6f8568e 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>>>@@ -175,11 +175,10 @@ struct pnv_phb {
+>>>>  			struct list_head	pe_list;
+>>>>  			struct mutex            pe_list_mutex;
+>>>>
+>>>>-			/* Reverse map of PEs, will have to extend if
+>>>>-			 * we are to support more than 256 PEs, indexed
+>>>>-			 * bus { bus, devfn }
+>>>>+			/* Reverse map of PEs, indexed by
+>>>>+			 * { bus, devfn }
+>>>>  			 */
+>>>>-			unsigned char		pe_rmap[0x10000];
+>>>>+			int			pe_rmap[0x10000];
+>>>
+>>>
+>>>256k seems to be waste when only tiny fraction of it will ever be used. Using
+>>>include/linux/hashtable.h makes sense here, and if you use a hashtable, you
+>>>won't have to initialize anything with IODA_INVALID_PE.
+>>>
+>>
+>>I'm not sure if I follow your idea completely. With hash table to trace
+>>RID mapping here, won't more memory needed if all PCI buse numbers (0
+>>to 255) are all valid? It means hash table doesn't have advantage in
+>>memory consumption.
 >
-> Wait, there's more!
-
-Thanks!  I fixed these two and updated pci/enumeration.  But the 0-day
-build also found this:
-
-commit: cc44fbb49d995ad2348d530300abf7877105094f [4/13] ARM/PCI,
-designware, xilinx: Use pci_scan_root_bus_msi()
-   drivers/built-in.o: In function `dw_msi_setup_irq':
->> :(.text+0x2a3c8): undefined reference to `pci_write_msi_msg'
-
-I don't see the problem there yet, and I'm going on vacation until
-Monday, so I won't be able to do anything with this until then.
-
-Bjorn
-
-
-> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> index 514f41b86c49..8ab3bd098424 100644
-> --- a/drivers/pci/host/pci-xgene.c
-> +++ b/drivers/pci/host/pci-xgene.c
-> @@ -506,7 +506,7 @@ static int xgene_pcie_msi_enable(struct xgene_pcie_port *port)
->  {
->         struct device_node *msi_node;
+>You need 3 bytes - one for a bus and two for devfn - which makes it a perfect
+>32bit has key and you only store existing devices in a hash so you do not
+>waste memory.
 >
-> -       msi_node = of_parse_phandle(port->dev.of_node, "msi-parent", 0);
-> +       msi_node = of_parse_phandle(port->dev->of_node, "msi-parent", 0);
->         if (!msi_node)
->                 return -ENODEV;
+
+You don't answer my concern yet: more memory will be needed if all PCI bus
+numbers (0 to 255) are all valid. Also, 2 bytes are enough: one byte is for
+bus number, another byte for devfn. Why we need 3 bytes here?
+
+How many bits of the 16-bits (2-bytes) used as the hash key? I believe it
+shouldn't all of them because lot of memory will be consumed for the hash
+bucket heads. Since most of cases, we have bus level PE. So it sounds
+reasonable to use the "devfn" as hash key, which is one-byte long. In this
+case, 2KB (256 * 8) is used for the hash bucket head without any node
+populated in the table yet.
+
+Every node would be represented by below data struct, each of which consumes
+24-bytes. If the PHB has 5 PCI buses, which is commonly seen, the total consumed
+memory will be:
+
+2KB for hash bucket head
+30KB for hash nodes: (24 * 256 * 5)
+
+struct pnv_ioda_rid {
+       int bdfn;
+       int pe_number;
+       struct hlist_node node;
+};
+
+Don't forget it need more complex to maintain the conflicting list in one
+bucket. So I don't see the benefit to use hashtable here.
+
 >
-> @@ -515,7 +515,7 @@ static int xgene_pcie_msi_enable(struct xgene_pcie_port *port)
->                 return -ENODEV;
+>>On the other hand, searching in hash table buckets
+>>have to iterate list of conflicting items (keys), which is slow comparing
+>>to what we have.
 >
->         of_node_put(msi_node);
-> -       port->msi->dev = &port->dev;
-> +       port->msi->dev = port->dev;
->         return 0;
->  }
+>How often do you expect this code to execute? Is not it setup-type and
+>hotplug only? Unless it is thousands times per second, it is not an issue
+>here.
 >
+
+I was intending to say: hashtable has more complex than array. The data
+struct can be as simple as array. I don't see why we bother to have
+hashtable here. However, you're correct, the code is just executed at
+system booting and hotplug time.
+
+>>Actually, I like the idea, using array to map RID to PE#,
+>>which was implemented by Ben.
 >
+>Where?
+>
+
+The array (unsigned char pe_rmap[0x10000]) was introduced by Ben. I think
+it's simple enough to finish the simple work: translating RID to PE number.
+
+>>
+>>>
+>>>>
+>>>>  			/* 32-bit TCE tables allocation */
+>>>>  			unsigned long		dma32_segcount;
+>>>>
+>>
+
+Thanks,
+Gavin
+
