@@ -1,53 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:35252 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751895AbbHLVx2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 17:53:28 -0400
-Date: Thu, 13 Aug 2015 07:53:22 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Tadeusz Struk <tadeusz.struk@intel.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Michal Marek <mmarek@suse.cz>
-Subject: Re: linux-next: Tree for Aug 12 (include/linux/pci.h)
-Message-ID: <20150813075322.064035f8@canb.auug.org.au>
-In-Reply-To: <55CB8AF0.4060905@infradead.org>
-References: <20150812233914.451d1fcf@canb.auug.org.au>
-	<55CB8AF0.4060905@infradead.org>
+Received: from mail-bl2on0134.outbound.protection.outlook.com ([65.55.169.134]:46780
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753235AbbHMRwe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Aug 2015 13:52:34 -0400
+From: Fabio Estevam <fabio.estevam@freescale.com>
+To: <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>
+Subject: [PATCH 3/4] PCI: spear: Use BUG_ON()
+Date: Thu, 13 Aug 2015 14:37:15 -0300
+Message-ID: <1439487436-26989-3-git-send-email-fabio.estevam@freescale.com>
+In-Reply-To: <1439487436-26989-1-git-send-email-fabio.estevam@freescale.com>
+References: <1439487436-26989-1-git-send-email-fabio.estevam@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Randy,
+Use BUG_ON() instead of an if condition followed by BUG().
 
-On Wed, 12 Aug 2015 11:05:36 -0700 Randy Dunlap <rdunlap@infradead.org> wrote:
->
-> on i386 or x86_64:
-> 
-> Many (repeated) errors like this one:
-> 
-> ../include/linux/pci.h:390:12: error: âstruct pci_devâ has no member named âphysfnâ
-> 
-> when CONFIG_PCI_ATS is not enabled.
+The semantic patch that makes this change is available
+in scripts/coccinelle/misc/bugon.cocci.
 
-Maybe caused by commit
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+ drivers/pci/host/pcie-spear13xx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-  dd0f368398ea ("crypto: qat - Add qat dh895xcc VF driver")
-
-from the crypto tree Which adds a
-
-  select PCI_IOV
-
-to drivers/crypto/qat/Kconfig without the necessary
-
-  select PCI
-
-but PCI_IOV selects PCI_ATS, so I am not sure what happened here.  I am
-assuming that your config has PCI_IOV enabled?  What about PCI?
-
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index c49fbdc..98d2683 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -223,8 +223,7 @@ static irqreturn_t spear13xx_pcie_irq_handler(int irq, void *arg)
+ 	status = readl(&app_reg->int_sts);
+ 
+ 	if (status & MSI_CTRL_INT) {
+-		if (!IS_ENABLED(CONFIG_PCI_MSI))
+-			BUG();
++		BUG_ON(!IS_ENABLED(CONFIG_PCI_MSI));
+ 		dw_handle_msi_irq(pp);
+ 	}
+ 
 -- 
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
+1.9.1
+
