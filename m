@@ -1,105 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:33350 "EHLO
-	mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751387AbbHTOMB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 10:12:01 -0400
-From: Pavel Fedin <p.fedin@samsung.com>
-To: 'David Daney' <ddaney.cavm@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	'Catalin Marinas' <catalin.marinas@arm.com>,
-	'Will Deacon' <will.deacon@arm.com>,
-	'Bjorn Helgaas' <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, 'Thomas Gleixner' <tglx@linutronix.de>,
-	'Jason Cooper' <jason@lakedaemon.net>
-Cc: linux-kernel@vger.kernel.org,
-	'Robert Richter' <rrichter@cavium.com>,
-	'David Daney' <david.daney@cavium.com>
-References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
- <1436979285-8177-3-git-send-email-ddaney.cavm@gmail.com>
-In-reply-to: <1436979285-8177-3-git-send-email-ddaney.cavm@gmail.com>
-Subject: RE: [PATCH 2/5] gic-its: Allow pci_requester_id to be overridden.
-Date: Thu, 20 Aug 2015 17:11:57 +0300
-Message-id: <01a101d0db52$2d23b360$876b1a20$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:34573 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495AbbHMUk1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Aug 2015 16:40:27 -0400
+Received: by wicne3 with SMTP id ne3so272351228wic.1
+        for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2015 13:40:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <841e1480e445f3bcde269a147a269a92@jcornwall.me>
+References: <8c1e7f957cc5a6f0404b883c864b5145@jcornwall.me>
+ <CAErSpo6OLAjVde8St2kCoqx3h9hX9ki+X9Ojy0eFqugvBKRrwg@mail.gmail.com> <841e1480e445f3bcde269a147a269a92@jcornwall.me>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 13 Aug 2015 15:40:07 -0500
+Message-ID: <CAErSpo7p1aX0z41H2Js=qdDSGq9gw-w3Y5-fs=h4H8wiYyDCVA@mail.gmail.com>
+Subject: Re: PCIe 3.0 AtomicOp capabilities
+To: Jay Cornwall <jay@jcornwall.me>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- Hello!
+On Tue, Aug 11, 2015 at 7:39 PM, Jay Cornwall <jay@jcornwall.me> wrote:
+> On 2015-08-11 10:10, Bjorn Helgaas wrote:
+>
+>> On Mon, Aug 10, 2015 at 1:36 PM, Jay Cornwall <jay@jcornwall.me> wrote:
+>>
+>>> Should the AtomicOp capabilities be similarly enabled if available? Or
+>>> might
+>>> there be a reason for doing this on a per-driver basis?
+>>
+>>
+>> I'm not very familiar with the AtomicOp functionality, but a quick
+>> skim of the spec suggests that it does have system implications and
+>> should be handled by the core. For example, AtomicOp support is
+>> optional, and it looks like it would be a bad idea to enable it in an
+>> endpoint if the upstream switch didn't support it.
+>
+>
+> This makes sense, but I think there are some cases in which upstream is
+> ambiguous.
+>
+> For example, consider a root complex which does not support AtomicOp
+> completion but supports routing to another endpoint which does. Would the
+> necessary condition for enabling AtomicOp requests be that at least one
+> other completion-capable endpoint is reachable?
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of David
-> Daney
-> Sent: Wednesday, July 15, 2015 7:55 PM
-> To: linux-arm-kernel@lists.infradead.org; Catalin Marinas; Will Deacon; Bjorn Helgaas; linux-
-> pci@vger.kernel.org; Thomas Gleixner; Jason Cooper
-> Cc: linux-kernel@vger.kernel.org; Robert Richter; David Daney
-> Subject: [PATCH 2/5] gic-its: Allow pci_requester_id to be overridden.
-> 
-> From: David Daney <david.daney@cavium.com>
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/irqchip/irq-gic-v3-its.c   | 14 +++++++++++++-
->  include/linux/irqchip/arm-gic-v3.h |  2 ++
->  2 files changed, 15 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-> index 1b7e155..4580970 100644
-> --- a/drivers/irqchip/irq-gic-v3-its.c
-> +++ b/drivers/irqchip/irq-gic-v3-its.c
-> @@ -1189,11 +1189,23 @@ static int its_pci_msi_vec_count(struct pci_dev *pdev)
->  	return max(msi, msix);
->  }
-> 
-> +static u32 its_dflt_pci_requester_id(struct pci_dev *pdev, u16 alias)
-> +{
-> +	return alias;
-> +}
-> +
-> +static its_pci_requester_id_t its_pci_requester_id = its_dflt_pci_requester_id;
-> +void set_its_pci_requester_id(its_pci_requester_id_t fn)
-> +{
-> +	its_pci_requester_id = fn;
-> +}
-> +EXPORT_SYMBOL(set_its_pci_requester_id);
+I don't know enough about AtomicOps to get into a discussion about
+what the exact conditions for enabling it are.
 
- IMHO having a globally defined function is a horrible approach. What if some HW has two different
-PCI host controllers, each of them wants to provide different form of IDs? I know, this is just
-imaginary, but still...
- What if instead of this function we simply add a field to a struct pci_bus ? Then bus driver would
-fill in HW-specific ID bits for every bus.
- I can send a patch if interested.
+I thought your original questions were basically (1) should the PCI
+core automatically enable AtomicOps? and (2) should drivers contain
+code to enable AtomicOps?
 
-> +
->  static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
->  {
->  	struct its_pci_alias *dev_alias = data;
-> 
-> -	dev_alias->dev_id = alias;
-> +	dev_alias->dev_id = its_pci_requester_id(pdev, alias);
->  	if (pdev != dev_alias->pdev)
->  		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
-> 
-> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
-> index ffbc034..18e3757 100644
-> --- a/include/linux/irqchip/arm-gic-v3.h
-> +++ b/include/linux/irqchip/arm-gic-v3.h
-> @@ -389,6 +389,8 @@ int its_cpu_init(void);
->  int its_init(struct device_node *node, struct rdists *rdists,
->  	     struct irq_domain *domain);
-> 
-> +typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
-> +void set_its_pci_requester_id(its_pci_requester_id_t fn);
->  #endif
-> 
->  #endif
-> --
+I think drivers should *not* contain code to directly enable
+AtomicOps, because it looks like doing that safely requires knowledge
+about the topology beyond the driver's device.  But I think it *would*
+be reasonable a driver to call a PCI interface like
+pci_enable_atomic() or something, and the PCI core could figure out
+whether it's safe and enable it or fail.
 
-Kind regards,
-Pavel Fedin
-Expert Engineer
-Samsung Electronics Research center Russia
+I don't know whether we should try to automatically enable AtomicOps
+even without an explicit driver request.  I don't say that to
+discourage that approach; I just don't know whether it makes sense or
+can be done safely.  I'm certainly open to reviewing patches that
+would do that.
 
-
-
+Bjorn
