@@ -1,253 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f194.google.com ([209.85.217.194]:36807 "EHLO
-	mail-lb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932359AbbHJLAr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 07:00:47 -0400
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:33970 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054AbbHMA3t (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 20:29:49 -0400
+Received: from /spool/local
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 13 Aug 2015 10:29:47 +1000
+Date: Thu, 13 Aug 2015 10:28:46 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
+	robherring2@gmail.com, panto@antoniou-consulting.com
+Subject: Re: [PATCH v6 18/42] powerpc/powernv: Allocate PE# in deasending
+ order
+Message-ID: <20150813002846.GA5978@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1438834307-26960-19-git-send-email-gwshan@linux.vnet.ibm.com>
+ <55C8B786.1050702@ozlabs.ru>
+ <20150811004339.GC18981@gwshan>
+ <55C962F9.2080105@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <55C4C448.4020102@arm.com>
-References: <1438933382-2936-1-git-send-email-lftan@altera.com>
-	<1438933382-2936-4-git-send-email-lftan@altera.com>
-	<55C4C448.4020102@arm.com>
-Date: Mon, 10 Aug 2015 19:00:44 +0800
-Message-ID: <CAFiDJ58QQzDVBE1-0vvyYHv03R_PVs9Nk3t_0wcJAdozBSLz7Q@mail.gmail.com>
-Subject: Re: [PATCH v3 3/5] pci: altera: Add Altera PCIe MSI driver
-From: Ley Foon Tan <lftan@altera.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55C962F9.2080105@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 7, 2015 at 10:44 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> On 07/08/15 08:43, Ley Foon Tan wrote:
->> This patch adds Altera PCIe MSI driver. This soft IP supports configurable
->> number of vectors, which is a dts parameter.
+On Tue, Aug 11, 2015 at 12:50:33PM +1000, Alexey Kardashevskiy wrote:
+>On 08/11/2015 10:43 AM, Gavin Shan wrote:
+>>On Tue, Aug 11, 2015 at 12:39:02AM +1000, Alexey Kardashevskiy wrote:
+>>>On 08/06/2015 02:11 PM, Gavin Shan wrote:
+>>>>The available PE#, represented by a bitmap in the PHB, is allocated
+>>>>in ascending order.
+>>>
+>>>Available PE# is available exactly because it is not allocated ;)
+>>>
 >>
->> Signed-off-by: Ley Foon Tan <lftan@altera.com>
->> ---
->>  drivers/pci/host/Kconfig           |   8 +
->>  drivers/pci/host/Makefile          |   1 +
->>  drivers/pci/host/pcie-altera-msi.c | 309 +++++++++++++++++++++++++++++++++++++
->>  3 files changed, 318 insertions(+)
->>  create mode 100644 drivers/pci/host/pcie-altera-msi.c
+>>Yeah, will correct it.
 >>
-<snip>
->> +static int altera_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
->> +                                  unsigned int nr_irqs, void *args)
->> +{
->> +       struct altera_msi *msi = domain->host_data;
->> +       unsigned long bit;
->> +       u32 mask;
->> +
->
-> As you cannot support multi-MSI, it would be good to have a
-> WARN_ON(nr_irqs != 1) here. Just in case...
-Noted.
-
->
->> +       mutex_lock(&msi->lock);
->> +
->> +       bit = find_first_zero_bit(msi->used, msi->num_of_vectors);
->> +       if (bit >= msi->num_of_vectors)
->> +               return -ENOSPC;
->> +
->> +       set_bit(bit, msi->used);
->> +
->> +       mutex_unlock(&msi->lock);
->> +
->> +       irq_domain_set_info(domain, virq, bit, &altera_msi_bottom_irq_chip,
->> +                           domain->host_data, handle_simple_irq,
->> +                           NULL, NULL);
->> +       set_irq_flags(virq, IRQF_VALID);
->> +
->> +       mask = msi_readl(msi, MSI_INTMASK);
->> +       mask |= 1 << bit;
->> +       msi_writel(msi, mask, MSI_INTMASK);
->> +
->> +       return 0;
->> +}
->> +
->> +static void altera_irq_domain_free(struct irq_domain *domain,
->> +                                  unsigned int virq, unsigned int nr_irqs)
->> +{
->> +       struct irq_data *d = irq_domain_get_irq_data(domain, virq);
->> +       struct altera_msi *msi = irq_data_get_irq_chip_data(d);
->> +       u32 mask;
->> +
->> +       mutex_lock(&msi->lock);
->> +
->> +       if (!test_bit(d->hwirq, msi->used)) {
->> +               dev_err(&msi->pdev->dev, "trying to free unused MSI#%lu\n",
->> +                       d->hwirq);
->> +       } else {
->> +               __clear_bit(d->hwirq, msi->used);
->> +               mask = msi_readl(msi, MSI_INTMASK);
->> +               mask &= ~(1 << d->hwirq);
->> +               msi_writel(msi, mask, MSI_INTMASK);
->> +       }
->> +
->> +       mutex_unlock(&msi->lock);
->> +}
->> +
->> +static const struct irq_domain_ops msi_domain_ops = {
->> +       .alloc  = altera_irq_domain_alloc,
->> +       .free   = altera_irq_domain_free,
->> +};
->> +
->> +static int altera_allocate_domains(struct altera_msi *msi)
->> +{
->> +       msi->inner_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
->> +                                            &msi_domain_ops, msi);
->> +       if (!msi->inner_domain) {
->> +               dev_err(&msi->pdev->dev, "failed to create IRQ domain\n");
->> +               return -ENOMEM;
->> +       }
->> +
->> +       msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
->> +                               &altera_msi_domain_info, msi->inner_domain);
->> +       if (!msi->msi_domain) {
->> +               dev_err(&msi->pdev->dev, "failed to create MSI domain\n");
->> +               irq_domain_remove(msi->inner_domain);
->> +               return -ENOMEM;
->> +       }
->> +
->> +       return 0;
->> +}
->> +
->> +static void altera_free_domains(struct altera_msi *msi)
->> +{
->> +       irq_domain_remove(msi->msi_domain);
->> +       irq_domain_remove(msi->inner_domain);
->> +}
->> +
->> +static int altera_msi_remove(struct platform_device *pdev)
->> +{
->> +       struct altera_msi *msi = platform_get_drvdata(pdev);
->> +
->> +       msi_writel(msi, 0, MSI_INTMASK);
->> +       irq_set_chained_handler(msi->irq, NULL);
->> +       irq_set_handler_data(msi->irq, NULL);
->> +
->> +       altera_free_domains(msi);
->> +
->> +       platform_set_drvdata(pdev, NULL);
->> +       return 0;
->> +}
->> +
->> +static int altera_msi_probe(struct platform_device *pdev)
->> +{
->> +       struct altera_msi *msi;
->> +       struct device_node *np = pdev->dev.of_node;
->> +       struct resource *res;
->> +       int ret;
->> +
->> +       msi = devm_kzalloc(&pdev->dev, sizeof(struct altera_msi),
->> +                          GFP_KERNEL);
->> +       if (!msi)
->> +               return -ENOMEM;
->> +
->> +       mutex_init(&msi->lock);
->> +       msi->pdev = pdev;
->> +
->> +       res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
->
-> Error checking here.
-Noted.
->
->> +       msi->csr_base = devm_ioremap_resource(&pdev->dev, res);
->> +       if (IS_ERR(msi->csr_base)) {
->> +               dev_err(&pdev->dev, "get csr resource failed\n");
->> +               return PTR_ERR(msi->csr_base);
->> +       }
->> +
->> +       res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
->> +                                          "vector_slave");
->
-> And here.
-Noted.
->
->> +       msi->vector_base = devm_ioremap_resource(&pdev->dev, res);
->> +       if (IS_ERR(msi->vector_base)) {
->> +               dev_err(&pdev->dev, "get vector slave resource failed\n");
->> +               return PTR_ERR(msi->vector_base);
->> +       }
->> +
->> +       msi->vector_phy = res->start;
->> +
->> +       if (of_property_read_u32(np, "num-vectors", &msi->num_of_vectors)) {
->> +               dev_err(&pdev->dev, "failed to parse the number of vectors\n");
->> +               return -EINVAL;
->> +       }
->> +
->> +       ret = altera_allocate_domains(msi);
->> +       if (ret)
->> +               return ret;
->> +
->> +       msi->irq = platform_get_irq(pdev, 0);
->> +       if (msi->irq <= 0) {
->> +               dev_err(&pdev->dev, "failed to map IRQ: %d\n", msi->irq);
->> +               ret = -ENODEV;
->> +               goto err;
->> +       }
->> +
->> +       irq_set_chained_handler_and_data(msi->irq, altera_msi_isr, msi);
->> +       platform_set_drvdata(pdev, msi);
->> +
->> +       return 0;
->> +
->> +err:
->> +       altera_msi_remove(pdev);
->> +       return ret;
->> +}
->> +
->> +static const struct of_device_id altera_msi_of_match[] = {
->> +       { .compatible = "altr,msi-1.0", NULL },
->> +       { },
->> +};
->> +
->> +static struct platform_driver altera_msi_driver = {
->> +       .driver = {
->> +               .name = "altera-msi",
->> +               .of_match_table = altera_msi_of_match,
->> +       },
->> +       .probe = altera_msi_probe,
->> +       .remove = altera_msi_remove,
->> +};
->> +
->> +static int __init altera_msi_init(void)
->> +{
->> +       return platform_driver_register(&altera_msi_driver);
->> +}
->> +
->> +subsys_initcall(altera_msi_init);
->> +
->> +MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
->> +MODULE_DESCRIPTION("Altera PCIe MSI support");
->> +MODULE_LICENSE("GPL v2");
->> --
->> 1.8.2.1
+>>>>It conflicts with the fact that M64 segments are
+>>>>assigned in same order. In order to avoid the conflict, the patch
+>>>>allocates PE# in descending order.
+>>>
+>>>What kind of conflict?
+>>>
 >>
+>>On PHB3, the M64 segment is assigned to one PE whose PE number is
+>>determined. M64 segment are allocated in ascending order. It's why
+>>I would like to allocate PE# in deascending order.
 >
-> Apart from the couple of nits above, this is starting to look good too.
-> And as for the PCIe driver, you need to get the DT maintainers to review
-> that part.
-Okay, added DT maintainers to CC list.
+>
+>From previous lessons, I thought M64 segment number is PE# number as well :-/
+>Seems this is not the case, so what does store this seg#<->PE# mapping in PHB?
+>
 
-Thanks for reviewing.
+Your understanding is somewhat correct. Let me explain for more here. Taking
+PHB3 as an example: it has 16 M64 BARs. The last BAR (15th) is running in
+share mode. When one segment from this BAR is assigned to one PE, the PE number
+is determined and that's equal to the segment number. However, it's still possible
+one PE has multiple segments. We have "master" and "slave" PEs for the later case.
 
-Regards
-Ley Foon
+If any one left BARs (0 to 14) is running in single mode and assigned to one particular
+PE. the PE number can be confiugred.
+
+>>
+>>>>
+>>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>>---
+>>>>  arch/powerpc/platforms/powernv/pci-ioda.c | 11 ++++++++---
+>>>>  1 file changed, 8 insertions(+), 3 deletions(-)
+>>>>
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>index 56b058c..1c950e8 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>@@ -161,13 +161,18 @@ static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>>>  static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>>>  {
+>>>>  	unsigned long pe;
+>>>>+	unsigned long limit = phb->ioda.total_pe_num - 1;
+>>>>
+>>>>  	do {
+>>>>  		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+>>>>-					phb->ioda.total_pe_num, 0);
+>>>>-		if (pe >= phb->ioda.total_pe_num)
+>>>>+					phb->ioda.total_pe_num, limit);
+>>>>+		if (pe < phb->ioda.total_pe_num &&
+>>>>+		    !test_and_set_bit(pe, phb->ioda.pe_alloc))
+>>>>+			break;
+>>>>+
+>>>>+		if (--limit >= phb->ioda.total_pe_num)
+>>>>  			return NULL;
+>>>>-	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+>>>>+	} while (1);
+>>>
+>>>
+>>>Usually, if it is "while(1)", then it is "while(1){}" rather than
+>>>"do{}while(1)" :)
+>>
+>>Agree, will change it.
+>>
+>>>
+>>>
+>>>>
+>>>>  	return pnv_ioda_init_pe(phb, pe);
+>>>>  }
+>>>>
+>>
+
+Thanks,
+Gavin
+
