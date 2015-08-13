@@ -1,250 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:39776 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933339AbbHKAN5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:13:57 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 11 Aug 2015 10:13:54 +1000
-Date: Tue, 11 Aug 2015 10:12:59 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-Subject: Re: [PATCH v6 07/42] powerpc/powernv: Improve IO and M32 mapping
-Message-ID: <20150811001259.GC10753@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-8-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C85558.2050300@ozlabs.ru>
+Received: from mail-bn1on0146.outbound.protection.outlook.com ([157.56.110.146]:31305
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751590AbbHMNbZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 13 Aug 2015 09:31:25 -0400
+Subject: Re: [PATCH v4 1/3] PCI: generic: remove dependency on hw_pci
+To: Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
+ <20150804234956.GF17327@google.com> <20150805092318.GB6092@arm.com>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Ming Lei <ming.lei@canonical.com>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Message-ID: <55CC98AE.5010604@amd.com>
+Date: Thu, 13 Aug 2015 20:16:30 +0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55C85558.2050300@ozlabs.ru>
+In-Reply-To: <20150805092318.GB6092@arm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 05:40:08PM +1000, Alexey Kardashevskiy wrote:
->On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>There're 3 windows (IO, M32 and M64) for PHB, root port and upstream
->
->These are actually IO, non-prefetchable and prefetchable windows which happen
->to be IO, 32bit and 64bit windows but this has nothing to do with the M32/M64
->BAR registers in P7IOC/PHB3, do I understand this correctly?
->
+Hi Bjorn,
 
-In pci-ioda.c, we have below definiations that are defined when
-developing the code, not from any specification:
+On 8/5/15 16:23, Will Deacon wrote:
+> On Wed, Aug 05, 2015 at 12:49:56AM +0100, Bjorn Helgaas wrote:
+>> >On Wed, Aug 05, 2015 at 02:23:38AM +0530, Jayachandran C wrote:
+>>> > >The current code in pci-host-generic.c uses pci_common_init_dev()
+>>> > >from arm architecture to do some part of the PCI setup, and this
+>>> > >prevents it from being used with arm64 architecture.
+>>> > >
+>>> > >The part of pci_common_init_dev() that is really needed by
+>>> > >pci-host-generic.c is very limited and can be done in the same
+>>> > >file without using hw_pci API of ARM. The ARM platform requires
+>>> > >a pci_sys_data as sysdata for the PCI bus, this can be handled by
+>>> > >setting up gen_pci to have a pci_sys_data variable as the first
+>>> > >element.
+>>> > >
+>>> > >Signed-off-by: Jayachandran C<jchandra@broadcom.com>
+>>> > >Acked-by: Lorenzo Pieralisi<lorenzo.pieralisi@arm.com>
+>>> > >Tested-by: Lorenzo Pieralisi<lorenzo.pieralisi@arm.com>
+>>> > >Tested-by: Pavel Fedin<p.fedin@samsung.com>
+>> >
+>> >I applied all three of these to my pci/enumeration branch for v4.3.
+>> >
+>> >I made a few changes, the most important being to call
+>> >pcie_bus_configure_settings() before pci_bus_add_devices(), because drivers
+>> >may claim devices in pci_bus_add_devices(), and the PCI core shouldn't
+>> >touch devices after drivers claim them.
+>> >
+>> >I dropped the acks and tested-by because of that change, but I'll happily
+>> >add them back if Lorenzo and Pavel confirm.  The patches are here if you
+>> >want to review/test them:
+>> >
+>> >https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/enumeration
+>> >
+>> >I'm sure the other patches on that branch will need some tweaks, too, so I
+>> >don't have any problem with updating these.
 
-IO  - resources with IO property
-M32 - 32-bits or non-prefetchable resources
-M64 - 64-bits and prefetchable resources
+I have also tested on AMD Seattle (w/ non-PROBE_ONLY mode).
 
->>port of the PCIE switch behind root port. In order to support PCI
->>hotplug, we extend the start/end address of those 3 windows of root
->>port or upstream port to the start/end address of the 3 PHB's windows.
->>The current implementation, assigning IO or M32 segment based on the
->>bridge's windows, isn't reliable.
->>
->>The patch fixes above issue by calculating PE's consumed IO or M32
->>segments from its contained devices, no PCI bridge windows involved
->>if the PE doesn't contain all the subordinate PCI buses.
->
->Please, rephrase it. How can PCI bridges be involved in PE consumption?
->
-
-Ok. Will add something like below:
-
-if the PE, corresponding to the PCI bus, doesn't contain all the subordinate
-PCI buses.
-
->
->>Otherwise,
->>the PCI bridge windows still contribute to PE's consumed IO or M32
->>segments.
->
->PCI bridge windows themselves consume PEs? Is that correct?
->
-
-PCI bridge windows consume IO, M32, M64 segments, not PEs.
-
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 136 +++++++++++++++++-------------
->>  1 file changed, 79 insertions(+), 57 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 488a53e..713f4b4 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -2844,75 +2844,97 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
->>  }
->>  #endif /* CONFIG_PCI_IOV */
->>
->>-/*
->>- * This function is supposed to be called on basis of PE from top
->>- * to bottom style. So the the I/O or MMIO segment assigned to
->>- * parent PE could be overrided by its child PEs if necessary.
->>- */
->>-static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->>-				  struct pnv_ioda_pe *pe)
->>+static int pnv_ioda_setup_one_res(struct pci_controller *hose,
->>+				  struct pnv_ioda_pe *pe,
->>+				  struct resource *res)
->>  {
->>  	struct pnv_phb *phb = hose->private_data;
->>  	struct pci_bus_region region;
->>-	struct resource *res;
->>-	int i, index;
->>-	unsigned int segsize;
->>+	unsigned int index, segsize;
->>  	unsigned long *segmap, *pe_segmap;
->>  	uint16_t win;
->>  	int64_t rc;
->>
->>-	/*
->>-	 * NOTE: We only care PCI bus based PE for now. For PCI
->>-	 * device based PE, for example SRIOV sensitive VF should
->>-	 * be figured out later.
->>-	 */
->>-	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
->>+	/* Check if we need map the resource */
->>+	if (!res->parent || !res->flags || res->start > res->end)
->
->res->start >= res->end ?
->
-
-No, res->start == res->end is valid.
-
->
->>+		return 0;
->>
->>-	pci_bus_for_each_resource(pe->pbus, res, i) {
->>-		if (!res || !res->flags ||
->>-		    res->start > res->end)
->>-			continue;
->>+	if (res->flags & IORESOURCE_IO) {
->>+		region.start = res->start - phb->ioda.io_pci_base;
->>+		region.end   = res->end - phb->ioda.io_pci_base;
->>+		segsize      = phb->ioda.io_segsize;
->>+		segmap       = phb->ioda.io_segmap;
->>+		pe_segmap    = pe->io_segmap;
->>+		win          = OPAL_IO_WINDOW_TYPE;
->>+	} else if ((res->flags & IORESOURCE_MEM) &&
->>+		   !pnv_pci_is_mem_pref_64(res->flags)) {
->>+		region.start = res->start -
->>+			       hose->mem_offset[0] -
->>+			       phb->ioda.m32_pci_base;
->>+		region.end   = res->end -
->>+			       hose->mem_offset[0] -
->>+			       phb->ioda.m32_pci_base;
->>+		segsize      = phb->ioda.m32_segsize;
->>+		segmap       = phb->ioda.m32_segmap;
->>+		pe_segmap    = pe->m32_segmap;
->>+		win          = OPAL_M32_WINDOW_TYPE;
->>+	} else {
->>+		return 0;
->>+	}
->>
->>-		if (res->flags & IORESOURCE_IO) {
->>-			region.start = res->start - phb->ioda.io_pci_base;
->>-			region.end   = res->end - phb->ioda.io_pci_base;
->>-			segsize      = phb->ioda.io_segsize;
->>-			segmap       = phb->ioda.io_segmap;
->>-			pe_segmap    = pe->io_segmap;
->>-			win          = OPAL_IO_WINDOW_TYPE;
->>-		} else if ((res->flags & IORESOURCE_MEM) &&
->>-			   !pnv_pci_is_mem_pref_64(res->flags)) {
->>-			region.start = res->start -
->>-				       hose->mem_offset[0] -
->>-				       phb->ioda.m32_pci_base;
->>-			region.end   = res->end -
->>-				       hose->mem_offset[0] -
->>-				       phb->ioda.m32_pci_base;
->>-			segsize      = phb->ioda.m32_segsize;
->>-			segmap       = phb->ioda.m32_segmap;
->>-			pe_segmap    = pe->m32_segmap;
->>-			win          = OPAL_M32_WINDOW_TYPE;
->>-		} else {
->>-			continue;
->>+	region.start = _ALIGN_DOWN(region.start, segsize);
->>+	region.end   = _ALIGN_UP(region.end, segsize);
->>+	index = region.start / segsize;
->>+	while (index < phb->ioda.total_pe &&
->>+	       region.start < region.end) {
->>+		rc = opal_pci_map_pe_mmio_window(phb->opal_id,
->>+				pe->pe_number, win, 0, index);
->>+		if (rc != OPAL_SUCCESS) {
->>+			pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
->>+				__func__, rc, win, index,
->>+				pe->phb->hose->global_number,
->>+				pe->pe_number);
->>+			return -EIO;
->>  		}
->>
->>-		index = region.start / phb->ioda.io_segsize;
->>-		while (index < phb->ioda.total_pe &&
->>-		       region.start <= region.end) {
->>-			set_bit(index, segmap);
->>-			set_bit(index, pe_segmap);
->>-			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
->>-					pe->pe_number, win, 0, index);
->>-			if (rc != OPAL_SUCCESS) {
->>-				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
->>-					__func__, rc, win, index,
->>-					pe->phb->hose->global_number,
->>-					pe->pe_number);
->>-				break;
->>-			}
->>+		set_bit(index, segmap);
->>+		set_bit(index, pe_segmap);
->>+		region.start += segsize;
->>+		index++;
->>+	}
->>+
->>+	return 0;
->>+}
->>+
->>+static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->>+				  struct pnv_ioda_pe *pe)
->>+{
->>+	struct pci_dev *pdev;
->>+	struct resource *res;
->>+	int i;
->>+
->>+	/* This function only works for bus dependent PE */
->>+	BUG_ON(!(pe->flags & (PNV_IODA_PE_BUS | PNV_IODA_PE_BUS_ALL)));
->>+
->>+	list_for_each_entry(pdev, &pe->pbus->devices, bus_list) {
->>+		for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
->>+			res = &pdev->resource[i];
->>+			if (pnv_ioda_setup_one_res(hose, pe, res))
->>+				return;
->>+		}
->>+
->>+		/* If the PE contains all subordinate PCI buses, the
->>+		 * resources of the child bridges should be mapped
->>+		 * to the PE as well.
->>+		 */
->>+		if (!(pe->flags & PNV_IODA_PE_BUS_ALL) ||
->>+		    (pdev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
->>+			continue;
->>
->>-			region.start += segsize;
->>-			index++;
->>+		for (i = 0; i <= PCI_BRIDGE_RESOURCE_NUM; i++) {
->>+			res = &pdev->resource[PCI_BRIDGE_RESOURCES + i];
->>+			if (pnv_ioda_setup_one_res(hose, pe, res))
->>+				return;
->>  		}
->>  	}
->>  }
->>
-
-Thanks,
-Gavin
-
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
