@@ -1,104 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f68.google.com ([209.85.213.68]:36381 "EHLO
-	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751667AbbH0Rsj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 27 Aug 2015 13:48:39 -0400
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:35431 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754304AbbHNO6A (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 10:58:00 -0400
+Received: by igbjg10 with SMTP id jg10so13710091igb.0
+        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2015 07:57:59 -0700 (PDT)
+Date: Fri, 14 Aug 2015 09:57:55 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/3] powerpc: PCI: Fix lookup of linux,pci-probe-only
+ property
+Message-ID: <20150814145755.GE26431@google.com>
+References: <1439563268-13418-1-git-send-email-marc.zyngier@arm.com>
+ <1439563268-13418-3-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1440678857-27118-4-git-send-email-gabriel.fernandez@linaro.org>
-References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
-	<1440678857-27118-4-git-send-email-gabriel.fernandez@linaro.org>
-Date: Thu, 27 Aug 2015 23:01:16 +0530
-Message-ID: <CAHM4w1=g=UFoz=R-6hxJC0=fSieN1WDvZT97ykL1b3_YPhBjZg@mail.gmail.com>
-Subject: Re: [PATCH v4 3/4] PCI: st: Provide support for the sti PCIe controller
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, kernel@stlinux.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1439563268-13418-3-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gabriel,
+Hi Marc,
 
-Looks good to me.
+On Fri, Aug 14, 2015 at 03:41:07PM +0100, Marc Zyngier wrote:
+> When find_and_init_phbs() looks for the probe-only property, it seems
+> to trust the firmware to be correctly written, and assumes that there
+> is a parameter to the property.
+> 
+> It is conceivable that the firmware could not be that perfect, and it
+> could expose this property naked (at least one arm64 platform seems to
+> exhibit this exact behaviour). The setup code the ends up making
+> a decision based on whatever the property pointer points to, which
+> is likely to be junk.
+> 
+> Instead, let's check for the validity of the property, and ignore
+> it if the firmware couldn't make up its mind.
+> 
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  arch/powerpc/platforms/pseries/setup.c | 15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
+> 
+> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+> index df6a704..6bdc1f9 100644
+> --- a/arch/powerpc/platforms/pseries/setup.c
+> +++ b/arch/powerpc/platforms/pseries/setup.c
+> @@ -490,14 +490,19 @@ static void __init find_and_init_phbs(void)
+>  	 */
+>  	if (of_chosen) {
+>  		const int *prop;
+> +		int len;
+>  
+>  		prop = of_get_property(of_chosen,
+> -				"linux,pci-probe-only", NULL);
+> +				"linux,pci-probe-only", &len);
+>  		if (prop) {
+> -			if (*prop)
+> -				pci_add_flags(PCI_PROBE_ONLY);
+> -			else
+> -				pci_clear_flags(PCI_PROBE_ONLY);
+> +			if (len) {
+> +				if (be32_to_cpup(prop))
+> +					pci_add_flags(PCI_PROBE_ONLY);
+> +				else
+> +					pci_clear_flags(PCI_PROBE_ONLY);
+> +			} else {
+> +				pr_warn("linux,pci-probe-only set without value, ignoring\n");
+> +			}
 
-On Thu, Aug 27, 2015 at 6:04 PM, Gabriel Fernandez
-<gabriel.fernandez@linaro.org> wrote:
-> sti pcie is built around a Synopsis Designware PCIe IP.
->
-> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+This seems essentially identical to the pci-host-generic version.
+Is there a way we can factor it out so there's only one copy?
 
-
-> +static int st_pcie_link_up(struct pcie_port *pp)
-> +{
-> +       u32 status;
-> +       int link_up;
-
-nit: why not bool
-
-> +       int count = 0;
-
-[...]
-
-> +static void st_pcie_board_reset(struct pcie_port *pp)
-> +{
-> +       struct st_pcie *pcie = to_st_pcie(pp);
-> +
-> +       if (!gpio_is_valid(pcie->reset_gpio))
-> +               return;
-> +
-> +       if (gpio_direction_output(pcie->reset_gpio, 0)) {
-> +               dev_err(pp->dev, "Cannot set PERST# (gpio %u) to output\n",
-> +                       pcie->reset_gpio);
-> +               return;
-> +       }
-> +
-> +       /* From PCIe spec */
-> +       msleep(2);
-> +       gpio_direction_output(pcie->reset_gpio, 1);
-> +
-> +       /*
-> +        * PCIe specification states that you should not issue any config
-> +        * requests until 100ms after asserting reset, so we enforce that here
-> +        */
-> +       msleep(100);
-
-IIRC, specification says to wait after link training completes. So
-shouldn't it be after st_pcie_enable_ltssm. Moreover, I wonder why
-others do not need it.
-
-Reviewed-by: Pratyush Anand <pratyush.anand@gmail.com>
+>  		}
+>  	}
+>  }
+> -- 
+> 2.1.4
+> 
