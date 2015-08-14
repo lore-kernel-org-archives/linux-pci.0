@@ -1,67 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:34143 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965208AbbHKPvD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 11:51:03 -0400
-Received: by igui7 with SMTP id i7so43095480igu.1
-        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 08:51:02 -0700 (PDT)
-Subject: [PATCH v3 00/11] PCI: Fix ATS deadlock
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gregor Dick <gdick@solarflare.com>,
-	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
-Date: Tue, 11 Aug 2015 10:50:59 -0500
-Message-ID: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mx2.suse.de ([195.135.220.15]:45892 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755285AbbHNQvJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 12:51:09 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+Subject: Re: [PATCH v2 2/4] PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
+From: Alexander Graf <agraf@suse.de>
+In-Reply-To: <20150814164324.GC22809@arm.com>
+Date: Fri, 14 Aug 2015 09:50:54 -0700
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	Ben Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Message-Id: <EA13B7D9-D612-4957-AF64-6B0BA0DFE06F@suse.de>
+References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com> <1439569159-10051-3-git-send-email-marc.zyngier@arm.com> <20150814164051.GF26431@google.com> <20150814164324.GC22809@arm.com>
+To: Will Deacon <will.deacon@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gregor reported a deadlock [1] when enabling a VF that supports ATS.
-This series is intended to fix that.  The second patch should be enough to
-fix the deadlock; the rest are simplification and cleanup.
 
-These are based on v4.2-rc2.
+> On 14.08.2015, at 09:43, Will Deacon <will.deacon@arm.com> wrote:
+> 
+> On Fri, Aug 14, 2015 at 05:40:51PM +0100, Bjorn Helgaas wrote:
+>> On Fri, Aug 14, 2015 at 05:19:17PM +0100, Marc Zyngier wrote:
+>>> When pci-host-generic looks for the probe-only property, it seems
+>>> to trust the DT to be correctly written, and assumes that there
+>>> is a parameter to the property.
+>>> 
+>>> Unfortunately, this is not always the case, and some firmware expose
+>>> this property naked. The driver ends up making a decision based on
+>>> whatever the property pointer points to, which is likely to be junk.
+>>> 
+>>> Switch to the common of_pci.c implementation that doesn't suffer
+>>> from this problem.
+>>> 
+>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>>> ---
+>>> drivers/pci/host/pci-host-generic.c | 9 +--------
+>>> 1 file changed, 1 insertion(+), 8 deletions(-)
+>>> 
+>>> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+>>> index 265dd25..545ff4e 100644
+>>> --- a/drivers/pci/host/pci-host-generic.c
+>>> +++ b/drivers/pci/host/pci-host-generic.c
+>>> @@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+>>> 	int err;
+>>> 	const char *type;
+>>> 	const struct of_device_id *of_id;
+>>> -	const int *prop;
+>>> 	struct device *dev = &pdev->dev;
+>>> 	struct device_node *np = dev->of_node;
+>>> 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+>>> @@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+>>> 		return -EINVAL;
+>>> 	}
+>>> 
+>>> -	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
+>>> -	if (prop) {
+>>> -		if (*prop)
+>>> -			pci_add_flags(PCI_PROBE_ONLY);
+>>> -		else
+>>> -			pci_clear_flags(PCI_PROBE_ONLY);
+>>> -	}
+>>> +	of_pci_check_probe_only(of_chosen);
+>> 
+>> Do we need support for pci-probe-only in pci-host-generic at all?
+>> You're removing the use in amd-overdrive.dts, and there are no other
+>> DTs in the kernel tree that mention it.
+>> 
+>> If we can live without it, that would be nice.  It seems like a relic from
+>> days when we couldn't reliably assign resources.  (I'm not saying we can do
+>> that reliably even today, but I'd rather make it reliable than turn it
+>> off.)
+> 
+> Kvmtool certainly uses it (and generates its own DT, hence why you don't
+> see it in mainline). Not sure about qemu, though.
 
-[1] http://permalink.gmane.org/gmane.linux.kernel.iommu/9433
-
-Changes between v2 and v3:
-  - Initialize info->ats.enabled, qdep in intel-iommu.c (Yinghai)
-  - Use "u8 enabled:1", not "int enabled:1" in intel-iommu.c state
-  - WARN_ON() if enabling ATS when already enabled (Joerg)
-  - Return -EBUSY, not -EINVAL if enabling ATS when already enabled
-  - Added Reviewed-by from Joerg
-
-Changes between v1 and v2:
-  - Remove use of pci_ats_enabled() (intel-iommu.c)
-  - Call pci_ats_queue_depth() only once per device and cache result
-    (intel-iommu.c)
-  - Remove pci_ats_enabled() interface
-  - Stop caching queue depth in pci_dev to save space
-  - Add PF refcount of how many associated VFs have ATS enabled
-  - Add comment that ATS must be enabled on PF before on VFs
-  - Require ATS to be disabled on all VFs and PF before changing STU
-
----
-
-Bjorn Helgaas (11):
-      iommu/vt-d: Cache PCI ATS state and Invalidate Queue Depth
-      PCI: Allocate ATS struct during enumeration
-      PCI: Embed ATS info directly into struct pci_dev
-      PCI: Reduce size of ATS structure elements
-      PCI: Rationalize pci_ats_queue_depth() error checking
-      PCI: Inline the ATS setup code into pci_ats_init()
-      PCI: Use pci_physfn() rather than looking up physfn by hand
-      PCI: Clean up ATS error handling
-      PCI: Move ATS declarations to linux/pci.h so they're all together
-      PCI: Stop caching ATS Invalidate Queue Depth
-      PCI: Remove pci_ats_enabled()
+QEMU definitely doesn't do proble-only. Is this driver used on real PPC machines too? In that case you also won't see the dt, because it comes with the hardware ;).
 
 
- drivers/iommu/intel-iommu.c |   28 ++++++---
- drivers/pci/ats.c           |  132 +++++++++++++++----------------------------
- drivers/pci/probe.c         |    3 +
- include/linux/pci-ats.h     |   49 ----------------
- include/linux/pci.h         |   18 ++++++
- 5 files changed, 85 insertions(+), 145 deletions(-)
+Alex
+
