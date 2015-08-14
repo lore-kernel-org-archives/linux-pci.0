@@ -1,51 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:36569 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207AbbHSGcK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Aug 2015 02:32:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <20150818041113.GW26431@google.com>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-	<1438039809-24957-28-git-send-email-yinghai@kernel.org>
-	<20150818041113.GW26431@google.com>
-Date: Tue, 18 Aug 2015 23:32:09 -0700
-Message-ID: <CAE9FiQXm6Xnf2Yf-h6D8o9o963zGyFG7vtrAsm5Qkfo=eOU7NQ@mail.gmail.com>
-Subject: Re: [PATCH v3 27/51] PCI: Move ISA ioport align out of calculate_iosize
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>
+Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: [PATCH v2 2/4] PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
+Date: Fri, 14 Aug 2015 17:19:17 +0100
+Message-Id: <1439569159-10051-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 9:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jul 27, 2015 at 04:29:45PM -0700, Yinghai Lu wrote:
->> So we could unify calculate_iosize and calculate_memsize later.
->
-> Please make this a complete sentence, not just a continuation of the
-> summary line.
->
->> when one bridge have several children devices, and every devices
->> have several io port resources and resource size < 0x400.
->
-> This isn't a sentence either, so I'm not sure what this is supposed to
-> mean.
+When pci-host-generic looks for the probe-only property, it seems
+to trust the DT to be correctly written, and assumes that there
+is a parameter to the property.
 
-will change to:
+Unfortunately, this is not always the case, and some firmware expose
+this property naked. The driver ends up making a decision based on
+whatever the property pointer points to, which is likely to be junk.
 
-Subject: [PATCH] PCI: Move ISA io port align out of calculate_iosize()
+Switch to the common of_pci.c implementation that doesn't suffer
+from this problem.
 
-We can move ISA io port align out of calculate_iosize(),
-so we could unify calculate_iosize and calculate_memsize later.
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/host/pci-host-generic.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-That extra aligning or offset is to work around ISA devices:
-When one bridge have several children devices, and every device
-has several io port resources and resource size < 0x400.
-We need to check size, and add extra size to make sure bit8/9
-to be zero.
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 265dd25..545ff4e 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	int err;
+ 	const char *type;
+ 	const struct of_device_id *of_id;
+-	const int *prop;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+@@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
+-	if (prop) {
+-		if (*prop)
+-			pci_add_flags(PCI_PROBE_ONLY);
+-		else
+-			pci_clear_flags(PCI_PROBE_ONLY);
+-	}
++	of_pci_check_probe_only(of_chosen);
+ 
+ 	of_id = of_match_node(gen_pci_of_match, np);
+ 	pci->cfg.ops = of_id->data;
+-- 
+2.1.4
+
