@@ -1,84 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:36418 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267AbbHTGBl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 02:01:41 -0400
-Received: by wicja10 with SMTP id ja10so136074631wic.1
-        for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2015 23:01:39 -0700 (PDT)
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:35077 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751347AbbHNU0m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 16:26:42 -0400
+Received: by wicne3 with SMTP id ne3so28583257wic.0
+        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2015 13:26:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1440023349.2737.21.camel@kernel.crashing.org>
-References: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
- <20150818184943.GA26431@google.com> <20150818.121004.1891242587946602543.davem@davemloft.net>
- <20150819221624.GA8150@google.com> <1440023349.2737.21.camel@kernel.crashing.org>
+In-Reply-To: <20150814164324.GC22809@arm.com>
+References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+ <1439569159-10051-3-git-send-email-marc.zyngier@arm.com> <20150814164051.GF26431@google.com>
+ <20150814164324.GC22809@arm.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Aug 2015 23:01:19 -0700
-Message-ID: <CAErSpo7JtRLWRAUPBdsoKauHNmftsb6fST317V9Sg4PkTV91pg@mail.gmail.com>
-Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: David Miller <davem@davemloft.net>,
-	Yijing Wang <wangyijing@huawei.com>,
+Date: Fri, 14 Aug 2015 15:26:21 -0500
+Message-ID: <CAErSpo5abs2Qj25Bs+JVg87ve346f_RVz7jhNwqdv856+WvXQA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/4] PCI: pci-host-generic: Fix lookup of
+ linux,pci-probe-only property
+To: Will Deacon <will.deacon@arm.com>
+Cc: Marc Zyngier <Marc.Zyngier@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"agraf@suse.de" <agraf@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Meelis Roos <mroos@linux.ee>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	Eric Snowberg <eric.snowberg@oracle.com>
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 19, 2015 at 3:29 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Wed, 2015-08-19 at 17:16 -0500, Bjorn Helgaas wrote:
->> On Tue, Aug 18, 2015 at 12:10:04PM -0700, David Miller wrote:
->> > From: Bjorn Helgaas <bhelgaas@google.com>
->> > Date: Tue, 18 Aug 2015 13:49:43 -0500
+On Fri, Aug 14, 2015 at 11:43 AM, Will Deacon <will.deacon@arm.com> wrote:
+> On Fri, Aug 14, 2015 at 05:40:51PM +0100, Bjorn Helgaas wrote:
+>> On Fri, Aug 14, 2015 at 05:19:17PM +0100, Marc Zyngier wrote:
+>> > When pci-host-generic looks for the probe-only property, it seems
+>> > to trust the DT to be correctly written, and assumes that there
+>> > is a parameter to the property.
 >> >
->> > > [+cc Dave, Eric, Ben, sparclinux]
->> > >
->> > > On Mon, Aug 17, 2015 at 06:47:58PM +0800, Yijing Wang wrote:
->> > > > Commit d0751b98dfa3 ("PCI: Add dev->has_secondary_link to
->> > > > track downstream PCIe links")assumed root port is always
->> > > > the top device in pcie tree. But on sparc64 V245 and T2000tthe
->> > > > pcie tree has no root port device in top level, the
->> > > > upstream port device is connected directly to root bus.
->> > > > So we may get NULL parent for this upstream port device.
+>> > Unfortunately, this is not always the case, and some firmware expose
+>> > this property naked. The driver ends up making a decision based on
+>> > whatever the property pointer points to, which is likely to be junk.
+>> >
+>> > Switch to the common of_pci.c implementation that doesn't suffer
+>> > from this problem.
+>> >
+>> > Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>> > ---
+>> >  drivers/pci/host/pci-host-generic.c | 9 +--------
+>> >  1 file changed, 1 insertion(+), 8 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+>> > index 265dd25..545ff4e 100644
+>> > --- a/drivers/pci/host/pci-host-generic.c
+>> > +++ b/drivers/pci/host/pci-host-generic.c
+>> > @@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+>> >     int err;
+>> >     const char *type;
+>> >     const struct of_device_id *of_id;
+>> > -   const int *prop;
+>> >     struct device *dev = &pdev->dev;
+>> >     struct device_node *np = dev->of_node;
+>> >     struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+>> > @@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+>> >             return -EINVAL;
+>> >     }
+>> >
+>> > -   prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
+>> > -   if (prop) {
+>> > -           if (*prop)
+>> > -                   pci_add_flags(PCI_PROBE_ONLY);
+>> > -           else
+>> > -                   pci_clear_flags(PCI_PROBE_ONLY);
+>> > -   }
+>> > +   of_pci_check_probe_only(of_chosen);
+>>
+>> Do we need support for pci-probe-only in pci-host-generic at all?
+>> You're removing the use in amd-overdrive.dts, and there are no other
+>> DTs in the kernel tree that mention it.
+>>
+>> If we can live without it, that would be nice.  It seems like a relic from
+>> days when we couldn't reliably assign resources.  (I'm not saying we can do
+>> that reliably even today, but I'd rather make it reliable than turn it
+>> off.)
 >
-> Picking up that thread half way through...
->
->> > > > Upstream port ------ Downstream port ------PCIe-PCI bridge
->> > >
->> > > This is an unusual, possibly even illegal, PCIe topology because
->> > > it lacks a Root Port at the top of the hierarchy.  From lspci
->> > > output
->> > > [1]
->> > > collected by Meelis, the top-level devices are:
->
-> Nobody cares what is "illegal", what matters is what HW actually does :
-> -) Specs only matter as far as they get followed.
+> Kvmtool certainly uses it (and generates its own DT, hence why you don't
+> see it in mainline). Not sure about qemu, though.
 
-I agree.  But nobody can predict all the ways platforms violate specs,
-so platforms that don't follow the spec don't work as well, and they
-cause a maintenance burden for everybody else.
+Do you know why kvmtool wants probe-only?  Would something break if we
+didn't support probe-only?  I guess we'd be looking for a case where
+Linux assigns resources and that assignment doesn't work with kvmtool?
 
-> In any case, it also
-> happens on powerpc, when running under a hypervisor such as IBM
-> PowerVM, PCIe devices appear directly under a virtual host bridge which
-> is not exposed as a PCIe root complex.
+"pci-probe-only" doesn't appear in qemu
+(git://git.qemu-project.org/qemu.git).  (I guess Alexander confirmed
+that later.)
 
-Thanks for the confirmation.
+Alexander wrote:
+> QEMU definitely doesn't do proble-only.
+> Is this driver used on real PPC machines too?
 
->> I don't like it because we have these PCIe links where we only know
->> about devices on one end of the link, and then we can't manage
->> ASPM/MPS/etc.  But we've had this situation for several years, so
->> I guess nobody cares too much about those things on the affected
->> mahines.
->
-> Correct, we have this situation on more than just sparc64 and we
-> shouldn't crash. Just don't touch ASPM/MPS/etc... in those cases.
-
-Easier said than done.  AFAIK, we won't crash after we add Yijing's
-patch.  But it's unreasonable to expect people writing to the spec to
-know the peculiarities of sparc64/powerpc, so there may be future
-things we discover the hard way.  We'll just have to deal with them as
-we find them.
+I think you're asking about pci-host-generic.c, and the answer is
+"no," because pci-host-generic.c currently depends on CONFIG_ARM.
 
 Bjorn
