@@ -1,38 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:54577 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753260AbbHCPs6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Aug 2015 11:48:58 -0400
-Date: Mon, 3 Aug 2015 17:48:55 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Gerald Schaefer <gerald.schaefer@de.ibm.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	Sebastian Ott <sebott@linux.vnet.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>
-Subject: Re: [RFC PATCH 0/1] iommu: Detach device from domain when removed
- from group
-Message-ID: <20150803154855.GI14980@8bytes.org>
-References: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
+Received: from mail-io0-f170.google.com ([209.85.223.170]:34776 "EHLO
+	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755197AbbHNQk4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 12:40:56 -0400
+Received: by iodb91 with SMTP id b91so90117237iod.1
+        for <linux-pci@vger.kernel.org>; Fri, 14 Aug 2015 09:40:55 -0700 (PDT)
+Date: Fri, 14 Aug 2015 11:40:51 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] PCI: pci-host-generic: Fix lookup of
+ linux,pci-probe-only property
+Message-ID: <20150814164051.GF26431@google.com>
+References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+ <1439569159-10051-3-git-send-email-marc.zyngier@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438106156-51847-1-git-send-email-gerald.schaefer@de.ibm.com>
+In-Reply-To: <1439569159-10051-3-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 28, 2015 at 07:55:55PM +0200, Gerald Schaefer wrote:
-> On s390, this eventually leads to a kernel panic when binding the device
-> again to its non-vfio PCI driver, because of the missing arch-specific
-> cleanup in detach_dev. On x86, the detach_dev callback will also not be
-> called directly, but there is a notifier that will catch
-> BUS_NOTIFY_REMOVED_DEVICE and eventually do the cleanup. Other
-> architectures w/o the notifier probably have at least some kind of memory
-> leak in this scenario, so a general fix would be nice.
+On Fri, Aug 14, 2015 at 05:19:17PM +0100, Marc Zyngier wrote:
+> When pci-host-generic looks for the probe-only property, it seems
+> to trust the DT to be correctly written, and assumes that there
+> is a parameter to the property.
+> 
+> Unfortunately, this is not always the case, and some firmware expose
+> this property naked. The driver ends up making a decision based on
+> whatever the property pointer points to, which is likely to be junk.
+> 
+> Switch to the common of_pci.c implementation that doesn't suffer
+> from this problem.
+> 
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/pci/host/pci-host-generic.c | 9 +--------
+>  1 file changed, 1 insertion(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 265dd25..545ff4e 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  	int err;
+>  	const char *type;
+>  	const struct of_device_id *of_id;
+> -	const int *prop;
+>  	struct device *dev = &pdev->dev;
+>  	struct device_node *np = dev->of_node;
+>  	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> @@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  		return -EINVAL;
+>  	}
+>  
+> -	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
+> -	if (prop) {
+> -		if (*prop)
+> -			pci_add_flags(PCI_PROBE_ONLY);
+> -		else
+> -			pci_clear_flags(PCI_PROBE_ONLY);
+> -	}
+> +	of_pci_check_probe_only(of_chosen);
 
-This notifier is not arch-specific, but registered against the bus the
-iommu-ops are set for. Why does it not run on s390?
+Do we need support for pci-probe-only in pci-host-generic at all?
+You're removing the use in amd-overdrive.dts, and there are no other
+DTs in the kernel tree that mention it.
 
+If we can live without it, that would be nice.  It seems like a relic from
+days when we couldn't reliably assign resources.  (I'm not saying we can do
+that reliably even today, but I'd rather make it reliable than turn it
+off.)
 
-	Joerg
-
+>  	of_id = of_match_node(gen_pci_of_match, np);
+>  	pci->cfg.ops = of_id->data;
+> -- 
+> 2.1.4
+> 
