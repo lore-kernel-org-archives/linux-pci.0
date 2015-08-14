@@ -1,58 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:62814 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753998AbbHFICu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 04:02:50 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v6 6/6] MAINTAINERS: Add pcie-hisi maintainer
-Date: Thu, 6 Aug 2015 16:09:19 +0800
-Message-ID: <1438848559-232109-7-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>
+Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: [PATCH v2 4/4] arm64: dts: Drop linux,pci-probe-only from the Seattle DTS
+Date: Fri, 14 Aug 2015 17:19:19 +0100
+Message-Id: <1439569159-10051-5-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+The linux,pci-probe-only property mandates an argument to indicate
+whether or not to engage the "probe-only" mode, but the Seattle
+DTS just provides a naked property, which is illegal.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8133cef..7cd8e47 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7854,6 +7854,13 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
- F:	drivers/pci/host/pci-xgene-msi.c
+Also, it turns out that the board is perfectly happy without
+probe-only, so let's drop this altogether.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ arch/arm64/boot/dts/amd/amd-overdrive.dts | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/amd/amd-overdrive.dts b/arch/arm64/boot/dts/amd/amd-overdrive.dts
+index 564a3f7..128fa94 100644
+--- a/arch/arm64/boot/dts/amd/amd-overdrive.dts
++++ b/arch/arm64/boot/dts/amd/amd-overdrive.dts
+@@ -14,7 +14,6 @@
  
-+PCIE DRIVER FOR HISILICON
-+M:	Zhou Wang <wangzhou1@hisilicon.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+F:	drivers/pci/host/pcie-hisi.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
+ 	chosen {
+ 		stdout-path = &serial0;
+-		linux,pci-probe-only;
+ 	};
+ };
+ 
 -- 
-1.9.1
+2.1.4
 
