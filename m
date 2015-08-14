@@ -1,47 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35791 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752150AbbH1TTf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Aug 2015 15:19:35 -0400
-Received: by wicne3 with SMTP id ne3so27093501wic.0
-        for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2015 12:19:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55E0AD63.1@laposte.net>
-References: <1438047747.1856.12.camel@rzhang1-mobl4> <1440750106.5982.2.camel@rzhang1-mobl4>
- <55E0A8BB.6020904@laposte.net> <2907359.7nsusuUeG0@linux-tez8> <55E0AD63.1@laposte.net>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 28 Aug 2015 14:19:14 -0500
-Message-ID: <CAErSpo56H99N_H3ffkYkwvdz92_HtB-9wJyWG9qGqgT6xCkwNQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-To: Barto <mister.freeman@laposte.net>
-Cc: Jay <MyMailClone@t-online.de>, Zhang Rui <rui.zhang@intel.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Chuansheng Liu <chuansheng.liu@intel.com>,
-	Tejun Heo <tj@kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Aaron Lu <aaron.lu@intel.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from foss.arm.com ([217.140.101.70]:39281 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755536AbbHNQTf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 14 Aug 2015 12:19:35 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>
+Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: [PATCH v2 3/4] powerpc: PCI: Fix lookup of linux,pci-probe-only property
+Date: Fri, 14 Aug 2015 17:19:18 +0100
+Message-Id: <1439569159-10051-4-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 28, 2015 at 1:50 PM, Barto <mister.freeman@laposte.net> wrote:
->>
->> And are you sure you are already at kernel 4.6.1? ;)
->>
->> Jay
->>
->
-> sorry, I meant "kernel 4.1.6", not 4.6.1 ;)
->
-> so I will wait the final version of this patch
+When find_and_init_phbs() looks for the probe-only property, it seems
+to trust the firmware to be correctly written, and assumes that there
+is a parameter to the property.
 
-If you want to test this before v4.3-rc1, here it is:
+It is conceivable that the firmware could not be that perfect, and it
+could expose this property naked (at least one arm64 platform seems to
+exhibit this exact behaviour). The setup code the ends up making
+a decision based on whatever the property pointer points to, which
+is likely to be junk.
 
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/misc&id=b95b73e30dfee0b96a3ecbb96c66486705701b9c
+Instead, switch to the common of_pci.c implementation that doesn't
+suffer from this problem and ignore the property if the firmware
+couldn't make up its mind.
 
-My plan is to merge this during the v4.3 merge window, so it will
-appear in v4.3.  I see that I probably should have added a stable tag
-as well.
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ arch/powerpc/platforms/pseries/setup.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-Bjorn
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index df6a704..8434953 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -40,6 +40,7 @@
+ #include <linux/seq_file.h>
+ #include <linux/root_dev.h>
+ #include <linux/of.h>
++#include <linux/of_pci.h>
+ #include <linux/kexec.h>
+ 
+ #include <asm/mmu.h>
+@@ -488,18 +489,7 @@ static void __init find_and_init_phbs(void)
+ 	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
+ 	 * in chosen.
+ 	 */
+-	if (of_chosen) {
+-		const int *prop;
+-
+-		prop = of_get_property(of_chosen,
+-				"linux,pci-probe-only", NULL);
+-		if (prop) {
+-			if (*prop)
+-				pci_add_flags(PCI_PROBE_ONLY);
+-			else
+-				pci_clear_flags(PCI_PROBE_ONLY);
+-		}
+-	}
++	of_pci_check_probe_only(of_chosen);
+ }
+ 
+ static void __init pSeries_setup_arch(void)
+-- 
+2.1.4
+
