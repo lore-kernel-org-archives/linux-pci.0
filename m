@@ -1,59 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:45681 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932774AbbHXMnJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 24 Aug 2015 08:43:09 -0400
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: <linuxppc-dev@ozlabs.org>
-Cc: linux-pci@vger.kernel.org, gpiccoli@linux.vnet.ibm.com,
-	bhelgaas@google.com, mst@redhat.com
-Subject: [PATCH 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI probe time in OF case
-Date: Mon, 24 Aug 2015 22:42:47 +1000
-Message-Id: <1440420167-8879-2-git-send-email-mpe@ellerman.id.au>
-In-Reply-To: <1440420167-8879-1-git-send-email-mpe@ellerman.id.au>
-References: <1440420167-8879-1-git-send-email-mpe@ellerman.id.au>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:12818 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755197AbbHNO4B convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 10:56:01 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: James Morse <james.morse@arm.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	Kangfenglong <kangfenglong@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	Jingoo Han <jingoohan1@gmail.com>
+Subject: RE: [PATCH v6 3/6] PCI: designware: Add ARM64 support
+Date: Fri, 14 Aug 2015 14:55:07 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D7BC19@lhreml503-mbs>
+References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+ <1438848559-232109-4-git-send-email-wangzhou1@hisilicon.com>
+ <55C44B18.4010103@hisilicon.com> <55CDFFC0.40604@arm.com>
+In-Reply-To: <55CDFFC0.40604@arm.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+> 
+> I've tested this whole series on an ARM32 PCIe board:'Freescale i.MX6
+> Quad
+> SABRE Lite Board' with an Intel wireless card on v4.2-rc6.
+> 
+> I can rescan the bus, load firmware, list nearby APs, and even get MSIs
+> coming from the card.
+> 
+> Tested-By: James Morse <james.morse@arm.com>
+> 
+> 
+> Thanks,
+> 
+> James
 
-Since commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if
-kernel doesn't support MSI"), the setup of dev->msi_cap/msix_cap and the
-disable of MSI/MSI-X interrupts isn't being done at PCI probe time, as
-the logic responsible for this was moved in the aforementioned commit
-from pci_device_add() to pci_setup_device(). The latter function is not
-reachable on PowerPC pseries platform during Open Firmware PCI probing
-time.
+Many Thanks for this James!
 
-This exhibits as drivers not being able to enable MSI, eg:
-
-  bnx2x 0000:01:00.0: no msix capability found
-
-This patch calls pci_msi_setup_pci_dev() explicitly to disable MSI/MSI-X
-during PCI probe time on pSeries platform.
-
-Fixes: 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel doesn't support MSI")
-[mpe: Flesh out change log and clarify comment]
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
----
- arch/powerpc/kernel/pci_of_scan.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 42e02a2d570b..efc3fa54c90b 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -191,6 +191,9 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
- 
- 	pci_device_add(dev, bus);
- 
-+	/* Setup MSI caps & disable MSI/MSI-X interrupts */
-+	pci_msi_setup_pci_dev(dev);
-+
- 	return dev;
- }
- EXPORT_SYMBOL(of_create_pci_dev);
--- 
-2.1.4
-
+Gab
