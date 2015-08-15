@@ -1,93 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:60253 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754531AbbHQLuh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:50:37 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	"Pratyush Anand" <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v7 5/6] Documentation: DT: Add HiSilicon PCIe host binding
-Date: Mon, 17 Aug 2015 19:55:53 +0800
-Message-ID: <1439812554-180426-6-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:37002 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174AbbHOOjp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Aug 2015 10:39:45 -0400
+Received: by wibhh20 with SMTP id hh20so45179153wib.0
+        for <linux-pci@vger.kernel.org>; Sat, 15 Aug 2015 07:39:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <3296684.6OYqAkrTIu@linux-tez8>
+References: <1438047747.1856.12.camel@rzhang1-mobl4> <1438133951.1856.23.camel@rzhang1-mobl4>
+ <20150814201752.GG26431@google.com> <3296684.6OYqAkrTIu@linux-tez8>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 15 Aug 2015 09:39:24 -0500
+Message-ID: <CAErSpo6zcgK=Hdgq+vVNMjMHS2WkYqpVR3Vppqi7R87xSjWMJg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+To: Jay <MyMailClone@t-online.de>
+Cc: Zhang Rui <rui.zhang@intel.com>, Tejun Heo <tj@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Chuansheng Liu <chuansheng.liu@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Barto <mister.freeman@laposte.net>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds related DTS binding document for HiSilicon PCIe host driver.
+Hi Jay,
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+On Sat, Aug 15, 2015 at 7:49 AM, Jay <MyMailClone@t-online.de> wrote:
+> Am Freitag, 14. August 2015, 15:17:52 schrieb Bjorn Helgaas:
+> ...
+>> Since you didn't say anything like that, I assume the patch in comment
+>> #72 of bug #81551 (https://bugzilla.kernel.org/attachment.cgi?id=156301)
+>> would work as well.  That has the advantage that it wouldn't penalize
+>> non-storage controllers.
+>
+> The problem was introduced with 3.15 and the kernel is almost at 4.2 now.
+>
+> A general solution for the JMicron-AHCI/PATA-controllers is still missing
+> although available since late September 2014. It was tested by Barto.
+>
+> Seems what I wrote in comment #76 wasn't completely wrong:
+> https://bugzilla.kernel.org/show_bug.cgi?id=81551#c76
+>
+> So this may be an opportunity to reconsider the approach to solving
+> things like this.
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-new file mode 100644
-index 0000000..2afc9d1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -0,0 +1,46 @@
-+HiSilicon PCIe host bridge DT description
-+
-+HiSilicon PCIe host controller is based on Designware PCI core.
-+It shares common functions with PCIe Designware core driver and inherits
-+common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties:
-+- compatible: Should contain "hisilicon,hip05-pcie".
-+- reg: Should contain rc_dbi, subctrl, config registers location and length.
-+- reg-names: Must include the following entries:
-+  "rc_dbi": controller configuration registers;
-+  "subctrl": whole PCIe hosts configuration registers;
-+  "config": PCIe configuration space registers.
-+- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
-+- port-id: Should be 0, 1, 2 or 3.
-+
-+Optional properties:
-+- status: Either "ok" or "disabled".
-+- dma-coherent: Present if DMA operations are coherent.
-+
-+Example:
-+	pcie@0xb0080000 {
-+		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
-+		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
-+		      <0x220 0x00000000 0 0x2000>;
-+		reg-names = "rc_dbi", "subctrl", "config";
-+		bus-range = <0  15>;
-+		msi-parent = <&its_pcie>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		dma-coherent;
-+		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
-+		num-lanes = <8>;
-+		port-id = <1>;
-+		#interrupts-cells = <1>;
-+		interrupts-map-mask = <0xf800 0 0 7>;
-+		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
-+				  0x0 0 0 2 &mbigen_pcie 2 11
-+				  0x0 0 0 3 &mbigen_pcie 3 12
-+				  0x0 0 0 4 &mbigen_pcie 4 13>;
-+		status = "ok";
-+	};
--- 
-1.9.1
+I don't understand your point, except to acknowledge that we are
+imperfect, have limited resources, and make many mistakes in
+diagnosing problems and communicating solutions.  Do you have a
+proposal for a better approach?
 
+The patch that Barto tested in late September 2014
+(https://bugzilla.kernel.org/show_bug.cgi?id=81551#c66) is exactly the
+patch from comment #72 that I mentioned as possibly being a better
+solution.
+
+That patch wouldn't involve me at all, since it doesn't touch PCI.
+Zhang is proposing a PCI change, so I'm asking for a clear changelog.
+
+A changelog is a "write-once, read-many" situation.  It's very
+important that it be concise and clear, and it's worth having the
+expert spend extra time writing the log to make it easier for the many
+novices that will read it in the future.
+
+Bjorn
