@@ -1,46 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:29566 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933708AbbHLHLe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 03:11:34 -0400
-Received: from eucpsbgm2.samsung.com (unknown [203.254.199.245])
- by mailout3.w1.samsung.com
- (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
- with ESMTP id <0NSY0033SJZ77A80@mailout3.w1.samsung.com> for
- linux-pci@vger.kernel.org; Wed, 12 Aug 2015 08:11:31 +0100 (BST)
-From: Pavel Fedin <p.fedin@samsung.com>
-To: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Jayachandran C' <jchandra@broadcom.com>
-Cc: 'Will Deacon' <will.deacon@arm.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Lorenzo Pieralisi' <lorenzo.pieralisi@arm.com>,
-	'Liviu Dudau' <Liviu.Dudau@arm.com>,
-	'Suravee Suthikulpanit' <Suravee.Suthikulpanit@amd.com>,
-	'Ming Lei' <ming.lei@canonical.com>
-References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
- <20150804234956.GF17327@google.com>
-In-reply-to: <20150804234956.GF17327@google.com>
-Subject: RE: [PATCH v4 1/3] PCI: generic: remove dependency on hw_pci
-Date: Wed, 12 Aug 2015 10:11:29 +0300
-Message-id: <007501d0d4ce$1d2dd9c0$57898d40$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from smtp2.tech.numericable.fr ([82.216.111.38]:51040 "EHLO
+	smtp2.tech.numericable.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406AbbHOXrb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Aug 2015 19:47:31 -0400
+Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Zhang Rui <rui.zhang@intel.com>
+References: <1438047747.1856.12.camel@rzhang1-mobl4>
+ <20150728175848.GI5322@mtj.duckdns.org>
+ <1438133951.1856.23.camel@rzhang1-mobl4> <20150814201752.GG26431@google.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	chuansheng.liu@intel.com, Alan Stern <stern@rowland.harvard.edu>,
+	Aaron Lu <aaron.lu@intel.com>, MyMailClone@t-online.de,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+From: Barto <mister.freeman@laposte.net>
+Message-ID: <55CFCDD5.6040302@laposte.net>
+Date: Sun, 16 Aug 2015 01:40:05 +0200
+MIME-Version: 1.0
+In-Reply-To: <20150814201752.GG26431@google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- Hello!
+Le 14/08/2015 22:17, Bjorn Helgaas a écrit :
+> For 1), I think it is probably overkill to penalize all JMicron
+> devices.  There's no reason to think NICs and SD/MMC/etc controllers
+> have the same issue.  Or if there *is* reason to think that, you
+> should give evidence for it.
 
-> I dropped the acks and tested-by because of that change, but I'll happily
-> add them back if Lorenzo and Pavel confirm.  
+if you don't want to penalize all JMicron models then a workaround would
+be to create a new feature : the ability for the user to disable async
+for a specific device,
 
- Confirm.
- Tested-by: Pavel Fedin <p.fedin@samsung.com>
+for example a kernel parameter ( no-async-for-jmicron ), or a more
+configurable mechanism, like a configuration file where the user can add
+the name of the device, a kind of blacklist in order to disable async
+only for a list of devices,
 
- I also added MSI support. Can i post it as patch on top of your branch?
-
-Kind regards,
-Pavel Fedin
-Expert Engineer
-Samsung Electronics Research center Russia
+it's only a workaround, the real solution would to be find the real root
+cause ( a bug in async method ? a design flaw in JMicron hardware ? a
+bios/acpi bug ? )
 
