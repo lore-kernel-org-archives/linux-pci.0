@@ -1,69 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:39813 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754847AbbHKACA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:02:00 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 11 Aug 2015 05:31:57 +0530
-Date: Mon, 10 Aug 2015 17:17:22 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-Subject: Re: [PATCH v6 00/42] powerpc/powernv: PCI hotplug suppport
-Message-ID: <20150810071722.GA19068@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C83F34.9040306@ozlabs.ru>
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:35014 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752878AbbHOU5a (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Aug 2015 16:57:30 -0400
+Received: by wicne3 with SMTP id ne3so43522865wic.0
+        for <linux-pci@vger.kernel.org>; Sat, 15 Aug 2015 13:57:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55C83F34.9040306@ozlabs.ru>
+In-Reply-To: <143984396.fBJoMvWU1G@linux-tez8>
+References: <1438047747.1856.12.camel@rzhang1-mobl4> <3296684.6OYqAkrTIu@linux-tez8>
+ <CAErSpo6zcgK=Hdgq+vVNMjMHS2WkYqpVR3Vppqi7R87xSjWMJg@mail.gmail.com> <143984396.fBJoMvWU1G@linux-tez8>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 15 Aug 2015 15:57:09 -0500
+Message-ID: <CAErSpo64Wgx4rpz-=Xdix30vgtPbk6y51Y_gfR_OJisOcT=3Vg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+To: Jay <MyMailClone@t-online.de>
+Cc: Zhang Rui <rui.zhang@intel.com>, Tejun Heo <tj@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Chuansheng Liu <chuansheng.liu@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Aaron Lu <aaron.lu@intel.com>,
+	Barto <mister.freeman@laposte.net>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 04:05:40PM +1000, Alexey Kardashevskiy wrote:
->On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>The series of patches intend to support PCI slot for PowerPC PowerNV platform,
->>which is running on top of skiboot firmware. The patchset requires corresponding
->>changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
->>for review. The PCI slots are exposed by skiboot with device node properties,
->>and kernel utilizes those properties to populated PCI slots accordingly.
+On Sat, Aug 15, 2015 at 3:33 PM, Jay <MyMailClone@t-online.de> wrote:
+> Am Samstag, 15. August 2015, 09:39:24 schrieb Bjorn Helgaas:
+>> Hi Jay,
+>>
+>> On Sat, Aug 15, 2015 at 7:49 AM, Jay <MyMailClone@t-online.de> wrote:
+>> > Am Freitag, 14. August 2015, 15:17:52 schrieb Bjorn Helgaas:
+>> > ...
+>> >
+>> >> Since you didn't say anything like that, I assume the patch in comment
+>> >> #72 of bug #81551 (https://bugzilla.kernel.org/attachment.cgi?id=156301)
+>> >> would work as well.  That has the advantage that it wouldn't penalize
+>> >> non-storage controllers.
+>> >
+>> > The problem was introduced with 3.15 and the kernel is almost at 4.2 now.
+>> >
+>> > A general solution for the JMicron-AHCI/PATA-controllers is still missing
+>> > although available since late September 2014. It was tested by Barto.
+>> >
+>> > Seems what I wrote in comment #76 wasn't completely wrong:
+>> > https://bugzilla.kernel.org/show_bug.cgi?id=81551#c76
+>> >
+>> > So this may be an opportunity to reconsider the approach to solving
+>> > things like this.
+>>
+>> I don't understand your point, except to acknowledge that we are
+>> imperfect, have limited resources, and make many mistakes in
+>> diagnosing problems and communicating solutions.  Do you have a
+>> proposal for a better approach?
+>>
+>> The patch that Barto tested in late September 2014
+>> (https://bugzilla.kernel.org/show_bug.cgi?id=81551#c66) is exactly the
+>> patch from comment #72 that I mentioned as possibly being a better
+>> solution.
+>>
+>> That patch wouldn't involve me at all, since it doesn't touch PCI.
+>> Zhang is proposing a PCI change, so I'm asking for a clear changelog.
+>>
+>> A changelog is a "write-once, read-many" situation.  It's very
+>> important that it be concise and clear, and it's worth having the
+>> expert spend extra time writing the log to make it easier for the many
+>> novices that will read it in the future.
 >
+> please don't feel offended. Nobody should. No need to. And I like what you
+> wrote, it's definitely constructive.
 >
->This does not apply on top of any actual trees I have - torvalds/master,
->powerpc/master, powerpc/next.
+> My point is that instead of looking for a "perfect" solution, a more pragmatic
+> approach may be more effective in solving things like this.
 >
->The problem patches are (at least):
->powerpc/powernv: Enable M64 on P7IOC
->powerpc/powernv: Release PEs dynamically
+> And this was exactly what I suggested in comment #76: "Let's be pragmatic,
+> take this patch and solve the problem now. And then you (developers) may take
+> your time to look for a better or even the "perfect" solution."
 >
->What did you base them on (sha1)? It is always worth mentioning.
->
+> That way the case would have been closed a year ago.
 
-The patchset bases on powerpc/next + below patches that will be merged
-prior to this patchset, I think. I tried to avoid conflicts as much as
-I can do:
+The only problem with that approach is that the owner of the issue now
+considers the issue closed, so the better solution never happens.
+Even if it *does* happen, we now have a fix for a fix, which makes it
+that much more difficult to follow the history.  This is just a
+generic issue with the way Linux works: maintainers have zero leverage
+after accepting a patch, so anything they really care about has to
+happen before that.
 
-e14f70b powerpc/powernv: compound PE for VFs				<<< EEH Support for VF - END
-42f59ac powerpc/eeh: Support error recovery for VF PE
-9c1c221 powerpc/powernv: Support PCI config restore for VFs
-8ac2231 powerpc/powernv: Support EEH reset for VF PE
-a636ce5 powerpc/eeh: Create PE for VFs
-a4e56fc powerpc/powernv: EEH device for VF
-2f02884 powerpc/eeh: Cache only BARs, not windows or IOV BARs
-1888e95 powerpc/pci: Remove VFs prior to PF
-0dab41d powerpc/pci: Cache VF index in pci_dn
-fdc2d8a PCI: Add pcibios_bus_add_device() weak function
-2bcc609 PCI/IOV: Rename and export virtfn_add/virtfn_remove		<<< EEH Support for VF - START
-efde611 powerpc/eeh: Disable automatically blocked PCI config
-
-All above patches can be found from linux-ppc mail archive.
-
-Thanks,
-Gavin
-
+Bjorn
