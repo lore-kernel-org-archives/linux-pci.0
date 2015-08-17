@@ -1,113 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:36183 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753915AbbHFOUF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 10:20:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <1438834307-26960-41-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com> <1438834307-26960-41-git-send-email-gwshan@linux.vnet.ibm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Thu, 6 Aug 2015 09:19:45 -0500
-Message-ID: <CAL_JsqK940pWJXazofnup8MHNTVO+0_1Zzcos4+uhhtwi=gwGQ@mail.gmail.com>
-Subject: Re: [PATCH v6 40/42] drivers/of: Return allocated memory chunk from of_fdt_unflatten_tree()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Pantelis Antoniou <panto@antoniou-consulting.com>,
-	aik@ozlabs.ru
-Content-Type: text/plain; charset=UTF-8
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:54279 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754603AbbHQLGU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:06:20 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: [PATCH v4 1/5] PCI: allow MSI chip providers to implement their own multivector MSI setup
+Date: Mon, 17 Aug 2015 13:06:14 +0200
+Message-Id: <1439809578-13654-2-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
+References: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 5, 2015 at 11:11 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> This changes of_fdt_unflatten_tree() so that it returns the allocated
-> memory chunk for unflattened device-tree, which can be released once
-> it's obsoleted.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Reviewed-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ drivers/pci/msi.c   | 3 +++
+ include/linux/msi.h | 2 ++
+ 2 files changed, 5 insertions(+)
 
-Acked-by: Rob Herring <robh@kernel.org>
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index f66be868ad21..685a83c459c6 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -121,9 +121,12 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+ 
+ int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+ {
++	struct msi_controller *chip = pci_msi_controller(dev);
+ 	struct msi_desc *entry;
+ 	int ret;
+ 
++	if (chip && chip->setup_irqs)
++		return chip->setup_irqs(chip, dev, nvec, type);
+ 	/*
+ 	 * If an architecture wants to support multiple MSI, it needs to
+ 	 * override arch_setup_msi_irqs()
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 8ac4a68ffae2..50fefeb30236 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -114,6 +114,8 @@ struct msi_controller {
+ 
+ 	int (*setup_irq)(struct msi_controller *chip, struct pci_dev *dev,
+ 			 struct msi_desc *desc);
++	int (*setup_irqs)(struct msi_controller *chip, struct pci_dev *dev,
++			  int nvec, int type);
+ 	void (*teardown_irq)(struct msi_controller *chip, unsigned int irq);
+ };
+ 
+-- 
+2.4.6
 
-> ---
->  drivers/of/fdt.c       | 11 ++++++-----
->  include/linux/of_fdt.h |  2 +-
->  2 files changed, 7 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-> index 074870a..8e1ba7e 100644
-> --- a/drivers/of/fdt.c
-> +++ b/drivers/of/fdt.c
-> @@ -408,7 +408,7 @@ static void *unflatten_dt_node(const void *blob,
->   * @dt_alloc: An allocator that provides a virtual address to memory
->   * for the resulting tree
->   */
-> -static void __unflatten_device_tree(const void *blob,
-> +static void *__unflatten_device_tree(const void *blob,
->                              struct device_node *dad,
->                              struct device_node **mynodes,
->                              void * (*dt_alloc)(u64 size, u64 align))
-> @@ -421,7 +421,7 @@ static void __unflatten_device_tree(const void *blob,
->
->         if (!blob) {
->                 pr_debug("No device tree pointer\n");
-> -               return;
-> +               return NULL;
->         }
->
->         pr_debug("Unflattening device tree:\n");
-> @@ -431,7 +431,7 @@ static void __unflatten_device_tree(const void *blob,
->
->         if (fdt_check_header(blob)) {
->                 pr_err("Invalid device tree blob header\n");
-> -               return;
-> +               return NULL;
->         }
->
->         /* First pass, scan for size */
-> @@ -458,6 +458,7 @@ static void __unflatten_device_tree(const void *blob,
->                            be32_to_cpup(mem + size));
->
->         pr_debug(" <- unflatten_device_tree()\n");
-> +       return mem;
->  }
->
->  static void *kernel_tree_alloc(u64 size, u64 align)
-> @@ -473,11 +474,11 @@ static void *kernel_tree_alloc(u64 size, u64 align)
->   * pointers of the nodes so the normal device-tree walking functions
->   * can be used.
->   */
-> -void of_fdt_unflatten_tree(const unsigned long *blob,
-> +void *of_fdt_unflatten_tree(const unsigned long *blob,
->                         struct device_node *dad,
->                         struct device_node **mynodes)
->  {
-> -       __unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
-> +       return __unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
->  }
->  EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
->
-> diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
-> index 3644960..00db279 100644
-> --- a/include/linux/of_fdt.h
-> +++ b/include/linux/of_fdt.h
-> @@ -37,7 +37,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
->                                  unsigned long node);
->  extern int of_fdt_match(const void *blob, unsigned long node,
->                         const char *const *compat);
-> -extern void of_fdt_unflatten_tree(const unsigned long *blob,
-> +extern void *of_fdt_unflatten_tree(const unsigned long *blob,
->                                struct device_node *dad,
->                                struct device_node **mynodes);
->
-> --
-> 2.1.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
