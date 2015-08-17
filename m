@@ -1,204 +1,394 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:34307 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932991AbbHKCjM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 22:39:12 -0400
-Received: by pawu10 with SMTP id u10so153082159paw.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 19:39:11 -0700 (PDT)
-Subject: Re: [PATCH v6 10/42] powerpc/powernv: pnv_ioda_setup_dma() configure
- one PE only
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-11-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C86F5F.70603@ozlabs.ru> <20150811002949.GA16482@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C96046.90102@ozlabs.ru>
-Date: Tue, 11 Aug 2015 12:39:02 +1000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>
+Subject: [PATCH v4 3/5] pci: altera: Add Altera PCIe MSI driver
+Date: Mon, 17 Aug 2015 17:09:37 +0800
+Message-ID: <1439802579-22651-4-git-send-email-lftan@altera.com>
+In-Reply-To: <1439802579-22651-1-git-send-email-lftan@altera.com>
+References: <1439802579-22651-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-In-Reply-To: <20150811002949.GA16482@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/11/2015 10:29 AM, Gavin Shan wrote:
-> On Mon, Aug 10, 2015 at 07:31:11PM +1000, Alexey Kardashevskiy wrote:
->> On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>> The original implementation of pnv_ioda_setup_dma() iterates the
->>> list of PEs and configures the DMA32 space for them one by one.
->>> The function was designed to be called during PHB fixup time.
->>> When configuring PE's DMA32 space in pcibios_setup_bridge(), in
->>> order to support PCI hotplug, we have to have the function PE
->>> oriented.
->>>
->>> This renames pnv_ioda_setup_dma() to pnv_ioda1_setup_dma() and
->>> adds one more argument "struct pnv_ioda_pe *pe" to it. The caller,
->>> pnv_pci_ioda_setup_DMA(), gets PE from the list and passes to it
->>> or pnv_pci_ioda2_setup_dma_pe(). The patch shouldn't cause behavioral
->>> changes.
->>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>   arch/powerpc/platforms/powernv/pci-ioda.c | 75 +++++++++++++++----------------
->>>   1 file changed, 36 insertions(+), 39 deletions(-)
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> index 8456f37..cd22002 100644
->>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> @@ -2443,52 +2443,29 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->>>   		pnv_ioda_setup_bus_dma(pe, pe->pbus);
->>>   }
->>>
->>> -static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->>> +static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
->>> +					struct pnv_ioda_pe *pe,
->>> +					unsigned int base)
->>>   {
->>>   	struct pci_controller *hose = phb->hose;
->>> -	struct pnv_ioda_pe *pe;
->>> -	unsigned int dma_weight;
->>> +	unsigned int dma_weight, segs;
->>>
->>>   	/* Calculate the PHB's DMA weight */
->>>   	dma_weight = pnv_ioda_phb_dma_weight(phb);
->>>   	pr_info("PCI%04x has %ld DMA32 segments, total weight %d\n",
->>>   		hose->global_number, phb->ioda.dma32_segcount, dma_weight);
->>>
->>> -	pnv_pci_ioda_setup_opal_tce_kill(phb);
->>> -
->>> -	/* Walk our PE list and configure their DMA segments, hand them
->>> -	 * out one base segment plus any residual segments based on
->>> -	 * weight
->>> -	 */
->>> -	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
->>> -		if (!pe->dma32_weight)
->>> -			continue;
->>> -
->>> -		/*
->>> -		 * For IODA2 compliant PHB3, we needn't care about the weight.
->>> -		 * The all available 32-bits DMA space will be assigned to
->>> -		 * the specific PE.
->>> -		 */
->>> -		if (phb->type == PNV_PHB_IODA1) {
->>> -			unsigned int segs, base = 0;
->>> -
->>> -			if (pe->dma32_weight <
->>> -			    dma_weight / phb->ioda.dma32_segcount)
->>> -				segs = 1;
->>> -			else
->>> -				segs = (pe->dma32_weight *
->>> -					phb->ioda.dma32_segcount) / dma_weight;
->>> -
->>> -			pe_info(pe, "DMA32 weight %d, assigned %d segments\n",
->>> -				pe->dma32_weight, segs);
->>> -			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
->>> +	if (pe->dma32_weight <
->>> +	    dma_weight / phb->ioda.dma32_segcount)
->>
->> Can be one line now.
->>
->
-> Indeed.
->
->>> +		segs = 1;
->>> +	else
->>> +		segs = (pe->dma32_weight *
->>> +			phb->ioda.dma32_segcount) / dma_weight;
->>> +	pe_info(pe, "DMA weight %d, assigned %d segments\n",
->>> +		pe->dma32_weight, segs);
->>> +	pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
->>
->>
->> Why not to merge pnv_ioda1_setup_dma() to pnv_pci_ioda_setup_dma_pe()?
->>
->
-> There're two reasons:
-> - They're separate logically. One is calculating number of DMA32 segments required.
->    Another one is allocate TCE32 tables and configure devices with them.
-> - In PCI hotplug path, I need pnv_ioda1_setup_dma() which has "pe" as parameter.
+This patch adds Altera PCIe MSI driver. This soft IP supports configurable
+number of vectors, which is a dts parameter.
 
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ drivers/pci/host/Kconfig           |   8 +
+ drivers/pci/host/Makefile          |   1 +
+ drivers/pci/host/pcie-altera-msi.c | 322 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 331 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-altera-msi.c
 
-And hotplug path does not care about dma weight why?
-
-
->
->>>
->>> -			base += segs;
->>> -		} else {
->>> -			pe_info(pe, "Assign DMA32 space\n");
->>> -			pnv_pci_ioda2_setup_dma_pe(phb, pe);
->>> -		}
->>> -	}
->>> +	return segs;
->>>   }
->>>
->>>   #ifdef CONFIG_PCI_MSI
->>> @@ -2955,12 +2932,32 @@ static void pnv_pci_ioda_setup_DMA(void)
->>>   {
->>>   	struct pci_controller *hose, *tmp;
->>>   	struct pnv_phb *phb;
->>> +	struct pnv_ioda_pe *pe;
->>> +	unsigned int base;
->>>
->>>   	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
->>> -		pnv_ioda_setup_dma(hose->private_data);
->>> +		phb = hose->private_data;
->>> +		pnv_pci_ioda_setup_opal_tce_kill(phb);
->>> +
->>> +		base = 0;
->>> +		list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
->>> +			if (!pe->dma32_weight)
->>> +				continue;
->>> +
->>> +			switch (phb->type) {
->>> +			case PNV_PHB_IODA1:
->>> +				base += pnv_ioda1_setup_dma(phb, pe, base);
->>
->>
->> This @base handling seems never be tested between 8..11 as "[PATCH v6 11/42]
->> powerpc/powernv: Trace DMA32 segments consumed by PE"
->> removes it and I suspect you only tested the final version. Which is ok for
->> the final result but not ok for bisectability.
->>
->> Looks like 8/42, 9/42, 10/42, 11/42 need to be rearranged or merged to remove
->> this multiple @base touching.
->>
->
-> Why ?
-
-You are touching this @base from 8/42 to 11/12 and in between it is very 
-broken, you only get it fixed (by removing) in 11/42. Read my comment for 
-8/42. After every single patch in any patchset the functionality should not 
-break but it does in this patchset.
-
-
->
->>
->>> +				break;
->>> +			case PNV_PHB_IODA2:
->>> +				pnv_pci_ioda2_setup_dma_pe(phb, pe);
->>> +				break;
->>> +			default:
->>> +				pr_warn("%s: No DMA for PHB type %d\n",
->>> +					__func__, phb->type);
->>> +			}
->>> +		}
->>>
->>>   		/* Mark the PHB initialization done */
->>> -		phb = hose->private_data;
->>>   		phb->initialized = 1;
->>>   	}
->>>   }
->>>
->
-> Thanks,
-> Gavin
->
-
-
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 4b4754a..d28cc6d 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -152,4 +152,12 @@ config PCIE_ALTERA
+ 	  Say Y here if you want to enable PCIe controller support for Altera
+ 	  SoCFPGA family of SoCs.
+ 
++config PCIE_ALTERA_MSI
++	bool "Altera PCIe MSI feature"
++	depends on PCI_MSI
++	select PCI_MSI_IRQ_DOMAIN
++	help
++	  Say Y here if you want PCIe MSI support for the Altera SocFPGA SoC.
++	  This MSI driver supports Altera MSI to GIC controller IP.
++
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 6954f76..6c4913d 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -18,3 +18,4 @@ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
+ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
+ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
++obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
+new file mode 100644
+index 0000000..d3ad96f
+--- /dev/null
++++ b/drivers/pci/host/pcie-altera-msi.c
+@@ -0,0 +1,322 @@
++/*
++ * Copyright Altera Corporation (C) 2013-2015. All rights reserved
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++#include <linux/interrupt.h>
++#include <linux/irqchip/chained_irq.h>
++#include <linux/module.h>
++#include <linux/msi.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++
++#define MSI_STATUS		0x0
++#define MSI_ERROR		0x4
++#define MSI_INTMASK		0x8
++
++#define MAX_MSI_VECTORS		32
++struct altera_msi {
++	DECLARE_BITMAP(used, MAX_MSI_VECTORS);
++	struct mutex		lock;	/* proctect used variable */
++	struct platform_device	*pdev;
++	struct irq_domain		*msi_domain;
++	struct irq_domain		*inner_domain;
++	void __iomem		*csr_base;
++	void __iomem		*vector_base;
++	phys_addr_t		vector_phy;
++	u32			num_of_vectors;
++	int			irq;
++};
++
++static inline void msi_writel(struct altera_msi *msi, u32 value, u32 reg)
++{
++	writel_relaxed(value, msi->csr_base + reg);
++}
++
++static inline u32 msi_readl(struct altera_msi *msi, u32 reg)
++{
++	return readl_relaxed(msi->csr_base + reg);
++}
++
++static void altera_msi_isr(unsigned int irq, struct irq_desc *desc)
++{
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct altera_msi *msi;
++	unsigned long status;
++	u32 num_of_vectors;
++	u32 bit;
++	u32 virq;
++
++	chained_irq_enter(chip, desc);
++	msi = irq_desc_get_handler_data(desc);
++	num_of_vectors = msi->num_of_vectors;
++
++	do {
++		status = msi_readl(msi, MSI_STATUS);
++		if (!status)
++			break;
++
++		do {
++			bit = find_first_bit(&status, num_of_vectors);
++			/* Dummy read from vector to clear the interrupt */
++			readl_relaxed(msi->vector_base + (bit * sizeof(u32)));
++
++			virq = irq_find_mapping(msi->inner_domain, bit);
++			if (virq && test_bit(bit, msi->used))
++				generic_handle_irq(virq);
++			else
++				dev_err(&msi->pdev->dev, "unexpected MSI\n");
++
++			/* Clear the bit from status and repeat without reading
++			 * again status register. */
++			__clear_bit(bit, &status);
++		} while (status);
++	} while (1);
++
++	chained_irq_exit(chip, desc);
++}
++
++static struct irq_chip altera_msi_irq_chip = {
++	.name = "Altera PCIe MSI",
++	.irq_enable = pci_msi_unmask_irq,
++	.irq_disable = pci_msi_mask_irq,
++	.irq_mask = pci_msi_mask_irq,
++	.irq_unmask = pci_msi_unmask_irq,
++};
++
++static struct msi_domain_info altera_msi_domain_info = {
++	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++		     MSI_FLAG_PCI_MSIX),
++	.chip	= &altera_msi_irq_chip,
++};
++
++static void altera_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	struct altera_msi *msi = irq_data_get_irq_chip_data(data);
++	phys_addr_t addr = msi->vector_phy + (data->hwirq * sizeof(u32));
++
++	msg->address_lo = lower_32_bits(addr);
++	msg->address_hi = upper_32_bits(addr);
++	msg->data = data->hwirq;
++
++	dev_dbg(&msi->pdev->dev, "msi#%d address_lo 0x%x address_hi 0x%x\n",
++		(int)data->hwirq, msg->address_hi, msg->address_lo);
++}
++
++static int altera_msi_set_affinity(struct irq_data *irq_data,
++				   const struct cpumask *mask, bool force)
++{
++	 return -EINVAL;
++}
++
++static struct irq_chip altera_msi_bottom_irq_chip = {
++	.name			= "Altera MSI",
++	.irq_compose_msi_msg	= altera_compose_msi_msg,
++	.irq_set_affinity	= altera_msi_set_affinity,
++};
++
++static int altera_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
++				   unsigned int nr_irqs, void *args)
++{
++	struct altera_msi *msi = domain->host_data;
++	unsigned long bit;
++	u32 mask;
++
++	WARN_ON(nr_irqs != 1);
++	mutex_lock(&msi->lock);
++
++	bit = find_first_zero_bit(msi->used, msi->num_of_vectors);
++	if (bit >= msi->num_of_vectors)
++		return -ENOSPC;
++
++	set_bit(bit, msi->used);
++
++	mutex_unlock(&msi->lock);
++
++	irq_domain_set_info(domain, virq, bit, &altera_msi_bottom_irq_chip,
++			    domain->host_data, handle_simple_irq,
++			    NULL, NULL);
++	set_irq_flags(virq, IRQF_VALID);
++
++	mask = msi_readl(msi, MSI_INTMASK);
++	mask |= 1 << bit;
++	msi_writel(msi, mask, MSI_INTMASK);
++
++	return 0;
++}
++
++static void altera_irq_domain_free(struct irq_domain *domain,
++				   unsigned int virq, unsigned int nr_irqs)
++{
++	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
++	struct altera_msi *msi = irq_data_get_irq_chip_data(d);
++	u32 mask;
++
++	mutex_lock(&msi->lock);
++
++	if (!test_bit(d->hwirq, msi->used)) {
++		dev_err(&msi->pdev->dev, "trying to free unused MSI#%lu\n",
++			d->hwirq);
++	} else {
++		__clear_bit(d->hwirq, msi->used);
++		mask = msi_readl(msi, MSI_INTMASK);
++		mask &= ~(1 << d->hwirq);
++		msi_writel(msi, mask, MSI_INTMASK);
++	}
++
++	mutex_unlock(&msi->lock);
++}
++
++static const struct irq_domain_ops msi_domain_ops = {
++	.alloc	= altera_irq_domain_alloc,
++	.free	= altera_irq_domain_free,
++};
++
++static int altera_allocate_domains(struct altera_msi *msi)
++{
++	msi->inner_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
++					     &msi_domain_ops, msi);
++	if (!msi->inner_domain) {
++		dev_err(&msi->pdev->dev, "failed to create IRQ domain\n");
++		return -ENOMEM;
++	}
++
++	msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
++				&altera_msi_domain_info, msi->inner_domain);
++	if (!msi->msi_domain) {
++		dev_err(&msi->pdev->dev, "failed to create MSI domain\n");
++		irq_domain_remove(msi->inner_domain);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++static void altera_free_domains(struct altera_msi *msi)
++{
++	irq_domain_remove(msi->msi_domain);
++	irq_domain_remove(msi->inner_domain);
++}
++
++static int altera_msi_remove(struct platform_device *pdev)
++{
++	struct altera_msi *msi = platform_get_drvdata(pdev);
++
++	msi_writel(msi, 0, MSI_INTMASK);
++	irq_set_chained_handler(msi->irq, NULL);
++	irq_set_handler_data(msi->irq, NULL);
++
++	altera_free_domains(msi);
++
++	platform_set_drvdata(pdev, NULL);
++	return 0;
++}
++
++static int altera_msi_probe(struct platform_device *pdev)
++{
++	struct altera_msi *msi;
++	struct device_node *np = pdev->dev.of_node;
++	struct resource *res;
++	int ret;
++
++	msi = devm_kzalloc(&pdev->dev, sizeof(struct altera_msi),
++			   GFP_KERNEL);
++	if (!msi)
++		return -ENOMEM;
++
++	mutex_init(&msi->lock);
++	msi->pdev = pdev;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
++	if (!res) {
++		dev_err(&pdev->dev,
++			"no csr memory resource defined\n");
++		return -ENODEV;
++	}
++
++	msi->csr_base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(msi->csr_base)) {
++		dev_err(&pdev->dev, "failed to map csr memory\n");
++		return PTR_ERR(msi->csr_base);
++	}
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
++					   "vector_slave");
++	if (!res) {
++		dev_err(&pdev->dev,
++			"no vector_slave memory resource defined\n");
++		return -ENODEV;
++	}
++
++	msi->vector_base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(msi->vector_base)) {
++		dev_err(&pdev->dev, "failed to map vector_slave memory\n");
++		return PTR_ERR(msi->vector_base);
++	}
++
++	msi->vector_phy = res->start;
++
++	if (of_property_read_u32(np, "num-vectors", &msi->num_of_vectors)) {
++		dev_err(&pdev->dev, "failed to parse the number of vectors\n");
++		return -EINVAL;
++	}
++
++	ret = altera_allocate_domains(msi);
++	if (ret)
++		return ret;
++
++	msi->irq = platform_get_irq(pdev, 0);
++	if (msi->irq <= 0) {
++		dev_err(&pdev->dev, "failed to map IRQ: %d\n", msi->irq);
++		ret = -ENODEV;
++		goto err;
++	}
++
++	irq_set_chained_handler_and_data(msi->irq, altera_msi_isr, msi);
++	platform_set_drvdata(pdev, msi);
++
++	return 0;
++
++err:
++	altera_msi_remove(pdev);
++	return ret;
++}
++
++static const struct of_device_id altera_msi_of_match[] = {
++	{ .compatible = "altr,msi-1.0", NULL },
++	{ },
++};
++
++static struct platform_driver altera_msi_driver = {
++	.driver = {
++		.name = "altera-msi",
++		.of_match_table = altera_msi_of_match,
++	},
++	.probe = altera_msi_probe,
++	.remove = altera_msi_remove,
++};
++
++static int __init altera_msi_init(void)
++{
++	return platform_driver_register(&altera_msi_driver);
++}
++
++subsys_initcall(altera_msi_init);
++
++MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
++MODULE_DESCRIPTION("Altera PCIe MSI support");
++MODULE_LICENSE("GPL v2");
 -- 
-Alexey
+1.8.2.1
+
