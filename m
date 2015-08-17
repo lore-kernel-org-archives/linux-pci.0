@@ -1,235 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:44431 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753229AbbHFENT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:16 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 09/42] powerpc/powernv: DMA32 cleanup
-Date: Thu,  6 Aug 2015 14:11:14 +1000
-Message-Id: <1438834307-26960-10-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20150814145310.GD26431@google.com>
+References: <1428657168-12495-1-git-send-email-gabriel.fernandez@linaro.org> <20150814145310.GD26431@google.com>
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Date: Mon, 17 Aug 2015 09:53:16 +0200
+Message-ID: <CAG374jB3sjfb5Y2L_SBeZ-9Yaw6uZL6OQsk81K8mE6a0MEYkdQ@mail.gmail.com>
+Subject: Re: [PATCH v3 0/5] PCI: st: provide support for dw pcie
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gabriel FERNANDEZ <gabriel.fernandez@st.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Muralidharan Karicheri <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lee Jones <lee.jones@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch cleans up DMA32 in pci-ioda.c. It shouldn't introduce
-behavioural changes:
+Hi Bjorn,
 
-   * Rename various fields in "struct pnv_phb" and "struct pnv_ioda_pe"
-     as 32-bits DMA should be related to "DMA", not "TCE".
-   * Removed struct pnv_ioda_pe::tce32_segcount.
+To be honest I'm wainting that Zhou patch (PCI: designware: Add ARM64
+support) is accepted.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 48 +++++++++++++++----------------
- arch/powerpc/platforms/powernv/pci.h      |  7 ++---
- 2 files changed, 27 insertions(+), 28 deletions(-)
+Because this patch allows to remove "pci: designware: remove
+pci_common_init_dev()" from my patchset. I think it's more judicious
+to do that.
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 7342cfd..8456f37 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -917,7 +917,7 @@ static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
- 	struct pnv_ioda_pe *lpe;
- 
- 	list_for_each_entry(lpe, &phb->ioda.pe_dma_list, dma_link) {
--		if (lpe->dma_weight < pe->dma_weight) {
-+		if (lpe->dma32_weight < pe->dma32_weight) {
- 			list_add_tail(&pe->dma_link, &lpe->dma_link);
- 			return;
- 		}
-@@ -942,14 +942,14 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
- 	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
- 	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
- 	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
--		return 3 * phb->ioda.tce32_count;
-+		return 3 * phb->ioda.dma32_segcount;
- 
- 	/* Increase the weight of RAID (includes Obsidian) */
- 	if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
--		return 15 * phb->ioda.tce32_count;
-+		return 15 * phb->ioda.dma32_segcount;
- 
- 	/* Default */
--	return 10 * phb->ioda.tce32_count;
-+	return 10 * phb->ioda.dma32_segcount;
- }
- 
- static int __pnv_ioda_phb_dma_weight(struct pci_dev *pdev, void *data)
-@@ -1057,7 +1057,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 			continue;
- 		}
- 		pdn->pe_number = pe->pe_number;
--		pe->dma_weight += pnv_ioda_dma_weight(dev);
-+		pe->dma32_weight += pnv_ioda_dma_weight(dev);
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
- 			pnv_ioda_setup_same_PE(dev->subordinate, pe);
- 	}
-@@ -1094,10 +1094,10 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
- 	pe->pbus = bus;
- 	pe->pdev = NULL;
--	pe->tce32_seg = -1;
-+	pe->dma32_seg = -1;
- 	pe->mve_number = -1;
- 	pe->rid = bus->busn_res.start << 8;
--	pe->dma_weight = 0;
-+	pe->dma32_weight = 0;
- 
- 	if (all)
- 		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
-@@ -1460,7 +1460,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 		pe->flags = PNV_IODA_PE_VF;
- 		pe->pbus = NULL;
- 		pe->parent_dev = pdev;
--		pe->tce32_seg = -1;
-+		pe->dma32_seg = -1;
- 		pe->mve_number = -1;
- 		pe->rid = (pci_iov_virtfn_bus(pdev, vf_index) << 8) |
- 			   pci_iov_virtfn_devfn(pdev, vf_index);
-@@ -1936,7 +1936,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 	/* XXX FIXME: Allocate multi-level tables on PHB3 */
- 
- 	/* We shouldn't already have a 32-bit DMA associated */
--	if (WARN_ON(pe->tce32_seg >= 0))
-+	if (WARN_ON(pe->dma32_seg >= 0))
- 		return;
- 
- 	tbl = pnv_pci_table_alloc(phb->hose->node);
-@@ -1945,7 +1945,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 	pnv_pci_link_table_and_group(phb->hose->node, 0, tbl, &pe->table_group);
- 
- 	/* Grab a 32-bit TCE table */
--	pe->tce32_seg = base;
-+	pe->dma32_seg = base;
- 	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
- 		(base << 28), ((base + segs) << 28) - 1);
- 
-@@ -2006,8 +2006,8 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 	return;
-  fail:
- 	/* XXX Failure: Try to fallback to 64-bit only ? */
--	if (pe->tce32_seg >= 0)
--		pe->tce32_seg = -1;
-+	if (pe->dma32_seg >= 0)
-+		pe->dma32_seg = -1;
- 	if (tce_mem)
- 		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
- 	if (tbl) {
-@@ -2405,7 +2405,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 	int64_t rc;
- 
- 	/* We shouldn't already have a 32-bit DMA associated */
--	if (WARN_ON(pe->tce32_seg >= 0))
-+	if (WARN_ON(pe->dma32_seg >= 0))
- 		return;
- 
- 	/* TVE #1 is selected by PCI address bit 59 */
-@@ -2415,7 +2415,7 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 			pe->pe_number);
- 
- 	/* The PE will reserve all possible 32-bits space */
--	pe->tce32_seg = 0;
-+	pe->dma32_seg = 0;
- 	pe_info(pe, "Setting up 32-bit TCE table at 0..%08x\n",
- 		phb->ioda.m32_pci_base);
- 
-@@ -2432,8 +2432,8 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 
- 	rc = pnv_pci_ioda2_setup_default_config(pe);
- 	if (rc) {
--		if (pe->tce32_seg >= 0)
--			pe->tce32_seg = -1;
-+		if (pe->dma32_seg >= 0)
-+			pe->dma32_seg = -1;
- 		return;
- 	}
- 
-@@ -2452,7 +2452,7 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
- 	/* Calculate the PHB's DMA weight */
- 	dma_weight = pnv_ioda_phb_dma_weight(phb);
- 	pr_info("PCI%04x has %ld DMA32 segments, total weight %d\n",
--		hose->global_number, phb->ioda.tce32_count, dma_weight);
-+		hose->global_number, phb->ioda.dma32_segcount, dma_weight);
- 
- 	pnv_pci_ioda_setup_opal_tce_kill(phb);
- 
-@@ -2461,7 +2461,7 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
- 	 * weight
- 	 */
- 	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
--		if (!pe->dma_weight)
-+		if (!pe->dma32_weight)
- 			continue;
- 
- 		/*
-@@ -2472,15 +2472,15 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
- 		if (phb->type == PNV_PHB_IODA1) {
- 			unsigned int segs, base = 0;
- 
--			if (pe->dma_weight <
--			    dma_weight / phb->ioda.tce32_count)
-+			if (pe->dma32_weight <
-+			    dma_weight / phb->ioda.dma32_segcount)
- 				segs = 1;
- 			else
--				segs = (pe->dma_weight *
--					phb->ioda.tce32_count) / dma_weight;
-+				segs = (pe->dma32_weight *
-+					phb->ioda.dma32_segcount) / dma_weight;
- 
- 			pe_info(pe, "DMA32 weight %d, assigned %d segments\n",
--				pe->dma_weight, segs);
-+				pe->dma32_weight, segs);
- 			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
- 
- 			base += segs;
-@@ -3211,7 +3211,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	mutex_init(&phb->ioda.pe_list_mutex);
- 
- 	/* Calculate how many 32-bit TCE segments we have */
--	phb->ioda.tce32_count = phb->ioda.m32_pci_base >> 28;
-+	phb->ioda.dma32_segcount = phb->ioda.m32_pci_base >> 28;
- 
- #if 0 /* We should really do that ... */
- 	rc = opal_pci_set_phb_mem_window(opal->phb_id,
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index addd3f7..574fe43 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -61,11 +61,10 @@ struct pnv_ioda_pe {
- 	/* "Weight" assigned to the PE for the sake of DMA resource
- 	 * allocations
- 	 */
--	unsigned int		dma_weight;
-+	unsigned int		dma32_weight;
- 
- 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
--	int			tce32_seg;
--	int			tce32_segcount;
-+	int			dma32_seg;
- 	struct iommu_table_group table_group;
- 
- 	/* 64-bit TCE bypass region */
-@@ -181,7 +180,7 @@ struct pnv_phb {
- 			unsigned char		pe_rmap[0x10000];
- 
- 			/* 32-bit TCE tables allocation */
--			unsigned long		tce32_count;
-+			unsigned long		dma32_segcount;
- 
- 			/* Sorted list of used PE's, sorted at
- 			 * boot for resource allocation purposes
--- 
-2.1.0
+I can send a v4 based on Zhou patchset ([PATCH v6 0/6] PCI: hisi: Add
+PCIe host support for HiSilicon SoC Hip05) if you want ?
 
+Best Regards
+
+Gabriel.
+
+On 14 August 2015 at 16:53, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Fri, Apr 10, 2015 at 11:12:43AM +0200, Gabriel FERNANDEZ wrote:
+>> Changes in v3:
+>>  - Remove power management functions (was not fully tested)
+>>  - Remove configuration space range from dt binding
+>>  - Remove pci_common_init_dev() call in pcie-designware.c to avoid
+>>    default IO space declaration.
+>>
+>> Changes in v2:
+>>  - comestic corrections in device tree binding
+>>  - add pci-st.c into MAINTAINERS
+>>  - remove st_pcie_ops structure to avoid another level of indirection
+>>  - remove nasty busy-loop
+>>  - remove useless test using virt_to_phys()
+>>  - move disable io support into dw-pcie driver
+>>
+>> I don't change the st_pcie_abort_handler() function because abort handling
+>> is masked during boot.
+>>
+>>
+>> This patch-set introduces a STMicroelectronics PCIe controller.
+>> It's based on designware PCIe driver.
+>>
+>> Gabriel Fernandez (5):
+>>   ARM: STi: Kconfig update for PCIe support
+>>   PCI: st: Add Device Tree bindings for sti pcie
+>>   PCI: st: Provide support for the sti PCIe controller
+>>   pci: designware: remove pci_common_init_dev()
+>>   MAINTAINERS: Add pci-st.c to ARCH/STI architecture
+>
+> Hi Gabriel,
+>
+> I lost track of where we are with this.  I *think* I'm waiting for a v4
+> posting, but I haven't seen it yet.  Let me know if I've missed something.
+>
+> Bjorn
