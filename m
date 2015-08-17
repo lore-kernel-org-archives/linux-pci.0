@@ -1,59 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:35400 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbbHLPf6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 11:35:58 -0400
-Received: by lbcbn3 with SMTP id bn3so11652956lbc.2
-        for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2015 08:35:57 -0700 (PDT)
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:33612 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750862AbbHQKfV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 06:35:21 -0400
 MIME-Version: 1.0
-In-Reply-To: <1439372036-15303-6-git-send-email-l.stach@pengutronix.de>
-References: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
-	<1439372036-15303-6-git-send-email-l.stach@pengutronix.de>
-Date: Wed, 12 Aug 2015 21:05:57 +0530
-Message-ID: <CAHM4w1kKu1rbONmWvE2UnEWXNaY+b73JXwB6Af+_KD6CfpKL8w@mail.gmail.com>
-Subject: Re: [PATCH v3 5/5] PCI: designware: set up high part of MSI target address
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <SIXPR06MB041595F310174F0654E3BCC4F5790@SIXPR06MB0415.apcprd06.prod.outlook.com>
+References: <1439296994-28480-1-git-send-email-geert+renesas@glider.be>
+	<SIXPR06MB041595F310174F0654E3BCC4F5790@SIXPR06MB0415.apcprd06.prod.outlook.com>
+Date: Mon, 17 Aug 2015 12:35:20 +0200
+Message-ID: <CAMuHMdWfpDT_fzGGGuf4GjGdUpRLf7Na=ZSkqyKFXPJbfi7-SQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: PCI_RCAR_GEN2 and PCI_RCAR_GEN2_PCIE should depend
+ on ARM
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	patchwork-lst@pengutronix.de, kernel@pengutronix.de
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 12, 2015 at 3:03 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Set up the high part of the MSI target address in order to allow the
-> MSI target to reside above the 4GB mark on 64bit and PAE systems.
->
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  drivers/pci/host/pcie-designware.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 74034395cf2a..fcb798e47c30 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -299,12 +299,15 @@ no_valid_irq:
->  static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
->  {
->         struct msi_msg msg;
-> +       u64 msi_target;
->
->         if (pp->ops->get_msi_addr)
-> -               msg.address_lo = pp->ops->get_msi_addr(pp);
-> +               msi_target = pp->ops->get_msi_addr(pp);
->         else
-> -               msg.address_lo = virt_to_phys((void *)pp->msi_data);
-> -       msg.address_hi = 0x0;
-> +               msi_target = virt_to_phys((void *)pp->msi_data);
-> +
-> +       msg.address_lo = (u32)(msi_target & 0xffffffff);
-> +       msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
->
->         if (pp->ops->get_msi_data)
->                 msg.data = pp->ops->get_msi_data(pp, pos);
+Hi Phil,
 
-Other than above, dw_pcie_msi_init also need to be fixed
-for PCIE_MSI_ADDR_HI.
+On Mon, Aug 17, 2015 at 12:23 PM, Phil Edworthy
+<phil.edworthy@renesas.com> wrote:
+> On 11 August 2015 13:43, Geert wrote:
+>> On arm64/shmobile:
+>>
+>>     drivers/pci/host/pci-rcar-gen2.c: In function 'rcar_pci_cfg_base':
+>> drivers/pci/host/pci-rcar-gen2.c:112:34: error: dereferencing pointer to
+>> incomplete type
+>>       struct rcar_pci_priv *priv = sys->private_data;
+>>                                     ^
+>>
+>> and
+>>
+>>     drivers/pci/host/pcie-rcar.c:138:52: warning: 'struct pci_sys_data' declared
+>> inside parameter list
+>>      static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
+>>                                                       ^
+>>
+>> pci_sys_data exists on ARM only, hence these drivers should depend on
+>> ARM unconditionally.
+>
+> Since these drivers should also be used for R-Car Gen3, I assume someone will
+> have to fix the problem in the same way the designware pci driver is being modified.
+> Please see http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/353421.html
+
+Yes, that would be the correct long-term solution.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
