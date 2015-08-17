@@ -1,58 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:59660 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753813AbbHFRxt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 13:53:49 -0400
-Date: Thu, 6 Aug 2015 18:53:22 +0100
-From: Mark Brown <broonie@kernel.org>
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Michal Simek <michal.simek@xilinx.com>
-Cc: kernel-build-reports@lists.linaro.org,
-	linaro-kernel@lists.linaro.org, linux-next@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Message-ID: <20150806175322.GB20873@sirena.org.uk>
-References: <E1ZNIul-0007IF-Ev@optimist>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="A/AdVN8FDkvpDdxN"
-In-Reply-To: <E1ZNIul-0007IF-Ev@optimist>
-Subject: Re: next-20150806 build: 2 failures 52 warnings (next-20150806)
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:57170 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754631AbbHQLGU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:06:20 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: [PATCH v4 3/5] PCI: designware: implement multivector MSI irq setup
+Date: Mon, 17 Aug 2015 13:06:16 +0200
+Message-Id: <1439809578-13654-4-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
+References: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Allows to set up and use multiple MSI irqs per device.
 
---A/AdVN8FDkvpDdxN
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+v3: use new MSI msg setup function.
+---
+ drivers/pci/host/pcie-designware.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-On Thu, Aug 06, 2015 at 12:00:47PM +0100, Build bot for Mark Brown wrote:
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 0ec435c56a8b..74034395cf2a 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+ 	}
+ 
+ 	*pos = pos0;
++	desc->nvec_used = no_irqs;
++	desc->msi_attrib.multiple = order_base_2(no_irqs);
++
+ 	return irq;
+ 
+ no_valid_irq:
+@@ -329,6 +332,33 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+ 	return 0;
+ }
+ 
++static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
++			     int nvec, int type)
++{
++#ifdef CONFIG_PCI_MSI
++	int irq, pos;
++	struct msi_desc *desc;
++	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
++
++	/* MSI-X interrupts are not supported */
++	if (type == PCI_CAP_ID_MSIX)
++		return -EINVAL;
++
++	WARN_ON(!list_is_singular(&pdev->msi_list));
++	desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
++
++	irq = assign_irq(nvec, desc, &pos);
++	if (irq < 0)
++		return irq;
++
++	dw_msi_setup_msg(pp, irq, pos);
++
++	return 0;
++#else
++	return -ENOSYS;
++#endif
++}
++
+ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+ {
+ 	struct irq_data *data = irq_get_irq_data(irq);
+@@ -340,6 +370,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+ 
+ static struct msi_controller dw_pcie_msi_chip = {
+ 	.setup_irq = dw_msi_setup_irq,
++	.setup_irqs = dw_msi_setup_irqs,
+ 	.teardown_irq = dw_msi_teardown_irq,
+ };
+ 
+-- 
+2.4.6
 
-Today's linux-next fails to build an ARM allmodconfig due to:
-
-> ../drivers/pci/host/pcie-xilinx.c:235:3: error: implicit declaration of function 'msi_desc_to_pci_sys_data' [-Werror=implicit-function-declaration]
-
-msi_desc_to_pci_sys_data doesn't appear to exist anywhere else in
-current -next, the usage was introduced by e39758e0ea769e632e (PCI: Use
-helper functions to access fields in struct msi_desc) at which time it
-looks like it did exist but I can't immediately see where it was removed.
-
---A/AdVN8FDkvpDdxN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJVw58RAAoJECTWi3JdVIfQSNAH/2++6pgRoyaBNUvxPLZeFza+
-UeW4WWSRIPsW6Bmrh3Y5weeN5npLKO2ZwiUdAfsDPsDvOlbGWWDdIvVibF5xpf8V
-lHc0ihPgPMuzJTNHjzETwXV+4mUDdkUv0FsWxgwzhv0bhe9w9z8uznEY5XiIxs5A
-Ptuvo8cvqRNwHIUoln64SWd3zMOSois/EXqX/+UcmUjKMMzQ4csk6BOjQZgPneGt
-ZnMPQgp8O8e2lSPDIne+O2+3c2U9j34FRsi6/SQAExG4z91Ti2JaVoZzx4kVh0H2
-krcql/myy6/k783zuOTkvqEdG5cdGb7j2KrNoumfQtve9jbMns604ExWagIEcls=
-=n1TH
------END PGP SIGNATURE-----
-
---A/AdVN8FDkvpDdxN--
