@@ -1,121 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:34719 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754562AbbHFOsG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 10:48:06 -0400
-Received: by pawu10 with SMTP id u10so64706733paw.1
-        for <linux-pci@vger.kernel.org>; Thu, 06 Aug 2015 07:48:06 -0700 (PDT)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>
-Cc: "'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
-	"'Jayachandran C'" <jchandra@broadcom.com>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Russell King'" <linux@arm.linux.org.uk>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
-	"'Marc Zyngier'" <marc.zyngier@arm.com>,
-	<linux-pci@vger.kernel.org>, "'Duc Dang'" <dhdang@apm.com>,
-	"'Michal Simek'" <michal.simek@xilinx.com>,
-	"'Simon Horman'" <horms@verge.net.au>,
-	"'James Morse'" <james.morse@arm.com>,
-	"'Tanmay Inamdar'" <tinamdar@apm.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
+Received: from szxga01-in.huawei.com ([58.251.152.64]:60248 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753738AbbHQLup (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:50:45 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	"Pratyush Anand" <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"'Jason Cooper'" <jason@lakedaemon.net>,
-	"'Jingoo Han'" <jingoohan1@gmail.com>
-References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150804215404.9189.41823.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150804215404.9189.41823.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Subject: Re: [PATCH v5 2/9] PCI: Add pci_scan_root_bus_msi()
-Date: Thu, 6 Aug 2015 23:47:55 +0900
-Message-ID: <000401d0d056$e700d260$b5027720$@com>
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
+	<liguozhu@hisilicon.com>
+Subject: [PATCH v7 2/6] ARM/PCI: remove align_resource in pci_sys_data
+Date: Mon, 17 Aug 2015 19:55:50 +0800
+Message-ID: <1439812554-180426-3-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 05, 2015 6:54 AM, Bjorn Helgaas wrote:
-> 
-> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> 
-> Add a pci_scan_root_bus_msi() interface so an arch can specify the MSI
-> controller up front.  This removes the need for a pcibios callback to set
-> the MSI controller later.
-> 
-> This is not exported because I'd like to replace the variety of "scan root
-> bus" interfaces with a single, more extensible interface that can handle
-> the MSI controller, domain, pci_ops, resources, etc.  I hope this interface
-> is temporary.
-> 
-> [bhelgaas: changelog, split into separate patch, move to drivers/pci/pci.h]
-> Suggested-by: Russell King <linux@arm.linux.org.uk>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
+This patch is needed in order to unify the PCIe designware framework for ARM and
+ARM64 architectures. In the PCIe designware unification process we are calling
+pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+cause a problem with the function pcibios_align_resource(); in fact this will
+cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+"struct pcie_port*" pointer.
 
-Best regards,
-Jingoo Han
+This patch solves the issue by removing "align_resource" from "pci_sys_data"
+struct and defining a static global function pointer in "bios32.c"
 
-> ---
->  drivers/pci/pci.h   |    5 +++++
->  drivers/pci/probe.c |   14 ++++++++++++--
->  2 files changed, 17 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 4ff0ff1..1d4c95c 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -223,6 +223,11 @@ enum pci_bar_type {
->  	pci_bar_mem64,		/* A 64-bit memory BAR */
->  };
-> 
-> +struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
-> +				      struct pci_ops *ops, void *sysdata,
-> +				      struct list_head *resources,
-> +				      struct msi_controller *msi);
-> +
->  bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
->  				int crs_timeout);
->  int pci_setup_device(struct pci_dev *dev);
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cefd636..9ff4df0 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2096,8 +2096,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
->  			res, ret ? "can not be" : "is");
->  }
-> 
-> -struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-> -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> +struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
-> +		struct pci_ops *ops, void *sysdata,
-> +		struct list_head *resources, struct msi_controller *msi)
->  {
->  	struct resource_entry *window;
->  	bool found = false;
-> @@ -2114,6 +2115,8 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
->  	if (!b)
->  		return NULL;
-> 
-> +	b->msi = msi;
-> +
->  	if (!found) {
->  		dev_info(&b->dev,
->  		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
-> @@ -2128,6 +2131,13 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-> 
->  	return b;
->  }
-> +
-> +struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-> +		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> +{
-> +	return pci_scan_root_bus_msi(parent, bus, ops, sysdata, resources,
-> +				     NULL);
-> +}
->  EXPORT_SYMBOL(pci_scan_root_bus);
-> 
->  struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ arch/arm/include/asm/mach/pci.h |  5 -----
+ arch/arm/kernel/bios32.c        | 12 ++++++++----
+ 2 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 28b9bb3..8a4e4de 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -58,11 +58,6 @@ struct pci_sys_data {
+ 					/* IRQ mapping				*/
+ 	int		(*map_irq)(const struct pci_dev *, u8, u8);
+ 					/* Resource alignement requirements	*/
+-	resource_size_t (*align_resource)(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align);
+ 	void		*private_data;	/* platform controller private data	*/
+ };
+ 
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index fcbbbb1..4cdc64d 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -17,6 +17,11 @@
+ #include <asm/mach/pci.h>
+ 
+ static int debug_pci;
++static resource_size_t (*align_resource)(struct pci_dev *dev,
++		  const struct resource *res,
++		  resource_size_t start,
++		  resource_size_t size,
++		  resource_size_t align) = NULL;
+ 
+ #ifdef CONFIG_PCI_MSI
+ struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
+@@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+-		sys->align_resource = hw->align_resource;
++		align_resource = hw->align_resource;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		if (hw->private_data)
+@@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
+ 	struct pci_dev *dev = data;
+-	struct pci_sys_data *sys = dev->sysdata;
+ 	resource_size_t start = res->start;
+ 
+ 	if (res->flags & IORESOURCE_IO && start & 0x300)
+@@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
+-	if (sys->align_resource)
+-		return sys->align_resource(dev, res, start, size, align);
++	if (align_resource)
++		return align_resource(dev, res, start, size, align);
+ 
+ 	return start;
+ }
+-- 
+1.9.1
 
