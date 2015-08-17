@@ -1,61 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:32964 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752507AbbHEJZg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 5 Aug 2015 05:25:36 -0400
-Date: Wed, 5 Aug 2015 10:25:34 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jayachandran C <jchandra@broadcom.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH v4 1/3] PCI: generic: remove dependency on hw_pci
-Message-ID: <20150805092533.GC6092@arm.com>
-References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
- <20150804234956.GF17327@google.com>
- <20150805092318.GB6092@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150805092318.GB6092@arm.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:44205 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754685AbbHQLGU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:06:20 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: [PATCH v4 5/5] PCI: designware: set up high part of MSI target address
+Date: Mon, 17 Aug 2015 13:06:18 +0200
+Message-Id: <1439809578-13654-6-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
+References: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 05, 2015 at 10:23:18AM +0100, Will Deacon wrote:
-> That said, I just tried to build this and it fails to compile the x-gene
-> PCI host driver. Fixup below.
+Set up the high part of the MSI target address in order to allow the
+MSI target to reside above the 4GB mark on 64bit and PAE systems.
 
-Wait, there's more!
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+v4: fix target address setup in dw_pcie_msi_init()
+---
+ drivers/pci/host/pcie-designware.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-Will
-
---->8
-
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index 514f41b86c49..8ab3bd098424 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -506,7 +506,7 @@ static int xgene_pcie_msi_enable(struct xgene_pcie_port *port)
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 74034395cf2a..71629175d1a1 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -205,12 +205,16 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 
+ void dw_pcie_msi_init(struct pcie_port *pp)
  {
- 	struct device_node *msi_node;
++	u64 msi_target;
++
+ 	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
++	msi_target = virt_to_phys((void *)pp->msi_data);
  
--	msi_node = of_parse_phandle(port->dev.of_node, "msi-parent", 0);
-+	msi_node = of_parse_phandle(port->dev->of_node, "msi-parent", 0);
- 	if (!msi_node)
- 		return -ENODEV;
- 
-@@ -515,7 +515,7 @@ static int xgene_pcie_msi_enable(struct xgene_pcie_port *port)
- 		return -ENODEV;
- 
- 	of_node_put(msi_node);
--	port->msi->dev = &port->dev;
-+	port->msi->dev = port->dev;
- 	return 0;
+ 	/* program the msi_data */
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+-			virt_to_phys((void *)pp->msi_data));
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
++			    (u32)(msi_target & 0xffffffff));
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
++			    (u32)(msi_target >> 32 & 0xffffffff));
  }
  
+ static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+@@ -299,12 +303,15 @@ no_valid_irq:
+ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ {
+ 	struct msi_msg msg;
++	u64 msi_target;
+ 
+ 	if (pp->ops->get_msi_addr)
+-		msg.address_lo = pp->ops->get_msi_addr(pp);
++		msi_target = pp->ops->get_msi_addr(pp);
+ 	else
+-		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+-	msg.address_hi = 0x0;
++		msi_target = virt_to_phys((void *)pp->msi_data);
++
++	msg.address_lo = (u32)(msi_target & 0xffffffff);
++	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+ 
+ 	if (pp->ops->get_msi_data)
+ 		msg.data = pp->ops->get_msi_data(pp, pos);
+-- 
+2.4.6
 
