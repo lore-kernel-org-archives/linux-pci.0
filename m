@@ -1,63 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59202 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752682AbbHFENR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:17 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:15 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 18/42] powerpc/powernv: Allocate PE# in deasending order
-Date: Thu,  6 Aug 2015 14:11:23 +1000
-Message-Id: <1438834307-26960-19-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:37885 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937AbbHQKyz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 06:54:55 -0400
+From: Yijing Wang <wangyijing@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <mroos@linux.ee>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
+Date: Mon, 17 Aug 2015 18:47:58 +0800
+Message-ID: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The available PE#, represented by a bitmap in the PHB, is allocated
-in ascending order. It conflicts with the fact that M64 segments are
-assigned in same order. In order to avoid the conflict, the patch
-allocates PE# in descending order.
+Commit d0751b98dfa3 ("PCI: Add dev->has_secondary_link to
+track downstream PCIe links")assumed root port is always
+the top device in pcie tree. But on sparc64 V245 and T2000
+the pcie tree has no root port device in top level, the
+upstream port device is connected directly to root bus.
+So we may get NULL parent for this upstream port device.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Upstream port ------ Downstream port ------PCIe-PCI bridge
+
+Reported-by: Meelis Roos <mroos@linux.ee>
+Tested-by: Meelis Roos <mroos@linux.ee>
+Signed-off-by: Yijing Wang <wangyijing@huawei.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/pci/probe.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 56b058c..1c950e8 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -161,13 +161,18 @@ static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
- static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
- {
- 	unsigned long pe;
-+	unsigned long limit = phb->ioda.total_pe_num - 1;
- 
- 	do {
- 		pe = find_next_zero_bit(phb->ioda.pe_alloc,
--					phb->ioda.total_pe_num, 0);
--		if (pe >= phb->ioda.total_pe_num)
-+					phb->ioda.total_pe_num, limit);
-+		if (pe < phb->ioda.total_pe_num &&
-+		    !test_and_set_bit(pe, phb->ioda.pe_alloc))
-+			break;
-+
-+		if (--limit >= phb->ioda.total_pe_num)
- 			return NULL;
--	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
-+	} while (1);
- 
- 	return pnv_ioda_init_pe(phb, pe);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 51ebb97..cd54298 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1003,7 +1003,10 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 	else if (type == PCI_EXP_TYPE_UPSTREAM ||
+ 		 type == PCI_EXP_TYPE_DOWNSTREAM) {
+ 		parent = pci_upstream_bridge(pdev);
+-		if (!parent->has_secondary_link)
++		/* For sparc64 V245 and T2000, upstream port may be
++		 * the top level device, connect to root bus directly.
++		 */
++		if (parent && !parent->has_secondary_link)
+ 			pdev->has_secondary_link = 1;
+ 	}
  }
 -- 
-2.1.0
+1.7.1
 
