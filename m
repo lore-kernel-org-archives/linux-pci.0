@@ -1,100 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:36639 "EHLO
-	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751530AbbHCW1d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 18:27:33 -0400
-Received: by ioeg141 with SMTP id g141so159347258ioe.3
-        for <linux-pci@vger.kernel.org>; Mon, 03 Aug 2015 15:27:32 -0700 (PDT)
-Date: Mon, 3 Aug 2015 17:27:26 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 17 Aug 2015 18:54:16 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-To: Barry Grussling <barry@grussling.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: Failure to HotPlug if devices not present at boot - no memory
- space
-Message-ID: <20150803222726.GB11144@google.com>
-References: <CABLseQ6HhaozD6D0Y-gPpjz1R5Ass_-mumn9jfcWReAVvrdjHQ@mail.gmail.com>
- <CAErSpo4f_BLrnq7T2foOA2HAySPTDVYn61dfyOfZahyiyzGTdg@mail.gmail.com>
- <CABLseQ4eR5DyzSar+TwTOOJkq2_za2t47j-4RYPgQnNrZXmWiA@mail.gmail.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v3 13/51] PCI: Separate realloc list checking after
+ allocation
+Message-ID: <20150817235416.GS26431@google.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+ <1438039809-24957-14-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABLseQ4eR5DyzSar+TwTOOJkq2_za2t47j-4RYPgQnNrZXmWiA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1438039809-24957-14-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai]
-
-On Mon, Aug 03, 2015 at 01:33:20PM -0700, Barry Grussling wrote:
-> > Can you attach complete dmesg logs and "lspci -vv" output for both
-> > cases?  (You can attach them to a kernel.org bugzilla if they're too
-> > big for email.)
-> >
+On Mon, Jul 27, 2015 at 04:29:31PM -0700, Yinghai Lu wrote:
+> We check the realloc list, as list must be empty after allocation.
 > 
-> Can do:
-> https://bugzilla.kernel.org/show_bug.cgi?id=102231
+> Separate the realloc list checking to another function.
 > 
-> > The dmesg logs will tell us what space is allocated to the host
-> > bridge.  That is generally done by firmware or the bootloader, and
-> > Linux doesn't change it.  So if firmware only assigns 0xc0000000 to
-> > 0xc59fffff to the host bridge, the current Linux kernel will only
-> > assign PCI devices inside that region; it will never expand the
-> > region.
-> Okay.  That makes sense.
+> Add checking that is missed in acpiphp driver.
 > 
-> We are using u-boot.  I don't believe our current u-boot build has any
-> PCIe knowledge in it though.
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: linux-acpi@vger.kernel.org
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |  1 +
+>  drivers/pci/pci.h                  |  1 +
+>  drivers/pci/setup-bus.c            | 11 ++++++++---
+>  3 files changed, 10 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index ff53856..134caee 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+>  		}
+>  	}
+>  	__pci_bus_assign_resources(bus, &add_list, NULL);
+> +	__pci_bus_check_realloc(&add_list);
+>  
+>  	acpiphp_sanitize_bus(bus);
+>  	pcie_bus_configure_settings(bus);
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 4ff0ff1..2b83977 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -235,6 +235,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
+>  void __pci_bus_assign_resources(const struct pci_bus *bus,
+>  				struct list_head *realloc_head,
+>  				struct list_head *fail_head);
+> +void __pci_bus_check_realloc(struct list_head *realloc_head);
+>  bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
+>  
+>  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 06664db..f30225c 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -350,6 +350,11 @@ out:
+>  	}
+>  }
+>  
+> +void __pci_bus_check_realloc(struct list_head *realloc_head)
+> +{
+> +	BUG_ON(!list_empty(realloc_head));
 
-You might have a host bridge driver that knows how to set up the
-windows.  Your dmesg logs mention altera_hps2fpga_bridge, which
-doesn't seem to be in the upstream kernel, so I don't know what it
-does.
+I don't think this really improves readability.  At least before, we could
+see what we were looking for and we knew it might BUG().
 
-Both logs show this:
-
-  PCI host bridge to bus 0000:00
-  pci_bus 0000:00: root bus resource [mem 0xc0000000-0xcfffffff]
-  pci_bus 0000:00: root bus resource [mem 0xd0000000-0xdfffffff pref]
-
-which means the top-level apertures are the same regardless of whether
-08:00.0 is present at boot.  That means the PCI core should be able to
-assign space for the hot-added device, at least in principle.
-
-The log where 08:00.0 is present at boot shows this:
-
-  pci 0000:08:00.0: [1aa9:0013] type 00 class 0x020000
-  pci 0000:08:00.0: reg 0x10: [mem 0x00000000-0x000fffff] (size  1M)
-  pci 0000:08:00.0: reg 0x14: [mem 0x00000000-0x00ffffff] (size 16M)
-  pci 0000:08:00.0: reg 0x18: [mem 0x00000000-0x00ffffff] (size 16M)
-  pci 0000:08:00.0: reg 0x1c: [mem 0x00000000-0x000003ff] (size  1K)
-  pci 0000:08:00.0: reg 0x20: [mem 0x00000000-0x000003ff] (size  1K)
-  pci 0000:08:00.0: reg 0x24: [mem 0x00000000-0x000003ff] (size  1K)
-
-so it needs a little over 33M of space.
-
-In the other log ("08:00.0 not present at boot"), we actually *do*
-enumerate an 08:00.0 device:
-
-  pci 0000:08:00.0: [1d00:0000] type 00 class 0x00001d
-  pci 0000:08:00.0: reg 0x30: [mem 0x00001800-0x00001fff pref]
-
-I don't know what this device is (lspci says "non-VGA unclassified
-device") and it only requests 2K of space for an option ROM.  And the
-log doesn't include the part where you hot-add the real device --
-that's the interesting information should be.
-
-I see that you already boot with "pcie=hpmemsize=256M", but that
-doesn't help in this case because it's only used for hotplug bridges,
-and 02:0f.0 (the Downstream Port leading to bus 08) is not marked as
-hotplug-capable:
-
-  02:0f.0 PCI bridge: PLX Technology, Inc. PEX 8619
-    Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
-      SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
-
-I think if you could get the PCI_EXP_SLTCAP_HPC bit set for 02:0f.0,
-and you booted with "pcie=hpmemsize=256M", it would likely work.  It's
-possible it could be made to work even without that, but in general
-it's hard to reserve the right amount of space for a bridge if you
-don't know what might be plugged in later.
-
-Bjorn
+> +}
+> +
+>  /**
+>   * assign_requested_resources_sorted() - satisfy resource requests
+>   *
+> @@ -1861,7 +1866,7 @@ again:
+>  	/* Depth last, allocate resources and update the hardware. */
+>  	__pci_bus_assign_resources(bus, add_list, &fail_head);
+>  	if (add_list)
+> -		BUG_ON(!list_empty(add_list));
+> +		__pci_bus_check_realloc(add_list);
+>  	tried_times++;
+>  
+>  	/* any device complain? */
+> @@ -1936,7 +1941,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>  again:
+>  	__pci_bus_size_bridges(parent, &add_list);
+>  	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+> -	BUG_ON(!list_empty(&add_list));
+> +	__pci_bus_check_realloc(&add_list);
+>  	tried_times++;
+>  
+>  	if (list_empty(&fail_head))
+> @@ -1995,6 +2000,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+>  							 &add_list);
+>  	up_read(&pci_bus_sem);
+>  	__pci_bus_assign_resources(bus, &add_list, NULL);
+> -	BUG_ON(!list_empty(&add_list));
+> +	__pci_bus_check_realloc(&add_list);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+> -- 
+> 1.8.4.5
+> 
