@@ -1,83 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:33923 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752489AbbHDVx7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 17:53:59 -0400
-Received: by ioea135 with SMTP id a135so31217605ioe.1
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 14:53:59 -0700 (PDT)
-Subject: [PATCH v5 1/9] ARM/PCI: Replace panic with WARN messages on failures
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Duc Dang <dhdang@apm.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Simon Horman <horms@verge.net.au>,
-	James Morse <james.morse@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>
-Date: Tue, 04 Aug 2015 16:53:57 -0500
-Message-ID: <20150804215357.9189.11942.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:60234 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754225AbbHQLuh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:50:37 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	"Pratyush Anand" <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v7 6/6] MAINTAINERS: Add pcie-hisi maintainer
+Date: Mon, 17 Aug 2015 19:55:54 +0800
+Message-ID: <1439812554-180426-7-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-In the ARM PCI bios32 layer, failures to dynamically allocate pci_sys_data
-for a PCI bus, or a PCI bus scan failure have to be considered serious
-warnings but they should not trigger a system panic so that at least the
-system is given a chance to be debugged.
-
-This patch replaces the panic statements with WARN() messages to improve
-error reporting in the ARM PCI bios32 layer.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-CC: Russell King <linux@arm.linux.org.uk>
-CC: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 ---
- arch/arm/kernel/bios32.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index bf370bc..4e95260 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -459,8 +459,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8133cef..7cd8e47 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7854,6 +7854,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ F:	drivers/pci/host/pci-xgene-msi.c
  
- 	for (nr = busnr = 0; nr < hw->nr_controllers; nr++) {
- 		sys = kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL);
--		if (!sys)
--			panic("PCI: unable to allocate sys data!");
-+		if (WARN(!sys, "PCI: unable to allocate sys data!"))
-+			break;
- 
- #ifdef CONFIG_PCI_MSI
- 		sys->msi_ctrl = hw->msi_ctrl;
-@@ -489,8 +489,10 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 				sys->bus = pci_scan_root_bus(parent, sys->busnr,
- 						hw->ops, sys, &sys->resources);
- 
--			if (!sys->bus)
--				panic("PCI: unable to scan bus!");
-+			if (WARN(!sys->bus, "PCI: unable to scan bus!")) {
-+				kfree(sys);
-+				break;
-+			}
- 
- 			busnr = sys->bus->busn_res.end + 1;
- 
++PCIE DRIVER FOR HISILICON
++M:	Zhou Wang <wangzhou1@hisilicon.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++F:	drivers/pci/host/pcie-hisi.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
+-- 
+1.9.1
 
