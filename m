@@ -1,67 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:32822 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752216AbbHaXV4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Aug 2015 19:21:56 -0400
-Received: by iods203 with SMTP id s203so176502376iod.0
-        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2015 16:21:55 -0700 (PDT)
+Received: from mga09.intel.com ([134.134.136.24]:15015 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750911AbbHQWuR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Aug 2015 18:50:17 -0400
+From: "Jiang, Dave" <dave.jiang@intel.com>
+To: "Busch, Keith" <keith.busch@intel.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	infinipath <infinipath@intel.com>
+Subject: Re: [PATCH 2/3] QIB: Removing usage of pcie_set_mps()
+Date: Mon, 17 Aug 2015 22:50:11 +0000
+Message-ID: <1439851811.3253.18.camel@intel.com>
+References: <1438208335-19457-1-git-send-email-keith.busch@intel.com>
+	 <1438208335-19457-3-git-send-email-keith.busch@intel.com>
+	 <20150817223039.GK26431@google.com>
+In-Reply-To: <20150817223039.GK26431@google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <loom.20150831T091131-859@post.gmane.org>
-References: <loom.20150831T091131-859@post.gmane.org>
-Date: Mon, 31 Aug 2015 16:21:55 -0700
-Message-ID: <CAE9FiQWNA1BEGom757xtbc0zFjFqZ9uqKwj2kM7EFDDKXEL6fw@mail.gmail.com>
-Subject: Re: PCI rescan : can't assign mem
-From: Yinghai Lu <yinghai@kernel.org>
-To: Peio <peio@azkarate.eu>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 31, 2015 at 12:47 AM, Peio <peio@azkarate.eu> wrote:
-> I have a board with an PCI Express-to-PCI Bridge (Texas Instruments
-> XIO2001).
-> Attached to the PCI bus, there are 2 FPGA PCI Target devices needing 32MB
-> memory map each.
-> The PCI rescan "echo 1 > /sys/bus/pci/rescan" memory assign fails.
->
-> dmesg messages:
-> [  150.978654] pci 0000:02:03.0: [4150:0001] type 00 class 0x068000
-> [  150.978684] pci 0000:02:03.0: reg 0x10: [mem 0x00000000-0x01ffffff]
-> [  150.978885] pci 0000:02:04.0: [4150:000a] type 00 class 0x078000
-> [  150.978909] pci 0000:02:04.0: reg 0x10: [mem 0x00000000-0x01ffffff]
-> [  150.979158] pcieport 0000:00:1c.0: bridge window [mem 0x00100000-
-> 0x000fffff 64bit pref] to [bus 01-02] add_size 200000
-> [  150.979166] pcieport 0000:00:1c.0: bridge window [mem 0x02000000-
-> 0x05ffffff] to [bus 01-02] add_size 2000000
-> [  150.979183] pcieport 0000:00:1c.2: bridge window [mem 0x00100000-
-> 0x000fffff 64bit pref] to [bus 04] add_size 200000
-> [  150.979190] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2] has
-> bogus alignment
-> [  150.979199] pcieport 0000:00:1c.0: res[14]=[mem 0x02000000-0x05ffffff]
-> get_res_add_size add_size 2000000
-> [  150.979205] pcieport 0000:00:1c.0: res[15]=[mem 0x00100000-0x000fffff
-> 64bit pref] get_res_add_size add_size 200000
-> [  150.979211] pcieport 0000:00:1c.2: res[15]=[mem 0x00100000-0x000fffff
-> 64bit pref] get_res_add_size add_size 200000
-> [  150.979222] pcieport 0000:00:1c.0: BAR 14: can't assign mem (size
-> 0x6000000)
-> [  150.979230] pcieport 0000:00:1c.0: BAR 15: can't assign mem pref (size
-> 0x200000)
-> [  150.979238] pcieport 0000:00:1c.2: BAR 15: can't assign mem pref (size
-> 0x200000)
-> [  150.979245] pcieport 0000:00:1c.0: BAR 14: can't assign mem (size
-> 0x4000000)
-
-> Linux: Ubuntu 14.04
-> Kernel: 3.13.0-62-generic
-
-how about current upsteam kernel?
-
-> Is possible to fix it?
-
-Please whole post boot log with "debug ignore_loglevel".
-
-Need _CRS from BIOS provide enough MMIO range for 00:1c.0
-
-Yinghai
+T24gTW9uLCAyMDE1LTA4LTE3IGF0IDE3OjMwIC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
+PiBbK2NjIE1pa2UsIGxpbnV4LXJkbWFdDQo+IA0KPiBPbiBXZWQsIEp1bCAyOSwgMjAxNSBhdCAw
+NDoxODo1NFBNIC0wNjAwLCBLZWl0aCBCdXNjaCB3cm90ZToNCj4gPiBGcm9tOiBEYXZlIEppYW5n
+IDxkYXZlLmppYW5nQGludGVsLmNvbT4NCj4gPiANCj4gPiBUaGlzIGlzIGluIHBlcnBlcmF0aW9u
+IG9mIHVuLWV4cG9ydGluZyB0aGUgcGNpZV9zZXRfbXBzKCkgZnVuY3Rpb24NCj4gPiBzeW1ib2wu
+IEEgZHJpdmVyIHNob3VsZCBub3QgYmUgY2hhbmdpbmcgdGhlIE1QUyBhcyB0aGF0IGlzIHRoZQ0K
+PiA+IHJlc3BvbnNpYmlsaXR5IG9mIHRoZSBQQ0kgc3Vic3lzdGVtLg0KPiANCj4gUGxlYXNlIGV4
+cGxhaW4gdGhlIGltcGxpY2F0aW9ucyBvZiByZW1vdmluZyB0aGlzIGNvZGUuICBEb2VzIHRoaXMg
+DQo+IGFmZmVjdA0KPiBwZXJmb3JtYW5jZSBvZiB0aGUgZGV2aWNlPyAgSWYgc28sIGhvdyBkbyB3
+ZSBnZXQgdGhhdCBwZXJmb3JtYW5jZSANCj4gYmFjaz8NCg0KSG9uZXN0bHkgSSBkb24ndCBrbm93
+LiBCdXQgYXQgdGhlIHNhbWUgdGltZSBJIHRoaW5rIHRoZSBkcml2ZXINCnNob3VsZG4ndCBiZSB0
+b3VjaGluZyB0aGUgTVBTIGF0IGFsbC4gU2hvdWxkbid0IHRoYXQgYmUgbGVmdCB0byB0aGUNClBD
+SWUgc3Vic3lzdGVtIGFuZCByZWx5IG9uIHRoZSBQQ0llIHN1YnN5c3RlbSB0byBzZXQgdGhpcyB0
+byBhIHNhbmUNCnZhbHVlPyANCg0KPiANCj4gSSBhbHNvIGNjJ2QgdGhlIFFJQiBtYWludGFpbmVy
+cyBmb3IgeW91Og0KPiANCj4gICBRSUIgRFJJVkVSDQo+ICAgTTogICAgICBNaWtlIE1hcmNpbmlz
+enluIDxpbmZpbmlwYXRoQGludGVsLmNvbT4NCj4gICBMOiAgICAgIGxpbnV4LXJkbWFAdmdlci5r
+ZXJuZWwub3JnDQo+ICAgRjogICAgICBkcml2ZXJzL2luZmluaWJhbmQvaHcvcWliLw0KPiANCj4g
+PiBTaWduZWQtb2ZmLWJ5OiBEYXZlIEppYW5nIDxkYXZlLmppYW5nQGludGVsLmNvbT4NCj4gPiAt
+LS0NCj4gPiAgZHJpdmVycy9pbmZpbmliYW5kL2h3L3FpYi9xaWJfcGNpZS5jIHwgICAyNyArLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tDQo+ID4gLS0tLS0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5z
+ZXJ0aW9uKCspLCAyNiBkZWxldGlvbnMoLSkNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9pbmZpbmliYW5kL2h3L3FpYi9xaWJfcGNpZS5jIA0KPiA+IGIvZHJpdmVycy9pbmZpbmliYW5k
+L2h3L3FpYi9xaWJfcGNpZS5jDQo+ID4gaW5kZXggNDc1OGEzOC4uYjhhMmRjZCAxMDA2NDQNCj4g
+PiAtLS0gYS9kcml2ZXJzL2luZmluaWJhbmQvaHcvcWliL3FpYl9wY2llLmMNCj4gPiArKysgYi9k
+cml2ZXJzL2luZmluaWJhbmQvaHcvcWliL3FpYl9wY2llLmMNCj4gPiBAQCAtNTU3LDEyICs1NTcs
+MTEgQEAgc3RhdGljIHZvaWQgcWliX3R1bmVfcGNpZV9jb2FsZXNjZShzdHJ1Y3QgDQo+ID4gcWli
+X2RldmRhdGEgKmRkKQ0KPiA+ICAgKi8NCj4gPiAgc3RhdGljIGludCBxaWJfcGNpZV9jYXBzOw0K
+PiA+ICBtb2R1bGVfcGFyYW1fbmFtZWQocGNpZV9jYXBzLCBxaWJfcGNpZV9jYXBzLCBpbnQsIFNf
+SVJVR08pOw0KPiA+IC1NT0RVTEVfUEFSTV9ERVNDKHBjaWVfY2FwcywgIk1heCBQQ0llIHR1bmlu
+ZzogUGF5bG9hZCAoMC4uMyksIA0KPiA+IFJlYWRSZXEgKDQuLjcpIik7DQo+ID4gK01PRFVMRV9Q
+QVJNX0RFU0MocGNpZV9jYXBzLCAiTWF4IFBDSWUgdHVuaW5nOiBSZWFkUmVxICg0Li43KSIpOw0K
+PiA+ICANCj4gPiAgc3RhdGljIHZvaWQgcWliX3R1bmVfcGNpZV9jYXBzKHN0cnVjdCBxaWJfZGV2
+ZGF0YSAqZGQpDQo+ID4gIHsNCj4gPiAgCXN0cnVjdCBwY2lfZGV2ICpwYXJlbnQ7DQo+ID4gLQl1
+MTYgcmNfbXBzcywgcmNfbXBzLCBlcF9tcHNzLCBlcF9tcHM7DQo+ID4gIAl1MTYgcmNfbXJycywg
+ZXBfbXJycywgbWF4X21ycnM7DQo+ID4gIA0KPiA+ICAJLyogRmluZCBvdXQgc3VwcG9ydGVkIGFu
+ZCBjb25maWd1cmVkIHZhbHVlcyBmb3IgcGFyZW50IA0KPiA+IChyb290KSAqLw0KPiA+IEBAIC01
+NzUsMzAgKzU3NCw2IEBAIHN0YXRpYyB2b2lkIHFpYl90dW5lX3BjaWVfY2FwcyhzdHJ1Y3QgDQo+
+ID4gcWliX2RldmRhdGEgKmRkKQ0KPiA+ICAJaWYgKCFwY2lfaXNfcGNpZShwYXJlbnQpIHx8ICFw
+Y2lfaXNfcGNpZShkZC0+cGNpZGV2KSkNCj4gPiAgCQlyZXR1cm47DQo+ID4gIA0KPiA+IC0JcmNf
+bXBzcyA9IHBhcmVudC0+cGNpZV9tcHNzOw0KPiA+IC0JcmNfbXBzID0gZmZzKHBjaWVfZ2V0X21w
+cyhwYXJlbnQpKSAtIDg7DQo+ID4gLQkvKiBGaW5kIG91dCBzdXBwb3J0ZWQgYW5kIGNvbmZpZ3Vy
+ZWQgdmFsdWVzIGZvciBlbmRwb2ludCANCj4gPiAodXMpICovDQo+ID4gLQllcF9tcHNzID0gZGQt
+PnBjaWRldi0+cGNpZV9tcHNzOw0KPiA+IC0JZXBfbXBzID0gZmZzKHBjaWVfZ2V0X21wcyhkZC0+
+cGNpZGV2KSkgLSA4Ow0KPiA+IC0NCj4gPiAtCS8qIEZpbmQgbWF4IHBheWxvYWQgc3VwcG9ydGVk
+IGJ5IHJvb3QsIGVuZHBvaW50ICovDQo+ID4gLQlpZiAocmNfbXBzcyA+IGVwX21wc3MpDQo+ID4g
+LQkJcmNfbXBzcyA9IGVwX21wc3M7DQo+ID4gLQ0KPiA+IC0JLyogSWYgU3VwcG9ydGVkIGdyZWF0
+ZXIgdGhhbiBsaW1pdCBpbiBtb2R1bGUgcGFyYW0sIGxpbWl0IA0KPiA+IGl0ICovDQo+ID4gLQlp
+ZiAocmNfbXBzcyA+IChxaWJfcGNpZV9jYXBzICYgNykpDQo+ID4gLQkJcmNfbXBzcyA9IHFpYl9w
+Y2llX2NhcHMgJiA3Ow0KPiA+IC0JLyogSWYgbGVzcyB0aGFuIChhbGxvd2VkLCBzdXBwb3J0ZWQp
+LCBidW1wIHJvb3QgcGF5bG9hZCAqLw0KPiA+IC0JaWYgKHJjX21wc3MgPiByY19tcHMpIHsNCj4g
+PiAtCQlyY19tcHMgPSByY19tcHNzOw0KPiA+IC0JCXBjaWVfc2V0X21wcyhwYXJlbnQsIDEyOCA8
+PCByY19tcHMpOw0KPiA+IC0JfQ0KPiA+IC0JLyogSWYgbGVzcyB0aGFuIChhbGxvd2VkLCBzdXBw
+b3J0ZWQpLCBidW1wIGVuZHBvaW50IA0KPiA+IHBheWxvYWQgKi8NCj4gPiAtCWlmIChyY19tcHNz
+ID4gZXBfbXBzKSB7DQo+ID4gLQkJZXBfbXBzID0gcmNfbXBzczsNCj4gPiAtCQlwY2llX3NldF9t
+cHMoZGQtPnBjaWRldiwgMTI4IDw8IGVwX21wcyk7DQo+ID4gLQl9DQo+ID4gLQ0KPiA+ICAJLyoN
+Cj4gPiAgCSAqIE5vdyB0aGUgUmVhZCBSZXF1ZXN0IHNpemUuDQo+ID4gIAkgKiBObyBmaWVsZCBm
+b3IgbWF4IHN1cHBvcnRlZCwgYnV0IFBDSWUgc3BlYyBsaW1pdHMgaXQgdG8gDQo+ID4gNDA5Niw=
