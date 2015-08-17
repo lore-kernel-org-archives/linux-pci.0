@@ -1,79 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:36414 "EHLO
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:35345 "EHLO
 	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753252AbbHUPHz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 11:07:55 -0400
-Received: by pawq9 with SMTP id q9so54591863paw.3
-        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2015 08:07:55 -0700 (PDT)
-Subject: [PATCH 2/3] PCI: Set MPS to match upstream bridge
-To: Keith Busch <keith.busch@intel.com>
+	with ESMTP id S1751050AbbHQX4H (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 19:56:07 -0400
+Received: by pacgr6 with SMTP id gr6so118544152pac.2
+        for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2015 16:56:06 -0700 (PDT)
+Date: Mon, 17 Aug 2015 18:56:00 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Austin Bolen <Austin_Bolen@dell.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Myron Stowe <mstowe@redhat.com>, Jon Mason <jdmason@kudzu.us>
-Date: Fri, 21 Aug 2015 10:07:51 -0500
-Message-ID: <20150821150751.7525.81766.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150821150557.7525.58923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150821150557.7525.58923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 20/51] PCI: Skip must+optional if there is no optional
+ addon
+Message-ID: <20150817235600.GT26431@google.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+ <1438039809-24957-21-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438039809-24957-21-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Keith Busch <keith.busch@intel.com>
+On Mon, Jul 27, 2015 at 04:29:38PM -0700, Yinghai Lu wrote:
+> If the bridge does not support hotplug or no child with sriov support
+> we could get out early and don't try must+optional allocation.
 
-Firmware typically configures the PCIe fabric with a consistent Max Payload
-Size setting based on the devices present at boot.  A hot-added device
-typically has the power-on default MPS setting (128 bytes), which may not
-match the fabric.
+You mention non-hotplug bridges and non-SR-IOV devices, but I can't figure
+out how the patch itself relates to those.  How can I connect them?
 
-When adding a new device via pci_device_add(), set its Max Payload Size to
-match the upstream bridge (unless PCIe bus tuning is disabled).  Note that
-pcie_bus_configure_settings() may further change MPS based on the tuning
-policy.
+> Also in the loop that update res with optional add info, skip resource
+> that add_size is 0.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
+>  1 file changed, 29 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index d1f9e19..64ef516 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -450,6 +450,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+>  	return false;	/* should not get here */
+>  }
+>  
+> +static bool __has_addon(struct list_head *head,
+> +			struct list_head *realloc_head)
 
-This makes it more likely that a hot-added device will work in a system
-with optimized MPS configuration.
+Why does this have a "__" prefix?
 
-If we hot-add a device that only supports 128-byte MPS, it still likely
-won't work because we don't reconfigure the rest of the fabric.  Booting
-with "pci=pcie_bus_peer2peer" is a workaround for this because it sets MPS
-to 128 for everything.
+> +{
+> +	int add_count = 0;
+> +	struct pci_dev_resource *dev_res, *tmp_res;
+> +
+> +	/* check if we have add really */
+> +	list_for_each_entry(dev_res, head, list) {
+> +		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
+> +		if (!tmp_res || !tmp_res->add_size)
+> +			continue;
+> +
+> +		add_count++;
+> +	}
+> +
+> +	return add_count != 0;
+> +}
+> +
+>  static bool save_resources(struct list_head *head,
+>  			   struct list_head *save_head)
+>  {
+> @@ -481,16 +499,24 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
+>  	struct pci_dev_resource *save_res;
+>  	struct pci_dev_resource *dev_res, *tmp_res;
+>  	unsigned long fail_type;
+> -	resource_size_t add_align;
+> +	resource_size_t add_align, add_size;
+>  	struct resource *res;
+>  
+> +	if (!__has_addon(head, realloc_head))
+> +		return false;
+> +
+>  	if (!save_resources(head, &save_head))
+>  		return false;
+>  
+>  	/* Update res in head list with add_size in realloc_head list */
+>  	list_for_each_entry(dev_res, head, list) {
+>  		res = dev_res->res;
+> -		res->end += get_res_add_size(realloc_head, res);
+> +		add_size = get_res_add_size(realloc_head, res);
+> +
+> +		if (!add_size)
+> +			continue;
+> +
+> +		res->end += add_size;
+>  
+>  		/*
+>  		 * There are two kinds of additional resources in the list:
+> @@ -578,7 +604,7 @@ static void __assign_resources_sorted(struct list_head *head,
+>  	 */
+>  
+>  	/* Check must+optional add */
+> -	if (realloc_head && !list_empty(realloc_head) &&
+> +	if (realloc_head &&
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |   12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+Why are you dropping the !list_empty() test?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index eb32395..f73dd7a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1278,7 +1278,7 @@ int pci_setup_device(struct pci_dev *dev)
- static void pci_configure_mps(struct pci_dev *dev)
- {
- 	struct pci_dev *bridge = pci_upstream_bridge(dev);
--	int mps, p_mps;
-+	int mps, p_mps, rc;
- 
- 	if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
- 		return;
-@@ -1294,6 +1294,16 @@ static void pci_configure_mps(struct pci_dev *dev)
- 			 mps, pci_name(bridge), p_mps);
- 		return;
- 	}
-+
-+	rc = pcie_set_mps(dev, p_mps);
-+	if (rc) {
-+		dev_warn(&dev->dev, "can't set Max Payload Size to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
-+			 p_mps);
-+		return;
-+	}
-+
-+	dev_info(&dev->dev, "Max Payload Size set to %d (was %d, max %d)\n",
-+		 p_mps, mps, 128 << dev->pcie_mpss);
- }
- 
- static struct hpp_type0 pci_default_type0 = {
-
+>  	    __assign_resources_must_add_sorted(head, realloc_head))
+>  		return;
+>  
+> -- 
+> 1.8.4.5
+> 
