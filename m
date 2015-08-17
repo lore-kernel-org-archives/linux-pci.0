@@ -1,214 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36820 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751755AbbHJHQs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 03:16:48 -0400
-Received: by pacrr5 with SMTP id rr5so97555114pac.3
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 00:16:48 -0700 (PDT)
-Subject: Re: [PATCH v6 05/42] powerpc/powernv: Track IO/M32/M64 segments from
- PE
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-6-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C84FD8.302@ozlabs.ru>
-Date: Mon, 10 Aug 2015 17:16:40 +1000
+Received: from szxga01-in.huawei.com ([58.251.152.64]:60240 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753631AbbHQLup (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:50:45 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	"Pratyush Anand" <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
+	<thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v7 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+Date: Mon, 17 Aug 2015 19:55:48 +0800
+Message-ID: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <1438834307-26960-6-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2015 02:11 PM, Gavin Shan wrote:
-> The patch is adding 6 bitmaps, three to PE and three to PHB, to track
+This patchset adds PCIe host support for HiSilicon SoC Hip05. The PCIe hosts
+use PCIe IP core from Synopsys, So this driver is base on designware PCIe driver.
 
-The patch is also removing 2 arrays (io_segmap and m32_segmap), what is 
-that all about? Also, there was no m64_segmap, now there is, needs an 
-explanation may be.
+Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64 PCIe API in
+designeware PCIe driver. So this patch also adds ARM64 support for designware
+pcie.
 
+This patchset is based on v4.2-rc1.
 
-> the consumed by one particular PE, which can be released once the PE
-> is destroyed during PCI unplugging time. Also, we're using fixed
-> quantity of bits to trace the used IO, M32 and M64 segments by PEs
-> in one particular PHB.
->
+Change from v6:
+- Add Pratyush's Acked-by for 1/6 and 2/6.
+- Add James' Tested-by for 3/6.
 
-Out of curiosity - have you considered having just 3 arrays, in PHB, 
-storing PE numbers, and ditching PE's arrays? Does PE itself need to know 
-what PEs it is using? Not sure about this master/slave PEs though.
+Change from v5:
+- Merge 1/6 in this series, discussion about this can be found in [1]
 
-It would be easier to read patches if this one was right before
-[PATCH v6 23/42] powerpc/powernv: Release PEs dynamically
+Change from v4:
+- Change the author of 1/5 to Gabriele.
+- Modify problems in 3/5 pointed by Bjorn.
+- Modify spelling problems in 4/5.
 
+Change from v3:
+- Change 1/5 to what Gabriele suggested.
+- Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3 series.
 
+Change from v2:
+- Move struct pci_dev *dev and struct pci_sys_data *sys in
+  pcibios_align_resource in 1/5.
+- Add Gabriele's codes in 2/5 which delete unnecessary information parse and
+  use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
+- Add maintainer patch 5/5.
 
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 29 +++++++++++++++--------------
->   arch/powerpc/platforms/powernv/pci.h      | 18 ++++++++++++++----
->   2 files changed, 29 insertions(+), 18 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index e4ac703..78b49a1 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -388,6 +388,12 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
->   			list_add_tail(&pe->list, &master_pe->slaves);
->   		}
->
-> +		/* M64 segments consumed by slave PEs are tracked
-> +		 * by master PE
-> +		 */
-> +		set_bit(pe->pe_number, master_pe->m64_segmap);
-> +		set_bit(pe->pe_number, phb->ioda.m64_segmap);
-> +
->   		/* P7IOC supports M64DT, which helps mapping M64 segment
->   		 * to one particular PE#. However, PHB3 has fixed mapping
->   		 * between M64 segment and PE#. In order to have same logic
-> @@ -2871,9 +2877,11 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->
->   			while (index < phb->ioda.total_pe &&
->   			       region.start <= region.end) {
-> -				phb->ioda.io_segmap[index] = pe->pe_number;
-> +				set_bit(index, pe->io_segmap);
-> +				set_bit(index, phb->ioda.io_segmap);
->   				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-> -					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
-> +					pe->pe_number, OPAL_IO_WINDOW_TYPE,
-> +					0, index);
+Change from RFC v1:
+- Add 1/4 patch by Arnd which removes align_resource callback in ARM
+  pcibios_align_resource.
+- Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
+- Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
+  spear13xx.
+- Remove unnecessary parentheses of some macros in pcie-hisi.
+- Use macro to replace some magic values.
+- Merge two loops together and add some comments about it in context_config
+  function in pcie-hisi.
+- Modify some value of items in pcie node example in binding document. 
 
-Unrelated change.
+Change from RFC:
+- delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+  merge related operations into dw_pcie_host_init.
 
+Link of v6:
+- http://www.spinics.net/lists/linux-pci/msg43669.html
+Link of v5:
+- http://www.spinics.net/lists/devicetree/msg87959.html
+Link of v4:
+- http://www.spinics.net/lists/arm-kernel/msg433050.html
+Link of v3:
+- http://www.spinics.net/lists/linux-pci/msg42539.html
+Link of v2:
+- http://www.spinics.net/lists/linux-pci/msg41844.html
+Link of RFC v1:
+- http://www.spinics.net/lists/linux-pci/msg41305.html
+Link of RFC:
+- http://www.spinics.net/lists/linux-pci/msg40434.html
 
->   				if (rc != OPAL_SUCCESS) {
->   					pr_err("%s: OPAL error %d when mapping IO "
->   					       "segment #%d to PE#%d\n",
-> @@ -2896,9 +2904,11 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->
->   			while (index < phb->ioda.total_pe &&
->   			       region.start <= region.end) {
-> -				phb->ioda.m32_segmap[index] = pe->pe_number;
-> +				set_bit(index, pe->m32_segmap);
-> +				set_bit(index, phb->ioda.m32_segmap);
->   				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-> -					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
-> +					pe->pe_number, OPAL_M32_WINDOW_TYPE,
-> +					0, index);
+[1] http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359741.html
 
-Unrelated change.
+Zhou Wang (4):
+  PCI: designware: Add ARM64 support
+  PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+  Documentation: DT: Add HiSilicon PCIe host binding
+  MAINTAINERS: Add pcie-hisi maintainer
 
+gabriele paoloni (2):
+  PCI: designware: move calculation of bus addresses to DRA7xx
+  ARM/PCI: remove align_resource in pci_sys_data
 
->   				if (rc != OPAL_SUCCESS) {
->   					pr_err("%s: OPAL error %d when mapping M32 "
->   					       "segment#%d to PE#%d",
-> @@ -3090,7 +3100,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->   {
->   	struct pci_controller *hose;
->   	struct pnv_phb *phb;
-> -	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
-> +	unsigned long size, pemap_off;
->   	const __be64 *prop64;
->   	const __be32 *prop32;
->   	int len;
-> @@ -3175,19 +3185,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->
->   	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
-
-
-This comment came with if(IODA1) below, since you are removing the 
-condition below, makes sense to remove the comment as well or move it where 
-people will look for it (arch/powerpc/platforms/powernv/pci.h ?)
-
-
->   	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
-> -	m32map_off = size;
-> -	size += phb->ioda.total_pe * sizeof(phb->ioda.m32_segmap[0]);
-> -	if (phb->type == PNV_PHB_IODA1) {
-> -		iomap_off = size;
-> -		size += phb->ioda.total_pe * sizeof(phb->ioda.io_segmap[0]);
-> -	}
->   	pemap_off = size;
->   	size += phb->ioda.total_pe * sizeof(struct pnv_ioda_pe);
->   	aux = memblock_virt_alloc(size, 0);
-
-
-After adding static arrays to PE and PHB, do you still need this "aux"?
-
-
->   	phb->ioda.pe_alloc = aux;
-> -	phb->ioda.m32_segmap = aux + m32map_off;
-> -	if (phb->type == PNV_PHB_IODA1)
-> -		phb->ioda.io_segmap = aux + iomap_off;
->   	phb->ioda.pe_array = aux + pemap_off;
->   	set_bit(phb->ioda.reserved_pe, phb->ioda.pe_alloc);
->
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 62239b1..08a4e57 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -49,6 +49,15 @@ struct pnv_ioda_pe {
->   	/* PE number */
->   	unsigned int		pe_number;
->
-> +	/* IO/M32/M64 segments consumed by the PE. Each PE can
-> +	 * have one M64 segment at most, but M64 segments consumed
-> +	 * by slave PEs will be contributed to the master PE. One
-> +	 * PE can own multiple IO and M32 segments.
-
-
-A PE can have multiple IO and M32 segments but just one M64 segment? Is 
-this correct for IODA1 or IODA2 or both? Is this a limitation of this 
-implementation or it comes from P7IOC/PHB3 hardware?
-
-
-> +	 */
-> +	unsigned long		io_segmap[8];
-> +	unsigned long		m32_segmap[8];
-> +	unsigned long		m64_segmap[8];
-
-Magic constant "8", 64bit*8 = 512 PEs - where did this come from?
-
-Anyway,
-
-#define PNV_IODA_MAX_PE_NUM	512
-
-unsigned long io_segmap[PNV_IODA_MAX_PE_NUM/BITS_PER_LONG]
-
-
-
-
-> +
->   	/* "Weight" assigned to the PE for the sake of DMA resource
->   	 * allocations
->   	 */
-> @@ -145,15 +154,16 @@ struct pnv_phb {
->   			unsigned int		io_segsize;
->   			unsigned int		io_pci_base;
->
-> +			/* IO, M32, M64 segment maps */
-> +			unsigned long		io_segmap[8];
-> +			unsigned long		m32_segmap[8];
-> +			unsigned long		m64_segmap[8];
-> +
->   			/* PE allocation */
->   			struct mutex		pe_alloc_mutex;
->   			unsigned long		*pe_alloc;
->   			struct pnv_ioda_pe	*pe_array;
->
-> -			/* M32 & IO segment maps */
-> -			unsigned int		*m32_segmap;
-> -			unsigned int		*io_segmap;
-> -
->   			/* IRQ chip */
->   			int			irq_chip_init;
->   			struct irq_chip		irq_chip;
->
-
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |  46 ++++
+ MAINTAINERS                                        |   7 +
+ arch/arm/include/asm/mach/pci.h                    |   5 -
+ arch/arm/kernel/bios32.c                           |  12 +-
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-dra7xx.c                      |  14 ++
+ drivers/pci/host/pci-exynos.c                      |   2 +-
+ drivers/pci/host/pci-imx6.c                        |   2 +-
+ drivers/pci/host/pci-keystone-dw.c                 |   2 +-
+ drivers/pci/host/pci-keystone.c                    |   2 +-
+ drivers/pci/host/pci-layerscape.c                  |   2 +-
+ drivers/pci/host/pcie-designware.c                 | 236 ++++++-------------
+ drivers/pci/host/pcie-designware.h                 |  14 +-
+ drivers/pci/host/pcie-hisi.c                       | 254 +++++++++++++++++++++
+ drivers/pci/host/pcie-spear13xx.c                  |   2 +-
+ 16 files changed, 425 insertions(+), 184 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-hisi.c
 
 -- 
-Alexey
+1.9.1
+
