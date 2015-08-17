@@ -1,57 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:33188 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920AbbHZEVl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2015 00:21:41 -0400
-Date: Wed, 26 Aug 2015 06:21:36 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Luis R. Rodriguez" <mcgrof@suse.com>,
-	David Howells <dhowells@redhat.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bp@suse.de,
-	bhelgaas@google.com, tomi.valkeinen@ti.com, airlied@linux.ie,
-	linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	vinod.koul@intel.com, dan.j.williams@intel.com, toshi.kani@hp.com,
-	benh@kernel.crashing.org, mst@redhat.com, daniel.vetter@ffwll.ch,
-	konrad.wilk@oracle.com, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	xen-devel@lists.xensource.com
-Subject: Re: [PATCH v4 10/11] dma: rename dma_*_writecombine() to dma_*_wc()
-Message-ID: <20150826042136.GA14584@gmail.com>
-References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
- <1440443613-13696-11-git-send-email-mcgrof@do-not-panic.com>
- <20150825075318.GA2735@gmail.com>
- <20150825154837.GL8051@wotan.suse.de>
- <20150825134358.990073a55012c60a638b3144@linux-foundation.org>
- <20150825231912.GW8051@wotan.suse.de>
- <20150825162540.0591c8c8276b1ff279785e49@linux-foundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150825162540.0591c8c8276b1ff279785e49@linux-foundation.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:37905 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754531AbbHQLGU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:06:20 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: [PATCH v4 2/5] PCI: designware: factor out MSI msg setup
+Date: Mon, 17 Aug 2015 13:06:15 +0200
+Message-Id: <1439809578-13654-3-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
+References: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Factor out the PCI MSI message setup from the single MSI setup
+function. This will be reused by the multivector MSI setup.
 
-* Andrew Morton <akpm@linux-foundation.org> wrote:
+No functional change yet.
 
-> > There's a catch-22 issue here either way, for instance this rename patch has 
-> > been being baked for probably 2 releases already but the difficulty has been 
-> > trying to find the appropriate time to merge it without conflict.
-> > 
-> > If you do it in the beginning of the merge window, you have to ask yourself in 
-> > what tree it will be done. Since subsystems are topic specific that means that 
-> > subsystem will end up having a conflict at the end of the merge window.
-> 
-> Yes it's a special case.  I think the best way of handling such things is to get 
-> them in to Linus either right at the end of the merge window or the day after he 
-> releases -rc1.  This is when most people's trees are mostly empty.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ drivers/pci/host/pcie-designware.c | 28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
-Yes, that was the plan last time around as well - but the end of the merge window 
-is when we have the least maintainer bandwidth as well ...
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 69486be7181e..0ec435c56a8b 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -293,19 +293,9 @@ no_valid_irq:
+ 	return -ENOSPC;
+ }
+ 
+-static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+-			struct msi_desc *desc)
++static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ {
+-	int irq, pos;
+ 	struct msi_msg msg;
+-	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+-
+-	if (desc->msi_attrib.is_msix)
+-		return -EINVAL;
+-
+-	irq = assign_irq(1, desc, &pos);
+-	if (irq < 0)
+-		return irq;
+ 
+ 	if (pp->ops->get_msi_addr)
+ 		msg.address_lo = pp->ops->get_msi_addr(pp);
+@@ -319,6 +309,22 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+ 		msg.data = pos;
+ 
+ 	pci_write_msi_msg(irq, &msg);
++}
++
++static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
++			struct msi_desc *desc)
++{
++	int irq, pos;
++	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
++
++	if (desc->msi_attrib.is_msix)
++		return -EINVAL;
++
++	irq = assign_irq(1, desc, &pos);
++	if (irq < 0)
++		return irq;
++
++	dw_msi_setup_msg(pp, irq, pos);
+ 
+ 	return 0;
+ }
+-- 
+2.4.6
 
-Anyway, I applied most of the patches (sans the rename), so the rename patch 
-should be a lot simpler to execute at the right moment this time around.
-
-Thanks,
-
-	Ingo
