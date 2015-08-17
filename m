@@ -1,99 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59362 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753447AbbHFENj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:39 -0400
-Received: from /spool/local
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:37 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 24/42] powerpc/powernv: Supports slot ID
-Date: Thu,  6 Aug 2015 14:11:29 +1000
-Message-Id: <1438834307-26960-25-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mga11.intel.com ([192.55.52.93]:17607 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750875AbbHQXD7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 17 Aug 2015 19:03:59 -0400
+Date: Mon, 17 Aug 2015 23:03:44 +0000 (UTC)
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+	Austin Bolen <Austin_Bolen@Dell.com>,
+	Myron Stowe <mstowe@redhat.com>, Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH] pci: Default MPS tuning, match upstream port
+In-Reply-To: <20150817222844.GJ26431@google.com>
+Message-ID: <alpine.LNX.2.00.1508172232140.15930@localhost.lm.intel.com>
+References: <1438208335-19457-1-git-send-email-keith.busch@intel.com> <1438208335-19457-2-git-send-email-keith.busch@intel.com> <20150817222844.GJ26431@google.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PowerNV platform is running on top of skiboot firmware, which has
-changes to support PCI slots. PCI slots are identified by PHB's
-OPAL ID (PHB slot) or combo of that and PCI slot ID. The patch
-changes argument names of opal_pci_reset() and opal_pci_poll()
-to reflect the firmware's change. pnv_eeh_phb_poll() is also
-renamed to pnv_eeh_poll() to reflect the firmware's change.
+On Mon, 17 Aug 2015, Bjorn Helgaas wrote:
+> On Wed, Jul 29, 2015 at 04:18:53PM -0600, Keith Busch wrote:
+>> The new pcie tuning will check the device's MPS against the parent bridge
+>> when it is initially added to the pci subsystem, prior to attaching
+>> to a driver. If MPS is mismatched, the downstream port is set to the
+>> parent bridge's if capable.
+>
+> This is a little confusing (at least, *I'm* confused).  You're talking
+> about setting the MPS configuration of the "downstream port," but I
+> think you are talking about either a Switch Upstream Port or an
+> Endpoint.  Such a port is indeed *downstream* from the parent bridge,
+> but referring to it as a "downstream port" risks confusing it with the
+> parent bridge, which is either a Switch Downstream Port or a Root
+> Port.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/opal.h              | 4 ++--
- arch/powerpc/platforms/powernv/eeh-powernv.c | 8 ++++----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Yes, the wording is confusing, yet you've managed to describe my
+intention, though. :)
 
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index a091c27..bbb3aa6 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -129,7 +129,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
- int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
- 					uint16_t dma_window_number, uint64_t pci_start_addr,
- 					uint64_t pci_mem_size);
--int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
-+int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
- 
- int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
- 				   uint64_t diag_buffer_len);
-@@ -146,7 +146,7 @@ int64_t opal_get_dpo_status(__be64 *dpo_timeout);
- int64_t opal_set_system_attention_led(uint8_t led_action);
- int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
- 			    __be16 *pci_error_type, __be16 *severity);
--int64_t opal_pci_poll(uint64_t phb_id);
-+int64_t opal_pci_poll(uint64_t id, uint8_t *val);
- int64_t opal_return_cpu(void);
- int64_t opal_check_token(uint64_t token);
- int64_t opal_reinit_cpus(uint64_t flags);
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 347b1cf..0350dab 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -745,12 +745,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
- 	return ret;
- }
- 
--static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
-+static s64 pnv_eeh_poll(uint64_t id)
- {
- 	s64 rc = OPAL_HARDWARE;
- 
- 	while (1) {
--		rc = opal_pci_poll(phb->opal_id);
-+		rc = opal_pci_poll(id, NULL);
- 		if (rc <= 0)
- 			break;
- 
-@@ -790,7 +790,7 @@ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
- 	 * reset followed by hot reset on root bus. So we also
- 	 * need the PCI bus settlement delay.
- 	 */
--	rc = pnv_eeh_phb_poll(phb);
-+	rc = pnv_eeh_poll(phb->opal_id);
- 	if (option == EEH_RESET_DEACTIVATE) {
- 		if (system_state < SYSTEM_RUNNING)
- 			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
-@@ -833,7 +833,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
- 		goto out;
- 
- 	/* Poll state of the PHB until the request is done */
--	rc = pnv_eeh_phb_poll(phb);
-+	rc = pnv_eeh_poll(phb->opal_id);
- 	if (option == EEH_RESET_DEACTIVATE)
- 		msleep(EEH_PE_RST_SETTLE_TIME);
- out:
--- 
-2.1.0
+>>  {
+>>  	int retval;
+>>
+>> +	if (dev->bus->self &&
+>> +			pcie_get_mps(dev) != pcie_get_mps(dev->bus->self))
+>> +		return;
+>
+> This part looks like it could be in its own separate patch that
+> basically enforces the "if we can't safely configure this device's MPS
+> setting, prevent drivers from using the device" idea.  What happens in
+> this case?  Does the device still appear in sysfs and lspci, even if
+> we can't configure its MPS safely?  This seems like good place for a
+> dev_warn().
 
+It will remain in the pci topology and all the associated sysfs
+artifacts and lspic capabilities will be there. You could retune the
+whole topology from user space with "setpci" and do a rescan if you were
+so inclined, but that could cause problems if transactions are in-flight
+while re-tuning.
+
+A dev_warn will be produced when the device is initially scanned as you
+noted below, but another at this point might be useful to
+make it clear a driver will not be bound.
+
+The above is broken, though, for PCI device's that are not PCI-e, so
+need to fix that at the very least if we will enforce this.
+
+>> -	if (mps != p_mps)
+>> -		dev_warn(&dev->dev, "Max Payload Size %d, but upstream %s set to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
+>> -			 mps, pci_name(bridge), p_mps);
+>> +	if (mps != p_mps) {
+>> +		if (128 << dev->pcie_mpss < p_mps) {
+>> +			dev_warn(&dev->dev,
+>> +				"Max Payload Size Supported %d, but upstream %s set to %d. If problems are experienced, try running with pci=pcie_bus_safe\n",
+>> +				128 << dev->pcie_mpss, pci_name(bridge), p_mps);
+>> +			return;
+>
+> Isn't this the same case where the above change to
+> pci_bus_add_device() will now decline to add the device?  So I think
+> there are really two policy changes:
+>
+>  1) If an device can be configured to match the upstream bridge's MPS
+>  setting, do it, and
+>
+>  2) Don't add a device when its MPS setting doesn't match the
+>  upstream bridge
+>
+> I'd like those to be separate patches.
+
+Ok.
+
+>> +		}
+>> +		pcie_write_mps(dev, p_mps);
+>> +		dev_info(&dev->dev, "Max Payload Size set to %4d/%4d (was %4d)\n",
+>> +			pcie_get_mps(dev), 128 << dev->pcie_mpss, mps);
+>> +	}
+>
+> I assume this hunk is related to the policy change (from "do nothing"
+> to "update the downstream port").  Can you split that policy change
+> into its own separate minimal patch?  Yes, I'm looking for minimal and
+> specific bisect targets :)
+>
+> I think this will be clearer if you write it as:
+>
+>  if (mps == p_mps)
+>    return;
+>
+>  if (128 << dev->pcie_mpss < p_mps) {
+>    dev_warn(...);
+>    return;
+>  }
+>
+>  pcie_write_mps(...);
+>  dev_info(...);
+>
+> Now that this actively updates the MPS setting, it's starting to grow
+> beyond the original "pcie_bus_detect_mps()" function name.
+
+Agreed that's a cleaner flow.
+
+
+Thanks for all the feedback. Will work on a revision this week.
