@@ -1,56 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:60234 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754225AbbHQLuh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:50:37 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	"Pratyush Anand" <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v7 6/6] MAINTAINERS: Add pcie-hisi maintainer
-Date: Mon, 17 Aug 2015 19:55:54 +0800
-Message-ID: <1439812554-180426-7-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:46582 "EHLO smtp2.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750780AbbHRTRC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 18 Aug 2015 15:17:02 -0400
+Date: Tue, 18 Aug 2015 21:44:13 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Helge Deller <deller@gmx.de>, Yinghai Lu <yinghai@kernel.org>
+cc: linux-parisc@vger.kernel.org, linux-pci@vger.kernel.org,
+	David Ahern <david.ahern@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, sparclinux@vger.kernel.org
+Subject: Re: Aw: A500 boot crash in 4.2.0-rc3-00246-g763e326
+In-Reply-To: <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
+Message-ID: <alpine.LRH.2.20.1508182141200.24742@math.ut.ee>
+References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee>, <trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71> <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+(CC-s added)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8133cef..7cd8e47 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7854,6 +7854,13 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
- F:	drivers/pci/host/pci-xgene-msi.c
- 
-+PCIE DRIVER FOR HISILICON
-+M:	Zhou Wang <wangzhou1@hisilicon.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+F:	drivers/pci/host/pcie-hisi.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
+> > > Tried 4.2.0-rc3-00246-g763e326 on A500 but it crashes on boot. This is 
+> > > still present in todays 4.2.0-rc6+git. 4.1 was fine, I Will bisect but 
+> > > it takes time.
+> > > 
+> > > PDC Stable Storage facility v0.30
+> > > STI GSC/PCI core graphics driver Version 0.9b
+> > > Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
+> > > serial 0000:00:04.0: enabling device (0146 -> 0147)
+> > > console [ttyS0] disabled
+> > > 0000:00:04.0: ttyS0 at MMIO 0xfffffffff8000000 (irq = 21, base_baud = 115200) is a 16550A
+> > > console [ttyS0] enabled
+> > > console [ttyS0] enabled
+> > > bootconsole [ttyB0] disabled
+> > > bootconsole [ttyB0] disabled
+> > > 0000:00:04.0: ttyS1 at MMIO 0xfffffffff8000008 (irq = 21, base_baud = 115200) is a 16550A
+> > > 0000:00:04.0: ttyS2 at MMIO 0xfffffffff8000010 (irq = 21, base_baud = 115200) is a 16550A
+> > > serial 0000:00:05.0: enabling device (0000 -> 0003)
+> > > serial 0000:00:05.0: enabling SERR and PARITY (0003 -> 0143)
+> > > 0000:00:05.0: ttyS3 at MMIO 0xfffffffff8003000 (irq = 22, base_baud = 115200) is a 16550A
+> > > serial 0000:00:05.0: Couldn't register serial port 0, irq 22, type 2, error -28
+> > > sym53c8xx 0000:00:01.0: enabling device (0000 -> 0003)
+> > > sym53c8xx 0000:00:01.0: enabling SERR and PARITY (0003 -> 0143)
+> > 
+> > I'm seeing the same problem on my rp5470 with Kernel 4.2-rc7. My machine just hangs though and doesn't crash.
+> 
+> I did a bisect and commit 3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d ("PCI: Add pci_bus_addr_t") seems to be the culprit:
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d
+> 
+> Since the patch has "CC: stable@vger.kernel.org  # v3.19+", it might be the reason why you see kernel 3.19 failing too...
+
+I just found the same commit breaking my A500 parisc machine by 
+bisecting.
+
+CC: patch author and linux-pci.
+
 -- 
-1.9.1
-
+Meelis Roos (mroos@linux.ee)
