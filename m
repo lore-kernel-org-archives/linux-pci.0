@@ -1,97 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:39803 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932655AbbHDKnk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 06:43:40 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: James Morse <james.morse@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 17 Aug 2015 19:49:06 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Mike Marciniszyn <infinipath@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Jiang, Dave" <dave.jiang@intel.com>,
+	"Busch, Keith" <keith.busch@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	Kangfenglong <kangfenglong@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v5 2/5] PCI: designware: Add ARM64 support
-Date: Tue, 4 Aug 2015 10:43:06 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D71A2D@lhreml503-mbs>
-References: <1437794486-21134-1-git-send-email-wangzhou1@hisilicon.com>
- <1437794486-21134-3-git-send-email-wangzhou1@hisilicon.com>
- <55B71F75.5030907@hisilicon.com> <55C0872E.9060507@arm.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D719E9@lhreml503-mbs>
- <55C09694.30506@arm.com>
-In-Reply-To: <55C09694.30506@arm.com>
-Content-Type: text/plain; charset="Windows-1252"
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	infinipath <infinipath@intel.com>
+Subject: Re: [PATCH 2/3] QIB: Removing usage of pcie_set_mps()
+Message-ID: <20150818014906.GA10427@obsidianresearch.com>
+References: <1438208335-19457-1-git-send-email-keith.busch@intel.com>
+ <1438208335-19457-3-git-send-email-keith.busch@intel.com>
+ <20150817223039.GK26431@google.com>
+ <1439851811.3253.18.camel@intel.com>
+ <CAErSpo7GEbAtkXr-VgifNtdcaDUCOkeFMcdzDXvdC-QH2qT7=w@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo7GEbAtkXr-VgifNtdcaDUCOkeFMcdzDXvdC-QH2qT7=w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: James Morse [mailto:james.morse@arm.com]
-> Sent: Tuesday, August 04, 2015 11:40 AM
-> To: Gabriele Paoloni; Wangzhou (B)
-> Cc: Bjorn Helgaas; Jingoo Han; Pratyush Anand; Arnd Bergmann; Lorenzo
-> Pieralisi; Liviu Dudau; thomas.petazzoni@free-electrons.com; Jason
-> Cooper; robh@kernel.org; linux-pci@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; devicetree@vger.kernel.org; Yuanzhichang;
-> Zhudacai; zhangjukuo; qiuzhenfa; liudongdong (C); qiujiang;
-> Kangfenglong; Liguozhu (Kenneth)
-> Subject: Re: [PATCH v5 2/5] PCI: designware: Add ARM64 support
-> 
-> On 04/08/15 11:23, Gabriele Paoloni wrote:
-> > Hi James
+On Mon, Aug 17, 2015 at 07:06:10PM -0500, Bjorn Helgaas wrote:
+> On Mon, Aug 17, 2015 at 5:50 PM, Jiang, Dave <dave.jiang@intel.com> wrote:
+> > On Mon, 2015-08-17 at 17:30 -0500, Bjorn Helgaas wrote:
+> >> [+cc Mike, linux-rdma]
+> >>
+> >> On Wed, Jul 29, 2015 at 04:18:54PM -0600, Keith Busch wrote:
+> >> > From: Dave Jiang <dave.jiang@intel.com>
+> >> >
+> >> > This is in perperation of un-exporting the pcie_set_mps() function
+> >> > symbol. A driver should not be changing the MPS as that is the
+> >> > responsibility of the PCI subsystem.
+> >>
+> >> Please explain the implications of removing this code.  Does this
+> >> affect
+> >> performance of the device?  If so, how do we get that performance
+> >> back?
 > >
-> > Please see "[PATCH v6] PCI: Store PCIe bus address in struct
-> of_pci_range"
-> >
-> > I think if you apply this patch your problem should be solved...
-> >
-> > If you follow the discussion you see that this patch is going to be
-> part
-> > of the next designware patchset...
+> > Honestly I don't know. But at the same time I think the driver
+> > shouldn't be touching the MPS at all. Shouldn't that be left to the
+> > PCIe subsystem and rely on the PCIe subsystem to set this to a sane
+> > value?
 > 
-> Yes I just spotted that series after continuing through my email
-> backlog.
-> 
-> > Wang Zhou said "You need apply Gabriele's patch before applying this
-> patch."
-> > but he didn't specify which one and obviously this patch should have
-> been part
-> > of the patch-set
-> 
-> I assumed he meant your patch 1 in the same series, (given the reply
-> was to
-> patch 2).
-> 
-> With the '[PATCH v6] PCI: Store PCIe bus address in struct
-> of_pci_range'
-> applied before patches and 1 and 2 of this series - pcie on the
-> 'Freescale i.MX6 Quad SABRE Lite Board' works fine.
-> 
-> I can rescan the bus, load firmware, list nearby APs, and even get MSIs
-> coming from the card.
+> Yes, I think in principle the PCI core should own this, but I also
+> don't want to introduce a performance regression, so I think we need
+> to understand whether there's a problem, and if there is, fix it.
 
-This is Great NEWS! Thanks a Lot!
+Making sure Mike is CC'd directly..
 
-> 
-> Tested-by: James Morse <james.morse@arm.com>
-> 
-> 
-> 
-> James
+Mike: I see this has been cut and pasted to HFI1 too, I would be
+disappointed if HFI needs it as well. :(
+
+FWIW, I totally agree with the above. MPS/MRS and related have to do
+with root port capability, switches in the path and any platform
+bugs..
+
+I'm not sure why a driver would ever want to mess with this, and since
+this code doesn't walk the bus toward the root port, it is technically
+wrong, right? I also find it strange that qib_pcie_caps defaults to
+zero which means the 'tuning' reduces the payload size to the minimums
+(??)
+
+> >> >     /*
+> >> >      * Now the Read Request size.
+> >> >      * No field for max supported, but PCIe spec limits it to
+> >> > 4096,
+
+.. it has been a bit since I looked at this, but IIRC, MRRS is also
+something that should not be touched by a driver?
+
+Jason
