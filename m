@@ -1,90 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:35014 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752878AbbHOU5a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 15 Aug 2015 16:57:30 -0400
-Received: by wicne3 with SMTP id ne3so43522865wic.0
-        for <linux-pci@vger.kernel.org>; Sat, 15 Aug 2015 13:57:29 -0700 (PDT)
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:3535 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753342AbbHRTTQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:16 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	"Mark Hounschell" <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	"Will Davis" <wdavis@nvidia.com>
+Subject: [PATCH v5 08/13] PCI: Add pci_find_common_upstream_dev()
+Date: Tue, 18 Aug 2015 14:04:04 -0500
+Message-ID: <1439924649-29698-9-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <143984396.fBJoMvWU1G@linux-tez8>
-References: <1438047747.1856.12.camel@rzhang1-mobl4> <3296684.6OYqAkrTIu@linux-tez8>
- <CAErSpo6zcgK=Hdgq+vVNMjMHS2WkYqpVR3Vppqi7R87xSjWMJg@mail.gmail.com> <143984396.fBJoMvWU1G@linux-tez8>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Sat, 15 Aug 2015 15:57:09 -0500
-Message-ID: <CAErSpo64Wgx4rpz-=Xdix30vgtPbk6y51Y_gfR_OJisOcT=3Vg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-To: Jay <MyMailClone@t-online.de>
-Cc: Zhang Rui <rui.zhang@intel.com>, Tejun Heo <tj@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Chuansheng Liu <chuansheng.liu@intel.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Aaron Lu <aaron.lu@intel.com>,
-	Barto <mister.freeman@laposte.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 15, 2015 at 3:33 PM, Jay <MyMailClone@t-online.de> wrote:
-> Am Samstag, 15. August 2015, 09:39:24 schrieb Bjorn Helgaas:
->> Hi Jay,
->>
->> On Sat, Aug 15, 2015 at 7:49 AM, Jay <MyMailClone@t-online.de> wrote:
->> > Am Freitag, 14. August 2015, 15:17:52 schrieb Bjorn Helgaas:
->> > ...
->> >
->> >> Since you didn't say anything like that, I assume the patch in comment
->> >> #72 of bug #81551 (https://bugzilla.kernel.org/attachment.cgi?id=156301)
->> >> would work as well.  That has the advantage that it wouldn't penalize
->> >> non-storage controllers.
->> >
->> > The problem was introduced with 3.15 and the kernel is almost at 4.2 now.
->> >
->> > A general solution for the JMicron-AHCI/PATA-controllers is still missing
->> > although available since late September 2014. It was tested by Barto.
->> >
->> > Seems what I wrote in comment #76 wasn't completely wrong:
->> > https://bugzilla.kernel.org/show_bug.cgi?id=81551#c76
->> >
->> > So this may be an opportunity to reconsider the approach to solving
->> > things like this.
->>
->> I don't understand your point, except to acknowledge that we are
->> imperfect, have limited resources, and make many mistakes in
->> diagnosing problems and communicating solutions.  Do you have a
->> proposal for a better approach?
->>
->> The patch that Barto tested in late September 2014
->> (https://bugzilla.kernel.org/show_bug.cgi?id=81551#c66) is exactly the
->> patch from comment #72 that I mentioned as possibly being a better
->> solution.
->>
->> That patch wouldn't involve me at all, since it doesn't touch PCI.
->> Zhang is proposing a PCI change, so I'm asking for a clear changelog.
->>
->> A changelog is a "write-once, read-many" situation.  It's very
->> important that it be concise and clear, and it's worth having the
->> expert spend extra time writing the log to make it easier for the many
->> novices that will read it in the future.
->
-> please don't feel offended. Nobody should. No need to. And I like what you
-> wrote, it's definitely constructive.
->
-> My point is that instead of looking for a "perfect" solution, a more pragmatic
-> approach may be more effective in solving things like this.
->
-> And this was exactly what I suggested in comment #76: "Let's be pragmatic,
-> take this patch and solve the problem now. And then you (developers) may take
-> your time to look for a better or even the "perfect" solution."
->
-> That way the case would have been closed a year ago.
+Add an interface to find the first device which is upstream of both
+devices.
 
-The only problem with that approach is that the owner of the issue now
-considers the issue closed, so the better solution never happens.
-Even if it *does* happen, we now have a fix for a fix, which makes it
-that much more difficult to follow the history.  This is just a
-generic issue with the way Linux works: maintainers have zero leverage
-after accepting a patch, so anything they really care about has to
-happen before that.
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+---
+ drivers/pci/search.c | 25 +++++++++++++++++++++++++
+ include/linux/pci.h  |  2 ++
+ 2 files changed, 27 insertions(+)
 
-Bjorn
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index a20ce7d..b6ed554 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -384,3 +384,28 @@ int pci_dev_present(const struct pci_device_id *ids)
+ 	return 0;
+ }
+ EXPORT_SYMBOL(pci_dev_present);
++
++/**
++ * pci_find_common_upstream_dev - Returns the first common upstream device
++ * @dev: the PCI device from which the bus hierarchy walk will start
++ * @other: the PCI device whose bus number will be used for the search
++ *
++ * Walks up the bus hierarchy from the @dev device, looking for the first bus
++ * which the @other device is downstream of. Returns %NULL if the devices do
++ * not share any upstream devices.
++ */
++struct pci_dev *pci_find_common_upstream_dev(struct pci_dev *dev,
++					     struct pci_dev *other)
++{
++	struct pci_dev *pdev = dev;
++
++	while (pdev != NULL) {
++		if ((other->bus->number >= pdev->bus->busn_res.start) &&
++		    (other->bus->number <= pdev->bus->busn_res.end))
++			return pdev;
++		pdev = pci_upstream_bridge(pdev);
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL(pci_find_common_upstream_dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d58063e..8262b9e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -860,6 +860,8 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+ }
+ struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
+ int pci_dev_present(const struct pci_device_id *ids);
++struct pci_dev *pci_find_common_upstream_dev(struct pci_dev *from,
++					     struct pci_dev *to);
+ 
+ int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
+ 			     int where, u8 *val);
+-- 
+2.5.0
+
