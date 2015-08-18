@@ -1,164 +1,243 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:60303 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752794AbbHFENV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:21 -0400
-Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:19 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 11/42] powerpc/powernv: Trace DMA32 segments consumed by PE
-Date: Thu,  6 Aug 2015 14:11:16 +1000
-Message-Id: <1438834307-26960-12-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:3506 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753201AbbHRTTL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:11 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	"Mark Hounschell" <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	"Will Davis" <wdavis@nvidia.com>
+Subject: [PATCH v5 03/13] dma-debug: add checking for map/unmap_peer_resource
+Date: Tue, 18 Aug 2015 14:03:59 -0500
+Message-ID: <1439924649-29698-4-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On P7IOC, the whole DMA32 space is divided evenly to 256MB segments.
-Each PE can consume one or multiple DMA32 segments. Current code
-doesn't trace the available DMA32 segments and those consumed by
-one particular PE. It's conflicting with PCI hotplug.
+Add debug callbacks for the new dma_map_peer_resource and
+dma_unmap_peer_resource functions.
 
-The patch introduces one bitmap to PHB to trace the available
-DMA32 segments for allocation, more fields to "struct pnv_ioda_pe"
-to trace the consumed DMA32 segments by the PE, which is going to
-be released when the PE is destroyed at PCI unplugging time.
+Also add a callback for dma_peer_mapping_error. Most of the time this will
+be identical to dma_mapping_error, except where the dma_addr_t is not as
+wide as dma_peer_addr_t.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Guard these new callbacks behind a CONFIG_HAS_DMA_P2P check.
+
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 40 +++++++++++++++++++++++--------
- arch/powerpc/platforms/powernv/pci.h      |  4 +++-
- 2 files changed, 33 insertions(+), 11 deletions(-)
+ include/linux/dma-debug.h | 39 ++++++++++++++++++++-
+ lib/dma-debug.c           | 86 +++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 122 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index cd22002..57ba8fd 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1946,6 +1946,7 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
+index fe8cb61..4ff8364 100644
+--- a/include/linux/dma-debug.h
++++ b/include/linux/dma-debug.h
+@@ -43,7 +43,21 @@ extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
  
- 	/* Grab a 32-bit TCE table */
- 	pe->dma32_seg = base;
-+	pe->dma32_segcount = segs;
- 	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
- 		(base << 28), ((base + segs) << 28) - 1);
- 
-@@ -2006,8 +2007,13 @@ static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 	return;
-  fail:
- 	/* XXX Failure: Try to fallback to 64-bit only ? */
--	if (pe->dma32_seg >= 0)
-+	if (pe->dma32_seg >= 0) {
-+		bitmap_clear(phb->ioda.dma32_segmap,
-+			     pe->dma32_seg, pe->dma32_segcount);
- 		pe->dma32_seg = -1;
-+		pe->dma32_segcount = 0;
-+	}
+ extern void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+ 				 size_t size, int direction, bool map_single);
+-
++#ifdef CONFIG_HAS_DMA_P2P
++extern void debug_dma_map_peer_resource(struct device *dev,
++					struct device *peer,
++					struct resource *resource,
++					size_t offset, size_t size,
++					int direction,
++					dma_peer_addr_t dma_addr);
 +
- 	if (tce_mem)
- 		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
- 	if (tbl) {
-@@ -2443,12 +2449,11 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
- 		pnv_ioda_setup_bus_dma(pe, pe->pbus);
++extern void debug_dma_peer_mapping_error(struct device *dev,
++					 dma_peer_addr_t dma_addr);
++
++extern void debug_dma_unmap_peer_resource(struct device *dev,
++					  dma_peer_addr_t addr,
++					  size_t size, int direction);
++#endif
+ extern void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 			     int nents, int mapped_ents, int direction);
+ 
+@@ -120,6 +134,29 @@ static inline void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+ {
  }
  
--static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
--					struct pnv_ioda_pe *pe,
--					unsigned int base)
-+static void pnv_ioda1_setup_dma(struct pnv_phb *phb,
-+					struct pnv_ioda_pe *pe)
++#ifdef CONFIG_HAS_DMA_P2P
++static inline void debug_dma_map_peer_resource(struct device *dev,
++					       struct device *peer,
++					       struct resource *resource,
++					       size_t offset, size_t size,
++					       int direction,
++					       dma_peer_addr_t dma_addr)
++{
++}
++
++static inline void debug_dma_peer_mapping_error(struct device *dev,
++						dma_peer_addr_t dma_addr)
++{
++}
++
++static inline void debug_dma_unmap_peer_resource(struct device *dev,
++						 dma_peer_addr_t addr,
++						 size_t size,
++						 int direction)
++{
++}
++#endif
++
+ static inline void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 				    int nents, int mapped_ents, int direction)
  {
- 	struct pci_controller *hose = phb->hose;
--	unsigned int dma_weight, segs;
-+	unsigned int dma_weight, base, segs;
+diff --git a/lib/dma-debug.c b/lib/dma-debug.c
+index ae4b65e..622f569 100644
+--- a/lib/dma-debug.c
++++ b/lib/dma-debug.c
+@@ -43,6 +43,7 @@ enum {
+ 	dma_debug_page,
+ 	dma_debug_sg,
+ 	dma_debug_coherent,
++	dma_debug_peer_resource,
+ };
  
- 	/* Calculate the PHB's DMA weight */
- 	dma_weight = pnv_ioda_phb_dma_weight(phb);
-@@ -2461,11 +2466,28 @@ static unsigned int pnv_ioda1_setup_dma(struct pnv_phb *phb,
- 	else
- 		segs = (pe->dma32_weight *
- 			phb->ioda.dma32_segcount) / dma_weight;
+ enum map_err_types {
+@@ -64,7 +65,8 @@ enum map_err_types {
+  * @direction: enum dma_data_direction
+  * @sg_call_ents: 'nents' from dma_map_sg
+  * @sg_mapped_ents: 'mapped_ents' from dma_map_sg
+- * @map_err_type: track whether dma_mapping_error() was checked
++ * @map_err_type: track whether dma_mapping_error() or dma_peer_mapping_error()
++ *		  was called
+  * @stacktrace: support backtraces when a violation is detected
+  */
+ struct dma_debug_entry {
+@@ -1250,6 +1252,23 @@ out:
+ 	put_hash_bucket(bucket, &flags);
+ }
+ 
++static void check_mapping_error(struct dma_debug_entry *entry, bool peer)
++{
++	if (peer && !(entry->type == dma_debug_peer_resource))
++		err_printk(entry->dev, entry, "DMA-API: device driver calls "
++				"dma_peer_mapping_error() on dma_addr_t "
++				"[device address=0x%016llx] [size=%llu bytes]\n",
++				(unsigned long long)entry->dev_addr,
++				entry->size);
 +
-+	/*
-+	 * Allocate DMA32 segments. We might not have enough
-+	 * resources available. However we expect at least one
-+	 * to be available.
-+	 */
-+	do {
-+		base = bitmap_find_next_zero_area(phb->ioda.dma32_segmap,
-+						  phb->ioda.dma32_segcount,
-+						  0, segs, 0);
-+		if (base < phb->ioda.dma32_segcount) {
-+			bitmap_set(phb->ioda.dma32_segmap, base, segs);
-+			break;
-+		}
-+	} while (--segs);
++	if (!peer && (entry->type == dma_debug_peer_resource))
++		err_printk(entry->dev, entry, "DMA-API: device driver calls "
++				"dma_mapping_error() on dma_peer_addr_t "
++				"[device address=0x%016llx] [size=%llu bytes]\n",
++				(unsigned long long)entry->dev_addr,
++				entry->size);
++}
 +
-+	if (WARN_ON(!segs))
+ void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
+ 			size_t size, int direction, dma_addr_t dma_addr,
+ 			bool map_single)
+@@ -1289,7 +1308,9 @@ void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
+ }
+ EXPORT_SYMBOL(debug_dma_map_page);
+ 
+-void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
++static void debug_dma_mapping_error_common(struct device *dev,
++					   u64 dma_addr,
++					   bool peer)
+ {
+ 	struct dma_debug_entry ref;
+ 	struct dma_debug_entry *entry;
+@@ -1319,12 +1340,18 @@ void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
+ 		 */
+ 		if (entry->map_err_type == MAP_ERR_NOT_CHECKED) {
+ 			entry->map_err_type = MAP_ERR_CHECKED;
++			check_mapping_error(entry, peer);
+ 			break;
+ 		}
+ 	}
+ 
+ 	put_hash_bucket(bucket, &flags);
+ }
++
++void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
++{
++	debug_dma_mapping_error_common(dev, (u64)dma_addr, false);
++}
+ EXPORT_SYMBOL(debug_dma_mapping_error);
+ 
+ void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+@@ -1348,6 +1375,61 @@ void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
+ }
+ EXPORT_SYMBOL(debug_dma_unmap_page);
+ 
++#ifdef CONFIG_HAS_DMA_P2P
++void debug_dma_map_peer_resource(struct device *dev, struct device *peer,
++				 struct resource *resource, size_t offset,
++				 size_t size, int direction,
++				 dma_peer_addr_t dma_addr)
++{
++	struct dma_debug_entry *entry;
++
++	if (unlikely(dma_debug_disabled()))
 +		return;
 +
- 	pe_info(pe, "DMA weight %d, assigned %d segments\n",
- 		pe->dma32_weight, segs);
- 	pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
--
--	return segs;
- }
- 
- #ifdef CONFIG_PCI_MSI
-@@ -2933,20 +2955,18 @@ static void pnv_pci_ioda_setup_DMA(void)
- 	struct pci_controller *hose, *tmp;
- 	struct pnv_phb *phb;
- 	struct pnv_ioda_pe *pe;
--	unsigned int base;
- 
- 	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
- 		phb = hose->private_data;
- 		pnv_pci_ioda_setup_opal_tce_kill(phb);
- 
--		base = 0;
- 		list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
- 			if (!pe->dma32_weight)
- 				continue;
- 
- 			switch (phb->type) {
- 			case PNV_PHB_IODA1:
--				base += pnv_ioda1_setup_dma(phb, pe, base);
-+				pnv_ioda1_setup_dma(phb, pe);
- 				break;
- 			case PNV_PHB_IODA2:
- 				pnv_pci_ioda2_setup_dma_pe(phb, pe);
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 574fe43..1dc9578 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -65,6 +65,7 @@ struct pnv_ioda_pe {
- 
- 	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
- 	int			dma32_seg;
-+	int			dma32_segcount;
- 	struct iommu_table_group table_group;
- 
- 	/* 64-bit TCE bypass region */
-@@ -153,10 +154,11 @@ struct pnv_phb {
- 			unsigned int		io_segsize;
- 			unsigned int		io_pci_base;
- 
--			/* IO, M32, M64 segment maps */
-+			/* IO, M32, M64, DMA32 segment maps */
- 			unsigned long		io_segmap[8];
- 			unsigned long		m32_segmap[8];
- 			unsigned long		m64_segmap[8];
-+			unsigned long		dma32_segmap[8];
- 
- 			/* PE allocation */
- 			struct mutex		pe_alloc_mutex;
++	if (dma_mapping_error(dev, dma_addr))
++		return;
++
++	entry = dma_entry_alloc();
++	if (!entry)
++		return;
++
++	entry->dev       = dev;
++	entry->type      = dma_debug_peer_resource;
++	entry->pfn       = resource->start >> PAGE_SHIFT;
++	entry->offset    = offset,
++	entry->dev_addr  = dma_addr;
++	entry->size      = size;
++	entry->direction = direction;
++
++	add_dma_entry(entry);
++}
++EXPORT_SYMBOL(debug_dma_map_peer_resource);
++
++void debug_dma_peer_mapping_error(struct device *dev, dma_peer_addr_t dma_addr)
++{
++	debug_dma_mapping_error_common(dev, (u64)dma_addr, true);
++}
++EXPORT_SYMBOL(debug_dma_peer_mapping_error);
++
++void debug_dma_unmap_peer_resource(struct device *dev, dma_peer_addr_t addr,
++				   size_t size, int direction)
++{
++	struct dma_debug_entry ref = {
++		.type           = dma_debug_peer_resource,
++		.dev            = dev,
++		.dev_addr       = addr,
++		.size           = size,
++		.direction      = direction,
++	};
++
++	if (unlikely(dma_debug_disabled()))
++		return;
++
++	check_unmap(&ref);
++}
++EXPORT_SYMBOL(debug_dma_unmap_peer_resource);
++#endif
++
+ void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
+ 		      int nents, int mapped_ents, int direction)
+ {
 -- 
-2.1.0
+2.5.0
 
