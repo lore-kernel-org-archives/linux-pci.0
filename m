@@ -1,111 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:36225 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788AbbHJWjD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 18:39:03 -0400
-Received: by igbij6 with SMTP id ij6so79474047igb.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 15:39:01 -0700 (PDT)
-Date: Mon, 10 Aug 2015 17:38:57 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	patchwork-lst@pengutronix.de
-Subject: Re: [PATCH v2 2/2] PCI: designware: implement multivector MSI irq
- setup
-Message-ID: <20150810223857.GC13982@google.com>
-References: <1437662976-27188-1-git-send-email-l.stach@pengutronix.de>
- <1437662976-27188-2-git-send-email-l.stach@pengutronix.de>
- <CAHM4w1=Sz1xJ1OGc9xAMVCv8hMLwnWmGrkRLHdqpdC7EgzEbpQ@mail.gmail.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:5845 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbbHRTTJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:09 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v5 02/13] linux/types.h: Add dma_peer_addr_t type
+Date: Tue, 18 Aug 2015 14:03:58 -0500
+Message-ID: <1439924649-29698-3-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHM4w1=Sz1xJ1OGc9xAMVCv8hMLwnWmGrkRLHdqpdC7EgzEbpQ@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 04, 2015 at 08:41:15PM +0530, Pratyush Anand wrote:
-> On Thu, Jul 23, 2015 at 8:19 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> > Allows to set up and use multiple MSI irqs per device.
-> >
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+On some platforms, a dma_addr_t is only 32 bits wide, but the bus addresses
+can be 64 bits wide. For peer-to-peer DMA, a device needs to use the full
+64-bit address. Therefore, introduce a DMA address type that is not
+constrained by the CPU DMA address size.
 
-Thanks Lucas, I'm hoping for a little refactoring as Pratyush suggests
-and maybe a third patch to fill in the upper bytes of the message?  Or
-do those look not feasible?
+This is only needed for peer-to-peer DMA, so guard this definition with a
+CONFIG_HAS_DMA_P2P check.
 
-Bjorn
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+---
+ include/linux/types.h | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-> > ---
-> > The ifdef is needed to avoid a compile error on
-> > !CONFIG_PCI_MSI, as msi_list is only part of pci_dev
-> > when the kernel is compiled with MSI support.
-> >
-> > v2: move ifdeffery inside single function
-> > ---
-> >  drivers/pci/host/pcie-designware.c | 43 ++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 43 insertions(+)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 69486be7181e..52c600327805 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -286,6 +286,9 @@ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
-> >         }
-> >
-> >         *pos = pos0;
-> > +       desc->nvec_used = no_irqs;
-> > +       desc->msi_attrib.multiple = order_base_2(no_irqs);
-> > +
-> >         return irq;
-> >
-> >  no_valid_irq:
-> > @@ -323,6 +326,45 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
-> >         return 0;
-> >  }
-> >
-> > +static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
-> > +                            int nvec, int type)
-> > +{
-> > +#ifdef CONFIG_PCI_MSI
-> > +       int irq, pos;
-> > +       struct msi_desc *desc;
-> > +       struct msi_msg msg;
-> > +       struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-> > +
-> > +       /* MSI-X interrupts are not supported */
-> > +       if (type == PCI_CAP_ID_MSIX)
-> > +               return -EINVAL;
-> > +
-> > +       WARN_ON(!list_is_singular(&pdev->msi_list));
-> > +       desc = list_entry(pdev->msi_list.next, struct msi_desc, list);
-> > +
-> 
-> Probably existing function dw_msi_setup_irq() can be re-factored and code after
-> this line can be reused from refactored function, as they are almost same.
-> 
-> > +       irq = assign_irq(nvec, desc, &pos);
-> > +       if (irq < 0)
-> > +               return irq;
-> > +
-> > +       if (pp->ops->get_msi_addr)
-> > +               msg.address_lo = pp->ops->get_msi_addr(pp);
-> > +       else
-> > +               msg.address_lo = virt_to_phys((void *)pp->msi_data);
-> > +       msg.address_hi = 0x0;
-> > +
-> 
-> Although, not specific to this patch, but since we are now going to have
-> ARM64 support for DW as well, so it would be nice to fill msg.address_hi
-> with upper bytes rather hard-coding as 0.
-> 
-> > +       if (pp->ops->get_msi_data)
-> > +               msg.data = pp->ops->get_msi_data(pp, pos);
-> > +       else
-> > +               msg.data = pos;
-> > +
-> > +       pci_write_msi_msg(irq, &msg);
-> > +
-> > +       return 0;
-> 
-> ~Pratyush
+diff --git a/include/linux/types.h b/include/linux/types.h
+index 8715287..dd85173 100644
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -140,13 +140,13 @@ typedef unsigned long blkcnt_t;
+ #define pgoff_t unsigned long
+ 
+ /*
+- * A dma_addr_t can hold any valid DMA address, i.e., any address returned
++ * A dma_addr_t can hold any valid DMA address, i.e., most addresses returned
+  * by the DMA API.
+  *
+  * If the DMA API only uses 32-bit addresses, dma_addr_t need only be 32
+  * bits wide.  Bus addresses, e.g., PCI BARs, may be wider than 32 bits,
+  * but drivers do memory-mapped I/O to ioremapped kernel virtual addresses,
+- * so they don't care about the size of the actual bus addresses.
++ * so they don't care about the size of the actual bus addresses in most cases.
+  */
+ #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ typedef u64 dma_addr_t;
+@@ -154,6 +154,15 @@ typedef u64 dma_addr_t;
+ typedef u32 dma_addr_t;
+ #endif
+ 
++/*
++ * Unlike dma_addr_t, a dma_peer_addr_t can hold any bus address for the
++ * platform. Drivers should only need this for peer-to-peer use cases, where
++ * the DMA target is also on the bus.
++ */
++#ifdef CONFIG_HAS_DMA_P2P
++typedef u64 dma_peer_addr_t;
++#endif
++
+ typedef unsigned __bitwise__ gfp_t;
+ typedef unsigned __bitwise__ fmode_t;
+ typedef unsigned __bitwise__ oom_flags_t;
+-- 
+2.5.0
+
