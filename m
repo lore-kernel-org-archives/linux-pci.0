@@ -1,114 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24353 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751958AbbHUGWN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:22:13 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:33573 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbbHREJt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 00:09:49 -0400
+Received: by pabyb7 with SMTP id yb7so123014091pab.0
+        for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2015 21:09:48 -0700 (PDT)
+Date: Mon, 17 Aug 2015 23:09:43 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 19/52] PCI: Separate required+optional assigning to another function
-Date: Thu, 20 Aug 2015 23:20:34 -0700
-Message-Id: <1440138067-4314-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 25/51] PCI: Fix size calculation with old_size on
+ rescan path
+Message-ID: <20150818040943.GV26431@google.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+ <1438039809-24957-26-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438039809-24957-26-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__assign_resources_sorted() is getting too big if we put alt_size support
-into it.  Split required+optional assigning code out to another function.
+On Mon, Jul 27, 2015 at 04:29:43PM -0700, Yinghai Lu wrote:
+> On booting path, we don't pass realloc at first, and treat all optional just
+> as must, in some case we can smaller size/align with optional than must only.
+> 
+> 04:00.0 has four child bridges: 05:01.0, 05:02.0, 05:03.0, 05:04.0
+> pref layout after booting path like followings:
+> 
+> pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
+> pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
+> pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
+> pci 0000:07:00.0: BAR 0: assigned [mem 0x81200000-0x8123ffff 64bit]
+> pci 0000:05:03.0: PCI bridge to [bus 08-0f]
+> pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
+> pci 0000:10:00.0: BAR 0: assigned [mem 0x90000000-0x9fffffff 64bit pref]
+> pci 0000:10:00.0: BAR 2: assigned [mem 0x88000000-0x8800ffff 64bit pref]
+> pci 0000:05:04.0: PCI bridge to [bus 10]
+> pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
+> pci 0000:04:00.0: PCI bridge to [bus 05-10]
+> pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+Unless 07:00.0 and 10:00.0 are relevant, please remove them.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e4b4b55..8195929 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -467,20 +467,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- 	res->flags = save_res->flags;
- }
- 
--static void __assign_resources_sorted(struct list_head *head,
--				 struct list_head *realloc_head,
--				 struct list_head *fail_head)
-+static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *realloc_head)
- {
--	/*
--	 * Should not assign requested resources at first.
--	 *   they could be adjacent, so later reassign can not reallocate
--	 *   them one by one in parent resource window.
--	 * Try to assign requested + add_size at beginning
--	 *  if could do that, could get out early.
--	 *  if could not do that, we still try to assign requested at first,
--	 *    then try to reassign add_size for some resources.
--	 */
--
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
-@@ -489,12 +478,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	resource_size_t add_align;
- 	struct resource *res;
- 
--	/* Check if optional add_size is there */
--	if (!realloc_head || list_empty(realloc_head))
--		goto requested_and_reassign;
--
- 	if (!save_resources(head, &save_head))
--		goto requested_and_reassign;
-+		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -533,7 +518,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 			remove_from_list(realloc_head, dev_res->res);
- 		free_list(&save_head);
- 		free_list(head);
--		return;
-+
-+		return true;
- 	}
- 
- 	/* check failed type */
-@@ -568,7 +554,28 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	free_list(&save_head);
- 
--requested_and_reassign:
-+	return false;
-+}
-+
-+static void __assign_resources_sorted(struct list_head *head,
-+				 struct list_head *realloc_head,
-+				 struct list_head *fail_head)
-+{
-+	/*
-+	 * Should not assign required resources at first.
-+	 *   they could be adjacent, so later reassign can not reallocate
-+	 *   them one by one in parent resource window.
-+	 * Try to assign required + optional at beginning
-+	 *  if could do that, could get out early.
-+	 *  if could not do that, we still try to assign required at first,
-+	 *    then try to reassign add_size for some resources.
-+	 */
-+
-+	/* Check required+optional add */
-+	if (realloc_head && !list_empty(realloc_head) &&
-+	    __assign_resources_required_optional_sorted(head, realloc_head))
-+		return;
-+
- 	sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
--- 
-1.8.4.5
+> so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
+> 
+> during remove and rescan:
+> 
+> pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
 
+What is "[mem 0x00000000-0xffffffffffffffff 64bit pref]" telling us?
+Surely that's not an actual aperture, is it?
