@@ -1,11 +1,11 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35345 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050AbbHQX4H (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 19:56:07 -0400
-Received: by pacgr6 with SMTP id gr6so118544152pac.2
-        for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2015 16:56:06 -0700 (PDT)
-Date: Mon, 17 Aug 2015 18:56:00 -0500
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:34450 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750847AbbHRENG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 00:13:06 -0400
+Received: by pdbfa8 with SMTP id fa8so63166672pdb.1
+        for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2015 21:13:05 -0700 (PDT)
+Date: Mon, 17 Aug 2015 23:13:00 -0500
 From: Bjorn Helgaas <bhelgaas@google.com>
 To: Yinghai Lu <yinghai@kernel.org>
 Cc: David Miller <davem@davemloft.net>,
@@ -14,103 +14,106 @@ Cc: David Miller <davem@davemloft.net>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 20/51] PCI: Skip must+optional if there is no optional
- addon
-Message-ID: <20150817235600.GT26431@google.com>
+Subject: Re: [PATCH v3 28/51] PCI: Unifiy calculate_size for io port and mmio
+Message-ID: <20150818041300.GX26431@google.com>
 References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
- <1438039809-24957-21-git-send-email-yinghai@kernel.org>
+ <1438039809-24957-29-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438039809-24957-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1438039809-24957-29-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 27, 2015 at 04:29:38PM -0700, Yinghai Lu wrote:
-> If the bridge does not support hotplug or no child with sriov support
-> we could get out early and don't try must+optional allocation.
+On Mon, Jul 27, 2015 at 04:29:46PM -0700, Yinghai Lu wrote:
+> We should check size+size1 with min_size for io port.
+> For example, when hotplug bridge has two children bridges,
+> every child bridge will need 0x1000, so size1 will be 0x2000
+> and size is 0. The min_size for the hotplug bridge is 0x100.
 
-You mention non-hotplug bridges and non-SR-IOV devices, but I can't figure
-out how the patch itself relates to those.  How can I connect them?
+A min_size of 0x100?  Is that a typo?
 
-> Also in the loop that update res with optional add info, skip resource
-> that add_size is 0.
+> with old version calculate_iosize, we get 0x3000 for final
+> size because we are using size to compare with min_size. That is
+> not right, we should use 0x2000 instead.
+
+If this fixes a bug, please make one patch that *only* fixes the bug,
+and a separate one that unifies but doesn't change the behavior.
+
+> After this change, calculate_memsize and calculate_iosize
+> is the same.
+> 
+> Change them to calculate_size.
 > 
 > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 > ---
->  drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
->  1 file changed, 29 insertions(+), 3 deletions(-)
+>  drivers/pci/setup-bus.c | 27 ++++++---------------------
+>  1 file changed, 6 insertions(+), 21 deletions(-)
 > 
 > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index d1f9e19..64ef516 100644
+> index 3db2838..aeed716 100644
 > --- a/drivers/pci/setup-bus.c
 > +++ b/drivers/pci/setup-bus.c
-> @@ -450,6 +450,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
->  	return false;	/* should not get here */
+> @@ -1116,23 +1116,7 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
+>  	return NULL;
 >  }
 >  
-> +static bool __has_addon(struct list_head *head,
-> +			struct list_head *realloc_head)
-
-Why does this have a "__" prefix?
-
-> +{
-> +	int add_count = 0;
-> +	struct pci_dev_resource *dev_res, *tmp_res;
-> +
-> +	/* check if we have add really */
-> +	list_for_each_entry(dev_res, head, list) {
-> +		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-> +		if (!tmp_res || !tmp_res->add_size)
-> +			continue;
-> +
-> +		add_count++;
-> +	}
-> +
-> +	return add_count != 0;
-> +}
-> +
->  static bool save_resources(struct list_head *head,
->  			   struct list_head *save_head)
->  {
-> @@ -481,16 +499,24 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
->  	struct pci_dev_resource *save_res;
->  	struct pci_dev_resource *dev_res, *tmp_res;
->  	unsigned long fail_type;
-> -	resource_size_t add_align;
-> +	resource_size_t add_align, add_size;
->  	struct resource *res;
+> -static resource_size_t calculate_iosize(resource_size_t size,
+> -		resource_size_t min_size,
+> -		resource_size_t size1,
+> -		resource_size_t old_size,
+> -		resource_size_t align)
+> -{
+> -	if (size < min_size)
+> -		size = min_size;
+> -	if (old_size == 1)
+> -		old_size = 0;
+> -	size = ALIGN(size + size1, align);
+> -	if (size < old_size)
+> -		size = old_size;
+> -	return size;
+> -}
+> -
+> -static resource_size_t calculate_memsize(resource_size_t size,
+> +static resource_size_t calculate_size(resource_size_t size,
+>  		resource_size_t min_size,
+>  		resource_size_t old_size,
+>  		resource_size_t align)
+> @@ -1257,14 +1241,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>  	}
 >  
-> +	if (!__has_addon(head, realloc_head))
-> +		return false;
-> +
->  	if (!save_resources(head, &save_head))
->  		return false;
->  
->  	/* Update res in head list with add_size in realloc_head list */
->  	list_for_each_entry(dev_res, head, list) {
->  		res = dev_res->res;
-> -		res->end += get_res_add_size(realloc_head, res);
-> +		add_size = get_res_add_size(realloc_head, res);
-> +
-> +		if (!add_size)
-> +			continue;
-> +
-> +		res->end += add_size;
->  
->  		/*
->  		 * There are two kinds of additional resources in the list:
-> @@ -578,7 +604,7 @@ static void __assign_resources_sorted(struct list_head *head,
->  	 */
->  
->  	/* Check must+optional add */
-> -	if (realloc_head && !list_empty(realloc_head) &&
-> +	if (realloc_head &&
-
-Why are you dropping the !list_empty() test?
-
->  	    __assign_resources_must_add_sorted(head, realloc_head))
->  		return;
->  
+>  	size = size_aligned_for_isa(size);
+> -	size0 = calculate_iosize(size, min_size, size1,
+> +	size += size1;
+> +	size0 = calculate_size(size, min_size,
+>  			resource_size(b_res), min_align);
+>  	sum_add_size = size_aligned_for_isa(sum_add_size);
+>  	sum_add_size += sum_add_size1;
+>  	if (sum_add_size < min_sum_size)
+>  		sum_add_size = min_sum_size;
+>  	size1 = !realloc_head ? size0 :
+> -		calculate_iosize(sum_add_size, min_size, 0,
+> +		calculate_size(sum_add_size, min_size,
+>  			resource_size(b_res), min_align);
+>  	if (!size0 && !size1) {
+>  		if (b_res->start || b_res->end)
+> @@ -1617,7 +1602,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  	if (size || min_size) {
+>  		min_align = calculate_mem_align(&align_test_list, max_align,
+>  						size, window_align);
+> -		size0 = calculate_memsize(size, min_size,
+> +		size0 = calculate_size(size, min_size,
+>  				  resource_size(b_res), min_align);
+>  	}
+>  	free_align_test_list(&align_test_list);
+> @@ -1642,7 +1627,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  		min_add_align = calculate_mem_align(&align_test_add_list,
+>  					max_add_align, sum_add_size,
+>  					window_align);
+> -		size1 = calculate_memsize(sum_add_size, min_size,
+> +		size1 = calculate_size(sum_add_size, min_size,
+>  				 resource_size(b_res), min_add_align);
+>  	}
+>  	free_align_test_list(&align_test_add_list);
 > -- 
 > 1.8.4.5
 > 
