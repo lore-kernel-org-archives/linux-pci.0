@@ -1,65 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:33612 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862AbbHQKfV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 06:35:21 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:35526 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923AbbHRX0Y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 19:26:24 -0400
 MIME-Version: 1.0
-In-Reply-To: <SIXPR06MB041595F310174F0654E3BCC4F5790@SIXPR06MB0415.apcprd06.prod.outlook.com>
-References: <1439296994-28480-1-git-send-email-geert+renesas@glider.be>
-	<SIXPR06MB041595F310174F0654E3BCC4F5790@SIXPR06MB0415.apcprd06.prod.outlook.com>
-Date: Mon, 17 Aug 2015 12:35:20 +0200
-Message-ID: <CAMuHMdWfpDT_fzGGGuf4GjGdUpRLf7Na=ZSkqyKFXPJbfi7-SQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: PCI_RCAR_GEN2 and PCI_RCAR_GEN2_PCIE should depend
- on ARM
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Simon Horman <horms@verge.net.au>,
-	Valentine Barshak <valentine.barshak@cogentembedded.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Message-ID: <2dd0ce48-fb6e-4003-90ee-33827ebfc7c1@default>
+Date: Tue, 18 Aug 2015 16:26:09 -0700 (PDT)
+From: Konrad Wilk <konrad.wilk@oracle.com>
+To: <wdavis@nvidia.com>
+Cc: <tripperda@nvidia.com>, <linux-pci@vger.kernel.org>,
+	<joro@8bytes.org>, <iommu@lists.linux-foundation.org>,
+	<jhubbard@nvidia.com>, <bhelgaas@google.com>,
+	<davem@davemloft.net>, <markh@compro.net>, <jglisse@redhat.com>,
+	<corbet@lwn.net>, <alex.williamson@redhat.com>
+Subject: Re: [PATCH v5 04/13] DMA-API: Introduce dma_(un)map_peer_resource
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Phil,
 
-On Mon, Aug 17, 2015 at 12:23 PM, Phil Edworthy
-<phil.edworthy@renesas.com> wrote:
-> On 11 August 2015 13:43, Geert wrote:
->> On arm64/shmobile:
->>
->>     drivers/pci/host/pci-rcar-gen2.c: In function 'rcar_pci_cfg_base':
->> drivers/pci/host/pci-rcar-gen2.c:112:34: error: dereferencing pointer to
->> incomplete type
->>       struct rcar_pci_priv *priv = sys->private_data;
->>                                     ^
->>
->> and
->>
->>     drivers/pci/host/pcie-rcar.c:138:52: warning: 'struct pci_sys_data' declared
->> inside parameter list
->>      static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
->>                                                       ^
->>
->> pci_sys_data exists on ARM only, hence these drivers should depend on
->> ARM unconditionally.
->
-> Since these drivers should also be used for R-Car Gen3, I assume someone will
-> have to fix the problem in the same way the designware pci driver is being modified.
-> Please see http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/353421.html
+> +#ifdef CONFIG_HAS_DMA_P2P
+> +static inline dma_peer_addr_t dma_map_peer_resource_attrs(struct
+> device *dev,
+> +							  struct device *peer,
+> +							  struct resource *res,
+> +							  size_t offset,
+> +							  size_t size,
+> +							  enum dma_data_direction dir,
+> +							  struct dma_attrs *attrs)
+> +{
+> +	struct dma_map_ops *ops = get_dma_ops(dev);
+> +	dma_peer_addr_t addr;
+> +
+> +	BUG_ON(!valid_dma_direction(dir));
+> +	BUG_ON(ops->map_peer_resource == NULL);
+> +	addr = ops->map_peer_resource(dev, peer, res, offset, size, dir,
+> +				      attrs);
+> +	debug_dma_map_peer_resource(dev, peer, res, offset, size, dir,
+> addr);
+> +
+> +	return addr;
+> +
 
-Yes, that would be the correct long-term solution.
+With those 'BUG_ON' you need to make sure that every dma_map_ops has
+this implemented. That means the calgary_dma_ops, gart_dma_ops, swiotlb_dma_ops,
+and xen_swiotlb_dma_ops MUST have something implemented.
 
-Gr{oetje,eeting}s,
+Please keep in mind that on one can do 'iommu=soft swiotbl=force' on the
+command line which will force the IOMMUs to be ignored and only the
+SWIOTLB code will be used.
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
