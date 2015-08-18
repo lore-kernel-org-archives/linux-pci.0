@@ -1,151 +1,121 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 07/52] PCI: Reorder resources list for required/optional resources
-Date: Thu, 20 Aug 2015 23:20:22 -0700
-Message-Id: <1440138067-4314-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:38664 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbbHRTWM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:22:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <1439802579-22651-5-git-send-email-lftan@altera.com>
+References: <1439802579-22651-1-git-send-email-lftan@altera.com>
+	<1439802579-22651-5-git-send-email-lftan@altera.com>
+Date: Tue, 18 Aug 2015 14:22:11 -0500
+Message-ID: <CADhT+wdwYQWq=yiw1R9YEXX=WTDtoj-5=6EysX=aHUjdSvU89w@mail.gmail.com>
+Subject: Re: [PATCH v4 4/5] Documentation: dt-bindings: pci: altera pcie
+ device tree binding
+From: Dinh Nguyen <dinh.linux@gmail.com>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	Linux List <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After we update size and alignment for required+optional resource, we
-reorder them with new alignment, but this is only for STARTALIGN.
+On Mon, Aug 17, 2015 at 4:09 AM, Ley Foon Tan <lftan@altera.com> wrote:
+> This patch adds the bindings for Altera PCIe host controller driver and
+> Altera PCIe MSI driver.
+>
+> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+> ---
+>  .../devicetree/bindings/pci/altera-pcie-msi.txt    | 27 ++++++++++++
+>  .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
+>  2 files changed, 76 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+>  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+>
+> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+> new file mode 100644
+> index 0000000..7f330c9
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+> @@ -0,0 +1,27 @@
+> +* Altera PCIe MSI controller
+> +
+> +Required properties:
+> +- compatible:  should contain "altr,msi-1.0"
+> +- reg:         specifies the physical base address of the controller and
+> +               the length of the memory mapped region.
+> +- reg-names:   Must include the following entries:
+> +               "csr": CSR registers
+> +               "vector_slave": vectors region
 
-For SIZEALIGN type resource, after add back add_size, the alignment
-get changed, so need to do sorting like STARTALIGN type resources.
+Can you be a little bit more specific here? What is a vectors region?
+Also, I'm not 100% sure, but I think "vector-slave" should be used.
 
-Also we need to reorder the sorting back after we restore
-resource to required only when required+optional fail to allocate for all.
+> +-interrupts:   specifies the interrupt source of the parent interrupt
+> +               controller. The format of the interrupt specifier depends on the
+> +               parent interrupt controller.
 
-So move out the reordering code from the loop to separated function,
-and call it two times accordingly.
+Need to document "interrupt-parent" .
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 37 insertions(+), 25 deletions(-)
+> +- num-vectors: Number of vectors, range 1 to 32.
+> +- msi-controller:      indicates that this is MSI controller node
+> +
+> +
+> +Example
+> +msi0: msi@0xFF200000 {
+> +       compatible = "altr,msi-1.0";
+> +       reg = <0xFF200000 0x00000010
+> +               0xFF200010 0x00000080>;
+> +       reg-names = "csr", "vector_slave";
+> +       interrupt-parent = <&hps_0_arm_gic_0>;
+> +       interrupts = <0 42 4>;
+> +       msi-controller = <1>;
+> +       num-vectors = <32>;
+> +};
+> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+> new file mode 100644
+> index 0000000..73a8dc0
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+> @@ -0,0 +1,49 @@
+> +* Altera PCIe controller
+> +
+> +Required properties:
+> +- compatible : should contain "altr,pcie-root-port-1.0"
+> +- reg:         A list of physical base address and length for TXS and CRA.
+> +- reg-names:   Must include the following entries:
+> +               "Txs" or "txs": TXS region
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e4aa93e..555a7a3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -286,6 +286,31 @@ static inline void reset_resource(struct resource *res)
- 	res->flags = 0;
- }
- 
-+static void sort_resources(struct list_head *head)
-+{
-+	struct pci_dev_resource *res1, *tmp_res, *res2;
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		resource_size_t align1, size1, align2, size2;
-+
-+		align1 = pci_resource_alignment(res1->dev, res1->res);
-+		size1 = resource_size(res1->res);
-+
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			align2 = pci_resource_alignment(res2->dev, res2->res);
-+			size2 = resource_size(res2->res);
-+			if (is_before(align1, size1, align2, size2)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
-+}
-+
- /**
-  * reassign_resources_sorted() - satisfy any additional resource requests
-  *
-@@ -448,9 +473,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
-+	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align, align;
-+	resource_size_t add_align;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -465,47 +490,32 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 
- 	/* Update res in head list with add_size in realloc_head list */
--	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
-+	list_for_each_entry(dev_res, head, list) {
- 		dev_res->res->end += get_res_add_size(realloc_head,
- 							dev_res->res);
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
--		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
--		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
--		 * Here just fix the additional alignment for bridge
-+		 * 1. bridge resource with IORESOURCE_STARTALIGN
-+		 *    need to update start to change alignment
-+		 * 2. resource with IORESOURCE_SIZEALIGN
-+		 *    update size above already change alignment.
- 		 */
- 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
- 			continue;
- 
- 		add_align = get_res_add_align(realloc_head, dev_res->res);
- 
--		/*
--		 * The "head" list is sorted by the alignment to make sure
--		 * resources with bigger alignment will be assigned first.
--		 * After we change the alignment of a dev_res in "head" list,
--		 * we need to reorder the list by alignment to make it
--		 * consistent.
--		 */
--		if (add_align > dev_res->res->start) {
-+		if (add_align) {
- 			resource_size_t r_size = resource_size(dev_res->res);
- 
- 			dev_res->res->start = add_align;
- 			dev_res->res->end = add_align + r_size - 1;
--
--			list_for_each_entry(dev_res2, head, list) {
--				align = pci_resource_alignment(dev_res2->dev,
--							       dev_res2->res);
--				if (add_align > align) {
--					list_move_tail(&dev_res->list,
--						       &dev_res2->list);
--					break;
--				}
--			}
-                }
--
- 	}
- 
-+	sort_resources(head);
-+
- 	/* Try updated head list with add_size added */
- 	assign_requested_resources_sorted(head, &local_fail_head);
- 
-@@ -547,6 +557,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
- 
-+	sort_resources(head);
-+
- requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
--- 
-1.8.4.5
+What is a TXS region?
 
+> +               "Cra" or "cra": Control register access region
+> +-interrupts:   specifies the interrupt source of the parent interrupt controller.
+> +               The format of the interrupt specifier depends on the parent interrupt
+> +               controller.
+> +- device_type: must be "pci"
+> +- #address-cells:      set to <3>
+> +- #size-cells: set to <2>
+> +- #interrupt-cells:    set to <1>
+> +- ranges:              Describes the translation of addresses for root ports and standard
+> +               PCI regions.
+> +- interrupt-map-mask and interrupt-map: standard PCI properties
+> +       to define the mapping of the PCIe interface to interrupt
+> +       numbers.
+
+"interrupt-parent" ?
+
+Dinh
