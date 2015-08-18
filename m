@@ -1,46 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:33590 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752608AbbHJGFs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 02:05:48 -0400
-Received: by pabyb7 with SMTP id yb7so99057120pab.0
-        for <linux-pci@vger.kernel.org>; Sun, 09 Aug 2015 23:05:47 -0700 (PDT)
-Subject: Re: [PATCH v6 00/42] powerpc/powernv: PCI hotplug suppport
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C83F34.9040306@ozlabs.ru>
-Date: Mon, 10 Aug 2015 16:05:40 +1000
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:5889 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754100AbbHRTTU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:20 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v5 12/13] x86: add pci-nommu implementation of map_peer_resource
+Date: Tue, 18 Aug 2015 14:04:08 -0500
+Message-ID: <1439924649-29698-13-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2015 02:11 PM, Gavin Shan wrote:
-> The series of patches intend to support PCI slot for PowerPC PowerNV platform,
-> which is running on top of skiboot firmware. The patchset requires corresponding
-> changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
-> for review. The PCI slots are exposed by skiboot with device node properties,
-> and kernel utilizes those properties to populated PCI slots accordingly.
+Add Intel nommu implementation of 'map_peer_resource', which simply checks
+whether peer traffic should be allowed and converts the resource to a bus
+address.
 
+Add behind CONFIG_HAS_DMA_P2P guards, since the dma_map_ops members are
+behind them as well.
 
-This does not apply on top of any actual trees I have - torvalds/master, 
-powerpc/master, powerpc/next.
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+---
+ arch/x86/kernel/pci-nommu.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-The problem patches are (at least):
-powerpc/powernv: Enable M64 on P7IOC
-powerpc/powernv: Release PEs dynamically
-
-What did you base them on (sha1)? It is always worth mentioning.
-
-
-
-
+diff --git a/arch/x86/kernel/pci-nommu.c b/arch/x86/kernel/pci-nommu.c
+index da15918..4b45cc6 100644
+--- a/arch/x86/kernel/pci-nommu.c
++++ b/arch/x86/kernel/pci-nommu.c
+@@ -38,6 +38,39 @@ static dma_addr_t nommu_map_page(struct device *dev, struct page *page,
+ 	return bus;
+ }
+ 
++#ifdef CONFIG_HAS_DMA_P2P
++static dma_peer_addr_t nommu_map_peer_resource(struct device *dev,
++					       struct device *peer,
++					       struct resource *res,
++					       unsigned long offset,
++					       size_t size,
++					       enum dma_data_direction dir,
++					       struct dma_attrs *attrs)
++{
++	struct pci_dev *pdev;
++	struct pci_dev *ppeer;
++	struct pci_bus_region region;
++	dma_peer_addr_t dma_address;
++
++	if (!dev_is_pci(dev) || !dev_is_pci(peer))
++		return DMA_ERROR_CODE;
++
++	pdev = to_pci_dev(dev);
++	ppeer = to_pci_dev(peer);
++
++	if (!pci_peer_traffic_supported(pdev, ppeer))
++		return DMA_ERROR_CODE;
++
++	pcibios_resource_to_bus(pdev->bus, &region, res);
++	dma_address = region.start + offset;
++	WARN_ON(size == 0);
++	if (!check_addr("map_peer_resource", dev, dma_address, size))
++		return DMA_ERROR_CODE;
++	flush_write_buffers();
++	return dma_address;
++}
++#endif
++
+ /* Map a set of buffers described by scatterlist in streaming
+  * mode for DMA.  This is the scatter-gather version of the
+  * above pci_map_single interface.  Here the scatter gather list
+@@ -93,6 +126,9 @@ struct dma_map_ops nommu_dma_ops = {
+ 	.free			= dma_generic_free_coherent,
+ 	.map_sg			= nommu_map_sg,
+ 	.map_page		= nommu_map_page,
++#ifdef CONFIG_HAS_DMA_P2P
++	.map_peer_resource	= nommu_map_peer_resource,
++#endif
+ 	.sync_single_for_device = nommu_sync_single_for_device,
+ 	.sync_sg_for_device	= nommu_sync_sg_for_device,
+ 	.is_phys		= 1,
 -- 
-Alexey
+2.5.0
+
