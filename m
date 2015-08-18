@@ -1,93 +1,193 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 29/52] PCI: Unify calculate_size() for io port and MMIO
-Date: Thu, 20 Aug 2015 23:20:44 -0700
-Message-Id: <1440138067-4314-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:12968 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbbHRTTN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:13 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v5 06/13] DMA-API: Add peer resource mapping documentation
+Date: Tue, 18 Aug 2015 14:04:02 -0500
+Message-ID: <1439924649-29698-7-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now calculate_memsize() and calculate_iosize() is the same.
+Add references to both the general API documentation, as well as the HOWTO,
+about the dma_(un)map_peer_resource() and dma_peer_mapping_error() APIs.
 
-Change them to calculate_size().
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Will Davis <wdavis@nvidia.com>
 ---
- drivers/pci/setup-bus.c | 25 +++++--------------------
- 1 file changed, 5 insertions(+), 20 deletions(-)
+ Documentation/DMA-API-HOWTO.txt | 69 +++++++++++++++++++++++++++++++++++++++++
+ Documentation/DMA-API.txt       | 38 ++++++++++++++++++++---
+ 2 files changed, 102 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f3d89d1..2d26745 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1110,22 +1110,7 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
- 	return NULL;
- }
+diff --git a/Documentation/DMA-API-HOWTO.txt b/Documentation/DMA-API-HOWTO.txt
+index 55b70b9..053a18f 100644
+--- a/Documentation/DMA-API-HOWTO.txt
++++ b/Documentation/DMA-API-HOWTO.txt
+@@ -143,6 +143,10 @@ What about block I/O and networking buffers?  The block I/O and
+ networking subsystems make sure that the buffers they use are valid
+ for you to DMA from/to.
  
--static resource_size_t calculate_iosize(resource_size_t size,
--		resource_size_t min_size,
--		resource_size_t old_size,
--		resource_size_t align)
--{
--	if (size < min_size)
--		size = min_size;
--	if (old_size == 1)
--		old_size = 0;
--	size = ALIGN(size, align);
--	if (size < old_size)
--		size = old_size;
--	return size;
--}
--
--static resource_size_t calculate_memsize(resource_size_t size,
-+static resource_size_t calculate_size(resource_size_t size,
- 		resource_size_t min_size,
- 		resource_size_t old_size,
- 		resource_size_t align)
-@@ -1251,14 +1236,14 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
++In some systems, it may also be possible to DMA to and/or from a peer
++device's MMIO region, as described by a 'struct resource'. This is
++referred to as a peer-to-peer mapping.
++
+ 			DMA addressing limitations
  
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_iosize(size, min_size,
-+	size0 = calculate_size(size, min_size,
- 			resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(sum_add_size, min_size,
-+		calculate_size(sum_add_size, min_size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1611,7 +1596,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (size || min_size) {
- 		min_align = calculate_mem_align(&align_test_list, max_align,
- 						size, window_align);
--		size0 = calculate_memsize(size, min_size,
-+		size0 = calculate_size(size, min_size,
- 				  resource_size(b_res), min_align);
+ Does your device have any DMA addressing limitations?  For example, is
+@@ -653,6 +657,45 @@ Every dma_map_{single,sg}() call should have its dma_unmap_{single,sg}()
+ counterpart, because the DMA address space is a shared resource and
+ you could render the machine unusable by consuming all DMA addresses.
+ 
++Peer-to-peer DMA mappings can be obtained using dma_map_peer_resource() to
++map another device's MMIO region for the given device:
++
++	dma_peer_addr_t dma_handle = dma_map_peer_resource(dev, peer, res,
++							   offset, size,
++							   direction);
++	if (dma_peer_mapping_error(dev, dma_handle))
++	{
++		/*
++		 * reduce current DMA mapping usage,
++		 * delay and try again later or
++		 * reset driver. P2P DMA may not be
++		 * supported between the devices.
++		 */
++		goto map_error_handling;
++	}
++
++	...
++
++	dma_unmap_peer_resource(dev, dma_handle, size, direction);
++
++Here, "res" is the struct resource * of the MMIO region, and "offset" means
++byte offset within the given resource.
++
++You should call dma_peer_mapping_error() as dma_map_peer_resource() could fail
++and return error.
++
++Not all implementations support dma_map_peer_resource(), but those that do
++should also implement dma_peer_mapping_error(). dma_map_peer_resource() may
++fail for various reasons depending on the implementation, but generally
++may fail for the same reasons as those outlined under the dma_map_single()
++discussion. In addition, the success of dma_map_peer_resource() may depend
++on the physical topology between the two devices. For example, in the x86
++implementations, peer-to-peer mappings will fail if the devices are behind
++different host bridges.
++
++You should call dma_unmap_peer_resource() when DMA activity is finished,
++e.g., from the interrupt which told you that the DMA transfer is done.
++
+ If you need to use the same streaming DMA region multiple times and touch
+ the data in between the DMA transfers, the buffer needs to be synced
+ properly in order for the CPU and device to see the most up-to-date and
+@@ -785,6 +828,23 @@ failure can be determined by:
+ 		goto map_error_handling;
  	}
- 	free_align_test_list(&align_test_list);
-@@ -1636,7 +1621,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
- 					window_align);
--		size1 = calculate_memsize(sum_add_size, min_size,
-+		size1 = calculate_size(sum_add_size, min_size,
- 				 resource_size(b_res), min_add_align);
- 	}
- 	free_align_test_list(&align_test_add_list);
+ 
++- checking the dma_peer_addr_t returned from dma_map_peer_resource() by using
++  dma_peer_mapping_error():
++
++  	dma_peer_addr_t dma_handle;
++
++	dma_handle = dma_map_peer_resource(dev, peer, res, offset, size,
++					   direction);
++	if (dma_peer_mapping_error(dev, dma_handle)) {
++		/*
++		 * reduce current DMA mapping usage,
++		 * delay and try again later or
++		 * reset driver. P2P DMA may not be
++		 * supported between the devices.
++		 */
++		goto map_error_handling;
++	}
++
+ - unmap pages that are already mapped, when mapping error occurs in the middle
+   of a multiple page mapping attempt. These example are applicable to
+   dma_map_page() as well.
+@@ -956,6 +1016,15 @@ to "Closing".
+    support multiple types of IOMMUs in a single system, the example of
+    x86 or powerpc helps.
+ 
++4) Peer-to-peer requirements.
++
++   If your platform can support peer-to-peer DMA, enable HAS_DMA_P2P to
++   include the peer-resource mapping interfaces in the DMA API, and
++   provide an implementation of dma_peer_mapping_error(). The latter part
++   is necessary because on some platforms, the dma_addr_t is not as wide
++   as the full bus address, and therefore the existing dma_mapping_error()
++   API may not be sufficient.
++
+ 			   Closing
+ 
+ This document, and the API itself, would not be in its current
+diff --git a/Documentation/DMA-API.txt b/Documentation/DMA-API.txt
+index 7eba542..c6f11a1 100644
+--- a/Documentation/DMA-API.txt
++++ b/Documentation/DMA-API.txt
+@@ -283,14 +283,42 @@ and <size> parameters are provided to do partial page mapping, it is
+ recommended that you never use these unless you really know what the
+ cache width is.
+ 
++dma_peer_addr_t
++dma_map_peer_resource(struct device *dev, struct device *peer,
++		      struct resource *res, unsigned long offset,
++		      size_t size, enum dma_data_direction_direction)
++
++API for mapping resources. This API allows a driver to map a peer
++device's resource for DMA. All the notes and warnings for the other
++APIs apply here. Also, the success of this API does not validate or
++guarantee that peer-to-peer transactions between the device and its
++peer will be functional. They only grant access so that if such
++transactions are possible, an IOMMU will not prevent them from
++succeeding. However, a failure of this API may indicate that peer-to-peer
++transactions are not expected to succeed across the underlying topology
++between the devices.
++
++void
++dma_unmap_peer_resource(struct device *dev, dma_peer_addr_t dma_address,
++			size_t size, enum dma_data_direction direction)
++
++Unmaps the resource previously mapped. All the parameters passed in
++must be identical to those passed in to (and returned by) the mapping
++API.
++
+ int
+ dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
+ 
+-In some circumstances dma_map_single() and dma_map_page() will fail to create
+-a mapping. A driver can check for these errors by testing the returned
+-DMA address with dma_mapping_error(). A non-zero return value means the mapping
+-could not be created and the driver should take appropriate action (e.g.
+-reduce current DMA mapping usage or delay and try again later).
++int
++dma_peer_mapping_error(struct device *dev, dma_peer_addr_t dma_addr)
++
++In some circumstances dma_map_single(), dma_map_page() and
++dma_map_peer_resource() will fail to create a mapping. A driver can check for
++these errors by testing the returned DMA address with dma_mapping_error()
++(or dma_peer_mapping_error() for dma_map_peer_resource()). A non-zero return
++value means the mapping could not be created and the driver should take
++appropriate action (e.g. reduce current DMA mapping usage or delay and try
++again later).
+ 
+ 	int
+ 	dma_map_sg(struct device *dev, struct scatterlist *sg,
 -- 
-1.8.4.5
+2.5.0
 
