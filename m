@@ -1,56 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:36577 "EHLO
-	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250AbbHKVCO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 17:02:14 -0400
-Received: by ioeg141 with SMTP id g141so590538ioe.3
-        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 14:02:14 -0700 (PDT)
-Date: Tue, 11 Aug 2015 16:02:10 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, tony@atomide.com,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	bcousson@baylibre.com, linux@arm.linux.org.uk, nsekhar@ti.com
-Subject: Re: [PATCH 0/2] pci: am57xx-evm: Fix PCIe card enumeration issue
-Message-ID: <20150811210210.GK13982@google.com>
-References: <1438090750-11604-1-git-send-email-kishon@ti.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:5859 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753388AbbHRTTN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:13 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	"Mark Hounschell" <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	"Will Davis" <wdavis@nvidia.com>
+Subject: [PATCH v5 05/13] dma-mapping: pci: add pci_(un)map_peer_resource
+Date: Tue, 18 Aug 2015 14:04:01 -0500
+Message-ID: <1439924649-29698-6-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438090750-11604-1-git-send-email-kishon@ti.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 28, 2015 at 07:09:08PM +0530, Kishon Vijay Abraham I wrote:
-> This series fixes PCIe card enumeration issue in am57xx-evm.
-> 
-> In the case of am57xx-evm, the PERST# line is connected to a gpio line
-> and this has to be driven low in order to perform a fundamental reset
-> of the card. If the gpio line is driven high, there is no way the card
-> can come out of reset.
-> 
-> Add support in the pcie-dra7xx driver to make gpio drive PERST# line.
-> 
-> The PERST# line can be used to perform reset not during the power on
-> sequence too (warm reset) but we are not adding support for this as the
-> PCIe express base sepcification doesn't explain how to perform warm
-> reset
-> 
-> "In some cases, it may be possible for the Fundamental Reset mechanism
-> to be triggered by hardware without the removal and re-application of
-> power to the component. This is called a warm reset. This document does
-> not specify a means for generating a warm reset."
-> 
-> Kishon Vijay Abraham I (2):
->   pci: host: pci-dra7xx: Add support to make gpio drive PERST# line
->   ARM: dts: am57xx-evm: Add 'gpios' property with gpio2_8
-> 
->  Documentation/devicetree/bindings/pci/ti-pci.txt |    3 +++
->  arch/arm/boot/dts/am57xx-beagle-x15.dts          |    5 +++++
->  arch/arm/boot/dts/dra7.dtsi                      |    2 +-
->  drivers/pci/host/pci-dra7xx.c                    |   24 ++++++++++++++++++++--
->  4 files changed, 31 insertions(+), 3 deletions(-)
+Simply route these through to the new dma_(un)map_peer_resource APIs.
 
-Applied with Tony's ack (for patch 2) to pci/host-dra7xx for v4.3, thanks!
+Also route pci_peer_mapping_error through to the new dma_peer_mapping_error
+API.
+
+Guard these new functions behind CONFIG_HAS_DMA_P2P.
+
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ include/asm-generic/pci-dma-compat.h | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
+index c110843..7baf09e 100644
+--- a/include/asm-generic/pci-dma-compat.h
++++ b/include/asm-generic/pci-dma-compat.h
+@@ -61,6 +61,29 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
+ 	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
+ }
+ 
++#ifdef CONFIG_HAS_DMA_P2P
++static inline dma_peer_addr_t
++pci_map_peer_resource(struct pci_dev *hwdev, struct pci_dev *peer,
++		      int res, unsigned long offset, size_t size,
++		      int direction)
++{
++	return dma_map_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, peer == NULL ? NULL : &peer->dev, peer == NULL ? NULL : &peer->resource[res], offset, size, (enum dma_data_direction)direction);
++}
++
++static inline int
++pci_dma_peer_mapping_error(struct pci_dev *pdev, dma_peer_addr_t dma_addr)
++{
++	return dma_peer_mapping_error(&pdev->dev, dma_addr);
++}
++
++static inline void
++pci_unmap_peer_resource(struct pci_dev *hwdev, dma_peer_addr_t dma_address,
++			size_t size, int direction)
++{
++	dma_unmap_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
++}
++#endif
++
+ static inline int
+ pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
+ 	   int nents, int direction)
+-- 
+2.5.0
+
