@@ -1,44 +1,212 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36079 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932106AbbHJScF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 10 Aug 2015 14:32:05 -0400
-Subject: [PATCH] PCI: Add ACS quirks for Intel I219-LM/V
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, john.ronciak@intel.com,
-	linux-kernel@vger.kernel.org
-Date: Mon, 10 Aug 2015 12:32:04 -0600
-Message-ID: <20150810183055.5714.12998.stgit@gimli.home>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36558 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750786AbbHREVl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 00:21:41 -0400
+Received: by pawq9 with SMTP id q9so25761700paw.3
+        for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2015 21:21:41 -0700 (PDT)
+Date: Mon, 17 Aug 2015 23:21:35 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 33/51] resources: Make allocate_resource return just
+ fit resource
+Message-ID: <20150818042135.GZ26431@google.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+ <1438039809-24957-34-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438039809-24957-34-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Intel 100-series chipset now includes the integrated Ethernet as
-part of a multifunction package.  The Ethernet function does not
-include native ACS support, but Intel confirms that the device is not
-capable of peer-to-peer within the package.  We can therefore quirk it
-to expose the isolation.
+On Mon, Jul 27, 2015 at 04:29:51PM -0700, Yinghai Lu wrote:
+> Find all suitable empty slots and pick one just fit, so we could save
+> the big slot for needed ones later when we have several pcie switches
+> and some bridges get assigned bios and we need to assign others in kernel.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Cc: John Ronciak <john.ronciak@intel.com>
----
- drivers/pci/quirks.c |    3 +++
- 1 file changed, 3 insertions(+)
+By "just fit," do you mean "best fit"?  "Best fit" is a well-known term, so
+if that's what you mean, let's use it.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e9fd0e9..a914848 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3848,6 +3848,9 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_INTEL, 0x105F, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x1060, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x10D9, pci_quirk_mf_endpoint_acs },
-+	/* I219 */
-+	{ PCI_VENDOR_ID_INTEL, 0x15b7, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15b8, pci_quirk_mf_endpoint_acs },
- 	/* Intel PCH root ports */
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
- 	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+I couldn't quite parse the PCIe switch stuff here.  How is that relevant to
+this change?
 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 68 insertions(+), 13 deletions(-)
+> 
+> diff --git a/kernel/resource.c b/kernel/resource.c
+> index 67b58a5..697b8ca 100644
+> --- a/kernel/resource.c
+> +++ b/kernel/resource.c
+> @@ -48,6 +48,7 @@ struct resource_constraint {
+>  	resource_size_t (*alignf)(void *, const struct resource *,
+>  			resource_size_t, resource_size_t);
+>  	void *alignf_data;
+> +	bool fit;
+>  };
+>  
+>  static DEFINE_RWLOCK(resource_lock);
+> @@ -554,12 +555,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
+>   * alignment constraints
+>   */
+>  static int __find_resource(struct resource *root, struct resource *old,
+> -			 struct resource *new,
+> +			 struct resource *new, struct resource *avail,
+>  			 resource_size_t  size,
+>  			 struct resource_constraint *constraint)
+>  {
+>  	struct resource *this = root->child;
+> -	struct resource tmp = *new, avail, alloc;
+> +	struct resource tmp = *new, availx, alloc;
+> +
+> +	if (!avail || avail == new)
+> +		avail = &availx;
+>  
+>  	tmp.start = root->start;
+>  	/*
+> @@ -583,15 +587,16 @@ static int __find_resource(struct resource *root, struct resource *old,
+>  		arch_remove_reservations(&tmp);
+>  
+>  		/* Check for overflow after ALIGN() */
+> -		avail.start = ALIGN(tmp.start, constraint->align);
+> -		avail.end = tmp.end;
+> -		avail.flags = new->flags & ~IORESOURCE_UNSET;
+> -		if (avail.start >= tmp.start) {
+> -			alloc.flags = avail.flags;
+> -			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
+> +		avail->start = ALIGN(tmp.start, constraint->align);
+> +		avail->end = tmp.end;
+> +		avail->flags = new->flags & ~IORESOURCE_UNSET;
+> +		if (avail->start >= tmp.start) {
+> +			alloc.flags = avail->flags;
+> +			alloc.start = constraint->alignf(
+> +					constraint->alignf_data, avail,
+>  					size, constraint->align);
+>  			alloc.end = alloc.start + size - 1;
+> -			if (resource_contains(&avail, &alloc)) {
+> +			if (resource_contains(avail, &alloc)) {
+>  				new->start = alloc.start;
+>  				new->end = alloc.end;
+>  				return 0;
+> @@ -608,6 +613,11 @@ next:		if (!this || this->end == root->end)
+>  	return -EBUSY;
+>  }
+>  
+> +struct good_resource {
+> +	struct list_head list;
+> +	struct resource avail;
+> +	struct resource new;
+> +};
+>  /*
+>   * Find empty slot in the resource tree given range and alignment.
+>   */
+> @@ -615,7 +625,49 @@ static int find_resource(struct resource *root, struct resource *new,
+>  			resource_size_t size,
+>  			struct resource_constraint  *constraint)
+>  {
+> -	return  __find_resource(root, NULL, new, size, constraint);
+> +	int ret = -1;
+> +	LIST_HEAD(head);
+> +	struct good_resource *good, *tmp;
+> +	resource_size_t avail_size = (resource_size_t)-1ULL;
+> +
+> +	if (!constraint->fit)
+> +		return __find_resource(root, NULL, new, NULL, size,
+> +					constraint);
+> +
+> +	/* find all suitable ones and add to the list */
+> +	for (;;) {
+> +		good = kzalloc(sizeof(*good), GFP_KERNEL);
+> +		if (!good)
+> +			break;
+> +
+> +		good->new.start = new->start;
+> +		good->new.end = new->end;
+> +		good->new.flags = new->flags;
+> +		ret = __find_resource(root, NULL, &good->new, &good->avail,
+> +					size, constraint);
+> +		if (ret || __request_resource(root, &good->avail)) {
+> +			ret = -EBUSY;
+> +			kfree(good);
+> +			break;
+> +		}
+> +
+> +		list_add(&good->list, &head);
+> +	}
+
+Allocating memory and building a list in a function that allocates space
+seems like a little bit of a hack.  I think we're holding resource_lock
+anyway; can't we just find a candidate, reserve it, look for another one,
+reserve it, release the larger one, and repeat?
+
+> +	/* pick up the smallest one and delete the list */
+> +	list_for_each_entry_safe(good, tmp, &head, list) {
+> +		if (resource_size(&good->avail) < avail_size) {
+> +			avail_size = resource_size(&good->avail);
+> +			new->start = good->new.start;
+> +			new->end = good->new.end;
+> +			ret = 0;
+> +		}
+> +		list_del(&good->list);
+> +		__release_resource(&good->avail);
+> +		kfree(good);
+> +	}
+> +
+> +	return ret;
+>  }
+>  
+>  /**
+> @@ -636,7 +688,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
+>  	struct resource new = *old;
+>  	struct resource *conflict;
+>  
+> -	if ((err = __find_resource(root, old, &new, newsize, constraint)))
+> +	err = __find_resource(root, old, &new, NULL, newsize, constraint);
+> +	if (err)
+>  		goto out;
+>  
+>  	if (resource_contains(&new, old)) {
+> @@ -675,6 +728,7 @@ out:
+>   * @align: alignment requested, in bytes
+>   * @alignf: alignment function, optional, called if not NULL
+>   * @alignf_data: arbitrary data to pass to the @alignf function
+> + * @fit: only allocate fit range.
+>   *
+>   * Caller need to hold resource_lock if needed.
+>   */
+> @@ -685,7 +739,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+>  						  const struct resource *,
+>  						  resource_size_t,
+>  						  resource_size_t),
+> -				void *alignf_data)
+> +				void *alignf_data, bool fit)
+>  {
+>  	int err;
+>  	struct resource_constraint constraint;
+> @@ -698,6 +752,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+>  	constraint.align = align;
+>  	constraint.alignf = alignf;
+>  	constraint.alignf_data = alignf_data;
+> +	constraint.fit = fit;
+>  
+>  	if (new->parent) {
+>  		/* resource is already allocated, try reallocating with
+> @@ -738,7 +793,7 @@ int allocate_resource(struct resource *root, struct resource *new,
+>  
+>  	write_lock(&resource_lock);
+>  	ret = __allocate_resource(root, new, size, min, max, align,
+> -				   alignf, alignf_data);
+> +				   alignf, alignf_data, true);
+>  	write_unlock(&resource_lock);
+>  
+>  	return ret;
+> -- 
+> 1.8.4.5
+> 
