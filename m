@@ -1,66 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25040 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753843AbbHUGYM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:24:12 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 30/52] PCI: Allow bridge optional only io port resource required size to be 0
-Date: Thu, 20 Aug 2015 23:20:45 -0700
-Message-Id: <1440138067-4314-31-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:3515 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbbHRTTM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:12 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v5 04/13] DMA-API: Introduce dma_(un)map_peer_resource
+Date: Tue, 18 Aug 2015 14:04:00 -0500
+Message-ID: <1439924649-29698-5-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When there is no child device under the non hotplug bridge,
-We can use 0 for required size, and do not use old size as required size.
+Add functions to DMA-map and -unmap a peer device's resource for a given
+device. This will allow devices to DMA-map, for example, another device's
+BAR region on PCI to enable peer-to-peer transactions.
 
-That will save some io port range for other bridges, as BIOS
-could do some partial assign, and we want to use those not
-used io port range.
+Guard these new functions behind CONFIG_HAS_DMA_P2P.
 
-When there is child device, size will not be 0.
-when the bridge supports hotplug, min_size will not be 0.
-So they will still honor the old size as required size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Will Davis <wdavis@nvidia.com>
 ---
- drivers/pci/setup-bus.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ include/asm-generic/dma-mapping-common.h | 43 ++++++++++++++++++++++++++++++++
+ include/linux/dma-mapping.h              | 12 +++++++++
+ 2 files changed, 55 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 2d26745..7fb08ef 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1236,8 +1236,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+diff --git a/include/asm-generic/dma-mapping-common.h b/include/asm-generic/dma-mapping-common.h
+index 940d5ec..45eec17 100644
+--- a/include/asm-generic/dma-mapping-common.h
++++ b/include/asm-generic/dma-mapping-common.h
+@@ -73,6 +73,42 @@ static inline void dma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg
+ 		ops->unmap_sg(dev, sg, nents, dir, attrs);
+ }
  
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_size(size, min_size,
--			resource_size(b_res), min_align);
-+	if (size || min_size)
-+		size0 = calculate_size(size, min_size,
-+					resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
-@@ -1253,7 +1254,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		return;
- 	}
++#ifdef CONFIG_HAS_DMA_P2P
++static inline dma_peer_addr_t dma_map_peer_resource_attrs(struct device *dev,
++							  struct device *peer,
++							  struct resource *res,
++							  size_t offset,
++							  size_t size,
++							  enum dma_data_direction dir,
++							  struct dma_attrs *attrs)
++{
++	struct dma_map_ops *ops = get_dma_ops(dev);
++	dma_peer_addr_t addr;
++
++	BUG_ON(!valid_dma_direction(dir));
++	BUG_ON(ops->map_peer_resource == NULL);
++	addr = ops->map_peer_resource(dev, peer, res, offset, size, dir,
++				      attrs);
++	debug_dma_map_peer_resource(dev, peer, res, offset, size, dir, addr);
++
++	return addr;
++}
++
++static inline void dma_unmap_peer_resource_attrs(struct device *dev,
++						 dma_peer_addr_t addr,
++						 size_t size,
++						 enum dma_data_direction dir,
++						 struct dma_attrs *attrs)
++{
++	struct dma_map_ops *ops = get_dma_ops(dev);
++
++	BUG_ON(!valid_dma_direction(dir));
++	if (ops->unmap_peer_resource)
++		ops->unmap_peer_resource(dev, addr, size, dir, attrs);
++	debug_dma_unmap_peer_resource(dev, addr, size, dir);
++}
++#endif
++
+ static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
+ 				      size_t offset, size_t size,
+ 				      enum dma_data_direction dir)
+@@ -181,6 +217,13 @@ dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
+ #define dma_map_sg(d, s, n, r) dma_map_sg_attrs(d, s, n, r, NULL)
+ #define dma_unmap_sg(d, s, n, r) dma_unmap_sg_attrs(d, s, n, r, NULL)
  
--	b_res->start = min_align;
-+	b_res->start = size0 ? min_align : 0;
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
++#ifdef CONFIG_HAS_DMA_P2P
++#define dma_map_peer_resource(d, p, e, o, s, r) \
++	dma_map_peer_resource_attrs(d, p, e, o, s, r, NULL)
++#define dma_unmap_peer_resource(d, a, s, r) \
++	dma_unmap_peer_resource_attrs(d, a, s, r, NULL)
++#endif
++
+ extern int dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
+ 			   void *cpu_addr, dma_addr_t dma_addr, size_t size);
+ 
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index ac07ff0..7b8fddc 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -34,6 +34,18 @@ struct dma_map_ops {
+ 	void (*unmap_page)(struct device *dev, dma_addr_t dma_handle,
+ 			   size_t size, enum dma_data_direction dir,
+ 			   struct dma_attrs *attrs);
++#ifdef CONFIG_HAS_DMA_P2P
++	dma_peer_addr_t (*map_peer_resource)(struct device *dev,
++					     struct device *peer,
++					     struct resource *res,
++					     unsigned long offset, size_t size,
++					     enum dma_data_direction dir,
++					     struct dma_attrs *attrs);
++	void (*unmap_peer_resource)(struct device *dev,
++				    dma_peer_addr_t dma_handle,
++				    size_t size, enum dma_data_direction dir,
++				    struct dma_attrs *attrs);
++#endif
+ 	/*
+ 	 * map_sg returns 0 on error and a value > 0 on success.
+ 	 * It should never return a value < 0.
 -- 
-1.8.4.5
+2.5.0
 
