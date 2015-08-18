@@ -1,100 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v2 1/4] of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
-Date: Fri, 14 Aug 2015 17:19:16 +0100
-Message-Id: <1439569159-10051-2-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
-References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e24smtp04.br.ibm.com ([32.104.18.25]:50812 "EHLO
+	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753098AbbHRVIG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 17:08:06 -0400
+Received: from /spool/local
+	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Tue, 18 Aug 2015 18:08:03 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id C28D5352007C
+	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 17:06:53 -0400 (EDT)
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
+	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7IL6T7112058960
+	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 18:06:30 -0300
+Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
+	by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7IL7wE9011327
+	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 18:07:58 -0300
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: linux-pci@vger.kernel.org
+Cc: gpiccoli@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com
+Subject: [PATCH 0/2] Disable MSI/MSI-X interrupts manually at PCI probe time in PowerPC architecture
+Date: Tue, 18 Aug 2015 18:07:55 -0300
+Message-Id: <1439932077-11427-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Both pci-host-generic and Pseries parse the "linux,pci-probe-only"
-to engage the PCI_PROBE_ONLY mode, and both have a subtle bug that
-can be triggered if the property has no parameter.
+These 2 patches correct a bogus behaviour introduced by commit 1851617cd2
+("PCI/MSI: Disable MSI at enumeration even if kernel doesn't support MSI").
+The commit moved the logic responsible to disable MSI/MSI-X interrupts
+at PCI probe time to a new function, named pci_msi_setup_pci_dev(), that
+is not reachable in the code path of PowerPC pSeries platform.
 
-Provide a generic implementation that can be used by both.
+Since then, devices aren't able to activate MSI/MSI-X capability, even
+after boot. The first patch makes the function pci_msi_setup_pci_dev()
+non-static. The second patch inserts a call to the function in powerpc
+code, so it explicitly disables MSI/MSI-X interrupts at PCI probe time.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/of/of_pci.c    | 30 ++++++++++++++++++++++++++++++
- include/linux/of_pci.h |  3 +++
- 2 files changed, 33 insertions(+)
+Guilherme G. Piccoli (2):
+  PCI: Make pci_msi_setup_pci_dev() non-static for use by arch code
+  powerpc/PCI: Disable MSI/MSI-X interrupts at PCI probe time in OF case
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 5751dc5..a4e29ff 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -118,6 +118,36 @@ int of_get_pci_domain_nr(struct device_node *node)
- EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
- 
- /**
-+ * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
-+ *                           is present and valid
-+ *
-+ * @node: device tree node that may contain the property (usually "chosen")
-+ *
-+ */
-+void of_pci_check_probe_only(struct device_node *node)
-+{
-+	const int *prop;
-+	int len;
-+
-+	if (!node)
-+		return;
-+
-+	prop = of_get_property(node, "linux,pci-probe-only", &len);
-+	if (prop) {
-+		if (!len) {
-+			pr_warn("linux,pci-probe-only set without value, ignoring\n");
-+			return;
-+		}
-+
-+		if (be32_to_cpup(prop))
-+			pci_add_flags(PCI_PROBE_ONLY);
-+		else
-+			pci_clear_flags(PCI_PROBE_ONLY);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
-+
-+/**
-  * of_pci_dma_configure - Setup DMA configuration
-  * @dev: ptr to pci_dev struct of the PCI device
-  *
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 29fd3fe..4c0a617 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -17,6 +17,7 @@ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
- void of_pci_dma_configure(struct pci_dev *pci_dev);
-+void of_pci_check_probe_only(struct device_node *node);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -53,6 +54,8 @@ of_get_pci_domain_nr(struct device_node *node)
- }
- 
- static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
-+
-+static inline void of_pci_check_probe_only(struct device_node *node) { }
- #endif
- 
- #if defined(CONFIG_OF_ADDRESS)
+ arch/powerpc/kernel/pci_of_scan.c | 3 +++
+ drivers/pci/probe.c               | 2 +-
+ include/linux/pci.h               | 1 +
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
 -- 
-2.1.4
+2.1.0
 
