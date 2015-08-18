@@ -1,231 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH V2 2/4] ACPI/scan: Clean up acpi_check_dma
-Date: Wed, 26 Aug 2015 00:33:27 +0700
-Message-ID: <1440524009-5359-3-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:3496 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbbHRTTH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:07 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v5 00/13] DMA-API/PCI map_peer_resource support for peer-to-peer
+Date: Tue, 18 Aug 2015 14:03:56 -0500
+Message-ID: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The original name of acpi_check_dma() function does not clearly tell what
-exactly it is checking. Also, returning two boolean values (one to indicate
-device is DMA capability, and the other to inidicate device coherency
-attribute) can be confusing.
+Hi,
 
-So, in order to simplify the function, this patch renames acpi_check_dma()
-to acpi_check_dma_coherency() to clearly indicate the purpose of this
-function, and only returns an integer where -1 means DMA not supported,
-1 means coherent DMA, and 0 means non-coherent DMA.
+This is the fifth version of a patchset to add the DMA APIs necessary to
+map and unmap a PCI device's BAR to and from another PCI device's IOVA
+domain. This enables PCI peer-to-peer traffic on x86 platforms where an
+IOMMU is enabled (this requires that peer-to-peer traffic be supported by
+the underlying chipset as well, of course).
 
-Also, this patch moves the function into drivers/acpi/scan.c since
-it is easier to follow the logic in the acpi_init_coherency() in the
-same file here.
+Thanks,
+Will
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: Catalin Marinas <catalin.marinas@arm.com>
-CC: Rob Herring <robh+dt@kernel.org>
-CC: Will Deacon <will.deacon@arm.com>
-CC: Rafael J. Wysocki <rjw@rjwysocki.net>
----
- drivers/acpi/acpi_platform.c |  7 ++++++-
- drivers/acpi/glue.c          |  5 +++--
- drivers/acpi/scan.c          | 39 +++++++++++++++++++++++++++++++++++++++
- drivers/base/property.c      |  8 ++++++--
- include/acpi/acpi_bus.h      | 36 ++----------------------------------
- include/linux/acpi.h         |  4 ++--
- 6 files changed, 58 insertions(+), 41 deletions(-)
+v5:
+- moved topology and ACS checks into a separate
+  pci_peer_traffic_supported() API, which determines whether PCI peer-
+  to-peer traffic may work based on language in the PCI and PCI Express
+  specifications (excerpts included in comments)
+- added CONFIG_HAS_DMA_P2P guards to x86 PCI no-mmu implementation of
+  map_peer_resource
+- modified a few patch descriptions for style
 
-diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
-index 06a67d5..2261e85 100644
---- a/drivers/acpi/acpi_platform.c
-+++ b/drivers/acpi/acpi_platform.c
-@@ -103,7 +103,12 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
- 	pdevinfo.res = resources;
- 	pdevinfo.num_res = count;
- 	pdevinfo.fwnode = acpi_fwnode_handle(adev);
--	pdevinfo.dma_mask = acpi_check_dma(adev, NULL) ? DMA_BIT_MASK(32) : 0;
-+
-+	if (-1 != acpi_check_dma_coherency(adev))
-+		pdevinfo.dma_mask = DMA_BIT_MASK(32);
-+	else
-+		pdevinfo.dma_mask = 0;
-+
- 	pdev = platform_device_register_full(&pdevinfo);
- 	if (IS_ERR(pdev))
- 		dev_err(&adev->dev, "platform device creation failed: %ld\n",
-diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-index b9657af..55cf916 100644
---- a/drivers/acpi/glue.c
-+++ b/drivers/acpi/glue.c
-@@ -168,7 +168,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 	struct list_head *physnode_list;
- 	unsigned int node_id;
- 	int retval = -EINVAL;
--	bool coherent;
-+	int coherent;
- 
- 	if (has_acpi_companion(dev)) {
- 		if (acpi_dev) {
-@@ -225,7 +225,8 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
- 	if (!has_acpi_companion(dev))
- 		ACPI_COMPANION_SET(dev, acpi_dev);
- 
--	if (acpi_check_dma(acpi_dev, &coherent))
-+	coherent = acpi_check_dma_coherency(acpi_dev);
-+	if (coherent != -1)
- 		arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
- 
- 	acpi_physnode_link_name(physical_node_name, node_id);
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index ec25635..299a825 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -2182,6 +2182,45 @@ void acpi_free_pnp_ids(struct acpi_device_pnp *pnp)
- 	kfree(pnp->unique_id);
- }
- 
-+/**
-+ * acpi_check_dma_coherency - Check DMA coherency for the specified device.
-+ * @adev: The pointer to acpi device to check coherency attribute
-+ *
-+ * Return -1 if DMA is not supported. Otherwise, return 1 if the
-+ * device support coherent DMA, or 0 for non-coherent DMA.
-+ */
-+int acpi_check_dma_coherency(struct acpi_device *adev)
-+{
-+	int ret = -1;
-+
-+	if (!adev)
-+		return ret;
-+
-+	/**
-+	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
-+	 * This should be equivalent to specifying dma-coherent for
-+	 * a device in OF.
-+	 *
-+	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
-+	 * we have two choices:
-+	 *   1. Do not support and disable DMA.
-+	 *   2. Support but rely on arch-specific cache maintenance for
-+	 *      non-coherenje DMA operations.
-+	 * Currently, we implement case 2 above.
-+	 *
-+	 * For the case when _CCA is missing (i.e. cca_seen=0) and
-+	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
-+	 * and fallback to arch-specific default handling.
-+	 *
-+	 * See acpi_init_coherency() for more info.
-+	 */
-+	if (!adev->flags.cca_seen && IS_ENABLED(CONFIG_ACPI_CCA_REQUIRED))
-+		return ret;
-+
-+	return adev->flags.coherent_dma;
-+}
-+EXPORT_SYMBOL_GPL(acpi_check_dma_coherency);
-+
- static void acpi_init_coherency(struct acpi_device *adev)
- {
- 	unsigned long long cca = 0;
-diff --git a/drivers/base/property.c b/drivers/base/property.c
-index f3f6d16..643b0fb 100644
---- a/drivers/base/property.c
-+++ b/drivers/base/property.c
-@@ -527,8 +527,12 @@ bool device_dma_is_coherent(struct device *dev)
- 
- 	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
- 		coherent = of_dma_is_coherent(dev->of_node);
--	else
--		acpi_check_dma(ACPI_COMPANION(dev), &coherent);
-+	else {
-+		int ac = acpi_check_dma_coherency(ACPI_COMPANION(dev));
-+
-+		if (ac != -1)
-+			coherent = ac;
-+	}
- 
- 	return coherent;
- }
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 7ecb8e4..baf43ea 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -382,40 +382,6 @@ struct acpi_device {
- 	void (*remove)(struct acpi_device *);
- };
- 
--static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
--{
--	bool ret = false;
--
--	if (!adev)
--		return ret;
--
--	/**
--	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
--	 * This should be equivalent to specifyig dma-coherent for
--	 * a device in OF.
--	 *
--	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
--	 * There are two cases:
--	 * case 1. Do not support and disable DMA.
--	 * case 2. Support but rely on arch-specific cache maintenance for
--	 *         non-coherence DMA operations.
--	 * Currently, we implement case 2 above.
--	 *
--	 * For the case when _CCA is missing (i.e. cca_seen=0) and
--	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
--	 * and fallback to arch-specific default handling.
--	 *
--	 * See acpi_init_coherency() for more info.
--	 */
--	if (adev->flags.coherent_dma ||
--	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
--		ret = true;
--		if (coherent)
--			*coherent = adev->flags.coherent_dma;
--	}
--	return ret;
--}
--
- static inline bool is_acpi_node(struct fwnode_handle *fwnode)
- {
- 	return fwnode && fwnode->type == FWNODE_ACPI;
-@@ -640,6 +606,8 @@ static inline bool acpi_device_can_poweroff(struct acpi_device *adev)
- 	return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
- }
- 
-+int acpi_check_dma_coherency(struct acpi_device *adev);
-+
- #else	/* CONFIG_ACPI */
- 
- static inline int register_acpi_bus_type(void *bus) { return 0; }
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index d2445fa..530d2fa 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -562,9 +562,9 @@ static inline int acpi_device_modalias(struct device *dev,
- 	return -ENODEV;
- }
- 
--static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
-+static inline int acpi_check_dma_coherency(struct acpi_device *adev)
- {
--	return false;
-+	return -1;
- }
- 
- #define ACPI_PTR(_ptr)	(NULL)
+v4: http://www.spinics.net/lists/linux-pci/msg43136.html
+- added HAS_DMA_P2P Kconfig option to guard new APIs, which are only
+  supported on x86 with this patch series
+- added a new dma_peer_addr_t type to handle future platform support
+  where the dma_peer_addr_t needs to have the same width as the bus
+  address, which can be wider than the dma_addr_t returned by other
+  DMA APIs
+- added a new dma_peer_mapping_error() and associated PCI wrapper to
+  detect errors returned via dma_map_peer_resource() API and its
+  PCI wrapper
+- modified the interface of the new API to explicitly take the peer
+  device as an argument
+- renamed the (un)map_resource APIs to (un)map_peer_resource, since
+  they directly receive a 'peer' argument now
+- modified the new PCI interface to take the BAR index instead of the
+  actual struct resource
+- modified the pci-nommu implementation to perform topology and ACS
+  checks before allowing
+- modified both the AMD and Intel IOMMU implementations to require
+  that both devices be behind the same host bridge
+- exposed a couple of preexisting PCI utility functions to aid in the
+  topology checks for all of the x86 implementations
+
+v3: http://www.spinics.net/lists/linux-pci/msg41703.html
+- changed dma_map_resource() to BUG() if the map_resource DMA op is not
+  provided, instead of returning 0
+- updated documentation to remove requirement to check for 0 return value
+  as an error
+- remove const keyword from struct dma_map_ops in new DMA APIs for
+  consistency with other APIs
+
+v2: http://www.spinics.net/lists/linux-pci/msg41192.html
+- added documentation for the new DMA APIs
+- fixed physical-to-bus address conversion in the nommu implementation
+
+v1: http://www.spinics.net/lists/linux-pci/msg40747.html
+
+
+Will Davis (13):
+  lib/Kconfig: add HAS_DMA_P2P for peer-to-peer support
+  linux/types.h: Add dma_peer_addr_t type
+  dma-debug: add checking for map/unmap_peer_resource
+  DMA-API: Introduce dma_(un)map_peer_resource
+  dma-mapping: pci: add pci_(un)map_peer_resource
+  DMA-API: Add peer resource mapping documentation
+  PCI: Export pci_find_host_bridge()
+  PCI: Add pci_find_common_upstream_dev()
+  PCI: Add pci_peer_traffic_supported()
+  iommu/amd: Implement (un)map_peer_resource
+  iommu/vt-d: implement (un)map_peer_resource
+  x86: add pci-nommu implementation of map_peer_resource
+  x86: declare support for DMA P2P
+
+ Documentation/DMA-API-HOWTO.txt          | 69 ++++++++++++++++++++++
+ Documentation/DMA-API.txt                | 38 ++++++++++--
+ arch/x86/Kconfig                         |  1 +
+ arch/x86/include/asm/dma-mapping.h       | 18 +++++-
+ arch/x86/kernel/pci-nommu.c              | 36 ++++++++++++
+ drivers/iommu/amd_iommu.c                | 99 +++++++++++++++++++++++++++-----
+ drivers/iommu/intel-iommu.c              | 38 ++++++++++++
+ drivers/pci/host-bridge.c                | 19 +-----
+ drivers/pci/pci.c                        | 99 ++++++++++++++++++++++++++++++++
+ drivers/pci/search.c                     | 25 ++++++++
+ include/asm-generic/dma-mapping-common.h | 43 ++++++++++++++
+ include/asm-generic/pci-dma-compat.h     | 23 ++++++++
+ include/linux/dma-debug.h                | 39 ++++++++++++-
+ include/linux/dma-mapping.h              | 12 ++++
+ include/linux/pci.h                      | 12 ++++
+ include/linux/types.h                    | 13 ++++-
+ lib/Kconfig                              |  5 ++
+ lib/dma-debug.c                          | 86 ++++++++++++++++++++++++++-
+ 18 files changed, 633 insertions(+), 42 deletions(-)
+
 -- 
-2.1.0
+2.5.0
 
