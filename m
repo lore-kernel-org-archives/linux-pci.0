@@ -1,48 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:47887 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751203AbbHTNvr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 09:51:47 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <wangzhou1@hisilicon.com>,
-	<jingoohan1@gmail.com>, <pratyush.anand@gmail.com>,
-	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liguozhu@hisilicon.com>
-Subject: [PATCH] PCI: designware: fix dw_pcie_cfg_write
-Date: Thu, 20 Aug 2015 21:58:33 +0800
-Message-ID: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:12986 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753342AbbHRTTV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:19:21 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH v5 13/13] x86: declare support for DMA P2P
+Date: Tue, 18 Aug 2015 14:04:09 -0500
+Message-ID: <1439924649-29698-14-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
+References: <1439924649-29698-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Use CONFIG_HAS_DMA_P2P to declare that we want the DMA peer resource APIs
+enabled on x86, and provide the requisite dma_peer_mapping_error()
+implementation.
 
-Currently in dw_pcie_cfg_write() if the input size is 2 bytes
-the address offset is wrongly calculated as we mask also bit0
-of "where" input parameter. Instead we should mask all bits of
-"where" except bit0 and bit1.
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Will Davis <wdavis@nvidia.com>
 ---
- drivers/pci/host/pcie-designware.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/x86/Kconfig                   |  1 +
+ arch/x86/include/asm/dma-mapping.h | 18 ++++++++++++++++--
+ 2 files changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be..a27f536 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -99,7 +99,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
- 	if (size == 4)
- 		writel(val, addr);
- 	else if (size == 2)
--		writew(val, addr + (where & 2));
-+		writew(val, addr + (where & 3));
- 	else if (size == 1)
- 		writeb(val, addr + (where & 3));
- 	else
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 3dbb7e7..581d1ad 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -149,6 +149,7 @@ config X86
+ 	select VIRT_TO_BUS
+ 	select X86_DEV_DMA_OPS			if X86_64
+ 	select X86_FEATURE_NAMES		if PROC_FS
++	select HAS_DMA_P2P
+ 
+ config INSTRUCTION_DECODER
+ 	def_bool y
+diff --git a/arch/x86/include/asm/dma-mapping.h b/arch/x86/include/asm/dma-mapping.h
+index 1f5b728..64472d8 100644
+--- a/arch/x86/include/asm/dma-mapping.h
++++ b/arch/x86/include/asm/dma-mapping.h
+@@ -44,16 +44,30 @@ static inline struct dma_map_ops *get_dma_ops(struct device *dev)
+ #include <asm-generic/dma-mapping-common.h>
+ 
+ /* Make sure we keep the same behaviour */
+-static inline int dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
++static inline int dma_mapping_error_common(struct device *dev, u64 dma_addr)
+ {
+ 	struct dma_map_ops *ops = get_dma_ops(dev);
+-	debug_dma_mapping_error(dev, dma_addr);
+ 	if (ops->mapping_error)
+ 		return ops->mapping_error(dev, dma_addr);
+ 
+ 	return (dma_addr == DMA_ERROR_CODE);
+ }
+ 
++static inline int dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
++{
++	debug_dma_mapping_error(dev, dma_addr);
++	return dma_mapping_error_common(dev, (u64)dma_addr);
++}
++
++#ifdef CONFIG_HAS_DMA_P2P
++static inline int dma_peer_mapping_error(struct device *dev,
++					 dma_peer_addr_t dma_addr)
++{
++	debug_dma_peer_mapping_error(dev, dma_addr);
++	return dma_mapping_error_common(dev, (u64)dma_addr);
++}
++#endif
++
+ #define dma_alloc_noncoherent(d, s, h, f) dma_alloc_coherent(d, s, h, f)
+ #define dma_free_noncoherent(d, s, v, h) dma_free_coherent(d, s, v, h)
+ 
 -- 
-1.9.1
+2.5.0
 
