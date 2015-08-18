@@ -1,117 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:44011 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758AbbHFEMw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:12:52 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:12:49 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 02/42] powerpc/powernv: Drop pnv_ioda_setup_dev_PE()
-Date: Thu,  6 Aug 2015 14:11:07 +1000
-Message-Id: <1438834307-26960-3-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-io0-f171.google.com ([209.85.223.171]:33372 "EHLO
+	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752555AbbHRVpr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 17:45:47 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAE9FiQVjSQE6w4A2e3Fr88eDv6aDotbuo3NSenCJdaUOY9eWwQ@mail.gmail.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+	<1438039809-24957-10-git-send-email-yinghai@kernel.org>
+	<20150817235307.GR26431@google.com>
+	<CAE9FiQVjSQE6w4A2e3Fr88eDv6aDotbuo3NSenCJdaUOY9eWwQ@mail.gmail.com>
+Date: Tue, 18 Aug 2015 14:45:46 -0700
+Message-ID: <CAE9FiQU_z_fcddRP5=XhJc7yePttqsGvmGmCqksOxyx6EwL3Aw@mail.gmail.com>
+Subject: Re: [PATCH v3 09/51] PCI: Rename pdev_sort_resources to pdev_check_resources
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Nobody is using the this function. The patch drops it.
+On Tue, Aug 18, 2015 at 2:36 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Mon, Aug 17, 2015 at 4:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>> On Mon, Jul 27, 2015 at 04:29:27PM -0700, Yinghai Lu wrote:
+>>> We don't do sorting in those functions anymore, so change "sort" to "check"
+>>> instead.
+>>
+>> What *do* we do in those functions?  "Check" doesn't tell me anything.
+>
+> Put all children devices' resources that need to assign in one list, and also
+> do some sanitary checking like if align is good or not.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 71 -------------------------------
- 1 file changed, 71 deletions(-)
-
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 07666ec..38b5405 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -923,77 +923,6 @@ static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
- }
- #endif /* CONFIG_PCI_IOV */
- 
--#if 0
--static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
--{
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	struct pnv_phb *phb = hose->private_data;
--	struct pci_dn *pdn = pci_get_pdn(dev);
--	struct pnv_ioda_pe *pe;
--	int pe_num;
--
--	if (!pdn) {
--		pr_err("%s: Device tree node not associated properly\n",
--			   pci_name(dev));
--		return NULL;
--	}
--	if (pdn->pe_number != IODA_INVALID_PE)
--		return NULL;
--
--	/* PE#0 has been pre-set */
--	if (dev->bus->number == 0)
--		pe_num = 0;
--	else
--		pe_num = pnv_ioda_alloc_pe(phb);
--	if (pe_num == IODA_INVALID_PE) {
--		pr_warning("%s: Not enough PE# available, disabling device\n",
--			   pci_name(dev));
--		return NULL;
--	}
--
--	/* NOTE: We get only one ref to the pci_dev for the pdn, not for the
--	 * pointer in the PE data structure, both should be destroyed at the
--	 * same time. However, this needs to be looked at more closely again
--	 * once we actually start removing things (Hotplug, SR-IOV, ...)
--	 *
--	 * At some point we want to remove the PDN completely anyways
--	 */
--	pe = &phb->ioda.pe_array[pe_num];
--	pci_dev_get(dev);
--	pdn->pcidev = dev;
--	pdn->pe_number = pe_num;
--	pe->pdev = dev;
--	pe->pbus = NULL;
--	pe->tce32_seg = -1;
--	pe->mve_number = -1;
--	pe->rid = dev->bus->number << 8 | pdn->devfn;
--
--	pe_info(pe, "Associated device to PE\n");
--
--	if (pnv_ioda_configure_pe(phb, pe)) {
--		/* XXX What do we do here ? */
--		if (pe_num)
--			pnv_ioda_free_pe(phb, pe_num);
--		pdn->pe_number = IODA_INVALID_PE;
--		pe->pdev = NULL;
--		pci_dev_put(dev);
--		return NULL;
--	}
--
--	/* Assign a DMA weight to the device */
--	pe->dma_weight = pnv_ioda_dma_weight(dev);
--	if (pe->dma_weight != 0) {
--		phb->ioda.dma_weight += pe->dma_weight;
--		phb->ioda.dma_pe_count++;
--	}
--
--	/* Link the PE */
--	pnv_ioda_link_pe_by_weight(phb, pe);
--
--	return pe;
--}
--#endif /* Useful for SRIOV case */
--
- static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- {
- 	struct pci_dev *dev;
--- 
-2.1.0
-
+or change to dev_assign_resources_prepare() ?
