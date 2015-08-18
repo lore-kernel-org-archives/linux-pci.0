@@ -1,127 +1,176 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:2396 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750949AbbHGGB6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2015 02:01:58 -0400
-Message-ID: <55C449AF.3030303@hisilicon.com>
-Date: Fri, 7 Aug 2015 14:01:19 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:33302 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbbHREOf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 00:14:35 -0400
+Received: by pdrh1 with SMTP id h1so63883617pdr.0
+        for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2015 21:14:35 -0700 (PDT)
+Date: Mon, 17 Aug 2015 23:14:29 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 32/51] resources: Split out __allocate_resource()
+Message-ID: <20150818041429.GY26431@google.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+ <1438039809-24957-33-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-To: Zhou Wang <wangzhou1@hisilicon.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: Re: [PATCH v6 0/6] PCI: hisi: Add PCIe host support for HiSilicon
- SoC Hip05
-References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438039809-24957-33-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc jingoohan1@gmail.com]
+On Mon, Jul 27, 2015 at 04:29:50PM -0700, Yinghai Lu wrote:
+> It will not hold lock, so we could use it in other functions that
+> hold the resource lock already.
 
-On 2015/8/6 16:09, Zhou Wang wrote:
-> This patchset adds PCIe host support for HiSilicon SoC Hip05. The PCIe hosts
-> use PCIe IP core from Synopsys, So this driver is base on designware PCIe driver.
+What's the benefit of this patch?  Does it fix something?  Does it add some
+functionality we need?
 > 
-> Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64 PCIe API in
-> designeware PCIe driver. So this patch also adds ARM64 support for designware
-> pcie.
+> -v2: according to Linus, using "bool lock" as parameter
+>      aka "conditionally take lock" is *wrong*.
 > 
-> This patchset is based on v4.2-rc1.
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Acked-by: Linus Torvalds <torvalds@linux-foundation.org>
+> ---
+>  kernel/resource.c | 70 +++++++++++++++++++++++++++++++++++++++----------------
+>  1 file changed, 50 insertions(+), 20 deletions(-)
 > 
-> Change from v5:
-> - Merge 1/6 in this series, discussion about this can be found in [1]
+> diff --git a/kernel/resource.c b/kernel/resource.c
+> index fed052a..67b58a5 100644
+> --- a/kernel/resource.c
+> +++ b/kernel/resource.c
+> @@ -619,7 +619,7 @@ static int find_resource(struct resource *root, struct resource *new,
+>  }
+>  
+>  /**
+> - * reallocate_resource - allocate a slot in the resource tree given range & alignment.
+> + * __reallocate_resource - allocate a slot in the resource tree given range & alignment.
+>   *	The resource will be relocated if the new size cannot be reallocated in the
+>   *	current location.
+>   *
+> @@ -628,7 +628,7 @@ static int find_resource(struct resource *root, struct resource *new,
+>   * @newsize: new size of the resource descriptor
+>   * @constraint: the size and alignment constraints to be met.
+>   */
+> -static int reallocate_resource(struct resource *root, struct resource *old,
+> +static int __reallocate_resource(struct resource *root, struct resource *old,
+>  			resource_size_t newsize,
+>  			struct resource_constraint  *constraint)
+>  {
+> @@ -636,8 +636,6 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+>  	struct resource new = *old;
+>  	struct resource *conflict;
+>  
+> -	write_lock(&resource_lock);
+> -
+>  	if ((err = __find_resource(root, old, &new, newsize, constraint)))
+>  		goto out;
+>  
+> @@ -662,14 +660,13 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+>  		BUG_ON(conflict);
+>  	}
+>  out:
+> -	write_unlock(&resource_lock);
+>  	return err;
+>  }
+>  
+> -
+>  /**
+> - * allocate_resource - allocate empty slot in the resource tree given range & alignment.
+> - * 	The resource will be reallocated with a new size if it was already allocated
+> + * __allocate_resource - allocate empty slot in the resource tree given range & alignment.
+> + *	The resource will be reallocated with a new size if it was already
+> + *	allocated
+>   * @root: root resource descriptor
+>   * @new: resource descriptor desired by caller
+>   * @size: requested resource region size
+> @@ -678,15 +675,17 @@ out:
+>   * @align: alignment requested, in bytes
+>   * @alignf: alignment function, optional, called if not NULL
+>   * @alignf_data: arbitrary data to pass to the @alignf function
+> + *
+> + * Caller need to hold resource_lock if needed.
+>   */
+> -int allocate_resource(struct resource *root, struct resource *new,
+> -		      resource_size_t size, resource_size_t min,
+> -		      resource_size_t max, resource_size_t align,
+> -		      resource_size_t (*alignf)(void *,
+> -						const struct resource *,
+> -						resource_size_t,
+> -						resource_size_t),
+> -		      void *alignf_data)
+> +static int __allocate_resource(struct resource *root, struct resource *new,
+> +				resource_size_t size, resource_size_t min,
+> +				resource_size_t max, resource_size_t align,
+> +				resource_size_t (*alignf)(void *,
+> +						  const struct resource *,
+> +						  resource_size_t,
+> +						  resource_size_t),
+> +				void *alignf_data)
+>  {
+>  	int err;
+>  	struct resource_constraint constraint;
+> @@ -700,20 +699,51 @@ int allocate_resource(struct resource *root, struct resource *new,
+>  	constraint.alignf = alignf;
+>  	constraint.alignf_data = alignf_data;
+>  
+> -	if ( new->parent ) {
+> +	if (new->parent) {
+>  		/* resource is already allocated, try reallocating with
+>  		   the new constraints */
+> -		return reallocate_resource(root, new, size, &constraint);
+> +		return __reallocate_resource(root, new, size, &constraint);
+>  	}
+>  
+> -	write_lock(&resource_lock);
+>  	err = find_resource(root, new, size, &constraint);
+>  	if (err >= 0 && __request_resource(root, new))
+>  		err = -EBUSY;
+> -	write_unlock(&resource_lock);
+> +
+>  	return err;
+>  }
+>  
+> +/**
+> + * allocate_resource - allocate empty slot in the resource tree given range & alignment.
+> + *	The resource will be reallocated with a new size if it was already
+> + *	allocated
+> + * @root: root resource descriptor
+> + * @new: resource descriptor desired by caller
+> + * @size: requested resource region size
+> + * @min: minimum boundary to allocate
+> + * @max: maximum boundary to allocate
+> + * @align: alignment requested, in bytes
+> + * @alignf: alignment function, optional, called if not NULL
+> + * @alignf_data: arbitrary data to pass to the @alignf function
+> + */
+> +int allocate_resource(struct resource *root, struct resource *new,
+> +		      resource_size_t size, resource_size_t min,
+> +		      resource_size_t max, resource_size_t align,
+> +		      resource_size_t (*alignf)(void *,
+> +						const struct resource *,
+> +						resource_size_t,
+> +						resource_size_t),
+> +		      void *alignf_data)
+> +{
+> +	int ret;
+> +
+> +	write_lock(&resource_lock);
+> +	ret = __allocate_resource(root, new, size, min, max, align,
+> +				   alignf, alignf_data);
+> +	write_unlock(&resource_lock);
+> +
+> +	return ret;
+> +}
+> +
+>  EXPORT_SYMBOL(allocate_resource);
+>  
+>  /**
+> -- 
+> 1.8.4.5
 > 
-> Change from v4:
-> - Change the author of 1/5 to Gabriele.
-> - Modify problems in 3/5 pointed by Bjorn.
-> - Modify spelling problems in 4/5.
-> 
-> Change from v3:
-> - Change 1/5 to what Gabriele suggested.
-> - Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3 series.
-> 
-> Change from v2:
-> - Move struct pci_dev *dev and struct pci_sys_data *sys in
->   pcibios_align_resource in 1/5.
-> - Add Gabriele's codes in 2/5 which delete unnecessary information parse and
->   use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
-> - Add maintainer patch 5/5.
-> 
-> Change from RFC v1:
-> - Add 1/4 patch by Arnd which removes align_resource callback in ARM
->   pcibios_align_resource.
-> - Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
-> - Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
->   spear13xx.
-> - Remove unnecessary parentheses of some macros in pcie-hisi.
-> - Use macro to replace some magic values.
-> - Merge two loops together and add some comments about it in context_config
->   function in pcie-hisi.
-> - Modify some value of items in pcie node example in binding document. 
-> 
-> Change from RFC:
-> - delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
->   merge related operations into dw_pcie_host_init.
-> 
-> Link of v5:
-> - http://www.spinics.net/lists/devicetree/msg87959.html
-> Link of v4:
-> - http://www.spinics.net/lists/arm-kernel/msg433050.html
-> Link of v3:
-> - http://www.spinics.net/lists/linux-pci/msg42539.html
-> Link of v2:
-> - http://www.spinics.net/lists/linux-pci/msg41844.html
-> Link of RFC v1:
-> - http://www.spinics.net/lists/linux-pci/msg41305.html
-> Link of RFC:
-> - http://www.spinics.net/lists/linux-pci/msg40434.html
-> 
-> [1] http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359741.html
-> 
-> Zhou Wang (4):
->   PCI: designware: Add ARM64 support
->   PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
->   Documentation: DT: Add HiSilicon PCIe host binding
->   MAINTAINERS: Add pcie-hisi maintainer
-> 
-> gabriele paoloni (2):
->   PCI: designware: move calculation of bus addresses to DRA7xx
->   ARM/PCI: remove align_resource in pci_sys_data
-> 
->  .../devicetree/bindings/pci/hisilicon-pcie.txt     |  46 ++++
->  MAINTAINERS                                        |   7 +
->  arch/arm/include/asm/mach/pci.h                    |   5 -
->  arch/arm/kernel/bios32.c                           |  12 +-
->  drivers/pci/host/Kconfig                           |   8 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pci-dra7xx.c                      |  14 ++
->  drivers/pci/host/pci-exynos.c                      |   2 +-
->  drivers/pci/host/pci-imx6.c                        |   2 +-
->  drivers/pci/host/pci-keystone-dw.c                 |   2 +-
->  drivers/pci/host/pci-keystone.c                    |   2 +-
->  drivers/pci/host/pci-layerscape.c                  |   2 +-
->  drivers/pci/host/pcie-designware.c                 | 236 ++++++-------------
->  drivers/pci/host/pcie-designware.h                 |  14 +-
->  drivers/pci/host/pcie-hisi.c                       | 254 +++++++++++++++++++++
->  drivers/pci/host/pcie-spear13xx.c                  |   2 +-
->  16 files changed, 425 insertions(+), 184 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
->  create mode 100644 drivers/pci/host/pcie-hisi.c
-> 
-
-
