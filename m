@@ -1,121 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:38664 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048AbbHRTWM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 15:22:12 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 17 Aug 2015 19:03:05 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 22/51] PCI: Add alt_size allocation support
+Message-ID: <20150818000305.GU26431@google.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+ <1438039809-24957-23-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1439802579-22651-5-git-send-email-lftan@altera.com>
-References: <1439802579-22651-1-git-send-email-lftan@altera.com>
-	<1439802579-22651-5-git-send-email-lftan@altera.com>
-Date: Tue, 18 Aug 2015 14:22:11 -0500
-Message-ID: <CADhT+wdwYQWq=yiw1R9YEXX=WTDtoj-5=6EysX=aHUjdSvU89w@mail.gmail.com>
-Subject: Re: [PATCH v4 4/5] Documentation: dt-bindings: pci: altera pcie
- device tree binding
-From: Dinh Nguyen <dinh.linux@gmail.com>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	Linux List <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438039809-24957-23-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 4:09 AM, Ley Foon Tan <lftan@altera.com> wrote:
-> This patch adds the bindings for Altera PCIe host controller driver and
-> Altera PCIe MSI driver.
->
-> Signed-off-by: Ley Foon Tan <lftan@altera.com>
-> ---
->  .../devicetree/bindings/pci/altera-pcie-msi.txt    | 27 ++++++++++++
->  .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
->  2 files changed, 76 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
->  create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
->
-> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-> new file mode 100644
-> index 0000000..7f330c9
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-> @@ -0,0 +1,27 @@
-> +* Altera PCIe MSI controller
-> +
-> +Required properties:
-> +- compatible:  should contain "altr,msi-1.0"
-> +- reg:         specifies the physical base address of the controller and
-> +               the length of the memory mapped region.
-> +- reg-names:   Must include the following entries:
-> +               "csr": CSR registers
-> +               "vector_slave": vectors region
+On Mon, Jul 27, 2015 at 04:29:40PM -0700, Yinghai Lu wrote:
+> On system with several pcie switches, BIOS allocate very tight resources
+> to the bridge bar, and it is not aligned to min_align as kernel allocation
+> code.
 
-Can you be a little bit more specific here? What is a vectors region?
-Also, I'm not 100% sure, but I think "vector-slave" should be used.
+I can't parse this.
 
-> +-interrupts:   specifies the interrupt source of the parent interrupt
-> +               controller. The format of the interrupt specifier depends on the
-> +               parent interrupt controller.
+> For example:
+> 	02:03.0---0c:00.0---0d:04.0---18:00.0
+> 18:00.0 need 0x10000000, and 0x00010000.
+> BIOS only allocate 0x10100000 to 0d:04.0 and above bridges.
 
-Need to document "interrupt-parent" .
+Do you mean the BIOS only allocated 0x10010000?
 
-> +- num-vectors: Number of vectors, range 1 to 32.
-> +- msi-controller:      indicates that this is MSI controller node
-> +
-> +
-> +Example
-> +msi0: msi@0xFF200000 {
-> +       compatible = "altr,msi-1.0";
-> +       reg = <0xFF200000 0x00000010
-> +               0xFF200010 0x00000080>;
-> +       reg-names = "csr", "vector_slave";
-> +       interrupt-parent = <&hps_0_arm_gic_0>;
-> +       interrupts = <0 42 4>;
-> +       msi-controller = <1>;
-> +       num-vectors = <32>;
-> +};
-> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-> new file mode 100644
-> index 0000000..73a8dc0
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
-> @@ -0,0 +1,49 @@
-> +* Altera PCIe controller
-> +
-> +Required properties:
-> +- compatible : should contain "altr,pcie-root-port-1.0"
-> +- reg:         A list of physical base address and length for TXS and CRA.
-> +- reg-names:   Must include the following entries:
-> +               "Txs" or "txs": TXS region
+> Later after using /sys/bus/pci/devices/0000:0c:00.0/remove to remove 0c:00.0,
+> rescan with /sys/bus/pci/rescan can not allocate 0x18000000 to 0c:00.0.
+> 
+> another example:
+> 00:1c.0-[02-21]----00.0-[03-21]--+-01.0-[04-12]----00.0-[05-12]----19.0-[06-12]----00.0
+>                                  +-05.0-[13]--
+>                                  +-07.0-[14-20]----00.0-[15-20]--+-08.0-[16]--+-00.0
+>                                  |                               |            \-00.1
+>                                  |                               +-14.0-[17]----00.0
+>                                  |                               \-19.0-[18-20]----00.0
+>                                  \-09.0-[21]--
+> 06:00.0 need 0x4000000 and 0x800000.
+> BIOS only allocate 0x4800000 to 05:19.0 and 04:00.0.
+> when 05:19.0 get removed via /sys/bus/pci/devices/0000:05:19.0/remove,
+> rescan with /sys/bus/pci/rescan will fail.
+>  pci 0000:05:19.0: BAR 14: no space for [mem size 0x06000000]
+>  pci 0000:05:19.0: BAR 14: failed to assign [mem size 0x06000000]
+>  pci 0000:06:00.0: BAR 2: no space for [mem size 0x04000000 64bit]
+>  pci 0000:06:00.0: BAR 2: failed to assign [mem size 0x04000000 64bit]
+>  pci 0000:06:00.0: BAR 0: no space for [mem size 0x00800000]
+>  pci 0000:06:00.0: BAR 0: failed to assign [mem size 0x00800000]
+> current code try to use align 0x2000000 and size 0x6000000, but parent
+> bridge only have 0x4800000.
 
-What is a TXS region?
+I *think* you're saying:
+  - BIOS assigned space for device X
+  - We remove X via sysfs
+  - We rescan via sysfs and discover X
+  - We try to assign space for X
+  - We fail because we don't use the same algorithm as BIOS did
 
-> +               "Cra" or "cra": Control register access region
-> +-interrupts:   specifies the interrupt source of the parent interrupt controller.
-> +               The format of the interrupt specifier depends on the parent interrupt
-> +               controller.
-> +- device_type: must be "pci"
-> +- #address-cells:      set to <3>
-> +- #size-cells: set to <2>
-> +- #interrupt-cells:    set to <1>
-> +- ranges:              Describes the translation of addresses for root ports and standard
-> +               PCI regions.
-> +- interrupt-map-mask and interrupt-map: standard PCI properties
-> +       to define the mapping of the PCIe interface to interrupt
-> +       numbers.
+If there is an optimal way to assign space for an arbitrary number of
+BARs, we could just adopt it.  I don't know what that is, and I don't
+know whether an optimal algorithm exists even in principle.
 
-"interrupt-parent" ?
+If there is no single optimal algorithm, there will always be cases where
+we fail because we use a different algorithm than the firmware did.
 
-Dinh
+> Introduce alt_align/alt_size and store them in realloc list in addition
+> to addon info, and will try it after min_align/min_size allocation fails.
+
+What does "alt" mean?
+
+> The alt_align is max_align, and alt_size is aligned size with bridge
+> minimum window alignment.
