@@ -1,41 +1,31 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <3540278.fBlMDMjYYH@vostro.rjw.lan>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-	<205780224.0d92UNafyF@vostro.rjw.lan>
-	<CAE9FiQWW_zzZGoq-rrbe+R==-xwRHMkTAtFRGGkN-GK-F6NWsg@mail.gmail.com>
-	<3540278.fBlMDMjYYH@vostro.rjw.lan>
-Date: Mon, 24 Aug 2015 17:14:51 -0700
-Message-ID: <CAE9FiQUc9hVv9jjuJs9g=DjdmM5_z-71o75Ye4jp-B15MiKkbA@mail.gmail.com>
-Subject: Re: [PATCH v4 13/52] PCI, acpiphp: Add missing realloc list checking
- after resource allocation
+In-Reply-To: <20150817235307.GR26431@google.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+	<1438039809-24957-10-git-send-email-yinghai@kernel.org>
+	<20150817235307.GR26431@google.com>
+Date: Tue, 18 Aug 2015 14:36:44 -0700
+Message-ID: <CAE9FiQVjSQE6w4A2e3Fr88eDv6aDotbuo3NSenCJdaUOY9eWwQ@mail.gmail.com>
+Subject: Re: [PATCH v3 09/51] PCI: Rename pdev_sort_resources to pdev_check_resources
 From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Miller <davem@davemloft.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 24, 2015 at 5:37 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Monday, August 24, 2015 03:14:26 PM Yinghai Lu wrote:
+On Mon, Aug 17, 2015 at 4:53 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jul 27, 2015 at 04:29:27PM -0700, Yinghai Lu wrote:
+>> We don't do sorting in those functions anymore, so change "sort" to "check"
+>> instead.
 >
-> I like this patch better, but the question really is how bad things can get
-> if we continue.  And if they can get critically bad, whether or not we still
-> are able to catch that critical error later on.
+> What *do* we do in those functions?  "Check" doesn't tell me anything.
 
-Some devices BARs could have not been assigned. Then drivers would not
-work properly.
-
-And if we want to go on, we at least need to avoid memory leaking with
-calling free_list().
-
-Yinghai
+Put all children devices' resources that need to assign in one list, and also
+do some sanitary checking like if align is good or not.
