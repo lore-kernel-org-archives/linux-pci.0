@@ -1,79 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:52552 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754929AbbHLJd6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 05:33:58 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	patchwork-lst@pengutronix.de, kernel@pengutronix.de
-Subject: [PATCH v3 2/5] PCI: designware: factor out MSI msg setup
-Date: Wed, 12 Aug 2015 11:33:53 +0200
-Message-Id: <1439372036-15303-3-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
-References: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
+Received: from smtp2.it.da.ut.ee ([193.40.5.67]:37857 "EHLO smtp2.it.da.ut.ee"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752775AbbHSKk3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Aug 2015 06:40:29 -0400
+Date: Wed, 19 Aug 2015 13:40:46 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: Yinghai Lu <yinghai@kernel.org>
+cc: Helge Deller <deller@gmx.de>, linux-parisc@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>
+Subject: Re: Aw: A500 boot crash in 4.2.0-rc3-00246-g763e326
+In-Reply-To: <CAE9FiQVUUN-SLO0U4G5CC6MEoXfb=bGd+f3bRgQprtaMHjsvpA@mail.gmail.com>
+Message-ID: <alpine.LRH.2.20.1508191340020.31468@math.ut.ee>
+References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee> <trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71> <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02> <alpine.LRH.2.20.1508182141200.24742@math.ut.ee>
+ <55D38BE6.6080302@gmx.de> <CAE9FiQVUUN-SLO0U4G5CC6MEoXfb=bGd+f3bRgQprtaMHjsvpA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Factor out the PCI MSI message setup from the single MSI setup
-function. This will be reused by the multivector MSI setup.
+> >>> I did a bisect and commit 3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d ("PCI:
+> >>> Add pci_bus_addr_t") seems to be the culprit:
+> >>>
+> >>> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d
+> >>
+> >> CC: patch author and linux-pci.
+> >
+> >
+> > I think this is the problem:
+> >
+> > --- a/drivers/pci/Kconfig
+> > +++ b/drivers/pci/Kconfig
+> > @@ -1,6 +1,10 @@
+> >  #
+> >  # PCI configuration
+> >  #
+> > +config PCI_BUS_ADDR_T_64BIT
+> > +       def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
+> > +       depends on PCI
+> 
+> Thanks for bisecting.
+> 
+> Then we should change to
+> 
+> config PCI_BUS_ADDR_T_64BIT
+>        def_bool y if (ARCH_DMA_ADDR_T_64BIT || SPARC64)
+>        depends on PCI
 
-No functional change yet.
+This works for my A500.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/host/pcie-designware.c | 28 +++++++++++++++++-----------
- 1 file changed, 17 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be7181e..0ec435c56a8b 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -293,19 +293,9 @@ no_valid_irq:
- 	return -ENOSPC;
- }
- 
--static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
--			struct msi_desc *desc)
-+static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
- {
--	int irq, pos;
- 	struct msi_msg msg;
--	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
--
--	if (desc->msi_attrib.is_msix)
--		return -EINVAL;
--
--	irq = assign_irq(1, desc, &pos);
--	if (irq < 0)
--		return irq;
- 
- 	if (pp->ops->get_msi_addr)
- 		msg.address_lo = pp->ops->get_msi_addr(pp);
-@@ -319,6 +309,22 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
- 		msg.data = pos;
- 
- 	pci_write_msi_msg(irq, &msg);
-+}
-+
-+static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
-+			struct msi_desc *desc)
-+{
-+	int irq, pos;
-+	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-+
-+	if (desc->msi_attrib.is_msix)
-+		return -EINVAL;
-+
-+	irq = assign_irq(1, desc, &pos);
-+	if (irq < 0)
-+		return irq;
-+
-+	dw_msi_setup_msg(pp, irq, pos);
- 
- 	return 0;
- }
 -- 
-2.4.6
-
+Meelis Roos (mroos@linux.ee)
