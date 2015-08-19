@@ -1,111 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:35325 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752729AbbHDVyH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 4 Aug 2015 17:54:07 -0400
-Received: by igr7 with SMTP id 7so83734186igr.0
-        for <linux-pci@vger.kernel.org>; Tue, 04 Aug 2015 14:54:06 -0700 (PDT)
-Subject: [PATCH v5 2/9] PCI: Add pci_scan_root_bus_msi()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
-	Duc Dang <dhdang@apm.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Simon Horman <horms@verge.net.au>,
-	James Morse <james.morse@arm.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>
-Date: Tue, 04 Aug 2015 16:54:04 -0500
-Message-ID: <20150804215404.9189.41823.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from gate.crashing.org ([63.228.1.57]:33618 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751062AbbHSWaR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Aug 2015 18:30:17 -0400
+Message-ID: <1440023349.2737.21.camel@kernel.crashing.org>
+Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>
+Cc: wangyijing@huawei.com, linux-pci@vger.kernel.org, mroos@linux.ee,
+	sparclinux@vger.kernel.org, eric.snowberg@oracle.com
+Date: Thu, 20 Aug 2015 08:29:09 +1000
+In-Reply-To: <20150819221624.GA8150@google.com>
+References: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
+	 <20150818184943.GA26431@google.com>
+	 <20150818.121004.1891242587946602543.davem@davemloft.net>
+	 <20150819221624.GA8150@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+On Wed, 2015-08-19 at 17:16 -0500, Bjorn Helgaas wrote:
+> On Tue, Aug 18, 2015 at 12:10:04PM -0700, David Miller wrote:
+> > From: Bjorn Helgaas <bhelgaas@google.com>
+> > Date: Tue, 18 Aug 2015 13:49:43 -0500
+> > 
+> > > [+cc Dave, Eric, Ben, sparclinux]
+> > > 
+> > > On Mon, Aug 17, 2015 at 06:47:58PM +0800, Yijing Wang wrote:
+> > > > Commit d0751b98dfa3 ("PCI: Add dev->has_secondary_link to
+> > > > track downstream PCIe links")assumed root port is always
+> > > > the top device in pcie tree. But on sparc64 V245 and T2000tthe
+> > > > pcie tree has no root port device in top level, the
+> > > > upstream port device is connected directly to root bus.
+> > > > So we may get NULL parent for this upstream port device.
 
-Add a pci_scan_root_bus_msi() interface so an arch can specify the MSI
-controller up front.  This removes the need for a pcibios callback to set
-the MSI controller later.
+Picking up that thread half way through...
 
-This is not exported because I'd like to replace the variety of "scan root
-bus" interfaces with a single, more extensible interface that can handle
-the MSI controller, domain, pci_ops, resources, etc.  I hope this interface
-is temporary.
+> > > > Upstream port ------ Downstream port ------PCIe-PCI bridge
+> > > 
+> > > This is an unusual, possibly even illegal, PCIe topology because 
+> > > it lacks a Root Port at the top of the hierarchy.  From lspci
+> > > output
+> > > [1]
+> > > collected by Meelis, the top-level devices are:
 
-[bhelgaas: changelog, split into separate patch, move to drivers/pci/pci.h]
-Suggested-by: Russell King <linux@arm.linux.org.uk>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.h   |    5 +++++
- drivers/pci/probe.c |   14 ++++++++++++--
- 2 files changed, 17 insertions(+), 2 deletions(-)
+Nobody cares what is "illegal", what matters is what HW actually does :
+-) Specs only matter as far as they get followed. In any case, it also
+happens on powerpc, when running under a hypervisor such as IBM
+PowerVM, PCIe devices appear directly under a virtual host bridge which
+is not exposed as a PCIe root complex.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4ff0ff1..1d4c95c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -223,6 +223,11 @@ enum pci_bar_type {
- 	pci_bar_mem64,		/* A 64-bit memory BAR */
- };
- 
-+struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
-+				      struct pci_ops *ops, void *sysdata,
-+				      struct list_head *resources,
-+				      struct msi_controller *msi);
-+
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
- 				int crs_timeout);
- int pci_setup_device(struct pci_dev *dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..9ff4df0 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2096,8 +2096,9 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- 			res, ret ? "can not be" : "is");
- }
- 
--struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
--		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
-+		struct pci_ops *ops, void *sysdata,
-+		struct list_head *resources, struct msi_controller *msi)
- {
- 	struct resource_entry *window;
- 	bool found = false;
-@@ -2114,6 +2115,8 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 	if (!b)
- 		return NULL;
- 
-+	b->msi = msi;
-+
- 	if (!found) {
- 		dev_info(&b->dev,
- 		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
-@@ -2128,6 +2131,13 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 
- 	return b;
- }
-+
-+struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
-+		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-+{
-+	return pci_scan_root_bus_msi(parent, bus, ops, sysdata, resources,
-+				     NULL);
-+}
- EXPORT_SYMBOL(pci_scan_root_bus);
- 
- struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
+> > The root port is in the PCI controller on sparc64, and PCI
+> > controllers
+> > don't have actual real PCI configuration space available.
+> > 
+> > I used to put dummy PCI bus nodes into the tree and do provide
+> > dummy
+> > software PCI config space methods, but that caused more harm than
+> > good.
+> 
+> I guess you're talking about what you removed with c26d3c013897
+> ("sparc64: Stop creating dummy root PCI host controller devices."),
+> which talks about duplicate sysfs and procfs nodes.  Removing the
+> dummy devices avoids the duplicate node problem, but it doesn't fix
+> the root cause, so it's probably not the only possible resolution.
+> 
+> We'll probably have to do something ugly like Yijing's patch just
+> because v4.2 is imminent and I don't want it to be broken.
+> 
+> I don't like it because we have these PCIe links where we only know
+> about devices on one end of the link, and then we can't manage
+> ASPM/MPS/etc.  But we've had this situation for several years, so
+> I guess nobody cares too much about those things on the affected
+> mahines.
+
+Correct, we have this situation on more than just sparc64 and we
+shouldn't crash. Just don't touch ASPM/MPS/etc... in those cases.
+
+Cheers,
+Ben.
 
