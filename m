@@ -1,67 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:34573 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753495AbbHMUk1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Aug 2015 16:40:27 -0400
-Received: by wicne3 with SMTP id ne3so272351228wic.1
-        for <linux-pci@vger.kernel.org>; Thu, 13 Aug 2015 13:40:26 -0700 (PDT)
+Received: from mail-io0-f172.google.com ([209.85.223.172]:34066 "EHLO
+	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524AbbHSG6o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Aug 2015 02:58:44 -0400
 MIME-Version: 1.0
-In-Reply-To: <841e1480e445f3bcde269a147a269a92@jcornwall.me>
-References: <8c1e7f957cc5a6f0404b883c864b5145@jcornwall.me>
- <CAErSpo6OLAjVde8St2kCoqx3h9hX9ki+X9Ojy0eFqugvBKRrwg@mail.gmail.com> <841e1480e445f3bcde269a147a269a92@jcornwall.me>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 13 Aug 2015 15:40:07 -0500
-Message-ID: <CAErSpo7p1aX0z41H2Js=qdDSGq9gw-w3Y5-fs=h4H8wiYyDCVA@mail.gmail.com>
-Subject: Re: PCIe 3.0 AtomicOp capabilities
-To: Jay Cornwall <jay@jcornwall.me>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <20150818041429.GY26431@google.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+	<1438039809-24957-33-git-send-email-yinghai@kernel.org>
+	<20150818041429.GY26431@google.com>
+Date: Tue, 18 Aug 2015 23:58:44 -0700
+Message-ID: <CAE9FiQUaNBYphhBhJWbePjxHZzCnXS5Qtj9zvUqy=x7qDQGahQ@mail.gmail.com>
+Subject: Re: [PATCH v3 32/51] resources: Split out __allocate_resource()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 11, 2015 at 7:39 PM, Jay Cornwall <jay@jcornwall.me> wrote:
-> On 2015-08-11 10:10, Bjorn Helgaas wrote:
+On Mon, Aug 17, 2015 at 9:14 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jul 27, 2015 at 04:29:50PM -0700, Yinghai Lu wrote:
+>> It will not hold lock, so we could use it in other functions that
+>> hold the resource lock already.
 >
->> On Mon, Aug 10, 2015 at 1:36 PM, Jay Cornwall <jay@jcornwall.me> wrote:
->>
->>> Should the AtomicOp capabilities be similarly enabled if available? Or
->>> might
->>> there be a reason for doing this on a per-driver basis?
->>
->>
->> I'm not very familiar with the AtomicOp functionality, but a quick
->> skim of the spec suggests that it does have system implications and
->> should be handled by the core. For example, AtomicOp support is
->> optional, and it looks like it would be a bad idea to enable it in an
->> endpoint if the upstream switch didn't support it.
->
->
-> This makes sense, but I think there are some cases in which upstream is
-> ambiguous.
->
-> For example, consider a root complex which does not support AtomicOp
-> completion but supports routing to another endpoint which does. Would the
-> necessary condition for enabling AtomicOp requests be that at least one
-> other completion-capable endpoint is reachable?
+> What's the benefit of this patch?  Does it fix something?  Does it add some
+> functionality we need?
 
-I don't know enough about AtomicOps to get into a discussion about
-what the exact conditions for enabling it are.
-
-I thought your original questions were basically (1) should the PCI
-core automatically enable AtomicOps? and (2) should drivers contain
-code to enable AtomicOps?
-
-I think drivers should *not* contain code to directly enable
-AtomicOps, because it looks like doing that safely requires knowledge
-about the topology beyond the driver's device.  But I think it *would*
-be reasonable a driver to call a PCI interface like
-pci_enable_atomic() or something, and the PCI core could figure out
-whether it's safe and enable it or fail.
-
-I don't know whether we should try to automatically enable AtomicOps
-even without an explicit driver request.  I don't say that to
-discourage that approach; I just don't know whether it makes sense or
-can be done safely.  I'm certainly open to reviewing patches that
-would do that.
-
-Bjorn
+will use it in following patch.
