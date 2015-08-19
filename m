@@ -1,124 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 21/52] PCI: Move saved required resource list out of required+optional assigning
-Date: Thu, 20 Aug 2015 23:20:36 -0700
-Message-Id: <1440138067-4314-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33853 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752541AbbHSWQ3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Aug 2015 18:16:29 -0400
+Received: by paccq16 with SMTP id cq16so12073230pac.1
+        for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2015 15:16:29 -0700 (PDT)
+Date: Wed, 19 Aug 2015 17:16:24 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: David Miller <davem@davemloft.net>
+Cc: wangyijing@huawei.com, linux-pci@vger.kernel.org, mroos@linux.ee,
+	sparclinux@vger.kernel.org, eric.snowberg@oracle.com,
+	benh@kernel.crashing.org
+Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
+Message-ID: <20150819221624.GA8150@google.com>
+References: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
+ <20150818184943.GA26431@google.com>
+ <20150818.121004.1891242587946602543.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150818.121004.1891242587946602543.davem@davemloft.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We will need to share saved required list for alt_size support, so move
-it out of required+optional assigning.
+On Tue, Aug 18, 2015 at 12:10:04PM -0700, David Miller wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> Date: Tue, 18 Aug 2015 13:49:43 -0500
+> 
+> > [+cc Dave, Eric, Ben, sparclinux]
+> > 
+> > On Mon, Aug 17, 2015 at 06:47:58PM +0800, Yijing Wang wrote:
+> >> Commit d0751b98dfa3 ("PCI: Add dev->has_secondary_link to
+> >> track downstream PCIe links")assumed root port is always
+> >> the top device in pcie tree. But on sparc64 V245 and T2000
+> >> the pcie tree has no root port device in top level, the
+> >> upstream port device is connected directly to root bus.
+> >> So we may get NULL parent for this upstream port device.
+> >> 
+> >> Upstream port ------ Downstream port ------PCIe-PCI bridge
+> > 
+> > This is an unusual, possibly even illegal, PCIe topology because it
+> > lacks a Root Port at the top of the hierarchy.  From lspci output [1]
+> > collected by Meelis, the top-level devices are:
+> 
+> The root port is in the PCI controller on sparc64, and PCI controllers
+> don't have actual real PCI configuration space available.
+> 
+> I used to put dummy PCI bus nodes into the tree and do provide dummy
+> software PCI config space methods, but that caused more harm than
+> good.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+I guess you're talking about what you removed with c26d3c013897
+("sparc64: Stop creating dummy root PCI host controller devices."),
+which talks about duplicate sysfs and procfs nodes.  Removing the
+dummy devices avoids the duplicate node problem, but it doesn't fix
+the root cause, so it's probably not the only possible resolution.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7d2420d..6429309 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -450,6 +450,9 @@ static bool has_addon(struct list_head *head,
- 	int add_count = 0;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 
-+	if (!realloc_head)
-+		return false;
-+
- 	/* check if we have add really */
- 	list_for_each_entry(dev_res, head, list) {
- 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-@@ -486,9 +489,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- }
- 
- static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *save_head,
- 				 struct list_head *realloc_head)
- {
--	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
-@@ -496,12 +499,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 	resource_size_t add_align, add_size;
- 	struct resource *res;
- 
--	if (!has_addon(head, realloc_head))
--		return false;
--
--	if (!save_resources(head, &save_head))
--		return false;
--
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
-@@ -542,7 +539,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		/* Remove head list from realloc_head list */
- 		list_for_each_entry(dev_res, head, list)
- 			remove_from_list(realloc_head, dev_res->res);
--		free_list(&save_head);
- 		free_list(head);
- 
- 		return true;
-@@ -556,7 +552,7 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
- 			remove_from_list(realloc_head, res);
--			remove_from_list(&save_head, res);
-+			remove_from_list(save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-@@ -575,11 +571,9 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		}
- 	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list)
-+	list_for_each_entry(save_res, save_head, list)
- 		restore_resource(save_res, save_res->res);
- 
--	free_list(&save_head);
--
- 	return false;
- }
- 
-@@ -597,16 +591,24 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *    then try to reassign add_size for some resources.
- 	 */
- 
-+	LIST_HEAD(save_head);
-+
- 	/* Check required+optional add */
--	if (realloc_head &&
--	    __assign_resources_required_optional_sorted(head, realloc_head))
-+	if (has_addon(head, realloc_head) &&
-+	    save_resources(head, &save_head) &&
-+	    __assign_resources_required_optional_sorted(head, &save_head,
-+					       realloc_head)) {
-+		free_list(&save_head);
- 		return;
-+	}
- 
- 	sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
- 
-+	free_list(&save_head);
-+
- 	/* Try to satisfy any additional optional resource
- 		requests */
- 	if (realloc_head)
--- 
-1.8.4.5
+We'll probably have to do something ugly like Yijing's patch just
+because v4.2 is imminent and I don't want it to be broken.
 
+I don't like it because we have these PCIe links where we only know
+about devices on one end of the link, and then we can't manage
+ASPM/MPS/etc.  But we've had this situation for several years, so
+I guess nobody cares too much about those things on the affected
+mahines.
+
+Bjorn
