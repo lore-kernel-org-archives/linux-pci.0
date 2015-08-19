@@ -1,100 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:50904 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753584AbbHFENT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:17 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 25/42] powerpc/powernv: Use PCI slot reset infrastructure
-Date: Thu,  6 Aug 2015 14:11:30 +1000
-Message-Id: <1438834307-26960-26-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mout.gmx.net ([212.227.15.15]:54766 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753418AbbHSOGr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Aug 2015 10:06:47 -0400
+MIME-Version: 1.0
+Message-ID: <trinity-ceafa563-3aad-4955-a6c6-205a2caf1e95-1439993198188@3capp-gmx-bs16>
+From: "Helge Deller" <deller@gmx.de>
+To: "John David Anglin" <dave.anglin@bell.net>
+Cc: "Yinghai Lu" <yinghai@kernel.org>, "Meelis Roos" <mroos@linux.ee>,
+	linux-parisc@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Bjorn Helgaas" <bhelgaas@google.com>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	"James Bottomley" <James.Bottomley@hansenpartnership.com>
+Subject: Aw: Re:  A500 boot crash in 4.2.0-rc3-00246-g763e326
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 19 Aug 2015 16:06:38 +0200
+In-Reply-To: <BLU436-SMTP773488774A8C76BF6C12E597670@phx.gbl>
+References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee>
+ <trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71>
+ <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
+ <alpine.LRH.2.20.1508182141200.24742@math.ut.ee> <55D38BE6.6080302@gmx.de>
+ <CAE9FiQVUUN-SLO0U4G5CC6MEoXfb=bGd+f3bRgQprtaMHjsvpA@mail.gmail.com>
+ <alpine.LRH.2.20.1508190747360.5154@math.ut.ee>
+ <CAE9FiQW9hjDe2NBEfwQqcVZoJKqDjKT1P=7FcGjhVrF7wQW9+g@mail.gmail.com>,
+ <BLU436-SMTP773488774A8C76BF6C12E597670@phx.gbl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The skiboot firmware might provide the capability of resetting PCI
-slot by property "ibm,reset-by-firmware" on the PCI slot associated
-device node. The patch checks on the property and route the reset
-to firmware if the property exists. Otherwise, we fail back to the
-old path as before.
+> On 2015-08-19, at 1:30 AM, Yinghai Lu wrote:
+> > On Tue, Aug 18, 2015 at 9:48 PM, Meelis Roos <mroos@linux.ee> wrote:
+> >>> On Tue, Aug 18, 2015 at 12:47 PM, Helge Deller <deller@gmx.de> wrote:
+> >>> 
+> >>> Then we should change to
+> >>> 
+> >>> config PCI_BUS_ADDR_T_64BIT
+> >>>       def_bool y if (ARCH_DMA_ADDR_T_64BIT || SPARC64)
+> >>>       depends on PCI
+> >> 
+> >> Why SPARC64? The problem happened on parisc.
+> > so will not set PCI_BUS_ADDR_T_64BIT for parisc.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/eeh-powernv.c | 44 +++++++++++++++++++++++++++-
- 1 file changed, 43 insertions(+), 1 deletion(-)
+I think given the current time frame it's probably the best approach to fix this problem for kernel 4.2.
+It reverts the behaviour back to how it was before (for all arches beside SPARC64).
+I'm still wondering if/why parisc is the only arch (in the sym53c8xx driver only!) which broke by this change...
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 0350dab..7be2ebf 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -843,7 +843,7 @@ out:
- 	return 0;
- }
- 
--static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-+static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- {
- 	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
- 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-@@ -894,6 +894,48 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	return 0;
- }
- 
-+static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
-+{
-+	struct pci_controller *hose;
-+	struct pnv_phb *phb;
-+	struct device_node *dn = pdev ? pci_device_to_OF_node(pdev) : NULL;
-+	uint64_t id = (0x1ul << 60);
-+	uint8_t scope;
-+	int64_t rc;
-+
-+	/*
-+	 * If the firmware can't handle it, we will issue hot reset
-+	 * on the secondary bus despite the requested reset type.
-+	 */
-+	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
-+		return __pnv_eeh_bridge_reset(pdev, option);
-+
-+	/* The firmware can handle the request */
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+		scope = OPAL_RESET_PCI_HOT;
-+		break;
-+	case EEH_RESET_FUNDAMENTAL:
-+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		return 0;
-+	default:
-+		dev_warn(&pdev->dev, "%s: Unsupported reset %d\n",
-+			 __func__, option);
-+		return -EINVAL;
-+	}
-+
-+	hose = pci_bus_to_host(pdev->bus);
-+	phb = hose->private_data;
-+	id |= (pdev->bus->number << 24) | (pdev->devfn << 16) | phb->opal_id;
-+	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
-+	if (rc > 0)
-+		rc = pnv_eeh_poll(id);
-+
-+	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
-+}
-+
- static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, int pos,
- 				     u16 mask, bool af_flr_rst)
- {
--- 
-2.1.0
+> I'm not sure this is optimal.  While the A500 may only have 32-bit PCI, c8000 appears to have a mix
+> of 32 and 64-bit, and rp34XX is all 64-bit.
 
+True, but probably nobody of us noticed that we only used the 32-bit PCI interface even with 64bit kernel on parisc up to now?
+pci_bus_alloc_resource() in drivers/pci/bus.c just disabled (flag=0) all 64bit resources for us.
+But I agree, I think we need to fix drivers/parisc/lba_pci.c to correctly cope with 64bit pci addresses.
+
+In the meantime I did some more debugging on sym_iomap_device() in drivers/scsi/sym53c8xx_2/sym_glue.c:
+   pcibios_resource_to_bus(pdev->bus, &bus_addr,
+                          &pdev->resource[i]);
+   ram_base = bus_addr.start;
+
+with (working) 32bit PCI addresses I get:
+ressource = [mem 0xffffffff80002000-0xffffffff80003fff 64bit]
+and pcibios_resource_to_bus() returning: ram_base = 0x80002000 
+
+and with (failing) 64bit PCI addresses I get:
+ressource = [mem 0xfffffff004000000-0xfffffff004001fff 64bit]
+and pcibios_resource_to_bus() returning: ram_base = 0xfffffff004000000 
+
+It seems the resource window doesn't get initialized correctly for 64bit...
+
+Helge
