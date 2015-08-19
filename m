@@ -1,119 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:36639 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933277AbbHKAiO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:38:14 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 11 Aug 2015 06:08:12 +0530
-Date: Tue, 11 Aug 2015 10:38:05 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-Subject: Re: [PATCH v6 12/42] powerpc/powernv: Increase PE# capacity
-Message-ID: <20150811003804.GA18283@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-13-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C8747E.9090908@ozlabs.ru>
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:34789 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751023AbbHSF2s (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 19 Aug 2015 01:28:48 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55C8747E.9090908@ozlabs.ru>
+In-Reply-To: <20150818000305.GU26431@google.com>
+References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
+	<1438039809-24957-23-git-send-email-yinghai@kernel.org>
+	<20150818000305.GU26431@google.com>
+Date: Tue, 18 Aug 2015 22:28:47 -0700
+Message-ID: <CAE9FiQU-3h4u9D_1FupepWe1P4N5CxFgYW9rTgm+bPpOfkck+w@mail.gmail.com>
+Subject: Re: [PATCH v3 22/51] PCI: Add alt_size allocation support
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 07:53:02PM +1000, Alexey Kardashevskiy wrote:
->On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>Each PHB maintains an array helping to translate RID (Request
->>ID) to PE# with the assumption that PE# takes 8 bits, indicating
->>that we can't have more than 256 PEs. However, pci_dn->pe_number
->>already had 4-bytes for the PE#.
->>
->>The patch extends the PE# capacity so that each of them will be
->>4-bytes long. Then we can use IODA_INVALID_PE to check one entry
->>in phb->pe_rmap[] is valid or not.
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 8 ++++++--
->>  arch/powerpc/platforms/powernv/pci.h      | 7 +++----
->>  2 files changed, 9 insertions(+), 6 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 57ba8fd..3094c61 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -786,7 +786,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
->>
->>  	/* Clear the reverse map */
->>  	for (rid = pe->rid; rid < rid_end; rid++)
->>-		phb->ioda.pe_rmap[rid] = 0;
->>+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
->>
->>  	/* Release from all parents PELT-V */
->>  	while (parent) {
->>@@ -3134,7 +3134,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>  	unsigned long size, pemap_off;
->>  	const __be64 *prop64;
->>  	const __be32 *prop32;
->>-	int len;
->>+	int len, i;
->>  	u64 phb_id;
->>  	void *aux;
->>  	long rc;
->>@@ -3201,6 +3201,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>  	if (prop32)
->>  		phb->ioda.reserved_pe = be32_to_cpup(prop32);
->>
->>+	/* Invalidate RID to PE# mapping */
->>+	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
->>+		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
->>+
->>  	/* Parse 64-bit MMIO range */
->>  	pnv_ioda_parse_m64_window(phb);
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->>index 1dc9578..6f8568e 100644
->>--- a/arch/powerpc/platforms/powernv/pci.h
->>+++ b/arch/powerpc/platforms/powernv/pci.h
->>@@ -175,11 +175,10 @@ struct pnv_phb {
->>  			struct list_head	pe_list;
->>  			struct mutex            pe_list_mutex;
->>
->>-			/* Reverse map of PEs, will have to extend if
->>-			 * we are to support more than 256 PEs, indexed
->>-			 * bus { bus, devfn }
->>+			/* Reverse map of PEs, indexed by
->>+			 * { bus, devfn }
->>  			 */
->>-			unsigned char		pe_rmap[0x10000];
->>+			int			pe_rmap[0x10000];
+On Mon, Aug 17, 2015 at 5:03 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Mon, Jul 27, 2015 at 04:29:40PM -0700, Yinghai Lu wrote:
+>> On system with several pcie switches, BIOS allocate very tight resources
+>> to the bridge bar, and it is not aligned to min_align as kernel allocation
+>> code.
 >
->
->256k seems to be waste when only tiny fraction of it will ever be used. Using
->include/linux/hashtable.h makes sense here, and if you use a hashtable, you
->won't have to initialize anything with IODA_INVALID_PE.
->
+> I can't parse this.
 
-I'm not sure if I follow your idea completely. With hash table to trace
-RID mapping here, won't more memory needed if all PCI buse numbers (0
-to 255) are all valid? It means hash table doesn't have advantage in
-memory consumption. On the other hand, searching in hash table buckets
-have to iterate list of conflicting items (keys), which is slow comparing
-to what we have. Actually, I like the idea, using array to map RID to PE#,
-which was implemented by Ben.
+BIOS allocate resource in different way.
+
+kernel is trying to find smallest align (min_align) and use it to get
+aligned min_size.
 
 >
->>
->>  			/* 32-bit TCE tables allocation */
->>  			unsigned long		dma32_segcount;
->>
+>> For example:
+>>       02:03.0---0c:00.0---0d:04.0---18:00.0
+>> 18:00.0 need 0x10000000, and 0x00010000.
+>> BIOS only allocate 0x10100000 to 0d:04.0 and above bridges.
+>
+> Do you mean the BIOS only allocated 0x10010000?
 
-Thanks,
-Gavin
+I can not find the exact bus layout on hand. only one similar ...
 
+23 13:15:49  kernel: pci_bus 0000:10: scanning bus
+Jun 23 13:15:49  kernel: pci 0000:10:00.0: [xxxx:xxxx] type 00 class 0x028000
+Jun 23 13:15:49  kernel: pci 0000:10:00.0: reg 0x10: [mem
+0xb0000000-0xbfffffff 64bit pref]
+Jun 23 13:15:49  kernel: pci 0000:10:00.0: reg 0x18: [mem
+0xc0000000-0xc000ffff 64bit pref]
+Jun 23 13:15:49  kernel: pci_bus 0000:10: fixups for bus
+Jun 23 13:15:49  kernel: pci 0000:05:04.0: PCI bridge to [bus 10-17]
+Jun 23 13:15:49  kernel: pci 0000:05:04.0:   bridge window [mem
+0xb0000000-0xc00fffff]
+Jun 23 13:15:49  kernel: pci_bus 0000:10: bus scan returning with max=10
+
+so device is using 0x10000000 and 0x00010000
+and bridge is 0x10100000
+
+As the bridge MMIO need to be aligned to 1M.
+
+>
+>> Later after using /sys/bus/pci/devices/0000:0c:00.0/remove to remove 0c:00.0,
+>> rescan with /sys/bus/pci/rescan can not allocate 0x18000000 to 0c:00.0.
+>>
+>> another example:
+>> 00:1c.0-[02-21]----00.0-[03-21]--+-01.0-[04-12]----00.0-[05-12]----19.0-[06-12]----00.0
+>>                                  +-05.0-[13]--
+>>                                  +-07.0-[14-20]----00.0-[15-20]--+-08.0-[16]--+-00.0
+>>                                  |                               |            \-00.1
+>>                                  |                               +-14.0-[17]----00.0
+>>                                  |                               \-19.0-[18-20]----00.0
+>>                                  \-09.0-[21]--
+>> 06:00.0 need 0x4000000 and 0x800000.
+>> BIOS only allocate 0x4800000 to 05:19.0 and 04:00.0.
+>> when 05:19.0 get removed via /sys/bus/pci/devices/0000:05:19.0/remove,
+>> rescan with /sys/bus/pci/rescan will fail.
+>>  pci 0000:05:19.0: BAR 14: no space for [mem size 0x06000000]
+>>  pci 0000:05:19.0: BAR 14: failed to assign [mem size 0x06000000]
+>>  pci 0000:06:00.0: BAR 2: no space for [mem size 0x04000000 64bit]
+>>  pci 0000:06:00.0: BAR 2: failed to assign [mem size 0x04000000 64bit]
+>>  pci 0000:06:00.0: BAR 0: no space for [mem size 0x00800000]
+>>  pci 0000:06:00.0: BAR 0: failed to assign [mem size 0x00800000]
+>> current code try to use align 0x2000000 and size 0x6000000, but parent
+>> bridge only have 0x4800000.
+>
+> I *think* you're saying:
+>   - BIOS assigned space for device X
+>   - We remove X via sysfs
+>   - We rescan via sysfs and discover X
+>   - We try to assign space for X
+>   - We fail because we don't use the same algorithm as BIOS did
+>
+> If there is an optimal way to assign space for an arbitrary number of
+> BARs, we could just adopt it.  I don't know what that is, and I don't
+> know whether an optimal algorithm exists even in principle.
+>
+> If there is no single optimal algorithm, there will always be cases where
+> we fail because we use a different algorithm than the firmware did.
+
+That is what this patch try to do.
+
+alt_size solution that is preferring smaller size and big alignment.
+
+Use it together with min_align solution that is used in kernel.
+
+>
+>> Introduce alt_align/alt_size and store them in realloc list in addition
+>> to addon info, and will try it after min_align/min_size allocation fails.
+>
+> What does "alt" mean?
+>
+
+alternative
