@@ -1,70 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:54766 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753418AbbHSOGr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Aug 2015 10:06:47 -0400
+Received: from mail-bl2on0056.outbound.protection.outlook.com ([65.55.169.56]:46806
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750791AbbHTDm0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Aug 2015 23:42:26 -0400
+From: Jay Cornwall <jay@jcornwall.me>
+To: <linux-pci@vger.kernel.org>
+CC: Jay Cornwall <jay@jcornwall.me>
+Subject: [PATCH RFC 1/1] PCI: Add pci_enable_atomic_request
+Date: Wed, 19 Aug 2015 16:10:02 -0500
+Message-ID: <1440018602-4212-2-git-send-email-jay@jcornwall.me>
+In-Reply-To: <1440018602-4212-1-git-send-email-jay@jcornwall.me>
+References: <1440018602-4212-1-git-send-email-jay@jcornwall.me>
 MIME-Version: 1.0
-Message-ID: <trinity-ceafa563-3aad-4955-a6c6-205a2caf1e95-1439993198188@3capp-gmx-bs16>
-From: "Helge Deller" <deller@gmx.de>
-To: "John David Anglin" <dave.anglin@bell.net>
-Cc: "Yinghai Lu" <yinghai@kernel.org>, "Meelis Roos" <mroos@linux.ee>,
-	linux-parisc@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
-	"James Bottomley" <James.Bottomley@hansenpartnership.com>
-Subject: Aw: Re:  A500 boot crash in 4.2.0-rc3-00246-g763e326
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 19 Aug 2015 16:06:38 +0200
-In-Reply-To: <BLU436-SMTP773488774A8C76BF6C12E597670@phx.gbl>
-References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee>
- <trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71>
- <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
- <alpine.LRH.2.20.1508182141200.24742@math.ut.ee> <55D38BE6.6080302@gmx.de>
- <CAE9FiQVUUN-SLO0U4G5CC6MEoXfb=bGd+f3bRgQprtaMHjsvpA@mail.gmail.com>
- <alpine.LRH.2.20.1508190747360.5154@math.ut.ee>
- <CAE9FiQW9hjDe2NBEfwQqcVZoJKqDjKT1P=7FcGjhVrF7wQW9+g@mail.gmail.com>,
- <BLU436-SMTP773488774A8C76BF6C12E597670@phx.gbl>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 2015-08-19, at 1:30 AM, Yinghai Lu wrote:
-> > On Tue, Aug 18, 2015 at 9:48 PM, Meelis Roos <mroos@linux.ee> wrote:
-> >>> On Tue, Aug 18, 2015 at 12:47 PM, Helge Deller <deller@gmx.de> wrote:
-> >>> 
-> >>> Then we should change to
-> >>> 
-> >>> config PCI_BUS_ADDR_T_64BIT
-> >>>       def_bool y if (ARCH_DMA_ADDR_T_64BIT || SPARC64)
-> >>>       depends on PCI
-> >> 
-> >> Why SPARC64? The problem happened on parisc.
-> > so will not set PCI_BUS_ADDR_T_64BIT for parisc.
+Allow individual drivers to control AtomicOp Requester PCIe 3.0 capability.
+This is a no-op on devices which do not support AtomicOp requests.
 
-I think given the current time frame it's probably the best approach to fix this problem for kernel 4.2.
-It reverts the behaviour back to how it was before (for all arches beside SPARC64).
-I'm still wondering if/why parisc is the only arch (in the sym53c8xx driver only!) which broke by this change...
+Signed-off-by: Jay Cornwall <jay@jcornwall.me>
+---
+ drivers/pci/pci.c             | 23 +++++++++++++++++++++++
+ include/linux/pci.h           |  1 +
+ include/uapi/linux/pci_regs.h |  1 +
+ 3 files changed, 25 insertions(+)
 
-> I'm not sure this is optimal.  While the A500 may only have 32-bit PCI, c8000 appears to have a mix
-> of 32 and 64-bit, and rp34XX is all 64-bit.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 0008c95..1b9d1a9 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2410,6 +2410,29 @@ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags)
+ }
+ 
+ /**
++ * pci_enable_atomic_request - enable or disable AtomicOp requester
++ * @dev: the PCI device
++ */
++void pci_enable_atomic_request(struct pci_dev *dev)
++{
++	if (!pci_is_pcie(dev))
++		return;
++
++	switch (pci_pcie_type(dev)) {
++	/* PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
++	 * to implement AtomicOp requester capabilities. */
++	case PCI_EXP_TYPE_ENDPOINT:
++	case PCI_EXP_TYPE_LEG_END:
++	case PCI_EXP_TYPE_RC_END:
++	case PCI_EXP_TYPE_ROOT_PORT:
++		pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
++					 PCI_EXP_DEVCTL2_ATOMICOP_REQ);
++		break;
++	}
++}
++EXPORT_SYMBOL(pci_enable_atomic_request);
++
++/**
+  * pci_acs_path_enable - test ACS flags from start to end in a hierarchy
+  * @start: starting downstream device
+  * @end: ending upstream device or NULL to search to the root bus
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a..946c3ce 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1750,6 +1750,7 @@ void pci_request_acs(void);
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+ bool pci_acs_path_enabled(struct pci_dev *start,
+ 			  struct pci_dev *end, u16 acs_flags);
++void pci_enable_atomic_request(struct pci_dev *dev);
+ 
+ #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+ #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 413417f..d2d2e8d 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -578,6 +578,7 @@
+ #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
+ #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
+ #define  PCI_EXP_DEVCTL2_ARI		0x0020	/* Alternative Routing-ID */
++#define  PCI_EXP_DEVCTL2_ATOMICOP_REQ	0x0040	/* Allow AtomicOp Requests */
+ #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
+ #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
+ #define  PCI_EXP_DEVCTL2_LTR_EN		0x0400	/* Enable LTR mechanism */
+-- 
+1.9.1
 
-True, but probably nobody of us noticed that we only used the 32-bit PCI interface even with 64bit kernel on parisc up to now?
-pci_bus_alloc_resource() in drivers/pci/bus.c just disabled (flag=0) all 64bit resources for us.
-But I agree, I think we need to fix drivers/parisc/lba_pci.c to correctly cope with 64bit pci addresses.
-
-In the meantime I did some more debugging on sym_iomap_device() in drivers/scsi/sym53c8xx_2/sym_glue.c:
-   pcibios_resource_to_bus(pdev->bus, &bus_addr,
-                          &pdev->resource[i]);
-   ram_base = bus_addr.start;
-
-with (working) 32bit PCI addresses I get:
-ressource = [mem 0xffffffff80002000-0xffffffff80003fff 64bit]
-and pcibios_resource_to_bus() returning: ram_base = 0x80002000 
-
-and with (failing) 64bit PCI addresses I get:
-ressource = [mem 0xfffffff004000000-0xfffffff004001fff 64bit]
-and pcibios_resource_to_bus() returning: ram_base = 0xfffffff004000000 
-
-It seems the resource window doesn't get initialized correctly for 64bit...
-
-Helge
