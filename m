@@ -1,139 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:55376 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142AbbHGGFT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2015 02:05:19 -0400
-Message-ID: <55C44A4D.8070300@hisilicon.com>
-Date: Fri, 7 Aug 2015 14:03:57 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Received: from ozlabs.org ([103.22.144.67]:38222 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751896AbbHTGSv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 02:18:51 -0400
+Date: Thu, 20 Aug 2015 16:18:49 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tadeusz Struk <tadeusz.struk@intel.com>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	linux-next list <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Michal Marek <mmarek@suse.cz>,
+	"Yann E. MORIN" <yann.morin.1998@free.fr>,
+	linux-kbuild <linux-kbuild@vger.kernel.org>
+Subject: Re: linux-next: Tree for Aug 12 (include/linux/pci.h)
+Message-ID: <20150820161849.79552437@canb.auug.org.au>
+In-Reply-To: <CAErSpo4+H6AJs9shVGN8fm9=GwPL9EzNcyMNt5FW81JGEA1sDA@mail.gmail.com>
+References: <20150812233914.451d1fcf@canb.auug.org.au>
+	<55CB8AF0.4060905@infradead.org>
+	<20150813075322.064035f8@canb.auug.org.au>
+	<55CBCF96.7060102@intel.com>
+	<CAErSpo4+H6AJs9shVGN8fm9=GwPL9EzNcyMNt5FW81JGEA1sDA@mail.gmail.com>
 MIME-Version: 1.0
-To: Zhou Wang <wangzhou1@hisilicon.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Jingoo Han <jingoohan1@gmail.com>
-Subject: Re: [PATCH v6 1/6] PCI: designware: move calculation of bus addresses
- to DRA7xx
-References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com> <1438848559-232109-2-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1438848559-232109-2-git-send-email-wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc jingoohan1@gmail.com]
+Hi Bjorn,
 
-On 2015/8/6 16:09, Zhou Wang wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Wed, 19 Aug 2015 23:16:06 -0700 Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> [+cc Yann, linux-kbuild]
 > 
-> Commit f4c55c5a3f7f "PCI: designware: Program ATU with untranslated
-> address" added the calculation of PCI BUS addresses in designware,
-> storing them in new fields added in "struct pcie_port". This
-> calculation is done for every designware user even if is only
-> applicable to DRA7xx.
-> This patch moves the calculation of the bus addresses to the DRA7xx
-> driver and is needed to allow the rework of designware to use
-> the new DT parsing API.
+> On Wed, Aug 12, 2015 at 3:58 PM, Tadeusz Struk <tadeusz.struk@intel.com> wrote:
+> > On 08/12/2015 02:53 PM, Stephen Rothwell wrote:
+> >> On Wed, 12 Aug 2015 11:05:36 -0700 Randy Dunlap <rdunlap@infradead.org> wrote:
+> >>> >
+> >>> > on i386 or x86_64:
+> >>> >
+> >>> > Many (repeated) errors like this one:
+> >>> >
+> >>> > ../include/linux/pci.h:390:12: error: â€˜struct pci_devâ€™ has no member named â€˜physfnâ€™
+> >>> >
+> >>> > when CONFIG_PCI_ATS is not enabled.
+> >> Maybe caused by commit
+> >>
+> >>   dd0f368398ea ("crypto: qat - Add qat dh895xcc VF driver")
+> >>
+> >> from the crypto tree Which adds a
+> >>
+> >>   select PCI_IOV
+> >>
+> >> to drivers/crypto/qat/Kconfig without the necessary
+> >>
+> >>   select PCI
+> >>
+> >> but PCI_IOV selects PCI_ATS, so I am not sure what happened here.  I am
+> >> assuming that your config has PCI_IOV enabled?  What about PCI?
+> >
+> > There is a patch submitted, but not yet applied
+> > https://patchwork.kernel.org/patch/6994171/
+> > maybe it will help?
 > 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> ---
->  drivers/pci/host/pci-dra7xx.c      | 13 +++++++++++++
->  drivers/pci/host/pcie-designware.c | 15 ++++-----------
->  2 files changed, 17 insertions(+), 11 deletions(-)
+> I don't understand this.  In drivers/pci/Kconfig, we have:
 > 
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 80db09e..18ae7ff 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -61,6 +61,7 @@
->  
->  #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
->  #define	LINK_UP						BIT(16)
-> +#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
->  
->  struct dra7xx_pcie {
->  	void __iomem		*base;
-> @@ -139,6 +140,18 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
->  static void dra7xx_pcie_host_init(struct pcie_port *pp)
->  {
->  	dw_pcie_setup_rc(pp);
-> +
-> +	if (pp->io_mod_base)
-> +		pp->io_mod_base &= CPU_TO_BUS_ADDR;
-> +
-> +	if (pp->mem_mod_base)
-> +		pp->mem_mod_base &= CPU_TO_BUS_ADDR;
-> +
-> +	if (pp->cfg0_mod_base) {
-> +		pp->cfg0_mod_base &= CPU_TO_BUS_ADDR;
-> +		pp->cfg1_mod_base &= CPU_TO_BUS_ADDR;
-> +	}
-> +
->  	dra7xx_pcie_establish_link(pp);
->  	if (IS_ENABLED(CONFIG_PCI_MSI))
->  		dw_pcie_msi_init(pp);
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be..c5d407c 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -366,14 +366,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  	struct of_pci_range range;
->  	struct of_pci_range_parser parser;
->  	struct resource *cfg_res;
-> -	u32 val, na, ns;
-> +	u32 val, ns;
->  	const __be32 *addrp;
->  	int i, index, ret;
->  
-> -	/* Find the address cell size and the number of cells in order to get
-> -	 * the untranslated address.
-> -	 */
-> -	of_property_read_u32(np, "#address-cells", &na);
->  	ns = of_n_size_cells(np);
->  
->  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-> @@ -416,8 +412,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  			pp->io_base = range.cpu_addr;
->  
->  			/* Find the untranslated IO space address */
-> -			pp->io_mod_base = of_read_number(parser.range -
-> -							 parser.np + na, ns);
-> +			pp->io_mod_base = range.cpu_addr;
->  		}
->  		if (restype == IORESOURCE_MEM) {
->  			of_pci_range_to_resource(&range, np, &pp->mem);
-> @@ -426,8 +421,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  			pp->mem_bus_addr = range.pci_addr;
->  
->  			/* Find the untranslated MEM space address */
-> -			pp->mem_mod_base = of_read_number(parser.range -
-> -							  parser.np + na, ns);
-> +			pp->mem_mod_base = range.cpu_addr;
->  		}
->  		if (restype == 0) {
->  			of_pci_range_to_resource(&range, np, &pp->cfg);
-> @@ -437,8 +431,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
->  
->  			/* Find the untranslated configuration space address */
-> -			pp->cfg0_mod_base = of_read_number(parser.range -
-> -							   parser.np + na, ns);
-> +			pp->cfg0_mod_base = range.cpu_addr;
->  			pp->cfg1_mod_base = pp->cfg0_mod_base +
->  					    pp->cfg0_size;
->  		}
+>   config PCI_IOV
+>     depends on PCI
 > 
+> and in drivers/crypto/qat/Kconfig, dd0f368398ea adds:
+> 
+>   config CRYPTO_DEV_QAT_DH895xCCVF
+>     select PCI_IOV
+> 
+> And apparently it's possible to end up with a .config with
+> CONFIG_PCI_IOV=y but CONFIG_PCI is not set?  That seems wrong, since
+> we declared that PCI_IOV depends on PCI.  Does select ignore that
+> dependency somehow?
 
+Yeah, unfortunately that is how select works.  If a symbol you select
+depends on anything, then you need to also select all the dependencies.
 
+-- 
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
