@@ -1,51 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>
-Subject: [PATCH v4 1/5] arm: add msi.h to Kbuild
-Date: Mon, 17 Aug 2015 17:09:35 +0800
-Message-ID: <1439802579-22651-2-git-send-email-lftan@altera.com>
-In-Reply-To: <1439802579-22651-1-git-send-email-lftan@altera.com>
-References: <1439802579-22651-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:33150 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752707AbbHTVbM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 17:31:12 -0400
+Received: by wijp15 with SMTP id p15so4170414wij.0
+        for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 14:31:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <55D6435A.9060808@gmx.de>
+References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee>
+ <trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71>
+ <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
+ <alpine.LRH.2.20.1508182141200.24742@math.ut.ee> <55D38BE6.6080302@gmx.de>
+ <CAE9FiQVUUN-SLO0U4G5CC6MEoXfb=bGd+f3bRgQprtaMHjsvpA@mail.gmail.com>
+ <alpine.LRH.2.20.1508190747360.5154@math.ut.ee> <CAE9FiQW9hjDe2NBEfwQqcVZoJKqDjKT1P=7FcGjhVrF7wQW9+g@mail.gmail.com>
+ <BLU436-SMTP773488774A8C76BF6C12E597670@phx.gbl> <trinity-ceafa563-3aad-4955-a6c6-205a2caf1e95-1439993198188@3capp-gmx-bs16>
+ <20150820054234.GA10267@google.com> <CAE9FiQXmzAoJ-5DtrzR94otRKtwJyzAxx8BUK+tuo2j_+rP9JA@mail.gmail.com>
+ <55D6435A.9060808@gmx.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Aug 2015 14:30:51 -0700
+Message-ID: <CAErSpo5uC+V29y4TVmjstWyRZRBaA9Ao09bM2pVNmuyrF0grkA@mail.gmail.com>
+Subject: Re: A500 boot crash in 4.2.0-rc3-00246-g763e326
+To: Helge Deller <deller@gmx.de>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	John David Anglin <dave.anglin@bell.net>,
+	Meelis Roos <mroos@linux.ee>, linux-parisc@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
-This to fix compilation error:
-"include/linux/msi.h:123:21: fatal error: asm/msi.h:
-No such file or directory"
+On Thu, Aug 20, 2015 at 2:15 PM, Helge Deller <deller@gmx.de> wrote:
+> On 20.08.2015 21:31, Yinghai Lu wrote:
+>>
+>> On Wed, Aug 19, 2015 at 10:42 PM, Bjorn Helgaas <bhelgaas@google.com>
+>> wrote:
+>>
+>>> commit 51a660a2732c
+>>> Author: Bjorn Helgaas <bhelgaas@google.com>
+>>> Date:   Thu Aug 20 00:08:15 2015 -0500
+>>>
+>>>      PCI: Don't use 64-bit bus addresses on PA-RISC
+>>>
+>>>      Meelis and Helge reported that 3a9ad0b4fdcd ("PCI: Add
+>>> pci_bus_addr_t")
+>>>      caused HPMCs on A500 and hangs on rp5470.
+>>>
+>>>      PA-RISC does not set ARCH_DMA_ADDR_T_64BIT, even for 64-bit kernels,
+>>> so
+>>>      prior to 3a9ad0b4fdcd, we always used 32-bit PCI addresses.  After
+>>>      3a9ad0b4fdcd, we do use 64-bit PCI addresses in 64-bit kernels, and
+>>>      apparently there's some PA-RISC problem related to them.
+>>>
+>>>      Fixes: 3a9ad0b4fdcd ("PCI: Add pci_bus_addr_t")
+>>>      Link:
+>>> http://lkml.kernel.org/r/alpine.LRH.2.11.1507260929000.30065@math.ut.ee
+>>>      Reported-by: Meelis Roos <mroos@linux.ee>
+>>>      Reported-by: Helge Deller <deller@gmx.de>
+>>>      Based-on-idea-by: Yinghai Lu <yinghai@kernel.org>
+>>>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>
+>>> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+>>> index 73de4ef..944f500 100644
+>>> --- a/drivers/pci/Kconfig
+>>> +++ b/drivers/pci/Kconfig
+>>> @@ -2,7 +2,7 @@
+>>>   # PCI configuration
+>>>   #
+>>>   config PCI_BUS_ADDR_T_64BIT
+>>> -       def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
+>>> +       def_bool y if (ARCH_DMA_ADDR_T_64BIT || (64BIT && !PARISC))
+>>>          depends on PCI
+>>>
+>>>   config PCI_MSI
+>>
+>>
+>> Yes, that is better.
+>>
+>> Acked-by: Yinghai Lu <yinghai@kernel.org>
+>
+>
+>
+> Tested-by: Helge Deller <deller@gmx.de>
+>   and please add:
+> CC: stable@vger.kernel.org  # v3.19+
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- arch/arm/include/asm/Kbuild | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/arch/arm/include/asm/Kbuild b/arch/arm/include/asm/Kbuild
-index 83c5019..ddc2761 100644
---- a/arch/arm/include/asm/Kbuild
-+++ b/arch/arm/include/asm/Kbuild
-@@ -14,6 +14,7 @@ generic-y += local.h
- generic-y += local64.h
- generic-y += mcs_spinlock.h
- generic-y += msgbuf.h
-+generic-y += msi.h
- generic-y += param.h
- generic-y += parport.h
- generic-y += poll.h
--- 
-1.8.2.1
-
+Done, thanks for testing this!
