@@ -1,185 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:34024 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932578AbbHKUUd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 16:20:33 -0400
-Received: by igui7 with SMTP id i7so48336343igu.1
-        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 13:20:32 -0700 (PDT)
-Date: Tue, 11 Aug 2015 15:20:27 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org,
-	linux-sh@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: kill off set_irq_flags usage
-Message-ID: <20150811202027.GG13982@google.com>
-References: <1438030523-15853-1-git-send-email-robh@kernel.org>
- <1438030523-15853-9-git-send-email-robh@kernel.org>
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:37919 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751087AbbHTGQ1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 02:16:27 -0400
+Received: by wicja10 with SMTP id ja10so26551459wic.1
+        for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2015 23:16:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1438030523-15853-9-git-send-email-robh@kernel.org>
+In-Reply-To: <55CBCF96.7060102@intel.com>
+References: <20150812233914.451d1fcf@canb.auug.org.au> <55CB8AF0.4060905@infradead.org>
+ <20150813075322.064035f8@canb.auug.org.au> <55CBCF96.7060102@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 19 Aug 2015 23:16:06 -0700
+Message-ID: <CAErSpo4+H6AJs9shVGN8fm9=GwPL9EzNcyMNt5FW81JGEA1sDA@mail.gmail.com>
+Subject: Re: linux-next: Tree for Aug 12 (include/linux/pci.h)
+To: Tadeusz Struk <tadeusz.struk@intel.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	linux-next list <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Michal Marek <mmarek@suse.cz>,
+	"Yann E. MORIN" <yann.morin.1998@free.fr>,
+	linux-kbuild <linux-kbuild@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 27, 2015 at 03:55:21PM -0500, Rob Herring wrote:
-> set_irq_flags is ARM specific with custom flags which have genirq
-> equivalents. Convert drivers to use the genirq interfaces directly, so we
-> can kill off set_irq_flags. The translation of flags is as follows:
-> 
-> IRQF_VALID -> !IRQ_NOREQUEST
-> IRQF_PROBE -> !IRQ_NOPROBE
-> IRQF_NOAUTOEN -> IRQ_NOAUTOEN
-> 
-> For IRQs managed by an irqdomain, the irqdomain core code handles clearing
-> and setting IRQ_NOREQUEST already, so there is no need to do this in
-> .map() functions and we can simply remove the set_irq_flags calls. Some
-> users also modify IRQ_NOPROBE and this has been maintained although it
-> is not clear that is really needed. There appears to be a great deal of
-> blind copy and paste of this code.
-> 
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Murali Karicheri <m-karicheri2@ti.com>
-> Cc: Thierry Reding <thierry.reding@gmail.com>
-> Cc: Stephen Warren <swarren@wwwdotorg.org>
-> Cc: Alexandre Courbot <gnurou@gmail.com>
-> Cc: Jingoo Han <jingoohan1@gmail.com>
-> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> Cc: Simon Horman <horms@verge.net.au>
-> Cc: Michal Simek <michal.simek@xilinx.com>
-> Cc: "S�ren Brinkmann" <soren.brinkmann@xilinx.com>
-> Cc: linux-omap@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-tegra@vger.kernel.org
-> Cc: linux-sh@vger.kernel.org
-> ---
-> Thomas asked that this be merged thru subsystem trees instead of arm-soc,
-> so please apply this to your tree.
+[+cc Yann, linux-kbuild]
 
-Applied with Jingoo's ack to pci/irq for v4.3, thanks!
+On Wed, Aug 12, 2015 at 3:58 PM, Tadeusz Struk <tadeusz.struk@intel.com> wrote:
+> On 08/12/2015 02:53 PM, Stephen Rothwell wrote:
+>> On Wed, 12 Aug 2015 11:05:36 -0700 Randy Dunlap <rdunlap@infradead.org> wrote:
+>>> >
+>>> > on i386 or x86_64:
+>>> >
+>>> > Many (repeated) errors like this one:
+>>> >
+>>> > ../include/linux/pci.h:390:12: error: â€˜struct pci_devâ€™ has no member named â€˜physfnâ€™
+>>> >
+>>> > when CONFIG_PCI_ATS is not enabled.
+>> Maybe caused by commit
+>>
+>>   dd0f368398ea ("crypto: qat - Add qat dh895xcc VF driver")
+>>
+>> from the crypto tree Which adds a
+>>
+>>   select PCI_IOV
+>>
+>> to drivers/crypto/qat/Kconfig without the necessary
+>>
+>>   select PCI
+>>
+>> but PCI_IOV selects PCI_ATS, so I am not sure what happened here.  I am
+>> assuming that your config has PCI_IOV enabled?  What about PCI?
+>
+> There is a patch submitted, but not yet applied
+> https://patchwork.kernel.org/patch/6994171/
+> maybe it will help?
 
->  drivers/pci/host/pci-dra7xx.c      | 1 -
->  drivers/pci/host/pci-keystone-dw.c | 2 --
->  drivers/pci/host/pci-tegra.c       | 1 -
->  drivers/pci/host/pci-xgene-msi.c   | 1 -
->  drivers/pci/host/pcie-designware.c | 1 -
->  drivers/pci/host/pcie-rcar.c       | 1 -
->  drivers/pci/host/pcie-xilinx.c     | 2 --
->  7 files changed, 9 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 80db09e..1a0d124 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -155,7 +155,6 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
-> 
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-> index f34892e..f1d0749 100644
-> --- a/drivers/pci/host/pci-keystone-dw.c
-> +++ b/drivers/pci/host/pci-keystone-dw.c
-> @@ -196,7 +196,6 @@ static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
->  	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
->  				 handle_level_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
-> 
->  	return 0;
->  }
-> @@ -277,7 +276,6 @@ static int ks_dw_pcie_init_legacy_irq_map(struct irq_domain *d,
->  	irq_set_chip_and_handler(irq, &ks_dw_pcie_legacy_irq_chip,
->  				 handle_level_irq);
->  	irq_set_chip_data(irq, d->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
-> 
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 10c0571..81df0c1 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -1248,7 +1248,6 @@ static int tegra_msi_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &tegra_msi_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
-> 
->  	tegra_cpuidle_pcie_irqs_in_use();
-> 
-> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> index 2d31d4d..8e559d1 100644
-> --- a/drivers/pci/host/pci-xgene-msi.c
-> +++ b/drivers/pci/host/pci-xgene-msi.c
-> @@ -223,7 +223,6 @@ static int xgene_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
->  	irq_domain_set_info(domain, virq, msi_irq,
->  			    &xgene_msi_bottom_irq_chip, domain->host_data,
->  			    handle_simple_irq, NULL, NULL);
-> -	set_irq_flags(virq, IRQF_VALID);
-> 
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be..5c6b562 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -350,7 +350,6 @@ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
-> 
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index c086210..7678fe0 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -664,7 +664,6 @@ static int rcar_msi_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &rcar_msi_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
-> 
->  	return 0;
->  }
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index f1a06a0..72015119 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -338,7 +338,6 @@ static int xilinx_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &xilinx_msi_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
-> 
->  	return 0;
->  }
-> @@ -377,7 +376,6 @@ static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
->  {
->  	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
->  	irq_set_chip_data(irq, domain->host_data);
-> -	set_irq_flags(irq, IRQF_VALID);
-> 
->  	return 0;
->  }
-> --
-> 2.1.0
-> 
+I don't understand this.  In drivers/pci/Kconfig, we have:
+
+  config PCI_IOV
+    depends on PCI
+
+and in drivers/crypto/qat/Kconfig, dd0f368398ea adds:
+
+  config CRYPTO_DEV_QAT_DH895xCCVF
+    select PCI_IOV
+
+And apparently it's possible to end up with a .config with
+CONFIG_PCI_IOV=y but CONFIG_PCI is not set?  That seems wrong, since
+we declared that PCI_IOV depends on PCI.  Does select ignore that
+dependency somehow?
+
+Bjorn
