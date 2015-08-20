@@ -1,45 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34627 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753252AbbHUPHh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 11:07:37 -0400
-Received: by padfo6 with SMTP id fo6so9046991pad.1
-        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2015 08:07:37 -0700 (PDT)
-Subject: [PATCH 0/3] MPS tuning
-To: Keith Busch <keith.busch@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Austin Bolen <Austin_Bolen@dell.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Myron Stowe <mstowe@redhat.com>, Jon Mason <jdmason@kudzu.us>
-Date: Fri, 21 Aug 2015 10:07:31 -0500
-Message-ID: <20150821150557.7525.58923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mga09.intel.com ([134.134.136.24]:54536 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752980AbbHTRAA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Aug 2015 13:00:00 -0400
+Date: Thu, 20 Aug 2015 12:00:00 -0500
+From: "Shelton, Ben" <benjamin.h.shelton@intel.com>
+To: linux-pci@vger.kernel.org
+Subject: Convention for PCI device to handle bridge window change
+Message-ID: <20150820165959.GB14073@bhshelto-vm>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith, et al,
+Hi all,
 
-This is essentially your patch, tweaked a little to move it to the
-pci_device_add() path instead of the pcie_bus_configure_settings() path.
+I'm working on an issue with an x64-based emulation system that has
+multiple PCI-accessible FPGAs, each of which sits behind a PCI bridge.
 
-One interesting wrinkle is the quirk_intel_mc_errata() quirk, which
-was previously essentially disabled because it did nothing in
-PCIE_BUS_TUNE_OFF mode, which was the default.  If we change the mode to
-something else (as I did in the last patch), that quirk will now be active
-when it wasn't before.  I'd like to chat with Jon about whether that's the
-right thing.
----
+We program the first FPGA and then warm-reboot the CPU.  When it comes
+back up, there is an additional PCIe device that has been programmed
+into the FPGA, and the kernel goes through the remapping process to
+figure out how to fit everything.  The remapping succeeds by moving
+several of the FPGA bridges out of the way.  The bridges get set up
+properly, but the FPGA resources themselves get released but not
+reassigned, and the BAR of the FPGA behind each bridge that got
+relocated is still set to the old address.  If I add a hack in the boot
+process to call pci_assign_resource() for those particular devices if
+they have not been assigned, then everything works as expected.
 
-Bjorn Helgaas (2):
-      PCI: Move MPS configuration check to pci_configure_device()
-      PCI: Change MPS default to "match upstream bridge"
+Where is the usual place to handle updating the BAR for a device after
+the bridge window of the bridge it's behind has changed?
 
-Keith Busch (1):
-      PCI: Set MPS to match upstream bridge
+Is it in the driver?  Looking at other drivers, there are a few that
+call pci_assign_resource() explicitly if their resource has not been
+assigned, e.g. drivers/char/agp/intel-agp.c.  There are also a few
+drivers that used to do this but no longer do, e.g. ath10k (see commit
+a6a2f74e for where it got removed).  
 
+Or are resources behind a bridge that was relocated supposed to be
+reassigned as part of the remapping process, and that just isn't
+happening for some reason in our case?
 
- drivers/pci/pci.c   |    2 +-
- drivers/pci/probe.c |   54 +++++++++++++++++++++++++++++++++------------------
- include/linux/pci.h |    9 +++++----
- 3 files changed, 41 insertions(+), 24 deletions(-)
+Thanks,
+Ben
