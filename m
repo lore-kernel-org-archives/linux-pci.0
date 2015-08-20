@@ -1,77 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp02.br.ibm.com ([32.104.18.86]:58106 "EHLO
-	e24smtp02.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752743AbbHRVIG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 17:08:06 -0400
-Received: from /spool/local
-	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Tue, 18 Aug 2015 18:08:03 -0300
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id C592D352007D
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 17:06:53 -0400 (EDT)
-Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
-	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7IL6T0b17367316
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 18:06:30 -0300
-Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
-	by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7IL7wuC017572
-	for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 18:07:59 -0300
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-To: linux-pci@vger.kernel.org
-Cc: gpiccoli@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com
-Subject: [PATCH 1/2] PCI: Make pci_msi_setup_pci_dev() non-static for use by arch code
-Date: Tue, 18 Aug 2015 18:07:56 -0300
-Message-Id: <1439932077-11427-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
-In-Reply-To: <1439932077-11427-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-References: <1439932077-11427-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:36418 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267AbbHTGBl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 02:01:41 -0400
+Received: by wicja10 with SMTP id ja10so136074631wic.1
+        for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2015 23:01:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1440023349.2737.21.camel@kernel.crashing.org>
+References: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
+ <20150818184943.GA26431@google.com> <20150818.121004.1891242587946602543.davem@davemloft.net>
+ <20150819221624.GA8150@google.com> <1440023349.2737.21.camel@kernel.crashing.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 19 Aug 2015 23:01:19 -0700
+Message-ID: <CAErSpo7JtRLWRAUPBdsoKauHNmftsb6fST317V9Sg4PkTV91pg@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: David Miller <davem@davemloft.net>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Meelis Roos <mroos@linux.ee>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Eric Snowberg <eric.snowberg@oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 1851617cd2 ("PCI/MSI: Disable MSI at enumeration even if kernel
-doesn't support MSI") changed the location of the code that disables
-MSI/MSI-X interrupts at PCI probe time in devices that have this flag set.
-It moved the code from pci_msi_init_pci_dev() to a new function named
-pci_msi_setup_pci_dev(), called by pci_setup_device().
+On Wed, Aug 19, 2015 at 3:29 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Wed, 2015-08-19 at 17:16 -0500, Bjorn Helgaas wrote:
+>> On Tue, Aug 18, 2015 at 12:10:04PM -0700, David Miller wrote:
+>> > From: Bjorn Helgaas <bhelgaas@google.com>
+>> > Date: Tue, 18 Aug 2015 13:49:43 -0500
+>> >
+>> > > [+cc Dave, Eric, Ben, sparclinux]
+>> > >
+>> > > On Mon, Aug 17, 2015 at 06:47:58PM +0800, Yijing Wang wrote:
+>> > > > Commit d0751b98dfa3 ("PCI: Add dev->has_secondary_link to
+>> > > > track downstream PCIe links")assumed root port is always
+>> > > > the top device in pcie tree. But on sparc64 V245 and T2000tthe
+>> > > > pcie tree has no root port device in top level, the
+>> > > > upstream port device is connected directly to root bus.
+>> > > > So we may get NULL parent for this upstream port device.
+>
+> Picking up that thread half way through...
+>
+>> > > > Upstream port ------ Downstream port ------PCIe-PCI bridge
+>> > >
+>> > > This is an unusual, possibly even illegal, PCIe topology because
+>> > > it lacks a Root Port at the top of the hierarchy.  From lspci
+>> > > output
+>> > > [1]
+>> > > collected by Meelis, the top-level devices are:
+>
+> Nobody cares what is "illegal", what matters is what HW actually does :
+> -) Specs only matter as far as they get followed.
 
-Since then, the pSeries platform of the powerpc architecture needs to
-disable MSI at PCI probe time manually, as the code flow doesn't
-reach pci_setup_device(). For doing so, it wants to call
-pci_msi_setup_pci_dev(). This patch makes the required function
-non-static, so that it will be called on PCI probe path on powerpc pSeries
-platform in next patch.
+I agree.  But nobody can predict all the ways platforms violate specs,
+so platforms that don't follow the spec don't work as well, and they
+cause a maintenance burden for everybody else.
 
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
----
- drivers/pci/probe.c | 2 +-
- include/linux/pci.h | 1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+> In any case, it also
+> happens on powerpc, when running under a hypervisor such as IBM
+> PowerVM, PCIe devices appear directly under a virtual host bridge which
+> is not exposed as a PCIe root complex.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..520c5b6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1103,7 +1103,7 @@ int pci_cfg_space_size(struct pci_dev *dev)
- 
- #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
- 
--static void pci_msi_setup_pci_dev(struct pci_dev *dev)
-+void pci_msi_setup_pci_dev(struct pci_dev *dev)
- {
- 	/*
- 	 * Disable the MSI hardware to avoid screaming interrupts
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a..860c751 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1202,6 +1202,7 @@ struct msix_entry {
- 	u16	entry;	/* driver uses to specify entry, OS writes */
- };
- 
-+void pci_msi_setup_pci_dev(struct pci_dev *dev);
- 
- #ifdef CONFIG_PCI_MSI
- int pci_msi_vec_count(struct pci_dev *dev);
--- 
-2.1.0
+Thanks for the confirmation.
 
+>> I don't like it because we have these PCIe links where we only know
+>> about devices on one end of the link, and then we can't manage
+>> ASPM/MPS/etc.  But we've had this situation for several years, so
+>> I guess nobody cares too much about those things on the affected
+>> mahines.
+>
+> Correct, we have this situation on more than just sparc64 and we
+> shouldn't crash. Just don't touch ASPM/MPS/etc... in those cases.
+
+Easier said than done.  AFAIK, we won't crash after we add Yijing's
+patch.  But it's unreasonable to expect people writing to the spec to
+know the peculiarities of sparc64/powerpc, so there may be future
+things we discover the hard way.  We'll just have to deal with them as
+we find them.
+
+Bjorn
