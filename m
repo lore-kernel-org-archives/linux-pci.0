@@ -1,226 +1,289 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: mingo@kernel.org
-Cc: bp@suse.de, bhelgaas@google.com, tomi.valkeinen@ti.com,
-	airlied@linux.ie, linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	vinod.koul@intel.com, dan.j.williams@intel.com, toshi.kani@hp.com,
-	benh@kernel.crashing.org, mst@redhat.com,
-	akpm@linux-foundation.org, daniel.vetter@ffwll.ch,
-	konrad.wilk@oracle.com, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	xen-devel@lists.xensource.com,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Benoit Taine <benoit.taine@lip6.fr>,
-	Dave Airlie <airlied@redhat.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Juergen Gross <jgross@suse.com>,
-	Rob Clark <robdclark@gmail.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH v4 02/11] drivers/video/fbdev/i740fb: Use arch_phys_wc_add() and pci_ioremap_wc_bar()
-Date: Mon, 24 Aug 2015 12:13:24 -0700
-Message-Id: <1440443613-13696-3-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:59900 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752111AbbHTRBq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Aug 2015 13:01:46 -0400
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: bhelgaas@google.com, rajatxjain@gmail.com, mst@redhat.com,
+	zajec5@gmail.com, gong.chen@linux.intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-api@vger.kernel.org
+Cc: sean.stalley@intel.com
+Subject: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
+Date: Thu, 20 Aug 2015 09:59:07 -0700
+Message-Id: <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
+References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Add support for devices using Enhanced Allocation entries instead of BARs.
+This patch allows the kernel to parse the EA Extended Capability structure
+in PCI configspace and claim the BAR-equivalent resources.
 
-Convert the driver from using the x86-specific MTRR code to the
-architecture-agnostic arch_phys_wc_add(). It will avoid MTRR if
-write-combining is available, in order to take advantage of that also
-ensure the ioremapped area is requested as write-combining.
-
-There are a few motivations for this:
-
-a) Take advantage of PAT when available
-
-b) Help bury MTRR code away, MTRR is architecture-specific and on
-   x86 it is being replaced by PAT.
-
-c) Help with the goal of eventually using _PAGE_CACHE_UC over
-   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
-   de33c442e titled "x86 PAT: fix performance drop for glx,
-   use UC minus for ioremap(), ioremap_nocache() and
-   pci_mmap_page_range()")
-
-The conversion done is expressed by the following Coccinelle SmPL
-patch, it additionally required manual intervention to address all the
-ifdeffery and removal of redundant things which arch_phys_wc_add()
-already addresses such as verbose message about when MTRR fails and
-doing nothing when we didn't get an MTRR.
-
-@ mtrr_found @
-expression index, base, size;
-@@
-
--index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
-+index = arch_phys_wc_add(base, size);
-
-@ mtrr_rm depends on mtrr_found @
-expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
-@@
-
--mtrr_del(index, base, size);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_zero_arg depends on mtrr_found @
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, 0, 0);
-+arch_phys_wc_del(index);
-
-@ mtrr_rm_fb_info depends on mtrr_found @
-struct fb_info *info;
-expression mtrr_found.index;
-@@
-
--mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
-+arch_phys_wc_del(index);
-
-@ ioremap_replace_nocache depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap_nocache(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-@ ioremap_replace_default depends on mtrr_found @
-struct fb_info *info;
-expression base, size;
-@@
-
--info->screen_base = ioremap(base, size);
-+info->screen_base = ioremap_wc(base, size);
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
-Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: benh@kernel.crashing.org
-Cc: Benoit Taine <benoit.taine@lip6.fr>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: mst@redhat.com
-Cc: Rob Clark <robdclark@gmail.com>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: toshi.kani@hp.com
-Link: http://lkml.kernel.org/r/1435195342-26879-3-git-send-email-mcgrof@do-not-panic.com
-Signed-off-by: Borislav Petkov <bp@suse.de>
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
 ---
- drivers/video/fbdev/i740fb.c | 35 ++++++-----------------------------
- 1 file changed, 6 insertions(+), 29 deletions(-)
+ drivers/pci/pci.c   | 219 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h   |   1 +
+ drivers/pci/probe.c |   3 +
+ 3 files changed, 223 insertions(+)
 
-diff --git a/drivers/video/fbdev/i740fb.c b/drivers/video/fbdev/i740fb.c
-index a2b4204b42bb..452e1163ad02 100644
---- a/drivers/video/fbdev/i740fb.c
-+++ b/drivers/video/fbdev/i740fb.c
-@@ -27,24 +27,15 @@
- #include <linux/console.h>
- #include <video/vga.h>
- 
--#ifdef CONFIG_MTRR
--#include <asm/mtrr.h>
--#endif
--
- #include "i740_reg.h"
- 
- static char *mode_option;
--
--#ifdef CONFIG_MTRR
- static int mtrr = 1;
--#endif
- 
- struct i740fb_par {
- 	unsigned char __iomem *regs;
- 	bool has_sgram;
--#ifdef CONFIG_MTRR
--	int mtrr_reg;
--#endif
-+	int wc_cookie;
- 	bool ddc_registered;
- 	struct i2c_adapter ddc_adapter;
- 	struct i2c_algo_bit_data ddc_algo;
-@@ -1040,7 +1031,7 @@ static int i740fb_probe(struct pci_dev *dev, const struct pci_device_id *ent)
- 		goto err_request_regions;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 0008c95..c8217a8 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2134,6 +2134,225 @@ void pci_pm_init(struct pci_dev *dev)
  	}
+ }
  
--	info->screen_base = pci_ioremap_bar(dev, 0);
-+	info->screen_base = pci_ioremap_wc_bar(dev, 0);
- 	if (!info->screen_base) {
- 		dev_err(info->device, "error remapping base\n");
- 		ret = -ENOMEM;
-@@ -1144,13 +1135,9 @@ static int i740fb_probe(struct pci_dev *dev, const struct pci_device_id *ent)
++static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
++{
++	unsigned long flags = IORESOURCE_PCI_FIXED;
++
++	switch (prop) {
++	case PCI_EA_P_MEM:
++		flags |= IORESOURCE_MEM;
++		break;
++	case PCI_EA_P_MEM_PREFETCH:
++		flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
++		break;
++	case PCI_EA_P_IO:
++		flags |= IORESOURCE_IO;
++		break;
++	default:
++		dev_warn(&dev->dev, "%s: Property type %x not supported\n",
++			__func__, prop);
++		return 0;
++	}
++
++	return flags;
++}
++
++static struct resource *pci_ea_get_parent_resource(struct pci_dev *dev,
++					struct resource *res)
++{
++	struct resource *parent;
++
++	parent = pci_find_parent_resource(dev, res);
++	if (parent)
++		return parent;
++
++	/* for resources not claimed by a bridge */
++	if (res->flags & IORESOURCE_MEM)
++		return &iomem_resource;
++
++	if (res->flags & IORESOURCE_IO)
++		return &ioport_resource;
++
++	return NULL;
++}
++
++/* claim the memory for this device in the proper location */
++static void pci_ea_claim_resource(struct pci_dev *dev, struct resource *res)
++{
++	struct resource *parent;
++	struct resource *conflict;
++
++	parent = pci_ea_get_parent_resource(dev, res);
++	if (!parent) {
++		dev_warn(&dev->dev, "can't find parent resource for EA entry %s %pR\n",
++			res->name, res);
++		return;
++	}
++
++	/* claim the appropriate resource */
++	conflict = request_resource_conflict(parent, res);
++	if (conflict) {
++		dev_warn(&dev->dev, "can't claim EA entry %s %pR: address conflict with %s %pR\n",
++			 res->name, res, conflict->name, conflict);
++	}
++}
++
++static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei)
++{
++	if (bei <= PCI_STD_RESOURCE_END)
++		return &dev->resource[bei];
++	else if (bei == PCI_EA_BEI_ROM)
++		return &dev->resource[PCI_ROM_RESOURCE];
++	else
++		return NULL;
++}
++
++/* Read an Enhanced Allocation (EA) entry */
++static int pci_ea_read(struct pci_dev *dev, int offset)
++{
++	struct resource *res;
++	int ent_offset = offset;
++	int ent_size;
++	resource_size_t start;
++	resource_size_t end;
++	unsigned long flags;
++	u32 dw0;
++	u32 base;
++	u32 max_offset;
++	bool support_64 = (sizeof(resource_size_t) >= 8);
++
++	pci_read_config_dword(dev, ent_offset, &dw0);
++	ent_offset += 4;
++
++	/* Entry size field indicates DWORDs after 1st */
++	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
++
++	if (!(dw0 & PCI_EA_ENABLE)) {
++		dev_err(&dev->dev, "%s: Entry not enabled\n", __func__);
++		goto out;
++	}
++
++	res = pci_ea_get_resource(dev, PCI_EA_BEI(dw0));
++	if (!res) {
++		dev_err(&dev->dev, "%s: Unsupported EA entry BEI\n", __func__);
++		goto out;
++	}
++
++	flags = pci_ea_set_flags(dev, PCI_EA_PP(dw0));
++	if (!flags)
++		flags = pci_ea_set_flags(dev, PCI_EA_SP(dw0));
++	if (!flags) {
++		dev_err(&dev->dev, "%s: Entry EA properties not supported\n",
++			__func__);
++		goto out;
++	}
++
++	/* Read Base */
++	pci_read_config_dword(dev, ent_offset, &base);
++	start = (base & PCI_EA_FIELD_MASK);
++	ent_offset += 4;
++
++	/* Read MaxOffset */
++	pci_read_config_dword(dev, ent_offset, &max_offset);
++	ent_offset += 4;
++
++	/* Read Base MSBs (if 64-bit entry) */
++	if (base & PCI_EA_IS_64) {
++		u32 base_upper;
++
++		pci_read_config_dword(dev, ent_offset, &base_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry starts above 32-bit boundary, can't use */
++		if (!support_64 && base_upper)
++			goto out;
++
++		if (support_64)
++			start |= ((u64)base_upper << 32);
++	}
++
++	dev_dbg(&dev->dev, "%s: start = %pa\n", __func__, &start);
++
++	end = start + (max_offset | 0x03);
++
++	/* Read MaxOffset MSBs (if 64-bit entry) */
++	if (max_offset & PCI_EA_IS_64) {
++		u32 max_offset_upper;
++
++		pci_read_config_dword(dev, ent_offset, &max_offset_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry too big, can't use */
++		if (!support_64 && max_offset_upper)
++			goto out;
++
++		if (support_64)
++			end += ((u64)max_offset_upper << 32);
++	}
++
++	dev_dbg(&dev->dev, "%s: end = %pa\n", __func__, &end);
++
++	if (end < start) {
++		dev_err(&dev->dev, "EA Entry crosses address boundary\n");
++		goto out;
++	}
++
++	if (ent_size != ent_offset - offset) {
++		dev_err(&dev->dev, "EA entry size does not match length read\n"
++			"(Entry Size:%u Length Read:%u)\n",
++			ent_size, ent_offset - offset);
++		goto out;
++	}
++
++	res->name = pci_name(dev);
++	res->start = start;
++	res->end = end;
++	res->flags = flags;
++
++	pci_ea_claim_resource(dev, res);
++
++out:
++	return offset + ent_size;
++}
++
++/* Enhanced Allocation Initalization */
++void pci_ea_init(struct pci_dev *dev)
++{
++	int ea;
++	u8 num_ent;
++	int offset;
++	int i;
++
++	/* find PCI EA capability in list */
++	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
++	if (!ea)
++		return;
++
++	dev_dbg(&dev->dev, "%s: capability found!\n", __func__);
++
++	/* determine the number of entries */
++	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
++					&num_ent);
++	num_ent &= PCI_EA_NUM_ENT_MASK;
++
++	offset = ea + PCI_EA_FIRST_ENT;
++
++	/* Skip DWORD 2 for type 1 functions */
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
++		offset += 4;
++		/* TODO: Support fixed bus numbers */
++
++	for (i = 0; i < num_ent; ++i) {
++		/* parse each EA entry */
++		dev_dbg(&dev->dev, "%s: parsing entry %i...\n", __func__, i);
++		offset = pci_ea_read(dev, offset);
++	}
++}
++
+ static void pci_add_saved_cap(struct pci_dev *pci_dev,
+ 	struct pci_cap_saved_state *new_cap)
+ {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4ff0ff1..92fbef0 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -76,6 +76,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+ void pci_config_pm_runtime_put(struct pci_dev *dev);
+ void pci_pm_init(struct pci_dev *dev);
++void pci_ea_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
  
- 	fb_info(info, "%s frame buffer device\n", info->fix.id);
- 	pci_set_drvdata(dev, info);
--#ifdef CONFIG_MTRR
--	if (mtrr) {
--		par->mtrr_reg = -1;
--		par->mtrr_reg = mtrr_add(info->fix.smem_start,
--				info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
--	}
--#endif
-+	if (mtrr)
-+		par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
-+						  info->fix.smem_len);
- 	return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..4cadf35 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1522,6 +1522,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
  
- err_reg_framebuffer:
-@@ -1177,13 +1164,7 @@ static void i740fb_remove(struct pci_dev *dev)
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
++	/* Enhanced Allocation */
++	pci_ea_init(dev);
++
+ 	/* MSI/MSI-X list */
+ 	pci_msi_init_pci_dev(dev);
  
- 	if (info) {
- 		struct i740fb_par *par = info->par;
--
--#ifdef CONFIG_MTRR
--		if (par->mtrr_reg >= 0) {
--			mtrr_del(par->mtrr_reg, 0, 0);
--			par->mtrr_reg = -1;
--		}
--#endif
-+		arch_phys_wc_del(par->wc_cookie);
- 		unregister_framebuffer(info);
- 		fb_dealloc_cmap(&info->cmap);
- 		if (par->ddc_registered)
-@@ -1287,10 +1268,8 @@ static int  __init i740fb_setup(char *options)
- 	while ((opt = strsep(&options, ",")) != NULL) {
- 		if (!*opt)
- 			continue;
--#ifdef CONFIG_MTRR
- 		else if (!strncmp(opt, "mtrr:", 5))
- 			mtrr = simple_strtoul(opt + 5, NULL, 0);
--#endif
- 		else
- 			mode_option = opt;
- 	}
-@@ -1327,7 +1306,5 @@ MODULE_DESCRIPTION("fbdev driver for Intel740");
- module_param(mode_option, charp, 0444);
- MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
- 
--#ifdef CONFIG_MTRR
- module_param(mtrr, int, 0444);
- MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
--#endif
 -- 
-2.4.3
+1.9.1
 
