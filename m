@@ -1,228 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:35957 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753957AbbHJJVU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 05:21:20 -0400
-Received: by pacrr5 with SMTP id rr5so99899360pac.3
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 02:21:20 -0700 (PDT)
-Subject: Re: [PATCH v6 08/42] powerpc/powernv: Calculate PHB's DMA weight
- dynamically
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-9-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C86D08.4070003@ozlabs.ru>
-Date: Mon, 10 Aug 2015 19:21:12 +1000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/5] gic-its: Allow pci_requester_id to be overridden.
+To: Pavel Fedin <p.fedin@samsung.com>,
+	'David Daney' <ddaney.cavm@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	'Catalin Marinas' <catalin.marinas@arm.com>,
+	'Will Deacon' <will.deacon@arm.com>,
+	'Bjorn Helgaas' <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	'Thomas Gleixner' <tglx@linutronix.de>,
+	'Jason Cooper' <jason@lakedaemon.net>
+References: <1436979285-8177-1-git-send-email-ddaney.cavm@gmail.com>
+ <1436979285-8177-3-git-send-email-ddaney.cavm@gmail.com>
+ <01a101d0db52$2d23b360$876b1a20$@samsung.com>
+CC: <linux-kernel@vger.kernel.org>,
+	'Robert Richter' <rrichter@cavium.com>,
+	'David Daney' <david.daney@cavium.com>
+From: David Daney <ddaney@caviumnetworks.com>
+Message-ID: <55D5F0E1.30702@caviumnetworks.com>
+Date: Thu, 20 Aug 2015 08:23:13 -0700
 MIME-Version: 1.0
-In-Reply-To: <1438834307-26960-9-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <01a101d0db52$2d23b360$876b1a20$@samsung.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2015 02:11 PM, Gavin Shan wrote:
-> For P7IOC, the whole available DMA32 space, which is below the
-> MEM32 space, is divided evenly into 256MB segments. The number
-> of continuous segments assigned to one particular PE depends on
-> the PE's DMA weight that is calculated based on the type of each
-> PCI devices contained in the PE, and PHB's DMA weight which is
-> accumulative DMA weight of PEs contained in the PHB. It means
-> that the PHB's DMA weight calculation depends on existing PEs,
-> which works perfectly now, but not hotplug friendly. As the
-> whole available DMA32 space can be assigned to one PE on PHB3,
-> so we don't have the issue on PHB3.
+On 08/20/2015 07:11 AM, Pavel Fedin wrote:
 >
-> The patch calculates PHB's DMA weight based on the PCI devices
-> contained in the PHB dynamically so that it's hotplug friendly.
+>   Hello!
 >
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 88 +++++++++++++++----------------
->   arch/powerpc/platforms/powernv/pci.h      |  6 ---
->   2 files changed, 43 insertions(+), 51 deletions(-)
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-owner@vger.kernel.org] On Behalf Of David
+>> Daney
+>> Sent: Wednesday, July 15, 2015 7:55 PM
+>> To: linux-arm-kernel@lists.infradead.org; Catalin Marinas; Will Deacon; Bjorn Helgaas; linux-
+>> pci@vger.kernel.org; Thomas Gleixner; Jason Cooper
+>> Cc: linux-kernel@vger.kernel.org; Robert Richter; David Daney
+>> Subject: [PATCH 2/5] gic-its: Allow pci_requester_id to be overridden.
+>>
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> ---
+>>   drivers/irqchip/irq-gic-v3-its.c   | 14 +++++++++++++-
+>>   include/linux/irqchip/arm-gic-v3.h |  2 ++
+>>   2 files changed, 15 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+>> index 1b7e155..4580970 100644
+>> --- a/drivers/irqchip/irq-gic-v3-its.c
+>> +++ b/drivers/irqchip/irq-gic-v3-its.c
+>> @@ -1189,11 +1189,23 @@ static int its_pci_msi_vec_count(struct pci_dev *pdev)
+>>   	return max(msi, msix);
+>>   }
+>>
+>> +static u32 its_dflt_pci_requester_id(struct pci_dev *pdev, u16 alias)
+>> +{
+>> +	return alias;
+>> +}
+>> +
+>> +static its_pci_requester_id_t its_pci_requester_id = its_dflt_pci_requester_id;
+>> +void set_its_pci_requester_id(its_pci_requester_id_t fn)
+>> +{
+>> +	its_pci_requester_id = fn;
+>> +}
+>> +EXPORT_SYMBOL(set_its_pci_requester_id);
 >
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 713f4b4..7342cfd 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -927,6 +927,9 @@ static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
->
->   static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
->   {
-> +	struct pci_controller *hose = pci_bus_to_host(dev->bus);
-> +	struct pnv_phb *phb = hose->private_data;
-> +
->   	/* This is quite simplistic. The "base" weight of a device
->   	 * is 10. 0 means no DMA is to be accounted for it.
->   	 */
-> @@ -939,14 +942,34 @@ static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
->   	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
->   	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
->   	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
-> -		return 3;
-> +		return 3 * phb->ioda.tce32_count;
->
->   	/* Increase the weight of RAID (includes Obsidian) */
->   	if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
-> -		return 15;
-> +		return 15 * phb->ioda.tce32_count;
->
->   	/* Default */
-> -	return 10;
-> +	return 10 * phb->ioda.tce32_count;
-> +}
-> +
-> +static int __pnv_ioda_phb_dma_weight(struct pci_dev *pdev, void *data)
-> +{
-> +	unsigned int *dma_weight = data;
-> +
-> +	*dma_weight += pnv_ioda_dma_weight(pdev);
-> +	return 0;
-> +}
-> +
-> +static unsigned int pnv_ioda_phb_dma_weight(struct pnv_phb *phb)
-> +{
-> +	unsigned int dma_weight = 0;
-> +
-> +	if (!phb->hose->bus)
-> +		return 0;
-> +
-> +	pci_walk_bus(phb->hose->bus,
-> +		     __pnv_ioda_phb_dma_weight, &dma_weight);
-> +	return dma_weight;
->   }
->
->   #ifdef CONFIG_PCI_IOV
-> @@ -1097,14 +1120,6 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
->   	/* Put PE to the list */
->   	list_add_tail(&pe->list, &phb->ioda.pe_list);
->
-> -	/* Account for one DMA PE if at least one DMA capable device exist
-> -	 * below the bridge
-> -	 */
-> -	if (pe->dma_weight != 0) {
-> -		phb->ioda.dma_weight += pe->dma_weight;
-> -		phb->ioda.dma_pe_count++;
-> -	}
-> -
->   	/* Link the PE */
->   	pnv_ioda_link_pe_by_weight(phb, pe);
->   }
-> @@ -2431,24 +2446,13 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->   static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   {
->   	struct pci_controller *hose = phb->hose;
-> -	unsigned int residual, remaining, segs, tw, base;
->   	struct pnv_ioda_pe *pe;
-> +	unsigned int dma_weight;
->
-> -	/* If we have more PE# than segments available, hand out one
-> -	 * per PE until we run out and let the rest fail. If not,
-> -	 * then we assign at least one segment per PE, plus more based
-> -	 * on the amount of devices under that PE
-> -	 */
-> -	if (phb->ioda.dma_pe_count > phb->ioda.tce32_count)
-> -		residual = 0;
-> -	else
-> -		residual = phb->ioda.tce32_count -
-> -			phb->ioda.dma_pe_count;
-> -
-> -	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
-> -		hose->global_number, phb->ioda.tce32_count);
-> -	pr_info("PCI: %d PE# for a total weight of %d\n",
-> -		phb->ioda.dma_pe_count, phb->ioda.dma_weight);
-> +	/* Calculate the PHB's DMA weight */
-> +	dma_weight = pnv_ioda_phb_dma_weight(phb);
-> +	pr_info("PCI%04x has %ld DMA32 segments, total weight %d\n",
-> +		hose->global_number, phb->ioda.tce32_count, dma_weight);
->
->   	pnv_pci_ioda_setup_opal_tce_kill(phb);
->
-> @@ -2456,22 +2460,9 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   	 * out one base segment plus any residual segments based on
->   	 * weight
->   	 */
-> -	remaining = phb->ioda.tce32_count;
-> -	tw = phb->ioda.dma_weight;
-> -	base = 0;
->   	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
->   		if (!pe->dma_weight)
->   			continue;
-> -		if (!remaining) {
-> -			pe_warn(pe, "No DMA32 resources available\n");
-> -			continue;
-> -		}
-> -		segs = 1;
-> -		if (residual) {
-> -			segs += ((pe->dma_weight * residual)  + (tw / 2)) / tw;
-> -			if (segs > remaining)
-> -				segs = remaining;
-> -		}
->
->   		/*
->   		 * For IODA2 compliant PHB3, we needn't care about the weight.
-> @@ -2479,17 +2470,24 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   		 * the specific PE.
->   		 */
->   		if (phb->type == PNV_PHB_IODA1) {
-> -			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
-> +			unsigned int segs, base = 0;
-> +
-> +			if (pe->dma_weight <
-> +			    dma_weight / phb->ioda.tce32_count)
-> +				segs = 1;
-> +			else
-> +				segs = (pe->dma_weight *
-> +					phb->ioda.tce32_count) / dma_weight;
-> +
-> +			pe_info(pe, "DMA32 weight %d, assigned %d segments\n",
->   				pe->dma_weight, segs);
->   			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
-> +
-> +			base += segs;
+>   IMHO having a globally defined function is a horrible approach. What if some HW has two different
+> PCI host controllers, each of them wants to provide different form of IDs? I know, this is just
+> imaginary, but still...
+
+It is not imaginary, such systems exist.
+
+>   What if instead of this function we simply add a field to a struct pci_bus ? Then bus driver would
+> fill in HW-specific ID bits for every bus.
+>   I can send a patch if interested.
+
+There is a lot of work being done in the upstream to extract the proper 
+information from the device tree.  We are going to piggyback on that for 
+the next versions of the patch.
+
+ACPI will have to be made to work as well.
+
+David Daney
 
 
-This is not right. @base here is a local variable in the scope, 
-pnv_pci_ioda_setup_dma_pe() will always be called with base==0.
 
 
-Sorry for commenting the same patch twice.
-
-
->   		} else {
->   			pe_info(pe, "Assign DMA32 space\n");
-> -			segs = 0;
->   			pnv_pci_ioda2_setup_dma_pe(phb, pe);
->   		}
-> -
-> -		remaining -= segs;
-> -		base += segs;
->   	}
->   }
 >
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 08a4e57..addd3f7 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -183,12 +183,6 @@ struct pnv_phb {
->   			/* 32-bit TCE tables allocation */
->   			unsigned long		tce32_count;
+>> +
+>>   static int its_get_pci_alias(struct pci_dev *pdev, u16 alias, void *data)
+>>   {
+>>   	struct its_pci_alias *dev_alias = data;
+>>
+>> -	dev_alias->dev_id = alias;
+>> +	dev_alias->dev_id = its_pci_requester_id(pdev, alias);
+>>   	if (pdev != dev_alias->pdev)
+>>   		dev_alias->count += its_pci_msi_vec_count(dev_alias->pdev);
+>>
+>> diff --git a/include/linux/irqchip/arm-gic-v3.h b/include/linux/irqchip/arm-gic-v3.h
+>> index ffbc034..18e3757 100644
+>> --- a/include/linux/irqchip/arm-gic-v3.h
+>> +++ b/include/linux/irqchip/arm-gic-v3.h
+>> @@ -389,6 +389,8 @@ int its_cpu_init(void);
+>>   int its_init(struct device_node *node, struct rdists *rdists,
+>>   	     struct irq_domain *domain);
+>>
+>> +typedef u32 (*its_pci_requester_id_t)(struct pci_dev *, u16);
+>> +void set_its_pci_requester_id(its_pci_requester_id_t fn);
+>>   #endif
+>>
+>>   #endif
+>> --
 >
-> -			/* Total "weight" for the sake of DMA resources
-> -			 * allocation
-> -			 */
-> -			unsigned int		dma_weight;
-> -			unsigned int		dma_pe_count;
-> -
->   			/* Sorted list of used PE's, sorted at
->   			 * boot for resource allocation purposes
->   			 */
+> Kind regards,
+> Pavel Fedin
+> Expert Engineer
+> Samsung Electronics Research center Russia
 >
-
-
--- 
-Alexey
+>
+>
