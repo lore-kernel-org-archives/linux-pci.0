@@ -1,102 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:55897 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752501AbbHRTsD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 18 Aug 2015 15:48:03 -0400
-Subject: Re: Aw: A500 boot crash in 4.2.0-rc3-00246-g763e326
-To: Meelis Roos <mroos@linux.ee>, Yinghai Lu <yinghai@kernel.org>
-References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee>
- <trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71>
- <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
- <alpine.LRH.2.20.1508182141200.24742@math.ut.ee>
-Cc: linux-parisc@vger.kernel.org, linux-pci@vger.kernel.org,
-	David Ahern <david.ahern@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	sparclinux@vger.kernel.org,
-	James Bottomley <James.Bottomley@HansenPartnership.com>
-From: Helge Deller <deller@gmx.de>
-Message-ID: <55D38BE6.6080302@gmx.de>
-Date: Tue, 18 Aug 2015 21:47:50 +0200
+Received: from e24smtp02.br.ibm.com ([32.104.18.86]:51004 "EHLO
+	e24smtp02.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751364AbbHTTKz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 15:10:55 -0400
+Received: from /spool/local
+	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Thu, 20 Aug 2015 16:10:53 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id C1EA71DC0072
+	for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 15:09:47 -0400 (EDT)
+Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
+	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7KJ9IlU12059002
+	for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 16:09:19 -0300
+Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
+	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7KJAlQ9029482
+	for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 16:10:48 -0300
+Message-ID: <55D62636.5050403@linux.vnet.ibm.com>
+Date: Thu, 20 Aug 2015 16:10:46 -0300
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.20.1508182141200.24742@math.ut.ee>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Michael Ellerman <mpe@ellerman.id.au>
+CC: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	paulus@samba.org, bhelgaas@google.com, mst@redhat.com
+Subject: Re: [PATCH v2 1/2] PCI: Make pci_msi_setup_pci_dev() non-static for
+ use by arch code
+References: <1439945086.23217.5.camel@ellerman.id.au> ,<1439932077-11427-2-git-send-email-gpiccoli@linux.vnet.ibm.com> <1440009922-30248-1-git-send-email-gpiccoli@linux.vnet.ibm.com> <1440032549.13406.3.camel@ellerman.id.au>
+In-Reply-To: <1440032549.13406.3.camel@ellerman.id.au>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18.08.2015 20:44, Meelis Roos wrote:
-> (CC-s added)
->
->>>> Tried 4.2.0-rc3-00246-g763e326 on A500 but it crashes on boot. This is
->>>> still present in todays 4.2.0-rc6+git. 4.1 was fine, I Will bisect but
->>>> it takes time.
->>>>
->>>> PDC Stable Storage facility v0.30
->>>> STI GSC/PCI core graphics driver Version 0.9b
->>>> Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
->>>> serial 0000:00:04.0: enabling device (0146 -> 0147)
->>>> console [ttyS0] disabled
->>>> 0000:00:04.0: ttyS0 at MMIO 0xfffffffff8000000 (irq = 21, base_baud = 115200) is a 16550A
->>>> console [ttyS0] enabled
->>>> console [ttyS0] enabled
->>>> bootconsole [ttyB0] disabled
->>>> bootconsole [ttyB0] disabled
->>>> 0000:00:04.0: ttyS1 at MMIO 0xfffffffff8000008 (irq = 21, base_baud = 115200) is a 16550A
->>>> 0000:00:04.0: ttyS2 at MMIO 0xfffffffff8000010 (irq = 21, base_baud = 115200) is a 16550A
->>>> serial 0000:00:05.0: enabling device (0000 -> 0003)
->>>> serial 0000:00:05.0: enabling SERR and PARITY (0003 -> 0143)
->>>> 0000:00:05.0: ttyS3 at MMIO 0xfffffffff8003000 (irq = 22, base_baud = 115200) is a 16550A
->>>> serial 0000:00:05.0: Couldn't register serial port 0, irq 22, type 2, error -28
->>>> sym53c8xx 0000:00:01.0: enabling device (0000 -> 0003)
->>>> sym53c8xx 0000:00:01.0: enabling SERR and PARITY (0003 -> 0143)
->>>
->>> I'm seeing the same problem on my rp5470 with Kernel 4.2-rc7. My machine just hangs though and doesn't crash.
->>
->> I did a bisect and commit 3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d ("PCI: Add pci_bus_addr_t") seems to be the culprit:
->> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=3a9ad0b4fdcd57f775d3615004c8c64c021a9e7d
->>
->> Since the patch has "CC: stable@vger.kernel.org  # v3.19+", it might be the reason why you see kernel 3.19 failing too...
->
-> I just found the same commit breaking my A500 parisc machine by
-> bisecting.
->
-> CC: patch author and linux-pci.
+On 08/19/2015 10:02 PM, Michael Ellerman wrote:
+> In future you should send a reply like the above to my mail, and then
+> separately send the new patch series. My preference is that the new series is
+> not a reply to anything, though some other maintainers may disagree on that
+> point.
 
-I think this is the problem:
-
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -1,6 +1,10 @@
-  #
-  # PCI configuration
-  #
-+config PCI_BUS_ADDR_T_64BIT
-+       def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
-+       depends on PCI
+OK, sure. I can send new patch series as new messages instead of replies 
+to the same thread.
 
 
-CONFIG_PCI_BUS_ADDR_T_64BIT gets now defined on all 64bit arches.
-Then if CONFIG_PCI_BUS_ADDR_T_64BIT is set, in pci_bus_alloc_resource()
-64bit address spaces (IORESOURCE_MEM_64) will be enabled which weren't enabled before.
+> The other question, which I neglected to ask yesterday, is what is the symptom
+> of the bug? ie. does the system fail to boot or otherwise crash etc.?
 
-This trivial/temporary hack fixes the problem:
+This is briefly explained on cover-letter, but I can elaborate a bit 
+more: I was testing driver issues on kernel 2.6.32 (RHEL 6.6), and when 
+I tried the mainline kernel, the driver wasn't able to enable MSI-X 
+capabilities. Interestingly, on kernel 4.1 this behavior doesn't happen 
+and the driver can use MSI-X interrupts.
 
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -200,7 +200,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
-                                           resource_size_t),
-                 void *alignf_data)
-  {
--#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
-+#if defined(CONFIG_PCI_BUS_ADDR_T_64BIT) && !defined(CONFIG_PARISC)
-         int rc;
-  
-         if (res->flags & IORESOURCE_MEM_64) {
+So, I figured that something was wrong and found the problem described 
+on the patches. I tried the proposed solution (calling manually the 
+function that is not reachable anymore) and it works.
+
+Regarding the bnx2x driver, below are two dmesg outputs:
+
+1) With kernel 4.2-rc7
+bnx2x 0000:01:00.0: no msix capability found
+
+2) With kernel 4.1
+bnx2x 0000:01:00.0: msix capability found
+bnx2x 0000:01:00.0 eth2: using MSI-X  IRQs: sp 24  fp[0] 26 ... fp[7] 33
+
+> This is changes *in* v2, or since v1.
+
+My bad, sorry.
 
 
-but the real problem is probably, that the sym53c8xx driver or maybe the parisc PCI core code isn't 64bit clean?
+> Or anywhere after the first '---', which means the version commentary is
+> discarded in the final commit.
 
-I did some more debugging, and on parisc the first hang happens in function sym_check_raid() [called from sym2_probe()]
-indrivers/scsi/sym53c8xx_2/sym_glue.c while trying to call readl():
-   ram_val = readl(device->s.ramaddr + ram_size - 16);
+I used scissors, but there's no problem in stop using it in this list. 
+Thanks for the suggestion.
 
-Helge
+Cheers
+
