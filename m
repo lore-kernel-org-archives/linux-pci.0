@@ -1,93 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Keith Busch <keith.busch@intel.com>
-To: x86@kernel.org, linux-kernel@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH 1/2] x86: PCI bus specific MSI operations
-Date: Thu, 27 Aug 2015 16:39:05 -0600
-Message-Id: <1440715146-16578-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1440715146-16578-1-git-send-email-keith.busch@intel.com>
-References: <1440715146-16578-1-git-send-email-keith.busch@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:56104 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752340AbbHTRuT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 13:50:19 -0400
+Date: Thu, 20 Aug 2015 10:50:17 -0700 (PDT)
+Message-Id: <20150820.105017.921228882849805352.davem@davemloft.net>
+To: bhelgaas@google.com
+Cc: benh@kernel.crashing.org, wangyijing@huawei.com,
+	linux-pci@vger.kernel.org, mroos@linux.ee,
+	sparclinux@vger.kernel.org, eric.snowberg@oracle.com
+Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAErSpo7JtRLWRAUPBdsoKauHNmftsb6fST317V9Sg4PkTV91pg@mail.gmail.com>
+References: <20150819221624.GA8150@google.com>
+	<1440023349.2737.21.camel@kernel.crashing.org>
+	<CAErSpo7JtRLWRAUPBdsoKauHNmftsb6fST317V9Sg4PkTV91pg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds struct x86_msi_ops to x86's PCI sysdata. This gives a
-host bridge driver the option to provide alternate MSI Data Register
-and MSI-X Table Entry programming for devices in PCI domains that do
-not subscribe to usual "IOAPIC" format.
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 19 Aug 2015 23:01:19 -0700
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-CC: Bryan Veal <bryan.e.veal@intel.com>
-CC: Dan Williams <dan.j.williams@intel.com>
-CC: x86@kernel.org
-CC: linux-kernel@vger.kernel.org
-CC: linux-pci@vger.kernel.org
----
- arch/x86/include/asm/pci.h |    3 +++
- arch/x86/kernel/x86_init.c |   19 +++++++++++++++++++
- 2 files changed, 22 insertions(+)
+> Easier said than done.  AFAIK, we won't crash after we add Yijing's
+> patch.  But it's unreasonable to expect people writing to the spec to
+> know the peculiarities of sparc64/powerpc, so there may be future
+> things we discover the hard way.  We'll just have to deal with them as
+> we find them.
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4625943..98f3802 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -20,6 +20,9 @@ struct pci_sysdata {
- #ifdef CONFIG_X86_64
- 	void		*iommu;		/* IOMMU private data */
- #endif
-+#ifdef CONFIG_PCI_MSI
-+	struct x86_msi_ops *msi_ops;
-+#endif
- };
- 
- extern int pci_routeirq;
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 3839628..416de84 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -118,21 +118,40 @@ struct x86_msi_ops x86_msi = {
- /* MSI arch specific hooks */
- int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
-+	struct pci_sysdata *sysdata = dev->bus->sysdata;
-+
-+	if (sysdata && sysdata->msi_ops && sysdata->msi_ops->setup_msi_irqs)
-+		return sysdata->msi_ops->setup_msi_irqs(dev, nvec, type);
- 	return x86_msi.setup_msi_irqs(dev, nvec, type);
- }
- 
- void arch_teardown_msi_irqs(struct pci_dev *dev)
- {
-+	struct pci_sysdata *sysdata = dev->bus->sysdata;
-+
-+	if (sysdata && sysdata->msi_ops && sysdata->msi_ops->teardown_msi_irqs)
-+		return sysdata->msi_ops->teardown_msi_irqs(dev);
- 	x86_msi.teardown_msi_irqs(dev);
- }
- 
- void arch_teardown_msi_irq(unsigned int irq)
- {
-+	struct msi_desc *desc =  irq_get_msi_desc(irq);
-+	struct pci_sysdata *sysdata = NULL;
-+
-+	if (desc)
-+		sysdata = desc->dev->bus->sysdata;
-+	if (sysdata && sysdata->msi_ops && sysdata->msi_ops->teardown_msi_irq)
-+		return sysdata->msi_ops->teardown_msi_irq(irq);
- 	x86_msi.teardown_msi_irq(irq);
- }
- 
- void arch_restore_msi_irqs(struct pci_dev *dev)
- {
-+	struct pci_sysdata *sysdata = dev->bus->sysdata;
-+
-+	if (sysdata && sysdata->msi_ops && sysdata->msi_ops->restore_msi_irqs)
-+		return sysdata->msi_ops->restore_msi_irqs(dev);
- 	x86_msi.restore_msi_irqs(dev);
- }
- #endif
--- 
-1.7.10.4
+I think it is unreasonable to assume that the PCI root complex is
+presented as a device in the full PCI bus hierarchy.
 
+If one wanted to chop the system up into multiple physical components,
+hiding the PCI root complex behind some controlled entity (hypervisor
+or whatever) is the only way to accomplish that.
+
+Therefore it is a very reasonable and perhaps even expected design
+decision to do what both powerpc and sparc64 have done.
