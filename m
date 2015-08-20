@@ -1,79 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp02.br.ibm.com ([32.104.18.86]:51004 "EHLO
-	e24smtp02.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364AbbHTTKz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 15:10:55 -0400
-Received: from /spool/local
-	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Thu, 20 Aug 2015 16:10:53 -0300
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id C1EA71DC0072
-	for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 15:09:47 -0400 (EDT)
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t7KJ9IlU12059002
-	for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 16:09:19 -0300
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t7KJAlQ9029482
-	for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 16:10:48 -0300
-Message-ID: <55D62636.5050403@linux.vnet.ibm.com>
-Date: Thu, 20 Aug 2015 16:10:46 -0300
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:32911 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106AbbHTFmk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 01:42:40 -0400
+Received: by pdrh1 with SMTP id h1so10255439pdr.0
+        for <linux-pci@vger.kernel.org>; Wed, 19 Aug 2015 22:42:40 -0700 (PDT)
+Date: Thu, 20 Aug 2015 00:42:34 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Helge Deller <deller@gmx.de>
+Cc: John David Anglin <dave.anglin@bell.net>,
+	Yinghai Lu <yinghai@kernel.org>, Meelis Roos <mroos@linux.ee>,
+	linux-parisc@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>
+Subject: Re: Re:  A500 boot crash in 4.2.0-rc3-00246-g763e326
+Message-ID: <20150820054234.GA10267@google.com>
+References: <alpine.LRH.2.11.1507260929000.30065@math.ut.ee>
+ <trinity-122a736f-3aac-4830-afc5-2abcd91792ea-1439820380917@3capp-gmx-bs71>
+ <trinity-5720bef8-5a4c-4465-b9eb-622daaef650a-1439902901415@3capp-gmx-bs02>
+ <alpine.LRH.2.20.1508182141200.24742@math.ut.ee>
+ <55D38BE6.6080302@gmx.de>
+ <CAE9FiQVUUN-SLO0U4G5CC6MEoXfb=bGd+f3bRgQprtaMHjsvpA@mail.gmail.com>
+ <alpine.LRH.2.20.1508190747360.5154@math.ut.ee>
+ <CAE9FiQW9hjDe2NBEfwQqcVZoJKqDjKT1P=7FcGjhVrF7wQW9+g@mail.gmail.com>
+ <BLU436-SMTP773488774A8C76BF6C12E597670@phx.gbl>
+ <trinity-ceafa563-3aad-4955-a6c6-205a2caf1e95-1439993198188@3capp-gmx-bs16>
 MIME-Version: 1.0
-To: Michael Ellerman <mpe@ellerman.id.au>
-CC: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-	paulus@samba.org, bhelgaas@google.com, mst@redhat.com
-Subject: Re: [PATCH v2 1/2] PCI: Make pci_msi_setup_pci_dev() non-static for
- use by arch code
-References: <1439945086.23217.5.camel@ellerman.id.au> ,<1439932077-11427-2-git-send-email-gpiccoli@linux.vnet.ibm.com> <1440009922-30248-1-git-send-email-gpiccoli@linux.vnet.ibm.com> <1440032549.13406.3.camel@ellerman.id.au>
-In-Reply-To: <1440032549.13406.3.camel@ellerman.id.au>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <trinity-ceafa563-3aad-4955-a6c6-205a2caf1e95-1439993198188@3capp-gmx-bs16>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/19/2015 10:02 PM, Michael Ellerman wrote:
-> In future you should send a reply like the above to my mail, and then
-> separately send the new patch series. My preference is that the new series is
-> not a reply to anything, though some other maintainers may disagree on that
-> point.
+On Wed, Aug 19, 2015 at 04:06:38PM +0200, Helge Deller wrote:
+> > On 2015-08-19, at 1:30 AM, Yinghai Lu wrote:
+> > > On Tue, Aug 18, 2015 at 9:48 PM, Meelis Roos <mroos@linux.ee> wrote:
+> > >>> On Tue, Aug 18, 2015 at 12:47 PM, Helge Deller <deller@gmx.de> wrote:
+> > >>> 
+> > >>> Then we should change to
+> > >>> 
+> > >>> config PCI_BUS_ADDR_T_64BIT
+> > >>>       def_bool y if (ARCH_DMA_ADDR_T_64BIT || SPARC64)
+> > >>>       depends on PCI
+> > >> 
+> > >> Why SPARC64? The problem happened on parisc.
+> > > so will not set PCI_BUS_ADDR_T_64BIT for parisc.
+> 
+> I think given the current time frame it's probably the best approach to fix this problem for kernel 4.2.
+> It reverts the behaviour back to how it was before (for all arches beside SPARC64).
+> I'm still wondering if/why parisc is the only arch (in the sym53c8xx driver only!) which broke by this change...
+> 
+> > I'm not sure this is optimal.  While the A500 may only have 32-bit PCI, c8000 appears to have a mix
+> > of 32 and 64-bit, and rp34XX is all 64-bit.
+> 
+> True, but probably nobody of us noticed that we only used the 32-bit PCI interface even with 64bit kernel on parisc up to now?
+> pci_bus_alloc_resource() in drivers/pci/bus.c just disabled (flag=0) all 64bit resources for us.
+> But I agree, I think we need to fix drivers/parisc/lba_pci.c to correctly cope with 64bit pci addresses.
 
-OK, sure. I can send new patch series as new messages instead of replies 
-to the same thread.
+I doubt we can fix the underlying issue before v4.2, but I'd at least
+like to avoid it.  I applied the patch below to for-linus.
+
+Yinghai proposed this:
+
+> > >>>       def_bool y if (ARCH_DMA_ADDR_T_64BIT || SPARC64)
+
+I did this instead:
+
++	def_bool y if (ARCH_DMA_ADDR_T_64BIT || (64BIT && !PARISC))
+
+because (a) Yinghai's proposal suggests this change is related to
+SPARC64, which is misleading, and (b) I want to keep 64-bit bus
+addresses for all 64-bit kernels *except* PA-RISC.
+
+I didn't mark it as Tested-by Meelis because I think he tested
+Yinghai's proposal.  But I can add that back, given confirmation.
 
 
-> The other question, which I neglected to ask yesterday, is what is the symptom
-> of the bug? ie. does the system fail to boot or otherwise crash etc.?
+commit 51a660a2732c
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Aug 20 00:08:15 2015 -0500
 
-This is briefly explained on cover-letter, but I can elaborate a bit 
-more: I was testing driver issues on kernel 2.6.32 (RHEL 6.6), and when 
-I tried the mainline kernel, the driver wasn't able to enable MSI-X 
-capabilities. Interestingly, on kernel 4.1 this behavior doesn't happen 
-and the driver can use MSI-X interrupts.
+    PCI: Don't use 64-bit bus addresses on PA-RISC
+    
+    Meelis and Helge reported that 3a9ad0b4fdcd ("PCI: Add pci_bus_addr_t")
+    caused HPMCs on A500 and hangs on rp5470.
+    
+    PA-RISC does not set ARCH_DMA_ADDR_T_64BIT, even for 64-bit kernels, so
+    prior to 3a9ad0b4fdcd, we always used 32-bit PCI addresses.  After
+    3a9ad0b4fdcd, we do use 64-bit PCI addresses in 64-bit kernels, and
+    apparently there's some PA-RISC problem related to them.
+    
+    Fixes: 3a9ad0b4fdcd ("PCI: Add pci_bus_addr_t")
+    Link: http://lkml.kernel.org/r/alpine.LRH.2.11.1507260929000.30065@math.ut.ee
+    Reported-by: Meelis Roos <mroos@linux.ee>
+    Reported-by: Helge Deller <deller@gmx.de>
+    Based-on-idea-by: Yinghai Lu <yinghai@kernel.org>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-So, I figured that something was wrong and found the problem described 
-on the patches. I tried the proposed solution (calling manually the 
-function that is not reachable anymore) and it works.
-
-Regarding the bnx2x driver, below are two dmesg outputs:
-
-1) With kernel 4.2-rc7
-bnx2x 0000:01:00.0: no msix capability found
-
-2) With kernel 4.1
-bnx2x 0000:01:00.0: msix capability found
-bnx2x 0000:01:00.0 eth2: using MSI-X  IRQs: sp 24  fp[0] 26 ... fp[7] 33
-
-> This is changes *in* v2, or since v1.
-
-My bad, sorry.
-
-
-> Or anywhere after the first '---', which means the version commentary is
-> discarded in the final commit.
-
-I used scissors, but there's no problem in stop using it in this list. 
-Thanks for the suggestion.
-
-Cheers
-
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 73de4ef..944f500 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -2,7 +2,7 @@
+ # PCI configuration
+ #
+ config PCI_BUS_ADDR_T_64BIT
+-	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
++	def_bool y if (ARCH_DMA_ADDR_T_64BIT || (64BIT && !PARISC))
+ 	depends on PCI
+ 
+ config PCI_MSI
