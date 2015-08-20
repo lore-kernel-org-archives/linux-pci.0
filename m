@@ -1,67 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:33280 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752644AbbHZVPU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2015 17:15:20 -0400
+Received: from mail-io0-f182.google.com ([209.85.223.182]:34604 "EHLO
+	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752486AbbHTSYE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 14:24:04 -0400
+Received: by iodb91 with SMTP id b91so55707601iod.1
+        for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 11:24:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150826134923.9d8fad571de4be237a84ff50@linux-foundation.org>
-References: <CAE9FiQXWXPexLM8xma8Cb9R9hpR2+tOwzGtmJxzH5uuyPraDpQ@mail.gmail.com>
-	<20150821202707.GA920@agluck-desk.sc.intel.com>
-	<CAE9FiQU-=oAzi_benuEm=x_Y_LUp48uND6cGnx9osbYyPWySdw@mail.gmail.com>
-	<CA+8MBbL4nqTxi14Lz92PRFZeobHBLimSfcTH=9HaZBcEUpLVOg@mail.gmail.com>
-	<CAE9FiQVJozeJ9R9GgMEVPfJaSJL+J+M3ULu2VXPjrdDqnYGwvw@mail.gmail.com>
-	<CA+8MBb+yJ9ywFnmfCAEPF0ZBQfH1R9b8hzmwVpM8+rsyJkEW5Q@mail.gmail.com>
-	<CAE9FiQUDb=uNKV9Bj34v3vvMT04MiuoRHqTq6=KTMd+DVrMVNg@mail.gmail.com>
-	<CA+8MBbK6wu+7-M+fP8_GMmhUDSMZ4akOVRkW8xaP8x0pqJN0bQ@mail.gmail.com>
-	<CAE9FiQUAAQZ4RF9rTxthBCJAJyDkw1g3dckfeJ870gqK9Dzg9A@mail.gmail.com>
-	<CAE9FiQXH0SxTCaw-J=nEhYtbuZfBDU3R+v_XRZYF6ymeXnPsgg@mail.gmail.com>
-	<20150826041716.GA14102@gmail.com>
-	<CAE9FiQXFHWNR41yEDjj=tAteanbngXQNQcwZvvVVexRmAQTTeA@mail.gmail.com>
-	<20150826134923.9d8fad571de4be237a84ff50@linux-foundation.org>
-Date: Wed, 26 Aug 2015 14:15:19 -0700
-Message-ID: <CAE9FiQXN6ziZVgiZWdut6JyGze8LyW5hkikdWnREq8aCwAUvpA@mail.gmail.com>
-Subject: Re: [PATCH v4 4/4] Use 2GB memory block size on large-memory x86-64 systems
-From: Yinghai Lu <yinghai@kernel.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Tony Luck <tony.luck@gmail.com>,
-	Daniel J Blueman <daniel@numascale.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"the arch/x86 maintainers" <x86@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+In-Reply-To: <20150820.104728.699050706854625548.davem@davemloft.net>
+References: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
+ <20150820054800.GB10267@google.com> <20150820.104728.699050706854625548.davem@davemloft.net>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Aug 2015 11:23:43 -0700
+Message-ID: <CAErSpo5SApFYWOs8Q2ZH2vpnEW6jY0XWAgeiyhMk4aCNtON46w@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
+To: David Miller <davem@davemloft.net>
+Cc: Yijing Wang <wangyijing@huawei.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>
+	Meelis Roos <mroos@linux.ee>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Eric Snowberg <eric.snowberg@oracle.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 26, 2015 at 1:49 PM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
-> On Tue, 25 Aug 2015 22:42:05 -0700 Yinghai Lu <yinghai@kernel.org> wrote:
-> I don't know what that means.  We have multiple patches under at least
-> two different Subject:s.  Please be very careful and very specific when
-> identifying patches.  Otherwise mistakes will be made.
+On Thu, Aug 20, 2015 at 10:47 AM, David Miller <davem@davemloft.net> wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> Date: Thu, 20 Aug 2015 00:48:00 -0500
 >
+>> [+cc Dave, Eric, Ben, sparclinux]
 >
-> I presently have three patches:
->
-> mm-check-if-section-present-during-memory-block-unregistering.patch
-> mm-check-if-section-present-during-memory-block-unregistering-v2.patch
-> mm-check-if-section-present-during-memory-block-unregistering-v2-fix.patch
->
-> When these are consolidated together, this is the result:
+> I think the comment is terrible.
 
-Please drop all three, and apply v3 directly from
+I'll update the comment if you suggest some text.  Do you object
+mainly to the mention of the specific systems?
 
-https://patchwork.kernel.org/patch/7080111/
+> It is not limited to those two systems, it is a general problem with
+> how the code assumes the root PCI-E port is instantiated in the PCI
+> bus hierarchy which will not be true on any system which has a PCI
+> controller that doesn't actually provide a bonafide config space to
+> access.
 
-we should not touch unregiser path, as unregister_memory_section()
-already check if the section is present before.
+I agree, we should not crash if the hardware we find isn't what we expect.
 
-Thanks
-
-Yinghai
+Bjorn
