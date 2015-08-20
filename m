@@ -1,69 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:34711 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075AbbHFQDM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 12:03:12 -0400
-Received: by iodb91 with SMTP id b91so25775501iod.1
-        for <linux-pci@vger.kernel.org>; Thu, 06 Aug 2015 09:03:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150729160701.GC31170@google.com>
-References: <20150721001243.28145.81610.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20150729160701.GC31170@google.com>
-Date: Thu, 6 Aug 2015 09:03:11 -0700
-Message-ID: <CAE9FiQWBuTq2gH_-UjrCrOgtgFw05=RLXXAqkWFz4cTxHPCcdA@mail.gmail.com>
-Subject: Re: [PATCH v2 00/11] PCI: Fix ATS deadlock
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu <iommu@lists.linux-foundation.org>,
-	Gregor Dick <gdick@solarflare.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from ozlabs.org ([103.22.144.67]:43925 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751387AbbHTBCb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 19 Aug 2015 21:02:31 -0400
+Message-ID: <1440032549.13406.3.camel@ellerman.id.au>
+Subject: Re: [PATCH v2 1/2] PCI: Make pci_msi_setup_pci_dev() non-static for
+ use by arch code
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	paulus@samba.org, bhelgaas@google.com, mst@redhat.com
+Date: Thu, 20 Aug 2015 11:02:29 +1000
+In-Reply-To: <1440009922-30248-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+References: <1439945086.23217.5.camel@ellerman.id.au>
+	,<1439932077-11427-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <1440009922-30248-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 29, 2015 at 9:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jul 20, 2015 at 07:13:49PM -0500, Bjorn Helgaas wrote:
->> Gregor reported a deadlock [1] when enabling a VF that supports ATS.
->> This series is intended to fix that.  The second patch should be enough to
->> fix the deadlock; the rest are simplification and cleanup.
->>
->> These are based on v4.2-rc2.
->>
->> [1] http://permalink.gmane.org/gmane.linux.kernel.iommu/9433
->>
->> Changes between v1 and v2:
->>   - Remove use of pci_ats_enabled() (intel-iommu.c)
->>   - Call pci_ats_queue_depth() only once per device and cache result
->>     (intel-iommu.c)
->>   - Remove pci_ats_enabled() interface
->>   - Stop caching queue depth in pci_dev to save space
->>   - Add PF refcount of how many associated VFs have ATS enabled
->>   - Add comment that ATS must be enabled on PF before on VFs
->>   - Require ATS to be disabled on all VFs and PF before changing STU
->>
->>
->> ---
->>
->> Bjorn Helgaas (11):
->>       iommu/vt-d: Cache PCI ATS state and Invalidate Queue Depth
->>       PCI: Allocate ATS struct during enumeration
->>       PCI: Embed ATS info directly into struct pci_dev
->>       PCI: Reduce size of ATS structure elements
->>       PCI: Rationalize pci_ats_queue_depth() error checking
->>       PCI: Inline the ATS setup code into pci_ats_init()
->>       PCI: Use pci_physfn() rather than looking up physfn by hand
->>       PCI: Clean up ATS error handling
->>       PCI: Move ATS declarations to linux/pci.h so they're all together
->>       PCI: Stop caching ATS Invalidate Queue Depth
->>       PCI: Remove pci_ats_enabled()
->
-> I applied these to a pci/iommu branch for v4.3.  Let me know if you see any
-> issues.
+On Wed, 2015-08-19 at 15:45 -0300, Guilherme G. Piccoli wrote:
+> Thanks very much for your suggestions Michael. I agree with them all,
+> so I'm sending the patch v2 (see below).
+> 
+> About the relevant mailing lists, I already sent to the linux-pci and
+> already cc'ed Bjorn Helgaas - the problem is that I made a mistake and
+> sent 2 different emails using git send-email. I'm really sorry about
+> this.
+> 
+> Now I'm trying to correct my mistake sending this message
+> simultaneously to both lists (and to a bunch of cc's) using two
+> Message-IDs in my reply. Hope it works...
 
-looks like this branch causes hang on system with qlogic/emulex cards.
+OK.
 
-exclude the branch, will make kernel work again.
+In future you should send a reply like the above to my mail, and then
+separately send the new patch series. My preference is that the new series is
+not a reply to anything, though some other maintainers may disagree on that
+point.
 
-Yinghai
+The other question, which I neglected to ask yesterday, is what is the symptom
+of the bug? ie. does the system fail to boot or otherwise crash etc.?
+
+
+> Changes since v2:
+
+This is changes *in* v2, or since v1.
+
+And it doesn't go here, it goes below ...
+
+>  * Made commit message more clear
+>  * Added "Fixes" line
+>  * Improved commit reference by using 12 first chars of SHA
+> 
+> >8----------8<
+> 
+> Commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
+> doesn't support MSI") changed the location of the code that disables
+> MSI/MSI-X interrupts at PCI probe time in devices that have this flag
+> set. It moved the code from pci_msi_init_pci_dev() to a new function
+> named pci_msi_setup_pci_dev(), called by pci_setup_device().
+> 
+> The pseries PCI probing code does not call pci_setup_device(), so since
+> the aforementioned commit the function pci_msi_setup_pci_dev() is not
+> called and MSI/MSI-X interrupts are left enabled, which is a bug. To fix
+> this, the pseries PCI probe should manually call pci_msi_setup_pci_dev(),
+> so this patch makes it non-static.
+> 
+> Fixes: 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
+> doesn't support MSI")
+> 
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> ---
+
+Here.
+
+Or anywhere after the first '---', which means the version commentary is
+discarded in the final commit.
+
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index cefd636..520c5b6 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1103,7 +1103,7 @@ int pci_cfg_space_size(struct pci_dev *dev)
+>  
+>  #define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
+>  
+> -static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+> +void pci_msi_setup_pci_dev(struct pci_dev *dev)
+>  {
+>  	/*
+>  	 * Disable the MSI hardware to avoid screaming interrupts
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8a0321a..860c751 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1202,6 +1202,7 @@ struct msix_entry {
+>  	u16	entry;	/* driver uses to specify entry, OS writes */
+>  };
+>  
+> +void pci_msi_setup_pci_dev(struct pci_dev *dev);
+>  
+>  #ifdef CONFIG_PCI_MSI
+>  int pci_msi_vec_count(struct pci_dev *dev);
+
+
+cheers
+
+
+
