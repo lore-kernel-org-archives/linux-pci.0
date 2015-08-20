@@ -1,176 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:33302 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750787AbbHREOf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 00:14:35 -0400
-Received: by pdrh1 with SMTP id h1so63883617pdr.0
-        for <linux-pci@vger.kernel.org>; Mon, 17 Aug 2015 21:14:35 -0700 (PDT)
-Date: Mon, 17 Aug 2015 23:14:29 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:46178 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751804AbbHTGix (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 20 Aug 2015 02:38:53 -0400
+Message-ID: <1440052702.9177.8.camel@kernel.crashing.org>
+Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 32/51] resources: Split out __allocate_resource()
-Message-ID: <20150818041429.GY26431@google.com>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
- <1438039809-24957-33-git-send-email-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438039809-24957-33-git-send-email-yinghai@kernel.org>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Meelis Roos <mroos@linux.ee>,
+	"sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>,
+	Eric Snowberg <eric.snowberg@oracle.com>
+Date: Thu, 20 Aug 2015 16:38:22 +1000
+In-Reply-To: <CAErSpo7JtRLWRAUPBdsoKauHNmftsb6fST317V9Sg4PkTV91pg@mail.gmail.com>
+References: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
+	 <20150818184943.GA26431@google.com>
+	 <20150818.121004.1891242587946602543.davem@davemloft.net>
+	 <20150819221624.GA8150@google.com>
+	 <1440023349.2737.21.camel@kernel.crashing.org>
+	 <CAErSpo7JtRLWRAUPBdsoKauHNmftsb6fST317V9Sg4PkTV91pg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 27, 2015 at 04:29:50PM -0700, Yinghai Lu wrote:
-> It will not hold lock, so we could use it in other functions that
-> hold the resource lock already.
+On Wed, 2015-08-19 at 23:01 -0700, Bjorn Helgaas wrote:
+> Easier said than done.  AFAIK, we won't crash after we add Yijing's
+> patch.  But it's unreasonable to expect people writing to the spec to
+> know the peculiarities of sparc64/powerpc, so there may be future
+> things we discover the hard way.  We'll just have to deal with them as
+> we find them.
 
-What's the benefit of this patch?  Does it fix something?  Does it add some
-functionality we need?
-> 
-> -v2: according to Linus, using "bool lock" as parameter
->      aka "conditionally take lock" is *wrong*.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Acked-by: Linus Torvalds <torvalds@linux-foundation.org>
-> ---
->  kernel/resource.c | 70 +++++++++++++++++++++++++++++++++++++++----------------
->  1 file changed, 50 insertions(+), 20 deletions(-)
-> 
-> diff --git a/kernel/resource.c b/kernel/resource.c
-> index fed052a..67b58a5 100644
-> --- a/kernel/resource.c
-> +++ b/kernel/resource.c
-> @@ -619,7 +619,7 @@ static int find_resource(struct resource *root, struct resource *new,
->  }
->  
->  /**
-> - * reallocate_resource - allocate a slot in the resource tree given range & alignment.
-> + * __reallocate_resource - allocate a slot in the resource tree given range & alignment.
->   *	The resource will be relocated if the new size cannot be reallocated in the
->   *	current location.
->   *
-> @@ -628,7 +628,7 @@ static int find_resource(struct resource *root, struct resource *new,
->   * @newsize: new size of the resource descriptor
->   * @constraint: the size and alignment constraints to be met.
->   */
-> -static int reallocate_resource(struct resource *root, struct resource *old,
-> +static int __reallocate_resource(struct resource *root, struct resource *old,
->  			resource_size_t newsize,
->  			struct resource_constraint  *constraint)
->  {
-> @@ -636,8 +636,6 @@ static int reallocate_resource(struct resource *root, struct resource *old,
->  	struct resource new = *old;
->  	struct resource *conflict;
->  
-> -	write_lock(&resource_lock);
-> -
->  	if ((err = __find_resource(root, old, &new, newsize, constraint)))
->  		goto out;
->  
-> @@ -662,14 +660,13 @@ static int reallocate_resource(struct resource *root, struct resource *old,
->  		BUG_ON(conflict);
->  	}
->  out:
-> -	write_unlock(&resource_lock);
->  	return err;
->  }
->  
-> -
->  /**
-> - * allocate_resource - allocate empty slot in the resource tree given range & alignment.
-> - * 	The resource will be reallocated with a new size if it was already allocated
-> + * __allocate_resource - allocate empty slot in the resource tree given range & alignment.
-> + *	The resource will be reallocated with a new size if it was already
-> + *	allocated
->   * @root: root resource descriptor
->   * @new: resource descriptor desired by caller
->   * @size: requested resource region size
-> @@ -678,15 +675,17 @@ out:
->   * @align: alignment requested, in bytes
->   * @alignf: alignment function, optional, called if not NULL
->   * @alignf_data: arbitrary data to pass to the @alignf function
-> + *
-> + * Caller need to hold resource_lock if needed.
->   */
-> -int allocate_resource(struct resource *root, struct resource *new,
-> -		      resource_size_t size, resource_size_t min,
-> -		      resource_size_t max, resource_size_t align,
-> -		      resource_size_t (*alignf)(void *,
-> -						const struct resource *,
-> -						resource_size_t,
-> -						resource_size_t),
-> -		      void *alignf_data)
-> +static int __allocate_resource(struct resource *root, struct resource *new,
-> +				resource_size_t size, resource_size_t min,
-> +				resource_size_t max, resource_size_t align,
-> +				resource_size_t (*alignf)(void *,
-> +						  const struct resource *,
-> +						  resource_size_t,
-> +						  resource_size_t),
-> +				void *alignf_data)
->  {
->  	int err;
->  	struct resource_constraint constraint;
-> @@ -700,20 +699,51 @@ int allocate_resource(struct resource *root, struct resource *new,
->  	constraint.alignf = alignf;
->  	constraint.alignf_data = alignf_data;
->  
-> -	if ( new->parent ) {
-> +	if (new->parent) {
->  		/* resource is already allocated, try reallocating with
->  		   the new constraints */
-> -		return reallocate_resource(root, new, size, &constraint);
-> +		return __reallocate_resource(root, new, size, &constraint);
->  	}
->  
-> -	write_lock(&resource_lock);
->  	err = find_resource(root, new, size, &constraint);
->  	if (err >= 0 && __request_resource(root, new))
->  		err = -EBUSY;
-> -	write_unlock(&resource_lock);
-> +
->  	return err;
->  }
->  
-> +/**
-> + * allocate_resource - allocate empty slot in the resource tree given range & alignment.
-> + *	The resource will be reallocated with a new size if it was already
-> + *	allocated
-> + * @root: root resource descriptor
-> + * @new: resource descriptor desired by caller
-> + * @size: requested resource region size
-> + * @min: minimum boundary to allocate
-> + * @max: maximum boundary to allocate
-> + * @align: alignment requested, in bytes
-> + * @alignf: alignment function, optional, called if not NULL
-> + * @alignf_data: arbitrary data to pass to the @alignf function
-> + */
-> +int allocate_resource(struct resource *root, struct resource *new,
-> +		      resource_size_t size, resource_size_t min,
-> +		      resource_size_t max, resource_size_t align,
-> +		      resource_size_t (*alignf)(void *,
-> +						const struct resource *,
-> +						resource_size_t,
-> +						resource_size_t),
-> +		      void *alignf_data)
-> +{
-> +	int ret;
-> +
-> +	write_lock(&resource_lock);
-> +	ret = __allocate_resource(root, new, size, min, max, align,
-> +				   alignf, alignf_data);
-> +	write_unlock(&resource_lock);
-> +
-> +	return ret;
-> +}
-> +
->  EXPORT_SYMBOL(allocate_resource);
->  
->  /**
-> -- 
-> 1.8.4.5
-> 
+I agree in general, you can't plan for all possible spec violations but
+it's also pretty standard defensive coding to now blow up if stuff
+doesn't look expected :)
+
+Anyway, this one is sorted.
+
+Cheers,
+Ben.
+
