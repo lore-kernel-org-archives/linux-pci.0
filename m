@@ -1,112 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	" David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
-	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH v4 2/4] PCI: st: Add Device Tree bindings for sti pcie
-Date: Thu, 27 Aug 2015 14:34:15 +0200
-Message-Id: <1440678857-27118-3-git-send-email-gabriel.fernandez@linaro.org>
-In-Reply-To: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
-References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:33253 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752533AbbHUI6u convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 04:58:50 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>
+CC: "<bhelgaas@google.com>" <bhelgaas@google.com>,
+	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
+	"<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH] PCI: designware: fix dw_pcie_cfg_write
+Date: Fri, 21 Aug 2015 08:58:12 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D824BF@lhreml503-mbs>
+References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com>
+ <55D68405.1000901@hisilicon.com>
+ <90DF1C90-A030-416D-9F86-364DBA1AABB6@gmail.com>
+In-Reply-To: <90DF1C90-A030-416D-9F86-364DBA1AABB6@gmail.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-sti pcie is built around a Synopsis Designware PCIe IP.
+Hi Jingoo 
 
-Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
-Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
----
- Documentation/devicetree/bindings/pci/st-pcie.txt | 53 +++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Jingoo Han
+> Sent: Friday, August 21, 2015 5:48 AM
+> To: Wangzhou (B)
+> Cc: Gabriele Paoloni; <bhelgaas@google.com>; <linux-
+> pci@vger.kernel.org>; <pratyush.anand@gmail.com>; Yuanzhichang;
+> Zhudacai; zhangjukuo; qiuzhenfa; Liguozhu (Kenneth);
+> jingoohan1@gmail.com
+> Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
+> 
+> On 2015. 8. 21., at AM 10:51, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+> >
+> >> On 2015/8/20 21:58, Gabriele Paoloni wrote:
+> >> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> >>
+> >> Currently in dw_pcie_cfg_write() if the input size is 2 bytes
+> >> the address offset is wrongly calculated as we mask also bit0
+> >> of "where" input parameter. Instead we should mask all bits of
+> >> "where" except bit0 and bit1.
+> >>
+> >> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> >> ---
+> >> drivers/pci/host/pcie-designware.c | 2 +-
+> >> 1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/pci/host/pcie-designware.c
+> b/drivers/pci/host/pcie-designware.c
+> >> index 69486be..a27f536 100644
+> >> --- a/drivers/pci/host/pcie-designware.c
+> >> +++ b/drivers/pci/host/pcie-designware.c
+> >> @@ -99,7 +99,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int
+> where, int size, u32 val)
+> >>    if (size == 4)
+> >>        writel(val, addr);
+> >>    else if (size == 2)
+> >> -        writew(val, addr + (where & 2));
+> >> +        writew(val, addr + (where & 3));
+> >>    else if (size == 1)
+> >>        writeb(val, addr + (where & 3));
+> >>    else
+> >
+> > Hi Jingoo,
+> >
+> > Is there some special consideration? If we miss something, please let
+> us know.
+> 
+> This patch is unnecessary.
+> 
+> In the case of 'size == 2', the writew() in dw_pcie_cfg_write() should
+> handle the following values of 'where'.
+> 
+>   h00    b0000
+>   h02    b0010
+> 
+> Thus, there is no need to keep 0th bit.
 
-diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
-new file mode 100644
-index 0000000..25fcab3
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
-@@ -0,0 +1,53 @@
-+STMicroelectronics STi PCIe controller
-+
-+This PCIe host controller is based on the Synopsis Designware PCIe IP
-+and thus inherits all the common properties defined in designware-pcie.txt.
-+
-+Required properties:
-+ - compatible: "st,stih407-pcie"
-+ - reg: base address and length of the pcie controller, mem-window address
-+   and length available to the controller.
-+ - interrupts: A list of interrupt outputs of the controller. Must contain an
-+   entry for each entry in the interrupt-names property.
-+ - interrupt-names: Should be "msi". STi interrupt that is asserted when an
-+   MSI is received.
-+ - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
-+   offset for IP configuration.
-+ - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
-+   Associated names must be "powerdown" and "softreset".
-+ - phys, phy-names: the phandle for the PHY device.
-+   Associated name must be "pcie"
-+
-+Optional properties:
-+ - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
-+
-+Example:
-+
-+pcie0: pcie@9b00000 {
-+	compatible = "st,pcie", "snps,dw-pcie";
-+	device_type = "pci";
-+	reg = <0x09b00000 0x4000>,	/* dbi cntrl registers */
-+	      <0x2fff0000 0x00010000>,	/* configuration space */
-+	      <0x40000000 0x80000000>;	/* lmi mem window */
-+	reg-names = "dbi", "config", "mem-window";
-+	st,syscfg = <&syscfg_core 0xd8 0xe0>;
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	ranges = <0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
-+	num-lanes = <1>;
-+	interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
-+	interrupt-names = "msi";
-+	#interrupt-cells = <1>;
-+	interrupt-map-mask = <0 0 0 7>;
-+	interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
-+			<0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
-+			<0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
-+			<0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
-+
-+	resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
-+		 <&softreset STIH407_PCIE0_SOFTRESET>;
-+	reset-names = "powerdown",
-+		      "softreset";
-+	phys = <&phy_port0 PHY_TYPE_PCIE>;
-+	phy-names = "pcie";
-+};
--- 
-1.9.1
+What if the last bits of "where" are h01(b0001), then the current implementation will clear the last bit...? 
+Do you think it is impossible to have a scenario where: "where = hxxxxxx01" and  "size = 2"? 
 
+
+> 
+> One more thing, is there any reason to urge me to review this patch
+> within a few hours?
+> Please wait for reviews for enough hours.
+> 
+> Maybe, your company looks to support you and other engineers for
+> mainline kernel.
+> However, I am not supported at all, so it is not easy to review the
+> patches quickly.
+> 
+
+Jingoo I am sorry for this. I am sure Zhou Wang did not mean to push you.
+
+I agree that this patch is low prio...for us I think is much more important
+to have "PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05" patchset 
+pushed in mainline.
+
+> Best regards,
+> Jingoo Han
+> 
+> > Thanks,
+> > Zhou
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
