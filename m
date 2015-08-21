@@ -1,107 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:35684 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753103AbbHFOvg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 10:51:36 -0400
-Received: by pdrg1 with SMTP id g1so33437023pdr.2
-        for <linux-pci@vger.kernel.org>; Thu, 06 Aug 2015 07:51:35 -0700 (PDT)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>
-Cc: "'Thomas Petazzoni'" <thomas.petazzoni@free-electrons.com>,
-	"'Jayachandran C'" <jchandra@broadcom.com>,
-	"'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Russell King'" <linux@arm.linux.org.uk>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
-	"'Marc Zyngier'" <marc.zyngier@arm.com>,
-	<linux-pci@vger.kernel.org>, "'Duc Dang'" <dhdang@apm.com>,
-	"'Michal Simek'" <michal.simek@xilinx.com>,
-	"'Simon Horman'" <horms@verge.net.au>,
-	"'James Morse'" <james.morse@arm.com>,
-	"'Tanmay Inamdar'" <tinamdar@apm.com>,
-	"'Thierry Reding'" <thierry.reding@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"'Jason Cooper'" <jason@lakedaemon.net>,
-	"'Jingoo Han'" <jingoohan1@gmail.com>
-References: <20150804214234.9189.42548.stgit@bhelgaas-glaptop2.roam.corp.google.com> <20150804215420.9189.22914.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150804215420.9189.22914.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Subject: Re: [PATCH v5 4/9] ARM/PCI: Remove msi_controller from struct pci_sys_data
-Date: Thu, 6 Aug 2015 23:51:24 +0900
-Message-ID: <000601d0d057$63c40fb0$2b4c2f10$@com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v4 41/52] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Thu, 20 Aug 2015 23:20:56 -0700
+Message-Id: <1440138067-4314-42-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 05, 2015 6:54 AM, Bjorn Helgaas wrote:
-> 
-> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> 
-> ARM now uses pci_bus->msi to store the msi_controller pointer, so we don't
-> need to save it in struct pci_sys_data, and we don't need to implement
-> pcibios_msi_controller() to get it out of pci_sys_data.
-> 
-> Remove msi_controller from struct pci_sys_data and
-> pcibios_msi_controller().
-> 
-> [bhelgaas: changelog, split into separate patch]
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+parsing.
 
-Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+---
+ arch/sparc/kernel/of_device_32.c | 5 +++--
+ arch/sparc/kernel/of_device_64.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-Best regards,
-Jingoo Han
-
-> ---
->  arch/arm/include/asm/mach/pci.h |    3 ---
->  arch/arm/kernel/bios32.c        |   12 ------------
->  2 files changed, 15 deletions(-)
-> 
-> diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-> index c074e7a..8857d28 100644
-> --- a/arch/arm/include/asm/mach/pci.h
-> +++ b/arch/arm/include/asm/mach/pci.h
-> @@ -40,9 +40,6 @@ struct hw_pci {
->   * Per-controller structure
->   */
->  struct pci_sys_data {
-> -#ifdef CONFIG_PCI_MSI
-> -	struct msi_controller *msi_ctrl;
-> -#endif
->  	struct list_head node;
->  	int		busnr;		/* primary bus number			*/
->  	u64		mem_offset;	/* bus->cpu memory mapping offset	*/
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 283bc1c..874e182 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -18,15 +18,6 @@
-> 
->  static int debug_pci;
-> 
-> -#ifdef CONFIG_PCI_MSI
-> -struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-> -{
-> -	struct pci_sys_data *sysdata = dev->bus->sysdata;
-> -
-> -	return sysdata->msi_ctrl;
-> -}
-> -#endif
-> -
->  /*
->   * We can't use pci_get_device() here since we are
->   * called from interrupt context.
-> @@ -462,9 +453,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  		if (WARN(!sys, "PCI: unable to allocate sys data!"))
->  			break;
-> 
-> -#ifdef CONFIG_PCI_MSI
-> -		sys->msi_ctrl = hw->msi_ctrl;
-> -#endif
->  		sys->busnr   = busnr;
->  		sys->swizzle = hw->swizzle;
->  		sys->map_irq = hw->map_irq;
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 185aa96..3e9f273 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index 7bbdc26..defee61 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+-- 
+1.8.4.5
 
