@@ -1,43 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6W3=SFTqabeD6gq7JCqFZ7+SBZh7Xa=RteO_8-3P7fbdw@mail.gmail.com>
-References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
- <1434064996.11808.64.camel@misato.fc.hp.com> <557AAD910200007800084014@mail.emea.novell.com>
- <1434128306.11808.97.camel@misato.fc.hp.com> <CAB=NE6W3=SFTqabeD6gq7JCqFZ7+SBZh7Xa=RteO_8-3P7fbdw@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 6 Aug 2015 12:55:48 -0700
-Message-ID: <CAB=NE6WvaY4p7O3=0MMjWO44AytNYFr6xRsvVmVWDns9qdYZ8Q@mail.gmail.com>
-Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: Jan Beulich <JBeulich@suse.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jej B <James.Bottomley@hansenpartnership.com>,
-	X86 ML <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	xen-devel@lists.xenproject.org, Dave Airlie <airlied@redhat.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	Juergen Gross <JGross@suse.com>, Borislav Petkov <bp@suse.de>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-media@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:24208 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751364AbbHUGV6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:21:58 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 20/52] PCI: Skip required+optional if there is no optional
+Date: Thu, 20 Aug 2015 23:20:35 -0700
+Message-Id: <1440138067-4314-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 6, 2015 at 12:53 PM, Luis R. Rodriguez
-<mcgrof@do-not-panic.com> wrote:
-> For those type of OSes...
-> could it be possible to negotiate or hint to the platform through an
-> attribute somehow that the OS has such capability to not use MTRR?
+If the bridge does not support hotplug and no child with sriov support,
+We will not have optional resources. We could get out early and
+don't try required+optional allocation.
 
-And if that's not possible how about a new platform setting that would
-need to be set at the platform level to enable disabling this junk?
-Then only folks who know what they are doing would enable it, and if
-the customer set it, the issue would not be on the platform.
+Also in the loop that update res with optional add info, skip resource
+that add_size is 0.
 
- Luis
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8195929..7d2420d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -444,6 +444,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+ 	return false;	/* should not get here */
+ }
+ 
++static bool has_addon(struct list_head *head,
++			struct list_head *realloc_head)
++{
++	int add_count = 0;
++	struct pci_dev_resource *dev_res, *tmp_res;
++
++	/* check if we have add really */
++	list_for_each_entry(dev_res, head, list) {
++		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
++		if (!tmp_res || !tmp_res->add_size)
++			continue;
++
++		add_count++;
++	}
++
++	return add_count != 0;
++}
++
+ static bool save_resources(struct list_head *head,
+ 			   struct list_head *save_head)
+ {
+@@ -475,16 +493,24 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 	struct pci_dev_resource *save_res;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+-	resource_size_t add_align;
++	resource_size_t add_align, add_size;
+ 	struct resource *res;
+ 
++	if (!has_addon(head, realloc_head))
++		return false;
++
+ 	if (!save_resources(head, &save_head))
+ 		return false;
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+-		res->end += get_res_add_size(realloc_head, res);
++		add_size = get_res_add_size(realloc_head, res);
++
++		if (!add_size)
++			continue;
++
++		res->end += add_size;
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+@@ -572,7 +598,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 */
+ 
+ 	/* Check required+optional add */
+-	if (realloc_head && !list_empty(realloc_head) &&
++	if (realloc_head &&
+ 	    __assign_resources_required_optional_sorted(head, realloc_head))
+ 		return;
+ 
+-- 
+1.8.4.5
+
