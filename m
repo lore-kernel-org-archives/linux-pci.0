@@ -8,141 +8,82 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 23/52] PCI: Add support for more than two alt_size under same bridge
-Date: Thu, 20 Aug 2015 23:20:38 -0700
-Message-Id: <1440138067-4314-24-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v4 44/52] PCI: Treat optional as required in first try for bridge rescan
+Date: Thu, 20 Aug 2015 23:20:59 -0700
+Message-Id: <1440138067-4314-45-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we have two bridges under same parent bridge, and each child
-bridge has alt_size, we need to increase parent alt_size to make
-sure it could fit all alt entries.
+For rescan bridge/bus that children are removed before, we should treat
+optional as required just like root bus the boot time in 19aa7ee432ce
+(PCI: make re-allocation try harder by reassigning ranges higher in
+the heirarchy).
 
-In the patch, we first select one big size, and then keep reducing
-the size and retrying to get the minimum value for alt_size.
+The reason: allocate required and expand to optional path do not
+put failed resource to fail list, so will lose required info before
+next try.
 
-Example:
-two bridges: one have 8M/8M, and 1M/1M children res.
-	     one have 4M/4M, and 1M/1M children res.
+So we are using following way:
+1. First and following try before last try:
+   We don't keep realloc list so treat every optional as required.
+   allocate for required+optional and put failed in the fail list.
+   then size info (include must and optonal separatedly) will be kept
+   for next try.
+2. last try:
+   a: try to allocate required+optional to see if all get allocated.
+   b: try to allocate required then expand to optional.
 
-Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
-Before this patch, parent bridge alt_align/alt_size is 8M/14M
-that is wrong.
-With this patch	parent bridge alt_align/alt_size: 8M/17M.
-
-At same time, child bridges required align/size: 4M/12M, 2M/6M.
-and prarent bridge required align/size: 4M/20M.
-
-So at last, we use 8M/17M as parent bridge alt_align/alt_size.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
-Reported-by: Yijing Wang <wangyijing@huawei.com>
-Tested-by: Yijing Wang <wangyijing@huawei.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 54 insertions(+), 2 deletions(-)
+ drivers/pci/setup-bus.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8be5544..baf9900 100644
+index cacdd75..898f9d7 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1329,6 +1329,47 @@ out:
- 	return good_align;
- }
- 
-+static resource_size_t calculate_mem_alt_size(struct list_head *head,
-+				resource_size_t max_align, resource_size_t size,
-+				resource_size_t align_low)
-+{
-+	struct align_test_res *p;
-+	resource_size_t tmp;
-+	resource_size_t good_size, bad_size;
-+	int count = 0, order;
-+
-+	good_size = ALIGN(size, align_low);
-+
-+	list_for_each_entry(p, head, list)
-+		count++;
-+
-+	if (count <= 1)
-+		goto out;
-+
-+	sort_align_test(head);
-+
-+	tmp = max(size, max_align);
-+	order = __fls(count);
-+	if ((1ULL << order) < count)
-+		order++;
-+	good_size = ALIGN((tmp << order), align_low);
-+	bad_size = ALIGN(size, align_low) - align_low;
-+	size = good_size;
-+	while (size > bad_size) {
-+		/* check if align/size fit all entries */
-+		if (is_align_size_good(head, max_align, size, 0))
-+			good_size = size;
-+		else
-+			bad_size = size;
-+
-+		size = bad_size + ((good_size - bad_size) >> 1);
-+		size = round_down(size, align_low);
-+	}
-+
-+out:
-+	return good_size;
-+}
-+
- static inline bool is_optional(int i)
+@@ -2355,25 +2355,34 @@ void __init pci_assign_unassigned_resources(void)
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
  {
+ 	struct pci_bus *parent = bridge->subordinate;
+-	LIST_HEAD(add_list); /* list of resources that
++	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
++	struct list_head *add_list = NULL;
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
++	int pci_try_num = 2;
  
-@@ -1375,6 +1416,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					mask | IORESOURCE_PREFETCH, type);
- 	LIST_HEAD(align_test_list);
- 	LIST_HEAD(align_test_add_list);
-+	LIST_HEAD(align_test_alt_list);
- 	resource_size_t alt_size = 0, alt_align = 0;
- 	resource_size_t window_align;
+ again:
+-	__pci_bus_size_bridges(parent, &add_list);
+-	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	BUG_ON(!list_empty(&add_list));
++	/*
++	 * last try will use add_list, otherwise will try good to have as
++	 * must have, so can realloc parent bridge resource
++	 */
++	if (tried_times + 1 == pci_try_num)
++		add_list = &realloc_head;
++	__pci_bus_size_bridges(parent, add_list);
++	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
++	if (add_list)
++		BUG_ON(!list_empty(add_list));
+ 	tried_times++;
  
-@@ -1448,10 +1490,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (list_empty(&fail_head))
+ 		goto enable_all;
  
- 				dev_res = res_to_dev_res(realloc_head, r);
- 				if (dev_res && dev_res->alt_size) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						dev_res->alt_align,
-+						dev_res->alt_size);
- 					alt_size += dev_res->alt_size;
- 					if (alt_align < dev_res->alt_align)
- 						alt_align = dev_res->alt_align;
- 				} else if (r_size > 1) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						align, r_size);
- 					alt_size += r_size;
- 					if (alt_align < align)
- 						alt_align = align;
-@@ -1471,14 +1520,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	if (size0 && realloc_head) {
- 		alt_align = max(alt_align, window_align);
--		alt_size = calculate_memsize(alt_size, min_size,
--					     0, window_align);
-+		/* need to increase size to fit more alt */
-+		alt_size = calculate_mem_alt_size(&align_test_alt_list,
-+						  alt_align, alt_size,
-+						  window_align);
- 		/* required is better ? */
- 		if (alt_size >= size0) {
- 			alt_align = 0;
- 			alt_size = 0;
- 		}
- 	}
-+	free_align_test_list(&align_test_alt_list);
- 
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
+-	if (tried_times >= 2) {
++	if (tried_times >= pci_try_num) {
+ 		/* still fail, don't need to try more */
+ 		free_list(&fail_head);
+ 		goto enable_all;
 -- 
 1.8.4.5
 
