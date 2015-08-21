@@ -1,113 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:62822 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753704AbbHFICy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 04:02:54 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v6 2/6] ARM/PCI: remove align_resource in pci_sys_data
-Date: Thu, 6 Aug 2015 16:09:15 +0800
-Message-ID: <1438848559-232109-3-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 28/52] PCI: Don't add too much io port for hotplug bridge with old size
+Date: Thu, 20 Aug 2015 23:20:43 -0700
+Message-Id: <1440138067-4314-29-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Now we add too much for hotplug bridge.
+For example, when hotplug bridge has two children bridges,
+every child bridge will need 0x1000, so size1 will be 0x2000
+and size is 0. The min_size for the hotplug bridge is 0x100.
+with old version calculate_iosize, we get 0x3000 for final
+size as we are using size to compare with min_size at first.
+That is not right, we should have 0x2000.
 
-This patch is needed in order to unify the PCIe designware framework for ARM and
-ARM64 architectures. In the PCIe designware unification process we are calling
-pci_create_root_bus() passing a "sysdata" parameter that is the same for both
-ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
-cause a problem with the function pcibios_align_resource(); in fact this will
-cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
-"struct pcie_port*" pointer.
+We should check size+size1 with min_size for io port,
+just add size1 to size and and don't pass extra size1 into
+calculate_iosize() directly.
 
-This patch solves the issue by removing "align_resource" from "pci_sys_data"
-struct and defining a static global function pointer in "bios32.c"
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/arm/include/asm/mach/pci.h |  5 -----
- arch/arm/kernel/bios32.c        | 12 ++++++++----
- 2 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/pci/setup-bus.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 28b9bb3..8a4e4de 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -58,11 +58,6 @@ struct pci_sys_data {
- 					/* IRQ mapping				*/
- 	int		(*map_irq)(const struct pci_dev *, u8, u8);
- 					/* Resource alignement requirements	*/
--	resource_size_t (*align_resource)(struct pci_dev *dev,
--					  const struct resource *res,
--					  resource_size_t start,
--					  resource_size_t size,
--					  resource_size_t align);
- 	void		*private_data;	/* platform controller private data	*/
- };
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8f11cd1..f3d89d1 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1112,7 +1112,6 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
  
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index fcbbbb1..4cdc64d 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -17,6 +17,11 @@
- #include <asm/mach/pci.h>
- 
- static int debug_pci;
-+static resource_size_t (*align_resource)(struct pci_dev *dev,
-+		  const struct resource *res,
-+		  resource_size_t start,
-+		  resource_size_t size,
-+		  resource_size_t align) = NULL;
- 
- #ifdef CONFIG_PCI_MSI
- struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-@@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
--		sys->align_resource = hw->align_resource;
-+		align_resource = hw->align_resource;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
-@@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
+ static resource_size_t calculate_iosize(resource_size_t size,
+ 		resource_size_t min_size,
+-		resource_size_t size1,
+ 		resource_size_t old_size,
+ 		resource_size_t align)
  {
- 	struct pci_dev *dev = data;
--	struct pci_sys_data *sys = dev->sysdata;
- 	resource_size_t start = res->start;
+@@ -1120,7 +1119,7 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	size = ALIGN(size + size1, align);
++	size = ALIGN(size, align);
+ 	if (size < old_size)
+ 		size = old_size;
+ 	return size;
+@@ -1251,14 +1250,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	}
  
- 	if (res->flags & IORESOURCE_IO && start & 0x300)
-@@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 
- 	start = (start + align - 1) & ~(align - 1);
- 
--	if (sys->align_resource)
--		return sys->align_resource(dev, res, start, size, align);
-+	if (align_resource)
-+		return align_resource(dev, res, start, size, align);
- 
- 	return start;
- }
+ 	size = size_aligned_for_isa(size);
+-	size0 = calculate_iosize(size, min_size, size1,
++	size += size1;
++	size0 = calculate_iosize(size, min_size,
+ 			resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(sum_add_size, min_size, 0,
++		calculate_iosize(sum_add_size, min_size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
 -- 
-1.9.1
+1.8.4.5
 
