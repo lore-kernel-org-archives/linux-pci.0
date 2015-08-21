@@ -1,42 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:36867 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755956AbbHYUur (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 16:50:47 -0400
-Received: by widdq5 with SMTP id dq5so25970586wid.0
-        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2015 13:50:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVMTpcWxg2Qw_DpPN4PpA4NkkDowOchrs6Wui_yOp-sgA@mail.gmail.com>
-References: <1438047747.1856.12.camel@rzhang1-mobl4> <20150825024941.GA25829@google.com>
- <CAE9FiQVMTpcWxg2Qw_DpPN4PpA4NkkDowOchrs6Wui_yOp-sgA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 25 Aug 2015 15:50:25 -0500
-Message-ID: <CAErSpo41irSW890bW+EueFwTzjCHYnKLX=15=XDPxLdWUv38QA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Zhang Rui <rui.zhang@intel.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Chuansheng Liu <chuansheng.liu@intel.com>,
-	Tejun Heo <tj@kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Aaron Lu <aaron.lu@intel.com>, Jay <MyMailClone@t-online.de>,
-	Barto <mister.freeman@laposte.net>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH v4 49/52] PCI: Set resource to FIXED for LSI devices
+Date: Thu, 20 Aug 2015 23:21:04 -0700
+Message-Id: <1440138067-4314-50-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 25, 2015 at 3:21 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Aug 24, 2015 at 7:49 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> commit 09981db5b0c9a6865aa39126b71bc87718577e4b
->> Author: Zhang Rui <rui.zhang@intel.com>
->> Date:   Mon Aug 24 15:27:11 2015 -0500
->>
->>     PCI: Disable async suspend/resume for JMicron multi-function SATA/AHCI
->>
->> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY, PCI_CLASS_STORAGE_IDE, 8, quirk_jmicron_async_suspend);
->> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY, PCI_CLASS_STORAGE_SATA_AHCI, 0, quirk_jmicron_async_suspend);
->
-> s/PCI_ANY/PCI_ANY_ID/g
+LSI HBA firmware stop responding pci read from host if pci core ever change
+pci device BAR values.
 
-Done, thanks.
+Set their resources to FIXED, so will allow realloc to skip them.
+
+Reported-by: Paul Johnson <pjay@nwtrail.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/pci.h       |  1 +
+ drivers/pci/quirks.c    | 20 ++++++++++++++++++++
+ drivers/pci/setup-bus.c |  4 ++++
+ 3 files changed, 25 insertions(+)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 1d90f42..51b877d 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -168,6 +168,7 @@ static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u
+ }
+ 
+ void pci_realloc_get_opt(char *);
++bool pci_realloc_user_enabled(void);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 9efa983..a2945a4 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -324,6 +324,26 @@ static void quirk_s3_64M(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
+ 
++/*
++ * LSI devices firmware does not like BAR get changed
++ */
++static void quirk_bar_fixed(struct pci_dev *dev)
++{
++	int i;
++
++	if (pci_realloc_user_enabled())
++		return;
++
++	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (!r->start || !r->flags)
++			continue;
++		r->flags |= IORESOURCE_PCI_FIXED;
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC,	PCI_ANY_ID,	quirk_bar_fixed);
++
+ /* for pci remove and rescan */
+ static void quirk_allocate_fixed(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 8e10821..32ce700 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2201,6 +2201,10 @@ void __init pci_realloc_get_opt(char *str)
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
++bool pci_realloc_user_enabled(void)
++{
++	return pci_realloc_enable == user_enabled;
++}
+ static bool pci_realloc_enabled(enum enable_type enable)
+ {
+ 	return enable >= user_enabled;
+-- 
+1.8.4.5
+
