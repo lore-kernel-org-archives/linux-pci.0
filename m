@@ -1,124 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:36958 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751867AbbHFBoj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Aug 2015 21:44:39 -0400
-Message-ID: <55C2BC01.6040801@roeck-us.net>
-Date: Wed, 05 Aug 2015 18:44:33 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-MIME-Version: 1.0
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:33629 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730AbbHUUFu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 16:05:50 -0400
+Received: by pacgr6 with SMTP id gr6so942655pac.0
+        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2015 13:05:50 -0700 (PDT)
+Date: Fri, 21 Aug 2015 15:05:45 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
 To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
+Cc: Keith Busch <keith.busch@intel.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v3] PCI: Only enable IO window if supported
-References: <1438308908-12259-1-git-send-email-linux@roeck-us.net> <CAE9FiQXuTKmXXCFsKUiMK43U+LpOzfa3oV0iNWS+Jh879EDNsw@mail.gmail.com>
-In-Reply-To: <CAE9FiQXuTKmXXCFsKUiMK43U+LpOzfa3oV0iNWS+Jh879EDNsw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Austin Bolen <Austin_Bolen@dell.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Myron Stowe <mstowe@redhat.com>, Jon Mason <jdmason@kudzu.us>
+Subject: Re: [PATCH 2/3] PCI: Set MPS to match upstream bridge
+Message-ID: <20150821200545.GC14810@google.com>
+References: <20150821150557.7525.58923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20150821150751.7525.81766.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <CAE9FiQWL_6i5o7Jx5__JdhCU0xcpE-96XRxx3eS29k2jdq1Hwg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQWL_6i5o7Jx5__JdhCU0xcpE-96XRxx3eS29k2jdq1Hwg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/05/2015 06:14 PM, Yinghai Lu wrote:
-> On Thu, Jul 30, 2015 at 7:15 PM, Guenter Roeck <linux@roeck-us.net> wrote:
->> The PCI subsystem always assumes that I/O is supported on PCIe bridges
->> and tries to assign an I/O window to each child bus even if that is not
->> the case.
->>
->> This may result in messages such as:
->>
->>    pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size add_size 1000
->>    pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
->>    pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
->>
->> for each bridge port, even if a bus or its parent does not support I/O in
->> the first place.
->>
->> To avoid this message, check if a bus supports I/O before trying to enable
->> it.  Also check if the root bus has an IO window assigned; if not, it does
->> not make sense to try to assign one to any of its child busses.
->>
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index cefd636681b6..d9e02ba34035 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -332,6 +332,24 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
->>          }
->>   }
->>
->> +static int pci_bridge_supports_io(struct pci_dev *bridge)
->> +{
->> +       u16 io;
->> +
->> +       pci_read_config_word(bridge, PCI_IO_BASE, &io);
->> +       if (io)
->> +               return 1;
->> +
->> +       /* IO_BASE/LIMIT is either hard-wired to zero or programmed to zero */
->> +       pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
->> +       pci_read_config_word(bridge, PCI_IO_BASE, &io);
->> +       pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
->> +       if (io)
->> +               return 1;
->> +
->> +       return 0;
->> +}
->> +
->>   static void pci_read_bridge_io(struct pci_bus *child)
->>   {
->>          struct pci_dev *dev = child->self;
->> @@ -340,6 +358,15 @@ static void pci_read_bridge_io(struct pci_bus *child)
->>          struct pci_bus_region region;
->>          struct resource *res;
->>
->> +       if (!(child->bus_flags & PCI_BUS_FLAGS_SUPPORTS_IO))
->> +               return;
->> +
->> +       if (!pci_bridge_supports_io(dev)) {
->> +               dev_printk(KERN_DEBUG, &dev->dev, "  no I/O window\n");
->> +               child->bus_flags &= ~PCI_BUS_FLAGS_SUPPORTS_IO;
->> +               return;
->> +       }
->> +
->
-> It only can avoid warning with bridge, and still have warning on
-> devices under the bridge.
->
-Not really, because children inherit bus_flags.
+On Fri, Aug 21, 2015 at 12:14:40PM -0700, Yinghai Lu wrote:
+> On Fri, Aug 21, 2015 at 8:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > From: Keith Busch <keith.busch@intel.com>
+> >
+> > Firmware typically configures the PCIe fabric with a consistent Max Payload
+> > Size setting based on the devices present at boot.  A hot-added device
+> > typically has the power-on default MPS setting (128 bytes), which may not
+> > match the fabric.
+> >
+> > When adding a new device via pci_device_add(), set its Max Payload Size to
+> > match the upstream bridge (unless PCIe bus tuning is disabled).  Note that
+> > pcie_bus_configure_settings() may further change MPS based on the tuning
+> > policy.
+> >
+> > This makes it more likely that a hot-added device will work in a system
+> > with optimized MPS configuration.
+> >
+> > If we hot-add a device that only supports 128-byte MPS, it still likely
+> > won't work because we don't reconfigure the rest of the fabric.  Booting
+> > with "pci=pcie_bus_peer2peer" is a workaround for this because it sets MPS
+> > to 128 for everything.
+> >
+> > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  drivers/pci/probe.c |   12 +++++++++++-
+> >  1 file changed, 11 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index eb32395..f73dd7a 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1278,7 +1278,7 @@ int pci_setup_device(struct pci_dev *dev)
+> >  static void pci_configure_mps(struct pci_dev *dev)
+> >  {
+> >         struct pci_dev *bridge = pci_upstream_bridge(dev);
+> > -       int mps, p_mps;
+> > +       int mps, p_mps, rc;
+> >
+> >         if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+> >                 return;
+> > @@ -1294,6 +1294,16 @@ static void pci_configure_mps(struct pci_dev *dev)
+> >                          mps, pci_name(bridge), p_mps);
+> >                 return;
+> >         }
+> > +
+> 
+> you may need add if the pcie_bus_config == PCIE_BUS_DEFAULT here.
+> 
+> we should not  could set mps extra for _SAFE, _PERFORMANCE, _PEER2PEER
 
-> also would have problem on transparent bridges, like
->
-> BRIDGE_A ---- BRIDGE_AA----DEVICE_AA
->                     |
->                     \-- BRIDGE_AB ---DEVICE_AB
->
-> if only BRIDGE_A and BRIDGE_AA are transparent, and BRIDGE_AB is not.
->
-> and if pci_bridge_supports_io() return false for BRIDGE_A.
->
-> We will have all three bridges have PCI_BUS_FLAGS_SUPPORTS_IO cleared.
-> so all will not been sized and will not get assigned io port resource.
->
-What is wrong with that ? Doesn't it reflect reality ?
+How about this?
 
-> later DEVICE_AA could root bus io port as parent, and get io resource assigned.
-> but DEVICE_AB will not get assigned.
->
-> so we should get rid of pci_bridge_supports_io(), and just check root
-> resource IO port.
->
-You lost me here. That would mean that we would not clear the flag
-and claim that a bridge supports IO even if it doesn't, and all ports
-and bridges connected to that bridge would try (and fail) to get
-IO address assignments.
+commit f2082d6c5e92ceedd1ed53f2d41fe50edd859557
+Author: Keith Busch <keith.busch@intel.com>
+Date:   Fri Aug 21 08:46:28 2015 -0500
 
-That does not make much sense to me. What do you expect to do in this case ?
+    PCI: Set MPS to match upstream bridge
+    
+    Firmware typically configures the PCIe fabric with a consistent Max Payload
+    Size setting based on the devices present at boot.  A hot-added device
+    typically has the power-on default MPS setting (128 bytes), which may not
+    match the fabric.
+    
+    When adding a new device via pci_device_add(), set its Max Payload Size to
+    match the upstream bridge (unless PCIe bus tuning is disabled).  Note that
+    pcie_bus_configure_settings() may further change MPS based on the tuning
+    policy.
+    
+    This makes it more likely that a hot-added device will work in a system
+    with optimized MPS configuration.
+    
+    If we hot-add a device that only supports 128-byte MPS, it still likely
+    won't work because we don't reconfigure the rest of the fabric.  Booting
+    with "pci=pcie_bus_peer2peer" is a workaround for this because it sets MPS
+    to 128 for everything.
+    
+    Signed-off-by: Keith Busch <keith.busch@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-I must admit I have no idea how non-transparent bridges fit
-into this picture. However, if Bridge A doesn't support IO,
-I don't see how we can get IO anywhere, transparent or not.
-
-Guenter
-
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index eb32395..0e5d22d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1278,7 +1278,7 @@ int pci_setup_device(struct pci_dev *dev)
+ static void pci_configure_mps(struct pci_dev *dev)
+ {
+ 	struct pci_dev *bridge = pci_upstream_bridge(dev);
+-	int mps, p_mps;
++	int mps, p_mps, rc;
+ 
+ 	if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+ 		return;
+@@ -1294,6 +1294,23 @@ static void pci_configure_mps(struct pci_dev *dev)
+ 			 mps, pci_name(bridge), p_mps);
+ 		return;
+ 	}
++
++	/*
++	 * Fancier MPS configuration is done later by
++	 * pcie_bus_configure_settings()
++	 */
++	if (pcie_bus_config != PCIE_BUS_DEFAULT)
++		return;
++
++	rc = pcie_set_mps(dev, p_mps);
++	if (rc) {
++		dev_warn(&dev->dev, "can't set Max Payload Size to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
++			 p_mps);
++		return;
++	}
++
++	dev_info(&dev->dev, "Max Payload Size set to %d (was %d, max %d)\n",
++		 p_mps, mps, 128 << dev->pcie_mpss);
+ }
+ 
+ static struct hpp_type0 pci_default_type0 = {
