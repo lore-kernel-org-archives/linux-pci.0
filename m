@@ -1,113 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:60248 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753738AbbHQLup (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:50:45 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	"Pratyush Anand" <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
-	<liguozhu@hisilicon.com>
-Subject: [PATCH v7 2/6] ARM/PCI: remove align_resource in pci_sys_data
-Date: Mon, 17 Aug 2015 19:55:50 +0800
-Message-ID: <1439812554-180426-3-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 26/52] PCI: Don't add too much optional size for hotplug bridge io
+Date: Thu, 20 Aug 2015 23:20:41 -0700
+Message-Id: <1440138067-4314-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Same as patch for MMIO (PCI: Don't add too much optional size for hotplug
+bridge MMIO), and this one is for io port.
 
-This patch is needed in order to unify the PCIe designware framework for ARM and
-ARM64 architectures. In the PCIe designware unification process we are calling
-pci_create_root_bus() passing a "sysdata" parameter that is the same for both
-ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
-cause a problem with the function pcibios_align_resource(); in fact this will
-cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
-"struct pcie_port*" pointer.
+It will compare required+optional with min_sum_size to get smaller
+optional size.
 
-This patch solves the issue by removing "align_resource" from "pci_sys_data"
-struct and defining a static global function pointer in "bios32.c"
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/arm/include/asm/mach/pci.h |  5 -----
- arch/arm/kernel/bios32.c        | 12 ++++++++----
- 2 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 28b9bb3..8a4e4de 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -58,11 +58,6 @@ struct pci_sys_data {
- 					/* IRQ mapping				*/
- 	int		(*map_irq)(const struct pci_dev *, u8, u8);
- 					/* Resource alignement requirements	*/
--	resource_size_t (*align_resource)(struct pci_dev *dev,
--					  const struct resource *res,
--					  resource_size_t start,
--					  resource_size_t size,
--					  resource_size_t align);
- 	void		*private_data;	/* platform controller private data	*/
- };
- 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index fcbbbb1..4cdc64d 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -17,6 +17,11 @@
- #include <asm/mach/pci.h>
- 
- static int debug_pci;
-+static resource_size_t (*align_resource)(struct pci_dev *dev,
-+		  const struct resource *res,
-+		  resource_size_t start,
-+		  resource_size_t size,
-+		  resource_size_t align) = NULL;
- 
- #ifdef CONFIG_PCI_MSI
- struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-@@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
--		sys->align_resource = hw->align_resource;
-+		align_resource = hw->align_resource;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
-@@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index de47692..372a182 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1183,7 +1183,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  *
+  * @bus : the bus
+  * @min_size : the minimum io window that must to be allocated
+- * @add_size : additional optional io window
+  * @realloc_head : track the additional io window on this list
+  *
+  * Sizing the IO windows of the PCI-PCI bridge is trivial,
+@@ -1192,9 +1191,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  * We must be careful with the ISA aliasing though.
+  */
+ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+-		resource_size_t add_size, struct list_head *realloc_head)
++			 struct list_head *realloc_head)
  {
- 	struct pci_dev *dev = data;
--	struct pci_sys_data *sys = dev->sysdata;
- 	resource_size_t start = res->start;
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
++	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+@@ -1204,6 +1205,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	if (!b_res)
+ 		return;
  
- 	if (res->flags & IORESOURCE_IO && start & 0x300)
-@@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+@@ -1233,10 +1239,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
  
- 	start = (start + align - 1) & ~(align - 1);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_iosize(size, min_size, add_size + size1,
++	sum_add_size = children_add_size + size + size1;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
++	size1 = !realloc_head ? size0 :
++		calculate_iosize(size, min_size, sum_add_size - size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+@@ -1788,7 +1795,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t min_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, min_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
  
--	if (sys->align_resource)
--		return sys->align_resource(dev, res, start, size, align);
-+	if (align_resource)
-+		return align_resource(dev, res, start, size, align);
+@@ -1821,13 +1828,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	case PCI_CLASS_BRIDGE_PCI:
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+-			additional_io_size  = pci_hotplug_io_size;
++			min_io_size  = pci_hotplug_io_size;
+ 			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+-		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
+-			     additional_io_size, realloc_head);
++		pbus_size_io(bus, min_io_size, realloc_head);
  
- 	return start;
- }
+ 		/*
+ 		 * If there's a 64-bit prefetchable MMIO window, compute
 -- 
-1.9.1
+1.8.4.5
 
