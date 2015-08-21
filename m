@@ -1,97 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:42280 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932864AbbHKAog (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:44:36 -0400
-Received: from /spool/local
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 11 Aug 2015 10:44:33 +1000
-Date: Tue, 11 Aug 2015 10:43:39 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-Subject: Re: [PATCH v6 18/42] powerpc/powernv: Allocate PE# in deasending
- order
-Message-ID: <20150811004339.GC18981@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-19-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C8B786.1050702@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55C8B786.1050702@ozlabs.ru>
+Received: from userp1040.oracle.com ([156.151.31.81]:46344 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753587AbbHUGWk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:22:40 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 14/52] PCI: Add __add_to_list()
+Date: Thu, 20 Aug 2015 23:20:29 -0700
+Message-Id: <1440138067-4314-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 11, 2015 at 12:39:02AM +1000, Alexey Kardashevskiy wrote:
->On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>The available PE#, represented by a bitmap in the PHB, is allocated
->>in ascending order.
->
->Available PE# is available exactly because it is not allocated ;)
->
+Add new __add_to_list() to to take alt_size, alt_align for alt_size support.
 
-Yeah, will correct it.
+and simplify add_to_list() not to take add/alt input.
 
->>It conflicts with the fact that M64 segments are
->>assigned in same order. In order to avoid the conflict, the patch
->>allocates PE# in descending order.
->
->What kind of conflict?
->
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 31 insertions(+), 20 deletions(-)
 
-On PHB3, the M64 segment is assigned to one PE whose PE number is
-determined. M64 segment are allocated in ascending order. It's why
-I would like to allocate PE# in deascending order.
-
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 11 ++++++++---
->>  1 file changed, 8 insertions(+), 3 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 56b058c..1c950e8 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -161,13 +161,18 @@ static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
->>  static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
->>  {
->>  	unsigned long pe;
->>+	unsigned long limit = phb->ioda.total_pe_num - 1;
->>
->>  	do {
->>  		pe = find_next_zero_bit(phb->ioda.pe_alloc,
->>-					phb->ioda.total_pe_num, 0);
->>-		if (pe >= phb->ioda.total_pe_num)
->>+					phb->ioda.total_pe_num, limit);
->>+		if (pe < phb->ioda.total_pe_num &&
->>+		    !test_and_set_bit(pe, phb->ioda.pe_alloc))
->>+			break;
->>+
->>+		if (--limit >= phb->ioda.total_pe_num)
->>  			return NULL;
->>-	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
->>+	} while (1);
->
->
->Usually, if it is "while(1)", then it is "while(1){}" rather than
->"do{}while(1)" :)
-
-Agree, will change it.
-
->
->
->>
->>  	return pnv_ioda_init_pe(phb, pe);
->>  }
->>
-
-Thanks,
-Gavin
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9d7adab..c2c0806 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -66,6 +66,8 @@ struct pci_dev_resource {
+ 	resource_size_t end;
+ 	resource_size_t add_size;
+ 	resource_size_t min_align;
++	resource_size_t alt_size;
++	resource_size_t alt_align;
+ 	unsigned long flags;
+ };
+ 
+@@ -88,15 +90,16 @@ static void free_list(struct list_head *head)
+  * @add_size:	additional size to be optionally added
+  *              to the resource
+  */
+-static int add_to_list(struct list_head *head,
++static int __add_to_list(struct list_head *head,
+ 		 struct pci_dev *dev, struct resource *res,
+-		 resource_size_t add_size, resource_size_t min_align)
++		 resource_size_t add_size, resource_size_t min_align,
++		 resource_size_t alt_size, resource_size_t alt_align)
+ {
+ 	struct pci_dev_resource *tmp;
+ 
+ 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
+ 	if (!tmp) {
+-		pr_warn("add_to_list: kmalloc() failed!\n");
++		pr_warn("__add_to_list: kmalloc() failed!\n");
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -107,12 +110,20 @@ static int add_to_list(struct list_head *head,
+ 	tmp->flags = res->flags;
+ 	tmp->add_size = add_size;
+ 	tmp->min_align = min_align;
++	tmp->alt_size = alt_size;
++	tmp->alt_align = alt_align;
+ 
+ 	list_add(&tmp->list, head);
+ 
+ 	return 0;
+ }
+ 
++static int add_to_list(struct list_head *head,
++		 struct pci_dev *dev, struct resource *res)
++{
++	return __add_to_list(head, dev, res, 0, 0, 0, 0);
++}
++
+ static void remove_from_list(struct list_head *head,
+ 				 struct resource *res)
+ {
+@@ -372,9 +383,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head)
+-				add_to_list(fail_head, dev_res->dev, res,
+-					    0 /* don't care */,
+-					    0 /* don't care */);
++				add_to_list(fail_head, dev_res->dev, res);
+ 			reset_resource(res);
+ 		}
+ 	}
+@@ -460,7 +469,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Save original start, end, flags etc at first */
+ 	list_for_each_entry(dev_res, head, list) {
+-		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
++		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
+ 			free_list(&save_head);
+ 			goto requested_and_reassign;
+ 		}
+@@ -1013,8 +1022,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0,
+-			    min_align);
++		__add_to_list(realloc_head, bus->self, b_res,
++			      size1 - size0, min_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long)size1-size0);
+@@ -1216,7 +1225,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				add_to_align_test_list(&align_test_add_list,
+ 							align, r_size);
+ 				r->end = r->start - 1;
+-				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
++				__add_to_list(realloc_head, dev, r,
++					      r_size, align, 0, 0);
+ 				sum_add_size += r_size;
+ 				if (align > max_add_align)
+ 					max_add_align = align;
+@@ -1287,8 +1297,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
+-				min_add_align);
++		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
++				min_add_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long) (size1 - size0),
+@@ -1325,8 +1335,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[0].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
+-				pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_1:
+@@ -1337,8 +1347,8 @@ handle_b_res_1:
+ 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[1].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
+-				 pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res + 1,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_2:
+@@ -1375,8 +1385,9 @@ handle_b_res_2:
+ 				  IORESOURCE_STARTALIGN;
+ 		if (realloc_head) {
+ 			b_res[2].end -= pci_cardbus_mem_size;
+-			add_to_list(realloc_head, bridge, b_res+2,
+-				 pci_cardbus_mem_size, pci_cardbus_mem_size);
++			__add_to_list(realloc_head, bridge, b_res + 2,
++				pci_cardbus_mem_size, pci_cardbus_mem_size,
++				0, 0);
+ 		}
+ 
+ 		/* reduce that to half */
+@@ -1391,8 +1402,8 @@ handle_b_res_3:
+ 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[3].end -= b_res_3_size;
+-		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
+-				 pci_cardbus_mem_size);
++		__add_to_list(realloc_head, bridge, b_res + 3,
++				b_res_3_size, pci_cardbus_mem_size, 0, 0);
+ 	}
+ 
+ handle_done:
+-- 
+1.8.4.5
 
