@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24098 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364AbbHUGVq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:21:46 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:46067 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753358AbbHUGWA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:22:00 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -12,54 +12,76 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 02/52] PCI: Reuse res_to_dev_res() in reassign_resources_sorted()
-Date: Thu, 20 Aug 2015 23:20:17 -0700
-Message-Id: <1440138067-4314-3-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v4 09/52] PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
+Date: Thu, 20 Aug 2015 23:20:24 -0700
+Message-Id: <1440138067-4314-10-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now res_to_dev_res() does not print out debug message anymore, so
-reuse it in reassign_resource_sorted().
+pdev_sort_resources() etc was used to check devices resources and put
+resources that need to assign to one list in sorted order.
+
+We don't do sorting in those functions anymore, so change to
+__assign_resources_prepare() instead.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+ drivers/pci/setup-bus.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6d0815e..f816472 100644
+index 44d63c0..1fd0b8d 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -240,26 +240,17 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+@@ -205,8 +205,8 @@ static resource_size_t __pci_resource_alignment(
+ 	return r_align;
+ }
+ 
+-/* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev,
++/* check resources and save to the list */
++static void pdev_assign_resources_prepare(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
  {
- 	struct resource *res;
- 	struct pci_dev_resource *add_res, *tmp;
--	struct pci_dev_resource *dev_res;
- 	resource_size_t add_size, align;
- 	int idx;
+@@ -242,7 +242,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 	}
+ }
  
- 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
--		bool found_match = false;
--
- 		res = add_res->res;
- 		/* skip resource that has been reset */
- 		if (!res->flags)
- 			goto out;
+-static void __dev_sort_resources(struct pci_dev *dev,
++static void __dev_assign_resources_prepare(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+@@ -260,7 +260,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
  
- 		/* skip this resource if not found in head list */
--		list_for_each_entry(dev_res, head, list) {
--			if (dev_res->res == res) {
--				found_match = true;
--				break;
--			}
--		}
--		if (!found_match)/* just skip */
-+		if (!res_to_dev_res(head, res))
- 			continue;
+-	pdev_sort_resources(dev, realloc_head, head);
++	pdev_assign_resources_prepare(dev, realloc_head, head);
+ }
  
- 		idx = res - &add_res->dev->resource[0];
+ static inline void reset_resource(struct resource *res)
+@@ -560,7 +560,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
+ 
+-	__dev_sort_resources(dev, add_head, &head);
++	__dev_assign_resources_prepare(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -573,7 +573,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, realloc_head, &head);
++		__dev_assign_resources_prepare(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
 -- 
 1.8.4.5
 
