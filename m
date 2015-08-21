@@ -1,186 +1,205 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <55DB4939.5070605@amd.com>
-References: <1439459925-2361-1-git-send-email-Suravee.Suthikulpanit@amd.com> <55DB4939.5070605@amd.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Aug 2015 10:32:00 -0700
-Message-ID: <CAErSpo4BzNgvVyEbFZWmQPR4KQsvMT1tRpT1mxPL=TymYSM3DQ@mail.gmail.com>
-Subject: Re: [PATCH] pci: acpi: Generic function for setting up PCI device DMA coherency
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: Rafael Wysocki <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 34/52] resources: Make allocate_resource() return best fit resource
+Date: Thu, 20 Aug 2015 23:20:49 -0700
+Message-Id: <1440138067-4314-35-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 24, 2015 at 9:41 AM, Suravee Suthikulpanit
-<Suravee.Suthikulpanit@amd.com> wrote:
-> Hi,
->
-> Ping. Does anyone have any comments or suggestions?
+Find all suitable empty slots and pick one with smallest size, so we could
+save the big slot for needed ones later when we have several pci bridges under
+parent bridge and some bridges get assigned from bios and we need to assign
+others in kernel.
 
-Yes, I sent you some ideas a couple weeks ago.  I'll resend them.
+For examples: we have window
+[0xc0000000, 0xd0000000), and [0xe0000000,0xe1000000)
 
-> On 8/13/15 16:58, Suravee Suthikulpanit wrote:
->>
->> This patch refactors of_pci_dma_configure() into a more generic
->> pci_dma_configure(), which can be reused by non-OF code.
->> Then, it adds support for setting up PCI device DMA coherency from
->> ACPI _CCA object that should normally be specified in the DSDT node
->> of its PCI host bridge..
->>
->> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> CC: Bjorn Helgaas <bhelgaas@google.com>
->> CC: Catalin Marinas <catalin.marinas@arm.com>
->> CC: Will Deacon <will.deacon@arm.com>
->> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
->> CC: Rob Herring <robh+dt@kernel.org>
->> CC: Murali Karicheri <m-karicheri2@ti.com>
->> ---
->> Note: According to the ACPI spec, the _CCA attribute is required
->>        for ARM64. Therefore, this patch is a pre-req for ACPI PCI
->>        support for ARM64 which is currently in development.
->>
->>        Also, this should not affect other architectures since
->>        if CCA is not required, the default value is coherent.
->>        Please see include/acpi/acpi_bus.h: acpi_check_dma() and
->>        drivers/acpi/scan.c: acpi_init_coherency() for more information
->>
->>   drivers/of/of_pci.c    | 20 --------------------
->>   drivers/pci/probe.c    | 35 +++++++++++++++++++++++++++++++++--
->>   include/linux/of_pci.h |  3 ---
->>   3 files changed, 33 insertions(+), 25 deletions(-)
->>
->> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->> index 5751dc5..b66ee4e 100644
->> --- a/drivers/of/of_pci.c
->> +++ b/drivers/of/of_pci.c
->> @@ -117,26 +117,6 @@ int of_get_pci_domain_nr(struct device_node *node)
->>   }
->>   EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
->>
->> -/**
->> - * of_pci_dma_configure - Setup DMA configuration
->> - * @dev: ptr to pci_dev struct of the PCI device
->> - *
->> - * Function to update PCI devices's DMA configuration using the same
->> - * info from the OF node of host bridge's parent (if any).
->> - */
->> -void of_pci_dma_configure(struct pci_dev *pci_dev)
->> -{
->> -       struct device *dev = &pci_dev->dev;
->> -       struct device *bridge = pci_get_host_bridge_device(pci_dev);
->> -
->> -       if (!bridge->parent)
->> -               return;
->> -
->> -       of_dma_configure(dev, bridge->parent->of_node);
->> -       pci_put_host_bridge_device(bridge);
->> -}
->> -EXPORT_SYMBOL_GPL(of_pci_dma_configure);
->> -
->>   #if defined(CONFIG_OF_ADDRESS)
->>   /**
->>    * of_pci_get_host_bridge_resources - Parse PCI host bridge resources
->> from DT
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index cefd636..e2fcd3b 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -6,12 +6,14 @@
->>   #include <linux/delay.h>
->>   #include <linux/init.h>
->>   #include <linux/pci.h>
->> -#include <linux/of_pci.h>
->> +#include <linux/of_device.h>
->>   #include <linux/pci_hotplug.h>
->>   #include <linux/slab.h>
->>   #include <linux/module.h>
->>   #include <linux/cpumask.h>
->>   #include <linux/pci-aspm.h>
->> +#include <linux/acpi.h>
->> +#include <linux/property.h>
->>   #include <asm-generic/pci-bridge.h>
->>   #include "pci.h"
->>
->> @@ -1544,6 +1546,35 @@ static void pci_init_capabilities(struct pci_dev
->> *dev)
->>         pci_enable_acs(dev);
->>   }
->>
->> +/**
->> + * pci_dma_configure - Setup DMA configuration
->> + * @pci_dev: ptr to pci_dev struct of the PCI device
->> + *
->> + * Function to update PCI devices's DMA configuration using the same
->> + * info from the OF node or ACPI node of host bridge's parent (if any).
->> + */
->> +static void pci_dma_configure(struct pci_dev *pci_dev)
->> +{
->> +       struct device *dev = &pci_dev->dev;
->> +       struct device *bridge = pci_get_host_bridge_device(pci_dev);
->> +       struct acpi_device *adev;
->> +       bool coherent;
->> +
->> +       if (has_acpi_companion(bridge)) {
->> +               adev = to_acpi_node(bridge->fwnode);
->> +               if (acpi_check_dma(adev, &coherent))
->> +                       arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
->> +       } else {
->> +               struct device *host = bridge->parent;
->> +               if (!host)
->> +                       return;
->> +
->> +               of_dma_configure(dev, host->of_node);
->> +       }
->> +
->> +       pci_put_host_bridge_device(bridge);
->> +}
->> +
->>   void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->>   {
->>         int ret;
->> @@ -1557,7 +1588,7 @@ void pci_device_add(struct pci_dev *dev, struct
->> pci_bus *bus)
->>         dev->dev.dma_mask = &dev->dma_mask;
->>         dev->dev.dma_parms = &dev->dma_parms;
->>         dev->dev.coherent_dma_mask = 0xffffffffull;
->> -       of_pci_dma_configure(dev);
->> +       pci_dma_configure(dev);
->>
->>         pci_set_dma_max_seg_size(dev, 65536);
->>         pci_set_dma_seg_boundary(dev, 0xffffffff);
->> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
->> index 29fd3fe..ce0e5ab 100644
->> --- a/include/linux/of_pci.h
->> +++ b/include/linux/of_pci.h
->> @@ -16,7 +16,6 @@ int of_pci_get_devfn(struct device_node *np);
->>   int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8
->> pin);
->>   int of_pci_parse_bus_range(struct device_node *node, struct resource
->> *res);
->>   int of_get_pci_domain_nr(struct device_node *node);
->> -void of_pci_dma_configure(struct pci_dev *pci_dev);
->>   #else
->>   static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct
->> of_phandle_args *out_irq)
->>   {
->> @@ -51,8 +50,6 @@ of_get_pci_domain_nr(struct device_node *node)
->>   {
->>         return -1;
->>   }
->> -
->> -static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
->>   #endif
->>
->>   #if defined(CONFIG_OF_ADDRESS)
->>
->
+and we try allocate 0x200000 size resource.
+
+in this patch will reserve [0xc0000000, 0xd0000000) and
+[0xe0000000,0xe1000000) at first, then pick [0xe0000000,0xe1000000)
+to allocate 0x200000 size.
+
+-v2: updated after __allocate_resource change, and add field in constraint
+	instead of passing it directly.
+-v3: Use best fit instead of just fit according to Bjorn.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 68 insertions(+), 13 deletions(-)
+
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 67b58a5..697b8ca 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -48,6 +48,7 @@ struct resource_constraint {
+ 	resource_size_t (*alignf)(void *, const struct resource *,
+ 			resource_size_t, resource_size_t);
+ 	void *alignf_data;
++	bool fit;
+ };
+ 
+ static DEFINE_RWLOCK(resource_lock);
+@@ -554,12 +555,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
+  * alignment constraints
+  */
+ static int __find_resource(struct resource *root, struct resource *old,
+-			 struct resource *new,
++			 struct resource *new, struct resource *avail,
+ 			 resource_size_t  size,
+ 			 struct resource_constraint *constraint)
+ {
+ 	struct resource *this = root->child;
+-	struct resource tmp = *new, avail, alloc;
++	struct resource tmp = *new, availx, alloc;
++
++	if (!avail || avail == new)
++		avail = &availx;
+ 
+ 	tmp.start = root->start;
+ 	/*
+@@ -583,15 +587,16 @@ static int __find_resource(struct resource *root, struct resource *old,
+ 		arch_remove_reservations(&tmp);
+ 
+ 		/* Check for overflow after ALIGN() */
+-		avail.start = ALIGN(tmp.start, constraint->align);
+-		avail.end = tmp.end;
+-		avail.flags = new->flags & ~IORESOURCE_UNSET;
+-		if (avail.start >= tmp.start) {
+-			alloc.flags = avail.flags;
+-			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
++		avail->start = ALIGN(tmp.start, constraint->align);
++		avail->end = tmp.end;
++		avail->flags = new->flags & ~IORESOURCE_UNSET;
++		if (avail->start >= tmp.start) {
++			alloc.flags = avail->flags;
++			alloc.start = constraint->alignf(
++					constraint->alignf_data, avail,
+ 					size, constraint->align);
+ 			alloc.end = alloc.start + size - 1;
+-			if (resource_contains(&avail, &alloc)) {
++			if (resource_contains(avail, &alloc)) {
+ 				new->start = alloc.start;
+ 				new->end = alloc.end;
+ 				return 0;
+@@ -608,6 +613,11 @@ next:		if (!this || this->end == root->end)
+ 	return -EBUSY;
+ }
+ 
++struct good_resource {
++	struct list_head list;
++	struct resource avail;
++	struct resource new;
++};
+ /*
+  * Find empty slot in the resource tree given range and alignment.
+  */
+@@ -615,7 +625,49 @@ static int find_resource(struct resource *root, struct resource *new,
+ 			resource_size_t size,
+ 			struct resource_constraint  *constraint)
+ {
+-	return  __find_resource(root, NULL, new, size, constraint);
++	int ret = -1;
++	LIST_HEAD(head);
++	struct good_resource *good, *tmp;
++	resource_size_t avail_size = (resource_size_t)-1ULL;
++
++	if (!constraint->fit)
++		return __find_resource(root, NULL, new, NULL, size,
++					constraint);
++
++	/* find all suitable ones and add to the list */
++	for (;;) {
++		good = kzalloc(sizeof(*good), GFP_KERNEL);
++		if (!good)
++			break;
++
++		good->new.start = new->start;
++		good->new.end = new->end;
++		good->new.flags = new->flags;
++		ret = __find_resource(root, NULL, &good->new, &good->avail,
++					size, constraint);
++		if (ret || __request_resource(root, &good->avail)) {
++			ret = -EBUSY;
++			kfree(good);
++			break;
++		}
++
++		list_add(&good->list, &head);
++	}
++
++	/* pick up the smallest one and delete the list */
++	list_for_each_entry_safe(good, tmp, &head, list) {
++		if (resource_size(&good->avail) < avail_size) {
++			avail_size = resource_size(&good->avail);
++			new->start = good->new.start;
++			new->end = good->new.end;
++			ret = 0;
++		}
++		list_del(&good->list);
++		__release_resource(&good->avail);
++		kfree(good);
++	}
++
++	return ret;
+ }
+ 
+ /**
+@@ -636,7 +688,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
+ 
+-	if ((err = __find_resource(root, old, &new, newsize, constraint)))
++	err = __find_resource(root, old, &new, NULL, newsize, constraint);
++	if (err)
+ 		goto out;
+ 
+ 	if (resource_contains(&new, old)) {
+@@ -675,6 +728,7 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ * @fit: only allocate fit range.
+  *
+  * Caller need to hold resource_lock if needed.
+  */
+@@ -685,7 +739,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 						  const struct resource *,
+ 						  resource_size_t,
+ 						  resource_size_t),
+-				void *alignf_data)
++				void *alignf_data, bool fit)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -698,6 +752,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.align = align;
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
++	constraint.fit = fit;
+ 
+ 	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+@@ -738,7 +793,7 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 
+ 	write_lock(&resource_lock);
+ 	ret = __allocate_resource(root, new, size, min, max, align,
+-				   alignf, alignf_data);
++				   alignf, alignf_data, true);
+ 	write_unlock(&resource_lock);
+ 
+ 	return ret;
+-- 
+1.8.4.5
+
