@@ -1,43 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:34145 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbbHCEd3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 00:33:29 -0400
-Received: by pawu10 with SMTP id u10so2668310paw.1
-        for <linux-pci@vger.kernel.org>; Sun, 02 Aug 2015 21:33:29 -0700 (PDT)
-From: Adam Lee <adam.lee@canonical.com>
-To: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 1/2] pci_ids: Add Pericom vendor and device ids
-Date: Mon,  3 Aug 2015 12:33:20 +0800
-Message-Id: <1438576401-24921-1-git-send-email-adam.lee@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 32/52] PCI: Kill macro checking for bus io port sizing
+Date: Thu, 20 Aug 2015 23:20:47 -0700
+Message-Id: <1440138067-4314-33-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch add Pericom's vendor id and Pericom PI7C9X795[1248] chips'
-device ids.
+We can use new generic version skip_isa_ioresource_align() instead
+the old marcro, so kill the marco.
 
-Signed-off-by: Adam Lee <adam.lee@canonical.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- include/linux/pci_ids.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/pci/setup-bus.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index fcff8f8..c4a93cf 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2995,4 +2995,10 @@
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1f08bed..1048483 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1166,15 +1166,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
+ 	return 0;
+ }
  
- #define PCI_VENDOR_ID_OCZ		0x1b85
- 
-+#define PCI_VENDOR_ID_PERICOM			0x12D8
-+#define PCI_DEVICE_ID_PERICOM_PI7C9X7951	0x7951
-+#define PCI_DEVICE_ID_PERICOM_PI7C9X7952	0x7952
-+#define PCI_DEVICE_ID_PERICOM_PI7C9X7954	0x7954
-+#define PCI_DEVICE_ID_PERICOM_PI7C9X7958	0x7958
+-static resource_size_t size_aligned_for_isa(resource_size_t size)
++static resource_size_t size_aligned_for_isa(resource_size_t size,
++					    struct pci_bus *bus)
+ {
+-	/*
+-	 * To be fixed in 2.5: we should have sort of HAVE_ISA
+-	 *  flag in the struct pci_bus.
+-	 */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
++	if (!skip_isa_ioresource_align(bus))
++		size = (size & 0xff) + ((size & ~0xffUL) << 2);
 +
- #endif /* _LINUX_PCI_IDS_H */
+ 	return size;
+ }
+ 
+@@ -1243,12 +1240,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		}
+ 	}
+ 
+-	size = size_aligned_for_isa(size);
++	size = size_aligned_for_isa(size, bus);
+ 	size += size1;
+ 	if (size || min_size)
+ 		size0 = calculate_size(size, min_size,
+ 					resource_size(b_res), min_align);
+-	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
 -- 
-2.5.0
+1.8.4.5
 
