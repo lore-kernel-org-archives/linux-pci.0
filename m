@@ -1,89 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:33166 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754115AbbHJTHn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 15:07:43 -0400
-Received: by oio137 with SMTP id 137so90487994oio.0
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 12:07:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo7aDYKwy4MC6ZPf7hNd4MPE-LARiOVKutFfDFFkHY7qjQ@mail.gmail.com>
-References: <20150724224258.GA23990@google.com> <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com>
- <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com>
- <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com>
- <20150728212944.GA12958@google.com> <CADaLNDkOLiyPmVC3VwpnbrfAKFmNwSVJKdChjQFdQqs7XP-Ddg@mail.gmail.com>
- <20150729012255.GA18606@google.com> <20150729155509.GA31170@google.com>
- <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com>
- <CAErSpo4VFh7rv81sCAG-eCXVyZh4ub8Trh-ntZhyfy7BzqTr5g@mail.gmail.com>
- <CADaLNDkUQHzGACfFmYDeJWnaNrKmJUDx4Rby60OWr4FzOjx3rA@mail.gmail.com> <CAErSpo7aDYKwy4MC6ZPf7hNd4MPE-LARiOVKutFfDFFkHY7qjQ@mail.gmail.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Mon, 10 Aug 2015 12:07:13 -0700
-Message-ID: <CADaLNDmnnZOoB1fxO=rQQa-eqT=B9G24rUrN_GzwAkFoC3Acbw@mail.gmail.com>
-Subject: Re: X-Gene: Unhandled fault: synchronous external abort in pci_generic_config_read32
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 16/52] PCI: Check if resource is allocated before trying to assign one
+Date: Thu, 20 Aug 2015 23:20:31 -0700
+Message-Id: <1440138067-4314-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 10:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Aug 10, 2015 at 12:16 PM, Duc Dang <dhdang@apm.com> wrote:
->> On Monday, August 10, 2015, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>
->>> On Fri, Jul 31, 2015 at 12:00 PM, Duc Dang <dhdang@apm.com> wrote:
->>> > On Wed, Jul 29, 2015 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com>
->>> > wrote:
->>> >> On Tue, Jul 28, 2015 at 08:22:55PM -0500, Bjorn Helgaas wrote:
->>> >>> On Tue, Jul 28, 2015 at 02:50:39PM -0700, Duc Dang wrote:
->>> >>
->>> >>> > Do you have another PCIe card to try on the same reboot test on this
->>> >>> > board?
->>> >>>
->>> >>> I've seen this on at least two Mellanox cards.  I'm running similar
->>> >>> tests
->>> >>> on a different type of card now.
->>> >>
->>> >> FWIW, reboot tests on two machines with Mellanox cards failed, while
->>> >> the
->>> >> same test on a machine with a different proprietary card succeeded.
->>> >
->>> > Thanks, Bjorn.
->>> >
->>> > I don't have the same Mellanox card as yours, but I will also run
->>> > similar reboot test to see if I hit the same issue with my card.
->>>
->>> Any more hints on this?  Nothing has changed on my end, so of course
->>> I'm still seeing this, always on machines with Mellanox, and never on
->>> other machines.  Could this be a hardware issue like a signal
->>> integrity or margin issue?  I don't know where to go from here because
->>> I'm not a hardware person, and I don't know anything to do in
->>> software.
->>
->>
->> Hi Bjorn,
->>
->> I tried to run similar reboot tests on 2 different Mellanox cards (Connect-X
->> family, one card has 2 10G interfaces, the other one has 1 port that
->> supports InfiniBand) with U-Boot 1.15.12 and linux 4.2-rc5 and I did not see
->> the crash that you encounterred.
->>
->> Did you check if your Mellanox cards have latest firmware? I did see some
->> link issues on my Mellanox cards with its old firmware before.
->
-> Good idea; I'll check that, too.  Also, I just learned that these
-> cards on installed with an extender card because of some space issues,
-> so we're going to test again without the extender.
+In following alt_size support, we will call pci_assign_resource()
+on one resource list several times, and some resources could have been
+assigned already.
 
-Hi Bjorn,
+Skip allocated resource in the list, as pci_assign_resource()
+only can handle not assigned resource.
 
-Are other cards that passed your test installed directly to the
-on-board PCIe slot?
-If yes, then this is a good data point and it will be useful to test
-the case where
-your Mellanox cards are directly installed into the on-board PCIe slot.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b17ee2d..ccc6f9d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -380,7 +380,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+ 		idx = res - &dev_res->dev->resource[0];
+-		if (resource_size(res) &&
++		if (!res->parent && resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head)
+ 				add_to_list(fail_head, dev_res->dev, res);
 -- 
-Regards,
-Duc Dang.
+1.8.4.5
+
