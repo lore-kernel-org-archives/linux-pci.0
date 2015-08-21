@@ -1,47 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:33702 "EHLO
-	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754138AbbHXVZq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2015 17:25:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+8MBb+yJ9ywFnmfCAEPF0ZBQfH1R9b8hzmwVpM8+rsyJkEW5Q@mail.gmail.com>
-References: <1415089784-28779-1-git-send-email-daniel@numascale.com>
-	<1415089784-28779-4-git-send-email-daniel@numascale.com>
-	<20150821181910.GA31378@agluck-desk.sc.intel.com>
-	<CAE9FiQXWXPexLM8xma8Cb9R9hpR2+tOwzGtmJxzH5uuyPraDpQ@mail.gmail.com>
-	<20150821202707.GA920@agluck-desk.sc.intel.com>
-	<CAE9FiQU-=oAzi_benuEm=x_Y_LUp48uND6cGnx9osbYyPWySdw@mail.gmail.com>
-	<CA+8MBbL4nqTxi14Lz92PRFZeobHBLimSfcTH=9HaZBcEUpLVOg@mail.gmail.com>
-	<CAE9FiQVJozeJ9R9GgMEVPfJaSJL+J+M3ULu2VXPjrdDqnYGwvw@mail.gmail.com>
-	<CA+8MBb+yJ9ywFnmfCAEPF0ZBQfH1R9b8hzmwVpM8+rsyJkEW5Q@mail.gmail.com>
-Date: Mon, 24 Aug 2015 14:25:45 -0700
-Message-ID: <CAE9FiQUDb=uNKV9Bj34v3vvMT04MiuoRHqTq6=KTMd+DVrMVNg@mail.gmail.com>
-Subject: Re: [PATCH v4 4/4] Use 2GB memory block size on large-memory x86-64 systems
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: Tony Luck <tony.luck@gmail.com>
-Cc: Daniel J Blueman <daniel@numascale.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"the arch/x86 maintainers" <x86@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 03/52] PCI: Use correct align for optional only resources during sorting
+Date: Thu, 20 Aug 2015 23:20:18 -0700
+Message-Id: <1440138067-4314-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 24, 2015 at 1:41 PM, Tony Luck <tony.luck@gmail.com> wrote:
-> On Mon, Aug 24, 2015 at 10:46 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> Then, what does the E820 look like?
->
-> See attached serial console log of the latest crash
+During sorting before assign, we only put resource with non-zero align
+in the sorted list, so for optional resources that required size is 0 and
+only have optional parts, we need to have correct align.
 
-Can you boot with "debug ignore_loglevel" so we can see following print out
-for vmemmap?
+While treating SRIOV as optional resources, we always read alignment for
+SRIOV bars, so they are ok.
+Hotplug bridge resources are using STARTALIGN so it is ok when size is 0
+if we have correct start for them.
 
-[    0.352486]  [ffffea0000000000-ffffea0001ffffff] PMD ->
-[ffff88007de00000-ffff88007fdfffff] on node 0
-[    0.358758]  [ffffea0004000000-ffffea0005ffffff] PMD ->
-[ffff88017d600000-ffff88017f5fffff] on node 1
+Later we want to treat the ROM BAR as optional resource, and it has
+SIZEALIGN, so align=size will be 0. we need to find a way to get align
+for them.
+
+We can use optional resource align instead in that case, and it
+is ok for SRIOV path and hotplug bridge resource path.
+
+We need to pass realloc_head from sizing stage to sorting stage, and
+get entry from realloc list and calculate align from the entry.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 42 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f816472..aea35b6 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -145,9 +145,42 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	return dev_res->min_align;
+ }
+ 
++static resource_size_t __pci_resource_alignment(
++				struct pci_dev *dev,
++				struct resource *r,
++				struct list_head *realloc_head)
++{
++	resource_size_t r_align = pci_resource_alignment(dev, r);
++	resource_size_t orig_start, orig_end;
++	struct pci_dev_resource *dev_res;
++
++	if (r_align || !realloc_head)
++		return r_align;
++
++	dev_res = res_to_dev_res(realloc_head, r);
++	if (!dev_res || !dev_res->add_size)
++		return r_align;
++
++	orig_start = r->start;
++	orig_end = r->end;
++	r->end += dev_res->add_size;
++	if ((r->flags & IORESOURCE_STARTALIGN)) {
++		resource_size_t r_size = resource_size(r);
++
++		r->start = dev_res->min_align;
++		r->end = r->start + r_size - 1;
++	}
++	r_align = pci_resource_alignment(dev, r);
++	r->start = orig_start;
++	r->end = orig_end;
++
++	return r_align;
++}
+ 
+ /* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
++static void pdev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
++				 struct list_head *head)
+ {
+ 	int i;
+ 
+@@ -165,7 +198,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		if (!(r->flags) || r->parent)
+ 			continue;
+ 
+-		r_align = pci_resource_alignment(dev, r);
++		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+ 				 i, r);
+@@ -183,8 +216,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		list_for_each_entry(dev_res, head, list) {
+ 			resource_size_t align;
+ 
+-			align = pci_resource_alignment(dev_res->dev,
+-							 dev_res->res);
++			align = __pci_resource_alignment(dev_res->dev,
++							 dev_res->res,
++							 realloc_head);
+ 
+ 			if (r_align > align) {
+ 				n = &dev_res->list;
+@@ -197,6 +231,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ }
+ 
+ static void __dev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+ 	u16 class = dev->class >> 8;
+@@ -213,7 +248,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
+ 
+-	pdev_sort_resources(dev, head);
++	pdev_sort_resources(dev, realloc_head, head);
+ }
+ 
+ static inline void reset_resource(struct resource *res)
+@@ -501,7 +536,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
+ 
+-	__dev_sort_resources(dev, &head);
++	__dev_sort_resources(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -514,7 +549,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, &head);
++		__dev_sort_resources(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
+-- 
+1.8.4.5
+
