@@ -1,161 +1,124 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1440524009-5359-4-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1440524009-5359-4-git-send-email-Suravee.Suthikulpanit@amd.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Tue, 25 Aug 2015 14:27:47 -0500
-Message-ID: <CAL_JsqLDkTKs4XVDCzY=CDubdQ+NuC3e+yFND9W2zmCgmLkTFQ@mail.gmail.com>
-Subject: Re: [PATCH V2 3/4] PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 21/52] PCI: Move saved required resource list out of required+optional assigning
+Date: Thu, 20 Aug 2015 23:20:36 -0700
+Message-Id: <1440138067-4314-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 25, 2015 at 12:33 PM, Suravee Suthikulpanit
-<Suravee.Suthikulpanit@amd.com> wrote:
-> This patch move of_pci_dma_configure() to a more generic
-> pci_dma_configure(), which can be extended by non-OF code (e.g. ACPI).
->
-> This has no functional change.
->
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Catalin Marinas <catalin.marinas@arm.com>
-> CC: Rob Herring <robh+dt@kernel.org>
+We will need to share saved required list for alt_size support, so move
+it out of required+optional assigning.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
 
-> CC: Will Deacon <will.deacon@arm.com>
-> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
-> CC: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  drivers/of/of_pci.c    | 20 --------------------
->  drivers/pci/probe.c    | 27 +++++++++++++++++++++++++--
->  include/linux/of_pci.h |  3 ---
->  3 files changed, 25 insertions(+), 25 deletions(-)
->
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 5751dc5..b66ee4e 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -117,26 +117,6 @@ int of_get_pci_domain_nr(struct device_node *node)
->  }
->  EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
->
-> -/**
-> - * of_pci_dma_configure - Setup DMA configuration
-> - * @dev: ptr to pci_dev struct of the PCI device
-> - *
-> - * Function to update PCI devices's DMA configuration using the same
-> - * info from the OF node of host bridge's parent (if any).
-> - */
-> -void of_pci_dma_configure(struct pci_dev *pci_dev)
-> -{
-> -       struct device *dev = &pci_dev->dev;
-> -       struct device *bridge = pci_get_host_bridge_device(pci_dev);
-> -
-> -       if (!bridge->parent)
-> -               return;
-> -
-> -       of_dma_configure(dev, bridge->parent->of_node);
-> -       pci_put_host_bridge_device(bridge);
-> -}
-> -EXPORT_SYMBOL_GPL(of_pci_dma_configure);
-> -
->  #if defined(CONFIG_OF_ADDRESS)
->  /**
->   * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cefd636..4de6594 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -6,12 +6,14 @@
->  #include <linux/delay.h>
->  #include <linux/init.h>
->  #include <linux/pci.h>
-> -#include <linux/of_pci.h>
-> +#include <linux/of_device.h>
->  #include <linux/pci_hotplug.h>
->  #include <linux/slab.h>
->  #include <linux/module.h>
->  #include <linux/cpumask.h>
->  #include <linux/pci-aspm.h>
-> +#include <linux/acpi.h>
-> +#include <linux/property.h>
->  #include <asm-generic/pci-bridge.h>
->  #include "pci.h"
->
-> @@ -1544,6 +1546,27 @@ static void pci_init_capabilities(struct pci_dev *dev)
->         pci_enable_acs(dev);
->  }
->
-> +/**
-> + * pci_dma_configure - Setup DMA configuration
-> + * @dev: ptr to pci_dev struct of the PCI device
-> + *
-> + * Function to update PCI devices's DMA configuration using the same
-> + * info from the OF node of host bridge's parent (if any).
-> + */
-> +static void pci_dma_configure(struct pci_dev *dev)
-> +{
-> +       struct device *bridge = pci_get_host_bridge_device(dev);
-> +
-> +       if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
-> +               if (!bridge->parent)
-> +                       return;
-> +
-> +               of_dma_configure(&dev->dev, bridge->parent->of_node);
-> +       }
-> +
-> +       pci_put_host_bridge_device(bridge);
-> +}
-> +
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  {
->         int ret;
-> @@ -1557,7 +1580,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->         dev->dev.dma_mask = &dev->dma_mask;
->         dev->dev.dma_parms = &dev->dma_parms;
->         dev->dev.coherent_dma_mask = 0xffffffffull;
-> -       of_pci_dma_configure(dev);
-> +       pci_dma_configure(dev);
->
->         pci_set_dma_max_seg_size(dev, 65536);
->         pci_set_dma_seg_boundary(dev, 0xffffffff);
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index 29fd3fe..ce0e5ab 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -16,7 +16,6 @@ int of_pci_get_devfn(struct device_node *np);
->  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
->  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
->  int of_get_pci_domain_nr(struct device_node *node);
-> -void of_pci_dma_configure(struct pci_dev *pci_dev);
->  #else
->  static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
->  {
-> @@ -51,8 +50,6 @@ of_get_pci_domain_nr(struct device_node *node)
->  {
->         return -1;
->  }
-> -
-> -static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
->  #endif
->
->  #if defined(CONFIG_OF_ADDRESS)
-> --
-> 2.1.0
->
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 7d2420d..6429309 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -450,6 +450,9 @@ static bool has_addon(struct list_head *head,
+ 	int add_count = 0;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 
++	if (!realloc_head)
++		return false;
++
+ 	/* check if we have add really */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
+@@ -486,9 +489,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+ }
+ 
+ static bool __assign_resources_required_optional_sorted(struct list_head *head,
++				 struct list_head *save_head,
+ 				 struct list_head *realloc_head)
+ {
+-	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+@@ -496,12 +499,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 	resource_size_t add_align, add_size;
+ 	struct resource *res;
+ 
+-	if (!has_addon(head, realloc_head))
+-		return false;
+-
+-	if (!save_resources(head, &save_head))
+-		return false;
+-
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+@@ -542,7 +539,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 		/* Remove head list from realloc_head list */
+ 		list_for_each_entry(dev_res, head, list)
+ 			remove_from_list(realloc_head, dev_res->res);
+-		free_list(&save_head);
+ 		free_list(head);
+ 
+ 		return true;
+@@ -556,7 +552,7 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+ 			remove_from_list(realloc_head, res);
+-			remove_from_list(&save_head, res);
++			remove_from_list(save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
+@@ -575,11 +571,9 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 		}
+ 	}
+ 	/* Restore start/end/flags from saved list */
+-	list_for_each_entry(save_res, &save_head, list)
++	list_for_each_entry(save_res, save_head, list)
+ 		restore_resource(save_res, save_res->res);
+ 
+-	free_list(&save_head);
+-
+ 	return false;
+ }
+ 
+@@ -597,16 +591,24 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 *    then try to reassign add_size for some resources.
+ 	 */
+ 
++	LIST_HEAD(save_head);
++
+ 	/* Check required+optional add */
+-	if (realloc_head &&
+-	    __assign_resources_required_optional_sorted(head, realloc_head))
++	if (has_addon(head, realloc_head) &&
++	    save_resources(head, &save_head) &&
++	    __assign_resources_required_optional_sorted(head, &save_head,
++					       realloc_head)) {
++		free_list(&save_head);
+ 		return;
++	}
+ 
+ 	sort_resources(head);
+ 
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
+ 
++	free_list(&save_head);
++
+ 	/* Try to satisfy any additional optional resource
+ 		requests */
+ 	if (realloc_head)
+-- 
+1.8.4.5
+
