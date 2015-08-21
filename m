@@ -7,68 +7,158 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v4 41/52] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Thu, 20 Aug 2015 23:20:56 -0700
-Message-Id: <1440138067-4314-42-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 33/52] resources: Split out __allocate_resource()
+Date: Thu, 20 Aug 2015 23:20:48 -0700
+Message-Id: <1440138067-4314-34-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-parsing.
+It will not hold lock, so we could use it in other functions that
+hold the resource lock already.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+-v2: according to Linus, using "bool lock" as parameter
+     aka "conditionally take lock" is *wrong*.
+
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
+Acked-by: Linus Torvalds <torvalds@linux-foundation.org>
 ---
- arch/sparc/kernel/of_device_32.c | 5 +++--
- arch/sparc/kernel/of_device_64.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ kernel/resource.c | 70 +++++++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 50 insertions(+), 20 deletions(-)
 
-diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
-index 185aa96..3e9f273 100644
---- a/arch/sparc/kernel/of_device_32.c
-+++ b/arch/sparc/kernel/of_device_32.c
-@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
+diff --git a/kernel/resource.c b/kernel/resource.c
+index fed052a..67b58a5 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -619,7 +619,7 @@ static int find_resource(struct resource *root, struct resource *new,
+ }
+ 
+ /**
+- * reallocate_resource - allocate a slot in the resource tree given range & alignment.
++ * __reallocate_resource - allocate a slot in the resource tree given range & alignment.
+  *	The resource will be relocated if the new size cannot be reallocated in the
+  *	current location.
+  *
+@@ -628,7 +628,7 @@ static int find_resource(struct resource *root, struct resource *new,
+  * @newsize: new size of the resource descriptor
+  * @constraint: the size and alignment constraints to be met.
+  */
+-static int reallocate_resource(struct resource *root, struct resource *old,
++static int __reallocate_resource(struct resource *root, struct resource *old,
+ 			resource_size_t newsize,
+ 			struct resource_constraint  *constraint)
+ {
+@@ -636,8 +636,6 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
+ 
+-	write_lock(&resource_lock);
 -
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
+ 	if ((err = __find_resource(root, old, &new, newsize, constraint)))
+ 		goto out;
+ 
+@@ -662,14 +660,13 @@ static int reallocate_resource(struct resource *root, struct resource *old,
+ 		BUG_ON(conflict);
  	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
-diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
-index 7bbdc26..defee61 100644
---- a/arch/sparc/kernel/of_device_64.c
-+++ b/arch/sparc/kernel/of_device_64.c
-@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
+ out:
+-	write_unlock(&resource_lock);
+ 	return err;
+ }
+ 
 -
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
+ /**
+- * allocate_resource - allocate empty slot in the resource tree given range & alignment.
+- * 	The resource will be reallocated with a new size if it was already allocated
++ * __allocate_resource - allocate empty slot in the resource tree given range & alignment.
++ *	The resource will be reallocated with a new size if it was already
++ *	allocated
+  * @root: root resource descriptor
+  * @new: resource descriptor desired by caller
+  * @size: requested resource region size
+@@ -678,15 +675,17 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ *
++ * Caller need to hold resource_lock if needed.
+  */
+-int allocate_resource(struct resource *root, struct resource *new,
+-		      resource_size_t size, resource_size_t min,
+-		      resource_size_t max, resource_size_t align,
+-		      resource_size_t (*alignf)(void *,
+-						const struct resource *,
+-						resource_size_t,
+-						resource_size_t),
+-		      void *alignf_data)
++static int __allocate_resource(struct resource *root, struct resource *new,
++				resource_size_t size, resource_size_t min,
++				resource_size_t max, resource_size_t align,
++				resource_size_t (*alignf)(void *,
++						  const struct resource *,
++						  resource_size_t,
++						  resource_size_t),
++				void *alignf_data)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -700,20 +699,51 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
+ 
+-	if ( new->parent ) {
++	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+ 		   the new constraints */
+-		return reallocate_resource(root, new, size, &constraint);
++		return __reallocate_resource(root, new, size, &constraint);
  	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
+ 
+-	write_lock(&resource_lock);
+ 	err = find_resource(root, new, size, &constraint);
+ 	if (err >= 0 && __request_resource(root, new))
+ 		err = -EBUSY;
+-	write_unlock(&resource_lock);
++
+ 	return err;
+ }
+ 
++/**
++ * allocate_resource - allocate empty slot in the resource tree given range & alignment.
++ *	The resource will be reallocated with a new size if it was already
++ *	allocated
++ * @root: root resource descriptor
++ * @new: resource descriptor desired by caller
++ * @size: requested resource region size
++ * @min: minimum boundary to allocate
++ * @max: maximum boundary to allocate
++ * @align: alignment requested, in bytes
++ * @alignf: alignment function, optional, called if not NULL
++ * @alignf_data: arbitrary data to pass to the @alignf function
++ */
++int allocate_resource(struct resource *root, struct resource *new,
++		      resource_size_t size, resource_size_t min,
++		      resource_size_t max, resource_size_t align,
++		      resource_size_t (*alignf)(void *,
++						const struct resource *,
++						resource_size_t,
++						resource_size_t),
++		      void *alignf_data)
++{
++	int ret;
++
++	write_lock(&resource_lock);
++	ret = __allocate_resource(root, new, size, min, max, align,
++				   alignf, alignf_data);
++	write_unlock(&resource_lock);
++
++	return ret;
++}
++
+ EXPORT_SYMBOL(allocate_resource);
+ 
+ /**
 -- 
 1.8.4.5
 
