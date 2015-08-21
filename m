@@ -1,74 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:34470 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753510AbbHNIuA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 04:50:00 -0400
-Message-ID: <1439542197.13210.37.camel@pengutronix.de>
-Subject: Re: [PATCH 1/4] PCI: imx6: Simplify a trivial if-return sequence
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <fabio.estevam@freescale.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
-Date: Fri, 14 Aug 2015 10:49:57 +0200
-In-Reply-To: <1439487436-26989-1-git-send-email-fabio.estevam@freescale.com>
-References: <1439487436-26989-1-git-send-email-fabio.estevam@freescale.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 00/52] PCI: Resource allocation cleanup for v4.3
+Date: Thu, 20 Aug 2015 23:20:15 -0700
+Message-Id: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 13.08.2015, 14:37 -0300 schrieb Fabio Estevam:
-> Simplify a trivial if-return sequence by combining it with a
-> preceding function call.
-> 
-> The semantic patch that makes this change is available
-> in scripts/coccinelle/misc/simple_return.cocci.
-> 
-I don't really see that this helps code clarity/readability, but it
-certainly also doesn't make things harder to follow.
+Hi,
 
-So if Bjorn wants to take the series I'm okay with this going in.
+After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
+to 64-bit resources), we have several reports on resource allocation
+failure, and we try to fix the problem with resource clip, and get
+more problems.
 
-Regards,
-Lucas
+One is realloc fail with two graphics cards above 4G.
+One is from sparc that have problem with clip as we don't parse
+mem64 for it.
 
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> ---
->  drivers/pci/host/pci-imx6.c | 12 ++----------
->  1 file changed, 2 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 233a196..8f3a981 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -117,11 +117,7 @@ static int pcie_phy_wait_ack(void __iomem *dbi_base, int addr)
->  	val = addr << PCIE_PHY_CTRL_DATA_LOC;
->  	writel(val, dbi_base + PCIE_PHY_CTRL);
->  
-> -	ret = pcie_phy_poll_ack(dbi_base, 0);
-> -	if (ret)
-> -		return ret;
-> -
-> -	return 0;
-> +	return pcie_phy_poll_ack(dbi_base, 0);
->  }
->  
->  /* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
-> @@ -148,11 +144,7 @@ static int pcie_phy_read(void __iomem *dbi_base, int addr , int *data)
->  	/* deassert Read signal */
->  	writel(0x00, dbi_base + PCIE_PHY_CTRL);
->  
-> -	ret = pcie_phy_poll_ack(dbi_base, 0);
-> -	if (ret)
-> -		return ret;
-> -
-> -	return 0;
-> +	return pcie_phy_poll_ack(dbi_base, 0);
->  }
->  
->  static int pcie_phy_write(void __iomem *dbi_base, int addr, int data)
+Other report is about pci remove/rescan does not work on some setup
+when BIOS tend to allocate small bus size.
+
+This patchset enhance resource allocation to address those problems.
+1. optimize bus mmio alignment calculation.
+2. optimize bus mmio optional alignment calculation.
+3. add support for alt size to prefer small bus size to small bus alignment.
+   when we have small resource window on parent bridges.
+4. treat ROM bar as optional resource.
+5. during allocation, will pick up just fit resource.
+6. parse MEM64 for sparc and other system with OF.
+7. treat non-pref mmio64 if parent bridges are all pcie.
+8. restore old pref allocation logic if hostbridge does not support mmio64 really.
+9. don't realloc resource if device firmware does not support bar change.
+10. add pci=assign_pref_bars to clear and assign pref bars.
+11. don't clear resource when allocation fails.
+
+I put latest copy at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-v4.3-next
+
+That is based on kind of v4.2-rc7.
+
+Yijing and Wei Yang both test the branch, and the patchset fixs rescan problem,
+and is working well on powerpc setup.
+
+Thanks
+
+Yinghai
+
+v2:
+    - fix resource_disabled allocation from powerpc
+    - other warnings that were found by Fengguang's build robot.
+    - io port alignment clean up.
+    - rebased to v4.2-rc2
+    - better for two alt_size support.
+
+v3:
+    - fix reset bridge resource on last try: only with bridge resources
+    - remove/rescan path checking with old_size.
+
+v4:
+    - Update changelog according to Bjorn.
+    - split calculate_size patch to two.
+    - use required instead of must.
+
+Yinghai Lu (52):
+  PCI: Cleanup res_to_dev_res() printout
+  PCI: Reuse res_to_dev_res() in reassign_resources_sorted()
+  PCI: Use correct align for optional only resources during sorting
+  PCI: Optimize bus min_align/size calculation during sizing
+  PCI: Optimize bus align/size calculation for optional during sizing
+  PCI: Don't add too much optional size for hotplug bridge MMIO
+  PCI: Reorder resources list for required/optional resources
+  PCI: Remove duplicated code for resource sorting
+  PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
+  PCI: Treat ROM resource as optional during realloc
+  PCI: Add debug printout during releasing partial assigned resources
+  PCI: Simplify res reference using in __assign_resources_sorted()
+  PCI, acpiphp: Add missing realloc list checking after resource allocation
+  PCI: Add __add_to_list()
+  PCI: Cache window alignment value during bus sizing
+  PCI: Check if resource is allocated before trying to assign one
+  PCI: Separate out save_resources()/restore_resources()
+  PCI: Move comment to pci_need_to_release()
+  PCI: Separate required+optional assigning to another function
+  PCI: Skip required+optional if there is no optional
+  PCI: Move saved required resource list out of required+optional assigning
+  PCI: Add alt_size ressource allocation support
+  PCI: Add support for more than two alt_size under same bridge
+  PCI: Better support for two alt_size
+  PCI: Fix size calculation with old_size on rescan path
+  PCI: Don't add too much optional size for hotplug bridge io
+  PCI: Move ISA io port align out of calculate_iosize()
+  PCI: Don't add too much io port for hotplug bridge with old size
+  PCI: Unify calculate_size() for io port and MMIO
+  PCI: Allow bridge optional only io port resource required size to be 0
+  PCI: Unify skip_ioresource_align()
+  PCI: Kill macro checking for bus io port sizing
+  resources: Split out __allocate_resource()
+  resources: Make allocate_resource() return best fit resource
+  PCI: Check pref compatible bit for mem64 resource of PCIe device
+  PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
+  PCI: Add has_mem64 for struct host_bridge
+  PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
+  PCI: Restore pref MMIO allocation logic for host bridge without mmio64
+  sparc/PCI: Add mem64 resource parsing for root bus
+  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+  OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+  PCI: Treat optional as required in first try for bridge rescan
+  PCI: Get new realloc size for bridge for last try
+  PCI: Don't release sibling bridge resources during hotplug
+  PCI: Don't release fixed resource for realloc
+  PCI: Claim fixed resource during remove/rescan path
+  PCI: Set resource to FIXED for LSI devices
+  PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
+  PCI: Introduce resource_disabled()
+  PCI: Don't set flags to 0 when assign resource fail
+
+ arch/alpha/kernel/pci.c                   |    2 +-
+ arch/ia64/pci/pci.c                       |    4 +-
+ arch/microblaze/pci/pci-common.c          |   23 +-
+ arch/mn10300/unit-asb2305/pci-asb2305.c   |    4 +-
+ arch/mn10300/unit-asb2305/pci.c           |    4 +-
+ arch/powerpc/kernel/pci-common.c          |   27 +-
+ arch/powerpc/kernel/pci_of_scan.c         |    4 +-
+ arch/powerpc/platforms/powernv/pci-ioda.c |   12 +-
+ arch/s390/pci/pci.c                       |    2 +-
+ arch/sparc/kernel/of_device_32.c          |    5 +-
+ arch/sparc/kernel/of_device_64.c          |    5 +-
+ arch/sparc/kernel/pci.c                   |    9 +-
+ arch/sparc/kernel/pci_common.c            |   15 +-
+ arch/sparc/kernel/pci_impl.h              |    1 +
+ arch/x86/include/asm/pci_x86.h            |    2 +-
+ arch/x86/pci/common.c                     |    7 +-
+ arch/x86/pci/i386.c                       |   72 +-
+ arch/xtensa/kernel/pci.c                  |    4 +-
+ drivers/iommu/intel-iommu.c               |    3 +-
+ drivers/of/address.c                      |    4 +-
+ drivers/pci/bus.c                         |    6 +-
+ drivers/pci/host/pcie-rcar.c              |    2 +-
+ drivers/pci/hotplug/acpiphp_glue.c        |    1 +
+ drivers/pci/iov.c                         |    2 +-
+ drivers/pci/pci.c                         |    3 +-
+ drivers/pci/pci.h                         |    3 +
+ drivers/pci/probe.c                       |   44 +-
+ drivers/pci/quirks.c                      |   37 +
+ drivers/pci/rom.c                         |    2 +-
+ drivers/pci/setup-bus.c                   | 1311 +++++++++++++++++++++--------
+ drivers/pci/setup-res.c                   |   18 +-
+ include/asm-generic/pci-bridge.h          |    2 +
+ include/linux/ioport.h                    |    6 +-
+ include/linux/pci.h                       |    2 +
+ kernel/resource.c                         |  175 +++-
+ 35 files changed, 1352 insertions(+), 471 deletions(-)
 
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.8.4.5
 
