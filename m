@@ -1,546 +1,380 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50945 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932121AbbH0WjK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 27 Aug 2015 18:39:10 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: x86@kernel.org, linux-kernel@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	linux-pci@vger.kernel.org
-Subject: [RFC PATCH 2/2] x86/pci: Initial commit for new VMD device driver
-Date: Thu, 27 Aug 2015 16:39:06 -0600
-Message-Id: <1440715146-16578-3-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1440715146-16578-1-git-send-email-keith.busch@intel.com>
-References: <1440715146-16578-1-git-send-email-keith.busch@intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:49918 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbbHUHWE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 03:22:04 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 22/52] PCI: Add alt_size ressource allocation support
+Date: Thu, 20 Aug 2015 23:20:37 -0700
+Message-Id: <1440138067-4314-23-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Intel Volume Management Device (VMD) is an integrated endpoint on the
-platform's PCIe root complex that acts as a host bridge to a secondary
-PCIe domain. BIOS can reassign one or more root ports to appear within
-the VMD domain instead of the primary domain.
+On system with several pcie switches, BIOS allocate very tight resources
+to the bridge bar, and it is not aligned to min_align as kernel allocation
+code.
 
-This driver enumerates and enables the domain using the root bus
-configuration interface provided by the PCI subsystem. The driver
-provides configuration space accessor functions (pci_ops), bus and memory
-resources, MSI configuration functions, and irq_chip implementation
-necessary to support the domain through the VMD endpoint's interface.
+For example:
+	02:03.0---0c:00.0---0d:04.0---18:00.0
+18:00.0 need 0x10000000, and 0x00010000.
+BIOS only allocate 0x10100000 to 0d:04.0 and above bridges.
+Later after using /sys/bus/pci/devices/0000:0c:00.0/remove to remove 0c:00.0,
+rescan with /sys/bus/pci/rescan can not allocate 0x18000000 to 0c:00.0.
 
-VMD routes I/O as follows:
+another example:
+00:1c.0-[02-21]----00.0-[03-21]--+-01.0-[04-12]----00.0-[05-12]----19.0-[06-12]----00.0
+                                 +-05.0-[13]--
+                                 +-07.0-[14-20]----00.0-[15-20]--+-08.0-[16]--+-00.0
+                                 |                               |            \-00.1
+                                 |                               +-14.0-[17]----00.0
+                                 |                               \-19.0-[18-20]----00.0
+                                 \-09.0-[21]--
+06:00.0 need 0x4000000 and 0x800000.
+BIOS only allocate 0x4800000 to 05:19.0 and 04:00.0.
+when 05:19.0 get removed via /sys/bus/pci/devices/0000:05:19.0/remove,
+rescan with /sys/bus/pci/rescan will fail.
+ pci 0000:05:19.0: BAR 14: no space for [mem size 0x06000000]
+ pci 0000:05:19.0: BAR 14: failed to assign [mem size 0x06000000]
+ pci 0000:06:00.0: BAR 2: no space for [mem size 0x04000000 64bit]
+ pci 0000:06:00.0: BAR 2: failed to assign [mem size 0x04000000 64bit]
+ pci 0000:06:00.0: BAR 0: no space for [mem size 0x00800000]
+ pci 0000:06:00.0: BAR 0: failed to assign [mem size 0x00800000]
+current code try to use align 0x2000000 and size 0x6000000, but parent
+bridge only have 0x4800000.
 
-  1) Configuration Space: BAR 0 ("CFGBAR") of VMD provides the base
-  address and size for configuration space register access to VMD-owned
-  root ports. It works similarly to MMCONFIG for extended configuration
-  space. Bus numbering is independent and does not conflict with the
-  primary domain.
+Introduce alt_align/alt_size and store them in realloc list in addition
+to addon info, and will try it after min_align/min_size allocation fails.
 
-  2) MMIO Space: BARs 2 and 4 ("MEMBAR1" and "MEMBAR2") of VMD provide the
-  base address, size, and type for MMIO register access. These addresses
-  are not translated by VMD hardware; they are simply reservations to be
-  distributed to root ports' memory base/limit registers and subdivided
-  among devices downstream.
+The alt_align is max_align, and alt_size is aligned size with bridge
+minimum window alignment.
 
-  3) DMA: To interact appropriately with IOMMU, the source ID DMA read
-  and write requests are translated to the bus-device-function of the
-  VMD endpoint. Otherwise, DMA operates normally without VMD-specific
-  address translation.
+on my test setup:
+	00:1c.7---61:00.0---62:00.0
+62:00.0 needs 0x800000 and 0x20000.
+and 00:1c.7 only have 9M allocated for mmio, with this patch we have
 
-  4) Interrupts: Part of VMD's BAR 4 is reserved for VMD's MSI-X Table and
-  PBA. MSIs from VMD domain devices and ports are remapped to appear if
-  they were issued using one of VMD's MSI-X table entries. Each MSI and
-  MSI-X addresses of VMD-owned devices and ports have a special format
-  where the address refers specific entries in VMD's MSI-X table.  As with
-  DMA, the interrupt source id is translated to VMD's bus-device-function.
+ pci 0000:61:00.0: bridge window [mem 0x00400000-0x00ffffff] to [bus 62] add_size 0 add_align 0 alt_size 900000 alt_align 800000 req_size c00000 req_align 400000
+ pci 0000:61:00.0: BAR 14: no space for [mem size 0x00c00000]
+ pci 0000:61:00.0: BAR 14: failed to assign [mem size 0x00c00000]
+ pci 0000:61:00.0: BAR 14: assigned [mem 0xdf000000-0xdf8fffff]
+ pci 0000:62:00.0: BAR 0: assigned [mem 0xdf000000-0xdf7fffff pref]
+ pci 0000:62:00.0: BAR 1: assigned [mem 0xdf800000-0xdf81ffff]
+ pci 0000:61:00.0: PCI bridge to [bus 62]
+ pci 0000:61:00.0:   bridge window [io  0x6000-0x6fff]
+ pci 0000:61:00.0:   bridge window [mem 0xdf000000-0xdf8fffff]
+ pci 0000:00:1c.7: PCI bridge to [bus 61-68]
+ pci 0000:00:1c.7:   bridge window [io  0x6000-0x6fff]
+ pci 0000:00:1c.7:   bridge window [mem 0xdf000000-0xdf8fffff]
 
-  The driver provides its own MSI and MSI-X configuration functions
-  specific to how MSi messages are used within the VMD domain, and
-  it provides an irq_chip for indepdent IRQ allocation and to relay
-  interrupts from VMD's interrupt handler to the appropriate device
-  driver's handler.
+so for 61:00.0 first try with 12M fails, and second try with 9M the
+alt_size works. Later 62:00.0 get correct resource allocated too.
 
-  5) Errors: PCIe error message are intercepted by the root ports normally
-  (e.g. AER), except with VMD, system errors (i.e. firmware first) are
-  disabled by default. AER and hotplug interrupts are translated in the
-  same way as endpoint interrupts.
-
-  6) VMD does not support INTx interrupts or IO ports. Devices or drivers
-  requiring these features should either not be placed below VMD-owned
-  root ports, or VMD should be disabled by BIOS for such enpdoints.
-
-Contributers to this patch include:
-
-  Artur Paszkiewicz <artur.paszkiewicz@intel.com>
-  Bryan Veal <bryan.e.veal@intel.com>
-  Jon Derrick <jonathan.derrick@intel.coM>
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-CC: Bryan Veal <bryan.e.veal@intel.com>
-CC: Dan Williams <dan.j.williams@intel.com>
-CC: x86@kernel.org
-CC: linux-kernel@vger.kernel.org
-CC: linux-pci@vger.kernel.org
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Tested-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/Kconfig      |   11 ++
- arch/x86/pci/Makefile |    2 +
- arch/x86/pci/vmd.c    |  412 +++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 425 insertions(+)
- create mode 100644 arch/x86/pci/vmd.c
+ drivers/pci/setup-bus.c | 203 +++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 191 insertions(+), 12 deletions(-)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index b3a1a5d..a8cad59 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2584,6 +2584,17 @@ config PMC_ATOM
- 	def_bool y
-         depends on PCI
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6429309..8be5544 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -323,7 +323,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ {
+ 	struct resource *res;
+ 	struct pci_dev_resource *add_res, *tmp;
+-	resource_size_t add_size, align;
++	resource_size_t add_size, align, r_size;
+ 	int idx;
  
-+config VMDDEV
-+	depends on PCI && PCI_DOMAINS && PCI_MSI
-+	tristate "Volume Management Device Driver"
-+	default N
-+	---help---
-+	Adds support for the Intel Volume Manage Device (VMD). VMD is
-+	a secondary PCI host bridge that allows PCI Express root ports,
-+	and devices attached to them, to be removed from the default PCI
-+	domain and placed within the VMD domain. If your system provides
-+	one of these, and you have devices attached to it, say "Y".
+ 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
+@@ -339,12 +339,23 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 		idx = res - &add_res->dev->resource[0];
+ 		add_size = add_res->add_size;
+ 		align = add_res->min_align;
+-		if (!resource_size(res)) {
++		if (!add_size || !align) /* alt_size only */
++			goto out;
 +
- source "net/Kconfig"
++		r_size = resource_size(res);
++		if (!r_size) {
+ 			res->start = align;
+ 			res->end = res->start + add_size - 1;
+ 			if (pci_assign_resource(add_res->dev, idx))
+ 				reset_resource(res);
+ 		} else {
++			/* could just assigned with alt, add difference ? */
++			resource_size_t size;
++
++			size = add_res->end - add_res->start + 1;
++			if (r_size < size)
++				add_size += size - r_size;
++
+ 			res->flags |= add_res->flags &
+ 				 (IORESOURCE_STARTALIGN|IORESOURCE_SIZEALIGN);
+ 			if (pci_reassign_resource(add_res->dev, idx,
+@@ -577,6 +588,104 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 	return false;
+ }
  
- source "drivers/Kconfig"
-diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
-index 5c6fc35..c204079 100644
---- a/arch/x86/pci/Makefile
-+++ b/arch/x86/pci/Makefile
-@@ -23,6 +23,8 @@ obj-y				+= bus_numa.o
- obj-$(CONFIG_AMD_NB)		+= amd_bus.o
- obj-$(CONFIG_PCI_CNB20LE_QUIRK)	+= broadcom_bus.o
- 
-+obj-$(CONFIG_VMDDEV) += vmd.o
-+
- ifeq ($(CONFIG_PCI_DEBUG),y)
- EXTRA_CFLAGS += -DDEBUG
- endif
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-new file mode 100644
-index 0000000..ea8bb4c
---- /dev/null
-+++ b/arch/x86/pci/vmd.c
-@@ -0,0 +1,412 @@
-+/*
-+ * Volume Management Device driver
-+ * Copyright (c) 2015, Intel Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <asm/hpet.h>
-+#include <asm/msidef.h>
-+
-+struct vmd_irq {
-+	struct list_head node;
-+	struct vmd_irq_list *irq;
-+	unsigned int virq;
-+};
-+
-+struct vmd_irq_list {
-+	struct list_head irq_list;
-+	spinlock_t irq_lock;
-+};
-+
-+struct vmd_dev {
-+	spinlock_t cfg_lock;
-+	char __iomem *cfgbar;
-+
-+	int msix_count;
-+	struct msix_entry *msix_entries;
-+	struct vmd_irq_list *irqs;
-+
-+	int domain;
-+	struct pci_sysdata sysdata;
-+	struct pci_bus *bus;
-+	struct pci_dev *dev;
-+};
-+
-+static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
++static bool __has_alt(struct list_head *head,
++		    struct list_head *realloc_head)
 +{
-+	return container_of(bus->sysdata, struct vmd_dev, sysdata);
-+}
++	int alt_count = 0;
++	struct pci_dev_resource *dev_res, *alt_res;
 +
-+static void vmd_irq_enable(struct irq_data *data)
-+{
-+	unsigned long flags;
-+	struct irq_desc *desc = irq_to_desc(data->irq);
-+	struct msi_desc *msidesc = irq_desc_get_msi_desc(desc);
-+	struct vmd_irq *vmdirq = (struct vmd_irq *)
-+				irq_data_get_irq_handler_data(data);
-+	struct vmd_irq_list *irq = vmdirq->irq;
++	if (!realloc_head)
++		return false;
 +
-+	spin_lock_irqsave(&irq->irq_lock, flags);
-+	list_add_tail(&vmdirq->node, &irq->irq_list);
-+	spin_unlock_irqrestore(&irq->irq_lock, flags);
++	/* check if we have alt really */
++	list_for_each_entry(dev_res, head, list) {
++		alt_res = res_to_dev_res(realloc_head, dev_res->res);
++		if (!alt_res || !alt_res->alt_size)
++			continue;
 +
-+	msidesc->irq = data->irq;
-+	dev_info(&msidesc->dev->dev, "%s: virq:%d\n", __func__, data->irq);
-+}
-+
-+static void vmd_irq_disable(struct irq_data *data)
-+{
-+	unsigned long flags;
-+	struct irq_desc *desc = irq_to_desc(data->irq);
-+	struct msi_desc *msidesc = irq_desc_get_msi_desc(desc);
-+	struct vmd_irq *vmdirq = (struct vmd_irq *)
-+				irq_data_get_irq_handler_data(data);
-+	struct vmd_irq_list *irq = vmdirq->irq;
-+
-+	spin_lock_irqsave(&irq->irq_lock, flags);
-+	list_del_init(&vmdirq->node);
-+	spin_unlock_irqrestore(&irq->irq_lock, flags);
-+
-+	msidesc->irq = 0;
-+	dev_info(&msidesc->dev->dev, "%s: virq:%d\n", __func__, data->irq);
-+}
-+
-+static struct irq_chip vmd_chip = {
-+	.name			= "VMD-MSI",
-+	.irq_enable		= vmd_irq_enable,
-+	.irq_disable		= vmd_irq_disable,
-+};
-+
-+static int vmd_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+{
-+	int i = 0;
-+	unsigned int irq, virq;
-+	struct msi_desc *msidesc;
-+	struct irq_desc *desc;
-+	struct vmd_dev *vmd = vmd_from_bus(dev->bus);
-+
-+	if (type == PCI_CAP_ID_MSI && nvec > 1)
-+		return 1;
-+	if (nvec > vmd->msix_count)
-+		return vmd->msix_count;
-+	if (nvec <= 0)
-+		return -EINVAL;
-+
-+	irq = irq_alloc_descs(-1, 0, nvec, -1);
-+	if (irq < 0)
-+		return irq;
-+
-+	list_for_each_entry(msidesc, &dev->msi_list, list) {
-+		struct vmd_irq *vmdirq;
-+		struct msi_msg msg;
-+
-+		vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
-+		if (!vmdirq)
-+			return -ENOMEM;
-+
-+		virq = i + irq;
-+		desc = irq_to_desc(virq);
-+		desc->irq_data.msi_desc = msidesc;
-+
-+		INIT_LIST_HEAD(&vmdirq->node);
-+		vmdirq->irq = &vmd->irqs[i];
-+		vmdirq->virq = virq;
-+
-+		irq_set_handler_data(virq, vmdirq);
-+		irq_set_chip_and_handler(virq, &vmd_chip, handle_simple_irq);
-+
-+		msg.address_hi = MSI_ADDR_BASE_HI;
-+		msg.address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(i);
-+		msg.data = MSI_DATA_VECTOR(vmd->msix_entries[i].vector);
-+
-+		msidesc->irq = virq;
-+		msidesc->msg = msg;
-+		pci_write_msi_msg(virq, &msg);
-+
-+		dev_info(&dev->dev, "irq %d mapped to %d for MSI\n",
-+				virq, vmd->msix_entries[i].vector);
-+		i++;
++		alt_count++;
 +	}
-+	return 0;
++
++	if (!alt_count)
++		return false;
++
++	return true;
 +}
 +
-+static void vmd_teardown_msi_irq(unsigned int irq)
++static void __assign_resources_alt_sorted(struct list_head *head,
++				 struct list_head *save_head,
++				 struct list_head *realloc_head,
++				 struct list_head *local_fail_head)
 +{
-+	struct vmd_irq *vmdirq = irq_get_handler_data(irq);
++	LIST_HEAD(local_alt_fail_head);
++	struct pci_dev_resource *dev_res;
++	struct pci_dev_resource *alt_res, *fail_res, *save_res;
++	unsigned long fail_type;
++	struct resource *res;
 +
-+	BUG_ON(!vmdirq || !list_empty(&vmdirq->node));
-+	kfree(vmdirq);
-+	irq_free_desc(irq);
-+}
++	/* check failed type */
++	fail_type = pci_fail_res_type_mask(local_fail_head);
++	/* release resource with same type that failes */
++	list_for_each_entry(dev_res, head, list) {
++		res = dev_res->res;
++		if (res->parent) {
++			if (!pci_need_to_release(fail_type, res))
++				continue;
 +
-+static struct x86_msi_ops vmd_msi = {
-+	.setup_msi_irqs		= vmd_setup_msi_irqs,
-+	.teardown_msi_irq	= vmd_teardown_msi_irq,
-+};
++			/*
++			 * have to use saved info, as resource that does not
++			 * have addon/alt is not in realloc list.
++			 */
++			save_res = res_to_dev_res(save_head, res);
++			if (!save_res)
++				continue;
 +
-+/*
-+ * CPU may deadlock if config space is not serialized on some versions of this
-+ * hardware, so all config space access is done under a spinlock.
-+ */
-+static int vmd_pci_read(struct pci_bus *bus, unsigned int devfn, int reg,
-+							int len, u32 *value)
-+{
-+	int ret = 0;
-+	unsigned long flags;
-+	struct vmd_dev *vmd = vmd_from_bus(bus);
-+	char __iomem *addr = vmd->cfgbar + (bus->number << 20) +
-+						(devfn << 12) + reg;
-+
-+	spin_lock_irqsave(&vmd->cfg_lock, flags);
-+	switch (len) {
-+	case 1:
-+		*value = readb(addr);
-+		break;
-+	case 2:
-+		*value = readw(addr);
-+		break;
-+	case 4:
-+		*value = readl(addr);
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
-+	}
-+	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
-+	return ret;
-+}
-+
-+/*
-+ * VMD h/w converts posted config writes to non-posted. The read-back in this
-+ * function forces the completion so it returns only after the device config
-+ * space was written, as expected.
-+ */
-+static int vmd_pci_write(struct pci_bus *bus, unsigned int devfn, int reg,
-+							int len, u32 value)
-+{
-+	int ret = 0;
-+	unsigned long flags;
-+	struct vmd_dev *vmd = vmd_from_bus(bus);
-+	char __iomem *addr = vmd->cfgbar + (bus->number << 20) +
-+						(devfn << 12) + reg;
-+
-+	spin_lock_irqsave(&vmd->cfg_lock, flags);
-+	switch (len) {
-+	case 1:
-+		writeb(value, addr);
-+		readb(addr);
-+		break;
-+	case 2:
-+		writew(value, addr);
-+		readw(addr);
-+		break;
-+	case 4:
-+		writel(value, addr);
-+		readl(addr);
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
-+	}
-+	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
-+	return ret;
-+}
-+
-+static struct pci_ops vmd_ops = {
-+	.read = vmd_pci_read,
-+	.write = vmd_pci_write,
-+};
-+
-+static int vmd_find_free_domain(void)
-+{
-+	int domain = -1;
-+	struct pci_bus *bus = NULL;
-+
-+	while ((bus = pci_find_next_bus(bus)) != NULL)
-+		domain = max_t(int, domain, pci_domain_nr(bus));
-+	if (domain < 0)
-+		return -ENODEV;
-+	return domain + 1;
-+}
-+
-+static int vmd_enable_domain(struct vmd_dev *vmd)
-+{
-+	static const u8 vmd_membars[] = {2, 4};
-+	static const u64 vmd_membar_offsets[] = {0, 0x2000};
-+	int i = 0;
-+	LIST_HEAD(resources);
-+	struct pci_sysdata *sd = &vmd->sysdata;
-+	struct resource_entry *entry;
-+
-+	sd->domain = vmd_find_free_domain();
-+	if (sd->domain < 0)
-+		return sd->domain;
-+	sd->node = pcibus_to_node(vmd->dev->bus);
-+	sd->msi_ops = &vmd_msi;
-+
-+	pci_add_resource(&resources, NULL);
-+	pci_add_resource(&resources, NULL);
-+	pci_add_resource(&resources, NULL);
-+	resource_list_for_each_entry(entry, &resources) {
-+		struct resource *source, *resource = entry->res;
-+
-+		if (!i) {
-+			resource->start = 0;
-+			resource->end = (resource_size(
-+					&vmd->dev->resource[0]) >> 20) - 1;
-+			resource->flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED;
++			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++				   "BAR %d: released %pR\n",
++				   (int)(res - &dev_res->dev->resource[0]),
++				   res);
++			release_resource(dev_res->res);
++			restore_resource(save_res, res);
 +		} else {
-+			source = &vmd->dev->resource[vmd_membars[i - 1]];
-+			resource->start = source->start +
-+						vmd_membar_offsets[i - 1];
-+			resource->end = source->end;
-+			resource->flags = source->flags & ~IORESOURCE_SIZEALIGN;
-+			resource->parent = source;
-+			if (!upper_32_bits(resource->end))
-+				resource->flags &= ~IORESOURCE_MEM_64;
++			/* restore fail one */
++			fail_res = res_to_dev_res(local_fail_head, res);
++			if (fail_res) {
++				restore_resource(fail_res, res);
++				remove_from_list(local_fail_head, res);
++			}
 +		}
-+		i++;
++
++		alt_res = res_to_dev_res(realloc_head, res);
++		if (!alt_res || !alt_res->alt_size)
++			continue;
++
++		/* change res to alt */
++		if (res->flags & IORESOURCE_STARTALIGN)
++			res->start = alt_res->alt_align;
++		else
++			res->start = 0;
++		res->end = res->start + alt_res->alt_size - 1;
 +	}
 +
-+	vmd->bus = pci_scan_root_bus(NULL, 0, &vmd_ops, sd, &resources);
-+	if (!vmd->bus) {
-+		pci_free_resource_list(&resources);
-+		return -ENODEV;
++	sort_resources(head);
++	/* Satisfy the alt resource requests */
++	assign_requested_resources_sorted(head, &local_alt_fail_head);
++
++	/* update local fail list */
++	list_for_each_entry(fail_res, &local_alt_fail_head, list) {
++		res = fail_res->res;
++		dev_res = res_to_dev_res(realloc_head, res);
++		/* change res back to required */
++		if (dev_res && dev_res->alt_size)
++			restore_resource(dev_res, res);
++
++		if (!res_to_dev_res(local_fail_head, res))
++			add_to_list(local_fail_head, fail_res->dev, res);
++		reset_resource(res);
 +	}
-+	pci_bus_size_bridges(vmd->bus);
-+	pci_bus_assign_resources(vmd->bus);
-+	pci_bus_add_devices(vmd->bus);
-+
-+	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj, "domain"),
-+			"Can't create symlink to domain\n");
-+	return 0;
++	free_list(&local_alt_fail_head);
 +}
 +
-+static irqreturn_t vmd_irq(int irq, void *data)
-+{
-+	struct vmd_irq_list *irqs = data;
-+	struct vmd_irq *vmdirq;
+ static void __assign_resources_sorted(struct list_head *head,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *fail_head)
+@@ -592,6 +701,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 */
+ 
+ 	LIST_HEAD(save_head);
++	LIST_HEAD(local_fail_head);
++	bool has_alt;
+ 
+ 	/* Check required+optional add */
+ 	if (has_addon(head, realloc_head) &&
+@@ -604,15 +715,29 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	sort_resources(head);
+ 
++	has_alt = __has_alt(head, realloc_head);
++	if (has_alt && list_empty(&save_head))
++		save_resources(head, &save_head);
 +
-+	spin_lock(&irqs->irq_lock);
-+	list_for_each_entry(vmdirq, &irqs->irq_list, node)
-+		generic_handle_irq(vmdirq->virq);
-+	spin_unlock(&irqs->irq_lock);
+ 	/* Satisfy the must-have resource requests */
+-	assign_requested_resources_sorted(head, fail_head);
++	assign_requested_resources_sorted(head, &local_fail_head);
 +
-+	return IRQ_HANDLED;
-+}
++	if (has_alt && !list_empty(&local_fail_head) && !list_empty(&save_head))
++		__assign_resources_alt_sorted(head, &save_head,
++					      realloc_head,
++					      &local_fail_head);
+ 
+ 	free_list(&save_head);
+ 
+-	/* Try to satisfy any additional optional resource
+-		requests */
++	/* Try to satisfy any additional optional resource requests */
+ 	if (realloc_head)
+ 		reassign_resources_sorted(realloc_head, head);
 +
-+static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
-+{
-+	struct vmd_dev *vmd;
-+	int i, err;
++	if (fail_head)
++		list_splice_tail(&local_fail_head, fail_head);
++	else
++		free_list(&local_fail_head);
 +
-+	vmd = devm_kzalloc(&dev->dev, sizeof(*vmd), GFP_KERNEL);
-+	if (!vmd)
-+		return -ENOMEM;
+ 	free_list(head);
+ }
+ 
+@@ -1250,6 +1375,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	resource_size_t alt_size = 0, alt_align = 0;
+ 	resource_size_t window_align;
+ 
+ 	if (!b_res)
+@@ -1306,6 +1432,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			if (realloc_head) {
+ 				resource_size_t add_r_size, add_align;
++				struct pci_dev_resource *dev_res;
+ 
+ 				add_r_size = get_res_add_size(realloc_head, r);
+ 				add_align = get_res_add_align(realloc_head, r);
+@@ -1318,6 +1445,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				sum_add_size += r_size + add_r_size;
+ 				if (add_align > max_add_align)
+ 					max_add_align = add_align;
 +
-+	err = pcim_enable_device(dev);
-+	if (err < 0)
-+		return err;
-+
-+	vmd->cfgbar = pcim_iomap(dev, 0, 0);
-+	if (!vmd->cfgbar)
-+		return -ENOMEM;
-+
-+	pci_set_master(dev);
-+	if (dma_set_mask_and_coherent(&dev->dev, DMA_BIT_MASK(64)) &&
-+	    dma_set_mask_and_coherent(&dev->dev, DMA_BIT_MASK(32)))
-+		return -ENODEV;
-+
-+	vmd->dev = dev;
-+	vmd->msix_count = pci_msix_vec_count(dev);
-+	if (!vmd->msix_count)
-+		return -ENODEV;
-+
-+	vmd->irqs = devm_kcalloc(&dev->dev, vmd->msix_count, sizeof(*vmd->irqs),
-+							GFP_KERNEL);
-+	if (!vmd->irqs)
-+		return -ENOMEM;
-+
-+	vmd->msix_entries = devm_kcalloc(&dev->dev, vmd->msix_count,
-+					sizeof(*vmd->msix_entries), GFP_KERNEL);
-+	if(!vmd->msix_entries)
-+		return -ENOMEM;
-+	for (i = 0; i < vmd->msix_count; i++)
-+		vmd->msix_entries[i].entry = i;
-+
-+	vmd->msix_count = pci_enable_msix_range(vmd->dev, vmd->msix_entries, 1,
-+							vmd->msix_count);
-+	if (vmd->msix_count < 0)
-+		return vmd->msix_count;
-+
-+	for (i = 0; i < vmd->msix_count; i++) {
-+		err = devm_request_irq(&dev->dev,
-+				vmd->msix_entries[i].vector, vmd_irq,
-+				IRQF_SHARED, "vmd", &vmd->irqs[i]);
-+		if (err)
-+			return err;
-+		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
-+		spin_lock_init(&vmd->irqs[i].irq_lock);
++				dev_res = res_to_dev_res(realloc_head, r);
++				if (dev_res && dev_res->alt_size) {
++					alt_size += dev_res->alt_size;
++					if (alt_align < dev_res->alt_align)
++						alt_align = dev_res->alt_align;
++				} else if (r_size > 1) {
++					alt_size += r_size;
++					if (alt_align < align)
++						alt_align = align;
++				}
+ 			}
+ 		}
+ 	}
+@@ -1331,6 +1469,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	}
+ 	free_align_test_list(&align_test_list);
+ 
++	if (size0 && realloc_head) {
++		alt_align = max(alt_align, window_align);
++		alt_size = calculate_memsize(alt_size, min_size,
++					     0, window_align);
++		/* required is better ? */
++		if (alt_size >= size0) {
++			alt_align = 0;
++			alt_size = 0;
++		}
 +	}
 +
-+	spin_lock_init(&vmd->cfg_lock);
-+	err = vmd_enable_domain(vmd);
-+	if (err)
-+		return err;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
+@@ -1352,13 +1501,43 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+-	if (size1 > size0 && realloc_head) {
+-		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
+-				min_add_align, 0, 0);
+-		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+-			   b_res, &bus->busn_res,
+-			   (unsigned long long) (size1 - size0),
+-			   (unsigned long long) min_add_align);
++	if (realloc_head) {
++		resource_size_t final_add_size = 0;
 +
-+	pci_set_drvdata(dev, vmd);
-+	return 0;
-+}
++		if (size1 > size0)
++			final_add_size = size1 - size0;
++		else
++			min_add_align = 0;
 +
-+static void vmd_remove(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus;
-+	struct pci_dev *child, *tmp;
-+	struct vmd_dev *vmd = pci_get_drvdata(dev);
-+
-+	if (!vmd)
-+		return;
-+	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
-+	pci_set_drvdata(dev, NULL);
-+	bus = vmd->bus;
-+	list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
-+		pci_stop_and_remove_bus_device(child);
-+	pci_remove_bus(bus);
-+}
-+
-+static const struct pci_device_id vmd_ids[] = {
-+	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x201d),},
-+	{0,}
-+};
-+MODULE_DEVICE_TABLE(pci, vmd_ids);
-+
-+struct pci_driver vmd_drv = {
-+	.name		= "vmd",
-+	.id_table	= vmd_ids,
-+	.probe		= vmd_probe,
-+	.remove		= vmd_remove,
-+};
-+
-+static int __init vmd_init(void)
-+{
-+	return pci_register_driver(&vmd_drv);
-+}
-+module_init(vmd_init);
-+
-+MODULE_AUTHOR("Intel Corporation");
-+MODULE_LICENSE("GPL v2");
-+MODULE_VERSION("0.1");
++		/*
++		 * realloc list include three type entries
++		 * 1. optional only:
++		 *    add_size != 0, alt_size == 0, req_size == 0
++		 * 2. required only with smaller alt_size.
++		 *    add_size == 0, alt_size != 0, req_size > alt_size
++		 * 3. required + optional:
++		 *    add_size != 0, alt_size < req_size, req_size != 0
++		 *
++		 * So there is no req_size != 0, and alt_size == req_size.
++		 * in that case, we already set alt_size = 0.
++		 *
++		 * req_align/req_size is not stored directly, and we
++		 * have dev_res start/end/flags instead.
++		 */
++		if (final_add_size || alt_size) {
++			__add_to_list(realloc_head, bus->self, b_res,
++				      final_add_size, min_add_align,
++				      alt_size, alt_align);
++			dev_printk(KERN_DEBUG, &bus->self->dev,
++				   "bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
++				   b_res, &bus->busn_res,
++				   (unsigned long long)final_add_size,
++				   (unsigned long long)min_add_align,
++				   (unsigned long long)alt_size,
++				   (unsigned long long)alt_align,
++				   (unsigned long long)size0,
++				   (unsigned long long)min_align);
++		}
+ 	}
+ 	return 0;
+ }
 -- 
-1.7.10.4
+1.8.4.5
 
