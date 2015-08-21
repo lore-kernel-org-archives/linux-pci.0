@@ -1,80 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:44432 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753178AbbHFENT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:16 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Daniel Axtens <dja@axtens.net>
-Subject: [PATCH v6 13/42] powerpc/pci: Cleanup on pci_controller_ops
-Date: Thu,  6 Aug 2015 14:11:18 +1000
-Message-Id: <1438834307-26960-14-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:29959 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779AbbHUGie (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:38:34 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 27/52] PCI: Move ISA io port align out of calculate_iosize()
+Date: Thu, 20 Aug 2015 23:20:42 -0700
+Message-Id: <1440138067-4314-28-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB maintains one instance of "struct pci_controller_ops",
-which includes various callbacks called by PCI subsystem. In the
-definition of this struct, some callbacks have explicit names for
-its arguments, but the left don't have.
+We can move ISA io port align out of calculate_iosize(),
+so we could unify calculate_iosize and calculate_memsize later.
 
-This adds all explicit names of the arguments to the callbacks in
-"struct pci_controller_ops" so that the code looks consistent.
+That extra aligning or offset is to work around ISA devices:
+When one bridge have several children devices, and every device
+has several io port resources and resource size < 0x400.
+We need to check size, and add extra size to make sure bit8/9
+to be zero.
 
-Cc: Daniel Axtens <dja@axtens.net>
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/powerpc/include/asm/pci-bridge.h | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index c927d5b..d627abf 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -21,18 +21,19 @@ struct pci_controller_ops {
- 	void		(*dma_dev_setup)(struct pci_dev *dev);
- 	void		(*dma_bus_setup)(struct pci_bus *bus);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 372a182..8f11cd1 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1120,11 +1120,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	/* To be fixed in 2.5: we should have sort of HAVE_ISA
+-	   flag in the struct pci_bus. */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
+ 	size = ALIGN(size + size1, align);
+ 	if (size < old_size)
+ 		size = old_size;
+@@ -1178,6 +1173,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+ 	return max(align, arch_align);
+ }
  
--	int		(*probe_mode)(struct pci_bus *);
-+	int		(*probe_mode)(struct pci_bus *bus);
++static resource_size_t size_aligned_for_isa(resource_size_t size)
++{
++	/*
++	 * To be fixed in 2.5: we should have sort of HAVE_ISA
++	 *  flag in the struct pci_bus.
++	 */
++#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
++	size = (size & 0xff) + ((size & ~0xffUL) << 2);
++#endif
++	return size;
++}
++
+ /**
+  * pbus_size_io() - size the io window of a given bus
+  *
+@@ -1195,11 +1202,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_sum_size = 0;
+-	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+-	resource_size_t children_add_size = 0;
++	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
+ 	resource_size_t min_align, align;
  
- 	/* Called when pci_enable_device() is called. Returns true to
- 	 * allow assignment/enabling of the device. */
--	bool		(*enable_device_hook)(struct pci_dev *);
-+	bool		(*enable_device_hook)(struct pci_dev *dev);
+ 	if (!b_res)
+@@ -1216,7 +1222,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
  
--	void		(*disable_device)(struct pci_dev *);
-+	void		(*disable_device)(struct pci_dev *dev);
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			unsigned long r_size;
++			unsigned long r_size, r_add_size;
  
--	void		(*release_device)(struct pci_dev *);
-+	void		(*release_device)(struct pci_dev *dev);
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+ 				continue;
+@@ -1232,18 +1238,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			if (align > min_align)
+ 				min_align = align;
  
- 	/* Called during PCI resource reassignment */
--	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
-+	resource_size_t (*window_alignment)(struct pci_bus *bus,
-+					    unsigned long type);
- 	void		(*reset_secondary_bus)(struct pci_dev *dev);
+-			if (realloc_head)
+-				children_add_size += get_res_add_size(realloc_head, r);
++			if (realloc_head) {
++				r_add_size = get_res_add_size(realloc_head, r);
++				r_add_size += r_size;
++				if (r_add_size < 0x400)
++					/* Might be re-aligned for ISA */
++					sum_add_size += r_add_size;
++				else
++					sum_add_size1 += r_add_size;
++			}
+ 		}
+ 	}
  
- #ifdef CONFIG_PCI_MSI
-@@ -43,7 +44,7 @@ struct pci_controller_ops {
- 
- 	int             (*dma_set_mask)(struct pci_dev *dev, u64 dma_mask);
- 
--	void		(*shutdown)(struct pci_controller *);
-+	void		(*shutdown)(struct pci_controller *hose);
- };
- 
- /*
++	size = size_aligned_for_isa(size);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	sum_add_size = children_add_size + size + size1;
++	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(size, min_size, sum_add_size - size,
++		calculate_iosize(sum_add_size, min_size, 0,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
 -- 
-2.1.0
+1.8.4.5
 
