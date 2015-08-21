@@ -1,83 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0091.outbound.protection.outlook.com ([207.46.100.91]:45536
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932963AbbHZCAn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 25 Aug 2015 22:00:43 -0400
-Subject: Re: [PATCH V2 2/4] ACPI/scan: Clean up acpi_check_dma
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1440524009-5359-3-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1659571.paO1iYcMuM@vostro.rjw.lan>
-CC: <bhelgaas@google.com>, <lenb@kernel.org>,
-	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
-	<hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Rob Herring <robh+dt@kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Message-ID: <55DD1DB7.1020203@amd.com>
-Date: Wed, 26 Aug 2015 09:00:23 +0700
-MIME-Version: 1.0
-In-Reply-To: <1659571.paO1iYcMuM@vostro.rjw.lan>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Received: from aserp1040.oracle.com ([141.146.126.69]:30179 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753625AbbHUGjN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:39:13 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: [PATCH v4 43/52] OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+Date: Thu, 20 Aug 2015 23:20:58 -0700
+Message-Id: <1440138067-4314-44-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during OF device resource flags
+parsing.
 
-On 8/26/15 06:48, Rafael J. Wysocki wrote:
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: devicetree@vger.kernel.org
+---
+ drivers/of/address.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
->[...]
-> On Wednesday, August 26, 2015 12:33:27 AM Suravee Suthikulpanit wrote:
->> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
->> index b9657af..55cf916 100644
->> --- a/drivers/acpi/glue.c
->> +++ b/drivers/acpi/glue.c
->> @@ -168,7 +168,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->>   	struct list_head *physnode_list;
->>   	unsigned int node_id;
->>   	int retval = -EINVAL;
->> -	bool coherent;
->> +	int coherent;
->
-> enum, anyone?  With clearly defined values?
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 8bfda6a..073125f 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -128,9 +128,11 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
+ 		flags |= IORESOURCE_IO;
+ 		break;
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+-- 
+1.8.4.5
 
-Originally I had defined
-
-enum acpi_dma_coherency {
-	ACPI_DMA_NON_COHERENT,
-	ACPI_DMA_COHERENT,
-	APCI_DMA_NOT_SUPPORTED = -1,
-};
-
-Although, this would need to be defined in the include/linux/acpi.h, and 
-will be used also for #ifndef CONFIG_ACPI code to return errors. I was 
-not sure if this would be too much. If this is preferred, I'll add this 
-back in.
-
->>
->>   	if (has_acpi_companion(dev)) {
->>   		if (acpi_dev) {
->> @@ -225,7 +225,8 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->>   	if (!has_acpi_companion(dev))
->>   		ACPI_COMPANION_SET(dev, acpi_dev);
->>
->> -	if (acpi_check_dma(acpi_dev, &coherent))
->> +	coherent = acpi_check_dma_coherency(acpi_dev);
->> +	if (coherent != -1)
->
-> Like here I'm not sure why -1 is special?
-
-It's just another value to communicate that DMA is not supported. :)
-
-Thanks,
-Suravee
->
->>   		arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
->>
->>   	acpi_physnode_link_name(physical_node_name, node_id);
->
-> Thanks,
-> Rafael
->
