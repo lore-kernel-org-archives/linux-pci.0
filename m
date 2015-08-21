@@ -1,58 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:44189 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753937AbbHFCWt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 5 Aug 2015 22:22:49 -0400
-Message-ID: <55C2C4F4.1040600@roeck-us.net>
-Date: Wed, 05 Aug 2015 19:22:44 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-MIME-Version: 1.0
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v3] PCI: Only enable IO window if supported
-References: <1438308908-12259-1-git-send-email-linux@roeck-us.net>	<CAE9FiQXuTKmXXCFsKUiMK43U+LpOzfa3oV0iNWS+Jh879EDNsw@mail.gmail.com> <CAE9FiQVGhfbFW5-5deYcU2bDWE9k0-4+V+cepwdqZ661sLWOFA@mail.gmail.com>
-In-Reply-To: <CAE9FiQVGhfbFW5-5deYcU2bDWE9k0-4+V+cepwdqZ661sLWOFA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 50/52] PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
+Date: Thu, 20 Aug 2015 23:21:05 -0700
+Message-Id: <1440138067-4314-51-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/05/2015 06:38 PM, Yinghai Lu wrote:
-> On Wed, Aug 5, 2015 at 6:14 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->>
->> It only can avoid warning with bridge, and still have warning on
->> devices under the bridge.
->>
->> also would have problem on transparent bridges, like
->>
->> BRIDGE_A ---- BRIDGE_AA----DEVICE_AA
->>                     |
->>                     \-- BRIDGE_AB ---DEVICE_AB
->>
->> if only BRIDGE_A and BRIDGE_AA are transparent, and BRIDGE_AB is not.
->>
->> and if pci_bridge_supports_io() return false for BRIDGE_A.
->>
->> We will have all three bridges have PCI_BUS_FLAGS_SUPPORTS_IO cleared.
->> so all will not been sized and will not get assigned io port resource.
->>
->> later DEVICE_AA could root bus io port as parent, and get io resource assigned.
->> but DEVICE_AB will not get assigned.
->>
->> so we should get rid of pci_bridge_supports_io(), and just check root
->> resource IO port.
->
-> I would suggest this version instead:
->
-> Subject: [PATCH] PCI: Only try to assign io port only if root bus support that
->
+Now some BIOS tend to allocate pref MMIO under non-pref MMIO, or allocate
+64bit pref MMIO under 4G.
 
-Bjorn had asked me to move the IO support check out of pci_bridge_check_ranges().
-It looks like you want to keep it there.
+Add pci=assign_pref_bars to clear and allocate resource to pref BARS.
+So could reallocate pref mmio64 above 4G and pref under bridges pref BARs.
 
-Can you explain your reasons ? Sorry, I just don't understand.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/include/asm/pci_x86.h |  1 +
+ arch/x86/pci/common.c          |  3 +++
+ arch/x86/pci/i386.c            | 56 ++++++++++++++++++++++++++----------------
+ 3 files changed, 39 insertions(+), 21 deletions(-)
 
-Guenter
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index ddac225..7b634b8 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -34,6 +34,7 @@ do {						\
+ #define PCI_NOASSIGN_ROMS	0x80000
+ #define PCI_ROOT_NO_CRS		0x100000
+ #define PCI_NOASSIGN_BARS	0x200000
++#define PCI_ASSIGN_PREF_BARS	0x400000
+ 
+ extern unsigned int pci_probe;
+ extern unsigned long pirq_table_addr;
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index e8df922..dcc7c48 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -606,6 +606,9 @@ char *__init pcibios_setup(char *str)
+ 	} else if (!strcmp(str, "assign-busses")) {
+ 		pci_probe |= PCI_ASSIGN_ALL_BUSSES;
+ 		return NULL;
++	} else if (!strcmp(str, "assign_pref_bars")) {
++		pci_probe |= PCI_ASSIGN_PREF_BARS;
++		return NULL;
+ 	} else if (!strcmp(str, "use_crs")) {
+ 		pci_probe |= PCI_USE__CRS;
+ 		return NULL;
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 3f17726..0b74efe 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -208,16 +208,25 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ 			continue;
+ 		if (r->parent)	/* Already allocated */
+ 			continue;
+-		if (!r->start || pci_claim_bridge_resource(dev, idx) < 0) {
+-			/*
+-			 * Something is wrong with the region.
+-			 * Invalidate the resource to prevent
+-			 * child resource allocations in this
+-			 * range.
+-			 */
+-			r->start = r->end = 0;
+-			r->flags = 0;
+-		}
++
++		if ((r->flags & IORESOURCE_PREFETCH) &&
++		    (pci_probe & PCI_ASSIGN_PREF_BARS))
++			goto clear;
++
++		if (!r->start)
++			goto clear;
++
++		if (pci_claim_bridge_resource(dev, idx) == 0)
++			continue;
++
++clear:
++		/*
++		 * Something is wrong with the region.
++		 * Invalidate the resource to prevent
++		 * child resource allocations in this range.
++		 */
++		r->start = r->end = 0;
++		r->flags = 0;
+ 	}
+ }
+ 
+@@ -263,21 +272,26 @@ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ 			else
+ 				disabled = !(command & PCI_COMMAND_MEMORY);
+ 			if (pass == disabled) {
++				if ((r->flags & IORESOURCE_PREFETCH) &&
++				    (pci_probe & PCI_ASSIGN_PREF_BARS))
++					goto clear;
++
+ 				dev_dbg(&dev->dev,
+ 					"BAR %d: reserving %pr (d=%d, p=%d)\n",
+ 					idx, r, disabled, pass);
+-				if (pci_claim_resource(dev, idx) < 0) {
+-					if (r->flags & IORESOURCE_PCI_FIXED) {
+-						dev_info(&dev->dev, "BAR %d %pR is immovable\n",
+-							 idx, r);
+-					} else {
+-						/* We'll assign a new address later */
+-						pcibios_save_fw_addr(dev,
+-								idx, r->start);
+-						r->end -= r->start;
+-						r->start = 0;
+-					}
++				if (pci_claim_resource(dev, idx) == 0)
++					continue;
++				if (r->flags & IORESOURCE_PCI_FIXED) {
++					dev_info(&dev->dev, "BAR %d %pR is immovable\n",
++						 idx, r);
++					continue;
+ 				}
++
++clear:
++				/* We'll assign a new address later */
++				pcibios_save_fw_addr(dev, idx, r->start);
++				r->end -= r->start;
++				r->start = 0;
+ 			}
+ 		}
+ 	if (!pass) {
+-- 
+1.8.4.5
 
