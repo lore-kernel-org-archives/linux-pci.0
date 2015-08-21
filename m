@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:24353 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751958AbbHUGWN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:22:13 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -7,107 +11,104 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH v4 47/52] PCI: Don't release fixed resource for realloc
-Date: Thu, 20 Aug 2015 23:21:02 -0700
-Message-Id: <1440138067-4314-48-git-send-email-yinghai@kernel.org>
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 19/52] PCI: Separate required+optional assigning to another function
+Date: Thu, 20 Aug 2015 23:20:34 -0700
+Message-Id: <1440138067-4314-20-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not release bridge resource if there is fixed resources
-under it, otherwise the children firmware would stop working.
+__assign_resources_sorted() is getting too big if we put alt_size support
+into it.  Split required+optional assigning code out to another function.
 
-Reported-by: Paul Johnson <pjay@nwtrail.com>
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
 ---
- drivers/pci/setup-bus.c |  6 ++++--
- include/linux/ioport.h  |  2 +-
- kernel/resource.c       | 28 ++++++++++++++++++++++++++--
- 3 files changed, 31 insertions(+), 5 deletions(-)
+ drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 27 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 0c85c0a..8e10821 100644
+index e4b4b55..8195929 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -2064,14 +2064,16 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 
- 	r = &b_res[idx];
- 
--	if (!r->parent)
-+	if (!r->parent || r->flags & IORESOURCE_PCI_FIXED)
- 		return;
- 
- 	/*
- 	 * if there are children under that, we should release them
- 	 *  all
- 	 */
--	release_child_resources(r);
-+	if (!release_child_resources(r))
-+		return;
-+
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & type_mask;
- 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 388e3ae..27dbb18 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -141,7 +141,7 @@ extern struct resource iomem_resource;
- extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
- extern int request_resource(struct resource *root, struct resource *new);
- extern int release_resource(struct resource *new);
--void release_child_resources(struct resource *new);
-+bool release_child_resources(struct resource *new);
- extern void reserve_region_with_split(struct resource *root,
- 			     resource_size_t start, resource_size_t end,
- 			     const char *name);
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 697b8ca..4e43f9b 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -276,11 +276,35 @@ static void __release_child_resources(struct resource *r)
- 	}
+@@ -467,20 +467,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+ 	res->flags = save_res->flags;
  }
  
--void release_child_resources(struct resource *r)
-+static bool __has_fixed_child_resources(struct resource *r)
+-static void __assign_resources_sorted(struct list_head *head,
+-				 struct list_head *realloc_head,
+-				 struct list_head *fail_head)
++static bool __assign_resources_required_optional_sorted(struct list_head *head,
++				 struct list_head *realloc_head)
  {
-+	struct resource *p;
+-	/*
+-	 * Should not assign requested resources at first.
+-	 *   they could be adjacent, so later reassign can not reallocate
+-	 *   them one by one in parent resource window.
+-	 * Try to assign requested + add_size at beginning
+-	 *  if could do that, could get out early.
+-	 *  if could not do that, we still try to assign requested at first,
+-	 *    then try to reassign add_size for some resources.
+-	 */
+-
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+@@ -489,12 +478,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	resource_size_t add_align;
+ 	struct resource *res;
+ 
+-	/* Check if optional add_size is there */
+-	if (!realloc_head || list_empty(realloc_head))
+-		goto requested_and_reassign;
+-
+ 	if (!save_resources(head, &save_head))
+-		goto requested_and_reassign;
++		return false;
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+@@ -533,7 +518,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 			remove_from_list(realloc_head, dev_res->res);
+ 		free_list(&save_head);
+ 		free_list(head);
+-		return;
 +
-+	p = r->child;
-+	while (p) {
-+		if (p->flags & IORESOURCE_PCI_FIXED)
-+			return true;
-+
-+		if (__has_fixed_child_resources(p))
-+			return true;
-+
-+		p = p->sibling;
-+	}
-+
++		return true;
+ 	}
+ 
+ 	/* check failed type */
+@@ -568,7 +554,28 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	free_list(&save_head);
+ 
+-requested_and_reassign:
 +	return false;
 +}
 +
-+bool release_child_resources(struct resource *r)
++static void __assign_resources_sorted(struct list_head *head,
++				 struct list_head *realloc_head,
++				 struct list_head *fail_head)
 +{
-+	bool fixed;
++	/*
++	 * Should not assign required resources at first.
++	 *   they could be adjacent, so later reassign can not reallocate
++	 *   them one by one in parent resource window.
++	 * Try to assign required + optional at beginning
++	 *  if could do that, could get out early.
++	 *  if could not do that, we still try to assign required at first,
++	 *    then try to reassign add_size for some resources.
++	 */
 +
- 	write_lock(&resource_lock);
--	__release_child_resources(r);
-+	fixed = __has_fixed_child_resources(r);
-+	if (!fixed)
-+		__release_child_resources(r);
- 	write_unlock(&resource_lock);
++	/* Check required+optional add */
++	if (realloc_head && !list_empty(realloc_head) &&
++	    __assign_resources_required_optional_sorted(head, realloc_head))
++		return;
 +
-+	return !fixed;
- }
+ 	sort_resources(head);
  
- /**
+ 	/* Satisfy the must-have resource requests */
 -- 
 1.8.4.5
 
