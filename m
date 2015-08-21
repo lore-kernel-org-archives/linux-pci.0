@@ -1,32 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:35453 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753333AbbHLPNm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 11:13:42 -0400
-Received: by lbcbn3 with SMTP id bn3so11273487lbc.2
-        for <linux-pci@vger.kernel.org>; Wed, 12 Aug 2015 08:13:40 -0700 (PDT)
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:35297 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752608AbbHURPK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 13:15:10 -0400
+Received: by pacdd16 with SMTP id dd16so48290701pac.2
+        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2015 10:15:09 -0700 (PDT)
+Date: Fri, 21 Aug 2015 12:15:04 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Meelis Roos <mroos@linux.ee>, Helge Deller <deller@gmx.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [GIT PULL] PCI fixes for v4.2
+Message-ID: <20150821171504.GA12562@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1439372036-15303-5-git-send-email-l.stach@pengutronix.de>
-References: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
-	<1439372036-15303-5-git-send-email-l.stach@pengutronix.de>
-Date: Wed, 12 Aug 2015 20:43:40 +0530
-Message-ID: <CAHM4w1kj_WDkhFXuJrR57tMco-5HfR-zbD+C4h72cK9ZQOQSZA@mail.gmail.com>
-Subject: Re: [PATCH v3 4/5] PCI: designware: change prototype of get_msi_addr
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	patchwork-lst@pengutronix.de, kernel@pengutronix.de
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 12, 2015 at 3:03 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Use phys_addr_t to allow the MSI target address to be above the
-> 4GB mark for 64bit or PAE systems. No functional change for the
-> current 32bit platform users as phys_addr_t maps to u32 for them.
->
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Hi Linus,
 
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+These are fixes for ASPM-related NULL pointer dereference crashes on Sparc
+and PowerPC and 64-bit PCI address-related HPMC crashes on PA-RISC.  These
+are both caused by things we merged in the v4.2 merge window.
+
+Bjorn
+
+
+The following changes since commit c9ddbac9c89110f77cb0fa07e634aaf1194899aa:
+
+  PCI: Restore PCI_MSIX_FLAGS_BIRMASK definition (2015-07-14 18:27:46 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.2-fixes-2
+
+for you to fetch changes up to 45ea2a5fed6dacb9bb0558d8b21eacc1c45d5bb4:
+
+  PCI: Don't use 64-bit bus addresses on PA-RISC (2015-08-20 17:16:37 -0500)
+
+----------------------------------------------------------------
+PCI updates for v4.2:
+
+  Resource management
+    - Don't use 64-bit bus addresses on PA-RISC
+
+  Miscellaneous
+    - Tolerate hierarchies with no Root Port
+
+----------------------------------------------------------------
+Bjorn Helgaas (1):
+      PCI: Don't use 64-bit bus addresses on PA-RISC
+
+Yijing Wang (1):
+      PCI: Tolerate hierarchies with no Root Port
+
+ drivers/pci/Kconfig | 2 +-
+ drivers/pci/probe.c | 7 ++++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
