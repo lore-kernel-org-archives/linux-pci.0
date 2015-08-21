@@ -1,88 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:10963 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1945937AbbHGSfP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Aug 2015 14:35:15 -0400
-Subject: [PATCH 0/5] crypto: qat - Add support for SRIOV
-From: Tadeusz Struk <tadeusz.struk@intel.com>
-To: herbert@gondor.apana.org.au
-Cc: linux-crypto@vger.kernel.org, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, qat-linux@intel.com,
-	tadeusz.struk@intel.com
-Date: Fri, 07 Aug 2015 11:34:14 -0700
-Message-ID: <20150807183414.630.25889.stgit@tstruk-mobl1>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:45765 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432AbbHUBsR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 20 Aug 2015 21:48:17 -0400
+Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>
+References: <CAErSpo5SApFYWOs8Q2ZH2vpnEW6jY0XWAgeiyhMk4aCNtON46w@mail.gmail.com>
+ <20150820.114042.1327127338658980319.davem@davemloft.net>
+ <20150820202135.GA14810@google.com>
+ <20150820.135832.47467691959908917.davem@davemloft.net>
+ <20150820212109.GB14810@google.com>
+CC: <linux-pci@vger.kernel.org>, <mroos@linux.ee>,
+	<sparclinux@vger.kernel.org>, <eric.snowberg@oracle.com>,
+	<benh@kernel.crashing.org>
+From: wangyijing <wangyijing@huawei.com>
+Message-ID: <55D68356.1060706@huawei.com>
+Date: Fri, 21 Aug 2015 09:48:06 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20150820212109.GB14810@google.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The following series adds SRIOV support for qat dh895xcc HW accelerator.
-First patch moves admin code and hw arbiter code that can be reused by PF
-and VF to common code in qat/qat_common/
-Second patch enables SRIOV support on dh895xcc PF.
-Third patch adds dh895xcc VF specific code.
-Fourth patch adds FW const table initialization,
-which may be required by VFs.
-Fifth patch adds pci quirk for a HW issue on VF.
+Hi Bjorn, David, thanks for your effort to improve the patch commit.
 
----
+Thanks!
+Yijing.
 
-Tadeusz Struk (5):
-      crypto: qat - Move adf admin and adf hw arbitrer to common code
-      crypto: qat - Add support for SRIOV
-      crypto: qat - Add qat dh895xcc VF driver
-      crypto: qat - Add FW const table
-      PCI: Add quirk for Intel DH895xCC VF PCI config erratum
+> commit 27ff9f3e0ab34a75a3420bffd3eb5316de2e4d92
+> Author: Yijing Wang <wangyijing@huawei.com>
+> Date:   Mon Aug 17 18:47:58 2015 +0800
+> 
+>     PCI: Tolerate hierarchies with no Root Port
+>     
+>     We should not assume any particular hardware topology.  Commit d0751b98dfa3
+>     ("PCI: Add dev->has_secondary_link to track downstream PCIe links") relied
+>     on the assumption that every PCIe hierarchy is rooted at a Root Port.  But
+>     we can't rely on any assumption about what hardware we will find; we just
+>     have to deal with the world as it is.
+>     
+>     On some platforms, PCIe devices (endpoints, switch upstream ports, etc.)
+>     appear directly on the root bus, and there is no Root Port in the PCI bus
+>     hierarchy.  For example, Meelis observed these top-level devices on a
+>     Sparc V245:
+>     
+>       0000:02:00.0 PCI bridge to [bus 03-0d]    Switch Upstream Port
+>       0001:02:00.0 PCI bridge to [bus 03]       PCIe to PCI/PCI-X Bridge
+>     
+>     These devices *look* like they have links going upstream, but there really
+>     are no upstream devices.
+>     
+>     In set_pcie_port_type(), we used the parent device to figure out which side
+>     of a switch port has a link, so if the parent device did not exist, we
+>     dereferenced a NULL parent pointer.
+>     
+>     Check whether the parent device exists before dereferencing it.
+>     
+>     Meelis observed this oops on Sparc V245 and T2000.  Ben Herrenschmidt says
+>     this is also possible on IBM PowerVM guests on PowerPC.
+>     
+>     [bhelgaas: changelog, comment]
+>     Link: http://lkml.kernel.org/r/alpine.LRH.2.20.1508122118210.18637@math.ut.ee
+>     Reported-by: Meelis Roos <mroos@linux.ee>
+>     Tested-by: Meelis Roos <mroos@linux.ee>
+>     Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index cefd636..b978bbf 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -997,7 +997,12 @@ void set_pcie_port_type(struct pci_dev *pdev)
+>  	else if (type == PCI_EXP_TYPE_UPSTREAM ||
+>  		 type == PCI_EXP_TYPE_DOWNSTREAM) {
+>  		parent = pci_upstream_bridge(pdev);
+> -		if (!parent->has_secondary_link)
+> +
+> +		/*
+> +		 * Usually there's a parent device (Root Port or Switch
+> +		 * Downstream Port), but we can't assume one exists.
+> +		 */
+> +		if (parent && !parent->has_secondary_link)
+>  			pdev->has_secondary_link = 1;
+>  	}
+>  }
+> 
+> .
+> 
 
-
- drivers/crypto/qat/Kconfig                         |   11 +
- drivers/crypto/qat/Makefile                        |    1 
- drivers/crypto/qat/qat_common/Makefile             |    3 
- drivers/crypto/qat/qat_common/adf_accel_devices.h  |   42 ++
- drivers/crypto/qat/qat_common/adf_admin.c          |  290 ++++++++++++++
- drivers/crypto/qat/qat_common/adf_aer.c            |    3 
- drivers/crypto/qat/qat_common/adf_cfg.c            |    3 
- drivers/crypto/qat/qat_common/adf_cfg_common.h     |    3 
- drivers/crypto/qat/qat_common/adf_common_drv.h     |   44 ++
- drivers/crypto/qat/qat_common/adf_ctl_drv.c        |    6 
- drivers/crypto/qat/qat_common/adf_dev_mgr.c        |  283 +++++++++++++-
- drivers/crypto/qat/qat_common/adf_hw_arbiter.c     |  168 ++++++++
- drivers/crypto/qat/qat_common/adf_init.c           |   94 +----
- drivers/crypto/qat/qat_common/adf_pf2vf_msg.c      |  336 +++++++++++++++++
- drivers/crypto/qat/qat_common/adf_pf2vf_msg.h      |  144 +++++++
- drivers/crypto/qat/qat_common/adf_sriov.c          |  406 ++++++++++++++++++++
- drivers/crypto/qat/qat_common/adf_transport.c      |    7 
- drivers/crypto/qat/qat_common/qat_crypto.c         |    7 
- drivers/crypto/qat/qat_dh895xcc/Makefile           |    5 
- drivers/crypto/qat/qat_dh895xcc/adf_admin.c        |  145 -------
- .../crypto/qat/qat_dh895xcc/adf_dh895xcc_hw_data.c |   30 +
- .../crypto/qat/qat_dh895xcc/adf_dh895xcc_hw_data.h |    9 
- drivers/crypto/qat/qat_dh895xcc/adf_drv.c          |   83 ++--
- drivers/crypto/qat/qat_dh895xcc/adf_drv.h          |    9 
- drivers/crypto/qat/qat_dh895xcc/adf_hw_arbiter.c   |  159 --------
- drivers/crypto/qat/qat_dh895xcc/adf_isr.c          |  139 +++++--
- drivers/crypto/qat/qat_dh895xcc/qat_admin.c        |  107 -----
- drivers/crypto/qat/qat_dh895xccvf/Makefile         |    5 
- .../qat/qat_dh895xccvf/adf_dh895xccvf_hw_data.c    |  172 ++++++++
- .../qat/qat_dh895xccvf/adf_dh895xccvf_hw_data.h    |   68 +++
- drivers/crypto/qat/qat_dh895xccvf/adf_drv.c        |  393 +++++++++++++++++++
- drivers/crypto/qat/qat_dh895xccvf/adf_drv.h        |   57 +++
- drivers/crypto/qat/qat_dh895xccvf/adf_isr.c        |  258 +++++++++++++
- drivers/pci/quirks.c                               |   85 ++++
- 34 files changed, 2959 insertions(+), 616 deletions(-)
- create mode 100644 drivers/crypto/qat/qat_common/adf_admin.c
- create mode 100644 drivers/crypto/qat/qat_common/adf_hw_arbiter.c
- create mode 100644 drivers/crypto/qat/qat_common/adf_pf2vf_msg.c
- create mode 100644 drivers/crypto/qat/qat_common/adf_pf2vf_msg.h
- create mode 100644 drivers/crypto/qat/qat_common/adf_sriov.c
- delete mode 100644 drivers/crypto/qat/qat_dh895xcc/adf_admin.c
- delete mode 100644 drivers/crypto/qat/qat_dh895xcc/adf_hw_arbiter.c
- delete mode 100644 drivers/crypto/qat/qat_dh895xcc/qat_admin.c
- create mode 100644 drivers/crypto/qat/qat_dh895xccvf/Makefile
- create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_dh895xccvf_hw_data.c
- create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_dh895xccvf_hw_data.h
- create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_drv.c
- create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_drv.h
- create mode 100644 drivers/crypto/qat/qat_dh895xccvf/adf_isr.c
-
---
