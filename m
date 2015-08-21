@@ -1,51 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:32041 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003AbbHNNor (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 09:44:47 -0400
-Received: from eucpsbgm1.samsung.com (unknown [203.254.199.244])
- by mailout3.w1.samsung.com
- (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
- with ESMTP id <0NT200DG6RI28I00@mailout3.w1.samsung.com> for
- linux-pci@vger.kernel.org; Fri, 14 Aug 2015 14:44:26 +0100 (BST)
-From: Pavel Fedin <p.fedin@samsung.com>
-To: 'Will Deacon' <will.deacon@arm.com>
-Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
-	'Jayachandran C' <jchandra@broadcom.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	'Arnd Bergmann' <arnd@arndb.de>,
-	'Lorenzo Pieralisi' <Lorenzo.Pieralisi@arm.com>,
-	'Liviu Dudau' <Liviu.Dudau@arm.com>,
-	suravee.suthikulpanit@amd.com, 'Ming Lei' <ming.lei@canonical.com>,
-	marc.zyngier@arm.com
-References: <1438721620-15493-1-git-send-email-jchandra@broadcom.com>
- <20150804234956.GF17327@google.com>
- <007501d0d4ce$1d2dd9c0$57898d40$@samsung.com> <20150812090449.GA22485@arm.com>
-In-reply-to: <20150812090449.GA22485@arm.com>
-Subject: RE: [PATCH v4 1/3] PCI: generic: remove dependency on hw_pci
-Date: Fri, 14 Aug 2015 16:44:24 +0300
-Message-id: <019001d0d697$55a5cf40$00f16dc0$@samsung.com>
-MIME-version: 1.0
-Content-type: text/plain; charset=us-ascii
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:33036 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752981AbbHULHx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 07:07:53 -0400
+Received: by pacgr6 with SMTP id gr6so7581362pac.0
+        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2015 04:07:53 -0700 (PDT)
+References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com> <55D68405.1000901@hisilicon.com> <90DF1C90-A030-416D-9F86-364DBA1AABB6@gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D824BF@lhreml503-mbs> <AEC0CFBF-431A-4C08-A795-80BC848996E9@gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D8252A@lhreml503-mbs>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D8252A@lhreml503-mbs>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <1914E7CE-C7BD-44D6-AD27-93AE5536B6E5@gmail.com>
+Cc: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"<bhelgaas@google.com>" <bhelgaas@google.com>,
+	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
+	"<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>, jingoohan1@gmail.com
+From: Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
+Date: Fri, 21 Aug 2015 20:07:42 +0900
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
- Hello!
-
-> >  I also added MSI support. Can i post it as patch on top of your branch?
+On 2015. 8. 21., at PM 7:29, Gabriele Paoloni <gabriele.paoloni@huawei.com> wrote:
 > 
-> There shouldn't be any need with the changes queued in tip/irq/core. Can
-> you give the following branch a go, please (it doesn't look like Bjorn's
-> stuff is in linux-next, unfortunately)?
+>> -----Original Message-----
+>> From: Jingoo Han [mailto:jingoohan1@gmail.com]
+>> Sent: Friday, August 21, 2015 10:25 AM
+>> To: Gabriele Paoloni
+>> Cc: Wangzhou (B); <bhelgaas@google.com>; <linux-pci@vger.kernel.org>;
+>> <pratyush.anand@gmail.com>; Yuanzhichang; Zhudacai; zhangjukuo;
+>> qiuzhenfa; Liguozhu (Kenneth); jingoohan1@gmail.com
+>> Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
+>> 
+>> On 2015. 8. 21., at PM 5:58, Gabriele Paoloni
+>> <gabriele.paoloni@huawei.com> wrote:
+>>> 
+>>> Hi Jingoo
+>>> 
+>>>> -----Original Message-----
+>>>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>>>> owner@vger.kernel.org] On Behalf Of Jingoo Han
+>>>> Sent: Friday, August 21, 2015 5:48 AM
+>>>> To: Wangzhou (B)
+>>>> Cc: Gabriele Paoloni; <bhelgaas@google.com>; <linux-
+>>>> pci@vger.kernel.org>; <pratyush.anand@gmail.com>; Yuanzhichang;
+>>>> Zhudacai; zhangjukuo; qiuzhenfa; Liguozhu (Kenneth);
+>>>> jingoohan1@gmail.com
+>>>> Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
+>>>> 
+>>>>> On 2015. 8. 21., at AM 10:51, Zhou Wang <wangzhou1@hisilicon.com>
+>> wrote:
+>>>>> 
+>>>>>> On 2015/8/20 21:58, Gabriele Paoloni wrote:
+>>>>>> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>>>>>> 
+>>>>>> Currently in dw_pcie_cfg_write() if the input size is 2 bytes
+>>>>>> the address offset is wrongly calculated as we mask also bit0
+>>>>>> of "where" input parameter. Instead we should mask all bits of
+>>>>>> "where" except bit0 and bit1.
+>>>>>> 
+>>>>>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>>>>>> ---
+>>>>>> drivers/pci/host/pcie-designware.c | 2 +-
+>>>>>> 1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>>> 
+>>>>>> diff --git a/drivers/pci/host/pcie-designware.c
+>>>> b/drivers/pci/host/pcie-designware.c
+>>>>>> index 69486be..a27f536 100644
+>>>>>> --- a/drivers/pci/host/pcie-designware.c
+>>>>>> +++ b/drivers/pci/host/pcie-designware.c
+>>>>>> @@ -99,7 +99,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int
+>>>> where, int size, u32 val)
+>>>>>>  if (size == 4)
+>>>>>>      writel(val, addr);
+>>>>>>  else if (size == 2)
+>>>>>> -        writew(val, addr + (where & 2));
+>>>>>> +        writew(val, addr + (where & 3));
+>>>>>>  else if (size == 1)
+>>>>>>      writeb(val, addr + (where & 3));
+>>>>>>  else
+>>>>> 
+>>>>> Hi Jingoo,
+>>>>> 
+>>>>> Is there some special consideration? If we miss something, please
+>> let
+>>>> us know.
+>>>> 
+>>>> This patch is unnecessary.
+>>>> 
+>>>> In the case of 'size == 2', the writew() in dw_pcie_cfg_write()
+>> should
+>>>> handle the following values of 'where'.
+>>>> 
+>>>> h00    b0000
+>>>> h02    b0010
+>>>> 
+>>>> Thus, there is no need to keep 0th bit.
+>>> 
+>>> What if the last bits of "where" are h01(b0001), then the current
+>> implementation will clear the last bit...?
+>> 
+>> Yep.
+>> 
+>>> Do you think it is impossible to have a scenario where: "where =
+>> hxxxxxx01" and  "size = 2"?
+>> 
+>> Is there any function using "where = h01" and "size =2"?
+>> It might be wrong usage.
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git devel
+> Please correct me if I am wrong...
+> For example if a designware based controller needs to modify
+> PCI_CLASS_PROG, then it will end up writing PCI_REVISION_ID.
 
- I have checked, they already implemented generic handling for "msi-parent" property in the device
-tree, and MSI works out of the box.
+You mean PCI_CLASS_PROG (0x09) and PCI_CLASS_DEVICE(0x10) with size 2.
 
-Kind regards,
-Pavel Fedin
-Expert Engineer
-Samsung Electronics Research center Russia
+> Now this is maybe not happening now, but, since it is a quick fix and 
+> since dw_pcie_cfg_write() is a base access function, I just thought
+> better to have it fixed now to avoid any future bug...
 
+I don't want to support these tricky and uncommon cases.
 
+Also, when writew() is called, "STRH" is used in ARM SoCs.
+In this case,
+unaligned access happens, when 0th bit of addr is 1.
+writew() is more beneficial than writel() when accessing address with 2 bytes.
+
+Sorry, I don't find any benefits to support the unaligned access.
+
+Best regards,
+Jingoo Han
+
+> However since you re the maintainer it is up to you...
+> 
+>> 
+>> Best regards,
+>> Jingoo Han
+>> 
+>>>> 
+>>>> One more thing, is there any reason to urge me to review this patch
+>>>> within a few hours?
+>>>> Please wait for reviews for enough hours.
+>>>> 
+>>>> Maybe, your company looks to support you and other engineers for
+>>>> mainline kernel.
+>>>> However, I am not supported at all, so it is not easy to review the
+>>>> patches quickly.
+>>> 
+>>> Jingoo I am sorry for this. I am sure Zhou Wang did not mean to push
+>> you.
+>>> 
+>>> I agree that this patch is low prio...for us I think is much more
+>> important
+>>> to have "PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05"
+>> patchset
+>>> pushed in mainline.
+>>> 
+>>>> Best regards,
+>>>> Jingoo Han
+>>>> 
+>>>>> Thanks,
+>>>>> Zhou
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
+>> in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
