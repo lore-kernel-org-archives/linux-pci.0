@@ -1,99 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:7152 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751612AbbHGGJz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 7 Aug 2015 02:09:55 -0400
-Message-ID: <55C44B63.9000409@hisilicon.com>
-Date: Fri, 7 Aug 2015 14:08:35 +0800
-From: Zhou Wang <wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-To: Zhou Wang <wangzhou1@hisilicon.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	<jingoohan1@gmail.com>
-Subject: Re: [PATCH v6 5/6] Documentation: DT: Add HiSilicon PCIe host binding
-References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com> <1438848559-232109-6-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1438848559-232109-6-git-send-email-wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:35602 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752533AbbHUJZa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 05:25:30 -0400
+Received: by pacdd16 with SMTP id dd16so40593222pac.2
+        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2015 02:25:29 -0700 (PDT)
+References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com> <55D68405.1000901@hisilicon.com> <90DF1C90-A030-416D-9F86-364DBA1AABB6@gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E01D824BF@lhreml503-mbs>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E01D824BF@lhreml503-mbs>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <AEC0CFBF-431A-4C08-A795-80BC848996E9@gmail.com>
+Cc: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"<bhelgaas@google.com>" <bhelgaas@google.com>,
+	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
+	"<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>, jingoohan1@gmail.com
+From: Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
+Date: Fri, 21 Aug 2015 18:25:19 +0900
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc jingoohan1@gmail.com]
-
-On 2015/8/6 16:09, Zhou Wang wrote:
-> This patch adds related DTS binding document for HiSilicon PCIe host driver.
+On 2015. 8. 21., at PM 5:58, Gabriele Paoloni <gabriele.paoloni@huawei.com> wrote:
 > 
-> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-> ---
->  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
->  1 file changed, 46 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> Hi Jingoo 
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> new file mode 100644
-> index 0000000..2afc9d1
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> @@ -0,0 +1,46 @@
-> +HiSilicon PCIe host bridge DT description
-> +
-> +HiSilicon PCIe host controller is based on Designware PCI core.
-> +It shares common functions with PCIe Designware core driver and inherits
-> +common properties defined in
-> +Documentation/devicetree/bindings/pci/designware-pci.txt.
-> +
-> +Additional properties are described here:
-> +
-> +Required properties:
-> +- compatible: Should contain "hisilicon,hip05-pcie".
-> +- reg: Should contain rc_dbi, subctrl, config registers location and length.
-> +- reg-names: Must include the following entries:
-> +  "rc_dbi": controller configuration registers;
-> +  "subctrl": whole PCIe hosts configuration registers;
-> +  "config": PCIe configuration space registers.
-> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
-> +- port-id: Should be 0, 1, 2 or 3.
-> +
-> +Optional properties:
-> +- status: Either "ok" or "disabled".
-> +- dma-coherent: Present if DMA operations are coherent.
-> +
-> +Example:
-> +	pcie@0xb0080000 {
-> +		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
-> +		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
-> +		      <0x220 0x00000000 0 0x2000>;
-> +		reg-names = "rc_dbi", "subctrl", "config";
-> +		bus-range = <0  15>;
-> +		msi-parent = <&its_pcie>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		dma-coherent;
-> +		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
-> +		num-lanes = <8>;
-> +		port-id = <1>;
-> +		#interrupts-cells = <1>;
-> +		interrupts-map-mask = <0xf800 0 0 7>;
-> +		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
-> +				  0x0 0 0 2 &mbigen_pcie 2 11
-> +				  0x0 0 0 3 &mbigen_pcie 3 12
-> +				  0x0 0 0 4 &mbigen_pcie 4 13>;
-> +		status = "ok";
-> +	};
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>> owner@vger.kernel.org] On Behalf Of Jingoo Han
+>> Sent: Friday, August 21, 2015 5:48 AM
+>> To: Wangzhou (B)
+>> Cc: Gabriele Paoloni; <bhelgaas@google.com>; <linux-
+>> pci@vger.kernel.org>; <pratyush.anand@gmail.com>; Yuanzhichang;
+>> Zhudacai; zhangjukuo; qiuzhenfa; Liguozhu (Kenneth);
+>> jingoohan1@gmail.com
+>> Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
+>> 
+>>> On 2015. 8. 21., at AM 10:51, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+>>> 
+>>>> On 2015/8/20 21:58, Gabriele Paoloni wrote:
+>>>> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>>>> 
+>>>> Currently in dw_pcie_cfg_write() if the input size is 2 bytes
+>>>> the address offset is wrongly calculated as we mask also bit0
+>>>> of "where" input parameter. Instead we should mask all bits of
+>>>> "where" except bit0 and bit1.
+>>>> 
+>>>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>>>> ---
+>>>> drivers/pci/host/pcie-designware.c | 2 +-
+>>>> 1 file changed, 1 insertion(+), 1 deletion(-)
+>>>> 
+>>>> diff --git a/drivers/pci/host/pcie-designware.c
+>> b/drivers/pci/host/pcie-designware.c
+>>>> index 69486be..a27f536 100644
+>>>> --- a/drivers/pci/host/pcie-designware.c
+>>>> +++ b/drivers/pci/host/pcie-designware.c
+>>>> @@ -99,7 +99,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int
+>> where, int size, u32 val)
+>>>>   if (size == 4)
+>>>>       writel(val, addr);
+>>>>   else if (size == 2)
+>>>> -        writew(val, addr + (where & 2));
+>>>> +        writew(val, addr + (where & 3));
+>>>>   else if (size == 1)
+>>>>       writeb(val, addr + (where & 3));
+>>>>   else
+>>> 
+>>> Hi Jingoo,
+>>> 
+>>> Is there some special consideration? If we miss something, please let
+>> us know.
+>> 
+>> This patch is unnecessary.
+>> 
+>> In the case of 'size == 2', the writew() in dw_pcie_cfg_write() should
+>> handle the following values of 'where'.
+>> 
+>>  h00    b0000
+>>  h02    b0010
+>> 
+>> Thus, there is no need to keep 0th bit.
 > 
+> What if the last bits of "where" are h01(b0001), then the current implementation will clear the last bit...? 
 
+Yep.
 
+> Do you think it is impossible to have a scenario where: "where = hxxxxxx01" and  "size = 2"? 
+
+Is there any function using "where = h01" and "size =2"?
+It might be wrong usage.
+
+Best regards,
+Jingoo Han
+
+>> 
+>> One more thing, is there any reason to urge me to review this patch
+>> within a few hours?
+>> Please wait for reviews for enough hours.
+>> 
+>> Maybe, your company looks to support you and other engineers for
+>> mainline kernel.
+>> However, I am not supported at all, so it is not easy to review the
+>> patches quickly.
+> 
+> Jingoo I am sorry for this. I am sure Zhou Wang did not mean to push you.
+> 
+> I agree that this patch is low prio...for us I think is much more important
+> to have "PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05" patchset 
+> pushed in mainline.
+> 
+>> Best regards,
+>> Jingoo Han
+>> 
+>>> Thanks,
+>>> Zhou
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
