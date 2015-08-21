@@ -1,65 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39231 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755104AbbHNQT1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 14 Aug 2015 12:19:27 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v2 0/4] PCI: arm64/powerpc: Fix parsing of linux,pci-probe-only
-Date: Fri, 14 Aug 2015 17:19:15 +0100
-Message-Id: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:34627 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753252AbbHUPHh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 11:07:37 -0400
+Received: by padfo6 with SMTP id fo6so9046991pad.1
+        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2015 08:07:37 -0700 (PDT)
+Subject: [PATCH 0/3] MPS tuning
+To: Keith Busch <keith.busch@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Austin Bolen <Austin_Bolen@dell.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Myron Stowe <mstowe@redhat.com>, Jon Mason <jdmason@kudzu.us>
+Date: Fri, 21 Aug 2015 10:07:31 -0500
+Message-ID: <20150821150557.7525.58923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci-host-generic driver parses the linux,pci-probe-only property,
-and assumes that it will have a boolean parameter.
+Hi Keith, et al,
 
-Turns out that the Seattle DTS file has a naked "linux,pci-probe-only"
-property, which leads to the driver dereferencing some unsuspecting
-memory location. Nothing really bad happens (we end up reading some
-other bit of DT, fortunately), but that not a reason to keep it this
-way. Turns out that the Pseries code (where this code was lifted from)
-may suffer from the same issue.
+This is essentially your patch, tweaked a little to move it to the
+pci_device_add() path instead of the pcie_bus_configure_settings() path.
 
-The first patch introduces a common (and fixed) version of that check
-that can be used by drivers and architectures that require it. The two
-following patches change the pci-host-generic driver and the powerpc
-code to use it.
+One interesting wrinkle is the quirk_intel_mc_errata() quirk, which
+was previously essentially disabled because it did nothing in
+PCIE_BUS_TUNE_OFF mode, which was the default.  If we change the mode to
+something else (as I did in the last patch), that quirk will now be active
+when it wasn't before.  I'd like to chat with Jon about whether that's the
+right thing.
+---
 
-Finally, the bad property is removed from the Seatle DTS, because it
-is simply not necessary (it actually prevents me from using SR-IOV,
-which otherwise runs fine without the probe-only thing).
+Bjorn Helgaas (2):
+      PCI: Move MPS configuration check to pci_configure_device()
+      PCI: Change MPS default to "match upstream bridge"
 
-This has been tested on the offending Seattle board.
+Keith Busch (1):
+      PCI: Set MPS to match upstream bridge
 
-* From v1:
-  - Consolidate the parsing in of_pci.c (Bjorn)
 
-Marc Zyngier (4):
-  of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
-  PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
-  powerpc: PCI: Fix lookup of linux,pci-probe-only property
-  arm64: dts: Drop linux,pci-probe-only from the Seattle DTS
-
- arch/arm64/boot/dts/amd/amd-overdrive.dts |  1 -
- arch/powerpc/platforms/pseries/setup.c    | 14 ++------------
- drivers/of/of_pci.c                       | 30 ++++++++++++++++++++++++++++++
- drivers/pci/host/pci-host-generic.c       |  9 +--------
- include/linux/of_pci.h                    |  3 +++
- 5 files changed, 36 insertions(+), 21 deletions(-)
-
--- 
-2.1.4
-
+ drivers/pci/pci.c   |    2 +-
+ drivers/pci/probe.c |   54 +++++++++++++++++++++++++++++++++------------------
+ include/linux/pci.h |    9 +++++----
+ 3 files changed, 41 insertions(+), 24 deletions(-)
