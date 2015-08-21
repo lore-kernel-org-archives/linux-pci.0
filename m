@@ -1,111 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:26926 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752420AbbHYJy0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 05:54:26 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
-	<liguozhu@hisilicon.com>
-Subject: [PATCH v8 2/6] ARM/PCI: remove align_resource in pci_sys_data
-Date: Tue, 25 Aug 2015 17:58:50 +0800
-Message-ID: <1440496734-18417-3-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 48/52] PCI: Claim fixed resource during remove/rescan path
+Date: Thu, 20 Aug 2015 23:21:03 -0700
+Message-Id: <1440138067-4314-49-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+During driver loading kernel will check if resources get reserved.
+so we need to make sure resources get reserved before pci_bus_add().
 
-This patch is needed in order to unify the PCIe designware framework for ARM and
-ARM64 architectures. In the PCIe designware unification process we are calling
-pci_create_root_bus() passing a "sysdata" parameter that is the same for both
-ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
-cause a problem with the function pcibios_align_resource(); in fact this will
-cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
-"struct pcie_port*" pointer.
+On remove/rescan path, we will leave those fixed resource
+not reserved. In that path, We don't call pcibios_resource_survery()
+before pci_assign_unassigned_bus_resources(), and that is intentional
+for us to get new resources for rescan. We do need to use rescan to make
+device get resource allocated while ignoring BIOS allocate resource.
 
-This patch solves the issue by removing "align_resource" from "pci_sys_data"
-struct and defining a static global function pointer in "bios32.c"
+But fixed resources are not allocated via
+pci_assign_unassigned_bus_resources(), so we need to reserve them
+explicitly.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/arm/include/asm/mach/pci.h |  5 -----
- arch/arm/kernel/bios32.c        | 12 ++++++++----
- 2 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/pci/quirks.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
-index 28b9bb3..8a4e4de 100644
---- a/arch/arm/include/asm/mach/pci.h
-+++ b/arch/arm/include/asm/mach/pci.h
-@@ -58,11 +58,6 @@ struct pci_sys_data {
- 					/* IRQ mapping				*/
- 	int		(*map_irq)(const struct pci_dev *, u8, u8);
- 					/* Resource alignement requirements	*/
--	resource_size_t (*align_resource)(struct pci_dev *dev,
--					  const struct resource *res,
--					  resource_size_t start,
--					  resource_size_t size,
--					  resource_size_t align);
- 	void		*private_data;	/* platform controller private data	*/
- };
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e9fd0e9..9efa983 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -324,6 +324,23 @@ static void quirk_s3_64M(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
  
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index fcbbbb1..4cdc64d 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -17,6 +17,11 @@
- #include <asm/mach/pci.h>
- 
- static int debug_pci;
-+static resource_size_t (*align_resource)(struct pci_dev *dev,
-+		  const struct resource *res,
-+		  resource_size_t start,
-+		  resource_size_t size,
-+		  resource_size_t align) = NULL;
- 
- #ifdef CONFIG_PCI_MSI
- struct msi_controller *pcibios_msi_controller(struct pci_dev *dev)
-@@ -468,7 +473,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 		sys->busnr   = busnr;
- 		sys->swizzle = hw->swizzle;
- 		sys->map_irq = hw->map_irq;
--		sys->align_resource = hw->align_resource;
-+		align_resource = hw->align_resource;
- 		INIT_LIST_HEAD(&sys->resources);
- 
- 		if (hw->private_data)
-@@ -589,7 +594,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
++/* for pci remove and rescan */
++static void quirk_allocate_fixed(struct pci_dev *dev)
++{
++	int i;
++	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (r->parent ||
++		    !(r->flags & IORESOURCE_PCI_FIXED) ||
++		    !(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
++			continue;
++
++		pci_claim_resource(dev, i);
++	}
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID,	PCI_ANY_ID,	quirk_allocate_fixed);
++
+ static void quirk_io(struct pci_dev *dev, int pos, unsigned size,
+ 		     const char *name)
  {
- 	struct pci_dev *dev = data;
--	struct pci_sys_data *sys = dev->sysdata;
- 	resource_size_t start = res->start;
- 
- 	if (res->flags & IORESOURCE_IO && start & 0x300)
-@@ -597,8 +601,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 
- 	start = (start + align - 1) & ~(align - 1);
- 
--	if (sys->align_resource)
--		return sys->align_resource(dev, res, start, size, align);
-+	if (align_resource)
-+		return align_resource(dev, res, start, size, align);
- 
- 	return start;
- }
 -- 
-1.9.1
+1.8.4.5
 
