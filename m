@@ -1,93 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:33092 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753570AbbHRSts (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 14:49:48 -0400
-Received: by pabyb7 with SMTP id yb7so138478265pab.0
-        for <linux-pci@vger.kernel.org>; Tue, 18 Aug 2015 11:49:48 -0700 (PDT)
-Date: Tue, 18 Aug 2015 13:49:43 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, mroos@linux.ee,
-	"David S. Miller" <davem@davemloft.net>,
-	sparclinux@vger.kernel.org,
-	Eric Snowberg <eric.snowberg@oracle.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
-Message-ID: <20150818184943.GA26431@google.com>
-References: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:46428 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753643AbbHUGW4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:22:56 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Anton Blanchard <anton@samba.org>,
+	linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH v4 42/52] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Thu, 20 Aug 2015 23:20:57 -0700
+Message-Id: <1440138067-4314-43-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Dave, Eric, Ben, sparclinux]
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+parsing.
 
-On Mon, Aug 17, 2015 at 06:47:58PM +0800, Yijing Wang wrote:
-> Commit d0751b98dfa3 ("PCI: Add dev->has_secondary_link to
-> track downstream PCIe links")assumed root port is always
-> the top device in pcie tree. But on sparc64 V245 and T2000
-> the pcie tree has no root port device in top level, the
-> upstream port device is connected directly to root bus.
-> So we may get NULL parent for this upstream port device.
-> 
-> Upstream port ------ Downstream port ------PCIe-PCI bridge
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Yijing Wang <wangyijing@huawei.com>
+Cc: Anton Blanchard <anton@samba.org>
+Cc: linuxppc-dev@lists.ozlabs.org
+---
+ arch/powerpc/kernel/pci_of_scan.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This is an unusual, possibly even illegal, PCIe topology because it
-lacks a Root Port at the top of the hierarchy.  From lspci output [1]
-collected by Meelis, the top-level devices are:
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 42e02a2..f31bfd0 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
+ 
+ 	if (addr0 & 0x02000000) {
+ 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
+-		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
++		if (addr0 & 0x01000000)
++			flags |= IORESOURCE_MEM_64
++				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
+ 		if (addr0 & 0x40000000)
+ 			flags |= IORESOURCE_PREFETCH
+ 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
+-- 
+1.8.4.5
 
-  0000:02:00.0 PCI bridge to [bus 03-0d]    Upstream Port
-  0001:02:00.0 PCI bridge to [bus 03]       PCIe to PCI/PCI-X Bridge
-  0001:02:00.2 PCI bridge to [bus 04]       PCIe to PCI/PCI-X Bridge
-
-There *should* be two Root Ports, one leading to 0000:02 and another
-leading to 0001:02.1
-
-I suspect this is an artifact of the way sparc and powerpc use OF to
-enumerate PCI.  I suspect there actually *is* a Root Port in the
-hardware: why would the hardware designers go to the trouble of
-working out special-case rules and behavior for a non-standard PCIe
-hierarchy when it would be much easier to reuse existing hardware?
-
-As long as the Root Port is configured correctly, Linux can pretend it
-doesn't exist and things will mostly just work.  Except for a few
-corner cases like this one.
-
-I really hate to put special case workarounds like this patch in the
-generic code.  It's likely that we'd trip over the same issue again in
-other areas, e.g., MPS or other configuration.
-
-Sparc & powerpc guys, any input on this?
-
-Bjorn
-
-[1] http://lkml.kernel.org/r/alpine.LRH.2.20.1508131111570.9039@math.ut.ee
-
-> Reported-by: Meelis Roos <mroos@linux.ee>
-> Tested-by: Meelis Roos <mroos@linux.ee>
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> ---
->  drivers/pci/probe.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 51ebb97..cd54298 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1003,7 +1003,10 @@ void set_pcie_port_type(struct pci_dev *pdev)
->  	else if (type == PCI_EXP_TYPE_UPSTREAM ||
->  		 type == PCI_EXP_TYPE_DOWNSTREAM) {
->  		parent = pci_upstream_bridge(pdev);
-> -		if (!parent->has_secondary_link)
-> +		/* For sparc64 V245 and T2000, upstream port may be
-> +		 * the top level device, connect to root bus directly.
-> +		 */
-> +		if (parent && !parent->has_secondary_link)
->  			pdev->has_secondary_link = 1;
->  	}
->  }
-> -- 
-> 1.7.1
-> 
