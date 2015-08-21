@@ -1,98 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:36189 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753931AbbHJQvU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 12:51:20 -0400
-Received: by ioeg141 with SMTP id g141so175452506ioe.3
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 09:51:20 -0700 (PDT)
-Date: Mon, 10 Aug 2015 11:51:16 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Will Davis <wdavis@nvidia.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [PATCH v4 10/12] pci: add pci_find_common_upstream_dev()
-Message-ID: <20150810165116.GA32452@google.com>
-References: <1437601197-6481-1-git-send-email-wdavis@nvidia.com>
- <1437601197-6481-11-git-send-email-wdavis@nvidia.com>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:23377 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751302AbbHUFQr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 01:16:47 -0400
+Message-ID: <55D6B42B.5010803@hisilicon.com>
+Date: Fri, 21 Aug 2015 13:16:27 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1437601197-6481-11-git-send-email-wdavis@nvidia.com>
+To: Jingoo Han <jingoohan1@gmail.com>
+CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"<bhelgaas@google.com>" <bhelgaas@google.com>,
+	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
+	"<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
+	"<yuanzhichang@hisilicon.com>" <yuanzhichang@hisilicon.com>,
+	"<zhudacai@hisilicon.com>" <zhudacai@hisilicon.com>,
+	"<zhangjukuo@huawei.com>" <zhangjukuo@huawei.com>,
+	"<qiuzhenfa@hisilicon.com>" <qiuzhenfa@hisilicon.com>,
+	"<liguozhu@hisilicon.com>" <liguozhu@hisilicon.com>
+Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
+References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com> <55D68405.1000901@hisilicon.com> <90DF1C90-A030-416D-9F86-364DBA1AABB6@gmail.com>
+In-Reply-To: <90DF1C90-A030-416D-9F86-364DBA1AABB6@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 22, 2015 at 04:39:55PM -0500, Will Davis wrote:
-> Adds an interface to find the first device which is upstream of both
-> devices.
+On 2015/8/21 12:48, Jingoo Han wrote:
+> On 2015. 8. 21., at AM 10:51, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+>>
+>>> On 2015/8/20 21:58, Gabriele Paoloni wrote:
+>>> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>>>
+>>> Currently in dw_pcie_cfg_write() if the input size is 2 bytes
+>>> the address offset is wrongly calculated as we mask also bit0
+>>> of "where" input parameter. Instead we should mask all bits of
+>>> "where" except bit0 and bit1.
+>>>
+>>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>>> ---
+>>> drivers/pci/host/pcie-designware.c | 2 +-
+>>> 1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>>> index 69486be..a27f536 100644
+>>> --- a/drivers/pci/host/pcie-designware.c
+>>> +++ b/drivers/pci/host/pcie-designware.c
+>>> @@ -99,7 +99,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
+>>>    if (size == 4)
+>>>        writel(val, addr);
+>>>    else if (size == 2)
+>>> -        writew(val, addr + (where & 2));
+>>> +        writew(val, addr + (where & 3));
+>>>    else if (size == 1)
+>>>        writeb(val, addr + (where & 3));
+>>>    else
+>>
+>> Hi Jingoo,
+>>
+>> Is there some special consideration? If we miss something, please let us know.
 > 
-> Signed-off-by: Will Davis <wdavis@nvidia.com>
-> ---
->  drivers/pci/search.c | 25 +++++++++++++++++++++++++
->  include/linux/pci.h  |  2 ++
->  2 files changed, 27 insertions(+)
+> This patch is unnecessary.
 > 
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index a20ce7d..cbd8163 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -384,3 +384,28 @@ int pci_dev_present(const struct pci_device_id *ids)
->  	return 0;
->  }
->  EXPORT_SYMBOL(pci_dev_present);
-> +
-> +/**
-> + * pci_find_common_upstream_dev - Returns the first common upstream device
-> + * @from: the PCI device to search for a common upstream device from
-> + * @to: the PCI device to search for a common upstream device to
-> + *
-> + * Walks up the bus hierarchy from the @from device, looking for the first bus
-> + * which the @to device is downstream of. Returns %NULL if the devices do not
-> + * share any upstream devices.
-
-This interface looks like it should be symmetric: you should get the same
-answer regardless of which device is "from" and which is "to".  I would
-rename the arguments to something more neutral to reflect that.
-
-> + */
-> +struct pci_dev *pci_find_common_upstream_dev(struct pci_dev *from,
-> +					     struct pci_dev *to)
-> +{
-> +	struct pci_dev *pdev = from;
-> +
-> +	while (pdev != NULL) {
-> +		if ((to->bus->number >= pdev->bus->busn_res.start) &&
-> +		    (to->bus->number <= pdev->bus->busn_res.end))
-> +			return pdev;
-> +		pdev = pdev->bus->self;
-
-I think you want "pdev = pci_upstream_bridge(pdev)" here; otherwise you'll
-exit the loop early if "from" is a VF on a virtual bus.
-
-> +	}
-> +
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL(pci_find_common_upstream_dev);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d58063e..8262b9e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -860,6 +860,8 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
->  }
->  struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
->  int pci_dev_present(const struct pci_device_id *ids);
-> +struct pci_dev *pci_find_common_upstream_dev(struct pci_dev *from,
-> +					     struct pci_dev *to);
->  
->  int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
->  			     int where, u8 *val);
-> -- 
-> 2.4.6
+> In the case of 'size == 2', the writew() in dw_pcie_cfg_write() should handle the following values of 'where'.
 > 
+>   h00    b0000
+>   h02    b0010
+> 
+> Thus, there is no need to keep 0th bit.
+> 
+> One more thing, is there any reason to urge me to review this patch within a few hours?
+> Please wait for reviews for enough hours.
+
+Honestly speaking, I didn't mean to push you to review it :)
+
+I thought maybe there was some hardware issues involved in above patch,
+just asking a question about it. Anyway, maybe I should have waited for your reply.
+
+Many thanks,
+Zhou
+
+> 
+> Maybe, your company looks to support you and other engineers for mainline kernel.
+> However, I am not supported at all, so it is not easy to review the patches quickly.
+>
+> Best regards,
+> Jingoo Han
+> 
+>> Thanks,
+>> Zhou
+>>
+> 
+> .
+> 
+
+
