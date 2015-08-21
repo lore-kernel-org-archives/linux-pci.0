@@ -1,64 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:43312 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753435AbbHKUXD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 16:23:03 -0400
-Subject: Re: [PATCH] PCI: iproc_bcma: allow build as module
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-References: <1437851724-10519-1-git-send-email-hauke@hauke-m.de>
- <20150811201215.GF13982@google.com>
-CC: <linux-pci@vger.kernel.org>, <zajec5@gmail.com>,
-	<rjui@broadcom.com.com>, Scott Branden <sbranden@broadcom.com>,
-	<bcm-kernel-feedback-list@broadcom.com>
-From: Ray Jui <rjui@broadcom.com>
-Message-ID: <55CA598D.2080704@broadcom.com>
-Date: Tue, 11 Aug 2015 13:22:37 -0700
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:34752 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807AbbHUTOl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 15:14:41 -0400
+Received: by igui7 with SMTP id i7so24719203igu.1
+        for <linux-pci@vger.kernel.org>; Fri, 21 Aug 2015 12:14:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150811201215.GF13982@google.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20150821150751.7525.81766.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150821150557.7525.58923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<20150821150751.7525.81766.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Fri, 21 Aug 2015 12:14:40 -0700
+Message-ID: <CAE9FiQWL_6i5o7Jx5__JdhCU0xcpE-96XRxx3eS29k2jdq1Hwg@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: Set MPS to match upstream bridge
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Austin Bolen <Austin_Bolen@dell.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Myron Stowe <mstowe@redhat.com>, Jon Mason <jdmason@kudzu.us>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Aug 21, 2015 at 8:07 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> From: Keith Busch <keith.busch@intel.com>
+>
+> Firmware typically configures the PCIe fabric with a consistent Max Payload
+> Size setting based on the devices present at boot.  A hot-added device
+> typically has the power-on default MPS setting (128 bytes), which may not
+> match the fabric.
+>
+> When adding a new device via pci_device_add(), set its Max Payload Size to
+> match the upstream bridge (unless PCIe bus tuning is disabled).  Note that
+> pcie_bus_configure_settings() may further change MPS based on the tuning
+> policy.
+>
+> This makes it more likely that a hot-added device will work in a system
+> with optimized MPS configuration.
+>
+> If we hot-add a device that only supports 128-byte MPS, it still likely
+> won't work because we don't reconfigure the rest of the fabric.  Booting
+> with "pci=pcie_bus_peer2peer" is a workaround for this because it sets MPS
+> to 128 for everything.
+>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/probe.c |   12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index eb32395..f73dd7a 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1278,7 +1278,7 @@ int pci_setup_device(struct pci_dev *dev)
+>  static void pci_configure_mps(struct pci_dev *dev)
+>  {
+>         struct pci_dev *bridge = pci_upstream_bridge(dev);
+> -       int mps, p_mps;
+> +       int mps, p_mps, rc;
+>
+>         if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+>                 return;
+> @@ -1294,6 +1294,16 @@ static void pci_configure_mps(struct pci_dev *dev)
+>                          mps, pci_name(bridge), p_mps);
+>                 return;
+>         }
+> +
 
-On 8/11/2015 1:12 PM, Bjorn Helgaas wrote:
-> [+cc Scott, bcm-kernel-feedback-list]
-> 
-> On Sat, Jul 25, 2015 at 09:15:24PM +0200, Hauke Mehrtens wrote:
->> Changes this to tristate to make it possible to build this driver as a
->> module.
->>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> 
-> Waiting for an ack from Ray or Scott.
-> 
->> ---
->>  drivers/pci/host/Kconfig | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index c132bdd..e339a8c 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -135,7 +135,7 @@ config PCIE_IPROC_PLATFORM
->>  	  through the generic platform bus interface
->>  
->>  config PCIE_IPROC_BCMA
->> -	bool "Broadcom iProc PCIe BCMA bus driver"
->> +	tristate "Broadcom iProc PCIe BCMA bus driver"
+you may need add if the pcie_bus_config == PCIE_BUS_DEFAULT here.
 
-This looks fine. I also build test it to make sure there's no export
-symbol related issues.
+we should not  could set mps extra for _SAFE, _PERFORMANCE, _PEER2PEER
 
-Acked-by: Ray Jui <rjui@broadcom.com>
+other than that.
 
-Thanks,
+For those patches:
+Acked-by: Yinghai Lu <yinghai@kernel.org>
 
-Ray
-
->>  	depends on ARCH_BCM_IPROC || (ARM && COMPILE_TEST)
->>  	select PCIE_IPROC
->>  	select BCMA
->> -- 
->> 2.1.4
->>
+> +       rc = pcie_set_mps(dev, p_mps);
+> +       if (rc) {
+> +               dev_warn(&dev->dev, "can't set Max Payload Size to %d; if necessary, use \"pci=pcie_bus_safe\" and report a bug\n",
+> +                        p_mps);
+> +               return;
+> +       }
+> +
+> +       dev_info(&dev->dev, "Max Payload Size set to %d (was %d, max %d)\n",
+> +                p_mps, mps, 128 << dev->pcie_mpss);
+>  }
