@@ -1,155 +1,112 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <205780224.0d92UNafyF@vostro.rjw.lan>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-	<1440138067-4314-14-git-send-email-yinghai@kernel.org>
-	<205780224.0d92UNafyF@vostro.rjw.lan>
-Date: Mon, 24 Aug 2015 15:14:26 -0700
-Message-ID: <CAE9FiQWW_zzZGoq-rrbe+R==-xwRHMkTAtFRGGkN-GK-F6NWsg@mail.gmail.com>
-Subject: Re: [PATCH v4 13/52] PCI, acpiphp: Add missing realloc list checking
- after resource allocation
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	Yijing Wang <wangyijing@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4 12/52] PCI: Simplify res reference using in __assign_resources_sorted()
+Date: Thu, 20 Aug 2015 23:20:27 -0700
+Message-Id: <1440138067-4314-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 24, 2015 at 3:09 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Thursday, August 20, 2015 11:20:28 PM Yinghai Lu wrote:
->> We check the realloc list, as list must be empty after allocation.
->>
->> Add missing one acpiphp driver.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
->> Cc: Len Brown <lenb@kernel.org>
->> Cc: linux-acpi@vger.kernel.org
->> ---
->>  drivers/pci/hotplug/acpiphp_glue.c | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
->> index ff53856..1c7c1d7 100644
->> --- a/drivers/pci/hotplug/acpiphp_glue.c
->> +++ b/drivers/pci/hotplug/acpiphp_glue.c
->> @@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
->>               }
->>       }
->>       __pci_bus_assign_resources(bus, &add_list, NULL);
->> +     BUG_ON(!list_empty(&add_list));
->
-> Is crashing the kernel the best we can do here?
->
-> What about bailing out with a WARN_ON() instead?  Surely, the kernel can work
-> without the new device?
-
-That should not happen.
-If that list is not empty, we could have broken the assign logic for
-optional or additional
-resource allocation.
-
-We have other two BUG_ON checking in drivers/pci/setup-bus.c.
-
-Do we need to change them all to WARN_ON()?
-
-or you prefer this version instead:
-
----
-
-Subject: [PATCH] PCI: Separate realloc list checking after allocation
-
-We check the realloc list, as list must be empty after allocation.
-
-Separate the realloc list checking to another function.
-
-Add checking that is missed in acpiphp driver.
-
--v2: change to WARN_ON addording to Rafael.
+Use res instead of dev_res->res.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
 ---
- drivers/pci/hotplug/acpiphp_glue.c |    1 +
- drivers/pci/pci.h                  |    1 +
- drivers/pci/setup-bus.c            |   12 +++++++++---
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-Index: linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/acpiphp_glue.c
-+++ linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
-@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_s
-         }
-     }
-     __pci_bus_assign_resources(bus, &add_list, NULL);
-+    pci_bus_check_realloc(&add_list);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a3d48ef..9d7adab 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -452,6 +452,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+ 	resource_size_t add_align;
++	struct resource *res;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -467,8 +468,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+-		dev_res->res->end += get_res_add_size(realloc_head,
+-							dev_res->res);
++		res = dev_res->res;
++		res->end += get_res_add_size(realloc_head, res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+@@ -477,16 +478,16 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		 * 2. resource with IORESOURCE_SIZEALIGN
+ 		 *    update size above already change alignment.
+ 		 */
+-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++		if (!(res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+-		add_align = get_res_add_align(realloc_head, dev_res->res);
++		add_align = get_res_add_align(realloc_head, res);
+ 
+ 		if (add_align) {
+-			resource_size_t r_size = resource_size(dev_res->res);
++			resource_size_t r_size = resource_size(res);
+ 
+-			dev_res->res->start = add_align;
+-			dev_res->res->end = add_align + r_size - 1;
++			res->start = add_align;
++			res->end = add_align + r_size - 1;
+                }
+ 	}
+ 
+@@ -508,21 +509,21 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	/* check failed type */
+ 	fail_type = pci_fail_res_type_mask(&local_fail_head);
+ 	/* remove not need to be released assigned res from head list etc */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list)
+-		if (dev_res->res->parent &&
+-		    !pci_need_to_release(fail_type, dev_res->res)) {
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++		res = dev_res->res;
++		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+-			remove_from_list(realloc_head, dev_res->res);
+-			remove_from_list(&save_head, dev_res->res);
++			remove_from_list(realloc_head, res);
++			remove_from_list(&save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
++	}
+ 
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list) {
+-		struct resource *res = dev_res->res;
+-
++		res = dev_res->res;
+ 		if (res->parent) {
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+ 				   "BAR %d: released %pR\n",
+@@ -533,8 +534,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+-		struct resource *res = save_res->res;
+-
++		res = save_res->res;
+ 		res->start = save_res->start;
+ 		res->end = save_res->end;
+ 		res->flags = save_res->flags;
+-- 
+1.8.4.5
 
-     acpiphp_sanitize_bus(bus);
-     pcie_bus_configure_settings(bus);
-Index: linux-2.6/drivers/pci/pci.h
-===================================================================
---- linux-2.6.orig/drivers/pci/pci.h
-+++ linux-2.6/drivers/pci/pci.h
-@@ -237,6 +237,7 @@ void __pci_bus_size_bridges(struct pci_b
- void __pci_bus_assign_resources(const struct pci_bus *bus,
-                 struct list_head *realloc_head,
-                 struct list_head *fail_head);
-+void pci_bus_check_realloc(struct list_head *realloc_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
-
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -349,6 +349,12 @@ out:
-     }
- }
-
-+void pci_bus_check_realloc(struct list_head *realloc_head)
-+{
-+    if (WARN_ON(!list_empty(realloc_head)))
-+        free_list(realloc_head);
-+}
-+
- /**
-  * assign_requested_resources_sorted() - satisfy resource requests
-  *
-@@ -1860,7 +1866,7 @@ again:
-     /* Depth last, allocate resources and update the hardware. */
-     __pci_bus_assign_resources(bus, add_list, &fail_head);
-     if (add_list)
--        BUG_ON(!list_empty(add_list));
-+        pci_bus_check_realloc(add_list);
-     tried_times++;
-
-     /* any device complain? */
-@@ -1935,7 +1941,7 @@ void pci_assign_unassigned_bridge_resour
- again:
-     __pci_bus_size_bridges(parent, &add_list);
-     __pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--    BUG_ON(!list_empty(&add_list));
-+    pci_bus_check_realloc(&add_list);
-     tried_times++;
-
-     if (list_empty(&fail_head))
-@@ -1994,6 +2000,6 @@ void pci_assign_unassigned_bus_resources
-                              &add_list);
-     up_read(&pci_bus_sem);
-     __pci_bus_assign_resources(bus, &add_list, NULL);
--    BUG_ON(!list_empty(&add_list));
-+    pci_bus_check_realloc(&add_list);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
