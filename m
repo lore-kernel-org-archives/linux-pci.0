@@ -1,85 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:35696 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965209AbbHKPw3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 11 Aug 2015 11:52:29 -0400
-Received: by igbjg10 with SMTP id jg10so24762538igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 11 Aug 2015 08:52:29 -0700 (PDT)
-Subject: [PATCH v3 11/11] PCI: Remove pci_ats_enabled()
-To: linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gregor Dick <gdick@solarflare.com>,
-	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
-Date: Tue, 11 Aug 2015 10:52:26 -0500
-Message-ID: <20150811155226.21078.27244.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: mingo@kernel.org
+Cc: bp@suse.de, bhelgaas@google.com, tomi.valkeinen@ti.com,
+	airlied@linux.ie, linux-fbdev@vger.kernel.org, luto@amacapital.net,
+	vinod.koul@intel.com, dan.j.williams@intel.com, toshi.kani@hp.com,
+	benh@kernel.crashing.org, mst@redhat.com,
+	akpm@linux-foundation.org, daniel.vetter@ffwll.ch,
+	konrad.wilk@oracle.com, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	xen-devel@lists.xensource.com,
+	"Luis R. Rodriguez" <mcgrof@suse.com>, dmaengine@vger.kernel.org
+Subject: [PATCH v4 09/11] drivers/dma/iop-adma: Use dma_alloc_writecombine() kernel-style
+Date: Mon, 24 Aug 2015 12:13:31 -0700
+Message-Id: <1440443613-13696-10-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove pci_ats_enabled().  There are no callers outside the ATS code
-itself.  We don't need to check ats_cap, because if we don't find an ATS
-capability, we'll never set ats_enabled.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Joerg Roedel <jroedel@suse.de>
+dma_alloc_writecombine()'s call and return value check is tangled in all
+in one call. Untangle both calls according to kernel coding style.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Acked-by: Vinod Koul <vinod.koul@intel.com>
+Cc: Vinod Koul <vinod.koul@intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: dmaengine@vger.kernel.org
+Cc: x86@kernel.org
+Link: http://lkml.kernel.org/r/1435258191-543-2-git-send-email-mcgrof@do-not-panic.com
+Signed-off-by: Borislav Petkov <bp@suse.de>
 ---
- drivers/pci/ats.c   |    8 ++++----
- include/linux/pci.h |    2 --
- 2 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/dma/iop-adma.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 4b17cf5..94976b4 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -43,8 +43,8 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
- 	if (!dev->ats_cap)
- 		return -EINVAL;
- 
--	WARN_ON(pci_ats_enabled(dev));
--	if (pci_ats_enabled(dev))
-+	WARN_ON(dev->ats_enabled);
-+	if (dev->ats_enabled)
- 		return -EBUSY;
- 
- 	if (ps < PCI_ATS_MIN_STU)
-@@ -81,7 +81,7 @@ void pci_disable_ats(struct pci_dev *dev)
- 	struct pci_dev *pdev;
- 	u16 ctrl;
- 
--	if (!pci_ats_enabled(dev))
-+	if (!dev->ats_enabled)
- 		return;
- 
- 	if (atomic_read(&dev->ats_ref_cnt))
-@@ -104,7 +104,7 @@ void pci_restore_ats_state(struct pci_dev *dev)
- {
- 	u16 ctrl;
- 
--	if (!pci_ats_enabled(dev))
-+	if (!dev->ats_enabled)
- 		return;
- 
- 	ctrl = PCI_ATS_CTRL_ENABLE;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4b484fd..806da76 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1303,13 +1303,11 @@ void pci_ats_init(struct pci_dev *dev);
- int pci_enable_ats(struct pci_dev *dev, int ps);
- void pci_disable_ats(struct pci_dev *dev);
- int pci_ats_queue_depth(struct pci_dev *dev);
--static inline int pci_ats_enabled(struct pci_dev *dev) { return dev->ats_cap && dev->ats_enabled; }
- #else
- static inline void pci_ats_init(struct pci_dev *d) { }
- static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
- static inline void pci_disable_ats(struct pci_dev *d) { }
- static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
--static inline int pci_ats_enabled(struct pci_dev *d) { return 0; }
- #endif
- 
- void pci_cfg_access_lock(struct pci_dev *dev);
+diff --git a/drivers/dma/iop-adma.c b/drivers/dma/iop-adma.c
+index 998826854fdd..e4f43125e0fb 100644
+--- a/drivers/dma/iop-adma.c
++++ b/drivers/dma/iop-adma.c
+@@ -1300,10 +1300,11 @@ static int iop_adma_probe(struct platform_device *pdev)
+ 	 * note: writecombine gives slightly better performance, but
+ 	 * requires that we explicitly flush the writes
+ 	 */
+-	if ((adev->dma_desc_pool_virt = dma_alloc_writecombine(&pdev->dev,
+-					plat_data->pool_size,
+-					&adev->dma_desc_pool,
+-					GFP_KERNEL)) == NULL) {
++	adev->dma_desc_pool_virt = dma_alloc_writecombine(&pdev->dev,
++							  plat_data->pool_size,
++							  &adev->dma_desc_pool,
++							  GFP_KERNEL);
++	if (!adev->dma_desc_pool_virt) {
+ 		ret = -ENOMEM;
+ 		goto err_free_adev;
+ 	}
+-- 
+2.4.3
 
