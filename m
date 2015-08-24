@@ -1,95 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45892 "EHLO mx2.suse.de"
+Received: from ozlabs.org ([103.22.144.67]:35278 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755285AbbHNQvJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 14 Aug 2015 12:51:09 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
-Subject: Re: [PATCH v2 2/4] PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
-From: Alexander Graf <agraf@suse.de>
-In-Reply-To: <20150814164324.GC22809@arm.com>
-Date: Fri, 14 Aug 2015 09:50:54 -0700
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Ben Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Message-Id: <EA13B7D9-D612-4957-AF64-6B0BA0DFE06F@suse.de>
-References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com> <1439569159-10051-3-git-send-email-marc.zyngier@arm.com> <20150814164051.GF26431@google.com> <20150814164324.GC22809@arm.com>
-To: Will Deacon <will.deacon@arm.com>
+	id S1751696AbbHXHiA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 24 Aug 2015 03:38:00 -0400
+Message-ID: <1440401878.15373.2.camel@ellerman.id.au>
+Subject: Re: [PATCH v2 1/2] PCI: Make pci_msi_setup_pci_dev() non-static for
+ use by arch code
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	paulus@samba.org, bhelgaas@google.com, mst@redhat.com
+Date: Mon, 24 Aug 2015 17:37:58 +1000
+In-Reply-To: <55D62636.5050403@linux.vnet.ibm.com>
+References: <1439945086.23217.5.camel@ellerman.id.au>
+	 ,<1439932077-11427-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <1440009922-30248-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <1440032549.13406.3.camel@ellerman.id.au>
+	 <55D62636.5050403@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-> On 14.08.2015, at 09:43, Will Deacon <will.deacon@arm.com> wrote:
+On Thu, 2015-08-20 at 16:10 -0300, Guilherme G. Piccoli wrote:
+> On 08/19/2015 10:02 PM, Michael Ellerman wrote:
+> > In future you should send a reply like the above to my mail, and then
+> > separately send the new patch series. My preference is that the new series is
+> > not a reply to anything, though some other maintainers may disagree on that
+> > point.
 > 
-> On Fri, Aug 14, 2015 at 05:40:51PM +0100, Bjorn Helgaas wrote:
->> On Fri, Aug 14, 2015 at 05:19:17PM +0100, Marc Zyngier wrote:
->>> When pci-host-generic looks for the probe-only property, it seems
->>> to trust the DT to be correctly written, and assumes that there
->>> is a parameter to the property.
->>> 
->>> Unfortunately, this is not always the case, and some firmware expose
->>> this property naked. The driver ends up making a decision based on
->>> whatever the property pointer points to, which is likely to be junk.
->>> 
->>> Switch to the common of_pci.c implementation that doesn't suffer
->>> from this problem.
->>> 
->>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
->>> ---
->>> drivers/pci/host/pci-host-generic.c | 9 +--------
->>> 1 file changed, 1 insertion(+), 8 deletions(-)
->>> 
->>> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
->>> index 265dd25..545ff4e 100644
->>> --- a/drivers/pci/host/pci-host-generic.c
->>> +++ b/drivers/pci/host/pci-host-generic.c
->>> @@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
->>> 	int err;
->>> 	const char *type;
->>> 	const struct of_device_id *of_id;
->>> -	const int *prop;
->>> 	struct device *dev = &pdev->dev;
->>> 	struct device_node *np = dev->of_node;
->>> 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
->>> @@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->>> 		return -EINVAL;
->>> 	}
->>> 
->>> -	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
->>> -	if (prop) {
->>> -		if (*prop)
->>> -			pci_add_flags(PCI_PROBE_ONLY);
->>> -		else
->>> -			pci_clear_flags(PCI_PROBE_ONLY);
->>> -	}
->>> +	of_pci_check_probe_only(of_chosen);
->> 
->> Do we need support for pci-probe-only in pci-host-generic at all?
->> You're removing the use in amd-overdrive.dts, and there are no other
->> DTs in the kernel tree that mention it.
->> 
->> If we can live without it, that would be nice.  It seems like a relic from
->> days when we couldn't reliably assign resources.  (I'm not saying we can do
->> that reliably even today, but I'd rather make it reliable than turn it
->> off.)
+> OK, sure. I can send new patch series as new messages instead of replies 
+> to the same thread.
+
+Thanks.
+
+> > The other question, which I neglected to ask yesterday, is what is the symptom
+> > of the bug? ie. does the system fail to boot or otherwise crash etc.?
 > 
-> Kvmtool certainly uses it (and generates its own DT, hence why you don't
-> see it in mainline). Not sure about qemu, though.
+> This is briefly explained on cover-letter, but I can elaborate a bit 
 
-QEMU definitely doesn't do proble-only. Is this driver used on real PPC machines too? In that case you also won't see the dt, because it comes with the hardware ;).
+Sure, but the cover-letter is not committed, so the commit change logs need to
+be self describing.
 
+> more: I was testing driver issues on kernel 2.6.32 (RHEL 6.6), and when 
+> I tried the mainline kernel, the driver wasn't able to enable MSI-X 
+> capabilities. Interestingly, on kernel 4.1 this behavior doesn't happen 
+> and the driver can use MSI-X interrupts.
+> 
+> So, I figured that something was wrong and found the problem described 
+> on the patches. I tried the proposed solution (calling manually the 
+> function that is not reachable anymore) and it works.
+> 
+> Regarding the bnx2x driver, below are two dmesg outputs:
+> 
+> 1) With kernel 4.2-rc7
+> bnx2x 0000:01:00.0: no msix capability found
 
-Alex
+OK. This is because the initialisation of dev->msix_cap was lost due to commit
+1851617cd2da.
+
+> 2) With kernel 4.1
+> bnx2x 0000:01:00.0: msix capability found
+> bnx2x 0000:01:00.0 eth2: using MSI-X  IRQs: sp 24  fp[0] 26 ... fp[7] 33
+
+OK. And I assume with these patches you see the above output again.
+
+> > This is changes *in* v2, or since v1.
+> 
+> My bad, sorry.
+> 
+> > Or anywhere after the first '---', which means the version commentary is
+> > discarded in the final commit.
+> 
+> I used scissors, but there's no problem in stop using it in this list.
+
+Thanks, but my scripts don't grok scissors. So I prefer the commentary after
+the '---'.
+
+cheers
+
 
