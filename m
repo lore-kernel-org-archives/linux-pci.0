@@ -1,81 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0083.outbound.protection.outlook.com ([157.56.110.83]:17536
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752544AbbHGHnO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 7 Aug 2015 03:43:14 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH v3 0/5] Altera PCIe host controller driver with MSI support
-Date: Fri, 7 Aug 2015 15:42:57 +0800
-Message-ID: <1438933382-2936-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CA+8MBbK6wu+7-M+fP8_GMmhUDSMZ4akOVRkW8xaP8x0pqJN0bQ@mail.gmail.com>
+References: <1415089784-28779-1-git-send-email-daniel@numascale.com>
+	<1415089784-28779-4-git-send-email-daniel@numascale.com>
+	<20150821181910.GA31378@agluck-desk.sc.intel.com>
+	<CAE9FiQXWXPexLM8xma8Cb9R9hpR2+tOwzGtmJxzH5uuyPraDpQ@mail.gmail.com>
+	<20150821202707.GA920@agluck-desk.sc.intel.com>
+	<CAE9FiQU-=oAzi_benuEm=x_Y_LUp48uND6cGnx9osbYyPWySdw@mail.gmail.com>
+	<CA+8MBbL4nqTxi14Lz92PRFZeobHBLimSfcTH=9HaZBcEUpLVOg@mail.gmail.com>
+	<CAE9FiQVJozeJ9R9GgMEVPfJaSJL+J+M3ULu2VXPjrdDqnYGwvw@mail.gmail.com>
+	<CA+8MBb+yJ9ywFnmfCAEPF0ZBQfH1R9b8hzmwVpM8+rsyJkEW5Q@mail.gmail.com>
+	<CAE9FiQUDb=uNKV9Bj34v3vvMT04MiuoRHqTq6=KTMd+DVrMVNg@mail.gmail.com>
+	<CA+8MBbK6wu+7-M+fP8_GMmhUDSMZ4akOVRkW8xaP8x0pqJN0bQ@mail.gmail.com>
+Date: Mon, 24 Aug 2015 16:41:07 -0700
+Message-ID: <CAE9FiQUAAQZ4RF9rTxthBCJAJyDkw1g3dckfeJ870gqK9Dzg9A@mail.gmail.com>
+Subject: Re: [PATCH v4 4/4] Use 2GB memory block size on large-memory x86-64 systems
+From: Yinghai Lu <yinghai@kernel.org>
+To: Tony Luck <tony.luck@gmail.com>
+Cc: Daniel J Blueman <daniel@numascale.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Steffen Persvold <sp@numascale.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the 3rd version of patch set to add support for Altera PCIe host
-controller with MSI feature on Altera FPGA device families. This patchset
-mainly resolve comments from Marc Zyngier in v2.
+On Mon, Aug 24, 2015 at 3:39 PM, Tony Luck <tony.luck@gmail.com> wrote:
+> On Mon, Aug 24, 2015 at 2:25 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>
+>> Can you boot with "debug ignore_loglevel" so we can see following print out
+>> for vmemmap?
+>
+> See attached. There are a few extra messages from my own debug printk()
+> calls. It seems that we successfully deal with node 0 from topology_init()
+> but die walking node 1. I see that the NODE_DATA limits for memory
+> on node 1 were from 1d70000 to 3a00000. But when we get into
+> register_mem_sect_under_node() we have rounded the start pfn down to
+> 1d00000 ... and we panic processing that range (which is in a hole in e820).
+>
+> We seem to die here:
+>
+>         for (pfn = sect_start_pfn; pfn <= sect_end_pfn; pfn++) {
+>                 int page_nid;
+>
+>                 page_nid = get_nid_for_pfn(pfn);
 
-It is based on patch series from Marc Zyngier "Per-device MSI domain &
-platform MSI" [1] to get rid of struct msi_controller.
-
-[1]: https://lkml.org/lkml/2015/7/23/172
-
-v2->v3 changes:
-- pci: host: move depends on PCI_MSI_IRQ_DOMAIN to PCIE_ALTERA_MSI in Kconfig
-- pcie-altera: change to use find_first_bit in isr
-- pcie-altera: change to use chained irq handler
-- pcie-altera: rename hwirq to irq
-- pcie-altera: rename irq to virq
-- pcie-altera-msi: update isr handling
-- pcie-altera-msi: change u64 to phys_addr_t
-- pcie-altera-msi: fix find_first_zero_bit error handle
-- pcie-altera-msi: change altera_msi_probe to static function
-- pcie-altera-msi: remove .owner
-- pcie-altera-msi: remove MODULE_DEVICE_TABLE
-- pcie-altera-msi: move INTMASK to _alloc()
-- change from clear_bit to __clear_bit
-- change to use irq_set_chained_handler_and_data
-- fix coding style
-
-History:
--------
-[v1]: https://lkml.org/lkml/2015/7/28/395
-[v2]: https://lkml.org/lkml/2015/7/31/267
-
-
-Ley Foon Tan (5):
-  arm: add msi.h to Kbuild
-  pci:host: Add Altera PCIe host controller driver
-  pci: altera: Add Altera PCIe MSI driver
-  Documentation: dt-bindings: pci: altera pcie device tree binding
-  MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
-
- .../devicetree/bindings/pci/altera-pcie-msi.txt    |  27 ++
- .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
- MAINTAINERS                                        |  16 +
- arch/arm/include/asm/Kbuild                        |   1 +
- drivers/pci/host/Kconfig                           |  15 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pcie-altera-msi.c                 | 309 ++++++++++++
- drivers/pci/host/pcie-altera.c                     | 532 +++++++++++++++++++++
- 8 files changed, 951 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
- create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
- create mode 100644 drivers/pci/host/pcie-altera-msi.c
- create mode 100644 drivers/pci/host/pcie-altera.c
-
--- 
-1.8.2.1
-
+oh, no.
+register_mem_sect_under_node() is assuming:
+first section in the block is present and first page in that section is present.
