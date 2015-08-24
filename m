@@ -1,135 +1,386 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:34316 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752095AbbHaN2M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Aug 2015 09:28:12 -0400
-Received: by igui7 with SMTP id i7so55802764igu.1
-        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2015 06:28:11 -0700 (PDT)
-Date: Mon, 31 Aug 2015 08:28:03 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH] ARM64: PCI: do not enable resources on PROBE_ONLY systems
-Message-ID: <20150831132803.GB647@google.com>
-References: <1438262039-32085-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20150828211444.GA27890@google.com>
- <20150829124457.GA18125@red-moon>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150829124457.GA18125@red-moon>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150814015004.GA26431@google.com>
+References: <1439459925-2361-1-git-send-email-Suravee.Suthikulpanit@amd.com> <20150814015004.GA26431@google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 24 Aug 2015 10:32:24 -0700
+Message-ID: <CAErSpo7yN08tKyo-yyyVG58vUptbHGN=L+MEZ8TQy1gm5a1_0Q@mail.gmail.com>
+Subject: Re: [PATCH] pci: acpi: Generic function for setting up PCI device DMA coherency
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: Rafael Wysocki <rjw@rjwysocki.net>, Len Brown <lenb@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 29, 2015 at 01:44:57PM +0100, Lorenzo Pieralisi wrote:
-> On Fri, Aug 28, 2015 at 10:14:44PM +0100, Bjorn Helgaas wrote:
-> > On Thu, Jul 30, 2015 at 02:13:59PM +0100, Lorenzo Pieralisi wrote:
-> > > On ARM64 PROBE_ONLY PCI systems resources are not currently claimed,
-> > > therefore they can't be enabled since they do not have a valid
-> > > parent pointer; this in turn prevents enabling PCI devices on
-> > > ARM64 PROBE_ONLY systems, causing PCI devices initialization to
-> > > fail.
-> > 
-> > Where does arm64 claim PCI BAR resources for the non-PROBE_ONLY case?
-> 
-> arm64 (and arm) does not claim resources in arch code, they are always
-> assigned in the respective host controllers (or the pcibios on arm),
-> except for the PCI generic host when in PROBE_ONLY mode, where resources
-> are neither claimed nor assigned (the reason for this patch to exist).
-> ...
-> 
-> > I know it must be there somewhere, but I don't see it.
-> 
-> It is not there, it is done in the host controllers by assigning the
-> resources (which also "claim" them by assigning the parent pointer).
+Here it is again.
 
-The host controller drivers should claim the apertures forwarded to
-the PCI bus.  For pci-host-generic, this happens when
-gen_pci_parse_request_of_pci_ranges() calls devm_request_resource().
-But that doesn't do anything for the BARs of the PCI devices
-themselves, of course.
-
-If this patch fixes a problem that will occur in the future, when we
-add arm/arm64 code to claim BARs, let's make this patch part of that
-series.  If it fixes a problem in the current tree, I'll merge it now,
-but so far I haven't been able to make the connection between this
-patch and a problem in the current code.
-
-> > > To solve this issue, resources must be claimed when devices are
-> > > added on PROBE_ONLY systems, which ensures that the resource hierarchy
-> > > is validated and the resource tree is sane, but this requires changes
-> > > in the ARM64 resource management that can affect adversely existing
-> > > PCI set-ups (claiming resources on !PROBE_ONLY systems might break
-> > > existing ARM64 PCI platform implementations).
-> > > 
-> > > As a temporary solution in preparation for a proper resources claiming
-> > > implementation in ARM64 core, to enable PCI PROBE_ONLY systems on ARM64,
-> > > this patch adds a pcibios_enable_device() arch implementation that
-> > > simply prevents enabling resources on PROBE_ONLY systems (mirroring ARM
-> > > behaviour).
-> > > 
-> > > This is always a safe thing to do because on PROBE_ONLY systems the
-> > > configuration space set-up can be considered immutable, and it is in
-> > > preparation of proper resource claiming that would finally validate
-> > > the PCI resources tree in the ARM64 arch implementation on PROBE_ONLY
-> > > systems.
-> > > 
-> > > For !PROBE_ONLY systems resources enablement in pcibios_enable_device()
-> > > on ARM64 is implemented as in current PCI core, leaving the behaviour
-> > > unchanged.
-> > > 
-> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > Cc: Will Deacon <will.deacon@arm.com>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > Cc: Catalin Marinas <catalin.marinas@arm.com>
-> > > ---
-> > > Bjorn, all,
-> > > 
-> > > as I mention in the commit log, this patch is a temporary solution
-> > > in preparation for proper resources claiming in ARM64, so that
-> > > we can safely enable the PCI generic host controller on ARM64 systems.
-> > > 
-> > > It mirrors ARM implementation and I will work on changing both
-> > > ARM and ARM64 to convert them to proper resources claiming in
-> > > the respective implementations.
-> > > 
-> > > Lorenzo
-> > > 
-> > >  arch/arm64/kernel/pci.c | 13 +++++++++++++
-> > >  1 file changed, 13 insertions(+)
-> > > 
-> > > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > > index 4095379..b3d098b 100644
-> > > --- a/arch/arm64/kernel/pci.c
-> > > +++ b/arch/arm64/kernel/pci.c
-> > > @@ -38,6 +38,19 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-> > >  	return res->start;
-> > >  }
-> > >  
-> > > +/**
-> > > + * pcibios_enable_device - Enable I/O and memory.
-> > > + * @dev: PCI device to be enabled
-> > > + * @mask: bitmask of BARs to enable
-> > > + */
-> > > +int pcibios_enable_device(struct pci_dev *dev, int mask)
-> > > +{
-> > > +	if (pci_has_flag(PCI_PROBE_ONLY))
-> > > +		return 0;
-> > > +
-> > > +	return pci_enable_resources(dev, mask);
-> > > +}
-> > > +
-> > >  /*
-> > >   * Try to assign the IRQ number from DT when adding a new device
-> > >   */
-> > > -- 
-> > > 2.2.1
-> > > 
-> > 
+On Thu, Aug 13, 2015 at 6:50 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Hi Suravee,
+>
+> On Thu, Aug 13, 2015 at 04:58:45PM +0700, Suravee Suthikulpanit wrote:
+>> This patch refactors of_pci_dma_configure() into a more generic
+>> pci_dma_configure(), which can be reused by non-OF code.
+>> Then, it adds support for setting up PCI device DMA coherency from
+>> ACPI _CCA object that should normally be specified in the DSDT node
+>> of its PCI host bridge..
+>
+> Since this does two things:
+>   1) Rename of_pci_dma_configure() and move it to PCI
+>   2) Add _CCA support,
+> maybe it should be split into two patches?
+>
+> There are a couple more comments below.
+>
+> While looking at this, I thought some of the existing code could be
+> made simpler and easier to follow.  I appended a couple possible patches;
+> you can incorporate them or ignore them, whatever seems best to you.
+>
+> Bjorn
+>
+>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>> CC: Bjorn Helgaas <bhelgaas@google.com>
+>> CC: Catalin Marinas <catalin.marinas@arm.com>
+>> CC: Will Deacon <will.deacon@arm.com>
+>> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+>> CC: Rob Herring <robh+dt@kernel.org>
+>> CC: Murali Karicheri <m-karicheri2@ti.com>
+>> ---
+>> Note: According to the ACPI spec, the _CCA attribute is required
+>>       for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+>>       support for ARM64 which is currently in development.
+>>
+>>       Also, this should not affect other architectures since
+>>       if CCA is not required, the default value is coherent.
+>>       Please see include/acpi/acpi_bus.h: acpi_check_dma() and
+>>       drivers/acpi/scan.c: acpi_init_coherency() for more information
+>>
+>>  drivers/of/of_pci.c    | 20 --------------------
+>>  drivers/pci/probe.c    | 35 +++++++++++++++++++++++++++++++++--
+>>  include/linux/of_pci.h |  3 ---
+>>  3 files changed, 33 insertions(+), 25 deletions(-)
+>>
+>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>> index 5751dc5..b66ee4e 100644
+>> --- a/drivers/of/of_pci.c
+>> +++ b/drivers/of/of_pci.c
+>> @@ -117,26 +117,6 @@ int of_get_pci_domain_nr(struct device_node *node)
+>>  }
+>>  EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+>>
+>> -/**
+>> - * of_pci_dma_configure - Setup DMA configuration
+>> - * @dev: ptr to pci_dev struct of the PCI device
+>> - *
+>> - * Function to update PCI devices's DMA configuration using the same
+>> - * info from the OF node of host bridge's parent (if any).
+>> - */
+>> -void of_pci_dma_configure(struct pci_dev *pci_dev)
+>> -{
+>> -     struct device *dev = &pci_dev->dev;
+>> -     struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>> -
+>> -     if (!bridge->parent)
+>> -             return;
+>> -
+>> -     of_dma_configure(dev, bridge->parent->of_node);
+>> -     pci_put_host_bridge_device(bridge);
+>> -}
+>> -EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+>> -
+>>  #if defined(CONFIG_OF_ADDRESS)
+>>  /**
+>>   * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index cefd636..e2fcd3b 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -6,12 +6,14 @@
+>>  #include <linux/delay.h>
+>>  #include <linux/init.h>
+>>  #include <linux/pci.h>
+>> -#include <linux/of_pci.h>
+>> +#include <linux/of_device.h>
+>>  #include <linux/pci_hotplug.h>
+>>  #include <linux/slab.h>
+>>  #include <linux/module.h>
+>>  #include <linux/cpumask.h>
+>>  #include <linux/pci-aspm.h>
+>> +#include <linux/acpi.h>
+>> +#include <linux/property.h>
+>>  #include <asm-generic/pci-bridge.h>
+>>  #include "pci.h"
+>>
+>> @@ -1544,6 +1546,35 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>>       pci_enable_acs(dev);
+>>  }
+>>
+>> +/**
+>> + * pci_dma_configure - Setup DMA configuration
+>> + * @pci_dev: ptr to pci_dev struct of the PCI device
+>> + *
+>> + * Function to update PCI devices's DMA configuration using the same
+>> + * info from the OF node or ACPI node of host bridge's parent (if any).
+>> + */
+>> +static void pci_dma_configure(struct pci_dev *pci_dev)
+>
+> Almost all pci_dev pointers in probe.c are named "dev", so I would use
+> that for this one, too.  I probably would just drop the "struct device
+> *dev" below and use "&dev->dev" the two places you need it.  That's a
+> common idiom in PCI.
+>
+>> +{
+>> +     struct device *dev = &pci_dev->dev;
+>> +     struct device *bridge = pci_get_host_bridge_device(pci_dev);
+>> +     struct acpi_device *adev;
+>> +     bool coherent;
+>> +
+>> +     if (has_acpi_companion(bridge)) {
+>> +             adev = to_acpi_node(bridge->fwnode);
+>> +             if (acpi_check_dma(adev, &coherent))
+>> +                     arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
+>> +     } else {
+>> +             struct device *host = bridge->parent;
+>> +             if (!host)
+>> +                     return;
+>> +
+>> +             of_dma_configure(dev, host->of_node);
+>> +     }
+>
+> Why is this check reversed with respect to device_dma_is_coherent()?
+> In device_dma_is_coherent(), we first look for an OF property, then look
+> for ACPI _CCA.  But here we check for _CCA, then for OF.
+>
+>> +
+>> +     pci_put_host_bridge_device(bridge);
+>> +}
+>> +
+>>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>>  {
+>>       int ret;
+>> @@ -1557,7 +1588,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>>       dev->dev.dma_mask = &dev->dma_mask;
+>>       dev->dev.dma_parms = &dev->dma_parms;
+>>       dev->dev.coherent_dma_mask = 0xffffffffull;
+>> -     of_pci_dma_configure(dev);
+>> +     pci_dma_configure(dev);
+>>
+>>       pci_set_dma_max_seg_size(dev, 65536);
+>>       pci_set_dma_seg_boundary(dev, 0xffffffff);
+>> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+>> index 29fd3fe..ce0e5ab 100644
+>> --- a/include/linux/of_pci.h
+>> +++ b/include/linux/of_pci.h
+>> @@ -16,7 +16,6 @@ int of_pci_get_devfn(struct device_node *np);
+>>  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+>>  int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+>>  int of_get_pci_domain_nr(struct device_node *node);
+>> -void of_pci_dma_configure(struct pci_dev *pci_dev);
+>>  #else
+>>  static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+>>  {
+>> @@ -51,8 +50,6 @@ of_get_pci_domain_nr(struct device_node *node)
+>>  {
+>>       return -1;
+>>  }
+>> -
+>> -static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
+>>  #endif
+>>
+>>  #if defined(CONFIG_OF_ADDRESS)
+>> --
+>> 2.1.0
+>>
+> commit 18183957888f601807ca0e166516ae60f682eb62
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Thu Aug 13 20:01:21 2015 -0500
+>
+>     ACPI / scan: Move _CCA comments to acpi_init_coherency()
+>
+>     Move the comments about how we handle _CCA to the code that looks at _CCA,
+>     and fix a couple typos.
+>
+>     No functional change.
+>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index ec25635..a12e522 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -2188,6 +2188,22 @@ static void acpi_init_coherency(struct acpi_device *adev)
+>         acpi_status status;
+>         struct acpi_device *parent = adev->parent;
+>
+> +       /**
+> +        * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
+> +        * This should be equivalent to specifying dma-coherent for
+> +        * a device in OF.
+> +        *
+> +        * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
+> +        * we have two choices:
+> +        * case 1. Do not support and disable DMA.
+> +        * case 2. Support but rely on arch-specific cache maintenance for
+> +        *         non-coherent DMA operations.
+> +        * Currently, we implement case 1 above.
+> +        *
+> +        * For the case when _CCA is missing (i.e. cca_seen=0) and
+> +        * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
+> +        * and fallback to arch-specific default handling.
+> +        */
+>         if (parent && parent->flags.cca_seen) {
+>                 /*
+>                  * From ACPI spec, OSPM will ignore _CCA if an ancestor
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index 83061ca..718942b 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -389,24 +389,6 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+>         if (!adev)
+>                 return ret;
+>
+> -       /**
+> -        * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
+> -        * This should be equivalent to specifyig dma-coherent for
+> -        * a device in OF.
+> -        *
+> -        * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
+> -        * There are two cases:
+> -        * case 1. Do not support and disable DMA.
+> -        * case 2. Support but rely on arch-specific cache maintenance for
+> -        *         non-coherence DMA operations.
+> -        * Currently, we implement case 1 above.
+> -        *
+> -        * For the case when _CCA is missing (i.e. cca_seen=0) and
+> -        * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
+> -        * and fallback to arch-specific default handling.
+> -        *
+> -        * See acpi_init_coherency() for more info.
+> -        */
+>         if (adev->flags.coherent_dma) {
+>                 ret = true;
+>                 if (coherent)
+>
+> commit 84cfb2213cd400fef227ec0d7829ec4e12895da9
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Thu Aug 13 19:49:52 2015 -0500
+>
+>     ACPI / scan: Rename acpi_check_dma() to acpi_dma_is_coherent()
+>
+>     The name "acpi_check_dma()" doesn't give any much indication about what
+>     exactly it checks.  The function also returns information both as a normal
+>     return value and as the "bool *coherent" return parameter.  But "*coherent"
+>     doesn't actually give any extra information: it is unchanged when returning
+>     false and set to true when returning true.
+>
+>     Rename acpi_check_dma() to acpi_dma_is_coherent() so the callers read more
+>     naturally.  Drop the return parameter and just use the function return
+>     value.
+>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
+> index 06a67d5..fc6138d 100644
+> --- a/drivers/acpi/acpi_platform.c
+> +++ b/drivers/acpi/acpi_platform.c
+> @@ -103,7 +103,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
+>         pdevinfo.res = resources;
+>         pdevinfo.num_res = count;
+>         pdevinfo.fwnode = acpi_fwnode_handle(adev);
+> -       pdevinfo.dma_mask = acpi_check_dma(adev, NULL) ? DMA_BIT_MASK(32) : 0;
+> +       pdevinfo.dma_mask = acpi_dma_is_coherent(adev) ? DMA_BIT_MASK(32) : 0;
+>         pdev = platform_device_register_full(&pdevinfo);
+>         if (IS_ERR(pdev))
+>                 dev_err(&adev->dev, "platform device creation failed: %ld\n",
+> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+> index b9657af..89b1cf8 100644
+> --- a/drivers/acpi/glue.c
+> +++ b/drivers/acpi/glue.c
+> @@ -168,7 +168,6 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+>         struct list_head *physnode_list;
+>         unsigned int node_id;
+>         int retval = -EINVAL;
+> -       bool coherent;
+>
+>         if (has_acpi_companion(dev)) {
+>                 if (acpi_dev) {
+> @@ -225,8 +224,8 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+>         if (!has_acpi_companion(dev))
+>                 ACPI_COMPANION_SET(dev, acpi_dev);
+>
+> -       if (acpi_check_dma(acpi_dev, &coherent))
+> -               arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
+> +       if (acpi_dma_is_coherent(acpi_dev))
+> +               arch_setup_dma_ops(dev, 0, 0, NULL, true);
+>
+>         acpi_physnode_link_name(physical_node_name, node_id);
+>         retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
+> diff --git a/drivers/base/property.c b/drivers/base/property.c
+> index f3f6d16..1124130 100644
+> --- a/drivers/base/property.c
+> +++ b/drivers/base/property.c
+> @@ -523,13 +523,9 @@ EXPORT_SYMBOL_GPL(device_get_child_node_count);
+>
+>  bool device_dma_is_coherent(struct device *dev)
+>  {
+> -       bool coherent = false;
+> -
+>         if (IS_ENABLED(CONFIG_OF) && dev->of_node)
+> -               coherent = of_dma_is_coherent(dev->of_node);
+> -       else
+> -               acpi_check_dma(ACPI_COMPANION(dev), &coherent);
+> +               return of_dma_is_coherent(dev->of_node);
+>
+> -       return coherent;
+> +       return acpi_dma_is_coherent(ACPI_COMPANION(dev));
+>  }
+>  EXPORT_SYMBOL_GPL(device_dma_is_coherent);
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index 718942b..39f1be6 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -382,19 +382,12 @@ struct acpi_device {
+>         void (*remove)(struct acpi_device *);
+>  };
+>
+> -static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+> +static inline bool acpi_dma_is_coherent(struct acpi_device *adev)
+>  {
+> -       bool ret = false;
+> +       if (adev && adev->flags.coherent_dma)
+> +               return true;
+>
+> -       if (!adev)
+> -               return ret;
+> -
+> -       if (adev->flags.coherent_dma) {
+> -               ret = true;
+> -               if (coherent)
+> -                       *coherent = adev->flags.coherent_dma;
+> -       }
+> -       return ret;
+> +       return false;
+>  }
+>
+>  static inline bool is_acpi_node(struct fwnode_handle *fwnode)
+> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+> index d2445fa..f29b8b5 100644
+> --- a/include/linux/acpi.h
+> +++ b/include/linux/acpi.h
+> @@ -562,7 +562,7 @@ static inline int acpi_device_modalias(struct device *dev,
+>         return -ENODEV;
+>  }
+>
+> -static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+> +static inline bool acpi_dma_is_coherent(struct acpi_device *adev)
+>  {
+>         return false;
+>  }
