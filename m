@@ -1,147 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:33627 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552AbbH1Vbs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Aug 2015 17:31:48 -0400
-Received: by obcid8 with SMTP id id8so4899673obc.0
-        for <linux-pci@vger.kernel.org>; Fri, 28 Aug 2015 14:31:48 -0700 (PDT)
-Date: Fri, 28 Aug 2015 16:31:45 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Cleanup AER error status registers on probing
- devices
-Message-ID: <20150828213145.GB27890@google.com>
-References: <1438706533-22547-1-git-send-email-izumi.taku@jp.fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438706533-22547-1-git-send-email-izumi.taku@jp.fujitsu.com>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:34760 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179AbbHXTOF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2015 15:14:05 -0400
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+To: mingo@kernel.org
+Cc: bp@suse.de, bhelgaas@google.com, tomi.valkeinen@ti.com,
+	airlied@linux.ie, linux-fbdev@vger.kernel.org, luto@amacapital.net,
+	vinod.koul@intel.com, dan.j.williams@intel.com, toshi.kani@hp.com,
+	benh@kernel.crashing.org, mst@redhat.com,
+	akpm@linux-foundation.org, daniel.vetter@ffwll.ch,
+	konrad.wilk@oracle.com, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	xen-devel@lists.xensource.com,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Antonino Daplas <adaplas@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dave Airlie <airlied@redhat.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
+	Juergen Gross <jgross@suse.com>,
+	"Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Suresh Siddha <sbsiddha@gmail.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH v4 06/11] drivers/video/fbdev/arkfb.c: Use arch_phys_wc_add() and pci_iomap_wc()
+Date: Mon, 24 Aug 2015 12:13:28 -0700
+Message-Id: <1440443613-13696-7-git-send-email-mcgrof@do-not-panic.com>
+In-Reply-To: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
+References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Taku-san,
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-On Wed, Aug 05, 2015 at 01:42:13AM +0900, Taku Izumi wrote:
-> AER uncorrectable or correctable error might be recorded
-> when power on devices. These errors can be ignored, so
-> BIOS usually clean up these registers ahead of OS's scanning
-> devices.
-> However, in case of hot-plug PCIe devices, BIOS can't care.
+Convert the driver from using the x86-specific MTRR code to the
+architecture-agnostic arch_phys_wc_add(). It will avoid MTRRs if
+write-combining is available. In order to take advantage of that also
+ensure the ioremapped area is requested as write-combining.
 
-What happens when we power down a device for suspend or because it's idle?
-Can we get spurious AER errors when we power the device back up?  This
-patch only covers the enumeration path, so we'd need to do more if it can
-happen during suspend/resume.
+There are a few motivations for this:
 
-> Currently OS don't clean up AER error status registers on probing
-> devices, ignorable AER errors recorded when power-on remains.
-> This causes false-positive.
-> 
-> This patch address this problem by cleaning up
-> AER error status registers on probing devices.
-> 
-> Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
-> ---
->  drivers/pci/pcie/aer/aerdrv_core.c | 26 ++++++++++++++++++++++++++
->  drivers/pci/probe.c                |  5 +++++
->  include/linux/aer.h                |  5 +++++
->  3 files changed, 36 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-> index 9803e3d..9857cc4 100644
-> --- a/drivers/pci/pcie/aer/aerdrv_core.c
-> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
-> @@ -74,6 +74,32 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_cleanup_aer_uncorrect_error_status);
->  
-> +int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
-> +{
-> +	int pos;
-> +	u32 status;
-> +	int port_type;
-> +
-> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +	if (!pos)
-> +		return -EIO;
-> +
-> +	port_type = pci_pcie_type(dev);
-> +	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
-> +		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
-> +		pci_write_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, status);
-> +	}
-> +
-> +	pci_read_config_dword(dev, pos + PCI_ERR_COR_STATUS, &status);
-> +	pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS, status);
-> +
-> +	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
-> +	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_cleanup_aer_error_status_regs);
+a) Take advantage of PAT when available.
 
-Why does this need to be exported?  I see that
-pci_cleanup_aer_uncorrect_error_status() above is exported, and it is used
-by many drivers, so I see why that needs to be exported.  But there are no
-users of pci_cleanup_aer_error_status_regs() outside the PCI core yet.  And
-if we wanted to add users outside the core, I would question whether that's
-the right thing to do.  AER management seems like something that probably
-should be done by the PCI core, not by drivers.
+b) Help bury MTRR code away, MTRR is architecture-specific and on
+   x86 it is being replaced by PAT.
 
->  /**
->   * add_error_device - list device to be handled
->   * @e_info: pointer to error info
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cefd636..d660db7 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -12,6 +12,7 @@
->  #include <linux/module.h>
->  #include <linux/cpumask.h>
->  #include <linux/pci-aspm.h>
-> +#include <linux/aer.h>
->  #include <asm-generic/pci-bridge.h>
->  #include "pci.h"
->  
-> @@ -1542,6 +1543,10 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  
->  	/* Enable ACS P2P upstream forwarding */
->  	pci_enable_acs(dev);
-> +
-> +	/* Cleanup AER error status registerts */
-> +	if (pci_is_pcie(dev))
-> +		pci_cleanup_aer_error_status_regs(dev);
+c) Help with the goal of eventually using _PAGE_CACHE_UC over
+   _PAGE_CACHE_UC_MINUS on x86 on ioremap_nocache() (see commit
+   de33c442e titled "x86 PAT: fix performance drop for glx,
+   use UC minus for ioremap(), ioremap_nocache() and
+   pci_mmap_page_range()").
 
-The other capability init functions check internally for pci_is_pcie(), so
-please do the same here.
+The conversion done is expressed by the following Coccinelle
+SmPL patch, it additionally required manual intervention to
+address all the ifdeffery and removal of redundant things which
+arch_phys_wc_add() already addresses such as verbose message about
+when MTRR fails and doing nothing when we didn't get an MTRR.
 
->  }
->  
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
-> diff --git a/include/linux/aer.h b/include/linux/aer.h
-> index 4fef65e..744b997 100644
-> --- a/include/linux/aer.h
-> +++ b/include/linux/aer.h
-> @@ -42,6 +42,7 @@ struct aer_capability_regs {
->  int pci_enable_pcie_error_reporting(struct pci_dev *dev);
->  int pci_disable_pcie_error_reporting(struct pci_dev *dev);
->  int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);
-> +int pci_cleanup_aer_error_status_regs(struct pci_dev *dev);
->  #else
->  static inline int pci_enable_pcie_error_reporting(struct pci_dev *dev)
->  {
-> @@ -55,6 +56,10 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
->  {
->  	return -EINVAL;
->  }
-> +static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
-> +{
-> +	return -EINVAL;
-> +}
->  #endif
->  
->  void cper_print_aer(struct pci_dev *dev, int cper_severity,
-> -- 
-> 1.8.3.1
-> 
+@ mtrr_found @
+expression index, base, size;
+@@
+
+-index = mtrr_add(base, size, MTRR_TYPE_WRCOMB, 1);
++index = arch_phys_wc_add(base, size);
+
+@ mtrr_rm depends on mtrr_found @
+expression mtrr_found.index, mtrr_found.base, mtrr_found.size;
+@@
+
+-mtrr_del(index, base, size);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_zero_arg depends on mtrr_found @
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, 0, 0);
++arch_phys_wc_del(index);
+
+@ mtrr_rm_fb_info depends on mtrr_found @
+struct fb_info *info;
+expression mtrr_found.index;
+@@
+
+-mtrr_del(index, info->fix.smem_start, info->fix.smem_len);
++arch_phys_wc_del(index);
+
+@ ioremap_replace_nocache depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap_nocache(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+@ ioremap_replace_default depends on mtrr_found @
+struct fb_info *info;
+expression base, size;
+@@
+
+-info->screen_base = ioremap(base, size);
++info->screen_base = ioremap_wc(base, size);
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Acked-by: Tomi Valkeinen <tomi.valkeinen@ti.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Andy Lutomirski <luto@amacapital.net>
+Cc: Antonino Daplas <adaplas@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: benh@kernel.crashing.org
+Cc: bhelgaas@google.com
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Ingo Molnar <mingo@kernel.org>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: mst@redhat.com
+Cc: Suresh Siddha <sbsiddha@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: toshi.kani@hp.com
+Link: http://lkml.kernel.org/r/1435195342-26879-8-git-send-email-mcgrof@do-not-panic.com
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ drivers/video/fbdev/arkfb.c | 36 +++++-------------------------------
+ 1 file changed, 5 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/video/fbdev/arkfb.c b/drivers/video/fbdev/arkfb.c
+index b305a1e7cc76..6a317de7082c 100644
+--- a/drivers/video/fbdev/arkfb.c
++++ b/drivers/video/fbdev/arkfb.c
+@@ -26,13 +26,9 @@
+ #include <linux/console.h> /* Why should fb driver call console functions? because console_lock() */
+ #include <video/vga.h>
+ 
+-#ifdef CONFIG_MTRR
+-#include <asm/mtrr.h>
+-#endif
+-
+ struct arkfb_info {
+ 	int mclk_freq;
+-	int mtrr_reg;
++	int wc_cookie;
+ 
+ 	struct dac_info *dac;
+ 	struct vgastate state;
+@@ -102,10 +98,6 @@ static const struct svga_timing_regs ark_timing_regs     = {
+ 
+ static char *mode_option = "640x480-8@60";
+ 
+-#ifdef CONFIG_MTRR
+-static int mtrr = 1;
+-#endif
+-
+ MODULE_AUTHOR("(c) 2007 Ondrej Zajicek <santiago@crfreenet.org>");
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("fbdev driver for ARK 2000PV");
+@@ -115,11 +107,6 @@ MODULE_PARM_DESC(mode_option, "Default video mode ('640x480-8@60', etc)");
+ module_param_named(mode, mode_option, charp, 0444);
+ MODULE_PARM_DESC(mode, "Default video mode ('640x480-8@60', etc) (deprecated)");
+ 
+-#ifdef CONFIG_MTRR
+-module_param(mtrr, int, 0444);
+-MODULE_PARM_DESC(mtrr, "Enable write-combining with MTRR (1=enable, 0=disable, default=1)");
+-#endif
+-
+ static int threshold = 4;
+ 
+ module_param(threshold, int, 0644);
+@@ -1002,7 +989,7 @@ static int ark_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	info->fix.smem_len = pci_resource_len(dev, 0);
+ 
+ 	/* Map physical IO memory address into kernel space */
+-	info->screen_base = pci_iomap(dev, 0, 0);
++	info->screen_base = pci_iomap_wc(dev, 0, 0);
+ 	if (! info->screen_base) {
+ 		rc = -ENOMEM;
+ 		dev_err(info->device, "iomap for framebuffer failed\n");
+@@ -1057,14 +1044,8 @@ static int ark_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 
+ 	/* Record a reference to the driver data */
+ 	pci_set_drvdata(dev, info);
+-
+-#ifdef CONFIG_MTRR
+-	if (mtrr) {
+-		par->mtrr_reg = -1;
+-		par->mtrr_reg = mtrr_add(info->fix.smem_start, info->fix.smem_len, MTRR_TYPE_WRCOMB, 1);
+-	}
+-#endif
+-
++	par->wc_cookie = arch_phys_wc_add(info->fix.smem_start,
++					  info->fix.smem_len);
+ 	return 0;
+ 
+ 	/* Error handling */
+@@ -1092,14 +1073,7 @@ static void ark_pci_remove(struct pci_dev *dev)
+ 
+ 	if (info) {
+ 		struct arkfb_info *par = info->par;
+-
+-#ifdef CONFIG_MTRR
+-		if (par->mtrr_reg >= 0) {
+-			mtrr_del(par->mtrr_reg, 0, 0);
+-			par->mtrr_reg = -1;
+-		}
+-#endif
+-
++		arch_phys_wc_del(par->wc_cookie);
+ 		dac_release(par->dac);
+ 		unregister_framebuffer(info);
+ 		fb_dealloc_cmap(&info->cmap);
+-- 
+2.4.3
+
