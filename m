@@ -1,84 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35431 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751019AbbHUEsU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 00:48:20 -0400
-Received: by pacdd16 with SMTP id dd16so35349050pac.2
-        for <linux-pci@vger.kernel.org>; Thu, 20 Aug 2015 21:48:20 -0700 (PDT)
-References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com> <55D68405.1000901@hisilicon.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <55D68405.1000901@hisilicon.com>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <90DF1C90-A030-416D-9F86-364DBA1AABB6@gmail.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"<bhelgaas@google.com>" <bhelgaas@google.com>,
-	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
-	"<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
-	"<yuanzhichang@hisilicon.com>" <yuanzhichang@hisilicon.com>,
-	"<zhudacai@hisilicon.com>" <zhudacai@hisilicon.com>,
-	"<zhangjukuo@huawei.com>" <zhangjukuo@huawei.com>,
-	"<qiuzhenfa@hisilicon.com>" <qiuzhenfa@hisilicon.com>,
-	"<liguozhu@hisilicon.com>" <liguozhu@hisilicon.com>,
-	jingoohan1@gmail.com
-From: Jingoo Han <jingoohan1@gmail.com>
-Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
-Date: Fri, 21 Aug 2015 13:48:11 +0900
-To: Zhou Wang <wangzhou1@hisilicon.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH v4 13/52] PCI, acpiphp: Add missing realloc list checking after resource allocation
+Date: Tue, 25 Aug 2015 00:09:29 +0200
+Message-ID: <205780224.0d92UNafyF@vostro.rjw.lan>
+In-Reply-To: <1440138067-4314-14-git-send-email-yinghai@kernel.org>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org> <1440138067-4314-14-git-send-email-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015. 8. 21., at AM 10:51, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+On Thursday, August 20, 2015 11:20:28 PM Yinghai Lu wrote:
+> We check the realloc list, as list must be empty after allocation.
 > 
->> On 2015/8/20 21:58, Gabriele Paoloni wrote:
->> From: gabriele paoloni <gabriele.paoloni@huawei.com>
->> 
->> Currently in dw_pcie_cfg_write() if the input size is 2 bytes
->> the address offset is wrongly calculated as we mask also bit0
->> of "where" input parameter. Instead we should mask all bits of
->> "where" except bit0 and bit1.
->> 
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->> ---
->> drivers/pci/host/pcie-designware.c | 2 +-
->> 1 file changed, 1 insertion(+), 1 deletion(-)
->> 
->> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
->> index 69486be..a27f536 100644
->> --- a/drivers/pci/host/pcie-designware.c
->> +++ b/drivers/pci/host/pcie-designware.c
->> @@ -99,7 +99,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
->>    if (size == 4)
->>        writel(val, addr);
->>    else if (size == 2)
->> -        writew(val, addr + (where & 2));
->> +        writew(val, addr + (where & 3));
->>    else if (size == 1)
->>        writeb(val, addr + (where & 3));
->>    else
+> Add missing one acpiphp driver.
 > 
-> Hi Jingoo,
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: linux-acpi@vger.kernel.org
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Is there some special consideration? If we miss something, please let us know.
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index ff53856..1c7c1d7 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+>  		}
+>  	}
+>  	__pci_bus_assign_resources(bus, &add_list, NULL);
+> +	BUG_ON(!list_empty(&add_list));
 
-This patch is unnecessary.
+Is crashing the kernel the best we can do here?
 
-In the case of 'size == 2', the writew() in dw_pcie_cfg_write() should handle the following values of 'where'.
+What about bailing out with a WARN_ON() instead?  Surely, the kernel can work
+without the new device?
 
-  h00    b0000
-  h02    b0010
-
-Thus, there is no need to keep 0th bit.
-
-One more thing, is there any reason to urge me to review this patch within a few hours?
-Please wait for reviews for enough hours.
-
-Maybe, your company looks to support you and other engineers for mainline kernel.
-However, I am not supported at all, so it is not easy to review the patches quickly.
-
-Best regards,
-Jingoo Han
-
-> Thanks,
-> Zhou
+>  
+>  	acpiphp_sanitize_bus(bus);
+>  	pcie_bus_configure_settings(bus);
 > 
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
