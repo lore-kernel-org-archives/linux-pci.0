@@ -1,69 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f182.google.com ([209.85.223.182]:33702 "EHLO
+	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754138AbbHXVZq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2015 17:25:46 -0400
 MIME-Version: 1.0
-In-Reply-To: <CADaLNDkUQHzGACfFmYDeJWnaNrKmJUDx4Rby60OWr4FzOjx3rA@mail.gmail.com>
-References: <20150724224258.GA23990@google.com> <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com>
- <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com>
- <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com>
- <20150728212944.GA12958@google.com> <CADaLNDkOLiyPmVC3VwpnbrfAKFmNwSVJKdChjQFdQqs7XP-Ddg@mail.gmail.com>
- <20150729012255.GA18606@google.com> <20150729155509.GA31170@google.com>
- <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com>
- <CAErSpo4VFh7rv81sCAG-eCXVyZh4ub8Trh-ntZhyfy7BzqTr5g@mail.gmail.com> <CADaLNDkUQHzGACfFmYDeJWnaNrKmJUDx4Rby60OWr4FzOjx3rA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 10 Aug 2015 12:42:19 -0500
-Message-ID: <CAErSpo7aDYKwy4MC6ZPf7hNd4MPE-LARiOVKutFfDFFkHY7qjQ@mail.gmail.com>
-Subject: Re: X-Gene: Unhandled fault: synchronous external abort in pci_generic_config_read32
-To: Duc Dang <dhdang@apm.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>,
+In-Reply-To: <CA+8MBb+yJ9ywFnmfCAEPF0ZBQfH1R9b8hzmwVpM8+rsyJkEW5Q@mail.gmail.com>
+References: <1415089784-28779-1-git-send-email-daniel@numascale.com>
+	<1415089784-28779-4-git-send-email-daniel@numascale.com>
+	<20150821181910.GA31378@agluck-desk.sc.intel.com>
+	<CAE9FiQXWXPexLM8xma8Cb9R9hpR2+tOwzGtmJxzH5uuyPraDpQ@mail.gmail.com>
+	<20150821202707.GA920@agluck-desk.sc.intel.com>
+	<CAE9FiQU-=oAzi_benuEm=x_Y_LUp48uND6cGnx9osbYyPWySdw@mail.gmail.com>
+	<CA+8MBbL4nqTxi14Lz92PRFZeobHBLimSfcTH=9HaZBcEUpLVOg@mail.gmail.com>
+	<CAE9FiQVJozeJ9R9GgMEVPfJaSJL+J+M3ULu2VXPjrdDqnYGwvw@mail.gmail.com>
+	<CA+8MBb+yJ9ywFnmfCAEPF0ZBQfH1R9b8hzmwVpM8+rsyJkEW5Q@mail.gmail.com>
+Date: Mon, 24 Aug 2015 14:25:45 -0700
+Message-ID: <CAE9FiQUDb=uNKV9Bj34v3vvMT04MiuoRHqTq6=KTMd+DVrMVNg@mail.gmail.com>
+Subject: Re: [PATCH v4 4/4] Use 2GB memory block size on large-memory x86-64 systems
+From: Yinghai Lu <yinghai@kernel.org>
+To: Tony Luck <tony.luck@gmail.com>
+Cc: Daniel J Blueman <daniel@numascale.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"the arch/x86 maintainers" <x86@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+	Steffen Persvold <sp@numascale.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 10, 2015 at 12:16 PM, Duc Dang <dhdang@apm.com> wrote:
-> On Monday, August 10, 2015, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> On Fri, Jul 31, 2015 at 12:00 PM, Duc Dang <dhdang@apm.com> wrote:
->> > On Wed, Jul 29, 2015 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com>
->> > wrote:
->> >> On Tue, Jul 28, 2015 at 08:22:55PM -0500, Bjorn Helgaas wrote:
->> >>> On Tue, Jul 28, 2015 at 02:50:39PM -0700, Duc Dang wrote:
->> >>
->> >>> > Do you have another PCIe card to try on the same reboot test on this
->> >>> > board?
->> >>>
->> >>> I've seen this on at least two Mellanox cards.  I'm running similar
->> >>> tests
->> >>> on a different type of card now.
->> >>
->> >> FWIW, reboot tests on two machines with Mellanox cards failed, while
->> >> the
->> >> same test on a machine with a different proprietary card succeeded.
->> >
->> > Thanks, Bjorn.
->> >
->> > I don't have the same Mellanox card as yours, but I will also run
->> > similar reboot test to see if I hit the same issue with my card.
->>
->> Any more hints on this?  Nothing has changed on my end, so of course
->> I'm still seeing this, always on machines with Mellanox, and never on
->> other machines.  Could this be a hardware issue like a signal
->> integrity or margin issue?  I don't know where to go from here because
->> I'm not a hardware person, and I don't know anything to do in
->> software.
+On Mon, Aug 24, 2015 at 1:41 PM, Tony Luck <tony.luck@gmail.com> wrote:
+> On Mon, Aug 24, 2015 at 10:46 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> Then, what does the E820 look like?
 >
->
-> Hi Bjorn,
->
-> I tried to run similar reboot tests on 2 different Mellanox cards (Connect-X
-> family, one card has 2 10G interfaces, the other one has 1 port that
-> supports InfiniBand) with U-Boot 1.15.12 and linux 4.2-rc5 and I did not see
-> the crash that you encounterred.
->
-> Did you check if your Mellanox cards have latest firmware? I did see some
-> link issues on my Mellanox cards with its old firmware before.
+> See attached serial console log of the latest crash
 
-Good idea; I'll check that, too.  Also, I just learned that these
-cards on installed with an extender card because of some space issues,
-so we're going to test again without the extender.
+Can you boot with "debug ignore_loglevel" so we can see following print out
+for vmemmap?
+
+[    0.352486]  [ffffea0000000000-ffffea0001ffffff] PMD ->
+[ffff88007de00000-ffff88007fdfffff] on node 0
+[    0.358758]  [ffffea0004000000-ffffea0005ffffff] PMD ->
+[ffff88017d600000-ffff88017f5fffff] on node 1
