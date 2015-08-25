@@ -1,158 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v4 13/52] PCI, acpiphp: Add missing realloc list checking after resource allocation
-Date: Tue, 25 Aug 2015 02:37:13 +0200
-Message-ID: <3540278.fBlMDMjYYH@vostro.rjw.lan>
-In-Reply-To: <CAE9FiQWW_zzZGoq-rrbe+R==-xwRHMkTAtFRGGkN-GK-F6NWsg@mail.gmail.com>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org> <205780224.0d92UNafyF@vostro.rjw.lan> <CAE9FiQWW_zzZGoq-rrbe+R==-xwRHMkTAtFRGGkN-GK-F6NWsg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:36437 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753266AbbHYLPD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 07:15:03 -0400
+Received: by pdbmi9 with SMTP id mi9so65558767pdb.3
+        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2015 04:15:02 -0700 (PDT)
+References: <1440498929-44519-1-git-send-email-wangzhou1@hisilicon.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <1440498929-44519-1-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <5DE197E3-8F25-4EAD-B21B-BE3220C6C21B@gmail.com>
+Cc: "<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
+	"<gabriele.paoloni@huawei.com>" <gabriele.paoloni@huawei.com>,
+	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
+	"<qiuzhenfa@hisilicon.com>" <qiuzhenfa@hisilicon.com>,
+	"<zhangjukuo@huawei.com>" <zhangjukuo@huawei.com>,
+	"<liudongdong3@huawei.com>" <liudongdong3@huawei.com>,
+	"<qiujiang@huawei.com>" <qiujiang@huawei.com>,
+	"<xuwei5@hisilicon.com>" <xuwei5@hisilicon.com>,
+	"<liguozhu@hisilicon.com>" <liguozhu@hisilicon.com>,
+	jingoohan1@gmail.com
+From: Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH] PCI: designware: Fix PORT_LOGIC_LINK_WIDTH_MASK
+Date: Tue, 25 Aug 2015 20:14:52 +0900
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, August 24, 2015 03:14:26 PM Yinghai Lu wrote:
-> On Mon, Aug 24, 2015 at 3:09 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > On Thursday, August 20, 2015 11:20:28 PM Yinghai Lu wrote:
-> >> We check the realloc list, as list must be empty after allocation.
-> >>
-> >> Add missing one acpiphp driver.
-> >>
-> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> >> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> >> Cc: Len Brown <lenb@kernel.org>
-> >> Cc: linux-acpi@vger.kernel.org
-> >> ---
-> >>  drivers/pci/hotplug/acpiphp_glue.c | 1 +
-> >>  1 file changed, 1 insertion(+)
-> >>
-> >> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> >> index ff53856..1c7c1d7 100644
-> >> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> >> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> >> @@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
-> >>               }
-> >>       }
-> >>       __pci_bus_assign_resources(bus, &add_list, NULL);
-> >> +     BUG_ON(!list_empty(&add_list));
-> >
-> > Is crashing the kernel the best we can do here?
-> >
-> > What about bailing out with a WARN_ON() instead?  Surely, the kernel can work
-> > without the new device?
+On 2015. 8. 25., at PM 7:35, Zhou Wang <wangzhou1@hisilicon.com> wrote:
 > 
-> That should not happen.
-> If that list is not empty, we could have broken the assign logic for
-> optional or additional
-> resource allocation.
+> The value under PORT_LOGIC_LINK_WIDTH_MASK is 0x1, 0x2, 0x4, 0x8. Here change
+> this mask to proper value.
 > 
-> We have other two BUG_ON checking in drivers/pci/setup-bus.c.
-> 
-> Do we need to change them all to WARN_ON()?
-> 
-> or you prefer this version instead:
+> In fact, for DesignWare PCIe IP version 4.4, it only uses bit8~12 to indicate
+> number of lanes. Original mask will bring a mistake.
 
-I like this patch better, but the question really is how bad things can get
-if we continue.  And if they can get critically bad, whether or not we still
-are able to catch that critical error later on.
+NAK
 
+The definitions of bits of registers should be defined based on hardware manual such as datasheet, databook.
+
+According to the databook, the bits [16:8] are defined for NUM_OF_LANES.
+
+In the future, if 16 lanes or 32 lanes is supported and 12th bit or 13th bit is used, what will you do?
+
+Then, in the version 4.4 IP, the bits[16:13] are used for other usage?
+
+Best regards,
+Jingoo Han
+
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 > ---
+> drivers/pci/host/pcie-designware.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Subject: [PATCH] PCI: Separate realloc list checking after allocation
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 69486be..eb549b9 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -35,7 +35,7 @@
 > 
-> We check the realloc list, as list must be empty after allocation.
+> #define PCIE_LINK_WIDTH_SPEED_CONTROL    0x80C
+> #define PORT_LOGIC_SPEED_CHANGE        (0x1 << 17)
+> -#define PORT_LOGIC_LINK_WIDTH_MASK    (0x1ff << 8)
+> +#define PORT_LOGIC_LINK_WIDTH_MASK    (0x1f << 8)
+> #define PORT_LOGIC_LINK_WIDTH_1_LANES    (0x1 << 8)
+> #define PORT_LOGIC_LINK_WIDTH_2_LANES    (0x2 << 8)
+> #define PORT_LOGIC_LINK_WIDTH_4_LANES    (0x4 << 8)
+> -- 
+> 1.9.1
 > 
-> Separate the realloc list checking to another function.
-> 
-> Add checking that is missed in acpiphp driver.
-> 
-> -v2: change to WARN_ON addording to Rafael.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> Cc: Len Brown <lenb@kernel.org>
-> Cc: linux-acpi@vger.kernel.org
-> ---
->  drivers/pci/hotplug/acpiphp_glue.c |    1 +
->  drivers/pci/pci.h                  |    1 +
->  drivers/pci/setup-bus.c            |   12 +++++++++---
->  3 files changed, 11 insertions(+), 3 deletions(-)
-> 
-> Index: linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/hotplug/acpiphp_glue.c
-> +++ linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_s
->          }
->      }
->      __pci_bus_assign_resources(bus, &add_list, NULL);
-> +    pci_bus_check_realloc(&add_list);
-> 
->      acpiphp_sanitize_bus(bus);
->      pcie_bus_configure_settings(bus);
-> Index: linux-2.6/drivers/pci/pci.h
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci.h
-> +++ linux-2.6/drivers/pci/pci.h
-> @@ -237,6 +237,7 @@ void __pci_bus_size_bridges(struct pci_b
->  void __pci_bus_assign_resources(const struct pci_bus *bus,
->                  struct list_head *realloc_head,
->                  struct list_head *fail_head);
-> +void pci_bus_check_realloc(struct list_head *realloc_head);
->  bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
-> 
->  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
-> Index: linux-2.6/drivers/pci/setup-bus.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/setup-bus.c
-> +++ linux-2.6/drivers/pci/setup-bus.c
-> @@ -349,6 +349,12 @@ out:
->      }
->  }
-> 
-> +void pci_bus_check_realloc(struct list_head *realloc_head)
-> +{
-> +    if (WARN_ON(!list_empty(realloc_head)))
-> +        free_list(realloc_head);
-> +}
-> +
->  /**
->   * assign_requested_resources_sorted() - satisfy resource requests
->   *
-> @@ -1860,7 +1866,7 @@ again:
->      /* Depth last, allocate resources and update the hardware. */
->      __pci_bus_assign_resources(bus, add_list, &fail_head);
->      if (add_list)
-> -        BUG_ON(!list_empty(add_list));
-> +        pci_bus_check_realloc(add_list);
->      tried_times++;
-> 
->      /* any device complain? */
-> @@ -1935,7 +1941,7 @@ void pci_assign_unassigned_bridge_resour
->  again:
->      __pci_bus_size_bridges(parent, &add_list);
->      __pci_bridge_assign_resources(bridge, &add_list, &fail_head);
-> -    BUG_ON(!list_empty(&add_list));
-> +    pci_bus_check_realloc(&add_list);
->      tried_times++;
-> 
->      if (list_empty(&fail_head))
-> @@ -1994,6 +2000,6 @@ void pci_assign_unassigned_bus_resources
->                               &add_list);
->      up_read(&pci_bus_sem);
->      __pci_bus_assign_resources(bus, &add_list, NULL);
-> -    BUG_ON(!list_empty(&add_list));
-> +    pci_bus_check_realloc(&add_list);
->  }
->  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
-
