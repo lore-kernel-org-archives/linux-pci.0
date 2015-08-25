@@ -1,72 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:38376 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127AbbHMOQe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 13 Aug 2015 10:16:34 -0400
-Message-ID: <1439475392.13210.19.camel@pengutronix.de>
-Subject: Re: [PATCH v3 5/5] PCI: designware: set up high part of MSI target
- address
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 13 Aug 2015 16:16:32 +0200
-In-Reply-To: <CAHM4w1kKu1rbONmWvE2UnEWXNaY+b73JXwB6Af+_KD6CfpKL8w@mail.gmail.com>
-References: <1439372036-15303-1-git-send-email-l.stach@pengutronix.de>
-	 <1439372036-15303-6-git-send-email-l.stach@pengutronix.de>
-	 <CAHM4w1kKu1rbONmWvE2UnEWXNaY+b73JXwB6Af+_KD6CfpKL8w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from szxga01-in.huawei.com ([58.251.152.64]:26917 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103AbbHYJy0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 05:54:26 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v8 6/6] MAINTAINERS: Add pcie-hisi maintainer
+Date: Tue, 25 Aug 2015 17:58:54 +0800
+Message-ID: <1440496734-18417-7-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-I'm going to respin this patch to fix it regarding Pratyushs comment.
-
-In such a situation do you prefer a repost of the whole series or rather
-just have the single fixed patch reposted?
-
-Regards,
-Lucas
-
-Am Mittwoch, den 12.08.2015, 21:05 +0530 schrieb Pratyush Anand:
-> On Wed, Aug 12, 2015 at 3:03 PM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> > Set up the high part of the MSI target address in order to allow the
-> > MSI target to reside above the 4GB mark on 64bit and PAE systems.
-> >
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> > ---
-> >  drivers/pci/host/pcie-designware.c | 9 ++++++---
-> >  1 file changed, 6 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 74034395cf2a..fcb798e47c30 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -299,12 +299,15 @@ no_valid_irq:
-> >  static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
-> >  {
-> >         struct msi_msg msg;
-> > +       u64 msi_target;
-> >
-> >         if (pp->ops->get_msi_addr)
-> > -               msg.address_lo = pp->ops->get_msi_addr(pp);
-> > +               msi_target = pp->ops->get_msi_addr(pp);
-> >         else
-> > -               msg.address_lo = virt_to_phys((void *)pp->msi_data);
-> > -       msg.address_hi = 0x0;
-> > +               msi_target = virt_to_phys((void *)pp->msi_data);
-> > +
-> > +       msg.address_lo = (u32)(msi_target & 0xffffffff);
-> > +       msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
-> >
-> >         if (pp->ops->get_msi_data)
-> >                 msg.data = pp->ops->get_msi_data(pp, pos);
-> 
-> Other than above, dw_pcie_msi_init also need to be fixed
-> for PCIE_MSI_ADDR_HI.
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 8133cef..7cd8e47 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7854,6 +7854,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/xgene-pci-msi.txt
+ F:	drivers/pci/host/pci-xgene-msi.c
+ 
++PCIE DRIVER FOR HISILICON
++M:	Zhou Wang <wangzhou1@hisilicon.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++F:	drivers/pci/host/pcie-hisi.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+1.9.1
 
