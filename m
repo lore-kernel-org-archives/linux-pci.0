@@ -1,45 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:35541 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752936AbbHYXTS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Aug 2015 19:19:18 -0400
+Date: Wed, 26 Aug 2015 01:19:13 +0200
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	David Howells <dhowells@redhat.com>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>, bp@suse.de,
+	bhelgaas@google.com, tomi.valkeinen@ti.com, airlied@linux.ie,
+	linux-fbdev@vger.kernel.org, luto@amacapital.net,
+	vinod.koul@intel.com, dan.j.williams@intel.com, toshi.kani@hp.com,
+	benh@kernel.crashing.org, mst@redhat.com, daniel.vetter@ffwll.ch,
+	konrad.wilk@oracle.com, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	xen-devel@lists.xensource.com
+Subject: Re: [PATCH v4 10/11] dma: rename dma_*_writecombine() to dma_*_wc()
+Message-ID: <20150825231912.GW8051@wotan.suse.de>
+References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
+ <1440443613-13696-11-git-send-email-mcgrof@do-not-panic.com>
+ <20150825075318.GA2735@gmail.com>
+ <20150825154837.GL8051@wotan.suse.de>
+ <20150825134358.990073a55012c60a638b3144@linux-foundation.org>
 MIME-Version: 1.0
-In-Reply-To: <CA+8MBbL4nqTxi14Lz92PRFZeobHBLimSfcTH=9HaZBcEUpLVOg@mail.gmail.com>
-References: <1415089784-28779-1-git-send-email-daniel@numascale.com>
-	<1415089784-28779-4-git-send-email-daniel@numascale.com>
-	<20150821181910.GA31378@agluck-desk.sc.intel.com>
-	<CAE9FiQXWXPexLM8xma8Cb9R9hpR2+tOwzGtmJxzH5uuyPraDpQ@mail.gmail.com>
-	<20150821202707.GA920@agluck-desk.sc.intel.com>
-	<CAE9FiQU-=oAzi_benuEm=x_Y_LUp48uND6cGnx9osbYyPWySdw@mail.gmail.com>
-	<CA+8MBbL4nqTxi14Lz92PRFZeobHBLimSfcTH=9HaZBcEUpLVOg@mail.gmail.com>
-Date: Mon, 24 Aug 2015 10:46:46 -0700
-Message-ID: <CAE9FiQVJozeJ9R9GgMEVPfJaSJL+J+M3ULu2VXPjrdDqnYGwvw@mail.gmail.com>
-Subject: Re: [PATCH v4 4/4] Use 2GB memory block size on large-memory x86-64 systems
-From: Yinghai Lu <yinghai@kernel.org>
-To: Tony Luck <tony.luck@gmail.com>
-Cc: Daniel J Blueman <daniel@numascale.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"the arch/x86 maintainers" <x86@kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Steffen Persvold <sp@numascale.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150825134358.990073a55012c60a638b3144@linux-foundation.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 21, 2015 at 4:54 PM, Tony Luck <tony.luck@gmail.com> wrote:
-> On Fri, Aug 21, 2015 at 1:50 PM, Yinghai Lu <yinghai@kernel.org> wrote:
->
-> Still stuff going on that I don't understand here. I increased the amount of
-> mirrored memory in this machine which moved max_pfn to 0x7560000
-> and probe_memory_block_size() picked 512MB as the memory_block_size,
-> which seemed plausible.
->
-> But my kernel still crashed during boot with this value. :-(
-> Forcing the block size to 128M made the system boot.
->
-> Maybe all the holes in the e820 map matter too (specifically the
-> alignment of the holes)?
+On Tue, Aug 25, 2015 at 01:43:58PM -0700, Andrew Morton wrote:
+> On Tue, 25 Aug 2015 17:48:37 +0200 "Luis R. Rodriguez" <mcgrof@suse.com> wrote:
+> 
+> > On Tue, Aug 25, 2015 at 09:53:18AM +0200, Ingo Molnar wrote:
+> > > Which kernel is this against? It has conflicts in 3 files with Linus's latest: 
+> > > v4.2-rc8.
+> > 
+> > Sorry I based it on linux-next, will respin the rename patch onto tip/auto-latest
+> > 
+> 
+> Doing that will make the patch kinda useless, because then the patch
+> will trash more mature work which is pending in linux-next, one week
+> before the merge window opens.
+> 
+> A better plan would be to base the patches on linux-next then wait for
+> 4.3-rc1.
 
-Then, what does the E820 look like?
+There's a catch-22 issue here either way, for instance this rename
+patch has been being baked for probably 2 releases already but the
+difficulty has been trying to find the appropriate time to merge it
+without conflict.
 
-Yinghai
+If you do it in the beginning of the merge window, you have to ask
+yourself in what tree it will be done. Since subsystems are topic
+specific that means that subsystem will end up having a conflict
+at the end of the merge window.
+
+If you do it at the end you run into the issue you describe.
+
+So unless I'm missing something, perhaps metrics to argue one way is better
+than another, it seems today this is up up to a subsystem's maintainer's
+preference?
+
+There are more subtle issues with this though, I've identified similar problems
+before and proposed one solution to it could be a linux-oven [0], in that
+thread I describe other issues and why I think a linux-oven might help.
+
+Perhaps the biggest change that comes to mind that could have caused
+tons of collateral was the UAPI change David Howells did years ago,
+when did that go in, at the end of early? In retrospect what would have
+helped?
+
+Anyway, both version of the patch are now available, up to you guys :)
+
+[0] http://lkml.kernel.org/r/20150619231255.GC7487@garbanzo.do-not-panic.com
+
+  Luis
