@@ -1,69 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:56520 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753040AbbHFENS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:18 -0400
-Received: from /spool/local
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:16 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 14/42] powerpc/pci: Override pcibios_setup_bridge()
-Date: Thu,  6 Aug 2015 14:11:19 +1000
-Message-Id: <1438834307-26960-15-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
+	will.deacon@arm.com, hanjun.guo@linaro.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Subject: Re: [PATCH V2 4/4] PCI: ACPI: Add support for PCI device DMA coherency
+Date: Wed, 26 Aug 2015 01:48:55 +0200
+Message-ID: <5541922.5doADRYBJG@vostro.rjw.lan>
+In-Reply-To: <1440524009-5359-5-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1440524009-5359-5-git-send-email-Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch overrides pcibios_setup_bridge(), called to update PCI
-bridge windows at completion of PCI resource assignment, to assign
-PE and setup various (resource) mapping in next patch.
+On Wednesday, August 26, 2015 12:33:29 AM Suravee Suthikulpanit wrote:
+> This patch adds support for setting up PCI device DMA coherency from
+> ACPI _CCA object that should normally be specified in the DSDT node
+> of its PCI host bridge.
+> 
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Catalin Marinas <catalin.marinas@arm.com>
+> CC: Rob Herring <robh+dt@kernel.org>
+> CC: Will Deacon <will.deacon@arm.com>
+> CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+> CC: Murali Karicheri <m-karicheri2@ti.com>
+> ---
+>  drivers/pci/probe.c | 15 ++++++++++-----
+>  1 file changed, 10 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 4de6594..2fd2a60 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1551,17 +1551,22 @@ static void pci_init_capabilities(struct pci_dev *dev)
+>   * @dev: ptr to pci_dev struct of the PCI device
+>   *
+>   * Function to update PCI devices's DMA configuration using the same
+> - * info from the OF node of host bridge's parent (if any).
+> + * info from the OF node or ACPI node of host bridge's parent (if any).
+>   */
+>  static void pci_dma_configure(struct pci_dev *dev)
+>  {
+>  	struct device *bridge = pci_get_host_bridge_device(dev);
+>  
+>  	if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
+> -		if (!bridge->parent)
+> -			return;
+> -
+> -		of_dma_configure(&dev->dev, bridge->parent->of_node);
+> +		if (bridge->parent)
+> +			of_dma_configure(&dev->dev,
+> +					 bridge->parent->of_node);
+> +	} else if (has_acpi_companion(bridge)) {
+> +		struct acpi_device *adev = to_acpi_node(bridge->fwnode);
+> +		int coherent = acpi_check_dma_coherency(adev);
+> +
+> +		if (-1 != coherent)
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/pci-bridge.h | 2 ++
- arch/powerpc/kernel/pci-common.c      | 8 ++++++++
- 2 files changed, 10 insertions(+)
+The ordering of this check is somewhat unusual.
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index d627abf..65357a9 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -34,6 +34,8 @@ struct pci_controller_ops {
- 	/* Called during PCI resource reassignment */
- 	resource_size_t (*window_alignment)(struct pci_bus *bus,
- 					    unsigned long type);
-+	void		(*setup_bridge)(struct pci_bus *bus,
-+					unsigned long type);
- 	void		(*reset_secondary_bus)(struct pci_dev *dev);
- 
- #ifdef CONFIG_PCI_MSI
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index b9de34d..9c88dcd1 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -123,6 +123,14 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
- 	return 1;
- }
- 
-+void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(bus);
-+
-+	if (hose->controller_ops.setup_bridge)
-+		hose->controller_ops.setup_bridge(bus, type);
-+}
-+
- void pcibios_reset_secondary_bus(struct pci_dev *dev)
- {
- 	struct pci_controller *phb = pci_bus_to_host(dev->bus);
--- 
-2.1.0
+
+> +			arch_setup_dma_ops(&dev->dev, 0, 0, NULL, coherent);
+>  	}
+>  
+>  	pci_put_host_bridge_device(bridge);
+> 
+
+Thanks,
+Rafael
 
