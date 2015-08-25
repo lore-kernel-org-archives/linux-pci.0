@@ -1,138 +1,150 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: mingo@kernel.org
-Cc: bp@suse.de, bhelgaas@google.com, tomi.valkeinen@ti.com,
-	airlied@linux.ie, linux-fbdev@vger.kernel.org, luto@amacapital.net,
-	vinod.koul@intel.com, dan.j.williams@intel.com, toshi.kani@hp.com,
-	benh@kernel.crashing.org, mst@redhat.com,
-	akpm@linux-foundation.org, daniel.vetter@ffwll.ch,
-	konrad.wilk@oracle.com, x86@kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	xen-devel@lists.xensource.com,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Suresh Siddha <sbsiddha@gmail.com>,
-	Ingo Molnar <mingo@elte.hu>, Juergen Gross <jgross@suse.com>,
-	Dave Airlie <airlied@redhat.com>,
-	Antonino Daplas <adaplas@gmail.com>,
-	Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>,
-	=?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= <syrjala@sci.fi>,
-	Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>,
-	Davidlohr Bueso <dbueso@suse.de>,
-	Doug Ledford <dledford@redhat.com>,
-	Andy Walls <awalls@md.metrocast.net>, netdev@vger.kernel.org,
-	linux-media@vger.kernel.org
-Subject: [PATCH v4 11/11] mtrr: bury MTRR - unexport mtrr_add() and mtrr_del()
-Date: Mon, 24 Aug 2015 12:13:33 -0700
-Message-Id: <1440443613-13696-12-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	"Murali Karicheri" <m-karicheri2@ti.com>
+Subject: [PATCH V2 3/4] PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+Date: Wed, 26 Aug 2015 00:33:28 +0700
+Message-ID: <1440524009-5359-4-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+This patch move of_pci_dma_configure() to a more generic
+pci_dma_configure(), which can be extended by non-OF code (e.g. ACPI).
 
-The crusade to replace mtrr_add() with architecture agnostic
-arch_phys_wc_add() is complete, this will ensure write-combining
-implementations (PAT on x86) is taken advantage instead of using
-MTRR. With the crusade done now, hide direct MTRR access for
-drivers.
+This has no functional change.
 
-Update x86 documentation on MTRR to reflect the completion of the
-phasing out of direct access to MTRR, also add a note on platform
-firmware code use of MTRRs based on the obituary discussion of
-MTRRs on Linux [0].
-
-[0] http://lkml.kernel.org/r/1438991330.3109.196.camel@hp.com
-
-Cc: Toshi Kani <toshi.kani@hp.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Suresh Siddha <sbsiddha@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>
-Cc: Juergen Gross <jgross@suse.com>
-Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc: Andy Lutomirski <luto@amacapital.net>
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Antonino Daplas <adaplas@gmail.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: Ville Syrjälä <syrjala@sci.fi>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Davidlohr Bueso <dbueso@suse.de>
-Cc: Doug Ledford <dledford@redhat.com>
-Cc: Andy Walls <awalls@md.metrocast.net>
-Cc: x86@kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-media@vger.kernel.org
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Will Deacon <will.deacon@arm.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+CC: Murali Karicheri <m-karicheri2@ti.com>
 ---
- Documentation/x86/mtrr.txt      | 20 ++++++++++++++++----
- arch/x86/kernel/cpu/mtrr/main.c |  2 --
- 2 files changed, 16 insertions(+), 6 deletions(-)
+ drivers/of/of_pci.c    | 20 --------------------
+ drivers/pci/probe.c    | 27 +++++++++++++++++++++++++--
+ include/linux/of_pci.h |  3 ---
+ 3 files changed, 25 insertions(+), 25 deletions(-)
 
-diff --git a/Documentation/x86/mtrr.txt b/Documentation/x86/mtrr.txt
-index 860bc3adc223..8a0bdb6e7370 100644
---- a/Documentation/x86/mtrr.txt
-+++ b/Documentation/x86/mtrr.txt
-@@ -6,10 +6,22 @@ Luis R. Rodriguez <mcgrof@do-not-panic.com> - April 9, 2015
- ===============================================================================
- Phasing out MTRR use
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 5751dc5..b66ee4e 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -117,26 +117,6 @@ int of_get_pci_domain_nr(struct device_node *node)
+ }
+ EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
  
--MTRR use is replaced on modern x86 hardware with PAT. Over time the only type
--of effective MTRR that is expected to be supported will be for write-combining.
--As MTRR use is phased out device drivers should use arch_phys_wc_add() to make
--MTRR effective on non-PAT systems while a no-op on PAT enabled systems.
-+MTRR use is replaced on modern x86 hardware with PAT. Direct MTRR use by
-+drivers on Linux is now completely phased out, device drivers should use
-+arch_phys_wc_add() in combination with ioremap_wc() to make MTRR effective on
-+non-PAT systems while a no-op but equally effective on PAT enabled systems.
+-/**
+- * of_pci_dma_configure - Setup DMA configuration
+- * @dev: ptr to pci_dev struct of the PCI device
+- *
+- * Function to update PCI devices's DMA configuration using the same
+- * info from the OF node of host bridge's parent (if any).
+- */
+-void of_pci_dma_configure(struct pci_dev *pci_dev)
+-{
+-	struct device *dev = &pci_dev->dev;
+-	struct device *bridge = pci_get_host_bridge_device(pci_dev);
+-
+-	if (!bridge->parent)
+-		return;
+-
+-	of_dma_configure(dev, bridge->parent->of_node);
+-	pci_put_host_bridge_device(bridge);
+-}
+-EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+-
+ #if defined(CONFIG_OF_ADDRESS)
+ /**
+  * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..4de6594 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -6,12 +6,14 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
+-#include <linux/of_pci.h>
++#include <linux/of_device.h>
+ #include <linux/pci_hotplug.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/cpumask.h>
+ #include <linux/pci-aspm.h>
++#include <linux/acpi.h>
++#include <linux/property.h>
+ #include <asm-generic/pci-bridge.h>
+ #include "pci.h"
+ 
+@@ -1544,6 +1546,27 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
+ }
+ 
++/**
++ * pci_dma_configure - Setup DMA configuration
++ * @dev: ptr to pci_dev struct of the PCI device
++ *
++ * Function to update PCI devices's DMA configuration using the same
++ * info from the OF node of host bridge's parent (if any).
++ */
++static void pci_dma_configure(struct pci_dev *dev)
++{
++	struct device *bridge = pci_get_host_bridge_device(dev);
 +
-+Even if Linux does not use MTRR directly some x86 platform firmware may still
-+set up MTRRs early before booting the OS, they do this as some platform
-+firmware may still have implemented access to MTRRs which would be controlled
-+and handled by the platform firmware directly. An example of platform use of
-+MTRR is through the use of SMI handlers, one case could be for fan control,
-+the platform code would need uncachable access to some of its fan control
-+registers. Such platform access does not need any Operating System MTRR code in
-+place other than mtrr_type_lookup() to ensure any OS specific mapping requests
-+are aligned with platform MTRR setup. If MTRRs are only set up by the platform
-+firmware code though and the OS does not make any specific MTRR mapping
-+requests mtrr_type_lookup() should always return MTRR_TYPE_INVALID.
++	if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
++		if (!bridge->parent)
++			return;
++
++		of_dma_configure(&dev->dev, bridge->parent->of_node);
++	}
++
++	pci_put_host_bridge_device(bridge);
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1557,7 +1580,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
+-	of_pci_dma_configure(dev);
++	pci_dma_configure(dev);
  
- For details refer to Documentation/x86/pat.txt.
- 
-diff --git a/arch/x86/kernel/cpu/mtrr/main.c b/arch/x86/kernel/cpu/mtrr/main.c
-index e7ed0d8ebacb..f891b4750f04 100644
---- a/arch/x86/kernel/cpu/mtrr/main.c
-+++ b/arch/x86/kernel/cpu/mtrr/main.c
-@@ -448,7 +448,6 @@ int mtrr_add(unsigned long base, unsigned long size, unsigned int type,
- 	return mtrr_add_page(base >> PAGE_SHIFT, size >> PAGE_SHIFT, type,
- 			     increment);
+ 	pci_set_dma_max_seg_size(dev, 65536);
+ 	pci_set_dma_seg_boundary(dev, 0xffffffff);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 29fd3fe..ce0e5ab 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -16,7 +16,6 @@ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_get_pci_domain_nr(struct device_node *node);
+-void of_pci_dma_configure(struct pci_dev *pci_dev);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+ {
+@@ -51,8 +50,6 @@ of_get_pci_domain_nr(struct device_node *node)
+ {
+ 	return -1;
  }
--EXPORT_SYMBOL(mtrr_add);
+-
+-static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
+ #endif
  
- /**
-  * mtrr_del_page - delete a memory type region
-@@ -537,7 +536,6 @@ int mtrr_del(int reg, unsigned long base, unsigned long size)
- 		return -EINVAL;
- 	return mtrr_del_page(reg, base >> PAGE_SHIFT, size >> PAGE_SHIFT);
- }
--EXPORT_SYMBOL(mtrr_del);
- 
- /**
-  * arch_phys_wc_add - add a WC MTRR and handle errors if PAT is unavailable
+ #if defined(CONFIG_OF_ADDRESS)
 -- 
-2.4.3
+2.1.0
 
