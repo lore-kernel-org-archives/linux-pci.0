@@ -1,134 +1,231 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:62823 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754029AbbHFICu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 04:02:50 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux@arm.linux.org.uk>,
-	<thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	James Morse <james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	Jason Cooper <jason@lakedaemon.net>, <robh@kernel.org>
-CC: <linux-pci@vger.kernel.org>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <kangfenglong@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v6 1/6] PCI: designware: move calculation of bus addresses to DRA7xx
-Date: Thu, 6 Aug 2015 16:09:14 +0800
-Message-ID: <1438848559-232109-2-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1438848559-232109-1-git-send-email-wangzhou1@hisilicon.com>
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH V2 2/4] ACPI/scan: Clean up acpi_check_dma
+Date: Wed, 26 Aug 2015 00:33:27 +0700
+Message-ID: <1440524009-5359-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+The original name of acpi_check_dma() function does not clearly tell what
+exactly it is checking. Also, returning two boolean values (one to indicate
+device is DMA capability, and the other to inidicate device coherency
+attribute) can be confusing.
 
-Commit f4c55c5a3f7f "PCI: designware: Program ATU with untranslated
-address" added the calculation of PCI BUS addresses in designware,
-storing them in new fields added in "struct pcie_port". This
-calculation is done for every designware user even if is only
-applicable to DRA7xx.
-This patch moves the calculation of the bus addresses to the DRA7xx
-driver and is needed to allow the rework of designware to use
-the new DT parsing API.
+So, in order to simplify the function, this patch renames acpi_check_dma()
+to acpi_check_dma_coherency() to clearly indicate the purpose of this
+function, and only returns an integer where -1 means DMA not supported,
+1 means coherent DMA, and 0 means non-coherent DMA.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Also, this patch moves the function into drivers/acpi/scan.c since
+it is easier to follow the logic in the acpi_init_coherency() in the
+same file here.
+
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Will Deacon <will.deacon@arm.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
 ---
- drivers/pci/host/pci-dra7xx.c      | 13 +++++++++++++
- drivers/pci/host/pcie-designware.c | 15 ++++-----------
- 2 files changed, 17 insertions(+), 11 deletions(-)
+ drivers/acpi/acpi_platform.c |  7 ++++++-
+ drivers/acpi/glue.c          |  5 +++--
+ drivers/acpi/scan.c          | 39 +++++++++++++++++++++++++++++++++++++++
+ drivers/base/property.c      |  8 ++++++--
+ include/acpi/acpi_bus.h      | 36 ++----------------------------------
+ include/linux/acpi.h         |  4 ++--
+ 6 files changed, 58 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 80db09e..18ae7ff 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -61,6 +61,7 @@
+diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
+index 06a67d5..2261e85 100644
+--- a/drivers/acpi/acpi_platform.c
++++ b/drivers/acpi/acpi_platform.c
+@@ -103,7 +103,12 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
+ 	pdevinfo.res = resources;
+ 	pdevinfo.num_res = count;
+ 	pdevinfo.fwnode = acpi_fwnode_handle(adev);
+-	pdevinfo.dma_mask = acpi_check_dma(adev, NULL) ? DMA_BIT_MASK(32) : 0;
++
++	if (-1 != acpi_check_dma_coherency(adev))
++		pdevinfo.dma_mask = DMA_BIT_MASK(32);
++	else
++		pdevinfo.dma_mask = 0;
++
+ 	pdev = platform_device_register_full(&pdevinfo);
+ 	if (IS_ERR(pdev))
+ 		dev_err(&adev->dev, "platform device creation failed: %ld\n",
+diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+index b9657af..55cf916 100644
+--- a/drivers/acpi/glue.c
++++ b/drivers/acpi/glue.c
+@@ -168,7 +168,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+ 	struct list_head *physnode_list;
+ 	unsigned int node_id;
+ 	int retval = -EINVAL;
+-	bool coherent;
++	int coherent;
  
- #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
- #define	LINK_UP						BIT(16)
-+#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
+ 	if (has_acpi_companion(dev)) {
+ 		if (acpi_dev) {
+@@ -225,7 +225,8 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+ 	if (!has_acpi_companion(dev))
+ 		ACPI_COMPANION_SET(dev, acpi_dev);
  
- struct dra7xx_pcie {
- 	void __iomem		*base;
-@@ -139,6 +140,18 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
- static void dra7xx_pcie_host_init(struct pcie_port *pp)
+-	if (acpi_check_dma(acpi_dev, &coherent))
++	coherent = acpi_check_dma_coherency(acpi_dev);
++	if (coherent != -1)
+ 		arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
+ 
+ 	acpi_physnode_link_name(physical_node_name, node_id);
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index ec25635..299a825 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -2182,6 +2182,45 @@ void acpi_free_pnp_ids(struct acpi_device_pnp *pnp)
+ 	kfree(pnp->unique_id);
+ }
+ 
++/**
++ * acpi_check_dma_coherency - Check DMA coherency for the specified device.
++ * @adev: The pointer to acpi device to check coherency attribute
++ *
++ * Return -1 if DMA is not supported. Otherwise, return 1 if the
++ * device support coherent DMA, or 0 for non-coherent DMA.
++ */
++int acpi_check_dma_coherency(struct acpi_device *adev)
++{
++	int ret = -1;
++
++	if (!adev)
++		return ret;
++
++	/**
++	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
++	 * This should be equivalent to specifying dma-coherent for
++	 * a device in OF.
++	 *
++	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
++	 * we have two choices:
++	 *   1. Do not support and disable DMA.
++	 *   2. Support but rely on arch-specific cache maintenance for
++	 *      non-coherenje DMA operations.
++	 * Currently, we implement case 2 above.
++	 *
++	 * For the case when _CCA is missing (i.e. cca_seen=0) and
++	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
++	 * and fallback to arch-specific default handling.
++	 *
++	 * See acpi_init_coherency() for more info.
++	 */
++	if (!adev->flags.cca_seen && IS_ENABLED(CONFIG_ACPI_CCA_REQUIRED))
++		return ret;
++
++	return adev->flags.coherent_dma;
++}
++EXPORT_SYMBOL_GPL(acpi_check_dma_coherency);
++
+ static void acpi_init_coherency(struct acpi_device *adev)
  {
- 	dw_pcie_setup_rc(pp);
+ 	unsigned long long cca = 0;
+diff --git a/drivers/base/property.c b/drivers/base/property.c
+index f3f6d16..643b0fb 100644
+--- a/drivers/base/property.c
++++ b/drivers/base/property.c
+@@ -527,8 +527,12 @@ bool device_dma_is_coherent(struct device *dev)
+ 
+ 	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
+ 		coherent = of_dma_is_coherent(dev->of_node);
+-	else
+-		acpi_check_dma(ACPI_COMPANION(dev), &coherent);
++	else {
++		int ac = acpi_check_dma_coherency(ACPI_COMPANION(dev));
 +
-+	if (pp->io_mod_base)
-+		pp->io_mod_base &= CPU_TO_BUS_ADDR;
-+
-+	if (pp->mem_mod_base)
-+		pp->mem_mod_base &= CPU_TO_BUS_ADDR;
-+
-+	if (pp->cfg0_mod_base) {
-+		pp->cfg0_mod_base &= CPU_TO_BUS_ADDR;
-+		pp->cfg1_mod_base &= CPU_TO_BUS_ADDR;
++		if (ac != -1)
++			coherent = ac;
 +	}
-+
- 	dra7xx_pcie_establish_link(pp);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		dw_pcie_msi_init(pp);
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be..c5d407c 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -366,14 +366,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
- 	struct resource *cfg_res;
--	u32 val, na, ns;
-+	u32 val, ns;
- 	const __be32 *addrp;
- 	int i, index, ret;
  
--	/* Find the address cell size and the number of cells in order to get
--	 * the untranslated address.
+ 	return coherent;
+ }
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 7ecb8e4..baf43ea 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -382,40 +382,6 @@ struct acpi_device {
+ 	void (*remove)(struct acpi_device *);
+ };
+ 
+-static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+-{
+-	bool ret = false;
+-
+-	if (!adev)
+-		return ret;
+-
+-	/**
+-	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
+-	 * This should be equivalent to specifyig dma-coherent for
+-	 * a device in OF.
+-	 *
+-	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
+-	 * There are two cases:
+-	 * case 1. Do not support and disable DMA.
+-	 * case 2. Support but rely on arch-specific cache maintenance for
+-	 *         non-coherence DMA operations.
+-	 * Currently, we implement case 2 above.
+-	 *
+-	 * For the case when _CCA is missing (i.e. cca_seen=0) and
+-	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
+-	 * and fallback to arch-specific default handling.
+-	 *
+-	 * See acpi_init_coherency() for more info.
 -	 */
--	of_property_read_u32(np, "#address-cells", &na);
- 	ns = of_n_size_cells(np);
+-	if (adev->flags.coherent_dma ||
+-	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
+-		ret = true;
+-		if (coherent)
+-			*coherent = adev->flags.coherent_dma;
+-	}
+-	return ret;
+-}
+-
+ static inline bool is_acpi_node(struct fwnode_handle *fwnode)
+ {
+ 	return fwnode && fwnode->type == FWNODE_ACPI;
+@@ -640,6 +606,8 @@ static inline bool acpi_device_can_poweroff(struct acpi_device *adev)
+ 	return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
+ }
  
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-@@ -416,8 +412,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->io_base = range.cpu_addr;
++int acpi_check_dma_coherency(struct acpi_device *adev);
++
+ #else	/* CONFIG_ACPI */
  
- 			/* Find the untranslated IO space address */
--			pp->io_mod_base = of_read_number(parser.range -
--							 parser.np + na, ns);
-+			pp->io_mod_base = range.cpu_addr;
- 		}
- 		if (restype == IORESOURCE_MEM) {
- 			of_pci_range_to_resource(&range, np, &pp->mem);
-@@ -426,8 +421,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->mem_bus_addr = range.pci_addr;
+ static inline int register_acpi_bus_type(void *bus) { return 0; }
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index d2445fa..530d2fa 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -562,9 +562,9 @@ static inline int acpi_device_modalias(struct device *dev,
+ 	return -ENODEV;
+ }
  
- 			/* Find the untranslated MEM space address */
--			pp->mem_mod_base = of_read_number(parser.range -
--							  parser.np + na, ns);
-+			pp->mem_mod_base = range.cpu_addr;
- 		}
- 		if (restype == 0) {
- 			of_pci_range_to_resource(&range, np, &pp->cfg);
-@@ -437,8 +431,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
+-static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
++static inline int acpi_check_dma_coherency(struct acpi_device *adev)
+ {
+-	return false;
++	return -1;
+ }
  
- 			/* Find the untranslated configuration space address */
--			pp->cfg0_mod_base = of_read_number(parser.range -
--							   parser.np + na, ns);
-+			pp->cfg0_mod_base = range.cpu_addr;
- 			pp->cfg1_mod_base = pp->cfg0_mod_base +
- 					    pp->cfg0_size;
- 		}
+ #define ACPI_PTR(_ptr)	(NULL)
 -- 
-1.9.1
+2.1.0
 
