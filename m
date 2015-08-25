@@ -1,73 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:44205 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754685AbbHQLGU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 07:06:20 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	patchwork-lst@pengutronix.de, kernel@pengutronix.de
-Subject: [PATCH v4 5/5] PCI: designware: set up high part of MSI target address
-Date: Mon, 17 Aug 2015 13:06:18 +0200
-Message-Id: <1439809578-13654-6-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
-References: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Jeremy Linton <jeremy.linton@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH V2 1/4] Honor ACPI _CCA attribute setting
+Date: Wed, 26 Aug 2015 00:33:26 +0700
+Message-ID: <1440524009-5359-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set up the high part of the MSI target address in order to allow the
-MSI target to reside above the 4GB mark on 64bit and PAE systems.
+From: Jeremy Linton <jeremy.linton@arm.com>
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
-v4: fix target address setup in dw_pcie_msi_init()
----
- drivers/pci/host/pcie-designware.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ACPI configurations can now mark devices as noncoherent,
+support that choice.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 74034395cf2a..71629175d1a1 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -205,12 +205,16 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 
- void dw_pcie_msi_init(struct pcie_port *pp)
- {
-+	u64 msi_target;
-+
- 	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
-+	msi_target = virt_to_phys((void *)pp->msi_data);
- 
- 	/* program the msi_data */
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
--			virt_to_phys((void *)pp->msi_data));
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
-+			    (u32)(msi_target & 0xffffffff));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
-+			    (u32)(msi_target >> 32 & 0xffffffff));
- }
- 
- static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-@@ -299,12 +303,15 @@ no_valid_irq:
- static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
- {
- 	struct msi_msg msg;
-+	u64 msi_target;
- 
- 	if (pp->ops->get_msi_addr)
--		msg.address_lo = pp->ops->get_msi_addr(pp);
-+		msi_target = pp->ops->get_msi_addr(pp);
- 	else
--		msg.address_lo = virt_to_phys((void *)pp->msi_data);
--	msg.address_hi = 0x0;
-+		msi_target = virt_to_phys((void *)pp->msi_data);
-+
-+	msg.address_lo = (u32)(msi_target & 0xffffffff);
-+	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
- 
- 	if (pp->ops->get_msi_data)
- 		msg.data = pp->ops->get_msi_data(pp, pos);
+NOTE: This is required to support USB on ARM Juno Development Board.
+
+Signed-off-by: Jeremy Linton <jeremy.linton@arm.com>
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Will Deacon <will.deacon@arm.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+---
+ include/acpi/acpi_bus.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 83061ca..7ecb8e4 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -399,7 +399,7 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+ 	 * case 1. Do not support and disable DMA.
+ 	 * case 2. Support but rely on arch-specific cache maintenance for
+ 	 *         non-coherence DMA operations.
+-	 * Currently, we implement case 1 above.
++	 * Currently, we implement case 2 above.
+ 	 *
+ 	 * For the case when _CCA is missing (i.e. cca_seen=0) and
+ 	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
+@@ -407,7 +407,8 @@ static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+ 	 *
+ 	 * See acpi_init_coherency() for more info.
+ 	 */
+-	if (adev->flags.coherent_dma) {
++	if (adev->flags.coherent_dma ||
++	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
+ 		ret = true;
+ 		if (coherent)
+ 			*coherent = adev->flags.coherent_dma;
 -- 
-2.4.6
+2.1.0
 
