@@ -1,81 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, hanjun.guo@linaro.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH V2 2/4] ACPI/scan: Clean up acpi_check_dma
-Date: Wed, 26 Aug 2015 04:44:20 +0200
-Message-ID: <1937405.90E8lxrvy8@vostro.rjw.lan>
-In-Reply-To: <55DD1DB7.1020203@amd.com>
-References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1659571.paO1iYcMuM@vostro.rjw.lan> <55DD1DB7.1020203@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bbn0106.outbound.protection.outlook.com ([157.56.111.106]:45671
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751400AbbHYRdo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Aug 2015 13:33:44 -0400
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [PATCH V2 0/4] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
+Date: Wed, 26 Aug 2015 00:33:25 +0700
+Message-ID: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, August 26, 2015 09:00:23 AM Suravee Suthikulpanit wrote:
-> Hi Rafael,
-> 
-> On 8/26/15 06:48, Rafael J. Wysocki wrote:
-> 
-> >[...]
-> > On Wednesday, August 26, 2015 12:33:27 AM Suravee Suthikulpanit wrote:
-> >> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-> >> index b9657af..55cf916 100644
-> >> --- a/drivers/acpi/glue.c
-> >> +++ b/drivers/acpi/glue.c
-> >> @@ -168,7 +168,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
-> >>   	struct list_head *physnode_list;
-> >>   	unsigned int node_id;
-> >>   	int retval = -EINVAL;
-> >> -	bool coherent;
-> >> +	int coherent;
-> >
-> > enum, anyone?  With clearly defined values?
-> 
-> Originally I had defined
-> 
-> enum acpi_dma_coherency {
-> 	ACPI_DMA_NON_COHERENT,
-> 	ACPI_DMA_COHERENT,
-> 	APCI_DMA_NOT_SUPPORTED = -1,
-> };
-> 
-> Although, this would need to be defined in the include/linux/acpi.h, and 
-> will be used also for #ifndef CONFIG_ACPI code to return errors. I was 
-> not sure if this would be too much. If this is preferred, I'll add this 
-> back in.
-> 
-> >>
-> >>   	if (has_acpi_companion(dev)) {
-> >>   		if (acpi_dev) {
-> >> @@ -225,7 +225,8 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
-> >>   	if (!has_acpi_companion(dev))
-> >>   		ACPI_COMPANION_SET(dev, acpi_dev);
-> >>
-> >> -	if (acpi_check_dma(acpi_dev, &coherent))
-> >> +	coherent = acpi_check_dma_coherency(acpi_dev);
-> >> +	if (coherent != -1)
-> >
-> > Like here I'm not sure why -1 is special?
-> 
-> It's just another value to communicate that DMA is not supported. :)
+This patch adds support to setup DMA coherency for PCI device using
+the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
+is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+support for ARM64 which is currently in development.
 
-OK
+Also, this should not affect other architectures that does not define 
+CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
 
-So maybe use 0/1 for the coherence thing and a proper error code
-(-ENOTSUPP seems to be a good candidate) for the "no DMA" case?
+In the V2 of this patch series, I have pulled in the following patch from Jeremy
+before cleaning up the acpi_check_dma() function (in patch 2).
 
-Then, if you rename the local variable to something like "ret",
-it will be slightly less confusing.
+    http://www.spinics.net/lists/linux-usb/msg128582.html)
 
-And instead of checking against a specific negative value, you can
-simply use "if (stuff < 0)" or "if (stuff >= 0)" to check whether or
-not it is supported at all.
+Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
+    * Include patch 1 from Jeremy to enable support for _CCA=0
+    * Clean up acpi_check_dma() per Bjorn suggestions
+    * Split the original V1 patch into two patches (patch 3 and 4)
 
-Thanks,
-Rafael
+Jeremy Linton (1):
+  Honor ACPI _CCA attribute setting
+
+Suravee Suthikulpanit (3):
+  ACPI/scan: Clean up acpi_check_dma
+  PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+  PCI: ACPI: Add support for PCI device DMA coherency
+
+ drivers/acpi/acpi_platform.c |  7 ++++++-
+ drivers/acpi/glue.c          |  5 +++--
+ drivers/acpi/scan.c          | 39 +++++++++++++++++++++++++++++++++++++++
+ drivers/base/property.c      |  8 ++++++--
+ drivers/of/of_pci.c          | 20 --------------------
+ drivers/pci/probe.c          | 32 ++++++++++++++++++++++++++++++--
+ include/acpi/acpi_bus.h      | 35 ++---------------------------------
+ include/linux/acpi.h         |  4 ++--
+ include/linux/of_pci.h       |  3 ---
+ 9 files changed, 88 insertions(+), 65 deletions(-)
+
+-- 
+2.1.0
 
