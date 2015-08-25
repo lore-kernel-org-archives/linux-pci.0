@@ -1,289 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:59900 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752111AbbHTRBq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 20 Aug 2015 13:01:46 -0400
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: bhelgaas@google.com, rajatxjain@gmail.com, mst@redhat.com,
-	zajec5@gmail.com, gong.chen@linux.intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-api@vger.kernel.org
-Cc: sean.stalley@intel.com
-Subject: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
-Date: Thu, 20 Aug 2015 09:59:07 -0700
-Message-Id: <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
-In-Reply-To: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
-References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:33731 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbbHYOoO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 10:44:14 -0400
+Received: by obbhe7 with SMTP id he7so143844961obb.0
+        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2015 07:44:14 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 25 Aug 2015 09:44:14 -0500
+Message-ID: <CAC1AzdcoZHpRJ3NpW2UQnp9frEYn6pAf5cPyDx4zPXT3TUiULA@mail.gmail.com>
+Subject: [PATCH 1/3] PCI: Move MPS configuration check to pci_configure_device()
+From: Jordan Hargrave <jharg93@gmail.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for devices using Enhanced Allocation entries instead of BARs.
-This patch allows the kernel to parse the EA Extended Capability structure
-in PCI configspace and claim the BAR-equivalent resources.
+>Previously we checked for invalid MPS settings, i.e., a device with MPS
+>different than its upstream bridge, in pcie_bus_detect_mps().  We only did
+>this if the arch or hotplug driver called pcie_bus_configure_settings(),
+>and then only if PCIe bus tuning was disabled (PCIE_BUS_TUNE_OFF).
+>
+>Move the MPS checking code to pci_configure_device(), so we do it in the
+>pci_device_add() path for every device.
+>
+>Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>---
+> drivers/pci/probe.c |   43 ++++++++++++++++++++++++-------------------
+> 1 file changed, 24 insertions(+), 19 deletions(-)
+>
+>diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>index 9ff4df0..eb32395 100644
+>--- a/drivers/pci/probe.c
+>+++ b/drivers/pci/probe.c
+>@@ -1275,6 +1275,27 @@ int pci_setup_device(struct pci_dev *dev)
+>     return 0;
+> }
+>
+>+static void pci_configure_mps(struct pci_dev *dev)
+>+{
+>+    struct pci_dev *bridge = pci_upstream_bridge(dev);
+>+    int mps, p_mps;
+>+
+>+    if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+>+        return;
+>+
+>+    mps = pcie_get_mps(dev);
+>+    p_mps = pcie_get_mps(bridge);
+>+
+>+    if (mps == p_mps)
+>+        return;
+>+
+>+    if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>+        dev_warn(&dev->dev, "Max Payload Size %d, but upstream %s set to %d; if necessary, \
+>use \"pci=pcie_bus_safe\" and report a bug\n", +             mps, pci_name(bridge), p_mps);
+>+        return;
+>+    }
+>+}
+>+
+> static struct hpp_type0 pci_default_type0 = {
+>     .revision = 1,
+>     .cache_line_size = 8,
+>@@ -1396,6 +1417,8 @@ static void pci_configure_device(struct pci_dev *dev)
+>     struct hotplug_params hpp;
+>     int ret;
+>
+>+    pci_configure_mps(dev);
+>+
+>     memset(&hpp, 0, sizeof(hpp));
+>     ret = pci_get_hp_params(dev, &hpp);
+>     if (ret)
+>@@ -1791,22 +1814,6 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>         dev_err(&dev->dev, "MRRS was unable to be configured with a safe value.  If \
+>problems are experienced, try running with pci=pcie_bus_safe\n");  }
+>
+>-static void pcie_bus_detect_mps(struct pci_dev *dev)
+>-{
+>-    struct pci_dev *bridge = dev->bus->self;
+>-    int mps, p_mps;
+>-
+>-    if (!bridge)
+>-        return;
+>-
+>-    mps = pcie_get_mps(dev);
+>-    p_mps = pcie_get_mps(bridge);
+>-
+>-    if (mps != p_mps)
+>-        dev_warn(&dev->dev, "Max Payload Size %d, but upstream %s set to %d; if necessary, \
+>                use \"pci=pcie_bus_safe\" and report a bug\n",
+>-             mps, pci_name(bridge), p_mps);
+>-}
+>-
+> static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
+> {
+>     int mps, orig_mps;
+>@@ -1814,10 +1821,8 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void \
+>*data)  if (!pci_is_pcie(dev))
+>         return 0;
+>
+>-    if (pcie_bus_config == PCIE_BUS_TUNE_OFF) {
+>-        pcie_bus_detect_mps(dev);
+>+    if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
+>         return 0;
+>-    }
+>
+>     mps = 128 << *(u8 *)data;
+>     orig_mps = pcie_get_mps(dev);
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
----
- drivers/pci/pci.c   | 219 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h   |   1 +
- drivers/pci/probe.c |   3 +
- 3 files changed, 223 insertions(+)
+I have tested the patch and it is working on our PCIE SSD devices.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0008c95..c8217a8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2134,6 +2134,225 @@ void pci_pm_init(struct pci_dev *dev)
- 	}
- }
- 
-+static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
-+{
-+	unsigned long flags = IORESOURCE_PCI_FIXED;
-+
-+	switch (prop) {
-+	case PCI_EA_P_MEM:
-+		flags |= IORESOURCE_MEM;
-+		break;
-+	case PCI_EA_P_MEM_PREFETCH:
-+		flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-+		break;
-+	case PCI_EA_P_IO:
-+		flags |= IORESOURCE_IO;
-+		break;
-+	default:
-+		dev_warn(&dev->dev, "%s: Property type %x not supported\n",
-+			__func__, prop);
-+		return 0;
-+	}
-+
-+	return flags;
-+}
-+
-+static struct resource *pci_ea_get_parent_resource(struct pci_dev *dev,
-+					struct resource *res)
-+{
-+	struct resource *parent;
-+
-+	parent = pci_find_parent_resource(dev, res);
-+	if (parent)
-+		return parent;
-+
-+	/* for resources not claimed by a bridge */
-+	if (res->flags & IORESOURCE_MEM)
-+		return &iomem_resource;
-+
-+	if (res->flags & IORESOURCE_IO)
-+		return &ioport_resource;
-+
-+	return NULL;
-+}
-+
-+/* claim the memory for this device in the proper location */
-+static void pci_ea_claim_resource(struct pci_dev *dev, struct resource *res)
-+{
-+	struct resource *parent;
-+	struct resource *conflict;
-+
-+	parent = pci_ea_get_parent_resource(dev, res);
-+	if (!parent) {
-+		dev_warn(&dev->dev, "can't find parent resource for EA entry %s %pR\n",
-+			res->name, res);
-+		return;
-+	}
-+
-+	/* claim the appropriate resource */
-+	conflict = request_resource_conflict(parent, res);
-+	if (conflict) {
-+		dev_warn(&dev->dev, "can't claim EA entry %s %pR: address conflict with %s %pR\n",
-+			 res->name, res, conflict->name, conflict);
-+	}
-+}
-+
-+static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei)
-+{
-+	if (bei <= PCI_STD_RESOURCE_END)
-+		return &dev->resource[bei];
-+	else if (bei == PCI_EA_BEI_ROM)
-+		return &dev->resource[PCI_ROM_RESOURCE];
-+	else
-+		return NULL;
-+}
-+
-+/* Read an Enhanced Allocation (EA) entry */
-+static int pci_ea_read(struct pci_dev *dev, int offset)
-+{
-+	struct resource *res;
-+	int ent_offset = offset;
-+	int ent_size;
-+	resource_size_t start;
-+	resource_size_t end;
-+	unsigned long flags;
-+	u32 dw0;
-+	u32 base;
-+	u32 max_offset;
-+	bool support_64 = (sizeof(resource_size_t) >= 8);
-+
-+	pci_read_config_dword(dev, ent_offset, &dw0);
-+	ent_offset += 4;
-+
-+	/* Entry size field indicates DWORDs after 1st */
-+	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
-+
-+	if (!(dw0 & PCI_EA_ENABLE)) {
-+		dev_err(&dev->dev, "%s: Entry not enabled\n", __func__);
-+		goto out;
-+	}
-+
-+	res = pci_ea_get_resource(dev, PCI_EA_BEI(dw0));
-+	if (!res) {
-+		dev_err(&dev->dev, "%s: Unsupported EA entry BEI\n", __func__);
-+		goto out;
-+	}
-+
-+	flags = pci_ea_set_flags(dev, PCI_EA_PP(dw0));
-+	if (!flags)
-+		flags = pci_ea_set_flags(dev, PCI_EA_SP(dw0));
-+	if (!flags) {
-+		dev_err(&dev->dev, "%s: Entry EA properties not supported\n",
-+			__func__);
-+		goto out;
-+	}
-+
-+	/* Read Base */
-+	pci_read_config_dword(dev, ent_offset, &base);
-+	start = (base & PCI_EA_FIELD_MASK);
-+	ent_offset += 4;
-+
-+	/* Read MaxOffset */
-+	pci_read_config_dword(dev, ent_offset, &max_offset);
-+	ent_offset += 4;
-+
-+	/* Read Base MSBs (if 64-bit entry) */
-+	if (base & PCI_EA_IS_64) {
-+		u32 base_upper;
-+
-+		pci_read_config_dword(dev, ent_offset, &base_upper);
-+		ent_offset += 4;
-+
-+		flags |= IORESOURCE_MEM_64;
-+
-+		/* entry starts above 32-bit boundary, can't use */
-+		if (!support_64 && base_upper)
-+			goto out;
-+
-+		if (support_64)
-+			start |= ((u64)base_upper << 32);
-+	}
-+
-+	dev_dbg(&dev->dev, "%s: start = %pa\n", __func__, &start);
-+
-+	end = start + (max_offset | 0x03);
-+
-+	/* Read MaxOffset MSBs (if 64-bit entry) */
-+	if (max_offset & PCI_EA_IS_64) {
-+		u32 max_offset_upper;
-+
-+		pci_read_config_dword(dev, ent_offset, &max_offset_upper);
-+		ent_offset += 4;
-+
-+		flags |= IORESOURCE_MEM_64;
-+
-+		/* entry too big, can't use */
-+		if (!support_64 && max_offset_upper)
-+			goto out;
-+
-+		if (support_64)
-+			end += ((u64)max_offset_upper << 32);
-+	}
-+
-+	dev_dbg(&dev->dev, "%s: end = %pa\n", __func__, &end);
-+
-+	if (end < start) {
-+		dev_err(&dev->dev, "EA Entry crosses address boundary\n");
-+		goto out;
-+	}
-+
-+	if (ent_size != ent_offset - offset) {
-+		dev_err(&dev->dev, "EA entry size does not match length read\n"
-+			"(Entry Size:%u Length Read:%u)\n",
-+			ent_size, ent_offset - offset);
-+		goto out;
-+	}
-+
-+	res->name = pci_name(dev);
-+	res->start = start;
-+	res->end = end;
-+	res->flags = flags;
-+
-+	pci_ea_claim_resource(dev, res);
-+
-+out:
-+	return offset + ent_size;
-+}
-+
-+/* Enhanced Allocation Initalization */
-+void pci_ea_init(struct pci_dev *dev)
-+{
-+	int ea;
-+	u8 num_ent;
-+	int offset;
-+	int i;
-+
-+	/* find PCI EA capability in list */
-+	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
-+	if (!ea)
-+		return;
-+
-+	dev_dbg(&dev->dev, "%s: capability found!\n", __func__);
-+
-+	/* determine the number of entries */
-+	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
-+					&num_ent);
-+	num_ent &= PCI_EA_NUM_ENT_MASK;
-+
-+	offset = ea + PCI_EA_FIRST_ENT;
-+
-+	/* Skip DWORD 2 for type 1 functions */
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
-+		offset += 4;
-+		/* TODO: Support fixed bus numbers */
-+
-+	for (i = 0; i < num_ent; ++i) {
-+		/* parse each EA entry */
-+		dev_dbg(&dev->dev, "%s: parsing entry %i...\n", __func__, i);
-+		offset = pci_ea_read(dev, offset);
-+	}
-+}
-+
- static void pci_add_saved_cap(struct pci_dev *pci_dev,
- 	struct pci_cap_saved_state *new_cap)
- {
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4ff0ff1..92fbef0 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -76,6 +76,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
- void pci_config_pm_runtime_get(struct pci_dev *dev);
- void pci_config_pm_runtime_put(struct pci_dev *dev);
- void pci_pm_init(struct pci_dev *dev);
-+void pci_ea_init(struct pci_dev *dev);
- void pci_allocate_cap_save_buffers(struct pci_dev *dev);
- void pci_free_cap_save_buffers(struct pci_dev *dev);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cefd636..4cadf35 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1522,6 +1522,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 
- static void pci_init_capabilities(struct pci_dev *dev)
- {
-+	/* Enhanced Allocation */
-+	pci_ea_init(dev);
-+
- 	/* MSI/MSI-X list */
- 	pci_msi_init_pci_dev(dev);
- 
--- 
-1.9.1
+This is basically reimplementing a patch I introduced several years
+ago that was reverted.
+http://marc.info/?l=linux-pci&m=130100586722666&w=2
 
++/* Program PCIE MaxPayload setting on device: ensure parent
+maxpayload <= device */
++static int pci_set_payload(struct pci_dev *dev)
++{
++ int pos, ppos;
++ u16 pctl, psz;
++ u16 dctl, dsz, dcap, dmax;
++ struct pci_dev *parent;
++
++ parent = dev->bus->self;
++ pos = pci_find_capability(dev, PCI_CAP_ID_EXP);
++ if (!pos)
++ return 0;
++
++ /* Read Device MaxPayload capability and setting */
++ pci_read_config_word(dev, pos + PCI_EXP_DEVCTL, &dctl);
++ pci_read_config_word(dev, pos + PCI_EXP_DEVCAP, &dcap);
++ dsz = (dctl & PCI_EXP_DEVCTL_PAYLOAD) >> 5;
++ dmax = (dcap & PCI_EXP_DEVCAP_PAYLOAD);
++
++ /* Read Parent MaxPayload setting */
++ ppos = pci_find_capability(parent, PCI_CAP_ID_EXP);
++ if (!ppos)
++ return 0;
++ pci_read_config_word(parent, ppos + PCI_EXP_DEVCTL, &pctl);
++ psz = (pctl &  PCI_EXP_DEVCTL_PAYLOAD) >> 5;
++
++ /* If parent payload > device max payload -> error
++ * If parent payload > device payload -> set speed
++ * If parent payload <= device payload -> do nothing
++ */
++ if (psz > dmax)
++ return -1;
++ else if (psz > dsz) {
++ dev_info(&dev->dev, "Setting MaxPayload to %d\n", 128 << psz);
++ pci_write_config_word(dev, pos + PCI_EXP_DEVCTL,
++      (dctl & ~PCI_EXP_DEVCTL_PAYLOAD) +
++      (psz << 5));
++ }
++ return 0;
++}
++
+
+
+
+
+One thing is you are not checking if the max possible payload of the
+inserted device is less than the payload setting of the parent.  If
+the bridge is set at 512 MPS for example, and the inserted device only
+supports a MPS of 256, it should error out and disable the PCI device.
