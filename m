@@ -1,94 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:44428 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150AbbHFENT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 00:13:19 -0400
-Received: from /spool/local
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Thu, 6 Aug 2015 14:13:16 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v6 12/42] powerpc/powernv: Increase PE# capacity
-Date: Thu,  6 Aug 2015 14:11:17 +1000
-Message-Id: <1438834307-26960-13-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v4 13/52] PCI, acpiphp: Add missing realloc list checking after resource allocation
+Date: Tue, 25 Aug 2015 02:37:13 +0200
+Message-ID: <3540278.fBlMDMjYYH@vostro.rjw.lan>
+In-Reply-To: <CAE9FiQWW_zzZGoq-rrbe+R==-xwRHMkTAtFRGGkN-GK-F6NWsg@mail.gmail.com>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org> <205780224.0d92UNafyF@vostro.rjw.lan> <CAE9FiQWW_zzZGoq-rrbe+R==-xwRHMkTAtFRGGkN-GK-F6NWsg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB maintains an array helping to translate RID (Request
-ID) to PE# with the assumption that PE# takes 8 bits, indicating
-that we can't have more than 256 PEs. However, pci_dn->pe_number
-already had 4-bytes for the PE#.
+On Monday, August 24, 2015 03:14:26 PM Yinghai Lu wrote:
+> On Mon, Aug 24, 2015 at 3:09 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Thursday, August 20, 2015 11:20:28 PM Yinghai Lu wrote:
+> >> We check the realloc list, as list must be empty after allocation.
+> >>
+> >> Add missing one acpiphp driver.
+> >>
+> >> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> >> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> >> Cc: Len Brown <lenb@kernel.org>
+> >> Cc: linux-acpi@vger.kernel.org
+> >> ---
+> >>  drivers/pci/hotplug/acpiphp_glue.c | 1 +
+> >>  1 file changed, 1 insertion(+)
+> >>
+> >> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> >> index ff53856..1c7c1d7 100644
+> >> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> >> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> >> @@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+> >>               }
+> >>       }
+> >>       __pci_bus_assign_resources(bus, &add_list, NULL);
+> >> +     BUG_ON(!list_empty(&add_list));
+> >
+> > Is crashing the kernel the best we can do here?
+> >
+> > What about bailing out with a WARN_ON() instead?  Surely, the kernel can work
+> > without the new device?
+> 
+> That should not happen.
+> If that list is not empty, we could have broken the assign logic for
+> optional or additional
+> resource allocation.
+> 
+> We have other two BUG_ON checking in drivers/pci/setup-bus.c.
+> 
+> Do we need to change them all to WARN_ON()?
+> 
+> or you prefer this version instead:
 
-The patch extends the PE# capacity so that each of them will be
-4-bytes long. Then we can use IODA_INVALID_PE to check one entry
-in phb->pe_rmap[] is valid or not.
+I like this patch better, but the question really is how bad things can get
+if we continue.  And if they can get critically bad, whether or not we still
+are able to catch that critical error later on.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 8 ++++++--
- arch/powerpc/platforms/powernv/pci.h      | 7 +++----
- 2 files changed, 9 insertions(+), 6 deletions(-)
-
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 57ba8fd..3094c61 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -786,7 +786,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
- 
- 	/* Clear the reverse map */
- 	for (rid = pe->rid; rid < rid_end; rid++)
--		phb->ioda.pe_rmap[rid] = 0;
-+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
- 
- 	/* Release from all parents PELT-V */
- 	while (parent) {
-@@ -3134,7 +3134,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	unsigned long size, pemap_off;
- 	const __be64 *prop64;
- 	const __be32 *prop32;
--	int len;
-+	int len, i;
- 	u64 phb_id;
- 	void *aux;
- 	long rc;
-@@ -3201,6 +3201,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	if (prop32)
- 		phb->ioda.reserved_pe = be32_to_cpup(prop32);
- 
-+	/* Invalidate RID to PE# mapping */
-+	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
-+		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
-+
- 	/* Parse 64-bit MMIO range */
- 	pnv_ioda_parse_m64_window(phb);
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 1dc9578..6f8568e 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -175,11 +175,10 @@ struct pnv_phb {
- 			struct list_head	pe_list;
- 			struct mutex            pe_list_mutex;
- 
--			/* Reverse map of PEs, will have to extend if
--			 * we are to support more than 256 PEs, indexed
--			 * bus { bus, devfn }
-+			/* Reverse map of PEs, indexed by
-+			 * { bus, devfn }
- 			 */
--			unsigned char		pe_rmap[0x10000];
-+			int			pe_rmap[0x10000];
- 
- 			/* 32-bit TCE tables allocation */
- 			unsigned long		dma32_segcount;
--- 
-2.1.0
+> ---
+> 
+> Subject: [PATCH] PCI: Separate realloc list checking after allocation
+> 
+> We check the realloc list, as list must be empty after allocation.
+> 
+> Separate the realloc list checking to another function.
+> 
+> Add checking that is missed in acpiphp driver.
+> 
+> -v2: change to WARN_ON addording to Rafael.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> Cc: Len Brown <lenb@kernel.org>
+> Cc: linux-acpi@vger.kernel.org
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c |    1 +
+>  drivers/pci/pci.h                  |    1 +
+>  drivers/pci/setup-bus.c            |   12 +++++++++---
+>  3 files changed, 11 insertions(+), 3 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/acpiphp_glue.c
+> +++ linux-2.6/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_s
+>          }
+>      }
+>      __pci_bus_assign_resources(bus, &add_list, NULL);
+> +    pci_bus_check_realloc(&add_list);
+> 
+>      acpiphp_sanitize_bus(bus);
+>      pcie_bus_configure_settings(bus);
+> Index: linux-2.6/drivers/pci/pci.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.h
+> +++ linux-2.6/drivers/pci/pci.h
+> @@ -237,6 +237,7 @@ void __pci_bus_size_bridges(struct pci_b
+>  void __pci_bus_assign_resources(const struct pci_bus *bus,
+>                  struct list_head *realloc_head,
+>                  struct list_head *fail_head);
+> +void pci_bus_check_realloc(struct list_head *realloc_head);
+>  bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
+> 
+>  void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+> Index: linux-2.6/drivers/pci/setup-bus.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/setup-bus.c
+> +++ linux-2.6/drivers/pci/setup-bus.c
+> @@ -349,6 +349,12 @@ out:
+>      }
+>  }
+> 
+> +void pci_bus_check_realloc(struct list_head *realloc_head)
+> +{
+> +    if (WARN_ON(!list_empty(realloc_head)))
+> +        free_list(realloc_head);
+> +}
+> +
+>  /**
+>   * assign_requested_resources_sorted() - satisfy resource requests
+>   *
+> @@ -1860,7 +1866,7 @@ again:
+>      /* Depth last, allocate resources and update the hardware. */
+>      __pci_bus_assign_resources(bus, add_list, &fail_head);
+>      if (add_list)
+> -        BUG_ON(!list_empty(add_list));
+> +        pci_bus_check_realloc(add_list);
+>      tried_times++;
+> 
+>      /* any device complain? */
+> @@ -1935,7 +1941,7 @@ void pci_assign_unassigned_bridge_resour
+>  again:
+>      __pci_bus_size_bridges(parent, &add_list);
+>      __pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+> -    BUG_ON(!list_empty(&add_list));
+> +    pci_bus_check_realloc(&add_list);
+>      tried_times++;
+> 
+>      if (list_empty(&fail_head))
+> @@ -1994,6 +2000,6 @@ void pci_assign_unassigned_bus_resources
+>                               &add_list);
+>      up_read(&pci_bus_sem);
+>      __pci_bus_assign_resources(bus, &add_list, NULL);
+> -    BUG_ON(!list_empty(&add_list));
+> +    pci_bus_check_realloc(&add_list);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
 
