@@ -1,95 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:53466 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753232AbbHCNLe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 3 Aug 2015 09:11:34 -0400
-Date: Mon, 3 Aug 2015 14:11:32 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "Jayachandran C." <jchandra@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	Ming Lei <ming.lei@canonical.com>, agraf@suse.de
-Subject: Re: [PATCH v3 1/2] PCI: generic: remove dependency on hw_pci
-Message-ID: <20150803131131.GF10501@arm.com>
-References: <1438183681-30519-1-git-send-email-jchandra@broadcom.com>
- <20150730133521.GA12999@red-moon>
- <20150731160654.GB31408@jayachandranc.netlogicmicro.com>
- <20150731162716.GA7182@red-moon>
+Received: from mout.kundenserver.de ([212.227.17.24]:58320 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751315AbbHYSs4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 14:48:56 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
+	catalin.marinas@arm.com, will.deacon@arm.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, hanjun.guo@linaro.org
+Subject: Re: [PATCH V2 0/4] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
+Date: Tue, 25 Aug 2015 20:48:24 +0200
+Message-ID: <240091906.Gl2z931jjW@wuerfel>
+In-Reply-To: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150731162716.GA7182@red-moon>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jayachandran, Bjorn,
+On Wednesday 26 August 2015 00:33:25 Suravee Suthikulpanit wrote:
+> This patch adds support to setup DMA coherency for PCI device using
+> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
+> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+> support for ARM64 which is currently in development.
+> 
+> Also, this should not affect other architectures that does not define 
+> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
+> 
 
-On Fri, Jul 31, 2015 at 05:27:16PM +0100, Lorenzo Pieralisi wrote:
-> On Fri, Jul 31, 2015 at 05:07:01PM +0100, Jayachandran C. wrote:
-> > On Thu, Jul 30, 2015 at 02:35:21PM +0100, Lorenzo Pieralisi wrote:
-> > > On Wed, Jul 29, 2015 at 04:28:00PM +0100, Jayachandran C wrote:
-> > > > -	pci_common_init_dev(dev, &hw);
-> > > > +	/* do not reassign resource if probe only */
-> > > > +	if (!pci_has_flag(PCI_PROBE_ONLY))
-> > > > +		pci_add_flags(PCI_REASSIGN_ALL_RSRC);
-> > > 
-> > > You should add PCI_REASSIGN_ALL_BUS here. As I said in patch 2 comment,
-> > 
-> > The idea is to do exactly what pci_common_init_dev does on ARM. There is
-> > not need to change behavior on ARM and deal with the fallout in this
-> > patchset.
-> 
-> You are enabling this driver on ARM64, and on ARM64 that flag does
-> make a difference, it does not on ARM as far as I can tell, but you do
-> not seem to care.
-> 
-> Actually Rob asked you to put together a function since most of
-> this code is replicated across ARM drivers eg:
-> 
-> drivers/pci/host/pci-versatile.c
-> 
-> Leave the code as it is and I will consolidate the code later.
-> 
-> > > please enable setup-irq.c in an explicit commit, re-sequence the
-> > > series and fold the Kconfig ARM64 enablement in this patch.
-> > 
-> > I would think that the Makefile and Kconfig changes should be
-> > togethter as the arm64 enablement patch. The previous patch is
-> > to update the gen_pci driver, and it really makes sense in that
-> > order.  I am not sure why you suggest this change.
-> 
-> Because this is not the only driver that requires compiling
-> drivers/pci/setup-irq.c on ARM64, I thought it made more sense
-> to do it in a separate patch to make that change standalone.
-> 
-> If for any reason we have to revert your patch that enables
-> PCI host generic on ARM64 (and we remove with it the compilation
-> of setup-irq.c) we would break other ARM64 PCI hosts that require it,
-> right ?
-> 
-> I leave the decision to Bjorn since I am away next week, I am fine
-> with the code as it is so please go ahead.
+We only support ACPI on SBSA compliant platforms, and SBSA mandates
+cache-coherent PCI, so I don't think this is actually needed,
+just use coherent all the time and do WARN_ON(!CCA) to catch people
+that try to incorrectly use ACPI on a non-SBSA platform.
 
-In the interest of getting something merged, can I suggest you
-(Jayachandran) repost the patches with Lorenzo's suggestions to reorder
-the series and split up the setup-irq compilation into a separate patch?
-
-You can also add his ack to this patch.
-
-It's a pity that the code isn't quite how we'd like it to end up, but
-this at least enables people for 4.3 and I know that Lorenzo is working
-on tidying up the loose ends as additional patches (but he's on holiday
-this week). That includes removal of the PROBE_ONLY bodge that I've got
-queued in arch/arm64/kernel/pci.c.
-
-Bjorn, does that sound ok to you? I'm keen to have something working, as
-I'm starting to get beaten up about the lack of generic PCI on arm64.
-
-Cheers,
-
-Will
+	Arnd
