@@ -1,52 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:37885 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbbHQKyz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 17 Aug 2015 06:54:55 -0400
-From: Yijing Wang <wangyijing@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <mroos@linux.ee>,
-	Yijing Wang <wangyijing@huawei.com>
-Subject: [PATCH] PCI/ASPM: Fix a NULL pointer crash on sparc64
-Date: Mon, 17 Aug 2015 18:47:58 +0800
-Message-ID: <1439808478-23253-1-git-send-email-wangyijing@huawei.com>
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:35685 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751580AbbHYCtq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2015 22:49:46 -0400
+Received: by oiew67 with SMTP id w67so93021664oie.2
+        for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2015 19:49:46 -0700 (PDT)
+Date: Mon, 24 Aug 2015 21:49:41 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Zhang Rui <rui.zhang@intel.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>, chuansheng.liu@intel.com,
+	Tejun Heo <tj@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Aaron Lu <aaron.lu@intel.com>, MyMailClone@t-online.de,
+	mister.freeman@laposte.net, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+Message-ID: <20150825024941.GA25829@google.com>
+References: <1438047747.1856.12.camel@rzhang1-mobl4>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1438047747.1856.12.camel@rzhang1-mobl4>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit d0751b98dfa3 ("PCI: Add dev->has_secondary_link to
-track downstream PCIe links")assumed root port is always
-the top device in pcie tree. But on sparc64 V245 and T2000
-the pcie tree has no root port device in top level, the
-upstream port device is connected directly to root bus.
-So we may get NULL parent for this upstream port device.
+On Tue, Jul 28, 2015 at 09:42:27AM +0800, Zhang Rui wrote:
+> From 57edba9c677e47354846db951014dc4d5b13ce54 Mon Sep 17 00:00:00 2001
+> From: Zhang Rui <rui.zhang@intel.com>
+> Date: Sun, 26 Jul 2015 14:15:36 +0800
+> Subject: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
 
-Upstream port ------ Downstream port ------PCIe-PCI bridge
+...
 
-Reported-by: Meelis Roos <mroos@linux.ee>
-Tested-by: Meelis Roos <mroos@linux.ee>
-Signed-off-by: Yijing Wang <wangyijing@huawei.com>
----
- drivers/pci/probe.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+In the interest of making progress on this, I reworked this to be what I'm
+looking for.  It's not significantly different code-wise from what you
+posted originally, so I left your Signed-off-by.  But let me know if I
+messed it up.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 51ebb97..cd54298 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1003,7 +1003,10 @@ void set_pcie_port_type(struct pci_dev *pdev)
- 	else if (type == PCI_EXP_TYPE_UPSTREAM ||
- 		 type == PCI_EXP_TYPE_DOWNSTREAM) {
- 		parent = pci_upstream_bridge(pdev);
--		if (!parent->has_secondary_link)
-+		/* For sparc64 V245 and T2000, upstream port may be
-+		 * the top level device, connect to root bus directly.
-+		 */
-+		if (parent && !parent->has_secondary_link)
- 			pdev->has_secondary_link = 1;
- 	}
+We don't actually *know* whether the quirk needs to be applied before
+pata_jmicron is loaded, but my guess is that is does, so I left it as a PCI
+quirk rather than as a driver quirk.
+
+Comments welcome!
+
+Bjorn
+
+
+commit 09981db5b0c9a6865aa39126b71bc87718577e4b
+Author: Zhang Rui <rui.zhang@intel.com>
+Date:   Mon Aug 24 15:27:11 2015 -0500
+
+    PCI: Disable async suspend/resume for JMicron multi-function SATA/AHCI
+    
+    On multi-function JMicron SATA/PATA/AHCI devices, the PATA controller at
+    function 1 doesn't work if it is powered on before the SATA controller at
+    function 0.  The result is that PATA doesn't work after resume, and
+    messages like this:
+    
+      pata_jmicron 0000:02:00.1: Refused to change power state, currently in D3
+      irq 17: nobody cared (try booting with the "irqpoll" option)
+    
+    e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361")
+    solved this problem for JMicron 361 and 363 devices.  With async suspend
+    disabled, we always power on function 0 before function 1.
+    
+    Barto then reported the same problem with a JMicron 368 (see comment #57 in
+    the bugzilla).
+    
+    Rather than extending the blacklist piecemeal, disable async suspend for
+    all JMicron multi-function SATA/PATA/AHCI devices.
+    
+    This quirk could stay in the ahci and pata_jmicron drivers, but it's likely
+    the problem will occur even if pata_jmicron isn't loaded until after the
+    suspend/resume.  Making it a PCI quirk ensures that we'll preserve the
+    power-on order even if the drivers aren't loaded.
+    
+    [bhelgaas: changelog, limit to multi-function, limit to IDE/ATA]
+    Link: https://bugzilla.kernel.org/show_bug.cgi?id=81551
+    Reported-by: Barto <mister.freeman@laposte.net>
+    Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 7e62751..a466602 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -351,6 +351,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* JMicron 362B and 362C have an AHCI function with IDE class code */
+ 	{ PCI_VDEVICE(JMICRON, 0x2362), board_ahci_ign_iferr },
+ 	{ PCI_VDEVICE(JMICRON, 0x236f), board_ahci_ign_iferr },
++	/* May need to update quirk_jmicron_async_suspend() for additions */
+ 
+ 	/* ATI */
+ 	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
+@@ -1451,18 +1452,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
+ 		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
+ 
+-	/*
+-	 * The JMicron chip 361/363 contains one SATA controller and one
+-	 * PATA controller,for powering on these both controllers, we must
+-	 * follow the sequence one by one, otherwise one of them can not be
+-	 * powered on successfully, so here we disable the async suspend
+-	 * method for these chips.
+-	 */
+-	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+-		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+-		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
+-		device_disable_async_suspend(&pdev->dev);
+-
+ 	/* acquire resources */
+ 	rc = pcim_enable_device(pdev);
+ 	if (rc)
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index 47e418b..4d1a5d2 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -143,18 +143,6 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
+ 
+-	/*
+-	 * The JMicron chip 361/363 contains one SATA controller and one
+-	 * PATA controller,for powering on these both controllers, we must
+-	 * follow the sequence one by one, otherwise one of them can not be
+-	 * powered on successfully, so here we disable the async suspend
+-	 * method for these chips.
+-	 */
+-	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+-		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+-		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
+-		device_disable_async_suspend(&pdev->dev);
+-
+ 	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
  }
--- 
-1.7.1
-
+ 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b6af4b0..5e35a9d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1570,6 +1570,18 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB3
+ 
+ #endif
+ 
++static void quirk_jmicron_async_suspend(struct pci_dev *dev)
++{
++	if (dev->multifunction) {
++		device_disable_async_suspend(&dev->dev);
++		dev_info(&dev->dev, "async suspend disabled to avoid multi-function power-on ordering issue\n");
++	}
++}
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY, PCI_CLASS_STORAGE_IDE, 8, quirk_jmicron_async_suspend);
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_JMICRON, PCI_ANY, PCI_CLASS_STORAGE_SATA_AHCI, 0, quirk_jmicron_async_suspend);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x2362, quirk_jmicron_async_suspend);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_JMICRON, 0x236f, quirk_jmicron_async_suspend);
++
+ #ifdef CONFIG_X86_IO_APIC
+ static void quirk_alder_ioapic(struct pci_dev *pdev)
+ {
