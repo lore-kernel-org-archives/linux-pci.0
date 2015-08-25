@@ -1,63 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:33184 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750912AbbHFXcb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 6 Aug 2015 19:32:31 -0400
+Received: from mail-bl2on0094.outbound.protection.outlook.com ([65.55.169.94]:27520
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755496AbbHYJg2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Aug 2015 05:36:28 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>
+Subject: [PATCH v5 4/5] Documentation: dt-bindings: pci: altera pcie device tree binding
+Date: Tue, 25 Aug 2015 17:35:47 +0800
+Message-ID: <1440495348-2666-5-git-send-email-lftan@altera.com>
+In-Reply-To: <1440495348-2666-1-git-send-email-lftan@altera.com>
+References: <1440495348-2666-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-In-Reply-To: <55C388CF.4090501@roeck-us.net>
-References: <1438308908-12259-1-git-send-email-linux@roeck-us.net>
-	<CAE9FiQXuTKmXXCFsKUiMK43U+LpOzfa3oV0iNWS+Jh879EDNsw@mail.gmail.com>
-	<CAE9FiQVGhfbFW5-5deYcU2bDWE9k0-4+V+cepwdqZ661sLWOFA@mail.gmail.com>
-	<55C2C4F4.1040600@roeck-us.net>
-	<CAE9FiQXtSDBFy1rf4TPHwD-JjoB+5Wii1MBMBfGTaNosqnRJGg@mail.gmail.com>
-	<55C2E79E.3090809@roeck-us.net>
-	<CAE9FiQVDwX_-bX9sH2qv3thkKzOosFR3WvkUYWM=TsU-4oOSzA@mail.gmail.com>
-	<55C388CF.4090501@roeck-us.net>
-Date: Thu, 6 Aug 2015 16:32:30 -0700
-Message-ID: <CAE9FiQUeY-aocR=vwRUopuERJc0uUWKMwDafqLHo2baeVG7cKg@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: Only enable IO window if supported
-From: Yinghai Lu <yinghai@kernel.org>
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 6, 2015 at 9:18 AM, Guenter Roeck <linux@roeck-us.net> wrote:
-> On 08/06/2015 08:58 AM, Yinghai Lu wrote:
+This patch adds the bindings for Altera PCIe host controller driver and
+Altera PCIe MSI driver.
 
-> Ok, I admit that I am lost. Earlier it seemed that you were concerned about
-> this case, where no io window is available or a bus doesn't support io,
-> but a non-transparent child does. Now you seem to say that the
-> non-transparent
-> child would not be able to support IO either.
->
-> For my education, can you list the possible options, and how you suggest
-> to solve them ? I can see the following situations.
->
-> - root supports IO, but has no io window assigned
-> - root does not support IO and has or has not an IO window assigned
-> - a bridge does not support IO
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ .../devicetree/bindings/pci/altera-pcie-msi.txt    | 28 +++++++++++++
+ .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
+ 2 files changed, 77 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
 
-should have two cases:
-1. root bus does not have io window exposed.
-2. pci bridge io bar is not writable.
+diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+new file mode 100644
+index 0000000..53ad2388
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+@@ -0,0 +1,28 @@
++* Altera PCIe MSI controller
++
++Required properties:
++- compatible:	should contain "altr,msi-1.0"
++- reg:		specifies the physical base address of the controller and
++		the length of the memory mapped region.
++- reg-names:	must include the following entries:
++		"csr": CSR registers
++		"vector_slave": vectors slave port region
++- interrupt-parent:	interrupt source phandle.
++- interrupts:	specifies the interrupt source of the parent interrupt
++		controller. The format of the interrupt specifier depends on the
++		parent interrupt controller.
++- num-vectors:	number of vectors, range 1 to 32.
++- msi-controller:	indicates that this is MSI controller node
++
++
++Example
++msi0: msi@0xFF200000 {
++	compatible = "altr,msi-1.0";
++	reg = <0xFF200000 0x00000010
++		0xFF200010 0x00000080>;
++	reg-names = "csr", "vector_slave";
++	interrupt-parent = <&hps_0_arm_gic_0>;
++	interrupts = <0 42 4>;
++	msi-controller = <1>;
++	num-vectors = <32>;
++};
+diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+new file mode 100644
+index 0000000..4440db1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+@@ -0,0 +1,49 @@
++* Altera PCIe controller
++
++Required properties:
++- compatible :	should contain "altr,pcie-root-port-1.0"
++- reg:		a list of physical base address and length for TXS and CRA.
++- reg-names:	must include the following entries:
++		"Txs" or "txs": TX slave port region
++		"Cra" or "cra": Control register access region
++- interrupt-parent:	interrupt source phandle.
++- interrupts:	specifies the interrupt source of the parent interrupt controller.
++		The format of the interrupt specifier depends on the parent interrupt
++		controller.
++- device_type:	must be "pci"
++- #address-cells:	set to <3>
++- #size-cells:	set to <2>
++- #interrupt-cells:	set to <1>
++- ranges:		describes the translation of addresses for root ports and standard
++		PCI regions.
++- interrupt-map-mask and interrupt-map: standard PCI properties to define the
++		mapping of the PCIe interface to interrupt numbers.
++
++Optional properties:
++- msi-parent:	Link to the hardware entity that serves as the MSI controller for this PCIe
++		controller.
++- bus-range:	PCI bus numbers covered
++
++Example
++	pcie_0: pcie@0xc00000000 {
++		compatible = "altr,pcie-root-port-1.0";
++		reg = <0xc0000000 0x20000000>,
++			<0xff220000 0x00004000>;
++		reg-names = "Txs", "Cra";
++		interrupt-parent = <&hps_0_arm_gic_0>;
++		interrupts = <0 40 4>;
++		interrupt-controller;
++		#interrupt-cells = <1>;
++		bus-range = <0x0 0xFF>;
++		device_type = "pci";
++		msi-parent = <&msi_to_gic_gen_0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_0 1>,
++			            <0 0 0 2 &pcie_0 2>,
++			            <0 0 0 3 &pcie_0 3>,
++			            <0 0 0 4 &pcie_0 4>;
++		ranges = <0x82000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x10000000
++			    0x82000000 0x00000000 0x10000000 0xd0000000 0x00000000 0x10000000>;
++	};
+-- 
+1.8.2.1
 
->
-> For the transparent case, each of those should result in all children
-> not even trying to assign an IO window, which is what we want,
-> and what my patc set tries to do.
->
-> How should those cases be handled for non-transparent bridges ?
-
-for case 2: current upstream code, no warning for the bridge itself,
-but have warning for devices under the bridge.
-
-We only need to handle case 1, aka root bus does not have io port window.
-
-What about your setup, is it case 1 or case 2?
-
-Yinghai
