@@ -1,68 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:51615 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750953AbbHMAtx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 12 Aug 2015 20:49:53 -0400
-Date: Thu, 13 Aug 2015 10:49:51 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Tadeusz Struk <tadeusz.struk@intel.com>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Michal Marek <mmarek@suse.cz>
-Subject: Re: linux-next: Tree for Aug 12 (include/linux/pci.h)
-Message-ID: <20150813104951.62b1e078@canb.auug.org.au>
-In-Reply-To: <55CBE1E7.60904@infradead.org>
-References: <20150812233914.451d1fcf@canb.auug.org.au>
-	<55CB8AF0.4060905@infradead.org>
-	<20150813075322.064035f8@canb.auug.org.au>
-	<55CBCF96.7060102@intel.com>
-	<55CBE1E7.60904@infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
+	will.deacon@arm.com, hanjun.guo@linaro.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH V2 2/4] ACPI/scan: Clean up acpi_check_dma
+Date: Wed, 26 Aug 2015 04:44:20 +0200
+Message-ID: <1937405.90E8lxrvy8@vostro.rjw.lan>
+In-Reply-To: <55DD1DB7.1020203@amd.com>
+References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1659571.paO1iYcMuM@vostro.rjw.lan> <55DD1DB7.1020203@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Randy,
-
-On Wed, 12 Aug 2015 17:16:39 -0700 Randy Dunlap <rdunlap@infradead.org> wrote:
->
-> On 08/12/15 15:58, Tadeusz Struk wrote:
-> > Hi,
-> > On 08/12/2015 02:53 PM, Stephen Rothwell wrote:
-> >> On Wed, 12 Aug 2015 11:05:36 -0700 Randy Dunlap <rdunlap@infradead.org> wrote:
-> >>>>
-> >>>> on i386 or x86_64:
-> >>>>
-> >>>> Many (repeated) errors like this one:
-> >>>>
-> >>>> ../include/linux/pci.h:390:12: error: âstruct pci_devâ has no member named âphysfnâ
-> >>>>
-> >>>> when CONFIG_PCI_ATS is not enabled.
-> >> Maybe caused by commit
-> >>
-> >>   dd0f368398ea ("crypto: qat - Add qat dh895xcc VF driver")
-> >>
-> >> from the crypto tree Which adds a
-> >>
-> >>   select PCI_IOV
-> >>
-> >> to drivers/crypto/qat/Kconfig without the necessary
-> >>
-> >>   select PCI
-> >>
-> >> but PCI_IOV selects PCI_ATS, so I am not sure what happened here.  I am
-> >> assuming that your config has PCI_IOV enabled?  What about PCI?
-> > 
-> > There is a patch submitted, but not yet applied
-> > https://patchwork.kernel.org/patch/6994171/
-> > maybe it will help?
+On Wednesday, August 26, 2015 09:00:23 AM Suravee Suthikulpanit wrote:
+> Hi Rafael,
 > 
-> Yes, that works for me.  Thanks.
+> On 8/26/15 06:48, Rafael J. Wysocki wrote:
+> 
+> >[...]
+> > On Wednesday, August 26, 2015 12:33:27 AM Suravee Suthikulpanit wrote:
+> >> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+> >> index b9657af..55cf916 100644
+> >> --- a/drivers/acpi/glue.c
+> >> +++ b/drivers/acpi/glue.c
+> >> @@ -168,7 +168,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+> >>   	struct list_head *physnode_list;
+> >>   	unsigned int node_id;
+> >>   	int retval = -EINVAL;
+> >> -	bool coherent;
+> >> +	int coherent;
+> >
+> > enum, anyone?  With clearly defined values?
+> 
+> Originally I had defined
+> 
+> enum acpi_dma_coherency {
+> 	ACPI_DMA_NON_COHERENT,
+> 	ACPI_DMA_COHERENT,
+> 	APCI_DMA_NOT_SUPPORTED = -1,
+> };
+> 
+> Although, this would need to be defined in the include/linux/acpi.h, and 
+> will be used also for #ifndef CONFIG_ACPI code to return errors. I was 
+> not sure if this would be too much. If this is preferred, I'll add this 
+> back in.
+> 
+> >>
+> >>   	if (has_acpi_companion(dev)) {
+> >>   		if (acpi_dev) {
+> >> @@ -225,7 +225,8 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+> >>   	if (!has_acpi_companion(dev))
+> >>   		ACPI_COMPANION_SET(dev, acpi_dev);
+> >>
+> >> -	if (acpi_check_dma(acpi_dev, &coherent))
+> >> +	coherent = acpi_check_dma_coherency(acpi_dev);
+> >> +	if (coherent != -1)
+> >
+> > Like here I'm not sure why -1 is special?
+> 
+> It's just another value to communicate that DMA is not supported. :)
 
-Thanks for doing that.
+OK
 
--- 
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
+So maybe use 0/1 for the coherence thing and a proper error code
+(-ENOTSUPP seems to be a good candidate) for the "no DMA" case?
+
+Then, if you rename the local variable to something like "ret",
+it will be slightly less confusing.
+
+And instead of checking against a specific negative value, you can
+simply use "if (stuff < 0)" or "if (stuff >= 0)" to check whether or
+not it is supported at all.
+
+Thanks,
+Rafael
+
