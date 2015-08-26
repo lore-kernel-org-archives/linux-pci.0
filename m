@@ -1,71 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1434128306.11808.97.camel@misato.fc.hp.com>
-References: <CAB=NE6UgtdSoBsA=8+ueYRAZHDnWUSmQAoHhAaefqudBrSY7Zw@mail.gmail.com>
- <1434064996.11808.64.camel@misato.fc.hp.com> <557AAD910200007800084014@mail.emea.novell.com>
- <1434128306.11808.97.camel@misato.fc.hp.com>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 6 Aug 2015 12:53:03 -0700
-Message-ID: <CAB=NE6W3=SFTqabeD6gq7JCqFZ7+SBZh7Xa=RteO_8-3P7fbdw@mail.gmail.com>
-Subject: Re: [Xen-devel] RIP MTRR - status update for upcoming v4.2
-To: Toshi Kani <toshi.kani@hp.com>
-Cc: Jan Beulich <JBeulich@suse.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jej B <James.Bottomley@hansenpartnership.com>,
-	X86 ML <x86@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	xen-devel@lists.xenproject.org, Dave Airlie <airlied@redhat.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <syrjala@sci.fi>,
-	Juergen Gross <JGross@suse.com>, Borislav Petkov <bp@suse.de>,
-	Tomi Valkeinen <tomi.valkeinen@ti.com>,
-	linux-fbdev <linux-fbdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-media@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:32951 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932203AbbHZCRb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 25 Aug 2015 22:17:31 -0400
+Received: by pacti10 with SMTP id ti10so70398088pac.0
+        for <linux-pci@vger.kernel.org>; Tue, 25 Aug 2015 19:17:30 -0700 (PDT)
+References: <1440498929-44519-1-git-send-email-wangzhou1@hisilicon.com> <5DE197E3-8F25-4EAD-B21B-BE3220C6C21B@gmail.com> <55DD1CF1.4050706@hisilicon.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <55DD1CF1.4050706@hisilicon.com>
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <24A4D961-E9D6-4DDD-968B-7DE2E44398D0@gmail.com>
+Cc: "<pratyush.anand@gmail.com>" <pratyush.anand@gmail.com>,
+	"<gabriele.paoloni@huawei.com>" <gabriele.paoloni@huawei.com>,
+	"<linux-pci@vger.kernel.org>" <linux-pci@vger.kernel.org>,
+	"<qiuzhenfa@hisilicon.com>" <qiuzhenfa@hisilicon.com>,
+	"<zhangjukuo@huawei.com>" <zhangjukuo@huawei.com>,
+	"<liudongdong3@huawei.com>" <liudongdong3@huawei.com>,
+	"<qiujiang@huawei.com>" <qiujiang@huawei.com>,
+	"<xuwei5@hisilicon.com>" <xuwei5@hisilicon.com>,
+	"<liguozhu@hisilicon.com>" <liguozhu@hisilicon.com>,
+	jingoohan1@gmail.com
+From: Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH] PCI: designware: Fix PORT_LOGIC_LINK_WIDTH_MASK
+Date: Wed, 26 Aug 2015 11:17:21 +0900
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 12, 2015 at 9:58 AM, Toshi Kani <toshi.kani@hp.com> wrote:
-> On Fri, 2015-06-12 at 08:59 +0100, Jan Beulich wrote:
->> >>> On 12.06.15 at 01:23, <toshi.kani@hp.com> wrote:
->> > There are two usages on MTRRs:
->> >  1) MTRR entries set by firmware
->> >  2) MTRR entries set by OS drivers
->> >
->> > We can obsolete 2), but we have no control over 1).  As UEFI firmwares
->> > also set this up, this usage will continue to stay.  So, we should not
->> > get rid of the MTRR code that looks up the MTRR entries, while we have
->> > no need to modify them.
->> >
->> > Such MTRR entries provide safe guard to /dev/mem, which allows
->> > privileged user to access a range that may require UC mapping while
->> > the /dev/mem driver blindly maps it with WB.  MTRRs converts WB to UC in
->> > such a case.
->>
->> But it wouldn't be impossible to simply read the MTRRs upon boot,
->> store the information, disable MTRRs, and correctly use PAT to
->> achieve the same effect (i.e. the "blindly maps" part of course
->> would need fixing).
->
-> It could be done, but I do not see much benefit of doing it.  One of the
-> reasons platform vendors set MTRRs is so that a system won't hit a
-> machine check when an OS bug leads an access with a wrong cache type.
->
-> A machine check is hard to analyze and can be seen as a hardware issue by
-> customers.  Emulating MTRRs with PAT won't protect from such a bug.
+On 2015. 8. 26., at AM 10:57, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+> 
+> Hi Jingoo,
+> 
+>> On 2015/8/25 19:14, Jingoo Han wrote:
+>>> On 2015. 8. 25., at PM 7:35, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+>>> 
+>>> The value under PORT_LOGIC_LINK_WIDTH_MASK is 0x1, 0x2, 0x4, 0x8. Here change
+>>> this mask to proper value.
+>>> 
+>>> In fact, for DesignWare PCIe IP version 4.4, it only uses bit8~12 to indicate
+>>> number of lanes. Original mask will bring a mistake.
+>> 
+>> NAK
+> 
+> Sorry, maybe above commit message is no very clear. Will explain it below.
+> 
+>> 
+>> The definitions of bits of registers should be defined based on hardware manual such as datasheet, databook.
+>> 
+>> According to the databook, the bits [16:8] are defined for NUM_OF_LANES.
+> 
+> Yes, according to databook of v4.2, bits [16:8] are defined for NUM_OF_LANES.
+> 
+>> 
+>> In the future, if 16 lanes or 32 lanes is supported and 12th bit or 13th bit is used, what will you do?
+>> 
+>> Then, in the version 4.4 IP, the bits[16:13] are used for other usage?
+> 
+> Yes, according to databook of v4.4, bits [12:8] are defined for NUM_OF_LANES.
+> [16:13] are for other usages(bit16 is AUTO_LANE_FLIP_CTRL_EN, bits [15:13] are
+> PRE_DET_LANE). For details, maybe you can refer to v4.4 databook :)
+> 
+> My opinion is that there is no conflict about NUM_OF_LANES between v4.2 and v4.4.
+> We can change this mask to avoid future problem.
 
-That's seems like a fair and valid concern. This could only happen if
-the OS would have code that would use MTRR, in the case of Linux we'll
-soon be able to vet that this cannot happen. For those type of OSes...
-could it be possible to negotiate or hint to the platform through an
-attribute somehow that the OS has such capability to not use MTRR?
-Then, only if this bit is set, the platform could then avoid such MTRR
-settings, and if we have issues you can throw rocks at us.
+OK, I see.
+I got what you want to say. :-)
 
-Could this also be used to prevent SMIs with MTRRs?
+I think that there is no conflict between v4.2 and v4.4.
+So, this patch can be accepted.
 
- Luis
+Then, would you send v2 patch with more detailed commit message above mentioned?
+
+Best regards,
+Jingoo Han
+
+> Thanks
+> Zhou
+> 
+>> Best regards,
+>> Jingoo Han
+>> 
+>>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+>>> ---
+>>> drivers/pci/host/pcie-designware.c | 2 +-
+>>> 1 file changed, 1 insertion(+), 1 deletion(-)
+>>> 
+>>> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+>>> index 69486be..eb549b9 100644
+>>> --- a/drivers/pci/host/pcie-designware.c
+>>> +++ b/drivers/pci/host/pcie-designware.c
+>>> @@ -35,7 +35,7 @@
+>>> 
+>>> #define PCIE_LINK_WIDTH_SPEED_CONTROL    0x80C
+>>> #define PORT_LOGIC_SPEED_CHANGE (0x1 << 17)
+>>> -#define PORT_LOGIC_LINK_WIDTH_MASK    (0x1ff << 8)
+>>> +#define PORT_LOGIC_LINK_WIDTH_MASK    (0x1f << 8)
+>>> #define PORT_LOGIC_LINK_WIDTH_1_LANES    (0x1 << 8)
+>>> #define PORT_LOGIC_LINK_WIDTH_2_LANES    (0x2 << 8)
+>>> #define PORT_LOGIC_LINK_WIDTH_4_LANES    (0x4 << 8)
+>>> -- 
+>>> 1.9.1
+>> 
+>> .
+> 
+> 
