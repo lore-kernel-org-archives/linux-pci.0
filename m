@@ -1,179 +1,235 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:37986 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753122AbbHCLSh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 07:18:37 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Rob Herring <robherring2@gmail.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@linaro.org>
-Subject: RE: [PATCH v6] PCI: Store PCIe bus address in struct of_pci_range
-Date: Mon, 3 Aug 2015 11:18:09 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D712E7@lhreml503-mbs>
-References: <1438010223-124422-1-git-send-email-gabriele.paoloni@huawei.com>
- <20150729172053.GE31170@google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6F350@lhreml503-mbs>
- <CAL_JsqKs11-sXQTdBD+ZjbVYFWUHBARTW9q5MF1hCXUhZ+nWLQ@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6F94A@lhreml503-mbs>
- <20150730161447.GG9640@google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6FB3B@lhreml503-mbs>
- <20150730171445.GI9640@google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D6FC15@lhreml503-mbs>
- <CAL_Jsq+aQVakaZf4xo7sxnVyTmPR+HJ-9ByyS6OYJ0PHDYOwmg@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D70589@lhreml503-mbs>
- <55BB8CC6.1080203@ti.com>
- <CAL_JsqJqjiWVaKs-3ghQ1EBQzRRQ38GzkMV+FELPj53bSF-yXQ@mail.gmail.com>
-In-Reply-To: <CAL_JsqJqjiWVaKs-3ghQ1EBQzRRQ38GzkMV+FELPj53bSF-yXQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Rob Herring <robh+dt@kernel.org>
+Subject: [PATCH V3 2/4] ACPI/scan: Clean up acpi_check_dma
+Date: Wed, 26 Aug 2015 20:54:37 +0700
+Message-ID: <1440597279-11802-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Um9iLCBLaXNob24gd2hhdCBhYm91dCB0aGUgZm9sbG93aW5nIHNvbHV0aW9uPy4uLi4NCg0KLS0t
-DQogZHJpdmVycy9wY2kvaG9zdC9wY2ktZHJhN3h4LmMgICAgICB8IDEyICsrKysrKysrKysrKw0K
-IGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMgfCAgOSArKystLS0tLS0NCiAyIGZp
-bGVzIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDYgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1kcmE3eHguYyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNp
-LWRyYTd4eC5jDQppbmRleCA4MGRiMDllLi5iYjI2MzVmIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9w
-Y2kvaG9zdC9wY2ktZHJhN3h4LmMNCisrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWRyYTd4eC5j
-DQpAQCAtNjEsNiArNjEsNyBAQA0KIA0KICNkZWZpbmUJUENJRUNUUkxfRFJBN1hYX0NPTkZfUEhZ
-X0NTCQkJMHgwMTBDDQogI2RlZmluZQlMSU5LX1VQCQkJCQkJQklUKDE2KQ0KKyNkZWZpbmUgQ1BV
-X1RPX0JVU19BRERSICAgICAgICAgICAgIDB4MEZGRkZGRkYNCiANCiBzdHJ1Y3QgZHJhN3h4X3Bj
-aWUgew0KIAl2b2lkIF9faW9tZW0JCSpiYXNlOw0KQEAgLTEzOCw2ICsxMzksMTcgQEAgc3RhdGlj
-IHZvaWQgZHJhN3h4X3BjaWVfZW5hYmxlX2ludGVycnVwdHMoc3RydWN0IHBjaWVfcG9ydCAqcHAp
-DQogDQogc3RhdGljIHZvaWQgZHJhN3h4X3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQg
-KnBwKQ0KIHsNCisJaWYgKHBwLT5pb19tb2RfYmFzZSkNCisJCXBwLT5pb19tb2RfYmFzZSAmPSBD
-UFVfVE9fQlVTX0FERFI7DQorDQorCWlmIChwcC0+bWVtX21vZF9iYXNlKQ0KKwkJcHAtPm1lbV9t
-b2RfYmFzZSAmPSBDUFVfVE9fQlVTX0FERFI7DQorDQorCWlmIChwcC0+Y2ZnMF9tb2RfYmFzZSkg
-ew0KKwkJcHAtPmNmZzBfbW9kX2Jhc2UgJj0gQ1BVX1RPX0JVU19BRERSOw0KKwkJcHAtPmNmZzFf
-bW9kX2Jhc2UgJj0gQ1BVX1RPX0JVU19BRERSOw0KKwl9DQorDQogCWR3X3BjaWVfc2V0dXBfcmMo
-cHApOw0KIAlkcmE3eHhfcGNpZV9lc3RhYmxpc2hfbGluayhwcCk7DQogCWlmIChJU19FTkFCTEVE
-KENPTkZJR19QQ0lfTVNJKSkNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVz
-aWdud2FyZS5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KaW5kZXggNjk0
-ODZiZS4uMDZjNjgyYiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253
-YXJlLmMNCisrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCkBAIC00MTYs
-OCArNDE2LDcgQEAgaW50IGR3X3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0K
-IAkJCXBwLT5pb19iYXNlID0gcmFuZ2UuY3B1X2FkZHI7DQogDQogCQkJLyogRmluZCB0aGUgdW50
-cmFuc2xhdGVkIElPIHNwYWNlIGFkZHJlc3MgKi8NCi0JCQlwcC0+aW9fbW9kX2Jhc2UgPSBvZl9y
-ZWFkX251bWJlcihwYXJzZXIucmFuZ2UgLQ0KLQkJCQkJCQkgcGFyc2VyLm5wICsgbmEsIG5zKTsN
-CisJCQlwcC0+aW9fbW9kX2Jhc2UgPSByYW5nZS5jcHVfYWRkcjs7DQogCQl9DQogCQlpZiAocmVz
-dHlwZSA9PSBJT1JFU09VUkNFX01FTSkgew0KIAkJCW9mX3BjaV9yYW5nZV90b19yZXNvdXJjZSgm
-cmFuZ2UsIG5wLCAmcHAtPm1lbSk7DQpAQCAtNDI2LDggKzQyNSw3IEBAIGludCBkd19wY2llX2hv
-c3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkNCiAJCQlwcC0+bWVtX2J1c19hZGRyID0gcmFu
-Z2UucGNpX2FkZHI7DQogDQogCQkJLyogRmluZCB0aGUgdW50cmFuc2xhdGVkIE1FTSBzcGFjZSBh
-ZGRyZXNzICovDQotCQkJcHAtPm1lbV9tb2RfYmFzZSA9IG9mX3JlYWRfbnVtYmVyKHBhcnNlci5y
-YW5nZSAtDQotCQkJCQkJCSAgcGFyc2VyLm5wICsgbmEsIG5zKTsNCisJCQlwcC0+bWVtX21vZF9i
-YXNlID0gcmFuZ2UuY3B1X2FkZHI7DQogCQl9DQogCQlpZiAocmVzdHlwZSA9PSAwKSB7DQogCQkJ
-b2ZfcGNpX3JhbmdlX3RvX3Jlc291cmNlKCZyYW5nZSwgbnAsICZwcC0+Y2ZnKTsNCkBAIC00Mzcs
-OCArNDM1LDcgQEAgaW50IGR3X3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0K
-IAkJCXBwLT5jZmcxX2Jhc2UgPSBwcC0+Y2ZnLnN0YXJ0ICsgcHAtPmNmZzBfc2l6ZTsNCiANCiAJ
-CQkvKiBGaW5kIHRoZSB1bnRyYW5zbGF0ZWQgY29uZmlndXJhdGlvbiBzcGFjZSBhZGRyZXNzICov
-DQotCQkJcHAtPmNmZzBfbW9kX2Jhc2UgPSBvZl9yZWFkX251bWJlcihwYXJzZXIucmFuZ2UgLQ0K
-LQkJCQkJCQkgICBwYXJzZXIubnAgKyBuYSwgbnMpOw0KKwkJCXBwLT5jZmcwX21vZF9iYXNlID0g
-cmFuZ2UuY3B1X2FkZHI7DQogCQkJcHAtPmNmZzFfbW9kX2Jhc2UgPSBwcC0+Y2ZnMF9tb2RfYmFz
-ZSArDQogCQkJCQkgICAgcHAtPmNmZzBfc2l6ZTsNCiAJCX0NCi0tIA0KMS45LjENCg0KDQo+IC0t
-LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBjaS1vd25lckB2Z2VyLmtl
-cm5lbC5vcmcgW21haWx0bzpsaW51eC1wY2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24g
-QmVoYWxmIE9mIFJvYiBIZXJyaW5nDQo+IFNlbnQ6IEZyaWRheSwgSnVseSAzMSwgMjAxNSA1OjUz
-IFBNDQo+IFRvOiBLaXNob24gVmlqYXkgQWJyYWhhbSBJDQo+IENjOiBHYWJyaWVsZSBQYW9sb25p
-OyBCam9ybiBIZWxnYWFzOyBhcm5kQGFybmRiLmRlOw0KPiBsb3JlbnpvLnBpZXJhbGlzaUBhcm0u
-Y29tOyBXYW5nemhvdSAoQik7IHJvYmgrZHRAa2VybmVsLm9yZzsNCj4gamFtZXMubW9yc2VAYXJt
-LmNvbTsgTGl2aXUuRHVkYXVAYXJtLmNvbTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4g
-bGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBkZXZpY2V0cmVlQHZnZXIua2Vy
-bmVsLm9yZzsNCj4gWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsgcWl1emhlbmZh
-OyBMaWd1b3podSAoS2VubmV0aCk7DQo+IEppbmdvbyBIYW47IFByYXR5dXNoIEFuYW5kOyBBcm5k
-IEJlcmdtYW5uDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjZdIFBDSTogU3RvcmUgUENJZSBidXMg
-YWRkcmVzcyBpbiBzdHJ1Y3QNCj4gb2ZfcGNpX3JhbmdlDQo+IA0KPiBPbiBGcmksIEp1bCAzMSwg
-MjAxNSBhdCA5OjU3IEFNLCBLaXNob24gVmlqYXkgQWJyYWhhbSBJIDxraXNob25AdGkuY29tPg0K
-PiB3cm90ZToNCj4gPiArQXJuZA0KPiA+DQo+ID4gSGksDQo+ID4NCj4gPiBPbiBGcmlkYXkgMzEg
-SnVseSAyMDE1IDA3OjU1IFBNLCBHYWJyaWVsZSBQYW9sb25pIHdyb3RlOg0KPiA+PiBbK2NjIEtp
-c2hvbl0NCj4gPj4NCj4gPj4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+PiBGcm9t
-OiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiA+
-Pj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgUm9iIEhlcnJpbmcNCj4gPj4+
-IFNlbnQ6IFRodXJzZGF5LCBKdWx5IDMwLCAyMDE1IDk6NDIgUE0NCj4gPj4+IFRvOiBHYWJyaWVs
-ZSBQYW9sb25pDQo+ID4+PiBDYzogQmpvcm4gSGVsZ2FhczsgYXJuZEBhcm5kYi5kZTsgbG9yZW56
-by5waWVyYWxpc2lAYXJtLmNvbTsNCj4gV2FuZ3pob3UNCj4gPj4+IChCKTsgcm9iaCtkdEBrZXJu
-ZWwub3JnOyBqYW1lcy5tb3JzZUBhcm0uY29tOyBMaXZpdS5EdWRhdUBhcm0uY29tOw0KPiA+Pj4g
-bGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRl
-YWQub3JnOw0KPiA+Pj4gZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7IFl1YW56aGljaGFuZzsg
-Wmh1ZGFjYWk7IHpoYW5nanVrdW87DQo+ID4+PiBxaXV6aGVuZmE7IExpZ3Vvemh1IChLZW5uZXRo
-KTsgSmluZ29vIEhhbjsgUHJhdHl1c2ggQW5hbmQNCj4gPj4+IFN1YmplY3Q6IFJlOiBbUEFUQ0gg
-djZdIFBDSTogU3RvcmUgUENJZSBidXMgYWRkcmVzcyBpbiBzdHJ1Y3QNCj4gPj4+IG9mX3BjaV9y
-YW5nZQ0KPiA+Pj4NCj4gPj4+IE9uIFRodSwgSnVsIDMwLCAyMDE1IGF0IDEyOjM0IFBNLCBHYWJy
-aWVsZSBQYW9sb25pDQo+ID4+PiA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPiB3cm90ZToN
-Cj4gPj4+Pj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4+Pj4gRnJvbTogQmpvcm4g
-SGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+ID4+Pj4+IFNlbnQ6IDMwIEp1
-bHkgMjAxNSAxODoxNQ0KPiA+Pj4+PiBPbiBUaHUsIEp1bCAzMCwgMjAxNSBhdCAwNDo1MDo1NVBN
-ICswMDAwLCBHYWJyaWVsZSBQYW9sb25pIHdyb3RlOg0KPiA+Pj4+Pj4+IC0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQo+ID4+Pj4+Pj4gRnJvbTogbGludXgtcGNpLW93bmVyQHZnZXIua2VybmVs
-Lm9yZyBbbWFpbHRvOmxpbnV4LXBjaS0NCj4gPj4+Pj4+PiBvd25lckB2Z2VyLmtlcm5lbC5vcmdd
-IE9uIEJlaGFsZiBPZiBCam9ybiBIZWxnYWFzDQo+ID4+Pj4+Pj4gU2VudDogVGh1cnNkYXksIEp1
-bHkgMzAsIDIwMTUgNToxNSBQTQ0KPiA+Pj4+Pj4+IE9uIFRodSwgSnVsIDMwLCAyMDE1IGF0IDAx
-OjUyOjEzUE0gKzAwMDAsIEdhYnJpZWxlIFBhb2xvbmkNCj4gd3JvdGU6DQo+ID4+Pg0KPiA+Pj4g
-Wy4uLl0NCj4gPj4+DQo+ID4+Pj4+Pj4+IEkgZG9u4oCZdCB0aGluayB3ZSBzaG91bGQgcmVseSBv
-biBbQ1BVXSBhZGRyZXNzZXMuLi53aGF0IGlmIHRoZQ0KPiA+Pj4+Pj4+IGludGVybWVkaWF0ZQ0K
-PiA+Pj4+Pj4+PiB0cmFuc2xhdGlvbiBsYXllciBjaGFuZ2VzIHRoZSBsb3dlciBzaWduaWZpY2Fu
-dCBiaXRzIG9mIHRoZQ0KPiA+Pj4gImJ1cw0KPiA+Pj4+Pj4+IGFkZHJlc3MiDQo+ID4+Pj4+Pj4+
-IHRvIHRyYW5zbGF0ZSBpbnRvIGEgY3B1IGFkZHJlc3M/DQo+ID4+Pj4+Pj4NCj4gPj4+Pj4+PiBJ
-cyBpdCByZWFsbHkgYSBwb3NzaWJsaXR5IHRoYXQgdGhlIGxvd2VyIGJpdHMgY291bGQgYmUgY2hh
-bmdlZD8NCj4gPj4+Pj4+DQo+ID4+Pj4+PiBJJ3ZlIGNoZWNrZWQgYWxsIHRoZSBjdXJyZW50IGRl
-aWdud2FyZSB1c2VycyBEVHMgZXhjZXB0ICJwY2ktDQo+ID4+Pj4+IGxheWVyc2NhcGUiDQo+ID4+
-Pj4+PiB0aGF0IEkgY291bGQgbm90IGZpbmQ6DQo+ID4+Pj4+PiBzcGVhcjEzMTAuZHRzaQ0KPiA+
-Pj4+Pj4gc3BlYXIxMzQwLmR0c2kNCj4gPj4+Pj4+IGRyYTcuZHRzaQ0KPiA+Pj4+Pj4gaW14NnFk
-bC5kdHNpDQo+ID4+Pj4+PiBpbXg2c3guZHRzaQ0KPiA+Pj4+Pj4ga2V5c3RvbmUuZHRzaQ0KPiA+
-Pj4+Pj4gZXh5bm9zNTQ0MC5kdHNpDQo+ID4+Pj4+Pg0KPiA+Pj4+Pj4gTm9uZSBvZiB0aGVtIG1v
-ZGlmaWVzIHRoZSBsb3dlciBiaXRzLiBUbyBiZSBtb3JlIHByZWNpc2UgdGhlDQo+IG9ubHkNCj4g
-Pj4+IGd1eQ0KPiA+Pj4+Pj4gdGhhdCBwcm92aWRlcyBhbm90aGVyIHRyYW5zbGF0aW9uIGxheWVy
-IGlzICJkcmE3LmR0c2kiOg0KPiA+Pj4+Pj4gYXhpMA0KPiA+Pj4+Pj4gaHR0cDovL2x4ci5mcmVl
-LQ0KPiA+Pj4gZWxlY3Ryb25zLmNvbS9zb3VyY2UvYXJjaC9hcm0vYm9vdC9kdHMvZHJhNy5kdHNp
-I0wyMDcNCj4gPj4+Pj4+DQo+ID4+Pj4+PiBheGkxDQo+ID4+Pj4+PiBodHRwOi8vbHhyLmZyZWUt
-DQo+ID4+PiBlbGVjdHJvbnMuY29tL3NvdXJjZS9hcmNoL2FybS9ib290L2R0cy9kcmE3LmR0c2kj
-TDI0MQ0KPiA+Pj4+Pj4NCj4gPj4+Pj4+IEZvciB0aGlzIGNhc2UgbWFza2luZyB0aGUgdG9wIDRi
-aXRzIChiaXRzMjggdG8gMzEpIHNob3VsZCBtYWtlDQo+IHRoZQ0KPiA+Pj4gam9iLg0KPiA+Pj4N
-Cj4gPj4+IElNTywgd2Ugc2hvdWxkIGp1c3QgZml4IHRoaXMgY2FzZS4gQWZ0ZXIgZnVydGhlciBz
-dHVkeSwgSSBkb24ndA0KPiB0aGluaw0KPiA+Pj4gdGhpcyBpcyBhIERXIGlzc3VlLCBidXQgcmF0
-aGVyIGFuIFNPQyBpbnRlZ3JhdGlvbiBpc3N1ZS4NCj4gPj4+DQo+ID4+PiBJIGJlbGlldmUgeW91
-IGNhbiBqdXN0IGZpeHVwIHRoZSBhZGRyZXNzIGluIHRoZSBwcC0+b3BzLT5ob3N0X2luaXQNCj4g
-aG9vay4NCj4gPj4+DQo+ID4+DQo+ID4+IFllcyBJIGd1ZXNzIHRoYXQgSSBjb3VsZCBqdXN0IGFz
-c2lnbiBwcC0+KCopX21vZF9iYXNlIHRvIHRoZSBDUFUNCj4gYWRkcmVzcw0KPiA+PiBpbiBEVyBh
-bmQgbWFzayBpdCBvdXQgaW4gZHJhN3h4X3BjaWVfaG9zdF9pbml0KCkuLi4NCj4gPj4NCj4gPj4g
-S2lzaG9uLCB3b3VsZCB5b3UgYmUgb2sgd2l0aCB0aGF0Pw0KPiA+DQo+ID4gSW5pdGlhbGx5IEkg
-d2FzIHVzaW5nICpiYXNlLW1hc2sqIHByb3BlcnR5IGZyb20gZHQuIE1lIGFuZCBBcm5kDQo+IChj
-YydlZCkgaGFkDQo+ID4gdGhpcyBkaXNjdXNzaW9uIFsxXSBiZWZvcmUgd2UgZGVjaWRlZCB0aGUg
-Y3VycmVudCBhcHByb2FjaC4gSXQnbGwgYmUNCj4gZ29vZCB0bw0KPiA+IGNoZWNrIHdpdGggQXJu
-ZCB0b28uDQo+ID4NCj4gPiBbMV0gLT4gIGh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL3BpcGVy
-bWFpbC9saW51eC1hcm0ta2VybmVsLzIwMTQtDQo+IE1heS8yNTM1MjguaHRtbA0KPiANCj4gVGhl
-IHByb2JsZW0gSSBoYXZlIGhlcmUgaXMgdGhlIHVzZSBvZiByYW5nZXMgZG9lcyBub3QgbmVjZXNz
-YXJpbHkgbWVhbg0KPiBmZXdlciBhZGRyZXNzIGJpdHMgYXJlIGF2YWlsYWJsZS4gSXQgY2FuIGJl
-IHVzZWQganVzdCBmb3IgY29udmVuaWVuY2UNCj4gb2Ygbm90IHB1dHRpbmcgdGhlIGZ1bGwgYWRk
-cmVzcyBpbnRvIGV2ZXJ5IG5vZGUncyByZWcgcHJvcGVydHkuIEFuZA0KPiB2aWNlIHZlcnNhLCB0
-aGVyZSBhcmUgcHJvYmFibHkgcGxlbnR5IG9mIGNhc2VzIHdoZXJlIHdlIGhhdmUgdGhlIGZ1bGwN
-Cj4gYWRkcmVzcyBpbiB0aGUgbm9kZXMsIGJ1dCByZWFsbHkgb25seSBzb21lIG9mIHRoZSBhZGRy
-ZXNzIGJpdHMgYXJlDQo+IGRlY29kZWQgYXQgdGhlIElQIGJsb2NrLiBXaGV0aGVyIHRoZSBhZGRy
-ZXNzIGJpdHMgYXJlIHByZXNlbnQgaXMNCj4gcmFyZWx5IGNhcmVkIGFib3V0IG9yIGtub3duIGJ5
-IHMvdyBmb2xrcyB1bnRpbCB5b3UgaGl0IGEgcHJvYmxlbSBsaWtlDQo+IHRoaXMuIEdpdmVuIHRo
-aXMgaXMgYW4gaXNvbGF0ZWQgY2FzZSBBVE0sIEkgd291bGQgZml4IGl0IGluIGFuDQo+IGlzb2xh
-dGVkIHdheS4gSXQgZG9lcyBub3QgYWZmZWN0IHRoZSBiaW5kaW5nIGFuZCBjb3VsZCBiZSBjaGFu
-Z2VkIGluDQo+IHRoZSBrZXJuZWwgbGF0ZXIgaWYgdGhpcyBiZWNvbWVzIGEgY29tbW9uIG5lZWQu
-DQo+IA0KPiBSb2INCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQg
-dGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4NCj4gdGhlIGJvZHkgb2YgYSBtZXNz
-YWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9yZSBtYWpvcmRvbW8gaW5mbyBh
-dCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
+The original name of acpi_check_dma() function does not clearly tell what
+exactly it is checking. Also, returning two boolean values (one to indicate
+device is DMA capability, and the other to inidicate device coherency
+attribute) can be confusing.
+
+So, in order to simplify the function, this patch renames acpi_check_dma()
+to acpi_check_dma_coherency() to clearly indicate the purpose of this
+function, and only returns an integer where -1 means DMA not supported,
+1 means coherent DMA, and 0 means non-coherent DMA.
+
+Also, this patch moves the function into drivers/acpi/scan.c since
+it is easier to follow the logic in the acpi_init_coherency() in the
+same file here.
+
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Suggested-by: Rafael J. Wysocki <rjw@rjwysocki.net>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Rob Herring <robh+dt@kernel.org>
+CC: Will Deacon <will.deacon@arm.com>
+---
+ drivers/acpi/acpi_platform.c |  7 ++++++-
+ drivers/acpi/glue.c          |  6 +++---
+ drivers/acpi/scan.c          | 39 +++++++++++++++++++++++++++++++++++++++
+ drivers/base/property.c      | 10 +++++++---
+ include/acpi/acpi_bus.h      | 36 ++----------------------------------
+ include/linux/acpi.h         |  4 ++--
+ 6 files changed, 59 insertions(+), 43 deletions(-)
+
+diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
+index 06a67d5..0b17a78 100644
+--- a/drivers/acpi/acpi_platform.c
++++ b/drivers/acpi/acpi_platform.c
+@@ -103,7 +103,12 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
+ 	pdevinfo.res = resources;
+ 	pdevinfo.num_res = count;
+ 	pdevinfo.fwnode = acpi_fwnode_handle(adev);
+-	pdevinfo.dma_mask = acpi_check_dma(adev, NULL) ? DMA_BIT_MASK(32) : 0;
++
++	if (acpi_check_dma_coherency(adev) < 0)
++		pdevinfo.dma_mask = 0;
++	else
++		pdevinfo.dma_mask = DMA_BIT_MASK(32);
++
+ 	pdev = platform_device_register_full(&pdevinfo);
+ 	if (IS_ERR(pdev))
+ 		dev_err(&adev->dev, "platform device creation failed: %ld\n",
+diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+index b9657af..9be7f0f 100644
+--- a/drivers/acpi/glue.c
++++ b/drivers/acpi/glue.c
+@@ -168,7 +168,6 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+ 	struct list_head *physnode_list;
+ 	unsigned int node_id;
+ 	int retval = -EINVAL;
+-	bool coherent;
+ 
+ 	if (has_acpi_companion(dev)) {
+ 		if (acpi_dev) {
+@@ -225,8 +224,9 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+ 	if (!has_acpi_companion(dev))
+ 		ACPI_COMPANION_SET(dev, acpi_dev);
+ 
+-	if (acpi_check_dma(acpi_dev, &coherent))
+-		arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
++	retval = acpi_check_dma_coherency(acpi_dev);
++	if (retval >= 0)
++		arch_setup_dma_ops(dev, 0, 0, NULL, retval);
+ 
+ 	acpi_physnode_link_name(physical_node_name, node_id);
+ 	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index ec25635..1d68289 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -2182,6 +2182,45 @@ void acpi_free_pnp_ids(struct acpi_device_pnp *pnp)
+ 	kfree(pnp->unique_id);
+ }
+ 
++/**
++ * acpi_check_dma_coherency - Check DMA coherency for the specified device.
++ * @adev: The pointer to acpi device to check coherency attribute
++ *
++ * Return -ENOTSUPP if DMA is not supported. Otherwise, return 1 if the
++ * device support coherent DMA, or 0 for non-coherent DMA.
++ */
++int acpi_check_dma_coherency(struct acpi_device *adev)
++{
++	int ret = -ENOTSUPP;
++
++	if (!adev)
++		return ret;
++
++	/**
++	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
++	 * This should be equivalent to specifying dma-coherent for
++	 * a device in OF.
++	 *
++	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
++	 * we have two choices:
++	 *   1. Do not support and disable DMA.
++	 *   2. Support but rely on arch-specific cache maintenance for
++	 *      non-coherenje DMA operations.
++	 * Currently, we implement case 2 above.
++	 *
++	 * For the case when _CCA is missing (i.e. cca_seen=0) and
++	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
++	 * and fallback to arch-specific default handling.
++	 *
++	 * See acpi_init_coherency() for more info.
++	 */
++	if (!adev->flags.cca_seen && IS_ENABLED(CONFIG_ACPI_CCA_REQUIRED))
++		return ret;
++
++	return adev->flags.coherent_dma;
++}
++EXPORT_SYMBOL_GPL(acpi_check_dma_coherency);
++
+ static void acpi_init_coherency(struct acpi_device *adev)
+ {
+ 	unsigned long long cca = 0;
+diff --git a/drivers/base/property.c b/drivers/base/property.c
+index f3f6d16..cd45dfc 100644
+--- a/drivers/base/property.c
++++ b/drivers/base/property.c
+@@ -525,10 +525,14 @@ bool device_dma_is_coherent(struct device *dev)
+ {
+ 	bool coherent = false;
+ 
+-	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
++	if (IS_ENABLED(CONFIG_OF) && dev->of_node) {
+ 		coherent = of_dma_is_coherent(dev->of_node);
+-	else
+-		acpi_check_dma(ACPI_COMPANION(dev), &coherent);
++	} else {
++		int ret = acpi_check_dma_coherency(ACPI_COMPANION(dev));
++
++		if (ret >= 0)
++			coherent = ret;
++	}
+ 
+ 	return coherent;
+ }
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 7ecb8e4..baf43ea 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -382,40 +382,6 @@ struct acpi_device {
+ 	void (*remove)(struct acpi_device *);
+ };
+ 
+-static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
+-{
+-	bool ret = false;
+-
+-	if (!adev)
+-		return ret;
+-
+-	/**
+-	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
+-	 * This should be equivalent to specifyig dma-coherent for
+-	 * a device in OF.
+-	 *
+-	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
+-	 * There are two cases:
+-	 * case 1. Do not support and disable DMA.
+-	 * case 2. Support but rely on arch-specific cache maintenance for
+-	 *         non-coherence DMA operations.
+-	 * Currently, we implement case 2 above.
+-	 *
+-	 * For the case when _CCA is missing (i.e. cca_seen=0) and
+-	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
+-	 * and fallback to arch-specific default handling.
+-	 *
+-	 * See acpi_init_coherency() for more info.
+-	 */
+-	if (adev->flags.coherent_dma ||
+-	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
+-		ret = true;
+-		if (coherent)
+-			*coherent = adev->flags.coherent_dma;
+-	}
+-	return ret;
+-}
+-
+ static inline bool is_acpi_node(struct fwnode_handle *fwnode)
+ {
+ 	return fwnode && fwnode->type == FWNODE_ACPI;
+@@ -640,6 +606,8 @@ static inline bool acpi_device_can_poweroff(struct acpi_device *adev)
+ 	return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
+ }
+ 
++int acpi_check_dma_coherency(struct acpi_device *adev);
++
+ #else	/* CONFIG_ACPI */
+ 
+ static inline int register_acpi_bus_type(void *bus) { return 0; }
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index d2445fa..d350c9e 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -562,9 +562,9 @@ static inline int acpi_device_modalias(struct device *dev,
+ 	return -ENODEV;
+ }
+ 
+-static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
++static inline int acpi_check_dma_coherency(struct acpi_device *adev)
+ {
+-	return false;
++	return -ENOTSUPP;
+ }
+ 
+ #define ACPI_PTR(_ptr)	(NULL)
+-- 
+2.1.0
+
