@@ -1,222 +1,374 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:34684 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753539AbbHUOVU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 10:21:20 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Liviu Dudau <Liviu.Dudau@arm.com>
-CC: Lucas Stach <l.stach@pengutronix.de>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	James Morse <James.Morse@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v7 3/6] PCI: designware: Add ARM64 support
-Date: Fri, 21 Aug 2015 14:19:32 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E01D826BD@lhreml503-mbs>
-References: <1439812554-180426-1-git-send-email-wangzhou1@hisilicon.com>
- <1439812554-180426-4-git-send-email-wangzhou1@hisilicon.com>
- <1439988852.31432.15.camel@pengutronix.de>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D81315@lhreml503-mbs>
- <1439998622.31432.44.camel@pengutronix.de>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D8139B@lhreml503-mbs>
- <1440059243.31432.59.camel@pengutronix.de>
- <EE11001F9E5DDD47B7634E2F8A612F2E01D81BAC@lhreml503-mbs>
- <20150821134230.GQ1020@e106497-lin.cambridge.arm.com>
-In-Reply-To: <20150821134230.GQ1020@e106497-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-lb0-f195.google.com ([209.85.217.195]:33578 "EHLO
+	mail-lb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737AbbHZNTA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 26 Aug 2015 09:19:00 -0400
 MIME-Version: 1.0
+In-Reply-To: <55DC5406.3080703@arm.com>
+References: <1440495348-2666-1-git-send-email-lftan@altera.com>
+	<1440495348-2666-3-git-send-email-lftan@altera.com>
+	<55DC5406.3080703@arm.com>
+Date: Wed, 26 Aug 2015 21:18:58 +0800
+Message-ID: <CAFiDJ5_A0jO5aBXGDMpm8QCizNbWpvHp+v_v3f4p86wrrA96Vg@mail.gmail.com>
+Subject: Re: [PATCH v5 2/5] pci:host: Add Altera PCIe host controller driver
+From: Ley Foon Tan <lftan@altera.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgTGl2aXUNCg0KTWFueSBUaGFua3MgZm9yIHJldmlld2luZw0KDQo+IC0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21h
-aWx0bzpsaW51eC1wY2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIExp
-dml1IER1ZGF1DQo+IFNlbnQ6IEZyaWRheSwgQXVndXN0IDIxLCAyMDE1IDI6NDMgUE0NCj4gVG86
-IEdhYnJpZWxlIFBhb2xvbmkNCj4gQ2M6IEx1Y2FzIFN0YWNoOyBXYW5nemhvdSAoQik7IEJqb3Ju
-IEhlbGdhYXM7IGppbmdvb2hhbjFAZ21haWwuY29tOw0KPiBQcmF0eXVzaCBBbmFuZDsgQXJuZCBC
-ZXJnbWFubjsgbGludXhAYXJtLmxpbnV4Lm9yZy51azsNCj4gdGhvbWFzLnBldGF6em9uaUBmcmVl
-LWVsZWN0cm9ucy5jb207IExvcmVuem8gUGllcmFsaXNpOyBKYW1lcyBNb3JzZTsNCj4gamFzb25A
-bGFrZWRhZW1vbi5uZXQ7IHJvYmhAa2VybmVsLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9y
-ZzsNCj4gbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBkZXZpY2V0cmVlQHZn
-ZXIua2VybmVsLm9yZzsNCj4gWXVhbnpoaWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsgcWl1
-emhlbmZhOyBsaXVkb25nZG9uZyAoQyk7DQo+IHFpdWppYW5nOyB4dXdlaSAoTyk7IExpZ3Vvemh1
-IChLZW5uZXRoKQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHY3IDMvNl0gUENJOiBkZXNpZ253YXJl
-OiBBZGQgQVJNNjQgc3VwcG9ydA0KPiANCj4gT24gVGh1LCBBdWcgMjAsIDIwMTUgYXQgMTI6MTA6
-MjRQTSArMDEwMCwgR2FicmllbGUgUGFvbG9uaSB3cm90ZToNCj4gPiBIaSBMdWNhcw0KPiA+DQo+
-ID4gQWdhaW4gbWFueSB0aGFua3MgZm9yIGV4cGxhaW5pbmcgYW5kIGZvciB5b3VyIHRpbWUuDQo+
-ID4NCj4gPiBJIGdvdCB5b3VyIHBvaW50IG5vdyBhbmQgSSBoYXZlIGR1ZyBhIGJpdCBiZXR0ZXIg
-aW4gdGhlIFBDSV9ET01BSU5TDQo+IGNvZGUuDQo+ID4NCj4gPiBIb3dldmVyIEkgaGF2ZSBhIHF1
-ZXN0aW9uLi4uc2VlIGlubGluZSBiZWxvdw0KPiA+DQo+ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KPiA+ID4gRnJvbTogTHVjYXMgU3RhY2ggW21haWx0bzpsLnN0YWNoQHBlbmd1dHJv
-bml4LmRlXQ0KPiA+ID4gU2VudDogVGh1cnNkYXksIEF1Z3VzdCAyMCwgMjAxNSA5OjI3IEFNDQo+
-ID4gPiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiA+ID4gQ2M6IFdhbmd6aG91IChCKTsgQmpvcm4g
-SGVsZ2FhczsgamluZ29vaGFuMUBnbWFpbC5jb207IFByYXR5dXNoDQo+IEFuYW5kOw0KPiA+ID4g
-QXJuZCBCZXJnbWFubjsgbGludXhAYXJtLmxpbnV4Lm9yZy51azsgdGhvbWFzLnBldGF6em9uaUBm
-cmVlLQ0KPiA+ID4gZWxlY3Ryb25zLmNvbTsgbG9yZW56by5waWVyYWxpc2lAYXJtLmNvbTsgamFt
-ZXMubW9yc2VAYXJtLmNvbTsNCj4gPiA+IExpdml1LkR1ZGF1QGFybS5jb207IGphc29uQGxha2Vk
-YWVtb24ubmV0OyByb2JoQGtlcm5lbC5vcmc7IGxpbnV4LQ0KPiA+ID4gcGNpQHZnZXIua2VybmVs
-Lm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiA+ID4gZGV2aWNl
-dHJlZUB2Z2VyLmtlcm5lbC5vcmc7IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87
-DQo+ID4gPiBxaXV6aGVuZmE7IGxpdWRvbmdkb25nIChDKTsgcWl1amlhbmc7IHh1d2VpIChPKTsg
-TGlndW96aHUgKEtlbm5ldGgpDQo+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIHY3IDMvNl0gUENJ
-OiBkZXNpZ253YXJlOiBBZGQgQVJNNjQgc3VwcG9ydA0KPiA+ID4NCj4gPiA+IEhpIEdhYiwNCj4g
-PiA+DQo+ID4gPiBBbSBNaXR0d29jaCwgZGVuIDE5LjA4LjIwMTUsIDE2OjM0ICswMDAwIHNjaHJp
-ZWIgR2FicmllbGUgUGFvbG9uaToNCj4gPiA+ID4gSGkgTHVjYXMNCj4gPiA+ID4NCj4gPiA+ID4g
-Rmlyc3Qgb2YgYWxsIG1hbnkgdGhhbmtzIGZvciB0aGUgcXVpY2sgcmVwbHksIHJlYWxseSBhcHBy
-ZWNpYXRlZA0KPiA+ID4gPg0KPiA+ID4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+
-ID4gPiA+ID4gRnJvbTogTHVjYXMgU3RhY2ggW21haWx0bzpsLnN0YWNoQHBlbmd1dHJvbml4LmRl
-XQ0KPiA+ID4gPiA+IFNlbnQ6IFdlZG5lc2RheSwgQXVndXN0IDE5LCAyMDE1IDQ6MzcgUE0NCj4g
-PiA+ID4gPiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiA+ID4gPiA+IENjOiBXYW5nemhvdSAoQik7
-IEJqb3JuIEhlbGdhYXM7IGppbmdvb2hhbjFAZ21haWwuY29tOyBQcmF0eXVzaA0KPiA+ID4gQW5h
-bmQ7DQo+ID4gPiA+ID4gQXJuZCBCZXJnbWFubjsgbGludXhAYXJtLmxpbnV4Lm9yZy51azsgdGhv
-bWFzLnBldGF6em9uaUBmcmVlLQ0KPiA+ID4gPiA+IGVsZWN0cm9ucy5jb207IGxvcmVuem8ucGll
-cmFsaXNpQGFybS5jb207IGphbWVzLm1vcnNlQGFybS5jb207DQo+ID4gPiA+ID4gTGl2aXUuRHVk
-YXVAYXJtLmNvbTsgamFzb25AbGFrZWRhZW1vbi5uZXQ7IHJvYmhAa2VybmVsLm9yZzsNCj4gbGlu
-dXgtDQo+ID4gPiA+ID4gcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0
-cy5pbmZyYWRlYWQub3JnOw0KPiA+ID4gPiA+IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBZ
-dWFuemhpY2hhbmc7IFpodWRhY2FpOyB6aGFuZ2p1a3VvOw0KPiA+ID4gPiA+IHFpdXpoZW5mYTsg
-bGl1ZG9uZ2RvbmcgKEMpOyBxaXVqaWFuZzsgeHV3ZWkgKE8pOyBMaWd1b3podQ0KPiAoS2VubmV0
-aCkNCj4gPiA+ID4gPiBTdWJqZWN0OiBSZTogW1BBVENIIHY3IDMvNl0gUENJOiBkZXNpZ253YXJl
-OiBBZGQgQVJNNjQgc3VwcG9ydA0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gSGkgR2FiLA0KPiA+ID4g
-PiA+DQo+ID4gPiA+ID4gQW0gTWl0dHdvY2gsIGRlbiAxOS4wOC4yMDE1LCAxNToxNiArMDAwMCBz
-Y2hyaWViIEdhYnJpZWxlDQo+IFBhb2xvbmk6DQo+ID4gPiA+ID4gPiBIaSBMdWNhcw0KPiA+ID4g
-PiA+ID4NCj4gPiA+ID4gPiA+IEkgaGF2ZSByZXdyaXR0ZW4gdGhlIHBhdGNoIHRvIHRha2UgaW50
-byBhY2NvdW50IG11bHRpcGxlDQo+ID4gPiBjb250cm9sbGVycy4NCj4gPiA+ID4gPiA+DQo+ID4g
-PiA+ID4gPiBBcyB5b3UgY2FuIHNlZSBub3cgdGhlcmUgaXMgYSBzdGF0aWMgdmFyIGluDQo+IGR3
-X3BjaWVfaG9zdF9pbml0KCkNCj4gPiA+IHRoYXQNCj4gPiA+ID4gPiB0cmFja3MNCj4gPiA+ID4g
-PiA+IHRoZSBidXMgbnVtYmVycyB1c2VkLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gVGhpcyBpcyB3
-cm9uZy4gVGhlIERUIHNwZWNpZmllcyB0aGUgdmFsaWQgYnVzIG51bWJlciByYW5nZS4gWW91DQo+
-IGNhbg0KPiA+ID4gbm90DQo+ID4gPiA+ID4ganVzdCBhc3NpZ24gdGhlIG5leHQgZnJlZSBidXMg
-bnVtYmVyIHRvIHRoZSByb290IGJ1cy4NCj4gPiA+ID4NCj4gPiA+ID4gSSB0aGluayB0aGlzIGlz
-IHdoYXQgaXMgYmVpbmcgZG9uZSBpbg0KPiA+ID4gPiBodHRwOi8vbHhyLmZyZWUtDQo+IGVsZWN0
-cm9ucy5jb20vc291cmNlL2FyY2gvYXJtL2tlcm5lbC9iaW9zMzIuYyNMNDk1DQo+ID4gPiA+IGFu
-ZCBjdXJyZW50bHkgZGVzaWdud2FyZSBhc3NpZ25zIHRoZSByb290IGJ1cyBudW1iZXIgaW4NCj4g
-PiA+ID4gaHR0cDovL2x4ci5mcmVlLWVsZWN0cm9ucy5jb20vc291cmNlL2RyaXZlcnMvcGNpL2hv
-c3QvcGNpZS0NCj4gPiA+IGRlc2lnbndhcmUuYyNMNzMwDQo+ID4gPiA+DQo+ID4gPiBZb3UgZm91
-bmQgdGhlIHJpZ2h0IHNwb3QuIEl0IHdvcmtzIGEgYml0IGRpZmZlcmVudCB0aGFuIEkgcmVtZW1i
-ZXIsDQo+IGJ1dA0KPiA+ID4gaXMgbGVzcyBicm9rZW4gdGhhbiB5b3VyIGN1cnJlbnQgY29kZS4g
-OikNCj4gPiA+DQo+ID4gPiBJdCBhY3R1YWxseSBhc3NpZ25zIHRoZSBuZXh0IGluc3RhbmNlIGEg
-cm9vdCBidXMgbnVtYmVyIGJlaGluZCB0aGUNCj4gPiA+IGN1cnJlbnQgaW5zdGFuY2VzIGJ1cyBy
-YW5nZS4gUGxlYXNlIG5vdGUgdGhlIGRpZmZlcmVuY2UgdG8geW91cg0KPiBjb2RlDQo+ID4gPiB3
-aGljaCBhc3NpZ25zIHRoZSBuZXh0IGZyZWUgYnVzIG51bWJlciwgd2hpY2ggbWF5IHN0aWxsIGxh
-eSB3aXRoaW4NCj4gdGhlDQo+ID4gPiBjdXJyZW50IGluc3RhbmNlcyBidXMgcmFuZ2UuDQo+IA0K
-PiBIaSBHYWJyaWVsZSwNCj4gDQo+ID4NCj4gPiBNbW1tIGhlcmUgSSBoYXZlIGRvbmUgYSBtaXN0
-YWtlOiBpbiB0aGUgY3VycmVudCBkZXNpZ253YXJlIHRoZSBudW1iZXINCj4gb2YgaHcNCj4gPiBj
-b250cm9sbGVycyBpcyBhbHdheXMgMQ0KPiA+IGh0dHA6Ly9seHIuZnJlZS1lbGVjdHJvbnMuY29t
-L3NvdXJjZS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtDQo+IGRlc2lnbndhcmUuYyNMNTEwDQo+ID4g
-U28gdGhlIGxvb3AgaW4gYmlvczMyLmMgZG9lcyBub3Qgd29yayBvbiBtdWx0aXBsZSBQQ0llIHBv
-cnRzLi4uDQo+IA0KPiBCaW9zMzIuYyBpcyBicm9rZW4gZm9yIG11bHRpcGxlIFBDSWUgaG9zdHMg
-Zm9yIG11bHRpcGxlIHJlYXNvbnMsIHRoaXMNCj4gaXMganVzdA0KPiBvbmUgb2YgdGhlbS4gSGVu
-Y2UgdGhlIGVmZm9ydCB0byBnZXQgcmlkIG9mIGl0IGZvciBtYWludGFpbmVkIGRyaXZlcnMuDQoN
-CkFzIHlvdSBjYW4gc2VlIHdlJ3JlIHB1c2hpbmcgaGFyZCBmb3IgdGhpcyA6KQ0KDQo+IA0KPiA+
-IEhvd2V2ZXIgeW91ciBjb21tZW50IGFib3V0IFBDSV9ET01BSU5TIGVubGlnaHRlbmVkIG15IG1p
-bmQgYW5kIG5vdyBJDQo+IHNlZQ0KPiA+IHRoYXQgd2hlbiBDT05GSUdfUENJX0RPTUFJTlMgaXMg
-ZGVmaW5lZCB3ZSBoYXZlIHRoZSBkb21haW5zIG51bWJlcnMNCj4gPiAodHJhY2tlZCBieSBfX2Rv
-bWFpbl9ucikuDQo+IA0KPiBDT05GSUdfUENJX0RPTUFJTlMgaW4gaXRzZWxmIGRvZXNuJ3QgZG8g
-bXVjaCB3aXRob3V0IGFkZGluZyBjb2RlIHRvDQo+IHlvdXIgZHJpdmVyLg0KPiBZb3UgY291bGQg
-cmVxdWVzdCBhIG5ldyBkb21haW4gZm9yIGVhY2ggY29udHJvbGxlciB3aXRoIGEgc3BlY2lhbA0K
-PiBwcm9wZXJ0eSB0bw0KPiBkaXNhYmxlIHRoYXQgYmVoYXZpb3VyIGluIHRoZSBkdHMsIG9yIHlv
-dSBjb3VsZCBlbmFibGUNCj4gQ09ORklHX1BDSV9ET01BSU5TX0dFTkVSSUMNCj4gd2hpY2ggd2ls
-bCBnaXZlIHlvdSBhIG5ldyBkb21haW4gYXV0b21hdGljYWxseS4NCg0KU28gZmFyIEkgc2VlIHRo
-YXQgZm9yIEFSTSBhbmQgQVJNNjQgQ09ORklHX1BDSV9ET01BSU5TX0dFTkVSSUMgZGVmYXVsdHMg
-dG8gDQp0aGUgc2FtZSB2YWx1ZSBhcyBDT05GSUdfUENJX0RPTUFJTlMgKHNlZSBhcmNoL2FybS9L
-Y29uZmlnLCBhcmNoL2FybTY0L0tjb25maWcpLiANClNvIEkgdGhpbmsgdGhpcyBpcyBob3cgY3Vy
-cmVudCBkZXNpZ253YXJlIGJhc2VkIGRyaXZlcnMgZ2V0IG11bHRpcGxlIFBDSWUgDQpjb250cm9s
-bGVyIHRvIHdvcmsgKHRoZXkganVzdCBlbmFibGUgQ09ORklHX1BDSV9ET01BSU5TKS4uLg0KDQog
-DQoNCj4gDQo+ID4gU28gKGNvcnJlY3QgbWUgaWYgSSBhbSB3cm9uZykgaWYgd2UgaGF2ZSAyIFBD
-SWUgcG9ydHMgdGhhdCBkbyBub3QNCj4gc3BlY2lmeQ0KPiA+IHRoZSAiYnVzLXJhbmdlIiBwcm9w
-ZXJ0eSwgYm90aCByb290IHBvcnRzIHdpbGwgZW51bWVyYXRlIHN0YXJ0aW5nDQo+IGZyb20NCj4g
-PiByb290X2J1c19uciA9IDAgYW5kIGV2ZXJ5dGhpbmcgd2lsbCBzdGlsbCB3b3JrIG9rLg0KPiAN
-Cj4gQ29ycmVjdC4NCj4gDQo+IEJlc3QgcmVnYXJkcywNCj4gTGl2aXUNCj4gDQo+ID4NCj4gPiBT
-byBpZiBteSBhc3N1bXB0aW9uIGlzIGNvcnJlY3QsIEkgZG8gbm90IHNlZSB3aHkgdGhlIG9yZ2lu
-YWwgcGF0Y2gNCj4gZnJvbSBXYW5nDQo+ID4gWmhvdSBpcyB3cm9uZy4NCj4gPiBUaGUgb25seSBw
-b2ludCBjYW4gYmUgdGhhdCBhc3NpZ25pbmcgcHAtPnJvb3RfYnVzX25yID0gMCBpcyBub3QNCj4g
-cmVxdWlyZWQNCj4gPiBhcyBwcCBtZW1vcnkgaXMga3phbGxvYydlZCAoYW4gdGhlcmVmb3JlIGlu
-aXQgdG8gemVybykuDQo+ID4NCj4gPg0KPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4gSW4gZ2VuZXJh
-bCBJIGFncmVlIHdpdGggeW91IGJ1dCBpZiB5b3UgbG9vayBhdCBhbGwgdGhlIGN1cnJlbnQNCj4g
-PiA+IGRyaXZlcnMNCj4gPiA+ID4gYmFzZWQgb24gZGVzaWdud2FyZSBub25lIG9mIHRoZW0gZGVm
-aW5lIHRoZSAiYnVzLXJhbmdlIiBkdGINCj4gcHJvcGVydHkuDQo+ID4gPiA+IFRoZXJlZm9yZSBk
-b2luZyBhcyB5b3Ugc2F5IHdvdWxkIGJyZWFrIHRoZSBjdXJyZW50IGRyaXZlciB3aGVuIHdlDQo+
-ID4gPiBoYXZlDQo+ID4gPiA+IG11bHRpcGxlIGNvbnRyb2xsZXJzLi4uYW0gSSByaWdodD8NCj4g
-PiA+ID4NCj4gPiA+IFRoZSBjdXJyZW50IF9jb2RlXyB3b3JrcyBmaW5lIGZvciBtdWx0aXBsZSBj
-b250cm9sbGVycy4gSXQncyBqdXN0DQo+IHRoYXQNCj4gPiA+IHlvdSBtdXN0IGRlZmluZSB0aGUg
-YnVzIHJhbmdlIHByb3BlcnR5IGluIHRoZSBEVEIgaWYgeW91IHdhbnQgdG8NCj4gZW5hYmxlDQo+
-ID4gPiBtdWx0aXBsZSBpbnN0YW5jZXMgb2Ygb25lIGNvbnRyb2xsZXIgYW5kIHN1cHBvcnQgYSBr
-ZXJuZWwgd2l0aG91dA0KPiBQQ0kNCj4gPiA+IGRvbWFpbnMgc3VwcG9ydC4gQXMgYWxsIGN1cnJl
-bnQgaW1wbGVtZW50YXRpb25zIGhhdmUgb25seSBhIHNpbmdsZQ0KPiA+ID4gaW5zdGFuY2Ugb2Yg
-dGhlIGNvbnRyb2xsZXIgcGVyIFNvQywgb3IgZGVwZW5kIG9uIFBDSSBkb21haW4gc3VwcG9ydCwN
-Cj4gPiA+IGl0J3MgdG90YWxseSBmaW5lIGZvciB0aGVtIHRvIG5vdCBkZWZpbmUgdGhlIGJ1cyBy
-YW5nZXMgcHJvcGVydHksDQo+IGFzDQo+ID4gPiBpdCdzIGFuIG9wdGlvbmFsIHByb3BlcnR5IGFu
-ZCBpdCBpcyB3ZWxsIGRlZmluZWQgaG93IHRoaW5ncyBiZWhhdmUNCj4gaWYNCj4gPiA+IGl0DQo+
-ID4gPiBpcyBhYnNlbnQuIFdlIGFic29sdXRlbHkgbmVlZCB0byBrZWVwIHRoYXQgc3BlY2lmaWVk
-IGJlaGF2aW9yLg0KPiA+ID4NCj4gPiA+ID4gSWYgdGhhdCBpcyB0aGUgY2FzZSBpbiBvcmRlciB0
-byBmaXggdGhpcyBpbiB0aGUgd2F5IHlvdSBzYXkgSQ0KPiB3b3VsZA0KPiA+ID4gbmVlZA0KPiA+
-ID4gPiB0byBhc3NpZ24gImJ1cy1yYW5nZSIgZm9yIGFsbCB0aGUgUENJZSBkcml2ZXJzIHdpdGgg
-bXVsdGlwbGUNCj4gPiA+IGNvbnRyb2xsZXJzOg0KPiA+ID4gPiBpbiB0aGlzIGNhc2UgSSB3b3Vs
-ZCBzcGxpdCB0aGUgZGVmYXVsdCByYW5nZSBldmVubHkgKHRoYXQgaXMsIGlmDQo+IHdlDQo+ID4g
-PiBoYXZlDQo+ID4gPiA+IHR3byBjb250cm9sbGVycyBJIHdvdWxkIGRlZmluZSAiYnVzLXJhbmdl
-IiAgMC0xMjcgYW5kIDEyOC0yNTUpDQo+ID4gPiA+DQo+ID4gPiA+IElmIHlvdSB0aGluayB0aGlz
-IHNvbHV0aW9uIGlzIG9rIEkgY2FuIGdvIGZvciBpdC4gTXkgb25seSBkb3VidA0KPiB3YXMNCj4g
-PiA+IGFib3V0DQo+ID4gPiA+IHRvdWNoaW5nIG90aGVyIHZlbmRvcnMgRFRCcy4uLi4NCj4gPiA+
-ID4NCj4gPiA+IFlvdSBkb24ndCBuZWVkIHRvIHRvdWNoIGFueSBvZiB0aGUgY3VycmVudCBEVEJz
-LCBhcyB0aGV5IGFyZSBmaW5lDQo+IHdpdGgNCj4gPiA+IHRoZSBkZWZhdWx0IGJ1cyByYW5nZSBi
-ZWhhdmlvci4gWW91IG5lZWQgdG8ga2VlcCB0aGUgc3BlY2lmaWVkDQo+IGJlaGF2aW9yDQo+ID4g
-PiBvZiB0aGUgYnVzIHJhbmdlIHByb3BlcnR5IHdpdGggdGhlIG5ldyBjb2RlLg0KPiA+ID4NCj4g
-PiA+IFJlZ2FyZHMsDQo+ID4gPiBMdWNhcw0KPiA+ID4gPg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4g
-SXQgaXMgcGVyZmVjdGx5IHZhbGlkIHRvIGhhdmUgYSBidXMgcmFuZ2Ugb2YgMHgwMC0weDEwIGFz
-c2lnbmVkDQo+IHRvDQo+ID4gPiBvbmUNCj4gPiA+ID4gPiBpbnN0YW5jZSBhbmQgMHg1MC0weGZm
-IHRvIHRoZSBuZXh0IGluc3RhbmNlLiBBZGRpdGlvbmFsIHdpdGgNCj4gUENJZQ0KPiA+ID4gPiA+
-IGhvdHBsdWcgeW91IG1heSBub3QgdXNlIHRoZSBmdWxsIHJhbmdlIG9mIHRoZSBidXMgbnVtYmVy
-cyBvbg0KPiBvbmUNCj4gPiA+ID4gPiBpbnN0YW5jZSBhdCB0aGUgZmlyc3Qgc2NhbiwgYnV0IG9u
-bHkgbGF0ZXIgcG9wdWxhdGUgbW9yZSBidXNlcw0KPiB3aGVuDQo+ID4gPiA+ID4gbW9yZQ0KPiA+
-ID4gPiA+IGJyaWRnZXMgYXJlIGFkZGVkIHRvIHRoZSB0cmVlLg0KPiA+ID4gPiA+DQo+ID4gPiA+
-ID4gPiBEcml2ZXJzIHRoYXQgZG8gbm90IHNwZWNpZnkgdGhlIGJ1cyByYW5nZSBpbiB0aGUgRFRC
-IHNldCBwcC0NCj4gPiA+ID4gPiA+cm9vdF9idXNfbnIgPSBEV19ST09UX05SX1VOREVGSU5FRC4N
-Cj4gPiA+ID4gPiA+IERlc2lnbndhcmUgd2lsbCBjaGVjayBpZiB0aGUgZmxhZyBpcyBzZXQgYW5k
-IHdpbGwgdXNlIHRoZQ0KPiA+ID4gYXV0b21hdGljDQo+ID4gPiA+ID4gYnVzIHJhbmdlDQo+ID4g
-PiA+ID4gPiBhc3NpZ25tZW50Lg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gTm8sIHBsZWFzZSBsZXRz
-IGdldCByaWQgb2YgdGhpcyBhc3NpZ25tZW50IGFsdG9nZXRoZXIuIFRoZSBnbHVlDQo+ID4gPiBk
-cml2ZXJzDQo+ID4gPiA+ID4gaGF2ZSBubyBidXNpbmVzcyBpbiBhc3NpZ25pbmcgdGhlIGJ1cyBy
-YW5nZS4gUGxlYXNlIHJlbW92ZSB0aGUNCj4gPiA+ID4gPiBwcC0+cm9vdF9idXNfbnIgYXNzaWdu
-bWVudCBmcm9tIGFsbCB0aGUgZ2x1ZSBkcml2ZXJzLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gImJ1
-cyByYW5nZSIgaXMgYSBnZW5lcmljIERXIFBDSWUgcHJvcGVydHksIHNvIGp1c3QgcGFyc2UgdGhl
-DQo+IHJvb3QNCj4gPiA+IGJ1cw0KPiA+ID4gPiA+IG51bWJlciBmcm9tIHRoZSBEVCwgaXQgaXMg
-aGFuZGxlZCB0aGUgc2FtZSB3YXkgZm9yIGFsbCB0aGUgRFcNCj4gYmFzZWQNCj4gPiA+ID4gPiBQ
-Q0llDQo+ID4gPiA+ID4gZHJpdmVycy4gVGhlIGJpbmRpbmdzIHNwZWNpZmllcyB0aGF0IGlmIHRo
-ZSBidXMgcmFuZ2UgcHJvcGVydHkNCj4gaXMNCj4gPiA+ID4gPiBtaXNzaW5nIHRoZSByYW5nZSBp
-cyAweDAwLTB4ZmYsIHNvIHlvdSBjYW4gZGVmYXVsdCB0byAwIGFzIHRoZQ0KPiByb290DQo+ID4g
-PiBidXMNCj4gPiA+ID4gPiBudW1iZXIgaW4gdGhhdCBjYXNlLg0KPiA+ID4gPiA+DQo+ID4gPiA+
-ID4gQWxzbyBJIHdvdWxkIHRoaW5rIHRoaXMgY29udmVyc2lvbiB3YXJyYW50cyBhIHBhdGNoIG9u
-IGl0cyBvd24NCj4gYW5kDQo+ID4gPiA+ID4gc2hvdWxkIG5vdCBiZSBtaXhlZCBpbiB0aGUgQVJN
-NjQgc3VwcG9ydCBwYXRjaC4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IFJlZ2FyZHMsDQo+ID4gPiA+
-ID4gTHVjYXMNCj4gPiA+ID4gPg0KPiA+ID4NCj4gPiA+IC0tDQo+ID4gPiBQZW5ndXRyb25peCBl
-LksuICAgICAgICAgICAgIHwgTHVjYXMgU3RhY2ggICAgICAgICAgICAgICAgIHwNCj4gPiA+IElu
-ZHVzdHJpYWwgTGludXggU29sdXRpb25zICAgfCBodHRwOi8vd3d3LnBlbmd1dHJvbml4LmRlLyAg
-fA0KPiA+DQo+IA0KPiAtLQ0KPiA9PT09PT09PT09PT09PT09PT09PQ0KPiB8IEkgd291bGQgbGlr
-ZSB0byB8DQo+IHwgZml4IHRoZSB3b3JsZCwgIHwNCj4gfCBidXQgdGhleSdyZSBub3QgfA0KPiB8
-IGdpdmluZyBtZSB0aGUgICB8DQo+ICBcIHNvdXJjZSBjb2RlISAgLw0KPiAgIC0tLS0tLS0tLS0t
-LS0tLQ0KPiAgICAgwq9cXyjjg4QpXy/Crw0KPiANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJv
-bSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4NCj4g
-dGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gTW9y
-ZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5m
-by5odG1sDQo=
+On Tue, Aug 25, 2015 at 7:39 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>
+
+> > +
+> > +static void altera_pcie_retrain(struct pci_dev *dev)
+> > +{
+> > +     u16 linkcap, linkstat;
+> > +
+> > +     /*
+> > +      * Set the retrain bit if the PCIe rootport support > 2.5GB/s, but
+> > +      * current speed is 2.5 GB/s.
+> > +      */
+> > +     pcie_capability_read_word(dev, PCI_EXP_LNKCAP, &linkcap);
+> > +
+> > +     if ((linkcap & PCI_EXP_LNKCAP_SLS) <= PCI_EXP_LNKCAP_SLS_2_5GB)
+> > +             return;
+> > +
+> > +     pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &linkstat);
+> > +     if ((linkstat & PCI_EXP_LNKSTA_CLS) == PCI_EXP_LNKSTA_CLS_2_5GB)
+> > +             pcie_capability_set_word(dev, PCI_EXP_LNKCTL,
+> > +                                      PCI_EXP_LNKCTL_RL);
+> > +}
+> > +DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, altera_pcie_retrain);
+>
+> Do I read this correctly? This function is being called on any PCI
+> device, without any filtering? What if the platform is not using this
+> driver despite the driver being compiled in?
+Will change it to Altera vendor ID.
+
+>
+> > +
+> > +static void altera_pcie_fixup_res(struct pci_dev *dev)
+> > +{
+> > +     /*
+> > +      * Prevent enumeration of root port.
+> > +      */
+> > +     if (!dev->bus->parent && dev->devfn == 0) {
+> > +             int i;
+> > +
+> > +             for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+> > +                     dev->resource[i].start = 0;
+> > +                     dev->resource[i].end   = 0;
+> > +                     dev->resource[i].flags   = 0;
+> > +             }
+> > +     }
+> > +}
+> > +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, altera_pcie_fixup_res);
+>
+> Same here. I also question the validity of nuking the resources, but I'm
+> not a PCI expert.
+We want to hide the host BARs from kernel as their content doesn't fix
+well in the resource management and cause the pci enumeration failed.
+Some other controllers also using same way to hide the host BARs resources.
+>
+> > +
+> > +static inline void cra_writel(struct altera_pcie *pcie, u32 value, u32 reg)
+> > +{
+> > +     writel_relaxed(value, pcie->cra_base + reg);
+> > +}
+> > +
+> > +static inline u32 cra_readl(struct altera_pcie *pcie, u32 reg)
+> > +{
+> > +     return readl_relaxed(pcie->cra_base + reg);
+> > +}
+> > +
+> > +static void tlp_read_rx(struct altera_pcie *pcie,
+> > +                     struct tlp_rp_regpair_t *tlp_rp_regdata)
+> > +{
+> > +     tlp_rp_regdata->ctrl = cra_readl(pcie, RP_RXCPL_STATUS);
+> > +     tlp_rp_regdata->reg0 = cra_readl(pcie, RP_RXCPL_REG0);
+> > +     tlp_rp_regdata->reg1 = cra_readl(pcie, RP_RXCPL_REG1);
+> > +}
+> > +
+> > +static void tlp_write_tx(struct altera_pcie *pcie,
+> > +                      struct tlp_rp_regpair_t *tlp_rp_regdata)
+> > +{
+> > +     cra_writel(pcie, tlp_rp_regdata->reg0, RP_TX_REG0);
+> > +     cra_writel(pcie, tlp_rp_regdata->reg1, RP_TX_REG1);
+> > +     cra_writel(pcie, tlp_rp_regdata->ctrl, RP_TX_CNTRL);
+> > +}
+> > +
+> > +static bool altera_pcie_link_is_up(struct altera_pcie *pcie)
+> > +{
+> > +     return !!(cra_readl(pcie, RP_LTSSM) & LTSSM_L0);
+> > +}
+> > +
+> > +static bool altera_pcie_valid_config(struct altera_pcie *pcie,
+> > +                                  struct pci_bus *bus, int dev)
+> > +{
+> > +     /* If there is no link, then there is no device */
+> > +     if (bus->number != pcie->root_bus_nr) {
+> > +             if (!altera_pcie_link_is_up(pcie))
+> > +                     return false;
+> > +     }
+> > +
+> > +     /* access only one slot on each root port */
+> > +     if (bus->number == pcie->root_bus_nr && dev > 0)
+> > +             return false;
+> > +
+> > +     /*
+> > +      * Do not read more than one device on the bus directly attached
+> > +      * to RC.
+> > +      */
+> > +     if (bus->primary == pcie->root_bus_nr && dev > 0)
+> > +             return false;
+> > +
+> > +      return true;
+> > +}
+> > +
+> > +static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
+> > +{
+> > +     u8 loop;
+> > +     struct tlp_rp_regpair_t tlp_rp_regdata;
+> > +
+> > +     for (loop = 0; loop < TLP_LOOP; loop++) {
+> > +             tlp_read_rx(pcie, &tlp_rp_regdata);
+> > +             if (tlp_rp_regdata.ctrl & RP_RXCPL_EOP) {
+> > +                     if (value)
+> > +                             *value = tlp_rp_regdata.reg0;
+> > +                     return PCIBIOS_SUCCESSFUL;
+> > +             }
+> > +             udelay(5);
+> > +     }
+> > +
+> > +     return -ENOENT;
+> > +}
+> > +
+> > +static void tlp_write_packet_unaligned(struct altera_pcie *pcie, u32 *headers,
+> > +                                    u32 data)
+> > +{
+> > +     struct tlp_rp_regpair_t tlp_rp_regdata;
+> > +
+> > +     tlp_rp_regdata.reg0 = headers[0];
+> > +     tlp_rp_regdata.reg1 = headers[1];
+> > +     tlp_rp_regdata.ctrl = RP_TX_SOP;
+> > +     tlp_write_tx(pcie, &tlp_rp_regdata);
+> > +
+> > +     tlp_rp_regdata.reg0 = headers[2];
+> > +     tlp_rp_regdata.reg1 = data;
+> > +     tlp_rp_regdata.ctrl = RP_TX_EOP;
+> > +     tlp_write_tx(pcie, &tlp_rp_regdata);
+> > +}
+> > +
+> > +static void tlp_write_packet_aligned(struct altera_pcie *pcie, u32 *headers,
+> > +                                  u32 data)
+> > +{
+> > +     struct tlp_rp_regpair_t tlp_rp_regdata;
+> > +
+> > +     tlp_rp_regdata.reg0 = headers[0];
+> > +     tlp_rp_regdata.reg1 = headers[1];
+> > +     tlp_rp_regdata.ctrl = RP_TX_SOP;
+> > +     tlp_write_tx(pcie, &tlp_rp_regdata);
+> > +
+> > +     tlp_rp_regdata.reg0 = headers[2];
+> > +     tlp_rp_regdata.reg1 = 0;
+> > +     tlp_rp_regdata.ctrl = 0;
+> > +     tlp_write_tx(pcie, &tlp_rp_regdata);
+> > +
+> > +     tlp_rp_regdata.reg0 = data;
+> > +     tlp_rp_regdata.reg1 = 0;
+> > +     tlp_rp_regdata.ctrl = RP_TX_EOP;
+> > +     tlp_write_tx(pcie, &tlp_rp_regdata);
+> > +}
+> > +
+> > +static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
+> > +                           int where, u32 *value)
+> > +{
+> > +     int ret;
+> > +     u32 headers[TLP_HDR_SIZE];
+> > +
+> > +     if (bus == pcie->root_bus_nr)
+> > +             headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD0);
+> > +     else
+> > +             headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGRD1);
+> > +
+> > +     headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
+> > +                                     TLP_READ_TAG);
+> > +     headers[2] = TLP_CFG_DW2(bus, devfn, where);
+> > +
+> > +     tlp_write_packet_unaligned(pcie, headers, 0);
+> > +
+> > +     ret = tlp_read_packet(pcie, value);
+> > +     if (ret != PCIBIOS_SUCCESSFUL)
+> > +             *value = ~0UL;  /* return 0xFFFFFFFF if error */
+> > +
+> > +     return ret;
+> > +}
+> > +
+> > +static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+> > +                            int where, u32 value)
+> > +{
+> > +     u32 headers[TLP_HDR_SIZE];
+> > +     int ret;
+> > +
+> > +     if (bus == pcie->root_bus_nr)
+> > +             headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR0);
+> > +     else
+> > +             headers[0] = TLP_CFG_DW0(TLP_FMTTYPE_CFGWR1);
+> > +
+> > +     headers[1] = TLP_CFG_DW1(TLP_REQ_ID(pcie->root_bus_nr, devfn),
+> > +                                     TLP_WRITE_TAG);
+> > +     headers[2] = TLP_CFG_DW2(bus, devfn, where);
+> > +
+> > +     /* check alignment to Qword */
+> > +     if ((where & 0x7) == 0)
+> > +             tlp_write_packet_aligned(pcie, headers, value);
+> > +     else
+> > +             tlp_write_packet_unaligned(pcie, headers, value);
+> > +
+> > +     ret = tlp_read_packet(pcie, NULL);
+> > +     if (ret != PCIBIOS_SUCCESSFUL)
+> > +             return ret;
+> > +
+> > +     /* Keep an eye out for changes to the root bus number */
+> > +     if ((bus == pcie->root_bus_nr) && (where == PCI_PRIMARY_BUS))
+> > +             pcie->root_bus_nr = (u8)(value);
+> > +
+> > +     return PCIBIOS_SUCCESSFUL;
+> > +}
+> > +
+> > +static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+> > +                             int where, int size, u32 *value)
+> > +{
+> > +     struct altera_pcie *pcie = bus->sysdata;
+> > +     int ret;
+> > +
+> > +     if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn))) {
+> > +             *value = ~0UL;
+> > +             return PCIBIOS_DEVICE_NOT_FOUND;
+> > +     }
+> > +
+> > +     ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
+> > +                              (where & ~DWORD_MASK), value);
+> > +     if (ret != PCIBIOS_SUCCESSFUL)
+> > +             return ret;
+> > +
+> > +     if (size == 1)
+> > +             *value = (*value >> (8 * (where & 0x3))) & 0xff;
+> > +     else if (size == 2)
+> > +             *value = (*value >> (8 * (where & 0x2))) & 0xffff;
+>
+> Please write this as a switch/case statement, with a default handling case.
+Okay.
+
+>
+> > +
+> > +     return PCIBIOS_SUCCESSFUL;
+> > +}
+> > +
+> > +static int altera_pcie_cfg_write(struct pci_bus *bus, unsigned int devfn,
+> > +                              int where, int size, u32 value)
+> > +{
+> > +     struct altera_pcie *pcie = bus->sysdata;
+> > +     u32 data32 = value;
+> > +     u32 shift = 8 * (where & 3);
+> > +     int ret;
+> > +
+> > +     if (!altera_pcie_valid_config(pcie, bus, PCI_SLOT(devfn)))
+> > +             return PCIBIOS_DEVICE_NOT_FOUND;
+> > +
+> > +     /* write partial */
+> > +     if (size != sizeof(u32)) {
+> > +             ret = tlp_cfg_dword_read(pcie, bus->number, devfn,
+> > +                                      where & ~DWORD_MASK, &data32);
+> > +             if (ret)
+> > +                     return ret;
+> > +
+> > +             if (size == 2)
+> > +                     data32 = (data32 & ~(0xffff << shift)) |
+> > +                                     ((value & 0xffff) << shift);
+> > +              else if (size == 1)
+> > +                     data32 = (data32 & ~(0xff << shift)) |
+> > +                                     ((value & 0xff) << shift);
+>
+> Same here.
+Okay.
+
+> > +     }
+> > +
+> > +     return tlp_cfg_dword_write(pcie, bus->number, devfn,
+> > +             (where & ~DWORD_MASK), data32);
+> > +}
+> > +
+> > +static struct pci_ops altera_pcie_ops = {
+> > +     .read = altera_pcie_cfg_read,
+> > +     .write = altera_pcie_cfg_write,
+> > +};
+> > +
+> > +static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+> > +                             irq_hw_number_t hwirq)
+> > +{
+> > +     irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+> > +     irq_set_chip_data(irq, domain->host_data);
+> > +     set_irq_flags(irq, IRQF_VALID);
+> > +
+> > +     return 0;
+> > +}
+> > +
+> > +static const struct irq_domain_ops intx_domain_ops = {
+> > +     .map = altera_pcie_intx_map,
+> > +};
+> > +
+> > +static void altera_pcie_isr(unsigned int irq, struct irq_desc *desc)
+> > +{
+> > +     struct irq_chip *chip = irq_desc_get_chip(desc);
+> > +     struct altera_pcie *pcie;
+> > +     unsigned long status;
+> > +     u32 bit;
+> > +     u32 virq;
+> > +
+> > +     chained_irq_enter(chip, desc);
+> > +     pcie = irq_desc_get_handler_data(desc);
+> > +
+> > +     do {
+> > +             status = cra_readl(pcie, P2A_INT_STATUS) & P2A_INT_STS_ALL;
+> > +             if (!status)
+> > +                     break;
+> > +
+> > +             do {
+> > +                     bit = find_first_bit(&status, INTX_NUM);
+> > +                     /* clear interrupts */
+> > +                     cra_writel(pcie, 1 << bit, P2A_INT_STATUS);
+> > +
+> > +                     virq = irq_find_mapping(pcie->irq_domain, bit + 1);
+> > +                     if (virq)
+> > +                             generic_handle_irq(virq);
+> > +                     else
+> > +                             dev_info(&pcie->pdev->dev, "unexpected IRQ\n");
+> > +
+> > +                     /* Clear the bit from status and repeat without reading
+> > +                      * again status register. */
+> > +                     __clear_bit(bit, &status);
+> > +             } while (status);
+> > +     } while (1);
+>
+> Please rewrite similarily to the way I proposed in your MSI driver.
+Okay.
+
+Thanks.
+
+Regards
+Ley Foon
