@@ -1,126 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:33219 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754111AbbHRWjH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 18 Aug 2015 18:39:07 -0400
+Received: from mail-by2on0091.outbound.protection.outlook.com ([207.46.100.91]:45536
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932963AbbHZCAn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 25 Aug 2015 22:00:43 -0400
+Subject: Re: [PATCH V2 2/4] ACPI/scan: Clean up acpi_check_dma
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+References: <1440524009-5359-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <1440524009-5359-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <1659571.paO1iYcMuM@vostro.rjw.lan>
+CC: <bhelgaas@google.com>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
+	<hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Rob Herring <robh+dt@kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Message-ID: <55DD1DB7.1020203@amd.com>
+Date: Wed, 26 Aug 2015 09:00:23 +0700
 MIME-Version: 1.0
-In-Reply-To: <20150817235600.GT26431@google.com>
-References: <1438039809-24957-1-git-send-email-yinghai@kernel.org>
-	<1438039809-24957-21-git-send-email-yinghai@kernel.org>
-	<20150817235600.GT26431@google.com>
-Date: Tue, 18 Aug 2015 15:39:05 -0700
-Message-ID: <CAE9FiQVNhh0hmtuvHWY6LQNHZ+BPZ6JMroCLCgM174bpvo0r9Q@mail.gmail.com>
-Subject: Re: [PATCH v3 20/51] PCI: Skip must+optional if there is no optional addon
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1659571.paO1iYcMuM@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 17, 2015 at 4:56 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Mon, Jul 27, 2015 at 04:29:38PM -0700, Yinghai Lu wrote:
->> If the bridge does not support hotplug or no child with sriov support
->> we could get out early and don't try must+optional allocation.
->
-> You mention non-hotplug bridges and non-SR-IOV devices, but I can't figure
-> out how the patch itself relates to those.  How can I connect them?
+Hi Rafael,
 
-in setup that does not support hotplug and sriov, then we will not
-have optional resources.
+On 8/26/15 06:48, Rafael J. Wysocki wrote:
 
+>[...]
+> On Wednesday, August 26, 2015 12:33:27 AM Suravee Suthikulpanit wrote:
+>> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+>> index b9657af..55cf916 100644
+>> --- a/drivers/acpi/glue.c
+>> +++ b/drivers/acpi/glue.c
+>> @@ -168,7 +168,7 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+>>   	struct list_head *physnode_list;
+>>   	unsigned int node_id;
+>>   	int retval = -EINVAL;
+>> -	bool coherent;
+>> +	int coherent;
 >
->> Also in the loop that update res with optional add info, skip resource
->> that add_size is 0.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->> ---
->>  drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
->>  1 file changed, 29 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index d1f9e19..64ef516 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -450,6 +450,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
->>       return false;   /* should not get here */
->>  }
->>
->> +static bool __has_addon(struct list_head *head,
->> +                     struct list_head *realloc_head)
->
-> Why does this have a "__" prefix?
+> enum, anyone?  With clearly defined values?
 
-Sorry, will remove that.
+Originally I had defined
 
->
->> +{
->> +     int add_count = 0;
->> +     struct pci_dev_resource *dev_res, *tmp_res;
->> +
->> +     /* check if we have add really */
->> +     list_for_each_entry(dev_res, head, list) {
->> +             tmp_res = res_to_dev_res(realloc_head, dev_res->res);
->> +             if (!tmp_res || !tmp_res->add_size)
->> +                     continue;
->> +
->> +             add_count++;
->> +     }
->> +
->> +     return add_count != 0;
->> +}
->> +
->>  static bool save_resources(struct list_head *head,
->>                          struct list_head *save_head)
->>  {
->> @@ -481,16 +499,24 @@ static bool __assign_resources_must_add_sorted(struct list_head *head,
->>       struct pci_dev_resource *save_res;
->>       struct pci_dev_resource *dev_res, *tmp_res;
->>       unsigned long fail_type;
->> -     resource_size_t add_align;
->> +     resource_size_t add_align, add_size;
->>       struct resource *res;
->>
->> +     if (!__has_addon(head, realloc_head))
->> +             return false;
->> +
->>       if (!save_resources(head, &save_head))
->>               return false;
->>
->>       /* Update res in head list with add_size in realloc_head list */
->>       list_for_each_entry(dev_res, head, list) {
->>               res = dev_res->res;
->> -             res->end += get_res_add_size(realloc_head, res);
->> +             add_size = get_res_add_size(realloc_head, res);
->> +
->> +             if (!add_size)
->> +                     continue;
->> +
->> +             res->end += add_size;
->>
->>               /*
->>                * There are two kinds of additional resources in the list:
->> @@ -578,7 +604,7 @@ static void __assign_resources_sorted(struct list_head *head,
->>        */
->>
->>       /* Check must+optional add */
->> -     if (realloc_head && !list_empty(realloc_head) &&
->> +     if (realloc_head &&
->
-> Why are you dropping the !list_empty() test?
+enum acpi_dma_coherency {
+	ACPI_DMA_NON_COHERENT,
+	ACPI_DMA_COHERENT,
+	APCI_DMA_NOT_SUPPORTED = -1,
+};
 
-count in __has_addon() will be 0, so we can skip checking here.
+Although, this would need to be defined in the include/linux/acpi.h, and 
+will be used also for #ifndef CONFIG_ACPI code to return errors. I was 
+not sure if this would be too much. If this is preferred, I'll add this 
+back in.
 
+>>
+>>   	if (has_acpi_companion(dev)) {
+>>   		if (acpi_dev) {
+>> @@ -225,7 +225,8 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+>>   	if (!has_acpi_companion(dev))
+>>   		ACPI_COMPANION_SET(dev, acpi_dev);
+>>
+>> -	if (acpi_check_dma(acpi_dev, &coherent))
+>> +	coherent = acpi_check_dma_coherency(acpi_dev);
+>> +	if (coherent != -1)
 >
->>           __assign_resources_must_add_sorted(head, realloc_head))
->>               return;
+> Like here I'm not sure why -1 is special?
+
+It's just another value to communicate that DMA is not supported. :)
+
+Thanks,
+Suravee
+>
+>>   		arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
 >>
->> --
->> 1.8.4.5
->>
+>>   	acpi_physnode_link_name(physical_node_name, node_id);
+>
+> Thanks,
+> Rafael
+>
