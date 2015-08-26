@@ -1,72 +1,149 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:43949 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233AbbHaGXI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Aug 2015 02:23:08 -0400
-Date: Mon, 31 Aug 2015 15:23:04 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-kernel@vger.kernel.org,
-	HARUNOBU KUROKAWA <harunobu.kurokawa.dn@renesas.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	NAOYA SHIIBA <naoya.shiiba.nx@renesas.com>,
-	TOSHIAKI KOMATSU <toshiaki.komatsu.ud@renesas.com>
-Subject: Re: [PATCH][resent] PCI: rcar: Add PCIE_CONF_REGNO macro for PCIECAR
- register
-Message-ID: <20150831062200.GB27319@verge.net.au>
-References: <HKNPR06MB049BFAE520321568794CA8FC5600@HKNPR06MB049.apcprd06.prod.outlook.com>
- <874mjlefty.wl%kuninori.morimoto.gx@renesas.com>
- <8737z5efjt.wl%kuninori.morimoto.gx@renesas.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH V3 3/4] PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+Date: Wed, 26 Aug 2015 20:54:38 +0700
+Message-ID: <1440597279-11802-4-git-send-email-Suravee.Suthikulpanit@amd.com>
+In-Reply-To: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8737z5efjt.wl%kuninori.morimoto.gx@renesas.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 27, 2015 at 12:37:00AM +0000, Kuninori Morimoto wrote:
-> From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-> 
-> The reg variable used when setting PCIECAR register need to be masked by 0xFC
-> by restriction of the corresponding register.
-> This adds PCIE_CONF_REGNO are macros for masking changes that PCIE_CONF_REGNO
-> is used when setting PCIECAR register.
-> 
-> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
-> ---
-> This patch was posted to ML, but still no response.
-> I re-sent it because original author has gone now.
-> 
->  drivers/pci/host/pcie-rcar.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index c086210..9fd39cd8b 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -104,6 +104,7 @@
->  #define  PCIE_CONF_BUS(b)	(((b) & 0xff) << 24)
->  #define  PCIE_CONF_DEV(d)	(((d) & 0x1f) << 19)
->  #define  PCIE_CONF_FUNC(f)	(((f) & 0x7) << 16)
-> +#define  PCIE_CONF_REGNO(r)	(r & 0xfc)
->  
->  #define RCAR_PCI_MAX_RESOURCES 4
->  #define MAX_NR_INBOUND_MAPS 6
-> @@ -227,7 +228,8 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
->  
->  	/* Set the PIO address */
->  	rcar_pci_write_reg(pcie, PCIE_CONF_BUS(bus->number) |
-> -		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) | reg, PCIECAR);
-> +		PCIE_CONF_DEV(dev) | PCIE_CONF_FUNC(func) |
-> +		PCIE_CONF_REGNO(reg), PCIECAR);
->  
->  	/* Enable the configuration access */
->  	if (bus->parent->number == pcie->root_bus_nr)
+This patch move of_pci_dma_configure() to a more generic
+pci_dma_configure(), which can be extended by non-OF code (e.g. ACPI).
 
-This seems to partially duplicate the following line earlier on
-in rcar_pcie_config_access().
+This has no functional change.
 
-	reg = where & ~3;
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Acked-by: Rob Herring <robh+dt@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>
+CC: Catalin Marinas <catalin.marinas@arm.com>
+CC: Will Deacon <will.deacon@arm.com>
+CC: Rafael J. Wysocki <rjw@rjwysocki.net>
+CC: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/of/of_pci.c    | 20 --------------------
+ drivers/pci/probe.c    | 27 +++++++++++++++++++++++++--
+ include/linux/of_pci.h |  3 ---
+ 3 files changed, 25 insertions(+), 25 deletions(-)
 
-I wonder if that line could be updated to use the new PCIE_CONF_REGNO()
-macro. If so it seems that the second hunk of the patch could be dropped.
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 5751dc5..b66ee4e 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -117,26 +117,6 @@ int of_get_pci_domain_nr(struct device_node *node)
+ }
+ EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+ 
+-/**
+- * of_pci_dma_configure - Setup DMA configuration
+- * @dev: ptr to pci_dev struct of the PCI device
+- *
+- * Function to update PCI devices's DMA configuration using the same
+- * info from the OF node of host bridge's parent (if any).
+- */
+-void of_pci_dma_configure(struct pci_dev *pci_dev)
+-{
+-	struct device *dev = &pci_dev->dev;
+-	struct device *bridge = pci_get_host_bridge_device(pci_dev);
+-
+-	if (!bridge->parent)
+-		return;
+-
+-	of_dma_configure(dev, bridge->parent->of_node);
+-	pci_put_host_bridge_device(bridge);
+-}
+-EXPORT_SYMBOL_GPL(of_pci_dma_configure);
+-
+ #if defined(CONFIG_OF_ADDRESS)
+ /**
+  * of_pci_get_host_bridge_resources - Parse PCI host bridge resources from DT
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index cefd636..4de6594 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -6,12 +6,14 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
+-#include <linux/of_pci.h>
++#include <linux/of_device.h>
+ #include <linux/pci_hotplug.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/cpumask.h>
+ #include <linux/pci-aspm.h>
++#include <linux/acpi.h>
++#include <linux/property.h>
+ #include <asm-generic/pci-bridge.h>
+ #include "pci.h"
+ 
+@@ -1544,6 +1546,27 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
+ }
+ 
++/**
++ * pci_dma_configure - Setup DMA configuration
++ * @dev: ptr to pci_dev struct of the PCI device
++ *
++ * Function to update PCI devices's DMA configuration using the same
++ * info from the OF node of host bridge's parent (if any).
++ */
++static void pci_dma_configure(struct pci_dev *dev)
++{
++	struct device *bridge = pci_get_host_bridge_device(dev);
++
++	if (IS_ENABLED(CONFIG_OF) && dev->dev.of_node) {
++		if (!bridge->parent)
++			return;
++
++		of_dma_configure(&dev->dev, bridge->parent->of_node);
++	}
++
++	pci_put_host_bridge_device(bridge);
++}
++
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1557,7 +1580,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
+-	of_pci_dma_configure(dev);
++	pci_dma_configure(dev);
+ 
+ 	pci_set_dma_max_seg_size(dev, 65536);
+ 	pci_set_dma_seg_boundary(dev, 0xffffffff);
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 29fd3fe..ce0e5ab 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -16,7 +16,6 @@ int of_pci_get_devfn(struct device_node *np);
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_get_pci_domain_nr(struct device_node *node);
+-void of_pci_dma_configure(struct pci_dev *pci_dev);
+ #else
+ static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
+ {
+@@ -51,8 +50,6 @@ of_get_pci_domain_nr(struct device_node *node)
+ {
+ 	return -1;
+ }
+-
+-static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
+ #endif
+ 
+ #if defined(CONFIG_OF_ADDRESS)
+-- 
+2.1.0
+
