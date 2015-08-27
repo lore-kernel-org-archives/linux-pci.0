@@ -1,401 +1,546 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55C4C448.4020102@arm.com>
-Date: Fri, 07 Aug 2015 15:44:24 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-MIME-Version: 1.0
-To: Ley Foon Tan <lftan@altera.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"lftan.linux@gmail.com" <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH v3 3/5] pci: altera: Add Altera PCIe MSI driver
-References: <1438933382-2936-1-git-send-email-lftan@altera.com> <1438933382-2936-4-git-send-email-lftan@altera.com>
-In-Reply-To: <1438933382-2936-4-git-send-email-lftan@altera.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:50945 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932121AbbH0WjK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 27 Aug 2015 18:39:10 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: x86@kernel.org, linux-kernel@vger.kernel.org
+Cc: Keith Busch <keith.busch@intel.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	linux-pci@vger.kernel.org
+Subject: [RFC PATCH 2/2] x86/pci: Initial commit for new VMD device driver
+Date: Thu, 27 Aug 2015 16:39:06 -0600
+Message-Id: <1440715146-16578-3-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1440715146-16578-1-git-send-email-keith.busch@intel.com>
+References: <1440715146-16578-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/08/15 08:43, Ley Foon Tan wrote:
-> This patch adds Altera PCIe MSI driver. This soft IP supports configurable
-> number of vectors, which is a dts parameter.
-> 
-> Signed-off-by: Ley Foon Tan <lftan@altera.com>
-> ---
->  drivers/pci/host/Kconfig           |   8 +
->  drivers/pci/host/Makefile          |   1 +
->  drivers/pci/host/pcie-altera-msi.c | 309 +++++++++++++++++++++++++++++++++++++
->  3 files changed, 318 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-altera-msi.c
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 4b4754a..d28cc6d 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -152,4 +152,12 @@ config PCIE_ALTERA
->           Say Y here if you want to enable PCIe controller support for Altera
->           SoCFPGA family of SoCs.
-> 
-> +config PCIE_ALTERA_MSI
-> +       bool "Altera PCIe MSI feature"
-> +       depends on PCI_MSI
-> +       select PCI_MSI_IRQ_DOMAIN
-> +       help
-> +         Say Y here if you want PCIe MSI support for the Altera SocFPGA SoC.
-> +         This MSI driver supports Altera MSI to GIC controller IP.
-> +
->  endmenu
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 6954f76..6c4913d 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -18,3 +18,4 @@ obj-$(CONFIG_PCIE_IPROC) += pcie-iproc.o
->  obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
->  obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
->  obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
-> +obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
-> diff --git a/drivers/pci/host/pcie-altera-msi.c b/drivers/pci/host/pcie-altera-msi.c
-> new file mode 100644
-> index 0000000..2d84e62
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-altera-msi.c
-> @@ -0,0 +1,309 @@
-> +/*
-> + * Copyright Altera Corporation (C) 2013-2015. All rights reserved
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-> + * more details.
-> + *
-> + * You should have received a copy of the GNU General Public License along with
-> + * this program.  If not, see <http://www.gnu.org/licenses/>.
-> + */
-> +#include <linux/interrupt.h>
-> +#include <linux/irqchip/chained_irq.h>
-> +#include <linux/module.h>
-> +#include <linux/msi.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_irq.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/pci.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/slab.h>
-> +
-> +#define MSI_STATUS             0x0
-> +#define MSI_ERROR              0x4
-> +#define MSI_INTMASK            0x8
-> +
-> +#define MAX_MSI_VECTORS                32
-> +struct altera_msi {
-> +       DECLARE_BITMAP(used, MAX_MSI_VECTORS);
-> +       struct mutex            lock;   /* proctect used variable */
-> +       struct platform_device  *pdev;
-> +       struct irq_domain               *msi_domain;
-> +       struct irq_domain               *inner_domain;
-> +       void __iomem            *csr_base;
-> +       void __iomem            *vector_base;
-> +       phys_addr_t             vector_phy;
-> +       u32                     num_of_vectors;
-> +       int                     irq;
-> +};
-> +
-> +static inline void msi_writel(struct altera_msi *msi, u32 value, u32 reg)
-> +{
-> +       writel_relaxed(value, msi->csr_base + reg);
-> +}
-> +
-> +static inline u32 msi_readl(struct altera_msi *msi, u32 reg)
-> +{
-> +       return readl_relaxed(msi->csr_base + reg);
-> +}
-> +
-> +static void altera_msi_isr(unsigned int irq, struct irq_desc *desc)
-> +{
-> +       struct irq_chip *chip = irq_desc_get_chip(desc);
-> +       struct altera_msi *msi;
-> +       unsigned long status;
-> +       u32 num_of_vectors;
-> +       u32 bit;
-> +       u32 virq;
-> +
-> +       chained_irq_enter(chip, desc);
-> +       msi = irq_desc_get_handler_data(desc);
-> +       num_of_vectors = msi->num_of_vectors;
-> +
-> +       do {
-> +               status = msi_readl(msi, MSI_STATUS);
-> +               if (!status)
-> +                       break;
-> +
-> +               do {
-> +                       bit = find_first_bit(&status, num_of_vectors);
-> +                       /* Dummy read from vector to clear the interrupt */
-> +                       readl_relaxed(msi->vector_base + (bit * sizeof(u32)));
-> +
-> +                       virq = irq_find_mapping(msi->inner_domain, bit);
-> +                       if (virq && test_bit(bit, msi->used))
-> +                               generic_handle_irq(virq);
-> +                       else
-> +                               dev_err(&msi->pdev->dev, "unexpected MSI\n");
-> +
-> +                       /* Clear the bit from status and repeat without reading
-> +                        * again status register. */
-> +                       __clear_bit(bit, &status);
-> +               } while (status);
-> +       } while (1);
-> +
-> +       chained_irq_exit(chip, desc);
-> +}
-> +
-> +static struct irq_chip altera_msi_irq_chip = {
-> +       .name = "Altera PCIe MSI",
-> +       .irq_enable = pci_msi_unmask_irq,
-> +       .irq_disable = pci_msi_mask_irq,
-> +       .irq_mask = pci_msi_mask_irq,
-> +       .irq_unmask = pci_msi_unmask_irq,
-> +};
-> +
-> +static struct msi_domain_info altera_msi_domain_info = {
-> +       .flags  = (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-> +                    MSI_FLAG_PCI_MSIX),
-> +       .chip   = &altera_msi_irq_chip,
-> +};
-> +
-> +static void altera_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> +{
-> +       struct altera_msi *msi = irq_data_get_irq_chip_data(data);
-> +       phys_addr_t addr = msi->vector_phy + (data->hwirq * sizeof(u32));
-> +
-> +       msg->address_lo = lower_32_bits(addr);
-> +       msg->address_hi = upper_32_bits(addr);
-> +       msg->data = data->hwirq;
-> +
-> +       dev_dbg(&msi->pdev->dev, "msi#%d address_lo 0x%x address_hi 0x%x\n",
-> +               (int)data->hwirq, msg->address_hi, msg->address_lo);
-> +}
-> +
-> +static int altera_msi_set_affinity(struct irq_data *irq_data,
-> +                                  const struct cpumask *mask, bool force)
-> +{
-> +        return -EINVAL;
-> +}
-> +
-> +static struct irq_chip altera_msi_bottom_irq_chip = {
-> +       .name                   = "Altera MSI",
-> +       .irq_compose_msi_msg    = altera_compose_msi_msg,
-> +       .irq_set_affinity       = altera_msi_set_affinity,
-> +};
-> +
-> +static int altera_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-> +                                  unsigned int nr_irqs, void *args)
-> +{
-> +       struct altera_msi *msi = domain->host_data;
-> +       unsigned long bit;
-> +       u32 mask;
-> +
+The Intel Volume Management Device (VMD) is an integrated endpoint on the
+platform's PCIe root complex that acts as a host bridge to a secondary
+PCIe domain. BIOS can reassign one or more root ports to appear within
+the VMD domain instead of the primary domain.
 
-As you cannot support multi-MSI, it would be good to have a
-WARN_ON(nr_irqs != 1) here. Just in case...
+This driver enumerates and enables the domain using the root bus
+configuration interface provided by the PCI subsystem. The driver
+provides configuration space accessor functions (pci_ops), bus and memory
+resources, MSI configuration functions, and irq_chip implementation
+necessary to support the domain through the VMD endpoint's interface.
 
-> +       mutex_lock(&msi->lock);
-> +
-> +       bit = find_first_zero_bit(msi->used, msi->num_of_vectors);
-> +       if (bit >= msi->num_of_vectors)
-> +               return -ENOSPC;
-> +
-> +       set_bit(bit, msi->used);
-> +
-> +       mutex_unlock(&msi->lock);
-> +
-> +       irq_domain_set_info(domain, virq, bit, &altera_msi_bottom_irq_chip,
-> +                           domain->host_data, handle_simple_irq,
-> +                           NULL, NULL);
-> +       set_irq_flags(virq, IRQF_VALID);
-> +
-> +       mask = msi_readl(msi, MSI_INTMASK);
-> +       mask |= 1 << bit;
-> +       msi_writel(msi, mask, MSI_INTMASK);
-> +
-> +       return 0;
-> +}
-> +
-> +static void altera_irq_domain_free(struct irq_domain *domain,
-> +                                  unsigned int virq, unsigned int nr_irqs)
-> +{
-> +       struct irq_data *d = irq_domain_get_irq_data(domain, virq);
-> +       struct altera_msi *msi = irq_data_get_irq_chip_data(d);
-> +       u32 mask;
-> +
-> +       mutex_lock(&msi->lock);
-> +
-> +       if (!test_bit(d->hwirq, msi->used)) {
-> +               dev_err(&msi->pdev->dev, "trying to free unused MSI#%lu\n",
-> +                       d->hwirq);
-> +       } else {
-> +               __clear_bit(d->hwirq, msi->used);
-> +               mask = msi_readl(msi, MSI_INTMASK);
-> +               mask &= ~(1 << d->hwirq);
-> +               msi_writel(msi, mask, MSI_INTMASK);
-> +       }
-> +
-> +       mutex_unlock(&msi->lock);
-> +}
-> +
-> +static const struct irq_domain_ops msi_domain_ops = {
-> +       .alloc  = altera_irq_domain_alloc,
-> +       .free   = altera_irq_domain_free,
-> +};
-> +
-> +static int altera_allocate_domains(struct altera_msi *msi)
-> +{
-> +       msi->inner_domain = irq_domain_add_linear(NULL, msi->num_of_vectors,
-> +                                            &msi_domain_ops, msi);
-> +       if (!msi->inner_domain) {
-> +               dev_err(&msi->pdev->dev, "failed to create IRQ domain\n");
-> +               return -ENOMEM;
-> +       }
-> +
-> +       msi->msi_domain = pci_msi_create_irq_domain(msi->pdev->dev.of_node,
-> +                               &altera_msi_domain_info, msi->inner_domain);
-> +       if (!msi->msi_domain) {
-> +               dev_err(&msi->pdev->dev, "failed to create MSI domain\n");
-> +               irq_domain_remove(msi->inner_domain);
-> +               return -ENOMEM;
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +static void altera_free_domains(struct altera_msi *msi)
-> +{
-> +       irq_domain_remove(msi->msi_domain);
-> +       irq_domain_remove(msi->inner_domain);
-> +}
-> +
-> +static int altera_msi_remove(struct platform_device *pdev)
-> +{
-> +       struct altera_msi *msi = platform_get_drvdata(pdev);
-> +
-> +       msi_writel(msi, 0, MSI_INTMASK);
-> +       irq_set_chained_handler(msi->irq, NULL);
-> +       irq_set_handler_data(msi->irq, NULL);
-> +
-> +       altera_free_domains(msi);
-> +
-> +       platform_set_drvdata(pdev, NULL);
-> +       return 0;
-> +}
-> +
-> +static int altera_msi_probe(struct platform_device *pdev)
-> +{
-> +       struct altera_msi *msi;
-> +       struct device_node *np = pdev->dev.of_node;
-> +       struct resource *res;
-> +       int ret;
-> +
-> +       msi = devm_kzalloc(&pdev->dev, sizeof(struct altera_msi),
-> +                          GFP_KERNEL);
-> +       if (!msi)
-> +               return -ENOMEM;
-> +
-> +       mutex_init(&msi->lock);
-> +       msi->pdev = pdev;
-> +
-> +       res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
+VMD routes I/O as follows:
 
-Error checking here.
+  1) Configuration Space: BAR 0 ("CFGBAR") of VMD provides the base
+  address and size for configuration space register access to VMD-owned
+  root ports. It works similarly to MMCONFIG for extended configuration
+  space. Bus numbering is independent and does not conflict with the
+  primary domain.
 
-> +       msi->csr_base = devm_ioremap_resource(&pdev->dev, res);
-> +       if (IS_ERR(msi->csr_base)) {
-> +               dev_err(&pdev->dev, "get csr resource failed\n");
-> +               return PTR_ERR(msi->csr_base);
-> +       }
-> +
-> +       res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-> +                                          "vector_slave");
+  2) MMIO Space: BARs 2 and 4 ("MEMBAR1" and "MEMBAR2") of VMD provide the
+  base address, size, and type for MMIO register access. These addresses
+  are not translated by VMD hardware; they are simply reservations to be
+  distributed to root ports' memory base/limit registers and subdivided
+  among devices downstream.
 
-And here.
+  3) DMA: To interact appropriately with IOMMU, the source ID DMA read
+  and write requests are translated to the bus-device-function of the
+  VMD endpoint. Otherwise, DMA operates normally without VMD-specific
+  address translation.
 
-> +       msi->vector_base = devm_ioremap_resource(&pdev->dev, res);
-> +       if (IS_ERR(msi->vector_base)) {
-> +               dev_err(&pdev->dev, "get vector slave resource failed\n");
-> +               return PTR_ERR(msi->vector_base);
-> +       }
-> +
-> +       msi->vector_phy = res->start;
-> +
-> +       if (of_property_read_u32(np, "num-vectors", &msi->num_of_vectors)) {
-> +               dev_err(&pdev->dev, "failed to parse the number of vectors\n");
-> +               return -EINVAL;
-> +       }
-> +
-> +       ret = altera_allocate_domains(msi);
-> +       if (ret)
-> +               return ret;
-> +
-> +       msi->irq = platform_get_irq(pdev, 0);
-> +       if (msi->irq <= 0) {
-> +               dev_err(&pdev->dev, "failed to map IRQ: %d\n", msi->irq);
-> +               ret = -ENODEV;
-> +               goto err;
-> +       }
-> +
-> +       irq_set_chained_handler_and_data(msi->irq, altera_msi_isr, msi);
-> +       platform_set_drvdata(pdev, msi);
-> +
-> +       return 0;
-> +
-> +err:
-> +       altera_msi_remove(pdev);
-> +       return ret;
-> +}
-> +
-> +static const struct of_device_id altera_msi_of_match[] = {
-> +       { .compatible = "altr,msi-1.0", NULL },
-> +       { },
-> +};
-> +
-> +static struct platform_driver altera_msi_driver = {
-> +       .driver = {
-> +               .name = "altera-msi",
-> +               .of_match_table = altera_msi_of_match,
-> +       },
-> +       .probe = altera_msi_probe,
-> +       .remove = altera_msi_remove,
-> +};
-> +
-> +static int __init altera_msi_init(void)
-> +{
-> +       return platform_driver_register(&altera_msi_driver);
-> +}
-> +
-> +subsys_initcall(altera_msi_init);
-> +
-> +MODULE_AUTHOR("Ley Foon Tan <lftan@altera.com>");
-> +MODULE_DESCRIPTION("Altera PCIe MSI support");
-> +MODULE_LICENSE("GPL v2");
-> --
-> 1.8.2.1
-> 
+  4) Interrupts: Part of VMD's BAR 4 is reserved for VMD's MSI-X Table and
+  PBA. MSIs from VMD domain devices and ports are remapped to appear if
+  they were issued using one of VMD's MSI-X table entries. Each MSI and
+  MSI-X addresses of VMD-owned devices and ports have a special format
+  where the address refers specific entries in VMD's MSI-X table.  As with
+  DMA, the interrupt source id is translated to VMD's bus-device-function.
 
-Apart from the couple of nits above, this is starting to look good too.
-And as for the PCIe driver, you need to get the DT maintainers to review
-that part.
+  The driver provides its own MSI and MSI-X configuration functions
+  specific to how MSi messages are used within the VMD domain, and
+  it provides an irq_chip for indepdent IRQ allocation and to relay
+  interrupts from VMD's interrupt handler to the appropriate device
+  driver's handler.
 
-Thanks,
+  5) Errors: PCIe error message are intercepted by the root ports normally
+  (e.g. AER), except with VMD, system errors (i.e. firmware first) are
+  disabled by default. AER and hotplug interrupts are translated in the
+  same way as endpoint interrupts.
 
-	M.
+  6) VMD does not support INTx interrupts or IO ports. Devices or drivers
+  requiring these features should either not be placed below VMD-owned
+  root ports, or VMD should be disabled by BIOS for such enpdoints.
+
+Contributers to this patch include:
+
+  Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+  Bryan Veal <bryan.e.veal@intel.com>
+  Jon Derrick <jonathan.derrick@intel.coM>
+
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+CC: Bryan Veal <bryan.e.veal@intel.com>
+CC: Dan Williams <dan.j.williams@intel.com>
+CC: x86@kernel.org
+CC: linux-kernel@vger.kernel.org
+CC: linux-pci@vger.kernel.org
+---
+ arch/x86/Kconfig      |   11 ++
+ arch/x86/pci/Makefile |    2 +
+ arch/x86/pci/vmd.c    |  412 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 425 insertions(+)
+ create mode 100644 arch/x86/pci/vmd.c
+
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index b3a1a5d..a8cad59 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2584,6 +2584,17 @@ config PMC_ATOM
+ 	def_bool y
+         depends on PCI
+ 
++config VMDDEV
++	depends on PCI && PCI_DOMAINS && PCI_MSI
++	tristate "Volume Management Device Driver"
++	default N
++	---help---
++	Adds support for the Intel Volume Manage Device (VMD). VMD is
++	a secondary PCI host bridge that allows PCI Express root ports,
++	and devices attached to them, to be removed from the default PCI
++	domain and placed within the VMD domain. If your system provides
++	one of these, and you have devices attached to it, say "Y".
++
+ source "net/Kconfig"
+ 
+ source "drivers/Kconfig"
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index 5c6fc35..c204079 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -23,6 +23,8 @@ obj-y				+= bus_numa.o
+ obj-$(CONFIG_AMD_NB)		+= amd_bus.o
+ obj-$(CONFIG_PCI_CNB20LE_QUIRK)	+= broadcom_bus.o
+ 
++obj-$(CONFIG_VMDDEV) += vmd.o
++
+ ifeq ($(CONFIG_PCI_DEBUG),y)
+ EXTRA_CFLAGS += -DDEBUG
+ endif
+diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+new file mode 100644
+index 0000000..ea8bb4c
+--- /dev/null
++++ b/arch/x86/pci/vmd.c
+@@ -0,0 +1,412 @@
++/*
++ * Volume Management Device driver
++ * Copyright (c) 2015, Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ */
++
++#include <linux/device.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <asm/hpet.h>
++#include <asm/msidef.h>
++
++struct vmd_irq {
++	struct list_head node;
++	struct vmd_irq_list *irq;
++	unsigned int virq;
++};
++
++struct vmd_irq_list {
++	struct list_head irq_list;
++	spinlock_t irq_lock;
++};
++
++struct vmd_dev {
++	spinlock_t cfg_lock;
++	char __iomem *cfgbar;
++
++	int msix_count;
++	struct msix_entry *msix_entries;
++	struct vmd_irq_list *irqs;
++
++	int domain;
++	struct pci_sysdata sysdata;
++	struct pci_bus *bus;
++	struct pci_dev *dev;
++};
++
++static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
++{
++	return container_of(bus->sysdata, struct vmd_dev, sysdata);
++}
++
++static void vmd_irq_enable(struct irq_data *data)
++{
++	unsigned long flags;
++	struct irq_desc *desc = irq_to_desc(data->irq);
++	struct msi_desc *msidesc = irq_desc_get_msi_desc(desc);
++	struct vmd_irq *vmdirq = (struct vmd_irq *)
++				irq_data_get_irq_handler_data(data);
++	struct vmd_irq_list *irq = vmdirq->irq;
++
++	spin_lock_irqsave(&irq->irq_lock, flags);
++	list_add_tail(&vmdirq->node, &irq->irq_list);
++	spin_unlock_irqrestore(&irq->irq_lock, flags);
++
++	msidesc->irq = data->irq;
++	dev_info(&msidesc->dev->dev, "%s: virq:%d\n", __func__, data->irq);
++}
++
++static void vmd_irq_disable(struct irq_data *data)
++{
++	unsigned long flags;
++	struct irq_desc *desc = irq_to_desc(data->irq);
++	struct msi_desc *msidesc = irq_desc_get_msi_desc(desc);
++	struct vmd_irq *vmdirq = (struct vmd_irq *)
++				irq_data_get_irq_handler_data(data);
++	struct vmd_irq_list *irq = vmdirq->irq;
++
++	spin_lock_irqsave(&irq->irq_lock, flags);
++	list_del_init(&vmdirq->node);
++	spin_unlock_irqrestore(&irq->irq_lock, flags);
++
++	msidesc->irq = 0;
++	dev_info(&msidesc->dev->dev, "%s: virq:%d\n", __func__, data->irq);
++}
++
++static struct irq_chip vmd_chip = {
++	.name			= "VMD-MSI",
++	.irq_enable		= vmd_irq_enable,
++	.irq_disable		= vmd_irq_disable,
++};
++
++static int vmd_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++{
++	int i = 0;
++	unsigned int irq, virq;
++	struct msi_desc *msidesc;
++	struct irq_desc *desc;
++	struct vmd_dev *vmd = vmd_from_bus(dev->bus);
++
++	if (type == PCI_CAP_ID_MSI && nvec > 1)
++		return 1;
++	if (nvec > vmd->msix_count)
++		return vmd->msix_count;
++	if (nvec <= 0)
++		return -EINVAL;
++
++	irq = irq_alloc_descs(-1, 0, nvec, -1);
++	if (irq < 0)
++		return irq;
++
++	list_for_each_entry(msidesc, &dev->msi_list, list) {
++		struct vmd_irq *vmdirq;
++		struct msi_msg msg;
++
++		vmdirq = kzalloc(sizeof(*vmdirq), GFP_KERNEL);
++		if (!vmdirq)
++			return -ENOMEM;
++
++		virq = i + irq;
++		desc = irq_to_desc(virq);
++		desc->irq_data.msi_desc = msidesc;
++
++		INIT_LIST_HEAD(&vmdirq->node);
++		vmdirq->irq = &vmd->irqs[i];
++		vmdirq->virq = virq;
++
++		irq_set_handler_data(virq, vmdirq);
++		irq_set_chip_and_handler(virq, &vmd_chip, handle_simple_irq);
++
++		msg.address_hi = MSI_ADDR_BASE_HI;
++		msg.address_lo = MSI_ADDR_BASE_LO | MSI_ADDR_DEST_ID(i);
++		msg.data = MSI_DATA_VECTOR(vmd->msix_entries[i].vector);
++
++		msidesc->irq = virq;
++		msidesc->msg = msg;
++		pci_write_msi_msg(virq, &msg);
++
++		dev_info(&dev->dev, "irq %d mapped to %d for MSI\n",
++				virq, vmd->msix_entries[i].vector);
++		i++;
++	}
++	return 0;
++}
++
++static void vmd_teardown_msi_irq(unsigned int irq)
++{
++	struct vmd_irq *vmdirq = irq_get_handler_data(irq);
++
++	BUG_ON(!vmdirq || !list_empty(&vmdirq->node));
++	kfree(vmdirq);
++	irq_free_desc(irq);
++}
++
++static struct x86_msi_ops vmd_msi = {
++	.setup_msi_irqs		= vmd_setup_msi_irqs,
++	.teardown_msi_irq	= vmd_teardown_msi_irq,
++};
++
++/*
++ * CPU may deadlock if config space is not serialized on some versions of this
++ * hardware, so all config space access is done under a spinlock.
++ */
++static int vmd_pci_read(struct pci_bus *bus, unsigned int devfn, int reg,
++							int len, u32 *value)
++{
++	int ret = 0;
++	unsigned long flags;
++	struct vmd_dev *vmd = vmd_from_bus(bus);
++	char __iomem *addr = vmd->cfgbar + (bus->number << 20) +
++						(devfn << 12) + reg;
++
++	spin_lock_irqsave(&vmd->cfg_lock, flags);
++	switch (len) {
++	case 1:
++		*value = readb(addr);
++		break;
++	case 2:
++		*value = readw(addr);
++		break;
++	case 4:
++		*value = readl(addr);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
++	return ret;
++}
++
++/*
++ * VMD h/w converts posted config writes to non-posted. The read-back in this
++ * function forces the completion so it returns only after the device config
++ * space was written, as expected.
++ */
++static int vmd_pci_write(struct pci_bus *bus, unsigned int devfn, int reg,
++							int len, u32 value)
++{
++	int ret = 0;
++	unsigned long flags;
++	struct vmd_dev *vmd = vmd_from_bus(bus);
++	char __iomem *addr = vmd->cfgbar + (bus->number << 20) +
++						(devfn << 12) + reg;
++
++	spin_lock_irqsave(&vmd->cfg_lock, flags);
++	switch (len) {
++	case 1:
++		writeb(value, addr);
++		readb(addr);
++		break;
++	case 2:
++		writew(value, addr);
++		readw(addr);
++		break;
++	case 4:
++		writel(value, addr);
++		readl(addr);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++	spin_unlock_irqrestore(&vmd->cfg_lock, flags);
++	return ret;
++}
++
++static struct pci_ops vmd_ops = {
++	.read = vmd_pci_read,
++	.write = vmd_pci_write,
++};
++
++static int vmd_find_free_domain(void)
++{
++	int domain = -1;
++	struct pci_bus *bus = NULL;
++
++	while ((bus = pci_find_next_bus(bus)) != NULL)
++		domain = max_t(int, domain, pci_domain_nr(bus));
++	if (domain < 0)
++		return -ENODEV;
++	return domain + 1;
++}
++
++static int vmd_enable_domain(struct vmd_dev *vmd)
++{
++	static const u8 vmd_membars[] = {2, 4};
++	static const u64 vmd_membar_offsets[] = {0, 0x2000};
++	int i = 0;
++	LIST_HEAD(resources);
++	struct pci_sysdata *sd = &vmd->sysdata;
++	struct resource_entry *entry;
++
++	sd->domain = vmd_find_free_domain();
++	if (sd->domain < 0)
++		return sd->domain;
++	sd->node = pcibus_to_node(vmd->dev->bus);
++	sd->msi_ops = &vmd_msi;
++
++	pci_add_resource(&resources, NULL);
++	pci_add_resource(&resources, NULL);
++	pci_add_resource(&resources, NULL);
++	resource_list_for_each_entry(entry, &resources) {
++		struct resource *source, *resource = entry->res;
++
++		if (!i) {
++			resource->start = 0;
++			resource->end = (resource_size(
++					&vmd->dev->resource[0]) >> 20) - 1;
++			resource->flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED;
++		} else {
++			source = &vmd->dev->resource[vmd_membars[i - 1]];
++			resource->start = source->start +
++						vmd_membar_offsets[i - 1];
++			resource->end = source->end;
++			resource->flags = source->flags & ~IORESOURCE_SIZEALIGN;
++			resource->parent = source;
++			if (!upper_32_bits(resource->end))
++				resource->flags &= ~IORESOURCE_MEM_64;
++		}
++		i++;
++	}
++
++	vmd->bus = pci_scan_root_bus(NULL, 0, &vmd_ops, sd, &resources);
++	if (!vmd->bus) {
++		pci_free_resource_list(&resources);
++		return -ENODEV;
++	}
++	pci_bus_size_bridges(vmd->bus);
++	pci_bus_assign_resources(vmd->bus);
++	pci_bus_add_devices(vmd->bus);
++
++	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj, "domain"),
++			"Can't create symlink to domain\n");
++	return 0;
++}
++
++static irqreturn_t vmd_irq(int irq, void *data)
++{
++	struct vmd_irq_list *irqs = data;
++	struct vmd_irq *vmdirq;
++
++	spin_lock(&irqs->irq_lock);
++	list_for_each_entry(vmdirq, &irqs->irq_list, node)
++		generic_handle_irq(vmdirq->virq);
++	spin_unlock(&irqs->irq_lock);
++
++	return IRQ_HANDLED;
++}
++
++static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
++{
++	struct vmd_dev *vmd;
++	int i, err;
++
++	vmd = devm_kzalloc(&dev->dev, sizeof(*vmd), GFP_KERNEL);
++	if (!vmd)
++		return -ENOMEM;
++
++	err = pcim_enable_device(dev);
++	if (err < 0)
++		return err;
++
++	vmd->cfgbar = pcim_iomap(dev, 0, 0);
++	if (!vmd->cfgbar)
++		return -ENOMEM;
++
++	pci_set_master(dev);
++	if (dma_set_mask_and_coherent(&dev->dev, DMA_BIT_MASK(64)) &&
++	    dma_set_mask_and_coherent(&dev->dev, DMA_BIT_MASK(32)))
++		return -ENODEV;
++
++	vmd->dev = dev;
++	vmd->msix_count = pci_msix_vec_count(dev);
++	if (!vmd->msix_count)
++		return -ENODEV;
++
++	vmd->irqs = devm_kcalloc(&dev->dev, vmd->msix_count, sizeof(*vmd->irqs),
++							GFP_KERNEL);
++	if (!vmd->irqs)
++		return -ENOMEM;
++
++	vmd->msix_entries = devm_kcalloc(&dev->dev, vmd->msix_count,
++					sizeof(*vmd->msix_entries), GFP_KERNEL);
++	if(!vmd->msix_entries)
++		return -ENOMEM;
++	for (i = 0; i < vmd->msix_count; i++)
++		vmd->msix_entries[i].entry = i;
++
++	vmd->msix_count = pci_enable_msix_range(vmd->dev, vmd->msix_entries, 1,
++							vmd->msix_count);
++	if (vmd->msix_count < 0)
++		return vmd->msix_count;
++
++	for (i = 0; i < vmd->msix_count; i++) {
++		err = devm_request_irq(&dev->dev,
++				vmd->msix_entries[i].vector, vmd_irq,
++				IRQF_SHARED, "vmd", &vmd->irqs[i]);
++		if (err)
++			return err;
++		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
++		spin_lock_init(&vmd->irqs[i].irq_lock);
++	}
++
++	spin_lock_init(&vmd->cfg_lock);
++	err = vmd_enable_domain(vmd);
++	if (err)
++		return err;
++
++	pci_set_drvdata(dev, vmd);
++	return 0;
++}
++
++static void vmd_remove(struct pci_dev *dev)
++{
++	struct pci_bus *bus;
++	struct pci_dev *child, *tmp;
++	struct vmd_dev *vmd = pci_get_drvdata(dev);
++
++	if (!vmd)
++		return;
++	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
++	pci_set_drvdata(dev, NULL);
++	bus = vmd->bus;
++	list_for_each_entry_safe(child, tmp, &bus->devices, bus_list)
++		pci_stop_and_remove_bus_device(child);
++	pci_remove_bus(bus);
++}
++
++static const struct pci_device_id vmd_ids[] = {
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x201d),},
++	{0,}
++};
++MODULE_DEVICE_TABLE(pci, vmd_ids);
++
++struct pci_driver vmd_drv = {
++	.name		= "vmd",
++	.id_table	= vmd_ids,
++	.probe		= vmd_probe,
++	.remove		= vmd_remove,
++};
++
++static int __init vmd_init(void)
++{
++	return pci_register_driver(&vmd_drv);
++}
++module_init(vmd_init);
++
++MODULE_AUTHOR("Intel Corporation");
++MODULE_LICENSE("GPL v2");
++MODULE_VERSION("0.1");
 -- 
-Jazz is not dead. It just smells funny...
+1.7.10.4
+
