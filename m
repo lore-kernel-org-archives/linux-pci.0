@@ -1,47 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39939 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbbHCEgs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 3 Aug 2015 00:36:48 -0400
-Date: Sun, 2 Aug 2015 21:36:47 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Adam Lee <adam.lee@canonical.com>
-Cc: linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/2] pci_ids: Add Pericom vendor and device ids
-Message-ID: <20150803043647.GA20605@kroah.com>
-References: <1438576401-24921-1-git-send-email-adam.lee@canonical.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 28 Aug 2015 16:43:50 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Simon Horman <horms@verge.net.au>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Valentine Barshak <valentine.barshak@cogentembedded.com>,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: PCI_RCAR_GEN2 and PCI_RCAR_GEN2_PCIE should depend
+ on ARM
+Message-ID: <20150828214350.GC27890@google.com>
+References: <1439296994-28480-1-git-send-email-geert+renesas@glider.be>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1438576401-24921-1-git-send-email-adam.lee@canonical.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1439296994-28480-1-git-send-email-geert+renesas@glider.be>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 03, 2015 at 12:33:20PM +0800, Adam Lee wrote:
-> This patch add Pericom's vendor id and Pericom PI7C9X795[1248] chips'
-> device ids.
+On Tue, Aug 11, 2015 at 02:43:14PM +0200, Geert Uytterhoeven wrote:
+> On arm64/shmobile:
 > 
-> Signed-off-by: Adam Lee <adam.lee@canonical.com>
-> ---
->  include/linux/pci_ids.h | 6 ++++++
->  1 file changed, 6 insertions(+)
+>     drivers/pci/host/pci-rcar-gen2.c: In function 'rcar_pci_cfg_base': drivers/pci/host/pci-rcar-gen2.c:112:34: error: dereferencing pointer to incomplete type
+>       struct rcar_pci_priv *priv = sys->private_data;
+> 				      ^
 > 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index fcff8f8..c4a93cf 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2995,4 +2995,10 @@
->  
->  #define PCI_VENDOR_ID_OCZ		0x1b85
->  
-> +#define PCI_VENDOR_ID_PERICOM			0x12D8
-> +#define PCI_DEVICE_ID_PERICOM_PI7C9X7951	0x7951
-> +#define PCI_DEVICE_ID_PERICOM_PI7C9X7952	0x7952
-> +#define PCI_DEVICE_ID_PERICOM_PI7C9X7954	0x7954
-> +#define PCI_DEVICE_ID_PERICOM_PI7C9X7958	0x7958
+> and
+> 
+>     drivers/pci/host/pcie-rcar.c:138:52: warning: 'struct pci_sys_data' declared inside parameter list
+>      static inline struct rcar_pcie *sys_to_pcie(struct pci_sys_data *sys)
+> 							^
+> 
+> pci_sys_data exists on ARM only, hence these drivers should depend on
+> ARM unconditionally.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Please read the top of this file, this isn't needed...
+Thanks, I applied this to pci-4.4/host-rcar, which I will rebase after v4.3
+is released.
 
-thanks,
+commit ae93c3763a294543fd790107e223023ae75cd93a
+Author: Geert Uytterhoeven <geert+renesas@glider.be>
+Date:   Tue Aug 11 14:43:14 2015 +0200
 
-greg k-h
+    PCI: rcar: Build only on ARM
+    
+    The pci-rcar-gen2.c and pcie-rcar.c drivers use struct pci_sys_data, which
+    only exists on ARM.  Building them on other arches, e.g., arm64/shmobile,
+    causes errors like this:
+    
+      drivers/pci/host/pci-rcar-gen2.c: In function 'rcar_pci_cfg_base': drivers/pci/host/pci-rcar-gen2.c:112:34: error: dereferencing pointer to incomplete type
+        struct rcar_pci_priv *priv = sys->private_data;
+                                        ^
+    Make these drivers depend on ARM unconditionally.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index c132bdd..3745c63 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -39,7 +39,8 @@ config PCI_TEGRA
+ 
+ config PCI_RCAR_GEN2
+ 	bool "Renesas R-Car Gen2 Internal PCI controller"
+-	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
++	depends on ARM
++	depends on ARCH_SHMOBILE || COMPILE_TEST
+ 	help
+ 	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
+ 	  There are 3 internal PCI controllers available with a single
+@@ -47,7 +48,8 @@ config PCI_RCAR_GEN2
+ 
+ config PCI_RCAR_GEN2_PCIE
+ 	bool "Renesas R-Car PCIe controller"
+-	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
++	depends on ARM
++	depends on ARCH_SHMOBILE || COMPILE_TEST
+ 	help
+ 	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
+ 
