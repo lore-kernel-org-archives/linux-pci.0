@@ -1,39 +1,35 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34084 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751446AbbHMHxh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 13 Aug 2015 03:53:37 -0400
-Date: Thu, 13 Aug 2015 09:53:33 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>,
-	Gregor Dick <gdick@solarflare.com>,
-	iommu@lists.linux-foundation.org, Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v3 01/11] iommu/vt-d: Cache PCI ATS state and Invalidate
- Queue Depth
-Message-ID: <20150813075333.GF12342@suse.de>
-References: <20150811154525.21078.85310.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150811155107.21078.24884.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from www.linutronix.de ([62.245.132.108]:35749 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751739AbbH1Qze (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Aug 2015 12:55:34 -0400
+Date: Fri, 28 Aug 2015 18:54:57 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Keith Busch <keith.busch@intel.com>
+cc: x86@kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [RFC PATCH 1/2] x86: PCI bus specific MSI operations
+In-Reply-To: <1440715146-16578-2-git-send-email-keith.busch@intel.com>
+Message-ID: <alpine.DEB.2.11.1508281849510.15006@nanos>
+References: <1440715146-16578-1-git-send-email-keith.busch@intel.com> <1440715146-16578-2-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150811155107.21078.24884.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 11, 2015 at 10:51:07AM -0500, Bjorn Helgaas wrote:
-> We check the ATS state (enabled/disabled) and fetch the PCI ATS Invalidate
-> Queue Depth in performance-sensitive paths.  It's easy to cache these,
-> which removes dependencies on PCI.
-> 
-> Remember the ATS enabled state.  When enabling, read the queue depth once
-> and cache it in the device_domain_info struct.  This is similar to what
-> amd_iommu.c does.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/iommu/intel-iommu.c |   28 ++++++++++++++++++----------
->  1 file changed, 18 insertions(+), 10 deletions(-)
+On Thu, 27 Aug 2015, Keith Busch wrote:
 
-Reviewed-by: Joerg Roedel <jroedel@suse.de>
-Acked-by: Joerg Roedel <jroedel@suse.de>
+> This patch adds struct x86_msi_ops to x86's PCI sysdata. This gives a
+> host bridge driver the option to provide alternate MSI Data Register
+> and MSI-X Table Entry programming for devices in PCI domains that do
+> not subscribe to usual "IOAPIC" format.
 
+I'm not too fond about more ad hoc indirection and special casing. We
+should be able to handle this with hierarchical irq domains. Jiang
+might have an idea how to do that for your case.
+
+Thanks,
+
+	tglx
