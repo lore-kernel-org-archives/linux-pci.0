@@ -1,88 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout1.freenet.de ([195.4.92.91]:46793 "EHLO mout1.freenet.de"
+Received: from mga11.intel.com ([192.55.52.93]:33011 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755441AbbHDSQf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 4 Aug 2015 14:16:35 -0400
-From: Andreas Hartmann <andihartmann@freenet.de>
-Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
- QUEUED errors since Linux 4.0
-To: Jeff Moyer <jmoyer@redhat.com>, Mike Snitzer <snitzer@redhat.com>
-References: <55B7BEA2.30205@01019freenet.de>
- <20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
- <20150728192908.GA25264@redhat.com> <55BCD5A7.2080708@maya.org>
- <55BE1D5E.6020709@maya.org>
- <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
- <55BE65E6.7060901@maya.org> <20150803081249.GF14980@8bytes.org>
- <20150804144711.GB24716@redhat.com>
- <x4937zzm3uc.fsf@segfault.boston.devel.redhat.com>
-Cc: Joerg Roedel <joro@8bytes.org>,
-	Andreas Hartmann <andihartmann@freenet.de>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	device-mapper development <dm-devel@redhat.com>,
-	Jens Axboe <axboe@fb.com>, iommu@lists.linux-foundation.org,
-	Leo Duran <leo.duran@amd.com>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	Christoph Hellwig <hch@lst.de>, Milan Broz <mbroz@redhat.com>,
-	linux-ide@vger.kernel.org
-Message-ID: <55C10069.6060303@maya.org>
-Date: Tue, 4 Aug 2015 20:11:53 +0200
+	id S1752662AbbH1Vjv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Aug 2015 17:39:51 -0400
+Date: Fri, 28 Aug 2015 21:39:49 +0000 (UTC)
+From: Keith Busch <keith.busch@intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+cc: Keith Busch <keith.busch@intel.com>, x86@kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [RFC PATCH 1/2] x86: PCI bus specific MSI operations
+In-Reply-To: <alpine.DEB.2.11.1508281849510.15006@nanos>
+Message-ID: <alpine.LNX.2.00.1508282044490.3969@localhost.lm.intel.com>
+References: <1440715146-16578-1-git-send-email-keith.busch@intel.com> <1440715146-16578-2-git-send-email-keith.busch@intel.com> <alpine.DEB.2.11.1508281849510.15006@nanos>
 MIME-Version: 1.0
-In-Reply-To: <x4937zzm3uc.fsf@segfault.boston.devel.redhat.com>
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/04/2015 at 06:10 PM Jeff Moyer wrote:
-> Mike Snitzer <snitzer@redhat.com> writes:
-> 
->> On Mon, Aug 03 2015 at  4:12am -0400,
->> Joerg Roedel <joro@8bytes.org> wrote:
->>
->>> On Sun, Aug 02, 2015 at 08:48:06PM +0200, Andreas Hartmann wrote:
->>>>>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
->>>>>>
->>>>>> block: remove artifical max_hw_sectors cap
->>>
->>> Looking at the patch, it seems to me that it just uncovered a bug
->>> elsewhere. It looks like an underlying driver doesn't expect the
->>> big io-requests that the patch enables and does not dma-map the whole
->>> target buffer, causing the IO_PAGE_FAULTs later.
->>
->> That patch has caused issues elsewhere too, see this 'Revert "block:
->> remove artifical max_hw_sectors cap"' thread (if/when lkml.org
->> cooperates): https://lkml.org/lkml/2015/7/20/572
->>
->> But it could be that there is a need for a horkage fix for this specific
->> hardware? something comparable to this?:
->> http://git.kernel.org/linus/af34d637637eabaf49406eb35c948cd51ba262a6
->>
->> We are running out of time to fix these whack-a-mole issues in 4.2
->> though.
-> 
-> CC-ing linux-ide.  Original dm-devel posting:
->   https://www.redhat.com/archives/dm-devel/2015-July/msg00178.html
-> 
-> Andreas, I would be curious to know what the value of
-> /sys/block/sdX/queue/max_hw_sectors_kb is for the affected disks.
+On Fri, 28 Aug 2015, Thomas Gleixner wrote:
+> On Thu, 27 Aug 2015, Keith Busch wrote:
+>
+>> This patch adds struct x86_msi_ops to x86's PCI sysdata. This gives a
+>> host bridge driver the option to provide alternate MSI Data Register
+>> and MSI-X Table Entry programming for devices in PCI domains that do
+>> not subscribe to usual "IOAPIC" format.
+>
+> I'm not too fond about more ad hoc indirection and special casing. We
+> should be able to handle this with hierarchical irq domains. Jiang
+> might have an idea how to do that for your case.
 
+Thank you for the suggestion, I will take a closer look at this again. All
+the better if we don't require an arch specific dependency.
 
-It's always 32767.
+I asked Jiang about domain hierarchies a few weeks ago and understood
+these are suited for irq controllers, but the VMD device is an aggregator.
 
-Where does this value come from? Is it empirical or is it calculated (on
-base of which parameters)?
-
-
-Devices are:
-
-1 x Corsair Force GT (SSD)
-2 x ST3000DM001-1CH166 (rotational) (WD)
-
-
-How can I set a higher max_sectors_kb on boot before the partitions are
-mounted (-> as kernel option)? Mounting the partitions here (w/ systemd)
-is the easiest and best way to trigger the problem!
-
-
-
-Thanks,
-Andreas
+Here's a little more h/w info in case it helps steer me in the right
+direction: VMD muxes all the device interrupts in its PCI domain into
+one of several VMD h/w irqs. The VMD driver then has to de-mux that into
+CPU side irqs for each device.
