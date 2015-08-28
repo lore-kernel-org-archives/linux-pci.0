@@ -1,48 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:32991 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932678AbbHKAlB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 20:41:01 -0400
-Received: from /spool/local
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 11 Aug 2015 10:40:59 +1000
-Date: Tue, 11 Aug 2015 10:40:05 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, grant.likely@linaro.org,
-	robherring2@gmail.com, panto@antoniou-consulting.com
-Subject: Re: [PATCH v6 17/42] powerpc/powernv: Rename PE# fields in PHB
-Message-ID: <20150811004005.GB18981@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-18-git-send-email-gwshan@linux.vnet.ibm.com>
- <55C8B35C.4040501@ozlabs.ru>
+Received: from smtp3.tech.numericable.fr ([82.216.111.39]:37445 "EHLO
+	smtp3.tech.numericable.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751943AbbH1Uhv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Aug 2015 16:37:51 -0400
+Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <1438047747.1856.12.camel@rzhang1-mobl4>
+ <1440750106.5982.2.camel@rzhang1-mobl4> <55E0A8BB.6020904@laposte.net>
+ <2907359.7nsusuUeG0@linux-tez8> <55E0AD63.1@laposte.net>
+ <CAErSpo56H99N_H3ffkYkwvdz92_HtB-9wJyWG9qGqgT6xCkwNQ@mail.gmail.com>
+Cc: Jay <MyMailClone@t-online.de>, Zhang Rui <rui.zhang@intel.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Chuansheng Liu <chuansheng.liu@intel.com>,
+	Tejun Heo <tj@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Aaron Lu <aaron.lu@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+From: Barto <mister.freeman@laposte.net>
+Message-ID: <55E0C652.2000706@laposte.net>
+Date: Fri, 28 Aug 2015 22:36:34 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55C8B35C.4040501@ozlabs.ru>
+In-Reply-To: <CAErSpo56H99N_H3ffkYkwvdz92_HtB-9wJyWG9qGqgT6xCkwNQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 11, 2015 at 12:21:16AM +1000, Alexey Kardashevskiy wrote:
->On 08/06/2015 02:11 PM, Gavin Shan wrote:
->>This renames the fields related to PE# in "struct pnv_phb" for
->>better reflecting of their usages as Alexey suggested. It doesn't
->>introduce behavioural changes.
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->
->
->Makes sense to move this to the beginning of the patchset as patches prior
->this are changing the same lines as this patch changes.
->
-
-Ok. I'll try to reorder the patch...
-
-Thanks,
-Gavin
+I tested this patch on kernel 4.1.6, it's ok, no bugs, good job
 
 
+
+Le 28/08/2015 21:19, Bjorn Helgaas a écrit :
+
+> If you want to test this before v4.3-rc1, here it is:
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/misc&id=b95b73e30dfee0b96a3ecbb96c66486705701b9c
+> 
+> My plan is to merge this during the v4.3 merge window, so it will
+> appear in v4.3.  I see that I probably should have added a stable tag
+> as well.
+> 
+> Bjorn
+> 
