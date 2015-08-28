@@ -1,59 +1,35 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 46/52] PCI: Don't release sibling bridge resources during hotplug
-Date: Thu, 20 Aug 2015 23:21:01 -0700
-Message-Id: <1440138067-4314-47-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp3.tech.numericable.fr ([82.216.111.39]:43045 "EHLO
+	smtp3.tech.numericable.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725AbbH1Sv2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 28 Aug 2015 14:51:28 -0400
+Subject: Re: [PATCH] PCI: Disable async suspend/resume for Jmicron chip
+To: Jay <MyMailClone@t-online.de>
+References: <1438047747.1856.12.camel@rzhang1-mobl4>
+ <1440750106.5982.2.camel@rzhang1-mobl4> <55E0A8BB.6020904@laposte.net>
+ <2907359.7nsusuUeG0@linux-tez8>
+Cc: Zhang Rui <rui.zhang@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>, chuansheng.liu@intel.com,
+	Tejun Heo <tj@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Aaron Lu <aaron.lu@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+From: Barto <mister.freeman@laposte.net>
+Message-ID: <55E0AD63.1@laposte.net>
+Date: Fri, 28 Aug 2015 20:50:11 +0200
+MIME-Version: 1.0
+In-Reply-To: <2907359.7nsusuUeG0@linux-tez8>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On hotplug path, we can not touch sibling bridges that is outside
-of the slot.
+> 
+> And are you sure you are already at kernel 4.6.1? ;)
+> 
+> Jay
+> 
 
-That could happen when BIOS does not assign some bridge BARs and
-later kernel can not assign resource to them in first try.
+sorry, I meant "kernel 4.1.6", not 4.6.1 ;)
 
-Check if fail dev is the parent bridge, then just use subordinate
-bus instead use parent bus.
-
-Reported-by: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 060977c..0c85c0a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2411,10 +2411,16 @@ again:
- 	 * Try to release leaf bridge's resources that doesn't fit resource of
- 	 * child device under that bridge
- 	 */
--	list_for_each_entry(fail_res, &fail_head, list)
--		pci_bus_release_bridge_resources(fail_res->dev->bus,
-+	list_for_each_entry(fail_res, &fail_head, list) {
-+		struct pci_bus *bus = fail_res->dev->bus;
-+
-+		if (fail_res->dev == bridge)
-+			bus = bridge->subordinate;
-+
-+		pci_bus_release_bridge_resources(bus,
- 						 fail_res->flags & type_mask,
- 						 whole_subtree);
-+	}
- 
- 	/* restore size and flags */
- 	list_for_each_entry(fail_res, &fail_head, list) {
--- 
-1.8.4.5
-
+so I will wait the final version of this patch
