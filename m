@@ -1,95 +1,135 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 25/52] PCI: Fix size calculation with old_size on rescan path
-Date: Thu, 20 Aug 2015 23:20:40 -0700
-Message-Id: <1440138067-4314-26-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54254 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751946AbbH2Mo6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 29 Aug 2015 08:44:58 -0400
+Date: Sat, 29 Aug 2015 13:44:57 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH] ARM64: PCI: do not enable resources on PROBE_ONLY systems
+Message-ID: <20150829124457.GA18125@red-moon>
+References: <1438262039-32085-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150828211444.GA27890@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150828211444.GA27890@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On booting path, we don't pass realloc at first, and treat all optional
-just as required, in some case we can smaller size/align with optional
-than required only.
+Hi Bjorn,
 
-04:00.0 has four child bridges: 05:01.0, 05:02.0, 05:03.0, 05:04.0
-pref layout after booting path like followings:
+On Fri, Aug 28, 2015 at 10:14:44PM +0100, Bjorn Helgaas wrote:
+> Hi Lorenzo,
+> 
+> On Thu, Jul 30, 2015 at 02:13:59PM +0100, Lorenzo Pieralisi wrote:
+> > On ARM64 PROBE_ONLY PCI systems resources are not currently claimed,
+> > therefore they can't be enabled since they do not have a valid
+> > parent pointer; this in turn prevents enabling PCI devices on
+> > ARM64 PROBE_ONLY systems, causing PCI devices initialization to
+> > fail.
+> 
+> Where does arm64 claim PCI BAR resources for the non-PROBE_ONLY case?
 
-pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
-pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:03.0: PCI bridge to [bus 08-0f]
-pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:04.0: PCI bridge to [bus 10]
-pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:04:00.0: PCI bridge to [bus 05-10]
-pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
+arm64 (and arm) does not claim resources in arch code, they are always
+assigned in the respective host controllers (or the pcibios on arm),
+except for the PCI generic host when in PROBE_ONLY mode, where resources
+are neither claimed nor assigned (the reason for this patch to exist).
 
-so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
+Certainly something to consolidate as part of the rework we talked
+about at LPC (PCI ACPI probing is yet another reason to consolidate it).
 
-during remove and rescan:
+I am working on this, in particular I want to test how claiming the
+resources by default will impact ARM systems.
 
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
-pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
+For the records, Will kindly provided me with an Alpha box so that I can
+test on it too.
 
-align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
-so for 04:00.0 will have big must and no optional size anymore.
+> I know it must be there somewhere, but I don't see it.
 
-So don't align old size, then we will have same size0 and size1.
-Also use smaller add_align as must align.
+It is not there, it is done in the host controllers by assigning the
+resources (which also "claim" them by assigning the parent pointer).
 
-After the patch, rescan works properly.
+Thanks,
+Lorenzo
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 42552b2..de47692 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1140,9 +1140,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
-+	size = ALIGN(size, align);
- 	if (size < old_size)
- 		size = old_size;
--	size = ALIGN(size, align);
- 	return size;
- }
- 
-@@ -1626,6 +1626,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		b_res->flags = 0;
- 		return 0;
- 	}
-+
-+	/*
-+	 * It happens when boot path is not passing realloc
-+	 * and later rescan is passing realloc.
-+	 * The old value from boot path is bigger, and calculate_size will
-+	 * use old value as size0 and size1, and also have
-+	 * chance optional align is smaller than must only align.
-+	 */
-+	if(size0 == size1 && min_align > min_add_align)
-+		min_align = min_add_align;
-+
- 	b_res->start = min_align;
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
--- 
-1.8.4.5
-
+> 
+> > To solve this issue, resources must be claimed when devices are
+> > added on PROBE_ONLY systems, which ensures that the resource hierarchy
+> > is validated and the resource tree is sane, but this requires changes
+> > in the ARM64 resource management that can affect adversely existing
+> > PCI set-ups (claiming resources on !PROBE_ONLY systems might break
+> > existing ARM64 PCI platform implementations).
+> > 
+> > As a temporary solution in preparation for a proper resources claiming
+> > implementation in ARM64 core, to enable PCI PROBE_ONLY systems on ARM64,
+> > this patch adds a pcibios_enable_device() arch implementation that
+> > simply prevents enabling resources on PROBE_ONLY systems (mirroring ARM
+> > behaviour).
+> > 
+> > This is always a safe thing to do because on PROBE_ONLY systems the
+> > configuration space set-up can be considered immutable, and it is in
+> > preparation of proper resource claiming that would finally validate
+> > the PCI resources tree in the ARM64 arch implementation on PROBE_ONLY
+> > systems.
+> > 
+> > For !PROBE_ONLY systems resources enablement in pcibios_enable_device()
+> > on ARM64 is implemented as in current PCI core, leaving the behaviour
+> > unchanged.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Will Deacon <will.deacon@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > ---
+> > Bjorn, all,
+> > 
+> > as I mention in the commit log, this patch is a temporary solution
+> > in preparation for proper resources claiming in ARM64, so that
+> > we can safely enable the PCI generic host controller on ARM64 systems.
+> > 
+> > It mirrors ARM implementation and I will work on changing both
+> > ARM and ARM64 to convert them to proper resources claiming in
+> > the respective implementations.
+> > 
+> > Lorenzo
+> > 
+> >  arch/arm64/kernel/pci.c | 13 +++++++++++++
+> >  1 file changed, 13 insertions(+)
+> > 
+> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > index 4095379..b3d098b 100644
+> > --- a/arch/arm64/kernel/pci.c
+> > +++ b/arch/arm64/kernel/pci.c
+> > @@ -38,6 +38,19 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> >  	return res->start;
+> >  }
+> >  
+> > +/**
+> > + * pcibios_enable_device - Enable I/O and memory.
+> > + * @dev: PCI device to be enabled
+> > + * @mask: bitmask of BARs to enable
+> > + */
+> > +int pcibios_enable_device(struct pci_dev *dev, int mask)
+> > +{
+> > +	if (pci_has_flag(PCI_PROBE_ONLY))
+> > +		return 0;
+> > +
+> > +	return pci_enable_resources(dev, mask);
+> > +}
+> > +
+> >  /*
+> >   * Try to assign the IRQ number from DT when adding a new device
+> >   */
+> > -- 
+> > 2.2.1
+> > 
+> 
