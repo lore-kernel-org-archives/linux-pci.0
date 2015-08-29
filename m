@@ -1,84 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0056.outbound.protection.outlook.com ([157.56.111.56]:23714
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751015AbbHTC0T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 19 Aug 2015 22:26:19 -0400
-From: Jay Cornwall <jay@jcornwall.me>
-To: <linux-pci@vger.kernel.org>
-CC: Jay Cornwall <jay@jcornwall.me>
-Subject: [PATCH RFC 0/1] Add AtomicOp Requester support
-Date: Wed, 19 Aug 2015 16:10:01 -0500
-Message-ID: <1440018602-4212-1-git-send-email-jay@jcornwall.me>
+Received: from mga09.intel.com ([134.134.136.24]:7181 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751691AbbH2BqD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 28 Aug 2015 21:46:03 -0400
+Subject: Re: [RFC PATCH 1/2] x86: PCI bus specific MSI operations
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Keith Busch <keith.busch@intel.com>
+References: <1440715146-16578-1-git-send-email-keith.busch@intel.com>
+ <1440715146-16578-2-git-send-email-keith.busch@intel.com>
+ <alpine.DEB.2.11.1508281849510.15006@nanos>
+Cc: x86@kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	linux-pci@vger.kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <55E10ED8.1010809@linux.intel.com>
+Date: Sat, 29 Aug 2015 09:46:00 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <alpine.DEB.2.11.1508281849510.15006@nanos>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be requested
-by, routed through and completed by PCIe components. Routing and completion
-do not require software support. Component support for each is detectable via
-the DEVCAP2 register.
-
-AtomicOp requests are permitted only if a component's
-DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot be
-detected but is a no-op if set on a component with no support. These requests
-can only be serviced if the upstream components support AtomicOp completion
-and/or routing to a component which does.
-
-A concrete example is the AMD Fiji-class GPU, which is specified to support
-AtomicOp requests, routed through a PLX 8747 switch (advertising AtomicOp
-routing) to a Haswell host bridge (advertising AtomicOp completion support).
-When AtomicOp requests are disabled the GPU logs attempts to initiate requests
-to an MMIO register for debugging.
-
-Several approaches for software support might be considered:
-
-  1. drivers/pci sets DEVCTL2.ATOMICOP_REQUESTER_ENABLE unconditionally for
-     all endpoints and root ports
-
-  2. drivers/pci attempts to establish a routable path to a completer prior to
-     setting DEVCTL2.ATOMICOP_REQUESTER_ENABLE
-
-  3. Approach 1/2 with individual drivers (drm/amdgpu in the above example)
-     initiating the request for AtomicOp requester support through a function
-     exported from drivers/pci
-
-  4. Individual drivers specify a target component for AtomicOp completion
-
-Approach 1 has two drawbacks. There is no guarantee that there is a reachable
-component which can complete an AtomicOp request. It also prevents individual
-drivers from blacklisting devices with known incorrect implementations. This
-might otherwise provide useful diagnostics information. (e.g. AMD GPUs will
-log an error to an MMIO register if the AtomicOp requester is disabled when an
-atomic memory request would have been promoted to an AtomicOp.)
-
-Approach 2 could only establish that there is a path to at least one completer,
-but it would not prevent requests being sent to a different device which does
-not support AtomicOp completion. For example, a root complex might support
-completion but a transaction could be sent to a different device which does
-not. The routable guarantee is not precise and so less useful.
-
-Approach 3 allows drivers to enable AtomicOp requests on a per-device basis to
-support blacklisting. A downside is that if AtomicOp support becomes more
-prevalent it may be undesirable to explicitly enable the feature in individual
-drivers.
-
-Approach 4 is intractable as the target for a transaction is generally known
-only by the application. DEVCTL2.ATOMICOP_REQUESTER_ENABLE is also a 1:many
-capability and would not align well with this model.
-
-In the absence of an ideal solution, I think approach 3(1) is the most
-appropriate. I am open to suggestions for an improved implementation.
-
-Jay Cornwall (1):
-  PCI: Add pci_enable_atomic_request
-
- drivers/pci/pci.c             | 23 +++++++++++++++++++++++
- include/linux/pci.h           |  1 +
- include/uapi/linux/pci_regs.h |  1 +
- 3 files changed, 25 insertions(+)
-
--- 
-1.9.1
-
+On 2015/8/29 0:54, Thomas Gleixner wrote:
+> On Thu, 27 Aug 2015, Keith Busch wrote:
+> 
+>> This patch adds struct x86_msi_ops to x86's PCI sysdata. This gives a
+>> host bridge driver the option to provide alternate MSI Data Register
+>> and MSI-X Table Entry programming for devices in PCI domains that do
+>> not subscribe to usual "IOAPIC" format.
+> 
+> I'm not too fond about more ad hoc indirection and special casing. We
+> should be able to handle this with hierarchical irq domains. Jiang
+> might have an idea how to do that for your case.
+Hi Thomas and Keith,
+	I have noticed this patch set yesterday, but still investigating the
+better way to handle this. Basically I think
+we should build per-domain/per-bus/per-device PCI MSI irqdomain,
+just like what ARM have done. That will give us a clear picture.
+But I need more information about the hardware topology
+to correctly build up the hierarchical irqdomain, especially the
+relationship between the embedded host bridge and IOMMU units.
+	Keith, could you please help to provide some doc with
+hardware details?
+Thanks!
+Gerry
