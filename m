@@ -1,224 +1,313 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:33663 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932641AbbHJKCa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 10 Aug 2015 06:02:30 -0400
-Received: by pdrh1 with SMTP id h1so51893188pdr.0
-        for <linux-pci@vger.kernel.org>; Mon, 10 Aug 2015 03:02:29 -0700 (PDT)
-Subject: Re: [PATCH v6 15/42] powerpc/powernv: PE oriented during
- configuration
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1438834307-26960-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1438834307-26960-16-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	panto@antoniou-consulting.com
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55C876AC.5060205@ozlabs.ru>
-Date: Mon, 10 Aug 2015 20:02:20 +1000
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:37774 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752085AbbHaNOk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Aug 2015 09:14:40 -0400
+Received: by igui7 with SMTP id i7so53878443igu.0
+        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2015 06:14:39 -0700 (PDT)
+Date: Mon, 31 Aug 2015 08:14:35 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [GIT PULL] PCI changes for v4.3
+Message-ID: <20150831131435.GA647@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1438834307-26960-16-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/06/2015 02:11 PM, Gavin Shan wrote:
-> Several functions used to configure PE take pe_number to indentify
-> PE instance. As the pe_number is included in PE instance after it
-> is reserved or allocated. It's convienent for those functions to
-> return PE instance which includes the required pe_number.
+Hi Linus,
 
-This is a description for the half of the patch but this patch also adds a 
-return value to functions which did not have it before and I am not sure 
-you need all of them to return something. It would be cleaner if you added 
-"return" when/where you really need it, not just because it seems that it 
-may be convenient later.
+Here are the PCI changes for v4.3.
+
+Bjorn
 
 
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 51 ++++++++++++++++---------------
->   arch/powerpc/platforms/powernv/pci.h      |  2 +-
->   2 files changed, 27 insertions(+), 26 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 3094c61..9f53682 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -132,12 +132,12 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
->   		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
->   }
->
-> -static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
-> +static struct pnv_ioda_pe *pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
->   {
->   	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe)) {
->   		pr_warn("%s: Invalid PE %d on PHB#%x\n",
->   			__func__, pe_no, phb->hose->global_number);
-> -		return;
-> +		return NULL;
->   	}
->
->   	if (test_and_set_bit(pe_no, phb->ioda.pe_alloc))
-> @@ -146,9 +146,11 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
->
->   	phb->ioda.pe_array[pe_no].phb = phb;
->   	phb->ioda.pe_array[pe_no].pe_number = pe_no;
-> +
-> +	return &phb->ioda.pe_array[pe_no];
->   }
->
-> -static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
-> +static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
->   {
->   	unsigned long pe;
->
-> @@ -156,12 +158,12 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
->   		pe = find_next_zero_bit(phb->ioda.pe_alloc,
->   					phb->ioda.total_pe, 0);
->   		if (pe >= phb->ioda.total_pe)
-> -			return IODA_INVALID_PE;
-> +			return NULL;
->   	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
->
->   	phb->ioda.pe_array[pe].phb = phb;
->   	phb->ioda.pe_array[pe].pe_number = pe;
-> -	return pe;
-> +	return &phb->ioda.pe_array[pe];
->   }
->
->   static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
-> @@ -334,7 +336,7 @@ static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
->   	}
->   }
->
-> -static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
-> +static struct pnv_ioda_pe *pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
->   {
->   	struct pci_controller *hose = pci_bus_to_host(bus);
->   	struct pnv_phb *phb = hose->private_data;
-> @@ -344,7 +346,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
->
->   	/* Root bus shouldn't use M64 */
->   	if (pci_is_root_bus(bus))
-> -		return IODA_INVALID_PE;
-> +		return NULL;
->
->   	/* Allocate bitmap */
->   	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
-> @@ -352,7 +354,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
->   	if (!pe_alloc) {
->   		pr_warn("%s: Out of memory !\n",
->   			__func__);
-> -		return IODA_INVALID_PE;
-> +		return NULL;
->   	}
->
->   	/* Figure out reserved PE numbers by the PE */
-> @@ -365,7 +367,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
->   	 */
->   	if (bitmap_empty(pe_alloc, phb->ioda.total_pe)) {
->   		kfree(pe_alloc);
-> -		return IODA_INVALID_PE;
-> +		return NULL;
->   	}
->
->   	/*
-> @@ -416,7 +418,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
->   	}
->
->   	kfree(pe_alloc);
-> -	return master_pe->pe_number;
-> +	return master_pe;
->   }
->
->   static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
-> @@ -1069,28 +1071,26 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
->    * subordinate PCI devices and buses. The second type of PE is normally
->    * orgiriated by PCIe-to-PCI bridge or PLX switch downstream ports.
->    */
-> -static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
-> +static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
->   {
->   	struct pci_controller *hose = pci_bus_to_host(bus);
->   	struct pnv_phb *phb = hose->private_data;
-> -	struct pnv_ioda_pe *pe;
-> -	int pe_num = IODA_INVALID_PE;
-> +	struct pnv_ioda_pe *pe = NULL;
->
->   	/* Check if PE is determined by M64 */
->   	if (phb->pick_m64_pe)
-> -		pe_num = phb->pick_m64_pe(bus, all);
-> +		pe = phb->pick_m64_pe(bus, all);
->
->   	/* The PE number isn't pinned by M64 */
-> -	if (pe_num == IODA_INVALID_PE)
-> -		pe_num = pnv_ioda_alloc_pe(phb);
-> +	if (!pe)
-> +		pe = pnv_ioda_alloc_pe(phb);
->
-> -	if (pe_num == IODA_INVALID_PE) {
-> -		pr_warning("%s: Not enough PE# available for PCI bus %04x:%02x\n",
-> +	if (!pe) {
-> +		pr_warning("%s: No enough PE# for PCI bus %04x:%02x\n",
->   			__func__, pci_domain_nr(bus), bus->number);
-> -		return;
-> +		return NULL;
->   	}
->
-> -	pe = &phb->ioda.pe_array[pe_num];
->   	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
->   	pe->pbus = bus;
->   	pe->pdev = NULL;
-> @@ -1101,17 +1101,16 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
->
->   	if (all)
->   		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
-> -			bus->busn_res.start, bus->busn_res.end, pe_num);
-> +			bus->busn_res.start, bus->busn_res.end, pe->pe_number);
->   	else
->   		pe_info(pe, "Secondary bus %d associated with PE#%d\n",
-> -			bus->busn_res.start, pe_num);
-> +			bus->busn_res.start, pe->pe_number);
->
->   	if (pnv_ioda_configure_pe(phb, pe)) {
->   		/* XXX What do we do here ? */
-> -		if (pe_num)
-> -			pnv_ioda_free_pe(phb, pe_num);
-> +		pnv_ioda_free_pe(phb, pe->pe_number);
->   		pe->pbus = NULL;
-> -		return;
-> +		return NULL;
->   	}
->
->   	/* Associate it with all child devices */
-> @@ -1122,6 +1121,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
->
->   	/* Link the PE */
->   	pnv_ioda_link_pe_by_weight(phb, pe);
-> +
-> +	return pe;
->   }
->
->   static void pnv_ioda_setup_PEs(struct pci_bus *bus)
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 6f8568e..c0bc57f 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -121,7 +121,7 @@ struct pnv_phb {
->   	int (*init_m64)(struct pnv_phb *phb);
->   	void (*reserve_m64_pe)(struct pci_bus *bus,
->   			       unsigned long *pe_bitmap, bool all);
-> -	int (*pick_m64_pe)(struct pci_bus *bus, bool all);
-> +	struct pnv_ioda_pe* (*pick_m64_pe)(struct pci_bus *bus, bool all);
->   	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
->   	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
->   	int (*unfreeze_pe)(struct pnv_phb *phb, int pe_no, int opt);
->
+The following changes since commit bc0195aad0daa2ad5b0d76cce22b167bc3435590:
 
+  Linux 4.2-rc2 (2015-07-12 15:10:30 -0700)
 
--- 
-Alexey
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.3-changes
+
+for you to fetch changes up to 9ca678d1dff610f7df6ac9b31fd9152c4426f815:
+
+  Merge branches 'pci/enumeration' and 'pci/misc' into next (2015-08-28 15:53:08 -0500)
+
+----------------------------------------------------------------
+PCI changes for the v4.3 merge window:
+
+  Enumeration
+    Allocate ATS struct during enumeration (Bjorn Helgaas)
+    Embed ATS info directly into struct pci_dev (Bjorn Helgaas)
+    Reduce size of ATS structure elements (Bjorn Helgaas)
+    Stop caching ATS Invalidate Queue Depth (Bjorn Helgaas)
+    iommu/vt-d: Cache PCI ATS state and Invalidate Queue Depth (Bjorn Helgaas)
+    Move MPS configuration check to pci_configure_device() (Bjorn Helgaas)
+    Set MPS to match upstream bridge (Keith Busch)
+    ARM/PCI: Set MPS before pci_bus_add_devices() (Murali Karicheri)
+    Add pci_scan_root_bus_msi() (Lorenzo Pieralisi)
+    ARM/PCI, designware, xilinx: Use pci_scan_root_bus_msi() (Lorenzo Pieralisi)
+
+  Resource management
+    Call pci_read_bridge_bases() from core instead of arch code (Lorenzo Pieralisi)
+
+  PCI device hotplug
+    pciehp: Remove unused interrupt events (Bjorn Helgaas)
+    pciehp: Remove ignored MRL sensor interrupt events (Bjorn Helgaas)
+    pciehp: Handle invalid data when reading from non-existent devices (Jarod Wilson)
+    pciehp: Simplify pcie_poll_cmd() (Yijing Wang)
+    Use "slot" and "pci_slot" for struct hotplug_slot and struct pci_slot (Yijing Wang)
+    Protect pci_bus->slots with pci_slot_mutex, not pci_bus_sem (Yijing Wang)
+    Hold pci_slot_mutex while searching bus->slots list (Yijing Wang)
+
+  Power management
+    Disable async suspend/resume for JMicron multi-function SATA/AHCI (Zhang Rui)
+
+  Virtualization
+    Add ACS quirks for Intel I219-LM/V (Alex Williamson)
+    Restore ACS configuration as part of pci_restore_state() (Alexander Duyck)
+
+  MSI
+    Add pcibios_alloc_irq() and pcibios_free_irq() (Jiang Liu)
+    x86: Implement pcibios_alloc_irq() and pcibios_free_irq() (Jiang Liu)
+    Add helpers to manage pci_dev->irq and pci_dev->irq_managed (Jiang Liu)
+    Free legacy IRQ when enabling MSI/MSI-X (Jiang Liu)
+    ARM/PCI: Remove msi_controller from struct pci_sys_data (Lorenzo Pieralisi)
+    Remove unused pcibios_msi_controller() hook (Lorenzo Pieralisi)
+
+  Generic host bridge driver
+    Remove dependency on ARM-specific struct hw_pci (Jayachandran C)
+    Build setup-irq.o for arm64 (Jayachandran C)
+    Add arm64 support (Jayachandran C)
+
+  APM X-Gene host bridge driver
+    Add APM X-Gene PCIe 64-bit prefetchable window (Duc Dang)
+    Add support for a 64-bit prefetchable memory window (Duc Dang)
+    Drop owner assignment from platform_driver (Krzysztof Kozlowski)
+
+  Broadcom iProc host bridge driver
+    Allow BCMA bus driver to be built as module (Hauke Mehrtens)
+    Delete unnecessary checks before phy calls (Markus Elfring)
+    Add arm64 support (Ray Jui)
+
+  Synopsys DesignWare host bridge driver
+    Don't complain missing *config* reg space if va_cfg0 is set (Murali Karicheri)
+
+  TI DRA7xx host bridge driver
+    Disable pm_runtime on get_sync failure (Kishon Vijay Abraham I)
+    Add PM support (Kishon Vijay Abraham I)
+    Clear MSE bit during suspend so clocks will idle (Kishon Vijay Abraham I)
+    Add support to make GPIO drive PERST# line (Kishon Vijay Abraham I)
+
+  Xilinx AXI host bridge driver
+    Check for MSI interrupt flag before handling as INTx (Russell Joyce)
+
+  Miscellaneous
+    Fix Intersil/Techwell TW686[4589] AV capture class code (Krzysztof Hałasa)
+    Use PCI_CLASS_SERIAL_USB instead of bare number (Bjorn Helgaas)
+    Fix generic NCR 53c810 class code quirk (Bjorn Helgaas)
+    Fix TI816X class code quirk (Bjorn Helgaas)
+    Remove unused "pci_probe" flags (Bjorn Helgaas)
+    Host bridge driver code simplifications (Fabio Estevam)
+    Add dev_flags bit to access VPD through function 0 (Mark Rustad)
+    Add VPD function 0 quirk for Intel Ethernet devices (Mark Rustad)
+    Kill off set_irq_flags() usage (Rob Herring)
+    Remove Intel Cherrytrail D3 delays (Srinidhi Kasagar)
+    Clean up pci_find_capability() (Wei Yang)
+
+----------------------------------------------------------------
+Alex Williamson (1):
+      PCI: Add ACS quirks for Intel I219-LM/V
+
+Alexander Duyck (1):
+      PCI: Restore ACS configuration as part of pci_restore_state()
+
+Bjorn Helgaas (30):
+      PCI: Use PCI_CLASS_SERIAL_USB instead of bare number
+      PCI: Fix generic NCR 53c810 class code quirk
+      PCI: Fix TI816X class code quirk
+      PCI: Revert aeb30016fec3 ("PCI: add Intel USB specific reset method")
+      PCI: Shift PCI_CLASS_NOT_DEFINED consistently with other classes
+      PCI: Fix pcie_port_device_resume() comment
+      PCI: Add pcie_downstream_port() (true for Root and Switch Downstream Ports)
+      PCI: Remove useless redundant code
+      iommu/vt-d: Cache PCI ATS state and Invalidate Queue Depth
+      PCI: Remove unused "pci_probe" flags
+      Merge branches 'pci/host-designware', 'pci/host-xgene' and 'pci/host-xilinx' into next
+      Merge branches 'pci/irq', 'pci/misc', 'pci/resource' and 'pci/virtualization' into next
+      PCI: pciehp: Remove unused interrupt events
+      PCI: pciehp: Remove ignored MRL sensor interrupt events
+      PCI: Allocate ATS struct during enumeration
+      PCI: Embed ATS info directly into struct pci_dev
+      PCI: Reduce size of ATS structure elements
+      PCI: Rationalize pci_ats_queue_depth() error checking
+      PCI: Inline the ATS setup code into pci_ats_init()
+      PCI: Use pci_physfn() rather than looking up physfn by hand
+      PCI: Clean up ATS error handling
+      PCI: Move ATS declarations to linux/pci.h so they're all together
+      PCI: Stop caching ATS Invalidate Queue Depth
+      PCI: Remove pci_ats_enabled()
+      Merge branches 'pci/hotplug', 'pci/iommu', 'pci/irq' and 'pci/virtualization' into next
+      Merge branches 'pci/host-dra7xx' and 'pci/host-iproc' into next
+      PCI: Drop references acquired by of_parse_phandle()
+      PCI: Move MPS configuration check to pci_configure_device()
+      Merge branches 'pci/host-dra7xx', 'pci/host-imx6' and 'pci/host-spear' into next
+      Merge branches 'pci/enumeration' and 'pci/misc' into next
+
+Duc Dang (2):
+      arm64: dts: Add APM X-Gene PCIe 64-bit prefetchable window
+      PCI: xgene: Add support for a 64-bit prefetchable memory window
+
+Fabio Estevam (3):
+      PCI: dra7xx: Remove unneeded use of IS_ERR_VALUE()
+      PCI: spear: Use BUG_ON() instead of condition followed by BUG()
+      PCI: imx6: Simplify a trivial if-return sequence
+
+Hauke Mehrtens (1):
+      PCI: iproc: Allow BCMA bus driver to be built as module
+
+Jarod Wilson (1):
+      PCI: pciehp: Handle invalid data when reading from non-existent devices
+
+Jayachandran C (3):
+      PCI: generic: Remove dependency on ARM-specific struct hw_pci
+      PCI: Build setup-irq.o for arm64
+      PCI: generic: Add arm64 support
+
+Jiang Liu (4):
+      PCI: Add pcibios_alloc_irq() and pcibios_free_irq()
+      PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()
+      PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed
+      PCI/MSI: Free legacy IRQ when enabling MSI/MSI-X
+
+Keith Busch (1):
+      PCI: Set MPS to match upstream bridge
+
+Kishon Vijay Abraham I (5):
+      PCI: dra7xx: Disable pm_runtime on get_sync failure
+      PCI: dra7xx: Add PM support
+      PCI: dra7xx: Clear MSE bit during suspend so clocks will idle
+      PCI: dra7xx: Add support to make GPIO drive PERST# line
+      ARM: dts: am57xx-evm: Add 'gpios' property with gpio2_8
+
+Krzysztof =?utf-8?Q?Ha=C5=82asa?= (1):
+      PCI: Add quirk for Intersil/Techwell TW686[4589] AV capture cards
+
+Krzysztof Kozlowski (1):
+      PCI: xgene: Drop owner assignment from platform_driver
+
+Lorenzo Pieralisi (6):
+      PCI: Call pci_read_bridge_bases() from core instead of arch code
+      ARM/PCI: Replace panic with WARN messages on failures
+      PCI: Add pci_scan_root_bus_msi()
+      ARM/PCI, designware, xilinx: Use pci_scan_root_bus_msi()
+      ARM/PCI: Remove msi_controller from struct pci_sys_data
+      PCI/MSI: Remove unused pcibios_msi_controller() hook
+
+Mark Rustad (2):
+      PCI: Add dev_flags bit to access VPD through function 0
+      PCI: Add VPD function 0 quirk for Intel Ethernet devices
+
+Markus Elfring (1):
+      PCI: iproc: Delete unnecessary checks before phy calls
+
+Murali Karicheri (2):
+      ARM/PCI: Set MPS before pci_bus_add_devices()
+      PCI: designware: Don't complain missing *config* reg space if va_cfg0 is set
+
+Rami Rosen (1):
+      PCI: Remove a broken link in quirks.c
+
+Ray Jui (1):
+      PCI: iproc: Add arm64 support
+
+Rob Herring (1):
+      PCI: Kill off set_irq_flags() usage
+
+Russell Joyce (1):
+      PCI: xilinx: Check for MSI interrupt flag before handling as INTx
+
+Srinidhi Kasagar (2):
+      PCI: Remove Intel Cherrytrail D3 delays
+      PCI / ACPI: Fix pci_acpi_optimize_delay() comment
+
+Wei Yang (2):
+      PCI: Move PCI_FIND_CAP_TTL to pci.h and use it in quirks
+      PCI: Simplify pci_find_(ext_)capability() return value checks
+
+Yijing Wang (4):
+      PCI: Use "slot" and "pci_slot" for struct hotplug_slot and struct pci_slot
+      PCI: pciehp: Simplify pcie_poll_cmd()
+      PCI: Protect pci_bus->slots with pci_slot_mutex, not pci_bus_sem
+      PCI: Hold pci_slot_mutex while searching bus->slots list
+
+Zhang Rui (1):
+      PCI: Disable async suspend/resume for JMicron multi-function SATA/AHCI
+
+ Documentation/devicetree/bindings/pci/ti-pci.txt |   3 +
+ arch/alpha/kernel/pci.c                          |   7 +-
+ arch/arm/boot/dts/am57xx-beagle-x15.dts          |   4 +
+ arch/arm/boot/dts/dra7.dtsi                      |   2 +-
+ arch/arm/include/asm/mach/pci.h                  |   5 -
+ arch/arm/kernel/bios32.c                         |  45 +++-----
+ arch/arm64/boot/dts/apm/apm-storm.dtsi           |  23 ++--
+ arch/frv/mb93090-mb00/pci-frv.c                  |   8 --
+ arch/frv/mb93090-mb00/pci-frv.h                  |   8 --
+ arch/frv/mb93090-mb00/pci-vdk.c                  |   2 -
+ arch/ia64/pci/pci.c                              |   5 +-
+ arch/microblaze/pci/pci-common.c                 |   9 +-
+ arch/mips/pci/pci.c                              |   6 --
+ arch/mn10300/unit-asb2305/pci-asb2305.c          |  22 ++--
+ arch/mn10300/unit-asb2305/pci-asb2305.h          |   7 --
+ arch/mn10300/unit-asb2305/pci.c                  |   1 -
+ arch/powerpc/kernel/pci-common.c                 |   8 +-
+ arch/powerpc/kernel/pci_of_scan.c                |   6 +-
+ arch/sh/drivers/pci/pci-sh4.h                    |   8 --
+ arch/sparc/kernel/pci.c                          |   6 +-
+ arch/x86/include/asm/pci_x86.h                   |   2 -
+ arch/x86/pci/common.c                            |  21 ++--
+ arch/x86/pci/fixup.c                             |  13 ---
+ arch/x86/pci/intel_mid_pci.c                     |   9 +-
+ arch/x86/pci/irq.c                               |  23 +---
+ arch/xtensa/kernel/pci.c                         |   4 -
+ drivers/acpi/pci_irq.c                           |  17 +--
+ drivers/ata/ahci.c                               |  13 +--
+ drivers/ata/pata_jmicron.c                       |  12 ---
+ drivers/iommu/intel-iommu.c                      |  28 +++--
+ drivers/parisc/dino.c                            |   3 -
+ drivers/parisc/lba_pci.c                         |   1 -
+ drivers/pci/Makefile                             |   1 +
+ drivers/pci/access.c                             |  84 +++++++++++++--
+ drivers/pci/ats.c                                | 131 ++++++++---------------
+ drivers/pci/host/Kconfig                         |   4 +-
+ drivers/pci/host/pci-dra7xx.c                    | 122 ++++++++++++++++++++-
+ drivers/pci/host/pci-host-generic.c              |  52 +++++----
+ drivers/pci/host/pci-imx6.c                      |  12 +--
+ drivers/pci/host/pci-keystone-dw.c               |   2 -
+ drivers/pci/host/pci-mvebu.c                     |   1 +
+ drivers/pci/host/pci-tegra.c                     |   1 -
+ drivers/pci/host/pci-xgene-msi.c                 |   2 -
+ drivers/pci/host/pci-xgene.c                     |  13 ++-
+ drivers/pci/host/pcie-designware.c               |  15 ++-
+ drivers/pci/host/pcie-iproc.c                    |  60 ++++++-----
+ drivers/pci/host/pcie-iproc.h                    |   4 +-
+ drivers/pci/host/pcie-rcar.c                     |   1 -
+ drivers/pci/host/pcie-spear13xx.c                |   3 +-
+ drivers/pci/host/pcie-xilinx.c                   |  30 +++---
+ drivers/pci/hotplug/pci_hotplug_core.c           | 122 ++++++++++-----------
+ drivers/pci/hotplug/pciehp.h                     |  14 +--
+ drivers/pci/hotplug/pciehp_hpc.c                 |  48 +++++----
+ drivers/pci/msi.c                                |  22 +---
+ drivers/pci/pci-acpi.c                           |   2 +-
+ drivers/pci/pci-driver.c                         |  26 +++--
+ drivers/pci/pci.c                                |  14 +--
+ drivers/pci/pci.h                                |   2 +
+ drivers/pci/pcie/portdrv_core.c                  |   2 +-
+ drivers/pci/probe.c                              |  92 +++++++++++-----
+ drivers/pci/quirks.c                             | 126 ++++++++++++++--------
+ drivers/pci/slot.c                               |  29 +++--
+ include/linux/pci-ats.h                          |  49 ---------
+ include/linux/pci.h                              |  60 +++++++++--
+ 64 files changed, 796 insertions(+), 681 deletions(-)
