@@ -1,87 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46067 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753358AbbHUGWA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 21 Aug 2015 02:22:00 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4 09/52] PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
-Date: Thu, 20 Aug 2015 23:20:24 -0700
-Message-Id: <1440138067-4314-10-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:57814 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752197AbbHaQdP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 31 Aug 2015 12:33:15 -0400
+Date: Mon, 31 Aug 2015 17:33:14 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH] ARM64: PCI: do not enable resources on PROBE_ONLY systems
+Message-ID: <20150831163314.GA19309@red-moon>
+References: <1438262039-32085-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150828211444.GA27890@google.com>
+ <20150829124457.GA18125@red-moon>
+ <20150831132803.GB647@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150831132803.GB647@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pdev_sort_resources() etc was used to check devices resources and put
-resources that need to assign to one list in sorted order.
+On Mon, Aug 31, 2015 at 02:28:03PM +0100, Bjorn Helgaas wrote:
+> On Sat, Aug 29, 2015 at 01:44:57PM +0100, Lorenzo Pieralisi wrote:
+> > On Fri, Aug 28, 2015 at 10:14:44PM +0100, Bjorn Helgaas wrote:
+> > > On Thu, Jul 30, 2015 at 02:13:59PM +0100, Lorenzo Pieralisi wrote:
+> > > > On ARM64 PROBE_ONLY PCI systems resources are not currently claimed,
+> > > > therefore they can't be enabled since they do not have a valid
+> > > > parent pointer; this in turn prevents enabling PCI devices on
+> > > > ARM64 PROBE_ONLY systems, causing PCI devices initialization to
+> > > > fail.
+> > > 
+> > > Where does arm64 claim PCI BAR resources for the non-PROBE_ONLY case?
+> > 
+> > arm64 (and arm) does not claim resources in arch code, they are always
+> > assigned in the respective host controllers (or the pcibios on arm),
+> > except for the PCI generic host when in PROBE_ONLY mode, where resources
+> > are neither claimed nor assigned (the reason for this patch to exist).
+> > ...
+> > 
+> > > I know it must be there somewhere, but I don't see it.
+> > 
+> > It is not there, it is done in the host controllers by assigning the
+> > resources (which also "claim" them by assigning the parent pointer).
+> 
+> The host controller drivers should claim the apertures forwarded to
+> the PCI bus.  For pci-host-generic, this happens when
+> gen_pci_parse_request_of_pci_ranges() calls devm_request_resource().
 
-We don't do sorting in those functions anymore, so change to
-__assign_resources_prepare() instead.
+Yes, the generic host claims the apertures at DT probing time.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+> But that doesn't do anything for the BARs of the PCI devices
+> themselves, of course.
+> 
+> If this patch fixes a problem that will occur in the future, when we
+> add arm/arm64 code to claim BARs, let's make this patch part of that
+> series.  If it fixes a problem in the current tree, I'll merge it now,
+> but so far I haven't been able to make the connection between this
+> patch and a problem in the current code.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 44d63c0..1fd0b8d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -205,8 +205,8 @@ static resource_size_t __pci_resource_alignment(
- 	return r_align;
- }
- 
--/* Sort resources by alignment */
--static void pdev_sort_resources(struct pci_dev *dev,
-+/* check resources and save to the list */
-+static void pdev_assign_resources_prepare(struct pci_dev *dev,
- 				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
-@@ -242,7 +242,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 	}
- }
- 
--static void __dev_sort_resources(struct pci_dev *dev,
-+static void __dev_assign_resources_prepare(struct pci_dev *dev,
- 				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
-@@ -260,7 +260,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
- 			return;
- 	}
- 
--	pdev_sort_resources(dev, realloc_head, head);
-+	pdev_assign_resources_prepare(dev, realloc_head, head);
- }
- 
- static inline void reset_resource(struct resource *res)
-@@ -560,7 +560,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
- {
- 	LIST_HEAD(head);
- 
--	__dev_sort_resources(dev, add_head, &head);
-+	__dev_assign_resources_prepare(dev, add_head, &head);
- 	__assign_resources_sorted(&head, add_head, fail_head);
- 
- }
-@@ -573,7 +573,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
- 	LIST_HEAD(head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list)
--		__dev_sort_resources(dev, realloc_head, &head);
-+		__dev_assign_resources_prepare(dev, realloc_head, &head);
- 
- 	__assign_resources_sorted(&head, realloc_head, fail_head);
- }
--- 
-1.8.4.5
+It fixes a problem in the current tree (I mean when the PCI pull is
+merged - it contains code that enables PCI host generic on arm64),
+since without it PROBE_ONLY systems (ie PCI host generic on kvmtool) would
+try to enable resources and fail, since the resources were not claimed.
 
+It works the same way as arm, I will rework both arches when I am done
+refactoring the resource claiming implementation.
+
+Will picked it up already I do not know what's the best way to
+merge it I guess it can go via the arm64 tree if you do not have any
+objections.
+
+Thank you !
+Lorenzo
+
+> > > > To solve this issue, resources must be claimed when devices are
+> > > > added on PROBE_ONLY systems, which ensures that the resource hierarchy
+> > > > is validated and the resource tree is sane, but this requires changes
+> > > > in the ARM64 resource management that can affect adversely existing
+> > > > PCI set-ups (claiming resources on !PROBE_ONLY systems might break
+> > > > existing ARM64 PCI platform implementations).
+> > > > 
+> > > > As a temporary solution in preparation for a proper resources claiming
+> > > > implementation in ARM64 core, to enable PCI PROBE_ONLY systems on ARM64,
+> > > > this patch adds a pcibios_enable_device() arch implementation that
+> > > > simply prevents enabling resources on PROBE_ONLY systems (mirroring ARM
+> > > > behaviour).
+> > > > 
+> > > > This is always a safe thing to do because on PROBE_ONLY systems the
+> > > > configuration space set-up can be considered immutable, and it is in
+> > > > preparation of proper resource claiming that would finally validate
+> > > > the PCI resources tree in the ARM64 arch implementation on PROBE_ONLY
+> > > > systems.
+> > > > 
+> > > > For !PROBE_ONLY systems resources enablement in pcibios_enable_device()
+> > > > on ARM64 is implemented as in current PCI core, leaving the behaviour
+> > > > unchanged.
+> > > > 
+> > > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > > Cc: Will Deacon <will.deacon@arm.com>
+> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > > > ---
+> > > > Bjorn, all,
+> > > > 
+> > > > as I mention in the commit log, this patch is a temporary solution
+> > > > in preparation for proper resources claiming in ARM64, so that
+> > > > we can safely enable the PCI generic host controller on ARM64 systems.
+> > > > 
+> > > > It mirrors ARM implementation and I will work on changing both
+> > > > ARM and ARM64 to convert them to proper resources claiming in
+> > > > the respective implementations.
+> > > > 
+> > > > Lorenzo
+> > > > 
+> > > >  arch/arm64/kernel/pci.c | 13 +++++++++++++
+> > > >  1 file changed, 13 insertions(+)
+> > > > 
+> > > > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> > > > index 4095379..b3d098b 100644
+> > > > --- a/arch/arm64/kernel/pci.c
+> > > > +++ b/arch/arm64/kernel/pci.c
+> > > > @@ -38,6 +38,19 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> > > >  	return res->start;
+> > > >  }
+> > > >  
+> > > > +/**
+> > > > + * pcibios_enable_device - Enable I/O and memory.
+> > > > + * @dev: PCI device to be enabled
+> > > > + * @mask: bitmask of BARs to enable
+> > > > + */
+> > > > +int pcibios_enable_device(struct pci_dev *dev, int mask)
+> > > > +{
+> > > > +	if (pci_has_flag(PCI_PROBE_ONLY))
+> > > > +		return 0;
+> > > > +
+> > > > +	return pci_enable_resources(dev, mask);
+> > > > +}
+> > > > +
+> > > >  /*
+> > > >   * Try to assign the IRQ number from DT when adding a new device
+> > > >   */
+> > > > -- 
+> > > > 2.2.1
+> > > > 
+> > > 
+> 
