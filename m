@@ -1,93 +1,160 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:36865 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941AbbHXQdy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 24 Aug 2015 12:33:54 -0400
-Received: by widdq5 with SMTP id dq5so77269579wid.0
-        for <linux-pci@vger.kernel.org>; Mon, 24 Aug 2015 09:33:53 -0700 (PDT)
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:35624 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753481AbbHaQtl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 31 Aug 2015 12:49:41 -0400
+Received: by wibq14 with SMTP id q14so6304717wib.0
+        for <linux-pci@vger.kernel.org>; Mon, 31 Aug 2015 09:49:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1508241605130.3969@localhost.lm.intel.com>
-References: <20150821150557.7525.58923.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20150821150800.7525.14750.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <CAErSpo7wEpPSy9BSt6t5UYXSqbXRf_Wu-1kzDCzmowO60UqKTQ@mail.gmail.com> <alpine.LNX.2.00.1508241605130.3969@localhost.lm.intel.com>
+In-Reply-To: <20150831163314.GA19309@red-moon>
+References: <1438262039-32085-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150828211444.GA27890@google.com> <20150829124457.GA18125@red-moon>
+ <20150831132803.GB647@google.com> <20150831163314.GA19309@red-moon>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Aug 2015 09:33:33 -0700
-Message-ID: <CAErSpo55h5CfhNWOMSpvZ4hrAo_NkGezP9ow6Vey=_M4Y1fvAA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: Change MPS default to "match upstream bridge"
-To: Keith Busch <keith.busch@intel.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Austin Bolen <Austin_Bolen@dell.com>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Myron Stowe <mstowe@redhat.com>, Jon Mason <jdmason@kudzu.us>
+Date: Mon, 31 Aug 2015 11:49:20 -0500
+Message-ID: <CAErSpo5188hGiySG+JweWOvfj6aZtAfVta4=0wwwRmMTp+9tFg@mail.gmail.com>
+Subject: Re: [PATCH] ARM64: PCI: do not enable resources on PROBE_ONLY systems
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Tanmay Inamdar <tinamdar@apm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 24, 2015 at 9:13 AM, Keith Busch <keith.busch@intel.com> wrote:
-> On Fri, 21 Aug 2015, Bjorn Helgaas wrote:
+On Mon, Aug 31, 2015 at 11:33 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Mon, Aug 31, 2015 at 02:28:03PM +0100, Bjorn Helgaas wrote:
+>> On Sat, Aug 29, 2015 at 01:44:57PM +0100, Lorenzo Pieralisi wrote:
+>> > On Fri, Aug 28, 2015 at 10:14:44PM +0100, Bjorn Helgaas wrote:
+>> > > On Thu, Jul 30, 2015 at 02:13:59PM +0100, Lorenzo Pieralisi wrote:
+>> > > > On ARM64 PROBE_ONLY PCI systems resources are not currently claimed,
+>> > > > therefore they can't be enabled since they do not have a valid
+>> > > > parent pointer; this in turn prevents enabling PCI devices on
+>> > > > ARM64 PROBE_ONLY systems, causing PCI devices initialization to
+>> > > > fail.
+>> > >
+>> > > Where does arm64 claim PCI BAR resources for the non-PROBE_ONLY case?
+>> >
+>> > arm64 (and arm) does not claim resources in arch code, they are always
+>> > assigned in the respective host controllers (or the pcibios on arm),
+>> > except for the PCI generic host when in PROBE_ONLY mode, where resources
+>> > are neither claimed nor assigned (the reason for this patch to exist).
+>> > ...
+>> >
+>> > > I know it must be there somewhere, but I don't see it.
+>> >
+>> > It is not there, it is done in the host controllers by assigning the
+>> > resources (which also "claim" them by assigning the parent pointer).
 >>
->> On Fri, Aug 21, 2015 at 8:08 AM, Bjorn Helgaas <bhelgaas@google.com>
->> wrote:
->>>
->>> Change the default MPS tuning policy to "default," which means we set
->>> every
->>> device's MPS to match its upstream bridge.  Typically this means we'll
->>> preserve the fabric configuration done by firmware, even for hot-added
->>> devices.
->>>
->>> N.B. This effectively re-enables quirk_intel_mc_errata(), which turns off
->>> read completion coalescing on Intel 5000 and 5100 memory controllers.
->>
->>
->> I think this patch might be the wrong thing for quirk_intel_mc_errata().
->>
->> Currently, the default is PCIE_BUS_TUNE_OFF.  In that case, the quirk
->> does nothing, Linux doesn't touch MPS at all, and the BIOS is
->> responsible for avoiding the erratum, either by disabling read
->> coalescing or by avoiding MPS=256.
->>
->> This patch (as-is) means that even if the BIOS set MPS=128, we would
->> disable read coalescing here, which is unnecessary.  The new
->> PCIE_BUS_DEFAULT basically means Linux will set MPS for hot-added
->> devices the same way as for devices present at boot.  That means we
->> should be able to rely on the BIOS workaround and shouldn't have to
->> disable read coalescing.
->>
->> So I think maybe we should bail out of quirk_intel_mc_errata() for
->> both TUNE_OFF and DEFAULT, e.g.,
->>
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -2862,7 +2862,8 @@ static void quirk_intel_mc_errata(struct pci_dev
->> *dev)
->>        int err;
->>        u16 rcc;
->>
->> -       if (pcie_bus_config == PCIE_BUS_TUNE_OFF)
->> +       if (pcie_bus_config == PCIE_BUS_TUNE_OFF ||
->> +           pcie_bus_config == PCIE_BUS_DEFAULT)
->>                return;
+>> The host controller drivers should claim the apertures forwarded to
+>> the PCI bus.  For pci-host-generic, this happens when
+>> gen_pci_parse_request_of_pci_ranges() calls devm_request_resource().
 >
+> Yes, the generic host claims the apertures at DT probing time.
 >
-> Hi Bjorn,
+>> But that doesn't do anything for the BARs of the PCI devices
+>> themselves, of course.
+>>
+>> If this patch fixes a problem that will occur in the future, when we
+>> add arm/arm64 code to claim BARs, let's make this patch part of that
+>> series.  If it fixes a problem in the current tree, I'll merge it now,
+>> but so far I haven't been able to make the connection between this
+>> patch and a problem in the current code.
 >
-> I've successfully tested the previously failing hot-plug tests with your
-> pci/enumeration tree.
+> It fixes a problem in the current tree (I mean when the PCI pull is
+> merged - it contains code that enables PCI host generic on arm64),
+> since without it PROBE_ONLY systems (ie PCI host generic on kvmtool) would
+> try to enable resources and fail, since the resources were not claimed.
 >
-> I don't understand the reported kbuild failure, though. It built
-> successfully for me and the error didn't make sense just from looking
-> at the patch either, so I hope it was a false alarm.
+> It works the same way as arm, I will rework both arches when I am done
+> refactoring the resource claiming implementation.
+>
+> Will picked it up already I do not know what's the best way to
+> merge it I guess it can go via the arm64 tree if you do not have any
+> objections.
 
-I couldn't figure that out either, but I reworked them slightly to
-squash the last two patches together, and I just got the build success
-email.
+OK, if it fixes a problem in my v4.3 pull request, we need to merge
+it.  I missed the connection, probably because I was browsing the
+v4.2-rc1 tree, which wouldn't have those changes.
 
-> Thank you for working on this feature with us. I've no further concerns
-> with the most recent implementation, think it looks great and all the
-> better for the effort.
->
-> Tested-by: Keith Busch <keith.busch@intel.com>
+It's OK with me to merge it via the arm64 tree.
 
-Thanks for testing it!  I'll put it into -next today.
-
-Bjorn
+>> > > > To solve this issue, resources must be claimed when devices are
+>> > > > added on PROBE_ONLY systems, which ensures that the resource hierarchy
+>> > > > is validated and the resource tree is sane, but this requires changes
+>> > > > in the ARM64 resource management that can affect adversely existing
+>> > > > PCI set-ups (claiming resources on !PROBE_ONLY systems might break
+>> > > > existing ARM64 PCI platform implementations).
+>> > > >
+>> > > > As a temporary solution in preparation for a proper resources claiming
+>> > > > implementation in ARM64 core, to enable PCI PROBE_ONLY systems on ARM64,
+>> > > > this patch adds a pcibios_enable_device() arch implementation that
+>> > > > simply prevents enabling resources on PROBE_ONLY systems (mirroring ARM
+>> > > > behaviour).
+>> > > >
+>> > > > This is always a safe thing to do because on PROBE_ONLY systems the
+>> > > > configuration space set-up can be considered immutable, and it is in
+>> > > > preparation of proper resource claiming that would finally validate
+>> > > > the PCI resources tree in the ARM64 arch implementation on PROBE_ONLY
+>> > > > systems.
+>> > > >
+>> > > > For !PROBE_ONLY systems resources enablement in pcibios_enable_device()
+>> > > > on ARM64 is implemented as in current PCI core, leaving the behaviour
+>> > > > unchanged.
+>> > > >
+>> > > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> > > > Cc: Will Deacon <will.deacon@arm.com>
+>> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> > > > Cc: Catalin Marinas <catalin.marinas@arm.com>
+>> > > > ---
+>> > > > Bjorn, all,
+>> > > >
+>> > > > as I mention in the commit log, this patch is a temporary solution
+>> > > > in preparation for proper resources claiming in ARM64, so that
+>> > > > we can safely enable the PCI generic host controller on ARM64 systems.
+>> > > >
+>> > > > It mirrors ARM implementation and I will work on changing both
+>> > > > ARM and ARM64 to convert them to proper resources claiming in
+>> > > > the respective implementations.
+>> > > >
+>> > > > Lorenzo
+>> > > >
+>> > > >  arch/arm64/kernel/pci.c | 13 +++++++++++++
+>> > > >  1 file changed, 13 insertions(+)
+>> > > >
+>> > > > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>> > > > index 4095379..b3d098b 100644
+>> > > > --- a/arch/arm64/kernel/pci.c
+>> > > > +++ b/arch/arm64/kernel/pci.c
+>> > > > @@ -38,6 +38,19 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>> > > >         return res->start;
+>> > > >  }
+>> > > >
+>> > > > +/**
+>> > > > + * pcibios_enable_device - Enable I/O and memory.
+>> > > > + * @dev: PCI device to be enabled
+>> > > > + * @mask: bitmask of BARs to enable
+>> > > > + */
+>> > > > +int pcibios_enable_device(struct pci_dev *dev, int mask)
+>> > > > +{
+>> > > > +       if (pci_has_flag(PCI_PROBE_ONLY))
+>> > > > +               return 0;
+>> > > > +
+>> > > > +       return pci_enable_resources(dev, mask);
+>> > > > +}
+>> > > > +
+>> > > >  /*
+>> > > >   * Try to assign the IRQ number from DT when adding a new device
+>> > > >   */
+>> > > > --
+>> > > > 2.2.1
+>> > > >
+>> > >
+>>
