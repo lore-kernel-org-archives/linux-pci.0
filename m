@@ -1,101 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:35607 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754618AbbIHQUE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 12:20:04 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH] PCI: designware: fix dw_pcie_cfg_write
-Date: Tue, 8 Sep 2015 16:19:53 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620B348@lhreml503-mbs>
-References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com>
-	<20150903205943.GJ829@google.com>
- <CAHM4w1mRg2K49H3jD4oEcEY91Y-TbNA-C4tjwppDuQwi05yrVA@mail.gmail.com>
-In-Reply-To: <CAHM4w1mRg2K49H3jD4oEcEY91Y-TbNA-C4tjwppDuQwi05yrVA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mgwkm04.jp.fujitsu.com ([202.219.69.171]:31634 "EHLO
+	mgwkm04.jp.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754079AbbIAIOp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Sep 2015 04:14:45 -0400
+Received: from g01jpfmpwyt01.exch.g01.fujitsu.local (g01jpfmpwyt01.exch.g01.fujitsu.local [10.128.193.38])
+	by kw-mxoi2.gw.nic.fujitsu.com (Postfix) with ESMTP id C74E6AC029B
+	for <linux-pci@vger.kernel.org>; Tue,  1 Sep 2015 17:14:42 +0900 (JST)
+From: "Izumi, Taku" <izumi.taku@jp.fujitsu.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] PCI/AER: Cleanup AER error status registers on probing
+ devices
+Date: Tue, 1 Sep 2015 08:14:41 +0000
+Message-ID: <E86EADE93E2D054CBCD4E708C38D364A54276116@G01JPEXMBYT01>
+References: <1438706533-22547-1-git-send-email-izumi.taku@jp.fujitsu.com>
+ <20150828213145.GB27890@google.com>
+In-Reply-To: <20150828213145.GB27890@google.com>
+Content-Type: text/plain; charset="iso-2022-jp"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4gYW5kIFByYXR5dXNoLCB0aGFua3MgZm9yIHJldmlld2luZw0KDQo+IC0tLS0tT3Jp
-Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5v
-cmcgW21haWx0bzpsaW51eC1wY2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxm
-IE9mIFByYXR5dXNoIEFuYW5kDQo+IFNlbnQ6IEZyaWRheSwgU2VwdGVtYmVyIDA0LCAyMDE1IDc6
-MDYgQU0NCj4gVG86IEJqb3JuIEhlbGdhYXMNCj4gQ2M6IEdhYnJpZWxlIFBhb2xvbmk7IGxpbnV4
-LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IFdhbmd6aG91IChCKTsgSmluZ29vDQo+IEhhbjsgWXVhbnpo
-aWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsgcWl1emhlbmZhOyBMaWd1b3podSAoS2VubmV0
-aCkNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gUENJOiBkZXNpZ253YXJlOiBmaXggZHdfcGNpZV9j
-Zmdfd3JpdGUNCj4gDQo+IEhpIEJqb3JuLA0KPiANCj4gDQo+IE9uIEZyaSwgU2VwIDQsIDIwMTUg
-YXQgMjoyOSBBTSwgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gd3JvdGU6
-DQo+ID4gT24gVGh1LCBBdWcgMjAsIDIwMTUgYXQgMDk6NTg6MzNQTSArMDgwMCwgR2FicmllbGUg
-UGFvbG9uaSB3cm90ZToNCj4gPj4gRnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFv
-bG9uaUBodWF3ZWkuY29tPg0KPiA+Pg0KPiA+PiBDdXJyZW50bHkgaW4gZHdfcGNpZV9jZmdfd3Jp
-dGUoKSBpZiB0aGUgaW5wdXQgc2l6ZSBpcyAyIGJ5dGVzDQo+ID4+IHRoZSBhZGRyZXNzIG9mZnNl
-dCBpcyB3cm9uZ2x5IGNhbGN1bGF0ZWQgYXMgd2UgbWFzayBhbHNvIGJpdDANCj4gPj4gb2YgIndo
-ZXJlIiBpbnB1dCBwYXJhbWV0ZXIuIEluc3RlYWQgd2Ugc2hvdWxkIG1hc2sgYWxsIGJpdHMgb2YN
-Cj4gPj4gIndoZXJlIiBleGNlcHQgYml0MCBhbmQgYml0MS4NCj4gPg0KPiA+IEkgdGhpbmsgdGhl
-cmUgYXJlIHR3byBwcm9ibGVtcyBpbiB0aGlzIGFyZWE6DQo+ID4NCj4gPiAxKSBNb3N0IGNhbGxz
-IG9mIGR3X3BjaWVfY2ZnX3dyaXRlKCkgYXJlIG9mIHRoZSBmb3JtOg0KPiA+DQo+ID4gICAgIGR3
-X3BjaWVfY2ZnX3JlYWQocHAtPmRiaV9iYXNlICsgKHdoZXJlICYgfjB4MyksIHdoZXJlLCAuLi4p
-DQo+ID4gICAgIGR3X3BjaWVfY2ZnX3dyaXRlKHBwLT5kYmlfYmFzZSArICh3aGVyZSAmIH4weDMp
-LCB3aGVyZSwgLi4uKQ0KPiA+DQo+ID4gICAgVGhpcyBpcyBuZWVkbGVzc2x5IHJlcGV0aXRpdmUg
-YmVjYXVzZSB0aGUgY2FsbGVyIGhhcyB0byBtZW50aW9uDQo+ID4gICAgIndoZXJlIiB0d2ljZSBh
-bmQgZG8gdGhlIG1hc2tpbmcgaXRzZWxmLiAgV2UgY291bGQgc2ltcGx5IHBhc3MNCj4gPiAgICAi
-cHAtPmRiaV9iYXNlIiBhbmQgIndoZXJlIiBhbmQgbGV0IGR3X3BjaWVfY2ZnX3dyaXRlKCkgZG8g
-YWxsIHRoZQ0KPiA+ICAgIHJlcXVpcmVkIG1hc2tpbmcgaW50ZXJuYWxseS4NCj4gDQo+IEkgdGhp
-bmsganVzdCBieSBwYXNzaW5nICJwcC0+ZGJpX2Jhc2UiIGFuZCAid2hlcmUiICB3ZSBjYW4gbm90
-IHRha2UNCj4gY2FyZSBvZiBhbGwgY2FzZXMuIEZvciBleGFtcGxlLCBpZiBJIGhhdmUgdG8gcmVh
-ZCBQQ0lfQ0FDSEVfTElORV9TSVpFDQo+ICg4IGJpdCB2YWx1ZSBhdCBvZmZzZXQgMHgwQyksIEkg
-d2lsbCBoYXZlIHRvIHBhc3MgInBwLT5kYmlfYmFzZSIgKw0KPiBQQ0lfQ0FDSEVfTElORV9TSVpF
-LCAxDQoNClNheSB5b3UgY2FsbCBkd19wY2llX2NmZ193cml0ZShwcC0+ZGJpX2Jhc2UsIFBDSV9D
-QUNIRV9MSU5FX1NJWkUsIDEsIC4uLikNCg0KeW91IGNhbiBoYXZlOg0KDQppbnQgZHdfcGNpZV9j
-Zmdfd3JpdGUodm9pZCBfX2lvbWVtICphZGRyLCBpbnQgd2hlcmUsIGludCBzaXplLCB1MzIgdmFs
-KQ0Kew0KCWFkZHIgKz0gd2hlcmU7DQoJaWYgKHNpemUgPT0gNCkgew0KCQlpZiAoYWRkciAmIDMp
-IHJldHVybiBQQ0lCSU9TX0JBRF9SRUdJU1RFUl9OVU1CRVI7DQoJCXdyaXRlbCh2YWwsIGFkZHIp
-Ow0KCX0gZWxzZSBpZiAoc2l6ZSA9PSAyKSB7DQoJCWlmIChhZGRyICYgMikgcmV0dXJuIFBDSUJJ
-T1NfQkFEX1JFR0lTVEVSX05VTUJFUjsNCgkJd3JpdGV3KHZhbCwgYWRkciArICh3aGVyZSAmIDIp
-KTsNCgl9IGVsc2UgaWYgKHNpemUgPT0gMSkNCgkJd3JpdGViKHZhbCwgYWRkciArICh3aGVyZSAm
-IDMpKTsNCgllbHNlDQoJCXJldHVybiBQQ0lCSU9TX0JBRF9SRUdJU1RFUl9OVU1CRVI7DQoNCgly
-ZXR1cm4gUENJQklPU19TVUNDRVNTRlVMOw0KfQ0KDQpTbyB3ZSBjYW4gY2xlYW4gYWxsIHRoZSBj
-YWxsZXJzIHRoYXQgQmpvcm4gcG9pbnRlZCBvdXQuLi4uDQoNCj4gDQo+IFNvLCBJIHRoaW5rIFVz
-ZXIgb2YgdGhpcyBmdW5jdGlvbiB3aWxsIG5lZWQgdG8gcGFzcyAiYWRkciIsInNpemUiIGFuZA0K
-PiAidmFsIiwgd2hlcmUNCj4gImFkZHIiICBhcyAicHAtPmRiaV9iYXNlIiArICJ3aGVyZSINCj4g
-InNpemUiIGFuZCAidmFsIiBhcyBpdCBpcy4NCj4gDQo+IG9uZSBtb3JlIHRoaW5nIElJUkMsIHRo
-ZXJlIHdhcyBzb21lIGRpc2N1c3Npb24gKGhvd2V2ZXIgSSBhbSB1bmFibGUgdG8NCj4gZmluZCBh
-bnkgcmVmZXJlbmNlKSwgYW5kIG5vdCBzdXJlIGlmIGl0IGlzIHN0aWxsIHRydWUgd2l0aCBhbnkN
-Cj4gcGxhdGZvcm06ICBpc3N1ZXMgd2l0aCBub24gd29yZCBhbGlnbmVkIFBDSSByZWdpc3RlciBy
-ZWFkLg0KPiBJZiBhIHBsYXRmb3JtIGlzIG5vdCBhYmxlIHRvIHJlYWQgbm9uIHdvcmQgYWxpZ25l
-ZCByZWdpc3RlciBjb3JyZWN0bHksDQo+IHRoZW4gaW4gdGhhdCBjYXNlIHdlIHdpbGwgaGF2ZSB0
-byBwYXNzIHdoZXJlIGFuZCBzaXplIGJvdGggOigNCj4gDQo+ID4NCj4gPiAyKSBQcmF0eXVzaCwg
-dGhpcyBvbmUncyBmb3IgeW91IDopICBzcGVhcjEzeHhfcGNpZV9lc3RhYmxpc2hfbGluaygpDQo+
-ID4gICAgY2FsbHMgZHdfcGNpZV9jZmdfcmVhZCgpIGFuZCBkd19wY2llX2NmZ193cml0ZSgpIHNl
-dmVyYWwgdGltZXMNCj4gbGlrZQ0KPiA+ICAgIHRoaXM6DQo+ID4NCj4gPiAgICAgZHdfcGNpZV9j
-ZmdfcmVhZChwcC0+ZGJpX2Jhc2UsIGV4cF9jYXBfb2ZmICsgUENJX0VYUF9ERVZDVEwsDQo+IDQs
-IC4uLikNCj4gPiAgICAgZHdfcGNpZV9jZmdfd3JpdGUocHAtPmRiaV9iYXNlLCBleHBfY2FwX29m
-ZiArIFBDSV9FWFBfREVWQ1RMLA0KPiA0LCAuLi4pDQo+ID4NCj4gPiAgICBJIHRoaW5rIHRoZXNl
-IGFyZSBpbmNvcnJlY3QgYmVjYXVzZSBkd19wY2llX2NmZ19yZWFkKCkgYW5kDQo+ID4gICAgZHdf
-cGNpZV9jZmdfd3JpdGUoKSBkb24ndCBhZGQgYW55dGhpbmcgdG8gdGhlICJhZGRyIiBhcmd1bWVu
-dA0KPiA+ICAgICgicHAtPmRiaV9iYXNlIiBpbiB0aGlzIGNhc2UpIGV4Y2VwdCB0aGUgMC0zIGJ5
-dGUgc2VsZWN0IG9mZnNldCwNCj4gc28NCj4gPiAgICB0aGV5IHVzZSB0aGUgY29ycmVjdCBhbGln
-bm1lbnQsIGJ1dCBhY2Nlc3MgdGhlIHdyb25nIHJlZ2lzdGVycy4NCj4gDQo+IGh1bW1tLi5zbyBm
-b3Igc3VyZSB0aGUgdmVyc2lvbiB3aGljaCB3YXMgdXAtc3RyZWFtZWQgaGFzIG5ldmVyIGJlZW4N
-Cj4gdGVzdGVkIHdpdGggYnVnZ3kgZ2VuMSBjYXJkIGFuZCB3aXRoIGFueSBlbmRwb2ludCB3aGlj
-aCB3b3VsZCBoYXZlDQo+IGdlbmVyYXRlZCBhIHJlYWQgcmVxdWVzdCBvZiBtb3JlIHRoYW4gMTI4
-IGJ5dGVzIDooIC4uIFdpbGwgY29ycmVjdC4NCg0KSWYgeW91IGFyZSBoYXBweSB3aXRoIHRoZSBz
-b2x1dGlvbiBhYm92ZSBJIGNhbiBjcmVhdGUgYSBwYXRjaHNldCwgd2hlcmUNCnRoZSBmaXJzdCBw
-YXRjaCBmaXhlcyB0aGlzIGFuZCB0aGUgc2Vjb25kIGNoYW5nZXMgZHdfcGNpZV9jZmdfd3JpdGUo
-KSwNCmR3X3BjaWVfY2ZnX3JlYWQgYW5kIHJlc3BlY3RpdmUgZnVuY3Rpb24gY2FsbHMuLi4NCg0K
-PiANCj4gVGhhbmtzIGEgbG90IGZvciBwb2ludGluZyB0aGlzIG91dCA6LSkNCj4gDQo+IH5QcmF0
-eXVzaA0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGlu
-ZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8g
-bWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRw
-Oi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
+Dear Bjorn,
+
+ Thanks for reviewing.
+ 
+> Hello Taku-san,
+> 
+> On Wed, Aug 05, 2015 at 01:42:13AM +0900, Taku Izumi wrote:
+> > AER uncorrectable or correctable error might be recorded
+> > when power on devices. These errors can be ignored, so
+> > BIOS usually clean up these registers ahead of OS's scanning
+> > devices.
+> > However, in case of hot-plug PCIe devices, BIOS can't care.
+> 
+> What happens when we power down a device for suspend or because it's idle?
+> Can we get spurious AER errors when we power the device back up?  This
+> patch only covers the enumeration path, so we'd need to do more if it can
+> happen during suspend/resume.
+
+  Our server only supports "suspend to disk". In that case,
+  BIOS cleans up those registers like boot-time.
+  So It seems that no troubles are previously reported other 
+  than hot-plug case.
+
+  However, if box supports suspend-to-RAM, similar problem may happen.
+  It is true that that register clean-up should be done during suspend/resume
+  case. Should we cover during-suspend/resume case ?
+
+> > Currently OS don't clean up AER error status registers on probing
+> > devices, ignorable AER errors recorded when power-on remains.
+> > This causes false-positive.
+> >
+> > This patch address this problem by cleaning up
+> > AER error status registers on probing devices.
+> >
+> > Signed-off-by: Taku Izumi <izumi.taku@jp.fujitsu.com>
+> > ---
+> >  drivers/pci/pcie/aer/aerdrv_core.c | 26 ++++++++++++++++++++++++++
+> >  drivers/pci/probe.c                |  5 +++++
+> >  include/linux/aer.h                |  5 +++++
+> >  3 files changed, 36 insertions(+)
+> >
+> > diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> > index 9803e3d..9857cc4 100644
+> > --- a/drivers/pci/pcie/aer/aerdrv_core.c
+> > +++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> > @@ -74,6 +74,32 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_cleanup_aer_uncorrect_error_status);
+> >
+> > +int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+> > +{
+> > +	int pos;
+> > +	u32 status;
+> > +	int port_type;
+> > +
+> > +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> > +	if (!pos)
+> > +		return -EIO;
+> > +
+> > +	port_type = pci_pcie_type(dev);
+> > +	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
+> > +		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
+> > +		pci_write_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, status);
+> > +	}
+> > +
+> > +	pci_read_config_dword(dev, pos + PCI_ERR_COR_STATUS, &status);
+> > +	pci_write_config_dword(dev, pos + PCI_ERR_COR_STATUS, status);
+> > +
+> > +	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
+> > +	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, status);
+> > +
+> > +	return 0;
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_cleanup_aer_error_status_regs);
+> 
+> Why does this need to be exported?  I see that
+> pci_cleanup_aer_uncorrect_error_status() above is exported, and it is used
+> by many drivers, so I see why that needs to be exported.  But there are no
+> users of pci_cleanup_aer_error_status_regs() outside the PCI core yet.  And
+> if we wanted to add users outside the core, I would question whether that's
+> the right thing to do.  AER management seems like something that probably
+> should be done by the PCI core, not by drivers.
+
+  You are right.
+
+  Sincerely,
+  Taku Izumi
+
+> 
+> >  /**
+> >   * add_error_device - list device to be handled
+> >   * @e_info: pointer to error info
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index cefd636..d660db7 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -12,6 +12,7 @@
+> >  #include <linux/module.h>
+> >  #include <linux/cpumask.h>
+> >  #include <linux/pci-aspm.h>
+> > +#include <linux/aer.h>
+> >  #include <asm-generic/pci-bridge.h>
+> >  #include "pci.h"
+> >
+> > @@ -1542,6 +1543,10 @@ static void pci_init_capabilities(struct pci_dev *dev)
+> >
+> >  	/* Enable ACS P2P upstream forwarding */
+> >  	pci_enable_acs(dev);
+> > +
+> > +	/* Cleanup AER error status registerts */
+> > +	if (pci_is_pcie(dev))
+> > +		pci_cleanup_aer_error_status_regs(dev);
+> 
+> The other capability init functions check internally for pci_is_pcie(), so
+> please do the same here.
+> 
+> >  }
+> >
+> >  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+> > diff --git a/include/linux/aer.h b/include/linux/aer.h
+> > index 4fef65e..744b997 100644
+> > --- a/include/linux/aer.h
+> > +++ b/include/linux/aer.h
+> > @@ -42,6 +42,7 @@ struct aer_capability_regs {
+> >  int pci_enable_pcie_error_reporting(struct pci_dev *dev);
+> >  int pci_disable_pcie_error_reporting(struct pci_dev *dev);
+> >  int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);
+> > +int pci_cleanup_aer_error_status_regs(struct pci_dev *dev);
+> >  #else
+> >  static inline int pci_enable_pcie_error_reporting(struct pci_dev *dev)
+> >  {
+> > @@ -55,6 +56,10 @@ static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
+> >  {
+> >  	return -EINVAL;
+> >  }
+> > +static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
+> > +{
+> > +	return -EINVAL;
+> > +}
+> >  #endif
+> >
+> >  void cper_print_aer(struct pci_dev *dev, int cper_severity,
+> > --
+> > 1.8.3.1
+> >
