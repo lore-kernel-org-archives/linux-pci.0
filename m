@@ -1,54 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:54249 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753932AbbIRObu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 10:31:50 -0400
-Date: Fri, 18 Sep 2015 10:31:49 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH] PCI / PM: Update runtime PM documentation for PCI devices
-In-Reply-To: <2256432.RWZW2V6rYx@vostro.rjw.lan>
-Message-ID: <Pine.LNX.4.44L0.1509181028130.1681-100000@iolanthe.rowland.org>
+Received: from mail-io0-f179.google.com ([209.85.223.179]:33852 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751029AbbIAXOJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Sep 2015 19:14:09 -0400
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
+References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
+	<1440089947-2839-3-git-send-email-sean.stalley@intel.com>
+Date: Tue, 1 Sep 2015 16:14:08 -0700
+Message-ID: <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Sean O. Stalley" <sean.stalley@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatxjain@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-api@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 18 Sep 2015, Rafael J. Wysocki wrote:
-
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Section 3.2 "Device Runtime Power Management" of pci.txt has become
-> outdated, so update it to correctly reflect the current code flow.
-> 
-> Also update the comment in local_pci_probe() to document the fact
-> that pm_runtime_put_noidle() is not the only runtime PM helper
-> function that can be used to decrement the device's runtime PM
-> usage counter in .probe().
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Thu, Aug 20, 2015 at 9:59 AM, Sean O. Stalley <sean.stalley@intel.com> wrote:
+> Add support for devices using Enhanced Allocation entries instead of BARs.
+> This patch allows the kernel to parse the EA Extended Capability structure
+> in PCI configspace and claim the BAR-equivalent resources.
+>
+> Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
 > ---
->  Documentation/power/pci.txt |   51 ++++++++++++++++++++++++++++++++------------
->  drivers/pci/pci-driver.c    |    7 +++---
->  2 files changed, 42 insertions(+), 16 deletions(-)
-> 
-> Index: linux-pm/Documentation/power/pci.txt
-> ===================================================================
-> --- linux-pm.orig/Documentation/power/pci.txt
-> +++ linux-pm/Documentation/power/pci.txt
-> @@ -979,20 +979,45 @@ every time right after the runtime_resum
-
+>  drivers/pci/pci.c   | 219 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h   |   1 +
+>  drivers/pci/probe.c |   3 +
+>  3 files changed, 223 insertions(+)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 0008c95..c8217a8 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
 ...
+> +
+> +/* Read an Enhanced Allocation (EA) entry */
+> +static int pci_ea_read(struct pci_dev *dev, int offset)
+> +{
+...
+> +       res->name = pci_name(dev);
+> +       res->start = start;
+> +       res->end = end;
+> +       res->flags = flags;
+> +
+> +       pci_ea_claim_resource(dev, res);
+> +
+> +out:
+> +       return offset + ent_size;
+> +}
+> +
+> +/* Enhanced Allocation Initalization */
+> +void pci_ea_init(struct pci_dev *dev)
+> +{
+...
+> +
+> +       for (i = 0; i < num_ent; ++i) {
+> +               /* parse each EA entry */
+> +               dev_dbg(&dev->dev, "%s: parsing entry %i...\n", __func__, i);
+> +               offset = pci_ea_read(dev, offset);
+> +       }
+> +}
+> +
+>  static void pci_add_saved_cap(struct pci_dev *pci_dev,
+>         struct pci_cap_saved_state *new_cap)
+>  {
 
-> +It is important to remember that the driver's runtime_suspend() callback
-> +may be executed right after the usage counter has been decremented, because
-> +user space may already have cuased the pm_runtime_allow() helper function
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index cefd636..4cadf35 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1522,6 +1522,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+>
+>  static void pci_init_capabilities(struct pci_dev *dev)
+>  {
+> +       /* Enhanced Allocation */
+> +       pci_ea_init(dev);
+> +
+>         /* MSI/MSI-X list */
+>         pci_msi_init_pci_dev(dev);
+>
 
-s/cuased/caused/.  Otherwise,
+Should not call pci_ea_claim_resource() that early.
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+For x86 and other arches, we call
+pcibios_resource_survey/pcibios_allocate_bus_resouce/pcibios_allocate_resources
+quite late.
 
+Yinghai
