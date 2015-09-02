@@ -1,79 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:11986 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005AbbIORLa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:30 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH 05/22] dma-mapping: pci: add pci_(un)map_peer_resource
-Date: Tue, 15 Sep 2015 12:10:50 -0500
-Message-ID: <1442337067-22964-6-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:36715 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbbIBWoj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Sep 2015 18:44:39 -0400
+Received: by ioii196 with SMTP id i196so37945456ioi.3
+        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2015 15:44:38 -0700 (PDT)
+Date: Wed, 2 Sep 2015 17:44:34 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: linux-pci@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	patchwork-lst@pengutronix.de, kernel@pengutronix.de
+Subject: Re: [PATCH v4 0/5] Designware host multivector MSI and 64bit MSI
+ fixes
+Message-ID: <20150902224434.GE829@google.com>
+References: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1439809578-13654-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simply route these through to the new dma_(un)map_peer_resource APIs.
+On Mon, Aug 17, 2015 at 01:06:13PM +0200, Lucas Stach wrote:
+> This is a reworked version of the multivector MSI support for the designware
+> PCIe host controller driver.
+> 
+> v3 added patch 2 to share more code between the single and multivector MSI
+> code paths.
+> 
+> While not really related to this topic patches 4+5 fix the MSI message setup
+> to work on 64bit and 32bit PAE systems. I included them in this series as
+> they depend on patch 2.
+> 
+> v4 fixes the last patch to also set up the high part of the MSI target
+> address, when calling the common DW MSI init function.
+> 
+> Regards,
+> Lucas
+> 
+> Lucas Stach (5):
+>   PCI: allow MSI chip providers to implement their own multivector MSI
+>     setup
+>   PCI: designware: factor out MSI msg setup
+>   PCI: designware: implement multivector MSI irq setup
+>   PCI: designware: change prototype of get_msi_addr
+>   PCI: designware: set up high part of MSI target address
 
-Also route pci_peer_mapping_error through to the new dma_peer_mapping_error
-API.
+I applied these to pci-4.4/host-designware with Pratyush's ack and minor
+changelog tweaks (and changing -ENOSYS to -EINVAL to shut up checkpatch).
+This will be rebased after v4.3-rc1.  Thanks!
 
-Guard these new functions behind CONFIG_HAS_DMA_P2P.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
----
- include/asm-generic/pci-dma-compat.h | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+commit 59f6d039d7ea
+Author: Lucas Stach <l.stach@pengutronix.de>
+Date:   Mon Aug 17 13:06:18 2015 +0200
 
-diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
-index c110843..7baf09e 100644
---- a/include/asm-generic/pci-dma-compat.h
-+++ b/include/asm-generic/pci-dma-compat.h
-@@ -61,6 +61,29 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
- 	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
- }
- 
-+#ifdef CONFIG_HAS_DMA_P2P
-+static inline dma_peer_addr_t
-+pci_map_peer_resource(struct pci_dev *hwdev, struct pci_dev *peer,
-+		      int res, unsigned long offset, size_t size,
-+		      int direction)
-+{
-+	return dma_map_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, peer == NULL ? NULL : &peer->dev, peer == NULL ? NULL : &peer->resource[res], offset, size, (enum dma_data_direction)direction);
-+}
-+
-+static inline int
-+pci_dma_peer_mapping_error(struct pci_dev *pdev, dma_peer_addr_t dma_addr)
-+{
-+	return dma_peer_mapping_error(&pdev->dev, dma_addr);
-+}
-+
-+static inline void
-+pci_unmap_peer_resource(struct pci_dev *hwdev, dma_peer_addr_t dma_address,
-+			size_t size, int direction)
-+{
-+	dma_unmap_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
-+}
-+#endif
-+
- static inline int
- pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
- 	   int nents, int direction)
--- 
-2.5.1
+    PCI: designware: Set up high part of MSI target address
+    
+    Set up the high part of the MSI target address to allow the MSI target to
+    be above 4GB on 64bit and PAE systems.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
 
+commit ec8d33e0c5ad
+Author: Lucas Stach <l.stach@pengutronix.de>
+Date:   Mon Aug 17 13:06:17 2015 +0200
+
+    PCI: designware: Make get_msi_addr() return phys_addr_t, not u32
+    
+    Make get_msi_addr() return phys_addr_t, not u32.  This allows the MSI
+    target address to be above 4GB for 64bit or PAE systems.
+    
+    No functional change for the current 32bit platform users as phys_addr_t
+    maps to u32 for them.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+
+commit 52495e4e5444
+Author: Lucas Stach <l.stach@pengutronix.de>
+Date:   Mon Aug 17 13:06:16 2015 +0200
+
+    PCI: designware: Implement multivector MSI IRQ setup
+    
+    Implement multivector MSI IRQ setup.  This us to set up and use multiple
+    MSI IRQs per device.
+    
+    [bhelgaas: changelog, use -EINVAL instead of -ENOSYS]
+    Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+
+commit 4e660090c3ad
+Author: Lucas Stach <l.stach@pengutronix.de>
+Date:   Mon Aug 17 13:06:15 2015 +0200
+
+    PCI: designware: Factor out MSI msg setup
+    
+    Factor out the PCI MSI message setup from the single MSI setup function.
+    This will be reused by the multivector MSI setup.
+    
+    No functional change yet.
+    
+    Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+
+commit 20c12de4f24b
+Author: Lucas Stach <l.stach@pengutronix.de>
+Date:   Mon Aug 17 13:06:14 2015 +0200
+
+    PCI: Add msi_controller setup_irqs() method for special multivector setup
+    
+    Add a msi_controller setup_irqs() method so MSI chip providers can
+    implement their own multivector MSI setup.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Reviewed-by: Pratyush Anand <pratyush.anand@gmail.com>
