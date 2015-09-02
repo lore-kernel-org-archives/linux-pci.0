@@ -1,102 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from xspv0103.northgrum.com ([134.223.120.78]:13364 "EHLO
-	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752811AbbIQVWf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2015 17:22:35 -0400
-From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: [PATCH v1 2/7] PCI: Track subordinate values in struct pci_bus
-Date: Thu, 17 Sep 2015 21:10:55 +0000
-Message-ID: <2014ce5807474d70b101b601a29c3550@XCGVAG27.northgrum.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mout.gmx.net ([212.227.17.20]:56934 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754560AbbIBQRm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 2 Sep 2015 12:17:42 -0400
+Date: Wed, 2 Sep 2015 18:17:29 +0200
+From: Helge Deller <deller@gmx.de>
+To: linux-parisc@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Meelis Roos <mroos@linux.ee>
+Subject: [PATCH] PCI,parisc: Enable 64-bit bus addresses on PA-RISC
+Message-ID: <20150902161729.GA2444@ls3530.box>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds the field 'subordinate' to struct pci_bus.  Normally,
-the subordinate is automatically calculated while scanning children of
-the bus and counting their downstream buses.
+Commit 3a9ad0b ("PCI: Add pci_bus_addr_t") unconditionally introduced usage of
+64-bit PCI bus addresses on all 64-bit platforms which broke PA-RISC.
 
-This heuristic fails for hot-added bridges.  A hot-added bridge will
-need to increase its subordinate if additional bridges are hot-added
-underneath it.  Without the 'subordinate' field, newly added bridges
-will not have a valid secondary number, without reshuffling all
-existing devices.
+It turned out that due to enabling the 64-bit addresses, the PCI logic decided
+to use the GMMIO instead of the LMMIO region. This commit simply disables
+registering the GMMIO and thus we fall back to use the LMMIO region as before.
 
-By storing the bus's intended subordinate number, the scanning
-algorithm can skip over reserved numbers while enumerating devices.  A
-subordinate value of 0 means to use the existing enumeration
-algorithm.  An upcoming commit will set that subordinate field to a
-non-zero value.
+Reverts commit 45ea2a5fed6dacb9bb0558d8b21eacc1c45d5bb4
+("PCI: Don't use 64-bit bus addresses on PA-RISC")
 
-Signed-off-by: Jason Tang <jason.tang2@ngc.com>
----
- drivers/pci/probe.c | 23 ++++++++++++++++++++---
- include/linux/pci.h |  1 +
- 2 files changed, 21 insertions(+), 3 deletions(-)
+To: linux-parisc@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Meelis Roos <mroos@linux.ee>
+Cc: stable@vger.kernel.org  # v3.19+
+Signed-off-by: Helge Deller <deller@gmx.de>
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c905db3..58ae892 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -863,8 +863,17 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 			if (!child)
- 				goto out;
- 			pci_bus_insert_busn_res(child, child->number, 0xff);
-+			/* child's subordinate bus will be calculated
-+			   during pass 2 */
- 		}
--		max++;
-+
-+		/* if the child bus has a subordinate value set, then
-+		   use that bus's subordinate+1 as the next probed bus
-+		   number */
-+		if (max < child->subordinate)
-+			max = child->subordinate + 1;
-+		else
-+			max++;
- 		buses = (buses & 0xff000000)
- 		      | ((unsigned int)(child->primary)     <<  0)
- 		      | ((unsigned int)(child->busn_res.start)   <<  8)
-@@ -921,8 +930,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 		/*
- 		 * Set the subordinate bus number to its real value.
- 		 */
--		pci_bus_update_busn_res_end(child, max);
--		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
-+		child->subordinate = max;
-+		pci_bus_update_busn_res_end(child, child->subordinate);
-+		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS,
-+				      child->subordinate);
- 	}
+
+diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
+index dceb9dd..a32c1f6 100644
+--- a/drivers/parisc/lba_pci.c
++++ b/drivers/parisc/lba_pci.c
+@@ -1556,8 +1556,11 @@ lba_driver_probe(struct parisc_device *dev)
+ 	if (lba_dev->hba.lmmio_space.flags)
+ 		pci_add_resource_offset(&resources, &lba_dev->hba.lmmio_space,
+ 					lba_dev->hba.lmmio_space_offset);
+-	if (lba_dev->hba.gmmio_space.flags)
+-		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
++	if (lba_dev->hba.gmmio_space.flags) {
++		/* pci_add_resource(&resources, &lba_dev->hba.gmmio_space); */
++		pr_warn("LBA: Not registering GMMIO space %pR\n",
++			&lba_dev->hba.gmmio_space);
++	}
  
- 	sprintf(child->name,
-@@ -1896,6 +1907,12 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
- 		}
+ 	pci_add_resource(&resources, &lba_dev->hba.bus_num);
  
- 	/*
-+	 * Adjust max if this bus has a set subordinate number
-+	 */
-+	if (max < bus->subordinate)
-+		max = bus->subordinate;
-+
-+	/*
- 	 * We've scanned the bus and so we know all about what's on
- 	 * the other side of any bridges that may be on this bus plus
- 	 * any devices.
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8a0321a..384106c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -458,6 +458,7 @@ struct pci_bus {
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 944f500..73de4ef 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -2,7 +2,7 @@
+ # PCI configuration
+ #
+ config PCI_BUS_ADDR_T_64BIT
+-	def_bool y if (ARCH_DMA_ADDR_T_64BIT || (64BIT && !PARISC))
++	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
+ 	depends on PCI
  
- 	unsigned char	number;		/* bus number */
- 	unsigned char	primary;	/* number of primary bridge */
-+	unsigned char	subordinate;	/* subordinate number on secondary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--- 
-1.8.3.1
-
+ config PCI_MSI
