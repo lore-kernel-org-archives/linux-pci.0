@@ -1,96 +1,81 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
-To: Arthur Marsh <arthur.marsh@internode.on.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
- <55F6EF40.50403@internode.on.net>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <55F78306.3000802@linux.intel.com>
-Date: Tue, 15 Sep 2015 10:31:34 +0800
+Date: Wed, 2 Sep 2015 17:23:25 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Alexander Graf <agraf@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] of/pci: Add of_pci_check_probe_only to parse
+ "linux,pci-probe-only"
+Message-ID: <20150902222325.GD829@google.com>
+References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
+ <1439569159-10051-2-git-send-email-marc.zyngier@arm.com>
+ <CAL_JsqL7VPB6nc-zRYm_73ZSgYVq_+a6sW_XZZ_LRaUXf4jTng@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <55F6EF40.50403@internode.on.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqL7VPB6nc-zRYm_73ZSgYVq_+a6sW_XZZ_LRaUXf4jTng@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/9/15 0:01, Arthur Marsh wrote:
+On Fri, Aug 14, 2015 at 04:08:10PM -0500, Rob Herring wrote:
+> On Fri, Aug 14, 2015 at 11:19 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> > Both pci-host-generic and Pseries parse the "linux,pci-probe-only"
+> > to engage the PCI_PROBE_ONLY mode, and both have a subtle bug that
+> > can be triggered if the property has no parameter.
 > 
+> Humm, I bet we could break a lot of machines if we fixed the core code
+> to properly make pp->value NULL when there is no value.
 > 
-> Jiang Liu wrote on 14/09/15 12:38:
->> Hi Authur,
->>     As suggested by Bjorn, patch 1-2 set implement a PCI device
->> driver to manage eata PCI devices. And patch 3 tries to support PCI
->> device hot-removal for eata, but I have no change to test due to
->> limited knowledge about scsi subsystem and lacking of hardware for
->> tests.
->>     So you could please help to test patch 1-2? Patch 3 is just
->> for comments.
->> Thanks!
->> Gerry
->>
->> Jiang Liu (3):
->>    eata: Use IDA to manage eata board IDs
->>    eata: Implement PCI driver to manage eata PCI devices
->>    eata: Enhance eata driver to support PCI device hot-removal
->>
->>   drivers/scsi/eata.c |  232
->> +++++++++++++++++++++++++++------------------------
->>   1 file changed, 125 insertions(+), 107 deletions(-)
->>
+> > Provide a generic implementation that can be used by both.
+> >
+> > Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> > ---
+> >  drivers/of/of_pci.c    | 30 ++++++++++++++++++++++++++++++
+> >  include/linux/of_pci.h |  3 +++
+> >  2 files changed, 33 insertions(+)
+> >
+> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> > index 5751dc5..a4e29ff 100644
+> > --- a/drivers/of/of_pci.c
+> > +++ b/drivers/of/of_pci.c
+> > @@ -118,6 +118,36 @@ int of_get_pci_domain_nr(struct device_node *node)
+> >  EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+> >
+> >  /**
+> > + * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
+> > + *                           is present and valid
+> > + *
+> > + * @node: device tree node that may contain the property (usually "chosen")
+> > + *
+> > + */
+> > +void of_pci_check_probe_only(struct device_node *node)
+> > +{
+> > +       const int *prop;
+> > +       int len;
+> > +
+> > +       if (!node)
+> > +               return;
+> > +
+> > +       prop = of_get_property(node, "linux,pci-probe-only", &len);
 > 
-> With patches 1 and 2 applied, I get a successful boot with IRQ mapping:
-> 
-> [    1.147056] EATA0: IRQ 10 mapped to IO-APIC IRQ 17.
-> [    1.160404] EATA/DMA 2.0x: Copyright (C) 1994-2003 Dario Ballabio.
-> [    1.160469] EATA config options -> tm:1, lc:y, mq:16, rs:y, et:n,
-> ip:n, ep:n, pp:y.
-> [    1.160541] EATA0: 2.0C, PCI 0xd890, IRQ 17, BMST, SG 122, MB 64.
-> [    1.160600] EATA0: wide SCSI support enabled, max_id 16, max_lun 8.
-> [    1.160658] EATA0: SCSI channel 0 enabled, host target ID 7.
-> [    1.161207] scsi host0: EATA/DMA 2.0x rev. 8.10.00
-> 
-> 
-> but I still get errors when trying to do a kexec reboot, see
-> http://www.users.on.net/~arthur.marsh/20150915547.jpg
-> 
-> roughly it reads (after the synchronising SCSI cache reboot messages)
-> and a long period of a dark screen:
-> 
-> sd 0:0:6:0: abort, mbox 63.
-> EATA0: abort, mbox 63 is in use.
-> sd 0:0:6:0: reset, enter.
-> EATA0: reset, mbox 63 in reset.
-> EATA0: reset, board reset done, enabling interrupts.
-> EATA0: reset, interrupts disabled, loops 100469.
-> EATA0: reset, mbox 63 locked, DID_RESET, done.
-> EATA0: reset, exit, done.
-> sd 0:0:6:0: qcomm, mbox 0, adapter busy, will start
-> sd 0:0:6:0: abort, mbox 0.
-> EATA0: abort, timeout error.
-> sd 0:0:6:0: reset, enter.
-> EATA0: reset, exit, timeout error.
-> sd 0:0:6:0 Device offlinled - not ready after error recovery
-> sd 0:0:6:0 rejecting I/O to offline device
-> sd 0:0:6:0 rejecting I/O to offline device
-> sd 0:0:6:0 [sda] Synchronize Cache(10) failed: Result:
-> hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-> starting new kernel
-> 
-> It would be great if this problem could be fixed.
-HI Arthur,
-	Really appreciate your help to test the patches. That's
-a good sign we have moved forward a bit:)
-	For kexec, it's always challenging to me. So could you
-please help to provide full dmesg logs with working kernels
-so I could try to figure out the order among scsi and PCI devices.
-It may be shutdown order related.
-Thanks!
-Gerry
+> It is preferred to use of_property_read_u32 to avoid just these types
+> of problems.
 
-> 
-> Arthur.
-> 
+I don't know enough OF to really understand this, but I infer that
+this is a suggestion for improving the patch.  Should I be waiting for
+a v3 series?
+
+Bjorn
