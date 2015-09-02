@@ -1,151 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33825 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736AbbIJNAT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 09:00:19 -0400
-Date: Thu, 10 Sep 2015 15:00:15 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Global lock for PCI configuration accesses
-Message-ID: <20150910130013.GD21542@ulmo.nvidia.com>
-References: <20150909151126.GA1366@ulmo.nvidia.com>
- <CAErSpo5bAHywkbeBBOsGs3e5ih5rFpPuWBE-sA1pSuAxtNf_MQ@mail.gmail.com>
+Received: from mail-io0-f181.google.com ([209.85.223.181]:35689 "EHLO
+	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756070AbbIBVWF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Sep 2015 17:22:05 -0400
+Received: by ioiz6 with SMTP id z6so36005763ioi.2
+        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2015 14:22:04 -0700 (PDT)
+Date: Wed, 2 Sep 2015 16:21:59 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Sean O. Stalley" <sean.stalley@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
+Message-ID: <20150902212159.GC829@google.com>
+References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
+ <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
+ <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
+ <20150902174612.GA2700@sean.stalley.intel.com>
+ <CAErSpo4qZ9AXskyo86gXG1cb3AqCn-HB05nj7qT9wovZdLt2Tg@mail.gmail.com>
+ <20150902200127.GA3347@sean.stalley.intel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="n/aVsWSeQ4JHkrmm"
-In-Reply-To: <CAErSpo5bAHywkbeBBOsGs3e5ih5rFpPuWBE-sA1pSuAxtNf_MQ@mail.gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20150902200127.GA3347@sean.stalley.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Sep 02, 2015 at 01:01:27PM -0700, Sean O. Stalley wrote:
+> On Wed, Sep 02, 2015 at 02:25:50PM -0500, Bjorn Helgaas wrote:
+> > On Wed, Sep 2, 2015 at 12:46 PM, Sean O. Stalley <sean.stalley@intel.com> wrote:
+> > 
+> > > Would it be better to modify pci_claim_resource() to support EA instead of adding pci_ea_claim_resource()?
+> > > That way, EA entries would be claimed at the same time as traditional BARs.
+> > 
+> > Yes, I think so.
+> 
+> Ok, I'll make it work this way in the next patchset.
+> 
+> > Why wouldn't pci_claim_resource() work as-is for EA?  I see that
+> > pci_ea_get_parent_resource() defaults to iomem_resource or
+> > ioport_resource if we don't find a parent, but I don't understand why
+> > that's necessary.
+> 
+> EA resources may (or may not) be in the parent's range[1].
+> If the parent doesn't describe this range, we want to default to the top-level resource.
+> Other than that case, I think pci_claim_resource would work as-is.
+> 
+> -Sean
+> 
+> [1] From the EA ECN:
+> For a bridge function that is permitted to implement EA based on the rules above, it is
+> permitted, but not required, for the bridge function to use EA mechanisms to indicate
+> resource ranges that are located behind the bridge Function (see Section 6.9.1.2).
 
---n/aVsWSeQ4JHkrmm
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+[BTW, in EA ECN 23_Oct_2014_Final, this text is in sec 6.9, not 6.9.1.2]
 
-On Wed, Sep 09, 2015 at 12:27:38PM -0500, Bjorn Helgaas wrote:
-> Hi Thierry,
->=20
-> On Wed, Sep 9, 2015 at 10:11 AM, Thierry Reding
-> <thierry.reding@gmail.com> wrote:
-> > Hi,
-> >
-> > There's currently an issue with PCI configuration space accesses on
-> > Tegra. The PCI host controller driver's ->map_bus() implementation
-> > remaps I/O memory on-demand to avoid potentially wasting 256 MiB of
-> > virtual address space. The reason why this is done is because the
-> > mapping isn't compatible with ECAM and the extended register number
-> > is encoded in the uppermost 4 bits. This means that if we want to
-> > address the configuration space for a single bus we already need to
-> > map 256 MiB of memory, even if only 1 MiB is really used.
-> >
-> > tegra_pcie_bus_alloc() is therefore used to stitch together a 1 MiB
-> > block of virtual addresses per bus made up of 16 64 KiB chunks each
-> > so that only what's really needed is mapped.
-> >
-> > That function gets called the first time a PCI configuration access
-> > is performed on a bus. The code calls functions that may sleep, and
-> > that causes problems because the PCI configuration space accessors
-> > are called with the global pci_lock held. This works in practice
-> > but it blows up when lockdep is enabled.
-> >
-> > I remember coding up a fix for this using the ARM/PCI ->add_bus()
-> > callbacks at one point and then forgetting about it. When I wanted
-> > to revive that patch a little while ago I noticed that ->add_bus()
-> > is now gone.
->=20
-> Removed by 6cf00af0ae15 ("ARM/PCI: Remove unused pcibios_add_bus() and
-> pcibios_remove_bus()"), I think.  That only removed the ARM
-> implementation; the hook itself is still called, but on every arch
-> except x86 and ia64, we use the default no-op implementation.  You
-> could add it back, I guess.  It was removed because the MSI-related
-> stuff that used to be in the ARM version is now done in a more generic
-> way (see 49dcc01a9ff2 ("ARM/PCI: Save MSI controller in
-> pci_sys_data")).
->=20
-> > What I'm asking myself now is how to fix this. I suppose it'd be
-> > possible to bring back ->add_bus(), though I suspect there were good
-> > reasons to remove it (portability?).
->=20
-> > Another possible fix would be
-> > to get rid of the spinlock protecting these accesses. It seems to me
-> > like it's not really necessary in the majority of cases. For drivers
-> > that do a simple readl() or writel() on some memory-mapped I/O the
-> > lock doesn't protect anything.
->=20
-> I've wondered about removing pci_lock, too.  It seems like it could be
-> removed in principle, but it would be a lot of work to audit
-> everything.  Probably more work than you want to do just to fix Tegra
-> :)
+I agree that it implies EA resources need not be in the parent's *EA*
+range.  But I would read it as saying "a bridge can use either the
+usual window registers or EA to indicate resources forwarded
+downstream."
 
-Thinking more about this, I'm not sure removing the lock would improve
-the situation much. It seems like everything assumes that accesses to
-PCI configuration space can be done in interrupt context, so what we do
-on Tegra wouldn't be valid anyway.
+What happens in the following case?
 
-I'm not sure if that's a reasonable assumption though. If it isn't then
-removing the lock (or pushing it down into drivers as necessary) might
-be the right thing to do.
+  00:00.0: PCI bridge to [bus 01]
+  00:00.0:   bridge window [mem 0x80000000-0x8fffffff]
+  01:00.0: EA 0: [mem 0x90000000-0x9000ffff]
 
-> > Then again, there are a lot of pci_ops implementations in the tree,
-> > and simply removing the global lock seems like it'd have a good chance
-> > of breaking things for somebody.
-> >
-> > So short of auditing all pci_ops implementations and pushing the lock
-> > down into drivers, does anyone have any good ideas on how to fix this?
->=20
-> The 32-bit version of pci_mmcfg_read() uses fixmap to map the page it
-> needs on-demand.  Could you do something similar, i.e., allocate the
-> virtual space (which I assume is the part that might sleep), then
-> redirect the virt-to-phys mapping while holding the lock?
+The 00:00.0 bridge knows nothing about EA.  The 01:00.0 EA device has
+a fixed region at 0x90000000.  The ECN says:
 
-I hadn't known about fixmap yet, but unfortunately I don't think that
-would work in this case. In particular we'd need to map 256 MiB in order
-to address the configuration space of a single device. Well, if we do
-the mapping directly in the configuration space accessor we could map
-a single 64 KiB chunk at a time, depending upon which register is being
-accesses. That's still quite a lot of code that would be running for
-every single configuration space access.
+  System firmware/software must comprehend that such bridge functions
+  [those that are permitted to implement EA] are not required to
+  indicate inclusively all resources behind the bridge, and as a
+  result system firmware/software must make a complete search of all
+  functions behind the bridge to comprehend the resources used by
+  those functions.
 
-Moreover this is really only a problem that happens during enumeration.
-After enumeration completes the configuration space address ranges for
-each bus will have been allocated and subsequent accesses would no
-longer execute the slow paths.
+A bridge was never required to indicate, e.g., via its window
+registers, anything about the resources behind it.  Software always
+had to search behind the bridge and look at all the downstream BARs.
+What's new here is that software now has to look for downstream EA
+entries in addition to BARs, and the EA entries are at fixed
+addresses.
 
-Given that and the assumption that PCI configuration space might be
-accessed from interrupt context it seems like a more suitable option to
-add back in some way of calling into the driver everytime a new bus gets
-created. I guess we could even reuse ->map_bus(), but it might be better
-to add a ->add_bus() to struct pci_ops to more clearly separate the slow
-=66rom the fast path.
+My question is what the implication is for address routing performed
+by the bridge.  The EA ECN doesn't mention any changes there, so I
+assume it is software's responsibility to reprogram the 00:00.0 mem
+window so it includes [mem 0x90000000-0x9000ffff].
 
-Any objections to adding ->add_bus() to struct pci_ops? That does have
-the benefit of being more portable than adding back the pcibios hooks
-that were previously removed.
+If software does have to reprogram that window, the normal
+pci_claim_resource() should work.  If it doesn't have to reprogram the
+window, and there's some magical way for 01:00.0 to work even though
+we don't route address space to it, I suspect we'll need significantly
+more changes than just pci_ea_claim_resource(), because then 00:00.0
+is really not a PCI bridge any more.
 
-Thierry
-
---n/aVsWSeQ4JHkrmm
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJV8X7bAAoJEN0jrNd/PrOhok4P/R6y37WPfluM5+ALsli1fGJG
-tKyukXQ3l7XGKfUfHm54Qgi0W7c51EcpoF473yyVdyb1RdXc8NJSAhIYPawFztQb
-lcG+AMozF1dXqFWdLf2GWIyxfoJqSyf5ITFG8vgQpgcur/4JcpsLBa353DMU9FN/
-OFPx4HfKhj5sxtCPsxIC+d/yGgRpEjKZGtA4NnkulIsq8N3zdEOdTUJHFLo/ptpe
-CdJkxqA09jAMjhdeGeNg9odeGfuAj3wkUvxOI38vYZ9fvJcNHWRHTomVF1YqQdoH
-FVzjQKOGRooCUeITQ6dpCMbZCPaE2+iN+kLyC63IeDWzO5CAY7SMziHDGLFu7lRA
-e0rQGLcIIxEYHbwGi/D8qW/8ZQGR63M/W7TiSJYP3fo18/xmT+56SV7ehFPISv1q
-fTGvPYCAySk6T+ONdU72fX67Zi2jdXpIm+4vid8MHftd6Uy0z7vTrTIWxWrwsAXE
-LCqUtycZpISCjhqrEwHYnlylqXFZqXzXlT7IGEn6ulpv0TJRbKoEZNy2houekn1W
-SUF5ZdSyoEmYgZKU3CXsFkiWta+fBleHG1ltE3c3kGwMAfqKNVjP4GGpNuG/lwqE
-3bSBkwkEKDFTwya7ZdN736I8YdKq2epTbqUdGG69LEI6pGFqs3K5bJtcQwZ49BAs
-cVh4lUjMQbui6stRYRWV
-=FSOH
------END PGP SIGNATURE-----
-
---n/aVsWSeQ4JHkrmm--
+Bjorn
