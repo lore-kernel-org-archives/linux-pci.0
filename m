@@ -1,57 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:36063 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751700AbbIQWlm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2015 18:41:42 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH 0/3] PCI: Add support for Cavium ThunderX RC and on-SoC devices.
-Date: Thu, 17 Sep 2015 15:41:31 -0700
-Message-Id: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:32990 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755206AbbIBT0L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Sep 2015 15:26:11 -0400
+Received: by wicmc4 with SMTP id mc4so76569284wic.0
+        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2015 12:26:10 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150902174612.GA2700@sean.stalley.intel.com>
+References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
+ <1440089947-2839-3-git-send-email-sean.stalley@intel.com> <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
+ <20150902174612.GA2700@sean.stalley.intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 2 Sep 2015 14:25:50 -0500
+Message-ID: <CAErSpo4qZ9AXskyo86gXG1cb3AqCn-HB05nj7qT9wovZdLt2Tg@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
+To: "Sean O. Stalley" <sean.stalley@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-api@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Wed, Sep 2, 2015 at 12:46 PM, Sean O. Stalley <sean.stalley@intel.com> wrote:
 
-The Cavium ThunderX arm64 based SoC needs a little bit of special
-handling for both its PCIe Root Complexes as well as on-SoC devices
-(which all appear as PCIe devices).
+> Would it be better to modify pci_claim_resource() to support EA instead of adding pci_ea_claim_resource()?
+> That way, EA entries would be claimed at the same time as traditional BARs.
 
-1/3 - Small change to allow SRIOV BARs to be given fixed addresses in
-      the header fixup.
+Yes, I think so.
 
-2/3 - Add quirks to support fixed BAR addresses for all on-SoC devices,
-      including SRIOV BARs in the NIC.
-
-3/3 - Add config spaces accessors to pci-host-generic driver for ThunderX RC.
-
-This patch set depends on:
-
-https://lkml.org/lkml/2015/9/17/799
-
-David Daney (3):
-  PCI: Allow quirks to override SRIOV BARs.
-  PCI: Add quirks for devices found on Cavium ThunderX SoCs.
-  PCI: generic: Add support for Cavium ThunderX PCIe root complexes.
-
- .../devicetree/bindings/pci/host-generic-pci.txt   |  8 +-
- drivers/pci/host/Kconfig                           |  6 ++
- drivers/pci/host/Makefile                          |  1 +
- drivers/pci/host/pci-host-generic.c                | 29 +++++++
- drivers/pci/host/quirks-thunder.c                  | 95 ++++++++++++++++++++++
- drivers/pci/iov.c                                  |  9 +-
- 6 files changed, 143 insertions(+), 5 deletions(-)
- create mode 100644 drivers/pci/host/quirks-thunder.c
-
--- 
-1.9.1
-
+Why wouldn't pci_claim_resource() work as-is for EA?  I see that
+pci_ea_get_parent_resource() defaults to iomem_resource or
+ioport_resource if we don't find a parent, but I don't understand why
+that's necessary.
