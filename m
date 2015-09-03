@@ -1,82 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20150909151126.GA1366@ulmo.nvidia.com>
-References: <20150909151126.GA1366@ulmo.nvidia.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Sep 2015 12:27:38 -0500
-Message-ID: <CAErSpo5bAHywkbeBBOsGs3e5ih5rFpPuWBE-sA1pSuAxtNf_MQ@mail.gmail.com>
-Subject: Re: Global lock for PCI configuration accesses
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:39841 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754844AbbICMQk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Sep 2015 08:16:40 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>
+Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: [PATCH v3 2/4] PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
+Date: Thu,  3 Sep 2015 13:16:14 +0100
+Message-Id: <1441282576-7304-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1441282576-7304-1-git-send-email-marc.zyngier@arm.com>
+References: <1441282576-7304-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thierry,
+When pci-host-generic looks for the probe-only property, it seems
+to trust the DT to be correctly written, and assumes that there
+is a parameter to the property.
 
-On Wed, Sep 9, 2015 at 10:11 AM, Thierry Reding
-<thierry.reding@gmail.com> wrote:
-> Hi,
->
-> There's currently an issue with PCI configuration space accesses on
-> Tegra. The PCI host controller driver's ->map_bus() implementation
-> remaps I/O memory on-demand to avoid potentially wasting 256 MiB of
-> virtual address space. The reason why this is done is because the
-> mapping isn't compatible with ECAM and the extended register number
-> is encoded in the uppermost 4 bits. This means that if we want to
-> address the configuration space for a single bus we already need to
-> map 256 MiB of memory, even if only 1 MiB is really used.
->
-> tegra_pcie_bus_alloc() is therefore used to stitch together a 1 MiB
-> block of virtual addresses per bus made up of 16 64 KiB chunks each
-> so that only what's really needed is mapped.
->
-> That function gets called the first time a PCI configuration access
-> is performed on a bus. The code calls functions that may sleep, and
-> that causes problems because the PCI configuration space accessors
-> are called with the global pci_lock held. This works in practice
-> but it blows up when lockdep is enabled.
->
-> I remember coding up a fix for this using the ARM/PCI ->add_bus()
-> callbacks at one point and then forgetting about it. When I wanted
-> to revive that patch a little while ago I noticed that ->add_bus()
-> is now gone.
+Unfortunately, this is not always the case, and some firmware expose
+this property naked. The driver ends up making a decision based on
+whatever the property pointer points to, which is likely to be junk.
 
-Removed by 6cf00af0ae15 ("ARM/PCI: Remove unused pcibios_add_bus() and
-pcibios_remove_bus()"), I think.  That only removed the ARM
-implementation; the hook itself is still called, but on every arch
-except x86 and ia64, we use the default no-op implementation.  You
-could add it back, I guess.  It was removed because the MSI-related
-stuff that used to be in the ARM version is now done in a more generic
-way (see 49dcc01a9ff2 ("ARM/PCI: Save MSI controller in
-pci_sys_data")).
+Switch to the common of_pci.c implementation that doesn't suffer
+from this problem.
 
-> What I'm asking myself now is how to fix this. I suppose it'd be
-> possible to bring back ->add_bus(), though I suspect there were good
-> reasons to remove it (portability?).
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/host/pci-host-generic.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-> Another possible fix would be
-> to get rid of the spinlock protecting these accesses. It seems to me
-> like it's not really necessary in the majority of cases. For drivers
-> that do a simple readl() or writel() on some memory-mapped I/O the
-> lock doesn't protect anything.
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 265dd25..545ff4e 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	int err;
+ 	const char *type;
+ 	const struct of_device_id *of_id;
+-	const int *prop;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+@@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
+-	if (prop) {
+-		if (*prop)
+-			pci_add_flags(PCI_PROBE_ONLY);
+-		else
+-			pci_clear_flags(PCI_PROBE_ONLY);
+-	}
++	of_pci_check_probe_only(of_chosen);
+ 
+ 	of_id = of_match_node(gen_pci_of_match, np);
+ 	pci->cfg.ops = of_id->data;
+-- 
+2.1.4
 
-I've wondered about removing pci_lock, too.  It seems like it could be
-removed in principle, but it would be a lot of work to audit
-everything.  Probably more work than you want to do just to fix Tegra
-:)
-
-> Then again, there are a lot of pci_ops implementations in the tree,
-> and simply removing the global lock seems like it'd have a good chance
-> of breaking things for somebody.
->
-> So short of auditing all pci_ops implementations and pushing the lock
-> down into drivers, does anyone have any good ideas on how to fix this?
-
-The 32-bit version of pci_mmcfg_read() uses fixmap to map the page it
-needs on-demand.  Could you do something similar, i.e., allocate the
-virtual space (which I assume is the part that might sleep), then
-redirect the virt-to-phys mapping while holding the lock?
-
-Bjorn
