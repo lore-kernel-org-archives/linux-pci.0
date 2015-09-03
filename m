@@ -1,83 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f53.google.com ([209.85.213.53]:35146 "EHLO
-	mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752600AbbIUVWs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2015 17:22:48 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: pcieport AER error spam on Intel Skylake
+To: Daniel Drake <drake@endlessm.com>
+References: <CAD8Lp44cpj0Z3aadOzW=Lc=m88AbQpaW3g=GCgtpvbpGATT7uw@mail.gmail.com>
+ <CAErSpo6tMJYqiynS-+svvMB2mskMBrTpWNBxR7OLPSxGxKbBvw@mail.gmail.com>
+ <55E7A90A.5080406@gmail.com>
+ <CAD8Lp4534o9+=MSSt5Rf_9HgxpoNJdA=gRsFAG8w-U8Eh5Otng@mail.gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Carlo Caione <carlo@endlessm.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <55E88C07.3090503@gmail.com>
+Date: Thu, 3 Sep 2015 11:05:59 -0700
 MIME-Version: 1.0
-In-Reply-To: <CAKsTQn=aigrfTz5hYmzvERK3w6Ax1yxEyZfzWt_NaT6d+-DYuA@mail.gmail.com>
-References: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
-	<CAE9FiQXaOkMKk2PddYOXApK9tKLkgusH18sYgvLHA04BRdXR-g@mail.gmail.com>
-	<CAKsTQn=u5HuMCz5_L1jbx6Fvz5Rf_e14tNeEPwxy1o8dxk4J8g@mail.gmail.com>
-	<CAE9FiQWxiLV0YeWfUAd=vJaxtV-0PrqBqm1ptKnFoEM0jQDaiQ@mail.gmail.com>
-	<CAKsTQn=skDo7mbTrvFfQHW+nD1Ggy-g+qT922WOrjiwqyK5BwQ@mail.gmail.com>
-	<CAKsTQn=aigrfTz5hYmzvERK3w6Ax1yxEyZfzWt_NaT6d+-DYuA@mail.gmail.com>
-Date: Mon, 21 Sep 2015 14:22:48 -0700
-Message-ID: <CAE9FiQWxBWaJh0CbbEfeBUJK+54NDrTW6r0v-6itXEyTkmzkhQ@mail.gmail.com>
-Subject: Re: PCIe bus (re-)numbering
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ruud <netwerkforens@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAD8Lp4534o9+=MSSt5Rf_9HgxpoNJdA=gRsFAG8w-U8Eh5Otng@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 21, 2015 at 7:06 AM, Ruud <netwerkforens@gmail.com> wrote:
-> 2015-09-21 9:49 GMT+02:00 Ruud <netwerkforens@gmail.com>:
-
-> Test result based upon
+On 09/03/2015 06:32 AM, Daniel Drake wrote:
+> On Wed, Sep 2, 2015 at 7:57 PM, Alexander Duyck
+> <alexander.duyck@gmail.com> wrote:
+>> Since it is correctable errors it is likely some sort of signalling issue.
+>> Could we get the output of something like an lspci -vt? Then you would be
+>> able to tell what the device is on the other side of the link from 00:1c.5
+>> and then we could probably check to see if there has been any changes for
+>> the device driver on the other end of the link.
+> "lspci -vt" reliably causes one occurance of the message, which is
+> logged by the kernel before lspci has written anything to stdout.
+>   pcieport 0000:00:1c.5: AER: Corrected error received: id=00e5
+>   pcieport 0000:00:1c.5: PCIe Bus Error: severity=Corrected,
+> type=Physical Layer, id=00e5(Receiver ID)
+>   pcieport 0000:00:1c.5:   device [8086:9d15] error status/mask=00000001/00002000
+>   pcieport 0000:00:1c.5:    [ 0] Receiver Error
 >
-> http://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> 7e3fad2 (for-pci-v4.3-rc1)
+> -[0000:00]-+-00.0  Intel Corporation Device 1904
+>             +-02.0  Intel Corporation Device 1916
+>             +-04.0  Intel Corporation Device 1903
+>             +-08.0  Intel Corporation Device 1911
+>             +-14.0  Intel Corporation Device 9d2f
+>             +-14.2  Intel Corporation Device 9d31
+>             +-15.0  Intel Corporation Device 9d60
+>             +-15.1  Intel Corporation Device 9d61
+>             +-16.0  Intel Corporation Device 9d3a
+>             +-17.0  Intel Corporation Device 9d03
+>             +-1c.0-[01]--
+>             +-1c.4-[02]----00.0  Realtek Semiconductor Co., Ltd.
+> RTL8111/8168 PCI Express Gigabit Ethernet controller
+>             +-1c.5-[03]----00.0  Realtek Semiconductor Co., Ltd. Device b723
+>             +-1f.0  Intel Corporation Device 9d48
+>             +-1f.2  Intel Corporation Device 9d21
+>             +-1f.3  Intel Corporation Device 9d70
+>             \-1f.4  Intel Corporation Device 9d23
 >
-> Unfortunately your script hangs the system, I modified it for my
-> situation (only one root complex, 1 PCI switch will be affected).
->  It seems to aggressive on the BAR's..tried to troubleshoot but don't
-> understand the details on
->
->       /sbin/setpci -s $NAME 0x20.l=0
->       /sbin/setpci -s $NAME 0x24.l=0
->       /sbin/setpci -s $NAME 0x28.l=0
->       /sbin/setpci -s $NAME 0x2c.l=0
->
-> why you zero these (besides the bus numbers).
+> Does this mean these messages are somehow related to the Realtek b723
+> device? That is the wifi card.
+> Using x86_64_defconfig there is not even any driver loaded for this
+> device, yet the messages appear quite a bit.
+> If I use a full config with all the relevant drivers including
+> rtlwifi, the frequency of these messages goes up a lot though.
 
-so the realloc will start from clean.
+The correctable errors are likely a result of some sort of link error 
+between the root port 00:1c.5 and the wireless adapter at 3:00.0.  What 
+is likely happening is that when the device is unused it transitions 
+down to a lower power link state like L0s or L1, and when it comes out 
+of that state it is likely triggering the PCIe error most likely as a 
+result of something during the PCIe link training sequence.
 
->
-> I got the full system working by just zeroing the busnumbers on the
-> switch at root complex level, remove the switch and rescan it.
+You might want to notify the manufacturer of the laptop as they may need 
+to address an issue in their hardware, firmware, or possibly add  a 
+workaround to mask off Receiver Error reporting for their part via 
+either a PCIe quirk or driver fix.
 
-Good.
+>> My suspicion since this is a laptop is that something like a power
+>> management change might be responsible if this is a regression as I have
+>> seen messages like this pop up as a result of ASPM being enabled before.
+> It's likely not a regression, this is brand new hardware and this
+> message is seen on all kernels that we have tried (4.1, 4.2, master).
+> pcie_aspm=off also makes these messages go away.
 
-> In this
-> procedure I need to take care of the some physical aspects: I can not
-> turn on the chassis when the PCIe switch is removed, some interrupt
-> comes through and will result in a kernel panic.
+Correctable errors are considered a sign of the PCIe link health. In 
+theory they can be ignored since by definition they can be corrected by 
+the hardware.  One thing you could do if you aren't using the wireless 
+card would be to simply switch off the correctable error reporting by 
+setting the mask bit for it in configuration space using setpci.
 
-?
+To do that what you could do is find the offset for the PCIe AER 
+configuration register for your port by doing a "lspci -vvv -s 0:1c.5" 
+and what you should get will be a dump listing the capabilities and 
+their current settings.  In there you should find a line like:
+     Capabilities: [148 v1] Advanced Error Reporting
 
->
-> Thus the procedure that works is:
-> 1) Chassis off
-> 2) Boot linux
-> 3) Chassis on
-> 4) setpci busnrs to 0
-> 5) remove switch
-> 6) rescan
+The 148 is the hex offset of the configuration space.  The Correctable 
+Error mask is located at a hex offset of 0x14 from there.  So adding the 
+hex values 0x148 and 0x14 gives us 0x15C.  To disable reporting 
+correctable receiver errors you would just want to add a 1 to whatever 
+value you get from "setpci -s 0:1c.5 0x15C.l" and then write that value 
+back.  So for example on my system I ended up with something like 
+"setpci -s 0:1c.5 0x15C.l=2001" where the output from the first command 
+was 2000.
 
-4, 5 is reversed?
+- Alex
 
->
-> Cards recognised and functional, memory regions look ok, running out
-> of iospace but not much can be done about that.
->
-> Same procedure on 3.2.0 kernel (debian stock)  results in all cards
-> being recognized (enum ok) but fails to assign BAR's (tries to fit
-> them below 4G)
 
-Could be resource allocation problem.
-
-Thanks
-
-Yinghai
