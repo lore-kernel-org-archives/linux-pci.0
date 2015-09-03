@@ -1,428 +1,175 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [Patch v6 6/7] x86/PCI/ACPI: Use common interface to support PCI host bridge
-Date: Mon, 14 Sep 2015 16:07:35 +0800
-Message-Id: <1442218057-4355-7-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
-References: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
+Date: Thu, 3 Sep 2015 11:23:04 -0700
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
+Message-ID: <20150903182303.GA3116@sean.stalley.intel.com>
+References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
+ <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
+ <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
+ <20150902174612.GA2700@sean.stalley.intel.com>
+ <CAErSpo4qZ9AXskyo86gXG1cb3AqCn-HB05nj7qT9wovZdLt2Tg@mail.gmail.com>
+ <20150902200127.GA3347@sean.stalley.intel.com>
+ <20150902212159.GC829@google.com>
+ <20150903002938.GA6334@sean.stalley.intel.com>
+ <20150903144654.GF829@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20150903144654.GF829@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use common interface to simplify ACPI PCI host bridge implementation.
+On Thu, Sep 03, 2015 at 09:46:54AM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 02, 2015 at 05:29:38PM -0700, Sean O. Stalley wrote:
+> > On Wed, Sep 02, 2015 at 04:21:59PM -0500, Bjorn Helgaas wrote:
+> > > On Wed, Sep 02, 2015 at 01:01:27PM -0700, Sean O. Stalley wrote:
+> > > > On Wed, Sep 02, 2015 at 02:25:50PM -0500, Bjorn Helgaas wrote:
+> > > > > On Wed, Sep 2, 2015 at 12:46 PM, Sean O. Stalley <sean.stalley@intel.com> wrote:
+> > > > > 
+> > > > > > Would it be better to modify pci_claim_resource() to support EA instead of adding pci_ea_claim_resource()?
+> > > > > > That way, EA entries would be claimed at the same time as traditional BARs.
+> > > > > 
+> > > > > Yes, I think so.
+> > > > 
+> > > > Ok, I'll make it work this way in the next patchset.
+> > > > 
+> > > > > Why wouldn't pci_claim_resource() work as-is for EA?  I see that
+> > > > > pci_ea_get_parent_resource() defaults to iomem_resource or
+> > > > > ioport_resource if we don't find a parent, but I don't understand why
+> > > > > that's necessary.
+> > > > 
+> > > > EA resources may (or may not) be in the parent's range[1].
+> > > > If the parent doesn't describe this range, we want to default to the top-level resource.
+> > > > Other than that case, I think pci_claim_resource would work as-is.
+> > > > 
+> > > > -Sean
+> > > > 
+> > > > [1] From the EA ECN:
+> > > > For a bridge function that is permitted to implement EA based on the rules above, it is
+> > > > permitted, but not required, for the bridge function to use EA mechanisms to indicate
+> > > > resource ranges that are located behind the bridge Function (see Section 6.9.1.2).
+> > > 
+> > > [BTW, in EA ECN 23_Oct_2014_Final, this text is in sec 6.9, not 6.9.1.2]
+> > > 
+> > > I agree that it implies EA resources need not be in the parent's *EA*
+> > > range.  But I would read it as saying "a bridge can use either the
+> > > usual window registers or EA to indicate resources forwarded
+> > > downstream."
+> > > 
+> > > What happens in the following case?
+> > > 
+> > >   00:00.0: PCI bridge to [bus 01]
+> > >   00:00.0:   bridge window [mem 0x80000000-0x8fffffff]
+> > >   01:00.0: EA 0: [mem 0x90000000-0x9000ffff]
+> > >
+> > > The 00:00.0 bridge knows nothing about EA.  The 01:00.0 EA device has
+> > > a fixed region at 0x90000000.  The ECN says:
+> > > 
+> > >   System firmware/software must comprehend that such bridge functions
+> > >   [those that are permitted to implement EA] are not required to
+> > >   indicate inclusively all resources behind the bridge, and as a
+> > >   result system firmware/software must make a complete search of all
+> > >   functions behind the bridge to comprehend the resources used by
+> > >   those functions.
+> > 
+> > The intention of this line was to indicate that EA regions are not required
+> > to be inside of the Base+Limit window.
+> 
+> It would be a lot nicer if the terminology here built on terminology
+> used in the original specs.  The P2P Bridge spec defines rules for
+> when a bridge forwards transactions between its primary and secondary
+> interfaces using Command register Enable bits and Base and Limit
+> registers.  It doesn't say anything about "indicating resources behind
+> the bridge."
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
----
- arch/x86/pci/acpi.c |  293 +++++++++++++++------------------------------------
- 1 file changed, 86 insertions(+), 207 deletions(-)
+Thanks for the feedback. I will forward it on the spec-writer.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 5bc018559cc4..54bcca55b667 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -4,16 +4,15 @@
- #include <linux/irq.h>
- #include <linux/dmi.h>
- #include <linux/slab.h>
-+#include <linux/pci-acpi.h>
- #include <asm/numa.h>
- #include <asm/pci_x86.h>
- 
- struct pci_root_info {
--	struct acpi_device *bridge;
--	char name[16];
-+	struct acpi_pci_root_info common;
- 	struct pci_sysdata sd;
- #ifdef	CONFIG_PCI_MMCONFIG
- 	bool mcfg_added;
--	u16 segment;
- 	u8 start_bus;
- 	u8 end_bus;
- #endif
-@@ -178,15 +177,18 @@ static int check_segment(u16 seg, struct device *dev, char *estr)
- 	return 0;
- }
- 
--static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
--			  u8 end, phys_addr_t addr)
-+static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- {
--	int result;
--	struct device *dev = &info->bridge->dev;
-+	int result, seg;
-+	struct pci_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+	struct device *dev = &ci->bridge->dev;
- 
--	info->start_bus = start;
--	info->end_bus = end;
-+	info = container_of(ci, struct pci_root_info, common);
-+	info->start_bus = (u8)root->secondary.start;
-+	info->end_bus = (u8)root->secondary.end;
- 	info->mcfg_added = false;
-+	seg = info->sd.domain;
- 
- 	/* return success if MMCFG is not in use */
- 	if (raw_pci_ext_ops && raw_pci_ext_ops != &pci_mmcfg)
-@@ -195,7 +197,8 @@ static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
- 	if (!(pci_probe & PCI_PROBE_MMCONF))
- 		return check_segment(seg, dev, "MMCONFIG is disabled,");
- 
--	result = pci_mmconfig_insert(dev, seg, start, end, addr);
-+	result = pci_mmconfig_insert(dev, seg, info->start_bus, info->end_bus,
-+				     root->mcfg_addr);
- 	if (result == 0) {
- 		/* enable MMCFG if it hasn't been enabled yet */
- 		if (raw_pci_ext_ops == NULL)
-@@ -208,134 +211,55 @@ static int setup_mcfg_map(struct pci_root_info *info, u16 seg, u8 start,
- 	return 0;
- }
- 
--static void teardown_mcfg_map(struct pci_root_info *info)
-+static void teardown_mcfg_map(struct acpi_pci_root_info *ci)
- {
-+	struct pci_root_info *info;
-+
-+	info = container_of(ci, struct pci_root_info, common);
- 	if (info->mcfg_added) {
--		pci_mmconfig_delete(info->segment, info->start_bus,
--				    info->end_bus);
-+		pci_mmconfig_delete(info->sd.domain,
-+				    info->start_bus, info->end_bus);
- 		info->mcfg_added = false;
- 	}
- }
- #else
--static int setup_mcfg_map(struct pci_root_info *info,
--				    u16 seg, u8 start, u8 end,
--				    phys_addr_t addr)
-+static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- {
- 	return 0;
- }
--static void teardown_mcfg_map(struct pci_root_info *info)
-+
-+static void teardown_mcfg_map(struct acpi_pci_root_info *ci)
- {
- }
- #endif
- 
--static void validate_resources(struct device *dev, struct list_head *crs_res,
--			       unsigned long type)
-+static int pci_acpi_root_get_node(struct acpi_pci_root *root)
- {
--	LIST_HEAD(list);
--	struct resource *res1, *res2, *root = NULL;
--	struct resource_entry *tmp, *entry, *entry2;
--
--	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
--	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
--
--	list_splice_init(crs_res, &list);
--	resource_list_for_each_entry_safe(entry, tmp, &list) {
--		bool free = false;
--		resource_size_t end;
--
--		res1 = entry->res;
--		if (!(res1->flags & type))
--			goto next;
--
--		/* Exclude non-addressable range or non-addressable portion */
--		end = min(res1->end, root->end);
--		if (end <= res1->start) {
--			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
--				 res1);
--			free = true;
--			goto next;
--		} else if (res1->end != end) {
--			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
--				 res1, (unsigned long long)end + 1,
--				 (unsigned long long)res1->end);
--			res1->end = end;
--		}
--
--		resource_list_for_each_entry(entry2, crs_res) {
--			res2 = entry2->res;
--			if (!(res2->flags & type))
--				continue;
--
--			/*
--			 * I don't like throwing away windows because then
--			 * our resources no longer match the ACPI _CRS, but
--			 * the kernel resource tree doesn't allow overlaps.
--			 */
--			if (resource_overlaps(res1, res2)) {
--				res2->start = min(res1->start, res2->start);
--				res2->end = max(res1->end, res2->end);
--				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
--					 res2, res1);
--				free = true;
--				goto next;
--			}
--		}
-+	int busnum = root->secondary.start;
-+	struct acpi_device *device = root->device;
-+	int node = acpi_get_node(device->handle);
- 
--next:
--		resource_list_del(entry);
--		if (free)
--			resource_list_free_entry(entry);
--		else
--			resource_list_add_tail(entry, crs_res);
-+	if (node == NUMA_NO_NODE) {
-+		node = x86_pci_root_bus_node(busnum);
-+		if (node != 0 && node != NUMA_NO_NODE)
-+			dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from hardware (may be inconsistent with ACPI node numbers)\n",
-+				node);
- 	}
-+	if (node != NUMA_NO_NODE && !node_online(node))
-+		node = NUMA_NO_NODE;
-+
-+	return node;
- }
- 
--static void add_resources(struct pci_root_info *info,
--			  struct list_head *resources,
--			  struct list_head *crs_res)
-+static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
- {
--	struct resource_entry *entry, *tmp;
--	struct resource *res, *conflict, *root = NULL;
--
--	validate_resources(&info->bridge->dev, crs_res, IORESOURCE_MEM);
--	validate_resources(&info->bridge->dev, crs_res, IORESOURCE_IO);
--
--	resource_list_for_each_entry_safe(entry, tmp, crs_res) {
--		res = entry->res;
--		if (res->flags & IORESOURCE_MEM)
--			root = &iomem_resource;
--		else if (res->flags & IORESOURCE_IO)
--			root = &ioport_resource;
--		else
--			BUG_ON(res);
--
--		conflict = insert_resource_conflict(root, res);
--		if (conflict) {
--			dev_info(&info->bridge->dev,
--				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
--				 res, conflict->name, conflict);
--			resource_list_destroy_entry(entry);
--		}
--	}
--
--	list_splice_tail(crs_res, resources);
-+	return setup_mcfg_map(ci);
- }
- 
--static void release_pci_root_info(struct pci_host_bridge *bridge)
-+static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
- {
--	struct resource *res;
--	struct resource_entry *entry;
--	struct pci_root_info *info = bridge->release_data;
--
--	resource_list_for_each_entry(entry, &bridge->windows) {
--		res = entry->res;
--		if (res->parent &&
--		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
--			release_resource(res);
--	}
--
--	teardown_mcfg_map(info);
--	kfree(info);
-+	teardown_mcfg_map(ci);
-+	kfree(container_of(ci, struct pci_root_info, common));
- }
- 
- /*
-@@ -358,47 +282,43 @@ static bool resource_is_pcicfg_ioport(struct resource *res)
- 		res->start == 0xCF8 && res->end == 0xCFF;
- }
- 
--static void probe_pci_root_info(struct pci_root_info *info,
--				struct acpi_device *device,
--				int busnum, int domain,
--				struct list_head *list)
-+static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci,
-+					   int status)
- {
--	int ret;
-+	struct acpi_device *device = ci->bridge;
-+	int busnum = ci->root->secondary.start;
- 	struct resource_entry *entry, *tmp;
- 
--	sprintf(info->name, "PCI Bus %04x:%02x", domain, busnum);
--	info->bridge = device;
--	ret = acpi_dev_get_resources(device, list,
--				     acpi_dev_filter_resource_type_cb,
--				     (void *)(IORESOURCE_IO | IORESOURCE_MEM));
--	if (ret < 0)
--		dev_warn(&device->dev,
--			 "failed to parse _CRS method, error code %d\n", ret);
--	else if (ret == 0)
--		dev_dbg(&device->dev,
--			"no IO and memory resources present in _CRS\n");
--	else
--		resource_list_for_each_entry_safe(entry, tmp, list) {
--			if ((entry->res->flags & IORESOURCE_DISABLED) ||
--			    resource_is_pcicfg_ioport(entry->res))
-+	if (pci_use_crs) {
-+		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
-+			if (resource_is_pcicfg_ioport(entry->res))
- 				resource_list_destroy_entry(entry);
--			else
--				entry->res->name = info->name;
--		}
-+		return status;
-+	}
-+
-+	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-+		dev_printk(KERN_DEBUG, &device->dev,
-+			   "host bridge window %pR (ignored)\n", entry->res);
-+		resource_list_destroy_entry(entry);
-+	}
-+	x86_pci_root_bus_resources(busnum, &ci->resources);
-+
-+	return 0;
- }
- 
-+static struct acpi_pci_root_ops acpi_pci_root_ops = {
-+	.pci_ops = &pci_root_ops,
-+	.init_info = pci_acpi_root_init_info,
-+	.release_info = pci_acpi_root_release_info,
-+	.prepare_resources = pci_acpi_root_prepare_resources,
-+};
-+
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- {
--	struct acpi_device *device = root->device;
--	struct pci_root_info *info;
- 	int domain = root->segment;
- 	int busnum = root->secondary.start;
--	struct resource_entry *res_entry;
--	LIST_HEAD(crs_res);
--	LIST_HEAD(resources);
-+	int node = pci_acpi_root_get_node(root);
- 	struct pci_bus *bus;
--	struct pci_sysdata *sd;
--	int node;
- 
- 	if (pci_ignore_seg)
- 		root->segment = domain = 0;
-@@ -410,71 +330,33 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
- 	}
- 
--	node = acpi_get_node(device->handle);
--	if (node == NUMA_NO_NODE) {
--		node = x86_pci_root_bus_node(busnum);
--		if (node != 0 && node != NUMA_NO_NODE)
--			dev_info(&device->dev, FW_BUG "no _PXM; falling back to node %d from hardware (may be inconsistent with ACPI node numbers)\n",
--				node);
--	}
--
--	if (node != NUMA_NO_NODE && !node_online(node))
--		node = NUMA_NO_NODE;
--
--	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
--	if (!info) {
--		printk(KERN_WARNING "pci_bus %04x:%02x: "
--		       "ignored (out of memory)\n", domain, busnum);
--		return NULL;
--	}
--
--	sd = &info->sd;
--	sd->domain = domain;
--	sd->node = node;
--	sd->companion = device;
--
- 	bus = pci_find_bus(domain, busnum);
- 	if (bus) {
- 		/*
- 		 * If the desired bus has been scanned already, replace
- 		 * its bus->sysdata.
- 		 */
--		memcpy(bus->sysdata, sd, sizeof(*sd));
--		kfree(info);
--	} else {
--		/* insert busn res at first */
--		pci_add_resource(&resources,  &root->secondary);
-+		struct pci_sysdata sd = {
-+			.domain = domain,
-+			.node = node,
-+			.companion = root->device
-+		};
- 
--		/*
--		 * _CRS with no apertures is normal, so only fall back to
--		 * defaults or native bridge info if we're ignoring _CRS.
--		 */
--		probe_pci_root_info(info, device, busnum, domain, &crs_res);
--		if (pci_use_crs) {
--			add_resources(info, &resources, &crs_res);
--		} else {
--			resource_list_for_each_entry(res_entry, &crs_res)
--				dev_printk(KERN_DEBUG, &device->dev,
--					   "host bridge window %pR (ignored)\n",
--					   res_entry->res);
--			resource_list_free(&crs_res);
--			x86_pci_root_bus_resources(busnum, &resources);
--		}
--
--		if (!setup_mcfg_map(info, domain, (u8)root->secondary.start,
--				    (u8)root->secondary.end, root->mcfg_addr))
--			bus = pci_create_root_bus(NULL, busnum, &pci_root_ops,
--						  sd, &resources);
--
--		if (bus) {
--			pci_scan_child_bus(bus);
--			pci_set_host_bridge_release(
--				to_pci_host_bridge(bus->bridge),
--				release_pci_root_info, info);
--		} else {
--			resource_list_free(&resources);
--			teardown_mcfg_map(info);
--			kfree(info);
-+		memcpy(bus->sysdata, &sd, sizeof(sd));
-+	} else {
-+		struct pci_root_info *info;
-+
-+		info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
-+		if (!info)
-+			dev_err(&root->device->dev,
-+				"pci_bus %04x:%02x: ignored (out of memory)\n",
-+				domain, busnum);
-+		else {
-+			info->sd.domain = domain;
-+			info->sd.node = node;
-+			info->sd.companion = root->device;
-+			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
-+						   &info->common, &info->sd);
- 		}
- 	}
- 
-@@ -487,9 +369,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 			pcie_bus_configure_settings(child);
- 	}
- 
--	if (bus && node != NUMA_NO_NODE)
--		dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n", node);
--
- 	return bus;
- }
- 
--- 
-1.7.10.4
+> > If an EA device is connected below a bridge, that bridge must be aware of EA.
+> > It is assumed that the bridge is aware of the fixed EA regions below it,
+> > so system software doesn't need to program the window to include them.
+> 
+> Is the requirement that every bridge upstream of an EA device must be
+> aware of EA in the ECN somewhere?  What does it even mean for a bridge
+> to be "aware of EA"?  That it has an EA Capability?
 
+Sorry, poor choice of words on my part. Yes, it must be an EA bridge.
+
+Also, I should point out that this patchset doesn't add support for EA bridges.
+It only adds support for EA endpoints that are using an EA entries instead of BARs.
+
+> The EA ECN doesn't change anything in the P2P bridge spec, so a bridge
+> that forwards EA regions not described by its Base/Limit registers
+> sounds like it would be non-conforming.
+
+Your right, It it seems like there would need to be a change to the P2P spec.
+I'll investigate...
+
+> The EA ECN *does* say (end of sec 6.9) that Memory and I/O Space
+> enables still work, so I assume that if we clear those bits, a bridge
+> will not forward EA regions, and an endpoint will not respond to EA
+> regions.
+
+Yes, they still work. 
+
+> AFAIK, config transaction forwarding is controlled only by the
+> Secondary and Subordinate Bus Number registers.  So I assume there's
+> no way to disable bridge forwarding of an EA Bus number range.
+
+That is how I read it as well.
+
+> > This is part of the reason why EA devices must be permanently connected
+> > (to make sure it doesn't end up behind an old bridge).
+> > Re-reading the spec, I can see that this requirement isn't explicitly stated.
+> > 
+> > > A bridge was never required to indicate, e.g., via its window
+> > > registers, anything about the resources behind it.  Software always
+> > > had to search behind the bridge and look at all the downstream BARs.
+> > > What's new here is that software now has to look for downstream EA
+> > > entries in addition to BARs, and the EA entries are at fixed
+> > > addresses.
+> > > 
+> > > My question is what the implication is for address routing performed
+> > > by the bridge.  The EA ECN doesn't mention any changes there, so I
+> > > assume it is software's responsibility to reprogram the 00:00.0 mem
+> > > window so it includes [mem 0x90000000-0x9000ffff].
+> > 
+> > The Base+Limit window is not required to include EA regions.
+> > 	In the example shown in in Figure 6-1, the bridge above Bus N [...]
+> > 	is permitted to not indicate the resources used by the two functions
+> > 	in “Si component C”
+> > 
+> > Before, all the BAR regions would be inside the window range.
+> > The Base+Limit "indicated" the Range of all the BARs behind the bridge.
+> > Once the window was set, system software could avoid an address collision
+> > with every device on the bus by avoiding the window.
+> > 
+> > BAR-equivalent EA regions aren't required to be inside the Base+Limit window,
+> > which is why System firmware/software must search all the functions behind a bus
+> > to avoid address collisions.
+> > 
+> > > If software does have to reprogram that window, the normal
+> > > pci_claim_resource() should work.  If it doesn't have to reprogram the
+> > > window, and there's some magical way for 01:00.0 to work even though
+> > > we don't route address space to it, I suspect we'll need significantly
+> > > more changes than just pci_ea_claim_resource(), because then 00:00.0
+> > > is really not a PCI bridge any more.
+> 
+> Assuming the Memory Enable bit of an EA bridge affects the EA regions,
+> I think EA resources of devices behind the bridge should appear as
+> children of the bridge, not of iomem_resource.  I guess that means the
+> bridge should claim the EA regions it forwards.
+> 
+> Bjorn
+
+Those bits should affect the EA regions.
+I'll make the EA resources children of the bridge in the next patchset.
+
+Thanks for reviewing,
+Sean
