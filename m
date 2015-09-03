@@ -1,64 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46634 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753792AbbINPAl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Sep 2015 11:00:41 -0400
-Message-ID: <55F6E115.9050502@arm.com>
-Date: Mon, 14 Sep 2015 16:00:37 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:36511 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755572AbbICOxL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Sep 2015 10:53:11 -0400
+Received: by wibz8 with SMTP id z8so101885404wib.1
+        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2015 07:53:10 -0700 (PDT)
 MIME-Version: 1.0
-To: jakeo@microsoft.com, gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH v2 00/12] New paravirtual PCI front-end for Hyper-V VMs
-References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <loom.20150903T113710-656@post.gmane.org>
+References: <loom.20150831T091131-859@post.gmane.org> <CAE9FiQWNA1BEGom757xtbc0zFjFqZ9uqKwj2kM7EFDDKXEL6fw@mail.gmail.com>
+ <loom.20150901T110001-176@post.gmane.org> <CAE9FiQUxU2FCxFKQ=6ZdnJL8fU-YxAOjQmMSAP_YBG1gEG+ntA@mail.gmail.com>
+ <loom.20150902T084450-322@post.gmane.org> <CAE9FiQWgrymUN07D5rFr0XVrF1Ays606JaWQCfH47Av0cv8q0g@mail.gmail.com>
+ <loom.20150903T080202-734@post.gmane.org> <loom.20150903T113710-656@post.gmane.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 3 Sep 2015 09:52:50 -0500
+Message-ID: <CAErSpo6KYCM99H5J0JvYymNmbn-O1NfVwo4Lp7B=2cXCFQwnOw@mail.gmail.com>
+Subject: Re: PCI rescan : can't assign mem [SOLVED]
+To: Peio <peio@azkarate.eu>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jake,
+On Thu, Sep 3, 2015 at 4:45 AM, Peio <peio@azkarate.eu> wrote:
+> Peio <peio <at> azkarate.eu> writes:
+>
+>>
+>> Yinghai Lu <yinghai <at> kernel.org> writes:
+>>
+>> > boot with pci=nocrs ?
+>> >
+>> > Try to get BIOS update.
+>> >
+>> > > If I change BIOS parameters I'll need a fresh install or the actual
+> kernel
+>> > > reconigzes changes?.
+>> > should not.
+>> >
+>>
+>> I'll try pci=nocrs and BIOS update.
+>> Thank you Yinghai.
+>>
+>>
+> I solved the issue.
+>
+> 1.- Boot kernel with pci=nocrs parameter (linux assigns lot of memory ro pci
+> root bus).
+>
+> 2.- Remove upstream bridge :
+> sudo echo 1 > /sys/bus/pci/devices/0000:00:1c.0/remove
+>
+> 3.- Rescan PCI bus
+> sudo echo 1 > /sys/bus/pci/rescan
 
-In the future, please CC me on anything that touches irqdomains, along
-with Jiang Liu as we both co-maintain this piece of code.
+This is a workaround, not a solution.  It is not safe to use
+"pci=nocrs" in general because it can break things related to resource
+assignment, including hot-add of new devices.
 
-On 11/09/15 01:00, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> The patch series updates the one sent about a month ago in three ways.  It
-> integrated with other IRQ domain work done in linux-next in that time, it
-> distributes interrupts to multiple virtual processors in the guest VM, and it
-> incorporates feedback from Thomas Gleixner and others.
-> 
-> These patches change the IRQ domain code so that an IRQ domain can match on both
-> bus type and on the PCI domain.  The IRQ domain match code is modified so that
-> IRQ domains can have a "rank," allowing for a default one which matches every
-> x86 PC and more specific ones that replace the default.
+I haven't looked at the problem in detail, but if the BIOS gives us a
+_CRS with host bridge windows that are too small to accommodate all
+your devices, there's really nothing the kernel can do about it.  You
+just have to regard it as a limitation of that platform.
 
-I'm not really fond of this approach. We already have a way to match an
-IRQ domain, and that's the device node. It looks to me that you're going
-through a lot of pain inventing a new infrastructure to avoid divorcing
-the two. If you could lookup your PCI IRQ domain directly based some
-(non-DT) identifier, and then possibly fallback to the default one,
-would that help?
-
-If so, here's the deal: I have been working on a patch series that
-addresses the above for unrelated reasons (ACPI support on arm64). It
-has been posted twice already:
-
-http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/358768.html
-
-and the latest version is there:
-
-https://git.kernel.org/cgit/linux/kernel/git/maz/arm-platforms.git/log/?h=irq/gsi-irq-domain-v3
-
-I have the feeling that you could replace a lot of your patches with
-this infrastructure.
-
-Thoughts?
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Bjorn
