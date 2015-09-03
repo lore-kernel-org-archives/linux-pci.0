@@ -1,98 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from xspv0103.northgrum.com ([134.223.120.78]:13364 "EHLO
-	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752889AbbIQVWi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2015 17:22:38 -0400
-From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: [PATCH v1 3/7] PCI: Let kcmdline reserve bus numbers for hotplug
- bridges
-Date: Thu, 17 Sep 2015 21:11:04 +0000
-Message-ID: <66c9da3f76f74ee5a81473d35777a59b@XCGVAG27.northgrum.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-io0-f170.google.com ([209.85.223.170]:34592 "EHLO
+	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753986AbbICR42 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Sep 2015 13:56:28 -0400
+Received: by iofb144 with SMTP id b144so67731974iof.1
+        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2015 10:56:28 -0700 (PDT)
+Date: Thu, 3 Sep 2015 12:56:24 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	benh@kernel.crashing.org, paulus@samba.org, mst@redhat.com,
+	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v2 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
+ probe time in OF case
+Message-ID: <20150903175624.GI829@google.com>
+References: <1439932430-13375-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This introduces a new kernel command line parameter, "hpbuses", that
-allows the user to set how many bus numbers to reserve for hotplug
-bridges.  The default value is 0, which means do not reserve any bus
-numbers for bridges that are hot-added after enumeration completes.
+[+cc Fam, Yinghai, Yijing, Eric (reviewers of MST's original series), Dave]
 
-During device probing, increment a hotplug bridge's subordinate bus
-number by the amount set by "hpbuses".  This way, bridges that are
-hot-added after enumeration can have buses reserved for them.
+Hi Guilherme,
 
-Signed-off-by: Jason Tang <jason.tang2@ngc.com>
----
- Documentation/kernel-parameters.txt | 2 ++
- drivers/pci/pci.c                   | 5 +++++
- drivers/pci/probe.c                 | 2 ++
- include/linux/pci.h                 | 1 +
- 4 files changed, 10 insertions(+)
+On Wed, Aug 19, 2015 at 03:54:10PM -0300, Guilherme G. Piccoli wrote:
+> Changes since v2:
+>  * Added "Fixes" line
+>  * Improved commit reference by using 12 first chars of SHA
+> 
+> >8----------8<
+> 
+> Since the commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even
+> if kernel doesn't support MSI"), MSI/MSI-X interrupts aren't being
+> disabled at PCI probe time, as the logic responsible for this was moved
+> in the aforementioned commit from pci_device_add() to pci_setup_device().
+> The latter function is not reachable on PowerPC pSeries platform during
+> Open Firmware PCI probing time.
+> 
+> This patch calls pci_msi_setup_pci_dev() explicitly to disable MSI/MSI-X
+> during PCI probe time on pSeries platform.
+> 
+> Fixes: 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
+> doesn't support MSI")
+> 
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/kernel/pci_of_scan.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+> index 42e02a2..0e920f3 100644
+> --- a/arch/powerpc/kernel/pci_of_scan.c
+> +++ b/arch/powerpc/kernel/pci_of_scan.c
+> @@ -191,6 +191,9 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+>  
+>  	pci_device_add(dev, bus);
+>  
+> +	/* Disable MSI/MSI-X here to avoid bogus interrupts */
+> +	pci_msi_setup_pci_dev(dev);
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 1d6f045..96948c7 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2815,6 +2815,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 		hpmemsize=nn[KMG]	The fixed amount of bus space which is
- 				reserved for hotplug bridge's memory window.
- 				Default size is 2 megabytes.
-+		hpbuses=nn	Number of bus numbers reserved for hotplug
-+				bridges.  Default is 0.
- 		realloc=	Enable/disable reallocating PCI bridge resources
- 				if allocations done by BIOS are too small to
- 				accommodate resources required by all child
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0008c95..c56dd35 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -80,6 +80,8 @@ unsigned long pci_cardbus_mem_size = DEFAULT_CARDBUS_MEM_SIZE;
- /* pci=hpmemsize=nnM,hpiosize=nn can override this */
- unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
- unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MEM_SIZE;
-+/* by default, do not reserve any additional buses for hotplug bridges */
-+u8 pci_hotplug_buses;
- 
- enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_TUNE_OFF;
- 
-@@ -4580,6 +4582,9 @@ static int __init pci_setup(char *str)
- 				pci_hotplug_io_size = memparse(str + 9, &str);
- 			} else if (!strncmp(str, "hpmemsize=", 10)) {
- 				pci_hotplug_mem_size = memparse(str + 10, &str);
-+			} else if (!strncmp(str, "hpbuses=", 8)) {
-+				if (kstrtou8(str + 8, 0, &pci_hotplug_buses))
-+					pci_hotplug_buses = 0;
- 			} else if (!strncmp(str, "pcie_bus_tune_off", 17)) {
- 				pcie_bus_config = PCIE_BUS_TUNE_OFF;
- 			} else if (!strncmp(str, "pcie_bus_safe", 13)) {
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 58ae892..553b345 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -930,6 +930,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 		/*
- 		 * Set the subordinate bus number to its real value.
- 		 */
-+		if (child->self->is_hotplug_bridge)
-+			max += pci_hotplug_buses;
- 		child->subordinate = max;
- 		pci_bus_update_busn_res_end(child, child->subordinate);
- 		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 384106c..22c6a97 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1637,6 +1637,7 @@ extern u8 pci_cache_line_size;
- 
- extern unsigned long pci_hotplug_io_size;
- extern unsigned long pci_hotplug_mem_size;
-+extern u8 pci_hotplug_buses;
- 
- /* Architecture-specific versions may override these (weak) */
- void pcibios_disable_device(struct pci_dev *dev);
--- 
-1.8.3.1
+of_create_pci_dev() already has a lot of code that duplicates
+pci_setup_device(), and it's a shame to add more.  There's also a sparc
+version of of_create_pci_dev() that presumably has the same problem you're
+fixing for powerpc.
 
+Michael originally called pci_msi_setup_pci_dev() from
+pci_init_capabilities() [1].  A subsequent patch moved the call
+to pci_setup_device() [2] because an early quirk (called from
+pci_setup_device()) used pci_msi_off(), which depended on
+pci_msi_setup_pci_dev().  
+
+But we later removed pci_msi_off() completely, so I think we probably
+*could* call pci_msi_setup_pci_dev() from pci_init_capabilities().
+
+That would be much nicer because it makes more sense there, and it
+would do the right thing for powerpc and sparc because they both
+already use that path.
+
+Can you look into moving the call?
+
+Bjorn
+
+[1] http://lkml.kernel.org/r/1427641227-7574-3-git-send-email-mst@redhat.com
+[2] http://lkml.kernel.org/r/1427641227-7574-4-git-send-email-mst@redhat.com
+
+>  	return dev;
+>  }
+>  EXPORT_SYMBOL(of_create_pci_dev);
+> -- 
+> 2.1.0
+> 
