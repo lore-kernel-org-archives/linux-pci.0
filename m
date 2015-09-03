@@ -1,71 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:36288 "EHLO
-	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754247AbbIKXWH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 19:22:07 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH 2/6] PCI: generic: Only fixup irqs for bus we are creating.
-Date: Fri, 11 Sep 2015 16:21:55 -0700
-Message-Id: <1442013719-5001-3-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from foss.arm.com ([217.140.101.70]:40908 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932599AbbICQmM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Sep 2015 12:42:12 -0400
+Date: Thu, 3 Sep 2015 17:42:09 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH] ARM64: PCI: do not enable resources on PROBE_ONLY systems
+Message-ID: <20150903164209.GI877@arm.com>
+References: <1438262039-32085-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150828211444.GA27890@google.com>
+ <20150829124457.GA18125@red-moon>
+ <20150831132803.GB647@google.com>
+ <20150831163314.GA19309@red-moon>
+ <CAErSpo5188hGiySG+JweWOvfj6aZtAfVta4=0wwwRmMTp+9tFg@mail.gmail.com>
+ <20150903163504.GH829@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150903163504.GH829@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Hi Bjorn,
 
-Use pci_walk_bus() to restrict the fixup irq actions to only the bus
-being created.
+On Thu, Sep 03, 2015 at 05:35:04PM +0100, Bjorn Helgaas wrote:
+> On Mon, Aug 31, 2015 at 11:49:20AM -0500, Bjorn Helgaas wrote:
+> > OK, if it fixes a problem in my v4.3 pull request, we need to merge
+> > it.  I missed the connection, probably because I was browsing the
+> > v4.2-rc1 tree, which wouldn't have those changes.
+> > 
+> > It's OK with me to merge it via the arm64 tree.
+> 
+> Do you need me to do anything with this?  It'd be nice to get it in
+> before -rc1.  The PCI changes have already been merged, and it'd be
+> nice to mention the commit that this fixes.
 
-If we create multiple buses with pci-host-generic, or there are buses
-created by other drivers, we don't want to call pci_fixup_irqs() which
-operates on all devices, not just the devices on the bus being added.
-The consequence is that either the fixups are done more than once, or
-in some cases incorrect fixups could be applied.
+Nope, it's queued in the arm64 tree. I'm just waiting for a dependent
+branch in -tip to get merged before I send my pull request.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/host/pci-host-generic.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+Cheers,
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 265dd25..a0fb241 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -205,6 +205,12 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- 	return 0;
- }
- 
-+static int gen_pci_fixup_irq_cb(struct pci_dev *dev, void *arg)
-+{
-+	pdev_fixup_irq(dev, pci_common_swizzle, of_irq_parse_and_map_pci);
-+	return 0;
-+}
-+
- static int gen_pci_probe(struct platform_device *pdev)
- {
- 	int err;
-@@ -262,7 +268,7 @@ static int gen_pci_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
- 
--	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-+	pci_walk_bus(bus, gen_pci_fixup_irq_cb, NULL);
- 
- 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
- 		pci_bus_size_bridges(bus);
--- 
-1.7.11.7
-
+Will
