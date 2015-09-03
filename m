@@ -1,131 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58013 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752066AbbIILc2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Sep 2015 07:32:28 -0400
-Date: Wed, 9 Sep 2015 12:32:36 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
- of arch code
-Message-ID: <20150909113235.GA10991@red-moon>
-References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
- <20150902174716.GA6305@red-moon>
- <20150902203250.GB829@google.com>
- <20150903100115.GA15308@red-moon>
- <20150903162140.GG829@google.com>
- <20150904141903.GA22997@red-moon>
- <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
- <20150904164412.GD22997@red-moon>
- <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 2 Sep 2015 17:29:38 -0700
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
+Message-ID: <20150903002938.GA6334@sean.stalley.intel.com>
+References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
+ <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
+ <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
+ <20150902174612.GA2700@sean.stalley.intel.com>
+ <CAErSpo4qZ9AXskyo86gXG1cb3AqCn-HB05nj7qT9wovZdLt2Tg@mail.gmail.com>
+ <20150902200127.GA3347@sean.stalley.intel.com>
+ <20150902212159.GC829@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20150902212159.GC829@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 05, 2015 at 12:53:48AM +0100, Yinghai Lu wrote:
-> On Fri, Sep 4, 2015 at 9:44 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Fri, Sep 04, 2015 at 05:00:35PM +0100, Yinghai Lu wrote:
-> >
-> > The problem here is not the last retry, it is the first bridge scan.
-> >
-> > By moving pci_read_bridge_bases() to core PCI code, if we do not
-> > vet the bridge apertures (ie claim them and reset them if the claiming
-> > fails) we end up calling (on ARM) __pci_bus_size_bridges() with apertures
-> > that can have sizes != 0, which does not make any sense since we are calling
-> > __pci_bus_size_bridges() to *discover* what the aperture size should
-> > be on first bridge scan, correct ?
+On Wed, Sep 02, 2015 at 04:21:59PM -0500, Bjorn Helgaas wrote:
+> On Wed, Sep 02, 2015 at 01:01:27PM -0700, Sean O. Stalley wrote:
+> > On Wed, Sep 02, 2015 at 02:25:50PM -0500, Bjorn Helgaas wrote:
+> > > On Wed, Sep 2, 2015 at 12:46 PM, Sean O. Stalley <sean.stalley@intel.com> wrote:
+> > > 
+> > > > Would it be better to modify pci_claim_resource() to support EA instead of adding pci_ea_claim_resource()?
+> > > > That way, EA entries would be claimed at the same time as traditional BARs.
+> > > 
+> > > Yes, I think so.
+> > 
+> > Ok, I'll make it work this way in the next patchset.
+> > 
+> > > Why wouldn't pci_claim_resource() work as-is for EA?  I see that
+> > > pci_ea_get_parent_resource() defaults to iomem_resource or
+> > > ioport_resource if we don't find a parent, but I don't understand why
+> > > that's necessary.
+> > 
+> > EA resources may (or may not) be in the parent's range[1].
+> > If the parent doesn't describe this range, we want to default to the top-level resource.
+> > Other than that case, I think pci_claim_resource would work as-is.
+> > 
+> > -Sean
+> > 
+> > [1] From the EA ECN:
+> > For a bridge function that is permitted to implement EA based on the rules above, it is
+> > permitted, but not required, for the bridge function to use EA mechanisms to indicate
+> > resource ranges that are located behind the bridge Function (see Section 6.9.1.2).
 > 
-> for x86, in pcibios_allocate_bridge_resources(), we do validate
-> the bridge resources, and reset size to 1 (strange ?!).
-> and they are called before pci_asssign_unassigned_resources()
+> [BTW, in EA ECN 23_Oct_2014_Final, this text is in sec 6.9, not 6.9.1.2]
 > 
-> so arch ARM would support pcibios_allocate_bridge_resources or other
-> call to do the same thing?
+> I agree that it implies EA resources need not be in the parent's *EA*
+> range.  But I would read it as saying "a bridge can use either the
+> usual window registers or EA to indicate resources forwarded
+> downstream."
 > 
-> wonder some arches even claim fails, they still does not want you to
-> reset it.
+> What happens in the following case?
+> 
+>   00:00.0: PCI bridge to [bus 01]
+>   00:00.0:   bridge window [mem 0x80000000-0x8fffffff]
+>   01:00.0: EA 0: [mem 0x90000000-0x9000ffff]
+>
+> The 00:00.0 bridge knows nothing about EA.  The 01:00.0 EA device has
+> a fixed region at 0x90000000.  The ECN says:
+> 
+>   System firmware/software must comprehend that such bridge functions
+>   [those that are permitted to implement EA] are not required to
+>   indicate inclusively all resources behind the bridge, and as a
+>   result system firmware/software must make a complete search of all
+>   functions behind the bridge to comprehend the resources used by
+>   those functions.
+> 
 
-While finding a fix for this issue, I bumped into another one
-with current pci_claim_bridge_resource() behaviour. Described
-and "fixed" (I actually did not fix it, patch below is just there to
-show what the problem is) in the patch below.
+The intention of this line was to indicate that EA regions are not required
+to be inside of the Base+Limit window.
 
-Comments welcome,
-Lorenzo
+If an EA device is connected below a bridge, that bridge must be aware of EA.
+It is assumed that the bridge is aware of the fixed EA regions below it,
+so system software doesn't need to program the window to include them.
 
--- >8 --
-Subject: [PATCH] PCI: remove dead code in pci_claim_bridge_resource()
+This is part of the reason why EA devices must be permanently connected
+(to make sure it doesn't end up behind an old bridge).
+Re-reading the spec, I can see that this requirement isn't explicitly stated.
 
-Commit 8505e729a2f6eb ("PCI: Add pci_claim_bridge_resource() to clip
-window if necessary") introduced a new API to claim bridge resources.
+> A bridge was never required to indicate, e.g., via its window
+> registers, anything about the resources behind it.  Software always
+> had to search behind the bridge and look at all the downstream BARs.
+> What's new here is that software now has to look for downstream EA
+> entries in addition to BARs, and the EA entries are at fixed
+> addresses.
+> 
+> My question is what the implication is for address routing performed
+> by the bridge.  The EA ECN doesn't mention any changes there, so I
+> assume it is software's responsibility to reprogram the 00:00.0 mem
+> window so it includes [mem 0x90000000-0x9000ffff].
 
-pci_claim_bridge_resource() tries to claim a bridge resource, and if
-the claiming fails the function tries to clip the resource to make
-it fit within the parent resource window.
+The Base+Limit window is not required to include EA regions.
+	In the example shown in in Figure 6-1, the bridge above Bus N [...]
+	is permitted to not indicate the resources used by the two functions
+	in “Si component C”
 
-If the clipping succeeds the bridge apertures are set-up accordingly
-and the pci_claim_bridge_resource() tries to claim the resource
-again.
+Before, all the BAR regions would be inside the window range.
+The Base+Limit "indicated" the Range of all the BARs behind the bridge.
+Once the window was set, system software could avoid an address collision
+with every device on the bus by avoiding the window.
 
-Commit c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") added
-code that sets the IORESOURCE_UNSET flag on claiming failure.
+BAR-equivalent EA regions aren't required to be inside the Base+Limit window,
+which is why System firmware/software must search all the functions behind a bus
+to avoid address collisions.
 
-This means that the second resource claiming after window clipping will
-always fail, since the resource flags contain IORESOURCE_UNSET,
-previously set on failure by pci_claim_resource(), so the subsequent
-pci_claim_resource() call ends up spitting a log message and return
-failure with no chance whatsoever to succeed.
+> If software does have to reprogram that window, the normal
+> pci_claim_resource() should work.  If it doesn't have to reprogram the
+> window, and there's some magical way for 01:00.0 to work even though
+> we don't route address space to it, I suspect we'll need significantly
+> more changes than just pci_ea_claim_resource(), because then 00:00.0
+> is really not a PCI bridge any more.
+> 
+> Bjorn
 
-This patch removes the second pci_claim_resource() call in
-pci_claim_bridge_resource() since it basically has no chance to
-succeed, leaving the current behaviour unchanged.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 508cc56..2bf4ac1 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -728,14 +728,10 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 		break;
- 	case 2:
- 		pci_setup_bridge_mmio_pref(bridge);
--		break;
- 	default:
--		return -EINVAL;
-+		break;
- 	}
- 
--	if (pci_claim_resource(bridge, i) == 0)
--		return 0;	/* claimed a smaller window */
--
- 	return -EINVAL;
- }
- 
--- 
-2.2.1
-
+-Sean
