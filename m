@@ -1,59 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59804 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753559AbbIYXeH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 25 Sep 2015 19:34:07 -0400
-Date: Fri, 25 Sep 2015 18:34:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	patches@apm.com
-Subject: Re: [PATCH 1/1] PCI/MSI: X-Gene: Remove msi_controller assignment in
- X-Gene PCIe driver
-Message-ID: <20150925233402.GA23134@localhost>
-References: <1442449900-30842-1-git-send-email-dhdang@apm.com>
- <20150918095956.2e27c93c@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: pcieport AER error spam on Intel Skylake
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Daniel Drake <drake@endlessm.com>
+References: <CAD8Lp44cpj0Z3aadOzW=Lc=m88AbQpaW3g=GCgtpvbpGATT7uw@mail.gmail.com>
+ <CAErSpo6tMJYqiynS-+svvMB2mskMBrTpWNBxR7OLPSxGxKbBvw@mail.gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Carlo Caione <carlo@endlessm.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Message-ID: <55E7A90A.5080406@gmail.com>
+Date: Wed, 2 Sep 2015 18:57:30 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150918095956.2e27c93c@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAErSpo6tMJYqiynS-+svvMB2mskMBrTpWNBxR7OLPSxGxKbBvw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 18, 2015 at 09:59:56AM +0100, Marc Zyngier wrote:
-> On Wed, 16 Sep 2015 17:31:40 -0700
-> Duc Dang <dhdang@apm.com> wrote:
-> 
-> > With commit 8d63bc7beaee ("PCI/MSI: pci-xgene-msi: Get rid of
-> > struct msi_controller"), it is no longer required to assign
-> > msi_controller for X-Gene PCIe host bridge to support MSI. This
-> > patch removes this unnecessary code and also helps avoid a warning
-> > message ("failed to enable MSI") during boot.
-> > 
-> > Signed-off-by: Duc Dang <dhdang@apm.com>
-> > Cc: Tanmay Inamdar <tinamdar@apm.com>
-> 
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+On 09/02/2015 03:53 PM, Bjorn Helgaas wrote:
+> On Wed, Sep 2, 2015 at 5:01 PM, Daniel Drake <drake@endlessm.com> wrote:
+>> Hi,
+>>
+>> Working with a sample for a new laptop based on Intel Skylake, the
+>> kernel logs are full of these messages:
+>>
+>>   pcieport 0000:00:1c.5: AER: Corrected error received: id=00e5
+>>   pcieport 0000:00:1c.5: PCIe Bus Error: severity=Corrected,
+>> type=Physical Layer, id=00e5(Receiver ID)
+>>   pcieport 0000:00:1c.5:   device [8086:9d15] error status/mask=00000001/00002000
+>>   pcieport 0000:00:1c.5:    [ 0] Receiver Error         (First)
+>>   pcieport 0000:00:1c.5: AER: Corrected error received: id=00e5
+>>   pcieport 0000:00:1c.5: PCIe Bus Error: severity=Corrected,
+>> type=Physical Layer, id=00e5(Receiver ID)
+>>   pcieport 0000:00:1c.5:   device [8086:9d15] error status/mask=00000001/00002000
+>>   pcieport 0000:00:1c.5:    [ 0] Receiver Error         (First)
+>>   pcieport 0000:00:1c.5: AER: Corrected error received: id=00e5
+>>   pcieport 0000:00:1c.5: can't find device of ID00e5
+>>
+>> Reproduced on 4.2 and on linus master as of today, using x86_64_defconfig.
+>>
+>> Apart from the log spam, there is no user-visible effect that I'm
+>> aware of. Booting with pci=nomsi makes the messages go away.
+>>
+>> Any thoughts, is this something worth looking into in more detail?
+>>
+>> full dmesg: https://gist.github.com/dsd/1d7f738e917465edf2ae
+>> lspci dump: https://gist.github.com/dsd/dc2481d64aadd520b0b3
+> Thanks, Daniel, this is indeed really annoying and worth looking into.
+> Do you happen to know whether it's a regression?  We haven't changed
+> much in AER recently, but it's possible we broke something.
+>
+> Even if it's not a regression, the output seems a bit wordy and redundant.
+>
+> Bjorn
 
-I lost the original mail from Duc, but I applied this to pci/host-xgene for
-v4.4 with this changelog:
+Since it is correctable errors it is likely some sort of signalling 
+issue.  Could we get the output of something like an lspci -vt? Then you 
+would be able to tell what the device is on the other side of the link 
+from 00:1c.5 and then we could probably check to see if there has been 
+any changes for the device driver on the other end of the link.
 
-commit 00b9b91cb330e70b6bc571a9aa7175b4590ca452
-Author: Duc Dang <dhdang@apm.com>
-Date:   Wed Sep 16 17:31:40 2015 -0700
+My suspicion since this is a laptop is that something like a power 
+management change might be responsible if this is a regression as I have 
+seen messages like this pop up as a result of ASPM being enabled before.
 
-    PCI/MSI: xgene: Remove msi_controller assignment
-    
-    After 8d63bc7beaee ("PCI/MSI: pci-xgene-msi: Get rid of struct
-    msi_controller"), it is no longer required to assign msi_controller for
-    X-Gene PCIe host bridge to support MSI.
-    
-    Remove this unnecessary code.  This also avoids a warning message ("failed
-    to enable MSI") during boot.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Duc Dang <dhdang@apm.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-    Cc: Tanmay Inamdar <tinamdar@apm.com>
+- Alex
