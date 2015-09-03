@@ -1,60 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:33839 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753752AbbI3GfV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 02:35:21 -0400
-Received: by padhy16 with SMTP id hy16so30594456pad.1
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2015 23:35:20 -0700 (PDT)
-From: Simon Horman <simon.horman@netronome.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Simon Horman <simon.horman@netronome.com>
-Subject: [PATCH repost 3/3] PCI: Support Netronome NFP6000 family quirks
-Date: Wed, 30 Sep 2015 15:35:07 +0900
-Message-Id: <1443594907-16196-4-git-send-email-simon.horman@netronome.com>
-In-Reply-To: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
-References: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
+Received: from foss.arm.com ([217.140.101.70]:39096 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751592AbbICISu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Sep 2015 04:18:50 -0400
+Message-ID: <55E80265.3050701@arm.com>
+Date: Thu, 03 Sep 2015 09:18:45 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robherring2@gmail.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Alexander Graf <agraf@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v2 1/4] of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
+References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com> <1439569159-10051-2-git-send-email-marc.zyngier@arm.com> <CAL_JsqL7VPB6nc-zRYm_73ZSgYVq_+a6sW_XZZ_LRaUXf4jTng@mail.gmail.com> <20150902222325.GD829@google.com>
+In-Reply-To: <20150902222325.GD829@google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Jason S. McMullan" <jason.mcmullan@netronome.com>
+On 02/09/15 23:23, Bjorn Helgaas wrote:
+> On Fri, Aug 14, 2015 at 04:08:10PM -0500, Rob Herring wrote:
+>> On Fri, Aug 14, 2015 at 11:19 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>>> Both pci-host-generic and Pseries parse the "linux,pci-probe-only"
+>>> to engage the PCI_PROBE_ONLY mode, and both have a subtle bug that
+>>> can be triggered if the property has no parameter.
+>>
+>> Humm, I bet we could break a lot of machines if we fixed the core code
+>> to properly make pp->value NULL when there is no value.
+>>
+>>> Provide a generic implementation that can be used by both.
+>>>
+>>> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+>>> ---
+>>>  drivers/of/of_pci.c    | 30 ++++++++++++++++++++++++++++++
+>>>  include/linux/of_pci.h |  3 +++
+>>>  2 files changed, 33 insertions(+)
+>>>
+>>> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+>>> index 5751dc5..a4e29ff 100644
+>>> --- a/drivers/of/of_pci.c
+>>> +++ b/drivers/of/of_pci.c
+>>> @@ -118,6 +118,36 @@ int of_get_pci_domain_nr(struct device_node *node)
+>>>  EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+>>>
+>>>  /**
+>>> + * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
+>>> + *                           is present and valid
+>>> + *
+>>> + * @node: device tree node that may contain the property (usually "chosen")
+>>> + *
+>>> + */
+>>> +void of_pci_check_probe_only(struct device_node *node)
+>>> +{
+>>> +       const int *prop;
+>>> +       int len;
+>>> +
+>>> +       if (!node)
+>>> +               return;
+>>> +
+>>> +       prop = of_get_property(node, "linux,pci-probe-only", &len);
+>>
+>> It is preferred to use of_property_read_u32 to avoid just these types
+>> of problems.
+> 
+> I don't know enough OF to really understand this, but I infer that
+> this is a suggestion for improving the patch.  Should I be waiting for
+> a v3 series?
 
-The NFP6000 has an errata where reading/writing to PCI config
-space addresses above 0x600 can cause the NFP to generate PCIe
-completion timeouts.
+Yes, I'll post an update very shortly. Thanks for reminding me!
 
-This patch addresses this issue, by limiting the NFP6000's config
-space size to 0x600 bytes.
-
-Signed-off-by: Jason S. McMullan <jason.mcmullan@netronome.com>
-[simon: edited changelog]
-Signed-off-by: Simon Horman <simon.horman@netronome.com>
----
- drivers/pci/quirks.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 83be0e555548..78537378021b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -287,6 +287,17 @@ static void quirk_citrine(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM,	PCI_DEVICE_ID_IBM_CITRINE,	quirk_citrine);
- 
-+/*
-+ *  This chip can cause bus lockups if config addresses above 0x600
-+ *  are read or written to.
-+ */
-+static void quirk_nfp6000(struct pci_dev *dev)
-+{
-+	dev->cfg_size = 0x600;
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETRONOME,	PCI_DEVICE_ID_NETRONOME_NFP6000,	quirk_nfp6000);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_NETRONOME,	PCI_DEVICE_ID_NETRONOME_NFP6000_VF,	quirk_nfp6000);
-+
- /*  On IBM Crocodile ipr SAS adapters, expand BAR to system page size */
- static void quirk_extend_bar_to_page(struct pci_dev *dev)
- {
+	M.
 -- 
-2.1.4
-
+Jazz is not dead. It just smells funny...
