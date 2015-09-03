@@ -1,302 +1,237 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 14 Sep 2015 11:34:11 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: rjw@rjwysocki.net, lenb@kernel.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, hanjun.guo@linaro.org,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>
-Subject: Re: [PATCH V3 2/4] ACPI/scan: Clean up acpi_check_dma
-Message-ID: <20150914163411.GL829@google.com>
-References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1440597279-11802-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:33510 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752416AbbICKDH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Sep 2015 06:03:07 -0400
+Received: by paddd1 with SMTP id dd1so4124813pad.0
+        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2015 03:03:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440597279-11802-3-git-send-email-Suravee.Suthikulpanit@amd.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20150902203250.GB829@google.com>
+References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
+	<20150902174716.GA6305@red-moon>
+	<20150902203250.GB829@google.com>
+Date: Thu, 3 Sep 2015 12:03:05 +0200
+Message-ID: <CAAa04yGKMenAABLfqUu++OCsV+4eOxxnA6YJMjOokBCamy1t5w@mail.gmail.com>
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+From: oe5hpm <oe5hpm@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"CC: Ralf Baechle" <ralf@linux-mips.org>,
+	"CC: James E.J. Bottomley" <jejb@parisc-linux.org>,
+	"CC: Michael Ellerman" <mpe@ellerman.id.au>,
+	"CC: Richard Henderson" <rth@twiddle.net>,
+	"CC: Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+	"CC: David Howells" <dhowells@redhat.com>,
+	"CC: Russell King" <linux@arm.linux.org.uk>,
+	"CC: Tony Luck" <tony.luck@intel.com>,
+	"CC: David S. Miller" <davem@davemloft.net>,
+	"CC: Ingo Molnar" <mingo@redhat.com>,
+	"CC: Guenter Roeck" <linux@roeck-us.net>,
+	"CC: Michal Simek" <monstr@monstr.eu>,
+	"CC: Chris Zankel" <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 26, 2015 at 08:54:37PM +0700, Suravee Suthikulpanit wrote:
-> The original name of acpi_check_dma() function does not clearly tell what
-> exactly it is checking. Also, returning two boolean values (one to indicate
-> device is DMA capability, and the other to inidicate device coherency
+hi bjorn, Lorenzo,
 
-s/inidicate/indicate/
+should i do some testing with patch from yesterday?
+please let me know if can test anything.
 
-> attribute) can be confusing.
-> 
-> So, in order to simplify the function, this patch renames acpi_check_dma()
-> to acpi_check_dma_coherency() to clearly indicate the purpose of this
-> function, and only returns an integer where -1 means DMA not supported,
-> 1 means coherent DMA, and 0 means non-coherent DMA.
+best regards,
+Hannes
 
-I think acpi_check_dma_coherency() is better, but only slightly.  It
-still doesn't give a hint about the *sense* of the return value.  I
-think it'd be easier to read if there were two functions, e.g.,
 
-  int acpi_dma_supported(struct acpi_device *adev)
-  {
-    if (!adev)
-      return 0;
-
-    if (adev->flags.cca_seen)
-      return 1;
-
-    /*
-     * Per ACPI 6.0 sec 6.2.17, assume devices can do cache-coherent
-     * DMA on "Intel platforms".  Presumably that includes all x86 and
-     * ia64, and other arches will set CONFIG_ACPI_CCA_REQUIRED=y.
-     */
-    if (!IS_ENABLED(CONFIG_ACPI_CCA_REQUIRED))
-      return 1;
-
-    return 0;
-  }
-
-  int acpi_dma_is_coherent(struct acpi_device *adev)
-  {
-    if (!acpi_dma_supported(adev))
-      return 0;
-
-    return adev->flags.coherent_dma;
-  }
-
-  struct platform_device *acpi_create_platform_device(...)
-  {
-    ...
-    if (acpi_dma_supported(adev))
-      pdevinfo.dma_mask = DMA_BIT_MASK(32);
-
-  int acpi_bind_one(...)
-  {
-    ...
-    if (acpi_dma_supported(acpi_dev))
-      arch_setup_dma_ops(dev, 0, 0, NULL, retval);
-
-  bool device_dma_is_coherent(...)
-  {
-    ...
-    return acpi_dma_is_coherent(ACPI_COMPANION(dev)):
-
-> Also, this patch moves the function into drivers/acpi/scan.c since
-> it is easier to follow the logic in the acpi_init_coherency() in the
-> same file here.
-> 
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Suggested-by: Rafael J. Wysocki <rjw@rjwysocki.net>
-> CC: Catalin Marinas <catalin.marinas@arm.com>
-> CC: Rob Herring <robh+dt@kernel.org>
-> CC: Will Deacon <will.deacon@arm.com>
-> ---
->  drivers/acpi/acpi_platform.c |  7 ++++++-
->  drivers/acpi/glue.c          |  6 +++---
->  drivers/acpi/scan.c          | 39 +++++++++++++++++++++++++++++++++++++++
->  drivers/base/property.c      | 10 +++++++---
->  include/acpi/acpi_bus.h      | 36 ++----------------------------------
->  include/linux/acpi.h         |  4 ++--
->  6 files changed, 59 insertions(+), 43 deletions(-)
-> 
-> diff --git a/drivers/acpi/acpi_platform.c b/drivers/acpi/acpi_platform.c
-> index 06a67d5..0b17a78 100644
-> --- a/drivers/acpi/acpi_platform.c
-> +++ b/drivers/acpi/acpi_platform.c
-> @@ -103,7 +103,12 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *adev)
->  	pdevinfo.res = resources;
->  	pdevinfo.num_res = count;
->  	pdevinfo.fwnode = acpi_fwnode_handle(adev);
-> -	pdevinfo.dma_mask = acpi_check_dma(adev, NULL) ? DMA_BIT_MASK(32) : 0;
-> +
-> +	if (acpi_check_dma_coherency(adev) < 0)
-> +		pdevinfo.dma_mask = 0;
-> +	else
-> +		pdevinfo.dma_mask = DMA_BIT_MASK(32);
-> +
->  	pdev = platform_device_register_full(&pdevinfo);
->  	if (IS_ERR(pdev))
->  		dev_err(&adev->dev, "platform device creation failed: %ld\n",
-> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
-> index b9657af..9be7f0f 100644
-> --- a/drivers/acpi/glue.c
-> +++ b/drivers/acpi/glue.c
-> @@ -168,7 +168,6 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->  	struct list_head *physnode_list;
->  	unsigned int node_id;
->  	int retval = -EINVAL;
-> -	bool coherent;
->  
->  	if (has_acpi_companion(dev)) {
->  		if (acpi_dev) {
-> @@ -225,8 +224,9 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->  	if (!has_acpi_companion(dev))
->  		ACPI_COMPANION_SET(dev, acpi_dev);
->  
-> -	if (acpi_check_dma(acpi_dev, &coherent))
-> -		arch_setup_dma_ops(dev, 0, 0, NULL, coherent);
-> +	retval = acpi_check_dma_coherency(acpi_dev);
-> +	if (retval >= 0)
-> +		arch_setup_dma_ops(dev, 0, 0, NULL, retval);
->  
->  	acpi_physnode_link_name(physical_node_name, node_id);
->  	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index ec25635..1d68289 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -2182,6 +2182,45 @@ void acpi_free_pnp_ids(struct acpi_device_pnp *pnp)
->  	kfree(pnp->unique_id);
->  }
->  
-> +/**
-> + * acpi_check_dma_coherency - Check DMA coherency for the specified device.
-> + * @adev: The pointer to acpi device to check coherency attribute
-> + *
-> + * Return -ENOTSUPP if DMA is not supported. Otherwise, return 1 if the
-> + * device support coherent DMA, or 0 for non-coherent DMA.
-> + */
-> +int acpi_check_dma_coherency(struct acpi_device *adev)
-> +{
-> +	int ret = -ENOTSUPP;
-> +
-> +	if (!adev)
-> +		return ret;
-
-There's no need for the local "ret".  You can "return -ENOTSUPP" here and
-below, which is easier to read than looking back to see where "ret" was
-defined and whether it was modified after being initialized.
-
-> +
-> +	/**
-> +	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
-> +	 * This should be equivalent to specifying dma-coherent for
-> +	 * a device in OF.
-> +	 *
-> +	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
-> +	 * we have two choices:
-> +	 *   1. Do not support and disable DMA.
-
-I know you didn't write this comment, but do we actually *disable* DMA in
-the sense of turning off PCI bus mastering or calling an ACPI method that
-disables DMA by this device?  I suspect we just don't set up DMA ops and
-masks for this device.
-
-> +	 *   2. Support but rely on arch-specific cache maintenance for
-> +	 *      non-coherenje DMA operations.
-
-s/Support but/Support DMA but/ ?
-s/non-coherenje/non-coherent/
-
-> +	 * Currently, we implement case 2 above.
-> +	 *
-> +	 * For the case when _CCA is missing (i.e. cca_seen=0) and
-> +	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
-> +	 * and fallback to arch-specific default handling.
-> +	 *
-> +	 * See acpi_init_coherency() for more info.
-> +	 */
-> +	if (!adev->flags.cca_seen && IS_ENABLED(CONFIG_ACPI_CCA_REQUIRED))
-> +		return ret;
-> +
-> +	return adev->flags.coherent_dma;
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_check_dma_coherency);
-> +
->  static void acpi_init_coherency(struct acpi_device *adev)
->  {
->  	unsigned long long cca = 0;
-> diff --git a/drivers/base/property.c b/drivers/base/property.c
-> index f3f6d16..cd45dfc 100644
-> --- a/drivers/base/property.c
-> +++ b/drivers/base/property.c
-> @@ -525,10 +525,14 @@ bool device_dma_is_coherent(struct device *dev)
->  {
->  	bool coherent = false;
->  
-> -	if (IS_ENABLED(CONFIG_OF) && dev->of_node)
-> +	if (IS_ENABLED(CONFIG_OF) && dev->of_node) {
->  		coherent = of_dma_is_coherent(dev->of_node);
-> -	else
-> -		acpi_check_dma(ACPI_COMPANION(dev), &coherent);
-> +	} else {
-> +		int ret = acpi_check_dma_coherency(ACPI_COMPANION(dev));
-> +
-> +		if (ret >= 0)
-> +			coherent = ret;
-> +	}
->  
->  	return coherent;
->  }
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 7ecb8e4..baf43ea 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -382,40 +382,6 @@ struct acpi_device {
->  	void (*remove)(struct acpi_device *);
->  };
->  
-> -static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
-> -{
-> -	bool ret = false;
-> -
-> -	if (!adev)
-> -		return ret;
-> -
-> -	/**
-> -	 * Currently, we only support _CCA=1 (i.e. coherent_dma=1)
-> -	 * This should be equivalent to specifyig dma-coherent for
-> -	 * a device in OF.
-> -	 *
-> -	 * For the case when _CCA=0 (i.e. coherent_dma=0 && cca_seen=1),
-> -	 * There are two cases:
-> -	 * case 1. Do not support and disable DMA.
-> -	 * case 2. Support but rely on arch-specific cache maintenance for
-> -	 *         non-coherence DMA operations.
-> -	 * Currently, we implement case 2 above.
-> -	 *
-> -	 * For the case when _CCA is missing (i.e. cca_seen=0) and
-> -	 * platform specifies ACPI_CCA_REQUIRED, we do not support DMA,
-> -	 * and fallback to arch-specific default handling.
-> -	 *
-> -	 * See acpi_init_coherency() for more info.
-> -	 */
-> -	if (adev->flags.coherent_dma ||
-> -	    (adev->flags.cca_seen && IS_ENABLED(CONFIG_ARM64))) {
-> -		ret = true;
-> -		if (coherent)
-> -			*coherent = adev->flags.coherent_dma;
-> -	}
-> -	return ret;
-> -}
-> -
->  static inline bool is_acpi_node(struct fwnode_handle *fwnode)
->  {
->  	return fwnode && fwnode->type == FWNODE_ACPI;
-> @@ -640,6 +606,8 @@ static inline bool acpi_device_can_poweroff(struct acpi_device *adev)
->  	return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
->  }
->  
-> +int acpi_check_dma_coherency(struct acpi_device *adev);
-> +
->  #else	/* CONFIG_ACPI */
->  
->  static inline int register_acpi_bus_type(void *bus) { return 0; }
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index d2445fa..d350c9e 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -562,9 +562,9 @@ static inline int acpi_device_modalias(struct device *dev,
->  	return -ENODEV;
->  }
->  
-> -static inline bool acpi_check_dma(struct acpi_device *adev, bool *coherent)
-> +static inline int acpi_check_dma_coherency(struct acpi_device *adev)
->  {
-> -	return false;
-> +	return -ENOTSUPP;
->  }
->  
->  #define ACPI_PTR(_ptr)	(NULL)
-> -- 
-> 2.1.0
-> 
+On Wed, Sep 2, 2015 at 10:32 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Hi Lorenzo, thanks for jumping on this!
+>
+> On Wed, Sep 02, 2015 at 06:47:16PM +0100, Lorenzo Pieralisi wrote:
+>> Hi Hannes,
+>>
+>> On Wed, Sep 02, 2015 at 10:51:18AM +0100, oe5hpm wrote:
+>> > Hi Lorenzo,
+>> >
+>> > today i tried to boot up the most recent vanilla kernel on my
+>> > Freescale i.mx6 board.
+>> > I ran into trouble regarding PCI enumeration.
+>> >
+>> > [    0.431949] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+>> > [    0.431976] pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+>> > [    0.431996] pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
+>> > [    0.432022] pci_bus 0000:00: root bus resource [bus 00-ff]
+>> > [    0.433271] PCI: bus0: Fast back to back transfers disabled
+>> > [    0.433629] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
+>> > [    0.435181] PCI: bus1: Fast back to back transfers disabled
+>> > [    0.435564] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
+>> > [    0.435593] pci 0000:00:00.0: BAR 8: no space for [mem size 0x01000000]
+>> > [    0.435613] pci 0000:00:00.0: BAR 8: failed to assign [mem size 0x01000000]
+>> > [    0.435635] pci 0000:00:00.0: BAR 9: assigned [mem
+>> > 0x01100000-0x011fffff pref]
+>> > [    0.435655] pci 0000:00:00.0: BAR 6: assigned [mem
+>> > 0x01200000-0x0120ffff pref]
+>> > [    0.435676] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+>> > [    0.435705] pci 0000:01:00.0: BAR 2: no space for [mem size 0x00200000]
+>> > [    0.435722] pci 0000:01:00.0: BAR 2: failed to assign [mem size 0x00200000]
+>> > [    0.435739] pci 0000:01:00.0: BAR 1: no space for [mem size 0x00004000]
+>> > [    0.435754] pci 0000:01:00.0: BAR 1: failed to assign [mem size 0x00004000]
+>> > [    0.435770] pci 0000:01:00.0: BAR 0: no space for [mem size 0x00000100]
+>> > [    0.435786] pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x00000100]
+>> > [    0.435804] pci 0000:00:00.0: PCI bridge to [bus 01]
+>> > [    0.435826] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+>> > [    0.435855] pci 0000:00:00.0:   bridge window [mem
+>> > 0x01100000-0x011fffff pref]
+>> >
+>> > there are several fails assigning memory ressources to pci-devices.
+>> >
+>> > i bisect down this trouble to commit id:
+>> > dff22d2054b5dbb1889f20c03959dd0c494fab8c : PCI: Call
+>> > pci_read_bridge_bases() from core instead of arch code
+>> >
+>> > For testing purpose i've reverted this commit on a local branch and
+>> > everythings works fine, as before.
+>> >
+>> > [    0.431976] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+>> > [    0.432004] pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+>> > [    0.432023] pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
+>> > [    0.432047] pci_bus 0000:00: root bus resource [bus 00-ff]
+>> > [    0.433302] PCI: bus0: Fast back to back transfers disabled
+>> > [    0.435122] PCI: bus1: Fast back to back transfers disabled
+>> > [    0.435504] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
+>> > [    0.435535] pci 0000:00:00.0: BAR 8: assigned [mem 0x01100000-0x013fffff]
+>> > [    0.435557] pci 0000:00:00.0: BAR 6: assigned [mem
+>> > 0x01400000-0x0140ffff pref]
+>> > [    0.435585] pci 0000:01:00.0: BAR 2: assigned [mem 0x01200000-0x013fffff]
+>> > [    0.435626] pci 0000:01:00.0: BAR 1: assigned [mem 0x01100000-0x01103fff]
+>> > [    0.435665] pci 0000:01:00.0: BAR 0: assigned [mem 0x01104000-0x011040ff]
+>> > [    0.435703] pci 0000:00:00.0: PCI bridge to [bus 01]
+>> > [    0.435728] pci 0000:00:00.0:   bridge window [mem 0x01100000-0x013fffff]
+>> >
+>> > Further i can break down the failure to "drivers/pci/probe.c" line #924.
+>> > If i comment out the "pci_read_bridge_bases(child);" also everything works well.
+>> >
+>> > I have to confess, that my knowledge about the whole PCI thing in the
+>> > kernel is not very deep, so it is not possible for me to figure out
+>> > what is going wrong.
+>>
+>> It looks like a bogus bridge aperture size is causing this to happen,
+>> and this prevents reassignment on arm (bridge aperture is too big),
+>> which proves that reading the bridge bases without vetting the corresponding
+>> resources may break (on platforms that were not reading them before).
+>>
+>> arm was the only platform not reading the bridge bases, here is an
+>> answer why. So, to prevent reverting the commit I put together this
+>> patch (to be reworked if we deem it reasonable), subject to discussion
+>> (I fear it may end up breaking other arm platforms, I do not have all
+>> ARM boards and required host controllers to test, I managed to test it on
+>> an iMX6 Sabrelite though).
+>>
+>> Here, please let me know if it works for you, I will keep on thinking
+>> to find the best solution.
+>>
+>> I will have to do this for arm64 too, comments very welcome.
+>>
+>> Thanks,
+>> Lorenzo
+>>
+>> -- >8 --
+>> Subject: [PATCH] arm: kernel: pci: fixup erroneous PCI bridge apertures
+>>
+>> Bridge apertures read by core PCI code through pci_read_bridge_bases()
+>> might be erroneous (bogus platform setup). If the arch code does not vet
+>> the bridge resources (ie by trying to claim them), we can end up in a
+>> situation where wrong bridge apertures can prevent resources assignment
+>> for downstream devices causing enumeration failures (eg a bridge
+>> aperture does not fit in the respective host controller resource window,
+>> so it can't be assigned).
+>>
+>> This patch adds arm arch code that vets bridge resources by trying
+>> to claim them, and reset them on claiming failure so that they can
+>> be properly reassigned.
+>
+> We definitely should not depend on the platform to set up the bridge
+> windows.  Do we know what the platform left in the 00:00.0 window
+> registers?
+>
+> I see that bus 01 requires 0x204100 of mem space, which must be
+> rounded up to a megabyte boundary, so the window must be at least 3M
+> (0x00300000):
+>
+>   pci 0000:01:00.0: BAR 2: failed to assign [mem size 0x00200000]
+>   pci 0000:01:00.0: BAR 1: failed to assign [mem size 0x00004000]
+>   pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x00000100]
+>
+> I don't understand the connection with dff22d2054b5 yet.  If we don't
+> call pci_read_bridge_bases(), apparently some assign-resources path
+> figures out the required size and assigns a 3M window.
+>
+> If we *do* call pci_read_bridge_bases(), do we read a bogus 16M window
+> size, fail to assign that because the host controller window isn't big
+> enough, and then the assign-resources path just gives up?  I assume
+> clearing r->flags in your patch is the critical thing?  Is there
+> something in assign-resources that checks for r->flags == 0?
+>
+> I think it would be ideal if we could someday claim the resource
+> immediately, as soon as we read it from a BAR or bridge window, and
+> mark it as IORESOURCE_UNSET if claiming it fails.  Then if the
+> platform set up reasonable windows, we could use them; if it didn't,
+> we could just assign our own.
+>
+> I'd like to avoid adding things to pcibios_fixup_bus() if possible
+> because most of what is done there is arch-independent, and I'd like
+> to get the arch-independent stuff into the PCI core.
+>
+> Bjorn
+>
+>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> ---
+>>  arch/arm/kernel/bios32.c | 24 ++++++++++++++++++++++++
+>>  1 file changed, 24 insertions(+)
+>>
+>> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+>> index 874e182..ebbe052 100644
+>> --- a/arch/arm/kernel/bios32.c
+>> +++ b/arch/arm/kernel/bios32.c
+>> @@ -282,6 +282,27 @@ static inline int pdev_bad_for_parity(struct pci_dev *dev)
+>>
+>>  }
+>>
+>> +static void pcibios_fixup_bridge_resources(struct pci_dev *dev)
+>> +{
+>> +     int idx;
+>> +
+>> +     if (!dev->bus)
+>> +             return;
+>> +
+>> +     for (idx = PCI_BRIDGE_RESOURCES; idx < PCI_NUM_RESOURCES; idx++) {
+>> +             struct resource *r = &dev->resource[idx];
+>> +
+>> +             if (!r->flags || r->parent)
+>> +                     continue;
+>> +
+>> +             if (pci_claim_resource(dev, idx)) {
+>> +                     r->flags = 0;
+>> +                     r->start = 0;
+>> +                     r->end = -1;
+>> +             }
+>> +     }
+>> +}
+>> +
+>>  /*
+>>   * pcibios_fixup_bus - Called after each bus is probed,
+>>   * but before its children are examined.
+>> @@ -352,6 +373,9 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+>>                       bus->bridge_ctl |= PCI_BRIDGE_CTL_PARITY;
+>>       }
+>>
+>> +     if (bus->self)
+>> +             pcibios_fixup_bridge_resources(bus->self);
+>> +
+>>       /*
+>>        * Report what we did for this bus
+>>        */
+>> --
+>> 1.9.1
+>>
+>>
