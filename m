@@ -1,54 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
-Subject: [PATCH v5 44/53] OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
-Date: Wed, 16 Sep 2015 14:57:42 -0700
-Message-Id: <1442440671-5361-45-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:33525 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932839AbbIDPmH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Sep 2015 11:42:07 -0400
+Received: by wiclk2 with SMTP id lk2so26868359wic.0
+        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2015 08:42:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20150904T072156-908@post.gmane.org>
+References: <loom.20150831T091131-859@post.gmane.org> <CAE9FiQWNA1BEGom757xtbc0zFjFqZ9uqKwj2kM7EFDDKXEL6fw@mail.gmail.com>
+ <loom.20150901T110001-176@post.gmane.org> <CAE9FiQUxU2FCxFKQ=6ZdnJL8fU-YxAOjQmMSAP_YBG1gEG+ntA@mail.gmail.com>
+ <loom.20150902T084450-322@post.gmane.org> <CAE9FiQWgrymUN07D5rFr0XVrF1Ays606JaWQCfH47Av0cv8q0g@mail.gmail.com>
+ <loom.20150903T080202-734@post.gmane.org> <loom.20150903T113710-656@post.gmane.org>
+ <CAErSpo6KYCM99H5J0JvYymNmbn-O1NfVwo4Lp7B=2cXCFQwnOw@mail.gmail.com> <loom.20150904T072156-908@post.gmane.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 4 Sep 2015 10:41:46 -0500
+Message-ID: <CAErSpo7M8Ahaps00An2qXQWdMpq38batxxXrVSwDBqvHjsm8rA@mail.gmail.com>
+Subject: Re: PCI rescan : can't assign mem [SOLVED]
+To: Peio <peio@azkarate.eu>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during OF device resource flags
-parsing.
+On Fri, Sep 4, 2015 at 12:32 AM, Peio <peio@azkarate.eu> wrote:
+> Bjorn Helgaas <bhelgaas <at> google.com> writes:
+>
+>> This is a workaround, not a solution.  It is not safe to use
+>> "pci=nocrs" in general because it can break things related to resource
+>> assignment, including hot-add of new devices.
+>>
+>> I haven't looked at the problem in detail, but if the BIOS gives us a
+>> _CRS with host bridge windows that are too small to accommodate all
+>> your devices, there's really nothing the kernel can do about it.  You
+>> just have to regard it as a limitation of that platform.
+>>
+>> Bjorn
+>>
+> I'm sure itsn't a platform limitation, a BIOS issue assigning resources
+> instead.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: devicetree@vger.kernel.org
----
- drivers/of/address.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Yep.  I include the BIOS in "the platform" because it's something we
+have no control over.
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 384574c..3399602 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -128,9 +128,11 @@ static unsigned int of_bus_pci_get_flags(const __be32 *addr)
- 		flags |= IORESOURCE_IO;
- 		break;
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
--- 
-1.8.4.5
+> Anyway, It's a closed system, without hot-add or not own devices.
+>
+> I suspect this workaround is fine to me.
 
+OK.  I didn't phrase the risk very well.  When we use "pci=nocrs",
+we're ignoring the host bridge apertures the BIOS tells us about.
+That means Linux may assign resources outside of those apertures to
+PCI devices.  They *might* work, but there's no guarantee that they
+will.  This can affect devices present at boot as well as hot-added
+ones.
+
+If we were really smart, we might emit a warning when we assigned
+resources outside of the apertures, but that's probably more work than
+it's worth.
+
+If the workaround works for you, that's great and you should keep
+using it.  I just don't want to propagate the idea that "pci=nocrs" is
+the general solution for anything.   Ideally, a user should not have
+to use kernel parameters except for debugging or to work around
+hardware or firmware problems.
+
+Bjorn
