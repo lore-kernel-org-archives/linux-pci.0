@@ -1,51 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:52954 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751750AbbIXOiZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Sep 2015 10:38:25 -0400
-Date: Thu, 24 Sep 2015 16:30:09 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/6] pci: mvebu: generate proper configuration access
- cycles
-Message-ID: <20150924143009.GA20029@lunn.ch>
-References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
- <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>
+Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: [PATCH v4 2/4] PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
+Date: Fri,  4 Sep 2015 17:50:09 +0100
+Message-Id: <1441385411-7624-3-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
+References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 06:17:32PM +0100, Russell King wrote:
-> The idea that you can arbitarily read 32-bits from PCI configuration
-> space, modify a sub-field (like the command register) and write it
-> back without consequence is deeply flawed.
-> 
-> Status registers (such as the status register, PCIe device status
-> register, etc) contain status bits which are read, write-one-to-clear.
-> 
-> What this means is that reading 32-bits from the command register,
-> modifying the command register, and then writing it back has the effect
-> of clearing any status bits that were indicating at that time.  Same for
-> the PCIe device control register clearing bits in the PCIe device status
-> register.
-> 
-> Since the Armada chips support byte, 16-bit and 32-bit accesses to the
-> registers (unless otherwise stated) and the PCI configuration data
-> register does not specify otherwise, it seems logical that the chip can
-> indeed generate the proper configuration access cycles down to byte
-> level.
-> 
-> Testing with an ASM1062 PCIe to SATA mini-PCIe card on Armada 388.
-> PCIe capability at 0x80, DevCtl at 0x88, DevSta at 0x8a.
+When pci-host-generic looks for the probe-only property, it seems
+to trust the DT to be correctly written, and assumes that there
+is a parameter to the property.
 
-The Armada 388 is a pretty new SoC. It would be good to test this on a
-much older device as well, e.g. Kirkwood. I will add it to my TODO
-list, but it anybody else gets there first, please let me know.
+Unfortunately, this is not always the case, and some firmware expose
+this property naked. The driver ends up making a decision based on
+whatever the property pointer points to, which is likely to be junk.
 
-      Andrew
+Switch to the common of_pci.c implementation that doesn't suffer
+from this problem.
+
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/pci/host/pci-host-generic.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 265dd25..224303d 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	int err;
+ 	const char *type;
+ 	const struct of_device_id *of_id;
+-	const int *prop;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+@@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
+-	if (prop) {
+-		if (*prop)
+-			pci_add_flags(PCI_PROBE_ONLY);
+-		else
+-			pci_clear_flags(PCI_PROBE_ONLY);
+-	}
++	of_pci_check_probe_only();
+ 
+ 	of_id = of_match_node(gen_pci_of_match, np);
+ 	pci->cfg.ops = of_id->data;
+-- 
+2.1.4
+
