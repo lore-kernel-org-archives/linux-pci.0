@@ -1,92 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, wfg@linux.intel.com,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-acpi@vger.kernel.org, x86@kernel.org
-Subject: [Bugfix 1/2] ACPI, PCI, irq: Do not share PCI IRQ with ISA IRQ
-Date: Thu, 17 Sep 2015 14:02:45 +0800
-Message-Id: <1442469766-31264-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>
+Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: [PATCH v4 4/4] arm64: dts: Drop linux,pci-probe-only from the Seattle DTS
+Date: Fri,  4 Sep 2015 17:50:11 +0100
+Message-Id: <1441385411-7624-5-git-send-email-marc.zyngier@arm.com>
+In-Reply-To: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
+References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Avoid IRQs occupied by ISA IRQs when allocating IRQs for PCI link devices,
-otherwise it may cause interrupt storm due to incompatible pin attributes.
+The linux,pci-probe-only property mandates an argument to indicate
+whether or not to engage the "probe-only" mode, but the Seattle
+DTS just provides a naked property, which is illegal.
 
-This issue was triggered on a KVM virtual machine, which
-1) uses IRQ9 for SCI in high level mode.
-2) defines an PCI interrupt link device (LNKS) with IRQ9 as the only
-   possible irq.
-3) has an PCI device referring to link device LNKS.
-So it causes interrupt storm when enabling the PCI device because PCI IRQ
-works in low level mode.
+Also, it turns out that the board is perfectly happy without
+probe-only, so let's drop this altogether.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Acked-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/acpi/pci_irq.c  |    1 +
- drivers/acpi/pci_link.c |   13 +++++++++++++
- include/linux/acpi.h    |    1 +
- 3 files changed, 15 insertions(+)
+ arch/arm64/boot/dts/amd/amd-overdrive.dts | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 6da0f9beab19..c9336751e5e3 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -372,6 +372,7 @@ static int acpi_isa_register_gsi(struct pci_dev *dev)
+diff --git a/arch/arm64/boot/dts/amd/amd-overdrive.dts b/arch/arm64/boot/dts/amd/amd-overdrive.dts
+index 564a3f7..128fa94 100644
+--- a/arch/arm64/boot/dts/amd/amd-overdrive.dts
++++ b/arch/arm64/boot/dts/amd/amd-overdrive.dts
+@@ -14,7 +14,6 @@
  
- 	/* Interrupt Line values above 0xF are forbidden */
- 	if (dev->irq > 0 && (dev->irq <= 0xF) &&
-+	    acpi_isa_irq_available(dev->irq) &&
- 	    (acpi_isa_irq_to_gsi(dev->irq, &dev_gsi) == 0)) {
- 		dev_warn(&dev->dev, "PCI INT %c: no GSI - using ISA IRQ %d\n",
- 			 pin_name(dev->pin), dev->irq);
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index 3b4ea98e3ea0..246e50d22120 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -553,6 +553,13 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
- 				irq = link->irq.possible[i];
- 		}
- 	}
-+	if (acpi_irq_penalty[irq] >= PIRQ_PENALTY_ISA_ALWAYS) {
-+		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
-+			    "Try pci=noacpi or acpi=off\n",
-+			    acpi_device_name(link->device),
-+			    acpi_device_bid(link->device));
-+		return -ENODEV;
-+	}
- 
- 	/* Attempt to enable the link device at this IRQ. */
- 	if (acpi_pci_link_set(link, irq)) {
-@@ -821,6 +828,12 @@ void acpi_penalize_isa_irq(int irq, int active)
- 	}
- }
- 
-+bool acpi_isa_irq_available(int irq)
-+{
-+	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
-+			    acpi_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
-+}
-+
- /*
-  * Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict with
-  * PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be use for
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 7235c4851460..43856d19cf4d 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -217,6 +217,7 @@ struct pci_dev;
- 
- int acpi_pci_irq_enable (struct pci_dev *dev);
- void acpi_penalize_isa_irq(int irq, int active);
-+bool acpi_isa_irq_available(int irq);
- void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
- void acpi_pci_irq_disable (struct pci_dev *dev);
+ 	chosen {
+ 		stdout-path = &serial0;
+-		linux,pci-probe-only;
+ 	};
+ };
  
 -- 
-1.7.10.4
+2.1.4
 
