@@ -1,72 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30980 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755889AbbJAGEl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 02:04:41 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 41/53] PCI: Kill macro checking for bus io port sizing
-Date: Wed, 30 Sep 2015 22:53:15 -0700
-Message-Id: <1443678807-786-42-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1441385411-7624-2-git-send-email-marc.zyngier@arm.com>
+References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com> <1441385411-7624-2-git-send-email-marc.zyngier@arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 4 Sep 2015 14:19:53 -0500
+Message-ID: <CAL_JsqKjXqgCvzUcTZkCfgpvub6uh_XzLTfyHpgSZzh4dJaOEg@mail.gmail.com>
+Subject: Re: [PATCH v4 1/4] of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Alexander Graf <agraf@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can use new generic version skip_isa_ioresource_align() instead
-of macro, and then kill the marco.
+On Fri, Sep 4, 2015 at 11:50 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> Both pci-host-generic and Pseries parse the "linux,pci-probe-only"
+> property to engage the PCI_PROBE_ONLY mode, and both have a subtle
+> bug that can be triggered if the property has no parameter.
+>
+> Provide a generic, safe implementation that can be used by both.
+>
+> Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+>  drivers/of/of_pci.c    | 28 ++++++++++++++++++++++++++++
+>  include/linux/of_pci.h |  3 +++
+>  2 files changed, 31 insertions(+)
+>
+> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+> index 5751dc5..5dd4966 100644
+> --- a/drivers/of/of_pci.c
+> +++ b/drivers/of/of_pci.c
+> @@ -118,6 +118,34 @@ int of_get_pci_domain_nr(struct device_node *node)
+>  EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
+>
+>  /**
+> + * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
+> + *                           is present and valid
+> + *
+> + * @node: device tree node that may contain the property (usually "chosen")
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+This line should be removed. Perhaps Bjorn will fix it up.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7d449d8..95c7def 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1122,15 +1122,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
- 	return 0;
- }
- 
--static resource_size_t size_aligned_for_isa(resource_size_t size)
-+static resource_size_t size_aligned_for_isa(resource_size_t size,
-+					    struct pci_bus *bus)
- {
--	/*
--	 * To be fixed in 2.5: we should have sort of HAVE_ISA
--	 *  flag in the struct pci_bus.
--	 */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
-+	if (!skip_isa_ioresource_align(bus))
-+		size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+
- 	return size;
- }
- 
-@@ -1199,12 +1196,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		}
- 	}
- 
--	size = size_aligned_for_isa(size);
-+	size = size_aligned_for_isa(size, bus);
- 	size += size1;
- 	if (size || min_size)
- 		size0 = calculate_size(size, min_size,
- 					resource_size(b_res), min_align);
--	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
--- 
-1.8.4.5
-
+Rob
