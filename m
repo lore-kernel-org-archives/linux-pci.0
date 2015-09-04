@@ -1,63 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:20763 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964840AbbI2L1a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 07:27:30 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v4 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-Date: Tue, 29 Sep 2015 19:34:04 +0800
-Message-ID: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from mail-yk0-f181.google.com ([209.85.160.181]:36165 "EHLO
+	mail-yk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932596AbbIDSxT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Sep 2015 14:53:19 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
+References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Fri, 4 Sep 2015 13:52:59 -0500
+Message-ID: <CAL_JsqJeZ3HJLvoyyz-WiPZOAXsmP9Q4yhrNeYjvDf8k+p0_9Q@mail.gmail.com>
+Subject: Re: [PATCH v4 0/4] PCI: arm64/powerpc: Fix parsing of linux,pci-probe-only
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Alexander Graf <agraf@suse.de>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Fri, Sep 4, 2015 at 11:50 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> The pci-host-generic driver parses the linux,pci-probe-only property,
+> and assumes that it will have a boolean parameter.
+>
+> Turns out that the Seattle DTS file has a naked "linux,pci-probe-only"
+> property, which leads to the driver dereferencing some unsuspecting
+> memory location. Nothing really bad happens (we end up reading some
+> other bit of DT, fortunately), but that not a reason to keep it this
+> way. Turns out that the Pseries code (where this code was lifted from)
+> may suffer from the same issue.
+>
+> The first patch introduces a common (and fixed) version of that check
+> that can be used by drivers and architectures that require it. The two
+> following patches change the pci-host-generic driver and the powerpc
+> code to use it.
+>
+> Finally, the bad property is removed from the Seatle DTS, because it
+> is simply not necessary (it actually prevents me from using SR-IOV,
+> which otherwise runs fine without the probe-only thing).
+>
+> This has been tested on the offending Seattle board.
+>
+> * From v3:
+>   - Restrict the property lookup to /chosen (Rob)
+>   - Acked-by on patch #4 from Suravee
+>   - I swear this is the last time I rework these patches! ;-)
+>
+> * From v2:
+>   - Use of_property_read_u32 to safely read the property (Rob)
+>   - Add a log message to indicate when we enable probe-only
+>     (probably quite useful for debugging)
+>
+> * From v1:
+>   - Consolidate the parsing in of_pci.c (Bjorn)
+>
+> Marc Zyngier (4):
+>   of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
+>   PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
+>   powerpc: PCI: Fix lookup of linux,pci-probe-only property
+>   arm64: dts: Drop linux,pci-probe-only from the Seattle DTS
+>
+>  arch/arm64/boot/dts/amd/amd-overdrive.dts |  1 -
+>  arch/powerpc/platforms/pseries/setup.c    | 14 ++------------
+>  drivers/of/of_pci.c                       | 28 ++++++++++++++++++++++++++++
+>  drivers/pci/host/pci-host-generic.c       |  9 +--------
+>  include/linux/of_pci.h                    |  3 +++
+>  5 files changed, 34 insertions(+), 21 deletions(-)
 
-This patchset:
-1) fixes a bug in spear13xx when calling dw_pcie_cfg_read and
-   dw_pcie_cfg_write usign the patch from Pratyush in
-   https://lkml.org/lkml/2015/9/7/5
-2) reworks dw_pcie_cfg_read/dw_pcie_cfg_write in pcie-designware.c in
-   order to make it easier for callers to pass input parameters;
-3) changes dw_pcie_cfg_read implementation to make it symmetric with
-   dw_pcie_cfg_write 
-4) adds sanity checks in dw_pcie_cfg_read/dw_pcie_cfg_write to make
-   sure the PCI header offset does not conflict with the size of
-   the read/written field.
+For the series:
 
-Changes from v3:
-   - changed dw_pcie_cfg_read implementation to make it symmetric with
-     dw_pcie_cfg_write
-   - changed dw_pcie_cfg_read/dw_pcie_cfg_write implementations to take
-     as input param directly the address of the field to read/write rather
-     than the base address and the offset in the PCI header
+Reviewed-by: Rob Herring <robh@kernel.org>
 
-Change from v2:
-   Replaced patch 1/3 with Pratyush one in
-   https://lkml.org/lkml/2015/9/7/5
-
-
-gabriele paoloni (3):
-  PCIE: spear13xx: fix addresses in dw_pcie_cfg_read and
-    dw_pcie_cfg_write
-  PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-  PCI: designware: add sanity checks on the header offset in
-    dw_pcie_cfg_read and dw_pcie_cfg_write
-
- drivers/pci/host/pci-exynos.c      |  5 ++--
- drivers/pci/host/pci-keystone-dw.c |  4 +--
- drivers/pci/host/pcie-designware.c | 52 ++++++++++++++++++++------------------
- drivers/pci/host/pcie-designware.h |  4 +--
- drivers/pci/host/pcie-spear13xx.c  | 16 ++++++------
- 5 files changed, 42 insertions(+), 39 deletions(-)
-
--- 
-1.9.1
-
+Rob
