@@ -1,154 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23100 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbbIPV61 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:58:27 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 06/53] PCI: Don't add too much optional size for hotplug bridge MMIO
-Date: Wed, 16 Sep 2015 14:57:04 -0700
-Message-Id: <1442440671-5361-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46501 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752591AbbIEUNO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 5 Sep 2015 16:13:14 -0400
+Message-ID: <55EB4CD8.8080405@redhat.com>
+Date: Sat, 05 Sep 2015 16:13:12 -0400
+From: Jon Masters <jcm@redhat.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>, Duc Dang <dhdang@apm.com>
+CC: Tanmay Inamdar <tinamdar@apm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: X-Gene: Unhandled fault: synchronous external abort in pci_generic_config_read32
+References: <20150724224258.GA23990@google.com> <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com> <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com> <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com> <20150728212944.GA12958@google.com> <CADaLNDkOLiyPmVC3VwpnbrfAKFmNwSVJKdChjQFdQqs7XP-Ddg@mail.gmail.com> <20150729012255.GA18606@google.com> <20150729155509.GA31170@google.com> <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com> <CAErSpo4VFh7rv81sCAG-eCXVyZh4ub8Trh-ntZhyfy7BzqTr5g@mail.gmail.com> <CADaLNDkUQHzGACfFmYDeJWnaNrKmJUDx4Rby60OWr4FzOjx3rA@mail.gmail.com> <CAErSpo7aDYKwy4MC6ZPf7hNd4MPE-LARiOVKutFfDFFkHY7qjQ@mail.gmail.com> <CADaLNDmnnZOoB1fxO=rQQa-eqT=B9G24rUrN_GzwAkFoC3Acbw@mail.gmail.com> <CAErSpo59jH3qeqThG-OO_dqB0fU5gmgC89Xued5QKrbB0dt2yg@mail.gmail.com>
+In-Reply-To: <CAErSpo59jH3qeqThG-OO_dqB0fU5gmgC89Xued5QKrbB0dt2yg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will always add 2M for hotplug bridge MMIO even
-there is child device under it already.
+On 08/11/2015 03:28 PM, Bjorn Helgaas wrote:
+> On Mon, Aug 10, 2015 at 2:07 PM, Duc Dang <dhdang@apm.com> wrote:
+>> On Mon, Aug 10, 2015 at 10:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>> On Mon, Aug 10, 2015 at 12:16 PM, Duc Dang <dhdang@apm.com> wrote:
+>>>> On Monday, August 10, 2015, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>>>
+>>>>> On Fri, Jul 31, 2015 at 12:00 PM, Duc Dang <dhdang@apm.com> wrote:
+>>>>>> On Wed, Jul 29, 2015 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com>
+>>>>>> wrote:
+>>>>>>> On Tue, Jul 28, 2015 at 08:22:55PM -0500, Bjorn Helgaas wrote:
+>>>>>>>> On Tue, Jul 28, 2015 at 02:50:39PM -0700, Duc Dang wrote:
+>>>>>>>
+>>>>>>>>> Do you have another PCIe card to try on the same reboot test on this
+>>>>>>>>> board?
+>>>>>>>>
+>>>>>>>> I've seen this on at least two Mellanox cards.  I'm running similar
+>>>>>>>> tests
+>>>>>>>> on a different type of card now.
+>>>>>>>
+>>>>>>> FWIW, reboot tests on two machines with Mellanox cards failed, while
+>>>>>>> the
+>>>>>>> same test on a machine with a different proprietary card succeeded.
+>>>>>>
+>>>>>> Thanks, Bjorn.
+>>>>>>
+>>>>>> I don't have the same Mellanox card as yours, but I will also run
+>>>>>> similar reboot test to see if I hit the same issue with my card.
+>>>>>
+>>>>> Any more hints on this?  Nothing has changed on my end, so of course
+>>>>> I'm still seeing this, always on machines with Mellanox, and never on
+>>>>> other machines.  Could this be a hardware issue like a signal
+>>>>> integrity or margin issue?  I don't know where to go from here because
+>>>>> I'm not a hardware person, and I don't know anything to do in
+>>>>> software.
+>>>>
+>>>>
+>>>> Hi Bjorn,
+>>>>
+>>>> I tried to run similar reboot tests on 2 different Mellanox cards (Connect-X
+>>>> family, one card has 2 10G interfaces, the other one has 1 port that
+>>>> supports InfiniBand) with U-Boot 1.15.12 and linux 4.2-rc5 and I did not see
+>>>> the crash that you encounterred.
+>>>>
+>>>> Did you check if your Mellanox cards have latest firmware? I did see some
+>>>> link issues on my Mellanox cards with its old firmware before.
+>>>
+>>> Good idea; I'll check that, too.  Also, I just learned that these
+>>> cards on installed with an extender card because of some space issues,
+>>> so we're going to test again without the extender.
+>>
+>> Hi Bjorn,
+>>
+>> Are other cards that passed your test installed directly to the
+>> on-board PCIe slot?
+>> If yes, then this is a good data point and it will be useful to test
+>> the case where
+>> your Mellanox cards are directly installed into the on-board PCIe slot.
+> 
+> The cards that passed the test were installed directly, with  no
+> extender.  We removed the extender from one of the machines with the
+> Mellanox card and have not seen this issue since then.  I think it's
+> very likely that the problem is related to using the extender.
 
-For example:
-	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
-					 \- 45:00.1
+If you're trying to use Mellanox cards in (for example) an APM Mustang
+like system with a PCIe extender card (for example a 90 degree angle
+adjustment for a low profile server case), you might want to ping me
+offline. I have procured a number of these over the past couple of years
+for my home lab and have found one that works (almost) reliably on that
+particular hardware platform and does 10G in my home lab.
 
-44:02.0 will need 1M as must for 45:00.0 and 45:00.1
-When we calculate add_size for 44:02.0, we pass 2M as additional
-size for hotplug bridge, total will be 3M.
+Jon.
 
-That is different from code before changes for optional support,
-or even current code that treat optional as required directly by
-not passing realloc list. We only need 2M as total.
-
-The optional size should be 1M, and total size should be 2M.
-
-This patch change to comparing required+optional with min_sum_size to
-get smaller optional size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6cccbe4..e4aa93e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1155,7 +1155,6 @@ out:
-  * @type2: second match type
-  * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-- * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-  *
-  * Calculate the size of the bus and minimal alignment which
-@@ -1168,10 +1167,11 @@ out:
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 unsigned long type, unsigned long type2,
- 			 unsigned long type3,
--			 resource_size_t min_size, resource_size_t add_size,
-+			 resource_size_t min_size,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
- 	resource_size_t min_align = 0, min_add_align = 0;
- 	resource_size_t max_align = 0, max_add_align = 0;
- 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
-@@ -1183,6 +1183,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (!b_res)
- 		return -ENOSPC;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1253,8 +1258,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	free_align_test_list(&align_test_list);
- 
--	if ((sum_add_size - size) < add_size)
--		sum_add_size = size + add_size;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
-@@ -1391,7 +1396,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, additional_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1425,7 +1430,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
-@@ -1444,8 +1449,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				  min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1468,8 +1472,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+					 min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1478,7 +1481,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				min_mem_size += min_mem_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1499,8 +1502,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+				min_mem_size, realloc_head);
- 		break;
- 	}
- }
--- 
-1.8.4.5
 
