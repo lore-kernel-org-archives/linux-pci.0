@@ -1,154 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0081.outbound.protection.outlook.com ([157.56.110.81]:51445
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933288AbbIVQNx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Sep 2015 12:13:53 -0400
-Message-ID: <56017E39.8060606@caviumnetworks.com>
-Date: Tue, 22 Sep 2015 09:13:45 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34270 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750888AbbIFPck (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 6 Sep 2015 11:32:40 -0400
+Date: Sun, 6 Sep 2015 18:32:35 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Fam Zheng <famz@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-pci@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Subject: [PATCH v7] pci: quirk to skip msi disable on shutdown
+Message-ID: <1441553385-3810-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 3/3] PCI: generic: Add support for Cavium ThunderX PCIe
- root complexes.
-References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com> <1442529694-1792-4-git-send-email-ddaney.cavm@gmail.com> <20150922160549.GE17444@red-moon>
-In-Reply-To: <20150922160549.GE17444@red-moon>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/22/2015 09:05 AM, Lorenzo Pieralisi wrote:
-> On Thu, Sep 17, 2015 at 11:41:34PM +0100, David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
->>
->> The config space for external PCIe root complexes on some Cavium
->> ThunderX SoCs is very similar to CAM and ECAM, but differs in the
->> shift values that have to be applied to the bus and devfn numbers to
->> compose that address window offset.  These root complexes also have
->> the interesting property that there is no root bridge, so the standard
->> manner of limiting scanning to only the first device doesn't work.  We
->> can use the standard pci-host-generic driver if we make a minor
->> addition to handle these differences, so we...
->>
->> Add a mapping function for ThunderX PCIe root complexes with a bus
->> shift of 24 and devfn shift of 16.  Ignore accesses for devices other
->> than the first device on the primary bus.
->>
->> Document the whole thing in devicetree/bindings/pci/host-generic-pci.txt
->>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->> ---
->>   .../devicetree/bindings/pci/host-generic-pci.txt   |  8 +++---
->>   drivers/pci/host/pci-host-generic.c                | 29 ++++++++++++++++++++++
->>   2 files changed, 34 insertions(+), 3 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> index 105a968..a5aed0f 100644
->> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> @@ -14,9 +14,11 @@ tree bindings communicated in pci.txt:
->>
->>   Properties of the host controller node:
->>
->> -- compatible     : Must be "pci-host-cam-generic" or "pci-host-ecam-generic"
->> -                   depending on the layout of configuration space (CAM vs
->> -                   ECAM respectively).
->> +- compatible     : One of the following with bus:devfn:reg mapped to the
->> +                   PCI config space address window in the bit positions shown:
->> +                   "pci-host-cam-generic" -- 'CAM'  bits 16:8:0
->> +                   "pci-host-ecam-generic" -- 'ECAM'  bits 20:12:0
->> +                   "cavium,pci-host-thunder-pem" --  bits 24:16:0
->
-> To me that's ECAM left shifted by 4. Is not it just a matter of defining
-> config space base address (ie reg property) differently ?
+On some hypervisors, virtio devices tend to generate spurious interrupts
+when switching between MSI and non-MSI mode.  Normally, either MSI or
+non-MSI is used and all is well, but during shutdown, linux disables MSI
+which then causes an "irq %d: nobody cared" message, with irq being
+subsequently disabled.
 
-No.
+Since bus mastering is already disabled at this point, disabling MSI
+isn't actually useful for spec compliant devices: MSI interrupts are
+in-bus memory writes so disabling Bus Master (which is already done)
+disables these as well: after some research, it appears to be there for
+the benefit of devices that ignore the bus master bit.
 
-That's like saying ECAM is just CAM shifted by 4, can't we just specify 
-the "reg" differently.
+As it's not clear how common this kind of bug is, this patch simply adds
+a quirk, to be set by devices that wish to skip disabling msi on
+shutdown, relying on bus master instead.
 
-The "reg" property describes the base of the config space access window. 
-  CAM/ECAM/cavium,pci-host-thunder-pem describe how to generate offsets 
-from that base, The offset calculation requires information that is not 
-present in the "reg" property, it is enumerated in the various 
-"compatible" values listed above.
+We set this quirk in virtio core.
 
-David Daney
+Reported-by: Fam Zheng <famz@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+Cc: Ulrich Obergfell <uobergfe@redhat.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
 
->
-> Lorenzo
->
->>
->>   - device_type    : Must be "pci".
->>
->> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
->> index e364232..e1d8d5b 100644
->> --- a/drivers/pci/host/pci-host-generic.c
->> +++ b/drivers/pci/host/pci-host-generic.c
->> @@ -91,6 +91,32 @@ static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
->>   	}
->>   };
->>
->> +static void __iomem *gen_pci_map_cfg_bus_thunder_pem(struct pci_bus *bus,
->> +						     unsigned int devfn,
->> +						     int where)
->> +{
->> +	struct gen_pci *pci = bus->sysdata;
->> +	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
->> +
->> +	/*
->> +	 * Thunder PEM is a PCIe RC, but without a root bridge.  On
->> +	 * the primary bus, ignore accesses for devices other than
->> +	 * the first device.
->> +	 */
->> +	if (idx == 0 && (devfn & ~7u))
->> +		return NULL;
->> +	return pci->cfg.win[idx] + ((devfn << 16) | where);
->> +}
->> +
->> +static struct gen_pci_cfg_bus_ops gen_pci_cfg_thunder_pem_bus_ops = {
->> +	.bus_shift	= 24,
->> +	.ops		= {
->> +		.map_bus	= gen_pci_map_cfg_bus_thunder_pem,
->> +		.read		= pci_generic_config_read,
->> +		.write		= pci_generic_config_write,
->> +	}
->> +};
->> +
->>   static const struct of_device_id gen_pci_of_match[] = {
->>   	{ .compatible = "pci-host-cam-generic",
->>   	  .data = &gen_pci_cfg_cam_bus_ops },
->> @@ -98,6 +124,9 @@ static const struct of_device_id gen_pci_of_match[] = {
->>   	{ .compatible = "pci-host-ecam-generic",
->>   	  .data = &gen_pci_cfg_ecam_bus_ops },
->>
->> +	{ .compatible = "cavium,pci-host-thunder-pem",
->> +	  .data = &gen_pci_cfg_thunder_pem_bus_ops },
->> +
->>   	{ },
->>   };
->>   MODULE_DEVICE_TABLE(of, gen_pci_of_match);
->> --
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
 
+changes from v6:
+	limit changes to virtio only
+changes from v5:
+        rebased on top of pci/msi
+        fixed commit log, including comments by Bjorn
+        and adding explanation to address comments/questions by Eric
+        dropped stable Cc, this patch does not seem to qualify for stable
+changes from v4:
+        Yijing Wang <wangyijing@huawei.com> noted that
+        early fixups rely on pci_msi_off.
+        Split out the functionality and move off the
+        required part to run early during pci_device_setup.
+Changes from v3:
+        fix a copy-and-paste error in
+          pci: drop some duplicate code
+        other patches are unchanged
+        drop Cc stable for now
+Changes from v2:
+        move code from probe to device enumeration
+        add patches to unexport pci_msi_off
+
+
+ include/linux/pci.h                | 2 ++
+ drivers/pci/pci-driver.c           | 6 ++++--
+ drivers/virtio/virtio_pci_common.c | 4 ++++
+ 3 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 860c751..80f3494 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -180,6 +180,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
+ 	/* Do not use PM reset even if device advertises NoSoftRst- */
+ 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
++	/* Do not disable MSI on shutdown, disable bus master instead */
++	PCI_DEV_FLAGS_NO_MSI_SHUTDOWN = (__force pci_dev_flags_t) (1 << 8),
+ };
+ 
+ enum pci_irq_reroute_variant {
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 3cb2210..59d9e40 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -450,8 +450,10 @@ static void pci_device_shutdown(struct device *dev)
+ 
+ 	if (drv && drv->shutdown)
+ 		drv->shutdown(pci_dev);
+-	pci_msi_shutdown(pci_dev);
+-	pci_msix_shutdown(pci_dev);
++	if (!(pci_dev->dev_flags & PCI_DEV_FLAGS_NO_MSI_SHUTDOWN)) {
++		pci_msi_shutdown(pci_dev);
++		pci_msix_shutdown(pci_dev);
++	}
+ 
+ #ifdef CONFIG_KEXEC
+ 	/*
+diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+index 78f804a..26f46c3 100644
+--- a/drivers/virtio/virtio_pci_common.c
++++ b/drivers/virtio/virtio_pci_common.c
+@@ -528,6 +528,8 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
+ 	if (rc)
+ 		goto err_register;
+ 
++	pci_dev->dev_flags |= PCI_DEV_FLAGS_NO_MSI_SHUTDOWN;
++
+ 	return 0;
+ 
+ err_register:
+@@ -546,6 +548,8 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+ {
+ 	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+ 
++	pci_dev->dev_flags &= ~PCI_DEV_FLAGS_NO_MSI_SHUTDOWN;
++
+ 	unregister_virtio_device(&vp_dev->vdev);
+ 
+ 	if (vp_dev->ioaddr)
+-- 
+MST
