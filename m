@@ -1,51 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f169.google.com ([209.85.213.169]:34401 "EHLO
-	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756897AbbIUSVw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2015 14:21:52 -0400
-Received: by igcpb10 with SMTP id pb10so84728938igc.1
-        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2015 11:21:51 -0700 (PDT)
-Date: Mon, 21 Sep 2015 13:21:47 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
+Received: from ozlabs.org ([103.22.144.67]:54195 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753174AbbIGDRE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 6 Sep 2015 23:17:04 -0400
+Message-ID: <1441595823.12945.4.camel@ellerman.id.au>
+Subject: Re: [PATCH v2 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
+ probe time in OF case
+From: Michael Ellerman <mpe@ellerman.id.au>
 To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
+Cc: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	paulus@samba.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
 	"Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-pci@vger.kernel.org,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
-Message-ID: <20150921182147.GC27964@google.com>
-References: <1441553385-3810-1-git-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1441553385-3810-1-git-send-email-mst@redhat.com>
+	"David S. Miller" <davem@davemloft.net>
+Date: Mon, 07 Sep 2015 13:17:03 +1000
+In-Reply-To: <20150906173838-mutt-send-email-mst@redhat.com>
+References: <1439932430-13375-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <20150903175624.GI829@google.com> <55EA2678.5030801@linux.vnet.ibm.com>
+	 <20150906173838-mutt-send-email-mst@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
-> On some hypervisors, virtio devices tend to generate spurious interrupts
-> when switching between MSI and non-MSI mode.  Normally, either MSI or
-> non-MSI is used and all is well, but during shutdown, linux disables MSI
-> which then causes an "irq %d: nobody cared" message, with irq being
-> subsequently disabled.
+On Sun, 2015-09-06 at 17:44 +0300, Michael S. Tsirkin wrote:
+> On Fri, Sep 04, 2015 at 08:17:12PM -0300, Guilherme G. Piccoli wrote:
+> > Hello Bjorn,
+> > 
+> > >of_create_pci_dev() already has a lot of code that duplicates
+> > >pci_setup_device(), and it's a shame to add more.  There's also a sparc
+> > >version of of_create_pci_dev() that presumably has the same problem you're
+> > >fixing for powerpc.
+> > 
+> > Thanks for the information!
+> > 
+> > >Michael originally called pci_msi_setup_pci_dev() from
+> > >pci_init_capabilities() [1].  A subsequent patch moved the call
+> > >to pci_setup_device() [2] because an early quirk (called from
+> > >pci_setup_device()) used pci_msi_off(), which depended on
+> > >pci_msi_setup_pci_dev().
+> > >
+> > >But we later removed pci_msi_off() completely, so I think we probably
+> > >*could* call pci_msi_setup_pci_dev() from pci_init_capabilities().
+> > >
+> > >That would be much nicer because it makes more sense there, and it
+> > >would do the right thing for powerpc and sparc because they both
+> > >already use that path.
+> > >
+> > >Can you look into moving the call?
+> > 
+> > I might have misunderstood something here (sorry if it's the case), but
+> > moving the call to pci_init_capabilities() has the same practical
+> > implications than reverting my 2 commmits [1] [2] and Michael Tsirkin's
+> > commit [3], except when CONFIG_PCI_MSI is not set - in this case, moving the
+> > call would initialize MSI capabilities anyway, since pci_init_capabilities()
+> > executes even if CONFIG_PCI_MSI isn't set.
+> > 
+> > My question is: is necessary to initialize MSI capabilities even with
+> > CONFIG_PCI_MSI not set? In negative case, would be "cleaner" revert the 3
+> > commits, right?
+> > 
+> > On the other hand, if it's necessary to initialize MSI capabilities on
+> > devices anyway, we can change the call place.
+> 
+> I think the reason why it's necessary is explained in
+> commit log for commit 1851617cd2da9cc53cdc1738f4148f4f042c0e56 (that's
+> [3] below).
 
-My understanding is:
+Well yes and no.
 
-  Linux disables MSI/MSI-X during device shutdown.  If the device
-  signals an interrupt after that, it may use INTx.
+What we want to do when CONFIG_PCI_MSI=n is disable MSI on the device. In order
+to do that the code first initialises dev->msi[x]_cap.
 
-This INTx interrupt is not necessarily spurious.  Using INTx to signal an
-interrupt that occurs when MSI is disabled seems like reasonable behavior
-for any PCI device.
+But arguably that's wrong, ie. when CONFIG_PCI_MSI=n dev->msi[x]_cap *should*
+be zero so that any code which erroneously tries to use them will fail.
 
-And it doesn't seem related to switching between MSI and non-MSI mode.
-Yes, the INTx happens *after* disabling MSI, but it is not at all
-*because* we disabled MSI.  So I wouldn't say "they generate spurious
-interrupts when switching between MSI and non-MSI."
+But perhaps that's being too pedantic :)
 
-Why doesn't virtio-pci just register an INTx handler in addition to an MSI
-handler?
+cheers
 
-Bjorn
+
