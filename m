@@ -1,246 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 35/53] PCI: Add debug print out for min_align and alt_size
-Date: Wed, 16 Sep 2015 14:57:33 -0700
-Message-Id: <1442440671-5361-36-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:40107 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753534AbbIGISB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Sep 2015 04:18:01 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"thomas.petazzoni@free-electrons.com"
+	<thomas.petazzoni@free-electrons.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"robh@kernel.org" <robh@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	qiujiang <qiujiang@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v8 0/6] PCI: hisi: Add PCIe host support for HiSilicon
+ SoC Hip05
+Date: Mon, 7 Sep 2015 08:17:20 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620A175@lhreml503-mbs>
+References: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Put all print out for all children align/size and result align/size
-together.
-
-We can print out device name at same time with min_align/alt_size
-calculation.
-
-So we can shut off debug print out from get_res_add_size() and
-get_res_add_align().
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 76 ++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 56 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 28e9768..f2aaead 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -159,11 +159,6 @@ static resource_size_t get_res_add_size(struct list_head *head,
- 	if (!dev_res || !dev_res->add_size)
- 		return 0;
- 
--	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
--		   (int)(res - &dev_res->dev->resource[0]),
--		   res, (unsigned long long)dev_res->add_size);
--
- 	return dev_res->add_size;
- }
- 
-@@ -176,11 +171,6 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	if (!dev_res || !dev_res->min_align)
- 		return 0;
- 
--	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
--		   (int)(res - &dev_res->dev->resource[0]),
--		   res, (unsigned long long)dev_res->min_align);
--
- 	return dev_res->min_align;
- }
- 
-@@ -1233,6 +1223,8 @@ struct align_test_res {
- 	struct resource res;
- 	resource_size_t size;
- 	resource_size_t align;
-+	struct device *dev;
-+	int idx;
- };
- 
- static void free_align_test_list(struct list_head *head)
-@@ -1246,7 +1238,8 @@ static void free_align_test_list(struct list_head *head)
- }
- 
- static int add_to_align_test_list(struct list_head *head,
--				  resource_size_t align, resource_size_t size)
-+				  resource_size_t align, resource_size_t size,
-+				  struct device *dev, int idx)
- {
- 	struct align_test_res *tmp;
- 
-@@ -1256,6 +1249,8 @@ static int add_to_align_test_list(struct list_head *head,
- 
- 	tmp->align = align;
- 	tmp->size = size;
-+	tmp->dev = dev;
-+	tmp->idx = idx;
- 
- 	list_add_tail(&tmp->list, head);
- 
-@@ -1321,6 +1316,19 @@ static resource_size_t calculate_mem_align(struct list_head *head,
- 	resource_size_t min_align, good_align, aligned_size, start;
- 	int count = 0;
- 
-+	list_for_each_entry(p, head, list)
-+		count++;
-+
-+	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_align========\n");
-+	if (count) {
-+		printk(KERN_DEBUG "  align/size:\n");
-+		list_for_each_entry(p, head, list)
-+			dev_printk(KERN_DEBUG, p->dev,
-+				   "BAR %d:     %08llx/%08llx\n", p->idx,
-+				   (unsigned long long)p->align,
-+				   (unsigned long long)p->size);
-+	}
-+
- 	if (max_align <= align_low) {
- 		good_align = align_low;
- 		goto out;
-@@ -1328,9 +1336,6 @@ static resource_size_t calculate_mem_align(struct list_head *head,
- 
- 	good_align = max_align;
- 
--	list_for_each_entry(p, head, list)
--		count++;
--
- 	if (count <= 1)
- 		goto out;
- 
-@@ -1355,6 +1360,11 @@ static resource_size_t calculate_mem_align(struct list_head *head,
- 	} while (min_align > align_low);
- 
- out:
-+	printk(KERN_DEBUG "      min_align/aligned_size: %08llx/%08llx\n",
-+			(unsigned long long)good_align,
-+			(unsigned long long)ALIGN(size, good_align));
-+	printk(KERN_DEBUG "  ===========END===calculate_mem_align==========\n");
-+
- 	return good_align;
- }
- 
-@@ -1372,6 +1382,16 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
- 	list_for_each_entry(p, head, list)
- 		count++;
- 
-+	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_alt_size=====\n");
-+	if (count) {
-+		printk(KERN_DEBUG "  align/size:\n");
-+		list_for_each_entry(p, head, list)
-+			dev_printk(KERN_DEBUG, p->dev,
-+				   "BAR %d:     %08llx/%08llx\n", p->idx,
-+				   (unsigned long long)p->align,
-+				   (unsigned long long)p->size);
-+	}
-+
- 	if (count <= 1)
- 		goto out;
- 
-@@ -1396,6 +1416,11 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
- 	}
- 
- out:
-+	printk(KERN_DEBUG "   alt_align/alt_size: %08llx/%08llx\n",
-+			(unsigned long long)max_align,
-+			(unsigned long long)good_size);
-+	printk(KERN_DEBUG "  ===========END===calculate_mem_alt_size=======\n");
-+
- 	return good_size;
- }
- 
-@@ -1476,7 +1501,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			/* put SRIOV/ROM res to realloc list */
- 			if (realloc_head && is_optional(i)) {
- 				add_to_align_test_list(&align_test_add_list,
--							align, r_size);
-+						align, r_size, &dev->dev, i);
- 				r->end = r->start - 1;
- 				__add_to_list(realloc_head, dev, r,
- 					      r_size, align, 0, 0);
-@@ -1495,7 +1520,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 			if (r_size > 1) {
- 				add_to_align_test_list(&align_test_list,
--							align, r_size);
-+						align, r_size, &dev->dev, i);
- 				size += r_size;
- 				if (align > max_align)
- 					max_align = align;
-@@ -1512,7 +1537,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					add_align = align;
- 				add_to_align_test_list(&align_test_add_list,
- 							add_align,
--							r_size + add_r_size);
-+							r_size + add_r_size,
-+							&dev->dev, i);
- 				sum_add_size += r_size + add_r_size;
- 				if (add_align > max_add_align)
- 					max_add_align = add_align;
-@@ -1522,14 +1548,14 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					add_to_align_test_list(
- 						&align_test_alt_list,
- 						dev_res->alt_align,
--						dev_res->alt_size);
-+						dev_res->alt_size, &dev->dev, i);
- 					alt_size += dev_res->alt_size;
- 					if (alt_align < dev_res->alt_align)
- 						alt_align = dev_res->alt_align;
- 				} else if (r_size > 1) {
- 					add_to_align_test_list(
- 						&align_test_alt_list,
--						align, r_size);
-+						align, r_size, &dev->dev, i);
- 					alt_size += r_size;
- 					if (alt_align < align)
- 						alt_align = align;
-@@ -1540,6 +1566,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	max_align = max(max_align, window_align);
- 	if (size || min_size) {
-+		dev_printk(KERN_DEBUG, &bus->self->dev,
-+			   "BAR %d: bridge window %pR to %pR calculate_mem for MUST\n",
-+			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
- 		min_align = calculate_mem_align(&align_test_list, max_align,
- 						size, window_align);
- 		size0 = calculate_size(size, min_size,
-@@ -1549,6 +1578,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	if (size0 && realloc_head) {
- 		alt_align = max(alt_align, window_align);
-+		dev_printk(KERN_DEBUG, &bus->self->dev,
-+			   "BAR %d: bridge window %pR to %pR calculate_mem for ALT\n",
-+			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
- 		/* need to increase size to fit more alt */
- 		alt_size = calculate_mem_alt_size(&align_test_alt_list,
- 						  alt_align, alt_size,
-@@ -1564,6 +1596,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
-+		dev_printk(KERN_DEBUG, &bus->self->dev,
-+			   "BAR %d: bridge window %pR to %pR calculate_mem for ADD\n",
-+			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
- 					window_align);
-@@ -1621,7 +1656,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				      final_add_size, min_add_align,
- 				      alt_size, alt_align);
- 			dev_printk(KERN_DEBUG, &bus->self->dev,
--				   "bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
-+				   "BAR %d: bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
-+				   (int)(b_res - &bus->self->resource[0]),
- 				   b_res, &bus->busn_res,
- 				   (unsigned long long)final_add_size,
- 				   (unsigned long long)min_add_align,
--- 
-1.8.4.5
-
+SGkgQmpvcm4gYW5kIGFsbA0KDQpEbyB5b3UgaGF2ZSBhbnkgY29tbWVudCBvbiB0aGlzIHBhdGNo
+c2V0PyBJIHRoaW5rIHdlIHNob3VsZCBiZSBjbG9zZSB0byBhIGZpbmFsIG9uZS4uLg0KDQpUaGFu
+a3MgYW5kIFJlZ2FyZHMNCg0KR2FiDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4g
+RnJvbTogV2FuZ3pob3UgKEIpDQo+IFNlbnQ6IDI1IEF1Z3VzdCAyMDE1IDEwOjU5DQo+IFRvOiBC
+am9ybiBIZWxnYWFzOyBqaW5nb29oYW4xQGdtYWlsLmNvbTsgcHJhdHl1c2guYW5hbmRAZ21haWwu
+Y29tOyBBcm5kDQo+IEJlcmdtYW5uOyBsaW51eEBhcm0ubGludXgub3JnLnVrOyB0aG9tYXMucGV0
+YXp6b25pQGZyZWUtZWxlY3Ryb25zLmNvbTsNCj4gR2FicmllbGUgUGFvbG9uaTsgbG9yZW56by5w
+aWVyYWxpc2lAYXJtLmNvbTsgamFtZXMubW9yc2VAYXJtLmNvbTsNCj4gTGl2aXUuRHVkYXVAYXJt
+LmNvbTsgamFzb25AbGFrZWRhZW1vbi5uZXQ7IHJvYmhAa2VybmVsLm9yZw0KPiBDYzogbGludXgt
+cGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3Jn
+Ow0KPiBkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgemhhbmdqdWt1bzsgcWl1emhlbmZhOyBs
+aXVkb25nZG9uZyAoQyk7IHFpdWppYW5nOw0KPiB4dXdlaSAoTyk7IExpZ3Vvemh1IChLZW5uZXRo
+KTsgV2FuZ3pob3UgKEIpDQo+IFN1YmplY3Q6IFtQQVRDSCB2OCAwLzZdIFBDSTogaGlzaTogQWRk
+IFBDSWUgaG9zdCBzdXBwb3J0IGZvciBIaVNpbGljb24gU29DDQo+IEhpcDA1DQo+IA0KPiBUaGlz
+IHBhdGNoc2V0IGFkZHMgUENJZSBob3N0IHN1cHBvcnQgZm9yIEhpU2lsaWNvbiBTb0MgSGlwMDUu
+IFRoZSBQQ0llIGhvc3RzDQo+IHVzZSBQQ0llIElQIGNvcmUgZnJvbSBTeW5vcHN5cywgU28gdGhp
+cyBkcml2ZXIgaXMgYmFzZSBvbiBkZXNpZ253YXJlIFBDSWUNCj4gZHJpdmVyLg0KPiANCj4gSGlw
+MDUgaXMgYW4gQVJNdjggYXJjaGl0ZWN0dXJlIFNvQy4gSXQgc2hvdWxkIGJlIGFibGUgdG8gdXNl
+IEFSTTY0IFBDSWUgQVBJIGluDQo+IGRlc2lnbmV3YXJlIFBDSWUgZHJpdmVyLiBTbyB0aGlzIHBh
+dGNoIGFsc28gYWRkcyBBUk02NCBzdXBwb3J0IGZvciBkZXNpZ253YXJlDQo+IHBjaWUuDQo+IA0K
+PiBUaGlzIHBhdGNoc2V0IGlzIGJhc2VkIG9uIHY0LjItcmMxLg0KPiANCj4gQ2hhbmdlIGZyb20g
+djc6DQo+IC0gUmVtb3ZlIHBwLT5yb290X2J1c19uciA9IDAgaW4gZHJhN3h4LCBleHlub3MsIGlt
+eDYsIGtleXN0b25lLCBsYXllcnNjYXBlLA0KPiAgIHNwZWFyMTN4eC4gUGFzcyBwcC0+YnVzbi0+
+c3RhcnQgdG8gcGNpX2NyZWF0ZV9yb290X2J1cyBhcyByb290IGJ1cyBudW1iZXIuDQo+IC0gUmVt
+b3ZlIGJ1cy1yYW5nZSBwYXJzaW5nIGluIHBjaWUtaGlzaS5jLg0KPiANCj4gQ2hhbmdlIGZyb20g
+djY6DQo+IC0gQWRkIFByYXR5dXNoJ3MgQWNrZWQtYnkgZm9yIDEvNiBhbmQgMi82Lg0KPiAtIEFk
+ZCBKYW1lcycgVGVzdGVkLWJ5IGZvciAzLzYuDQo+IA0KPiBDaGFuZ2UgZnJvbSB2NToNCj4gLSBN
+ZXJnZSAxLzYgaW4gdGhpcyBzZXJpZXMsIGRpc2N1c3Npb24gYWJvdXQgdGhpcyBjYW4gYmUgZm91
+bmQgaW4gWzFdDQo+IA0KPiBDaGFuZ2UgZnJvbSB2NDoNCj4gLSBDaGFuZ2UgdGhlIGF1dGhvciBv
+ZiAxLzUgdG8gR2FicmllbGUuDQo+IC0gTW9kaWZ5IHByb2JsZW1zIGluIDMvNSBwb2ludGVkIGJ5
+IEJqb3JuLg0KPiAtIE1vZGlmeSBzcGVsbGluZyBwcm9ibGVtcyBpbiA0LzUuDQo+IA0KPiBDaGFu
+Z2UgZnJvbSB2MzoNCj4gLSBDaGFuZ2UgMS81IHRvIHdoYXQgR2FicmllbGUgc3VnZ2VzdGVkLg0K
+PiAtIFVzZSB3aW4tPl9fcmVzLnN0YXJ0IHRvIGdldCAqX21vZF9iYXNlIGluIDIvNSwgdGhpcyBm
+aXggYSBidWcgaW4gdjMgc2VyaWVzLg0KPiANCj4gQ2hhbmdlIGZyb20gdjI6DQo+IC0gTW92ZSBz
+dHJ1Y3QgcGNpX2RldiAqZGV2IGFuZCBzdHJ1Y3QgcGNpX3N5c19kYXRhICpzeXMgaW4NCj4gICBw
+Y2liaW9zX2FsaWduX3Jlc291cmNlIGluIDEvNS4NCj4gLSBBZGQgR2FicmllbGUncyBjb2RlcyBp
+biAyLzUgd2hpY2ggZGVsZXRlIHVubmVjZXNzYXJ5IGluZm9ybWF0aW9uIHBhcnNlIGFuZA0KPiAg
+IHVzZSBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcyBmb3IgYm90aCBBUk0zMiBhbmQg
+QVJNNjQuDQo+IC0gQWRkIG1haW50YWluZXIgcGF0Y2ggNS81Lg0KPiANCj4gQ2hhbmdlIGZyb20g
+UkZDIHYxOg0KPiAtIEFkZCAxLzQgcGF0Y2ggYnkgQXJuZCB3aGljaCByZW1vdmVzIGFsaWduX3Jl
+c291cmNlIGNhbGxiYWNrIGluIEFSTQ0KPiAgIHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UuDQo+IC0g
+Q2hhbmdlIGhlYWQgZmlsZSBpbiBwY2llLWRlc2lnbndhcmUgZnJvbSBhc20vaGFyZGlycS5oIHRv
+IGxpbnV4L2hhcmRpcnEuaC4NCj4gLSBTZXQgcHAtPnJvb3RfYnVzX25yID0gMCBpbiBkcmE3eHgs
+IGV4eW5vcywgaW14Niwga2V5c3RvbmUsIGxheWVyc2NhcGUsDQo+ICAgc3BlYXIxM3h4Lg0KPiAt
+IFJlbW92ZSB1bm5lY2Vzc2FyeSBwYXJlbnRoZXNlcyBvZiBzb21lIG1hY3JvcyBpbiBwY2llLWhp
+c2kuDQo+IC0gVXNlIG1hY3JvIHRvIHJlcGxhY2Ugc29tZSBtYWdpYyB2YWx1ZXMuDQo+IC0gTWVy
+Z2UgdHdvIGxvb3BzIHRvZ2V0aGVyIGFuZCBhZGQgc29tZSBjb21tZW50cyBhYm91dCBpdCBpbiBj
+b250ZXh0X2NvbmZpZw0KPiAgIGZ1bmN0aW9uIGluIHBjaWUtaGlzaS4NCj4gLSBNb2RpZnkgc29t
+ZSB2YWx1ZSBvZiBpdGVtcyBpbiBwY2llIG5vZGUgZXhhbXBsZSBpbiBiaW5kaW5nIGRvY3VtZW50
+Lg0KPiANCj4gQ2hhbmdlIGZyb20gUkZDOg0KPiAtIGRlbGV0ZSBkd19wY2llX3NldHVwLCBkd19w
+Y2llX3NjYW5fYnVzLCBkd19wY2llX21hcF9pcnEgYW5kIHN0cnVjdCBod19wY2ksDQo+ICAgbWVy
+Z2UgcmVsYXRlZCBvcGVyYXRpb25zIGludG8gZHdfcGNpZV9ob3N0X2luaXQuDQo+IA0KPiBMaW5r
+IG9mIHY3Og0KPiAtIGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvZGV2aWNldHJlZS9tc2c5
+MDY5MC5odG1sDQo+IExpbmsgb2YgdjY6DQo+IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0
+cy9saW51eC1wY2kvbXNnNDM2NjkuaHRtbA0KPiBMaW5rIG9mIHY1Og0KPiAtIGh0dHA6Ly93d3cu
+c3Bpbmljcy5uZXQvbGlzdHMvZGV2aWNldHJlZS9tc2c4Nzk1OS5odG1sDQo+IExpbmsgb2YgdjQ6
+DQo+IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9hcm0ta2VybmVsL21zZzQzMzA1MC5o
+dG1sDQo+IExpbmsgb2YgdjM6DQo+IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51
+eC1wY2kvbXNnNDI1MzkuaHRtbA0KPiBMaW5rIG9mIHYyOg0KPiAtIGh0dHA6Ly93d3cuc3Bpbmlj
+cy5uZXQvbGlzdHMvbGludXgtcGNpL21zZzQxODQ0Lmh0bWwNCj4gTGluayBvZiBSRkMgdjE6DQo+
+IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1wY2kvbXNnNDEzMDUuaHRtbA0K
+PiBMaW5rIG9mIFJGQzoNCj4gLSBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXBj
+aS9tc2c0MDQzNC5odG1sDQo+IA0KPiBbMV0gaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvcGlw
+ZXJtYWlsL2xpbnV4LWFybS1rZXJuZWwvMjAxNS0NCj4gSnVseS8zNTk3NDEuaHRtbA0KPiANCj4g
+DQo+IFpob3UgV2FuZyAoNCk6DQo+ICAgUENJOiBkZXNpZ253YXJlOiBBZGQgQVJNNjQgc3VwcG9y
+dA0KPiAgIFBDSTogaGlzaTogQWRkIFBDSWUgaG9zdCBzdXBwb3J0IGZvciBIaVNpbGljb24gU29D
+IEhpcDA1DQo+ICAgRG9jdW1lbnRhdGlvbjogRFQ6IEFkZCBIaVNpbGljb24gUENJZSBob3N0IGJp
+bmRpbmcNCj4gICBNQUlOVEFJTkVSUzogQWRkIHBjaWUtaGlzaSBtYWludGFpbmVyDQo+IA0KPiBn
+YWJyaWVsZSBwYW9sb25pICgyKToNCj4gICBQQ0k6IGRlc2lnbndhcmU6IG1vdmUgY2FsY3VsYXRp
+b24gb2YgYnVzIGFkZHJlc3NlcyB0byBEUkE3eHgNCj4gICBBUk0vUENJOiByZW1vdmUgYWxpZ25f
+cmVzb3VyY2UgaW4gcGNpX3N5c19kYXRhDQo+IA0KPiAgLi4uL2RldmljZXRyZWUvYmluZGluZ3Mv
+cGNpL2hpc2lsaWNvbi1wY2llLnR4dCAgICAgfCAgNDYgKysrKw0KPiAgTUFJTlRBSU5FUlMgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDcgKw0KPiAgYXJjaC9hcm0v
+aW5jbHVkZS9hc20vbWFjaC9wY2kuaCAgICAgICAgICAgICAgICAgICAgfCAgIDUgLQ0KPiAgYXJj
+aC9hcm0va2VybmVsL2Jpb3MzMi5jICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMTIgKy0N
+Cj4gIGRyaXZlcnMvcGNpL2hvc3QvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgICAgICAgIHwg
+ICA4ICsNCj4gIGRyaXZlcnMvcGNpL2hvc3QvTWFrZWZpbGUgICAgICAgICAgICAgICAgICAgICAg
+ICAgIHwgICAxICsNCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWRyYTd4eC5jICAgICAgICAgICAg
+ICAgICAgICAgIHwgIDEzICsrDQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS1rZXlzdG9uZS1kdy5j
+ICAgICAgICAgICAgICAgICB8ICAgMiArLQ0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2ln
+bndhcmUuYyAgICAgICAgICAgICAgICAgfCAyMzcgKysrKysrKy0tLS0tLS0tLS0tLS0NCj4gIGRy
+aXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmggICAgICAgICAgICAgICAgIHwgIDE0ICst
+DQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtaGlzaS5jICAgICAgICAgICAgICAgICAgICAgICB8
+IDI0Nw0KPiArKysrKysrKysrKysrKysrKysrKysNCj4gIDExIGZpbGVzIGNoYW5nZWQsIDQxMyBp
+bnNlcnRpb25zKCspLCAxNzkgZGVsZXRpb25zKC0pDQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgRG9j
+dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9oaXNpbGljb24tcGNpZS50eHQNCj4g
+IGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtaGlzaS5jDQo+IA0KPiAt
+LQ0KPiAxLjkuMQ0KDQo=
