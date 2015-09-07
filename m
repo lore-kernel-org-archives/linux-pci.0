@@ -1,53 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33021 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104AbbIIFWP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 01:22:15 -0400
-Received: by pacex6 with SMTP id ex6so146047309pac.0
-        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2015 22:22:14 -0700 (PDT)
-Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
-To: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150729031718.GA18069@richard> <20150909024820.GA6808@gwshan>
- <20150909033616.GA5148@richards-mbp.cn.ibm.com>
-Cc: bhelgaas@google.com, mpe@ellerman.id.au,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <55EFC200.10209@ozlabs.ru>
-Date: Wed, 9 Sep 2015 15:22:08 +1000
-MIME-Version: 1.0
-In-Reply-To: <20150909033616.GA5148@richards-mbp.cn.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Received: from plane.gmane.org ([80.91.229.3]:33546 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751062AbbIGGc7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Sep 2015 02:32:59 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1ZYpz2-0001up-Gf
+	for linux-pci@vger.kernel.org; Mon, 07 Sep 2015 08:32:53 +0200
+Received: from 195.219.98.189 ([195.219.98.189])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Mon, 07 Sep 2015 08:32:52 +0200
+Received: from peio by 195.219.98.189 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Mon, 07 Sep 2015 08:32:52 +0200
+To: linux-pci@vger.kernel.org
+From: Peio <peio@azkarate.eu>
+Subject: Re: PCI rescan : can't assign mem [SOLVED]
+Date: Mon, 7 Sep 2015 06:32:45 +0000 (UTC)
+Message-ID: <loom.20150907T082622-930@post.gmane.org>
+References: <loom.20150831T091131-859@post.gmane.org> <CAE9FiQWNA1BEGom757xtbc0zFjFqZ9uqKwj2kM7EFDDKXEL6fw@mail.gmail.com> <loom.20150901T110001-176@post.gmane.org> <CAE9FiQUxU2FCxFKQ=6ZdnJL8fU-YxAOjQmMSAP_YBG1gEG+ntA@mail.gmail.com> <loom.20150902T084450-322@post.gmane.org> <CAE9FiQWgrymUN07D5rFr0XVrF1Ays606JaWQCfH47Av0cv8q0g@mail.gmail.com> <loom.20150903T080202-734@post.gmane.org> <loom.20150903T113710-656@post.gmane.org> <CAErSpo6KYCM99H5J0JvYymNmbn-O1NfVwo4Lp7B=2cXCFQwnOw@mail.gmail.com> <loom.20150904T072156-908@post.gmane.org> <CAErSpo7M8Ahaps00An2qXQWdMpq38batxxXrVSwDBqvHjsm8rA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/09/2015 01:36 PM, Richard Yang wrote:
-> On Wed, Sep 09, 2015 at 12:48:21PM +1000, Gavin Shan wrote:
->> On Wed, Jul 29, 2015 at 11:17:18AM +0800, Wei Yang wrote:
->>> Hi, Michael
->>>
->>> Hope you didn't take this yet. We may change this patch a little.
->>>
->>
->> [Cc Alexey who might concern the SRIOV status]
->>
->> Richard, do you have plan to get it upstream? It seems it's hanged
->> over here for long time.
->>
->
-> The VF EEH is hung since we re-designed the SRIOV. After the re-design, we
-> don't have VF groups.
->
-> My plan is to push the VF EEH patch set after the SRIOV Redesign is accepted.
+Bjorn Helgaas <bhelgaas <at> google.com> writes:
+
+> 
+> On Fri, Sep 4, 2015 at 12:32 AM, Peio <peio <at> azkarate.eu> wrote:
+> > Bjorn Helgaas <bhelgaas <at> google.com> writes:
+> >-
+> 
+> 
+> If the workaround works for you, that's great and you should keep
+> using it.  I just don't want to propagate the idea that "pci=nocrs" is
+> the general solution for anything.   Ideally, a user should not have
+> to use kernel parameters except for debugging or to work around
+> hardware or firmware problems.
+> 
+> Bjorn
+> 
+
+At the moment I'll use the workaround, but a better solution will be, update 
+the BIOS to a version assigning more memory resources to pcie.
+Thank you for your warning Bjorn.
+
+Peio
 
 
-Can you please rebase on v4.2 (or v4.2 + sriov rework) and repost VF EEH 
-patchset just to me? Or share the tree somewhere where I can pull it from? 
-Thanks.
 
-As for now, I cannot tell what difference your SRIOV patchset actually makes.
-
--- 
-Alexey
