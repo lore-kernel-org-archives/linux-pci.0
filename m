@@ -1,243 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:7815 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074AbbIORLZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:25 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH 03/22] dma-debug: add checking for map/unmap_peer_resource
-Date: Tue, 15 Sep 2015 12:10:48 -0500
-Message-ID: <1442337067-22964-4-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+Received: from e24smtp01.br.ibm.com ([32.104.18.85]:43124 "EHLO
+	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751162AbbIGXEa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Sep 2015 19:04:30 -0400
+Received: from /spool/local
+	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Mon, 7 Sep 2015 20:04:28 -0300
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 1DE361DC007E
+	for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2015 19:03:23 -0400 (EDT)
+Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
+	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t87N4o3S4845654
+	for <linux-pci@vger.kernel.org>; Mon, 7 Sep 2015 20:04:50 -0300
+Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
+	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t87N4Npv026426
+	for <linux-pci@vger.kernel.org>; Mon, 7 Sep 2015 20:04:24 -0300
+Subject: Re: [PATCH v2 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
+ probe time in OF case
+To: Michael Ellerman <mpe@ellerman.id.au>,
+	"Michael S. Tsirkin" <mst@redhat.com>
+References: <1439932430-13375-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <20150903175624.GI829@google.com> <55EA2678.5030801@linux.vnet.ibm.com>
+ <20150906173838-mutt-send-email-mst@redhat.com>
+ <1441595823.12945.4.camel@ellerman.id.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	benh@kernel.crashing.org, paulus@samba.org,
+	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	"David S. Miller" <davem@davemloft.net>
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Message-ID: <55EE17F6.8010807@linux.vnet.ibm.com>
+Date: Mon, 7 Sep 2015 20:04:22 -0300
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1441595823.12945.4.camel@ellerman.id.au>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add debug callbacks for the new dma_map_peer_resource and
-dma_unmap_peer_resource functions.
+> On Sun, 2015-09-06 at 17:44 +0300, Michael S. Tsirkin wrote:
 
-Also add a callback for dma_peer_mapping_error. Most of the time this will
-be identical to dma_mapping_error, except where the dma_addr_t is not as
-wide as dma_peer_addr_t.
+>>> My question is: is necessary to initialize MSI capabilities even with
+>>> CONFIG_PCI_MSI not set? In negative case, would be "cleaner" revert the 3
+>>> commits, right?
 
-Guard these new callbacks behind a CONFIG_HAS_DMA_P2P check.
+>> I think the reason why it's necessary is explained in
+>> commit log for commit 1851617cd2da9cc53cdc1738f4148f4f042c0e56 (that's
+>> [3] below).
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
-Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
----
- include/linux/dma-debug.h | 39 ++++++++++++++++++++-
- lib/dma-debug.c           | 86 +++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 122 insertions(+), 3 deletions(-)
+Thanks very much Michael. I re-read the text of your commit, and makes 
+sense then to initialize the MSI capabilities even with CONFIG_PCI_MSI 
+not set.
 
-diff --git a/include/linux/dma-debug.h b/include/linux/dma-debug.h
-index fe8cb61..4ff8364 100644
---- a/include/linux/dma-debug.h
-+++ b/include/linux/dma-debug.h
-@@ -43,7 +43,21 @@ extern void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr);
- 
- extern void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- 				 size_t size, int direction, bool map_single);
--
-+#ifdef CONFIG_HAS_DMA_P2P
-+extern void debug_dma_map_peer_resource(struct device *dev,
-+					struct device *peer,
-+					struct resource *resource,
-+					size_t offset, size_t size,
-+					int direction,
-+					dma_peer_addr_t dma_addr);
-+
-+extern void debug_dma_peer_mapping_error(struct device *dev,
-+					 dma_peer_addr_t dma_addr);
-+
-+extern void debug_dma_unmap_peer_resource(struct device *dev,
-+					  dma_peer_addr_t addr,
-+					  size_t size, int direction);
-+#endif
- extern void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 			     int nents, int mapped_ents, int direction);
- 
-@@ -120,6 +134,29 @@ static inline void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- {
- }
- 
-+#ifdef CONFIG_HAS_DMA_P2P
-+static inline void debug_dma_map_peer_resource(struct device *dev,
-+					       struct device *peer,
-+					       struct resource *resource,
-+					       size_t offset, size_t size,
-+					       int direction,
-+					       dma_peer_addr_t dma_addr)
-+{
-+}
-+
-+static inline void debug_dma_peer_mapping_error(struct device *dev,
-+						dma_peer_addr_t dma_addr)
-+{
-+}
-+
-+static inline void debug_dma_unmap_peer_resource(struct device *dev,
-+						 dma_peer_addr_t addr,
-+						 size_t size,
-+						 int direction)
-+{
-+}
-+#endif
-+
- static inline void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 				    int nents, int mapped_ents, int direction)
- {
-diff --git a/lib/dma-debug.c b/lib/dma-debug.c
-index ae4b65e..622f569 100644
---- a/lib/dma-debug.c
-+++ b/lib/dma-debug.c
-@@ -43,6 +43,7 @@ enum {
- 	dma_debug_page,
- 	dma_debug_sg,
- 	dma_debug_coherent,
-+	dma_debug_peer_resource,
- };
- 
- enum map_err_types {
-@@ -64,7 +65,8 @@ enum map_err_types {
-  * @direction: enum dma_data_direction
-  * @sg_call_ents: 'nents' from dma_map_sg
-  * @sg_mapped_ents: 'mapped_ents' from dma_map_sg
-- * @map_err_type: track whether dma_mapping_error() was checked
-+ * @map_err_type: track whether dma_mapping_error() or dma_peer_mapping_error()
-+ *		  was called
-  * @stacktrace: support backtraces when a violation is detected
-  */
- struct dma_debug_entry {
-@@ -1250,6 +1252,23 @@ out:
- 	put_hash_bucket(bucket, &flags);
- }
- 
-+static void check_mapping_error(struct dma_debug_entry *entry, bool peer)
-+{
-+	if (peer && !(entry->type == dma_debug_peer_resource))
-+		err_printk(entry->dev, entry, "DMA-API: device driver calls "
-+				"dma_peer_mapping_error() on dma_addr_t "
-+				"[device address=0x%016llx] [size=%llu bytes]\n",
-+				(unsigned long long)entry->dev_addr,
-+				entry->size);
-+
-+	if (!peer && (entry->type == dma_debug_peer_resource))
-+		err_printk(entry->dev, entry, "DMA-API: device driver calls "
-+				"dma_mapping_error() on dma_peer_addr_t "
-+				"[device address=0x%016llx] [size=%llu bytes]\n",
-+				(unsigned long long)entry->dev_addr,
-+				entry->size);
-+}
-+
- void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
- 			size_t size, int direction, dma_addr_t dma_addr,
- 			bool map_single)
-@@ -1289,7 +1308,9 @@ void debug_dma_map_page(struct device *dev, struct page *page, size_t offset,
- }
- EXPORT_SYMBOL(debug_dma_map_page);
- 
--void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
-+static void debug_dma_mapping_error_common(struct device *dev,
-+					   u64 dma_addr,
-+					   bool peer)
- {
- 	struct dma_debug_entry ref;
- 	struct dma_debug_entry *entry;
-@@ -1319,12 +1340,18 @@ void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
- 		 */
- 		if (entry->map_err_type == MAP_ERR_NOT_CHECKED) {
- 			entry->map_err_type = MAP_ERR_CHECKED;
-+			check_mapping_error(entry, peer);
- 			break;
- 		}
- 	}
- 
- 	put_hash_bucket(bucket, &flags);
- }
-+
-+void debug_dma_mapping_error(struct device *dev, dma_addr_t dma_addr)
-+{
-+	debug_dma_mapping_error_common(dev, (u64)dma_addr, false);
-+}
- EXPORT_SYMBOL(debug_dma_mapping_error);
- 
- void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
-@@ -1348,6 +1375,61 @@ void debug_dma_unmap_page(struct device *dev, dma_addr_t addr,
- }
- EXPORT_SYMBOL(debug_dma_unmap_page);
- 
-+#ifdef CONFIG_HAS_DMA_P2P
-+void debug_dma_map_peer_resource(struct device *dev, struct device *peer,
-+				 struct resource *resource, size_t offset,
-+				 size_t size, int direction,
-+				 dma_peer_addr_t dma_addr)
-+{
-+	struct dma_debug_entry *entry;
-+
-+	if (unlikely(dma_debug_disabled()))
-+		return;
-+
-+	if (dma_mapping_error(dev, dma_addr))
-+		return;
-+
-+	entry = dma_entry_alloc();
-+	if (!entry)
-+		return;
-+
-+	entry->dev       = dev;
-+	entry->type      = dma_debug_peer_resource;
-+	entry->pfn       = resource->start >> PAGE_SHIFT;
-+	entry->offset    = offset,
-+	entry->dev_addr  = dma_addr;
-+	entry->size      = size;
-+	entry->direction = direction;
-+
-+	add_dma_entry(entry);
-+}
-+EXPORT_SYMBOL(debug_dma_map_peer_resource);
-+
-+void debug_dma_peer_mapping_error(struct device *dev, dma_peer_addr_t dma_addr)
-+{
-+	debug_dma_mapping_error_common(dev, (u64)dma_addr, true);
-+}
-+EXPORT_SYMBOL(debug_dma_peer_mapping_error);
-+
-+void debug_dma_unmap_peer_resource(struct device *dev, dma_peer_addr_t addr,
-+				   size_t size, int direction)
-+{
-+	struct dma_debug_entry ref = {
-+		.type           = dma_debug_peer_resource,
-+		.dev            = dev,
-+		.dev_addr       = addr,
-+		.size           = size,
-+		.direction      = direction,
-+	};
-+
-+	if (unlikely(dma_debug_disabled()))
-+		return;
-+
-+	check_unmap(&ref);
-+}
-+EXPORT_SYMBOL(debug_dma_unmap_peer_resource);
-+#endif
-+
- void debug_dma_map_sg(struct device *dev, struct scatterlist *sg,
- 		      int nents, int mapped_ents, int direction)
- {
--- 
-2.5.1
+
+> On 09/07/2015 12:17 AM, Michael Ellerman wrote:
+> Well yes and no.
+>
+> What we want to do when CONFIG_PCI_MSI=n is disable MSI on the device. In order
+> to do that the code first initialises dev->msi[x]_cap.
+>
+> But arguably that's wrong, ie. when CONFIG_PCI_MSI=n dev->msi[x]_cap *should*
+> be zero so that any code which erroneously tries to use them will fail.
+>
+> But perhaps that's being too pedantic :)
+
+I thought exactly this - that was the reason of my questioning. Thanks 
+for your opinion Michael - I'd call the argument logical, not pedantic 
+hehehe
+
+
+Cheers
 
