@@ -1,81 +1,101 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 2 Sep 2015 17:23:25 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Alexander Graf <agraf@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v2 1/4] of/pci: Add of_pci_check_probe_only to parse
- "linux,pci-probe-only"
-Message-ID: <20150902222325.GD829@google.com>
-References: <1439569159-10051-1-git-send-email-marc.zyngier@arm.com>
- <1439569159-10051-2-git-send-email-marc.zyngier@arm.com>
- <CAL_JsqL7VPB6nc-zRYm_73ZSgYVq_+a6sW_XZZ_LRaUXf4jTng@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqL7VPB6nc-zRYm_73ZSgYVq_+a6sW_XZZ_LRaUXf4jTng@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <55657EA3.5000601@linaro.org>
+References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
+	<1432644564-24746-2-git-send-email-hanjun.guo@linaro.org>
+	<20150526165844.GD2175@e106497-lin.cambridge.arm.com>
+	<5564AB68.6080502@linux.intel.com>
+	<55657EA3.5000601@linaro.org>
+Date: Mon, 7 Sep 2015 09:44:22 +0530
+Message-ID: <CAFpQJXUU4mVbJSyfQJJm_VjR_uAm-xKHP7syYaM_xuC+CG7q5w@mail.gmail.com>
+Subject: Re: [PATCH 01/11] ARM64 / PCI: introduce struct pci_controller for ACPI
+From: Ganapatrao Kulkarni <gpkulkarni@gmail.com>
+To: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 14, 2015 at 04:08:10PM -0500, Rob Herring wrote:
-> On Fri, Aug 14, 2015 at 11:19 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> > Both pci-host-generic and Pseries parse the "linux,pci-probe-only"
-> > to engage the PCI_PROBE_ONLY mode, and both have a subtle bug that
-> > can be triggered if the property has no parameter.
-> 
-> Humm, I bet we could break a lot of machines if we fixed the core code
-> to properly make pp->value NULL when there is no value.
-> 
-> > Provide a generic implementation that can be used by both.
-> >
-> > Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
-> > ---
-> >  drivers/of/of_pci.c    | 30 ++++++++++++++++++++++++++++++
-> >  include/linux/of_pci.h |  3 +++
-> >  2 files changed, 33 insertions(+)
-> >
-> > diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> > index 5751dc5..a4e29ff 100644
-> > --- a/drivers/of/of_pci.c
-> > +++ b/drivers/of/of_pci.c
-> > @@ -118,6 +118,36 @@ int of_get_pci_domain_nr(struct device_node *node)
-> >  EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
-> >
-> >  /**
-> > + * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
-> > + *                           is present and valid
-> > + *
-> > + * @node: device tree node that may contain the property (usually "chosen")
-> > + *
-> > + */
-> > +void of_pci_check_probe_only(struct device_node *node)
-> > +{
-> > +       const int *prop;
-> > +       int len;
-> > +
-> > +       if (!node)
-> > +               return;
-> > +
-> > +       prop = of_get_property(node, "linux,pci-probe-only", &len);
-> 
-> It is preferred to use of_property_read_u32 to avoid just these types
-> of problems.
+Hi Hanjun,
 
-I don't know enough OF to really understand this, but I infer that
-this is a suggestion for improving the patch.  Should I be waiting for
-a v3 series?
+On Wed, May 27, 2015 at 1:51 PM, Hanjun Guo <hanjun.guo@linaro.org> wrote:
+> Hi Liviu,
+>
+> On 2015年05月27日 01:20, Jiang Liu wrote:
+>>
+>> On 2015/5/27 0:58, Liviu Dudau wrote:
+>>>
+>>> On Tue, May 26, 2015 at 01:49:14PM +0100, Hanjun Guo wrote:
+>>>>
+>>>> ARM64 ACPI based PCI host bridge init needs a arch dependent
+>>>> struct pci_controller to accommodate common PCI host bridge
+>>>> code which is introduced later, or it will lead to compile
+>>>> errors on ARM64.
+>>>
+>>>
+>>> Hi Hanjun,
+>>>
+>>> Two questions: why don't you introduce this patch next to the
+>>> one that is going to make use of it (or even merge it there)?
+>
+>
+> this is because of this patch is needed by Jiang Liu's patch set
+> to fix the compile error on ARM64, I'd rather do that, but It's
+> better to let Jiang Liu's patch goes in, and then this one, that's
+> why I prepared a single patch for the struct. (I mentioned it
+> in the cover letter)
+>
+>>> Second, why is the whole struct pci_controller not surrounded
+>>> by #ifdef CONFIG_ACPI as you are implying that this is needed
+>>> only for ACPI?
+>
+>
+> I hope it can be reused, since the NUMA node and segment (domain)
+> is both needed for DT and ACPI, if it's not the case foe now, I
+> can surrounded them all by #ifdef CONFIG_ACPI.
+we can make use of this structure to hold pci to numa node
+mapping(pcibus_to_node).
+can you please pull node member out of  CONFIG_ACPI ifdef.
+or you can put only acpi_device under ifdef.
+>
+>>>
+>>> Btw, looking through the whole series I'm not (yet) convinced
+>>> that this is needed at all.
+>>
+>> Hi Liviu,
+>>         This structure is required by the requested patch set
+>> at http://patchwork.ozlabs.org/patch/472249/, which consolidates
+>> the common code to support PCI host bridge into ACPI core.
+>
+>
+> Jiang, thanks for the explanation :)
+>
+> Thanks
+> Hanjun
 
-Bjorn
+thanks
+Ganapat
+>
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
