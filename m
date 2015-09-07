@@ -1,112 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
-Subject: [PATCH v6 05/53] PCI: Don't release fixed resource for realloc
-Date: Wed, 30 Sep 2015 22:52:39 -0700
-Message-Id: <1443678807-786-6-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:45919 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753417AbbIGDKG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 6 Sep 2015 23:10:06 -0400
+Message-ID: <1441595403.12945.3.camel@ellerman.id.au>
+Subject: Re: [PATCH v2 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
+ probe time in OF case
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
+	paulus@samba.org, mst@redhat.com, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Yijing Wang <wangyijing@huawei.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	"David S. Miller" <davem@davemloft.net>
+Date: Mon, 07 Sep 2015 13:10:03 +1000
+In-Reply-To: <20150903175624.GI829@google.com>
+References: <1439932430-13375-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <20150903175624.GI829@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We should not release bridge resource if there is fixed resources
-under it, otherwise the children firmware would stop working.
+On Thu, 2015-09-03 at 12:56 -0500, Bjorn Helgaas wrote:
+> [+cc Fam, Yinghai, Yijing, Eric (reviewers of MST's original series), Dave]
+> 
+> Hi Guilherme,
+> 
+> On Wed, Aug 19, 2015 at 03:54:10PM -0300, Guilherme G. Piccoli wrote:
+> > diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+> > index 42e02a2..0e920f3 100644
+> > --- a/arch/powerpc/kernel/pci_of_scan.c
+> > +++ b/arch/powerpc/kernel/pci_of_scan.c
+> > @@ -191,6 +191,9 @@ struct pci_dev *of_create_pci_dev(struct device_node *node,
+> >  
+> >  	pci_device_add(dev, bus);
+> >  
+> > +	/* Disable MSI/MSI-X here to avoid bogus interrupts */
+> > +	pci_msi_setup_pci_dev(dev);
+> 
+> of_create_pci_dev() already has a lot of code that duplicates
+> pci_setup_device(), and it's a shame to add more.  There's also a sparc
+> version of of_create_pci_dev() that presumably has the same problem you're
+> fixing for powerpc.
+> 
+> Michael originally called pci_msi_setup_pci_dev() from
+> pci_init_capabilities() [1].  A subsequent patch moved the call
+> to pci_setup_device() [2] because an early quirk (called from
+> pci_setup_device()) used pci_msi_off(), which depended on
+> pci_msi_setup_pci_dev().  
+> 
+> But we later removed pci_msi_off() completely, so I think we probably
+> *could* call pci_msi_setup_pci_dev() from pci_init_capabilities().
+> 
+> That would be much nicer because it makes more sense there, and it
+> would do the right thing for powerpc and sparc because they both
+> already use that path.
 
-Reported-by: Paul Johnson <pjay@nwtrail.com>
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: stable@vger.kernel.org
----
- drivers/pci/setup-bus.c |  6 ++++--
- include/linux/ioport.h  |  2 +-
- kernel/resource.c       | 28 ++++++++++++++++++++++++++--
- 3 files changed, 31 insertions(+), 5 deletions(-)
+Sounds reasonable to me.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 508cc56..a65439a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1450,14 +1450,16 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 
- 	r = &b_res[idx];
- 
--	if (!r->parent)
-+	if (!r->parent || r->flags & IORESOURCE_PCI_FIXED)
- 		return;
- 
- 	/*
- 	 * if there are children under that, we should release them
- 	 *  all
- 	 */
--	release_child_resources(r);
-+	if (!release_child_resources(r))
-+		return;
-+
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & type_mask;
- 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 388e3ae..27dbb18 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -141,7 +141,7 @@ extern struct resource iomem_resource;
- extern struct resource *request_resource_conflict(struct resource *root, struct resource *new);
- extern int request_resource(struct resource *root, struct resource *new);
- extern int release_resource(struct resource *new);
--void release_child_resources(struct resource *new);
-+bool release_child_resources(struct resource *new);
- extern void reserve_region_with_split(struct resource *root,
- 			     resource_size_t start, resource_size_t end,
- 			     const char *name);
-diff --git a/kernel/resource.c b/kernel/resource.c
-index f150dbb..6927298 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -275,11 +275,35 @@ static void __release_child_resources(struct resource *r)
- 	}
- }
- 
--void release_child_resources(struct resource *r)
-+static bool __has_fixed_child_resources(struct resource *r)
- {
-+	struct resource *p;
-+
-+	p = r->child;
-+	while (p) {
-+		if (p->flags & IORESOURCE_PCI_FIXED)
-+			return true;
-+
-+		if (__has_fixed_child_resources(p))
-+			return true;
-+
-+		p = p->sibling;
-+	}
-+
-+	return false;
-+}
-+
-+bool release_child_resources(struct resource *r)
-+{
-+	bool fixed;
-+
- 	write_lock(&resource_lock);
--	__release_child_resources(r);
-+	fixed = __has_fixed_child_resources(r);
-+	if (!fixed)
-+		__release_child_resources(r);
- 	write_unlock(&resource_lock);
-+
-+	return !fixed;
- }
- 
- /**
--- 
-1.8.4.5
+Guilherme can you please try this and let us know.
+
+cheers
+
 
