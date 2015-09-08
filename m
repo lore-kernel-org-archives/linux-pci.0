@@ -1,77 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:50669 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827AbbIPWD4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 18:03:56 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v5 42/53] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Wed, 16 Sep 2015 14:57:40 -0700
-Message-Id: <1442440671-5361-43-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:35607 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754618AbbIHQUE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 12:20:04 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH] PCI: designware: fix dw_pcie_cfg_write
+Date: Tue, 8 Sep 2015 16:19:53 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620B348@lhreml503-mbs>
+References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com>
+	<20150903205943.GJ829@google.com>
+ <CAHM4w1mRg2K49H3jD4oEcEY91Y-TbNA-C4tjwppDuQwi05yrVA@mail.gmail.com>
+In-Reply-To: <CAHM4w1mRg2K49H3jD4oEcEY91Y-TbNA-C4tjwppDuQwi05yrVA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-parsing.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
----
- arch/sparc/kernel/of_device_32.c | 5 +++--
- arch/sparc/kernel/of_device_64.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
-index 185aa96..3e9f273 100644
---- a/arch/sparc/kernel/of_device_32.c
-+++ b/arch/sparc/kernel/of_device_32.c
-@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
-diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
-index 7bbdc26..defee61 100644
---- a/arch/sparc/kernel/of_device_64.c
-+++ b/arch/sparc/kernel/of_device_64.c
-@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
--- 
-1.8.4.5
-
+SGkgQmpvcm4gYW5kIFByYXR5dXNoLCB0aGFua3MgZm9yIHJldmlld2luZw0KDQo+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXBjaS1vd25lckB2Z2VyLmtlcm5lbC5v
+cmcgW21haWx0bzpsaW51eC1wY2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxm
+IE9mIFByYXR5dXNoIEFuYW5kDQo+IFNlbnQ6IEZyaWRheSwgU2VwdGVtYmVyIDA0LCAyMDE1IDc6
+MDYgQU0NCj4gVG86IEJqb3JuIEhlbGdhYXMNCj4gQ2M6IEdhYnJpZWxlIFBhb2xvbmk7IGxpbnV4
+LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IFdhbmd6aG91IChCKTsgSmluZ29vDQo+IEhhbjsgWXVhbnpo
+aWNoYW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsgcWl1emhlbmZhOyBMaWd1b3podSAoS2VubmV0
+aCkNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gUENJOiBkZXNpZ253YXJlOiBmaXggZHdfcGNpZV9j
+Zmdfd3JpdGUNCj4gDQo+IEhpIEJqb3JuLA0KPiANCj4gDQo+IE9uIEZyaSwgU2VwIDQsIDIwMTUg
+YXQgMjoyOSBBTSwgQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gd3JvdGU6
+DQo+ID4gT24gVGh1LCBBdWcgMjAsIDIwMTUgYXQgMDk6NTg6MzNQTSArMDgwMCwgR2FicmllbGUg
+UGFvbG9uaSB3cm90ZToNCj4gPj4gRnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFv
+bG9uaUBodWF3ZWkuY29tPg0KPiA+Pg0KPiA+PiBDdXJyZW50bHkgaW4gZHdfcGNpZV9jZmdfd3Jp
+dGUoKSBpZiB0aGUgaW5wdXQgc2l6ZSBpcyAyIGJ5dGVzDQo+ID4+IHRoZSBhZGRyZXNzIG9mZnNl
+dCBpcyB3cm9uZ2x5IGNhbGN1bGF0ZWQgYXMgd2UgbWFzayBhbHNvIGJpdDANCj4gPj4gb2YgIndo
+ZXJlIiBpbnB1dCBwYXJhbWV0ZXIuIEluc3RlYWQgd2Ugc2hvdWxkIG1hc2sgYWxsIGJpdHMgb2YN
+Cj4gPj4gIndoZXJlIiBleGNlcHQgYml0MCBhbmQgYml0MS4NCj4gPg0KPiA+IEkgdGhpbmsgdGhl
+cmUgYXJlIHR3byBwcm9ibGVtcyBpbiB0aGlzIGFyZWE6DQo+ID4NCj4gPiAxKSBNb3N0IGNhbGxz
+IG9mIGR3X3BjaWVfY2ZnX3dyaXRlKCkgYXJlIG9mIHRoZSBmb3JtOg0KPiA+DQo+ID4gICAgIGR3
+X3BjaWVfY2ZnX3JlYWQocHAtPmRiaV9iYXNlICsgKHdoZXJlICYgfjB4MyksIHdoZXJlLCAuLi4p
+DQo+ID4gICAgIGR3X3BjaWVfY2ZnX3dyaXRlKHBwLT5kYmlfYmFzZSArICh3aGVyZSAmIH4weDMp
+LCB3aGVyZSwgLi4uKQ0KPiA+DQo+ID4gICAgVGhpcyBpcyBuZWVkbGVzc2x5IHJlcGV0aXRpdmUg
+YmVjYXVzZSB0aGUgY2FsbGVyIGhhcyB0byBtZW50aW9uDQo+ID4gICAgIndoZXJlIiB0d2ljZSBh
+bmQgZG8gdGhlIG1hc2tpbmcgaXRzZWxmLiAgV2UgY291bGQgc2ltcGx5IHBhc3MNCj4gPiAgICAi
+cHAtPmRiaV9iYXNlIiBhbmQgIndoZXJlIiBhbmQgbGV0IGR3X3BjaWVfY2ZnX3dyaXRlKCkgZG8g
+YWxsIHRoZQ0KPiA+ICAgIHJlcXVpcmVkIG1hc2tpbmcgaW50ZXJuYWxseS4NCj4gDQo+IEkgdGhp
+bmsganVzdCBieSBwYXNzaW5nICJwcC0+ZGJpX2Jhc2UiIGFuZCAid2hlcmUiICB3ZSBjYW4gbm90
+IHRha2UNCj4gY2FyZSBvZiBhbGwgY2FzZXMuIEZvciBleGFtcGxlLCBpZiBJIGhhdmUgdG8gcmVh
+ZCBQQ0lfQ0FDSEVfTElORV9TSVpFDQo+ICg4IGJpdCB2YWx1ZSBhdCBvZmZzZXQgMHgwQyksIEkg
+d2lsbCBoYXZlIHRvIHBhc3MgInBwLT5kYmlfYmFzZSIgKw0KPiBQQ0lfQ0FDSEVfTElORV9TSVpF
+LCAxDQoNClNheSB5b3UgY2FsbCBkd19wY2llX2NmZ193cml0ZShwcC0+ZGJpX2Jhc2UsIFBDSV9D
+QUNIRV9MSU5FX1NJWkUsIDEsIC4uLikNCg0KeW91IGNhbiBoYXZlOg0KDQppbnQgZHdfcGNpZV9j
+Zmdfd3JpdGUodm9pZCBfX2lvbWVtICphZGRyLCBpbnQgd2hlcmUsIGludCBzaXplLCB1MzIgdmFs
+KQ0Kew0KCWFkZHIgKz0gd2hlcmU7DQoJaWYgKHNpemUgPT0gNCkgew0KCQlpZiAoYWRkciAmIDMp
+IHJldHVybiBQQ0lCSU9TX0JBRF9SRUdJU1RFUl9OVU1CRVI7DQoJCXdyaXRlbCh2YWwsIGFkZHIp
+Ow0KCX0gZWxzZSBpZiAoc2l6ZSA9PSAyKSB7DQoJCWlmIChhZGRyICYgMikgcmV0dXJuIFBDSUJJ
+T1NfQkFEX1JFR0lTVEVSX05VTUJFUjsNCgkJd3JpdGV3KHZhbCwgYWRkciArICh3aGVyZSAmIDIp
+KTsNCgl9IGVsc2UgaWYgKHNpemUgPT0gMSkNCgkJd3JpdGViKHZhbCwgYWRkciArICh3aGVyZSAm
+IDMpKTsNCgllbHNlDQoJCXJldHVybiBQQ0lCSU9TX0JBRF9SRUdJU1RFUl9OVU1CRVI7DQoNCgly
+ZXR1cm4gUENJQklPU19TVUNDRVNTRlVMOw0KfQ0KDQpTbyB3ZSBjYW4gY2xlYW4gYWxsIHRoZSBj
+YWxsZXJzIHRoYXQgQmpvcm4gcG9pbnRlZCBvdXQuLi4uDQoNCj4gDQo+IFNvLCBJIHRoaW5rIFVz
+ZXIgb2YgdGhpcyBmdW5jdGlvbiB3aWxsIG5lZWQgdG8gcGFzcyAiYWRkciIsInNpemUiIGFuZA0K
+PiAidmFsIiwgd2hlcmUNCj4gImFkZHIiICBhcyAicHAtPmRiaV9iYXNlIiArICJ3aGVyZSINCj4g
+InNpemUiIGFuZCAidmFsIiBhcyBpdCBpcy4NCj4gDQo+IG9uZSBtb3JlIHRoaW5nIElJUkMsIHRo
+ZXJlIHdhcyBzb21lIGRpc2N1c3Npb24gKGhvd2V2ZXIgSSBhbSB1bmFibGUgdG8NCj4gZmluZCBh
+bnkgcmVmZXJlbmNlKSwgYW5kIG5vdCBzdXJlIGlmIGl0IGlzIHN0aWxsIHRydWUgd2l0aCBhbnkN
+Cj4gcGxhdGZvcm06ICBpc3N1ZXMgd2l0aCBub24gd29yZCBhbGlnbmVkIFBDSSByZWdpc3RlciBy
+ZWFkLg0KPiBJZiBhIHBsYXRmb3JtIGlzIG5vdCBhYmxlIHRvIHJlYWQgbm9uIHdvcmQgYWxpZ25l
+ZCByZWdpc3RlciBjb3JyZWN0bHksDQo+IHRoZW4gaW4gdGhhdCBjYXNlIHdlIHdpbGwgaGF2ZSB0
+byBwYXNzIHdoZXJlIGFuZCBzaXplIGJvdGggOigNCj4gDQo+ID4NCj4gPiAyKSBQcmF0eXVzaCwg
+dGhpcyBvbmUncyBmb3IgeW91IDopICBzcGVhcjEzeHhfcGNpZV9lc3RhYmxpc2hfbGluaygpDQo+
+ID4gICAgY2FsbHMgZHdfcGNpZV9jZmdfcmVhZCgpIGFuZCBkd19wY2llX2NmZ193cml0ZSgpIHNl
+dmVyYWwgdGltZXMNCj4gbGlrZQ0KPiA+ICAgIHRoaXM6DQo+ID4NCj4gPiAgICAgZHdfcGNpZV9j
+ZmdfcmVhZChwcC0+ZGJpX2Jhc2UsIGV4cF9jYXBfb2ZmICsgUENJX0VYUF9ERVZDVEwsDQo+IDQs
+IC4uLikNCj4gPiAgICAgZHdfcGNpZV9jZmdfd3JpdGUocHAtPmRiaV9iYXNlLCBleHBfY2FwX29m
+ZiArIFBDSV9FWFBfREVWQ1RMLA0KPiA0LCAuLi4pDQo+ID4NCj4gPiAgICBJIHRoaW5rIHRoZXNl
+IGFyZSBpbmNvcnJlY3QgYmVjYXVzZSBkd19wY2llX2NmZ19yZWFkKCkgYW5kDQo+ID4gICAgZHdf
+cGNpZV9jZmdfd3JpdGUoKSBkb24ndCBhZGQgYW55dGhpbmcgdG8gdGhlICJhZGRyIiBhcmd1bWVu
+dA0KPiA+ICAgICgicHAtPmRiaV9iYXNlIiBpbiB0aGlzIGNhc2UpIGV4Y2VwdCB0aGUgMC0zIGJ5
+dGUgc2VsZWN0IG9mZnNldCwNCj4gc28NCj4gPiAgICB0aGV5IHVzZSB0aGUgY29ycmVjdCBhbGln
+bm1lbnQsIGJ1dCBhY2Nlc3MgdGhlIHdyb25nIHJlZ2lzdGVycy4NCj4gDQo+IGh1bW1tLi5zbyBm
+b3Igc3VyZSB0aGUgdmVyc2lvbiB3aGljaCB3YXMgdXAtc3RyZWFtZWQgaGFzIG5ldmVyIGJlZW4N
+Cj4gdGVzdGVkIHdpdGggYnVnZ3kgZ2VuMSBjYXJkIGFuZCB3aXRoIGFueSBlbmRwb2ludCB3aGlj
+aCB3b3VsZCBoYXZlDQo+IGdlbmVyYXRlZCBhIHJlYWQgcmVxdWVzdCBvZiBtb3JlIHRoYW4gMTI4
+IGJ5dGVzIDooIC4uIFdpbGwgY29ycmVjdC4NCg0KSWYgeW91IGFyZSBoYXBweSB3aXRoIHRoZSBz
+b2x1dGlvbiBhYm92ZSBJIGNhbiBjcmVhdGUgYSBwYXRjaHNldCwgd2hlcmUNCnRoZSBmaXJzdCBw
+YXRjaCBmaXhlcyB0aGlzIGFuZCB0aGUgc2Vjb25kIGNoYW5nZXMgZHdfcGNpZV9jZmdfd3JpdGUo
+KSwNCmR3X3BjaWVfY2ZnX3JlYWQgYW5kIHJlc3BlY3RpdmUgZnVuY3Rpb24gY2FsbHMuLi4NCg0K
+PiANCj4gVGhhbmtzIGEgbG90IGZvciBwb2ludGluZyB0aGlzIG91dCA6LSkNCj4gDQo+IH5QcmF0
+eXVzaA0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGlu
+ZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8g
+bWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRw
+Oi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
