@@ -1,98 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:5328 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927AbbIKJby (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 05:31:54 -0400
+Received: from lhrrgout.huawei.com ([194.213.3.17]:9356 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752071AbbIHKRi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 06:17:38 -0400
 From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>,
-	Pratyush Anand <panand@redhat.com>
-Subject: [PATCH v3 1/3] PCIe: SPEAr13xx: fix dw_pcie_cfg_read/write() usage
-Date: Fri, 11 Sep 2015 17:38:25 +0800
-Message-ID: <1441964307-126942-2-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	qiujiang <qiujiang@huawei.com>
+Subject: RE: [PATCH] PCI: Designware: Move num-lanes property read to
+ dw_pcie_setup_rc
+Date: Tue, 8 Sep 2015 10:17:26 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620AF8A@lhreml503-mbs>
+References: <1440587656-84224-1-git-send-email-gabriele.paoloni@huawei.com>
+ <CAHM4w1nECj+eVRNNXSPLOt0gzXCeS5vhLKAihHGCR7bresbnmw@mail.gmail.com>
+In-Reply-To: <CAHM4w1nECj+eVRNNXSPLOt0gzXCeS5vhLKAihHGCR7bresbnmw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
-
-w_pcie_cfg_read/write() expects 1st argument 'addr' as a 32 bit word
-aligned address, 2nd argument 'where' as the offset within that word(0, 1,
-2 or 3) and 3rd argument 'size' is the number of bytes need to be read at
-the offset(could be 1, 2 ,4).
-
-SPEAr13xx is using dw_pcie_cfg_read() and dw_pcie_cfg_write() incorrectly.
-Without this fix, SPEAr13xx host will never work with  few buggy gen1 card
-which connects with only gen1 host and also with any endpoint which would
-generate a read request of more than 128 bytes.
-
-Cc: stable@vger.kernel.org # v3.17+
-Signed-off-by: Pratyush Anand <panand@redhat.com>
-Reported-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pcie-spear13xx.c | 26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 98d2683..0754ea3 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -163,34 +163,36 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
-+	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
-+				0, 2, &val);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
-+	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
-+				0, 2, val);
- 
--	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
--	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
- 
- 	/*
- 	 * if is_gen1 is set then handle it, so that some buggy card
- 	 * also works
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
--				 &val);
-+		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
-+					0, 4, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCAP, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
-+						PCI_EXP_LNKCAP, 0, 4, val);
- 		}
- 
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
--				 &val);
-+		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
-+					0, 2, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCTL2, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
-+						PCI_EXP_LNKCTL2, 0, 2, val);
- 		}
- 	}
- 
--- 
-1.9.1
-
+SGkgUHJhdHl1c2gsIG1hbnkgdGhhbmtzIGZvciByZXBseWluZy4NCg0KPiAtLS0tLU9yaWdpbmFs
+IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBQcmF0eXVzaCBBbmFuZCBbbWFpbHRvOnByYXR5dXNoLmFu
+YW5kQGdtYWlsLmNvbV0NCj4gU2VudDogVHVlc2RheSwgU2VwdGVtYmVyIDA4LCAyMDE1IDEwOjA2
+IEFNDQo+IFRvOiBHYWJyaWVsZSBQYW9sb25pDQo+IENjOiBKaW5nb28gSGFuOyBXYW5nemhvdSAo
+Qik7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IHFpdXpoZW5mYTsNCj4gemhhbmdqdWt1bzsg
+bGl1ZG9uZ2RvbmcgKEMpOyBMaWd1b3podSAoS2VubmV0aCk7IHFpdWppYW5nDQo+IFN1YmplY3Q6
+IFJlOiBbUEFUQ0hdIFBDSTogRGVzaWdud2FyZTogTW92ZSBudW0tbGFuZXMgcHJvcGVydHkgcmVh
+ZCB0bw0KPiBkd19wY2llX3NldHVwX3JjDQo+IA0KPiBIaSBHYWIsDQo+IA0KPiBTb3JyeSBmb3Ig
+dGhlIGRlbGF5ZWQgcmVzcG9uc2UuDQo+IA0KPiBPbiBXZWQsIEF1ZyAyNiwgMjAxNSBhdCA0OjQ0
+IFBNLCBHYWJyaWVsZSBQYW9sb25pDQo+IDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+IHdy
+b3RlOg0KPiA+IEZyb206IGdhYnJpZWxlIHBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2Vp
+LmNvbT4NCj4gPg0KPiA+IEN1cnJlbnRseSBudW0tbGFuZXMgaXMgcmVhZCBpbiBkd19wY2llX2hv
+c3RfaW5pdCgpLg0KPiA+IGZvciBBIFNvQyB0aGF0IHBlcmZvcm1zIHRoZSBsaW5rLXVwIG9wZXJh
+dGlvbiBpbiBVRUZJIG51bS1sYW5lcw0KPiA+IGlzIG5vdCBuZWVkZWQgaW4gdGhlIERUUyBidXQg
+aXQgaGFzIHRvIGJlIHNwZWNpZmllZCB0byBhbnkgdmFsdWU7DQo+ID4gb3RoZXJ3aXNlIGR3X3Bj
+aWVfaG9zdF9pbml0IHdpbGwgZmFpbC4NCj4gDQo+IE9LLCBTbyBpdCBtZWFucyBudW0tbGFuZXMg
+aXMgbm8gbG9uZ2VyICJyZXF1aXJlZCBwcm9wZXJ0eSIgYW5kIGNhbiBiZQ0KPiBhbiAib3B0aW9u
+YWwgcHJvcGVydHkiLg0KPiBJTU8sDQo+IA0KPiAqIG1vdmUgbnVtLWxhbmVzIGZyb20gIlJlcXVp
+cmVkIiB0byAiT3B0aW9uYWwiIGluDQo+IERvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5n
+cy9wY2kvZGVzaWdud2FyZS1wY2llLnR4dA0KDQpBZ3JlZWQsIHdpbGwgZG8gaW4gUEFUQ0ggdjIN
+Cg0KPiAqIEhhbmRsZSBpdCBpbiBkd19wY2llX2hvc3RfaW5pdCgpIGl0c2VsZiAoc2ltaWxhciB0
+byBidXMtcmFuZ2UpDQo+ICAgICAgLSBzL2Rldl9lcnIvZGV2X2RiZw0KPiAgICAgIC0gc2V0IHBw
+LT5sYW5lcyA9IDA7DQo+ICogTWF5IGJlIHdlIGNhbiBwdXQgYSBkZXZfZXJyIG1lc3NhZ2UgaW4g
+ZHdfcGNpZV9zZXR1cF9yYygpIGZvciBwcC0NCj4gPmxhbmVzID0gMC4NCj4gDQoNCkFib3V0IHRo
+ZXNlIHR3byBhYm92ZSwgbW92aW5nIHRoZSBEVCByZWFkIHRvIGR3X3BjaWVfc2V0dXBfcmMoKSB3
+b3VsZA0Kc2F2ZSB0aGUgaGFzc2xlIG9mIHNldHRpbmcgcHAtPmxhbmVzIHRvIDAgYW5kIGhhdmlu
+ZyBpdCBjaGVja2VkIGxhdGVyIA0KaW4gZHdfcGNpZV9zZXR1cF9yYygpLCBob3dldmVyIGlmIHlv
+dSB0aGluayBpdCBpcyBtb3JlIGNsZWFuIHRvIGtlZXAgDQphbGwgdGhlIERUIHJlbGF0ZWQgcGFy
+dCBpbiBkd19wY2llX2hvc3RfaW5pdCgpIEkgaGF2ZSBubyBwcm9icyBpbiBkb2luZw0KdGhlIHdh
+eSB5b3Ugc3VnZ2VzdGVkLi4uIA0KDQo+IH5QcmF0eXVzaA0K
