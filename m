@@ -1,68 +1,209 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:36881 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753676AbbIHIcR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 04:32:17 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	qiujiang <qiujiang@huawei.com>
-Subject: RE: [PATCH] PCI: Designware: Move num-lanes property read to
- dw_pcie_setup_rc
-Date: Tue, 8 Sep 2015 08:32:02 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620AE08@lhreml503-mbs>
-References: <1440587656-84224-1-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1440587656-84224-1-git-send-email-gabriele.paoloni@huawei.com>
-Content-Type: text/plain; charset="gb2312"
+Received: from foss.arm.com ([217.140.101.70]:55040 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754537AbbIHPHS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Sep 2015 11:07:18 -0400
+Date: Tue, 8 Sep 2015 16:07:27 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+Message-ID: <20150908150727.GF29293@red-moon>
+References: <20150526170817.GU1565@arm.com>
+ <55657B02.5090805@linaro.org>
+ <20150602133215.GC23650@red-moon>
+ <55701A31.808@linaro.org>
+ <20150604102253.GA31773@red-moon>
+ <5570447D.3020705@linaro.org>
+ <557504A2.3060203@linaro.org>
+ <20150608151443.GA16151@red-moon>
+ <55E4340D.6050004@linaro.org>
+ <55ED6010.3020406@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55ED6010.3020406@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSmluZ29vLCBQcmF0eXVzaA0KDQpBbnkgY29tbWVudCBvbiB0aGlzIHBhdGNoPw0KDQpUaGFu
-a3MNCg0KR2FiDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEdhYnJpZWxl
-IFBhb2xvbmkNCj4gU2VudDogV2VkbmVzZGF5LCBBdWd1c3QgMjYsIDIwMTUgMTI6MTQgUE0NCj4g
-VG86IGppbmdvb2hhbjFAZ21haWwuY29tOyBXYW5nemhvdSAoQik7IHByYXR5dXNoLmFuYW5kQGdt
-YWlsLmNvbQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgcWl1emhlbmZhOyB6aGFu
-Z2p1a3VvOyBsaXVkb25nZG9uZyAoQyk7DQo+IExpZ3Vvemh1IChLZW5uZXRoKTsgcWl1amlhbmc7
-IEdhYnJpZWxlIFBhb2xvbmkNCj4gU3ViamVjdDogW1BBVENIXSBQQ0k6IERlc2lnbndhcmU6IE1v
-dmUgbnVtLWxhbmVzIHByb3BlcnR5IHJlYWQgdG8NCj4gZHdfcGNpZV9zZXR1cF9yYw0KPiANCj4g
-RnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiAN
-Cj4gQ3VycmVudGx5IG51bS1sYW5lcyBpcyByZWFkIGluIGR3X3BjaWVfaG9zdF9pbml0KCkuDQo+
-IGZvciBBIFNvQyB0aGF0IHBlcmZvcm1zIHRoZSBsaW5rLXVwIG9wZXJhdGlvbiBpbiBVRUZJIG51
-bS1sYW5lcw0KPiBpcyBub3QgbmVlZGVkIGluIHRoZSBEVFMgYnV0IGl0IGhhcyB0byBiZSBzcGVj
-aWZpZWQgdG8gYW55IHZhbHVlOw0KPiBvdGhlcndpc2UgZHdfcGNpZV9ob3N0X2luaXQgd2lsbCBm
-YWlsLg0KPiBUaGlzIHBhdGNoIG1vdmVzIHRoZSBudW0tbGFuZXMgcHJvcGVydHkgcmVhZCBpbiBk
-d19wY2llX3NldHVwX3JjKCkNCj4gYXMgbnVtLWxhbmVzIGlzIG9ubHkgdXNlZCB0aGVyZSBhbmQs
-IGlmIHRoZSBsaW5rIGlzIGFscmVhZHkgdXAsDQo+IHRoZSBQQ0llIGNvbnRyb2xsZXIgZHJpdmVy
-IGNhbiBkZWNpZGUgZWl0aGVyIHRvIGxlYXZlIGhvc3RfaW5pdA0KPiBOVUxMIG9yIHRvIHJldHVy
-biBzdHJhaWdodGZvcndhcmQgd2l0aG91dCBwcm9jZWVkaW5nIHRvIGNhbGwNCj4gZHdfcGNpZV9z
-ZXR1cF9yYygpLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogR2FicmllbGUgUGFvbG9uaSA8Z2Ficmll
-bGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1k
-ZXNpZ253YXJlLmMgfCAxMCArKysrKy0tLS0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgNSBpbnNlcnRp
-b25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hv
-c3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2Fy
-ZS5jDQo+IGluZGV4IDY5NDg2YmUuLjdkNzA3YjcgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvcGNp
-L2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRl
-c2lnbndhcmUuYw0KPiBAQCAtNDgzLDExICs0ODMsNiBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQo
-c3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ICAJCX0NCj4gIAl9DQo+IA0KPiAtCWlmIChvZl9wcm9w
-ZXJ0eV9yZWFkX3UzMihucCwgIm51bS1sYW5lcyIsICZwcC0+bGFuZXMpKSB7DQo+IC0JCWRldl9l
-cnIocHAtPmRldiwgIkZhaWxlZCB0byBwYXJzZSB0aGUgbnVtYmVyIG9mIGxhbmVzXG4iKTsNCj4g
-LQkJcmV0dXJuIC1FSU5WQUw7DQo+IC0JfQ0KPiAtDQo+ICAJaWYgKElTX0VOQUJMRUQoQ09ORklH
-X1BDSV9NU0kpKSB7DQo+ICAJCWlmICghcHAtPm9wcy0+bXNpX2hvc3RfaW5pdCkgew0KPiAgCQkJ
-cHAtPmlycV9kb21haW4gPSBpcnFfZG9tYWluX2FkZF9saW5lYXIocHAtPmRldi0NCj4gPm9mX25v
-ZGUsDQo+IEBAIC03NDIsNyArNzM3LDEyIEBAIHZvaWQgZHdfcGNpZV9zZXR1cF9yYyhzdHJ1Y3Qg
-cGNpZV9wb3J0ICpwcCkNCj4gIAl1MzIgdmFsOw0KPiAgCXUzMiBtZW1iYXNlOw0KPiAgCXUzMiBt
-ZW1saW1pdDsNCj4gKwlzdHJ1Y3QgZGV2aWNlX25vZGUgKm5wID0gcHAtPmRldi0+b2Zfbm9kZTsN
-Cj4gDQo+ICsJaWYgKG9mX3Byb3BlcnR5X3JlYWRfdTMyKG5wLCAibnVtLWxhbmVzIiwgJnBwLT5s
-YW5lcykpIHsNCj4gKwkJZGV2X2VycihwcC0+ZGV2LCAiRmFpbGVkIHRvIHBhcnNlIHRoZSBudW1i
-ZXIgb2YgbGFuZXNcbiIpOw0KPiArCQlyZXR1cm47DQo+ICsJfQ0KPiAgCS8qIHNldCB0aGUgbnVt
-YmVyIG9mIGxhbmVzICovDQo+ICAJZHdfcGNpZV9yZWFkbF9yYyhwcCwgUENJRV9QT1JUX0xJTktf
-Q09OVFJPTCwgJnZhbCk7DQo+ICAJdmFsICY9IH5QT1JUX0xJTktfTU9ERV9NQVNLOw0KPiAtLQ0K
-PiAxLjkuMQ0KDQo=
+Hi Tomasz,
+
+On Mon, Sep 07, 2015 at 10:59:44AM +0100, Tomasz Nowicki wrote:
+> On 31.08.2015 13:01, Tomasz Nowicki wrote:
+> > On 08.06.2015 17:14, Lorenzo Pieralisi wrote:
+> >> On Mon, Jun 08, 2015 at 03:57:38AM +0100, Hanjun Guo wrote:
+> >>
+> >> [...]
+> >>
+> >>>>>>>>> Why can't we make use of the ECAM implementation used by
+> >>>>>>>>> pci-host-generic
+> >>>>>>>>> and drivers/pci/access.c?
+> >>>>>>>>
+> >>>>>>>> We had that question when I had posted MMCFG patch set separately,
+> >>>>>>>> please see:
+> >>>>>>>> https://lkml.org/lkml/2015/3/11/492
+> >>>>>>>
+> >>>>>>> Yes, but the real question is, why do we need to have PCI config
+> >>>>>>> space
+> >>>>>>> up and running before a bus struct is even created ? I think the
+> >>>>>>> reason is
+> >>>>>>> the PCI configuration address space format (ACPI 6.0, Table 5-27,
+> >>>>>>> page
+> >>>>>>> 108):
+> >>>>>>>
+> >>>>>>> "PCI Configuration space addresses must be confined to devices on
+> >>>>>>> PCI Segment Group 0, bus 0. This restriction exists to accommodate
+> >>>>>>> access to fixed hardware prior to PCI bus enumeration".
+> >>>>>>>
+> >>>>>>> On HW reduced platforms I do not even think this is required at all,
+> >>>>>>> we have to look into this to avoid code duplication that might well
+> >>>>>>> turn out useless.
+> >>>>>>
+> >>>>>> This is only for the fixed hardware, which will be not available for
+> >>>>>> ARM64 (reduced hardware mode), but in Generic Hardware Programming
+> >>>>>> Model, we using OEM-provided ACPI Machine Language (AML) code to
+> >>>>>> access
+> >>>>>> generic hardware registers, this will be available for reduced
+> >>>>>> hardware
+> >>>>>> too.
+> >>>>>>
+> >>>>>> So in ACPI spec, it says: (ACPI 6.0 page 66, last paragraph)
+> >>>>>>
+> >>>>>> ACPI defines eight address spaces that may be accessed by generic
+> >>>>>> hardware implementations. These include:
+> >>>>>> * System I/O space
+> >>>>>> * System memory space
+> >>>>>> * PCI configuration space
+> >>>>>> * Embedded controller space
+> >>>>>> * System Management Bus (SMBus) space
+> >>>>>> * CMOS
+> >>>>>> * PCI BAR Target
+> >>>>>> * IPMI space
+> >>>>>>
+> >>>>>> So if any device using the PCI address space for control, such
+> >>>>>> as a system reset control device, its address space can be reside
+> >>>>>> in PCI configuration space (who can prevent a OEM do that crazy
+> >>>>>> thing? :) ), and it should be accessible before the PCI bus is
+> >>>>>> created.
+> >>>>>
+> >>>>> Us, by changing attitude and questioning features whose usefulness
+> >>>>> is questionable. I will look into this and raise the point, I am not
+> >>>>> thrilled by the idea of adding another set of PCI accessor functions
+> >>>>> and drivers because we have to access a register through PCI before
+> >>>>> enumerating the bus (and on arm64 this is totally useless since
+> >>>>> we are not meant to support fixed HW anyway). Maybe we can make acpica
+> >>>>> code use a "special" stub (ACPI specific, PCI configuration space
+> >>>>> address
+> >>>>> space has restrictions anyway), I have to review this set in its
+> >>>>> entirety to see how to do that (and I would kindly ask you to do
+> >>>>> it too, before saying it is not possible to implement it).
+> >>>>
+> >>>> I'm willing to do that, actually, if we don't need a mechanism to
+> >>>> access PCI config space before the bus is created, the code can be
+> >>>> simplified a lot.
+> >>>
+> >>> After more investigation on the spec and the ACPI core code, I'm
+> >>> still not convinced that accessing to PCI config space before PCI
+> >>> bus creating is impossible, also there is no enough ARM64 hardware
+> >>> to prove that too. But I think we can go in this way, reuse the
+> >>> ECAM implementation by pci-host-generic for now, and implement the PCI
+> >>> accessor functions before enumerating PCI bus when needed in the
+> >>> future, does it make sense?
+> >>
+> >> You mean we rewrite the patch to make sure we can use the PCI host
+> >> generic
+> >> driver with MCFG and we leave the acpica PCI config call empty stubs on
+> >> arm64 (as they are now) ?
+> >>
+> >
+> > Hi Bjorn, Rafael,
+> >
+> > Lorenzo pointed out very important problem we are having with PCI config
+> > space access for ARM64. Please refer to the above discussion and add
+> > your 2 cents. Can we forget about accessing PCI config space (for
+> > Hardware Reduced profile) before PCI bus creation? If not, do you see a
+> > way to use drivers/pci/access.c accessors here, like acpica change? Any
+> > opinion is very appreciated.
+> >
+> 
+> Kindly remainder.
+
+I think (but I am happy to be corrected) that the map_bus() hook
+(ie that's why struct pci_bus is required in eg pci_generic_config_write)
+is there to ensure that when the generic accessors are called
+a) we have a valid bus b) the host controllers implementing it
+has been initialized.
+
+I had another look and I noticed you are trying to solve multiple
+things at once:
+
+1) ACPICA seems to need PCI config space on bus 0 to be working
+   before PCI enumerates (ie before we have a root bus), we need to
+   countercheck on that, but you can't use the generic PCI accessors
+   for that reasons (ie root bus might not be available, you do not
+   have a pci_bus struct)
+2) the raw_pci_read/write require _generic_ mmio back-ends, since AMD
+   can't cope with standard x86 read/write{b,w,l}
+
+Overall, it seems to me that we can avoid code duplication by
+shuffling your code a bit.
+
+You could modify the generic accessors in drivers/pci/access.c to
+use your mmio back-end instead of using plain read/write{b,w,l}
+functions (we should check if RobH is ok with that there can be
+reasons that prevent this from happening). This would solve the
+AMD mmio issue.
+
+By factoring out the code that actually carries out the reads
+and writes in the accessors basically you decouple the functions
+requiring the struct pci_bus from the ones that does not require it
+(ie raw_pci_{read/write}.
+
+The generic MMIO layer belongs in the drivers/pci/access.c file, it has
+nothing to do with ECAM.
+
+The mmcfg interface should probably live in pci-acpi.c, I do not think
+you need an extra file in there but that's a detail.
+
+Basically the generic accessors would become something like eg:
+
+int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
+			     int where, int size, u32 val)
+{
+	void __iomem *addr;
+
+	addr = bus->ops->map_bus(bus, devfn, where);
+	if (!addr)
+		return PCIBIOS_DEVICE_NOT_FOUND;
+
+	pci_mmio_write(size, addr + where, value);
+
+	return PCIBIOS_SUCCESSFUL;
+}
+
+With that in place using raw_pci_write/read or the generic accessors
+becomes almost identical, with code requiring the pci_bus to be
+created using the generic accessors and ACPICA using the raw version.
+
+I might be missing something, so apologies if that's the case.
+
+Comments welcome.
+
+Lorenzo
