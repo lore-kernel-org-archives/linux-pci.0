@@ -1,51 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33793 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753752AbbI3GfS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 02:35:18 -0400
-Received: by padhy16 with SMTP id hy16so30593434pad.1
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2015 23:35:18 -0700 (PDT)
-From: Simon Horman <simon.horman@netronome.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Simon Horman <simon.horman@netronome.com>
-Subject: [PATCH repost 2/3] PCI: Add Netronome vendor and device IDs
-Date: Wed, 30 Sep 2015 15:35:06 +0900
-Message-Id: <1443594907-16196-3-git-send-email-simon.horman@netronome.com>
-In-Reply-To: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
-References: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
+Received: from mga01.intel.com ([192.55.52.88]:13825 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752692AbbIHJpC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Sep 2015 05:45:02 -0400
+Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices
+ managed by non-PCI drivers
+To: Arthur Marsh <arthur.marsh@internode.on.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+References: <55EE8106.6060100@internode.on.net>
+ <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
+ <55EEA45D.2070709@internode.on.net>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <55EEAE19.2070606@linux.intel.com>
+Date: Tue, 8 Sep 2015 17:44:57 +0800
+MIME-Version: 1.0
+In-Reply-To: <55EEA45D.2070709@internode.on.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Jason S. McMullan" <jason.mcmullan@netronome.com>
+On 2015/9/8 17:03, Arthur Marsh wrote:
+> 
+> 
+> Jiang Liu wrote on 08/09/15 16:56:
+> Thanks, I removed the test patch and applied the revised patch and built
+> and rebooted the kernel and successfully mounted file systems on a disk
+> attached to the DPT 2044W card using the eata driver:
+> 
+> [    0.000000] Linux version 4.2.0+ (root@victoria) (gcc version 5.2.1
+> 20150903
+> (Debian 5.2.1-16) ) #31 SMP PREEMPT Tue Sep 8 17:36:28 ACST 2015
+> ...
+> 
+> [   80.691097] EATA0: IRQ 10 mapped to IO-APIC IRQ 17.
+> [   80.724519] EATA/DMA 2.0x: Copyright (C) 1994-2003 Dario Ballabio.
+> [   80.752035] EATA config options -> tm:1, lc:y, mq:16, rs:y, et:n,
+> ip:n, ep:n, pp:y.
+> [   80.777063] EATA0: 2.0C, PCI 0xd890, IRQ 17, BMST, SG 122, MB 64.
+> [   80.802391] EATA0: wide SCSI support enabled, max_id 16, max_lun 8.
+> [   80.827959] EATA0: SCSI channel 0 enabled, host target ID 7.
+> [   80.853413] scsi host3: EATA/DMA 2.0x rev. 8.10.00
+> [   82.445662] scsi 3:0:6:0: Direct-Access     IBM      DCAS-34330W
+>  S65A PQ: 0 ANSI: 2
+> [   82.471584] scsi 3:0:6:0: cmds/lun 16, sorted, simple tags.
+> [   84.571451] sd 3:0:6:0: Attached scsi generic sg4 type 0
+> [   84.597572] sd 3:0:6:0: [sdd] 8466688 512-byte logical blocks: (4.33
+> GB/4.03 GiB)
+> [   84.659874] sd 3:0:6:0: [sdd] Write Protect is off
+> [   84.688543] sd 3:0:6:0: [sdd] Mode Sense: b3 00 00 08
+> [   84.714021] sd 3:0:6:0: [sdd] Write cache: enabled, read cache:
+> enabled, doesn't support DPO or FUA
+> [   84.817682]  sdd: sdd1 sdd2 < sdd5 >
+> [   84.919267] sd 3:0:6:0: [sdd] Attached SCSI disk
+Hi Arthur,
+Thanks for testing:)
 
-Device IDs for the Netronome NFP3200, NFP3240, NFP6000, and
-NFP6000 SR-IOV devices.
-
-Signed-off-by: Jason S. McMullan <jason.mcmullan@netronome.com>
-[simon: edited changelog]
-Signed-off-by: Simon Horman <simon.horman@netronome.com>
----
- include/linux/pci_ids.h | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index d9ba49cedc5d..526e2c12ae59 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2495,6 +2495,12 @@
- #define PCI_DEVICE_ID_KORENIX_JETCARDF2	0x1700
- #define PCI_DEVICE_ID_KORENIX_JETCARDF3	0x17ff
- 
-+#define PCI_VENDOR_ID_NETRONOME		0x19ee
-+#define PCI_DEVICE_ID_NETRONOME_NFP3200	0x3200
-+#define PCI_DEVICE_ID_NETRONOME_NFP3240	0x3240
-+#define PCI_DEVICE_ID_NETRONOME_NFP6000	0x6000
-+#define PCI_DEVICE_ID_NETRONOME_NFP6000_VF	0x6003
-+
- #define PCI_VENDOR_ID_QMI		0x1a32
- 
- #define PCI_VENDOR_ID_AZWAVE		0x1a3b
--- 
-2.1.4
-
+> 
+> Arthur.
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
