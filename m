@@ -1,80 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:7797 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074AbbIORLX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:23 -0400
-From: Will Davis <wdavis@nvidia.com>
+Received: from mga01.intel.com ([192.55.52.88]:46759 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754960AbbIHQt6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Sep 2015 12:49:58 -0400
+Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices
+ managed by non-PCI drivers
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	"Mark Hounschell" <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	"Will Davis" <wdavis@nvidia.com>
-Subject: [PATCH 02/22] linux/types.h: Add dma_peer_addr_t type
-Date: Tue, 15 Sep 2015 12:10:47 -0500
-Message-ID: <1442337067-22964-3-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <55EE8106.6060100@internode.on.net>
+ <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
+ <20150908162735.GK829@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <55EF119E.5030905@linux.intel.com>
+Date: Wed, 9 Sep 2015 00:49:34 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150908162735.GK829@google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms, a dma_addr_t is only 32 bits wide, but the bus addresses
-can be 64 bits wide. For peer-to-peer DMA, a device needs to use the full
-64-bit address. Therefore, introduce a DMA address type that is not
-constrained by the CPU DMA address size.
 
-This is only needed for peer-to-peer DMA, so guard this definition with a
-CONFIG_HAS_DMA_P2P check.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
+On 2015/9/9 0:27, Bjorn Helgaas wrote:
+> Hi Jiang,
+> 
+> I object to subject lines like "Correctly do such and such."  Nobody
+> writes code to do things *incorrectly*, so the word "correctly" takes
+> up space without contributing meaning.  In this case, it's at least
+> debatable whether this is even the "correct" approach; see below.
+> 
+> On Tue, Sep 08, 2015 at 03:26:29PM +0800, Jiang Liu wrote:
+>> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+>> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
+>> for PCI devices on x86 platforms. Instead of allocating PCI legacy
+>> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
+>> will be called by pci_device_probe() to allocate PCI legacy IRQs
+>> when binding PCI drivers to PCI devices.
+>>
+>> But some device drivers, such as eata, directly access PCI devices
+>> without implementing corresponding PCI drivers, so pcibios_alloc_irq()
+>> won't be called for those PCI devices and wrong IRQ number may be
+>> used to manage the PCI device.
+> 
+> I'm not sure this is wise.  
+> 
+> We normally call pcibios_alloc_irq() from pci_device_probe(), just
+> before we call the driver's .probe() method.
+> 
+> The eata driver does not use pci_register_driver(), so there is no
+> .probe() method (also no .remove(), .suspend(), etc.)  But eata *does*
+> use pci_enable_device() and other PCI interfaces.  So this patch adds
+> code in the x86 pci_enable_device() path for this case.
+> 
+> AFAICT, there's no real reason why eata doesn't register a PCI driver;
+> it's just a case of legacy code where nobody has been motivated to
+> update it.  I'm not in favor of catering to code like that because
+> then we have random special cases like this that clutter up the core
+> code.
+> 
+> I don't think we should necessarily expect the PCI core to support
+> calls to PCI interfaces when it hasn't had a chance to initialize
+> itself via driver registration.
+> 
+>> So detect such a case in pcibios_enable_device() by checking
+>> pci_dev->driver is NULL and call pcibios_alloc_irq() to allocate PCI
+>> legacy IRQs.
+>>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> ---
+>>  arch/x86/pci/common.c |   10 ++++++++++
+>>  1 file changed, 10 insertions(+)
+>>
+>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>> index 09d3afc0a181..60b237783582 100644
+>> --- a/arch/x86/pci/common.c
+>> +++ b/arch/x86/pci/common.c
+>> @@ -685,6 +685,16 @@ void pcibios_free_irq(struct pci_dev *dev)
+>>  
+>>  int pcibios_enable_device(struct pci_dev *dev, int mask)
+>>  {
+>> +	/*
+>> +	 * By design, pcibios_alloc_irq() will be called by pci_device_probe()
+>> +	 * when binding a PCI device to a PCI driver. But some device drivers,
+>> +	 * such as eata, directly make use of PCI devices without implementing
+>> +	 * PCI device drivers, so pcibios_alloc_irq() won't be called for those
+>> +	 * PCI devices.
+>> +	 */
+>> +	if (!dev->driver)
+>> +		pcibios_alloc_irq(dev);
+> 
+> This is a point fix for x86 only, but I think eata can be built for
+> any architecture.  Won't other architectures still have the same
+> problem?
+Hi Bjorn,
+	We have used another draft version to fix this issue by changing
+eata driver as below. But that needs to export pcibios_alloc_irq. And
+I'm not sure whether there are other drivers having the same behavior.
+If we think it's a legacy behavior and only a few drivers may have
+such a behavior, I prefer changing drivers to fix the issue too.
+Thanks!
+Gerry
 ---
- include/linux/types.h | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/pci/pci-driver.c |    1 +
+ drivers/scsi/eata.c      |    2 ++
+ 2 files changed, 3 insertions(+)
 
-diff --git a/include/linux/types.h b/include/linux/types.h
-index 8715287..dd85173 100644
---- a/include/linux/types.h
-+++ b/include/linux/types.h
-@@ -140,13 +140,13 @@ typedef unsigned long blkcnt_t;
- #define pgoff_t unsigned long
- 
- /*
-- * A dma_addr_t can hold any valid DMA address, i.e., any address returned
-+ * A dma_addr_t can hold any valid DMA address, i.e., most addresses returned
-  * by the DMA API.
-  *
-  * If the DMA API only uses 32-bit addresses, dma_addr_t need only be 32
-  * bits wide.  Bus addresses, e.g., PCI BARs, may be wider than 32 bits,
-  * but drivers do memory-mapped I/O to ioremapped kernel virtual addresses,
-- * so they don't care about the size of the actual bus addresses.
-+ * so they don't care about the size of the actual bus addresses in most cases.
-  */
- #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
- typedef u64 dma_addr_t;
-@@ -154,6 +154,15 @@ typedef u64 dma_addr_t;
- typedef u32 dma_addr_t;
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 52a880ca1768..17d2a0b1de18 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -392,6 +392,7 @@ int __weak pcibios_alloc_irq(struct pci_dev *dev)
+ {
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pcibios_alloc_irq);
+
+ void __weak pcibios_free_irq(struct pci_dev *dev)
+ {
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index 227dd2c2ec2f..7e6eaf867987 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -1061,6 +1061,7 @@ static void enable_pci_ports(void)
+ 		       driver_name, dev->bus->number, dev->devfn);
  #endif
- 
-+/*
-+ * Unlike dma_addr_t, a dma_peer_addr_t can hold any bus address for the
-+ * platform. Drivers should only need this for peer-to-peer use cases, where
-+ * the DMA target is also on the bus.
-+ */
-+#ifdef CONFIG_HAS_DMA_P2P
-+typedef u64 dma_peer_addr_t;
-+#endif
-+
- typedef unsigned __bitwise__ gfp_t;
- typedef unsigned __bitwise__ fmode_t;
- typedef unsigned __bitwise__ oom_flags_t;
--- 
-2.5.1
 
++		pcibios_alloc_irq(dev);
+ 		if (pci_enable_device(dev))
+ 			printk
+ 			    ("%s: warning, pci_enable_device failed, bus %d devfn 0x%x.\n",
+@@ -1520,6 +1521,7 @@ static void add_pci_ports(void)
+ 		if (!(dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev)))
+ 			break;
+
++		pcibios_alloc_irq(dev);
+ 		if (pci_enable_device(dev)) {
+ #if defined(DEBUG_PCI_DETECT)
+ 			printk
+
+
+> 
+>>  	return pci_enable_resources(dev, mask);
+>>  }
+>>  
+>> -- 
+>> 1.7.10.4
+>>
