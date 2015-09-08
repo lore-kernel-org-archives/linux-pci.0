@@ -1,86 +1,157 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47588 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252AbbIPV6l (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:58:41 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 08/53] PCI: Remove duplicated code for resource sorting
-Date: Wed, 16 Sep 2015 14:57:06 -0700
-Message-Id: <1442440671-5361-9-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 8 Sep 2015 10:19:44 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>
+Subject: Re: [PATCH v6 3/6] pci:host: Add Altera PCIe host controller driver
+Message-ID: <20150908091944.GE29293@red-moon>
+References: <1441103408-8433-1-git-send-email-lftan@altera.com>
+ <1441103408-8433-4-git-send-email-lftan@altera.com>
+ <20150901163304.GA9769@red-moon>
+ <CAFiDJ58WCjTNkU5PWtbHxj+-0oWNg1T+psfE-OaJD+4k-DBb-A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFiDJ58WCjTNkU5PWtbHxj+-0oWNg1T+psfE-OaJD+4k-DBb-A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now sort_resources() and pdev_sort_resources() all have sorting
-code.
+On Fri, Sep 04, 2015 at 09:29:14AM +0100, Ley Foon Tan wrote:
+> On Wed, Sep 2, 2015 at 12:33 AM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
 
-As we are going to call sort_resources() several places later for
-alt_size support, so choose to remove related code in
-pdev_sort_resources().
+[...]
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 22 +++-------------------
- 1 file changed, 3 insertions(+), 19 deletions(-)
+> > > +static bool altera_pcie_valid_config(struct altera_pcie *pcie,
+> > > +                                    struct pci_bus *bus, int dev)
+> > > +{
+> > > +       /* If there is no link, then there is no device */
+> > > +       if (bus->number != pcie->root_bus_nr) {
+> > > +               if (!altera_pcie_link_is_up(pcie))
+> > > +                       return false;
+> > > +       }
+> >
+> > Can you explain to pls me why you have to check this for every config
+> > transaction ? Isn't it something that can prevent probing the
+> > host controller altogether ?
+> In our PCIe hardware spec, it stated that software should check the
+> link status before issuing a configuration request to downstream
+> ports.
+> BTW, other pci controllers have similar implementation as well, eg: dw
+> pci, mvebu pci.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 555a7a3..44d63c0 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -214,9 +214,8 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 
- 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 		struct resource *r;
--		struct pci_dev_resource *dev_res, *tmp;
-+		struct pci_dev_resource *tmp;
- 		resource_size_t r_align;
--		struct list_head *n;
- 
- 		r = &dev->resource[i];
- 
-@@ -239,22 +238,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 		tmp->res = r;
- 		tmp->dev = dev;
- 
--		/* fallback is smallest one or list is empty*/
--		n = head;
--		list_for_each_entry(dev_res, head, list) {
--			resource_size_t align;
--
--			align = __pci_resource_alignment(dev_res->dev,
--							 dev_res->res,
--							 realloc_head);
--
--			if (r_align > align) {
--				n = &dev_res->list;
--				break;
--			}
--		}
--		/* Insert it just before n*/
--		list_add_tail(&tmp->list, n);
-+		list_add_tail(&tmp->list, head);
- 	}
- }
- 
-@@ -557,9 +541,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
- 
-+requested_and_reassign:
- 	sort_resources(head);
- 
--requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
- 
--- 
-1.8.4.5
+Understood, thanks.
 
+[...]
+
+> > > +static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
+> > > +{
+> > > +       u8 loop;
+> > > +       struct tlp_rp_regpair_t tlp_rp_regdata;
+> > > +
+> > > +       for (loop = 0; loop < TLP_LOOP; loop++) {
+> > > +               tlp_read_rx(pcie, &tlp_rp_regdata);
+> > > +               if (tlp_rp_regdata.ctrl & RP_RXCPL_EOP) {
+> > > +                       if (value)
+> > > +                               *value = tlp_rp_regdata.reg0;
+> > > +                       return PCIBIOS_SUCCESSFUL;
+> > > +               }
+> > > +               udelay(5);
+> >
+> > Could you comment please on the chosen udelay/TLP_LOOP values (ie how
+> > did you come up with them) ?
+> For udelay value, we just want to have small delay between each read.
+
+I would explain how you chose the value, in particular if it can
+affect next generation hosts sharing the same driver.
+
+> For TLP_LOOP value, minimum 2 loops to read tlp headers and 1 loop to
+> read data payload. So, we choose to poll 10 loops for maximum.
+
+Add it to a comment.
+
+[...]
+
+> > > +static int altera_pcie_probe(struct platform_device *pdev)
+> > > +{
+> > > +       struct altera_pcie *pcie;
+> > > +       struct pci_bus *bus;
+> > > +       int ret;
+> > > +
+> > > +       pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+> > > +       if (!pcie)
+> > > +               return -ENOMEM;
+> > > +
+> > > +       pcie->pdev = pdev;
+> > > +
+> > > +       ret = altera_pcie_parse_dt(pcie);
+> > > +       if (ret) {
+> > > +               dev_err(&pdev->dev, "Parsing DT failed\n");
+> > > +               return ret;
+> > > +       }
+> > > +
+> > > +       INIT_LIST_HEAD(&pcie->resources);
+> > > +
+> > > +       ret = altera_pcie_parse_request_of_pci_ranges(pcie);
+> > > +       if (ret) {
+> > > +               dev_err(&pdev->dev, "Failed add resources\n");
+> > > +               return ret;
+> > > +       }
+> > > +
+> > > +       ret = altera_pcie_init_irq_domain(pcie);
+> > > +       if (ret) {
+> > > +               dev_err(&pdev->dev, "Failed creating IRQ Domain\n");
+> > > +               return ret;
+> > > +       }
+> > > +
+> > > +       pcie->root_bus_nr = 0;
+> >
+> > Nit: It is already 0.
+> Okay. Will remove it.
+> >
+> > > +
+> > > +       /* clear all interrupts */
+> > > +       cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
+> > > +       /* enable all interrupts */
+> > > +       cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
+> > > +
+> > > +       bus = pci_scan_root_bus(&pdev->dev, pcie->root_bus_nr, &altera_pcie_ops,
+> > > +                               pcie, &pcie->resources);
+> > > +       if (!bus)
+> > > +               return -ENOMEM;
+> > > +
+> > > +       pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> > > +       pci_assign_unassigned_bus_resources(bus);
+> >
+> > I think you are missing a call to pcie_bus_configure_settings(),
+> > see drivers/pci/host/pci-host-generic.c
+> Other pci controller drivers like xgene and iproc don't call to this
+> function, but it call in
+> arch/arm/kernel/bios32.c:pci_common_init_dev().
+> Do we really need this?
+
+It is there to provide a way to configure the system MPS, through
+command line parameters, it is always a good idea to have it and
+it should be part of your driver so that you can tune it in case
+the MPS is misconfigured or you want to apply a specific configuration
+for a given system.
+
+Have a look at pcie_bus_config and how it is used in
+pcie_bus_configure_settings(), that would clarify further.
+
+Thanks,
+Lorenzo
