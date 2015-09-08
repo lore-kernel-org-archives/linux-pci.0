@@ -1,51 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:48925 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964828AbbI2NI5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 09:08:57 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v4 0/3] PCI: designware: change dw_pcie_cfg_write() and
- dw_pcie_cfg_read()
-Date: Tue, 29 Sep 2015 13:08:44 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E16236A55@lhreml503-mbs>
-References: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
- <CAHM4w1mKMxy_MyZuSa_+pt3zF1Oi_gXYgMLUJAni3HLDRQmyFw@mail.gmail.com>
-In-Reply-To: <CAHM4w1mKMxy_MyZuSa_+pt3zF1Oi_gXYgMLUJAni3HLDRQmyFw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:34963 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754836AbbIHQ1k (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 12:27:40 -0400
+Received: by igbkq10 with SMTP id kq10so78286866igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2015 09:27:39 -0700 (PDT)
+Date: Tue, 8 Sep 2015 11:27:35 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices
+ managed by non-PCI drivers
+Message-ID: <20150908162735.GK829@google.com>
+References: <55EE8106.6060100@internode.on.net>
+ <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUHJhdHl1c2ggQW5hbmQg
-W21haWx0bzpwcmF0eXVzaC5hbmFuZEBnbWFpbC5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIFNlcHRl
-bWJlciAyOSwgMjAxNSAxOjA4IFBNDQo+IFRvOiBHYWJyaWVsZSBQYW9sb25pDQo+IENjOiBCam9y
-biBIZWxnYWFzOyBKaW5nb28gSGFuOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBXYW5nemhv
-dSAoQik7DQo+IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpoZW5mYTsg
-TGlndW96aHUgKEtlbm5ldGgpDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjQgMC8zXSBQQ0k6IGRl
-c2lnbndhcmU6IGNoYW5nZSBkd19wY2llX2NmZ193cml0ZSgpDQo+IGFuZCBkd19wY2llX2NmZ19y
-ZWFkKCkNCj4gDQo+IEhpIEdhYiwNCj4gDQo+IE9uIFR1ZSwgU2VwIDI5LCAyMDE1IGF0IDU6MDQg
-UE0sIEdhYnJpZWxlIFBhb2xvbmkNCj4gPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4gd3Jv
-dGU6DQo+ID4gRnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWku
-Y29tPg0KPiA+DQo+ID4gVGhpcyBwYXRjaHNldDoNCj4gPiAxKSBmaXhlcyBhIGJ1ZyBpbiBzcGVh
-cjEzeHggd2hlbiBjYWxsaW5nIGR3X3BjaWVfY2ZnX3JlYWQgYW5kDQo+ID4gICAgZHdfcGNpZV9j
-Zmdfd3JpdGUgdXNpZ24gdGhlIHBhdGNoIGZyb20gUHJhdHl1c2ggaW4NCj4gPiAgICBodHRwczov
-L2xrbWwub3JnL2xrbWwvMjAxNS85LzcvNQ0KPiANCj4gSSB0aGluaywgeW91IGZvcmdvdCB0byB0
-YWtlIHRoaXMsIGFuZCByZXBsYWNlZCB3aXRoIGFub3RoZXIgdmVyc2lvbi4NCj4gV2UgaGF2ZSBh
-bHJlYWR5IGRpc2N1c3NlZCBbMV0gdGhhdCwgd2h5IHRoZSB2ZXJzaW9uIGFkZGVkIGluIHRoaXMN
-Cj4gc2VyaWVzIGlzIG5vdCBwcmVmZXJhYmxlLg0KPiBQbGVhc2UgbGV0IG1lIGtub3cgaWYgeW91
-IHNlZSBhbnkgaXNzdWUgaW4gdGFraW5nIFsyXS4NCg0KU29ycnkgeW91J3JlIGNvbXBsZXRlbHkg
-cmlnaHQhDQoNCkkndmUganVzdCBtZXNzZWQgdXAgd2l0aCBteSBpbnRlcm5hbCBicmFuY2hlcy4N
-Cg0KV2lsbCByZS1zZW5kIHdpdGggdjUNCg0KQXBvbG9naWVzIGFnYWluDQoNCj4gDQo+IFRoYW5r
-cw0KPiANCj4gflByYXR5dXNoDQo+IA0KPiBbMV0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0
-cy9saW51eC1wY2kvbXNnNDQ0NDAuaHRtbA0KPiBbMl0gaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIw
-MTUvOS83LzUNCg==
+Hi Jiang,
+
+I object to subject lines like "Correctly do such and such."  Nobody
+writes code to do things *incorrectly*, so the word "correctly" takes
+up space without contributing meaning.  In this case, it's at least
+debatable whether this is even the "correct" approach; see below.
+
+On Tue, Sep 08, 2015 at 03:26:29PM +0800, Jiang Liu wrote:
+> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
+> for PCI devices on x86 platforms. Instead of allocating PCI legacy
+> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
+> will be called by pci_device_probe() to allocate PCI legacy IRQs
+> when binding PCI drivers to PCI devices.
+> 
+> But some device drivers, such as eata, directly access PCI devices
+> without implementing corresponding PCI drivers, so pcibios_alloc_irq()
+> won't be called for those PCI devices and wrong IRQ number may be
+> used to manage the PCI device.
+
+I'm not sure this is wise.  
+
+We normally call pcibios_alloc_irq() from pci_device_probe(), just
+before we call the driver's .probe() method.
+
+The eata driver does not use pci_register_driver(), so there is no
+.probe() method (also no .remove(), .suspend(), etc.)  But eata *does*
+use pci_enable_device() and other PCI interfaces.  So this patch adds
+code in the x86 pci_enable_device() path for this case.
+
+AFAICT, there's no real reason why eata doesn't register a PCI driver;
+it's just a case of legacy code where nobody has been motivated to
+update it.  I'm not in favor of catering to code like that because
+then we have random special cases like this that clutter up the core
+code.
+
+I don't think we should necessarily expect the PCI core to support
+calls to PCI interfaces when it hasn't had a chance to initialize
+itself via driver registration.
+
+> So detect such a case in pcibios_enable_device() by checking
+> pci_dev->driver is NULL and call pcibios_alloc_irq() to allocate PCI
+> legacy IRQs.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  arch/x86/pci/common.c |   10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index 09d3afc0a181..60b237783582 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -685,6 +685,16 @@ void pcibios_free_irq(struct pci_dev *dev)
+>  
+>  int pcibios_enable_device(struct pci_dev *dev, int mask)
+>  {
+> +	/*
+> +	 * By design, pcibios_alloc_irq() will be called by pci_device_probe()
+> +	 * when binding a PCI device to a PCI driver. But some device drivers,
+> +	 * such as eata, directly make use of PCI devices without implementing
+> +	 * PCI device drivers, so pcibios_alloc_irq() won't be called for those
+> +	 * PCI devices.
+> +	 */
+> +	if (!dev->driver)
+> +		pcibios_alloc_irq(dev);
+
+This is a point fix for x86 only, but I think eata can be built for
+any architecture.  Won't other architectures still have the same
+problem?
+
+>  	return pci_enable_resources(dev, mask);
+>  }
+>  
+> -- 
+> 1.7.10.4
+> 
