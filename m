@@ -1,107 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54845 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751838AbbIPKcS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Sep 2015 06:32:18 -0400
-Date: Wed, 16 Sep 2015 11:32:32 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Will Deacon <Will.Deacon@arm.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 2/6] PCI: generic: Only fixup irqs for bus we are
- creating.
-Message-ID: <20150916103232.GB17510@red-moon>
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
- <1442013719-5001-3-git-send-email-ddaney.cavm@gmail.com>
- <20150915173654.GJ31157@arm.com>
- <55F85A24.2010600@caviumnetworks.com>
+Received: from mail-yk0-f193.google.com ([209.85.160.193]:32852 "EHLO
+	mail-yk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752020AbbIHJFc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 05:05:32 -0400
+Received: by ykdg206 with SMTP id g206so10433614ykd.0
+        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2015 02:05:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55F85A24.2010600@caviumnetworks.com>
+In-Reply-To: <1440587656-84224-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1440587656-84224-1-git-send-email-gabriele.paoloni@huawei.com>
+Date: Tue, 8 Sep 2015 14:35:32 +0530
+Message-ID: <CAHM4w1nECj+eVRNNXSPLOt0gzXCeS5vhLKAihHGCR7bresbnmw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Designware: Move num-lanes property read to dw_pcie_setup_rc
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	qiuzhenfa@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
+	liudongdong3@huawei.com, Liguozhu <liguozhu@hisilicon.com>,
+	qiujiang@huawei.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 15, 2015 at 06:49:24PM +0100, David Daney wrote:
-> On 09/15/2015 10:36 AM, Will Deacon wrote:
-> > Hi David,
-> >
-> > On Sat, Sep 12, 2015 at 12:21:55AM +0100, David Daney wrote:
-> >> From: David Daney <david.daney@cavium.com>
-> >>
-> >> Use pci_walk_bus() to restrict the fixup irq actions to only the bus
-> >> being created.
-> >>
-> >> If we create multiple buses with pci-host-generic, or there are buses
-> >> created by other drivers, we don't want to call pci_fixup_irqs() which
-> >> operates on all devices, not just the devices on the bus being added.
-> >> The consequence is that either the fixups are done more than once, or
-> >> in some cases incorrect fixups could be applied.
-> >>
-> >> Signed-off-by: David Daney <david.daney@cavium.com>
-> >> ---
-> >>   drivers/pci/host/pci-host-generic.c | 8 +++++++-
-> >>   1 file changed, 7 insertions(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> >> index 265dd25..a0fb241 100644
-> >> --- a/drivers/pci/host/pci-host-generic.c
-> >> +++ b/drivers/pci/host/pci-host-generic.c
-> >> @@ -205,6 +205,12 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
-> >>   	return 0;
-> >>   }
-> >>
-> >> +static int gen_pci_fixup_irq_cb(struct pci_dev *dev, void *arg)
-> >> +{
-> >> +	pdev_fixup_irq(dev, pci_common_swizzle, of_irq_parse_and_map_pci);
-> >> +	return 0;
-> >> +}
-> >> +
-> >>   static int gen_pci_probe(struct platform_device *pdev)
-> >>   {
-> >>   	int err;
-> >> @@ -262,7 +268,7 @@ static int gen_pci_probe(struct platform_device *pdev)
-> >>   		return -ENODEV;
-> >>   	}
-> >>
-> >> -	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> >> +	pci_walk_bus(bus, gen_pci_fixup_irq_cb, NULL);
-> >
-> > Any chance we could put something in the core PCI code for this? I think
-> > any host controller wanting to work with arm64 is potentially going to
-> > run into the same problem.
-> 
-> Good idea.
-> 
-> I will move the walking code into setup-irq.c (the current home of 
-> pci_fixup_irqs()), and make it part of patch 1/6.
+Hi Gab,
 
-For arm64 we could even compile out pci_fixup_irqs() since the IRQ mapping
-is done in pcibios_add_device() through DT, I agree on CONFIG_ARM this
-needs fixing though, so yes, make it common code and patch all host
-controllers that make use of pci_fixup_irqs() since that's a common
-issue as far as I can see (ARM pcibios works around it by having a
-IRQ mapping function per bus and it provides an API to initialize
-multiple host controllers at once and fixing up IRQs before devices
-are added, still, for host controllers that do not use that
-functionality - eg drivers/pci/host/pcie-designware.c - if there are
-multiple host controllers instances we run into the same problem).
+Sorry for the delayed response.
 
-Side note: do you have any PCI host controller where mapping IRQs through
-of_irq_parse_and_map_pci() does not work ? If yes, why ?
+On Wed, Aug 26, 2015 at 4:44 PM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+>
+> Currently num-lanes is read in dw_pcie_host_init().
+> for A SoC that performs the link-up operation in UEFI num-lanes
+> is not needed in the DTS but it has to be specified to any value;
+> otherwise dw_pcie_host_init will fail.
 
-Cheers,
-Lorenzo
+OK, So it means num-lanes is no longer "required property" and can be
+an "optional property".
+IMO,
+
+* move num-lanes from "Required" to "Optional" in
+Documentation/devicetree/bindings/pci/designware-pcie.txt
+* Handle it in dw_pcie_host_init() itself (similar to bus-range)
+     - s/dev_err/dev_dbg
+     - set pp->lanes = 0;
+* May be we can put a dev_err message in dw_pcie_setup_rc() for pp->lanes = 0.
+
+~Pratyush
