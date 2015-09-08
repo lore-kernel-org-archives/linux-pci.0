@@ -1,67 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:56934 "EHLO mout.gmx.net"
+Received: from mga03.intel.com ([134.134.136.65]:44302 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754560AbbIBQRm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Sep 2015 12:17:42 -0400
-Date: Wed, 2 Sep 2015 18:17:29 +0200
-From: Helge Deller <deller@gmx.de>
-To: linux-parisc@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Meelis Roos <mroos@linux.ee>
-Subject: [PATCH] PCI,parisc: Enable 64-bit bus addresses on PA-RISC
-Message-ID: <20150902161729.GA2444@ls3530.box>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752115AbbIHHX3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Sep 2015 03:23:29 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices managed by non-PCI drivers
+Date: Tue,  8 Sep 2015 15:26:29 +0800
+Message-Id: <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <55EE8106.6060100@internode.on.net>
+References: <55EE8106.6060100@internode.on.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit 3a9ad0b ("PCI: Add pci_bus_addr_t") unconditionally introduced usage of
-64-bit PCI bus addresses on all 64-bit platforms which broke PA-RISC.
+Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
+for PCI devices on x86 platforms. Instead of allocating PCI legacy
+IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
+will be called by pci_device_probe() to allocate PCI legacy IRQs
+when binding PCI drivers to PCI devices.
 
-It turned out that due to enabling the 64-bit addresses, the PCI logic decided
-to use the GMMIO instead of the LMMIO region. This commit simply disables
-registering the GMMIO and thus we fall back to use the LMMIO region as before.
+But some device drivers, such as eata, directly access PCI devices
+without implementing corresponding PCI drivers, so pcibios_alloc_irq()
+won't be called for those PCI devices and wrong IRQ number may be
+used to manage the PCI device.
 
-Reverts commit 45ea2a5fed6dacb9bb0558d8b21eacc1c45d5bb4
-("PCI: Don't use 64-bit bus addresses on PA-RISC")
+So detect such a case in pcibios_enable_device() by checking
+pci_dev->driver is NULL and call pcibios_alloc_irq() to allocate PCI
+legacy IRQs.
 
-To: linux-parisc@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Meelis Roos <mroos@linux.ee>
-Cc: stable@vger.kernel.org  # v3.19+
-Signed-off-by: Helge Deller <deller@gmx.de>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/common.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-
-diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-index dceb9dd..a32c1f6 100644
---- a/drivers/parisc/lba_pci.c
-+++ b/drivers/parisc/lba_pci.c
-@@ -1556,8 +1556,11 @@ lba_driver_probe(struct parisc_device *dev)
- 	if (lba_dev->hba.lmmio_space.flags)
- 		pci_add_resource_offset(&resources, &lba_dev->hba.lmmio_space,
- 					lba_dev->hba.lmmio_space_offset);
--	if (lba_dev->hba.gmmio_space.flags)
--		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
-+	if (lba_dev->hba.gmmio_space.flags) {
-+		/* pci_add_resource(&resources, &lba_dev->hba.gmmio_space); */
-+		pr_warn("LBA: Not registering GMMIO space %pR\n",
-+			&lba_dev->hba.gmmio_space);
-+	}
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 09d3afc0a181..60b237783582 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -685,6 +685,16 @@ void pcibios_free_irq(struct pci_dev *dev)
  
- 	pci_add_resource(&resources, &lba_dev->hba.bus_num);
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
++	/*
++	 * By design, pcibios_alloc_irq() will be called by pci_device_probe()
++	 * when binding a PCI device to a PCI driver. But some device drivers,
++	 * such as eata, directly make use of PCI devices without implementing
++	 * PCI device drivers, so pcibios_alloc_irq() won't be called for those
++	 * PCI devices.
++	 */
++	if (!dev->driver)
++		pcibios_alloc_irq(dev);
++
+ 	return pci_enable_resources(dev, mask);
+ }
  
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 944f500..73de4ef 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -2,7 +2,7 @@
- # PCI configuration
- #
- config PCI_BUS_ADDR_T_64BIT
--	def_bool y if (ARCH_DMA_ADDR_T_64BIT || (64BIT && !PARISC))
-+	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
- 	depends on PCI
- 
- config PCI_MSI
+-- 
+1.7.10.4
+
