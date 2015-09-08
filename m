@@ -1,69 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f47.google.com ([209.85.213.47]:33112 "EHLO
-	mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751464AbbISVf4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Sep 2015 17:35:56 -0400
+Received: from lhrrgout.huawei.com ([194.213.3.17]:36881 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753676AbbIHIcR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 04:32:17 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	qiujiang <qiujiang@huawei.com>
+Subject: RE: [PATCH] PCI: Designware: Move num-lanes property read to
+ dw_pcie_setup_rc
+Date: Tue, 8 Sep 2015 08:32:02 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620AE08@lhreml503-mbs>
+References: <1440587656-84224-1-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1440587656-84224-1-git-send-email-gabriele.paoloni@huawei.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-In-Reply-To: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
-References: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
-Date: Sat, 19 Sep 2015 14:35:55 -0700
-Message-ID: <CAE9FiQXaOkMKk2PddYOXApK9tKLkgusH18sYgvLHA04BRdXR-g@mail.gmail.com>
-Subject: Re: PCIe bus (re-)numbering
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ruud <netwerkforens@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 19, 2015 at 1:20 AM, Ruud <netwerkforens@gmail.com> wrote:
-> Hello all,
->
-> Not a patch, not a complaint: a start of a discussion on PCIe bus
-> renumbering and bus numbering in general..
->
->
-> The current algorithm seems to allocate 8 extra busnumbers at the
-> hotplug switch, but clearly 8 is not sufficient for the whole tree
-> when it is discovered after initial numbering has been assigned. As
-> the PCIe routing requires the bus numbers to be consecutive as it
-> describes ranges there are not that many allocation strategies for bus
-> numbers. It is impossible to predict at boot-time which switch will
-> require lots of busses and which do not.
-
-Well, if you need more than 8 bus number then practical way is
-booting with pcie switch and late only hot-remove and host-add
-instead of code hot-add.
-
->
-> A solution is static assignment (e.g. as described by
-> http://article.gmane.org/gmane.linux.kernel.pci/45212), but it seems
-> not convenient to me.
-
-Interesting, one patch in that thread looks like try to use bus range blindly.
-so it is no go.
-
->
-> I got the impression the most elegant way is to renumber, but at the
-> same time I doubt. Would the BIOS become confused? Currently the
-> kernel becomes confused as it renumbers the ethernet interfaces when
-> the bus-numbers change. Several drivers seem to be locked to the
-> device by its geographical routing (aka bus << 16 | device << 11 |
-> function << 8 ). I got the impression that this is the root of the
-> evil as the bus need not be as constant as expected.
-
-Do you mean changing bus number without unloading driver ?
-
-No, you can not do that.
-
-some device firmware like lsi cards, if you change it's primary bus number,
-the device will stop working, but that is another problem.
-
-For cold hot add several pcie switches, right way would be have a script:
-1. remove related children devices.
-2. use setpci to clear bus number register
-3. remove bridge devices
-4. do pci rescan.
-
-Yinghai
+SGkgSmluZ29vLCBQcmF0eXVzaA0KDQpBbnkgY29tbWVudCBvbiB0aGlzIHBhdGNoPw0KDQpUaGFu
+a3MNCg0KR2FiDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEdhYnJpZWxl
+IFBhb2xvbmkNCj4gU2VudDogV2VkbmVzZGF5LCBBdWd1c3QgMjYsIDIwMTUgMTI6MTQgUE0NCj4g
+VG86IGppbmdvb2hhbjFAZ21haWwuY29tOyBXYW5nemhvdSAoQik7IHByYXR5dXNoLmFuYW5kQGdt
+YWlsLmNvbQ0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgcWl1emhlbmZhOyB6aGFu
+Z2p1a3VvOyBsaXVkb25nZG9uZyAoQyk7DQo+IExpZ3Vvemh1IChLZW5uZXRoKTsgcWl1amlhbmc7
+IEdhYnJpZWxlIFBhb2xvbmkNCj4gU3ViamVjdDogW1BBVENIXSBQQ0k6IERlc2lnbndhcmU6IE1v
+dmUgbnVtLWxhbmVzIHByb3BlcnR5IHJlYWQgdG8NCj4gZHdfcGNpZV9zZXR1cF9yYw0KPiANCj4g
+RnJvbTogZ2FicmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiAN
+Cj4gQ3VycmVudGx5IG51bS1sYW5lcyBpcyByZWFkIGluIGR3X3BjaWVfaG9zdF9pbml0KCkuDQo+
+IGZvciBBIFNvQyB0aGF0IHBlcmZvcm1zIHRoZSBsaW5rLXVwIG9wZXJhdGlvbiBpbiBVRUZJIG51
+bS1sYW5lcw0KPiBpcyBub3QgbmVlZGVkIGluIHRoZSBEVFMgYnV0IGl0IGhhcyB0byBiZSBzcGVj
+aWZpZWQgdG8gYW55IHZhbHVlOw0KPiBvdGhlcndpc2UgZHdfcGNpZV9ob3N0X2luaXQgd2lsbCBm
+YWlsLg0KPiBUaGlzIHBhdGNoIG1vdmVzIHRoZSBudW0tbGFuZXMgcHJvcGVydHkgcmVhZCBpbiBk
+d19wY2llX3NldHVwX3JjKCkNCj4gYXMgbnVtLWxhbmVzIGlzIG9ubHkgdXNlZCB0aGVyZSBhbmQs
+IGlmIHRoZSBsaW5rIGlzIGFscmVhZHkgdXAsDQo+IHRoZSBQQ0llIGNvbnRyb2xsZXIgZHJpdmVy
+IGNhbiBkZWNpZGUgZWl0aGVyIHRvIGxlYXZlIGhvc3RfaW5pdA0KPiBOVUxMIG9yIHRvIHJldHVy
+biBzdHJhaWdodGZvcndhcmQgd2l0aG91dCBwcm9jZWVkaW5nIHRvIGNhbGwNCj4gZHdfcGNpZV9z
+ZXR1cF9yYygpLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogR2FicmllbGUgUGFvbG9uaSA8Z2Ficmll
+bGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiAtLS0NCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1k
+ZXNpZ253YXJlLmMgfCAxMCArKysrKy0tLS0tDQo+ICAxIGZpbGUgY2hhbmdlZCwgNSBpbnNlcnRp
+b25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hv
+c3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2Fy
+ZS5jDQo+IGluZGV4IDY5NDg2YmUuLjdkNzA3YjcgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvcGNp
+L2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRl
+c2lnbndhcmUuYw0KPiBAQCAtNDgzLDExICs0ODMsNiBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQo
+c3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ICAJCX0NCj4gIAl9DQo+IA0KPiAtCWlmIChvZl9wcm9w
+ZXJ0eV9yZWFkX3UzMihucCwgIm51bS1sYW5lcyIsICZwcC0+bGFuZXMpKSB7DQo+IC0JCWRldl9l
+cnIocHAtPmRldiwgIkZhaWxlZCB0byBwYXJzZSB0aGUgbnVtYmVyIG9mIGxhbmVzXG4iKTsNCj4g
+LQkJcmV0dXJuIC1FSU5WQUw7DQo+IC0JfQ0KPiAtDQo+ICAJaWYgKElTX0VOQUJMRUQoQ09ORklH
+X1BDSV9NU0kpKSB7DQo+ICAJCWlmICghcHAtPm9wcy0+bXNpX2hvc3RfaW5pdCkgew0KPiAgCQkJ
+cHAtPmlycV9kb21haW4gPSBpcnFfZG9tYWluX2FkZF9saW5lYXIocHAtPmRldi0NCj4gPm9mX25v
+ZGUsDQo+IEBAIC03NDIsNyArNzM3LDEyIEBAIHZvaWQgZHdfcGNpZV9zZXR1cF9yYyhzdHJ1Y3Qg
+cGNpZV9wb3J0ICpwcCkNCj4gIAl1MzIgdmFsOw0KPiAgCXUzMiBtZW1iYXNlOw0KPiAgCXUzMiBt
+ZW1saW1pdDsNCj4gKwlzdHJ1Y3QgZGV2aWNlX25vZGUgKm5wID0gcHAtPmRldi0+b2Zfbm9kZTsN
+Cj4gDQo+ICsJaWYgKG9mX3Byb3BlcnR5X3JlYWRfdTMyKG5wLCAibnVtLWxhbmVzIiwgJnBwLT5s
+YW5lcykpIHsNCj4gKwkJZGV2X2VycihwcC0+ZGV2LCAiRmFpbGVkIHRvIHBhcnNlIHRoZSBudW1i
+ZXIgb2YgbGFuZXNcbiIpOw0KPiArCQlyZXR1cm47DQo+ICsJfQ0KPiAgCS8qIHNldCB0aGUgbnVt
+YmVyIG9mIGxhbmVzICovDQo+ICAJZHdfcGNpZV9yZWFkbF9yYyhwcCwgUENJRV9QT1JUX0xJTktf
+Q09OVFJPTCwgJnZhbCk7DQo+ICAJdmFsICY9IH5QT1JUX0xJTktfTU9ERV9NQVNLOw0KPiAtLQ0K
+PiAxLjkuMQ0KDQo=
