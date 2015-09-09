@@ -1,43 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:7831 "EHLO
-	ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754645AbbIRPI4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 11:08:56 -0400
-Message-ID: <55FC2903.6080102@internode.on.net>
-Date: Sat, 19 Sep 2015 00:38:51 +0930
-From: Arthur Marsh <arthur.marsh@internode.on.net>
+Received: from mail-yk0-f194.google.com ([209.85.160.194]:34425 "EHLO
+	mail-yk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390AbbIISCq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 14:02:46 -0400
+Received: by ykdt18 with SMTP id t18so2490130ykd.1
+        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2015 11:02:45 -0700 (PDT)
 MIME-Version: 1.0
-To: Christoph Hellwig <hch@infradead.org>,
-	Hannes Reinecke <hare@suse.de>
-CC: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+In-Reply-To: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
+Date: Wed, 9 Sep 2015 23:32:45 +0530
+Message-ID: <CAHM4w1nQrDFmiN--8NcGK_yywsKHJ=_vCHh5h-_4uaQPexKQkg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Dario Ballabio <ballabio_dario@emc.com>,
-	"James E.J. Bottomley" <JBottomley@odin.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-Subject: Re: [Bugfix 3/3] eata: Enhance eata driver to support PCI device
- hot-removal
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com> <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com> <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com> <55F6837A.5020807@suse.de> <20150916134211.GA21535@infradead.org>
-In-Reply-To: <20150916134211.GA21535@infradead.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Zhichang Yuan <yuanzhichang@hisilicon.com>,
+	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Sep 9, 2015 at 10:21 PM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
 
+>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>  {
+> +       addr += (where & ~0x3);
 
-Christoph Hellwig wrote on 16/09/15 23:12:
+Lets see what Jingoo and other have to say on it. IMO, where should be
+better kept as an offset within 32 bit word and addr should be 32 bit
+aligned.  I think this is how where has been considered at other
+places like pci-mvebu.c.
 
-> Jiang, you also need to convert the driver to
-> scsi_add_host/scsi_remove_host from the legacy scsi_register interface,
-> otherwise the SCSI layer will be very unhappy.
->
-> Take a look at commit 0d31f8759109cbc1e6fc196d08e6b0e8a9e93b3f for
-> example, the change should be straight forward.
->
+>         *val = readl(addr);
+> -
+> -       if (size == 1)
+> -               *val = (*val >> (8 * (where & 3))) & 0xff;
+> -       else if (size == 2)
+> -               *val = (*val >> (8 * (where & 3))) & 0xffff;
+> -       else if (size != 4)
+> +       where &= 3;
+> +
+> +       if (size == 1) {
+> +               *val = (*val >> (8 * where)) & 0xff;
+> +       } else if (size == 2) {
+> +               if (where & 1)
+> +                       return PCIBIOS_BAD_REGISTER_NUMBER;
 
-I am pleased to note that when I tried a Linus git head kernel from the 
-last 24 hours, the IRQ routing for my DPT2044W SCSI card using eata 
-module worked again, although the shut-down/kexec issue remains.
+Do we really need such cross check? I do not think that any caller is
+expected for such misbehave.
 
-Arthur.
+~Pratyush
