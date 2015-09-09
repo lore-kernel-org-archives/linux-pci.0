@@ -1,63 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:38191 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752433AbbIJMkD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 08:40:03 -0400
-Received: by wiclk2 with SMTP id lk2so21541334wic.1
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 05:40:01 -0700 (PDT)
+Received: from e28smtp02.in.ibm.com ([122.248.162.2]:55924 "EHLO
+	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbbIIFxh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 01:53:37 -0400
+Received: from /spool/local
+	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 9 Sep 2015 11:23:35 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id DAF7F394005A
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2015 11:23:32 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t895rV579371836
+	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 11:23:32 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t895rUT4020515
+	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 11:23:31 +0530
+Date: Wed, 9 Sep 2015 13:53:29 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>, aik@ozlabs.ru,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
+Message-ID: <20150909055329.GA7684@Richards-MacBook-Pro.local>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150729031718.GA18069@richard>
+ <20150909024820.GA6808@gwshan>
+ <20150909033616.GA5148@richards-mbp.cn.ibm.com>
+ <1441774751.2767.20.camel@au1.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1620C569@lhreml503-mbs>
-References: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
- <CAErSpo6d_65oCez7fUBLLpYAiA8F8vj5V4j3gkvMVMsNobpfrg@mail.gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E1620C569@lhreml503-mbs>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 10 Sep 2015 07:39:42 -0500
-Message-ID: <CAErSpo5+7cBWLbqVNfq2_+MbY+aL3_Q8n6mBQejGzy29bk7new@mail.gmail.com>
-Subject: Re: [PATCH] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1441774751.2767.20.camel@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 10, 2015 at 6:26 AM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
->> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
-
->> I think there was a separate patch for the pcie-spear13xx.c bug,
->> wasn't there?  At least, I don't see that fix in *this* patch.
->>
+On Wed, Sep 09, 2015 at 02:59:11PM +1000, Benjamin Herrenschmidt wrote:
+>On Wed, 2015-09-09 at 11:36 +0800, Richard Yang wrote:
+>> The VF EEH is hung since we re-designed the SRIOV. After the re
+>> -design, we
+>> don't have VF groups.
+>> 
+>> My plan is to push the VF EEH patch set after the SRIOV Redesign is
+>> accepted.
 >
-> From your previous comments:
-> ********
-> *2) Pratyush, this one's for you :)  spear13xx_pcie_establish_link()
-> *   calls dw_pcie_cfg_read() and dw_pcie_cfg_write() several times like
-> *   this:
-> *
-> *    dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, ...)
-> *    dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, ...)
-> ********
+>What do you mean taht we don't have VF groups ?
 >
-> I think that the implementation of dw_pcie_cfg_read() and
-> dw_pcie_cfg_write() that I proposed in this patch is compatible with
-> the previous calls in pcie-spear13xx.c. So the calls in pcie-spear13xx.c
-> were buggy for the previous implementations of the functions; with
-> the reworked functions there is no need to modify the function calls
-> in pcie-spear13xx.c...do you agree?
 
-Oh, I see, I didn't read it closely enough, but you're probably right.
-What I would probably do is apply Pratyush's fix first, then apply
-your patch on top.  That way we can do the spear13xx bug fix by itself
-(which should be a fairly obviously-correct patch), then your
-interface change (which would be extended to touch all the calls
-including spear13xx and be similarly obviously correct).  I think that
-would make it a bit easier for future changelog archaeologists.
+Before we redesign the SRIOV, several VFs may share one M64 segment. This
+introduced the compound PE for VFs. The VF group in previous mail means the
+compound PE composed of a master VF PE will have several slave VF PEs.
 
-Bjorn
+>If we don't have IOMMU groups per VF that means we can't assign them to
+>KVM partitions -> they are completely useless.
+
+Yes, I don't mean for the IOMMU group.
+
+>
+>Ben.
+
+-- 
+Richard Yang
+Help you, Help me
+
