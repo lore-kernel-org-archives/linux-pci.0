@@ -1,66 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:21174 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932797AbbI2QNv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 12:13:51 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v6 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-Date: Wed, 30 Sep 2015 00:20:33 +0800
-Message-ID: <1443543636-35105-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from e28smtp01.in.ibm.com ([122.248.162.1]:36784 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbbIIGBy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 02:01:54 -0400
+Received: from /spool/local
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
+	Wed, 9 Sep 2015 11:31:51 +0530
+Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
+	by d28dlp02.in.ibm.com (Postfix) with ESMTP id ABCB2394005C
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2015 11:31:47 +0530 (IST)
+Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
+	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8961XtJ8323276
+	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 11:31:33 +0530
+Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
+	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8961V0l030674
+	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 11:31:32 +0530
+Date: Wed, 9 Sep 2015 14:01:29 +0800
+From: Richard Yang <weiyang@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
+	mpe@ellerman.id.au, linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
+Message-ID: <20150909060129.GC7684@Richards-MacBook-Pro.local>
+Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150729031718.GA18069@richard>
+ <20150909024820.GA6808@gwshan>
+ <20150909033616.GA5148@richards-mbp.cn.ibm.com>
+ <55EFC200.10209@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55EFC200.10209@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Wed, Sep 09, 2015 at 03:22:08PM +1000, Alexey Kardashevskiy wrote:
+>On 09/09/2015 01:36 PM, Richard Yang wrote:
+>>On Wed, Sep 09, 2015 at 12:48:21PM +1000, Gavin Shan wrote:
+>>>On Wed, Jul 29, 2015 at 11:17:18AM +0800, Wei Yang wrote:
+>>>>Hi, Michael
+>>>>
+>>>>Hope you didn't take this yet. We may change this patch a little.
+>>>>
+>>>
+>>>[Cc Alexey who might concern the SRIOV status]
+>>>
+>>>Richard, do you have plan to get it upstream? It seems it's hanged
+>>>over here for long time.
+>>>
+>>
+>>The VF EEH is hung since we re-designed the SRIOV. After the re-design, we
+>>don't have VF groups.
+>>
+>>My plan is to push the VF EEH patch set after the SRIOV Redesign is accepted.
+>
+>
+>Can you please rebase on v4.2 (or v4.2 + sriov rework) and repost VF EEH
+>patchset just to me? Or share the tree somewhere where I can pull it from?
+>Thanks.
+>
 
-This patchset:
-1) fixes a bug in spear13xx when calling dw_pcie_cfg_read and
-   dw_pcie_cfg_write usign the patch from Pratyush in
-   https://lkml.org/lkml/2015/9/7/5
-2) reworks dw_pcie_cfg_read/dw_pcie_cfg_write in pcie-designware.c in
-   order to make it easier for callers to pass input parameters;
-3) changes dw_pcie_cfg_read implementation to make it symmetric with
-   dw_pcie_cfg_write 
-4) adds sanity checks in dw_pcie_cfg_read/dw_pcie_cfg_write to make
-   sure the PCI header offset does not conflict with the size of
-   the read/written field.
+Yep, this is what I am planning to do.
 
-Changes from v5: sanity check readibility simplified
-
-Changes from v4:
-   - included https://lkml.org/lkml/2015/9/7/5 back as it was lost in v4
-
-Changes from v3:
-   - changed dw_pcie_cfg_read implementation to make it symmetric with
-     dw_pcie_cfg_write
-   - changed dw_pcie_cfg_read/dw_pcie_cfg_write implementations to take
-     as input param directly the address of the field to read/write rather
-     than the base address and the offset in the PCI header
-
-Change from v2:
-   Replaced patch 1/3 with Pratyush one in
-   https://lkml.org/lkml/2015/9/7/5
-
-gabriele paoloni (3):
-  PCIe: SPEAr13xx: fix dw_pcie_cfg_read/write() usage
-  PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-  PCI: designware: add sanity checks on the header offset in
-    dw_pcie_cfg_read and dw_pcie_cfg_write
-
- drivers/pci/host/pci-exynos.c      |  5 ++---
- drivers/pci/host/pci-keystone-dw.c |  4 ++--
- drivers/pci/host/pcie-designware.c | 40 ++++++++++++++++++++------------------
- drivers/pci/host/pcie-designware.h |  4 ++--
- drivers/pci/host/pcie-spear13xx.c  | 24 +++++++++++------------
- 5 files changed, 39 insertions(+), 38 deletions(-)
+>As for now, I cannot tell what difference your SRIOV patchset actually makes.
+>
+>-- 
+>Alexey
 
 -- 
-1.9.1
+Richard Yang
+Help you, Help me
 
