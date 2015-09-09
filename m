@@ -1,51 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f67.google.com ([209.85.215.67]:33445 "EHLO
-	mail-la0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbbIFNle convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Sep 2015 09:41:34 -0400
-Received: by laag3 with SMTP id g3so3932911laa.0
-        for <linux-pci@vger.kernel.org>; Sun, 06 Sep 2015 06:41:32 -0700 (PDT)
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33021 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752104AbbIIFWP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 01:22:15 -0400
+Received: by pacex6 with SMTP id ex6so146047309pac.0
+        for <linux-pci@vger.kernel.org>; Tue, 08 Sep 2015 22:22:14 -0700 (PDT)
+Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
+To: Richard Yang <weiyang@linux.vnet.ibm.com>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150729031718.GA18069@richard> <20150909024820.GA6808@gwshan>
+ <20150909033616.GA5148@richards-mbp.cn.ibm.com>
+Cc: bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <55EFC200.10209@ozlabs.ru>
+Date: Wed, 9 Sep 2015 15:22:08 +1000
 MIME-Version: 1.0
-Date: Sun, 6 Sep 2015 06:41:32 -0700
-Message-ID: <CAH2rL8yC8eEQ2S9x9iy8ridCmO7dLcsqUkMxHvZuHiU_4y1__Q@mail.gmail.com>
-Subject: From: Western Union Money Transfer Office................MTCN 795-462-6380
-From: western transfer <westerntransfer1779@gmail.com>
-To: undisclosed-recipients:;
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20150909033616.GA5148@richards-mbp.cn.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Wir haben eine E-Mail über Western Union EURO 5.000,00, wie wir Ihre
-volle Zahlung Zahlung Summe 2.500,000.00euro über Western Union das
-Mandat, diese governemnt vermitteln erhalten.
+On 09/09/2015 01:36 PM, Richard Yang wrote:
+> On Wed, Sep 09, 2015 at 12:48:21PM +1000, Gavin Shan wrote:
+>> On Wed, Jul 29, 2015 at 11:17:18AM +0800, Wei Yang wrote:
+>>> Hi, Michael
+>>>
+>>> Hope you didn't take this yet. We may change this patch a little.
+>>>
+>>
+>> [Cc Alexey who might concern the SRIOV status]
+>>
+>> Richard, do you have plan to get it upstream? It seems it's hanged
+>> over here for long time.
+>>
+>
+> The VF EEH is hung since we re-designed the SRIOV. After the re-design, we
+> don't have VF groups.
+>
+> My plan is to push the VF EEH patch set after the SRIOV Redesign is accepted.
 
-Ich nenne Ihre Telefonnummer, um Ihnen Informationen über das Telefon
-zu geben, aber nicht abholen meine Anrufe überall dort, wo gestern
-noch dieses morning.Now, entschied ich mich, Ihnen das MTCN und
-Absendernamen senden, so dass Sie bis zu 7000 Brief abholen 00 EURO
-uns eine andere EURO 5000,00 heute, wie Sie wissen, werden wir das
-Senden nur 5.000,00 EUR pro Nacht. Bitte nehmen Sie diese
-Informationen, und führen Sie den Western Union abholen 5000,00 Euro &
-NBSP; Und Nbsp; und rufen Sie mich an eine andere Zahlungs heute zu schicken,
 
-es kostet Sie die Menge 75EURO kurz vor der EURO 5000 OK über Western
-Union zu erhalten.
+Can you please rebase on v4.2 (or v4.2 + sriov rework) and repost VF EEH 
+patchset just to me? Or share the tree somewhere where I can pull it from? 
+Thanks.
 
-Meine Direktwahltelefon (+23481073623304), der Leiter der WESTERN
-UNION und NBSP; Rufen Sie per E-Mail oder per E-Mail an mich, wenn Sie
-noch
-haben dieses 5000,00 Euro. Hier Western Union Informationen das Geld abholen:
+As for now, I cannot tell what difference your SRIOV patchset actually makes.
 
-MTCN 795-462-6380
-Absender Name: & nbsp; George E LAND
-Frage: OK?
-Antwort: God
-Summe: 5.000,00 EURO
-
-Und Nbsp;
-
-Ich warte auf Ihren Anruf, wenn Sie so 5000,00 EURO und NBSP sind;
-Mailen Sie mir Ihre direkte Telefonnummer bitte, weil ich möchte, dass
-Sie immer NBSP nennen; Wir senden keine Zahlungsinformationen.
-
-From: Western Union Money Transfer Office.
+-- 
+Alexey
