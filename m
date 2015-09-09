@@ -1,147 +1,131 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20150602133215.GC23650@red-moon> <55701A31.808@linaro.org>
- <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org>
- <557504A2.3060203@linaro.org> <20150608151443.GA16151@red-moon>
- <55E4340D.6050004@linaro.org> <55ED6010.3020406@linaro.org>
- <20150908150727.GF29293@red-moon> <55F0388B.1090607@linaro.org>
- <20150911112018.GA13033@red-moon> <55F6DFF6.4010807@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:58013 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752066AbbIILc2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 9 Sep 2015 07:32:28 -0400
+Date: Wed, 9 Sep 2015 12:32:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <56057001.9000101@linaro.org>
-Date: Fri, 25 Sep 2015 18:02:09 +0200
+	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+Message-ID: <20150909113235.GA10991@red-moon>
+References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
+ <20150902174716.GA6305@red-moon>
+ <20150902203250.GB829@google.com>
+ <20150903100115.GA15308@red-moon>
+ <20150903162140.GG829@google.com>
+ <20150904141903.GA22997@red-moon>
+ <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
+ <20150904164412.GD22997@red-moon>
+ <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <55F6DFF6.4010807@linaro.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+On Sat, Sep 05, 2015 at 12:53:48AM +0100, Yinghai Lu wrote:
+> On Fri, Sep 4, 2015 at 9:44 AM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > On Fri, Sep 04, 2015 at 05:00:35PM +0100, Yinghai Lu wrote:
+> >
+> > The problem here is not the last retry, it is the first bridge scan.
+> >
+> > By moving pci_read_bridge_bases() to core PCI code, if we do not
+> > vet the bridge apertures (ie claim them and reset them if the claiming
+> > fails) we end up calling (on ARM) __pci_bus_size_bridges() with apertures
+> > that can have sizes != 0, which does not make any sense since we are calling
+> > __pci_bus_size_bridges() to *discover* what the aperture size should
+> > be on first bridge scan, correct ?
+> 
+> for x86, in pcibios_allocate_bridge_resources(), we do validate
+> the bridge resources, and reset size to 1 (strange ?!).
+> and they are called before pci_asssign_unassigned_resources()
+> 
+> so arch ARM would support pcibios_allocate_bridge_resources or other
+> call to do the same thing?
+> 
+> wonder some arches even claim fails, they still does not want you to
+> reset it.
 
-On 09/14/2015 04:55 PM, Tomasz Nowicki wrote:
-> On 11.09.2015 13:20, Lorenzo Pieralisi wrote:
->> On Wed, Sep 09, 2015 at 02:47:55PM +0100, Tomasz Nowicki wrote:
->>
->> [...]
->>
->>>> I think (but I am happy to be corrected) that the map_bus() hook
->>>> (ie that's why struct pci_bus is required in eg
->>>> pci_generic_config_write)
->>>> is there to ensure that when the generic accessors are called
->>>> a) we have a valid bus b) the host controllers implementing it
->>>> has been initialized.
->>>>
->>>> I had another look and I noticed you are trying to solve multiple
->>>> things at once:
->>>>
->>>> 1) ACPICA seems to need PCI config space on bus 0 to be working
->>>>      before PCI enumerates (ie before we have a root bus), we need to
->>>>      countercheck on that, but you can't use the generic PCI accessors
->>>>      for that reasons (ie root bus might not be available, you do not
->>>>      have a pci_bus struct)
->>>> 2) the raw_pci_read/write require _generic_ mmio back-ends, since AMD
->>>>      can't cope with standard x86 read/write{b,w,l}
->>>>
->>>> Overall, it seems to me that we can avoid code duplication by
->>>> shuffling your code a bit.
->>>>
->>>> You could modify the generic accessors in drivers/pci/access.c to
->>>> use your mmio back-end instead of using plain read/write{b,w,l}
->>>> functions (we should check if RobH is ok with that there can be
->>>> reasons that prevent this from happening). This would solve the
->>>> AMD mmio issue.
->>>>
->>>> By factoring out the code that actually carries out the reads
->>>> and writes in the accessors basically you decouple the functions
->>>> requiring the struct pci_bus from the ones that does not require it
->>>> (ie raw_pci_{read/write}.
->>>>
->>>> The generic MMIO layer belongs in the drivers/pci/access.c file, it has
->>>> nothing to do with ECAM.
->>>>
->>>> The mmcfg interface should probably live in pci-acpi.c, I do not think
->>>> you need an extra file in there but that's a detail.
->>>>
->>>> Basically the generic accessors would become something like eg:
->>>>
->>>> int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
->>>>                             int where, int size, u32 val)
->>>> {
->>>>        void __iomem *addr;
->>>>
->>>>        addr = bus->ops->map_bus(bus, devfn, where);
->>>>        if (!addr)
->>>>                return PCIBIOS_DEVICE_NOT_FOUND;
->>>>
->>>>        pci_mmio_write(size, addr + where, value);
->>>>
->>>>        return PCIBIOS_SUCCESSFUL;
->>>> }
->>>>
->>>> With that in place using raw_pci_write/read or the generic accessors
->>>> becomes almost identical, with code requiring the pci_bus to be
->>>> created using the generic accessors and ACPICA using the raw version.
->>>>
->>>> I might be missing something, so apologies if that's the case.
->>>>
->>>
->>> Actually, I think you showed me the right direction :) Here are some
->>> conclusions/comments/concerns. Please correct me if I am wrong:
->>>
->>> 1. We need raw_pci_write/read accessors (based on ECAM) for ARM64 too
->>> but only up to the point where buses are enumerated. From that point on,
->>> we should reuse generic accessors from access.c file, right?
->>
->> Well, I still have not figured out whether on arm64 the raw accessors
->> required by ACPICA make sense.
->>
->> So either arm64 relies on the generic MCFG based raw read and writes
->> or we define the global raw read and writes as empty (ie x86 overrides
->> them anyway).
->>
->
-> My concerns/ideas related to raw accessors for ARM64, please correct me
-> at any point.
->
-> ACPI spec - chapter: 19.5.96 OperationRegion (Declare Operation Region)
-> defines PCI_Config as one of region types. Every time ASL opcode
-> operates on corresponding PCI config space region, ASL interpreter is
-> dispatching address space to our raw accessors, please see
-> acpi_ex_pci_config_space_handler, acpi_ev_pci_config_region_setup calls.
-> What is more important, such operations may happen after (yes after) bus
-> enumeration, but always raw accessors are called at the end with the
-> {segment, bus, dev, fn} tuple.
->
-> Giving above, here are some ideas:
-> 1. We force somehow vendors to avoid operations on PCI config regions in
-> ASL code. PCI config region definitions still fall into Hardware Reduced
-> profile, so new ACPICA special subset for ARM64 is need. Then raw ACPI
-> accessors can be empty (and overridden by x86).
-> 2. We provide raw accessors which translate {segment, bus, dev, fn}
-> tuple to Linux generic accessors (this can be considered only if PCI
-> config accesses happened after bus enumeration for HR profile, thus
-> tuple to bus structure map is possible).
-> 4. We rely on the generic MCFG based raw read and writes.
+While finding a fix for this issue, I bumped into another one
+with current pci_claim_bridge_resource() behaviour. Described
+and "fixed" (I actually did not fix it, patch below is just there to
+show what the problem is) in the patch below.
 
-I will appreciate your opinion on above ideas.
+Comments welcome,
+Lorenzo
 
-Tomasz
+-- >8 --
+Subject: [PATCH] PCI: remove dead code in pci_claim_bridge_resource()
+
+Commit 8505e729a2f6eb ("PCI: Add pci_claim_bridge_resource() to clip
+window if necessary") introduced a new API to claim bridge resources.
+
+pci_claim_bridge_resource() tries to claim a bridge resource, and if
+the claiming fails the function tries to clip the resource to make
+it fit within the parent resource window.
+
+If the clipping succeeds the bridge apertures are set-up accordingly
+and the pci_claim_bridge_resource() tries to claim the resource
+again.
+
+Commit c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") added
+code that sets the IORESOURCE_UNSET flag on claiming failure.
+
+This means that the second resource claiming after window clipping will
+always fail, since the resource flags contain IORESOURCE_UNSET,
+previously set on failure by pci_claim_resource(), so the subsequent
+pci_claim_resource() call ends up spitting a log message and return
+failure with no chance whatsoever to succeed.
+
+This patch removes the second pci_claim_resource() call in
+pci_claim_bridge_resource() since it basically has no chance to
+succeed, leaving the current behaviour unchanged.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 508cc56..2bf4ac1 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -728,14 +728,10 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 		break;
+ 	case 2:
+ 		pci_setup_bridge_mmio_pref(bridge);
+-		break;
+ 	default:
+-		return -EINVAL;
++		break;
+ 	}
+ 
+-	if (pci_claim_resource(bridge, i) == 0)
+-		return 0;	/* claimed a smaller window */
+-
+ 	return -EINVAL;
+ }
+ 
+-- 
+2.2.1
+
