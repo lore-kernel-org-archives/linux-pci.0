@@ -1,206 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 33/53] resources: Make allocate_resource() return best fit resource
-Date: Wed, 16 Sep 2015 14:57:31 -0700
-Message-Id: <1442440671-5361-34-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device
+ from _CCA attribute
+To: <bhelgaas@google.com>, <rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>
+References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+CC: <hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+From: "Suthikulpanit, Suravee" <suravee.suthikulpanit@amd.com>
+Message-ID: <55F02331.2060001@amd.com>
+Date: Wed, 9 Sep 2015 19:16:49 +0700
+MIME-Version: 1.0
+In-Reply-To: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code just allocate from first avail window.
+Hi All,
 
-We can find all suitable empty slots and pick one with smallest size, so
-we could save the big slot for needed ones later when we have several pci
-bridges under parent bridge and some bridges get assigned from bios and we
-need to assign others in kernel.
+Are there any other concerns about this patch series?
 
-For examples: we have window
-[0xc0000000, 0xd0000000), and [0xe0000000,0xe1000000)
+Thanks,
+Suravee
 
-and we try allocate 0x200000 size resource.
-
-in this patch will reserve [0xc0000000, 0xd0000000) and
-[0xe0000000,0xe1000000) at first, then pick [0xe0000000,0xe1000000)
-to allocate 0x200000 size.
-
--v2: updated after __allocate_resource change, and add field in constraint
-	instead of passing it directly.
--v3: Use best fit instead of just fit according to Bjorn.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 68 insertions(+), 13 deletions(-)
-
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 07dea6f..ef8c495 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -48,6 +48,7 @@ struct resource_constraint {
- 	resource_size_t (*alignf)(void *, const struct resource *,
- 			resource_size_t, resource_size_t);
- 	void *alignf_data;
-+	bool fit;
- };
- 
- static DEFINE_RWLOCK(resource_lock);
-@@ -565,12 +566,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
-  * alignment constraints
-  */
- static int __find_resource(struct resource *root, struct resource *old,
--			 struct resource *new,
-+			 struct resource *new, struct resource *avail,
- 			 resource_size_t  size,
- 			 struct resource_constraint *constraint)
- {
- 	struct resource *this = root->child;
--	struct resource tmp = *new, avail, alloc;
-+	struct resource tmp = *new, availx, alloc;
-+
-+	if (!avail || avail == new)
-+		avail = &availx;
- 
- 	tmp.start = root->start;
- 	/*
-@@ -594,15 +598,16 @@ static int __find_resource(struct resource *root, struct resource *old,
- 		arch_remove_reservations(&tmp);
- 
- 		/* Check for overflow after ALIGN() */
--		avail.start = ALIGN(tmp.start, constraint->align);
--		avail.end = tmp.end;
--		avail.flags = new->flags & ~IORESOURCE_UNSET;
--		if (avail.start >= tmp.start) {
--			alloc.flags = avail.flags;
--			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
-+		avail->start = ALIGN(tmp.start, constraint->align);
-+		avail->end = tmp.end;
-+		avail->flags = new->flags & ~IORESOURCE_UNSET;
-+		if (avail->start >= tmp.start) {
-+			alloc.flags = avail->flags;
-+			alloc.start = constraint->alignf(
-+					constraint->alignf_data, avail,
- 					size, constraint->align);
- 			alloc.end = alloc.start + size - 1;
--			if (resource_contains(&avail, &alloc)) {
-+			if (resource_contains(avail, &alloc)) {
- 				new->start = alloc.start;
- 				new->end = alloc.end;
- 				return 0;
-@@ -619,6 +624,11 @@ next:		if (!this || this->end == root->end)
- 	return -EBUSY;
- }
- 
-+struct good_resource {
-+	struct list_head list;
-+	struct resource avail;
-+	struct resource new;
-+};
- /*
-  * Find empty slot in the resource tree given range and alignment.
-  */
-@@ -626,7 +636,49 @@ static int find_resource(struct resource *root, struct resource *new,
- 			resource_size_t size,
- 			struct resource_constraint  *constraint)
- {
--	return  __find_resource(root, NULL, new, size, constraint);
-+	int ret = -1;
-+	LIST_HEAD(head);
-+	struct good_resource *good, *tmp;
-+	resource_size_t avail_size = (resource_size_t)-1ULL;
-+
-+	if (!constraint->fit)
-+		return __find_resource(root, NULL, new, NULL, size,
-+					constraint);
-+
-+	/* find all suitable ones and add to the list */
-+	for (;;) {
-+		good = kzalloc(sizeof(*good), GFP_KERNEL);
-+		if (!good)
-+			break;
-+
-+		good->new.start = new->start;
-+		good->new.end = new->end;
-+		good->new.flags = new->flags;
-+		ret = __find_resource(root, NULL, &good->new, &good->avail,
-+					size, constraint);
-+		if (ret || __request_resource(root, &good->avail)) {
-+			ret = -EBUSY;
-+			kfree(good);
-+			break;
-+		}
-+
-+		list_add(&good->list, &head);
-+	}
-+
-+	/* pick up the smallest one and delete the list */
-+	list_for_each_entry_safe(good, tmp, &head, list) {
-+		if (resource_size(&good->avail) < avail_size) {
-+			avail_size = resource_size(&good->avail);
-+			new->start = good->new.start;
-+			new->end = good->new.end;
-+			ret = 0;
-+		}
-+		list_del(&good->list);
-+		__release_resource(&good->avail);
-+		kfree(good);
-+	}
-+
-+	return ret;
- }
- 
- /**
-@@ -647,7 +699,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
- 	struct resource new = *old;
- 	struct resource *conflict;
- 
--	if ((err = __find_resource(root, old, &new, newsize, constraint)))
-+	err = __find_resource(root, old, &new, NULL, newsize, constraint);
-+	if (err)
- 		goto out;
- 
- 	if (resource_contains(&new, old)) {
-@@ -686,6 +739,7 @@ out:
-  * @align: alignment requested, in bytes
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-+ * @fit: only allocate fit range.
-  *
-  * Caller need to hold resource_lock if needed.
-  */
-@@ -696,7 +750,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 						  const struct resource *,
- 						  resource_size_t,
- 						  resource_size_t),
--				void *alignf_data)
-+				void *alignf_data, bool fit)
- {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -709,6 +763,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
- 	constraint.align = align;
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
-+	constraint.fit = fit;
- 
- 	if (new->parent) {
- 		/* resource is already allocated, try reallocating with
-@@ -749,7 +804,7 @@ int allocate_resource(struct resource *root, struct resource *new,
- 
- 	write_lock(&resource_lock);
- 	ret = __allocate_resource(root, new, size, min, max, align,
--				   alignf, alignf_data);
-+				   alignf, alignf_data, true);
- 	write_unlock(&resource_lock);
- 
- 	return ret;
--- 
-1.8.4.5
-
+On 8/26/2015 8:54 PM, Suravee Suthikulpanit wrote:
+> This patch adds support to setup DMA coherency for PCI device using
+> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
+> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+> support for ARM64 which is currently in development.
+>
+> Also, this should not affect other architectures that does not define
+> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
+>
+> I have included the following patch from Jeremy before cleaning up
+> the acpi_check_dma() function (in patch 2).
+>
+>      http://www.spinics.net/lists/linux-usb/msg128582.html)
+>
+> Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
+>      * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
+>      * Add WARN() when fail to setup DMA for PCI device when booting
+>        ACPI (per Arnd's suggestion)
+>      * Added Acked-by from Rob.
+>      * Minor clean up
+>
+> Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
+>      * Include patch 1 from Jeremy to enable support for _CCA=0
+>      * Clean up acpi_check_dma() per Bjorn suggestions
+>      * Split the original V1 patch into two patches (patch 3 and 4)
+>
+>
+> Jeremy Linton (1):
+>    Honor ACPI _CCA attribute setting
+>
+> Suravee Suthikulpanit (3):
+>    ACPI/scan: Clean up acpi_check_dma
+>    PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+>    PCI: ACPI: Add support for PCI device DMA coherency
+>
+>   drivers/acpi/acpi_platform.c |  7 ++++++-
+>   drivers/acpi/glue.c          |  6 +++---
+>   drivers/acpi/scan.c          | 39 +++++++++++++++++++++++++++++++++++++++
+>   drivers/base/property.c      | 10 +++++++---
+>   drivers/of/of_pci.c          | 20 --------------------
+>   drivers/pci/probe.c          | 35 +++++++++++++++++++++++++++++++++--
+>   include/acpi/acpi_bus.h      | 35 ++---------------------------------
+>   include/linux/acpi.h         |  4 ++--
+>   include/linux/of_pci.h       |  3 ---
+>   9 files changed, 92 insertions(+), 67 deletions(-)
+>
