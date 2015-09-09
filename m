@@ -1,68 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f169.google.com ([209.85.160.169]:35725 "EHLO
-	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835AbbIKMJJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 08:09:09 -0400
-Received: by ykdu9 with SMTP id u9so89216296ykd.2
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2015 05:09:09 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: l.stach@pengutronix.de, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH v2 2/2] PCI: imx6: Add some defines for improving code readability
-Date: Fri, 11 Sep 2015 09:08:53 -0300
-Message-Id: <1441973333-3346-2-git-send-email-festevam@gmail.com>
-In-Reply-To: <1441973333-3346-1-git-send-email-festevam@gmail.com>
-References: <1441973333-3346-1-git-send-email-festevam@gmail.com>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:58386 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754857AbbIICtY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 22:49:24 -0400
+Received: from /spool/local
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 9 Sep 2015 12:49:21 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 87CE4357804F
+	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2015 12:49:18 +1000 (EST)
+Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t892n2Yr66584646
+	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 12:49:10 +1000
+Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
+	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t892mjHC010284
+	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 12:48:46 +1000
+Date: Wed, 9 Sep 2015 12:48:21 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: gwshan@linux.vnet.ibm.com, bhelgaas@google.com, mpe@ellerman.id.au,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	aik@ozlabs.ru
+Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
+Message-ID: <20150909024820.GA6808@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
+ <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
+ <20150729031718.GA18069@richard>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150729031718.GA18069@richard>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On Wed, Jul 29, 2015 at 11:17:18AM +0800, Wei Yang wrote:
+>Hi, Michael
+>
+>Hope you didn't take this yet. We may change this patch a little.
+>
 
-Instead of having some hardcoded values, it is preferred to use
-defines when possible.
+[Cc Alexey who might concern the SRIOV status]
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
-Changes since v1:
-- Make clear that the defines represent bitfields (Lucas)
+Richard, do you have plan to get it upstream? It seems it's hanged
+over here for long time.
 
- drivers/pci/host/pci-imx6.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 2d0d0fe..6f43086 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -55,6 +55,7 @@ struct imx6_pcie {
- #define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
- #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
- #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
-+#define PCIE_PHY_DEBUG_R0_LTSSM_MASK		(0x3f << 0)
- #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
- #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
- #define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
-@@ -74,6 +75,7 @@ struct imx6_pcie {
- 
- /* PHY registers (not memory-mapped) */
- #define PCIE_PHY_RX_ASIC_OUT 0x100D
-+#define PCIE_PHY_RX_ASIC_OUT_VALID	(1 << 0)
- 
- #define PHY_RX_OVRD_IN_LO 0x1005
- #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
-@@ -503,10 +505,10 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
- 	pcie_phy_read(pp->dbi_base, PCIE_PHY_RX_ASIC_OUT, &rx_valid);
- 	debug_r0 = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0);
- 
--	if (rx_valid & 0x01)
-+	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
- 		return 0;
- 
--	if ((debug_r0 & 0x3f) != 0x0d)
-+	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != 0x0d)
- 		return 0;
- 
- 	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
--- 
-1.9.1
+>On Fri, Jul 17, 2015 at 02:02:41PM +0800, Wei Yang wrote:
+>>When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
+>>which means those VFs in a group should form a compound PE.
+>>
+>>This patch links those VF PEs into compound PE in this case.
+>>
+>>[gwshan: code refactoring for a bit]
+>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+>>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>> arch/powerpc/platforms/powernv/pci-ioda.c |   46 +++++++++++++++++++++++++----
+>> arch/powerpc/platforms/powernv/pci.c      |   17 +++++++++--
+>> 2 files changed, 56 insertions(+), 7 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 5738d31..d1530cb 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -1359,9 +1359,20 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+>> 	}
+>>
+>> 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
+>>+		struct pnv_ioda_pe *s, *sn;
+>> 		if (pe->parent_dev != pdev)
+>> 			continue;
+>>
+>>+		if ((pe->flags & PNV_IODA_PE_MASTER) &&
+>>+		    (pe->flags & PNV_IODA_PE_VF)) {
+>>+			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
+>>+				pnv_pci_ioda2_release_dma_pe(pdev, s);
+>>+				list_del(&s->list);
+>>+				pnv_ioda_deconfigure_pe(phb, s);
+>>+				pnv_ioda_free_pe(phb, s->pe_number);
+>>+			}
+>>+		}
+>>+
+>> 		pnv_pci_ioda2_release_dma_pe(pdev, pe);
+>>
+>> 		/* Remove from list */
+>>@@ -1414,7 +1425,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+>> 	struct pci_bus        *bus;
+>> 	struct pci_controller *hose;
+>> 	struct pnv_phb        *phb;
+>>-	struct pnv_ioda_pe    *pe;
+>>+	struct pnv_ioda_pe    *pe, *master_pe;
+>> 	int                    pe_num;
+>> 	u16                    vf_index;
+>> 	struct pci_dn         *pdn;
+>>@@ -1456,10 +1467,13 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+>> 			continue;
+>> 		}
+>>
+>>-		/* Put PE to the list */
+>>-		mutex_lock(&phb->ioda.pe_list_mutex);
+>>-		list_add_tail(&pe->list, &phb->ioda.pe_list);
+>>-		mutex_unlock(&phb->ioda.pe_list_mutex);
+>>+		/* Put PE to the list, or postpone it for compound PEs */
+>>+		if ((pdn->m64_per_iov != M64_PER_IOV) ||
+>>+		    (num_vfs <= M64_PER_IOV)) {
+>>+			mutex_lock(&phb->ioda.pe_list_mutex);
+>>+			list_add_tail(&pe->list, &phb->ioda.pe_list);
+>>+			mutex_unlock(&phb->ioda.pe_list_mutex);
+>>+		}
+>>
+>> 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
+>> 	}
+>>@@ -1472,10 +1486,32 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+>> 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
+>>
+>> 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
+>>+			master_pe = NULL;
+>>+
+>> 			for (vf_index = vf_group * vf_per_group;
+>> 			     vf_index < (vf_group + 1) * vf_per_group &&
+>> 			     vf_index < num_vfs;
+>> 			     vf_index++) {
+>>+
+>>+				/*
+>>+				 * Figure out the master PE and put all slave
+>>+				 * PEs to master PE's list.
+>>+				 */
+>>+				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
+>>+				if (!master_pe) {
+>>+					pe->flags |= PNV_IODA_PE_MASTER;
+>>+					INIT_LIST_HEAD(&pe->slaves);
+>>+					master_pe = pe;
+>>+					mutex_lock(&phb->ioda.pe_list_mutex);
+>>+					list_add_tail(&pe->list, &phb->ioda.pe_list);
+>>+					mutex_unlock(&phb->ioda.pe_list_mutex);
+>>+				} else {
+>>+					pe->flags |= PNV_IODA_PE_SLAVE;
+>>+					pe->master = master_pe;
+>>+					list_add_tail(&pe->list,
+>>+						&master_pe->slaves);
+>>+				}
+>>+
+>> 				for (vf_index1 = vf_group * vf_per_group;
+>> 				     vf_index1 < (vf_group + 1) * vf_per_group &&
+>> 				     vf_index1 < num_vfs;
+>>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+>>index 0e4f42e..f3aead0 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.c
+>>+++ b/arch/powerpc/platforms/powernv/pci.c
+>>@@ -739,7 +739,7 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
+>> 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+>> 	struct pnv_phb *phb = hose->private_data;
+>> #ifdef CONFIG_PCI_IOV
+>>-	struct pnv_ioda_pe *pe;
+>>+	struct pnv_ioda_pe *pe, *slave;
+>> 	struct pci_dn *pdn;
+>>
+>> 	/* Fix the VF pdn PE number */
+>>@@ -751,10 +751,23 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
+>> 			    (pdev->devfn & 0xff))) {
+>> 				pdn->pe_number = pe->pe_number;
+>> 				pe->pdev = pdev;
+>>-				break;
+>>+				goto found;
+>>+			}
+>>+
+>>+			if ((pe->flags & PNV_IODA_PE_MASTER) &&
+>>+			    (pe->flags & PNV_IODA_PE_VF)) {
+>>+				list_for_each_entry(slave, &pe->slaves, list) {
+>>+					if (slave->rid == ((pdev->bus->number << 8)
+>>+					   | (pdev->devfn & 0xff))) {
+>>+						pdn->pe_number = slave->pe_number;
+>>+						slave->pdev = pdev;
+>>+						goto found;
+>>+					}
+>>+				}
+>> 			}
+>> 		}
+>> 	}
+>>+found:
+>> #endif /* CONFIG_PCI_IOV */
+>>
+>> 	if (phb && phb->dma_dev_setup)
+>>-- 
+>>1.7.9.5
+>
+>-- 
+>Richard Yang
+>Help you, Help me
 
