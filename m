@@ -1,105 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Knuth Posern <knuth@posern.org>
-Subject: [PATCH] thunderbolt: Allow loading of module on recent Apple MacBooks
- with thunderbolt 2 controller
-To: linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	Greg KH <greg@kroah.com>, linux-pci@vger.kernel.org
-Message-ID: <55FEF7EB.7030705@posern.org>
-Date: Sun, 20 Sep 2015 20:16:11 +0200
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="O2kXoRwi4lLQ2tUFkRWBxqFpkk0d2dooJ"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:38854 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753371AbbIIQ72 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 12:59:28 -0400
+Received: by igxx6 with SMTP id x6so19101794igx.1
+        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2015 09:59:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20150909113235.GA10991@red-moon>
+References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
+	<20150902174716.GA6305@red-moon>
+	<20150902203250.GB829@google.com>
+	<20150903100115.GA15308@red-moon>
+	<20150903162140.GG829@google.com>
+	<20150904141903.GA22997@red-moon>
+	<CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
+	<20150904164412.GD22997@red-moon>
+	<CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+	<20150909113235.GA10991@red-moon>
+Date: Wed, 9 Sep 2015 09:59:27 -0700
+Message-ID: <CAE9FiQUsRHgqQ6F58yx5pyWeLJc1U72dWOf2p6OUO2PAbFwF=A@mail.gmail.com>
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+From: Yinghai Lu <yinghai@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---O2kXoRwi4lLQ2tUFkRWBxqFpkk0d2dooJ
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On Wed, Sep 9, 2015 at 4:32 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> Subject: [PATCH] PCI: remove dead code in pci_claim_bridge_resource()
+>
+> Commit 8505e729a2f6eb ("PCI: Add pci_claim_bridge_resource() to clip
+> window if necessary") introduced a new API to claim bridge resources.
+>
+> pci_claim_bridge_resource() tries to claim a bridge resource, and if
+> the claiming fails the function tries to clip the resource to make
+> it fit within the parent resource window.
+>
+> If the clipping succeeds the bridge apertures are set-up accordingly
+> and the pci_claim_bridge_resource() tries to claim the resource
+> again.
+>
+> Commit c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") added
+> code that sets the IORESOURCE_UNSET flag on claiming failure.
+>
+> This means that the second resource claiming after window clipping will
+> always fail, since the resource flags contain IORESOURCE_UNSET,
+> previously set on failure by pci_claim_resource(), so the subsequent
+> pci_claim_resource() call ends up spitting a log message and return
+> failure with no chance whatsoever to succeed.
+>
+> This patch removes the second pci_claim_resource() call in
+> pci_claim_bridge_resource() since it basically has no chance to
+> succeed, leaving the current behaviour unchanged.
+>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/setup-bus.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 508cc56..2bf4ac1 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -728,14 +728,10 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+>                 break;
+>         case 2:
+>                 pci_setup_bridge_mmio_pref(bridge);
+> -               break;
+>         default:
+> -               return -EINVAL;
+> +               break;
+>         }
+>
+> -       if (pci_claim_resource(bridge, i) == 0)
+> -               return 0;       /* claimed a smaller window */
+> -
+>         return -EINVAL;
+>  }
 
-The pci device ids listed in the thunderbolt driver are to restrictive,
-which prevents the driver from being loaded on recent Apple MacBooks
-using a thunderbolt 2 controller. In particular this prevented any
-hot-plugging functionality for thunderbolt based ethernet dongles
-(i.e. Apples thunderbolt gigabit ethernet broadcom tg3 based dongle
-Model A1433 EMC 2590).
+That should be regression from c770cb4cb505 ("PCI: Mark invalid BARs
+as unassigned")
+so right fix should be:
 
-Changing the subvendor and subdevice to PCI_ANY_ID the thunderbolt driver=
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 508cc56..76b3349 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -733,6 +733,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+                return -EINVAL;
+        }
 
-loads and binds to the pci device 07:00.0 System peripheral:
-Intel Corporation Device 156c which is the thunderbolt 2 controller on
-the MacBookPro12,1.
-
-Successfully tested on MacBookPro12,1. With the patch the thunderbolt
-module gets now loaded on boot. And it provides hot-plugging support both=
-
-for a cold-plugged and a warm-plugged ethernet dongle.
-
-Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
-Acked-by: Knuth Posern <knuth@posern.org>
----
-
-This patch is submitted for upstream inclusion.
-
-Thanks to Greg and Andreas helping coming up with the patch fixing the
-bug:
-https://bugzilla.kernel.org/show_bug.cgi?id=3D100191
-
-This is a second trial for me, so I hope the format of this mail is
-convenient.
-For the changelog/comment, I tried to follow Andrew Mortons guide
-https://www.ozlabs.org/~akpm/stuff/tpp.txt
-
-- why the kernel needed patching
-1st paragraph.
-
-- the overall design approach in the patch
-- implementation details
-2nd paragraph
-
-- testing results
-3rd paragraph
-
-Cheers,
-
-Knuth.
-
---- linux/drivers/thunderbolt/nhi.c.orig 2015-09-20 17:36:14.014964300 +0=
-200
-+++ linux/drivers/thunderbolt/nhi.c 2015-09-13 09:58:18.000000000 +0200
-@@ -643,7 +643,7 @@ static struct pci_device_id nhi_ids[] =3D
-{
-=2Eclass =3D PCI_CLASS_SYSTEM_OTHER << 8, .class_mask =3D ~0,
-=2Evendor =3D PCI_VENDOR_ID_INTEL, .device =3D 0x156c,
-- .subvendor =3D 0x2222, .subdevice =3D 0x1111,
-+ .subvendor =3D PCI_ANY_ID, .subdevice =3D PCI_ANY_ID,
-},
-{ 0,}
-};
-
-
---O2kXoRwi4lLQ2tUFkRWBxqFpkk0d2dooJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJV/vgEAAoJEMkMg1OiIJvy8JsP/3PGvvznBxcjVZVSvDgVudMQ
-M9hTimIdSjZbUmBFdIPxiACWfHkU/XJV/Vx1qlWrl7aqD6rv33vW+QEqndei8khV
-ZobMI2bDOAlhK4O7C98zin88fuGVb5ZBi+Ci665auNQXyjlbggKMwqexVo3VrhjG
-1LcIa3+8doWPpwylrMUDyIcTqQkphQ7lEAE/KGnlAI3/tPW/LT6BUpqiKh2vCk/P
-HPbnfNNQmj1vSjNBdJBwX0TVfa3LGtuDCph668SDXLlkCFMgDj/+GTYCsmma5J53
-wXevduohC+NosK5ROMRzm2VFflNc33ujXs0qMzlc/xFndfleV042NM/xpV/J41Nq
-tcjBWpgT74N96LztZ4ypIsebrf7R9fH8Av8+r4J867NeJDUGV/YaxVckOg3M2AVA
-A20RhfzfxxjdJl61TslcqCZz0EumSacsTd90fMordrF/7qdT9r2Vd7l5/WQfE8xB
-dEezDETB0S6Nvlc9a52lxEHkP0XkRgevFH+yJrxjJZVjmUHK+lwa1HmBbOgWWKif
-BxLbSkxbUeqzg+WQ0l/ueL2ODW3f7bPPE3xBPgmxcn5zhpOM/j3WgOWIjArkYPK3
-/10Q5VLHHFxQY4XR/fN1jCfN2wHTZH+KTa7uNDXpisOBHRYxfS1v0AErtyemUAa6
-z+ORe7xmQ9/U2mS4hjOL
-=BZzB
------END PGP SIGNATURE-----
-
---O2kXoRwi4lLQ2tUFkRWBxqFpkk0d2dooJ--
++       bridge->resource[i].flags &= ~IORESOURCE_UNSET;
+        if (pci_claim_resource(bridge, i) == 0)
+                return 0;       /* claimed a smaller window */
