@@ -1,124 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:32796 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222AbbIRGaj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 02:30:39 -0400
-Received: by wiclk2 with SMTP id lk2so50788491wic.0
-        for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2015 23:30:38 -0700 (PDT)
+Received: from mail-io0-f171.google.com ([209.85.223.171]:34496 "EHLO
+	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752104AbbIIRWf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 13:22:35 -0400
+Received: by iofb144 with SMTP id b144so30569568iof.1
+        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2015 10:22:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20150917145949.GF25767@google.com>
-References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org> <20150917145949.GF25767@google.com>
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Date: Fri, 18 Sep 2015 08:29:58 +0200
-Message-ID: <CAG374jAPc8o47uy=0u7FKSZzgMqX9UQ2HCB0Kjme2Xce_tC2aQ@mail.gmail.com>
-Subject: Re: [PATCH v4 0/4] PCI: st: provide support for dw pcie
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
+In-Reply-To: <CAE9FiQUsRHgqQ6F58yx5pyWeLJc1U72dWOf2p6OUO2PAbFwF=A@mail.gmail.com>
+References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
+	<20150902174716.GA6305@red-moon>
+	<20150902203250.GB829@google.com>
+	<20150903100115.GA15308@red-moon>
+	<20150903162140.GG829@google.com>
+	<20150904141903.GA22997@red-moon>
+	<CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
+	<20150904164412.GD22997@red-moon>
+	<CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+	<20150909113235.GA10991@red-moon>
+	<CAE9FiQUsRHgqQ6F58yx5pyWeLJc1U72dWOf2p6OUO2PAbFwF=A@mail.gmail.com>
+Date: Wed, 9 Sep 2015 10:22:34 -0700
+Message-ID: <CAE9FiQWUr6f_KsTyJrntRg-uuF1OL9VCqfUXB6eJ3Kpj+bf9=A@mail.gmail.com>
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+From: Yinghai Lu <yinghai@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
 	Russell King <linux@arm.linux.org.uk>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+	Tony Luck <tony.luck@intel.com>,
 	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Muralidharan Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+	Ingo Molnar <mingo@redhat.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a113feec67d36b7051f53ba20
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No problem
+--001a113feec67d36b7051f53ba20
+Content-Type: text/plain; charset=UTF-8
 
-Thanks
+On Wed, Sep 9, 2015 at 9:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> On Wed, Sep 9, 2015 at 4:32 AM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+>> Subject: [PATCH] PCI: remove dead code in pci_claim_bridge_resource()
+>>
+> That should be regression from c770cb4cb505 ("PCI: Mark invalid BARs
+> as unassigned")
+> so right fix should be:
 
-Gabriel
+completed format as attached:
 
-On 17 September 2015 at 16:59, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> Hi Gabriel,
->
-> On Thu, Aug 27, 2015 at 02:34:13PM +0200, Gabriel Fernandez wrote:
->>
->> This patchset is based on v4.2-rc1 and is based on
->> [PATCH v8 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
->> patchset from Zhou Wang.
->>
->> Changes in v4:
->>  - Remove pci: designware: remove my pci_common_init_dev() patch and
->>       use [PATCH v8 3/6] PCI: designware: Add ARM64 support instead.
->>       This patch is a good solution for me to disable IO support.
->>  - add __init to st_pcie_probe() and use module_init() instead
->>       device_initcall() to prevent the probe function from being
->>       deferred and to prevent module unloading.
->>
->> Changes in v3:
->>  - Remove power management functions (was not fully tested)
->>  - Remove configuration space range from dt binding
->>  - Remove pci_common_init_dev() call in pcie-designware.c to avoid
->>    default IO space declaration.
->>
->> Changes in v2:
->>  - comestic corrections in device tree binding
->>  - add pci-st.c into MAINTAINERS
->>  - remove st_pcie_ops structure to avoid another level of indirection
->>  - remove nasty busy-loop
->>  - remove useless test using virt_to_phys()
->>  - move disable io support into dw-pcie driver
->>
->> I don't change the st_pcie_abort_handler() function because abort handling
->> is masked during boot.
->>
->>
->> This patch-set introduces a STMicroelectronics PCIe controller.
->> It's based on designware PCIe driver.
->>
->> Gabriel Fernandez (4):
->>   ARM: STi: Kconfig update for PCIe support
->>   PCI: st: Add Device Tree bindings for sti pcie
->>   PCI: st: Provide support for the sti PCIe controller
->>   MAINTAINERS: Add pci-st.c to ARCH/STI architecture
->
-> Rob had some questions, so I'm waiting for an update that responds to
-> those.  When you post that, can you also squash the last two patches
-> together?
->
-> Thanks,
->   Bjorn
->
->>  Documentation/devicetree/bindings/pci/st-pcie.txt |  53 ++
->>  MAINTAINERS                                       |   1 +
->>  arch/arm/mach-sti/Kconfig                         |   2 +
->>  drivers/pci/host/Kconfig                          |   9 +
->>  drivers/pci/host/Makefile                         |   1 +
->>  drivers/pci/host/pci-st.c                         | 583 ++++++++++++++++++++++
->>  6 files changed, 649 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
->>  create mode 100644 drivers/pci/host/pci-st.c
->>
->> --
->> 1.9.1
->>
+--001a113feec67d36b7051f53ba20
+Content-Type: text/x-patch; charset=US-ASCII; name="fix_pci_clip_bridge.patch"
+Content-Disposition: attachment; filename="fix_pci_clip_bridge.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ied20i5l0
+
+RnJvbTogTG9yZW56byBQaWVyYWxpc2kgPGxvcmVuem8ucGllcmFsaXNpQGFybS5jb20+ClN1Ympl
+Y3Q6IFtQQVRDSF0gUENJOiBGaXggY2xpcHBlZCBicmlkZ2UgcmVzb3VyY2UgcmVzZXJ2ZQoKQ29t
+bWl0IDg1MDVlNzI5YTJmNmViICgiUENJOiBBZGQgcGNpX2NsYWltX2JyaWRnZV9yZXNvdXJjZSgp
+IHRvIGNsaXAKd2luZG93IGlmIG5lY2Vzc2FyeSIpIGludHJvZHVjZWQgYSBuZXcgQVBJIHRvIGNs
+YWltIGJyaWRnZSByZXNvdXJjZXMuCnBjaV9jbGFpbV9icmlkZ2VfcmVzb3VyY2UoKSB0cmllcyB0
+byBjbGFpbSBhIGJyaWRnZSByZXNvdXJjZSwgYW5kIGlmCnRoZSBjbGFpbWluZyBmYWlscyB0aGUg
+ZnVuY3Rpb24gdHJpZXMgdG8gY2xpcCB0aGUgcmVzb3VyY2UgdG8gbWFrZQppdCBmaXQgd2l0aGlu
+IHRoZSBwYXJlbnQgcmVzb3VyY2Ugd2luZG93LgpJZiB0aGUgY2xpcHBpbmcgc3VjY2VlZHMgdGhl
+IGJyaWRnZSBhcGVydHVyZXMgYXJlIHNldC11cCBhY2NvcmRpbmdseQphbmQgdGhlIHBjaV9jbGFp
+bV9icmlkZ2VfcmVzb3VyY2UoKSB0cmllcyB0byBjbGFpbSB0aGUgcmVzb3VyY2UKYWdhaW4uCgpD
+b21taXQgYzc3MGNiNGNiNTA1ICgiUENJOiBNYXJrIGludmFsaWQgQkFScyBhcyB1bmFzc2lnbmVk
+IikgYWRkZWQKY29kZSB0aGF0IHNldHMgdGhlIElPUkVTT1VSQ0VfVU5TRVQgZmxhZyBvbiBjbGFp
+bWluZyBmYWlsdXJlLgoKVGhpcyBtZWFucyB0aGF0IHRoZSBzZWNvbmQgcmVzb3VyY2UgY2xhaW1p
+bmcgYWZ0ZXIgd2luZG93IGNsaXBwaW5nIHdpbGwKYWx3YXlzIGZhaWwsIHNpbmNlIHRoZSByZXNv
+dXJjZSBmbGFncyBjb250YWluIElPUkVTT1VSQ0VfVU5TRVQsCnByZXZpb3VzbHkgc2V0IG9uIGZh
+aWx1cmUgYnkgcGNpX2NsYWltX3Jlc291cmNlKCksIHNvIHRoZSBzdWJzZXF1ZW50CnBjaV9jbGFp
+bV9yZXNvdXJjZSgpIGNhbGwgZW5kcyB1cCBzcGl0dGluZyBhIGxvZyBtZXNzYWdlIGFuZCByZXR1
+cm4KZmFpbHVyZSB3aXRoIG5vIGNoYW5jZSB3aGF0c29ldmVyIHRvIHN1Y2NlZWQuCgpUaGlzIHBh
+dGNoIGNsZWFyIHRoZSBVTlNFVCBpbiByZXNvdXJjZSBmbGFncywgYW5kIGl0IG1ha2VzIHNlY29u
+ZApwY2lfY2xhaW1fcmVzb3VyY2UoKSB3b3JrIGFnYWluLgoKRml4ZXM6IGM3NzBjYjRjYjUwNSAo
+IlBDSTogTWFyayBpbnZhbGlkIEJBUnMgYXMgdW5hc3NpZ25lZCIpCkNjOiBzdGFibGVAdmdlci5r
+ZXJuZWwub3JnIFt2NC4xK10KW2NoYW5nZSB0byBjbGVhciBVTlNFVCBpbnN0ZWFkLCBZaW5naGFp
+XQpTaWduZWQtb2ZmLWJ5OiBZaW5naGFpIEx1IDx5aW5naGFpQGtlcm5lbC5vcmc+CgpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgYi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpp
+bmRleCA1MDhjYzU2Li43NmIzMzQ5IDEwMDY0NAotLS0gYS9kcml2ZXJzL3BjaS9zZXR1cC1idXMu
+YworKysgYi9kcml2ZXJzL3BjaS9zZXR1cC1idXMuYwpAQCAtNzMzLDYgKzczMyw3IEBAIGludCBw
+Y2lfY2xhaW1fYnJpZGdlX3Jlc291cmNlKHN0cnVjdCBwY2lfZGV2ICpicmlkZ2UsIGludCBpKQog
+CQlyZXR1cm4gLUVJTlZBTDsKIAl9CiAKKwlicmlkZ2UtPnJlc291cmNlW2ldLmZsYWdzICY9IH5J
+T1JFU09VUkNFX1VOU0VUOwogCWlmIChwY2lfY2xhaW1fcmVzb3VyY2UoYnJpZGdlLCBpKSA9PSAw
+KQogCQlyZXR1cm4gMDsJLyogY2xhaW1lZCBhIHNtYWxsZXIgd2luZG93ICovCiAK
+--001a113feec67d36b7051f53ba20--
