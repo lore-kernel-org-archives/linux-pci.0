@@ -1,185 +1,211 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <bhelgaas@google.com>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<nsekhar@ti.com>, <kishon@ti.com>
-Subject: [RFC PATCH 2/2] pci: host: pci-dra7xx: Enable x2 mode support
-Date: Mon, 28 Sep 2015 18:27:38 +0530
-Message-ID: <1443445058-643-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1443445058-643-1-git-send-email-kishon@ti.com>
-References: <1443445058-643-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:6690 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957AbbIIQoK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 12:44:10 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<gabriele.paoloni@huawei.com>, <wangzhou1@hisilicon.com>,
+	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
+	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
+	<liguozhu@hisilicon.com>
+Subject: [PATCH] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+Date: Thu, 10 Sep 2015 00:51:00 +0800
+Message-ID: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Perform syscon configurations to get x2 mode to working in DRA74x and
-DRA72x. Also add a new compatible string to dfferentiate
-DRA72x and DRA74x, since b1c0 mask is different for both these platforms.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+This patch changes the implementation of dw_pcie_cfg_read() and
+dw_pcie_cfg_write() to:
+- improve the function usage from the callers perspective;
+- make sure that the callers specify proper address offsets
+  according to the size of the field being read/written
+- fix a bug in pcie-spear13xx.c where the callers where passing
+  the wrong address as they missed to add the appropriate offset
+
+This patch is a follow up from the discussion in:
+http://www.spinics.net/lists/linux-pci/msg44351.html
+
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 ---
- Documentation/devicetree/bindings/pci/ti-pci.txt |    7 +-
- drivers/pci/host/pci-dra7xx.c                    |   81 +++++++++++++++++++++-
- 2 files changed, 86 insertions(+), 2 deletions(-)
+ drivers/pci/host/pci-exynos.c      |  5 ++--
+ drivers/pci/host/pci-keystone-dw.c |  4 +--
+ drivers/pci/host/pcie-designware.c | 51 ++++++++++++++++++++++----------------
+ 3 files changed, 34 insertions(+), 26 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-index 60e2516..1ae1705 100644
---- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-@@ -1,7 +1,8 @@
- TI PCI Controllers
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index f9f468d..8b0e04b 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -454,7 +454,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	int ret;
  
- PCIe Designware Controller
-- - compatible: Should be "ti,dra7-pcie""
-+ - compatible: Should be "ti,dra7-pcie" for DRA74x
-+	       Should be "ti,dra72-pcie" for DRA72x
-  - reg : Two register ranges as listed in the reg-names property
-  - reg-names : The first entry must be "ti-conf" for the TI specific registers
- 	       The second entry must be "rc-dbics" for the designware pcie
-@@ -14,6 +15,10 @@ PCIe Designware Controller
- 	       where <X> is the instance number of the pcie from the HW spec.
-  - interrupts : Two interrupt entries must be specified. The first one is for
- 		main interrupt line and the second for MSI interrupt line.
-+ - syscon-lane-conf : phandle/offset pair. Phandle to the system control module and the
-+   register offset to specify 1 lane or 2 lane.
-+ - syscon-lane-sel : phandle/offset pair. Phandle to the system control module and the
-+   register offset to specify lane selection.
-  - #address-cells,
-    #size-cells,
-    #interrupt-cells,
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index e15b2e2..fb23a58 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -22,8 +22,11 @@
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
-+#include <linux/of_platform.h>
- #include <linux/resource.h>
- #include <linux/types.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/regmap.h>
+ 	exynos_pcie_sideband_dbi_r_mode(pp, true);
+-	ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
++	ret = dw_pcie_cfg_read(pp->dbi_base, where, size, val);
+ 	exynos_pcie_sideband_dbi_r_mode(pp, false);
+ 	return ret;
+ }
+@@ -465,8 +465,7 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	int ret;
  
- #include "pcie-designware.h"
+ 	exynos_pcie_sideband_dbi_w_mode(pp, true);
+-	ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
+-			where, size, val);
++	ret = dw_pcie_cfg_write(pp->dbi_base, where, size, val);
+ 	exynos_pcie_sideband_dbi_w_mode(pp, false);
+ 	return ret;
+ }
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index f34892e..2b391f4 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -403,7 +403,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
  
-@@ -63,14 +66,22 @@
- #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
- #define	LINK_UP						BIT(16)
+ 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
  
-+#define PCIE_1LANE_2LANE_SELECTION			BIT(13)
-+#define PCIE_B1C0_MODE_SEL				BIT(2)
-+
- struct dra7xx_pcie {
- 	void __iomem		*base;
-+	u32			*b1c0_mask;
- 	struct phy		**phy;
- 	int			lanes;
- 	struct device		*dev;
- 	struct pcie_port	pp;
- };
- 
-+struct dra7xx_pcie_data {
-+	u32	b1co_mode_sel_mask;
-+};
-+
- #define to_dra7xx_pcie(x)	container_of((x), struct dra7xx_pcie, pp)
- 
- static inline u32 dra7xx_pcie_readl(struct dra7xx_pcie *pcie, u32 offset)
-@@ -322,6 +333,57 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 	return 0;
+-	return dw_pcie_cfg_read(addr + (where & ~0x3), where, size, val);
++	return dw_pcie_cfg_read(addr, where, size, val);
  }
  
-+static const struct of_device_id of_dra7xx_pcie_match[];
-+
-+static int dra7xx_pcie_configure_two_lane(struct device *dev)
-+{
-+	struct device_node *np = dev->of_node;
-+	struct regmap *pcie_syscon;
-+	unsigned int pcie_reg;
-+	struct dra7xx_pcie_data *data;
-+	const struct of_device_id *match;
-+
-+	match = of_match_device(of_dra7xx_pcie_match, dev);
-+	if (!match)
-+		return -EINVAL;
-+
-+	data = (struct dra7xx_pcie_data *)match->data;
-+	if (!data) {
-+		dev_err(dev, "no b1c0 mask data\n");
-+		return -EINVAL;
-+	}
-+
-+	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-conf");
-+	if (IS_ERR(pcie_syscon)) {
-+		dev_err(dev, "unable to get syscon-lane-conf\n");
-+		return -EINVAL;
-+	}
-+
-+	if (of_property_read_u32_index(np, "syscon-lane-conf", 1, &pcie_reg)) {
-+		dev_err(dev, "couldn't get lane configuration reg offset\n");
-+		return -EINVAL;
-+	}
-+
-+	regmap_update_bits(pcie_syscon, pcie_reg, PCIE_1LANE_2LANE_SELECTION,
-+			   PCIE_1LANE_2LANE_SELECTION);
-+
-+	pcie_syscon = syscon_regmap_lookup_by_phandle(np, "syscon-lane-sel");
-+	if (IS_ERR(pcie_syscon)) {
-+		dev_err(dev, "unable to get syscon-lane-sel\n");
-+		return -EINVAL;
-+	}
-+
-+	if (of_property_read_u32_index(np, "syscon-lane-sel", 1, &pcie_reg)) {
-+		dev_err(dev, "couldn't get lane selection reg offset\n");
-+		return -EINVAL;
-+	}
-+
-+	regmap_update_bits(pcie_syscon, pcie_reg, data->b1co_mode_sel_mask,
-+			   PCIE_B1C0_MODE_SEL);
-+
-+	return 0;
-+}
-+
- static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+@@ -415,7 +415,7 @@ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 
+ 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
+ 
+-	return dw_pcie_cfg_write(addr + (where & ~0x3), where, size, val);
++	return dw_pcie_cfg_write(addr, where, size, val);
+ }
+ 
+ /**
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 69486be..b53aa38 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -82,13 +82,20 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+ 
+ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
  {
- 	u32 reg;
-@@ -386,6 +448,14 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 			phy_exit(phy[i]);
- 			goto err_phy;
- 		}
++	addr += (where & ~0x3);
+ 	*val = readl(addr);
+-
+-	if (size == 1)
+-		*val = (*val >> (8 * (where & 3))) & 0xff;
+-	else if (size == 2)
+-		*val = (*val >> (8 * (where & 3))) & 0xffff;
+-	else if (size != 4)
++	where &= 3;
 +
-+		if (i == 1) {
-+			ret = dra7xx_pcie_configure_two_lane(dev);
-+			if (ret < 0) {
-+				i++;
-+				goto err_phy;
-+			}
-+		}
- 	}
++	if (size == 1) {
++		*val = (*val >> (8 * where)) & 0xff;
++	} else if (size == 2) {
++		if (where & 1)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
++		*val = (*val >> (8 * where)) & 0xffff;
++	} else if (size == 4) {
++		if (where & 3)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
++	} else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
  
- 	dra7xx->base = base;
-@@ -541,8 +611,17 @@ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
- 				      dra7xx_pcie_resume_noirq)
- };
+ 	return PCIBIOS_SUCCESSFUL;
+@@ -96,12 +103,18 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
  
-+static const struct dra7xx_pcie_data dra7_pcie_data = {
-+	.b1co_mode_sel_mask = BIT(2),
-+};
+ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
+ {
+-	if (size == 4)
++	addr += where;
 +
-+static const struct dra7xx_pcie_data dra72_pcie_data = {
-+	.b1co_mode_sel_mask = GENMASK(2, 3),
-+};
-+
- static const struct of_device_id of_dra7xx_pcie_match[] = {
--	{ .compatible = "ti,dra7-pcie", },
-+	{ .compatible = "ti,dra7-pcie", .data = &dra7_pcie_data },
-+	{ .compatible = "ti,dra72-pcie", .data = &dra72_pcie_data },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, of_dra7xx_pcie_match);
++	if (size == 4) {
++		if ((uintptr_t)addr & 3)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
+ 		writel(val, addr);
+-	else if (size == 2)
+-		writew(val, addr + (where & 2));
+-	else if (size == 1)
+-		writeb(val, addr + (where & 3));
++	} else if (size == 2) {
++		if ((uintptr_t)addr & 1)
++			return PCIBIOS_BAD_REGISTER_NUMBER;
++		writew(val, addr);
++	} else if (size == 1)
++		writeb(val, addr);
+ 	else
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 
+@@ -132,8 +145,7 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	if (pp->ops->rd_own_conf)
+ 		ret = pp->ops->rd_own_conf(pp, where, size, val);
+ 	else
+-		ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
+-				size, val);
++		ret = dw_pcie_cfg_read(pp->dbi_base, where, size, val);
+ 
+ 	return ret;
+ }
+@@ -146,8 +158,7 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	if (pp->ops->wr_own_conf)
+ 		ret = pp->ops->wr_own_conf(pp, where, size, val);
+ 	else
+-		ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where,
+-				size, val);
++		ret = dw_pcie_cfg_write(pp->dbi_base, where, size, val);
+ 
+ 	return ret;
+ }
+@@ -541,13 +552,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		u32 devfn, int where, int size, u32 *val)
+ {
+ 	int ret, type;
+-	u32 address, busdev, cfg_size;
++	u32 busdev, cfg_size;
+ 	u64 cpu_addr;
+ 	void __iomem *va_cfg_base;
+ 
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+-	address = where & ~0x3;
+ 
+ 	if (bus->parent->number == pp->root_bus_nr) {
+ 		type = PCIE_ATU_TYPE_CFG0;
+@@ -564,7 +574,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  type, cpu_addr,
+ 				  busdev, cfg_size);
+-	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
++	ret = dw_pcie_cfg_read(va_cfg_base, where, size, val);
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
+ 				  pp->io_bus_addr, pp->io_size);
+@@ -576,13 +586,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		u32 devfn, int where, int size, u32 val)
+ {
+ 	int ret, type;
+-	u32 address, busdev, cfg_size;
++	u32 busdev, cfg_size;
+ 	u64 cpu_addr;
+ 	void __iomem *va_cfg_base;
+ 
+ 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
+ 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
+-	address = where & ~0x3;
+ 
+ 	if (bus->parent->number == pp->root_bus_nr) {
+ 		type = PCIE_ATU_TYPE_CFG0;
+@@ -599,7 +608,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  type, cpu_addr,
+ 				  busdev, cfg_size);
+-	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
++	ret = dw_pcie_cfg_write(va_cfg_base, where, size, val);
+ 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
+ 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
+ 				  pp->io_bus_addr, pp->io_size);
 -- 
-1.7.9.5
+1.9.1
 
