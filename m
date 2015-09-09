@@ -1,69 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:34434 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760772AbbIDXxt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Sep 2015 19:53:49 -0400
-Received: by igcpb10 with SMTP id pb10so27452905igc.1
-        for <linux-pci@vger.kernel.org>; Fri, 04 Sep 2015 16:53:49 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: "Suthikulpanit, Suravee" <suravee.suthikulpanit@amd.com>
+Cc: bhelgaas@google.com, lenb@kernel.org, catalin.marinas@arm.com,
+	will.deacon@arm.com, hanjun.guo@linaro.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device from _CCA attribute
+Date: Wed, 09 Sep 2015 22:38:50 +0200
+Message-ID: <8172790.rR5Ld4j83C@vostro.rjw.lan>
+In-Reply-To: <55F02331.2060001@amd.com>
+References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com> <55F02331.2060001@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20150904164412.GD22997@red-moon>
-References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
-	<20150902174716.GA6305@red-moon>
-	<20150902203250.GB829@google.com>
-	<20150903100115.GA15308@red-moon>
-	<20150903162140.GG829@google.com>
-	<20150904141903.GA22997@red-moon>
-	<CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
-	<20150904164412.GD22997@red-moon>
-Date: Fri, 4 Sep 2015 16:53:48 -0700
-Message-ID: <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
-Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
- of arch code
-From: Yinghai Lu <yinghai@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 4, 2015 at 9:44 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Fri, Sep 04, 2015 at 05:00:35PM +0100, Yinghai Lu wrote:
->
-> The problem here is not the last retry, it is the first bridge scan.
->
-> By moving pci_read_bridge_bases() to core PCI code, if we do not
-> vet the bridge apertures (ie claim them and reset them if the claiming
-> fails) we end up calling (on ARM) __pci_bus_size_bridges() with apertures
-> that can have sizes != 0, which does not make any sense since we are calling
-> __pci_bus_size_bridges() to *discover* what the aperture size should
-> be on first bridge scan, correct ?
+On Wednesday, September 09, 2015 07:16:49 PM Suthikulpanit, Suravee wrote:
+> Hi All,
+> 
+> Are there any other concerns about this patch series?
 
-for x86, in pcibios_allocate_bridge_resources(), we do validate
-the bridge resources, and reset size to 1 (strange ?!).
-and they are called before pci_asssign_unassigned_resources()
+I have none, but then it sort of missed the merge window.
 
-so arch ARM would support pcibios_allocate_bridge_resources or other
-call to do the same thing?
+I can easily queue it up for the next one unless it is super-urgent,
+but in that case I need to know why that's the case.
 
-wonder some arches even claim fails, they still does not want you to
-reset it.
 
-Thanks
+> On 8/26/2015 8:54 PM, Suravee Suthikulpanit wrote:
+> > This patch adds support to setup DMA coherency for PCI device using
+> > the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
+> > is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
+> > support for ARM64 which is currently in development.
+> >
+> > Also, this should not affect other architectures that does not define
+> > CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
+> >
+> > I have included the following patch from Jeremy before cleaning up
+> > the acpi_check_dma() function (in patch 2).
+> >
+> >      http://www.spinics.net/lists/linux-usb/msg128582.html)
+> >
+> > Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
+> >      * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
+> >      * Add WARN() when fail to setup DMA for PCI device when booting
+> >        ACPI (per Arnd's suggestion)
+> >      * Added Acked-by from Rob.
+> >      * Minor clean up
+> >
+> > Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
+> >      * Include patch 1 from Jeremy to enable support for _CCA=0
+> >      * Clean up acpi_check_dma() per Bjorn suggestions
+> >      * Split the original V1 patch into two patches (patch 3 and 4)
+> >
+> >
+> > Jeremy Linton (1):
+> >    Honor ACPI _CCA attribute setting
+> >
+> > Suravee Suthikulpanit (3):
+> >    ACPI/scan: Clean up acpi_check_dma
+> >    PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
+> >    PCI: ACPI: Add support for PCI device DMA coherency
+> >
+> >   drivers/acpi/acpi_platform.c |  7 ++++++-
+> >   drivers/acpi/glue.c          |  6 +++---
+> >   drivers/acpi/scan.c          | 39 +++++++++++++++++++++++++++++++++++++++
+> >   drivers/base/property.c      | 10 +++++++---
+> >   drivers/of/of_pci.c          | 20 --------------------
+> >   drivers/pci/probe.c          | 35 +++++++++++++++++++++++++++++++++--
+> >   include/acpi/acpi_bus.h      | 35 ++---------------------------------
+> >   include/linux/acpi.h         |  4 ++--
+> >   include/linux/of_pci.h       |  3 ---
+> >   9 files changed, 92 insertions(+), 67 deletions(-)
+> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yinghai
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
