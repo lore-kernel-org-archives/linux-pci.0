@@ -1,79 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:37027 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965305AbbI2Nus (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 09:50:48 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v5 3/3] PCI: designware: add sanity checks on the header offset in dw_pcie_cfg_read and dw_pcie_cfg_write
-Date: Tue, 29 Sep 2015 21:57:22 +0800
-Message-ID: <1443535042-242400-4-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1443535042-242400-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1443535042-242400-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [Patch v5 1/6] ACPI/PCI: Enhance ACPI core to support sparse IO
+ space
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
+ <1433780448-18636-2-git-send-email-jiang.liu@linux.intel.com>
+ <20150729203741.GC9640@google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
+	Thierry Reding <treding@nvidia.com>,
+	Jakub Sitnicki <jsitnicki@gmail.com>,
+	Lv Zheng <lv.zheng@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "x86 @ kernel . org" <x86@kernel.org>,
+	linux-arm-kernel@lists.infradead.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <55EFD3CA.3050301@linux.intel.com>
+Date: Wed, 9 Sep 2015 14:38:02 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150729203741.GC9640@google.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On 2015/7/30 4:37, Bjorn Helgaas wrote:
+> On Tue, Jun 09, 2015 at 12:20:43AM +0800, Jiang Liu wrote:
+>> Enhance ACPI resource parsing interfaces to support sparse IO space,
+>> which will be used to share common code between x86 and IA64 later.
+>>
+>> Tested-by: Tony Luck <tony.luck@intel.com>
+>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+>> ---
+>>  drivers/acpi/resource.c |    9 ++++++---
+>>  include/linux/ioport.h  |    1 +
+>>  2 files changed, 7 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+>> index 8244f013f210..fdcc73dad2c1 100644
+>> --- a/drivers/acpi/resource.c
+>> +++ b/drivers/acpi/resource.c
+>> @@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
+>>  EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
+>>  
+>>  static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+>> -				      u8 io_decode)
+>> +				      u8 io_decode, u8 translation_type)
+>>  {
+>>  	res->flags = IORESOURCE_IO;
+>>  
+>> @@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+>>  
+>>  	if (io_decode == ACPI_DECODE_16)
+>>  		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+>> +	if (translation_type == ACPI_SPARSE_TRANSLATION)
+>> +		res->flags |= IORESOURCE_IO_SPARSE;
+>>  }
+>>  
+>>  static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+>> @@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
+>>  {
+>>  	res->start = start;
+>>  	res->end = start + len - 1;
+>> -	acpi_dev_ioresource_flags(res, len, io_decode);
+>> +	acpi_dev_ioresource_flags(res, len, io_decode, 0);
+>>  }
+>>  
+>>  /**
+>> @@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
+>>  		acpi_dev_memresource_flags(res, len, wp);
+>>  		break;
+>>  	case ACPI_IO_RANGE:
+>> -		acpi_dev_ioresource_flags(res, len, iodec);
+>> +		acpi_dev_ioresource_flags(res, len, iodec,
+>> +					  addr->info.io.translation_type);
+>>  		break;
+>>  	case ACPI_BUS_NUMBER_RANGE:
+>>  		res->flags = IORESOURCE_BUS;
+>> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+>> index 388e3ae94f7a..24bea087e7af 100644
+>> --- a/include/linux/ioport.h
+>> +++ b/include/linux/ioport.h
+>> @@ -94,6 +94,7 @@ struct resource {
+>>  /* PnP I/O specific bits (IORESOURCE_BITS) */
+>>  #define IORESOURCE_IO_16BIT_ADDR	(1<<0)
+>>  #define IORESOURCE_IO_FIXED		(1<<1)
+>> +#define IORESOURCE_IO_SPARSE		(1<<2)
+> 
+> I don't really like this bit.  We adding a new generic IORESOURCE_* bit
+> just for a special case, and it's only used in one place, for one arch,
+> during enumeration.
+Hi Bjorn,
+	Instead of defining a formal flag IORESOURCE_IO_SPARSE, we may
+reuse other field in struct resource to pass back the SPARSE flag,
+but that's a little dirty. For example, we may reuse res->name field
+to carry the SPARSE flag for the IA64 special case.
+	Is that OK?
+Thanks!
+Gerry
 
-This patch adds sanity checks on "where" input parameter in
-dw_pcie_cfg_read and dw_pcie_cfg_write. These checks make sure
-that offset passed in by the caller is not in conflict with
-the size of the PCI header field that is being read/written
+> 
+> Don't we have a similar problem (struct resource can't express all the
+> information from an ACPI resource) for the _TRA value for bridge windows?
+> If it's a similar issue, we should solve it in a similar way.
+Per my understanding, we just ignore ACPI address space information
+which can't be expressed by struct resource.
+Thanks!
+Gerry
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
----
- drivers/pci/host/pcie-designware.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index d771fa5..719d2cd 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -82,11 +82,15 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
- 
- int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- {
--	if (size == 4)
-+	if (size == 4) {
-+		if ((uintptr_t)addr & 3)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
- 		*val = readl(addr);
--	else if (size == 2)
-+	} else if (size == 2) {
-+		if ((uintptr_t)addr & 1)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
- 		*val = readw(addr);
--	else if (size == 1)
-+	} else if (size == 1)
- 		*val = readb(addr);
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
-@@ -96,11 +100,15 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- 
- int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
- {
--	if (size == 4)
-+	if (size == 4) {
-+		if ((uintptr_t)addr & 3)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
- 		writel(val, addr);
--	else if (size == 2)
-+	} else if (size == 2) {
-+		if ((uintptr_t)addr & 1)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
- 		writew(val, addr);
--	else if (size == 1)
-+	} else if (size == 1)
- 		writeb(val, addr);
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
--- 
-1.9.1
-
+> 
+>>  /* PCI ROM control bits (IORESOURCE_BITS) */
+>>  #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
+>> -- 
+>> 1.7.10.4
+>>
