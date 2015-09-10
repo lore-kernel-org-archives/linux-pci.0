@@ -1,47 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from xspv0103.northgrum.com ([134.223.120.78]:50645 "EHLO
-	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932920AbbIVQRR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 12:17:17 -0400
-From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
-To: Yinghai Lu <yinghai@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: :Re: :Re: [PATCH v1 3/7] PCI: Let kcmdline reserve bus numbers
- for hotplug bridges
-Date: Tue, 22 Sep 2015 16:16:15 +0000
-Message-ID: <e387283cc26d4d758d24ba454328abed@XCGVAG27.northgrum.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:44651 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750764AbbIJUhg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Sep 2015 16:37:36 -0400
+Message-ID: <1441917455.20355.624.camel@redhat.com>
+Subject: Re: reg: difference in pcie behavior in fedora16 vs fedora20
+From: Alex Williamson <alex.williamson@redhat.com>
+To: zubin kumar <zubinkumar@gmail.com>
+Cc: linux-pci@vger.kernel.org
+Date: Thu, 10 Sep 2015 14:37:35 -0600
+In-Reply-To: <CAHX5tOGkZ+ZtDymyViYrvEi+LdRbYzHU_mOa4uZK_t58G7KcqQ@mail.gmail.com>
+References: <CAHX5tOGkZ+ZtDymyViYrvEi+LdRbYzHU_mOa4uZK_t58G7KcqQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiB5aGx1Lmtlcm5lbEBnbWFpbC5j
-b20gW21haWx0bzp5aGx1Lmtlcm5lbEBnbWFpbC5jb21dIE9uIEJlaGFsZiBPZg0KPiBZaW5naGFp
-IEx1DQo+IFNlbnQ6IE1vbmRheSwgU2VwdGVtYmVyIDIxLCAyMDE1IDE3OjMyDQo+IFRvOiBUYW5n
-LCBKYXNvbiAoRVMpDQo+IENjOiBCam9ybiBIZWxnYWFzOyBsaW51eC1wY2lAdmdlci5rZXJuZWwu
-b3JnDQo+IFN1YmplY3Q6IFJlOiA6UmU6IFtQQVRDSCB2MSAzLzddIFBDSTogTGV0IGtjbWRsaW5l
-IHJlc2VydmUgYnVzDQo+IG51bWJlcnMgZm9yIGhvdHBsdWcgYnJpZGdlcw0KPiANCj4gT24gTW9u
-LCBTZXAgMjEsIDIwMTUgYXQgOTowMSBBTSwgVGFuZywgSmFzb24gKEVTKSA8SmFzb24uVGFuZzJA
-bmdjLmNvbT4NCj4gd3JvdGU6DQo+ID4gSSBoYXZlIHRlc3RlZCB0aGUgY2FzZSB3aGVyZSBhIHN1
-YnNlcXVlbnQgYnJpZGdlIGhhcyBub3QgYmVlbiBwcm9iZWQgeWV0DQo+IGFuZCB0aGUgQklPUyBp
-cyBhc3NpZ25pbmcgaXQgdGhlIHNhbWUgYnVzIG51bWJlci4gVGhlIGJlaGF2aW9yIEkgb2JzZXJ2
-ZWQNCj4gaXMgdGhhdCBjb25mbGljdGluZyBidXMgbnVtYmVycyB3aWxsIGJlIGZpeGVkIGR1cmlu
-ZyB0aGUgc2Vjb25kIHBhc3Mgb2YNCj4gUENJIHByb2JpbmcuIFNlZSBwY2lfc2Nhbl9icmlkZ2Uo
-KSBpbiBkcml2ZXJzL3BjaS9wcm9iZS5jLCBsaW5lcyA4NzUtODgwDQo+IG9uIHRhZyB2NC4zLXJj
-Mi4gQWxzbyBvYnNlcnZlIGhvdyBwYXRjaCA3IGluIG15IHNlcmllcyB1cGRhdGVzIHRoZQ0KPiBw
-cmVjZWRpbmcgY29uZGl0aW9uYWwgKGxpbmUgODc0KSB0byBhbHNvIGNoZWNrIGlmIHRoZSBkZXZp
-Y2UgaXMgYQ0KPiBob3RwbHVnZ2FibGUgYnJpZGdlLg0KPiA+DQo+IA0KPiBzbyB0aGVyZSBpcyBh
-IHdpbmRvdyB0aGF0IHR3byBwZWVyIGJyaWRnZXMgaGF2ZSBiZWVuIGNvbmZpZ3VyZWQgdG8NCj4g
-b3ZlcmxhcHBlZCBidXMgcmFuZ2U/DQoNCkZyb20gd2hhdCBJIGhhdmUgc2VlbiwgeWVzLCBmb3Ig
-YSBicmllZiBtb21lbnQgYnJpZGdlcy9lbmRwb2ludHMgd2lsbCBoYXZlIG92ZXJsYXBwaW5nIG51
-bWJlcnMuIEF0IGxlYXN0IG9uIG15IHN5c3RlbSwgdGhlIGtlcm5lbCBmaXhlcyB0aGF0IHByb2Js
-ZW0gZHVyaW5nIHBhc3MgMiBieSByZWVudW1lcmF0aW5nIGRldmljZXMgaW4gcmV2ZXJzZSBvcmRl
-ci4NCg0KPiA+PiBBbHNvIGl0IGNvdWxkIGV2ZW4gY3Jvc3MgdGhlIGJvdW5kYXJ5IHRvIG90aGVy
-IHBlZXIgcm9vdCBidXMgcmFuZ2UuDQo+ID4NCj4gPiBJIGFtIG5vdCBzdXJlIHdoYXQgeW91IG1l
-YW4gYnkgdGhpcy4gQ2FuIHlvdSBlbGFib3JhdGU/DQo+IA0KPiBjb3VwbGUgcGVlciBidXMgcmFu
-Z2U6DQo+IHJvb3QgYnVzIDA6IFswLDdmXSwgcm9vdCBidXMgWzgwLCBmZl0NCj4gaWYgb25lIGJy
-aWRnZSB1bmRlciBmaXJzdCByb290IGJ1cyBnZXQgYWRkIHJhbmdlIGJsaW5kbHksIGl0IHdpbGwN
-Cj4gY3Jvc3MgdGhlIGJvdW5kYXJ5IGF0IDB4N2YuDQoNCk5vbmUgb2YgbXkgdGVzdCBzeXN0ZW1z
-IGhhdmUgbXVsdGlwbGUgcm9vdHMsIHNvIEkgYW0gdW5hYmxlIHRvIHRlc3QgdGhpcyBzY2VuYXJp
-by4NCg0K
+On Thu, 2015-09-10 at 12:55 -0700, zubin kumar wrote:
+> hi,
+> 
+> i had some queries regarding pcie behavior in fedora16 vs fedora20.
+> 
+> observation on fedora16 -
+> when i connect a pcie device in slot#3 with fedora16, the pcie device
+> comes up properly. i am able to see the pcie device ID, class code and
+> all the memory bars.
+> 
+> observation on fedora20 -
+> however when i connect the same device to a fedora20 system, the
+> machine itself does not boot. and the motherboard keeps sending out
+> the fundamental reset. then it keeps looping in a reset-bootup
+> sequence.
+> 
+> fedora16 kernel - 3.6.11 fc16 x86x64 arch
+> fedora20 kernel - 3.11.10-4 fc20 x86x64 arch
+> 
+> queries -
+> 1) i was wondering if pcie enumeration is effected by OS or is it
+> controlled directly by motherboard and OS settings/kernel etc. dont
+> impact PCIe enum at all?
+> 2) what could be the differences between fedora16 Vs fedora20 that
+> could cause the pc to boot properly in fedora16 but go into a
+> reset-boot loop in fedora20?
+> 3) any log file i can check to see what might be causing the issue on the host?
+> 4) my pcie device enumerates as an memory device. could this impact
+> the fedora16 / fedora20 differently?
+> 
+> additional observation -
+> i have tried other pcie slots on both fedora16 and fedora20 machines.
+> either machines are not able to even detect the pcie device if i use
+> any slot other than slot#3. i checked the BIOS settings and all the
+> pcie slots are enabled.
+> 
+> if anyone can give some insight into what could be causing the
+> difference in behavior in pcie enum in fedora16 vs fedora20, that
+> would be great.
+> 
+> thanks in advance ...
+
+Hi Zubin,
+
+The problem description seems to already presume that the fault is at
+the kernel, but it's not even clear to me from the description whether
+the F16 vs F20 tests are different kernels on different systems or
+different kernels on the same system.  If these are different systems,
+an obvious test would be to try F16 on the system with the reset-boot
+loop issue.
+
+When you see a reset-boot loop, does it occur during BIOS initialization
+or after the kernel has started booting?  If the latter, can you capture
+any of the kernel log via serial console?  The fact that the card isn't
+even visible in other slots in the "working" system certainly raises
+concerns whether the card is actually a generic PCIe device or somehow
+specific to that platform.  Obviously knowing the card and something
+about the system is potentially useful, otherwise slot#3 doesn't mean
+much.  Thanks,
+
+Alex
+
