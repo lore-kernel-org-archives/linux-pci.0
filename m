@@ -1,75 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 37/53] PCI: Don't add too much io port for hotplug bridge with old size
-Date: Wed, 30 Sep 2015 22:53:11 -0700
-Message-Id: <1443678807-786-38-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:38191 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752433AbbIJMkD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 08:40:03 -0400
+Received: by wiclk2 with SMTP id lk2so21541334wic.1
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 05:40:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1620C569@lhreml503-mbs>
+References: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
+ <CAErSpo6d_65oCez7fUBLLpYAiA8F8vj5V4j3gkvMVMsNobpfrg@mail.gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E1620C569@lhreml503-mbs>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 10 Sep 2015 07:39:42 -0500
+Message-ID: <CAErSpo5+7cBWLbqVNfq2_+MbY+aL3_Q8n6mBQejGzy29bk7new@mail.gmail.com>
+Subject: Re: [PATCH] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we add too much for hotplug bridge io port.
-For example, when hotplug bridge has two children bridges,
-every child bridge will need 0x1000, so size1 will be 0x2000
-and size is 0. The min_size for the hotplug bridge is 0x100.
-with old version calculate_iosize, we get 0x3000 for final
-size as we are using size to compare with min_size at first.
-That is not right, we should have 0x2000.
+On Thu, Sep 10, 2015 at 6:26 AM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
+>> From: Bjorn Helgaas [mailto:bhelgaas@google.com]
 
-We can check size+size1 with min_size for io port, and just add size1
-to size without passing extra size1 into calculate_iosize().
+>> I think there was a separate patch for the pcie-spear13xx.c bug,
+>> wasn't there?  At least, I don't see that fix in *this* patch.
+>>
+>
+> From your previous comments:
+> ********
+> *2) Pratyush, this one's for you :)  spear13xx_pcie_establish_link()
+> *   calls dw_pcie_cfg_read() and dw_pcie_cfg_write() several times like
+> *   this:
+> *
+> *    dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, ...)
+> *    dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, ...)
+> ********
+>
+> I think that the implementation of dw_pcie_cfg_read() and
+> dw_pcie_cfg_write() that I proposed in this patch is compatible with
+> the previous calls in pcie-spear13xx.c. So the calls in pcie-spear13xx.c
+> were buggy for the previous implementations of the functions; with
+> the reworked functions there is no need to modify the function calls
+> in pcie-spear13xx.c...do you agree?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Oh, I see, I didn't read it closely enough, but you're probably right.
+What I would probably do is apply Pratyush's fix first, then apply
+your patch on top.  That way we can do the spear13xx bug fix by itself
+(which should be a fairly obviously-correct patch), then your
+interface change (which would be extended to touch all the calls
+including spear13xx and be similarly obviously correct).  I think that
+would make it a bit easier for future changelog archaeologists.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a446fc3..077302d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1068,7 +1068,6 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
- 
- static resource_size_t calculate_iosize(resource_size_t size,
- 		resource_size_t min_size,
--		resource_size_t size1,
- 		resource_size_t old_size,
- 		resource_size_t align)
- {
-@@ -1076,7 +1075,7 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
--	size = ALIGN(size + size1, align);
-+	size = ALIGN(size, align);
- 	if (size < old_size)
- 		size = old_size;
- 	return size;
-@@ -1207,14 +1206,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	}
- 
- 	size = size_aligned_for_isa(size);
--	size0 = calculate_iosize(size, min_size, size1,
-+	size += size1;
-+	size0 = calculate_iosize(size, min_size,
- 			resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(sum_add_size, min_size, 0,
-+		calculate_iosize(sum_add_size, min_size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
--- 
-1.8.4.5
-
+Bjorn
