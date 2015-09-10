@@ -1,65 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:36210 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751227AbbIJJP5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 05:15:57 -0400
-Received: by padhk3 with SMTP id hk3so37689758pad.3
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 02:15:57 -0700 (PDT)
-Message-ID: <55F14A4E.80206@linaro.org>
-Date: Thu, 10 Sep 2015 17:15:58 +0800
-From: Hanjun Guo <hanjun.guo@linaro.org>
-MIME-Version: 1.0
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	bhelgaas@google.com, rjw@rjwysocki.net, lenb@kernel.org,
-	catalin.marinas@arm.com, will.deacon@arm.com
-CC: linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device
- from _CCA attribute
-References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-In-Reply-To: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from plane.gmane.org ([80.91.229.3]:52795 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751736AbbIJNAP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Sep 2015 09:00:15 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1Za1SM-0000dJ-CL
+	for linux-pci@vger.kernel.org; Thu, 10 Sep 2015 15:00:12 +0200
+Received: from 192.107.155.4 ([192.107.155.4])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 15:00:02 +0200
+Received: from faj6816 by 192.107.155.4 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 15:00:02 +0200
+To: linux-pci@vger.kernel.org
+From: Frank Jenner <faj6816@rit.edu>
+Subject: Multiple MSIs on ARM imx6q
+Date: Thu, 10 Sep 2015 12:55:10 +0000 (UTC)
+Message-ID: <loom.20150910T144529-230@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/26/2015 09:54 PM, Suravee Suthikulpanit wrote:
-> This patch adds support to setup DMA coherency for PCI device using
-> the ACPI _CCA attribute. According to the ACPI spec, the _CCA attribute
-> is required for ARM64. Therefore, this patch is a pre-req for ACPI PCI
-> support for ARM64 which is currently in development.
->
-> Also, this should not affect other architectures that does not define
-> CONFIG_ACPI_CCA_REQUIRED, since the default value is coherent.
->
-> I have included the following patch from Jeremy before cleaning up
-> the acpi_check_dma() function (in patch 2).
->
->      http://www.spinics.net/lists/linux-usb/msg128582.html)
->
-> Changes from V2: (https://lkml.org/lkml/2015/8/25/549)
->      * Return -ENOSUPP instead of -1 (per Rafael's suggestion)
->      * Add WARN() when fail to setup DMA for PCI device when booting
->        ACPI (per Arnd's suggestion)
->      * Added Acked-by from Rob.
->      * Minor clean up
->
-> Changes from V1: (https://lkml.org/lkml/2015/8/13/182)
->      * Include patch 1 from Jeremy to enable support for _CCA=0
->      * Clean up acpi_check_dma() per Bjorn suggestions
->      * Split the original V1 patch into two patches (patch 3 and 4)
->
->
-> Jeremy Linton (1):
->    Honor ACPI _CCA attribute setting
->
-> Suravee Suthikulpanit (3):
->    ACPI/scan: Clean up acpi_check_dma
->    PCI: OF: Move of_pci_dma_configure() to pci_dma_configure()
->    PCI: ACPI: Add support for PCI device DMA coherency
+Hello,
 
-For this series,
+I'm trying to develop a driver for a PCIe device which utilizes multiple
+MSIs (up to the full 32 allowable), but I cannot seem to enable more than
+one when calling pci_enable_msi_range(). The host platform uses a Freescale
+i.MX 6Quad ARM SoC and is running the "linux-fslc_4.1" kernel (from the
+Yocto project).
 
-Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+With some investigation, I believe that this limitation is stemming from
+arch_setup_msi_irqs() in drivers/pci/msi.c where there is an early return
+with the comment "If an architecture wants to support multiple MSI, it needs
+to override arch_setup_msi_irqs()". There appears to be no such override for
+ARM.
 
-Thanks
-Hanjun
+My first question then, is:
+
+1.) Are multiple MSIs simply not yet supported on ARM as of 4.1?
+
+Both MSIs and ARM have been around for a while, and I doubt I'm the only
+person who ever wanted to use multiple MSIs on ARM, so I can't help but
+think maybe I'm overlooking something. I ran into a similar question
+(http://lists.infradead.org/pipermail/linux-arm-kernel/2010-May/016858.html), but
+as that was 5+ years ago, I'm wondering whether the situation has since changed.
+
+Unfortunately, even if I work around the arch_setup_msi_irqs() limitation
+(which I've done by trying out patches 448141 and 448142 from
+http://patchwork.ozlabs.org/project/linux-pci/list/) and break through to
+the assign_irq() function in drivers/pci/host/pcie-designware.c, I still
+cannot allocate all 32 MSIs that my device reports.
+
+It appears that one of the bits in the msi_irq_in_use bitmap is already set
+prior to my driver requesting any MSIs, meaning there aren't enough free
+slots for the 32 MSIs I am requesting, and causing the function to fail with
+-ENOSPC. Based on the output from /proc/interrupts, I believe that the PCIe
+PME service driver is consuming one of the 32 available MSI slots. Thus, my
+second question is:
+
+2.) Is it possible to leverage all 32 MSIs while still using PCIe PME?
+
+I tried using the kernel command line argument pcie_pme=nomsi, but that
+appeared to disable all MSIs for the device rather than just making the PME
+service driver use some other mechanism.
+
+Thank you.
+
