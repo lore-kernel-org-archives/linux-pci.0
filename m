@@ -1,82 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:4514 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751289AbbIJKoz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 06:44:55 -0400
+From: Zhen Lei <thunder.leizhen@huawei.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 19/53] PCI: Remove duplicated code for resource sorting
-Date: Wed, 30 Sep 2015 22:52:53 -0700
-Message-Id: <1443678807-786-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	linux-pci <linux-pci@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+CC: Zefan Li <lizefan@huawei.com>, Xinwei Hu <huxinwei@huawei.com>,
+	"Tianhong Ding" <dingtianhong@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	"Yijing Wang" <wangyijing@huawei.com>,
+	Zhen Lei <thunder.leizhen@huawei.com>
+Subject: [PATCH 1/1] PCI: remove an unnecessary if statement
+Date: Thu, 10 Sep 2015 18:40:31 +0800
+Message-ID: <1441881631-5044-1-git-send-email-thunder.leizhen@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now sort_resources() and pdev_sort_resources() all have sorting
-code.
+This patch have no functional change. Successful return count, otherwise
+return -ENODEV.
 
-As we are going to call sort_resources() several places later for
-alt_size support, so choose to remove related code in
-pdev_sort_resources().
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 ---
- drivers/pci/setup-bus.c | 22 +++-------------------
- 1 file changed, 3 insertions(+), 19 deletions(-)
+ drivers/pci/pci-driver.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 92677c5..61905bb 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -214,9 +214,8 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 
- 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 		struct resource *r;
--		struct pci_dev_resource *dev_res, *tmp;
-+		struct pci_dev_resource *tmp;
- 		resource_size_t r_align;
--		struct list_head *n;
- 
- 		r = &dev->resource[i];
- 
-@@ -239,22 +238,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 		tmp->res = r;
- 		tmp->dev = dev;
- 
--		/* fallback is smallest one or list is empty*/
--		n = head;
--		list_for_each_entry(dev_res, head, list) {
--			resource_size_t align;
--
--			align = __pci_resource_alignment(dev_res->dev,
--							 dev_res->res,
--							 realloc_head);
--
--			if (r_align > align) {
--				n = &dev_res->list;
--				break;
--			}
--		}
--		/* Insert it just before n*/
--		list_add_tail(&tmp->list, n);
-+		list_add_tail(&tmp->list, head);
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 52a880c..02919ec 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -172,7 +172,7 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
+ 	__u32 vendor, device, subvendor = PCI_ANY_ID,
+ 		subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
+ 	int fields = 0;
+-	int retval = -ENODEV;
++	size_t retval = -ENODEV;
+
+ 	fields = sscanf(buf, "%x %x %x %x %x %x",
+ 			&vendor, &device, &subvendor, &subdevice,
+@@ -190,15 +190,13 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
+ 		    !((id->class ^ class) & class_mask)) {
+ 			list_del(&dynid->node);
+ 			kfree(dynid);
+-			retval = 0;
++			retval = count;
+ 			break;
+ 		}
  	}
+ 	spin_unlock(&pdrv->dynids.lock);
+
+-	if (retval)
+-		return retval;
+-	return count;
++	return retval;
  }
- 
-@@ -563,9 +547,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
- 
-+requested_and_reassign:
- 	sort_resources(head);
- 
--requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
- 
--- 
-1.8.4.5
+ static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
+
+--
+2.5.0
+
 
