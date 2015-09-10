@@ -1,74 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"alexander.h.duyck@redhat.com" <alexander.h.duyck@redhat.com>,
-	"myron.stowe@redhat.com" <myron.stowe@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH] vfio/pci: Use kernel VPD access functions
-Date: Mon, 14 Sep 2015 21:34:14 +0000
-Message-ID: <D7293B5C-82BC-4C9D-A06F-3BF806DC1CF2@intel.com>
-References: <20150911181332.32399.74472.stgit@gimli.home>
- <80CE59CA-1B93-42FF-96D1-6276B724203F@intel.com>
-In-Reply-To: <80CE59CA-1B93-42FF-96D1-6276B724203F@intel.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_B35C96C7-EFFF-4F5C-9E5D-DD122EFEFF52";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:32807 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119AbbIJTzm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 15:55:42 -0400
+Received: by lbcjc2 with SMTP id jc2so29133592lbc.0
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 12:55:40 -0700 (PDT)
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Thu, 10 Sep 2015 12:55:40 -0700
+Message-ID: <CAHX5tOGkZ+ZtDymyViYrvEi+LdRbYzHU_mOa4uZK_t58G7KcqQ@mail.gmail.com>
+Subject: reg: difference in pcie behavior in fedora16 vs fedora20
+From: zubin kumar <zubinkumar@gmail.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Apple-Mail=_B35C96C7-EFFF-4F5C-9E5D-DD122EFEFF52
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+hi,
 
-> On Sep 11, 2015, at 6:11 PM, Rustad, Mark D <mark.d.rustad@intel.com> =
-wrote:
->=20
-> Superficially this looks pretty good. I need to think harder to be =
-sure of the details.
+i had some queries regarding pcie behavior in fedora16 vs fedora20.
 
-This is the first time I've looked at all at any of the vfio code, but =
-this is still looking good to me. Thanks for taking this on and exposing =
-the vfio code to me. I hope more devices will be able to take advantage =
-of the quirk and get their VPD issues resolved.
+observation on fedora16 -
+when i connect a pcie device in slot#3 with fedora16, the pcie device
+comes up properly. i am able to see the pcie device ID, class code and
+all the memory bars.
 
-I did run this on a host with a device with VPD assigned to a guest and =
-did not see any trouble when accessing it concurrently from both the =
-guest and the host on the same and different functions. I don't think my =
-particular environment is ideal to fully reproduce the problem (no =
-writable VPD area), but my initial testing looks good.
+observation on fedora20 -
+however when i connect the same device to a fedora20 system, the
+machine itself does not boot. and the motherboard keeps sending out
+the fundamental reset. then it keeps looping in a reset-bootup
+sequence.
 
-Acked-by: Mark Rustad <mark.d.rustad@intel.com>
+fedora16 kernel - 3.6.11 fc16 x86x64 arch
+fedora20 kernel - 3.11.10-4 fc20 x86x64 arch
 
---
-Mark Rustad, Networking Division, Intel Corporation
+queries -
+1) i was wondering if pcie enumeration is effected by OS or is it
+controlled directly by motherboard and OS settings/kernel etc. dont
+impact PCIe enum at all?
+2) what could be the differences between fedora16 Vs fedora20 that
+could cause the pc to boot properly in fedora16 but go into a
+reset-boot loop in fedora20?
+3) any log file i can check to see what might be causing the issue on the host?
+4) my pcie device enumerates as an memory device. could this impact
+the fedora16 / fedora20 differently?
 
+additional observation -
+i have tried other pcie slots on both fedora16 and fedora20 machines.
+either machines are not able to even detect the pcie device if i use
+any slot other than slot#3. i checked the BIOS settings and all the
+pcie slots are enabled.
 
---Apple-Mail=_B35C96C7-EFFF-4F5C-9E5D-DD122EFEFF52
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
+if anyone can give some insight into what could be causing the
+difference in behavior in pcie enum in fedora16 vs fedora20, that
+would be great.
 
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
+thanks in advance ...
 
-iQIcBAEBCAAGBQJV9z1WAAoJEDwO/+eO4+5uyaYQAKRT8he+vAEqlubnKeNDW+eF
-/Mdfg4QwbB769Bcsr6QlMUeD/MTvJoa6HYYhieOHgyUsQnL79XUn9jEjXIvdJNW1
-uX4l65t1Vy7HBqP3bgEhgjRLRW0zG4ttlqOBDauMLWY5AgMRyyxVtM/Nf4rwxNNp
-YdR6/SmJwBFSyjfG+ZJBP/Bbxpx5YcBkr52BoOGZ/D7ptNaF+QkDKeqzy8zSM2lh
-Un8vqHLTZiYyifCqvebuc4HGGCMaZMKp58+P8m2gViG4mMroYTC+JDd6iU77vyJr
-Q5SsBoRqd/vb5eew0bUHfQvN28hsa3tOUbO8kBPkgTiCIOKfHyV2CuWxRtMzVqaJ
-qi/2rdLKLfEoqbrs0oND/mnFXWoiIZQwhbbBli4gj5dNiKVqBG3VJH4RUec3sbPK
-uiZAX8GuLHL6YikcJiLj6hWsNKMQLgH7VyznrwSBRmI2Ay1cC2OHjsbiRZWdjfel
-TF72k/3xxxNEFmfuQNQpXE7RuSYOLWzhaDoRGxTG+vSe8HKo+XJL34upSAjML/59
-5hYYiITLDERiQCXLG5M3T9WMygVRLCmu9zbH1fZ/4c0qdLBj6wg9w5r0SuzAv0oK
-IKI5J2lxmp/AGqbVprz3QgGQ0QEjpr1Qr/bG70Q7KG9J6pbabHbdWBEjcnU5C7rY
-jK1CMqLNsrqZ6o7zUFl4
-=4c9A
------END PGP SIGNATURE-----
-
---Apple-Mail=_B35C96C7-EFFF-4F5C-9E5D-DD122EFEFF52--
+-- 
+Thanks and regards,
+Zubin Kumar
