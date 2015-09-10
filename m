@@ -1,94 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46501 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752591AbbIEUNO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 5 Sep 2015 16:13:14 -0400
-Message-ID: <55EB4CD8.8080405@redhat.com>
-Date: Sat, 05 Sep 2015 16:13:12 -0400
-From: Jon Masters <jcm@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V3 0/4] PCI: ACPI: Setting up DMA coherency for PCI device
+ from _CCA attribute
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+References: <1440597279-11802-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <55F02331.2060001@amd.com> <8172790.rR5Ld4j83C@vostro.rjw.lan>
+CC: <bhelgaas@google.com>, <lenb@kernel.org>,
+	<catalin.marinas@arm.com>, <will.deacon@arm.com>,
+	<hanjun.guo@linaro.org>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+From: "Suthikulpanit, Suravee" <suravee.suthikulpanit@amd.com>
+Message-ID: <55F0EF79.3090202@amd.com>
+Date: Thu, 10 Sep 2015 09:48:25 +0700
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, Duc Dang <dhdang@apm.com>
-CC: Tanmay Inamdar <tinamdar@apm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: X-Gene: Unhandled fault: synchronous external abort in pci_generic_config_read32
-References: <20150724224258.GA23990@google.com> <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com> <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com> <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com> <20150728212944.GA12958@google.com> <CADaLNDkOLiyPmVC3VwpnbrfAKFmNwSVJKdChjQFdQqs7XP-Ddg@mail.gmail.com> <20150729012255.GA18606@google.com> <20150729155509.GA31170@google.com> <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com> <CAErSpo4VFh7rv81sCAG-eCXVyZh4ub8Trh-ntZhyfy7BzqTr5g@mail.gmail.com> <CADaLNDkUQHzGACfFmYDeJWnaNrKmJUDx4Rby60OWr4FzOjx3rA@mail.gmail.com> <CAErSpo7aDYKwy4MC6ZPf7hNd4MPE-LARiOVKutFfDFFkHY7qjQ@mail.gmail.com> <CADaLNDmnnZOoB1fxO=rQQa-eqT=B9G24rUrN_GzwAkFoC3Acbw@mail.gmail.com> <CAErSpo59jH3qeqThG-OO_dqB0fU5gmgC89Xued5QKrbB0dt2yg@mail.gmail.com>
-In-Reply-To: <CAErSpo59jH3qeqThG-OO_dqB0fU5gmgC89Xued5QKrbB0dt2yg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8172790.rR5Ld4j83C@vostro.rjw.lan>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/11/2015 03:28 PM, Bjorn Helgaas wrote:
-> On Mon, Aug 10, 2015 at 2:07 PM, Duc Dang <dhdang@apm.com> wrote:
->> On Mon, Aug 10, 2015 at 10:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>> On Mon, Aug 10, 2015 at 12:16 PM, Duc Dang <dhdang@apm.com> wrote:
->>>> On Monday, August 10, 2015, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>>
->>>>> On Fri, Jul 31, 2015 at 12:00 PM, Duc Dang <dhdang@apm.com> wrote:
->>>>>> On Wed, Jul 29, 2015 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com>
->>>>>> wrote:
->>>>>>> On Tue, Jul 28, 2015 at 08:22:55PM -0500, Bjorn Helgaas wrote:
->>>>>>>> On Tue, Jul 28, 2015 at 02:50:39PM -0700, Duc Dang wrote:
->>>>>>>
->>>>>>>>> Do you have another PCIe card to try on the same reboot test on this
->>>>>>>>> board?
->>>>>>>>
->>>>>>>> I've seen this on at least two Mellanox cards.  I'm running similar
->>>>>>>> tests
->>>>>>>> on a different type of card now.
->>>>>>>
->>>>>>> FWIW, reboot tests on two machines with Mellanox cards failed, while
->>>>>>> the
->>>>>>> same test on a machine with a different proprietary card succeeded.
->>>>>>
->>>>>> Thanks, Bjorn.
->>>>>>
->>>>>> I don't have the same Mellanox card as yours, but I will also run
->>>>>> similar reboot test to see if I hit the same issue with my card.
->>>>>
->>>>> Any more hints on this?  Nothing has changed on my end, so of course
->>>>> I'm still seeing this, always on machines with Mellanox, and never on
->>>>> other machines.  Could this be a hardware issue like a signal
->>>>> integrity or margin issue?  I don't know where to go from here because
->>>>> I'm not a hardware person, and I don't know anything to do in
->>>>> software.
->>>>
->>>>
->>>> Hi Bjorn,
->>>>
->>>> I tried to run similar reboot tests on 2 different Mellanox cards (Connect-X
->>>> family, one card has 2 10G interfaces, the other one has 1 port that
->>>> supports InfiniBand) with U-Boot 1.15.12 and linux 4.2-rc5 and I did not see
->>>> the crash that you encounterred.
->>>>
->>>> Did you check if your Mellanox cards have latest firmware? I did see some
->>>> link issues on my Mellanox cards with its old firmware before.
->>>
->>> Good idea; I'll check that, too.  Also, I just learned that these
->>> cards on installed with an extender card because of some space issues,
->>> so we're going to test again without the extender.
->>
->> Hi Bjorn,
->>
->> Are other cards that passed your test installed directly to the
->> on-board PCIe slot?
->> If yes, then this is a good data point and it will be useful to test
->> the case where
->> your Mellanox cards are directly installed into the on-board PCIe slot.
-> 
-> The cards that passed the test were installed directly, with  no
-> extender.  We removed the extender from one of the machines with the
-> Mellanox card and have not seen this issue since then.  I think it's
-> very likely that the problem is related to using the extender.
+Hi Rafael,
 
-If you're trying to use Mellanox cards in (for example) an APM Mustang
-like system with a PCIe extender card (for example a 90 degree angle
-adjustment for a low profile server case), you might want to ping me
-offline. I have procured a number of these over the past couple of years
-for my home lab and have found one that works (almost) reliably on that
-particular hardware platform and does 10G in my home lab.
+On 9/10/2015 3:38 AM, Rafael J. Wysocki wrote:
+> On Wednesday, September 09, 2015 07:16:49 PM Suthikulpanit, Suravee wrote:
+>> >Hi All,
+>> >
+>> >Are there any other concerns about this patch series?
+> I have none, but then it sort of missed the merge window.
+>
+> I can easily queue it up for the next one unless it is super-urgent,
+> but in that case I need to know why that's the case.
+>
 
-Jon.
+This is not urgent. This mainly needed to enable the ACPI PCI supports 
+for ARM64 which is still work in progress.
 
-
+Thanks,
+Suravee
