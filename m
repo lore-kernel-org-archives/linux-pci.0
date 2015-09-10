@@ -1,101 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:35689 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756070AbbIBVWF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Sep 2015 17:22:05 -0400
-Received: by ioiz6 with SMTP id z6so36005763ioi.2
-        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2015 14:22:04 -0700 (PDT)
-Date: Wed, 2 Sep 2015 16:21:59 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
-Message-ID: <20150902212159.GC829@google.com>
-References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
- <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
- <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
- <20150902174612.GA2700@sean.stalley.intel.com>
- <CAErSpo4qZ9AXskyo86gXG1cb3AqCn-HB05nj7qT9wovZdLt2Tg@mail.gmail.com>
- <20150902200127.GA3347@sean.stalley.intel.com>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:35339 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752928AbbIJRiO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 13:38:14 -0400
+Received: by lbpo4 with SMTP id o4so27303322lbp.2
+        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 10:38:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20150902200127.GA3347@sean.stalley.intel.com>
+In-Reply-To: <1441893436.7900.10.camel@pengutronix.de>
+References: <loom.20150910T144529-230@post.gmane.org> <1441893436.7900.10.camel@pengutronix.de>
+From: Frank Jenner <faj6816@rit.edu>
+Date: Thu, 10 Sep 2015 13:37:53 -0400
+Message-ID: <CABFJKVLW3MsnxybhDjZ02ghUV2mKfPgj7kmMdiuJ+oK94OYFxQ@mail.gmail.com>
+Subject: Re: Multiple MSIs on ARM imx6q
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 02, 2015 at 01:01:27PM -0700, Sean O. Stalley wrote:
-> On Wed, Sep 02, 2015 at 02:25:50PM -0500, Bjorn Helgaas wrote:
-> > On Wed, Sep 2, 2015 at 12:46 PM, Sean O. Stalley <sean.stalley@intel.com> wrote:
-> > 
-> > > Would it be better to modify pci_claim_resource() to support EA instead of adding pci_ea_claim_resource()?
-> > > That way, EA entries would be claimed at the same time as traditional BARs.
-> > 
-> > Yes, I think so.
-> 
-> Ok, I'll make it work this way in the next patchset.
-> 
-> > Why wouldn't pci_claim_resource() work as-is for EA?  I see that
-> > pci_ea_get_parent_resource() defaults to iomem_resource or
-> > ioport_resource if we don't find a parent, but I don't understand why
-> > that's necessary.
-> 
-> EA resources may (or may not) be in the parent's range[1].
-> If the parent doesn't describe this range, we want to default to the top-level resource.
-> Other than that case, I think pci_claim_resource would work as-is.
-> 
-> -Sean
-> 
-> [1] From the EA ECN:
-> For a bridge function that is permitted to implement EA based on the rules above, it is
-> permitted, but not required, for the bridge function to use EA mechanisms to indicate
-> resource ranges that are located behind the bridge Function (see Section 6.9.1.2).
+Hi Lucas,
 
-[BTW, in EA ECN 23_Oct_2014_Final, this text is in sec 6.9, not 6.9.1.2]
+Thanks for the quick response. See inline:
 
-I agree that it implies EA resources need not be in the parent's *EA*
-range.  But I would read it as saying "a bridge can use either the
-usual window registers or EA to indicate resources forwarded
-downstream."
+On Thu, Sep 10, 2015 at 9:57 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Hi Frank,
+>
+> Am Donnerstag, den 10.09.2015, 12:55 +0000 schrieb Frank Jenner:
+>> Hello,
+>>
+>> I'm trying to develop a driver for a PCIe device which utilizes multiple
+>> MSIs (up to the full 32 allowable), but I cannot seem to enable more than
+>> one when calling pci_enable_msi_range(). The host platform uses a Freescale
+>> i.MX 6Quad ARM SoC and is running the "linux-fslc_4.1" kernel (from the
+>> Yocto project).
+>>
+>> With some investigation, I believe that this limitation is stemming from
+>> arch_setup_msi_irqs() in drivers/pci/msi.c where there is an early return
+>> with the comment "If an architecture wants to support multiple MSI, it needs
+>> to override arch_setup_msi_irqs()". There appears to be no such override for
+>> ARM.
+>>
+>> My first question then, is:
+>>
+>> 1.) Are multiple MSIs simply not yet supported on ARM as of 4.1?
+>>
+> Right, multivector MSI is not supported for any ARM host bridge on any
+> released kernel version.
+>
+>> Both MSIs and ARM have been around for a while, and I doubt I'm the only
+>> person who ever wanted to use multiple MSIs on ARM, so I can't help but
+>> think maybe I'm overlooking something. I ran into a similar question
+>> (http://lists.infradead.org/pipermail/linux-arm-kernel/2010-May/016858.html), but
+>> as that was 5+ years ago, I'm wondering whether the situation has since changed.
+>>
+> Multivector MSI is a rarely used feature on endpoints. Most devices
+> either do single vector MSI or full blown MSI-X. It's mostly FPGA
+> devices preferring the simplicity of multivector MSI over MSI-X.
 
-What happens in the following case?
+Ah, yes. This was the case for us. We have an FPGA that does not have
+MSI-X functionality built into the hard PCIe core, so regular MSIs
+were used for simplicity.
 
-  00:00.0: PCI bridge to [bus 01]
-  00:00.0:   bridge window [mem 0x80000000-0x8fffffff]
-  01:00.0: EA 0: [mem 0x90000000-0x9000ffff]
+>
+> An implementation for the i.MX6 is already sitting in Bjorns PCI
+> maintainer tree and is expected to be merged in kernel 4.4.
+>
 
-The 00:00.0 bridge knows nothing about EA.  The 01:00.0 EA device has
-a fixed region at 0x90000000.  The ECN says:
+I took a look at Bjorn's pci-4.4/host-designware branch and saw your
+commits. It looks like the patches I'm using apply most of the same
+changes. While they do enable me to get multiple MSIs back from
+pci_enable_msi_range() and I get the correct IRQs back to my ISR, I
+still run into the issue below when attempting to get the full 32
+vectors.
 
-  System firmware/software must comprehend that such bridge functions
-  [those that are permitted to implement EA] are not required to
-  indicate inclusively all resources behind the bridge, and as a
-  result system firmware/software must make a complete search of all
-  functions behind the bridge to comprehend the resources used by
-  those functions.
+>> Unfortunately, even if I work around the arch_setup_msi_irqs() limitation
+>> (which I've done by trying out patches 448141 and 448142 from
+>> http://patchwork.ozlabs.org/project/linux-pci/list/) and break through to
+>> the assign_irq() function in drivers/pci/host/pcie-designware.c, I still
+>> cannot allocate all 32 MSIs that my device reports.
+>>
+>> It appears that one of the bits in the msi_irq_in_use bitmap is already set
+>> prior to my driver requesting any MSIs, meaning there aren't enough free
+>> slots for the 32 MSIs I am requesting, and causing the function to fail with
+>> -ENOSPC. Based on the output from /proc/interrupts, I believe that the PCIe
+>> PME service driver is consuming one of the 32 available MSI slots. Thus, my
+>> second question is:
+>>
+>> 2.) Is it possible to leverage all 32 MSIs while still using PCIe PME?
+>>
+>> I tried using the kernel command line argument pcie_pme=nomsi, but that
+>> appeared to disable all MSIs for the device rather than just making the PME
+>> service driver use some other mechanism.
+>>
+> It should be possible to make PME use a legacy INT, but I would have to
+> look this up in the code.
 
-A bridge was never required to indicate, e.g., via its window
-registers, anything about the resources behind it.  Software always
-had to search behind the bridge and look at all the downstream BARs.
-What's new here is that software now has to look for downstream EA
-entries in addition to BARs, and the EA entries are at fixed
-addresses.
+Could you please elaborate on this? I'm a little confused why PME
+occupies one of the MSI slots in the first place. Also, as I thought a
+device could only use either MSIs or legacy INTs (but not both), is it
+even possible for PME to use legacy INTs while my driver uses MSIs?
+>
+> Another alternative is to extend the i.MX6 driver. It should be able to
+> provide up to 256 MSI interrupt vectors. But I have no way to test that,
+> so if you could help with testing I can certainly come up with a patch
+> for that.
 
-My question is what the implication is for address routing performed
-by the bridge.  The EA ECN doesn't mention any changes there, so I
-assume it is software's responsibility to reprogram the 00:00.0 mem
-window so it includes [mem 0x90000000-0x9000ffff].
+Where does the 256 come from?
 
-If software does have to reprogram that window, the normal
-pci_claim_resource() should work.  If it doesn't have to reprogram the
-window, and there's some magical way for 01:00.0 to work even though
-we don't route address space to it, I suspect we'll need significantly
-more changes than just pci_ea_claim_resource(), because then 00:00.0
-is really not a PCI bridge any more.
+I appreciate the help, and I would be happy to test out a patch for
+you with the caveat that I'm using a custom board so I can only test
+any changes against our specific device.
 
-Bjorn
+Thanks!
+>
+> Regards,
+> Lucas
+>
+> --
+> Pengutronix e.K.             | Lucas Stach                 |
+> Industrial Linux Solutions   | http://www.pengutronix.de/  |
+>
