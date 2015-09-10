@@ -1,72 +1,69 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:60784 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751536AbbIJNGx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 09:06:53 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH] PCI: designware: change dw_pcie_cfg_write() and
+ dw_pcie_cfg_read()
+Date: Thu, 10 Sep 2015 13:06:41 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620C5FB@lhreml503-mbs>
+References: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
+ <CAErSpo6d_65oCez7fUBLLpYAiA8F8vj5V4j3gkvMVMsNobpfrg@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1620C569@lhreml503-mbs>
+ <CAErSpo5+7cBWLbqVNfq2_+MbY+aL3_Q8n6mBQejGzy29bk7new@mail.gmail.com>
+In-Reply-To: <CAErSpo5+7cBWLbqVNfq2_+MbY+aL3_Q8n6mBQejGzy29bk7new@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <65590637.5YmBIDOvTf@wuerfel>
-References: <1442906367-10935-1-git-send-email-lftan@altera.com>
-	<1442906367-10935-2-git-send-email-lftan@altera.com>
-	<65590637.5YmBIDOvTf@wuerfel>
-Date: Tue, 22 Sep 2015 18:53:50 +0800
-Message-ID: <CAFiDJ59EeokEJVXCY7DEmDRp0hnd3he3f2fwjO-2tNN5VXrBgQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] nios2: Add architectural support for PCIe
-From: Ley Foon Tan <lftan@altera.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux-Arch <linux-arch@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 22, 2015 at 4:18 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Tuesday 22 September 2015 15:19:26 Ley Foon Tan wrote:
->> +
->> +config PCI_SYSCALL
->> +     def_bool PCI
->
-> IIRC, PCI_SYSCALL is deprecated and you should just leave that
-> turned off.
->
-> In any case, you enable the syscalls here but don't assign a
-> system call number, so that is rather pointless. I
-You are right. I can remove it if it is deprecated .
->
-> I might be missing something though. Bjorn?
->
->> @@ -14,7 +14,7 @@
->>  #include <linux/types.h>
->>  #include <asm/pgtable-bits.h>
->>
->> -/* PCI is not supported in nios2, set this to 0. */
->> +/* PCI I/O space is not supported, set this to 0. */
->>  #define IO_SPACE_LIMIT 0
->>
->>  #define readb_relaxed(addr)  readb(addr)
->
-> It might be useful to enable this, just in case someone connects
-> a PCI host bridge that does support I/O space.
->
-> Which host bridge do you use? Are you sure there is no I/O space?
-> Most of them use a set of translation windows to set up a mapping
-> between bus address (memory, config and io space) and physical
-> (mmio) space.
-I'm using Altera PCIe IP. But, you are right. We should enable this,
-because it shouldn't limited to support Altera PCIe only.
-BTW, any rule/requirement for the IO_SPACE_LIMIT?
-And PCIBIOS_MIN_IO should be non-zero if we enable IO_SPACE_LIMIT?
-
->
->> diff --git a/arch/nios2/include/asm/pci.h b/arch/nios2/include/asm/pci.h
->> new file mode 100644
->> index 0000000..f2cba05
->> --- /dev/null
->> +++ b/arch/nios2/include/asm/pci.h
->
-> What happens if you use the asm-generic header? If there is something
-> missing in it, we can try to get it to do the right things.
-All the defines in arch/nios2/include/asm/pci.h are required by PCI framework.
-It will trigger undefined symbols/define error if without them. Seem
-all architectures must provide all these defines.
-So, we can consider to add default defines for these in asm-generic.
-
-Regards
-Ley Foon
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
+bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBTZXB0ZW1iZXIg
+MTAsIDIwMTUgMTo0MCBQTQ0KPiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiBDYzogSmluZ29vIEhh
+bjsgUHJhdHl1c2ggQW5hbmQgVGhha3VyOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiBX
+YW5nemhvdSAoQik7IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpoZW5m
+YTsgTGlndW96aHUNCj4gKEtlbm5ldGgpDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIFBDSTogZGVz
+aWdud2FyZTogY2hhbmdlIGR3X3BjaWVfY2ZnX3dyaXRlKCkgYW5kDQo+IGR3X3BjaWVfY2ZnX3Jl
+YWQoKQ0KPiANCj4gT24gVGh1LCBTZXAgMTAsIDIwMTUgYXQgNjoyNiBBTSwgR2FicmllbGUgUGFv
+bG9uaQ0KPiA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPiB3cm90ZToNCj4gPj4gRnJvbTog
+Qmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IA0KPiA+PiBJIHRo
+aW5rIHRoZXJlIHdhcyBhIHNlcGFyYXRlIHBhdGNoIGZvciB0aGUgcGNpZS1zcGVhcjEzeHguYyBi
+dWcsDQo+ID4+IHdhc24ndCB0aGVyZT8gIEF0IGxlYXN0LCBJIGRvbid0IHNlZSB0aGF0IGZpeCBp
+biAqdGhpcyogcGF0Y2guDQo+ID4+DQo+ID4NCj4gPiBGcm9tIHlvdXIgcHJldmlvdXMgY29tbWVu
+dHM6DQo+ID4gKioqKioqKioNCj4gPiAqMikgUHJhdHl1c2gsIHRoaXMgb25lJ3MgZm9yIHlvdSA6
+KSAgc3BlYXIxM3h4X3BjaWVfZXN0YWJsaXNoX2xpbmsoKQ0KPiA+ICogICBjYWxscyBkd19wY2ll
+X2NmZ19yZWFkKCkgYW5kIGR3X3BjaWVfY2ZnX3dyaXRlKCkgc2V2ZXJhbCB0aW1lcw0KPiBsaWtl
+DQo+ID4gKiAgIHRoaXM6DQo+ID4gKg0KPiA+ICogICAgZHdfcGNpZV9jZmdfcmVhZChwcC0+ZGJp
+X2Jhc2UsIGV4cF9jYXBfb2ZmICsgUENJX0VYUF9ERVZDVEwsDQo+IDQsIC4uLikNCj4gPiAqICAg
+IGR3X3BjaWVfY2ZnX3dyaXRlKHBwLT5kYmlfYmFzZSwgZXhwX2NhcF9vZmYgKyBQQ0lfRVhQX0RF
+VkNUTCwNCj4gNCwgLi4uKQ0KPiA+ICoqKioqKioqDQo+ID4NCj4gPiBJIHRoaW5rIHRoYXQgdGhl
+IGltcGxlbWVudGF0aW9uIG9mIGR3X3BjaWVfY2ZnX3JlYWQoKSBhbmQNCj4gPiBkd19wY2llX2Nm
+Z193cml0ZSgpIHRoYXQgSSBwcm9wb3NlZCBpbiB0aGlzIHBhdGNoIGlzIGNvbXBhdGlibGUgd2l0
+aA0KPiA+IHRoZSBwcmV2aW91cyBjYWxscyBpbiBwY2llLXNwZWFyMTN4eC5jLiBTbyB0aGUgY2Fs
+bHMgaW4gcGNpZS0NCj4gc3BlYXIxM3h4LmMNCj4gPiB3ZXJlIGJ1Z2d5IGZvciB0aGUgcHJldmlv
+dXMgaW1wbGVtZW50YXRpb25zIG9mIHRoZSBmdW5jdGlvbnM7IHdpdGgNCj4gPiB0aGUgcmV3b3Jr
+ZWQgZnVuY3Rpb25zIHRoZXJlIGlzIG5vIG5lZWQgdG8gbW9kaWZ5IHRoZSBmdW5jdGlvbiBjYWxs
+cw0KPiA+IGluIHBjaWUtc3BlYXIxM3h4LmMuLi5kbyB5b3UgYWdyZWU/DQo+IA0KPiBPaCwgSSBz
+ZWUsIEkgZGlkbid0IHJlYWQgaXQgY2xvc2VseSBlbm91Z2gsIGJ1dCB5b3UncmUgcHJvYmFibHkg
+cmlnaHQuDQo+IFdoYXQgSSB3b3VsZCBwcm9iYWJseSBkbyBpcyBhcHBseSBQcmF0eXVzaCdzIGZp
+eCBmaXJzdCwgdGhlbiBhcHBseQ0KPiB5b3VyIHBhdGNoIG9uIHRvcC4gIFRoYXQgd2F5IHdlIGNh
+biBkbyB0aGUgc3BlYXIxM3h4IGJ1ZyBmaXggYnkgaXRzZWxmDQo+ICh3aGljaCBzaG91bGQgYmUg
+YSBmYWlybHkgb2J2aW91c2x5LWNvcnJlY3QgcGF0Y2gpLCB0aGVuIHlvdXINCj4gaW50ZXJmYWNl
+IGNoYW5nZSAod2hpY2ggd291bGQgYmUgZXh0ZW5kZWQgdG8gdG91Y2ggYWxsIHRoZSBjYWxscw0K
+PiBpbmNsdWRpbmcgc3BlYXIxM3h4IGFuZCBiZSBzaW1pbGFybHkgb2J2aW91c2x5IGNvcnJlY3Qp
+LiAgSSB0aGluayB0aGF0DQo+IHdvdWxkIG1ha2UgaXQgYSBiaXQgZWFzaWVyIGZvciBmdXR1cmUg
+Y2hhbmdlbG9nIGFyY2hhZW9sb2dpc3RzLg0KDQpTaW5jZSBQcmF0eXVzaCBoYXMgbm90IHB1c2hl
+ZCB0aGUgZml4IHlldCwgbWF5YmUgSSBjYW4gcHJlcGFyZSBhIHYyIGFzIA0KYSBwYXRjaHNldCBv
+ZiAyIHBhdGNoZXMuLi4uDQoodG8gYmVuZWZpdCB0aGUgTGludXggYXJjaGVvbG9naXN0cyBhcyB5
+b3Ugc2FpZCA6LSkgKQ0KDQo+IA0KPiBCam9ybg0K
