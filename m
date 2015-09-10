@@ -1,189 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 11 Sep 2015 12:20:18 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:47269 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751597AbbIJQlx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 12:41:53 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Jingoo Han <jingoohan1@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-Message-ID: <20150911112018.GA13033@red-moon>
-References: <20150602133215.GC23650@red-moon>
- <55701A31.808@linaro.org>
- <20150604102253.GA31773@red-moon>
- <5570447D.3020705@linaro.org>
- <557504A2.3060203@linaro.org>
- <20150608151443.GA16151@red-moon>
- <55E4340D.6050004@linaro.org>
- <55ED6010.3020406@linaro.org>
- <20150908150727.GF29293@red-moon>
- <55F0388B.1090607@linaro.org>
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v2 1/3] PCI: spear13xx: fix addresses in
+ dw_pcie_cfg_read and dw_pcie_cfg_write
+Date: Thu, 10 Sep 2015 16:41:42 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620C805@lhreml503-mbs>
+References: <1441897138-23251-1-git-send-email-gabriele.paoloni@huawei.com>
+	<1441897138-23251-2-git-send-email-gabriele.paoloni@huawei.com>
+ <CAHM4w1kEnZv0_WssMKV3n+DvGhCzqgAJYnKrK37YW5WaUXDSdg@mail.gmail.com>
+In-Reply-To: <CAHM4w1kEnZv0_WssMKV3n+DvGhCzqgAJYnKrK37YW5WaUXDSdg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55F0388B.1090607@linaro.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 09, 2015 at 02:47:55PM +0100, Tomasz Nowicki wrote:
-
-[...]
-
-> > I think (but I am happy to be corrected) that the map_bus() hook
-> > (ie that's why struct pci_bus is required in eg pci_generic_config_write)
-> > is there to ensure that when the generic accessors are called
-> > a) we have a valid bus b) the host controllers implementing it
-> > has been initialized.
-> >
-> > I had another look and I noticed you are trying to solve multiple
-> > things at once:
-> >
-> > 1) ACPICA seems to need PCI config space on bus 0 to be working
-> >     before PCI enumerates (ie before we have a root bus), we need to
-> >     countercheck on that, but you can't use the generic PCI accessors
-> >     for that reasons (ie root bus might not be available, you do not
-> >     have a pci_bus struct)
-> > 2) the raw_pci_read/write require _generic_ mmio back-ends, since AMD
-> >     can't cope with standard x86 read/write{b,w,l}
-> >
-> > Overall, it seems to me that we can avoid code duplication by
-> > shuffling your code a bit.
-> >
-> > You could modify the generic accessors in drivers/pci/access.c to
-> > use your mmio back-end instead of using plain read/write{b,w,l}
-> > functions (we should check if RobH is ok with that there can be
-> > reasons that prevent this from happening). This would solve the
-> > AMD mmio issue.
-> >
-> > By factoring out the code that actually carries out the reads
-> > and writes in the accessors basically you decouple the functions
-> > requiring the struct pci_bus from the ones that does not require it
-> > (ie raw_pci_{read/write}.
-> >
-> > The generic MMIO layer belongs in the drivers/pci/access.c file, it has
-> > nothing to do with ECAM.
-> >
-> > The mmcfg interface should probably live in pci-acpi.c, I do not think
-> > you need an extra file in there but that's a detail.
-> >
-> > Basically the generic accessors would become something like eg:
-> >
-> > int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
-> >                            int where, int size, u32 val)
-> > {
-> >       void __iomem *addr;
-> >
-> >       addr = bus->ops->map_bus(bus, devfn, where);
-> >       if (!addr)
-> >               return PCIBIOS_DEVICE_NOT_FOUND;
-> >
-> >       pci_mmio_write(size, addr + where, value);
-> >
-> >       return PCIBIOS_SUCCESSFUL;
-> > }
-> >
-> > With that in place using raw_pci_write/read or the generic accessors
-> > becomes almost identical, with code requiring the pci_bus to be
-> > created using the generic accessors and ACPICA using the raw version.
-> >
-> > I might be missing something, so apologies if that's the case.
-> >
-> 
-> Actually, I think you showed me the right direction :) Here are some
-> conclusions/comments/concerns. Please correct me if I am wrong:
-> 
-> 1. We need raw_pci_write/read accessors (based on ECAM) for ARM64 too
-> but only up to the point where buses are enumerated. From that point on,
-> we should reuse generic accessors from access.c file, right?
-
-Well, I still have not figured out whether on arm64 the raw accessors
-required by ACPICA make sense.
-
-So either arm64 relies on the generic MCFG based raw read and writes
-or we define the global raw read and writes as empty (ie x86 overrides
-them anyway).
-
-I will get back to you on this.
-
-> 2. For ARM64 ACPI PCI, we can use generic accessors right away, .map_bus
-> would call common code part (pci_dev_base()). The only thing that worry
-> me is fact that MCFG regions are RCU list so it needs rcu_read_lock()
-> for the .map_bus (mcfg lookup) *and* read/write operation.
-
-Do you mean the address look-up and the mmio operation should be carried
-out atomically right ? I have to review the MCFG descriptor locking anyway
-to check if and when there is a problem here.
-
-> 3. Changing generic accessors to introduce generic MMIO layer (because
-> of AMD issue) like this:
-> int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
->                              int where, int size, u32 val)
-> {
->         void __iomem *addr;
-> 
->         addr = bus->ops->map_bus(bus, devfn, where);
->         if (!addr)
->                 return PCIBIOS_DEVICE_NOT_FOUND;
-> 
->         pci_mmio_write(size, addr + where, val);
-> 
->         return PCIBIOS_SUCCESSFUL;
-> }
-> would imply using those accessors for x86 ACPI PCI host bridge driver,
-> see arch/x86/pci/common.c
-> 
-> int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
->                                                 int reg, int len, u32 *val)
-> {
->         if (domain == 0 && reg < 256 && raw_pci_ops)
->                 return raw_pci_ops->read(domain, bus, devfn, reg, len, val);
->         if (raw_pci_ext_ops)
->                 return raw_pci_ext_ops->read(domain, bus, devfn, reg, len, val);
->         return -EINVAL;
-> }
-> [...]
-> static int pci_read(struct pci_bus *bus, unsigned int devfn, int where,
-> int size, u32 *value)
-> {
->         return raw_pci_read(pci_domain_nr(bus), bus->number,
->                                  devfn, where, size, value);
-> }
-> [...]
-> struct pci_ops pci_root_ops = {
->         .read = pci_read,
->         .write = pci_write,
-> };
-> 
-> Currently, the above code may call lots of different accessors (not
-> necessarily generic accessor friendly :), moreover it possible that x86
-> may have registered two accessor sets (raw_pci_ops, raw_pci_ext_ops). I
-> am happy to fix that but I would need x86 PCI expert to get know if that
-> is possible at all.
-
-Well, we can let x86 code use the same pci_ops as they are using
-today without bothering converting it to generic accessors.
-
-Honestly, even the AMD requirement for special MMIO back-end could
-be left in x86 code, which would simplify your task even more (it
-would leave more x86 churn but that's not my call).
-
-> I really appreciate your help.
-
-You are welcome, I will get back to you shortly on the points above.
-
-Thanks,
-Lorenzo
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBQcmF0eXVzaCBBbmFuZCBbbWFp
+bHRvOnByYXR5dXNoLmFuYW5kQGdtYWlsLmNvbV0NCj4gU2VudDogVGh1cnNkYXksIFNlcHRlbWJl
+ciAxMCwgMjAxNSA1OjMwIFBNDQo+IFRvOiBHYWJyaWVsZSBQYW9sb25pOyBCam9ybiBIZWxnYWFz
+DQo+IENjOiBKaW5nb28gSGFuOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBXYW5nemhvdSAo
+Qik7IFl1YW56aGljaGFuZzsNCj4gWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpoZW5mYTsgTGln
+dW96aHUgKEtlbm5ldGgpDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgMS8zXSBQQ0k6IHNwZWFy
+MTN4eDogZml4IGFkZHJlc3NlcyBpbg0KPiBkd19wY2llX2NmZ19yZWFkIGFuZCBkd19wY2llX2Nm
+Z193cml0ZQ0KPiANCj4gSGkgR2FiLA0KPiANCj4gT24gVGh1LCBTZXAgMTAsIDIwMTUgYXQgODoy
+OCBQTSwgR2FicmllbGUgUGFvbG9uaQ0KPiA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPiB3
+cm90ZToNCj4gPiBGcm9tOiBnYWJyaWVsZSBwYW9sb25pIDxnYWJyaWVsZS5wYW9sb25pQGh1YXdl
+aS5jb20+DQo+ID4NCj4gPiBDdXJyZW50bHkgc3BlYXIxM3h4IHBhc3NlcyB0aGUgd3JvbmcgImFk
+ZHJlc3MiIGluIG1hbnkgY2FsbHMgdG8NCj4gPiBkd19wY2llX2NmZ19yZWFkIGFuZCBkd19wY2ll
+X2NmZ193cml0ZTogdGhlIHBhc3NlZCBhZGRyZXNzIGlzDQo+ID4gYWx3YXlzIHBwLT5kYmlfYmFz
+ZSwgdGhhdCBpcyB3cm9uZyBhcyBpdCBkb2VzIG5vdCBjb25zaWRlcg0KPiA+IHRoZSBvZmZzZXQg
+dG8gYWNjZXNzIHRoZSByaWdodCByZWdpc3RlciBvZiB0aGUgUENJIGhlYWRlci4NCj4gPiBUaGlz
+IHBhdGNoZXMgZml4ZXMgdGhlc2UgZnVuY3Rpb24gY2FsbHMgcGFzc2luZyB0aGUgYWRkcmVzcyB0
+bw0KPiA+IGFjY2VzcyB0aGUgcmlnaHQgcmVnaXN0ZXIuDQo+IA0KPiBUaGFua3MgZm9yIHRoZSBl
+ZmZvcnQsIGhvd2V2ZXIgdGhlcmUgd2VyZSBzb21lIG1vcmUgaXNzdWVzIHdpdGgNCj4gY3VycmVu
+dCBpbXBsZW1lbnRhdGlvbi4NCj4gTGlrZSBQQ0lfRVhQX0RFVkNUTCBpcyBvbmx5IHR3byBieXRl
+cyBvZiByZWdpc3Rlci4gTmV4dCB0d28gYnl0ZXMgYXJlDQo+IFBDSV9FWFBfREVWU1RTIHdoaWNo
+IGlzIFJPLCBzbyB3cml0aW5nIDQgYnl0ZXMgYXQgb2Zmc2V0ICdleHBfY2FwX29mZg0KPiArIFBD
+SV9FWFBfREVWQ1RMJyBpcyBub3QgY29ycmVjdC4NCj4gDQo+IEkgaGFkIHNlbnQgYSBwYXRjaCB0
+byBjb3JyZWN0IGFsbCB0aGUgaXNzdWVzIHdpdGggY3VycmVudA0KPiBpbXBsZW1lbnRhdGlvbiBb
+MV0uIFlvdSBjYW4gdGFrZSB0aGF0IGFzIHlvdXIgMXN0IHBhdGNoLg0KDQpPb3BzIFNvcnJ5LCBJ
+IG1pc3NlZCB0aGF0IHBhdGNoIQ0KSSdsbCB0YWtlIGl0IGFzIHBhdGNoIDEsIE1hbnkgVGhhbmtz
+DQoNCkdhYg0KDQo+IA0KPiBbMV0gaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTUvOS83LzUNCg==
