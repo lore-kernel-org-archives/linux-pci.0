@@ -1,69 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v7 6/6] MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
-Date: Mon, 21 Sep 2015 10:13:07 +0800
-Message-ID: <1442801587-3812-7-git-send-email-lftan@altera.com>
-In-Reply-To: <1442801587-3812-1-git-send-email-lftan@altera.com>
-References: <1442801587-3812-1-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:33964 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923AbbIJOwG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 10:52:06 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: [PATCH v2 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+Date: Thu, 10 Sep 2015 22:58:55 +0800
+Message-ID: <1441897138-23251-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- MAINTAINERS | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7ba7ab7..eeb9ec9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7938,6 +7938,14 @@ F:	include/linux/pci*
- F:	arch/x86/pci/
- F:	arch/x86/kernel/quirks.c
- 
-+PCI DRIVER FOR ALTERA PCIE IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
-+F:	drivers/pci/host/pcie-altera.c
-+
- PCI DRIVER FOR ARM VERSATILE PLATFORM
- M:	Rob Herring <robh@kernel.org>
- L:	linux-pci@vger.kernel.org
-@@ -8039,6 +8047,14 @@ L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/host/*spear*
- 
-+PCI MSI DRIVER FOR ALTERA MSI IP
-+M:	Ley Foon Tan <lftan@altera.com>
-+L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
-+L:	linux-pci@vger.kernel.org
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
-+F:	drivers/pci/host/pcie-altera-msi.c
-+
- PCI MSI DRIVER FOR APPLIEDMICRO XGENE
- M:	Duc Dang <dhdang@apm.com>
- L:	linux-pci@vger.kernel.org
+This patchset:
+1) fixes a bug in spear13xx when calling dw_pcie_cfg_read and
+   dw_pcie_cfg_write;
+2) reworks dw_pcie_cfg_read/dw_pcie_cfg_write in pcie-designware.c in
+   order to make it easier for callers to pass input parameters;
+3) adds sanity checks in dw_pcie_cfg_read/dw_pcie_cfg_write to make
+   sure the PCI header offset does not conflict with the size of
+   the read/written field.
+
+gabriele paoloni (3):
+  PCIE: spear13xx: fix addresses in dw_pcie_cfg_read and
+    dw_pcie_cfg_write
+  PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
+  PCIE: designware: add sanity checks on the header offset in
+    dw_pcie_cfg_read and dw_pcie_cfg_write
+
+ drivers/pci/host/pci-exynos.c      |  5 ++--
+ drivers/pci/host/pci-keystone-dw.c |  4 ++--
+ drivers/pci/host/pcie-designware.c | 47 +++++++++++++++++++++++---------------
+ 3 files changed, 32 insertions(+), 24 deletions(-)
+
 -- 
-1.8.2.1
+1.9.1
 
