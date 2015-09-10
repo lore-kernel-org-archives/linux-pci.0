@@ -1,99 +1,95 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:38920 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462AbbIJOwK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 10:52:10 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: [PATCH v2 1/3] PCI: spear13xx: fix addresses in dw_pcie_cfg_read and dw_pcie_cfg_write
+Date: Thu, 10 Sep 2015 22:58:56 +0800
+Message-ID: <1441897138-23251-2-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1441897138-23251-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1441897138-23251-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <5408024.XroFc5QNep@wuerfel>
-References: <1442906367-10935-1-git-send-email-lftan@altera.com>
-	<65590637.5YmBIDOvTf@wuerfel>
-	<CAFiDJ59EeokEJVXCY7DEmDRp0hnd3he3f2fwjO-2tNN5VXrBgQ@mail.gmail.com>
-	<5408024.XroFc5QNep@wuerfel>
-Date: Tue, 29 Sep 2015 11:12:24 +0800
-Message-ID: <CAFiDJ5_jkEqdAY=TtKOg6=GzT8i4qAFdnSH_z1RsoPVU2Vfr1Q@mail.gmail.com>
-Subject: Re: [PATCH 1/2] nios2: Add architectural support for PCIe
-From: Ley Foon Tan <lftan@altera.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux-Arch <linux-arch@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 22, 2015 at 7:42 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Tuesday 22 September 2015 18:53:50 Ley Foon Tan wrote:
->> On Tue, Sep 22, 2015 at 4:18 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> > On Tuesday 22 September 2015 15:19:26 Ley Foon Tan wrote:
->> > I might be missing something though. Bjorn?
->> >
->> >> @@ -14,7 +14,7 @@
->> >>  #include <linux/types.h>
->> >>  #include <asm/pgtable-bits.h>
->> >>
->> >> -/* PCI is not supported in nios2, set this to 0. */
->> >> +/* PCI I/O space is not supported, set this to 0. */
->> >>  #define IO_SPACE_LIMIT 0
->> >>
->> >>  #define readb_relaxed(addr)  readb(addr)
->> >
->> > It might be useful to enable this, just in case someone connects
->> > a PCI host bridge that does support I/O space.
->> >
->> > Which host bridge do you use? Are you sure there is no I/O space?
->> > Most of them use a set of translation windows to set up a mapping
->> > between bus address (memory, config and io space) and physical
->> > (mmio) space.
->>
->> I'm using Altera PCIe IP. But, you are right. We should enable this,
->> because it shouldn't limited to support Altera PCIe only.
->> BTW, any rule/requirement for the IO_SPACE_LIMIT?
->
-> If you want to allow just one PCI host bridge, set it to 0xffff, otherwise
-> use 0xfffff (for up to 16 bridges)
-Okay, will set it to 0xffff.
->
->> And PCIBIOS_MIN_IO should be non-zero if we enable IO_SPACE_LIMIT?
->
-> If you define pcibios_align_resource() as an empty function, that can
-> remain zero as well, it's only meant to stay out of the way of ISA
-> devices.
-Okay.
->
->> >> diff --git a/arch/nios2/include/asm/pci.h b/arch/nios2/include/asm/pci.h
->> >> new file mode 100644
->> >> index 0000000..f2cba05
->> >> --- /dev/null
->> >> +++ b/arch/nios2/include/asm/pci.h
->> >
->> > What happens if you use the asm-generic header? If there is something
->> > missing in it, we can try to get it to do the right things.
->> All the defines in arch/nios2/include/asm/pci.h are required by PCI framework.
->> It will trigger undefined symbols/define error if without them. Seem
->> all architectures must provide all these defines.
->> So, we can consider to add default defines for these in asm-generic.
->
-> I think that would be good, yes. We probably picked defaults for the
-> asm-generic version that are enough to build with CONFIG_PCI disabled,
-> but there are useful defaults for the other case as well.
->
-> Most architectures that use the file don't support PCI, so you can just
-> add stuff inside of #ifdef CONFIG_PCI. For the remaining 13 architectures
-> (git grep -l generic/pci.h  | wc), see whether there are conflicts first.
-> The normal way would be to have the arch specific definition come before
-> the #include, and then do something like
->
-> #ifndef pci_proc_domain
-> #define pci_proc_domain pci_proc_domain
-> static inline int pci_proc_domain(struct pci_bus *bus)
-> {
-> #ifdef CONFIG_PCI_DOMAINS_GENERIC
->         return pci_domain_nr(bus);
-> #else
->         return 1;
-> }
-> #endif
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Okay, will try add them to asm-generic.
-Do you prefer to send it as separate patch or can be part of this patchset?
-Thanks.
+Currently spear13xx passes the wrong "address" in many calls to
+dw_pcie_cfg_read and dw_pcie_cfg_write: the passed address is
+always pp->dbi_base, that is wrong as it does not consider
+the offset to access the right register of the PCI header.
+This patches fixes these function calls passing the address to
+access the right register.
 
-Regards
-Ley Foon
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ drivers/pci/host/pcie-spear13xx.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index c49fbdc..5f3513b 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -146,6 +146,7 @@ struct pcie_app_reg {
+ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ {
+ 	u32 val;
++	int where;
+ 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+ 	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
+ 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+@@ -163,9 +164,10 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 * default value in capability register is 512 bytes. So force
+ 	 * it to 128 here.
+ 	 */
+-	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
++	where = exp_cap_off + PCI_EXP_DEVCTL;
++	dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4, &val);
+ 	val &= ~PCI_EXP_DEVCTL_READRQ;
+-	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
++	dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where, 4, val);
+ 
+ 	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
+ 	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
+@@ -175,22 +177,24 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	 * also works
+ 	 */
+ 	if (spear13xx_pcie->is_gen1) {
+-		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
++		where = exp_cap_off + PCI_EXP_LNKCAP;
++		dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4,
+ 				 &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
+-					  PCI_EXP_LNKCAP, 4, val);
++			dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
++					where, 4, val);
+ 		}
+ 
+-		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
++		where = exp_cap_off + PCI_EXP_LNKCTL2;
++		dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4,
+ 				 &val);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
+-					  PCI_EXP_LNKCTL2, 4, val);
++			dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
++					where, 4, val);
+ 		}
+ 	}
+ 
+-- 
+1.9.1
+
