@@ -1,49 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:34349 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970AbbIJQzc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 12:55:32 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
+	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
+Subject: [PATCH] PCI: Designware: make num-lanes an optional DT property
+Date: Fri, 11 Sep 2015 01:02:26 +0800
+Message-ID: <1441904546-34591-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
-References: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
-Date: Sun, 27 Sep 2015 14:19:25 -0600
-Message-ID: <CAL-B5D2N_DQCEtJtbq6DtV+6FsrB_4=sb2mO64xv2z4HsrOPhw@mail.gmail.com>
-Subject: Re: [RFC] PCI: Unassigned Expansion ROM BARs
-From: Myron Stowe <myron.stowe@gmail.com>
-To: linux-pci <linux-pci@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 8:47 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
-snip
->
-> There is a kernel boot parameter, pci=norom, that is intended to disable the
-> kernel's resource assignment actions for Expansion ROMs that do not already
-> have BIOS assigned address ranges.  Note however, if I remember correctly,
-> that this only works if the Expansion ROM BAR is set to "0" by the BIOS
-> before hand-off.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-In private conversations I was asked: Why do you propose asking the BIOS
-to assign setting Expansion ROM BARs to "0"?
+Currently num-lanes is read in dw_pcie_host_init().
+for A SoC that performs the link-up operation in UEFI num-lanes
+is not needed in the DTS but it has to be specified to any value;
+otherwise dw_pcie_host_init will fail.
+If the link is brought up in BIOS dw_pcie_setup_rc should not
+be called.
+This patch rework dw_pcie_host_init() so that, if num-lanes is
+not specified, it sets pp->lanes = 0. If later on dw_pcie_setup_rc
+is called and pp->num_lanes is not set to a valid value,
+dw_pcie_setup_rc will send an error message and return.
 
-That is not what I'm advocating.  I think it's a complete hack.
+This patch is a follow-up of
+http://www.spinics.net/lists/linux-pci/msg44394.html
 
-  Some background context - this is effectively the defacto detente that
-  has come to be somehow with one of the major vendor's BIOS' to
-  circumvent 'dmesg' entries corresponding to unassigned Expansion ROM
-  BARs which draws customer attention.
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ Documentation/devicetree/bindings/pci/designware-pcie.txt |  3 ++-
+ drivers/pci/host/pcie-designware.c                        | 10 ++++++----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-Unless something has changed recently, specifying "pci=norom" when booting
-does not cause the kernel to completely ignore Expansion ROM BARs
-all together as one would expect.  The kernel still outputs 'dmesg's
-corresponding to unassigned Expansion ROM BARs and also attempts to
-allocate such.  This is a kernel bug in my opinion.  It's only if both
-"pci=norom" has been specified, and, the BIOS has set the Expansion ROM
-BARs to "0" that the kernel completely ignores Expansion ROM BARs and no
-'dmesg's are output.
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 9f4faa8..0036ab3 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -14,7 +14,6 @@ Required properties:
+ - interrupt-map-mask and interrupt-map: standard PCI properties
+ 	to define the mapping of the PCIe interface to interrupt
+ 	numbers.
+-- num-lanes: number of lanes to use
+ - clocks: Must contain an entry for each entry in clock-names.
+ 	See ../clocks/clock-bindings.txt for details.
+ - clock-names: Must include the following entries:
+@@ -22,6 +21,8 @@ Required properties:
+ 	- "pcie_bus"
+ 
+ Optional properties:
++- num-lanes: number of lanes to use (this property should be specified unless
++  the link is brought already up in BIOS)
+ - reset-gpio: gpio pin number of power good signal
+ - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
+   specify this property, to keep backwards compatibility a range of 0x00-0xff
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52aa6e3..b0b40ed 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -482,10 +482,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		}
+ 	}
+ 
+-	if (of_property_read_u32(np, "num-lanes", &pp->lanes)) {
+-		dev_err(pp->dev, "Failed to parse the number of lanes\n");
+-		return -EINVAL;
+-	}
++	ret = of_property_read_u32(np, "num-lanes", &pp->lanes);
++	if (ret)
++		pp->lanes = 0;
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		if (!pp->ops->msi_host_init) {
+@@ -764,6 +763,9 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	case 8:
+ 		val |= PORT_LINK_MODE_8_LANES;
+ 		break;
++	default:
++		dev_err(pp->dev, "invalid pp->lanes value\n");
++		return;
+ 	}
+ 	dw_pcie_writel_rc(pp, val, PCIE_PORT_LINK_CONTROL);
+ 
+-- 
+1.9.1
 
-Customers don't want to, and shouldn't have to, utilize kernel parameters.
-They are indispensable for kernel engineers to use for debugging and such
-but not for normal, every day, (i.e. customer) use.  So, no, I am not
-advocating the current defacto detente that is in place today
