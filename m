@@ -1,52 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:16823 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007AbbIKAJM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 20:09:12 -0400
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 08/12] drivers:pci:msi: Store PCI domain (segment) as part of IRQ domain
-Date: Fri, 11 Sep 2015 00:01:07 +0000
-Message-Id: <1441929670-10058-9-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+Received: from mail-yk0-f169.google.com ([209.85.160.169]:35699 "EHLO
+	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752835AbbIKMJI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 08:09:08 -0400
+Received: by ykdu9 with SMTP id u9so89215654ykd.2
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2015 05:09:07 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: l.stach@pengutronix.de, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH v2 1/2] PCI: imx6: Return the real error code
+Date: Fri, 11 Sep 2015 09:08:52 -0300
+Message-Id: <1441973333-3346-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-In order to allow an MSI IRQ domain to be specific to a PCI domain, add a field
-to the struct that tracks the PCI domain.
+When devm_request_irq() fails we should better return the real
+error code instead of returning a 'fake' one.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- include/linux/msi.h | 2 ++
- 1 file changed, 2 insertions(+)
+Changes since v1:
+- None
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ad939d0..7370225 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -227,6 +227,7 @@ struct msi_domain_ops {
-  * @handler_data:	Optional: associated interrupt flow handler data
-  * @handler_name:	Optional: associated interrupt flow handler name
-  * @data:		Optional: domain specific data
-+ * @pci_domain:		Associated PCI domain (segment)
-  */
- struct msi_domain_info {
- 	u32			flags;
-@@ -237,6 +238,7 @@ struct msi_domain_info {
- 	void			*handler_data;
- 	const char		*handler_name;
- 	void			*data;
-+	int			pci_domain;
- };
+ drivers/pci/host/pci-imx6.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 8f3a981..2d0d0fe 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -539,7 +539,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ 				       IRQF_SHARED, "mx6-pcie-msi", pp);
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "failed to request MSI irq\n");
+-			return -ENODEV;
++			return ret;
+ 		}
+ 	}
  
- /* Flags for msi_domain_info */
 -- 
 1.9.1
 
