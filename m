@@ -1,77 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f180.google.com ([209.85.160.180]:35025 "EHLO
-	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752734AbbI3VaZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 17:30:25 -0400
-Received: by ykdz138 with SMTP id z138so59306476ykd.2
-        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2015 14:30:25 -0700 (PDT)
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:33385 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752079AbbIKMLT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 08:11:19 -0400
+Received: by lbcjc2 with SMTP id jc2so38440529lbc.0
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2015 05:11:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CADaLNDndQ6qZ2yuGuff6=cTm565in5e75AjkcX8MJmH2BCwyEw@mail.gmail.com>
-References: <20150928220854.GA16110@localhost> <CAL_JsqL_O2qqESs69spQCPuDfKG5g8_GZkhiYFo-+U8ttxnJng@mail.gmail.com>
- <20150928230532.GG21513@n2100.arm.linux.org.uk> <CAL_JsqLVxtcgcTK55cY32=s24Nuv378X2aKZhYKHFEKO9wh3mw@mail.gmail.com>
- <CADaLNDndQ6qZ2yuGuff6=cTm565in5e75AjkcX8MJmH2BCwyEw@mail.gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Wed, 30 Sep 2015 16:30:05 -0500
-Message-ID: <CAL_JsqJni3nB3OTevG8VSZoJ7ndnxSYHV6Yfpn6TwvghCxhHxg@mail.gmail.com>
-Subject: Re: pci_generic_config_write32() access size problem
-To: Duc Dang <dhdang@apm.com>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Ray Jui <rjui@broadcom.com>, Tanmay Inamdar <tinamdar@apm.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <1441961093.3126.8.camel@pengutronix.de>
+References: <loom.20150910T144529-230@post.gmane.org> <1441893436.7900.10.camel@pengutronix.de>
+ <CABFJKVLW3MsnxybhDjZ02ghUV2mKfPgj7kmMdiuJ+oK94OYFxQ@mail.gmail.com> <1441961093.3126.8.camel@pengutronix.de>
+From: Frank Jenner <faj6816@rit.edu>
+Date: Fri, 11 Sep 2015 08:10:57 -0400
+Message-ID: <CABFJKVKxpkS5Qb7mYbOuFxnW+_oaqdRX2UUW2GWaeT6Ss=oa0A@mail.gmail.com>
+Subject: Re: Multiple MSIs on ARM imx6q
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: linux-pci@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 30, 2015 at 4:17 PM, Duc Dang <dhdang@apm.com> wrote:
-> On Tue, Sep 29, 2015 at 9:47 AM, Rob Herring <robh@kernel.org> wrote:
->> + several affected driver maintainers
->>
->> On Mon, Sep 28, 2015 at 6:05 PM, Russell King - ARM Linux
->> <linux@arm.linux.org.uk> wrote:
->>> On Mon, Sep 28, 2015 at 05:42:20PM -0500, Rob Herring wrote:
->>>> On Mon, Sep 28, 2015 at 5:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>> > Hi Rob,
->>>> >
->>>> > Russell pointed out a problem with 1f94a94f67e1 ("PCI: Add generic config
->>>> > accessors").  pci_generic_config_write32() does a read/modify/write if the
->>>> > size is less than 32 bits, so I think we have problem if this is used with
->>>> > 8- or 16-bit registers that contain RW1C bits.  Any thoughts on how we can
->>>> > fix this?
->>>>
->>>> My series didn't change access sizes unless I made a made a mistake
->>>> somewhere, so the problem should have existed before.
->>>>
->>>> Is it known addresses we need to deal with? We could do special case
->>>> handling of certain addresses to mask out RW1C bits. This could be in
->>>> the generic functions or in wrappers around the generic functions.
->>>> There's already some similar examples of special address handling
->>>> IIRC.
->>>
->>> I think this originally came into being because Intel decided that their
->>> IOP platforms wouldn't support anything except 32-bit accesses, and
->>> cargo cult programming took over.  I complained about it on the Intel IOP
->>> platforms, but obviously if the hardware doesn't support anything else
->>> then your stuck with it.
->>
->> What about SA1100 nanoengine?
->>
->> Others are Tegra, XGene, iproc, and maybe rcar. These are all
->> relatively active platforms, so hopefully some testing can be done.
+Ah! Things are making more sense to me now. I was failing to realize
+the distinction between the "port" and the "device" in terms of the
+MSI allocations. In particular, I was getting confused because the
+"port" happened to be limited to only 32 MSIs (even though the
+hardware can support 256), which is the same as the number of MSIs
+allowed for a device.
+
+By simply increasing the MAX_MSI_IRQS value from 32 to 64 (in
+conjunction with using your multivector MSI support patches mentioned
+previously), I was able to successfully allocate all 32 of the EP's
+MSIs, while also allowing PME to use an MSI. I'm not sure if there
+should be more to it than that, but all 32 MSIs from the EP appear to
+work now with that change.
+
+If there's more I'm missing besides just modifying MAX_MSI_IRQS and
+you still want to make a patch for me to test, I'll be happy to give
+it a go with my device.
+
+Thanks again!
+
+
+On Fri, Sep 11, 2015 at 4:44 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Hi Frank,
 >
-> On X-Gene, so far I don't see anything strange after switching to use
-> pci_generic_config_write32 with all the cards that I can test.
-
-You mean switching to use pci_generic_config_write, right?
-
+> Am Donnerstag, den 10.09.2015, 13:37 -0400 schrieb Frank Jenner:
+>> Hi Lucas,
+>>
+>> Thanks for the quick response. See inline:
+>>
+>> On Thu, Sep 10, 2015 at 9:57 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
 >
-> But looks like it's still safer to use pci_generic_config_write
-> instead as this will make sure no unexpected read-modify-write will
-> happen?
-
-Yes. You can also change xgene_pcie_config_read32 to use
-pci_generic_config_read instead to simplify the function some.
-
-Rob
+> [...]
+>
+>> >
+>> > An implementation for the i.MX6 is already sitting in Bjorns PCI
+>> > maintainer tree and is expected to be merged in kernel 4.4.
+>> >
+>>
+>> I took a look at Bjorn's pci-4.4/host-designware branch and saw your
+>> commits. It looks like the patches I'm using apply most of the same
+>> changes. While they do enable me to get multiple MSIs back from
+>> pci_enable_msi_range() and I get the correct IRQs back to my ISR, I
+>> still run into the issue below when attempting to get the full 32
+>> vectors.
+>>
+>> >> Unfortunately, even if I work around the arch_setup_msi_irqs() limitation
+>> >> (which I've done by trying out patches 448141 and 448142 from
+>> >> http://patchwork.ozlabs.org/project/linux-pci/list/) and break through to
+>> >> the assign_irq() function in drivers/pci/host/pcie-designware.c, I still
+>> >> cannot allocate all 32 MSIs that my device reports.
+>> >>
+>> >> It appears that one of the bits in the msi_irq_in_use bitmap is already set
+>> >> prior to my driver requesting any MSIs, meaning there aren't enough free
+>> >> slots for the 32 MSIs I am requesting, and causing the function to fail with
+>> >> -ENOSPC. Based on the output from /proc/interrupts, I believe that the PCIe
+>> >> PME service driver is consuming one of the 32 available MSI slots. Thus, my
+>> >> second question is:
+>> >>
+>> >> 2.) Is it possible to leverage all 32 MSIs while still using PCIe PME?
+>> >>
+>> >> I tried using the kernel command line argument pcie_pme=nomsi, but that
+>> >> appeared to disable all MSIs for the device rather than just making the PME
+>> >> service driver use some other mechanism.
+>> >>
+>> > It should be possible to make PME use a legacy INT, but I would have to
+>> > look this up in the code.
+>>
+>> Could you please elaborate on this? I'm a little confused why PME
+>> occupies one of the MSI slots in the first place. Also, as I thought a
+>> device could only use either MSIs or legacy INTs (but not both), is it
+>> even possible for PME to use legacy INTs while my driver uses MSIs?
+>> >
+>
+> Sorry, I'm not sure about this myself.
+>
+>> > Another alternative is to extend the i.MX6 driver. It should be able to
+>> > provide up to 256 MSI interrupt vectors. But I have no way to test that,
+>> > so if you could help with testing I can certainly come up with a patch
+>> > for that.
+>>
+>> Where does the 256 come from?
+>>
+> It's the size of the register space available for MSI IRQs in the i.MX6
+> implementation.
+>
+>> I appreciate the help, and I would be happy to test out a patch for
+>> you with the caveat that I'm using a custom board so I can only test
+>> any changes against our specific device.
+>>
+> That's totally fine. I can test that I don't break the currently working
+> cases myself, so I only need you to test if the extension works as I
+> have no EP with such a large number of MSI IRQs.
+>
+> Regards,
+> Lucas
+> --
+> Pengutronix e.K.             | Lucas Stach                 |
+> Industrial Linux Solutions   | http://www.pengutronix.de/  |
+>
