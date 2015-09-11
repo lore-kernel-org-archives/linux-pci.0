@@ -1,86 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:33078 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753746AbbI3GfQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 02:35:16 -0400
-Received: by pacex6 with SMTP id ex6so30722680pac.0
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2015 23:35:16 -0700 (PDT)
-From: Simon Horman <simon.horman@netronome.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Simon Horman <simon.horman@netronome.com>
-Subject: [PATCH repost 1/3] PCI: Support PCIe devices with short cfg_size
-Date: Wed, 30 Sep 2015 15:35:05 +0900
-Message-Id: <1443594907-16196-2-git-send-email-simon.horman@netronome.com>
-In-Reply-To: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
-References: <1443594907-16196-1-git-send-email-simon.horman@netronome.com>
+Received: from mail-io0-f177.google.com ([209.85.223.177]:36288 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754247AbbIKXWH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 19:22:07 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH 2/6] PCI: generic: Only fixup irqs for bus we are creating.
+Date: Fri, 11 Sep 2015 16:21:55 -0700
+Message-Id: <1442013719-5001-3-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "Jason S. McMullan" <jason.mcmullan@netronome.com>
+From: David Daney <david.daney@cavium.com>
 
-If a PCIe device has a 'quirk' where the quirk modifies the
-pci_dev->cfg_size to be less than PCI_CFG_SPACE_EXP_SIZE, but greater than
-PCI_CFG_SPACE_SIZE then the pci sysfs interface truncates the readable size
-to PCI_CFG_SPACE_SIZE.
+Use pci_walk_bus() to restrict the fixup irq actions to only the bus
+being created.
 
-This patch corrects this issue.
+If we create multiple buses with pci-host-generic, or there are buses
+created by other drivers, we don't want to call pci_fixup_irqs() which
+operates on all devices, not just the devices on the bus being added.
+The consequence is that either the fixups are done more than once, or
+in some cases incorrect fixups could be applied.
 
-This is in preparation for adding a quirk for such a case.
-
-Signed-off-by: Jason S. McMullan <jason.mcmullan@netronome.com>
-[simon: edited changelog]
-Signed-off-by: Simon Horman <simon.horman@netronome.com>
+Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/pci/pci-sysfs.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/pci/host/pci-host-generic.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 312f23a8429c..cf8eba5d8e14 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1369,10 +1369,10 @@ int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
- 	if (!sysfs_initialized)
- 		return -EACCES;
- 
--	if (pdev->cfg_size < PCI_CFG_SPACE_EXP_SIZE)
--		retval = sysfs_create_bin_file(&pdev->dev.kobj, &pci_config_attr);
--	else
-+	if (pdev->cfg_size > PCI_CFG_SPACE_SIZE)
- 		retval = sysfs_create_bin_file(&pdev->dev.kobj, &pcie_config_attr);
-+	else
-+		retval = sysfs_create_bin_file(&pdev->dev.kobj, &pci_config_attr);
- 	if (retval)
- 		goto err;
- 
-@@ -1424,10 +1424,10 @@ err_rom_file:
- err_resource_files:
- 	pci_remove_resource_files(pdev);
- err_config_file:
--	if (pdev->cfg_size < PCI_CFG_SPACE_EXP_SIZE)
--		sysfs_remove_bin_file(&pdev->dev.kobj, &pci_config_attr);
--	else
-+	if (pdev->cfg_size > PCI_CFG_SPACE_SIZE)
- 		sysfs_remove_bin_file(&pdev->dev.kobj, &pcie_config_attr);
-+	else
-+		sysfs_remove_bin_file(&pdev->dev.kobj, &pci_config_attr);
- err:
- 	return retval;
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 265dd25..a0fb241 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -205,6 +205,12 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	return 0;
  }
-@@ -1461,10 +1461,10 @@ void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
  
- 	pci_remove_capabilities_sysfs(pdev);
++static int gen_pci_fixup_irq_cb(struct pci_dev *dev, void *arg)
++{
++	pdev_fixup_irq(dev, pci_common_swizzle, of_irq_parse_and_map_pci);
++	return 0;
++}
++
+ static int gen_pci_probe(struct platform_device *pdev)
+ {
+ 	int err;
+@@ -262,7 +268,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
  
--	if (pdev->cfg_size < PCI_CFG_SPACE_EXP_SIZE)
--		sysfs_remove_bin_file(&pdev->dev.kobj, &pci_config_attr);
--	else
-+	if (pdev->cfg_size > PCI_CFG_SPACE_SIZE)
- 		sysfs_remove_bin_file(&pdev->dev.kobj, &pcie_config_attr);
-+	else
-+		sysfs_remove_bin_file(&pdev->dev.kobj, &pci_config_attr);
+-	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_walk_bus(bus, gen_pci_fixup_irq_cb, NULL);
  
- 	pci_remove_resource_files(pdev);
- 
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+ 		pci_bus_size_bridges(bus);
 -- 
-2.1.4
+1.7.11.7
 
