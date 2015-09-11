@@ -1,145 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21950 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756293AbbJAF7v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:59:51 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 50/53] PCI: Restore pref MMIO allocation logic for host bridge without mmio64
-Date: Wed, 30 Sep 2015 22:53:24 -0700
-Message-Id: <1443678807-786-51-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:60871 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064AbbIKIoz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 04:44:55 -0400
+Message-ID: <1441961093.3126.8.camel@pengutronix.de>
+Subject: Re: Multiple MSIs on ARM imx6q
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Frank Jenner <faj6816@rit.edu>
+Cc: linux-pci@vger.kernel.org
+Date: Fri, 11 Sep 2015 10:44:53 +0200
+In-Reply-To: <CABFJKVLW3MsnxybhDjZ02ghUV2mKfPgj7kmMdiuJ+oK94OYFxQ@mail.gmail.com>
+References: <loom.20150910T144529-230@post.gmane.org>
+	 <1441893436.7900.10.camel@pengutronix.de>
+	 <CABFJKVLW3MsnxybhDjZ02ghUV2mKfPgj7kmMdiuJ+oK94OYFxQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
-resources), we change the logic for pref mmio allocation:
-When bridge pref support mmio64, we will only put children pref
-that support mmio64 into it, and will put children pref mmio32
-into bridge's non-pref mmio32.
+Hi Frank,
 
-That could leave bridge pref bar not used when that pref bar is mmio64,
-and children res only has mmio32.
-Also could have allocation failure when non-pref mmio32 is not big
-enough space for those children pref mmio32.
+Am Donnerstag, den 10.09.2015, 13:37 -0400 schrieb Frank Jenner:
+> Hi Lucas,
+> 
+> Thanks for the quick response. See inline:
+> 
+> On Thu, Sep 10, 2015 at 9:57 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
 
-That is not rational when the host bridge does not 64bit mmio above 4g
-at all.
+[...]
 
-The patch restore to old logic:
-when host bridge does not have has_mem64, put children pref mmio64 and
-pref mmio32 all under bridges pref bars.
+> >
+> > An implementation for the i.MX6 is already sitting in Bjorns PCI
+> > maintainer tree and is expected to be merged in kernel 4.4.
+> >
+> 
+> I took a look at Bjorn's pci-4.4/host-designware branch and saw your
+> commits. It looks like the patches I'm using apply most of the same
+> changes. While they do enable me to get multiple MSIs back from
+> pci_enable_msi_range() and I get the correct IRQs back to my ISR, I
+> still run into the issue below when attempting to get the full 32
+> vectors.
+> 
+> >> Unfortunately, even if I work around the arch_setup_msi_irqs() limitation
+> >> (which I've done by trying out patches 448141 and 448142 from
+> >> http://patchwork.ozlabs.org/project/linux-pci/list/) and break through to
+> >> the assign_irq() function in drivers/pci/host/pcie-designware.c, I still
+> >> cannot allocate all 32 MSIs that my device reports.
+> >>
+> >> It appears that one of the bits in the msi_irq_in_use bitmap is already set
+> >> prior to my driver requesting any MSIs, meaning there aren't enough free
+> >> slots for the 32 MSIs I am requesting, and causing the function to fail with
+> >> -ENOSPC. Based on the output from /proc/interrupts, I believe that the PCIe
+> >> PME service driver is consuming one of the 32 available MSI slots. Thus, my
+> >> second question is:
+> >>
+> >> 2.) Is it possible to leverage all 32 MSIs while still using PCIe PME?
+> >>
+> >> I tried using the kernel command line argument pcie_pme=nomsi, but that
+> >> appeared to disable all MSIs for the device rather than just making the PME
+> >> service driver use some other mechanism.
+> >>
+> > It should be possible to make PME use a legacy INT, but I would have to
+> > look this up in the code.
+> 
+> Could you please elaborate on this? I'm a little confused why PME
+> occupies one of the MSI slots in the first place. Also, as I thought a
+> device could only use either MSIs or legacy INTs (but not both), is it
+> even possible for PME to use legacy INTs while my driver uses MSIs?
+> >
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c       |  4 +++-
- drivers/pci/setup-bus.c | 13 +++++++++----
- drivers/pci/setup-res.c |  9 ++++++---
- 3 files changed, 18 insertions(+), 8 deletions(-)
+Sorry, I'm not sure about this myself.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6fbd3f2..b043bdf 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -202,8 +202,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- {
- #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- 	int rc;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
- 
--	if (res->flags & IORESOURCE_MEM_64) {
-+	if (res->flags & mmio64) {
- 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
- 					       type_mask, alignf, alignf_data,
- 					       &pci_high);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d95b46a..e6c649a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1856,7 +1856,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
- 		mask = IORESOURCE_MEM;
- 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
--		if (b_res[2].flags & IORESOURCE_MEM_64) {
-+		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
-+		    pci_find_host_bridge(bus)->has_mem64) {
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
-@@ -2012,17 +2013,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 *	  io port.
- 	 *     2. if there is non pref mmio assign fail, release bridge
- 	 *	  nonpref mmio.
--	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
-+	 *     3. if there is pref mmio assign fail, and host bridge does
-+	 *	  have 64bit mmio, release bridge pref mmio.
-+	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
- 	 *	  is 64bit, release bridge pref mmio.
--	 *     4. if there is pref mmio assign fail, and bridge pref is
-+	 *     5. if there is pref mmio assign fail, and bridge pref is
- 	 *	  32bit mmio, release bridge pref mmio
--	 *     5. if there is pref mmio assign fail, and bridge pref is not
-+	 *     6. if there is pref mmio assign fail, and bridge pref is not
- 	 *	  assigned, release bridge nonpref mmio.
- 	 */
- 	if (type & IORESOURCE_IO)
- 		idx = 0;
- 	else if (!(type & IORESOURCE_PREFETCH))
- 		idx = 1;
-+	else if (!pci_find_host_bridge(bus)->has_mem64)
-+		idx = 2;
- 	else if ((type & IORESOURCE_MEM_64) &&
- 		 (b_res[2].flags & IORESOURCE_MEM_64))
- 		idx = 2;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index b19aa5b..26aedde 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -205,6 +205,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t min;
- 	int ret;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
- 
- 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
- 
-@@ -216,7 +218,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * things differently than they were sized, not everything will fit.
- 	 */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
--				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
-+				     IORESOURCE_PREFETCH | mmio64,
- 				     pcibios_align_resource, dev);
- 	if (ret == 0)
- 		return 0;
-@@ -225,7 +227,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * If the prefetchable window is only 32 bits wide, we can put
- 	 * 64-bit prefetchable resources in it.
- 	 */
--	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
-+	if (mmio64 &&
-+	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
- 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 					     IORESOURCE_PREFETCH,
-@@ -240,7 +243,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * non-prefetchable, the first call already tried the only possibility
- 	 * so we don't need to try again.
- 	 */
--	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
-+	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
- 					     pcibios_align_resource, dev);
- 
+> > Another alternative is to extend the i.MX6 driver. It should be able to
+> > provide up to 256 MSI interrupt vectors. But I have no way to test that,
+> > so if you could help with testing I can certainly come up with a patch
+> > for that.
+> 
+> Where does the 256 come from?
+> 
+It's the size of the register space available for MSI IRQs in the i.MX6
+implementation.
+
+> I appreciate the help, and I would be happy to test out a patch for
+> you with the caveat that I'm using a custom board so I can only test
+> any changes against our specific device.
+> 
+That's totally fine. I can test that I don't break the currently working
+cases myself, so I only need you to test if the extension works as I
+have no EP with such a large number of MSI IRQs.
+
+Regards,
+Lucas
 -- 
-1.8.4.5
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
