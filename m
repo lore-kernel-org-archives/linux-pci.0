@@ -1,109 +1,49 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 25/53] PCI: Don't add too much optional size for hotplug bridge io
-Date: Wed, 16 Sep 2015 14:57:23 -0700
-Message-Id: <1442440671-5361-26-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 10/11] drivers:hv: Define the channel type for Hyper-V PCI Express pass-through
+Date: Fri, 11 Sep 2015 00:01:09 +0000
+Message-Id: <1441929670-10058-11-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as patch for MMIO (PCI: Don't add too much optional size for hotplug
-bridge MMIO), and this one is for io port.
+From: Jake Oshins <jakeo@microsoft.com>
 
-It will compare required+optional with min_sum_size to get smaller
-optional size.
+This defines the channel type for PCI front-ends in Hyper-V VMs.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ include/linux/hyperv.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 43b34a7..073435d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1139,7 +1139,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  *
-  * @bus : the bus
-  * @min_size : the minimum io window that must to be allocated
-- * @add_size : additional optional io window
-  * @realloc_head : track the additional io window on this list
-  *
-  * Sizing the IO windows of the PCI-PCI bridge is trivial,
-@@ -1148,9 +1147,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  * We must be careful with the ISA aliasing though.
-  */
- static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
--		resource_size_t add_size, struct list_head *realloc_head)
-+			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
-+	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
-@@ -1160,6 +1161,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	if (!b_res)
- 		return;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-@@ -1189,10 +1195,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_iosize(size, min_size, add_size + size1,
-+	sum_add_size = children_add_size + size + size1;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
-+	size1 = !realloc_head ? size0 :
-+		calculate_iosize(size, min_size, sum_add_size - size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1718,7 +1725,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t min_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, min_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1751,13 +1758,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	case PCI_CLASS_BRIDGE_PCI:
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
--			additional_io_size  = pci_hotplug_io_size;
-+			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 033fe59..af0f2e7 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -1140,6 +1140,17 @@ u64 do_hypercall(u64 control, void *input, void *output);
  		}
- 		/* Fall through */
- 	default:
--		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
--			     additional_io_size, realloc_head);
-+		pbus_size_io(bus, min_io_size, realloc_head);
  
- 		/*
- 		 * If there's a 64-bit prefetchable MMIO window, compute
+ /*
++ * PCI Express Pass Through
++ * {44C4F61D-4444-4400-9D52-802E27EDE19F}
++ */
++
++#define HV_PCIE_GUID \
++	.guid = { \
++			0x1D, 0xF6, 0xC4, 0x44, 0x44, 0x44, 0x00, 0x44, \
++			0x9D, 0x52, 0x80, 0x2E, 0x27, 0xED, 0xE1, 0x9F \
++		}
++
++/*
+  * Common header for Hyper-V ICs
+  */
+ 
 -- 
-1.8.4.5
+1.9.1
 
