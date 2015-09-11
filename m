@@ -1,71 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 25/53] PCI: Cache window alignment value during bus sizing
-Date: Wed, 30 Sep 2015 22:52:59 -0700
-Message-Id: <1443678807-786-26-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:34698 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932153AbbIKXGR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 19:06:17 -0400
+Received: by lbbmp1 with SMTP id mp1so46885813lbb.1
+        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2015 16:06:16 -0700 (PDT)
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	horms@verge.net.au, bhelgaas@google.com,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-sh@vger.kernel.org
+Subject: [PATCH] pci-rcar-gen2: add R8A7794 support
+Date: Sat, 12 Sep 2015 02:06:09 +0300
+Message-ID: <2525770.ZsLzbliFPH@wasted.cogentembedded.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are several calling to window_alignment(), and we will have more
-for alt_size support, cache the value instead of keeping on getting it.
+Add Renesas R8A7794 SoC support to the Renesas R-Car gen2 PCI driver.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+
 ---
- drivers/pci/setup-bus.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+The patch is against the 'next' branch of Bjorn Helgaas' 'pci.git' repo.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ca23b2a..4da42e5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1203,6 +1203,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					mask | IORESOURCE_PREFETCH, type);
- 	LIST_HEAD(align_test_list);
- 	LIST_HEAD(align_test_add_list);
-+	resource_size_t window_align;
+ Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt |    3 ++-
+ drivers/pci/host/pci-rcar-gen2.c                        |    1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+Index: pci/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+===================================================================
+--- pci.orig/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
++++ pci/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+@@ -7,7 +7,8 @@ OHCI and EHCI controllers.
  
- 	if (!b_res)
- 		return -ENOSPC;
-@@ -1212,6 +1213,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		min_size = 0;
- 	}
+ Required properties:
+ - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
+-	      "renesas,pci-r8a7791" for the R8A7791 SoC.
++	      "renesas,pci-r8a7791" for the R8A7791 SoC;
++	      "renesas,pci-r8a7794" for the R8A7794 SoC.
+ - reg:	A list of physical regions to access the device: the first is
+ 	the operational registers for the OHCI/EHCI controllers and the
+ 	second is for the bridge configuration and control registers.
+Index: pci/drivers/pci/host/pci-rcar-gen2.c
+===================================================================
+--- pci.orig/drivers/pci/host/pci-rcar-gen2.c
++++ pci/drivers/pci/host/pci-rcar-gen2.c
+@@ -362,6 +362,7 @@ static int rcar_pci_probe(struct platfor
+ static struct of_device_id rcar_pci_of_match[] = {
+ 	{ .compatible = "renesas,pci-r8a7790", },
+ 	{ .compatible = "renesas,pci-r8a7791", },
++	{ .compatible = "renesas,pci-r8a7794", },
+ 	{ },
+ };
  
-+	window_align = window_alignment(bus, b_res->flags);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1272,10 +1275,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		}
- 	}
- 
--	max_align = max(max_align, window_alignment(bus, b_res->flags));
-+	max_align = max(max_align, window_align);
- 	if (size || min_size) {
- 		min_align = calculate_mem_align(&align_test_list, max_align,
--				 size, window_alignment(bus, b_res->flags));
-+						size, window_align);
- 		size0 = calculate_memsize(size, min_size,
- 				  resource_size(b_res), min_align);
- 	}
-@@ -1286,7 +1289,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
--					window_alignment(bus, b_res->flags));
-+					window_align);
- 		size1 = calculate_memsize(sum_add_size, min_size,
- 				 resource_size(b_res), min_add_align);
- 	}
--- 
-1.8.4.5
 
