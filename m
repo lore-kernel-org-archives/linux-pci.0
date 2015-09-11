@@ -1,24 +1,62 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAKsTQn=skDo7mbTrvFfQHW+nD1Ggy-g+qT922WOrjiwqyK5BwQ@mail.gmail.com>
-References: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
-	<CAE9FiQXaOkMKk2PddYOXApK9tKLkgusH18sYgvLHA04BRdXR-g@mail.gmail.com>
-	<CAKsTQn=u5HuMCz5_L1jbx6Fvz5Rf_e14tNeEPwxy1o8dxk4J8g@mail.gmail.com>
-	<CAE9FiQWxiLV0YeWfUAd=vJaxtV-0PrqBqm1ptKnFoEM0jQDaiQ@mail.gmail.com>
-	<CAKsTQn=skDo7mbTrvFfQHW+nD1Ggy-g+qT922WOrjiwqyK5BwQ@mail.gmail.com>
-Date: Mon, 21 Sep 2015 14:22:31 -0700
-Message-ID: <CAE9FiQVFj93zemMa4H1N1JtObXPPyK-u-iwub48aAb3UNYLtqg@mail.gmail.com>
-Subject: Re: PCIe bus (re-)numbering
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ruud <netwerkforens@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 06/12] drivers:hv: Export do_hypercall()
+Date: Fri, 11 Sep 2015 00:01:05 +0000
+Message-Id: <1441929670-10058-7-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 21, 2015 at 12:49 AM, Ruud <netwerkforens@gmail.com> wrote:
-> Sorry for the rookie question: which version do you mean by "current
-> upstream", the current main trunk rc?.
+From: Jake Oshins <jakeo@microsoft.com>
 
-current linus tree like v4.2 or v4.3-rc1 etc
+This patch exposes the function that hv_vmbus.ko uses to make hypercalls.  This
+is necessary for retargeting an interrupt when it is given a new affinity.
+
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/hv.c        | 3 ++-
+ include/linux/hyperv.h | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
+index 6341be8..6d01649 100644
+--- a/drivers/hv/hv.c
++++ b/drivers/hv/hv.c
+@@ -91,7 +91,7 @@ static int query_hypervisor_info(void)
+ /*
+  * do_hypercall- Invoke the specified hypercall
+  */
+-static u64 do_hypercall(u64 control, void *input, void *output)
++u64 do_hypercall(u64 control, void *input, void *output)
+ {
+ 	u64 input_address = (input) ? virt_to_phys(input) : 0;
+ 	u64 output_address = (output) ? virt_to_phys(output) : 0;
+@@ -132,6 +132,7 @@ static u64 do_hypercall(u64 control, void *input, void *output)
+ 	return hv_status_lo | ((u64)hv_status_hi << 32);
+ #endif /* !x86_64 */
+ }
++EXPORT_SYMBOL_GPL(do_hypercall);
+ 
+ #ifdef CONFIG_X86_64
+ static cycle_t read_hv_clock_tsc(struct clocksource *arg)
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 02393b6..033fe59 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -983,6 +983,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			bool fb_overlap_ok);
+ 
+ int vmbus_cpu_number_to_vp_number(int cpu_number);
++u64 do_hypercall(u64 control, void *input, void *output);
+ 
+ /**
+  * VMBUS_DEVICE - macro used to describe a specific hyperv vmbus device
+-- 
+1.9.1
+
