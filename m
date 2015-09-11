@@ -1,116 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35014 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753349AbbIOP52 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 11:57:28 -0400
-Received: by wicge5 with SMTP id ge5so35580639wic.0
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2015 08:57:27 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150915094610.GD11199@red-moon>
-References: <20150904141903.GA22997@red-moon> <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
- <20150904164412.GD22997@red-moon> <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
- <20150907091230.GB29293@red-moon> <20150914100929.GB18886@red-moon>
- <CAE9FiQV-eG42xzqVcO2Q+xT3jx-Oa7uC7fEuowvopx4Fp9F7hQ@mail.gmail.com>
- <20150914162834.GA11199@red-moon> <CAE9FiQWJfbMD1Akq6XD-Yedc+tNNF8o0obPGHt8f_WnWX0pLbA@mail.gmail.com>
- <CAE9FiQU6NTEdKJi58bNZU4u=+-rzB3mddp6vKGc4JjbZWoa9zQ@mail.gmail.com> <20150915094610.GD11199@red-moon>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 15 Sep 2015 10:57:07 -0500
-Message-ID: <CAErSpo5KaV7ERYcyZBzfvCEh40zSPJmymwXUCbAZkK=hb4DPSw@mail.gmail.com>
-Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
- of arch code
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
+Date: Fri, 11 Sep 2015 16:21:57 -0700
+Message-Id: <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 15, 2015 at 4:46 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Tue, Sep 15, 2015 at 12:58:20AM +0100, Yinghai Lu wrote:
->> On Mon, Sep 14, 2015 at 10:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
->> > On Mon, Sep 14, 2015 at 9:28 AM, Lorenzo Pieralisi
->> > <lorenzo.pieralisi@arm.com> wrote:
->> >> On Mon, Sep 14, 2015 at 05:05:50PM +0100, Yinghai Lu wrote:
->> >>> We could just revert
->> >>> dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
->> >>> arch code")
->> >>> instead.
->> >>
->>
->> > if arch code called pci_read_bridge_bases() via pcibios_fixup_bus(),
->> > then it need to have
->> > to call pcibios_allocate_bus_resources() later.
->> >
->> > but now arm (mips ?)  does not have calling pcibios_allocate_bus_resources().
->
-> pcibios_allocate_bus_resources() is an arch specific function and arm
-> and (and mips ?) does not need to create/call it because ARM reassigns
-> ALL resources in ALL platforms, hoping FW can provide a reasonable PCI
-> bridge apertures set-up on ARM is wishful thinking at present.
->
-> If PCI core code is written with that assumption (ie that arch code zeroes
-> the bridge apertures if they can't be claimed), pci_read_bridge_bases()
-> can't be moved to PCI core code at present, sad and simple.
->
-> I already asked many times why __pci_bus_size_bridges() cares about
-> the old bridge size on first scan and got no answer so I would ask Bjorn
-> to revert dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core
-> instead of arch code") or we apply an ARM specific plaster, we are making
-> no progress on this.
->
->> Found other problem that is caused by
->> dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
->> arch code")
->>
->> If that commit does not get reverted, will need to have attached patch
->
-> I see what you mean and I see why there is a reason to apply the patch
-> below if we do not revert dff22d2054b5 (" PCI: Call pci_read_bridge_bases()
-> from core instead of arch code"), but I am afraid the commit log has to
-> be rewritten to explain the problem in a way that properly describes
-> the issue, and that's not the first one I read in the last couple of
-> weeks to figure out how to fix this regression.
+From: David Daney <david.daney@cavium.com>
 
-I'm inclined to revert dff22d2054b5 ("PCI: Call
-pci_read_bridge_bases() from core instead of arch code") until we can
-figure this out.  I think the idea of moving that work from
-arch-specific code to the core is good, but it seems like it leads to
-more hacky workarounds than real cleanup right now.  What would break
-if we simply reverted it?  Would that reintroduce any problems?
+There are two problems with the bus_max calculation:
 
-PCI enumeration and resource assignment is currently split, with some
-ACPI stuff in the middle:
+1) The u8 data type can overflow for large config space windows.
 
-  - PCI enumeration
-  - ACPI resource reservation
-  - PCI resource assignment
+2) The calculation is incorrect for a bus range that doesn't start at
+   zero.
 
-I think it would make sense to do some PCI resource validation and
-assignment during enumeration, but I don't think it's possible as long
-as we have that ACPI stuff in the middle.  Sometimes ACPI reports
-non-PCI devices in the middle of space we think is available for PCI
-(either from _CRS or our legacy "everything after top-of-RAM" idea),
-so we can't assign space to PCI devices until we know where those ACPI
-things are.
+Since the configuration space is relative to bus zero, make bus_max
+just be the size of the config window scaled by bus_shift.  Then clamp
+it to a maximum of 255, per PCI.  Use a data type of int to avoid
+overflow problems.
 
-I think this is totally broken; ACPI is logically more fundamental
-than PCI, and we should look at all the ACPI resources *before* we
-enumerate PCI devices, but there's a lot of ancient history there and
-it's a lot of work to change it.
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/host/pci-host-generic.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index cd6f898..fce5bf7 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -164,7 +164,7 @@ out_release_res:
+ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ {
+ 	int err;
+-	u8 bus_max;
++	int bus_max;
+ 	resource_size_t busn;
+ 	struct resource *bus_range;
+ 	struct device *dev = pci->host.dev.parent;
+@@ -177,8 +177,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	}
+ 
+ 	/* Limit the bus-range to fit within reg */
+-	bus_max = pci->cfg.bus_range->start +
+-		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
++	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
++	if (bus_max > 255)
++		bus_max = 255;
+ 	pci->cfg.bus_range->end = min_t(resource_size_t,
+ 					pci->cfg.bus_range->end, bus_max);
+ 
+-- 
+1.7.11.7
+
