@@ -1,101 +1,37 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 10/53] PCI: Treat ROM resource as optional during realloc
-Date: Wed, 16 Sep 2015 14:57:08 -0700
-Message-Id: <1442440671-5361-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+From: Ondrej Zary <linux@rainbow-software.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Kernel development list <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: disable MSI on SiS 761
+Date: Fri, 11 Sep 2015 23:12:17 +0200
+Message-Id: <1442005937-21938-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current on realloc path, we just ignore ROM resource if we can not assign
-them in first try.
+MSI is broken on SiS 761 chipset at least on PC Chips A31G board.
+No interrupts are delivered once MSI is enabled for a device. This causes
+hang on X11 start with a nVidia card installed (with nouveau driver).
 
-Treat ROM resources as optional resources,so try to allocate them together
-with required ones, if can not assign them, could go with other required
-resources only, and try to allocate them second time in expand path.
+Disable MSI completely for this chipset.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/pci/setup-bus.c | 37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
+ drivers/pci/quirks.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1fd0b8d..eca319e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -371,18 +371,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		idx = res - &dev_res->dev->resource[0];
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
--			if (fail_head) {
--				/*
--				 * if the failed res is for ROM BAR, and it will
--				 * be enabled later, don't add it to the list
--				 */
--				if (!((idx == PCI_ROM_RESOURCE) &&
--				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
--					add_to_list(fail_head,
--						    dev_res->dev, res,
--						    0 /* don't care */,
--						    0 /* don't care */);
--			}
-+			if (fail_head)
-+				add_to_list(fail_head, dev_res->dev, res,
-+					    0 /* don't care */,
-+					    0 /* don't care */);
- 			reset_resource(res);
- 		}
- 	}
-@@ -1142,6 +1134,19 @@ out:
- 	return good_align;
- }
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index e9fd0e9..6caffc3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2204,6 +2204,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3336, quirk_disab
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3351, quirk_disable_all_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3364, quirk_disable_all_msi);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_8380_0, quirk_disable_all_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SI, 0x0761, quirk_disable_all_msi);
  
-+static inline bool is_optional(int i)
-+{
-+
-+	if (i == PCI_ROM_RESOURCE)
-+		return true;
-+
-+#ifdef CONFIG_PCI_IOV
-+	if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
-+		return true;
-+#endif
-+
-+	return false;
-+}
- /**
-  * pbus_size_mem() - size the memory window of a given bus
-  *
-@@ -1198,10 +1203,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 			r_size = resource_size(r);
- 			align = pci_resource_alignment(dev, r);
--#ifdef CONFIG_PCI_IOV
--			/* put SRIOV requested res to the optional list */
--			if (realloc_head && i >= PCI_IOV_RESOURCES &&
--					i <= PCI_IOV_RESOURCE_END) {
-+			/* put SRIOV/ROM res to realloc list */
-+			if (realloc_head && is_optional(i)) {
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
-@@ -1211,7 +1214,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					max_add_align = align;
- 				continue;
- 			}
--#endif
-+
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
+ /* Disable MSI on chipsets that are known to not support it */
+ static void quirk_disable_msi(struct pci_dev *dev)
 -- 
-1.8.4.5
+Ondrej Zary
 
