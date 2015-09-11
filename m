@@ -1,77 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:38919 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751183AbbIJOwJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 10:52:09 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v2 3/3] PCI: designware: add sanity checks on the header offset in dw_pcie_cfg_read and dw_pcie_cfg_write
-Date: Thu, 10 Sep 2015 22:58:58 +0800
-Message-ID: <1441897138-23251-4-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1441897138-23251-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1441897138-23251-1-git-send-email-gabriele.paoloni@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:16823 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbbIKAJM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 20:09:12 -0400
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 08/12] drivers:pci:msi: Store PCI domain (segment) as part of IRQ domain
+Date: Fri, 11 Sep 2015 00:01:07 +0000
+Message-Id: <1441929670-10058-9-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+From: Jake Oshins <jakeo@microsoft.com>
 
-This patch adds sanity checks on "where" input parameter in
-dw_pcie_cfg_read and dw_pcie_cfg_write. These checks make sure
-that offset passed in by the caller is not in conflict with
-the size of the PCI header field that is being read/written
+In order to allow an MSI IRQ domain to be specific to a PCI domain, add a field
+to the struct that tracks the PCI domain.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/host/pcie-designware.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ include/linux/msi.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 4f8ff80..c0825b7 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -88,9 +88,14 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index ad939d0..7370225 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -227,6 +227,7 @@ struct msi_domain_ops {
+  * @handler_data:	Optional: associated interrupt flow handler data
+  * @handler_name:	Optional: associated interrupt flow handler name
+  * @data:		Optional: domain specific data
++ * @pci_domain:		Associated PCI domain (segment)
+  */
+ struct msi_domain_info {
+ 	u32			flags;
+@@ -237,6 +238,7 @@ struct msi_domain_info {
+ 	void			*handler_data;
+ 	const char		*handler_name;
+ 	void			*data;
++	int			pci_domain;
+ };
  
- 	if (size == 1)
- 		*val = (*val >> (8 * where)) & 0xff;
--	else if (size == 2)
-+	else if (size == 2) {
-+		if (where & 1)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
- 		*val = (*val >> (8 * where)) & 0xffff;
--	else if (size != 4)
-+	} else if (size == 4) {
-+		if (where & 3)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
-+	} else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
- 	return PCIBIOS_SUCCESSFUL;
-@@ -100,11 +105,15 @@ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
- {
- 	addr += where;
- 
--	if (size == 4)
-+	if (size == 4) {
-+		if ((uintptr_t)addr & 3)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
- 		writel(val, addr);
--	else if (size == 2)
-+	} else if (size == 2) {
-+		if ((uintptr_t)addr & 1)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
- 		writew(val, addr);
--	else if (size == 1)
-+	} else if (size == 1)
- 		writeb(val, addr);
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ /* Flags for msi_domain_info */
 -- 
 1.9.1
 
