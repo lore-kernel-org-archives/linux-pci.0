@@ -1,105 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51041 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40463 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750965AbbIOTEV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Sep 2015 15:04:21 -0400
-Message-ID: <1442343860.23936.141.camel@redhat.com>
-Subject: Re: [PATCH V4 1/2] pci: Add dev_flags bit to access VPD through
- function 0
+	id S1751399AbbIKSQu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Sep 2015 14:16:50 -0400
+Subject: [RFC PATCH] vfio/pci: Use kernel VPD access functions
 From: Alex Williamson <alex.williamson@redhat.com>
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Myron Stowe <myron.stowe@redhat.com>
-Date: Tue, 15 Sep 2015 13:04:20 -0600
-In-Reply-To: <F17F8A11-FB09-4131-A404-DE106F3944BB@intel.com>
-References: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
-	 <20150713184001.19985.64867.stgit@mdrustad-wks.jf.intel.com>
-	 <1442341152.23936.122.camel@redhat.com>
-	 <F17F8A11-FB09-4131-A404-DE106F3944BB@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: kvm@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, mark.d.rustad@intel.com,
+	alexander.h.duyck@redhat.com, myron.stowe@redhat.com,
+	linux-kernel@vger.kernel.org
+Date: Fri, 11 Sep 2015 12:16:49 -0600
+Message-ID: <20150911181332.32399.74472.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2015-09-15 at 18:39 +0000, Rustad, Mark D wrote:
-> > On Sep 15, 2015, at 11:19 AM, Alex Williamson <alex.williamson@redhat.com> wrote:
-> > 
-> > In addition to the (PCI_SLOT() != devfn) issue, I'm concerned about
-> > topologies like we see on Skylake.  IIRC, the integrated NIC appears at
-> > something like 00:1f.6.  I don't know if that specific NIC has VPD, nor
-> > am I sure it really matter because another example or some future
-> > version might.  So we'll set the PCI_DEV_FLAGS_VPD_REF_F0 because we do
-> > so for all (PCI_FUNC() != 0) Intel NICs, we'll call
-> > pci_vpd_f0_dev_check(), which will error because function 0 has a
-> > different class code and device ID, so we return error and if VPD exists
-> > on the device, it's now inaccessible.
-> 
-> Yes, that is exactly what would happen.
-> 
-> > I thought there was talk about whitelisting anything on the root bus to
-> > avoid strange root complex integrated devices (and perhaps avoid the
-> > general case for assigned devices within a VM), but I don't see anything
-> > like that here.
-> 
-> I hadn't heard that talk, but I'm not on the PCI list and I guess I
-> wasn't copied.
-> 
-> > Perhaps instead of failing and hiding VPD we should fail, clear the
-> > flag, and allow normal access.  Thanks,
-> 
-> Because the purpose of VPD is to hold information about the device, I
-> would suggest that VPD should never be provided for an embedded
-> network device, but rather for the device as a whole. So while there
-> may well be VPD for an SOC, that VPD should not be associated with one
-> of its embedded devices, but rather something more appropriate for the
-> device as a whole. And attaching VPD to a whole bunch of internal
-> devices would just be madness.
+The PCI VPD capability operates on a set of window registers in PCI
+config space.  Writing to the address register triggers either a read
+or write, depending on the setting of the PCI_VPD_ADDR_F bit within
+the address register.  The data register provides either the source
+for writes or the target for reads.
 
-FRU-type information is only one of the use cases of VPD, the spec also
-defines (PCI rev 3.0, 6.4):
+This model is susceptible to being broken by concurrent access, for
+which the kernel has adopted a set of access functions to serialize
+these registers.  Additionally, commits like 932c435caba8 ("PCI: Add
+dev_flags bit to access VPD through function 0") and 7aa6ca4d39ed
+("PCI: Add VPD function 0 quirk for Intel Ethernet devices") indicate
+that VPD registers can be shared between functions on multifunction
+devices creating dependencies between otherwise independent devices.
 
-        ... a mechanism for storing information such as performance and
-        failure data on the device being monitored.
+Fortunately it's quite easy to emulate the VPD registers, simply
+storing copies of the address and data registers in memory and
+triggering a VPD read or write on writes to the address register.
+This allows vfio users to avoid seeing spurious register changes from
+accesses on other devices and enables the use of shared quirks in the
+host kernel.  We can theoretically still race with access through
+sysfs, but the window of opportunity is much smaller.
 
-That information could very much be function specific.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
 
-> So I understand the concern, but I don't think that it should really
-> happen in real systems. I did think about this case when I was working
-> on the patches. A networking device should really only have VPD when
-> it is its own physical device, such as a NIC.
-> 
+RFC - Is this something we should do?  Should we consider providing
+similar emulation through PCI sysfs to allow lspci to also make use
+of the vpd interfaces?
 
-When I was looking at whether we should provide VPD access of an
-assigned device at all, I ran across this interesting statement in the
-PCI spec (rev 3.0, I.3.1.1):
+ drivers/vfio/pci/vfio_pci_config.c |   70 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 69 insertions(+), 1 deletion(-)
 
-        CP Extended Capability
-
-        This field allows a new capability to be identified in the VPD
-        area. Since dynamic control/status cannot be placed in VPD, the
-        data for this field identifies where, in the device’s memory or
-        I/O address space, the control/status registers for the
-        capability can be found. Location of the control/status
-        registers is identified by providing the index (a value between
-        0 and 5) of the Base Address register that defines the address
-        range that contains the registers, and the offset within that
-        Base Address register range where the control/status registers
-        reside. The data area for this field is four bytes long. The
-        first byte contains the ID of the extended capability. The
-        second byte contains the index (zero based) of the Base Address
-        register used. The next two bytes contain the offset (in
-        little-endian order) within that address range where the
-        control/status registers defined for that capability reside.
-
-Again, this sounds like function specific data, and both here and above,
-blocking access to VPD could affect the functionality of drivers.  It
-may be the case that Intel would find this use to be madness, but
-there's no PCI spec requirement that separate functions are in any way
-similar and we're looking at an interface that may be used by non-Intel
-devices as well.  Thanks,
-
-Alex
+diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+index ff75ca3..a8657ef 100644
+--- a/drivers/vfio/pci/vfio_pci_config.c
++++ b/drivers/vfio/pci/vfio_pci_config.c
+@@ -671,6 +671,73 @@ static int __init init_pci_cap_pm_perm(struct perm_bits *perm)
+ 	return 0;
+ }
+ 
++static int vfio_vpd_config_write(struct vfio_pci_device *vdev, int pos,
++				 int count, struct perm_bits *perm,
++				 int offset, __le32 val)
++{
++	struct pci_dev *pdev = vdev->pdev;
++	__le16 *paddr = (__le16 *)(vdev->vconfig + pos - offset + PCI_VPD_ADDR);
++	__le32 *pdata = (__le32 *)(vdev->vconfig + pos - offset + PCI_VPD_DATA);
++	u16 addr;
++	u32 data;
++
++	/*
++	 * Write through to emulation.  If the write includes the upper byte
++	 * of PCI_VPD_ADDR, then the PCI_VPD_ADDR_F bit is written and we
++	 * have work to do.
++	 */
++	count = vfio_default_config_write(vdev, pos, count, perm, offset, val);
++	if (count < 0 || offset > PCI_VPD_ADDR + 1 ||
++	    offset + count <= PCI_VPD_ADDR + 1)
++		return count;
++
++	addr = le16_to_cpu(*paddr);
++
++	if (addr & PCI_VPD_ADDR_F) {
++		data = le32_to_cpu(*pdata);
++		if (pci_write_vpd(pdev, addr & ~PCI_VPD_ADDR_F, 4, &data) != 4)
++			return count;
++	} else {
++		if (pci_read_vpd(pdev, addr, 4, &data) != 4)
++			return count;
++		*pdata = cpu_to_le32(data);
++	}
++
++	/*
++	 * Toggle PCI_VPD_ADDR_F in the emulated PCI_VPD_ADDR register to
++	 * signal completion.  If an error occurs above, we assume that not
++	 * toggling this bit will induce a driver timeout.
++	 */
++	addr ^= PCI_VPD_ADDR_F;
++	*paddr = cpu_to_le16(addr);
++
++	return count;
++}
++
++/* Permissions for Vital Product Data capability */
++static int __init init_pci_cap_vpd_perm(struct perm_bits *perm)
++{
++	if (alloc_perm_bits(perm, pci_cap_length[PCI_CAP_ID_VPD]))
++		return -ENOMEM;
++
++	perm->writefn = vfio_vpd_config_write;
++
++	/*
++	 * We always virtualize the next field so we can remove
++	 * capabilities from the chain if we want to.
++	 */
++	p_setb(perm, PCI_CAP_LIST_NEXT, (u8)ALL_VIRT, NO_WRITE);
++
++	/*
++	 * Both the address and data registers are virtualized to
++	 * enable access through the pci_vpd_read/write functions
++	 */
++	p_setw(perm, PCI_VPD_ADDR, (u16)ALL_VIRT, (u16)ALL_WRITE);
++	p_setd(perm, PCI_VPD_DATA, ALL_VIRT, ALL_WRITE);
++
++	return 0;
++}
++
+ /* Permissions for PCI-X capability */
+ static int __init init_pci_cap_pcix_perm(struct perm_bits *perm)
+ {
+@@ -790,6 +857,7 @@ void vfio_pci_uninit_perm_bits(void)
+ 	free_perm_bits(&cap_perms[PCI_CAP_ID_BASIC]);
+ 
+ 	free_perm_bits(&cap_perms[PCI_CAP_ID_PM]);
++	free_perm_bits(&cap_perms[PCI_CAP_ID_VPD]);
+ 	free_perm_bits(&cap_perms[PCI_CAP_ID_PCIX]);
+ 	free_perm_bits(&cap_perms[PCI_CAP_ID_EXP]);
+ 	free_perm_bits(&cap_perms[PCI_CAP_ID_AF]);
+@@ -807,7 +875,7 @@ int __init vfio_pci_init_perm_bits(void)
+ 
+ 	/* Capabilities */
+ 	ret |= init_pci_cap_pm_perm(&cap_perms[PCI_CAP_ID_PM]);
+-	cap_perms[PCI_CAP_ID_VPD].writefn = vfio_raw_config_write;
++	ret |= init_pci_cap_vpd_perm(&cap_perms[PCI_CAP_ID_VPD]);
+ 	ret |= init_pci_cap_pcix_perm(&cap_perms[PCI_CAP_ID_PCIX]);
+ 	cap_perms[PCI_CAP_ID_VNDR].writefn = vfio_raw_config_write;
+ 	ret |= init_pci_cap_exp_perm(&cap_perms[PCI_CAP_ID_EXP]);
 
