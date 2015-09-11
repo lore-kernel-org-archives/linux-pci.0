@@ -1,98 +1,189 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f68.google.com ([209.85.213.68]:35870 "EHLO
-	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753423AbbISDDx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 23:03:53 -0400
-Received: by vkgp185 with SMTP id p185so3892375vkg.3
-        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2015 20:03:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20150918204625.GL25767@google.com>
-References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
-	<1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
-	<20150918204625.GL25767@google.com>
-Date: Sat, 19 Sep 2015 08:33:52 +0530
-Message-ID: <CAHM4w1nWNj-Ws0CiYt2vGCa4V7XJsjjwHRSkgdpVSCPmdeARqA@mail.gmail.com>
-Subject: Re: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 11 Sep 2015 12:20:18 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Zhichang Yuan <yuanzhichang@hisilicon.com>,
-	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+Message-ID: <20150911112018.GA13033@red-moon>
+References: <20150602133215.GC23650@red-moon>
+ <55701A31.808@linaro.org>
+ <20150604102253.GA31773@red-moon>
+ <5570447D.3020705@linaro.org>
+ <557504A2.3060203@linaro.org>
+ <20150608151443.GA16151@red-moon>
+ <55E4340D.6050004@linaro.org>
+ <55ED6010.3020406@linaro.org>
+ <20150908150727.GF29293@red-moon>
+ <55F0388B.1090607@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55F0388B.1090607@linaro.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 19, 2015 at 2:16 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> On Fri, Sep 11, 2015 at 05:38:26PM +0800, Gabriele Paoloni wrote:
->> From: gabriele paoloni <gabriele.paoloni@huawei.com>
->>
->> This patch changes the implementation of dw_pcie_cfg_read() and
->> dw_pcie_cfg_write() to improve the function usage from the callers
->> perspective.
->> Currently the callers are obliged to pass the 32bit aligned address
->> of the register that contains the field of the PCI header that they
->> want to read/write; also they have to pass the offset of the field
->> in that register. This is quite tricky to use as the callers are
->> obliged to sum the PCI header base address to the field offset
->> masked to retrieve the 32b aligned register address.
->>
->> With the new API the callers have to pass the base address of the
->> PCI header and the offset corresponding to the field they intend to
->> read/write.
->>
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->
->
->>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
->>  {
->> +     addr += (where & ~0x3);
->>       *val = readl(addr);
->> +     where &= 3;
->>
->>       if (size == 1)
->> -             *val = (*val >> (8 * (where & 3))) & 0xff;
->> +             *val = (*val >> (8 * where)) & 0xff;
->>       else if (size == 2)
->> -             *val = (*val >> (8 * (where & 3))) & 0xffff;
->> +             *val = (*val >> (8 * where)) & 0xffff;
->>       else if (size != 4)
->>               return PCIBIOS_BAD_REGISTER_NUMBER;
->>
->> @@ -96,12 +98,14 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
->>
->>  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
->>  {
->> +     addr += where;
->> +
->>       if (size == 4)
->>               writel(val, addr);
->>       else if (size == 2)
->> -             writew(val, addr + (where & 2));
->> +             writew(val, addr);
->>       else if (size == 1)
->> -             writeb(val, addr + (where & 3));
->> +             writeb(val, addr);
->>       else
->>               return PCIBIOS_BAD_REGISTER_NUMBER;
->
-> I just noticed the asymmetry between dw_pcie_cfg_read() and
-> dw_pcie_cfg_write(): in dw_pcie_cfg_read() we always do 32-bit reads and
-> mask out the parts we won't want, but in dw_pcie_cfg_write() we do 8-, 16-,
-> or 32-byte writes.
->
-> That was there even before your patch, but I wonder why.  Either both
-> should work the same way, or there should be a comment explaining why they
-> are different.
->
-> Jingoo, Pratyush?
+On Wed, Sep 09, 2015 at 02:47:55PM +0100, Tomasz Nowicki wrote:
 
-As I said earlier, I just vaguely remember that there was some issue
-with a SOC in reading non word aligned addresses.
-(1) I do not have any reference for it and (2) even if some where
-there could be such issue they can always have platform specific
-accessor . So I support your idea and both read and write can be made
-symmetric.
+[...]
+
+> > I think (but I am happy to be corrected) that the map_bus() hook
+> > (ie that's why struct pci_bus is required in eg pci_generic_config_write)
+> > is there to ensure that when the generic accessors are called
+> > a) we have a valid bus b) the host controllers implementing it
+> > has been initialized.
+> >
+> > I had another look and I noticed you are trying to solve multiple
+> > things at once:
+> >
+> > 1) ACPICA seems to need PCI config space on bus 0 to be working
+> >     before PCI enumerates (ie before we have a root bus), we need to
+> >     countercheck on that, but you can't use the generic PCI accessors
+> >     for that reasons (ie root bus might not be available, you do not
+> >     have a pci_bus struct)
+> > 2) the raw_pci_read/write require _generic_ mmio back-ends, since AMD
+> >     can't cope with standard x86 read/write{b,w,l}
+> >
+> > Overall, it seems to me that we can avoid code duplication by
+> > shuffling your code a bit.
+> >
+> > You could modify the generic accessors in drivers/pci/access.c to
+> > use your mmio back-end instead of using plain read/write{b,w,l}
+> > functions (we should check if RobH is ok with that there can be
+> > reasons that prevent this from happening). This would solve the
+> > AMD mmio issue.
+> >
+> > By factoring out the code that actually carries out the reads
+> > and writes in the accessors basically you decouple the functions
+> > requiring the struct pci_bus from the ones that does not require it
+> > (ie raw_pci_{read/write}.
+> >
+> > The generic MMIO layer belongs in the drivers/pci/access.c file, it has
+> > nothing to do with ECAM.
+> >
+> > The mmcfg interface should probably live in pci-acpi.c, I do not think
+> > you need an extra file in there but that's a detail.
+> >
+> > Basically the generic accessors would become something like eg:
+> >
+> > int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
+> >                            int where, int size, u32 val)
+> > {
+> >       void __iomem *addr;
+> >
+> >       addr = bus->ops->map_bus(bus, devfn, where);
+> >       if (!addr)
+> >               return PCIBIOS_DEVICE_NOT_FOUND;
+> >
+> >       pci_mmio_write(size, addr + where, value);
+> >
+> >       return PCIBIOS_SUCCESSFUL;
+> > }
+> >
+> > With that in place using raw_pci_write/read or the generic accessors
+> > becomes almost identical, with code requiring the pci_bus to be
+> > created using the generic accessors and ACPICA using the raw version.
+> >
+> > I might be missing something, so apologies if that's the case.
+> >
+> 
+> Actually, I think you showed me the right direction :) Here are some
+> conclusions/comments/concerns. Please correct me if I am wrong:
+> 
+> 1. We need raw_pci_write/read accessors (based on ECAM) for ARM64 too
+> but only up to the point where buses are enumerated. From that point on,
+> we should reuse generic accessors from access.c file, right?
+
+Well, I still have not figured out whether on arm64 the raw accessors
+required by ACPICA make sense.
+
+So either arm64 relies on the generic MCFG based raw read and writes
+or we define the global raw read and writes as empty (ie x86 overrides
+them anyway).
+
+I will get back to you on this.
+
+> 2. For ARM64 ACPI PCI, we can use generic accessors right away, .map_bus
+> would call common code part (pci_dev_base()). The only thing that worry
+> me is fact that MCFG regions are RCU list so it needs rcu_read_lock()
+> for the .map_bus (mcfg lookup) *and* read/write operation.
+
+Do you mean the address look-up and the mmio operation should be carried
+out atomically right ? I have to review the MCFG descriptor locking anyway
+to check if and when there is a problem here.
+
+> 3. Changing generic accessors to introduce generic MMIO layer (because
+> of AMD issue) like this:
+> int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
+>                              int where, int size, u32 val)
+> {
+>         void __iomem *addr;
+> 
+>         addr = bus->ops->map_bus(bus, devfn, where);
+>         if (!addr)
+>                 return PCIBIOS_DEVICE_NOT_FOUND;
+> 
+>         pci_mmio_write(size, addr + where, val);
+> 
+>         return PCIBIOS_SUCCESSFUL;
+> }
+> would imply using those accessors for x86 ACPI PCI host bridge driver,
+> see arch/x86/pci/common.c
+> 
+> int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
+>                                                 int reg, int len, u32 *val)
+> {
+>         if (domain == 0 && reg < 256 && raw_pci_ops)
+>                 return raw_pci_ops->read(domain, bus, devfn, reg, len, val);
+>         if (raw_pci_ext_ops)
+>                 return raw_pci_ext_ops->read(domain, bus, devfn, reg, len, val);
+>         return -EINVAL;
+> }
+> [...]
+> static int pci_read(struct pci_bus *bus, unsigned int devfn, int where,
+> int size, u32 *value)
+> {
+>         return raw_pci_read(pci_domain_nr(bus), bus->number,
+>                                  devfn, where, size, value);
+> }
+> [...]
+> struct pci_ops pci_root_ops = {
+>         .read = pci_read,
+>         .write = pci_write,
+> };
+> 
+> Currently, the above code may call lots of different accessors (not
+> necessarily generic accessor friendly :), moreover it possible that x86
+> may have registered two accessor sets (raw_pci_ops, raw_pci_ext_ops). I
+> am happy to fix that but I would need x86 PCI expert to get know if that
+> is possible at all.
+
+Well, we can let x86 code use the same pci_ops as they are using
+today without bothering converting it to generic accessors.
+
+Honestly, even the AMD requirement for special MMIO back-end could
+be left in x86 code, which would simplify your task even more (it
+would leave more x86 churn but that's not my call).
+
+> I really appreciate your help.
+
+You are welcome, I will get back to you shortly on the points above.
+
+Thanks,
+Lorenzo
