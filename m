@@ -1,67 +1,65 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v3 4/6] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
-Date: Wed, 23 Sep 2015 10:01:01 +0200
-Message-ID: <1496061.0ds89jTH75@wuerfel>
-In-Reply-To: <1442965757-12925-5-git-send-email-ddaney.cavm@gmail.com>
-References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com> <1442965757-12925-5-git-send-email-ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Ben Shelton <benjamin.h.shelton@intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ben Shelton <benjamin.h.shelton@intel.com>
+Subject: [PATCH] PCI: IOV: reread SRIOV_NUM_VF after enabling ARI
+Date: Fri, 11 Sep 2015 16:55:00 -0500
+Message-Id: <1442008500-3570-1-git-send-email-benjamin.h.shelton@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 22 September 2015 16:49:15 David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> There are two problems with the bus_max calculation:
-> 
-> 1) The u8 data type can overflow for large config space windows.
-> 
-> 2) The calculation is incorrect for a bus range that doesn't start at
->    zero.
-> 
-> Since the configuration space is relative to bus zero, make bus_max
-> just be the size of the config window scaled by bus_shift.  Then clamp
-> it to a maximum of 255, per PCI.  Use a data type of int to avoid
-> overflow problems.
-> 
-> Update host-generic-pci.txt to clarify the semantics of the "reg"
-> property with respect to non-zero starting bus numbers.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
+For some SR-IOV devices, the number of available virtual functions
+increases after enabling ARI.  Currently, SRIOV_NUM_VF is read and saved
+off before the ARI control bit is enabled.  This causes an issue when VFs
+are enabled.
 
-Not sure about this one
+At device init, SRIOV_INITIAL_VF and SRIOV_NUM_VF are specified to contain
+the number of available VFs for the device.  sriov_enable() does a sanity
+check that PCI_SRIOV_INITIAL_VF is not greater than iov->total_VFs, the
+saved-off value of SRIOV_NUM_VF.  Since the value of both SRIOV_INITIAL_VF
+and SRIOV_NUM_VF has increased after enabling the ARI bit, the check fails,
+and the VFs cannot be enabled.
 
-> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> index cf3e205..105a968 100644
-> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> @@ -34,7 +34,9 @@ Properties of the host controller node:
->  - #size-cells    : Must be 2.
->  
->  - reg            : The Configuration Space base address and size, as accessed
-> -                   from the parent bus.
-> +                   from the parent bus.  The base address corresponds to
-> +                   bus zero, even though the "bus-range" property may specify
-> +                   a different starting bus number.
+To fix the issue, after ARI is enabled for a device, reread SRIOV_NUM_VF.
 
-This sounds like very unusual behavior. If you have a system with faked
-bus numbers where the registers only physically exist for a subset of the
-buses, this requires defining a reg property that contains MMIO space
-which is outside of the device and potentially contains other devices.
+Signed-off-by: Ben Shelton <benjamin.h.shelton@intel.com>
+---
+ drivers/pci/iov.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-What would break if we instead defined it the expected way and only
-list the registers for the bus numbers in the "bus-range" property?
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..88b1959 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -388,6 +388,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	struct pci_sriov *iov;
+ 	struct resource *res;
+ 	struct pci_dev *pdev;
++	bool total_needs_reread = false;
+ 
+ 	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
+ 	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+@@ -409,12 +410,18 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 			goto found;
+ 
+ 	pdev = NULL;
+-	if (pci_ari_enabled(dev->bus))
++	if (pci_ari_enabled(dev->bus)) {
+ 		ctrl |= PCI_SRIOV_CTRL_ARI;
++		total_needs_reread = true;
++	}
+ 
+ found:
+ 	pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, ctrl);
+ 	pci_write_config_word(dev, pos + PCI_SRIOV_NUM_VF, 0);
++
++	if (total_needs_reread)
++		pci_read_config_word(dev, pos + PCI_SRIOV_TOTAL_VF, &total);
++
+ 	pci_read_config_word(dev, pos + PCI_SRIOV_VF_OFFSET, &offset);
+ 	pci_read_config_word(dev, pos + PCI_SRIOV_VF_STRIDE, &stride);
+ 	if (!offset || (total > 1 && !stride))
+-- 
+1.9.5
 
-	Arnd
