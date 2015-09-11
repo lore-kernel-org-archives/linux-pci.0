@@ -1,97 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:48543 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933994AbbIDXRV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 4 Sep 2015 19:17:21 -0400
-Received: from /spool/local
-	by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Fri, 4 Sep 2015 20:17:17 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 161921DC0084
-	for <linux-pci@vger.kernel.org>; Fri,  4 Sep 2015 19:16:13 -0400 (EDT)
-Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t84NHdVb4952126
-	for <linux-pci@vger.kernel.org>; Fri, 4 Sep 2015 20:17:40 -0300
-Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
-	by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t84NHCIY000927
-	for <linux-pci@vger.kernel.org>; Fri, 4 Sep 2015 20:17:14 -0300
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
- probe time in OF case
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <1439932430-13375-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <20150903175624.GI829@google.com>
-Cc: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	benh@kernel.crashing.org, paulus@samba.org, mst@redhat.com,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	"David S. Miller" <davem@davemloft.net>
-Message-ID: <55EA2678.5030801@linux.vnet.ibm.com>
-Date: Fri, 4 Sep 2015 20:17:12 -0300
-MIME-Version: 1.0
-In-Reply-To: <20150903175624.GI829@google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:16823 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751066AbbIKAJN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 20:09:13 -0400
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 09/11] kernel:irq: Implement msi match function
+Date: Fri, 11 Sep 2015 00:01:08 +0000
+Message-Id: <1441929670-10058-10-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+From: Jake Oshins <jakeo@microsoft.com>
 
-> of_create_pci_dev() already has a lot of code that duplicates
-> pci_setup_device(), and it's a shame to add more.  There's also a sparc
-> version of of_create_pci_dev() that presumably has the same problem you're
-> fixing for powerpc.
+Previous patches in this series introduced the concept of ranked matches of
+IRQ domains, where a default implementation ranks low and a specific
+implementation might rank higher, overriding the default.
 
-Thanks for the information!
+This patch supplies a match function for use by any IRQ domain derived from
+the default MSI IRQ domain.  It returns a rank of '1' when the IRQ domain
+does not ask for a match based on PCI domain and a rank of '2' if the IRQ
+domain does set the flag indicating that it wants a more specific match.
 
-> Michael originally called pci_msi_setup_pci_dev() from
-> pci_init_capabilities() [1].  A subsequent patch moved the call
-> to pci_setup_device() [2] because an early quirk (called from
-> pci_setup_device()) used pci_msi_off(), which depended on
-> pci_msi_setup_pci_dev().
->
-> But we later removed pci_msi_off() completely, so I think we probably
-> *could* call pci_msi_setup_pci_dev() from pci_init_capabilities().
->
-> That would be much nicer because it makes more sense there, and it
-> would do the right thing for powerpc and sparc because they both
-> already use that path.
->
-> Can you look into moving the call?
+At this point in the patch series, there is no implementation of an MSI IRQ
+domain which asks for a more specific match.  That's found in the final patch,
+introducing a new driver.
 
-I might have misunderstood something here (sorry if it's the case), but 
-moving the call to pci_init_capabilities() has the same practical 
-implications than reverting my 2 commmits [1] [2] and Michael Tsirkin's 
-commit [3], except when CONFIG_PCI_MSI is not set - in this case, moving 
-the call would initialize MSI capabilities anyway, since 
-pci_init_capabilities() executes even if CONFIG_PCI_MSI isn't set.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ include/linux/msi.h |  2 ++
+ kernel/irq/msi.c    | 24 ++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+)
 
-My question is: is necessary to initialize MSI capabilities even with 
-CONFIG_PCI_MSI not set? In negative case, would be "cleaner" revert the 
-3 commits, right?
-
-On the other hand, if it's necessary to initialize MSI capabilities on 
-devices anyway, we can change the call place.
-
-Let me know your opinion, and I'm sorry if I misunderstood something here.
-
-Cheers,
-
-
-Guilherme Piccoli
-
-
-
-[1] commit 22b6839b914b ("PCI: Make pci_msi_setup_pci_dev() non-static 
-for use by arch code")
-
-[2] commit 4d9aac397a5d ("powerpc/PCI: Disable MSI/MSI-X interrupts at 
-PCI probe time in OF case")
-
-[3] commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if 
-kernel doesn't support MSI")
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 7370225..a8ee7a1 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -259,6 +259,8 @@ enum {
+ 	MSI_FLAG_MULTI_PCI_MSI		= (1 << 3),
+ 	/* Support PCI MSIX interrupts */
+ 	MSI_FLAG_PCI_MSIX		= (1 << 4),
++	/* Require exact match for PCI domain */
++	MSI_FLAG_PCI_DOMAIN_MATCH	= (1 << 5),
+ };
+ 
+ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 7e6512b..5fcd68c 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -141,11 +141,35 @@ static void msi_domain_free(struct irq_domain *domain, unsigned int virq,
+ 	irq_domain_free_irqs_top(domain, virq, nr_irqs);
+ }
+ 
++/*
++ * Return a higher rank for exact matches against PCI domain (segment)
++ * so that generic MSI IRQ domains can be overridden by more specific
++ * implementations.
++ */
++static int msi_domain_match(struct irq_domain *d, struct device_node *node,
++			    enum irq_domain_bus_token bus_token,
++			    void *bus_data)
++{
++	struct msi_domain_info *info = d->host_data;
++
++	if (bus_token != d->bus_token)
++		return 0;
++
++	if (bus_token == DOMAIN_BUS_PCI_MSI) {
++		if (!(info->flags & MSI_FLAG_PCI_DOMAIN_MATCH))
++			return 1;
++		if (bus_data && (info->pci_domain == *(int *)bus_data))
++			return 2;
++	}
++	return 0;
++}
++
+ static const struct irq_domain_ops msi_domain_ops = {
+ 	.alloc		= msi_domain_alloc,
+ 	.free		= msi_domain_free,
+ 	.activate	= msi_domain_activate,
+ 	.deactivate	= msi_domain_deactivate,
++	.match		= msi_domain_match,
+ };
+ 
+ #ifdef GENERIC_MSI_DOMAIN_OPS
+-- 
+1.9.1
 
