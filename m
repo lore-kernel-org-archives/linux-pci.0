@@ -1,103 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:49967 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751676AbbIGJMZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Sep 2015 05:12:25 -0400
-Date: Mon, 7 Sep 2015 10:12:30 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
- of arch code
-Message-ID: <20150907091230.GB29293@red-moon>
-References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
- <20150902174716.GA6305@red-moon>
- <20150902203250.GB829@google.com>
- <20150903100115.GA15308@red-moon>
- <20150903162140.GG829@google.com>
- <20150904141903.GA22997@red-moon>
- <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
- <20150904164412.GD22997@red-moon>
- <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 07/12] drivers:x86:pci: Make it possible to implement a PCI MSI IRQ Domain in a module.
+Date: Fri, 11 Sep 2015 00:01:06 +0000
+Message-Id: <1441929670-10058-8-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 05, 2015 at 12:53:48AM +0100, Yinghai Lu wrote:
-> On Fri, Sep 4, 2015 at 9:44 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Fri, Sep 04, 2015 at 05:00:35PM +0100, Yinghai Lu wrote:
-> >
-> > The problem here is not the last retry, it is the first bridge scan.
-> >
-> > By moving pci_read_bridge_bases() to core PCI code, if we do not
-> > vet the bridge apertures (ie claim them and reset them if the claiming
-> > fails) we end up calling (on ARM) __pci_bus_size_bridges() with apertures
-> > that can have sizes != 0, which does not make any sense since we are calling
-> > __pci_bus_size_bridges() to *discover* what the aperture size should
-> > be on first bridge scan, correct ?
-> 
-> for x86, in pcibios_allocate_bridge_resources(), we do validate
-> the bridge resources, and reset size to 1 (strange ?!).
+From: Jake Oshins <jakeo@microsoft.com>
 
-Yes, strange, but there is even a special case in calculate_memsize()
-to handle that :) it seems !
+The Linux kernel already has the concept of IRQ domain, wherein a component
+can expose a set of IRQs which are managed by a particular interrupt controller
+chip or other subsystem.  The PCI driver exposes the notion of an IRQ domain
+for Message-Signaled Interrupts (MSI) from PCI Express devices.  This patch
+exposes the functions which are necessary for making an MSI IRQ domain within
+a module.
 
-> and they are called before pci_asssign_unassigned_resources()
-> 
-> so arch ARM would support pcibios_allocate_bridge_resources or other
-> call to do the same thing?
+The same goal could be accomplished by building an MSI IRQ domain for Hyper-V
+into the kernel itself, but this would have required pulling in a lot of other
+code which currently exists in modules, and it seemed cleaner to avoid that.
 
-I could do that, but:
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ arch/x86/include/asm/msi.h    | 4 ++++
+ arch/x86/kernel/apic/msi.c    | 5 +++--
+ arch/x86/kernel/apic/vector.c | 2 ++
+ drivers/pci/msi.c             | 2 ++
+ kernel/irq/chip.c             | 1 +
+ 5 files changed, 12 insertions(+), 2 deletions(-)
 
-1) Bjorn does not like this approach (ie it has nothing arch specific
-   in it - actually zeroing the bridge size on first scan seems to be an
-   implicit requirement of __pci_bus_size_bridges() and that's not
-   documented)
-2) I still do not understand why on first bridge scan we should care
-   about the old bridge size. If the bridge windows are claimed
-   __pci_bus_size_bridges() ignore them (and that's right). If they
-   are not claimed (ie they are free) why, on first scan, would the old
-   size matter ? I really do not like the implicit requirement that
-   forces the bridge aperture size to be 0 (or 1 ;-)) on first scan,
-   we end up zeroing it in arch code where it should not really matter.
-   Is there a reason why old size matters on first bridge scan ? I guess
-   it has to do with hotplug, but I need your input on this.
-   I agree we have to find a way to detect the *first* scan (there are
-   various ways of doing that - possibly a "pass" parameter or we can
-   rely on resource flags to detect that), question is if we should.
+diff --git a/arch/x86/include/asm/msi.h b/arch/x86/include/asm/msi.h
+index 93724cc..e8b7924 100644
+--- a/arch/x86/include/asm/msi.h
++++ b/arch/x86/include/asm/msi.h
+@@ -1,7 +1,11 @@
+ #ifndef _ASM_X86_MSI_H
+ #define _ASM_X86_MSI_H
+ #include <asm/hw_irq.h>
++#include <asm/irqdomain.h>
+ 
+ typedef struct irq_alloc_info msi_alloc_info_t;
+ 
++int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
++		    msi_alloc_info_t *arg);
++
+ #endif /* _ASM_X86_MSI_H */
+diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
+index 5f1feb6..bdb28fc 100644
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -96,8 +96,8 @@ static irq_hw_number_t pci_msi_get_hwirq(struct msi_domain_info *info,
+ 	return arg->msi_hwirq;
+ }
+ 
+-static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+-			   int nvec, msi_alloc_info_t *arg)
++int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
++		    msi_alloc_info_t *arg)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct msi_desc *desc = first_pci_msi_entry(pdev);
+@@ -113,6 +113,7 @@ static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_msi_prepare);
+ 
+ static void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+ {
+diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
+index 1bbd0fe..b16d915 100644
+--- a/arch/x86/kernel/apic/vector.c
++++ b/arch/x86/kernel/apic/vector.c
+@@ -29,6 +29,7 @@ struct apic_chip_data {
+ };
+ 
+ struct irq_domain *x86_vector_domain;
++EXPORT_SYMBOL_GPL(x86_vector_domain);
+ static DEFINE_RAW_SPINLOCK(vector_lock);
+ static cpumask_var_t vector_cpumask;
+ static struct irq_chip lapic_controller;
+@@ -66,6 +67,7 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
+ 
+ 	return data ? &data->cfg : NULL;
+ }
++EXPORT_SYMBOL_GPL(irqd_cfg);
+ 
+ struct irq_cfg *irq_cfg(unsigned int irq)
+ {
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index c7ad8ce..1aaa26d 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1119,6 +1119,7 @@ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+ {
+ 	return to_pci_dev(desc->dev);
+ }
++EXPORT_SYMBOL(msi_desc_to_pci_dev);
+ 
+ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+ {
+@@ -1274,6 +1275,7 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
+ 	domain->bus_token = DOMAIN_BUS_PCI_MSI;
+ 	return domain;
+ }
++EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
+ 
+ /**
+  * pci_msi_domain_alloc_irqs - Allocate interrupts for @dev in @domain
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index 6e40a95..b0d9ecd 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -935,6 +935,7 @@ void irq_chip_ack_parent(struct irq_data *data)
+ 	data = data->parent_data;
+ 	data->chip->irq_ack(data);
+ }
++EXPORT_SYMBOL_GPL(irq_chip_ack_parent);
+ 
+ /**
+  * irq_chip_mask_parent - Mask the parent interrupt
+-- 
+1.9.1
 
-> wonder some arches even claim fails, they still does not want you to
-> reset it.
-
-Yes, that's what I noticed too, I have no idea how they work, but IMO
-they should be patched too (ia64 is an example). If the bridge size
-read from pci_read_bridge_bases() is erroneous its size is kept even
-when we try to reassign it (as this regression showed) so I guess
-on those archs this bug just does not trigger because the bridge
-apertures are programmed in FW in a *saner* way.
-
-On platforms where we want to reassign everything the current approch
-just does not make sense (ie keeping the old size on first bridge scan)
-but please shout if there is a reason for that, I would like to put
-together a fix asap.
-
-Thank you !
-Lorenzo
