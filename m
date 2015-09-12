@@ -1,103 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35364 "EHLO foss.arm.com"
+Received: from mga02.intel.com ([134.134.136.20]:37367 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752105AbbIWSCA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Sep 2015 14:02:00 -0400
-Date: Wed, 23 Sep 2015 19:01:57 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+	id S1754215AbbILBLi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Sep 2015 21:11:38 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v2 4/5] PCI: generic: Correct, and avoid overflow, in
- bus_max calculation.
-Message-ID: <20150923180157.GV7356@arm.com>
-References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
- <1442527332-1174-5-git-send-email-ddaney.cavm@gmail.com>
+	"alexander.h.duyck@redhat.com" <alexander.h.duyck@redhat.com>,
+	"myron.stowe@redhat.com" <myron.stowe@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH] vfio/pci: Use kernel VPD access functions
+Date: Sat, 12 Sep 2015 01:11:37 +0000
+Message-ID: <80CE59CA-1B93-42FF-96D1-6276B724203F@intel.com>
+References: <20150911181332.32399.74472.stgit@gimli.home>
+In-Reply-To: <20150911181332.32399.74472.stgit@gimli.home>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_CACFEE63-A8F3-4076-9CE5-54C2EB6428EA";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442527332-1174-5-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 11:02:11PM +0100, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> There are two problems with the bus_max calculation:
-> 
-> 1) The u8 data type can overflow for large config space windows.
-> 
-> 2) The calculation is incorrect for a bus range that doesn't start at
->    zero.
-> 
-> Since the configuration space is relative to bus zero, make bus_max
-> just be the size of the config window scaled by bus_shift.  Then clamp
-> it to a maximum of 255, per PCI.  Use a data type of int to avoid
-> overflow problems.
-> 
-> Update host-generic-pci.txt to clarify the semantics of the "reg"
-> property with respect to non-zero starting bus numbers.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
-> Change from v1: Added text to host-generic-pci.txt
-> 
->  Documentation/devicetree/bindings/pci/host-generic-pci.txt | 4 +++-
->  drivers/pci/host/pci-host-generic.c                        | 7 ++++---
->  2 files changed, 7 insertions(+), 4 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> index cf3e205..105a968 100644
-> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> @@ -34,7 +34,9 @@ Properties of the host controller node:
->  - #size-cells    : Must be 2.
->  
->  - reg            : The Configuration Space base address and size, as accessed
-> -                   from the parent bus.
-> +                   from the parent bus.  The base address corresponds to
-> +                   bus zero, even though the "bus-range" property may specify
-> +                   a different starting bus number.
+--Apple-Mail=_CACFEE63-A8F3-4076-9CE5-54C2EB6428EA
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-That's a useful clarification, thanks.
+Alex,
 
->  Properties of the /chosen node:
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 77cf4bd..0a9c453 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -164,7 +164,7 @@ out_release_res:
->  static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  {
->  	int err;
-> -	u8 bus_max;
-> +	int bus_max;
->  	resource_size_t busn;
->  	struct resource *bus_range;
->  	struct device *dev = pci->host.dev.parent;
-> @@ -177,8 +177,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  	}
->  
->  	/* Limit the bus-range to fit within reg */
-> -	bus_max = pci->cfg.bus_range->start +
-> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> +	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> +	if (bus_max > 255)
-> +		bus_max = 255;
+> On Sep 11, 2015, at 11:16 AM, Alex Williamson =
+<alex.williamson@redhat.com> wrote:
+>=20
+> RFC - Is this something we should do?
 
-I still don't understand the need for this part. If the cfg space is bigger
-than bus_max, isn't that simply an invalid resource? Given that the resource
-could be broken in other ways too, this check feels more like a specific
-workaround rather than generally useful code.
+Superficially this looks pretty good. I need to think harder to be sure =
+of the details.
 
-Will
+> Should we consider providing
+> similar emulation through PCI sysfs to allow lspci to also make use
+> of the vpd interfaces?
+
+It looks to me like lspci already uses the vpd attribute in sysfs to =
+access VPD, so maybe nothing more than this is needed. No doubt lspci =
+can be coerced into accessing VPD directly, but is that really worth =
+going after? I'm not so sure.
+
+An strace of lspci accessing a device with VPD shows me:
+
+write(1, "\tCapabilities: [e0] Vital Produc"..., 39	Capabilities: =
+[e0] Vital Product Data
+) =3D 39
+open("/sys/bus/pci/devices/0000:02:00.0/vpd", O_RDONLY) =3D 4
+----------------------------------------^^^ accesses to this should be =
+safe, I think
+
+pread(4, "\202", 1, 0)                  =3D 1
+pread(4, "\10\0", 2, 1)                 =3D 2
+pread(4, "PVL Dell", 8, 3)              =3D 8
+write(1, "\t\tProduct Name: PVL Dell\n", 25		Product Name: =
+PVL Dell
+) =3D 25
+
+and so forth.
+
+--
+Mark Rustad, Networking Division, Intel Corporation
+
+
+--Apple-Mail=_CACFEE63-A8F3-4076-9CE5-54C2EB6428EA
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJV83vIAAoJEDwO/+eO4+5u9BcQAI0MJoFkLlapvWMj/6+ZwBS0
+T7EKJD/37QXMzwv31P7WtBpJIdk4F1HsPQe9bIbEHrFMTJ1sbITMdLf0iYOmmIK9
+3RIDH3snndI8NGBuV50qRz0hq/FqyDxoStSs/poe3pkNUNWfA1MzEO2d2u54qkta
+kPSxbNZSg9QP99oRH3x44Qp9Kc/7P465buPUzWTznwJFn8TkWVNf6cB7WLh62/OE
+FxaePrZfnPcWvUf0UFvLbBrk2hUHyIHihYILZridw0TZh0ju1wGdY9SsjYLpupyI
+1K5UzlogZEH8WApHIjtbjgCuM7Ptu/aGWHmGoIGYNGsO2Ib4jeaI2/UnOXES1hir
+7j0qzMgjjpFaIJs78A5xgp2IR89col7xf/EtVpI/o3Rvdo4a3j67pj/uZsof88n5
+MQcAO5sFfy9kJuMw3RlXZUtFY2x7GePmnJQb2R+pZi03YaOn9Llr+34ycYAabxxk
++riW2irO8KJAe+4TkkmOVrcJGAajq4F1AwyrHep/QaTUxMk92pC7uZ9DjPCrU8EF
+xPV7Taib72C1SuJOjxw7rcOXhjyihQKdr0qlymXmtt2YZvR/GEtOZC/b+jt5Fa+D
+MsYOY03afnM6h2Endm6HrJeBXeQt4qLtlod6Mc7NnF/pESViqFlywTqlcPS83GLY
+HwMztEEhL060LrOgld3I
+=4gXz
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_CACFEE63-A8F3-4076-9CE5-54C2EB6428EA--
