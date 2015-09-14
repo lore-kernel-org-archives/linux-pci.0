@@ -1,188 +1,354 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20150602133215.GC23650@red-moon> <55701A31.808@linaro.org>
- <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org>
- <557504A2.3060203@linaro.org> <20150608151443.GA16151@red-moon>
- <55E4340D.6050004@linaro.org> <55ED6010.3020406@linaro.org>
- <20150908150727.GF29293@red-moon> <55F0388B.1090607@linaro.org>
- <20150911112018.GA13033@red-moon>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f178.google.com ([209.85.160.178]:33972 "EHLO
+	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634AbbINUV2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 16:21:28 -0400
+Received: by ykdg206 with SMTP id g206so164542878ykd.1
+        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2015 13:21:27 -0700 (PDT)
+Date: Mon, 14 Sep 2015 15:21:23 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <55F2CA98.7050905@linaro.org>
-Date: Fri, 11 Sep 2015 14:35:36 +0200
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 04/52] PCI: Optimize bus min_align/size calculation
+ during sizing
+Message-ID: <20150914202123.GA27964@google.com>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+ <1440138067-4314-5-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20150911112018.GA13033@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1440138067-4314-5-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11.09.2015 13:20, Lorenzo Pieralisi wrote:
-> On Wed, Sep 09, 2015 at 02:47:55PM +0100, Tomasz Nowicki wrote:
->
-> [...]
->
->>> I think (but I am happy to be corrected) that the map_bus() hook
->>> (ie that's why struct pci_bus is required in eg pci_generic_config_write)
->>> is there to ensure that when the generic accessors are called
->>> a) we have a valid bus b) the host controllers implementing it
->>> has been initialized.
->>>
->>> I had another look and I noticed you are trying to solve multiple
->>> things at once:
->>>
->>> 1) ACPICA seems to need PCI config space on bus 0 to be working
->>>      before PCI enumerates (ie before we have a root bus), we need to
->>>      countercheck on that, but you can't use the generic PCI accessors
->>>      for that reasons (ie root bus might not be available, you do not
->>>      have a pci_bus struct)
->>> 2) the raw_pci_read/write require _generic_ mmio back-ends, since AMD
->>>      can't cope with standard x86 read/write{b,w,l}
->>>
->>> Overall, it seems to me that we can avoid code duplication by
->>> shuffling your code a bit.
->>>
->>> You could modify the generic accessors in drivers/pci/access.c to
->>> use your mmio back-end instead of using plain read/write{b,w,l}
->>> functions (we should check if RobH is ok with that there can be
->>> reasons that prevent this from happening). This would solve the
->>> AMD mmio issue.
->>>
->>> By factoring out the code that actually carries out the reads
->>> and writes in the accessors basically you decouple the functions
->>> requiring the struct pci_bus from the ones that does not require it
->>> (ie raw_pci_{read/write}.
->>>
->>> The generic MMIO layer belongs in the drivers/pci/access.c file, it has
->>> nothing to do with ECAM.
->>>
->>> The mmcfg interface should probably live in pci-acpi.c, I do not think
->>> you need an extra file in there but that's a detail.
->>>
->>> Basically the generic accessors would become something like eg:
->>>
->>> int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
->>>                             int where, int size, u32 val)
->>> {
->>>        void __iomem *addr;
->>>
->>>        addr = bus->ops->map_bus(bus, devfn, where);
->>>        if (!addr)
->>>                return PCIBIOS_DEVICE_NOT_FOUND;
->>>
->>>        pci_mmio_write(size, addr + where, value);
->>>
->>>        return PCIBIOS_SUCCESSFUL;
->>> }
->>>
->>> With that in place using raw_pci_write/read or the generic accessors
->>> becomes almost identical, with code requiring the pci_bus to be
->>> created using the generic accessors and ACPICA using the raw version.
->>>
->>> I might be missing something, so apologies if that's the case.
->>>
->>
->> Actually, I think you showed me the right direction :) Here are some
->> conclusions/comments/concerns. Please correct me if I am wrong:
->>
->> 1. We need raw_pci_write/read accessors (based on ECAM) for ARM64 too
->> but only up to the point where buses are enumerated. From that point on,
->> we should reuse generic accessors from access.c file, right?
->
-> Well, I still have not figured out whether on arm64 the raw accessors
-> required by ACPICA make sense.
->
-> So either arm64 relies on the generic MCFG based raw read and writes
-> or we define the global raw read and writes as empty (ie x86 overrides
-> them anyway).
->
-> I will get back to you on this.
->
->> 2. For ARM64 ACPI PCI, we can use generic accessors right away, .map_bus
->> would call common code part (pci_dev_base()). The only thing that worry
->> me is fact that MCFG regions are RCU list so it needs rcu_read_lock()
->> for the .map_bus (mcfg lookup) *and* read/write operation.
->
-> Do you mean the address look-up and the mmio operation should be carried
-> out atomically right ?
-Yes.
+I spent a couple hours trying to understand the v3 version of this
+patch, and I gave you some detailed examples and questions.  If you
+want me to look at v4, I expect you to try to clarify the changelog to
+help answer those questions.
 
-  I have to review the MCFG descriptor locking anyway
-> to check if and when there is a problem here.
->
->> 3. Changing generic accessors to introduce generic MMIO layer (because
->> of AMD issue) like this:
->> int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
->>                               int where, int size, u32 val)
->> {
->>          void __iomem *addr;
->>
->>          addr = bus->ops->map_bus(bus, devfn, where);
->>          if (!addr)
->>                  return PCIBIOS_DEVICE_NOT_FOUND;
->>
->>          pci_mmio_write(size, addr + where, val);
->>
->>          return PCIBIOS_SUCCESSFUL;
->> }
->> would imply using those accessors for x86 ACPI PCI host bridge driver,
->> see arch/x86/pci/common.c
->>
->> int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
->>                                                  int reg, int len, u32 *val)
->> {
->>          if (domain == 0 && reg < 256 && raw_pci_ops)
->>                  return raw_pci_ops->read(domain, bus, devfn, reg, len, val);
->>          if (raw_pci_ext_ops)
->>                  return raw_pci_ext_ops->read(domain, bus, devfn, reg, len, val);
->>          return -EINVAL;
->> }
->> [...]
->> static int pci_read(struct pci_bus *bus, unsigned int devfn, int where,
->> int size, u32 *value)
->> {
->>          return raw_pci_read(pci_domain_nr(bus), bus->number,
->>                                   devfn, where, size, value);
->> }
->> [...]
->> struct pci_ops pci_root_ops = {
->>          .read = pci_read,
->>          .write = pci_write,
->> };
->>
->> Currently, the above code may call lots of different accessors (not
->> necessarily generic accessor friendly :), moreover it possible that x86
->> may have registered two accessor sets (raw_pci_ops, raw_pci_ext_ops). I
->> am happy to fix that but I would need x86 PCI expert to get know if that
->> is possible at all.
->
-> Well, we can let x86 code use the same pci_ops as they are using
-> today without bothering converting it to generic accessors.
->
-> Honestly, even the AMD requirement for special MMIO back-end could
-> be left in x86 code, which would simplify your task even more (it
-> would leave more x86 churn but that's not my call).
-AMD special MMIO back-end was my optional goal and wanted to kill two 
-birds with one stone :) I will drop this in next version and focus on 
-main aspect of these patches.
+The goal is that someone with reasonable familiarity with Linux and
+PCI would be able to read the changelogs and understand what happened,
+without having to search out all the email discussions.
 
-Regards,
-Tomasz
+On Thu, Aug 20, 2015 at 11:20:19PM -0700, Yinghai Lu wrote:
+> Current code try to get align as small as possible and use that to
+> align final size. But it does not handle resource that size is bigger
+> than align in optimal way, kernel only use max align for them.
+> 
+> For example:
+>  when we have resources with align/size: 1M/2M, 512M/512M,
+>    bus resource min_align/size0 will be 512M/1024M,
+>    but optimal value should be 256M/768M.
+> 
+> For following cases that we have resource size that is bigger
+> than resource alignment:
+> 1. SRIOV bar.
+> 2. PCI bridges with children that need several MMIOs that are more than 1M.
+> 
+> We can keep on trying to allocate children devices resources under range
+> [offset, offset + aligned_size) and offset is aligned with half_align.
+> If sucesses, we can use that half_align as new min_align.
+> 
+> After this patch, we get:
+>  align/size: 1M/2M, 2M/4M, 4M/8M, 8M/16M
+>  new min_align/min_size: 4M/32M, and old is 8M/32M
+> 
+>  align/size: 1M/2M, 2M/4M, 4M/8M
+>  new min_align/min_size: 2M/14M, and old is 4M/16M
+> 
+>  align/size: 1M/2M, 512M/512M
+>  new min_align/min_size: 256M/768M, and old is 512M/1024M
+> 
+> The real result from one system with one pcie card that has
+> four functions that support sriov:
+>  children resources with align/size:
+>    00800000/00800000
+>    00800000/00800000
+>    00800000/00800000
+>    00800000/00800000
+>    00010000/00200000
+>    00010000/00200000
+>    00010000/00200000
+>    00010000/00200000
+>    00008000/00008000
+>    00008000/00008000
+>    00008000/00008000
+>    00008000/00008000
+>    00004000/00080000
+>    00004000/00080000
+>    00004000/00080000
+>    00004000/00080000
+> the for the bridge
+> with orig code we have min_align/min_size: 00400000/02c00000
+> and with this patch we have min_align/min_size: 00100000/02b00000
+> So align will be 1M instead of 4M and even have smaller size.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+> Reported-by: TJ <linux@iam.tj>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> ---
+>  drivers/pci/setup-bus.c | 195 ++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 157 insertions(+), 38 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index aea35b6..861fe68 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -30,6 +30,34 @@
+>  
+>  unsigned int pci_flags;
+>  
+> +static inline bool is_before(resource_size_t align1, resource_size_t size1,
+> +			     resource_size_t align2, resource_size_t size2)
+> +{
+> +	resource_size_t size1_left, size2_left;
+> +
+> +	/* big align is before small align */
+> +	if (align1 > align2)
+> +		return true;
+> +
+> +	/*
+> +	 * for same align:
+> +	 *   aligned is before not aligned
+> +	 *   for not aligned, big remainder is before small remainder
+> +	 */
+> +	if (align1 == align2) {
+> +		size1_left = size1 & (align1 - 1);
+> +		if (!size1_left)
+> +			size1_left = align1;
+> +		size2_left = size2 & (align2 - 1);
+> +		if (!size2_left)
+> +			size2_left = align2;
+> +		if (size1_left > size2_left)
+> +			return true;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+>  struct pci_dev_resource {
+>  	struct list_head list;
+>  	struct resource *res;
+> @@ -998,26 +1026,125 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+>  	}
+>  }
+>  
+> -static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
+> -						  int max_order)
+> +struct align_test_res {
+> +	struct list_head list;
+> +	struct resource res;
+> +	resource_size_t size;
+> +	resource_size_t align;
+> +};
+> +
+> +static void free_align_test_list(struct list_head *head)
+>  {
+> -	resource_size_t align = 0;
+> -	resource_size_t min_align = 0;
+> -	int order;
+> +	struct align_test_res *p, *tmp;
+>  
+> -	for (order = 0; order <= max_order; order++) {
+> -		resource_size_t align1 = 1;
+> +	list_for_each_entry_safe(p, tmp, head, list) {
+> +		list_del(&p->list);
+> +		kfree(p);
+> +	}
+> +}
+>  
+> -		align1 <<= (order + 20);
+> +static int add_to_align_test_list(struct list_head *head,
+> +				  resource_size_t align, resource_size_t size)
+> +{
+> +	struct align_test_res *tmp;
+> +
+> +	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
+> +	if (!tmp)
+> +		return -ENOMEM;
+> +
+> +	tmp->align = align;
+> +	tmp->size = size;
+> +
+> +	list_add_tail(&tmp->list, head);
+> +
+> +	return 0;
+> +}
+> +
+> +static void sort_align_test(struct list_head *head)
+> +{
+> +	struct align_test_res *res1, *tmp_res, *res2;
+>  
+> -		if (!align)
+> -			min_align = align1;
+> -		else if (ALIGN(align + min_align, min_align) < align1)
+> -			min_align = align1 >> 1;
+> -		align += aligns[order];
+> +	list_for_each_entry_safe(res1, tmp_res, head, list) {
+> +		/* reorder it */
+> +		list_for_each_entry(res2, head, list) {
+> +			if (res2 == res1)
+> +				break;
+> +
+> +			if (is_before(res1->align, res1->size,
+> +				      res2->align, res2->size)) {
+> +				list_move_tail(&res1->list, &res2->list);
+> +				break;
+> +			}
+> +		}
+> +	}
+> +}
+> +
+> +static bool is_align_size_good(struct list_head *head,
+> +			resource_size_t min_align, resource_size_t size,
+> +			resource_size_t start)
+> +{
+> +	struct align_test_res *p;
+> +	struct resource root;
+> +
+> +	memset(&root, 0, sizeof(root));
+> +	root.start = start;
+> +	root.end = start + size - 1;
+> +
+> +	list_for_each_entry(p, head, list)
+> +		memset(&p->res, 0, sizeof(p->res));
+> +
+> +	list_for_each_entry(p, head, list)
+> +		if (allocate_resource(&root, &p->res, p->size,
+> +				0, (resource_size_t)-1ULL,
+> +				p->align, NULL, NULL))
+> +			return false;
+> +
+> +	return true;
+> +}
+> +
+> +static resource_size_t calculate_mem_align(struct list_head *head,
+> +				resource_size_t max_align, resource_size_t size,
+> +				resource_size_t align_low)
+> +{
+> +	struct align_test_res *p;
+> +	resource_size_t min_align, good_align, aligned_size, start;
+> +	int count = 0;
+> +
+> +	if (max_align <= align_low) {
+> +		good_align = align_low;
+> +		goto out;
+>  	}
+>  
+> -	return min_align;
+> +	good_align = max_align;
+> +
+> +	list_for_each_entry(p, head, list)
+> +		count++;
+> +
+> +	if (count <= 1)
+> +		goto out;
+> +
+> +	sort_align_test(head);
+> +
+> +	do {
+> +		/* check if we can use smaller align */
+> +		min_align = good_align >> 1;
+> +		aligned_size = ALIGN(size, min_align);
+> +
+> +		/* need to make sure every offset work */
+> +		for (start = min_align; start < max_align; start += min_align) {
+> +			/* checked already with last align ? */
+> +			if (!(start & (good_align - 1)))
+> +				continue;
+> +
+> +			if (!is_align_size_good(head, min_align, aligned_size,
+> +					       start))
+> +				goto out;
+> +		}
+> +		good_align = min_align;
+> +	} while (min_align > align_low);
+> +
+> +out:
+> +	return good_align;
+>  }
+>  
+>  /**
+> @@ -1047,19 +1174,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  {
+>  	struct pci_dev *dev;
+>  	resource_size_t min_align, align, size, size0, size1;
+> -	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
+> -	int order, max_order;
+> +	resource_size_t max_align = 0;
+>  	struct resource *b_res = find_free_bus_resource(bus,
+>  					mask | IORESOURCE_PREFETCH, type);
+>  	resource_size_t children_add_size = 0;
+>  	resource_size_t children_add_align = 0;
+>  	resource_size_t add_align = 0;
+> +	LIST_HEAD(align_test_list);
+>  
+>  	if (!b_res)
+>  		return -ENOSPC;
+>  
+> -	memset(aligns, 0, sizeof(aligns));
+> -	max_order = 0;
+>  	size = 0;
+>  
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+> @@ -1085,29 +1210,20 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  				continue;
+>  			}
+>  #endif
+> -			/*
+> -			 * aligns[0] is for 1MB (since bridge memory
+> -			 * windows are always at least 1MB aligned), so
+> -			 * keep "order" from being negative for smaller
+> -			 * resources.
+> -			 */
+>  			align = pci_resource_alignment(dev, r);
+> -			order = __ffs(align) - 20;
+> -			if (order < 0)
+> -				order = 0;
+> -			if (order >= ARRAY_SIZE(aligns)) {
+> +			if (align > (1ULL<<37)) { /*128 Gb*/
+>  				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+> -					 i, r, (unsigned long long) align);
+> +					i, r, (unsigned long long) align);
+>  				r->flags = 0;
+>  				continue;
+>  			}
+> +
+> +			if (r_size > 1)
+> +				add_to_align_test_list(&align_test_list,
+> +							align, r_size);
+>  			size += r_size;
+> -			/* Exclude ranges with size > align from
+> -			   calculation of the alignment. */
+> -			if (r_size == align)
+> -				aligns[order] += align;
+> -			if (order > max_order)
+> -				max_order = order;
+> +			if (align > max_align)
+> +				max_align = align;
+>  
+>  			if (realloc_head) {
+>  				children_add_size += get_res_add_size(realloc_head, r);
+> @@ -1117,9 +1233,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+>  		}
+>  	}
+>  
+> -	min_align = calculate_mem_align(aligns, max_order);
+> -	min_align = max(min_align, window_alignment(bus, b_res->flags));
+> -	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
+> +	max_align = max(max_align, window_alignment(bus, b_res->flags));
+> +	min_align = calculate_mem_align(&align_test_list, max_align, size,
+> +					window_alignment(bus, b_res->flags));
+> +	size0 = calculate_memsize(size, min_size, 0,
+> +				  resource_size(b_res), min_align);
+> +	free_align_test_list(&align_test_list);
+>  	add_align = max(min_align, add_align);
+>  	if (children_add_size > add_size)
+>  		add_size = children_add_size;
+> -- 
+> 1.8.4.5
+> 
