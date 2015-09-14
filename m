@@ -1,116 +1,129 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 16 Sep 2015 18:29:35 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: David Daney <ddaney@caviumnetworks.com>,
-	David Daney <ddaney.cavm@gmail.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in
- bus_max calculation.
-Message-ID: <20150916172935.GT28771@arm.com>
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
- <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
- <20150915174934.GL31157@arm.com>
- <55F85D4E.9020604@caviumnetworks.com>
- <20150915183500.GR31157@arm.com>
- <55F86764.4060502@caviumnetworks.com>
- <20150916104152.GC28771@arm.com>
- <20150916112852.GC17510@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yk0-f178.google.com ([209.85.160.178]:35298 "EHLO
+	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbbINT6p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 15:58:45 -0400
+Received: by ykdu9 with SMTP id u9so164841640ykd.2
+        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2015 12:58:44 -0700 (PDT)
+Date: Mon, 14 Sep 2015 14:58:40 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jay Cornwall <jay@jcornwall.me>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC 0/1] Add AtomicOp Requester support
+Message-ID: <20150914195840.GA25767@google.com>
+References: <1440018602-4212-1-git-send-email-jay@jcornwall.me>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150916112852.GC17510@red-moon>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1440018602-4212-1-git-send-email-jay@jcornwall.me>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+Hi Jay,
 
-On Wed, Sep 16, 2015 at 12:28:52PM +0100, Lorenzo Pieralisi wrote:
-> On Wed, Sep 16, 2015 at 11:41:53AM +0100, Will Deacon wrote:
-> > > Here is the current code:
-> > > 
-> > > >> 	bus_range = pci->cfg.bus_range;
-> > > >> 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
-> > > >> 		u32 idx = busn - bus_range->start;
-> > > 
-> > > The index is offset by the bus range start...
-> > > 
-> > > >> 		u32 sz = 1 << pci->cfg.ops.bus_shift;
-> > > >>
-> > > >> 		pci->cfg.win[idx] = devm_ioremap(dev,
-> > > >> 						 pci->cfg.res.start + busn * sz,
-> > > >> 						 sz);
-> > > 
-> > > But, the offset into the "reg" property is the raw bus number.
-> > > 
-> > > 
-> > > >> 		if (!pci->cfg.win[idx])
-> > > >> 			return -ENOMEM;
-> > > >> 	}
-> > > 
-> > > 
-> > > I hope that makes it more clear.
-> > 
-> > Got it. So we should be using idx instead of busn in the devm_ioremap
-> > call above.
+The [0/n] overview text doesn't get included in the changelog, but
+some of this description is very useful background.  So I'd suggest
+incorporating at least part of it into the patch changelog.
+
+On Wed, Aug 19, 2015 at 04:10:01PM -0500, Jay Cornwall wrote:
+> The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be requested
+> by, routed through and completed by PCIe components. Routing and completion
+> do not require software support. Component support for each is detectable via
+> the DEVCAP2 register.
 > 
-> I think that's not what's specified in the PCI firmware specification,
-> at least for the MMCFG regions. For MMCFG regions (quoting the specs)
-> the "base address of the memory mapped configuration space always
-> corresponds to bus number 0 (regardless of the start bus number decoded
-> by the host bridge)..."
+> AtomicOp requests are permitted only if a component's
+> DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot be
+> detected but is a no-op if set on a component with no support. These requests
+> can only be serviced if the upstream components support AtomicOp completion
+> and/or routing to a component which does.
 > 
-> For the x86 implementation have a look at:
+> A concrete example is the AMD Fiji-class GPU, which is specified to support
+> AtomicOp requests, routed through a PLX 8747 switch (advertising AtomicOp
+> routing) to a Haswell host bridge (advertising AtomicOp completion support).
+> When AtomicOp requests are disabled the GPU logs attempts to initiate requests
+> to an MMIO register for debugging.
 > 
-> arch/x86/pci/mmconfig_64.c mcfg_ioremap()
+> Several approaches for software support might be considered:
 > 
-> static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
-> {
-> 	void __iomem *addr;
-> 	u64 start, size;
-> 	int num_buses;
+>   1. drivers/pci sets DEVCTL2.ATOMICOP_REQUESTER_ENABLE unconditionally for
+>      all endpoints and root ports
 > 
-> 	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-> 	num_buses = cfg->end_bus - cfg->start_bus + 1;
-> 	size = PCI_MMCFG_BUS_OFFSET(num_buses);
-> 	addr = ioremap_nocache(start, size);
-> 	if (addr)
-> 		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-> 	return addr;
-> }
+>   2. drivers/pci attempts to establish a routable path to a completer prior to
+>      setting DEVCTL2.ATOMICOP_REQUESTER_ENABLE
 > 
-> The MCFG config accessors add back the PCI_MMCFG_BUS_OFFSET(cfg->start_bus)
-> to the virtual address so that the proper virtual address is used when
-> issuing the config cycles, that's my understanding.
+>   3. Approach 1/2 with individual drivers (drm/amdgpu in the above example)
+>      initiating the request for AtomicOp requester support through a function
+>      exported from drivers/pci
+> 
+>   4. Individual drivers specify a target component for AtomicOp completion
+> 
+> Approach 1 has two drawbacks. There is no guarantee that there is a reachable
+> component which can complete an AtomicOp request. It also prevents individual
+> drivers from blacklisting devices with known incorrect implementations. This
+> might otherwise provide useful diagnostics information. (e.g. AMD GPUs will
+> log an error to an MMIO register if the AtomicOp requester is disabled when an
+> atomic memory request would have been promoted to an AtomicOp.)
+> 
+> Approach 2 could only establish that there is a path to at least one completer,
+> but it would not prevent requests being sent to a different device which does
+> not support AtomicOp completion. For example, a root complex might support
+> completion but a transaction could be sent to a different device which does
+> not. The routable guarantee is not precise and so less useful.
 
-Ok. I think that whether the config space mapping or the config accessors
-do the fixup should remain an implementation detail, but the resource
-identifying config space should be dealt with consistently.
+I assume the common usage scenario is to enable AtomicOps for
+host-to-device and/or device-to-host transactions, and we can ignore
+device-to-device transactions for now.
 
-So that means the reg property should describe everything from bus 0,
-but then we only map the region corresponding to the bus-range.
+If I understand correctly, AtomicOps must be supported by all devices
+along the path, e.g., a Root Port, possibly some Switch Ports, and
+finally an Endpoint.  I guess your worry with Approach 2 is for a
+scenario like this:
 
-> So IMO we have to define what "reg" represents for ECAM in DT, we can't
-> leave this open to interpretation (and I think makng MCFG and DT config
-> work the same way would be ideal).
+  00:1c.0: PCI bridge to [bus 01-04]  Root Port, with AtomicOp Routing
+  01:00.0: PCI bridge to [bus 02-04]  Upstream Port, with AtomicOp Routing
+  02:00.0: PCI bridge to [bus 03]     Downstream Port, with AtomicOp Routing
+  03:00.0: endpoint                   AtomicOp Completer Supported
+  02:00.1: PCI bridge to [bus 04]     Downstream Port, with AtomicOp Routing
+  04:00.0: endpoint                   no AtomicOp Completer support
 
-If we define reg to cover the whole config space from bus 0 onwards,
-then I think the driver should work as-is today. It's slightly odd, in
-that there may be a prefix of config space that maps to god-knows-where,
-but it's consistent with ACPI and doesn't require us to change the driver.
+It's true that we wouldn't want to enable AtomicOp routing to 04:00.0,
+but isn't that what the AtomicOp Egress Blocking bit is for?  If we
+set that in 02:00.1, we should be safe in the sense that AtomicOps
+targeting 04:00.0 should cause non-fatal errors.
 
-David?
+> Approach 3 allows drivers to enable AtomicOp requests on a per-device basis to
+> support blacklisting. A downside is that if AtomicOp support becomes more
+> prevalent it may be undesirable to explicitly enable the feature in individual
+> drivers.
 
-Will
+Your pci_enable_atomic_request() enables AtomicOps for one component.
+I assume that means the driver would have to map out the topology,
+figure out whether all the components support AtomicOp routing, and
+call pci_enable_atomic_request() for the Root Port and the Endpoint.
+That seems like a lot of grubbing around for a driver.
+
+I think a driver should only call pci_enable_atomic_request() for its
+own device, and the PCI core should figure out whether it can be
+enabled, and if it can, do everything needed to enable it.
+
+> Approach 4 is intractable as the target for a transaction is generally known
+> only by the application. DEVCTL2.ATOMICOP_REQUESTER_ENABLE is also a 1:many
+> capability and would not align well with this model.
+> 
+> In the absence of an ideal solution, I think approach 3(1) is the most
+> appropriate. I am open to suggestions for an improved implementation.
+> 
+> Jay Cornwall (1):
+>   PCI: Add pci_enable_atomic_request
+> 
+>  drivers/pci/pci.c             | 23 +++++++++++++++++++++++
+>  include/linux/pci.h           |  1 +
+>  include/uapi/linux/pci_regs.h |  1 +
+>  3 files changed, 25 insertions(+)
+> 
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
