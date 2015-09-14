@@ -1,70 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:47015 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752529AbbINQ20 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Sep 2015 12:28:26 -0400
-Date: Mon, 14 Sep 2015 17:28:34 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Yinghai Lu <yinghai@kernel.org>
+Received: from mail-la0-f47.google.com ([209.85.215.47]:34972 "EHLO
+	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754239AbbINOz6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 10:55:58 -0400
+Received: by lagj9 with SMTP id j9so89722644lag.2
+        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2015 07:55:56 -0700 (PDT)
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20150602133215.GC23650@red-moon> <55701A31.808@linaro.org>
+ <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org>
+ <557504A2.3060203@linaro.org> <20150608151443.GA16151@red-moon>
+ <55E4340D.6050004@linaro.org> <55ED6010.3020406@linaro.org>
+ <20150908150727.GF29293@red-moon> <55F0388B.1090607@linaro.org>
+ <20150911112018.GA13033@red-moon>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
- of arch code
-Message-ID: <20150914162834.GA11199@red-moon>
-References: <20150902203250.GB829@google.com>
- <20150903100115.GA15308@red-moon>
- <20150903162140.GG829@google.com>
- <20150904141903.GA22997@red-moon>
- <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
- <20150904164412.GD22997@red-moon>
- <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
- <20150907091230.GB29293@red-moon>
- <20150914100929.GB18886@red-moon>
- <CAE9FiQV-eG42xzqVcO2Q+xT3jx-Oa7uC7fEuowvopx4Fp9F7hQ@mail.gmail.com>
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Message-ID: <55F6DFF6.4010807@linaro.org>
+Date: Mon, 14 Sep 2015 16:55:50 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQV-eG42xzqVcO2Q+xT3jx-Oa7uC7fEuowvopx4Fp9F7hQ@mail.gmail.com>
+In-Reply-To: <20150911112018.GA13033@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 14, 2015 at 05:05:50PM +0100, Yinghai Lu wrote:
-> On Mon, Sep 14, 2015 at 3:09 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > As I said, ARM is not the only platform affected, MIPS and possibly
-> > Alpha suffer from the same issue and I think it should be fixed
-> > in core code (I think __pci_bus_size_bridges() should ignore the
-> > old aperture size on first scan).
-> 
-> We could just revert
-> dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
-> arch code")
-> instead.
+On 11.09.2015 13:20, Lorenzo Pieralisi wrote:
+> On Wed, Sep 09, 2015 at 02:47:55PM +0100, Tomasz Nowicki wrote:
+>
+> [...]
+>
+>>> I think (but I am happy to be corrected) that the map_bus() hook
+>>> (ie that's why struct pci_bus is required in eg pci_generic_config_write)
+>>> is there to ensure that when the generic accessors are called
+>>> a) we have a valid bus b) the host controllers implementing it
+>>> has been initialized.
+>>>
+>>> I had another look and I noticed you are trying to solve multiple
+>>> things at once:
+>>>
+>>> 1) ACPICA seems to need PCI config space on bus 0 to be working
+>>>      before PCI enumerates (ie before we have a root bus), we need to
+>>>      countercheck on that, but you can't use the generic PCI accessors
+>>>      for that reasons (ie root bus might not be available, you do not
+>>>      have a pci_bus struct)
+>>> 2) the raw_pci_read/write require _generic_ mmio back-ends, since AMD
+>>>      can't cope with standard x86 read/write{b,w,l}
+>>>
+>>> Overall, it seems to me that we can avoid code duplication by
+>>> shuffling your code a bit.
+>>>
+>>> You could modify the generic accessors in drivers/pci/access.c to
+>>> use your mmio back-end instead of using plain read/write{b,w,l}
+>>> functions (we should check if RobH is ok with that there can be
+>>> reasons that prevent this from happening). This would solve the
+>>> AMD mmio issue.
+>>>
+>>> By factoring out the code that actually carries out the reads
+>>> and writes in the accessors basically you decouple the functions
+>>> requiring the struct pci_bus from the ones that does not require it
+>>> (ie raw_pci_{read/write}.
+>>>
+>>> The generic MMIO layer belongs in the drivers/pci/access.c file, it has
+>>> nothing to do with ECAM.
+>>>
+>>> The mmcfg interface should probably live in pci-acpi.c, I do not think
+>>> you need an extra file in there but that's a detail.
+>>>
+>>> Basically the generic accessors would become something like eg:
+>>>
+>>> int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
+>>>                             int where, int size, u32 val)
+>>> {
+>>>        void __iomem *addr;
+>>>
+>>>        addr = bus->ops->map_bus(bus, devfn, where);
+>>>        if (!addr)
+>>>                return PCIBIOS_DEVICE_NOT_FOUND;
+>>>
+>>>        pci_mmio_write(size, addr + where, value);
+>>>
+>>>        return PCIBIOS_SUCCESSFUL;
+>>> }
+>>>
+>>> With that in place using raw_pci_write/read or the generic accessors
+>>> becomes almost identical, with code requiring the pci_bus to be
+>>> created using the generic accessors and ACPICA using the raw version.
+>>>
+>>> I might be missing something, so apologies if that's the case.
+>>>
+>>
+>> Actually, I think you showed me the right direction :) Here are some
+>> conclusions/comments/concerns. Please correct me if I am wrong:
+>>
+>> 1. We need raw_pci_write/read accessors (based on ECAM) for ARM64 too
+>> but only up to the point where buses are enumerated. From that point on,
+>> we should reuse generic accessors from access.c file, right?
+>
+> Well, I still have not figured out whether on arm64 the raw accessors
+> required by ACPICA make sense.
+>
+> So either arm64 relies on the generic MCFG based raw read and writes
+> or we define the global raw read and writes as empty (ie x86 overrides
+> them anyway).
+>
 
-Sure, but still that does not explain why the old bridge aperture size
-matters while sizing the bridge aperture on first bridge scan, I
-still have no answer for that and I would like to get one.
+My concerns/ideas related to raw accessors for ARM64, please correct me 
+at any point.
 
-As far as I understand we could just rework:
+ACPI spec - chapter: 19.5.96 OperationRegion (Declare Operation Region)
+defines PCI_Config as one of region types. Every time ASL opcode 
+operates on corresponding PCI config space region, ASL interpreter is 
+dispatching address space to our raw accessors, please see 
+acpi_ex_pci_config_space_handler, acpi_ev_pci_config_region_setup calls. 
+What is more important, such operations may happen after (yes after) bus 
+enumeration, but always raw accessors are called at the end with the 
+{segment, bus, dev, fn} tuple.
 
-commit d65245c3297ac63abc51a976d9 ("PCI: don't shrink bridge resources")
+Giving above, here are some ideas:
+1. We force somehow vendors to avoid operations on PCI config regions in 
+ASL code. PCI config region definitions still fall into Hardware Reduced 
+profile, so new ACPICA special subset for ARM64 is need. Then raw ACPI 
+accessors can be empty (and overridden by x86).
+2. We provide raw accessors which translate {segment, bus, dev, fn} 
+tuple to Linux generic accessors (this can be considered only if PCI 
+config accesses happened after bus enumeration for HR profile, thus 
+tuple to bus structure map is possible).
+4. We rely on the generic MCFG based raw read and writes.
 
-to make sure that old size is taken into account only when the core
-code tries to reallocate resources, I think that dff22d2054b5 unearthed
-a problem instead of creating one but I am open to suggestions.
+Let me know your opinion.
 
 Thanks,
-Lorenzo
+Tomasz
