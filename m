@@ -1,82 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:34076 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755816AbbINQsE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 12:48:04 -0400
-Received: by iofb144 with SMTP id b144so173253364iof.1
-        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2015 09:48:02 -0700 (PDT)
-Date: Mon, 14 Sep 2015 11:47:56 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: linux-pci@vger.kernel.org, thierry.reding@gmail.com,
-	linux-tegra@vger.kernel.org, swarren@wwwdotorg.org
-Subject: Re: [PATCH resend] PCI: tegra: use __pgprot() around static pgprot_t
- initializer
-Message-ID: <20150914164756.GM829@google.com>
-References: <1440578974-26527-1-git-send-email-ard.biesheuvel@linaro.org>
+Received: from mailuogwdur.emc.com ([128.221.224.79]:52239 "EHLO
+	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751444AbbINIaL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 04:30:11 -0400
+From: "Ballabio, Dario" <dario.ballabio@emc.com>
+To: Hannes Reinecke <hare@suse.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	"James E.J. Bottomley" <JBottomley@odin.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>
+Date: Mon, 14 Sep 2015 04:31:06 -0400
+Subject: RE: [Bugfix 3/3] eata: Enhance eata driver to support PCI device
+ hot-removal
+Message-ID: <EB35ED741F0E024A8A7C30A8B22D7DA61FAF5D3D98@MX27A.corp.emc.com>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
+ <55F6837A.5020807@suse.de>
+In-Reply-To: <55F6837A.5020807@suse.de>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440578974-26527-1-git-send-email-ard.biesheuvel@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 26, 2015 at 10:49:34AM +0200, Ard Biesheuvel wrote:
-> In order to comply with the rules that apply when STRICT_MM_TYPECHECKS
-> is defined, wrap the initializer for a pgprot_t in __pgprot().
+Agreed, It does not make sense to have  this driver converted to a hot plug api.
+
+Cheers,
+
+
+
+***************************************
+Ph.D. Dario Ballabio
+Principal Field Support Specialist, EMC EMEA 
+Mobile phone: +393487978851
+
+
+
+-----Original Message-----
+From: Hannes Reinecke [mailto:hare@suse.de] 
+Sent: Monday, September 14, 2015 10:21 AM
+To: Jiang Liu; Thomas Gleixner; Bjorn Helgaas; Arthur Marsh; Ballabio, Dario; James E.J. Bottomley
+Cc: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org; linux-scsi@vger.kernel.org; x86@kernel.org
+Subject: Re: [Bugfix 3/3] eata: Enhance eata driver to support PCI device hot-removal
+
+On 09/14/2015 05:08 AM, Jiang Liu wrote:
+> Due to having no hardware for testing, this is just a sample code to 
+> support PCI device hot-removal. It just passing compilation, no any 
+> tests.
 > 
-> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-
-Applied with Thierry's ack to pci/host-tegra for v4.4, thanks!
-
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 > ---
->  drivers/pci/host/pci-tegra.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/scsi/eata.c |   26 ++++++++++++++++++++++++++
+>  1 file changed, 26 insertions(+)
 > 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 10c05718dbfd..0d3e6cb0c459 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -382,8 +382,8 @@ static unsigned long tegra_pcie_conf_offset(unsigned int devfn, int where)
->  static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
->  						   unsigned int busnr)
->  {
-> -	pgprot_t prot = L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_DIRTY | L_PTE_XN |
-> -			L_PTE_MT_DEV_SHARED | L_PTE_SHARED;
-> +	pgprot_t prot = __pgprot(L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_DIRTY |
-> +				 L_PTE_XN | L_PTE_MT_DEV_SHARED | L_PTE_SHARED);
->  	phys_addr_t cs = pcie->cs->start;
->  	struct tegra_pcie_bus *bus;
->  	unsigned int i;
-> -- 
-> 1.9.1
+> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c index 
+> b92e6856f909..f3bd7cbf260e 100644
+> --- a/drivers/scsi/eata.c
+> +++ b/drivers/scsi/eata.c
+> @@ -1474,6 +1474,21 @@ static unsigned int port_probe(unsigned long 
+> port_base,  #ifdef CONFIG_PCI  static int eata2x_pci_device_count;
+>  
+> +/* TODO: need help here to shutdown the scsi host and release 
+> +resources */ static void port_remove(unsigned int id, resource_size_t port_base,
+> +			struct pci_dev *pdev)
+> +{
+> +	struct Scsi_Host *shost = sh[id];
+> +
+> +	/* TODO: stop scsi device */
+> +	scsi_unregister(shost);
+> +	/* TODO: clean up resources allocated by port_detect() */
+> +	clear_bit(id, eata_board_bitmap);
+> +	free_irq(shost->irq, &sha[id]);
+> +	release_region(port_base, REGION_SIZE);
+> +	ida_simple_remove(&eata_ida, id);
+> +}
+> +
+>  static int eata2x_pci_probe(struct pci_dev *dev, const struct 
+> pci_device_id *id)  {
+>  	int i, ret = -ENXIO;
+> @@ -1521,6 +1536,16 @@ out_error:
+>  	return ret;
+>  }
+>  
+> +static void eata2x_pci_remove(struct pci_dev *pdev) {
+> +	int id = (int)(long)dev_get_drvdata(&pdev->dev);
+> +	resource_size_t port_base;
+> +
+> +	port_base = pci_resource_start(pdev, 0) + PCI_BASE_ADDRESS_0;
+> +	port_remove(id, port_base, pdev);
+> +	pci_disable_device(pdev);
+> +}
+> +
+>  static struct pci_device_id eata2x_tbl[] = {
+>  	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_SCSI << 8, PCI_ANY_ID) },
+>  	{ },
+> @@ -1531,6 +1556,7 @@ static struct pci_driver eata2x_pci_driver = {
+>  	.name		= "eata",
+>  	.id_table	= eata2x_tbl,
+>  	.probe		= eata2x_pci_probe,
+> +	.remove		= eata2x_pci_remove,
+>  };
+>  
+>  static int eata2x_probe_pci_devices(struct scsi_host_template *tpnt)
+> 
+Welll ... if you don't have hardware (and I strongly hope you refer to 'hardware able to do hotplugging', not 'hardware for the eata driver'
+...) why add the code at all?
+Chances are no-one will ever need eata PCI hotplug; SCSI parallel typically isn't very good at hotplugging, so throwing in PCI hotplug will only confuse matters more.
+Plus due to the sheer mechanics involved here I find it very unlikely anyone will be using it in real life.
 
+Cheers,
 
-commit 512ee2fd9ca1c0b447a144c6c49a53a010f8d6fa
-Author: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date:   Wed Aug 26 10:49:34 2015 +0200
-
-    PCI: tegra: Wrap static pgprot_t initializer with __pgprot()
-    
-    Wrap pgprot_t initializer with __pgprot() to comply with the
-    STRICT_MM_TYPECHECKS rules.
-    
-    [bhelgaas: changelog]
-    Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Thierry Reding <treding@nvidia.com>
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 81df0c1..3018ae5 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -382,8 +382,8 @@ static unsigned long tegra_pcie_conf_offset(unsigned int devfn, int where)
- static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
- 						   unsigned int busnr)
- {
--	pgprot_t prot = L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_DIRTY | L_PTE_XN |
--			L_PTE_MT_DEV_SHARED | L_PTE_SHARED;
-+	pgprot_t prot = __pgprot(L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_DIRTY |
-+				 L_PTE_XN | L_PTE_MT_DEV_SHARED | L_PTE_SHARED);
- 	phys_addr_t cs = pcie->cs->start;
- 	struct tegra_pcie_bus *bus;
- 	unsigned int i;
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
