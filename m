@@ -1,165 +1,102 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 32/53] resources: Split out __allocate_resource()
-Date: Wed, 16 Sep 2015 14:57:30 -0700
-Message-Id: <1442440671-5361-33-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Subject: Re: [Bugfix 3/3] eata: Enhance eata driver to support PCI device
+ hot-removal
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	"James E.J. Bottomley" <JBottomley@odin.com>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <55F6837A.5020807@suse.de>
+Date: Mon, 14 Sep 2015 10:21:14 +0200
+MIME-Version: 1.0
+In-Reply-To: <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This one is separated from next patch for best fit allocation.
+On 09/14/2015 05:08 AM, Jiang Liu wrote:
+> Due to having no hardware for testing, this is just a sample code
+> to support PCI device hot-removal. It just passing compilation,
+> no any tests.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/scsi/eata.c |   26 ++++++++++++++++++++++++++
+>  1 file changed, 26 insertions(+)
+> 
+> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+> index b92e6856f909..f3bd7cbf260e 100644
+> --- a/drivers/scsi/eata.c
+> +++ b/drivers/scsi/eata.c
+> @@ -1474,6 +1474,21 @@ static unsigned int port_probe(unsigned long port_base,
+>  #ifdef CONFIG_PCI
+>  static int eata2x_pci_device_count;
+>  
+> +/* TODO: need help here to shutdown the scsi host and release resources */
+> +static void port_remove(unsigned int id, resource_size_t port_base,
+> +			struct pci_dev *pdev)
+> +{
+> +	struct Scsi_Host *shost = sh[id];
+> +
+> +	/* TODO: stop scsi device */
+> +	scsi_unregister(shost);
+> +	/* TODO: clean up resources allocated by port_detect() */
+> +	clear_bit(id, eata_board_bitmap);
+> +	free_irq(shost->irq, &sha[id]);
+> +	release_region(port_base, REGION_SIZE);
+> +	ida_simple_remove(&eata_ida, id);
+> +}
+> +
+>  static int eata2x_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>  {
+>  	int i, ret = -ENXIO;
+> @@ -1521,6 +1536,16 @@ out_error:
+>  	return ret;
+>  }
+>  
+> +static void eata2x_pci_remove(struct pci_dev *pdev)
+> +{
+> +	int id = (int)(long)dev_get_drvdata(&pdev->dev);
+> +	resource_size_t port_base;
+> +
+> +	port_base = pci_resource_start(pdev, 0) + PCI_BASE_ADDRESS_0;
+> +	port_remove(id, port_base, pdev);
+> +	pci_disable_device(pdev);
+> +}
+> +
+>  static struct pci_device_id eata2x_tbl[] = {
+>  	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_SCSI << 8, PCI_ANY_ID) },
+>  	{ },
+> @@ -1531,6 +1556,7 @@ static struct pci_driver eata2x_pci_driver = {
+>  	.name		= "eata",
+>  	.id_table	= eata2x_tbl,
+>  	.probe		= eata2x_pci_probe,
+> +	.remove		= eata2x_pci_remove,
+>  };
+>  
+>  static int eata2x_probe_pci_devices(struct scsi_host_template *tpnt)
+> 
+Welll ... if you don't have hardware (and I strongly hope you refer to
+'hardware able to do hotplugging', not 'hardware for the eata driver'
+...) why add the code at all?
+Chances are no-one will ever need eata PCI hotplug; SCSI parallel
+typically isn't very good at hotplugging, so throwing in PCI hotplug
+will only confuse matters more.
+Plus due to the sheer mechanics involved here I find it very unlikely
+anyone will be using it in real life.
 
-Split out __allocate_resource(), and it will not hold lock, so we could use it
-in other functions that hold the resource lock already.
+Cheers,
 
--v2: according to Linus, using "bool lock" as parameter
-     aka "conditionally take lock" is *wrong*.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Acked-by: Linus Torvalds <torvalds@linux-foundation.org>
----
- kernel/resource.c | 70 +++++++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 50 insertions(+), 20 deletions(-)
-
-diff --git a/kernel/resource.c b/kernel/resource.c
-index f150dbb..07dea6f 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -630,7 +630,7 @@ static int find_resource(struct resource *root, struct resource *new,
- }
- 
- /**
-- * reallocate_resource - allocate a slot in the resource tree given range & alignment.
-+ * __reallocate_resource - allocate a slot in the resource tree given range & alignment.
-  *	The resource will be relocated if the new size cannot be reallocated in the
-  *	current location.
-  *
-@@ -639,7 +639,7 @@ static int find_resource(struct resource *root, struct resource *new,
-  * @newsize: new size of the resource descriptor
-  * @constraint: the size and alignment constraints to be met.
-  */
--static int reallocate_resource(struct resource *root, struct resource *old,
-+static int __reallocate_resource(struct resource *root, struct resource *old,
- 			resource_size_t newsize,
- 			struct resource_constraint  *constraint)
- {
-@@ -647,8 +647,6 @@ static int reallocate_resource(struct resource *root, struct resource *old,
- 	struct resource new = *old;
- 	struct resource *conflict;
- 
--	write_lock(&resource_lock);
--
- 	if ((err = __find_resource(root, old, &new, newsize, constraint)))
- 		goto out;
- 
-@@ -673,14 +671,13 @@ static int reallocate_resource(struct resource *root, struct resource *old,
- 		BUG_ON(conflict);
- 	}
- out:
--	write_unlock(&resource_lock);
- 	return err;
- }
- 
--
- /**
-- * allocate_resource - allocate empty slot in the resource tree given range & alignment.
-- * 	The resource will be reallocated with a new size if it was already allocated
-+ * __allocate_resource - allocate empty slot in the resource tree given range & alignment.
-+ *	The resource will be reallocated with a new size if it was already
-+ *	allocated
-  * @root: root resource descriptor
-  * @new: resource descriptor desired by caller
-  * @size: requested resource region size
-@@ -689,15 +686,17 @@ out:
-  * @align: alignment requested, in bytes
-  * @alignf: alignment function, optional, called if not NULL
-  * @alignf_data: arbitrary data to pass to the @alignf function
-+ *
-+ * Caller need to hold resource_lock if needed.
-  */
--int allocate_resource(struct resource *root, struct resource *new,
--		      resource_size_t size, resource_size_t min,
--		      resource_size_t max, resource_size_t align,
--		      resource_size_t (*alignf)(void *,
--						const struct resource *,
--						resource_size_t,
--						resource_size_t),
--		      void *alignf_data)
-+static int __allocate_resource(struct resource *root, struct resource *new,
-+				resource_size_t size, resource_size_t min,
-+				resource_size_t max, resource_size_t align,
-+				resource_size_t (*alignf)(void *,
-+						  const struct resource *,
-+						  resource_size_t,
-+						  resource_size_t),
-+				void *alignf_data)
- {
- 	int err;
- 	struct resource_constraint constraint;
-@@ -711,20 +710,51 @@ int allocate_resource(struct resource *root, struct resource *new,
- 	constraint.alignf = alignf;
- 	constraint.alignf_data = alignf_data;
- 
--	if ( new->parent ) {
-+	if (new->parent) {
- 		/* resource is already allocated, try reallocating with
- 		   the new constraints */
--		return reallocate_resource(root, new, size, &constraint);
-+		return __reallocate_resource(root, new, size, &constraint);
- 	}
- 
--	write_lock(&resource_lock);
- 	err = find_resource(root, new, size, &constraint);
- 	if (err >= 0 && __request_resource(root, new))
- 		err = -EBUSY;
--	write_unlock(&resource_lock);
-+
- 	return err;
- }
- 
-+/**
-+ * allocate_resource - allocate empty slot in the resource tree given range & alignment.
-+ *	The resource will be reallocated with a new size if it was already
-+ *	allocated
-+ * @root: root resource descriptor
-+ * @new: resource descriptor desired by caller
-+ * @size: requested resource region size
-+ * @min: minimum boundary to allocate
-+ * @max: maximum boundary to allocate
-+ * @align: alignment requested, in bytes
-+ * @alignf: alignment function, optional, called if not NULL
-+ * @alignf_data: arbitrary data to pass to the @alignf function
-+ */
-+int allocate_resource(struct resource *root, struct resource *new,
-+		      resource_size_t size, resource_size_t min,
-+		      resource_size_t max, resource_size_t align,
-+		      resource_size_t (*alignf)(void *,
-+						const struct resource *,
-+						resource_size_t,
-+						resource_size_t),
-+		      void *alignf_data)
-+{
-+	int ret;
-+
-+	write_lock(&resource_lock);
-+	ret = __allocate_resource(root, new, size, min, max, align,
-+				   alignf, alignf_data);
-+	write_unlock(&resource_lock);
-+
-+	return ret;
-+}
-+
- EXPORT_SYMBOL(allocate_resource);
- 
- /**
+Hannes
 -- 
-1.8.4.5
-
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
