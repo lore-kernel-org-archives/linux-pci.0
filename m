@@ -1,81 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:45192 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751854AbbINKJS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Sep 2015 06:09:18 -0400
-Date: Mon, 14 Sep 2015 11:09:29 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
+ ECAM) and ACPI code out of arch/x86/ directory
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org>
+ <557504A2.3060203@linaro.org> <20150608151443.GA16151@red-moon>
+ <55E4340D.6050004@linaro.org> <55ED6010.3020406@linaro.org>
+ <20150908150727.GF29293@red-moon> <55F0388B.1090607@linaro.org>
+ <20150911112018.GA13033@red-moon> <55F2CA98.7050905@linaro.org>
+ <20150914093719.GC18410@red-moon>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
- of arch code
-Message-ID: <20150914100929.GB18886@red-moon>
-References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
- <20150902174716.GA6305@red-moon>
- <20150902203250.GB829@google.com>
- <20150903100115.GA15308@red-moon>
- <20150903162140.GG829@google.com>
- <20150904141903.GA22997@red-moon>
- <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
- <20150904164412.GD22997@red-moon>
- <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
- <20150907091230.GB29293@red-moon>
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Catalin Marinas <Catalin.Marinas@arm.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Message-ID: <55F6B0AA.9030506@linaro.org>
+Date: Mon, 14 Sep 2015 13:34:02 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150907091230.GB29293@red-moon>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20150914093719.GC18410@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Yinghai,
+On 14.09.2015 11:37, Lorenzo Pieralisi wrote:
+> On Fri, Sep 11, 2015 at 01:35:36PM +0100, Tomasz Nowicki wrote:
+>> On 11.09.2015 13:20, Lorenzo Pieralisi wrote:
+>
+> [...]
+>
+>>>>> With that in place using raw_pci_write/read or the generic accessors
+>>>>> becomes almost identical, with code requiring the pci_bus to be
+>>>>> created using the generic accessors and ACPICA using the raw version.
+>>>>>
+>>>>> I might be missing something, so apologies if that's the case.
+>>>>>
+>>>>
+>>>> Actually, I think you showed me the right direction :) Here are some
+>>>> conclusions/comments/concerns. Please correct me if I am wrong:
+>>>>
+>>>> 1. We need raw_pci_write/read accessors (based on ECAM) for ARM64 too
+>>>> but only up to the point where buses are enumerated. From that point on,
+>>>> we should reuse generic accessors from access.c file, right?
+>>>
+>>> Well, I still have not figured out whether on arm64 the raw accessors
+>>> required by ACPICA make sense.
+>>>
+>>> So either arm64 relies on the generic MCFG based raw read and writes
+>>> or we define the global raw read and writes as empty (ie x86 overrides
+>>> them anyway).
+>>>
+>>> I will get back to you on this.
+>>>
+>>>> 2. For ARM64 ACPI PCI, we can use generic accessors right away, .map_bus
+>>>> would call common code part (pci_dev_base()). The only thing that worry
+>>>> me is fact that MCFG regions are RCU list so it needs rcu_read_lock()
+>>>> for the .map_bus (mcfg lookup) *and* read/write operation.
+>>>
+>>> Do you mean the address look-up and the mmio operation should be carried
+>>> out atomically right ?
+>> Yes.
+>
+> We can wrap the calls pci_generic_read/write() within a function and
+> add rcu_read_lock()/unlock() around them, eg:
+>
+> int pci_generic_config_read_rcu()
+> {
+> 	rcu_read_lock();
+> 	pci_generic_config_read(...);
+> 	rcu_read_unlock();
+> }
+It looks good to me, thanks for suggestion.
 
-On Mon, Sep 07, 2015 at 10:12:30AM +0100, Lorenzo Pieralisi wrote:
-> On Sat, Sep 05, 2015 at 12:53:48AM +0100, Yinghai Lu wrote:
-> > On Fri, Sep 4, 2015 at 9:44 AM, Lorenzo Pieralisi
-> > <lorenzo.pieralisi@arm.com> wrote:
-> > > On Fri, Sep 04, 2015 at 05:00:35PM +0100, Yinghai Lu wrote:
-> > >
-> > > The problem here is not the last retry, it is the first bridge scan.
-> > >
-> > > By moving pci_read_bridge_bases() to core PCI code, if we do not
-> > > vet the bridge apertures (ie claim them and reset them if the claiming
-> > > fails) we end up calling (on ARM) __pci_bus_size_bridges() with apertures
-> > > that can have sizes != 0, which does not make any sense since we are calling
-> > > __pci_bus_size_bridges() to *discover* what the aperture size should
-> > > be on first bridge scan, correct ?
-> > 
-> > for x86, in pcibios_allocate_bridge_resources(), we do validate
-> > the bridge resources, and reset size to 1 (strange ?!).
-> 
-> Yes, strange, but there is even a special case in calculate_memsize()
-> to handle that :) it seems !
+>
+> Honestly it seems the RCU API is needed just because config space
+> can be also accessed by raw_ accessors in ACPICA code, that's the only
+> reason I see to protect the config structs against config space
+> removal (basically config entries are removed only when the host
+> bridge is released if I read the code correctly, and the only way
+> this can happen concurrently is having ACPICA code reusing the
+> same config space but accessing it with no pci_bus struct attached
+> to it, by just using the (segment, bus, dev, fn) tuple).
+>
+Right.
 
-Any thoughts on that ? I would like to understand if there is any
-reason why on first scan the bridge aperture size is relevant, whereas
-in my opinion it should not be, I need your input on that.
+Side note:
+MCFG region can be removed from the pci_mmcfg_list list only if it has 
+been "hot added" there. Which means that PCI host bridge specified 
+configuration base address (_CBA) different than those from MCFG static 
+table e.g.:
 
-Put it differently, I do not see any reason why arch code should
-reset the bridge resource on platforms that reassign the whole
-PCI config space, if you see any please mention it here.
+DSDT.asl:
+Device (PCI0) {
+     Name (_HID, EISAID ("PNP0A03"))
+     [...]
+     Name (_CBA, 0xB0000000)
+     [...]
+}
 
-As I said, ARM is not the only platform affected, MIPS and possibly
-Alpha suffer from the same issue and I think it should be fixed
-in core code (I think __pci_bus_size_bridges() should ignore the
-old aperture size on first scan).
+But pci_mmcfg_list elements coming from static MCFG table cannot be 
+removed, hence they are living there for ever.
 
-Thanks !
-Lorenzo
+Thanks,
+Tomasz
