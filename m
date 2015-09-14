@@ -1,271 +1,248 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 34/53] PCI, x86: Allocate from high in available window for MMIO
-Date: Wed, 16 Sep 2015 14:57:32 -0700
-Message-Id: <1442440671-5361-35-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:43908 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751330AbbINIRi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Sep 2015 04:17:38 -0400
+Subject: Re: [Bugfix 2/3] eata: Implement PCI driver to manage eata PCI
+ devices
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	"James E.J. Bottomley" <JBottomley@odin.com>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442200140-30808-3-git-send-email-jiang.liu@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <55F6829F.8090707@suse.de>
+Date: Mon, 14 Sep 2015 10:17:35 +0200
+MIME-Version: 1.0
+In-Reply-To: <1442200140-30808-3-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code just use aligned start from avialable window, that could waste
-big alignment from start.
+On 09/14/2015 05:08 AM, Jiang Liu wrote:
+> Previously the eata driver just grabs and accesses eata PCI devices
+> without implementing a PCI device driver, that causes troubles with
+> latest IRQ related
+> 
+> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
+> for PCI devices on x86 platforms. Instead of allocating PCI legacy
+> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
+> will be called by pci_device_probe() to allocate PCI legacy IRQs
+> when binding PCI drivers to PCI devices.
+> 
+> But the eata driver directly accesses PCI devices without implementing
+> corresponding PCI drivers, so pcibios_alloc_irq() won't be called for
+> those PCI devices and wrong IRQ number may be used to manage the PCI
+> device.
+> 
+> This patch implements a PCI device driver to manage eata PCI devices,
+> so eata driver could properly cooperate with the PCI core. It also
+> provides headroom for PCI hotplug with eata driver.
+> 
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> ---
+>  drivers/scsi/eata.c |  170 ++++++++++++++++++++++-----------------------------
+>  1 file changed, 74 insertions(+), 96 deletions(-)
+> 
+> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+> index b45d3b532b70..b92e6856f909 100644
+> --- a/drivers/scsi/eata.c
+> +++ b/drivers/scsi/eata.c
+> @@ -850,10 +850,6 @@ static unsigned long io_port[] = {
+>  	/* First ISA */
+>  	0x1f0,
+>  
+> -	/* Space for MAX_PCI ports possibly reported by PCI_BIOS */
+> -	SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+> -	SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+> -
+>  	/* MAX_EISA ports */
+>  	0x1c88, 0x2c88, 0x3c88, 0x4c88, 0x5c88, 0x6c88, 0x7c88, 0x8c88,
+>  	0x9c88, 0xac88, 0xbc88, 0xcc88, 0xdc88, 0xec88, 0xfc88,
+> @@ -1024,60 +1020,13 @@ static int read_pio(unsigned long iobase, ushort * start, ushort * end)
+>  	return 0;
+>  }
+>  
+> -static struct pci_dev *get_pci_dev(unsigned long port_base)
+> -{
+> -#if defined(CONFIG_PCI)
+> -	unsigned int addr;
+> -	struct pci_dev *dev = NULL;
+> -
+> -	while ((dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev))) {
+> -		addr = pci_resource_start(dev, 0);
+> -
+> -#if defined(DEBUG_PCI_DETECT)
+> -		printk("%s: get_pci_dev, bus %d, devfn 0x%x, addr 0x%x.\n",
+> -		       driver_name, dev->bus->number, dev->devfn, addr);
+> -#endif
+> -
+> -		/* we are in so much trouble for a pci hotplug system with this driver
+> -		 * anyway, so doing this at least lets people unload the driver and not
+> -		 * cause memory problems, but in general this is a bad thing to do (this
+> -		 * driver needs to be converted to the proper PCI api someday... */
+> -		pci_dev_put(dev);
+> -		if (addr + PCI_BASE_ADDRESS_0 == port_base)
+> -			return dev;
+> -	}
+> -#endif				/* end CONFIG_PCI */
+> -	return NULL;
+> -}
+> -
+> -static void enable_pci_ports(void)
+> -{
+> -#if defined(CONFIG_PCI)
+> -	struct pci_dev *dev = NULL;
+> -
+> -	while ((dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev))) {
+> -#if defined(DEBUG_PCI_DETECT)
+> -		printk("%s: enable_pci_ports, bus %d, devfn 0x%x.\n",
+> -		       driver_name, dev->bus->number, dev->devfn);
+> -#endif
+> -
+> -		if (pci_enable_device(dev))
+> -			printk
+> -			    ("%s: warning, pci_enable_device failed, bus %d devfn 0x%x.\n",
+> -			     driver_name, dev->bus->number, dev->devfn);
+> -	}
+> -
+> -#endif				/* end CONFIG_PCI */
+> -}
+> -
+>  static int port_detect(unsigned long port_base, unsigned int j,
+> -		struct scsi_host_template *tpnt)
+> +		       struct scsi_host_template *tpnt, struct pci_dev *pdev)
+>  {
+>  	unsigned char irq, dma_channel, subversion, i, is_pci = 0;
+>  	unsigned char protocol_rev;
+>  	struct eata_info info;
+>  	char *bus_type, dma_name[16];
+> -	struct pci_dev *pdev;
+>  	/* Allowed DMA channels for ISA (0 indicates reserved) */
+>  	unsigned char dma_channel_table[4] = { 5, 6, 7, 0 };
+>  	struct Scsi_Host *shost;
+> @@ -1199,15 +1148,8 @@ static int port_detect(unsigned long port_base, unsigned int j,
+>  		    ("%s: warning, LEVEL triggering is suggested for IRQ %u.\n",
+>  		     name, irq);
+>  
+> -	if (is_pci) {
+> -		pdev = get_pci_dev(port_base);
+> -		if (!pdev)
+> -			printk
+> -			    ("%s: warning, failed to get pci_dev structure.\n",
+> -			     name);
+> -	} else
+> -		pdev = NULL;
+> -
+> +	if (is_pci && !pdev)
+> +		printk("%s: warning, failed to get pci_dev structure.\n", name);
+>  	if (pdev && (irq != pdev->irq)) {
+>  		printk("%s: IRQ %u mapped to IO-APIC IRQ %u.\n", name, irq,
+>  		       pdev->irq);
+> @@ -1510,14 +1452,17 @@ static int option_setup(char *str)
+>  }
+>  
+>  static unsigned int port_probe(unsigned long port_base,
+> -			       struct scsi_host_template *tpnt)
+> +			       struct scsi_host_template *tpnt,
+> +			       struct pci_dev *pdev)
+>  {
+>  	int id;
+>  
+>  	id = ida_simple_get(&eata_ida, 0, MAX_BOARDS, GFP_KERNEL);
+>  	if (id >= 0) {
+>  		set_bit(id, eata_board_bitmap);
+> -		if (port_detect(port_base, id, tpnt))
+> +		if (pdev)
+> +			dev_set_drvdata(&pdev->dev, (void *)(long)id);
+> +		if (port_detect(port_base, id, tpnt, pdev))
+>  			return id;
+>  		clear_bit(id, eata_board_bitmap);
+>  		ida_simple_remove(&eata_ida, id);
+> @@ -1526,42 +1471,81 @@ static unsigned int port_probe(unsigned long port_base,
+>  	return -1;
+>  }
+>  
+> -static void add_pci_ports(void)
+> -{
+> -#if defined(CONFIG_PCI)
+> -	unsigned int addr, k;
+> -	struct pci_dev *dev = NULL;
+> -
+> -	for (k = 0; k < MAX_PCI; k++) {
+> +#ifdef CONFIG_PCI
+> +static int eata2x_pci_device_count;
+>  
+> -		if (!(dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev)))
+> -			break;
+> +static int eata2x_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+> +{
+> +	int i, ret = -ENXIO;
+> +	resource_size_t addr;
+> +	unsigned long port_base;
+> +	struct scsi_host_template *tpnt = (void *)id->driver_data;
+>  
+> -		if (pci_enable_device(dev)) {
+> +	if (pci_enable_device(dev)) {
+>  #if defined(DEBUG_PCI_DETECT)
+> -			printk
+> -			    ("%s: detect, bus %d, devfn 0x%x, pci_enable_device failed.\n",
+> -			     driver_name, dev->bus->number, dev->devfn);
+> +		pr_warn("%s: detect, bus %d, devfn 0x%x, pci_enable_device failed.\n",
+> +			driver_name, dev->bus->number, dev->devfn);
+>  #endif
+> +		goto out_error;
+> +	}
+>  
+> -			continue;
+> -		}
+> -
+> -		addr = pci_resource_start(dev, 0);
+> -
+> +	addr = pci_resource_start(dev, 0);
+> +	port_base = addr + PCI_BASE_ADDRESS_0;
+>  #if defined(DEBUG_PCI_DETECT)
+> -		printk("%s: detect, seq. %d, bus %d, devfn 0x%x, addr 0x%x.\n",
+> -		       driver_name, k, dev->bus->number, dev->devfn, addr);
+> +	printk("%s: detect, bus %d, devfn 0x%x, addr 0x%x.\n",
+> +	       driver_name, dev->bus->number, dev->devfn, (unsigned int)addr);
+>  #endif
+>  
+> -		/* Order addresses according to rev_scan value */
+> -		io_port[MAX_INT_PARAM + (rev_scan ? (MAX_PCI - k) : (1 + k))] =
+> -		    addr + PCI_BASE_ADDRESS_0;
+> +	if (setup_done) {
+> +		/*
+> +		 * Handle kernel or module parameter
+> +		 * . probe board if its port is specified by user
+> +		 * . otherwise ignore the board
+> +		 */
+> +		for (i = 1; i < MAX_INT_PARAM; i++)
+> +			if (io_port[i] == port_base) {
+> +				io_port[i] = SKIP;
+> +				break;
+> +			}
+> +		if (i >= MAX_INT_PARAM)
+> +			goto out_disable_device;
+> +	}
+Hmm. I must admit I don't like the 'setup_done' thingie. As the driver
+is now converted to a 'real' PCI device we should be using driver-core
+mechanisms to avoid driver binding, not the prefabricated 'setup_done'
+variable.
+Can't we just do away with it completely?
 
-We can align to the end from avialable window, so will save
-start with big align to others: like second try for pref mmio
-after first try already have non-pref assigned.
+Cheers,
 
-pci tree:
--[0000:00]-+-00.0
-           +-1c.0-[01-10]--+-00.0-[02-10]--+-01.0-[03]----00.0  PLX Technology, Inc. Device 87b1
-           |               |               +-02.0-[04-09]--+-00.0-[05-09]--+-01.0-[06]----00.0  PLX Technology, Inc. Device 87b1
-           |               |               |               |               +-02.0-[07]----00.0  Broadcom Corporation Device 8650
-           |               |               |               |               +-03.0-[08]--
-           |               |               |               |               \-04.0-[09]----00.0  Altera Corporation Device 0201
-           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
-           |               |               +-03.0-[0a-0f]--+-00.0-[0b-0f]--+-01.0-[0c]----00.0  PLX Technology, Inc. Device 87b1
-           |               |               |               |               +-02.0-[0d]----00.0  Broadcom Corporation Device 8650
-           |               |               |               |               +-03.0-[0e]--
-           |               |               |               |               \-04.0-[0f]----00.0  Altera Corporation Device 0201
-           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
-           |               |               \-04.0-[10]--
-           |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               \-00.4  PLX Technology, Inc. Device 87d0
-           +-1c.3-[11]----00.0
-
-hotplug device under 0000:02:03.0
-
-before the patch:
-
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 8: assigned [mem 0xb0000000-0xb01fffff]  **************
-pci 0000:0a:00.0: BAR 0: assigned [mem 0xb0200000-0xb023ffff]
-pci 0000:0a:00.1: BAR 0: assigned [mem 0xb0240000-0xb0241fff]
-pci 0000:0a:00.2: BAR 0: assigned [mem 0xb0242000-0xb0243fff]
-pci 0000:0a:00.3: BAR 0: assigned [mem 0xb0244000-0xb0245fff]
-pci 0000:0a:00.4: BAR 0: assigned [mem 0xb0246000-0xb0247fff]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:01.0: BAR 8: assigned [mem 0xb0000000-0xb00fffff]
-pci 0000:0b:02.0: BAR 8: assigned [mem 0xb0100000-0xb01fffff]
-pci 0000:0c:00.0: BAR 0: assigned [mem 0xb0000000-0xb003ffff]
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
-pci 0000:0d:00.0: BAR 0: assigned [mem 0xb0100000-0xb013ffff 64bit]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
-pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-pcieport 0000:02:03.0:   bridge window [mem 0x80200000-0x803fffff 64bit pref]
-PCI: No. 2 try to assign unassigned res
-pcieport 0000:02:03.0: resource 9 [mem 0x80200000-0x803fffff 64bit pref] released
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
-pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-
-
-after the patch:
-
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 8: assigned [mem 0xb2300000-0xb24fffff]   *************
-pci 0000:0a:00.0: BAR 0: assigned [mem 0xb22c0000-0xb22fffff]
-pci 0000:0a:00.1: BAR 0: assigned [mem 0xb22be000-0xb22bffff]
-pci 0000:0a:00.2: BAR 0: assigned [mem 0xb22bc000-0xb22bdfff]
-pci 0000:0a:00.3: BAR 0: assigned [mem 0xb22ba000-0xb22bbfff]
-pci 0000:0a:00.4: BAR 0: assigned [mem 0xb22b8000-0xb22b9fff]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:01.0: BAR 8: assigned [mem 0xb2400000-0xb24fffff]
-pci 0000:0b:02.0: BAR 8: assigned [mem 0xb2300000-0xb23fffff]
-pci 0000:0c:00.0: BAR 0: assigned [mem 0xb24c0000-0xb24fffff]
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
-pci 0000:0d:00.0: BAR 0: assigned [mem 0xb23c0000-0xb23fffff 64bit]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
-pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-pcieport 0000:02:03.0:   bridge window [mem 0x9fc00000-0x9fdfffff 64bit pref]
-PCI: No. 2 try to assign unassigned res
-pcieport 0000:02:03.0: resource 9 [mem 0x9fc00000-0x9fdfffff 64bit pref] released
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: assigned [mem 0xb0000000-0xb1ffffff 64bit pref]   ********
-pci 0000:0f:00.0: BAR 2: assigned [mem 0xb20f0000-0xb20fffff 64bit pref]   ********
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0b:04.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
-pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-
-So we allocate high for 0a:00.0 and etc, and leave low range like 0xb0000000 to
-0b:04.0 and 0f:00.0
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/i386.c     | 20 ++++++++++++++++++++
- drivers/pci/setup-bus.c | 11 ++++++++++-
- include/linux/pci.h     |  3 +++
- 3 files changed, 33 insertions(+), 1 deletion(-)
-
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 3f17726..21f3e3e 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -129,6 +129,24 @@ static void __init pcibios_fw_addr_list_del(void)
- 	pcibios_fw_addr_done = true;
- }
- 
-+resource_size_t
-+pcibios_align_end_resource(void *data, const struct resource *res,
-+			resource_size_t size, resource_size_t align)
-+{
-+	resource_size_t start = res->start;
-+
-+	/* Take near end */
-+	if (res->end + 1 > size) {
-+		resource_size_t new_start;
-+
-+		new_start = round_down(res->end + 1 - size, align);
-+		if (new_start > start)
-+			start = new_start;
-+	}
-+
-+	return start;
-+}
-+
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-@@ -155,6 +173,8 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
- 	} else if (res->flags & IORESOURCE_MEM) {
-+		start = pcibios_align_end_resource(data, res, size, align);
-+
- 		/* The low 1MB range is reserved for ISA cards */
- 		if (start < BIOS_END)
- 			start = BIOS_END;
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 86d29db..28e9768 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1281,6 +1281,15 @@ static void sort_align_test(struct list_head *head)
- 	}
- }
- 
-+resource_size_t __weak pcibios_align_end_resource(void *data,
-+					  const struct resource *res,
-+					  resource_size_t size,
-+					  resource_size_t align)
-+{
-+	/* default is not aligned to end */
-+	return res->start;
-+}
-+
- static bool is_align_size_good(struct list_head *head,
- 			resource_size_t min_align, resource_size_t size,
- 			resource_size_t start)
-@@ -1298,7 +1307,7 @@ static bool is_align_size_good(struct list_head *head,
- 	list_for_each_entry(p, head, list)
- 		if (allocate_resource(&root, &p->res, p->size,
- 				0, (resource_size_t)-1ULL,
--				p->align, NULL, NULL))
-+				p->align, pcibios_align_end_resource, NULL))
- 			return false;
- 
- 	return true;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e90eb22..acb9c56 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -772,6 +772,9 @@ char *pcibios_setup(char *str);
- resource_size_t pcibios_align_resource(void *, const struct resource *,
- 				resource_size_t,
- 				resource_size_t);
-+resource_size_t pcibios_align_end_resource(void *, const struct resource *,
-+				resource_size_t,
-+				resource_size_t);
- void pcibios_update_irq(struct pci_dev *, int irq);
- 
- /* Weak but can be overriden by arch */
+Hannes
 -- 
-1.8.4.5
-
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
