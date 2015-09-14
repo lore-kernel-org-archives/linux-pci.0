@@ -1,211 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:6690 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751957AbbIIQoK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 12:44:10 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<gabriele.paoloni@huawei.com>, <wangzhou1@hisilicon.com>,
-	<yuanzhichang@hisilicon.com>, <zhudacai@hisilicon.com>,
-	<zhangjukuo@huawei.com>, <qiuzhenfa@hisilicon.com>,
-	<liguozhu@hisilicon.com>
-Subject: [PATCH] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-Date: Thu, 10 Sep 2015 00:51:00 +0800
-Message-ID: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from mail-vk0-f51.google.com ([209.85.213.51]:34744 "EHLO
+	mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752367AbbINQFu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 12:05:50 -0400
+Received: by vkhf67 with SMTP id f67so62177043vkh.1
+        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2015 09:05:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150914100929.GB18886@red-moon>
+References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
+	<20150902174716.GA6305@red-moon>
+	<20150902203250.GB829@google.com>
+	<20150903100115.GA15308@red-moon>
+	<20150903162140.GG829@google.com>
+	<20150904141903.GA22997@red-moon>
+	<CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
+	<20150904164412.GD22997@red-moon>
+	<CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+	<20150907091230.GB29293@red-moon>
+	<20150914100929.GB18886@red-moon>
+Date: Mon, 14 Sep 2015 09:05:50 -0700
+Message-ID: <CAE9FiQV-eG42xzqVcO2Q+xT3jx-Oa7uC7fEuowvopx4Fp9F7hQ@mail.gmail.com>
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+From: Yinghai Lu <yinghai@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Mon, Sep 14, 2015 at 3:09 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> As I said, ARM is not the only platform affected, MIPS and possibly
+> Alpha suffer from the same issue and I think it should be fixed
+> in core code (I think __pci_bus_size_bridges() should ignore the
+> old aperture size on first scan).
 
-This patch changes the implementation of dw_pcie_cfg_read() and
-dw_pcie_cfg_write() to:
-- improve the function usage from the callers perspective;
-- make sure that the callers specify proper address offsets
-  according to the size of the field being read/written
-- fix a bug in pcie-spear13xx.c where the callers where passing
-  the wrong address as they missed to add the appropriate offset
+We could just revert
+dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
+arch code")
+instead.
 
-This patch is a follow up from the discussion in:
-http://www.spinics.net/lists/linux-pci/msg44351.html
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
----
- drivers/pci/host/pci-exynos.c      |  5 ++--
- drivers/pci/host/pci-keystone-dw.c |  4 +--
- drivers/pci/host/pcie-designware.c | 51 ++++++++++++++++++++++----------------
- 3 files changed, 34 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index f9f468d..8b0e04b 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -454,7 +454,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_r_mode(pp, true);
--	ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
-+	ret = dw_pcie_cfg_read(pp->dbi_base, where, size, val);
- 	exynos_pcie_sideband_dbi_r_mode(pp, false);
- 	return ret;
- }
-@@ -465,8 +465,7 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_w_mode(pp, true);
--	ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
--			where, size, val);
-+	ret = dw_pcie_cfg_write(pp->dbi_base, where, size, val);
- 	exynos_pcie_sideband_dbi_w_mode(pp, false);
- 	return ret;
- }
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index f34892e..2b391f4 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -403,7 +403,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
- 
--	return dw_pcie_cfg_read(addr + (where & ~0x3), where, size, val);
-+	return dw_pcie_cfg_read(addr, where, size, val);
- }
- 
- int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-@@ -415,7 +415,7 @@ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
- 
--	return dw_pcie_cfg_write(addr + (where & ~0x3), where, size, val);
-+	return dw_pcie_cfg_write(addr, where, size, val);
- }
- 
- /**
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 69486be..b53aa38 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -82,13 +82,20 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
- 
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
- {
-+	addr += (where & ~0x3);
- 	*val = readl(addr);
--
--	if (size == 1)
--		*val = (*val >> (8 * (where & 3))) & 0xff;
--	else if (size == 2)
--		*val = (*val >> (8 * (where & 3))) & 0xffff;
--	else if (size != 4)
-+	where &= 3;
-+
-+	if (size == 1) {
-+		*val = (*val >> (8 * where)) & 0xff;
-+	} else if (size == 2) {
-+		if (where & 1)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
-+		*val = (*val >> (8 * where)) & 0xffff;
-+	} else if (size == 4) {
-+		if (where & 3)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
-+	} else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
- 	return PCIBIOS_SUCCESSFUL;
-@@ -96,12 +103,18 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
- 
- int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
- {
--	if (size == 4)
-+	addr += where;
-+
-+	if (size == 4) {
-+		if ((uintptr_t)addr & 3)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
- 		writel(val, addr);
--	else if (size == 2)
--		writew(val, addr + (where & 2));
--	else if (size == 1)
--		writeb(val, addr + (where & 3));
-+	} else if (size == 2) {
-+		if ((uintptr_t)addr & 1)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
-+		writew(val, addr);
-+	} else if (size == 1)
-+		writeb(val, addr);
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
-@@ -132,8 +145,7 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->rd_own_conf)
- 		ret = pp->ops->rd_own_conf(pp, where, size, val);
- 	else
--		ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
--				size, val);
-+		ret = dw_pcie_cfg_read(pp->dbi_base, where, size, val);
- 
- 	return ret;
- }
-@@ -146,8 +158,7 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->wr_own_conf)
- 		ret = pp->ops->wr_own_conf(pp, where, size, val);
- 	else
--		ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where,
--				size, val);
-+		ret = dw_pcie_cfg_write(pp->dbi_base, where, size, val);
- 
- 	return ret;
- }
-@@ -541,13 +552,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 *val)
- {
- 	int ret, type;
--	u32 address, busdev, cfg_size;
-+	u32 busdev, cfg_size;
- 	u64 cpu_addr;
- 	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
--	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
-@@ -564,7 +574,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
-+	ret = dw_pcie_cfg_read(va_cfg_base, where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
- 				  pp->io_bus_addr, pp->io_size);
-@@ -576,13 +586,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 val)
- {
- 	int ret, type;
--	u32 address, busdev, cfg_size;
-+	u32 busdev, cfg_size;
- 	u64 cpu_addr;
- 	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
--	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
-@@ -599,7 +608,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
-+	ret = dw_pcie_cfg_write(va_cfg_base, where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
- 				  pp->io_bus_addr, pp->io_size);
--- 
-1.9.1
-
+Yinghai
