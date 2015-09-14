@@ -1,86 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40234 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990AbbJAGy1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 02:54:27 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 20/53] PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
-Date: Wed, 30 Sep 2015 22:52:54 -0700
-Message-Id: <1443678807-786-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Received: from jabberwock.ucw.cz ([46.255.230.98]:59124 "EHLO
+	jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbbINPLu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 11:11:50 -0400
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [193.165.110.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+	by jabberwock.ucw.cz (Postfix) with ESMTPS id B0D1B1C010A
+	for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2015 17:04:24 +0200 (CEST)
+Date: Mon, 14 Sep 2015 17:04:24 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] Report NUMA node in lspci -v
+Message-ID: <mj+md-20150914.150326.15859.albireo@ucw.cz>
+References: <20150422202721.GY4003@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150422202721.GY4003@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pdev_sort_resources() etc was checking devices resources and putting
-resources that need to assign to one list in sorted order.
+Hi Matthew!
 
-Now we don't do sorting in those functions anymore, so change to
-pdev_assign_resources_prepare() instead.
+> In multi-socket systems, it's useful to see which node a particular
+> PCI device belongs to.  Linux provides this information through sysfs,
+> but some users don't like poking through sysfs themselves to find it,
+> and it's pretty straightforward to report it in lspci.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+First of all, sorry for the delay.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 61905bb..0a89d06 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -205,8 +205,8 @@ static resource_size_t __pci_resource_alignment(
- 	return r_align;
- }
- 
--/* Sort resources by alignment */
--static void pdev_sort_resources(struct pci_dev *dev,
-+/* check resources and save to the list */
-+static void pdev_assign_resources_prepare(struct pci_dev *dev,
- 				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
-@@ -242,7 +242,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 	}
- }
- 
--static void __dev_sort_resources(struct pci_dev *dev,
-+static void __dev_assign_resources_prepare(struct pci_dev *dev,
- 				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
-@@ -260,7 +260,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
- 			return;
- 	}
- 
--	pdev_sort_resources(dev, realloc_head, head);
-+	pdev_assign_resources_prepare(dev, realloc_head, head);
- }
- 
- static inline void reset_resource(struct resource *res)
-@@ -566,7 +566,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
- {
- 	LIST_HEAD(head);
- 
--	__dev_sort_resources(dev, add_head, &head);
-+	__dev_assign_resources_prepare(dev, add_head, &head);
- 	__assign_resources_sorted(&head, add_head, fail_head);
- 
- }
-@@ -579,7 +579,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
- 	LIST_HEAD(head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list)
--		__dev_sort_resources(dev, realloc_head, &head);
-+		__dev_assign_resources_prepare(dev, realloc_head, &head);
- 
- 	__assign_resources_sorted(&head, realloc_head, fail_head);
- }
+I have applied your patch and improved it slightly: NUMA nodes are
+reported also in "-vv" and "-nv" modes and everything is done in
+an ABI-compatible way. Look at the public Git repo, if you wish.
+
+Thanks for the patch!
+
+				Have a nice fortnight
 -- 
-1.8.4.5
-
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+System going down at 5 pm to install scheduler bug.
