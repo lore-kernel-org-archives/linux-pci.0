@@ -1,92 +1,286 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:49613 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751681AbbIOMtF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 08:49:05 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v9 5/6] Documentation: DT: Add HiSilicon PCIe host binding
-Date: Tue, 15 Sep 2015 20:49:20 +0800
-Message-ID: <1442321361-174300-6-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, x86@kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [Patch v6 4/7] PCI/ACPI: Consolidate common PCI host bridge code into ACPI core
+Date: Mon, 14 Sep 2015 16:07:33 +0800
+Message-Id: <1442218057-4355-5-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
+References: <1442218057-4355-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds related DTS binding document for HiSilicon PCIe host driver.
+Introduce common interface acpi_pci_root_create() and related data
+structures to create PCI root bus for ACPI PCI host bridges. It will
+be used to kill duplicated arch specific code for IA64 and x86. It may
+also help ARM64 in future.
 
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Tony Luck <tony.luck@intel.com>
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+ drivers/acpi/pci_root.c  |  204 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |   23 ++++++
+ 2 files changed, 227 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-new file mode 100644
-index 0000000..2afc9d1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -0,0 +1,46 @@
-+HiSilicon PCIe host bridge DT description
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 393706a5261b..48d27bd35b58 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -652,6 +652,210 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 	kfree(root);
+ }
+ 
++/*
++ * Following code to support acpi_pci_root_create() is copied from
++ * arch/x86/pci/acpi.c and modified so it could be reused by x86, IA64
++ * and ARM64.
++ */
++static void acpi_pci_root_validate_resources(struct device *dev,
++					     struct list_head *resources,
++					     unsigned long type)
++{
++	LIST_HEAD(list);
++	struct resource *res1, *res2, *root = NULL;
++	struct resource_entry *tmp, *entry, *entry2;
 +
-+HiSilicon PCIe host controller is based on Designware PCI core.
-+It shares common functions with PCIe Designware core driver and inherits
-+common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
++	BUG_ON((type & (IORESOURCE_MEM | IORESOURCE_IO)) == 0);
++	root = (type & IORESOURCE_MEM) ? &iomem_resource : &ioport_resource;
 +
-+Additional properties are described here:
++	list_splice_init(resources, &list);
++	resource_list_for_each_entry_safe(entry, tmp, &list) {
++		bool free = false;
++		resource_size_t end;
 +
-+Required properties:
-+- compatible: Should contain "hisilicon,hip05-pcie".
-+- reg: Should contain rc_dbi, subctrl, config registers location and length.
-+- reg-names: Must include the following entries:
-+  "rc_dbi": controller configuration registers;
-+  "subctrl": whole PCIe hosts configuration registers;
-+  "config": PCIe configuration space registers.
-+- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
-+- port-id: Should be 0, 1, 2 or 3.
++		res1 = entry->res;
++		if (!(res1->flags & type))
++			goto next;
 +
-+Optional properties:
-+- status: Either "ok" or "disabled".
-+- dma-coherent: Present if DMA operations are coherent.
++		/* Exclude non-addressable range or non-addressable portion */
++		end = min(res1->end, root->end);
++		if (end <= res1->start) {
++			dev_info(dev, "host bridge window %pR (ignored, not CPU addressable)\n",
++				 res1);
++			free = true;
++			goto next;
++		} else if (res1->end != end) {
++			dev_info(dev, "host bridge window %pR ([%#llx-%#llx] ignored, not CPU addressable)\n",
++				 res1, (unsigned long long)end + 1,
++				 (unsigned long long)res1->end);
++			res1->end = end;
++		}
 +
-+Example:
-+	pcie@0xb0080000 {
-+		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
-+		reg = <0 0xb0080000 0 0x10000>, <0 0xb0000000 0 0x10000>,
-+		      <0x220 0x00000000 0 0x2000>;
-+		reg-names = "rc_dbi", "subctrl", "config";
-+		bus-range = <0  15>;
-+		msi-parent = <&its_pcie>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		dma-coherent;
-+		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
-+		num-lanes = <8>;
-+		port-id = <1>;
-+		#interrupts-cells = <1>;
-+		interrupts-map-mask = <0xf800 0 0 7>;
-+		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
-+				  0x0 0 0 2 &mbigen_pcie 2 11
-+				  0x0 0 0 3 &mbigen_pcie 3 12
-+				  0x0 0 0 4 &mbigen_pcie 4 13>;
-+		status = "ok";
-+	};
++		resource_list_for_each_entry(entry2, resources) {
++			res2 = entry2->res;
++			if (!(res2->flags & type))
++				continue;
++
++			/*
++			 * I don't like throwing away windows because then
++			 * our resources no longer match the ACPI _CRS, but
++			 * the kernel resource tree doesn't allow overlaps.
++			 */
++			if (resource_overlaps(res1, res2)) {
++				res2->start = min(res1->start, res2->start);
++				res2->end = max(res1->end, res2->end);
++				dev_info(dev, "host bridge window expanded to %pR; %pR ignored\n",
++					 res2, res1);
++				free = true;
++				goto next;
++			}
++		}
++
++next:
++		resource_list_del(entry);
++		if (free)
++			resource_list_free_entry(entry);
++		else
++			resource_list_add_tail(entry, resources);
++	}
++}
++
++static int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
++{
++	int ret;
++	struct list_head *list = &info->resources;
++	struct acpi_device *device = info->bridge;
++	struct resource_entry *entry, *tmp;
++	unsigned long flags;
++
++	flags = IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_MEM_8AND16BIT;
++	ret = acpi_dev_get_resources(device, list,
++				     acpi_dev_filter_resource_type_cb,
++				     (void *)flags);
++	if (ret < 0)
++		dev_warn(&device->dev,
++			 "failed to parse _CRS method, error code %d\n", ret);
++	else if (ret == 0)
++		dev_dbg(&device->dev,
++			"no IO and memory resources present in _CRS\n");
++	else {
++		resource_list_for_each_entry_safe(entry, tmp, list) {
++			if (entry->res->flags & IORESOURCE_DISABLED)
++				resource_list_destroy_entry(entry);
++			else
++				entry->res->name = info->name;
++		}
++		acpi_pci_root_validate_resources(&device->dev, list,
++						 IORESOURCE_MEM);
++		acpi_pci_root_validate_resources(&device->dev, list,
++						 IORESOURCE_IO);
++	}
++
++	return ret;
++}
++
++static void pci_acpi_root_add_resources(struct acpi_pci_root_info *info)
++{
++	struct resource_entry *entry, *tmp;
++	struct resource *res, *conflict, *root = NULL;
++
++	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
++		res = entry->res;
++		if (res->flags & IORESOURCE_MEM)
++			root = &iomem_resource;
++		else if (res->flags & IORESOURCE_IO)
++			root = &ioport_resource;
++		else
++			continue;
++
++		conflict = insert_resource_conflict(root, res);
++		if (conflict) {
++			dev_info(&info->bridge->dev,
++				 "ignoring host bridge window %pR (conflicts with %s %pR)\n",
++				 res, conflict->name, conflict);
++			resource_list_destroy_entry(entry);
++		}
++	}
++}
++
++static void __acpi_pci_root_release_info(struct acpi_pci_root_info *info)
++{
++	struct resource *res;
++	struct resource_entry *entry, *tmp;
++
++	if (!info)
++		return;
++
++	resource_list_for_each_entry_safe(entry, tmp, &info->resources) {
++		res = entry->res;
++		if (res->parent &&
++		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			release_resource(res);
++		resource_list_destroy_entry(entry);
++	}
++
++	info->ops->release_info(info);
++}
++
++static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
++{
++	struct resource *res;
++	struct resource_entry *entry;
++
++	resource_list_for_each_entry(entry, &bridge->windows) {
++		res = entry->res;
++		if (res->parent &&
++		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
++			release_resource(res);
++	}
++	__acpi_pci_root_release_info(bridge->release_data);
++}
++
++struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
++				     struct acpi_pci_root_ops *ops,
++				     struct acpi_pci_root_info *info,
++				     void *sysdata)
++{
++	int ret, busnum = root->secondary.start;
++	struct acpi_device *device = root->device;
++	int node = acpi_get_node(device->handle);
++	struct pci_bus *bus;
++
++	info->root = root;
++	info->bridge = device;
++	info->ops = ops;
++	INIT_LIST_HEAD(&info->resources);
++	snprintf(info->name, sizeof(info->name), "PCI Bus %04x:%02x",
++		 root->segment, busnum);
++
++	if (ops->init_info && ops->init_info(info))
++		goto out_release_info;
++	ret = acpi_pci_probe_root_resources(info);
++	if (ops->prepare_resources)
++		ret = ops->prepare_resources(info, ret);
++	if (ret < 0)
++		goto out_release_info;
++	else if (ret > 0)
++		pci_acpi_root_add_resources(info);
++	pci_add_resource(&info->resources, &root->secondary);
++
++	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
++				  sysdata, &info->resources);
++	if (bus) {
++		pci_scan_child_bus(bus);
++		pci_set_host_bridge_release(to_pci_host_bridge(bus->bridge),
++					    acpi_pci_root_release_info, info);
++		if (node != NUMA_NO_NODE)
++			dev_printk(KERN_DEBUG, &bus->dev, "on NUMA node %d\n",
++				   node);
++		return bus;
++	}
++
++out_release_info:
++	__acpi_pci_root_release_info(info);
++	return NULL;
++}
++
+ void __init acpi_pci_root_init(void)
+ {
+ 	acpi_hest_init();
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index a965efa52152..583af37c6030 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -52,6 +52,29 @@ static inline acpi_handle acpi_pci_get_bridge_handle(struct pci_bus *pbus)
+ 	return ACPI_HANDLE(dev);
+ }
+ 
++struct acpi_pci_root;
++struct acpi_pci_root_ops;
++
++struct acpi_pci_root_info {
++	struct acpi_pci_root		*root;
++	struct acpi_device		*bridge;
++	struct acpi_pci_root_ops	*ops;
++	struct list_head		resources;
++	char				name[16];
++};
++
++struct acpi_pci_root_ops {
++	struct pci_ops *pci_ops;
++	int (*init_info)(struct acpi_pci_root_info *info);
++	void (*release_info)(struct acpi_pci_root_info *info);
++	int (*prepare_resources)(struct acpi_pci_root_info *info, int status);
++};
++
++extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
++					    struct acpi_pci_root_ops *ops,
++					    struct acpi_pci_root_info *info,
++					    void *sd);
++
+ void acpi_pci_add_bus(struct pci_bus *bus);
+ void acpi_pci_remove_bus(struct pci_bus *bus);
+ 
 -- 
-1.9.1
+1.7.10.4
 
