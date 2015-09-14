@@ -1,150 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-la0-f47.google.com ([209.85.215.47]:34972 "EHLO
-	mail-la0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754239AbbINOz6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 10:55:58 -0400
-Received: by lagj9 with SMTP id j9so89722644lag.2
-        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2015 07:55:56 -0700 (PDT)
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20150602133215.GC23650@red-moon> <55701A31.808@linaro.org>
- <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org>
- <557504A2.3060203@linaro.org> <20150608151443.GA16151@red-moon>
- <55E4340D.6050004@linaro.org> <55ED6010.3020406@linaro.org>
- <20150908150727.GF29293@red-moon> <55F0388B.1090607@linaro.org>
- <20150911112018.GA13033@red-moon>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <55F6DFF6.4010807@linaro.org>
-Date: Mon, 14 Sep 2015 16:55:50 +0200
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63078 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576AbbINXn4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 19:43:56 -0400
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+Subject: iProc PCI issue with Linux v4.3-rc1
+CC: Ray Jui <rjui@broadcom.com>
+Message-ID: <55F75BB8.4070405@broadcom.com>
+Date: Mon, 14 Sep 2015 16:43:52 -0700
 MIME-Version: 1.0
-In-Reply-To: <20150911112018.GA13033@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11.09.2015 13:20, Lorenzo Pieralisi wrote:
-> On Wed, Sep 09, 2015 at 02:47:55PM +0100, Tomasz Nowicki wrote:
->
-> [...]
->
->>> I think (but I am happy to be corrected) that the map_bus() hook
->>> (ie that's why struct pci_bus is required in eg pci_generic_config_write)
->>> is there to ensure that when the generic accessors are called
->>> a) we have a valid bus b) the host controllers implementing it
->>> has been initialized.
->>>
->>> I had another look and I noticed you are trying to solve multiple
->>> things at once:
->>>
->>> 1) ACPICA seems to need PCI config space on bus 0 to be working
->>>      before PCI enumerates (ie before we have a root bus), we need to
->>>      countercheck on that, but you can't use the generic PCI accessors
->>>      for that reasons (ie root bus might not be available, you do not
->>>      have a pci_bus struct)
->>> 2) the raw_pci_read/write require _generic_ mmio back-ends, since AMD
->>>      can't cope with standard x86 read/write{b,w,l}
->>>
->>> Overall, it seems to me that we can avoid code duplication by
->>> shuffling your code a bit.
->>>
->>> You could modify the generic accessors in drivers/pci/access.c to
->>> use your mmio back-end instead of using plain read/write{b,w,l}
->>> functions (we should check if RobH is ok with that there can be
->>> reasons that prevent this from happening). This would solve the
->>> AMD mmio issue.
->>>
->>> By factoring out the code that actually carries out the reads
->>> and writes in the accessors basically you decouple the functions
->>> requiring the struct pci_bus from the ones that does not require it
->>> (ie raw_pci_{read/write}.
->>>
->>> The generic MMIO layer belongs in the drivers/pci/access.c file, it has
->>> nothing to do with ECAM.
->>>
->>> The mmcfg interface should probably live in pci-acpi.c, I do not think
->>> you need an extra file in there but that's a detail.
->>>
->>> Basically the generic accessors would become something like eg:
->>>
->>> int pci_generic_config_write(struct pci_bus *bus, unsigned int devfn,
->>>                             int where, int size, u32 val)
->>> {
->>>        void __iomem *addr;
->>>
->>>        addr = bus->ops->map_bus(bus, devfn, where);
->>>        if (!addr)
->>>                return PCIBIOS_DEVICE_NOT_FOUND;
->>>
->>>        pci_mmio_write(size, addr + where, value);
->>>
->>>        return PCIBIOS_SUCCESSFUL;
->>> }
->>>
->>> With that in place using raw_pci_write/read or the generic accessors
->>> becomes almost identical, with code requiring the pci_bus to be
->>> created using the generic accessors and ACPICA using the raw version.
->>>
->>> I might be missing something, so apologies if that's the case.
->>>
->>
->> Actually, I think you showed me the right direction :) Here are some
->> conclusions/comments/concerns. Please correct me if I am wrong:
->>
->> 1. We need raw_pci_write/read accessors (based on ECAM) for ARM64 too
->> but only up to the point where buses are enumerated. From that point on,
->> we should reuse generic accessors from access.c file, right?
->
-> Well, I still have not figured out whether on arm64 the raw accessors
-> required by ACPICA make sense.
->
-> So either arm64 relies on the generic MCFG based raw read and writes
-> or we define the global raw read and writes as empty (ie x86 overrides
-> them anyway).
->
+Hi,
 
-My concerns/ideas related to raw accessors for ARM64, please correct me 
-at any point.
+I started trying out the kernel v4.3-rc1 on Broadcom iProc ARM32 based
+platform (Cygnus) today and found PCIe is broken.
 
-ACPI spec - chapter: 19.5.96 OperationRegion (Declare Operation Region)
-defines PCI_Config as one of region types. Every time ASL opcode 
-operates on corresponding PCI config space region, ASL interpreter is 
-dispatching address space to our raw accessors, please see 
-acpi_ex_pci_config_space_handler, acpi_ev_pci_config_region_setup calls. 
-What is more important, such operations may happen after (yes after) bus 
-enumeration, but always raw accessors are called at the end with the 
-{segment, bus, dev, fn} tuple.
+A quick binary search shows that the following patch *causes* the issue:
 
-Giving above, here are some ideas:
-1. We force somehow vendors to avoid operations on PCI config regions in 
-ASL code. PCI config region definitions still fall into Hardware Reduced 
-profile, so new ACPICA special subset for ARM64 is need. Then raw ACPI 
-accessors can be empty (and overridden by x86).
-2. We provide raw accessors which translate {segment, bus, dev, fn} 
-tuple to Linux generic accessors (this can be considered only if PCI 
-config accesses happened after bus enumeration for HR profile, thus 
-tuple to bus structure map is possible).
-4. We rely on the generic MCFG based raw read and writes.
+Author: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Date:   Thu Jul 9 11:59:16 2015 +0100
 
-Let me know your opinion.
+    PCI: Call pci_read_bridge_bases() from core instead of arch code
+
+    When we scan a PCI bus, we read PCI-PCI bridge window registers with
+    pci_read_bridge_bases() so we can validate the resource hierarchy.  Most
+    architectures call pci_read_bridge_bases() from pcibios_fixup_bus(), but
+    PCI-PCI bridges are not arch-specific, so this doesn't need to be in
+    arch-specific code.
+
+    Call pci_read_bridge_bases() directly from the PCI core instead of from
+    arch code.
+
+    For alpha and mips, we now call pci_read_bridge_bases() always;
+previously
+    we only called it if PCI_PROBE_ONLY was set.
+
+Note I haven't looked this issue deeply since I haven't had much time.
+But it could be either 1) the patch itself that breaks PCIe on our
+platform; or 2) the patch is fine but it triggers previous hidden bug
+caused by incorrect configuration in our PCIe driver.
+
+I thought I'd share some information here, before I have time to look
+into this more closely, in case this issue may seem very obvious to some
+of you.
+
+PCIe enumeration log that's working before this patch:
+[    0.263354] PCI host bridge /pcie@18013000 ranges:
+[    0.263366]    IO 0x48000000..0x4800ffff -> 0x00000000
+[    0.263374]   MEM 0x40000000..0x43ffffff -> 0x40000000
+[    0.318058] cygnus-pcie-phy 301d0a0.pcie_phy: PCIe PHY enabled
+[    0.423136] iproc-pcie 18013000.pcie: PCI host bridge to bus 0001:00
+[    0.423145] pci_bus 0001:00: root bus resource [bus 00-ff]
+[    0.423153] pci_bus 0001:00: root bus resource [io  0x10000-0x1ffff]
+(bus address [0x0000-0xffff])
+[    0.423159] pci_bus 0001:00: root bus resource [mem
+0x40000000-0x43ffffff]
+[    0.423171] iproc-pcie 18013000.pcie: link: UP
+[    0.423337] pci 0001:00:00.0: IOMMU is currently not supported for PCI
+[    0.423529] PCI: bus0: Fast back to back transfers disabled
+[    0.423765] pci 0001:01:00.0: IOMMU is currently not supported for PCI
+[    0.433078] PCI: bus1: Fast back to back transfers disabled
+[    0.433107] pci 0001:00:00.0: BAR 8: assigned [mem 0x40000000-0x400fffff]
+[    0.433117] pci 0001:01:00.0: BAR 1: assigned [mem 0x40000000-0x4007ffff]
+[    0.433129] pci 0001:01:00.0: BAR 6: assigned [mem
+0x40080000-0x400bffff pref]
+[    0.433137] pci 0001:01:00.0: BAR 0: assigned [mem 0x400c0000-0x400dffff]
+[    0.433147] pci 0001:01:00.0: BAR 3: assigned [mem 0x400e0000-0x400e3fff]
+[    0.433157] pci 0001:01:00.0: BAR 2: no space for [io  size 0x0020]
+[    0.433164] pci 0001:01:00.0: BAR 2: failed to assign [io  size 0x0020]
+[    0.433171] pci 0001:00:00.0: PCI bridge to [bus 01-04]
+[    0.433179] pci 0001:00:00.0:   bridge window [mem 0x40000000-0x400fffff]
+[    0.433259] pcieport 0001:00:00.0: enabling device (0140 -> 0142)
+
+PCIe enumeration that is broken after this patch:
+[    0.358241] PCI host bridge /pcie@18013000 ranges:
+[    0.358252]    IO 0x48000000..0x4800ffff -> 0x00000000
+[    0.358260]   MEM 0x40000000..0x43ffffff -> 0x40000000
+[    0.613034] iproc-pcie 18013000.pcie: PCI host bridge to bus 0001:00
+[    0.613045] pci_bus 0001:00: root bus resource [bus 00-ff]
+[    0.613054] pci_bus 0001:00: root bus resource [io  0x10000-0x1ffff]
+(bus address [0x0000-0xffff])
+[    0.613060] pci_bus 0001:00: root bus resource [mem
+0x40000000-0x43ffffff]
+[    0.613071] iproc-pcie 18013000.pcie: link: UP
+[    0.613292] PCI: bus0: Fast back to back transfers disabled
+[    0.613366] pci 0001:00:00.0: PCI bridge to [bus 01-04]
+[    0.622963] PCI: bus1: Fast back to back transfers disabled
+[    0.622995] pci 0001:00:00.0: BAR 8: no space for [mem size 0x08100000]
+[    0.623003] pci 0001:00:00.0: BAR 8: failed to assign [mem size
+0x08100000]
+[    0.623012] pci 0001:00:00.0: BAR 9: assigned [mem
+0x40000000-0x400fffff 64bit pref]
+[    0.623019] pci 0001:00:00.0: BAR 7: assigned [io  0x10000-0x10fff]
+[    0.623028] pci 0001:01:00.0: BAR 1: no space for [mem size 0x00080000]
+[    0.623033] pci 0001:01:00.0: BAR 1: failed to assign [mem size
+0x00080000]
+[    0.623040] pci 0001:01:00.0: BAR 6: assigned [mem
+0x40000000-0x4003ffff pref]
+[    0.623047] pci 0001:01:00.0: BAR 0: no space for [mem size 0x00020000]
+[    0.623053] pci 0001:01:00.0: BAR 0: failed to assign [mem size
+0x00020000]
+[    0.623059] pci 0001:01:00.0: BAR 3: no space for [mem size 0x00004000]
+[    0.623064] pci 0001:01:00.0: BAR 3: failed to assign [mem size
+0x00004000]
+[    0.623071] pci 0001:01:00.0: BAR 2: assigned [io  0x10000-0x1001f]
+[    0.623081] pci 0001:00:00.0: PCI bridge to [bus 01-04]
+[    0.623088] pci 0001:00:00.0:   bridge window [io  0x10000-0x10fff]
+[    0.623096] pci 0001:00:00.0:   bridge window [mem
+0x40000000-0x400fffff 64bit pref]
+[    0.623200] pcieport 0001:00:00.0: enabling device (0146 -> 0147)
+
+On the broken log, mem size of 0x08100000 for BAR 8 appears to be way
+too big.
 
 Thanks,
-Tomasz
+
+Ray
