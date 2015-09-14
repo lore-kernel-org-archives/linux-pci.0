@@ -1,47 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 23 Sep 2015 18:59:40 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v2 2/5] PCI: generic: Only fixup irqs for bus we are
- creating.
-Message-ID: <20150923175940.GU7356@arm.com>
-References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
- <1442527332-1174-3-git-send-email-ddaney.cavm@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:29570 "EHLO
+	ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754909AbbINQBK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 12:01:10 -0400
+Message-ID: <55F6EF40.50403@internode.on.net>
+Date: Tue, 15 Sep 2015 01:31:04 +0930
+From: Arthur Marsh <arthur.marsh@internode.on.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442527332-1174-3-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com> <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 11:02:09PM +0100, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> If we create multiple buses with pci-host-generic, or there are buses
-> created by other drivers, we don't want to call pci_fixup_irqs() which
-> operates on all devices, not just the devices on the bus being added.
-> The consequence is that either the fixups are done more than once, or
-> in some cases incorrect fixups could be applied.
-> 
-> Call pci_bus_fixup_irqs() instead of pci_fixup_irqs().
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
-> Changes from v1: Moved most of the code to pci_bus_fixup_irqs(),
-> making this patch very simple.
 
-Acked-by: Will Deacon <will.deacon@arm.com>
 
-Will
+Jiang Liu wrote on 14/09/15 12:38:
+> Hi Authur,
+> 	As suggested by Bjorn, patch 1-2 set implement a PCI device
+> driver to manage eata PCI devices. And patch 3 tries to support PCI
+> device hot-removal for eata, but I have no change to test due to
+> limited knowledge about scsi subsystem and lacking of hardware for
+> tests.
+> 	So you could please help to test patch 1-2? Patch 3 is just
+> for comments.
+> Thanks!
+> Gerry
+>
+> Jiang Liu (3):
+>    eata: Use IDA to manage eata board IDs
+>    eata: Implement PCI driver to manage eata PCI devices
+>    eata: Enhance eata driver to support PCI device hot-removal
+>
+>   drivers/scsi/eata.c |  232 +++++++++++++++++++++++++++------------------------
+>   1 file changed, 125 insertions(+), 107 deletions(-)
+>
+
+With patches 1 and 2 applied, I get a successful boot with IRQ mapping:
+
+[    1.147056] EATA0: IRQ 10 mapped to IO-APIC IRQ 17.
+[    1.160404] EATA/DMA 2.0x: Copyright (C) 1994-2003 Dario Ballabio.
+[    1.160469] EATA config options -> tm:1, lc:y, mq:16, rs:y, et:n, 
+ip:n, ep:n, pp:y.
+[    1.160541] EATA0: 2.0C, PCI 0xd890, IRQ 17, BMST, SG 122, MB 64.
+[    1.160600] EATA0: wide SCSI support enabled, max_id 16, max_lun 8.
+[    1.160658] EATA0: SCSI channel 0 enabled, host target ID 7.
+[    1.161207] scsi host0: EATA/DMA 2.0x rev. 8.10.00
+
+
+but I still get errors when trying to do a kexec reboot, see 
+http://www.users.on.net/~arthur.marsh/20150915547.jpg
+
+roughly it reads (after the synchronising SCSI cache reboot messages) 
+and a long period of a dark screen:
+
+sd 0:0:6:0: abort, mbox 63.
+EATA0: abort, mbox 63 is in use.
+sd 0:0:6:0: reset, enter.
+EATA0: reset, mbox 63 in reset.
+EATA0: reset, board reset done, enabling interrupts.
+EATA0: reset, interrupts disabled, loops 100469.
+EATA0: reset, mbox 63 locked, DID_RESET, done.
+EATA0: reset, exit, done.
+sd 0:0:6:0: qcomm, mbox 0, adapter busy, will start
+sd 0:0:6:0: abort, mbox 0.
+EATA0: abort, timeout error.
+sd 0:0:6:0: reset, enter.
+EATA0: reset, exit, timeout error.
+sd 0:0:6:0 Device offlinled - not ready after error recovery
+sd 0:0:6:0 rejecting I/O to offline device
+sd 0:0:6:0 rejecting I/O to offline device
+sd 0:0:6:0 [sda] Synchronize Cache(10) failed: Result: 
+hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+starting new kernel
+
+It would be great if this problem could be fixed.
+
+Arthur.
+
