@@ -1,49 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:33942 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753700AbbINBnc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Sep 2015 21:43:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <55E580AF.6060302@arm.com>
-References: <1441103408-8433-1-git-send-email-lftan@altera.com>
-	<55E580AF.6060302@arm.com>
-Date: Mon, 14 Sep 2015 09:43:30 +0800
-Message-ID: <CAFiDJ59Q7+5eCUmRMcmk=EgQ7YH9Tn=SRBsVHGP0XNRUZoTuqA@mail.gmail.com>
-Subject: Re: [PATCH v6 0/6] Altera PCIe host controller driver with MSI support
-From: Ley Foon Tan <lftan@altera.com>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:33946 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753881AbbINDF7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 13 Sep 2015 23:05:59 -0400
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	"James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+Subject: [Bugfix 1/3] eata: Use IDA to manage eata board IDs
+Date: Mon, 14 Sep 2015 11:08:57 +0800
+Message-Id: <1442200140-30808-2-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 1, 2015 at 6:40 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> On 01/09/15 11:30, Ley Foon Tan wrote:
->> This is the 6th version of patch set to add support for Altera PCIe host
->> controller with MSI feature on Altera FPGA device families. This patchset
->> mainly resolve comments from Marc Zyngier in v5 and minor fixes.
->
-> The merge window has just started, and I'm not going to go through
-> another review at that stage - too many things in flight.
->
-> Please ping me again once 4.3-rc1 is out.
->
-Hi Marc
+Use IDA to manage eata board IDs, so we could dynamically allocate
+and free board IDs later.
 
-Do you have further comment on this patchset?
-Thanks.
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/scsi/eata.c |   46 ++++++++++++++++++++++++++++++----------------
+ 1 file changed, 30 insertions(+), 16 deletions(-)
 
-Regards
-Ley Foon
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index 227dd2c2ec2f..b45d3b532b70 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -491,6 +491,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/slab.h>
++#include <linux/idr.h>
+ #include <asm/byteorder.h>
+ #include <asm/dma.h>
+ #include <asm/io.h>
+@@ -837,9 +838,8 @@ struct hostdata {
+ static struct Scsi_Host *sh[MAX_BOARDS];
+ static const char *driver_name = "EATA";
+ static char sha[MAX_BOARDS];
+-
+-/* Initialize num_boards so that ihdlr can work while detect is in progress */
+-static unsigned int num_boards = MAX_BOARDS;
++static DEFINE_IDA(eata_ida);
++static DECLARE_BITMAP(eata_board_bitmap, MAX_BOARDS);
+ 
+ static unsigned long io_port[] = {
+ 
+@@ -1509,6 +1509,23 @@ static int option_setup(char *str)
+ 	return 1;
+ }
+ 
++static unsigned int port_probe(unsigned long port_base,
++			       struct scsi_host_template *tpnt)
++{
++	int id;
++
++	id = ida_simple_get(&eata_ida, 0, MAX_BOARDS, GFP_KERNEL);
++	if (id >= 0) {
++		set_bit(id, eata_board_bitmap);
++		if (port_detect(port_base, id, tpnt))
++			return id;
++		clear_bit(id, eata_board_bitmap);
++		ida_simple_remove(&eata_ida, id);
++	}
++
++	return -1;
++}
++
+ static void add_pci_ports(void)
+ {
+ #if defined(CONFIG_PCI)
+@@ -1548,7 +1565,7 @@ static void add_pci_ports(void)
+ 
+ static int eata2x_detect(struct scsi_host_template *tpnt)
+ {
+-	unsigned int j = 0, k;
++	unsigned int k, count = 0;
+ 
+ 	tpnt->proc_name = "eata2x";
+ 
+@@ -1582,17 +1599,12 @@ static int eata2x_detect(struct scsi_host_template *tpnt)
+ 			enable_pci_ports();
+ 	}
+ 
+-	for (k = 0; io_port[k]; k++) {
++	for (k = 0; io_port[k]; k++)
++		if (io_port[k] != SKIP &&
++		    port_probe(io_port[k], tpnt) >= 0)
++			count++;
+ 
+-		if (io_port[k] == SKIP)
+-			continue;
+-
+-		if (j < MAX_BOARDS && port_detect(io_port[k], j, tpnt))
+-			j++;
+-	}
+-
+-	num_boards = j;
+-	return j;
++	return count;
+ }
+ 
+ static void map_dma(unsigned int i, struct hostdata *ha)
+@@ -2530,14 +2542,16 @@ static irqreturn_t ihdlr(struct Scsi_Host *shost)
+ static irqreturn_t do_interrupt_handler(int dummy, void *shap)
+ {
+ 	struct Scsi_Host *shost;
+-	unsigned int j;
++	unsigned int j = (unsigned int)((char *)shap - sha);
+ 	unsigned long spin_flags;
+ 	irqreturn_t ret;
+ 
+ 	/* Check if the interrupt must be processed by this handler */
+-	if ((j = (unsigned int)((char *)shap - sha)) >= num_boards)
++	if (j >= MAX_BOARDS || !test_bit(j, eata_board_bitmap))
+ 		return IRQ_NONE;
+ 	shost = sh[j];
++	if (!shost)
++		return IRQ_NONE;
+ 
+ 	spin_lock_irqsave(shost->host_lock, spin_flags);
+ 	ret = ihdlr(shost);
+-- 
+1.7.10.4
+
