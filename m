@@ -1,94 +1,74 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 24/53] PCI: Fix size calculation with old_size on rescan path
-Date: Wed, 16 Sep 2015 14:57:22 -0700
-Message-Id: <1442440671-5361-25-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"alexander.h.duyck@redhat.com" <alexander.h.duyck@redhat.com>,
+	"myron.stowe@redhat.com" <myron.stowe@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH] vfio/pci: Use kernel VPD access functions
+Date: Mon, 14 Sep 2015 21:34:14 +0000
+Message-ID: <D7293B5C-82BC-4C9D-A06F-3BF806DC1CF2@intel.com>
+References: <20150911181332.32399.74472.stgit@gimli.home>
+ <80CE59CA-1B93-42FF-96D1-6276B724203F@intel.com>
+In-Reply-To: <80CE59CA-1B93-42FF-96D1-6276B724203F@intel.com>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_B35C96C7-EFFF-4F5C-9E5D-DD122EFEFF52";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On booting path, we don't pass realloc at first, and treat all optional
-just as required, in some case we can have smaller size/align with optional
-than required only.
+--Apple-Mail=_B35C96C7-EFFF-4F5C-9E5D-DD122EFEFF52
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-  04:00.0 has children bridges: 05:03.0, 05:04.0
-pref layout after booting path like followings:
+> On Sep 11, 2015, at 6:11 PM, Rustad, Mark D <mark.d.rustad@intel.com> =
+wrote:
+>=20
+> Superficially this looks pretty good. I need to think harder to be =
+sure of the details.
 
-pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
-pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:03.0: PCI bridge to [bus 08-0f]
-pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
-pci 0000:05:04.0: PCI bridge to [bus 10]
-pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
-pci 0000:04:00.0: PCI bridge to [bus 05-10]
-pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
+This is the first time I've looked at all at any of the vfio code, but =
+this is still looking good to me. Thanks for taking this on and exposing =
+the vfio code to me. I hope more devices will be able to take advantage =
+of the quirk and get their VPD issues resolved.
 
-so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
+I did run this on a host with a device with VPD assigned to a guest and =
+did not see any trouble when accessing it concurrently from both the =
+guest and the host on the same and different functions. I don't think my =
+particular environment is ideal to fully reproduce the problem (no =
+writable VPD area), but my initial testing looks good.
 
-during remove and rescan:
+Acked-by: Mark Rustad <mark.d.rustad@intel.com>
 
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
-pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
-pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
-pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
+--
+Mark Rustad, Networking Division, Intel Corporation
 
-align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
-so for 04:00.0 will have big must and no optional size anymore.
 
-So don't align old size, then we will have same size0 and size1,
-and use smaller add_align as must align.
+--Apple-Mail=_B35C96C7-EFFF-4F5C-9E5D-DD122EFEFF52
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
 
-After the patch, rescan works properly.
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+iQIcBAEBCAAGBQJV9z1WAAoJEDwO/+eO4+5uyaYQAKRT8he+vAEqlubnKeNDW+eF
+/Mdfg4QwbB769Bcsr6QlMUeD/MTvJoa6HYYhieOHgyUsQnL79XUn9jEjXIvdJNW1
+uX4l65t1Vy7HBqP3bgEhgjRLRW0zG4ttlqOBDauMLWY5AgMRyyxVtM/Nf4rwxNNp
+YdR6/SmJwBFSyjfG+ZJBP/Bbxpx5YcBkr52BoOGZ/D7ptNaF+QkDKeqzy8zSM2lh
+Un8vqHLTZiYyifCqvebuc4HGGCMaZMKp58+P8m2gViG4mMroYTC+JDd6iU77vyJr
+Q5SsBoRqd/vb5eew0bUHfQvN28hsa3tOUbO8kBPkgTiCIOKfHyV2CuWxRtMzVqaJ
+qi/2rdLKLfEoqbrs0oND/mnFXWoiIZQwhbbBli4gj5dNiKVqBG3VJH4RUec3sbPK
+uiZAX8GuLHL6YikcJiLj6hWsNKMQLgH7VyznrwSBRmI2Ay1cC2OHjsbiRZWdjfel
+TF72k/3xxxNEFmfuQNQpXE7RuSYOLWzhaDoRGxTG+vSe8HKo+XJL34upSAjML/59
+5hYYiITLDERiQCXLG5M3T9WMygVRLCmu9zbH1fZ/4c0qdLBj6wg9w5r0SuzAv0oK
+IKI5J2lxmp/AGqbVprz3QgGQ0QEjpr1Qr/bG70Q7KG9J6pbabHbdWBEjcnU5C7rY
+jK1CMqLNsrqZ6o7zUFl4
+=4c9A
+-----END PGP SIGNATURE-----
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f3077db..43b34a7 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1096,9 +1096,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
-+	size = ALIGN(size, align);
- 	if (size < old_size)
- 		size = old_size;
--	size = ALIGN(size, align);
- 	return size;
- }
- 
-@@ -1556,6 +1556,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		b_res->flags = 0;
- 		return 0;
- 	}
-+
-+	/*
-+	 * It happens when boot path is not passing realloc
-+	 * and later rescan is passing realloc.
-+	 * The old value from boot path is bigger, and calculate_size will
-+	 * use old value as size0 and size1, and also have
-+	 * chance optional align is smaller than must only align.
-+	 */
-+	if(size0 == size1 && min_align > min_add_align)
-+		min_align = min_add_align;
-+
- 	b_res->start = min_align;
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
--- 
-1.8.4.5
-
+--Apple-Mail=_B35C96C7-EFFF-4F5C-9E5D-DD122EFEFF52--
