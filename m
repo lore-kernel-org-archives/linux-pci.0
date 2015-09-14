@@ -1,50 +1,27 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 24 Sep 2015 15:40:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Kernel development list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: disable MSI on SiS 761
-Message-ID: <20150924204041.GE10481@localhost>
-References: <1442005937-21938-1-git-send-email-linux@rainbow-software.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:46229 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753515AbbINAtA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Sep 2015 20:49:00 -0400
+Date: Mon, 14 Sep 2015 09:48:58 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	bhelgaas@google.com, devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-sh@vger.kernel.org
+Subject: Re: [PATCH] pci-rcar-gen2: add R8A7794 support
+Message-ID: <20150914004858.GB6230@verge.net.au>
+References: <2525770.ZsLzbliFPH@wasted.cogentembedded.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442005937-21938-1-git-send-email-linux@rainbow-software.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <2525770.ZsLzbliFPH@wasted.cogentembedded.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 11, 2015 at 11:12:17PM +0200, Ondrej Zary wrote:
-> MSI is broken on SiS 761 chipset at least on PC Chips A31G board.
-> No interrupts are delivered once MSI is enabled for a device. This causes
-> hang on X11 start with a nVidia card installed (with nouveau driver).
+On Sat, Sep 12, 2015 at 02:06:09AM +0300, Sergei Shtylyov wrote:
+> Add Renesas R8A7794 SoC support to the Renesas R-Car gen2 PCI driver.
 > 
-> Disable MSI completely for this chipset.
-> 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-Applied to pci/misc for v4.4, thanks!
-
-> ---
->  drivers/pci/quirks.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index e9fd0e9..6caffc3 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2204,6 +2204,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3336, quirk_disab
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3351, quirk_disable_all_msi);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3364, quirk_disable_all_msi);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_8380_0, quirk_disable_all_msi);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SI, 0x0761, quirk_disable_all_msi);
->  
->  /* Disable MSI on chipsets that are known to not support it */
->  static void quirk_disable_msi(struct pci_dev *dev)
-> -- 
-> Ondrej Zary
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
