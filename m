@@ -1,234 +1,288 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:34255 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbbIITpB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 15:45:01 -0400
-Received: by wicfx3 with SMTP id fx3so3596869wic.1
-        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2015 12:45:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Sep 2015 14:44:39 -0500
-Message-ID: <CAErSpo6d_65oCez7fUBLLpYAiA8F8vj5V4j3gkvMVMsNobpfrg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Zhichang Yuan <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	Zhang Jukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	Liguozhu <liguozhu@hisilicon.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	"James E.J. Bottomley" <JBottomley@odin.com>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+Subject: [Bugfix 2/3] eata: Implement PCI driver to manage eata PCI devices
+Date: Mon, 14 Sep 2015 11:08:58 +0800
+Message-Id: <1442200140-30808-3-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gabriele,
+Previously the eata driver just grabs and accesses eata PCI devices
+without implementing a PCI device driver, that causes troubles with
+latest IRQ related
 
-On Wed, Sep 9, 2015 at 11:51 AM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
->
-> This patch changes the implementation of dw_pcie_cfg_read() and
-> dw_pcie_cfg_write() to:
-> - improve the function usage from the callers perspective;
-> - make sure that the callers specify proper address offsets
->   according to the size of the field being read/written
-> - fix a bug in pcie-spear13xx.c where the callers where passing
->   the wrong address as they missed to add the appropriate offset
+Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
+for PCI devices on x86 platforms. Instead of allocating PCI legacy
+IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
+will be called by pci_device_probe() to allocate PCI legacy IRQs
+when binding PCI drivers to PCI devices.
 
-Please split this into separate patches, so each patch does one thing,
-i.e., separate the "where" usage change from the "return
-PCIBIOS_BAD_REGISTER_NUMBER for bad offsets" change.
+But the eata driver directly accesses PCI devices without implementing
+corresponding PCI drivers, so pcibios_alloc_irq() won't be called for
+those PCI devices and wrong IRQ number may be used to manage the PCI
+device.
 
-I think there was a separate patch for the pcie-spear13xx.c bug,
-wasn't there?  At least, I don't see that fix in *this* patch.
+This patch implements a PCI device driver to manage eata PCI devices,
+so eata driver could properly cooperate with the PCI core. It also
+provides headroom for PCI hotplug with eata driver.
 
-> This patch is a follow up from the discussion in:
-> http://www.spinics.net/lists/linux-pci/msg44351.html
->
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> ---
->  drivers/pci/host/pci-exynos.c      |  5 ++--
->  drivers/pci/host/pci-keystone-dw.c |  4 +--
->  drivers/pci/host/pcie-designware.c | 51 ++++++++++++++++++++++----------------
->  3 files changed, 34 insertions(+), 26 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index f9f468d..8b0e04b 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -454,7 +454,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
->         int ret;
->
->         exynos_pcie_sideband_dbi_r_mode(pp, true);
-> -       ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
-> +       ret = dw_pcie_cfg_read(pp->dbi_base, where, size, val);
->         exynos_pcie_sideband_dbi_r_mode(pp, false);
->         return ret;
->  }
-> @@ -465,8 +465,7 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
->         int ret;
->
->         exynos_pcie_sideband_dbi_w_mode(pp, true);
-> -       ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
-> -                       where, size, val);
-> +       ret = dw_pcie_cfg_write(pp->dbi_base, where, size, val);
->         exynos_pcie_sideband_dbi_w_mode(pp, false);
->         return ret;
->  }
-> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-> index f34892e..2b391f4 100644
-> --- a/drivers/pci/host/pci-keystone-dw.c
-> +++ b/drivers/pci/host/pci-keystone-dw.c
-> @@ -403,7 +403,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->
->         addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
->
-> -       return dw_pcie_cfg_read(addr + (where & ~0x3), where, size, val);
-> +       return dw_pcie_cfg_read(addr, where, size, val);
->  }
->
->  int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-> @@ -415,7 +415,7 @@ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->
->         addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
->
-> -       return dw_pcie_cfg_write(addr + (where & ~0x3), where, size, val);
-> +       return dw_pcie_cfg_write(addr, where, size, val);
->  }
->
->  /**
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be..b53aa38 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -82,13 +82,20 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
->
->  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
->  {
-> +       addr += (where & ~0x3);
->         *val = readl(addr);
-> -
-> -       if (size == 1)
-> -               *val = (*val >> (8 * (where & 3))) & 0xff;
-> -       else if (size == 2)
-> -               *val = (*val >> (8 * (where & 3))) & 0xffff;
-> -       else if (size != 4)
-> +       where &= 3;
-> +
-> +       if (size == 1) {
-> +               *val = (*val >> (8 * where)) & 0xff;
-> +       } else if (size == 2) {
-> +               if (where & 1)
-> +                       return PCIBIOS_BAD_REGISTER_NUMBER;
-> +               *val = (*val >> (8 * where)) & 0xffff;
-> +       } else if (size == 4) {
-> +               if (where & 3)
-> +                       return PCIBIOS_BAD_REGISTER_NUMBER;
-> +       } else
->                 return PCIBIOS_BAD_REGISTER_NUMBER;
->
->         return PCIBIOS_SUCCESSFUL;
-> @@ -96,12 +103,18 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
->
->  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
->  {
-> -       if (size == 4)
-> +       addr += where;
-> +
-> +       if (size == 4) {
-> +               if ((uintptr_t)addr & 3)
-> +                       return PCIBIOS_BAD_REGISTER_NUMBER;
->                 writel(val, addr);
-> -       else if (size == 2)
-> -               writew(val, addr + (where & 2));
-> -       else if (size == 1)
-> -               writeb(val, addr + (where & 3));
-> +       } else if (size == 2) {
-> +               if ((uintptr_t)addr & 1)
-> +                       return PCIBIOS_BAD_REGISTER_NUMBER;
-> +               writew(val, addr);
-> +       } else if (size == 1)
-> +               writeb(val, addr);
->         else
->                 return PCIBIOS_BAD_REGISTER_NUMBER;
->
-> @@ -132,8 +145,7 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
->         if (pp->ops->rd_own_conf)
->                 ret = pp->ops->rd_own_conf(pp, where, size, val);
->         else
-> -               ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
-> -                               size, val);
-> +               ret = dw_pcie_cfg_read(pp->dbi_base, where, size, val);
->
->         return ret;
->  }
-> @@ -146,8 +158,7 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
->         if (pp->ops->wr_own_conf)
->                 ret = pp->ops->wr_own_conf(pp, where, size, val);
->         else
-> -               ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where,
-> -                               size, val);
-> +               ret = dw_pcie_cfg_write(pp->dbi_base, where, size, val);
->
->         return ret;
->  }
-> @@ -541,13 +552,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->                 u32 devfn, int where, int size, u32 *val)
->  {
->         int ret, type;
-> -       u32 address, busdev, cfg_size;
-> +       u32 busdev, cfg_size;
->         u64 cpu_addr;
->         void __iomem *va_cfg_base;
->
->         busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
->                  PCIE_ATU_FUNC(PCI_FUNC(devfn));
-> -       address = where & ~0x3;
->
->         if (bus->parent->number == pp->root_bus_nr) {
->                 type = PCIE_ATU_TYPE_CFG0;
-> @@ -564,7 +574,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->         dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->                                   type, cpu_addr,
->                                   busdev, cfg_size);
-> -       ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
-> +       ret = dw_pcie_cfg_read(va_cfg_base, where, size, val);
->         dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->                                   PCIE_ATU_TYPE_IO, pp->io_mod_base,
->                                   pp->io_bus_addr, pp->io_size);
-> @@ -576,13 +586,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->                 u32 devfn, int where, int size, u32 val)
->  {
->         int ret, type;
-> -       u32 address, busdev, cfg_size;
-> +       u32 busdev, cfg_size;
->         u64 cpu_addr;
->         void __iomem *va_cfg_base;
->
->         busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
->                  PCIE_ATU_FUNC(PCI_FUNC(devfn));
-> -       address = where & ~0x3;
->
->         if (bus->parent->number == pp->root_bus_nr) {
->                 type = PCIE_ATU_TYPE_CFG0;
-> @@ -599,7 +608,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
->         dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->                                   type, cpu_addr,
->                                   busdev, cfg_size);
-> -       ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
-> +       ret = dw_pcie_cfg_write(va_cfg_base, where, size, val);
->         dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
->                                   PCIE_ATU_TYPE_IO, pp->io_mod_base,
->                                   pp->io_bus_addr, pp->io_size);
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/scsi/eata.c |  170 ++++++++++++++++++++++-----------------------------
+ 1 file changed, 74 insertions(+), 96 deletions(-)
+
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index b45d3b532b70..b92e6856f909 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -850,10 +850,6 @@ static unsigned long io_port[] = {
+ 	/* First ISA */
+ 	0x1f0,
+ 
+-	/* Space for MAX_PCI ports possibly reported by PCI_BIOS */
+-	SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+-	SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+-
+ 	/* MAX_EISA ports */
+ 	0x1c88, 0x2c88, 0x3c88, 0x4c88, 0x5c88, 0x6c88, 0x7c88, 0x8c88,
+ 	0x9c88, 0xac88, 0xbc88, 0xcc88, 0xdc88, 0xec88, 0xfc88,
+@@ -1024,60 +1020,13 @@ static int read_pio(unsigned long iobase, ushort * start, ushort * end)
+ 	return 0;
+ }
+ 
+-static struct pci_dev *get_pci_dev(unsigned long port_base)
+-{
+-#if defined(CONFIG_PCI)
+-	unsigned int addr;
+-	struct pci_dev *dev = NULL;
+-
+-	while ((dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev))) {
+-		addr = pci_resource_start(dev, 0);
+-
+-#if defined(DEBUG_PCI_DETECT)
+-		printk("%s: get_pci_dev, bus %d, devfn 0x%x, addr 0x%x.\n",
+-		       driver_name, dev->bus->number, dev->devfn, addr);
+-#endif
+-
+-		/* we are in so much trouble for a pci hotplug system with this driver
+-		 * anyway, so doing this at least lets people unload the driver and not
+-		 * cause memory problems, but in general this is a bad thing to do (this
+-		 * driver needs to be converted to the proper PCI api someday... */
+-		pci_dev_put(dev);
+-		if (addr + PCI_BASE_ADDRESS_0 == port_base)
+-			return dev;
+-	}
+-#endif				/* end CONFIG_PCI */
+-	return NULL;
+-}
+-
+-static void enable_pci_ports(void)
+-{
+-#if defined(CONFIG_PCI)
+-	struct pci_dev *dev = NULL;
+-
+-	while ((dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev))) {
+-#if defined(DEBUG_PCI_DETECT)
+-		printk("%s: enable_pci_ports, bus %d, devfn 0x%x.\n",
+-		       driver_name, dev->bus->number, dev->devfn);
+-#endif
+-
+-		if (pci_enable_device(dev))
+-			printk
+-			    ("%s: warning, pci_enable_device failed, bus %d devfn 0x%x.\n",
+-			     driver_name, dev->bus->number, dev->devfn);
+-	}
+-
+-#endif				/* end CONFIG_PCI */
+-}
+-
+ static int port_detect(unsigned long port_base, unsigned int j,
+-		struct scsi_host_template *tpnt)
++		       struct scsi_host_template *tpnt, struct pci_dev *pdev)
+ {
+ 	unsigned char irq, dma_channel, subversion, i, is_pci = 0;
+ 	unsigned char protocol_rev;
+ 	struct eata_info info;
+ 	char *bus_type, dma_name[16];
+-	struct pci_dev *pdev;
+ 	/* Allowed DMA channels for ISA (0 indicates reserved) */
+ 	unsigned char dma_channel_table[4] = { 5, 6, 7, 0 };
+ 	struct Scsi_Host *shost;
+@@ -1199,15 +1148,8 @@ static int port_detect(unsigned long port_base, unsigned int j,
+ 		    ("%s: warning, LEVEL triggering is suggested for IRQ %u.\n",
+ 		     name, irq);
+ 
+-	if (is_pci) {
+-		pdev = get_pci_dev(port_base);
+-		if (!pdev)
+-			printk
+-			    ("%s: warning, failed to get pci_dev structure.\n",
+-			     name);
+-	} else
+-		pdev = NULL;
+-
++	if (is_pci && !pdev)
++		printk("%s: warning, failed to get pci_dev structure.\n", name);
+ 	if (pdev && (irq != pdev->irq)) {
+ 		printk("%s: IRQ %u mapped to IO-APIC IRQ %u.\n", name, irq,
+ 		       pdev->irq);
+@@ -1510,14 +1452,17 @@ static int option_setup(char *str)
+ }
+ 
+ static unsigned int port_probe(unsigned long port_base,
+-			       struct scsi_host_template *tpnt)
++			       struct scsi_host_template *tpnt,
++			       struct pci_dev *pdev)
+ {
+ 	int id;
+ 
+ 	id = ida_simple_get(&eata_ida, 0, MAX_BOARDS, GFP_KERNEL);
+ 	if (id >= 0) {
+ 		set_bit(id, eata_board_bitmap);
+-		if (port_detect(port_base, id, tpnt))
++		if (pdev)
++			dev_set_drvdata(&pdev->dev, (void *)(long)id);
++		if (port_detect(port_base, id, tpnt, pdev))
+ 			return id;
+ 		clear_bit(id, eata_board_bitmap);
+ 		ida_simple_remove(&eata_ida, id);
+@@ -1526,42 +1471,81 @@ static unsigned int port_probe(unsigned long port_base,
+ 	return -1;
+ }
+ 
+-static void add_pci_ports(void)
+-{
+-#if defined(CONFIG_PCI)
+-	unsigned int addr, k;
+-	struct pci_dev *dev = NULL;
+-
+-	for (k = 0; k < MAX_PCI; k++) {
++#ifdef CONFIG_PCI
++static int eata2x_pci_device_count;
+ 
+-		if (!(dev = pci_get_class(PCI_CLASS_STORAGE_SCSI << 8, dev)))
+-			break;
++static int eata2x_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
++{
++	int i, ret = -ENXIO;
++	resource_size_t addr;
++	unsigned long port_base;
++	struct scsi_host_template *tpnt = (void *)id->driver_data;
+ 
+-		if (pci_enable_device(dev)) {
++	if (pci_enable_device(dev)) {
+ #if defined(DEBUG_PCI_DETECT)
+-			printk
+-			    ("%s: detect, bus %d, devfn 0x%x, pci_enable_device failed.\n",
+-			     driver_name, dev->bus->number, dev->devfn);
++		pr_warn("%s: detect, bus %d, devfn 0x%x, pci_enable_device failed.\n",
++			driver_name, dev->bus->number, dev->devfn);
+ #endif
++		goto out_error;
++	}
+ 
+-			continue;
+-		}
+-
+-		addr = pci_resource_start(dev, 0);
+-
++	addr = pci_resource_start(dev, 0);
++	port_base = addr + PCI_BASE_ADDRESS_0;
+ #if defined(DEBUG_PCI_DETECT)
+-		printk("%s: detect, seq. %d, bus %d, devfn 0x%x, addr 0x%x.\n",
+-		       driver_name, k, dev->bus->number, dev->devfn, addr);
++	printk("%s: detect, bus %d, devfn 0x%x, addr 0x%x.\n",
++	       driver_name, dev->bus->number, dev->devfn, (unsigned int)addr);
+ #endif
+ 
+-		/* Order addresses according to rev_scan value */
+-		io_port[MAX_INT_PARAM + (rev_scan ? (MAX_PCI - k) : (1 + k))] =
+-		    addr + PCI_BASE_ADDRESS_0;
++	if (setup_done) {
++		/*
++		 * Handle kernel or module parameter
++		 * . probe board if its port is specified by user
++		 * . otherwise ignore the board
++		 */
++		for (i = 1; i < MAX_INT_PARAM; i++)
++			if (io_port[i] == port_base) {
++				io_port[i] = SKIP;
++				break;
++			}
++		if (i >= MAX_INT_PARAM)
++			goto out_disable_device;
++	}
++	if (port_probe(port_base, tpnt, dev) >= 0) {
++		eata2x_pci_device_count++;
++		return 0;
+ 	}
+ 
+-	pci_dev_put(dev);
+-#endif				/* end CONFIG_PCI */
++out_disable_device:
++	pci_disable_device(dev);
++out_error:
++	return ret;
++}
++
++static struct pci_device_id eata2x_tbl[] = {
++	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_SCSI << 8, PCI_ANY_ID) },
++	{ },
++};
++MODULE_DEVICE_TABLE(pci, eata2x_tbl);
++
++static struct pci_driver eata2x_pci_driver = {
++	.name		= "eata",
++	.id_table	= eata2x_tbl,
++	.probe		= eata2x_pci_probe,
++};
++
++static int eata2x_probe_pci_devices(struct scsi_host_template *tpnt)
++{
++	eata2x_tbl[0].driver_data = (kernel_ulong_t)tpnt;
++	if (pci_probe && pci_register_driver(&eata2x_pci_driver))
++		pr_warn("eata2x: failed to register PCI device driver.\n");
++	return eata2x_pci_device_count;
++}
++#else /* CONFIG_PCI */
++static inline int eata2x_probe_pci_devices(struct scsi_host_template *tpnt)
++{
++	return 0;
+ }
++#endif /* CONFIG_PCI */
+ 
+ static int eata2x_detect(struct scsi_host_template *tpnt)
+ {
+@@ -1592,16 +1576,10 @@ static int eata2x_detect(struct scsi_host_template *tpnt)
+ 				io_port[k] = SKIP;
+ 		}
+ 
+-	if (pci_probe) {
+-		if (!setup_done)
+-			add_pci_ports();
+-		else
+-			enable_pci_ports();
+-	}
+-
++	count += eata2x_probe_pci_devices(tpnt);
+ 	for (k = 0; io_port[k]; k++)
+ 		if (io_port[k] != SKIP &&
+-		    port_probe(io_port[k], tpnt) >= 0)
++		    port_probe(io_port[k], tpnt, NULL) >= 0)
+ 			count++;
+ 
+ 	return count;
+-- 
+1.7.10.4
+
