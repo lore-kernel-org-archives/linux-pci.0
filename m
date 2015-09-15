@@ -1,114 +1,139 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 22 Sep 2015 17:07:19 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:51729 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751827AbbIOQ3t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Sep 2015 12:29:49 -0400
+Date: Tue, 15 Sep 2015 17:30:00 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-pci@vger.kernel.org,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
-Message-ID: <20150922164107-mutt-send-email-mst@redhat.com>
-References: <1441553385-3810-1-git-send-email-mst@redhat.com>
- <20150921182147.GC27964@google.com>
- <20150921223622-mutt-send-email-mst@redhat.com>
- <20150921221043.GR25767@google.com>
- <20150922131303-mutt-send-email-mst@redhat.com>
- <20150922123640.GT25767@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+Message-ID: <20150915163000.GA16240@red-moon>
+References: <20150904164412.GD22997@red-moon>
+ <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+ <20150907091230.GB29293@red-moon>
+ <20150914100929.GB18886@red-moon>
+ <CAE9FiQV-eG42xzqVcO2Q+xT3jx-Oa7uC7fEuowvopx4Fp9F7hQ@mail.gmail.com>
+ <20150914162834.GA11199@red-moon>
+ <CAE9FiQWJfbMD1Akq6XD-Yedc+tNNF8o0obPGHt8f_WnWX0pLbA@mail.gmail.com>
+ <CAE9FiQU6NTEdKJi58bNZU4u=+-rzB3mddp6vKGc4JjbZWoa9zQ@mail.gmail.com>
+ <20150915094610.GD11199@red-moon>
+ <CAErSpo5KaV7ERYcyZBzfvCEh40zSPJmymwXUCbAZkK=hb4DPSw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150922123640.GT25767@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAErSpo5KaV7ERYcyZBzfvCEh40zSPJmymwXUCbAZkK=hb4DPSw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 22, 2015 at 07:36:40AM -0500, Bjorn Helgaas wrote:
-> On Tue, Sep 22, 2015 at 02:29:03PM +0300, Michael S. Tsirkin wrote:
-> > On Mon, Sep 21, 2015 at 05:10:43PM -0500, Bjorn Helgaas wrote:
-> > > On Mon, Sep 21, 2015 at 10:42:13PM +0300, Michael S. Tsirkin wrote:
-> > > > On Mon, Sep 21, 2015 at 01:21:47PM -0500, Bjorn Helgaas wrote:
-> > > > > On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
-> > > > > > On some hypervisors, virtio devices tend to generate spurious interrupts
-> > > > > > when switching between MSI and non-MSI mode.  Normally, either MSI or
-> > > > > > non-MSI is used and all is well, but during shutdown, linux disables MSI
-> > > > > > which then causes an "irq %d: nobody cared" message, with irq being
-> > > > > > subsequently disabled.
-> > > > > 
-> > > > > My understanding is:
-> > > > > 
-> > > > >   Linux disables MSI/MSI-X during device shutdown.  If the device
-> > > > >   signals an interrupt after that, it may use INTx.
-> > > > > 
-> > > > > This INTx interrupt is not necessarily spurious.  Using INTx to signal an
-> > > > > interrupt that occurs when MSI is disabled seems like reasonable behavior
-> > > > > for any PCI device.
-> > > > > And it doesn't seem related to switching between MSI and non-MSI mode.
-> > > > > Yes, the INTx happens *after* disabling MSI, but it is not at all
-> > > > > *because* we disabled MSI.  So I wouldn't say "they generate spurious
-> > > > > interrupts when switching between MSI and non-MSI."
-> > > > > 
-> > > > > Why doesn't virtio-pci just register an INTx handler in addition to an MSI
-> > > > > handler?
-> > > > 
-> > > > The handler causes an expensive exit to the hypervisor,
-> > > > and the INTx lines are shared with other devices.
-> > > 
-> > > Do we care?  Is this a performance path?  I thought we were in a kexec
-> > > shutdown path.
-> > 
-> > Yes but the handler would always have to be registered, right?
+On Tue, Sep 15, 2015 at 04:57:07PM +0100, Bjorn Helgaas wrote:
+> On Tue, Sep 15, 2015 at 4:46 AM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > On Tue, Sep 15, 2015 at 12:58:20AM +0100, Yinghai Lu wrote:
+> >> On Mon, Sep 14, 2015 at 10:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> >> > On Mon, Sep 14, 2015 at 9:28 AM, Lorenzo Pieralisi
+> >> > <lorenzo.pieralisi@arm.com> wrote:
+> >> >> On Mon, Sep 14, 2015 at 05:05:50PM +0100, Yinghai Lu wrote:
+> >> >>> We could just revert
+> >> >>> dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
+> >> >>> arch code")
+> >> >>> instead.
+> >> >>
+> >>
+> >> > if arch code called pci_read_bridge_bases() via pcibios_fixup_bus(),
+> >> > then it need to have
+> >> > to call pcibios_allocate_bus_resources() later.
+> >> >
+> >> > but now arm (mips ?)  does not have calling pcibios_allocate_bus_resources().
+> >
+> > pcibios_allocate_bus_resources() is an arch specific function and arm
+> > and (and mips ?) does not need to create/call it because ARM reassigns
+> > ALL resources in ALL platforms, hoping FW can provide a reasonable PCI
+> > bridge apertures set-up on ARM is wishful thinking at present.
+> >
+> > If PCI core code is written with that assumption (ie that arch code zeroes
+> > the bridge apertures if they can't be claimed), pci_read_bridge_bases()
+> > can't be moved to PCI core code at present, sad and simple.
+> >
+> > I already asked many times why __pci_bus_size_bridges() cares about
+> > the old bridge size on first scan and got no answer so I would ask Bjorn
+> > to revert dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core
+> > instead of arch code") or we apply an ARM specific plaster, we are making
+> > no progress on this.
+> >
+> >> Found other problem that is caused by
+> >> dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
+> >> arch code")
+> >>
+> >> If that commit does not get reverted, will need to have attached patch
+> >
+> > I see what you mean and I see why there is a reason to apply the patch
+> > below if we do not revert dff22d2054b5 (" PCI: Call pci_read_bridge_bases()
+> > from core instead of arch code"), but I am afraid the commit log has to
+> > be rewritten to explain the problem in a way that properly describes
+> > the issue, and that's not the first one I read in the last couple of
+> > weeks to figure out how to fix this regression.
 > 
-> The pci_device_shutdown() path you're modifying calls drv->shutdown()
-> immediately before disabling MSI, so I suppose you could register a
-> handler in a virtio shutdown method.
+> I'm inclined to revert dff22d2054b5 ("PCI: Call
+> pci_read_bridge_bases() from core instead of arch code") until we can
+> figure this out.  I think the idea of moving that work from
+> arch-specific code to the core is good, but it seems like it leads to
+> more hacky workarounds than real cleanup right now.  What would break
+> if we simply reverted it?  Would that reintroduce any problems?
 
-I guess we could. Not sure what we'd do e.g. if that fails.
+None that I am aware of, I know Guenter required it for this series:
 
-> > > > Seems silly to slow them down just so we can do something
-> > > > that triggers the device bug.  The bus master is disabled by that time,
-> > > > if linux can just desist from touching MSI enable device won't
-> > > > send either INTx (because MSI is on) or MSI
-> > > > (because bus master is on) and all will be well.
-> > > 
-> > > It would also be silly to put special-purpose code in the PCI core
-> > > if there's a reasonable way to handle this in a driver.
-> > > 
-> > > Can you describe exactly what the device bug is?  Apparently you're
-> > > saying that if we shut down MSI, it triggers the bug?  And I guess
-> > > you're talking about a virtio device as implemented in qemu or other
-> > > hypervisors?
-> > 
-> > Yes. Basically depending on an internal device state, disabling MSI
-> > sometimes wedges it.  The most easy to debug effect is if it starts
-> > sending INTx interrupts, for which there's no handler currently.
-> > Full system reset always gets us out of the bad state.
+https://lkml.org/lkml/2015/7/30/861
+
+but it was not merged so, as far as I understand, reverting the patch
+should get things to normal. I think it unearthed a couple of niggles
+in core code though that should be changed regardless (eg I still
+think that __pci_bus_size_bridges() taking the "old" bridge aperture
+size for granted is wrong and that's the only reason why bridge apertures
+can only be read in arch code, that claims them and reset them if the
+claiming fail).
+
+> PCI enumeration and resource assignment is currently split, with some
+> ACPI stuff in the middle:
 > 
-> If disabling MSI causes the device to use INTx interrupts, that sounds
-> perfectly normal to me.
+>   - PCI enumeration
+>   - ACPI resource reservation
+>   - PCI resource assignment
 > 
-> If disabling MSI causes the device to hang, *that* sounds like a bug.
-> Since this is virtio, we should be able to figure out exactly where
-> that happens.  Do you have a pointer to a virtio bug report, or even a
-> QEMU commit that fixes this virtio bug?
-> 
-> I understand that even if there is a virtio fix in QEMU, we want a
-> solution that works even with an old QEMU that doesn't contain the
-> fix.  But a pointer to a QEMU fix would really help understand and
-> document the Linux fix.
-> 
-> Bjorn
+> I think it would make sense to do some PCI resource validation and
+> assignment during enumeration, but I don't think it's possible as long
+> as we have that ACPI stuff in the middle.  Sometimes ACPI reports
+> non-PCI devices in the middle of space we think is available for PCI
+> (either from _CRS or our legacy "everything after top-of-RAM" idea),
+> so we can't assign space to PCI devices until we know where those ACPI
+> things are.
 
-I'm not sure we ever understood it completely.
+I think there are too many hidden assumptions in the code that assigns
+resources owing to history and they are really difficult to untangle,
+that's certain and that's why the resource validation and assignment,
+that should be arch-agnostic, is very arch dependent at present.
 
-I think some of it has to do with the way the whole virtio 0
-device register layout changes when you enable/disable MSI.  So should
-be ok when using the modern virtio 1 model since we fixed this thing.
+Reading bridge bases in core code, which should be harmless, triggered
+a couple of regressions already, imagine what happens if we started
+claiming resources in core PCI code.
 
-I was hoping that since disabling MSI in pci core is only useful as a
-work-around (for devices with a broken bus master enable - even though I
-don't think we know what these are exactly), a flag for not disabling it
-won't be held to such a high standard.
+Resource validation can be done in core code IMO, it will take time
+to figure it out though but it is something worth doing.
 
--- 
-MST
+Thank you !
+Lorenzo
