@@ -1,115 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:34823 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752422AbbIIOzL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 10:55:11 -0400
-Received: by wicge5 with SMTP id ge5so158575330wic.0
-        for <linux-pci@vger.kernel.org>; Wed, 09 Sep 2015 07:55:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <55EFD3CA.3050301@linux.intel.com>
-References: <1433780448-18636-1-git-send-email-jiang.liu@linux.intel.com>
- <1433780448-18636-2-git-send-email-jiang.liu@linux.intel.com>
- <20150729203741.GC9640@google.com> <55EFD3CA.3050301@linux.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 9 Sep 2015 09:54:50 -0500
-Message-ID: <CAErSpo438W5kRtxb9dG8AyLNVaCSTqF_QQ-rdU6DR26Q1_gRvA@mail.gmail.com>
-Subject: Re: [Patch v5 1/6] ACPI/PCI: Enhance ACPI core to support sparse IO space
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"Rafael J . Wysocki" <rjw@rjwysocki.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Len Brown <lenb@kernel.org>, Vivek Goyal <vgoyal@redhat.com>,
-	Thierry Reding <treding@nvidia.com>,
-	Jakub Sitnicki <jsitnicki@gmail.com>,
-	Lv Zheng <lv.zheng@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:2401 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbbIOTtT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 15:49:19 -0400
+From: William Davis <wdavis@nvidia.com>
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"x86 @ kernel . org" <x86@kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <TRipperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>
+Subject: RE: [PATCH 11/22] swiotlb: Add map_peer_resource stub
+Date: Tue, 15 Sep 2015 19:49:08 +0000
+Message-ID: <640f5c715db84f83b1cb443365c1de30@HQMAIL106.nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+ <1442337067-22964-12-git-send-email-wdavis@nvidia.com>
+ <20150915194028.GA23813@l.oracle.com>
+In-Reply-To: <20150915194028.GA23813@l.oracle.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 9, 2015 at 1:38 AM, Jiang Liu <jiang.liu@linux.intel.com> wrote:
-> On 2015/7/30 4:37, Bjorn Helgaas wrote:
->> On Tue, Jun 09, 2015 at 12:20:43AM +0800, Jiang Liu wrote:
->>> Enhance ACPI resource parsing interfaces to support sparse IO space,
->>> which will be used to share common code between x86 and IA64 later.
->>>
->>> Tested-by: Tony Luck <tony.luck@intel.com>
->>> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
->>> Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
->>> ---
->>>  drivers/acpi/resource.c |    9 ++++++---
->>>  include/linux/ioport.h  |    1 +
->>>  2 files changed, 7 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
->>> index 8244f013f210..fdcc73dad2c1 100644
->>> --- a/drivers/acpi/resource.c
->>> +++ b/drivers/acpi/resource.c
->>> @@ -123,7 +123,7 @@ bool acpi_dev_resource_memory(struct acpi_resource *ares, struct resource *res)
->>>  EXPORT_SYMBOL_GPL(acpi_dev_resource_memory);
->>>
->>>  static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->>> -                                  u8 io_decode)
->>> +                                  u8 io_decode, u8 translation_type)
->>>  {
->>>      res->flags = IORESOURCE_IO;
->>>
->>> @@ -135,6 +135,8 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->>>
->>>      if (io_decode == ACPI_DECODE_16)
->>>              res->flags |= IORESOURCE_IO_16BIT_ADDR;
->>> +    if (translation_type == ACPI_SPARSE_TRANSLATION)
->>> +            res->flags |= IORESOURCE_IO_SPARSE;
->>>  }
->>>
->>>  static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
->>> @@ -142,7 +144,7 @@ static void acpi_dev_get_ioresource(struct resource *res, u64 start, u64 len,
->>>  {
->>>      res->start = start;
->>>      res->end = start + len - 1;
->>> -    acpi_dev_ioresource_flags(res, len, io_decode);
->>> +    acpi_dev_ioresource_flags(res, len, io_decode, 0);
->>>  }
->>>
->>>  /**
->>> @@ -227,7 +229,8 @@ static bool acpi_decode_space(struct resource_win *win,
->>>              acpi_dev_memresource_flags(res, len, wp);
->>>              break;
->>>      case ACPI_IO_RANGE:
->>> -            acpi_dev_ioresource_flags(res, len, iodec);
->>> +            acpi_dev_ioresource_flags(res, len, iodec,
->>> +                                      addr->info.io.translation_type);
->>>              break;
->>>      case ACPI_BUS_NUMBER_RANGE:
->>>              res->flags = IORESOURCE_BUS;
->>> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
->>> index 388e3ae94f7a..24bea087e7af 100644
->>> --- a/include/linux/ioport.h
->>> +++ b/include/linux/ioport.h
->>> @@ -94,6 +94,7 @@ struct resource {
->>>  /* PnP I/O specific bits (IORESOURCE_BITS) */
->>>  #define IORESOURCE_IO_16BIT_ADDR    (1<<0)
->>>  #define IORESOURCE_IO_FIXED         (1<<1)
->>> +#define IORESOURCE_IO_SPARSE                (1<<2)
->>
->> I don't really like this bit.  We adding a new generic IORESOURCE_* bit
->> just for a special case, and it's only used in one place, for one arch,
->> during enumeration.
-> Hi Bjorn,
->         Instead of defining a formal flag IORESOURCE_IO_SPARSE, we may
-> reuse other field in struct resource to pass back the SPARSE flag,
-> but that's a little dirty. For example, we may reuse res->name field
-> to carry the SPARSE flag for the IA64 special case.
->         Is that OK?
 
-No, I think that's even worse.  Adding IORESOURCE_IO_SPARSE looks
-positively glorious now.
 
-Bjorn
+> -----Original Message-----
+> From: Konrad Rzeszutek Wilk [mailto:konrad.wilk@oracle.com]
+> Sent: Tuesday, September 15, 2015 2:40 PM
+> To: William Davis
+> Cc: Bjorn Helgaas; Alex Williamson; Joerg Roedel; iommu@lists.linux-foundation.org; linux-
+> pci@vger.kernel.org; Mark Hounschell; David S. Miller; Jonathan Corbet; Terence Ripperda; John
+> Hubbard; Jerome Glisse
+> Subject: Re: [PATCH 11/22] swiotlb: Add map_peer_resource stub
+> 
+> On Tue, Sep 15, 2015 at 12:10:56PM -0500, Will Davis wrote:
+> > Add swiotlb stub of the 'map_peer_resource' DMA operation.
+> >
+> > Signed-off-by: Will Davis <wdavis@nvidia.com>
+> > ---
+> >  include/linux/swiotlb.h |  8 ++++++++
+> >  lib/swiotlb.c           | 17 +++++++++++++++++
+> >  2 files changed, 25 insertions(+)
+> >
+> > diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
+> > index e7a018e..872463a 100644
+> > --- a/include/linux/swiotlb.h
+> > +++ b/include/linux/swiotlb.h
+> > @@ -87,6 +87,14 @@ swiotlb_unmap_sg_attrs(struct device *hwdev, struct scatterlist *sgl,
+> >  		       int nelems, enum dma_data_direction dir,
+> >  		       struct dma_attrs *attrs);
+> >
+> > +#ifdef CONFIG_HAS_DMA_P2P
+> > +extern dma_peer_addr_t
+> > +swiotlb_map_peer_resource(struct device *hwdev, struct device *hwpeer,
+> > +			  struct resource *res, unsigned long offset,
+> > +			  size_t size, enum dma_data_direction dir,
+> > +			  struct dma_attrs *attrs);
+> > +#endif
+> > +
+> >  extern void
+> >  swiotlb_sync_single_for_cpu(struct device *hwdev, dma_addr_t dev_addr,
+> >  			    size_t size, enum dma_data_direction dir);
+> > diff --git a/lib/swiotlb.c b/lib/swiotlb.c
+> > index 76f29ec..61522a7 100644
+> > --- a/lib/swiotlb.c
+> > +++ b/lib/swiotlb.c
+> > @@ -945,6 +945,23 @@ swiotlb_unmap_sg(struct device *hwdev, struct scatterlist *sgl, int nelems,
+> >  }
+> >  EXPORT_SYMBOL(swiotlb_unmap_sg);
+> >
+> > +#ifdef CONFIG_HAS_DMA_P2P
+> > +/*
+> > + * Maps a single region from a peer device's resource for DMA streaming. This
+> > + * is currently unimplemented because there's no bounce buffer abstraction for
+> > + * peer mappings.
+> > + */
+> > +dma_peer_addr_t
+> > +swiotlb_map_peer_resource(struct device *hwdev, struct device *hwpeer,
+> > +			  struct resource *res, unsigned long offset,
+> > +			  size_t size, enum dma_data_direction dir,
+> > +			  struct dma_attrs *attrs)
+> > +{
+> > +	return phys_to_dma(hwdev, io_tlb_overflow_buffer);
+> 
+> That seems to be implemented :-)
+> 
+> Did you mean to return DMA_ERROR_CODE instead?
+
+I didn't see DMA_ERROR_CODE used in lib/swiotlb.c, and
+swiotlb_dma_mapping_error is implemented as:
+
+	return (dma_addr == phys_to_dma(hwdev, io_tlb_overflow_buffer));
+
+So I figured that phys_to_dma(hwdev, io_tlb_overflow_buffer) was intended
+to be used as DMA_ERROR_CODE instead.
+
+Thanks,
+Will
+
+> > +}
+> > +EXPORT_SYMBOL(swiotlb_map_peer_resource);
+> > +#endif
+> > +
+> >  /*
+> >   * Make physical memory consistent for a set of streaming mode DMA translations
+> >   * after a transfer.
+> > --
+> > 2.5.1
+> >
+
+--
+nvpublic
