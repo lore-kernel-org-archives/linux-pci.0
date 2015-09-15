@@ -1,57 +1,79 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-	lftan.linux@gmail.com
-Subject: Re: [PATCH 1/2] nios2: Add architectural support for PCIe
-Date: Tue, 22 Sep 2015 10:18:58 +0200
-Message-ID: <65590637.5YmBIDOvTf@wuerfel>
-In-Reply-To: <1442906367-10935-2-git-send-email-lftan@altera.com>
-References: <1442906367-10935-1-git-send-email-lftan@altera.com> <1442906367-10935-2-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:11986 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbbIORLa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:30 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 05/22] dma-mapping: pci: add pci_(un)map_peer_resource
+Date: Tue, 15 Sep 2015 12:10:50 -0500
+Message-ID: <1442337067-22964-6-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 22 September 2015 15:19:26 Ley Foon Tan wrote:
-> +
-> +config PCI_SYSCALL
-> +	def_bool PCI
+Simply route these through to the new dma_(un)map_peer_resource APIs.
 
-IIRC, PCI_SYSCALL is deprecated and you should just leave that
-turned off.
+Also route pci_peer_mapping_error through to the new dma_peer_mapping_error
+API.
 
-In any case, you enable the syscalls here but don't assign a
-system call number, so that is rather pointless. I 
+Guard these new functions behind CONFIG_HAS_DMA_P2P.
 
-I might be missing something though. Bjorn?
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ include/asm-generic/pci-dma-compat.h | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-> @@ -14,7 +14,7 @@
->  #include <linux/types.h>
->  #include <asm/pgtable-bits.h>
->  
-> -/* PCI is not supported in nios2, set this to 0. */
-> +/* PCI I/O space is not supported, set this to 0. */
->  #define IO_SPACE_LIMIT 0
->  
->  #define readb_relaxed(addr)	readb(addr)
+diff --git a/include/asm-generic/pci-dma-compat.h b/include/asm-generic/pci-dma-compat.h
+index c110843..7baf09e 100644
+--- a/include/asm-generic/pci-dma-compat.h
++++ b/include/asm-generic/pci-dma-compat.h
+@@ -61,6 +61,29 @@ pci_unmap_page(struct pci_dev *hwdev, dma_addr_t dma_address,
+ 	dma_unmap_page(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
+ }
+ 
++#ifdef CONFIG_HAS_DMA_P2P
++static inline dma_peer_addr_t
++pci_map_peer_resource(struct pci_dev *hwdev, struct pci_dev *peer,
++		      int res, unsigned long offset, size_t size,
++		      int direction)
++{
++	return dma_map_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, peer == NULL ? NULL : &peer->dev, peer == NULL ? NULL : &peer->resource[res], offset, size, (enum dma_data_direction)direction);
++}
++
++static inline int
++pci_dma_peer_mapping_error(struct pci_dev *pdev, dma_peer_addr_t dma_addr)
++{
++	return dma_peer_mapping_error(&pdev->dev, dma_addr);
++}
++
++static inline void
++pci_unmap_peer_resource(struct pci_dev *hwdev, dma_peer_addr_t dma_address,
++			size_t size, int direction)
++{
++	dma_unmap_peer_resource(hwdev == NULL ? NULL : &hwdev->dev, dma_address, size, (enum dma_data_direction)direction);
++}
++#endif
++
+ static inline int
+ pci_map_sg(struct pci_dev *hwdev, struct scatterlist *sg,
+ 	   int nents, int direction)
+-- 
+2.5.1
 
-It might be useful to enable this, just in case someone connects
-a PCI host bridge that does support I/O space.
-
-Which host bridge do you use? Are you sure there is no I/O space?
-Most of them use a set of translation windows to set up a mapping
-between bus address (memory, config and io space) and physical
-(mmio) space.
-
-> diff --git a/arch/nios2/include/asm/pci.h b/arch/nios2/include/asm/pci.h
-> new file mode 100644
-> index 0000000..f2cba05
-> --- /dev/null
-> +++ b/arch/nios2/include/asm/pci.h
-
-What happens if you use the asm-generic header? If there is something
-missing in it, we can try to get it to do the right things.
-
-	Arnd
