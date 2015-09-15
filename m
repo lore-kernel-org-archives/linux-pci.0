@@ -1,69 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:60784 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751536AbbIJNGx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 09:06:53 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 15 Sep 2015 18:49:34 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH] PCI: designware: change dw_pcie_cfg_write() and
- dw_pcie_cfg_read()
-Date: Thu, 10 Sep 2015 13:06:41 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620C5FB@lhreml503-mbs>
-References: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
- <CAErSpo6d_65oCez7fUBLLpYAiA8F8vj5V4j3gkvMVMsNobpfrg@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1620C569@lhreml503-mbs>
- <CAErSpo5+7cBWLbqVNfq2_+MbY+aL3_Q8n6mBQejGzy29bk7new@mail.gmail.com>
-In-Reply-To: <CAErSpo5+7cBWLbqVNfq2_+MbY+aL3_Q8n6mBQejGzy29bk7new@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <david.daney@cavium.com>, lorenzo.pieralisi@arm.com
+Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in
+ bus_max calculation.
+Message-ID: <20150915174934.GL31157@arm.com>
+References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+ <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmpvcm4gSGVsZ2FhcyBb
-bWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBTZXB0ZW1iZXIg
-MTAsIDIwMTUgMTo0MCBQTQ0KPiBUbzogR2FicmllbGUgUGFvbG9uaQ0KPiBDYzogSmluZ29vIEhh
-bjsgUHJhdHl1c2ggQW5hbmQgVGhha3VyOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiBX
-YW5nemhvdSAoQik7IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpoZW5m
-YTsgTGlndW96aHUNCj4gKEtlbm5ldGgpDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIFBDSTogZGVz
-aWdud2FyZTogY2hhbmdlIGR3X3BjaWVfY2ZnX3dyaXRlKCkgYW5kDQo+IGR3X3BjaWVfY2ZnX3Jl
-YWQoKQ0KPiANCj4gT24gVGh1LCBTZXAgMTAsIDIwMTUgYXQgNjoyNiBBTSwgR2FicmllbGUgUGFv
-bG9uaQ0KPiA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPiB3cm90ZToNCj4gPj4gRnJvbTog
-Qmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmJoZWxnYWFzQGdvb2dsZS5jb21dDQo+IA0KPiA+PiBJIHRo
-aW5rIHRoZXJlIHdhcyBhIHNlcGFyYXRlIHBhdGNoIGZvciB0aGUgcGNpZS1zcGVhcjEzeHguYyBi
-dWcsDQo+ID4+IHdhc24ndCB0aGVyZT8gIEF0IGxlYXN0LCBJIGRvbid0IHNlZSB0aGF0IGZpeCBp
-biAqdGhpcyogcGF0Y2guDQo+ID4+DQo+ID4NCj4gPiBGcm9tIHlvdXIgcHJldmlvdXMgY29tbWVu
-dHM6DQo+ID4gKioqKioqKioNCj4gPiAqMikgUHJhdHl1c2gsIHRoaXMgb25lJ3MgZm9yIHlvdSA6
-KSAgc3BlYXIxM3h4X3BjaWVfZXN0YWJsaXNoX2xpbmsoKQ0KPiA+ICogICBjYWxscyBkd19wY2ll
-X2NmZ19yZWFkKCkgYW5kIGR3X3BjaWVfY2ZnX3dyaXRlKCkgc2V2ZXJhbCB0aW1lcw0KPiBsaWtl
-DQo+ID4gKiAgIHRoaXM6DQo+ID4gKg0KPiA+ICogICAgZHdfcGNpZV9jZmdfcmVhZChwcC0+ZGJp
-X2Jhc2UsIGV4cF9jYXBfb2ZmICsgUENJX0VYUF9ERVZDVEwsDQo+IDQsIC4uLikNCj4gPiAqICAg
-IGR3X3BjaWVfY2ZnX3dyaXRlKHBwLT5kYmlfYmFzZSwgZXhwX2NhcF9vZmYgKyBQQ0lfRVhQX0RF
-VkNUTCwNCj4gNCwgLi4uKQ0KPiA+ICoqKioqKioqDQo+ID4NCj4gPiBJIHRoaW5rIHRoYXQgdGhl
-IGltcGxlbWVudGF0aW9uIG9mIGR3X3BjaWVfY2ZnX3JlYWQoKSBhbmQNCj4gPiBkd19wY2llX2Nm
-Z193cml0ZSgpIHRoYXQgSSBwcm9wb3NlZCBpbiB0aGlzIHBhdGNoIGlzIGNvbXBhdGlibGUgd2l0
-aA0KPiA+IHRoZSBwcmV2aW91cyBjYWxscyBpbiBwY2llLXNwZWFyMTN4eC5jLiBTbyB0aGUgY2Fs
-bHMgaW4gcGNpZS0NCj4gc3BlYXIxM3h4LmMNCj4gPiB3ZXJlIGJ1Z2d5IGZvciB0aGUgcHJldmlv
-dXMgaW1wbGVtZW50YXRpb25zIG9mIHRoZSBmdW5jdGlvbnM7IHdpdGgNCj4gPiB0aGUgcmV3b3Jr
-ZWQgZnVuY3Rpb25zIHRoZXJlIGlzIG5vIG5lZWQgdG8gbW9kaWZ5IHRoZSBmdW5jdGlvbiBjYWxs
-cw0KPiA+IGluIHBjaWUtc3BlYXIxM3h4LmMuLi5kbyB5b3UgYWdyZWU/DQo+IA0KPiBPaCwgSSBz
-ZWUsIEkgZGlkbid0IHJlYWQgaXQgY2xvc2VseSBlbm91Z2gsIGJ1dCB5b3UncmUgcHJvYmFibHkg
-cmlnaHQuDQo+IFdoYXQgSSB3b3VsZCBwcm9iYWJseSBkbyBpcyBhcHBseSBQcmF0eXVzaCdzIGZp
-eCBmaXJzdCwgdGhlbiBhcHBseQ0KPiB5b3VyIHBhdGNoIG9uIHRvcC4gIFRoYXQgd2F5IHdlIGNh
-biBkbyB0aGUgc3BlYXIxM3h4IGJ1ZyBmaXggYnkgaXRzZWxmDQo+ICh3aGljaCBzaG91bGQgYmUg
-YSBmYWlybHkgb2J2aW91c2x5LWNvcnJlY3QgcGF0Y2gpLCB0aGVuIHlvdXINCj4gaW50ZXJmYWNl
-IGNoYW5nZSAod2hpY2ggd291bGQgYmUgZXh0ZW5kZWQgdG8gdG91Y2ggYWxsIHRoZSBjYWxscw0K
-PiBpbmNsdWRpbmcgc3BlYXIxM3h4IGFuZCBiZSBzaW1pbGFybHkgb2J2aW91c2x5IGNvcnJlY3Qp
-LiAgSSB0aGluayB0aGF0DQo+IHdvdWxkIG1ha2UgaXQgYSBiaXQgZWFzaWVyIGZvciBmdXR1cmUg
-Y2hhbmdlbG9nIGFyY2hhZW9sb2dpc3RzLg0KDQpTaW5jZSBQcmF0eXVzaCBoYXMgbm90IHB1c2hl
-ZCB0aGUgZml4IHlldCwgbWF5YmUgSSBjYW4gcHJlcGFyZSBhIHYyIGFzIA0KYSBwYXRjaHNldCBv
-ZiAyIHBhdGNoZXMuLi4uDQoodG8gYmVuZWZpdCB0aGUgTGludXggYXJjaGVvbG9naXN0cyBhcyB5
-b3Ugc2FpZCA6LSkgKQ0KDQo+IA0KPiBCam9ybg0K
+On Sat, Sep 12, 2015 at 12:21:57AM +0100, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> There are two problems with the bus_max calculation:
+> 
+> 1) The u8 data type can overflow for large config space windows.
+> 
+> 2) The calculation is incorrect for a bus range that doesn't start at
+>    zero.
+> 
+> Since the configuration space is relative to bus zero, make bus_max
+> just be the size of the config window scaled by bus_shift.  Then clamp
+> it to a maximum of 255, per PCI.  Use a data type of int to avoid
+> overflow problems.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  drivers/pci/host/pci-host-generic.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index cd6f898..fce5bf7 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -164,7 +164,7 @@ out_release_res:
+>  static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+>  {
+>  	int err;
+> -	u8 bus_max;
+> +	int bus_max;
+>  	resource_size_t busn;
+>  	struct resource *bus_range;
+>  	struct device *dev = pci->host.dev.parent;
+> @@ -177,8 +177,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+>  	}
+>  
+>  	/* Limit the bus-range to fit within reg */
+> -	bus_max = pci->cfg.bus_range->start +
+> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> +	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> +	if (bus_max > 255)
+> +		bus_max = 255;
+>  	pci->cfg.bus_range->end = min_t(resource_size_t,
+>  					pci->cfg.bus_range->end, bus_max);
+
+Hmm, this is changing the meaning of the bus-range property in the
+device-tree, which really needs to match what IEEE Std 1275-1994 requires.
+
+My understanding was that the bus-range could be used to offset the config
+space, which is why it's subtracted from the bus number in
+gen_pci_map_cfg_bus_[e]cam. Also, why is your config space so large that
+we end up overflowing bus_max?
+
+Will
