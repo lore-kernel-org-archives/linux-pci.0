@@ -1,125 +1,157 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 2 Sep 2015 17:29:38 -0700
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
-Message-ID: <20150903002938.GA6334@sean.stalley.intel.com>
-References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
- <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
- <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
- <20150902174612.GA2700@sean.stalley.intel.com>
- <CAErSpo4qZ9AXskyo86gXG1cb3AqCn-HB05nj7qT9wovZdLt2Tg@mail.gmail.com>
- <20150902200127.GA3347@sean.stalley.intel.com>
- <20150902212159.GC829@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f48.google.com ([209.85.213.48]:36250 "EHLO
+	mail-vk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415AbbIOUXh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 16:23:37 -0400
+Received: by vkfp126 with SMTP id p126so87665834vkf.3
+        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2015 13:23:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20150902212159.GC829@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <55F84CAA.8060901@roeck-us.net>
+References: <20150904164412.GD22997@red-moon>
+	<CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+	<20150907091230.GB29293@red-moon>
+	<20150914100929.GB18886@red-moon>
+	<CAE9FiQV-eG42xzqVcO2Q+xT3jx-Oa7uC7fEuowvopx4Fp9F7hQ@mail.gmail.com>
+	<20150914162834.GA11199@red-moon>
+	<CAE9FiQWJfbMD1Akq6XD-Yedc+tNNF8o0obPGHt8f_WnWX0pLbA@mail.gmail.com>
+	<CAE9FiQU6NTEdKJi58bNZU4u=+-rzB3mddp6vKGc4JjbZWoa9zQ@mail.gmail.com>
+	<20150915094610.GD11199@red-moon>
+	<CAErSpo5KaV7ERYcyZBzfvCEh40zSPJmymwXUCbAZkK=hb4DPSw@mail.gmail.com>
+	<20150915163000.GA16240@red-moon>
+	<55F84CAA.8060901@roeck-us.net>
+Date: Tue, 15 Sep 2015 13:17:46 -0700
+Message-ID: <CAE9FiQXrr2w5=QRpP9kL=xE4djwCz80wTPn1SA93Wg_u=6Tp3Q@mail.gmail.com>
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+From: Yinghai Lu <yinghai@kernel.org>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 02, 2015 at 04:21:59PM -0500, Bjorn Helgaas wrote:
-> On Wed, Sep 02, 2015 at 01:01:27PM -0700, Sean O. Stalley wrote:
-> > On Wed, Sep 02, 2015 at 02:25:50PM -0500, Bjorn Helgaas wrote:
-> > > On Wed, Sep 2, 2015 at 12:46 PM, Sean O. Stalley <sean.stalley@intel.com> wrote:
-> > > 
-> > > > Would it be better to modify pci_claim_resource() to support EA instead of adding pci_ea_claim_resource()?
-> > > > That way, EA entries would be claimed at the same time as traditional BARs.
-> > > 
-> > > Yes, I think so.
-> > 
-> > Ok, I'll make it work this way in the next patchset.
-> > 
-> > > Why wouldn't pci_claim_resource() work as-is for EA?  I see that
-> > > pci_ea_get_parent_resource() defaults to iomem_resource or
-> > > ioport_resource if we don't find a parent, but I don't understand why
-> > > that's necessary.
-> > 
-> > EA resources may (or may not) be in the parent's range[1].
-> > If the parent doesn't describe this range, we want to default to the top-level resource.
-> > Other than that case, I think pci_claim_resource would work as-is.
-> > 
-> > -Sean
-> > 
-> > [1] From the EA ECN:
-> > For a bridge function that is permitted to implement EA based on the rules above, it is
-> > permitted, but not required, for the bridge function to use EA mechanisms to indicate
-> > resource ranges that are located behind the bridge Function (see Section 6.9.1.2).
-> 
-> [BTW, in EA ECN 23_Oct_2014_Final, this text is in sec 6.9, not 6.9.1.2]
-> 
-> I agree that it implies EA resources need not be in the parent's *EA*
-> range.  But I would read it as saying "a bridge can use either the
-> usual window registers or EA to indicate resources forwarded
-> downstream."
-> 
-> What happens in the following case?
-> 
->   00:00.0: PCI bridge to [bus 01]
->   00:00.0:   bridge window [mem 0x80000000-0x8fffffff]
->   01:00.0: EA 0: [mem 0x90000000-0x9000ffff]
+On Tue, Sep 15, 2015 at 9:51 AM, Guenter Roeck <linux@roeck-us.net> wrote:
+> On 09/15/2015 09:30 AM, Lorenzo Pieralisi wrote:
 >
-> The 00:00.0 bridge knows nothing about EA.  The 01:00.0 EA device has
-> a fixed region at 0x90000000.  The ECN says:
-> 
->   System firmware/software must comprehend that such bridge functions
->   [those that are permitted to implement EA] are not required to
->   indicate inclusively all resources behind the bridge, and as a
->   result system firmware/software must make a complete search of all
->   functions behind the bridge to comprehend the resources used by
->   those functions.
-> 
+> It looks like me and Yinghai disagree how the problem I was trying to fix
+> should be handled, I don't understand Yinghai's concerns, and unfortunately
+> I just don't have the time I would need to get a better understanding.
+> It is fine with me to revert your patch and abandon mine.
 
-The intention of this line was to indicate that EA regions are not required
-to be inside of the Base+Limit window.
+I put one simplified version in one my branch.
 
-If an EA device is connected below a bridge, that bridge must be aware of EA.
-It is assumed that the bridge is aware of the fixed EA regions below it,
-so system software doesn't need to program the window to include them.
+https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/patch/?id=cdf4bfbc1ce12d826abd49a8987eb3ca7e129332
 
-This is part of the reason why EA devices must be permanently connected
-(to make sure it doesn't end up behind an old bridge).
-Re-reading the spec, I can see that this requirement isn't explicitly stated.
+and will sent that later if needed.
 
-> A bridge was never required to indicate, e.g., via its window
-> registers, anything about the resources behind it.  Software always
-> had to search behind the bridge and look at all the downstream BARs.
-> What's new here is that software now has to look for downstream EA
-> entries in addition to BARs, and the EA entries are at fixed
-> addresses.
-> 
-> My question is what the implication is for address routing performed
-> by the bridge.  The EA ECN doesn't mention any changes there, so I
-> assume it is software's responsibility to reprogram the 00:00.0 mem
-> window so it includes [mem 0x90000000-0x9000ffff].
+>From cdf4bfbc1ce12d826abd49a8987eb3ca7e129332 Mon Sep 17 00:00:00 2001
+From: Guenter Roeck <linux@roeck-us.net>
+Date: Tue, 15 Sep 2015 12:59:11 -0700
+Subject: PCI: Only try to assign io port only for root bus that support it
 
-The Base+Limit window is not required to include EA regions.
-	In the example shown in in Figure 6-1, the bridge above Bus N [...]
-	is permitted to not indicate the resources used by the two functions
-	in “Si component C”
+The PCI subsystem always assumes that I/O is supported on root bus and
+tries to assign an I/O window to each child bus even if that is not the
+case.
 
-Before, all the BAR regions would be inside the window range.
-The Base+Limit "indicated" the Range of all the BARs behind the bridge.
-Once the window was set, system software could avoid an address collision
-with every device on the bus by avoiding the window.
+This may result in messages such as:
 
-BAR-equivalent EA regions aren't required to be inside the Base+Limit window,
-which is why System firmware/software must search all the functions behind a bus
-to avoid address collisions.
+  pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size
+add_size 1000
+  pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
+  pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
 
-> If software does have to reprogram that window, the normal
-> pci_claim_resource() should work.  If it doesn't have to reprogram the
-> window, and there's some magical way for 01:00.0 to work even though
-> we don't route address space to it, I suspect we'll need significantly
-> more changes than just pci_ea_claim_resource(), because then 00:00.0
-> is really not a PCI bridge any more.
-> 
-> Bjorn
+for each bridge port, even if root does not support I/O in the first place.
 
--Sean
+To avoid this message, check if root bus supports I/O, then child bus
+will inherit the setting from parent bus, and later during sizing and
+assigning, check that bus flags and skip those resources.
+
+[bhelgaas: reverse sense of new pci_bus_flags_t value]
+[yinghai: only check root bus io port, and use flag on sizing and assigning]
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c4c6947..5d946bd 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -339,6 +339,9 @@ static void pci_read_bridge_io(struct pci_bus *child)
+  struct pci_bus_region region;
+  struct resource *res;
+
++ if (!(child->bus_flags & PCI_BUS_FLAGS_ROOT_SUPPORTS_IO))
++ return;
++
+  io_mask = PCI_IO_RANGE_MASK;
+  io_granularity = 0x1000;
+  if (dev->io_window_1k) {
+@@ -2126,6 +2129,8 @@ struct pci_bus *pci_create_root_bus(struct
+device *parent, int bus,
+  } else
+  bus_addr[0] = '\0';
+  dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
++ if (resource_type(res) == IORESOURCE_IO)
++ b->bus_flags |= PCI_BUS_FLAGS_ROOT_SUPPORTS_IO;
+  }
+
+  resource_list_for_each_entry(window, &bridge->windows) {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9d5e415..8ee5d17 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -223,6 +223,10 @@ static void pdev_assign_resources_prepare(struct
+pci_dev *dev,
+  if (r->flags & IORESOURCE_PCI_FIXED)
+  continue;
+
++ if ((r->flags & IORESOURCE_IO) &&
++    !(dev->bus->bus_flags & PCI_BUS_FLAGS_ROOT_SUPPORTS_IO))
++ continue;
++
+  if (resource_disabled(r) || r->parent)
+  continue;
+
+@@ -1178,6 +1182,11 @@ static void pbus_size_io(struct pci_bus *bus,
+resource_size_t min_size,
+  min_size = 0;
+  }
+
++ if (!(bus->bus_flags & PCI_BUS_FLAGS_ROOT_SUPPORTS_IO)) {
++ b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
++ return;
++ }
++
+  min_align = window_alignment(bus, IORESOURCE_IO);
+  list_for_each_entry(dev, &bus->devices, bus_list) {
+  int i;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5ed9bf1..790c534 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -193,6 +193,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
+ enum pci_bus_flags {
+  PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
+  PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
++ PCI_BUS_FLAGS_ROOT_SUPPORTS_IO = (__force pci_bus_flags_t) 4,
+ };
+
+ /* These values come from the PCI Express Spec */
+-- 
+cgit v0.10.2
