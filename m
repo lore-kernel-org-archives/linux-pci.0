@@ -1,71 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 22 Sep 2015 08:19:16 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	David Daney <ddaney.cavm@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 2/3] PCI: Add quirks for devices found on Cavium ThunderX
- SoCs.
-Message-ID: <20150922131916.GE27964@google.com>
-References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com>
- <3066583.BWDZlYWxXU@wuerfel>
- <55FC4330.10302@caviumnetworks.com>
- <2512701.zkjk3n3AQS@wuerfel>
- <55FCB3AC.8080709@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:33578 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945AbbIOTn4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 15:43:56 -0400
+Subject: Re: [PATCH v9 5/6] Documentation: DT: Add HiSilicon PCIe host binding
+To: Zhou Wang <wangzhou1@hisilicon.com>
+References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
+ <1442321361-174300-6-git-send-email-wangzhou1@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, jingoohan1@gmail.com,
+	pratyush.anand@gmail.com, Arnd Bergmann <arnd@arndb.de>,
+	linux@arm.linux.org.uk, thomas.petazzoni@free-electrons.com,
+	gabriele.paoloni@huawei.com, lorenzo.pieralisi@arm.com,
+	james.morse@arm.com, Liviu.Dudau@arm.com, jason@lakedaemon.net,
+	gabriel.fernandez@linaro.org, Minghuan.Lian@freescale.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, zhangjukuo@huawei.com,
+	qiuzhenfa@hisilicon.com, liudongdong3@huawei.com,
+	qiujiang@huawei.com, xuwei5@hisilicon.com, liguozhu@hisilicon.com
+From: Rob Herring <robh@kernel.org>
+Message-ID: <55F874F9.1060804@kernel.org>
+Date: Tue, 15 Sep 2015 14:43:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55FCB3AC.8080709@caviumnetworks.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1442321361-174300-6-git-send-email-wangzhou1@hisilicon.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
-
-On Fri, Sep 18, 2015 at 06:00:28PM -0700, David Daney wrote:
-> On 09/18/2015 12:45 PM, Arnd Bergmann wrote:
-> >On Friday 18 September 2015 10:00:32 David Daney wrote:
-> >>On 09/18/2015 12:19 AM, Arnd Bergmann wrote:
-> >>>On Thursday 17 September 2015 15:41:33 David Daney wrote:
-> >>>>From: David Daney <david.daney@cavium.com>
-> >>>>
-> >>>>The on-chip devices all have fixed bars.  So, fix them up.
-> >>>>
-> >>>>Signed-off-by: David Daney <david.daney@cavium.com>
-> >>>>
-> >>>
-> >>>You should be able to just mark the BARs as fixed in DT
+On 09/15/2015 07:49 AM, Zhou Wang wrote:
+> This patch adds related DTS binding document for HiSilicon PCIe host driver.
 > 
-> I think we can switch to PCI_PROBE_ONLY, and have all non-fixed BAR
-> devices configured by firmware.  This may significantly simplify any
-> quirks required in the kernel.
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+> ---
+>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
+>  1 file changed, 46 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> new file mode 100644
+> index 0000000..2afc9d1
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> @@ -0,0 +1,46 @@
+> +HiSilicon PCIe host bridge DT description
+> +
+> +HiSilicon PCIe host controller is based on Designware PCI core.
+> +It shares common functions with PCIe Designware core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties:
+> +- compatible: Should contain "hisilicon,hip05-pcie".
+> +- reg: Should contain rc_dbi, subctrl, config registers location and length.
+> +- reg-names: Must include the following entries:
+> +  "rc_dbi": controller configuration registers;
+> +  "subctrl": whole PCIe hosts configuration registers;
+> +  "config": PCIe configuration space registers.
+> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
+> +- port-id: Should be 0, 1, 2 or 3.
 
-I don't like PCI_PROBE_ONLY, and I'd like to avoid it when we can.
+What is port-id for? Use of instance indexes need to have good reason.
 
-Your original patch description said the on-chip devices have "fixed
-BARs."  In what sense are they "fixed"?  I assume they are writable
-enough so we can learn their sizes?  If we can't learn their sizes, we
-have bigger problems because we can't tell what space is used.
+Rob
 
-Are there other parts of the system, e.g., run-time firmware, that
-depend on the devices not being moved?
-
-> >>For the record:  The PCI Enhanced Allocation (EA) capability (approved
-> >>by PCI SIG on 23 October 2014) is the proper way to handle this going
-> >>forward.  However, this is not yet implemented in the SoCs that this
-> >>patch addresses.  Our plan is to implement the EA capability in the core
-> >>PCI code, so that we do not need to keep adding devices to this fixup code.
-
-Sean Stalley has posted some patches to add EA support to Linux, but I
-haven't merged them yet.  If we had that, another option would be to
-hook into your config accessors and fabricate an EA capability.
-
-Bjorn
