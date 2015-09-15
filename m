@@ -1,66 +1,61 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 23 Sep 2015 20:35:45 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <ddaney@caviumnetworks.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 4/5] PCI: generic: Correct, and avoid overflow, in
- bus_max calculation.
-Message-ID: <20150923193545.GZ7356@arm.com>
-References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
- <20150923180157.GV7356@arm.com>
- <5602EDC4.3040603@caviumnetworks.com>
- <3751968.n8LRgots8n@wuerfel>
+Date: Tue, 15 Sep 2015 11:10:16 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Ethan Zhao <ethan.zhao@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iov: initialize NumVFs register to 0 at the end of
+ sriov_init()
+Message-ID: <20150915161016.GB27964@google.com>
+References: <1440150685-6690-1-git-send-email-ethan.zhao@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3751968.n8LRgots8n@wuerfel>
+In-Reply-To: <1440150685-6690-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 08:27:41PM +0100, Arnd Bergmann wrote:
-> On Wednesday 23 September 2015 11:21:56 David Daney wrote:
-> > >>
-> > >>      /* Limit the bus-range to fit within reg */
-> > >> -    bus_max = pci->cfg.bus_range->start +
-> > >> -              (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> > >> +    bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> > >> +    if (bus_max > 255)
-> > >> +            bus_max = 255;
-> > >
-> > > I still don't understand the need for this part. If the cfg space is bigger
-> > > than bus_max, isn't that simply an invalid resource? Given that the resource
-> > > could be broken in other ways too, this check feels more like a specific
-> > > workaround rather than generally useful code.
-> > 
-> > Imagine...
-> > 
-> >    bus-range [0x80 .. 0xff], this requires a cfg.res that will cover the 
-> > entire range of 0..0xff.
-> > 
-> >    according to the calculations above, (resource_size(&pci->cfg.res) >> 
-> > pci->cfg.ops.bus_shift) - 1 will have a value of 0xff, so...
+On Fri, Aug 21, 2015 at 06:51:25PM +0900, Ethan Zhao wrote:
+> After commit 4449f079722c ("PCI: Calculate maximum number of buses
+> required for VFs"),the initial value of NumVFs register was set to
+> non-zero after sriov_init() and no VFs was enabled in device driver.
+> this changed the behaviour of kernel exported by lspci and sysfs etc.
+> so this patch initialize the NumVFs register to zero after the
+> calculation of max_VF_buses was done.
 > 
-> Extending the computation to 32 bit seems fine, but I'd rather warn loudly
-> if the bus range does not fit within the registers.
+> Tested on stable 4.1 and passed building on stable 4.2-rc7
 > 
-> Also note that the computation is already correct with my interpretation
-> of the reg property.
+> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+> ---
+>  drivers/pci/iov.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ee0ebff..6969084 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -476,6 +476,7 @@ found:
+>  	dev->is_physfn = 1;
+>  	iov->max_VF_buses = virtfn_max_buses(dev);
+>  
+> +	pci_iov_set_numvfs(dev, 0);
 
->From what Lorenzo was saying, ACPI shares the interpretation that David is
-implementing here and, given that the DT version seems to be subjective,
-aligning this reg property with MMCFG seems to make sense.
+I think it would be better to put this in virtfn_max_buses(), where we
+clobbered numVFs in the first place.  I'd also read the original value and
+restore it, e.g.,
 
-Will
+    pci_read_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, &numvfs);
+    for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+      ...
+    }
+    pci_iov_set_numvfs(dev, numvfs);
+    return max;
+
+I know sriov_init() sets numVFs to zero before it calls virtfn_max_buses(),
+but why rely on that extra knowledge?
+
+>  	return 0;
+>  
+>  failed:
+> -- 
+> 1.8.3.1
+> 
