@@ -1,113 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:37761 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755454AbbIWPH1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 11:07:27 -0400
-Date: Wed, 23 Sep 2015 11:07:26 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Roland Weber <r-o-l@web.de>
-cc: linux-usb@vger.kernel.org, Mathias Nyman <mathias.nyman@intel.com>,
+Received: from foss.arm.com ([217.140.101.70]:52153 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751074AbbIORzT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Sep 2015 13:55:19 -0400
+Date: Tue, 15 Sep 2015 18:55:20 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: PROBLEM: lsusb -v freezes kernel on Acer ES1-111M
-In-Reply-To: <trinity-1e46bbda-8dfe-4ec4-95a2-bfb481c528de-1442957105043@3capp-webde-bs21>
-Message-ID: <Pine.LNX.4.44L0.1509231058110.1670-100000@iolanthe.rowland.org>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <david.daney@cavium.com>, lorenzo.pieralisi@arm.com
+Subject: Re: [PATCH 5/6] PCI: generic: Pass proper starting bus number to
+ pci_scan_root_bus().
+Message-ID: <20150915175519.GN31157@arm.com>
+References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+ <1442013719-5001-6-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442013719-5001-6-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 22 Sep 2015, Roland Weber wrote:
-
-> Hi Alan,
+On Sat, Sep 12, 2015 at 12:21:58AM +0100, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
 > 
-> > Did you turn off the computer before booting these kernels (i.e., a
-> > "cold" boot) or did you reboot when the machine was already running (a
-> > "warm" boot)?
+> If the bus is being configured with a bus-range that does not start at
+> zero, pass that starting bus number to pci_scan_root_bus().  Passing
+> the incorrect value of zero causes attempted config accesses outside
+> of the supported range, which cascades to an OOPs spew and eventual
+> kernel panic.
 > 
-> I didn't pay attention to that. Most likely, I prepared the debug session
-> on 3.17.8, warm-booted into kernel-f, froze the machine, then cold-booted
-> into kernel-g.
-> Now I tried again, making sure to cold-boot into both kernels. The
-> differences you noticed are gone, both -f and -g behave as listed for -g.
-> See below for the full output. And -f still freezes, while -g does not.
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  drivers/pci/host/pci-host-generic.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> > Here's the corresponding part of the -g kernel log:
-> > 
-> > > [    1.017430] pci 0000:00:02.0: Video device with shadowed ROM
-> > > [    1.017971] PCI: CLS 64 bytes, default 64
-> [...]
-> > and for the -g kernel:
-> > 
-> > > /sys/kernel/debug/usb/ehci/0000:00:1d.0/registers now contains:
-> > > bus pci, device 0000:00:1d.0
-> > > EHCI Host Controller
-> > > EHCI 1.00, rh state running
-> > > ownership 00000001
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index fce5bf7..8219c0b 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -265,7 +265,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  	if (!pci_has_flag(PCI_PROBE_ONLY))
+>  		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+>  
+> -	bus = pci_scan_root_bus(dev, 0,
+> +	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
+>  				&pci->cfg.ops.ops, pci, &pci->resources);
+>  	if (!bus) {
+>  		dev_err(dev, "Scanning rootbus failed");
 
-Okay.  This value for ownership is still wrong, though.
+Acked-by: Will Deacon <will.deacon@arm.com>
 
-> > Have you checked to see if any BIOS updates are available?
-> 
-> The machine is on v1.08, there have been two updates since:
-> v1.13: 1. add Elan touchpad support
->        2. update EC to v1.5
-> v1.10: 1. Add battery ID
-> 
-> But there's also a guy who reports that external USB drives are
-> no longer detected during boot after he updated the BIOS to v1.10.
-> http://community.acer.com/t5/E-and-M-Series/Acer-ES1-111M-doesn-t-detect-USB-Drives-at-boot-phase-anymore/td-p/364139
-> 
-> Frankly, I don't dare to upgrade the BIOS right now. I need the
-> machine in working condition starting Friday next week, until
-> around Christmas. I'll be teaching lectures once a week and bought
-> the machine to drive the projector. Most of my spare time will be
-> consumed by preparing the lectures for the next three months.
-> If the machine stops booting from external USB devices, I couldn't
-> reinstall it anymore, nor could I flash a fixed BIOS. I'll have
-> to set up dual boot with Linux and FreeDOS before I can risk a
-> BIOS upgrade. Currently, that doesn't fit into my time budget.
-
-All right.  Maybe at some point in the future.  The thing is, I don't 
-want to patch the kernel only to find that the problem has already been 
-fixed in a newer BIOS.
-
-> > there are a few other thing you can try.  Under a kernel with 
-> > CONFIG_PM enabled, before unbinding the driver try doing:
-> > 
-> > 	echo on >/sys/bus/pci/devices/0000:00:1d.0/usb3/power/control
-> > 
-> > That alone might cause the system to freeze
-> 
-> It does. I tried with kernel-f and got two lines of output:
-> usb usb3: usb auto-resume
-> ehci-pci 0000:00:1d.0: resume root hub
-> (freeze)
-> 
-> > Here's another experiment.  At the start of ehci_halt(), before the
-> > spin_lock_irq(), add this:
-> > 
-> > 	if (ehci->rh_state == EHCI_RH_SUSPENDED) {
-> // I added a printk here
-> > 		ehci_writel(ehci, CMD_RUN, &ehci->regs->command);
-> > 		msleep(10);
-> > 	}
-> > 
-> > This may end up doing about the same thing as the previous test.
-> 
-> It does. The last few lines of the debug output are:
-> ehci_halt: entry
-> ehci_halt: EHCI_RH_SUSPENDED, running patch writel
-> ehci_halt: about to readl prematurely
-> (freeze)
-
-The unavoidable conclusion is that your system doesn't work right when 
-this root hub is suspended.  (I still think it's the BIOS's fault.)
-
-Which suggests yet another test: Under a kernel with CONFIG_PM and
-CONFIG_PM_SLEEP enabled, what happens when you suspend the system
-(i.e., suspend-to-RAM) and then wake it up?  For this experiment, it
-may help to add "no_console_suspend" to the boot command line.
-
-Alan Stern
-
+Will
