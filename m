@@ -1,37 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ondrej Zary <linux@rainbow-software.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:7883 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751558AbbIORLr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:47 -0400
+From: Will Davis <wdavis@nvidia.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Kernel development list <linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI: disable MSI on SiS 761
-Date: Fri, 11 Sep 2015 23:12:17 +0200
-Message-Id: <1442005937-21938-1-git-send-email-linux@rainbow-software.org>
-Sender: linux-kernel-owner@vger.kernel.org
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 12/22] x86, swiotlb: Add swiotlb_map_peer_resource() to swiotlb_dma_ops
+Date: Tue, 15 Sep 2015 12:10:57 -0500
+Message-ID: <1442337067-22964-13-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MSI is broken on SiS 761 chipset at least on PC Chips A31G board.
-No interrupts are delivered once MSI is enabled for a device. This causes
-hang on X11 start with a nVidia card installed (with nouveau driver).
-
-Disable MSI completely for this chipset.
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Will Davis <wdavis@nvidia.com>
 ---
- drivers/pci/quirks.c |    1 +
- 1 file changed, 1 insertion(+)
+ arch/x86/kernel/pci-swiotlb.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e9fd0e9..6caffc3 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2204,6 +2204,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3336, quirk_disab
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3351, quirk_disable_all_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_VT3364, quirk_disable_all_msi);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, PCI_DEVICE_ID_VIA_8380_0, quirk_disable_all_msi);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_SI, 0x0761, quirk_disable_all_msi);
+diff --git a/arch/x86/kernel/pci-swiotlb.c b/arch/x86/kernel/pci-swiotlb.c
+index adf0392..844b89b 100644
+--- a/arch/x86/kernel/pci-swiotlb.c
++++ b/arch/x86/kernel/pci-swiotlb.c
+@@ -57,6 +57,9 @@ static struct dma_map_ops swiotlb_dma_ops = {
+ 	.unmap_sg = swiotlb_unmap_sg_attrs,
+ 	.map_page = swiotlb_map_page,
+ 	.unmap_page = swiotlb_unmap_page,
++#ifdef CONFIG_HAS_DMA_P2P
++	.map_peer_resource = swiotlb_map_peer_resource,
++#endif
+ 	.dma_supported = NULL,
+ };
  
- /* Disable MSI on chipsets that are known to not support it */
- static void quirk_disable_msi(struct pci_dev *dev)
 -- 
-Ondrej Zary
+2.5.1
 
