@@ -1,59 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:50298 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750980AbbINUgF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 16:36:05 -0400
-Date: Mon, 14 Sep 2015 16:36:03 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Roland Weber <r-o-l@web.de>
-cc: linux-usb@vger.kernel.org, Mathias Nyman <mathias.nyman@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: PROBLEM: lsusb -v freezes kernel on Acer ES1-111M
-In-Reply-To: <Pine.LNX.4.44L0.1509131649200.19943-100000@netrider.rowland.org>
-Message-ID: <Pine.LNX.4.44L0.1509141624180.1277-100000@iolanthe.rowland.org>
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:33697 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752350AbbIOQux (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 12:50:53 -0400
+Received: by oixx17 with SMTP id x17so99059402oix.0
+        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2015 09:50:52 -0700 (PDT)
+Date: Tue, 15 Sep 2015 11:50:49 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: jingoohan1@gmail.com, pratyush.anand@gmail.com,
+	gabriele.paoloni@huawei.com, linux-pci@vger.kernel.org,
+	qiuzhenfa@hisilicon.com, zhangjukuo@huawei.com,
+	liudongdong3@huawei.com, qiujiang@huawei.com, xuwei5@hisilicon.com,
+	liguozhu@hisilicon.com
+Subject: Re: [PATCH v2] PCI: designware: Fix PORT_LOGIC_LINK_WIDTH_MASK
+Message-ID: <20150915165049.GD25767@google.com>
+References: <1440559054-231033-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1440559054-231033-1-git-send-email-wangzhou1@hisilicon.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 13 Sep 2015, Alan Stern wrote:
-
-> On Sun, 13 Sep 2015, Roland Weber wrote:
+On Wed, Aug 26, 2015 at 11:17:34AM +0800, Zhou Wang wrote:
+> The value under PORT_LOGIC_LINK_WIDTH_MASK is 0x1, 0x2, 0x4, 0x8. Here change
+> this mask to proper value.
 > 
-> > I compiled a kernel 3.17(.0) with my additional debug lines...
-> > and this one does NOT freeze! The output is:
-> > 
-> > (first unbind)
-> > ehci-pci 0000:00:1d.0: remove, state 4
-> > ehci-pci 0000:00:1d.0: roothub graceful disconnect
-> > usb usb1: USB disconnect, device number 1
-> > ehci-pci 0000:00:1d.0: shutdown urb ffff880072bf4300 ep1in-intr
-> > usb_remove_hcd: calling stop
-> > ehci-pci 0000:00:1d.0: stop
-> > ehci_silence_controller: entry
-> > ehci_halt: entry
-> > ehci_halt: after spin_lock_irq
-> > ehci_halt: about to readl prematurely
-> > ehci_halt: premature readl returned 10001
+> In IP v4.2, bits [16:8] are defined for NUM_OF_LANES. But in IP v4.4, bits[12:8]
+> are defined for NUM_OF_LANES, bits [16:13] are for other usages(bit 16 is
+> AUTO_LANE_FLIP_CTRL_EN, bits [15:13] are PRE_DET_LANE).
 > 
-> Note: 10001 instead of 10000, which is what you saw in the other 
-> kernel.  That could be highly relevant.
+> As there is no conflict about NUM_OF_LANES between v4.2 and v4.4, this patch
+> change above mask value to avoid future problem.
+> 
+> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
 
-> At some point along the way, can you try adding some printk statements 
-> to ehci_suspend() and ehci_resume() in ehci-hcd.c?  I'd like to know if 
-> they get called during the bind/unbind procedure and are responsible 
-> for that 10001 vs. 10000 value.
+Applied with Jingoo's ack to pci/host-designware for v4.4, thanks!
 
-There's one other thing I'd like to see as well.  Before doing the 
-unbind, save a copy of 
-/sys/kernel/debug/usb/ehci/0000:00:1d.0/registers.  Do this for both 
-types of kernel (one that gets 10000 for the readl value and one that 
-gets 10001).  There ought to be some useful information in them.
-
-Oh, and also let's see what 
-/sys/bus/pci/devices/0000:00:1d.0/power/control and
-/sys/bus/pci/devices/0000:00:1d.0/power/runtime_status contain.
-
-Alan Stern
-
+> ---
+>  drivers/pci/host/pcie-designware.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 69486be..eb549b9 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -35,7 +35,7 @@
+>  
+>  #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
+>  #define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
+> -#define PORT_LOGIC_LINK_WIDTH_MASK	(0x1ff << 8)
+> +#define PORT_LOGIC_LINK_WIDTH_MASK	(0x1f << 8)
+>  #define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
+>  #define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
+>  #define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
