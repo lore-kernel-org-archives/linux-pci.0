@@ -1,217 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:35244 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751263AbbIJL0g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 07:26:36 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand Thakur <pratyush.anand@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH] PCI: designware: change dw_pcie_cfg_write() and
- dw_pcie_cfg_read()
-Date: Thu, 10 Sep 2015 11:26:23 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620C569@lhreml503-mbs>
-References: <1441817460-174811-1-git-send-email-gabriele.paoloni@huawei.com>
- <CAErSpo6d_65oCez7fUBLLpYAiA8F8vj5V4j3gkvMVMsNobpfrg@mail.gmail.com>
-In-Reply-To: <CAErSpo6d_65oCez7fUBLLpYAiA8F8vj5V4j3gkvMVMsNobpfrg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from foss.arm.com ([217.140.101.70]:49721 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755014AbbIOJp5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Sep 2015 05:45:57 -0400
+Date: Tue, 15 Sep 2015 10:46:10 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+Message-ID: <20150915094610.GD11199@red-moon>
+References: <20150904141903.GA22997@red-moon>
+ <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
+ <20150904164412.GD22997@red-moon>
+ <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+ <20150907091230.GB29293@red-moon>
+ <20150914100929.GB18886@red-moon>
+ <CAE9FiQV-eG42xzqVcO2Q+xT3jx-Oa7uC7fEuowvopx4Fp9F7hQ@mail.gmail.com>
+ <20150914162834.GA11199@red-moon>
+ <CAE9FiQWJfbMD1Akq6XD-Yedc+tNNF8o0obPGHt8f_WnWX0pLbA@mail.gmail.com>
+ <CAE9FiQU6NTEdKJi58bNZU4u=+-rzB3mddp6vKGc4JjbZWoa9zQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAE9FiQU6NTEdKJi58bNZU4u=+-rzB3mddp6vKGc4JjbZWoa9zQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sIHRoYW5rcyBmb3IgeW91ciBjb21tZW50cw0KDQo+IC0tLS0tT3JpZ2luYWwgTWVz
-c2FnZS0tLS0tDQo+IEZyb206IEJqb3JuIEhlbGdhYXMgW21haWx0bzpiaGVsZ2Fhc0Bnb29nbGUu
-Y29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIFNlcHRlbWJlciAwOSwgMjAxNSA4OjQ1IFBNDQo+IFRv
-OiBHYWJyaWVsZSBQYW9sb25pDQo+IENjOiBKaW5nb28gSGFuOyBQcmF0eXVzaCBBbmFuZCBUaGFr
-dXI7IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IFdhbmd6aG91IChCKTsgWXVhbnpoaWNo
-YW5nOyBaaHVkYWNhaTsgemhhbmdqdWt1bzsgcWl1emhlbmZhOyBMaWd1b3podQ0KPiAoS2VubmV0
-aCkNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gUENJOiBkZXNpZ253YXJlOiBjaGFuZ2UgZHdfcGNp
-ZV9jZmdfd3JpdGUoKSBhbmQNCj4gZHdfcGNpZV9jZmdfcmVhZCgpDQo+IA0KPiBIaSBHYWJyaWVs
-ZSwNCj4gDQo+IE9uIFdlZCwgU2VwIDksIDIwMTUgYXQgMTE6NTEgQU0sIEdhYnJpZWxlIFBhb2xv
-bmkNCj4gPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogZ2Fi
-cmllbGUgcGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiA+DQo+ID4gVGhp
-cyBwYXRjaCBjaGFuZ2VzIHRoZSBpbXBsZW1lbnRhdGlvbiBvZiBkd19wY2llX2NmZ19yZWFkKCkg
-YW5kDQo+ID4gZHdfcGNpZV9jZmdfd3JpdGUoKSB0bzoNCj4gPiAtIGltcHJvdmUgdGhlIGZ1bmN0
-aW9uIHVzYWdlIGZyb20gdGhlIGNhbGxlcnMgcGVyc3BlY3RpdmU7DQo+ID4gLSBtYWtlIHN1cmUg
-dGhhdCB0aGUgY2FsbGVycyBzcGVjaWZ5IHByb3BlciBhZGRyZXNzIG9mZnNldHMNCj4gPiAgIGFj
-Y29yZGluZyB0byB0aGUgc2l6ZSBvZiB0aGUgZmllbGQgYmVpbmcgcmVhZC93cml0dGVuDQo+ID4g
-LSBmaXggYSBidWcgaW4gcGNpZS1zcGVhcjEzeHguYyB3aGVyZSB0aGUgY2FsbGVycyB3aGVyZSBw
-YXNzaW5nDQo+ID4gICB0aGUgd3JvbmcgYWRkcmVzcyBhcyB0aGV5IG1pc3NlZCB0byBhZGQgdGhl
-IGFwcHJvcHJpYXRlIG9mZnNldA0KPiANCj4gUGxlYXNlIHNwbGl0IHRoaXMgaW50byBzZXBhcmF0
-ZSBwYXRjaGVzLCBzbyBlYWNoIHBhdGNoIGRvZXMgb25lIHRoaW5nLA0KPiBpLmUuLCBzZXBhcmF0
-ZSB0aGUgIndoZXJlIiB1c2FnZSBjaGFuZ2UgZnJvbSB0aGUgInJldHVybg0KPiBQQ0lCSU9TX0JB
-RF9SRUdJU1RFUl9OVU1CRVIgZm9yIGJhZCBvZmZzZXRzIiBjaGFuZ2UuDQoNCk9rIEkgd2lsbCBz
-ZW5kIG91dCBhIHBhdGNoc2V0IHdpdGggc2VwYXJhdGUgcGF0Y2hlcyANCg0KPiANCj4gSSB0aGlu
-ayB0aGVyZSB3YXMgYSBzZXBhcmF0ZSBwYXRjaCBmb3IgdGhlIHBjaWUtc3BlYXIxM3h4LmMgYnVn
-LA0KPiB3YXNuJ3QgdGhlcmU/ICBBdCBsZWFzdCwgSSBkb24ndCBzZWUgdGhhdCBmaXggaW4gKnRo
-aXMqIHBhdGNoLg0KPiANCg0KRnJvbSB5b3VyIHByZXZpb3VzIGNvbW1lbnRzOg0KKioqKioqKioN
-CioyKSBQcmF0eXVzaCwgdGhpcyBvbmUncyBmb3IgeW91IDopICBzcGVhcjEzeHhfcGNpZV9lc3Rh
-Ymxpc2hfbGluaygpDQoqICAgY2FsbHMgZHdfcGNpZV9jZmdfcmVhZCgpIGFuZCBkd19wY2llX2Nm
-Z193cml0ZSgpIHNldmVyYWwgdGltZXMgbGlrZQ0KKiAgIHRoaXM6DQoqDQoqICAgIGR3X3BjaWVf
-Y2ZnX3JlYWQocHAtPmRiaV9iYXNlLCBleHBfY2FwX29mZiArIFBDSV9FWFBfREVWQ1RMLCA0LCAu
-Li4pDQoqICAgIGR3X3BjaWVfY2ZnX3dyaXRlKHBwLT5kYmlfYmFzZSwgZXhwX2NhcF9vZmYgKyBQ
-Q0lfRVhQX0RFVkNUTCwgNCwgLi4uKQ0KKioqKioqKioNCg0KSSB0aGluayB0aGF0IHRoZSBpbXBs
-ZW1lbnRhdGlvbiBvZiBkd19wY2llX2NmZ19yZWFkKCkgYW5kIA0KZHdfcGNpZV9jZmdfd3JpdGUo
-KSB0aGF0IEkgcHJvcG9zZWQgaW4gdGhpcyBwYXRjaCBpcyBjb21wYXRpYmxlIHdpdGgNCnRoZSBw
-cmV2aW91cyBjYWxscyBpbiBwY2llLXNwZWFyMTN4eC5jLiBTbyB0aGUgY2FsbHMgaW4gcGNpZS1z
-cGVhcjEzeHguYw0Kd2VyZSBidWdneSBmb3IgdGhlIHByZXZpb3VzIGltcGxlbWVudGF0aW9ucyBv
-ZiB0aGUgZnVuY3Rpb25zOyB3aXRoDQp0aGUgcmV3b3JrZWQgZnVuY3Rpb25zIHRoZXJlIGlzIG5v
-IG5lZWQgdG8gbW9kaWZ5IHRoZSBmdW5jdGlvbiBjYWxscw0KaW4gcGNpZS1zcGVhcjEzeHguYy4u
-LmRvIHlvdSBhZ3JlZT8NCg0KPiA+IFRoaXMgcGF0Y2ggaXMgYSBmb2xsb3cgdXAgZnJvbSB0aGUg
-ZGlzY3Vzc2lvbiBpbjoNCj4gPiBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXBj
-aS9tc2c0NDM1MS5odG1sDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBHYWJyaWVsZSBQYW9sb25p
-IDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvcGNp
-L2hvc3QvcGNpLWV4eW5vcy5jICAgICAgfCAgNSArKy0tDQo+ID4gIGRyaXZlcnMvcGNpL2hvc3Qv
-cGNpLWtleXN0b25lLWR3LmMgfCAgNCArLS0NCj4gPiAgZHJpdmVycy9wY2kvaG9zdC9wY2llLWRl
-c2lnbndhcmUuYyB8IDUxICsrKysrKysrKysrKysrKysrKysrKystLS0tLS0NCj4gLS0tLS0tLS0t
-LQ0KPiA+ICAzIGZpbGVzIGNoYW5nZWQsIDM0IGluc2VydGlvbnMoKyksIDI2IGRlbGV0aW9ucygt
-KQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWV4eW5vcy5jIGIv
-ZHJpdmVycy9wY2kvaG9zdC9wY2ktDQo+IGV4eW5vcy5jDQo+ID4gaW5kZXggZjlmNDY4ZC4uOGIw
-ZTA0YiAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS1leHlub3MuYw0KPiA+
-ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWV4eW5vcy5jDQo+ID4gQEAgLTQ1NCw3ICs0NTQs
-NyBAQCBzdGF0aWMgaW50IGV4eW5vc19wY2llX3JkX293bl9jb25mKHN0cnVjdA0KPiBwY2llX3Bv
-cnQgKnBwLCBpbnQgd2hlcmUsIGludCBzaXplLA0KPiA+ICAgICAgICAgaW50IHJldDsNCj4gPg0K
-PiA+ICAgICAgICAgZXh5bm9zX3BjaWVfc2lkZWJhbmRfZGJpX3JfbW9kZShwcCwgdHJ1ZSk7DQo+
-ID4gLSAgICAgICByZXQgPSBkd19wY2llX2NmZ19yZWFkKHBwLT5kYmlfYmFzZSArICh3aGVyZSAm
-IH4weDMpLCB3aGVyZSwNCj4gc2l6ZSwgdmFsKTsNCj4gPiArICAgICAgIHJldCA9IGR3X3BjaWVf
-Y2ZnX3JlYWQocHAtPmRiaV9iYXNlLCB3aGVyZSwgc2l6ZSwgdmFsKTsNCj4gPiAgICAgICAgIGV4
-eW5vc19wY2llX3NpZGViYW5kX2RiaV9yX21vZGUocHAsIGZhbHNlKTsNCj4gPiAgICAgICAgIHJl
-dHVybiByZXQ7DQo+ID4gIH0NCj4gPiBAQCAtNDY1LDggKzQ2NSw3IEBAIHN0YXRpYyBpbnQgZXh5
-bm9zX3BjaWVfd3Jfb3duX2NvbmYoc3RydWN0DQo+IHBjaWVfcG9ydCAqcHAsIGludCB3aGVyZSwg
-aW50IHNpemUsDQo+ID4gICAgICAgICBpbnQgcmV0Ow0KPiA+DQo+ID4gICAgICAgICBleHlub3Nf
-cGNpZV9zaWRlYmFuZF9kYmlfd19tb2RlKHBwLCB0cnVlKTsNCj4gPiAtICAgICAgIHJldCA9IGR3
-X3BjaWVfY2ZnX3dyaXRlKHBwLT5kYmlfYmFzZSArICh3aGVyZSAmIH4weDMpLA0KPiA+IC0gICAg
-ICAgICAgICAgICAgICAgICAgIHdoZXJlLCBzaXplLCB2YWwpOw0KPiA+ICsgICAgICAgcmV0ID0g
-ZHdfcGNpZV9jZmdfd3JpdGUocHAtPmRiaV9iYXNlLCB3aGVyZSwgc2l6ZSwgdmFsKTsNCj4gPiAg
-ICAgICAgIGV4eW5vc19wY2llX3NpZGViYW5kX2RiaV93X21vZGUocHAsIGZhbHNlKTsNCj4gPiAg
-ICAgICAgIHJldHVybiByZXQ7DQo+ID4gIH0NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kv
-aG9zdC9wY2kta2V5c3RvbmUtZHcuYw0KPiBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWtleXN0b25l
-LWR3LmMNCj4gPiBpbmRleCBmMzQ4OTJlLi4yYjM5MWY0IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZl
-cnMvcGNpL2hvc3QvcGNpLWtleXN0b25lLWR3LmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0
-L3BjaS1rZXlzdG9uZS1kdy5jDQo+ID4gQEAgLTQwMyw3ICs0MDMsNyBAQCBpbnQga3NfZHdfcGNp
-ZV9yZF9vdGhlcl9jb25mKHN0cnVjdCBwY2llX3BvcnQgKnBwLA0KPiBzdHJ1Y3QgcGNpX2J1cyAq
-YnVzLA0KPiA+DQo+ID4gICAgICAgICBhZGRyID0ga3NfcGNpZV9jZmdfc2V0dXAoa3NfcGNpZSwg
-YnVzX251bSwgZGV2Zm4pOw0KPiA+DQo+ID4gLSAgICAgICByZXR1cm4gZHdfcGNpZV9jZmdfcmVh
-ZChhZGRyICsgKHdoZXJlICYgfjB4MyksIHdoZXJlLCBzaXplLA0KPiB2YWwpOw0KPiA+ICsgICAg
-ICAgcmV0dXJuIGR3X3BjaWVfY2ZnX3JlYWQoYWRkciwgd2hlcmUsIHNpemUsIHZhbCk7DQo+ID4g
-IH0NCj4gPg0KPiA+ICBpbnQga3NfZHdfcGNpZV93cl9vdGhlcl9jb25mKHN0cnVjdCBwY2llX3Bv
-cnQgKnBwLCBzdHJ1Y3QgcGNpX2J1cw0KPiAqYnVzLA0KPiA+IEBAIC00MTUsNyArNDE1LDcgQEAg
-aW50IGtzX2R3X3BjaWVfd3Jfb3RoZXJfY29uZihzdHJ1Y3QgcGNpZV9wb3J0ICpwcCwNCj4gc3Ry
-dWN0IHBjaV9idXMgKmJ1cywNCj4gPg0KPiA+ICAgICAgICAgYWRkciA9IGtzX3BjaWVfY2ZnX3Nl
-dHVwKGtzX3BjaWUsIGJ1c19udW0sIGRldmZuKTsNCj4gPg0KPiA+IC0gICAgICAgcmV0dXJuIGR3
-X3BjaWVfY2ZnX3dyaXRlKGFkZHIgKyAod2hlcmUgJiB+MHgzKSwgd2hlcmUsIHNpemUsDQo+IHZh
-bCk7DQo+ID4gKyAgICAgICByZXR1cm4gZHdfcGNpZV9jZmdfd3JpdGUoYWRkciwgd2hlcmUsIHNp
-emUsIHZhbCk7DQo+ID4gIH0NCj4gPg0KPiA+ICAvKioNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KPiBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1k
-ZXNpZ253YXJlLmMNCj4gPiBpbmRleCA2OTQ4NmJlLi5iNTNhYTM4IDEwMDY0NA0KPiA+IC0tLSBh
-L2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmMNCj4gPiArKysgYi9kcml2ZXJzL3Bj
-aS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+ID4gQEAgLTgyLDEzICs4MiwyMCBAQCBzdGF0aWMg
-aW5saW5lIHN0cnVjdCBwY2llX3BvcnQNCj4gKnN5c190b19wY2llKHN0cnVjdCBwY2lfc3lzX2Rh
-dGEgKnN5cykNCj4gPg0KPiA+ICBpbnQgZHdfcGNpZV9jZmdfcmVhZCh2b2lkIF9faW9tZW0gKmFk
-ZHIsIGludCB3aGVyZSwgaW50IHNpemUsIHUzMg0KPiAqdmFsKQ0KPiA+ICB7DQo+ID4gKyAgICAg
-ICBhZGRyICs9ICh3aGVyZSAmIH4weDMpOw0KPiA+ICAgICAgICAgKnZhbCA9IHJlYWRsKGFkZHIp
-Ow0KPiA+IC0NCj4gPiAtICAgICAgIGlmIChzaXplID09IDEpDQo+ID4gLSAgICAgICAgICAgICAg
-ICp2YWwgPSAoKnZhbCA+PiAoOCAqICh3aGVyZSAmIDMpKSkgJiAweGZmOw0KPiA+IC0gICAgICAg
-ZWxzZSBpZiAoc2l6ZSA9PSAyKQ0KPiA+IC0gICAgICAgICAgICAgICAqdmFsID0gKCp2YWwgPj4g
-KDggKiAod2hlcmUgJiAzKSkpICYgMHhmZmZmOw0KPiA+IC0gICAgICAgZWxzZSBpZiAoc2l6ZSAh
-PSA0KQ0KPiA+ICsgICAgICAgd2hlcmUgJj0gMzsNCj4gPiArDQo+ID4gKyAgICAgICBpZiAoc2l6
-ZSA9PSAxKSB7DQo+ID4gKyAgICAgICAgICAgICAgICp2YWwgPSAoKnZhbCA+PiAoOCAqIHdoZXJl
-KSkgJiAweGZmOw0KPiA+ICsgICAgICAgfSBlbHNlIGlmIChzaXplID09IDIpIHsNCj4gPiArICAg
-ICAgICAgICAgICAgaWYgKHdoZXJlICYgMSkNCj4gPiArICAgICAgICAgICAgICAgICAgICAgICBy
-ZXR1cm4gUENJQklPU19CQURfUkVHSVNURVJfTlVNQkVSOw0KPiA+ICsgICAgICAgICAgICAgICAq
-dmFsID0gKCp2YWwgPj4gKDggKiB3aGVyZSkpICYgMHhmZmZmOw0KPiA+ICsgICAgICAgfSBlbHNl
-IGlmIChzaXplID09IDQpIHsNCj4gPiArICAgICAgICAgICAgICAgaWYgKHdoZXJlICYgMykNCj4g
-PiArICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gUENJQklPU19CQURfUkVHSVNURVJfTlVN
-QkVSOw0KPiA+ICsgICAgICAgfSBlbHNlDQo+ID4gICAgICAgICAgICAgICAgIHJldHVybiBQQ0lC
-SU9TX0JBRF9SRUdJU1RFUl9OVU1CRVI7DQo+ID4NCj4gPiAgICAgICAgIHJldHVybiBQQ0lCSU9T
-X1NVQ0NFU1NGVUw7DQo+ID4gQEAgLTk2LDEyICsxMDMsMTggQEAgaW50IGR3X3BjaWVfY2ZnX3Jl
-YWQodm9pZCBfX2lvbWVtICphZGRyLCBpbnQNCj4gd2hlcmUsIGludCBzaXplLCB1MzIgKnZhbCkN
-Cj4gPg0KPiA+ICBpbnQgZHdfcGNpZV9jZmdfd3JpdGUodm9pZCBfX2lvbWVtICphZGRyLCBpbnQg
-d2hlcmUsIGludCBzaXplLCB1MzINCj4gdmFsKQ0KPiA+ICB7DQo+ID4gLSAgICAgICBpZiAoc2l6
-ZSA9PSA0KQ0KPiA+ICsgICAgICAgYWRkciArPSB3aGVyZTsNCj4gPiArDQo+ID4gKyAgICAgICBp
-ZiAoc2l6ZSA9PSA0KSB7DQo+ID4gKyAgICAgICAgICAgICAgIGlmICgodWludHB0cl90KWFkZHIg
-JiAzKQ0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiBQQ0lCSU9TX0JBRF9SRUdJ
-U1RFUl9OVU1CRVI7DQo+ID4gICAgICAgICAgICAgICAgIHdyaXRlbCh2YWwsIGFkZHIpOw0KPiA+
-IC0gICAgICAgZWxzZSBpZiAoc2l6ZSA9PSAyKQ0KPiA+IC0gICAgICAgICAgICAgICB3cml0ZXco
-dmFsLCBhZGRyICsgKHdoZXJlICYgMikpOw0KPiA+IC0gICAgICAgZWxzZSBpZiAoc2l6ZSA9PSAx
-KQ0KPiA+IC0gICAgICAgICAgICAgICB3cml0ZWIodmFsLCBhZGRyICsgKHdoZXJlICYgMykpOw0K
-PiA+ICsgICAgICAgfSBlbHNlIGlmIChzaXplID09IDIpIHsNCj4gPiArICAgICAgICAgICAgICAg
-aWYgKCh1aW50cHRyX3QpYWRkciAmIDEpDQo+ID4gKyAgICAgICAgICAgICAgICAgICAgICAgcmV0
-dXJuIFBDSUJJT1NfQkFEX1JFR0lTVEVSX05VTUJFUjsNCj4gPiArICAgICAgICAgICAgICAgd3Jp
-dGV3KHZhbCwgYWRkcik7DQo+ID4gKyAgICAgICB9IGVsc2UgaWYgKHNpemUgPT0gMSkNCj4gPiAr
-ICAgICAgICAgICAgICAgd3JpdGViKHZhbCwgYWRkcik7DQo+ID4gICAgICAgICBlbHNlDQo+ID4g
-ICAgICAgICAgICAgICAgIHJldHVybiBQQ0lCSU9TX0JBRF9SRUdJU1RFUl9OVU1CRVI7DQo+ID4N
-Cj4gPiBAQCAtMTMyLDggKzE0NSw3IEBAIHN0YXRpYyBpbnQgZHdfcGNpZV9yZF9vd25fY29uZihz
-dHJ1Y3QgcGNpZV9wb3J0DQo+ICpwcCwgaW50IHdoZXJlLCBpbnQgc2l6ZSwNCj4gPiAgICAgICAg
-IGlmIChwcC0+b3BzLT5yZF9vd25fY29uZikNCj4gPiAgICAgICAgICAgICAgICAgcmV0ID0gcHAt
-Pm9wcy0+cmRfb3duX2NvbmYocHAsIHdoZXJlLCBzaXplLCB2YWwpOw0KPiA+ICAgICAgICAgZWxz
-ZQ0KPiA+IC0gICAgICAgICAgICAgICByZXQgPSBkd19wY2llX2NmZ19yZWFkKHBwLT5kYmlfYmFz
-ZSArICh3aGVyZSAmIH4weDMpLA0KPiB3aGVyZSwNCj4gPiAtICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIHNpemUsIHZhbCk7DQo+ID4gKyAgICAgICAgICAgICAgIHJldCA9IGR3X3BjaWVf
-Y2ZnX3JlYWQocHAtPmRiaV9iYXNlLCB3aGVyZSwgc2l6ZSwNCj4gdmFsKTsNCj4gPg0KPiA+ICAg
-ICAgICAgcmV0dXJuIHJldDsNCj4gPiAgfQ0KPiA+IEBAIC0xNDYsOCArMTU4LDcgQEAgc3RhdGlj
-IGludCBkd19wY2llX3dyX293bl9jb25mKHN0cnVjdCBwY2llX3BvcnQNCj4gKnBwLCBpbnQgd2hl
-cmUsIGludCBzaXplLA0KPiA+ICAgICAgICAgaWYgKHBwLT5vcHMtPndyX293bl9jb25mKQ0KPiA+
-ICAgICAgICAgICAgICAgICByZXQgPSBwcC0+b3BzLT53cl9vd25fY29uZihwcCwgd2hlcmUsIHNp
-emUsIHZhbCk7DQo+ID4gICAgICAgICBlbHNlDQo+ID4gLSAgICAgICAgICAgICAgIHJldCA9IGR3
-X3BjaWVfY2ZnX3dyaXRlKHBwLT5kYmlfYmFzZSArICh3aGVyZSAmIH4weDMpLA0KPiB3aGVyZSwN
-Cj4gPiAtICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHNpemUsIHZhbCk7DQo+ID4gKyAg
-ICAgICAgICAgICAgIHJldCA9IGR3X3BjaWVfY2ZnX3dyaXRlKHBwLT5kYmlfYmFzZSwgd2hlcmUs
-IHNpemUsDQo+IHZhbCk7DQo+ID4NCj4gPiAgICAgICAgIHJldHVybiByZXQ7DQo+ID4gIH0NCj4g
-PiBAQCAtNTQxLDEzICs1NTIsMTIgQEAgc3RhdGljIGludCBkd19wY2llX3JkX290aGVyX2NvbmYo
-c3RydWN0DQo+IHBjaWVfcG9ydCAqcHAsIHN0cnVjdCBwY2lfYnVzICpidXMsDQo+ID4gICAgICAg
-ICAgICAgICAgIHUzMiBkZXZmbiwgaW50IHdoZXJlLCBpbnQgc2l6ZSwgdTMyICp2YWwpDQo+ID4g
-IHsNCj4gPiAgICAgICAgIGludCByZXQsIHR5cGU7DQo+ID4gLSAgICAgICB1MzIgYWRkcmVzcywg
-YnVzZGV2LCBjZmdfc2l6ZTsNCj4gPiArICAgICAgIHUzMiBidXNkZXYsIGNmZ19zaXplOw0KPiA+
-ICAgICAgICAgdTY0IGNwdV9hZGRyOw0KPiA+ICAgICAgICAgdm9pZCBfX2lvbWVtICp2YV9jZmdf
-YmFzZTsNCj4gPg0KPiA+ICAgICAgICAgYnVzZGV2ID0gUENJRV9BVFVfQlVTKGJ1cy0+bnVtYmVy
-KSB8DQo+IFBDSUVfQVRVX0RFVihQQ0lfU0xPVChkZXZmbikpIHwNCj4gPiAgICAgICAgICAgICAg
-ICAgIFBDSUVfQVRVX0ZVTkMoUENJX0ZVTkMoZGV2Zm4pKTsNCj4gPiAtICAgICAgIGFkZHJlc3Mg
-PSB3aGVyZSAmIH4weDM7DQo+ID4NCj4gPiAgICAgICAgIGlmIChidXMtPnBhcmVudC0+bnVtYmVy
-ID09IHBwLT5yb290X2J1c19ucikgew0KPiA+ICAgICAgICAgICAgICAgICB0eXBlID0gUENJRV9B
-VFVfVFlQRV9DRkcwOw0KPiA+IEBAIC01NjQsNyArNTc0LDcgQEAgc3RhdGljIGludCBkd19wY2ll
-X3JkX290aGVyX2NvbmYoc3RydWN0IHBjaWVfcG9ydA0KPiAqcHAsIHN0cnVjdCBwY2lfYnVzICpi
-dXMsDQo+ID4gICAgICAgICBkd19wY2llX3Byb2dfb3V0Ym91bmRfYXR1KHBwLCBQQ0lFX0FUVV9S
-RUdJT05fSU5ERVgwLA0KPiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0eXBl
-LCBjcHVfYWRkciwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYnVzZGV2
-LCBjZmdfc2l6ZSk7DQo+ID4gLSAgICAgICByZXQgPSBkd19wY2llX2NmZ19yZWFkKHZhX2NmZ19i
-YXNlICsgYWRkcmVzcywgd2hlcmUsIHNpemUsDQo+IHZhbCk7DQo+ID4gKyAgICAgICByZXQgPSBk
-d19wY2llX2NmZ19yZWFkKHZhX2NmZ19iYXNlLCB3aGVyZSwgc2l6ZSwgdmFsKTsNCj4gPiAgICAg
-ICAgIGR3X3BjaWVfcHJvZ19vdXRib3VuZF9hdHUocHAsIFBDSUVfQVRVX1JFR0lPTl9JTkRFWDAs
-DQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFBDSUVfQVRVX1RZUEVfSU8s
-IHBwLT5pb19tb2RfYmFzZSwNCj4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-cHAtPmlvX2J1c19hZGRyLCBwcC0+aW9fc2l6ZSk7DQo+ID4gQEAgLTU3NiwxMyArNTg2LDEyIEBA
-IHN0YXRpYyBpbnQgZHdfcGNpZV93cl9vdGhlcl9jb25mKHN0cnVjdA0KPiBwY2llX3BvcnQgKnBw
-LCBzdHJ1Y3QgcGNpX2J1cyAqYnVzLA0KPiA+ICAgICAgICAgICAgICAgICB1MzIgZGV2Zm4sIGlu
-dCB3aGVyZSwgaW50IHNpemUsIHUzMiB2YWwpDQo+ID4gIHsNCj4gPiAgICAgICAgIGludCByZXQs
-IHR5cGU7DQo+ID4gLSAgICAgICB1MzIgYWRkcmVzcywgYnVzZGV2LCBjZmdfc2l6ZTsNCj4gPiAr
-ICAgICAgIHUzMiBidXNkZXYsIGNmZ19zaXplOw0KPiA+ICAgICAgICAgdTY0IGNwdV9hZGRyOw0K
-PiA+ICAgICAgICAgdm9pZCBfX2lvbWVtICp2YV9jZmdfYmFzZTsNCj4gPg0KPiA+ICAgICAgICAg
-YnVzZGV2ID0gUENJRV9BVFVfQlVTKGJ1cy0+bnVtYmVyKSB8DQo+IFBDSUVfQVRVX0RFVihQQ0lf
-U0xPVChkZXZmbikpIHwNCj4gPiAgICAgICAgICAgICAgICAgIFBDSUVfQVRVX0ZVTkMoUENJX0ZV
-TkMoZGV2Zm4pKTsNCj4gPiAtICAgICAgIGFkZHJlc3MgPSB3aGVyZSAmIH4weDM7DQo+ID4NCj4g
-PiAgICAgICAgIGlmIChidXMtPnBhcmVudC0+bnVtYmVyID09IHBwLT5yb290X2J1c19ucikgew0K
-PiA+ICAgICAgICAgICAgICAgICB0eXBlID0gUENJRV9BVFVfVFlQRV9DRkcwOw0KPiA+IEBAIC01
-OTksNyArNjA4LDcgQEAgc3RhdGljIGludCBkd19wY2llX3dyX290aGVyX2NvbmYoc3RydWN0IHBj
-aWVfcG9ydA0KPiAqcHAsIHN0cnVjdCBwY2lfYnVzICpidXMsDQo+ID4gICAgICAgICBkd19wY2ll
-X3Byb2dfb3V0Ym91bmRfYXR1KHBwLCBQQ0lFX0FUVV9SRUdJT05fSU5ERVgwLA0KPiA+ICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0eXBlLCBjcHVfYWRkciwNCj4gPiAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgYnVzZGV2LCBjZmdfc2l6ZSk7DQo+ID4gLSAgICAg
-ICByZXQgPSBkd19wY2llX2NmZ193cml0ZSh2YV9jZmdfYmFzZSArIGFkZHJlc3MsIHdoZXJlLCBz
-aXplLA0KPiB2YWwpOw0KPiA+ICsgICAgICAgcmV0ID0gZHdfcGNpZV9jZmdfd3JpdGUodmFfY2Zn
-X2Jhc2UsIHdoZXJlLCBzaXplLCB2YWwpOw0KPiA+ICAgICAgICAgZHdfcGNpZV9wcm9nX291dGJv
-dW5kX2F0dShwcCwgUENJRV9BVFVfUkVHSU9OX0lOREVYMCwNCj4gPiAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgUENJRV9BVFVfVFlQRV9JTywgcHAtPmlvX21vZF9iYXNlLA0KPiA+
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBwcC0+aW9fYnVzX2FkZHIsIHBwLT5p
-b19zaXplKTsNCj4gPiAtLQ0KPiA+IDEuOS4xDQo+ID4NCj4gPiAtLQ0KPiA+IFRvIHVuc3Vic2Ny
-aWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2ki
-DQo+IGluDQo+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5l
-bC5vcmcNCj4gPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3Jn
-L21ham9yZG9tby1pbmZvLmh0bWwNCg==
+On Tue, Sep 15, 2015 at 12:58:20AM +0100, Yinghai Lu wrote:
+> On Mon, Sep 14, 2015 at 10:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+> > On Mon, Sep 14, 2015 at 9:28 AM, Lorenzo Pieralisi
+> > <lorenzo.pieralisi@arm.com> wrote:
+> >> On Mon, Sep 14, 2015 at 05:05:50PM +0100, Yinghai Lu wrote:
+> >>> We could just revert
+> >>> dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
+> >>> arch code")
+> >>> instead.
+> >>
+> 
+> > if arch code called pci_read_bridge_bases() via pcibios_fixup_bus(),
+> > then it need to have
+> > to call pcibios_allocate_bus_resources() later.
+> >
+> > but now arm (mips ?)  does not have calling pcibios_allocate_bus_resources().
+
+pcibios_allocate_bus_resources() is an arch specific function and arm
+and (and mips ?) does not need to create/call it because ARM reassigns
+ALL resources in ALL platforms, hoping FW can provide a reasonable PCI
+bridge apertures set-up on ARM is wishful thinking at present.
+
+If PCI core code is written with that assumption (ie that arch code zeroes
+the bridge apertures if they can't be claimed), pci_read_bridge_bases()
+can't be moved to PCI core code at present, sad and simple.
+
+I already asked many times why __pci_bus_size_bridges() cares about
+the old bridge size on first scan and got no answer so I would ask Bjorn
+to revert dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core
+instead of arch code") or we apply an ARM specific plaster, we are making
+no progress on this.
+
+> Found other problem that is caused by
+> dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
+> arch code")
+> 
+> If that commit does not get reverted, will need to have attached patch
+
+I see what you mean and I see why there is a reason to apply the patch
+below if we do not revert dff22d2054b5 (" PCI: Call pci_read_bridge_bases()
+from core instead of arch code"), but I am afraid the commit log has to
+be rewritten to explain the problem in a way that properly describes
+the issue, and that's not the first one I read in the last couple of
+weeks to figure out how to fix this regression.
+
+Thanks,
+Lorenzo
+
+> 
+> 
+> Subject: [PATCH] PCI: Skip reading bridge bases with existing ones on rescan
+> 
+> Noticed there is noisy print out pci bridge bases read out for
+> existing devices that is caused by commit dff22d2054b5
+> ("PCI: Call pci_read_bridge_bases() from core instead of arch code")
+> 
+> pci_bus 0000:06: scanning bus
+> pcieport 0000:06:00.0: scanning [bus 07-09] behind bridge, pass 0
+> pcieport 0000:06:00.0: PCI bridge to [bus 07-09]
+> pcieport 0000:06:00.0:   bridge window [io  0x1000-0x2fff]
+> pcieport 0000:06:00.0:   bridge window [mem 0xfda00000-0xfddfffff]
+> pcieport 0000:06:00.0:   bridge window [mem 0xfc000000-0xfc3fffff 64bit pref]
+> pci_bus 0000:07: scanning bus
+> pcieport 0000:07:00.0: scanning [bus 08-08] behind bridge, pass 0
+> pcieport 0000:07:00.0: PCI bridge to [bus 08]
+> pcieport 0000:07:00.0:   bridge window [io  0x2000-0x2fff]
+> pcieport 0000:07:00.0:   bridge window [mem 0xfdc00000-0xfddfffff]
+> pcieport 0000:07:00.0:   bridge window [mem 0xfc200000-0xfc3fffff 64bit pref]
+> pci_bus 0000:08: scanning bus
+> pcieport 0000:07:00.1: scanning [bus 09-09] behind bridge, pass 0
+> pcieport 0000:07:00.1: PCI bridge to [bus 09]
+> pcieport 0000:07:00.1:   bridge window [io  0x1000-0x1fff]
+> pcieport 0000:07:00.1:   bridge window [mem 0xfda00000-0xfdbfffff]
+> pcieport 0000:07:00.1:   bridge window [mem 0xfc000000-0xfc1fffff 64bit pref]
+> 
+> Add is_added checking to avoid those wrong reading.
+> 
+> Fixes: dff22d2054b5 ("PCI: Call pci_read_bridge_bases() from core
+> instead of arch code")
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/probe.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -455,6 +455,9 @@ void pci_read_bridge_bases(struct pci_bu
+>      struct resource *res;
+>      int i;
+> 
+> +    if (child->is_added)
+> +        return;
+> +
+>      if (pci_is_root_bus(child))    /* It's a host bus, nothing to read */
+>          return;
+
+> Subject: [PATCH] PCI: Skip reading bridge bases with existing ones on rescan
+> 
+> Noticed there is noisy print out pci bridge bases read out for
+> existing devices that is caused by commit dff22d2054b5
+> ("PCI: Call pci_read_bridge_bases() from core instead of arch code")
+> 
+> pci_bus 0000:06: scanning bus
+> pcieport 0000:06:00.0: scanning [bus 07-09] behind bridge, pass 0
+> pcieport 0000:06:00.0: PCI bridge to [bus 07-09]
+> pcieport 0000:06:00.0:   bridge window [io  0x1000-0x2fff]
+> pcieport 0000:06:00.0:   bridge window [mem 0xfda00000-0xfddfffff]
+> pcieport 0000:06:00.0:   bridge window [mem 0xfc000000-0xfc3fffff 64bit pref]
+> pci_bus 0000:07: scanning bus
+> pcieport 0000:07:00.0: scanning [bus 08-08] behind bridge, pass 0
+> pcieport 0000:07:00.0: PCI bridge to [bus 08]
+> pcieport 0000:07:00.0:   bridge window [io  0x2000-0x2fff]
+> pcieport 0000:07:00.0:   bridge window [mem 0xfdc00000-0xfddfffff]
+> pcieport 0000:07:00.0:   bridge window [mem 0xfc200000-0xfc3fffff 64bit pref]
+> pci_bus 0000:08: scanning bus
+> pcieport 0000:07:00.1: scanning [bus 09-09] behind bridge, pass 0
+> pcieport 0000:07:00.1: PCI bridge to [bus 09]
+> pcieport 0000:07:00.1:   bridge window [io  0x1000-0x1fff]
+> pcieport 0000:07:00.1:   bridge window [mem 0xfda00000-0xfdbfffff]
+> pcieport 0000:07:00.1:   bridge window [mem 0xfc000000-0xfc1fffff 64bit pref]
+> 
+> Add is_added checking to avoid those wrong reading.
+> 
+> Fixes: dff22d2054b5 ("PCI: Call pci_read_bridge_bases() from core instead of arch code")
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/probe.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -455,6 +455,9 @@ void pci_read_bridge_bases(struct pci_bu
+>  	struct resource *res;
+>  	int i;
+>  
+> +	if (child->is_added)
+> +		return;
+> +
+>  	if (pci_is_root_bus(child))	/* It's a host bus, nothing to read */
+>  		return;
+>  
+
