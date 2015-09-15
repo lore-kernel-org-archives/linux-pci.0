@@ -1,234 +1,148 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 16/53] PCI: Optimize bus align/size calculation for optional during sizing
-Date: Wed, 30 Sep 2015 22:52:50 -0700
-Message-Id: <1443678807-786-17-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:13318 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965AbbIORLS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:18 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 00/22] DMA-API/PCI map_peer_resource support for peer-to-peer
+Date: Tue, 15 Sep 2015 12:10:45 -0500
+Message-ID: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current add_align always use max align, that make required+optional
-to get allocated more than needed in some cases.
+Hi,
 
-Now we have new calculate_mem_align(), so we could use it for
-add_align calculation.
+This is the sixth version of a patchset to add the DMA APIs necessary to
+map and unmap a PCI device's BAR to and from another PCI device's IOVA
+domain. This enables PCI peer-to-peer traffic on x86 platforms where an
+IOMMU is enabled (this requires that peer-to-peer traffic be supported by
+the underlying chipset as well, of course).
 
-Need to create separated list for required+optional align/size info.
+Thanks,
+Will
 
-After that we can get smaller add_align/size, and we have more chance
-to make required+optional to get allocated sucessfully.
+v6:
+- added stubs for remaining x86 dma_map_ops: calgary, gart, sta2x11,
+  swiotlb, xen-swiotlb
+- factored part of x86 PCI nommu implementation into a generic PCI
+  helper, pci_resource_to_peer()
+- split x86 dma_peer_mapping_error() implementation into a separate
+  patch
 
-The result for bridge that have Intel 4x10g card installed:
+v5: http://www.spinics.net/lists/linux-pci/msg43975.html
+- moved topology and ACS checks into a separate
+  pci_peer_traffic_supported() API, which determines whether PCI peer-
+  to-peer traffic may work based on language in the PCI and PCI Express
+  specifications (excerpts included in comments)
+- added CONFIG_HAS_DMA_P2P guards to x86 PCI no-mmu implementation of
+  map_peer_resource
+- modified a few patch descriptions for style
 
- pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
-	to [bus 2a-31] calculate_mem for required
- align/size:
-   00800000/00800000, 00800000/00800000, 00800000/00800000,
-   00800000/00800000, 00008000/00008000, 00008000/00008000,
-   00008000/00008000, 00008000/00008000
- original min_align/min_size: 00400000/02400000
- new min_align/min_size: 00400000/02400000
+v4: http://www.spinics.net/lists/linux-pci/msg43136.html
+- added HAS_DMA_P2P Kconfig option to guard new APIs, which are only
+  supported on x86 with this patch series
+- added a new dma_peer_addr_t type to handle future platform support
+  where the dma_peer_addr_t needs to have the same width as the bus
+  address, which can be wider than the dma_addr_t returned by other
+  DMA APIs
+- added a new dma_peer_mapping_error() and associated PCI wrapper to
+  detect errors returned via dma_map_peer_resource() API and its
+  PCI wrapper
+- modified the interface of the new API to explicitly take the peer
+  device as an argument
+- renamed the (un)map_resource APIs to (un)map_peer_resource, since
+  they directly receive a 'peer' argument now
+- modified the new PCI interface to take the BAR index instead of the
+  actual struct resource
+- modified the pci-nommu implementation to perform topology and ACS
+  checks before allowing
+- modified both the AMD and Intel IOMMU implementations to require
+  that both devices be behind the same host bridge
+- exposed a couple of preexisting PCI utility functions to aid in the
+  topology checks for all of the x86 implementations
 
- pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
-	to [bus 2a-31] calculate_mem for required+optional
- align/size:
-   00800000/00800000, 00800000/00800000, 00800000/00800000,
-   00800000/00800000, 00010000/00200000, 00010000/00200000,
-   00010000/00200000, 00010000/00200000, 00008000/00008000,
-   00008000/00008000, 00008000/00008000, 00008000/00008000,
-   00004000/00080000, 00004000/00080000, 00004000/00080000,
-   00004000/00080000
- original code min_align/min_size: 00800000/03000000
- new min_align/min_size: 00100000/02b00000
+v3: http://www.spinics.net/lists/linux-pci/msg41703.html
+- changed dma_map_resource() to BUG() if the map_resource DMA op is not
+  provided, instead of returning 0
+- updated documentation to remove requirement to check for 0 return value
+  as an error
+- remove const keyword from struct dma_map_ops in new DMA APIs for
+  consistency with other APIs
 
-so required align/size: 0x400000/0x2400000, and
-new required+optional align/size: 0x100000/0x2b00000, and it is much better
-than original required+optional align/size: 0x800000/0x3000000
-and even have smaller min_align than required.
+v2: http://www.spinics.net/lists/linux-pci/msg41192.html
+- added documentation for the new DMA APIs
+- fixed physical-to-bus address conversion in the nommu implementation
 
--v2: remove not used size1 in calculate_memsize
+v1: http://www.spinics.net/lists/linux-pci/msg40747.html
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Will Davis (22):
+  lib/Kconfig: add HAS_DMA_P2P for peer-to-peer support
+  linux/types.h: Add dma_peer_addr_t type
+  dma-debug: add checking for map/unmap_peer_resource
+  DMA-API: Introduce dma_(un)map_peer_resource
+  dma-mapping: pci: add pci_(un)map_peer_resource
+  DMA-API: Add peer resource mapping documentation
+  PCI: Export pci_find_host_bridge()
+  PCI: Add pci_find_common_upstream_dev()
+  PCI: Add pci_peer_traffic_supported()
+  PCI: Add pci_resource_to_peer()
+  swiotlb: Add map_peer_resource stub
+  x86, swiotlb: Add swiotlb_map_peer_resource() to swiotlb_dma_ops
+  x86, platform: Add swiotlb_map_peer_resource() to sta2x11_dma_ops
+  swiotlb-xen: add map_peer_resource stub
+  pci-swiotlb-xen: add xen_swiotlb_map_peer_resource to
+    xen_swiotlb_dma_ops
+  iommu/amd: Implement (un)map_peer_resource
+  iommu/vt-d: implement (un)map_peer_resource
+  x86: add pci-nommu implementation of map_peer_resource
+  x86: Calgary: Add map_peer_resource stub
+  x86: gart: Add map_peer_resource stub
+  x86: add dma_peer_mapping_error()
+  x86: declare support for DMA P2P
 
+ Documentation/DMA-API-HOWTO.txt          | 69 ++++++++++++++++++++++
+ Documentation/DMA-API.txt                | 38 ++++++++++--
+ arch/x86/Kconfig                         |  1 +
+ arch/x86/include/asm/dma-mapping.h       | 18 +++++-
+ arch/x86/kernel/amd_gart_64.c            | 16 ++++++
+ arch/x86/kernel/pci-calgary_64.c         | 16 ++++++
+ arch/x86/kernel/pci-nommu.c              | 30 ++++++++++
+ arch/x86/kernel/pci-swiotlb.c            |  3 +
+ arch/x86/pci/sta2x11-fixup.c             |  3 +
+ arch/x86/xen/pci-swiotlb-xen.c           |  3 +
+ drivers/iommu/amd_iommu.c                | 99 +++++++++++++++++++++++++++-----
+ drivers/iommu/intel-iommu.c              | 38 ++++++++++++
+ drivers/pci/host-bridge.c                | 19 +-----
+ drivers/pci/pci.c                        | 99 ++++++++++++++++++++++++++++++++
+ drivers/pci/search.c                     | 25 ++++++++
+ drivers/xen/swiotlb-xen.c                | 20 +++++++
+ include/asm-generic/dma-mapping-common.h | 43 ++++++++++++++
+ include/asm-generic/pci-dma-compat.h     | 23 ++++++++
+ include/linux/dma-debug.h                | 39 ++++++++++++-
+ include/linux/dma-mapping.h              | 12 ++++
+ include/linux/pci.h                      | 28 +++++++++
+ include/linux/swiotlb.h                  |  8 +++
+ include/linux/types.h                    | 13 ++++-
+ include/xen/swiotlb-xen.h                | 11 ++++
+ lib/Kconfig                              |  5 ++
+ lib/dma-debug.c                          | 86 ++++++++++++++++++++++++++-
+ lib/swiotlb.c                            | 17 ++++++
+ 27 files changed, 740 insertions(+), 42 deletions(-)
 
- drivers/pci/setup-bus.c |   82 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 51 insertions(+), 31 deletions(-)
----
- drivers/pci/setup-bus.c | 82 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 51 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c03a5d8..3797b71 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -906,7 +906,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 
- static resource_size_t calculate_memsize(resource_size_t size,
- 		resource_size_t min_size,
--		resource_size_t size1,
- 		resource_size_t old_size,
- 		resource_size_t align)
- {
-@@ -916,7 +915,7 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 		old_size = 0;
- 	if (size < old_size)
- 		size = old_size;
--	size = ALIGN(size + size1, align);
-+	size = ALIGN(size, align);
- 	return size;
- }
- 
-@@ -1179,44 +1178,45 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
--	resource_size_t min_align, align, size, size0, size1;
--	resource_size_t max_align = 0;
-+	resource_size_t min_align = 0, min_add_align = 0;
-+	resource_size_t max_align = 0, max_add_align = 0;
-+	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
- 	struct resource *b_res = find_free_bus_resource(bus,
- 					mask | IORESOURCE_PREFETCH, type);
--	resource_size_t children_add_size = 0;
--	resource_size_t children_add_align = 0;
--	resource_size_t add_align = 0;
- 	LIST_HEAD(align_test_list);
-+	LIST_HEAD(align_test_add_list);
- 
- 	if (!b_res)
- 		return -ENOSPC;
- 
--	size = 0;
--
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
--			resource_size_t r_size;
-+			resource_size_t r_size, align;
- 
- 			if (r->parent || ((r->flags & mask) != type &&
- 					  (r->flags & mask) != type2 &&
- 					  (r->flags & mask) != type3))
- 				continue;
-+
- 			r_size = resource_size(r);
-+			align = pci_resource_alignment(dev, r);
- #ifdef CONFIG_PCI_IOV
- 			/* put SRIOV requested res to the optional list */
- 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
- 					i <= PCI_IOV_RESOURCE_END) {
--				add_align = max(pci_resource_alignment(dev, r), add_align);
-+				add_to_align_test_list(&align_test_add_list,
-+							align, r_size);
- 				r->end = r->start - 1;
- 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
--				children_add_size += r_size;
-+				sum_add_size += r_size;
-+				if (align > max_add_align)
-+					max_add_align = align;
- 				continue;
- 			}
- #endif
--			align = pci_resource_alignment(dev, r);
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
-@@ -1224,33 +1224,52 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				continue;
- 			}
- 
--			if (r_size > 1)
-+			if (r_size > 1) {
- 				add_to_align_test_list(&align_test_list,
- 							align, r_size);
--			size += r_size;
--			if (align > max_align)
--				max_align = align;
-+				size += r_size;
-+				if (align > max_align)
-+					max_align = align;
-+			}
- 
- 			if (realloc_head) {
--				children_add_size += get_res_add_size(realloc_head, r);
--				children_add_align = get_res_add_align(realloc_head, r);
--				add_align = max(add_align, children_add_align);
-+				resource_size_t add_r_size, add_align;
-+
-+				add_r_size = get_res_add_size(realloc_head, r);
-+				add_align = get_res_add_align(realloc_head, r);
-+				/* no add on ? */
-+				if (add_align < align)
-+					add_align = align;
-+				add_to_align_test_list(&align_test_add_list,
-+							add_align,
-+							r_size + add_r_size);
-+				sum_add_size += r_size + add_r_size;
-+				if (add_align > max_add_align)
-+					max_add_align = add_align;
- 			}
- 		}
- 	}
- 
- 	max_align = max(max_align, window_alignment(bus, b_res->flags));
--	min_align = calculate_mem_align(&align_test_list, max_align, size,
--					window_alignment(bus, b_res->flags));
--	size0 = calculate_memsize(size, min_size, 0,
-+	if (size || min_size) {
-+		min_align = calculate_mem_align(&align_test_list, max_align,
-+				 size, window_alignment(bus, b_res->flags));
-+		size0 = calculate_memsize(size, min_size,
- 				  resource_size(b_res), min_align);
-+	}
- 	free_align_test_list(&align_test_list);
--	add_align = max(min_align, add_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_memsize(size, min_size, add_size,
--				resource_size(b_res), add_align);
-+
-+	if ((sum_add_size - size) < add_size)
-+		sum_add_size = size + add_size;
-+	if (sum_add_size > size && realloc_head) {
-+		min_add_align = calculate_mem_align(&align_test_add_list,
-+					max_add_align, sum_add_size,
-+					window_alignment(bus, b_res->flags));
-+		size1 = calculate_memsize(sum_add_size, min_size,
-+				 resource_size(b_res), min_add_align);
-+	}
-+	free_align_test_list(&align_test_add_list);
-+
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
-@@ -1262,11 +1281,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
-+		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
-+				min_add_align);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long) (size1 - size0),
--			   (unsigned long long) add_align);
-+			   (unsigned long long) min_add_align);
- 	}
- 	return 0;
- }
 -- 
-1.8.4.5
+2.5.1
 
