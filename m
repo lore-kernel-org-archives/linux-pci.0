@@ -1,71 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:52795 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751736AbbIJNAP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Sep 2015 09:00:15 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1Za1SM-0000dJ-CL
-	for linux-pci@vger.kernel.org; Thu, 10 Sep 2015 15:00:12 +0200
-Received: from 192.107.155.4 ([192.107.155.4])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 15:00:02 +0200
-Received: from faj6816 by 192.107.155.4 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 15:00:02 +0200
-To: linux-pci@vger.kernel.org
-From: Frank Jenner <faj6816@rit.edu>
-Subject: Multiple MSIs on ARM imx6q
-Date: Thu, 10 Sep 2015 12:55:10 +0000 (UTC)
-Message-ID: <loom.20150910T144529-230@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:7915 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673AbbIORLw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:52 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 14/22] swiotlb-xen: add map_peer_resource stub
+Date: Tue, 15 Sep 2015 12:10:59 -0500
+Message-ID: <1442337067-22964-15-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Add Xen stub of the map_peer_resource DMA API. Return an error to
+indicate no bounce-buffer implementation is available yet.
 
-I'm trying to develop a driver for a PCIe device which utilizes multiple
-MSIs (up to the full 32 allowable), but I cannot seem to enable more than
-one when calling pci_enable_msi_range(). The host platform uses a Freescale
-i.MX 6Quad ARM SoC and is running the "linux-fslc_4.1" kernel (from the
-Yocto project).
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+---
+ drivers/xen/swiotlb-xen.c | 20 ++++++++++++++++++++
+ include/xen/swiotlb-xen.h | 11 +++++++++++
+ 2 files changed, 31 insertions(+)
 
-With some investigation, I believe that this limitation is stemming from
-arch_setup_msi_irqs() in drivers/pci/msi.c where there is an early return
-with the comment "If an architecture wants to support multiple MSI, it needs
-to override arch_setup_msi_irqs()". There appears to be no such override for
-ARM.
-
-My first question then, is:
-
-1.) Are multiple MSIs simply not yet supported on ARM as of 4.1?
-
-Both MSIs and ARM have been around for a while, and I doubt I'm the only
-person who ever wanted to use multiple MSIs on ARM, so I can't help but
-think maybe I'm overlooking something. I ran into a similar question
-(http://lists.infradead.org/pipermail/linux-arm-kernel/2010-May/016858.html), but
-as that was 5+ years ago, I'm wondering whether the situation has since changed.
-
-Unfortunately, even if I work around the arch_setup_msi_irqs() limitation
-(which I've done by trying out patches 448141 and 448142 from
-http://patchwork.ozlabs.org/project/linux-pci/list/) and break through to
-the assign_irq() function in drivers/pci/host/pcie-designware.c, I still
-cannot allocate all 32 MSIs that my device reports.
-
-It appears that one of the bits in the msi_irq_in_use bitmap is already set
-prior to my driver requesting any MSIs, meaning there aren't enough free
-slots for the 32 MSIs I am requesting, and causing the function to fail with
--ENOSPC. Based on the output from /proc/interrupts, I believe that the PCIe
-PME service driver is consuming one of the 32 available MSI slots. Thus, my
-second question is:
-
-2.) Is it possible to leverage all 32 MSIs while still using PCIe PME?
-
-I tried using the kernel command line argument pcie_pme=nomsi, but that
-appeared to disable all MSIs for the device rather than just making the PME
-service driver use some other mechanism.
-
-Thank you.
+diff --git a/drivers/xen/swiotlb-xen.c b/drivers/xen/swiotlb-xen.c
+index 4c54932..b9879dc 100644
+--- a/drivers/xen/swiotlb-xen.c
++++ b/drivers/xen/swiotlb-xen.c
+@@ -475,6 +475,26 @@ void xen_swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
+ }
+ EXPORT_SYMBOL_GPL(xen_swiotlb_unmap_page);
+ 
++#ifdef CONFIG_HAS_DMA_P2P
++/*
++ * Maps a single region from a peer device's resource for DMA streaming. This is
++ * currently unimplemented for Xen because the only peer DMA mappings we're
++ * capable of creating are direct mappings with no explicit synchronization,
++ * e.g., there's no bounce buffer abstraction for peer mappings.
++ */
++dma_peer_addr_t xen_swiotlb_map_peer_resource(struct device *hwdev,
++					      struct device *hwpeer,
++					      struct resource *res,
++					      unsigned long offset,
++					      size_t size,
++					      enum dma_data_direction dir,
++					      struct dma_attrs *attrs)
++{
++	return DMA_ERROR_CODE;
++}
++EXPORT_SYMBOL_GPL(xen_swiotlb_map_peer_resource);
++#endif
++
+ /*
+  * Make physical memory consistent for a single streaming mode DMA translation
+  * after a transfer.
+diff --git a/include/xen/swiotlb-xen.h b/include/xen/swiotlb-xen.h
+index 8b2eb93..dc08a4f 100644
+--- a/include/xen/swiotlb-xen.h
++++ b/include/xen/swiotlb-xen.h
+@@ -24,6 +24,17 @@ extern dma_addr_t xen_swiotlb_map_page(struct device *dev, struct page *page,
+ extern void xen_swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
+ 				   size_t size, enum dma_data_direction dir,
+ 				   struct dma_attrs *attrs);
++
++#ifdef CONFIG_HAS_DMA_P2P
++extern dma_peer_addr_t xen_swiotlb_map_peer(struct device *hwdev,
++					    struct device *hwpeer,
++					    struct resource *res,
++					    unsigned long offset,
++					    size_t size,
++					    enum dma_data_direction dir,
++					    struct dma_attrs *attrs);
++#endif
++
+ extern int
+ xen_swiotlb_map_sg_attrs(struct device *hwdev, struct scatterlist *sgl,
+ 			 int nelems, enum dma_data_direction dir,
+-- 
+2.5.1
 
