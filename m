@@ -1,82 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 25 Sep 2015 08:29:29 -0500
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: [GIT PULL] PCI fixes for v4.3
-Message-ID: <20150925132929.GA27521@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:32195 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754625AbbIOJ2m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 05:28:42 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v3 0/3] PCI: designware: change dw_pcie_cfg_write() and
+ dw_pcie_cfg_read()
+Date: Tue, 15 Sep 2015 09:28:27 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1621EE27@lhreml503-mbs>
+References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
-
-These are fixes for things we merged for v4.3 (VPD, MSI, and bridge window
-management), and a new Renesas R8A7794 SoC device ID.
-
-Bjorn
-
-
-The following changes since commit 6ff33f3902c3b1c5d0db6b1e2c70b6d76fba357f:
-
-  Linux 4.3-rc1 (2015-09-12 16:35:56 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.3-fixes-1
-
-for you to fetch changes up to de24c18c0faca5ebd618e1cb87f5489745e40475:
-
-  PCI: rcar: Add R8A7794 support (2015-09-24 17:06:32 -0500)
-
-----------------------------------------------------------------
-PCI updates for v4.3:
-
-  Resource management
-    - Revert pci_read_bridge_bases() unification (Bjorn Helgaas)
-    - Clear IORESOURCE_UNSET when clipping a bridge window (Bjorn Helgaas)
-
-  MSI
-    - Fix MSI IRQ domains for VFs on virtual buses (Alex Williamson)
-
-  Renesas R-Car host bridge driver
-    - Add R8A7794 support (Sergei Shtylyov)
-
-  Miscellaneous
-    - Fix devfn for VPD access through function 0 (Alex Williamson)
-    - Use function 0 VPD only for identical functions (Alex Williamson)
-
-----------------------------------------------------------------
-Alex Williamson (3):
-      PCI/MSI: Fix MSI IRQ domains for VFs on virtual buses
-      PCI: Fix devfn for VPD access through function 0
-      PCI: Use function 0 VPD for identical functions, regular VPD for others
-
-Bjorn Helgaas (2):
-      PCI: Revert "PCI: Call pci_read_bridge_bases() from core instead of arch code"
-      PCI: Clear IORESOURCE_UNSET when clipping a bridge window
-
-Sergei Shtylyov (1):
-      PCI: rcar: Add R8A7794 support
-
- .../devicetree/bindings/pci/pci-rcar-gen2.txt      |  3 ++-
- arch/alpha/kernel/pci.c                            |  7 +++++-
- arch/frv/mb93090-mb00/pci-vdk.c                    |  2 ++
- arch/ia64/pci/pci.c                                |  5 ++--
- arch/microblaze/pci/pci-common.c                   |  9 +++++++-
- arch/mips/pci/pci.c                                |  6 +++++
- arch/mn10300/unit-asb2305/pci.c                    |  1 +
- arch/powerpc/kernel/pci-common.c                   |  8 ++++++-
- arch/x86/pci/common.c                              |  1 +
- arch/xtensa/kernel/pci.c                           |  4 ++++
- drivers/parisc/dino.c                              |  3 +++
- drivers/parisc/lba_pci.c                           |  1 +
- drivers/pci/access.c                               | 27 ++++------------------
- drivers/pci/bus.c                                  |  2 ++
- drivers/pci/host/pci-rcar-gen2.c                   |  1 +
- drivers/pci/probe.c                                | 23 +++++++++---------
- drivers/pci/quirks.c                               | 20 ++++++++++++++--
- 17 files changed, 80 insertions(+), 43 deletions(-)
+SGkgUHJhdHl1c2guLi5kbyB5b3UgdGhpbmsgdGhlIHBhdGNoc2V0IGlzIGdvb2QgdG8gYmUgYWNr
+ZWQtYnk/DQoNClRoYW5rcw0KDQpHYWINCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
+PiBGcm9tOiBHYWJyaWVsZSBQYW9sb25pDQo+IFNlbnQ6IEZyaWRheSwgU2VwdGVtYmVyIDExLCAy
+MDE1IDEwOjM4IEFNDQo+IFRvOiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBqaW5nb29oYW4xQGdtYWls
+LmNvbTsgcHJhdHl1c2guYW5hbmRAZ21haWwuY29tDQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJu
+ZWwub3JnOyBHYWJyaWVsZSBQYW9sb25pOyBXYW5nemhvdSAoQik7DQo+IFl1YW56aGljaGFuZzsg
+Wmh1ZGFjYWk7IHpoYW5nanVrdW87IHFpdXpoZW5mYTsgTGlndW96aHUgKEtlbm5ldGgpDQo+IFN1
+YmplY3Q6IFtQQVRDSCB2MyAwLzNdIFBDSTogZGVzaWdud2FyZTogY2hhbmdlIGR3X3BjaWVfY2Zn
+X3dyaXRlKCkgYW5kDQo+IGR3X3BjaWVfY2ZnX3JlYWQoKQ0KPiANCj4gRnJvbTogZ2FicmllbGUg
+cGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3ZWkuY29tPg0KPiANCj4gVGhpcyBwYXRjaHNl
+dDoNCj4gMSkgZml4ZXMgYSBidWcgaW4gc3BlYXIxM3h4IHdoZW4gY2FsbGluZyBkd19wY2llX2Nm
+Z19yZWFkIGFuZA0KPiAgICBkd19wY2llX2NmZ193cml0ZSB1c2lnbiB0aGUgcGF0Y2ggZnJvbSBQ
+cmF0eXVzaCBpbg0KPiAgICBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNS85LzcvNQ0KPiAyKSBy
+ZXdvcmtzIGR3X3BjaWVfY2ZnX3JlYWQvZHdfcGNpZV9jZmdfd3JpdGUgaW4gcGNpZS1kZXNpZ253
+YXJlLmMgaW4NCj4gICAgb3JkZXIgdG8gbWFrZSBpdCBlYXNpZXIgZm9yIGNhbGxlcnMgdG8gcGFz
+cyBpbnB1dCBwYXJhbWV0ZXJzOw0KPiAzKSBhZGRzIHNhbml0eSBjaGVja3MgaW4gZHdfcGNpZV9j
+ZmdfcmVhZC9kd19wY2llX2NmZ193cml0ZSB0byBtYWtlDQo+ICAgIHN1cmUgdGhlIFBDSSBoZWFk
+ZXIgb2Zmc2V0IGRvZXMgbm90IGNvbmZsaWN0IHdpdGggdGhlIHNpemUgb2YNCj4gICAgdGhlIHJl
+YWQvd3JpdHRlbiBmaWVsZC4NCj4gDQo+IENoYW5nZSBmcm9tIHYyOg0KPiAgICBSZXBsYWNlZCBw
+YXRjaCAxLzMgd2l0aCBQcmF0eXVzaCBvbmUgaW4NCj4gICAgaHR0cHM6Ly9sa21sLm9yZy9sa21s
+LzIwMTUvOS83LzUNCj4gDQo+IGdhYnJpZWxlIHBhb2xvbmkgKDMpOg0KPiAgIFBDSWU6IFNQRUFy
+MTN4eDogZml4IGR3X3BjaWVfY2ZnX3JlYWQvd3JpdGUoKSB1c2FnZQ0KPiAgIFBDSTogZGVzaWdu
+d2FyZTogY2hhbmdlIGR3X3BjaWVfY2ZnX3dyaXRlKCkgYW5kICBkd19wY2llX2NmZ19yZWFkKCkN
+Cj4gICBQQ0k6IGRlc2lnbndhcmU6IGFkZCBzYW5pdHkgY2hlY2tzIG9uIHRoZSBoZWFkZXIgb2Zm
+c2V0IGluDQo+ICAgICBkd19wY2llX2NmZ19yZWFkIGFuZCBkd19wY2llX2NmZ193cml0ZQ0KPiAN
+Cj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWV4eW5vcy5jICAgICAgfCAgNSArKy0tDQo+ICBkcml2
+ZXJzL3BjaS9ob3N0L3BjaS1rZXlzdG9uZS1kdy5jIHwgIDQgKystLQ0KPiAgZHJpdmVycy9wY2kv
+aG9zdC9wY2llLWRlc2lnbndhcmUuYyB8IDQ3ICsrKysrKysrKysrKysrKysrKysrKysrLS0tLS0t
+LQ0KPiAtLS0tLS0tLQ0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2llLXNwZWFyMTN4eC5jICB8IDE4
+ICsrKysrKystLS0tLS0tLQ0KPiAgNCBmaWxlcyBjaGFuZ2VkLCA0MSBpbnNlcnRpb25zKCspLCAz
+MyBkZWxldGlvbnMoLSkNCj4gDQo+IC0tDQo+IDEuOS4xDQoNCg==
