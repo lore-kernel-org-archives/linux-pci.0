@@ -1,275 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:37021 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965334AbbI2Nuq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 09:50:46 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v5 2/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-Date: Tue, 29 Sep 2015 21:57:21 +0800
-Message-ID: <1443535042-242400-3-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1443535042-242400-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1443535042-242400-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:13374 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbbIORL3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:29 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 04/22] DMA-API: Introduce dma_(un)map_peer_resource
+Date: Tue, 15 Sep 2015 12:10:49 -0500
+Message-ID: <1442337067-22964-5-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Add functions to DMA-map and -unmap a peer device's resource for a given
+device. This will allow devices to DMA-map, for example, another device's
+BAR region on PCI to enable peer-to-peer transactions.
 
-This patch changes the implementation of dw_pcie_cfg_read() and
-dw_pcie_cfg_write() to improve the function usage from the callers
-perspective.
-Currently the callers are obliged to pass the 32bit aligned address
-of the register that contains the field of the PCI header that they
-want to read/write; also they have to pass the offset of the field
-in that register. This is quite tricky to use as the callers are
-obliged to sum the PCI header base address to the field offset
-masked to retrieve the 32b aligned register address.
+Guard these new functions behind CONFIG_HAS_DMA_P2P.
 
-With the new API the callers have to pass directly the address of the
-field they intend to read/write in the PCI header: so once they have
-the base address of the PCI header they will just sum up the offset
-of the field they intend to access and pass the sum to the functions'
-addr field.
-
-This patch also changes the implementation of dw_pcie_cfg_read to
-make it symmetric with dw_pcie_cfg_write.
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Will Davis <wdavis@nvidia.com>
 ---
- drivers/pci/host/pci-exynos.c      |  5 ++---
- drivers/pci/host/pci-keystone-dw.c |  4 ++--
- drivers/pci/host/pcie-designware.c | 36 ++++++++++++++++--------------------
- drivers/pci/host/pcie-designware.h |  4 ++--
- drivers/pci/host/pcie-spear13xx.c  | 18 ++++++++----------
- 5 files changed, 30 insertions(+), 37 deletions(-)
+ include/asm-generic/dma-mapping-common.h | 43 ++++++++++++++++++++++++++++++++
+ include/linux/dma-mapping.h              | 12 +++++++++
+ 2 files changed, 55 insertions(+)
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index f9f468d..01095e1 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -454,7 +454,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_r_mode(pp, true);
--	ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
-+	ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
- 	exynos_pcie_sideband_dbi_r_mode(pp, false);
- 	return ret;
- }
-@@ -465,8 +465,7 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_w_mode(pp, true);
--	ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
--			where, size, val);
-+	ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
- 	exynos_pcie_sideband_dbi_w_mode(pp, false);
- 	return ret;
- }
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index e71da99..51789b7 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -398,7 +398,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
- 
--	return dw_pcie_cfg_read(addr + (where & ~0x3), where, size, val);
-+	return dw_pcie_cfg_read(addr + where, size, val);
+diff --git a/include/asm-generic/dma-mapping-common.h b/include/asm-generic/dma-mapping-common.h
+index 940d5ec..45eec17 100644
+--- a/include/asm-generic/dma-mapping-common.h
++++ b/include/asm-generic/dma-mapping-common.h
+@@ -73,6 +73,42 @@ static inline void dma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg
+ 		ops->unmap_sg(dev, sg, nents, dir, attrs);
  }
  
- int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-@@ -410,7 +410,7 @@ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
++#ifdef CONFIG_HAS_DMA_P2P
++static inline dma_peer_addr_t dma_map_peer_resource_attrs(struct device *dev,
++							  struct device *peer,
++							  struct resource *res,
++							  size_t offset,
++							  size_t size,
++							  enum dma_data_direction dir,
++							  struct dma_attrs *attrs)
++{
++	struct dma_map_ops *ops = get_dma_ops(dev);
++	dma_peer_addr_t addr;
++
++	BUG_ON(!valid_dma_direction(dir));
++	BUG_ON(ops->map_peer_resource == NULL);
++	addr = ops->map_peer_resource(dev, peer, res, offset, size, dir,
++				      attrs);
++	debug_dma_map_peer_resource(dev, peer, res, offset, size, dir, addr);
++
++	return addr;
++}
++
++static inline void dma_unmap_peer_resource_attrs(struct device *dev,
++						 dma_peer_addr_t addr,
++						 size_t size,
++						 enum dma_data_direction dir,
++						 struct dma_attrs *attrs)
++{
++	struct dma_map_ops *ops = get_dma_ops(dev);
++
++	BUG_ON(!valid_dma_direction(dir));
++	if (ops->unmap_peer_resource)
++		ops->unmap_peer_resource(dev, addr, size, dir, attrs);
++	debug_dma_unmap_peer_resource(dev, addr, size, dir);
++}
++#endif
++
+ static inline dma_addr_t dma_map_page(struct device *dev, struct page *page,
+ 				      size_t offset, size_t size,
+ 				      enum dma_data_direction dir)
+@@ -181,6 +217,13 @@ dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
+ #define dma_map_sg(d, s, n, r) dma_map_sg_attrs(d, s, n, r, NULL)
+ #define dma_unmap_sg(d, s, n, r) dma_unmap_sg_attrs(d, s, n, r, NULL)
  
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
++#ifdef CONFIG_HAS_DMA_P2P
++#define dma_map_peer_resource(d, p, e, o, s, r) \
++	dma_map_peer_resource_attrs(d, p, e, o, s, r, NULL)
++#define dma_unmap_peer_resource(d, a, s, r) \
++	dma_unmap_peer_resource_attrs(d, a, s, r, NULL)
++#endif
++
+ extern int dma_common_mmap(struct device *dev, struct vm_area_struct *vma,
+ 			   void *cpu_addr, dma_addr_t dma_addr, size_t size);
  
--	return dw_pcie_cfg_write(addr + (where & ~0x3), where, size, val);
-+	return dw_pcie_cfg_write(addr + where, size, val);
- }
- 
- /**
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 52aa6e3..d771fa5 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -80,28 +80,28 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
- 	return sys->private_data;
- }
- 
--int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
-+int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- {
--	*val = readl(addr);
--
--	if (size == 1)
--		*val = (*val >> (8 * (where & 3))) & 0xff;
-+	if (size == 4)
-+		*val = readl(addr);
- 	else if (size == 2)
--		*val = (*val >> (8 * (where & 3))) & 0xffff;
--	else if (size != 4)
-+		*val = readw(addr);
-+	else if (size == 1)
-+		*val = readb(addr);
-+	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
-+int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
- {
- 	if (size == 4)
- 		writel(val, addr);
- 	else if (size == 2)
--		writew(val, addr + (where & 2));
-+		writew(val, addr);
- 	else if (size == 1)
--		writeb(val, addr + (where & 3));
-+		writeb(val, addr);
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
-@@ -132,8 +132,7 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->rd_own_conf)
- 		ret = pp->ops->rd_own_conf(pp, where, size, val);
- 	else
--		ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
--				size, val);
-+		ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
- 
- 	return ret;
- }
-@@ -146,8 +145,7 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->wr_own_conf)
- 		ret = pp->ops->wr_own_conf(pp, where, size, val);
- 	else
--		ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where,
--				size, val);
-+		ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
- 
- 	return ret;
- }
-@@ -539,13 +537,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 *val)
- {
- 	int ret, type;
--	u32 address, busdev, cfg_size;
-+	u32 busdev, cfg_size;
- 	u64 cpu_addr;
- 	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
--	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
-@@ -562,7 +559,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
-+	ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
- 				  pp->io_bus_addr, pp->io_size);
-@@ -574,13 +571,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 val)
- {
- 	int ret, type;
--	u32 address, busdev, cfg_size;
-+	u32 busdev, cfg_size;
- 	u64 cpu_addr;
- 	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
--	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
-@@ -597,7 +593,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
-+	ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
- 				  pp->io_bus_addr, pp->io_size);
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index d0bbd27..0b29194 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -76,8 +76,8 @@ struct pcie_host_ops {
- 	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
- };
- 
--int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val);
--int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val);
-+int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
-+int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 0754ea3..b95b756 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -163,14 +163,12 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
--				0, 2, &val);
-+	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
--				0, 2, val);
-+	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, val);
- 
--	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
--	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 0x104A);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_DEVICE_ID, 2, 0xCD80);
- 
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index ac07ff0..7b8fddc 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -34,6 +34,18 @@ struct dma_map_ops {
+ 	void (*unmap_page)(struct device *dev, dma_addr_t dma_handle,
+ 			   size_t size, enum dma_data_direction dir,
+ 			   struct dma_attrs *attrs);
++#ifdef CONFIG_HAS_DMA_P2P
++	dma_peer_addr_t (*map_peer_resource)(struct device *dev,
++					     struct device *peer,
++					     struct resource *res,
++					     unsigned long offset, size_t size,
++					     enum dma_data_direction dir,
++					     struct dma_attrs *attrs);
++	void (*unmap_peer_resource)(struct device *dev,
++				    dma_peer_addr_t dma_handle,
++				    size_t size, enum dma_data_direction dir,
++				    struct dma_attrs *attrs);
++#endif
  	/*
- 	 * if is_gen1 is set then handle it, so that some buggy card
-@@ -178,21 +176,21 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
- 		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
--					0, 4, &val);
-+					4, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
- 			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--						PCI_EXP_LNKCAP, 0, 4, val);
-+				PCI_EXP_LNKCAP, 4, val);
- 		}
- 
- 		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
--					0, 2, &val);
-+					2, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
- 			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--						PCI_EXP_LNKCTL2, 0, 2, val);
-+					PCI_EXP_LNKCTL2, 2, val);
- 		}
- 	}
- 
+ 	 * map_sg returns 0 on error and a value > 0 on success.
+ 	 * It should never return a value < 0.
 -- 
-1.9.1
+2.5.1
 
