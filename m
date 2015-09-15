@@ -1,125 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 36/53] PCI: Move ISA io port align out of calculate_iosize()
-Date: Wed, 30 Sep 2015 22:53:10 -0700
-Message-Id: <1443678807-786-37-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:52382 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751576AbbIOSkD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Sep 2015 14:40:03 -0400
+Date: Tue, 15 Sep 2015 19:40:03 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH] PCI: generic: Add support for Cavium ThunderX PCIe root
+ complexes.
+Message-ID: <20150915184003.GS31157@arm.com>
+References: <1442016439-7636-1-git-send-email-ddaney.cavm@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442016439-7636-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to move ISA io port align out of calculate_iosize(),
-so we could unify calculate_iosize and calculate_memsize later.
+On Sat, Sep 12, 2015 at 01:07:19AM +0100, David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> The config space for external PCIe root complexes on some Cavium
+> ThunderX SoCs is very similar to CAM and ECAM, but differs in the
+> shift values that have to be applied to the bus and devfn numbers to
+> compose that address window offset.  These root complexes also have
+> the interesting property that there is no root bridge, so the standard
+> manner of limiting scanning to only the first device doesn't work.  We
+> can use the standard pci-host-generic driver if we make a minor
+> addition to handle these differences, so we...
+> 
+> Add a mapping function for ThunderX PCIe root complexes with a bus
+> shift of 24 and devfn shift of 16.  Ignore accesses for devices other
+> than the first device on the primary bus.
+> 
+> Document the whole thing in devicetree/bindings/pci/host-generic-pci.txt
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+> 
+> This patch depends on the set I recently sent:
+> https://lkml.org/lkml/2015/9/11/764
+> 
+>  .../devicetree/bindings/pci/host-generic-pci.txt   |  5 +++-
+>  drivers/pci/host/pci-host-generic.c                | 29 ++++++++++++++++++++++
+>  2 files changed, 33 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> index daa6942..51cc1d1 100644
+> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> @@ -16,7 +16,10 @@ Properties of the host controller node:
+>  
+>  - compatible     : Must be "pci-host-cam-generic" or "pci-host-ecam-generic"
+>                     depending on the layout of configuration space (CAM vs
+> -                   ECAM respectively).
+> +                   ECAM respectively). Also supported is
+> +                   "cavium,pci-host-thunder-pem" which has bus:devfn:reg in
+> +                   bits 24:16:0 respectively of the PCI config space address
+> +                   window.
 
-That extra aligning or offset is to work around ISA devices:
-When one bridge have several children devices, and every device
-has several io port resources and resource size < 0x400.
-We need to check size, and add extra size to make sure bit8/9
-to be zero.
+It's probably easier to read and maintain if we reword this as a list of
+property + comment rather than continue the freeform text.
 
-Also need to apply same checking for optional size path.
+Other than that, I'm fine with special-casing your accessors if need-be.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7cd6d32..a446fc3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1076,11 +1076,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
--	/* To be fixed in 2.5: we should have sort of HAVE_ISA
--	   flag in the struct pci_bus. */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
- 	size = ALIGN(size + size1, align);
- 	if (size < old_size)
- 		size = old_size;
-@@ -1134,6 +1129,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
- 	return max(align, arch_align);
- }
- 
-+static resource_size_t size_aligned_for_isa(resource_size_t size)
-+{
-+	/*
-+	 * To be fixed in 2.5: we should have sort of HAVE_ISA
-+	 *  flag in the struct pci_bus.
-+	 */
-+#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
-+	size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+#endif
-+	return size;
-+}
-+
- /**
-  * pbus_size_io() - size the io window of a given bus
-  *
-@@ -1151,11 +1158,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_sum_size = 0;
--	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
--	resource_size_t children_add_size = 0;
-+	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
- 	resource_size_t min_align, align;
- 
- 	if (!b_res)
-@@ -1172,7 +1178,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
--			unsigned long r_size;
-+			unsigned long r_size, r_add_size;
- 
- 			if (r->parent || !(r->flags & IORESOURCE_IO))
- 				continue;
-@@ -1188,18 +1194,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			if (align > min_align)
- 				min_align = align;
- 
--			if (realloc_head)
--				children_add_size += get_res_add_size(realloc_head, r);
-+			if (realloc_head) {
-+				r_add_size = get_res_add_size(realloc_head, r);
-+				r_add_size += r_size;
-+				if (r_add_size < 0x400)
-+					/* Might be re-aligned for ISA */
-+					sum_add_size += r_add_size;
-+				else
-+					sum_add_size1 += r_add_size;
-+			}
- 		}
- 	}
- 
-+	size = size_aligned_for_isa(size);
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	sum_add_size = children_add_size + size + size1;
-+	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(size, min_size, sum_add_size - size,
-+		calculate_iosize(sum_add_size, min_size, 0,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
--- 
-1.8.4.5
-
+Will
