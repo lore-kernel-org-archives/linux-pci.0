@@ -1,116 +1,192 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:35569 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003AbbISIUe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Sep 2015 04:20:34 -0400
-MIME-Version: 1.0
-Date: Sat, 19 Sep 2015 10:20:33 +0200
-Message-ID: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
-Subject: PCIe bus (re-)numbering
-From: Ruud <netwerkforens@gmail.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:47267 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751573AbbIOSTN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Sep 2015 14:19:13 -0400
+Message-ID: <1442341152.23936.122.camel@redhat.com>
+Subject: Re: [PATCH V4 1/2] pci: Add dev_flags bit to access VPD through
+ function 0
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Mark D Rustad <mark.d.rustad@intel.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+	Myron Stowe <myron.stowe@redhat.com>
+Date: Tue, 15 Sep 2015 12:19:12 -0600
+In-Reply-To: <20150713184001.19985.64867.stgit@mdrustad-wks.jf.intel.com>
+References: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
+	 <20150713184001.19985.64867.stgit@mdrustad-wks.jf.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello all,
+On Mon, 2015-07-13 at 11:40 -0700, Mark D Rustad wrote:
+> From: Mark Rustad <mark.d.rustad@intel.com>
+> 
+> Add a dev_flags bit, PCI_DEV_FLAGS_VPD_REF_F0, to access VPD through
+> function 0 to provide VPD access on other functions. This is for
+> hardware devices that provide copies of the same VPD capability
+> registers in multiple functions. Because the kernel expects that
+> each function has its own registers, both the locking and the state
+> tracking are affected by VPD accesses to different functions.
+> 
+> On such devices for example, if a VPD write is performed on function
+> 0, *any* later attempt to read VPD from any other function of that
+> device will hang. This has to do with how the kernel tracks the
+> expected value of the F bit per function.
+> 
+> Concurrent accesses to different functions of the same device can
+> not only hang but also corrupt both read and write VPD data.
+> 
+> When hangs occur, typically the error message:
+> 
+> vpd r/w failed.  This is likely a firmware bug on this device.
+> 
+> will be seen.
+> 
+> Never set this bit on function 0 or there will be an infinite recursion.
+> 
+> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+> ---
+> Changes in V2:
+> - Corrected spelling in log message
+> - Added checks to see that the referenced function 0 is reasonable
+> Changes in V3:
+> - Don't leak a device reference
+> - Check that function 0 has VPD
+> - Make a helper for the function 0 checks
+> - Do multifunction check in the quirk
+> Changes in V4:
+> - Provide a much more detailed explanation in the commit log
+> ---
+>  drivers/pci/access.c |   61 +++++++++++++++++++++++++++++++++++++++++++++++++-
+>  include/linux/pci.h  |    2 ++
+>  2 files changed, 62 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index d9b64a175990..b965c12168b7 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -439,6 +439,56 @@ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
+>  	.release = pci_vpd_pci22_release,
+>  };
+>  
+> +static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
+> +			       void *arg)
+> +{
+> +	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
+> +	ssize_t ret;
+> +
+> +	if (!tdev)
+> +		return -ENODEV;
+> +
+> +	ret = pci_read_vpd(tdev, pos, count, arg);
+> +	pci_dev_put(tdev);
+> +	return ret;
+> +}
+> +
+> +static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
+> +				const void *arg)
+> +{
+> +	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
+> +	ssize_t ret;
+> +
+> +	if (!tdev)
+> +		return -ENODEV;
+> +
+> +	ret = pci_write_vpd(tdev, pos, count, arg);
+> +	pci_dev_put(tdev);
+> +	return ret;
+> +}
+> +
+> +static const struct pci_vpd_ops pci_vpd_f0_ops = {
+> +	.read = pci_vpd_f0_read,
+> +	.write = pci_vpd_f0_write,
+> +	.release = pci_vpd_pci22_release,
+> +};
+> +
+> +static int pci_vpd_f0_dev_check(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *tdev = pci_get_slot(dev->bus, PCI_SLOT(dev->devfn));
+> +	int ret = 0;
+> +
+> +	if (!tdev)
+> +		return -ENODEV;
+> +	if (!tdev->vpd || !tdev->multifunction ||
+> +	    dev->class != tdev->class || dev->vendor != tdev->vendor ||
+> +	    dev->device != tdev->device)
+> +		ret = -ENODEV;
+> +
+> +	pci_dev_put(tdev);
+> +	return ret;
+> +}
+> +
+>  int pci_vpd_pci22_init(struct pci_dev *dev)
+>  {
+>  	struct pci_vpd_pci22 *vpd;
+> @@ -447,12 +497,21 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+>  	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
+>  	if (!cap)
+>  		return -ENODEV;
+> +	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
+> +		int ret = pci_vpd_f0_dev_check(dev);
+> +
+> +		if (ret)
+> +			return ret;
+> +	}
 
-Not a patch, not a complaint: a start of a discussion on PCIe bus
-renumbering and bus numbering in general..
 
-For bigger PCIe chassis I notice it contains lots of levels of PCIe
-switches e.g. as per
-commit lopg https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/commit/?h=for-pci-v4.3-rc1&id=d3934f379e3a35aed05b53aeb49b5fb872c55aa1
+In addition to the (PCI_SLOT() != devfn) issue, I'm concerned about
+topologies like we see on Skylake.  IIRC, the integrated NIC appears at
+something like 00:1f.6.  I don't know if that specific NIC has VPD, nor
+am I sure it really matter because another example or some future
+version might.  So we'll set the PCI_DEV_FLAGS_VPD_REF_F0 because we do
+so for all (PCI_FUNC() != 0) Intel NICs, we'll call
+pci_vpd_f0_dev_check(), which will error because function 0 has a
+different class code and device ID, so we return error and if VPD exists
+on the device, it's now inaccessible.
 
-Imagine this kind of tree is behind a hot-plug interface at
-[1c.0-[01-10]]  and is plugged in later. Like
+I thought there was talk about whitelisting anything on the root bus to
+avoid strange root complex integrated devices (and perhaps avoid the
+general case for assigned devices within a VM), but I don't see anything
+like that here.
 
-pci tree:
--[0000:00]-+-00.0
-           +-1c.0-[01-10]--+-00.0-[02-10]--+-01.0-[03]----00.0  PLX
-Technology, Inc. Device 87b1
-           |               |
-+-02.0-[04-09]--+-00.0-[05-09]--+-01.0-[06]----00.0  PLX Technology,
-Inc. Device 87b1
-           |               |               |               |
-    +-02.0-[07]----00.0  Broadcom Corporation Device 8650
-           |               |               |               |
-    +-03.0-[08]--
-           |               |               |               |
-    \-04.0-[09]----00.0  Altera Corporation Device 0201
-           |               |               |               +-00.1  PLX
-Technology, Inc. Device 87d0
-           |               |               |               +-00.2  PLX
-Technology, Inc. Device 87d0
-           |               |               |               +-00.3  PLX
-Technology, Inc. Device 87d0
-           |               |               |               \-00.4  PLX
-Technology, Inc. Device 87d0
-           |               |
-+-03.0-[0a-0f]--+-00.0-[0b-0f]--+-01.0-[0c]----00.0  PLX Technology,
-Inc. Device 87b1
-           |               |               |               |
-    +-02.0-[0d]----00.0  Broadcom Corporation Device 8650
-           |               |               |               |
-    +-03.0-[0e]--
-           |               |               |               |
-    \-04.0-[0f]----00.0  Altera Corporation Device 0201
-           |               |               |               +-00.1  PLX
-Technology, Inc. Device 87d0
-           |               |               |               +-00.2  PLX
-Technology, Inc. Device 87d0
-           |               |               |               +-00.3  PLX
-Technology, Inc. Device 87d0
-           |               |               |               \-00.4  PLX
-Technology, Inc. Device 87d0
-           |               |               \-04.0-[10]--
-           |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               \-00.4  PLX Technology, Inc. Device 87d0
-           +-1c.3-[11]----00.0
+Perhaps instead of failing and hiding VPD we should fail, clear the
+flag, and allow normal access.  Thanks,
 
-The current algorithm seems to allocate 8 extra busnumbers at the
-hotplug switch, but clearly 8 is not sufficient for the whole tree
-when it is discovered after initial numbering has been assigned. As
-the PCIe routing requires the bus numbers to be consecutive as it
-describes ranges there are not that many allocation strategies for bus
-numbers. It is impossible to predict at boot-time which switch will
-require lots of busses and which do not.
+Alex
 
-A solution is static assignment (e.g. as described by
-http://article.gmane.org/gmane.linux.kernel.pci/45212), but it seems
-not convenient to me.
+>  	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
+>  	if (!vpd)
+>  		return -ENOMEM;
+>  
+>  	vpd->base.len = PCI_VPD_PCI22_SIZE;
+> -	vpd->base.ops = &pci_vpd_pci22_ops;
+> +	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
+> +		vpd->base.ops = &pci_vpd_f0_ops;
+> +	else
+> +		vpd->base.ops = &pci_vpd_pci22_ops;
+>  	mutex_init(&vpd->lock);
+>  	vpd->cap = cap;
+>  	vpd->busy = false;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8a0321a8fb59..8edb125db13a 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -180,6 +180,8 @@ enum pci_dev_flags {
+>  	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
+>  	/* Do not use PM reset even if device advertises NoSoftRst- */
+>  	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
+> +	/* Get VPD from function 0 VPD */
+> +	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
+>  };
+>  
+>  enum pci_irq_reroute_variant {
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I got the impression the most elegant way is to renumber, but at the
-same time I doubt. Would the BIOS become confused? Currently the
-kernel becomes confused as it renumbers the ethernet interfaces when
-the bus-numbers change. Several drivers seem to be locked to the
-device by its geographical routing (aka bus << 16 | device << 11 |
-function << 8 ). I got the impression that this is the root of the
-evil as the bus need not be as constant as expected.
 
-E.g. the Broadcom device at bus 07 device 00 function 0 could just as
-well be at bus 08 device 00 function 0 when an extra busnumber is
-assigned to another switch.
 
-Would it be an idea to describe the geographical location for this
-device as the full chain..
-[0000:00].[1c.0].[00.0].[02.0].[00.0].[02.0].[00.0]. This would be
-invariant for busnumbering. Device drivers if in need for the bus
-number (why would they in the first place?) could determine the actual
-bus number at that moment in time. As a result ethernet interface
-renaming would perhaps also not happen?
-
-I am not that deep in the material yet (in respect to the kernel
-code). But I got the feeling that by allowing renumbering the
-assignment procedure can be greatly simplified and become more robust
-for big PCIe configs... probably moving complexity to other parts like
-ethernet naming.
-
-What does the community think?
-
-Best regards,
-
-Ruud
