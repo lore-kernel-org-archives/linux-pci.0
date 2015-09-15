@@ -1,56 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0095.outbound.protection.outlook.com ([65.55.169.95]:35136
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753738AbbIAKa3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Sep 2015 06:30:29 -0400
-From: Ley Foon Tan <lftan@altera.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>
-Subject: [PATCH v6 1/6] arm: add msi.h to Kbuild
-Date: Tue, 1 Sep 2015 18:30:03 +0800
-Message-ID: <1441103408-8433-2-git-send-email-lftan@altera.com>
-In-Reply-To: <1441103408-8433-1-git-send-email-lftan@altera.com>
-References: <1441103408-8433-1-git-send-email-lftan@altera.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:51041 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750965AbbIOTEV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Sep 2015 15:04:21 -0400
+Message-ID: <1442343860.23936.141.camel@redhat.com>
+Subject: Re: [PATCH V4 1/2] pci: Add dev_flags bit to access VPD through
+ function 0
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Rustad, Mark D" <mark.d.rustad@intel.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Myron Stowe <myron.stowe@redhat.com>
+Date: Tue, 15 Sep 2015 13:04:20 -0600
+In-Reply-To: <F17F8A11-FB09-4131-A404-DE106F3944BB@intel.com>
+References: <20150713183821.19985.52157.stgit@mdrustad-wks.jf.intel.com>
+	 <20150713184001.19985.64867.stgit@mdrustad-wks.jf.intel.com>
+	 <1442341152.23936.122.camel@redhat.com>
+	 <F17F8A11-FB09-4131-A404-DE106F3944BB@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Include asm-generic/msi.h to support CONFIG_GENERIC_MSI_IRQ_DOMAIN.
-This to fix compilation error:
-"include/linux/msi.h:123:21: fatal error: asm/msi.h:
-No such file or directory"
+On Tue, 2015-09-15 at 18:39 +0000, Rustad, Mark D wrote:
+> > On Sep 15, 2015, at 11:19 AM, Alex Williamson <alex.williamson@redhat.com> wrote:
+> > 
+> > In addition to the (PCI_SLOT() != devfn) issue, I'm concerned about
+> > topologies like we see on Skylake.  IIRC, the integrated NIC appears at
+> > something like 00:1f.6.  I don't know if that specific NIC has VPD, nor
+> > am I sure it really matter because another example or some future
+> > version might.  So we'll set the PCI_DEV_FLAGS_VPD_REF_F0 because we do
+> > so for all (PCI_FUNC() != 0) Intel NICs, we'll call
+> > pci_vpd_f0_dev_check(), which will error because function 0 has a
+> > different class code and device ID, so we return error and if VPD exists
+> > on the device, it's now inaccessible.
+> 
+> Yes, that is exactly what would happen.
+> 
+> > I thought there was talk about whitelisting anything on the root bus to
+> > avoid strange root complex integrated devices (and perhaps avoid the
+> > general case for assigned devices within a VM), but I don't see anything
+> > like that here.
+> 
+> I hadn't heard that talk, but I'm not on the PCI list and I guess I
+> wasn't copied.
+> 
+> > Perhaps instead of failing and hiding VPD we should fail, clear the
+> > flag, and allow normal access.  Thanks,
+> 
+> Because the purpose of VPD is to hold information about the device, I
+> would suggest that VPD should never be provided for an embedded
+> network device, but rather for the device as a whole. So while there
+> may well be VPD for an SOC, that VPD should not be associated with one
+> of its embedded devices, but rather something more appropriate for the
+> device as a whole. And attaching VPD to a whole bunch of internal
+> devices would just be madness.
 
-Signed-off-by: Ley Foon Tan <lftan@altera.com>
----
- arch/arm/include/asm/Kbuild | 1 +
- 1 file changed, 1 insertion(+)
+FRU-type information is only one of the use cases of VPD, the spec also
+defines (PCI rev 3.0, 6.4):
 
-diff --git a/arch/arm/include/asm/Kbuild b/arch/arm/include/asm/Kbuild
-index 30b3bc1..362b053 100644
---- a/arch/arm/include/asm/Kbuild
-+++ b/arch/arm/include/asm/Kbuild
-@@ -15,6 +15,7 @@ generic-y += local64.h
- generic-y += mcs_spinlock.h
- generic-y += mm-arch-hooks.h
- generic-y += msgbuf.h
-+generic-y += msi.h
- generic-y += param.h
- generic-y += parport.h
- generic-y += poll.h
--- 
-1.8.2.1
+        ... a mechanism for storing information such as performance and
+        failure data on the device being monitored.
+
+That information could very much be function specific.
+
+> So I understand the concern, but I don't think that it should really
+> happen in real systems. I did think about this case when I was working
+> on the patches. A networking device should really only have VPD when
+> it is its own physical device, such as a NIC.
+> 
+
+When I was looking at whether we should provide VPD access of an
+assigned device at all, I ran across this interesting statement in the
+PCI spec (rev 3.0, I.3.1.1):
+
+        CP Extended Capability
+
+        This field allows a new capability to be identified in the VPD
+        area. Since dynamic control/status cannot be placed in VPD, the
+        data for this field identifies where, in the device’s memory or
+        I/O address space, the control/status registers for the
+        capability can be found. Location of the control/status
+        registers is identified by providing the index (a value between
+        0 and 5) of the Base Address register that defines the address
+        range that contains the registers, and the offset within that
+        Base Address register range where the control/status registers
+        reside. The data area for this field is four bytes long. The
+        first byte contains the ID of the extended capability. The
+        second byte contains the index (zero based) of the Base Address
+        register used. The next two bytes contain the offset (in
+        little-endian order) within that address range where the
+        control/status registers defined for that capability reside.
+
+Again, this sounds like function specific data, and both here and above,
+blocking access to VPD could affect the functionality of drivers.  It
+may be the case that Intel would find this use to be madness, but
+there's no PCI spec requirement that separate functions are in any way
+similar and we're looking at an interface that may be used by non-Intel
+devices as well.  Thanks,
+
+Alex
 
