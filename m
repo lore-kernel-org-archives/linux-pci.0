@@ -1,80 +1,114 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 23 Sep 2015 20:47:53 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:49534 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816AbbIOMsw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 08:48:52 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <ddaney@caviumnetworks.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 4/5] PCI: generic: Correct, and avoid overflow, in
- bus_max calculation.
-Message-ID: <20150923194753.GA7356@arm.com>
-References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
- <3751968.n8LRgots8n@wuerfel>
- <20150923193545.GZ7356@arm.com>
- <1707525.QvfFzUYq4E@wuerfel>
+	<devicetree@vger.kernel.org>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v9 2/6] ARM/PCI: remove align_resource in pci_sys_data
+Date: Tue, 15 Sep 2015 20:49:17 +0800
+Message-ID: <1442321361-174300-3-git-send-email-wangzhou1@hisilicon.com>
+In-Reply-To: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
+References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1707525.QvfFzUYq4E@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 08:39:27PM +0100, Arnd Bergmann wrote:
-> On Wednesday 23 September 2015 20:35:45 Will Deacon wrote:
-> > On Wed, Sep 23, 2015 at 08:27:41PM +0100, Arnd Bergmann wrote:
-> > > On Wednesday 23 September 2015 11:21:56 David Daney wrote:
-> > > > >>
-> > > > >>      /* Limit the bus-range to fit within reg */
-> > > > >> -    bus_max = pci->cfg.bus_range->start +
-> > > > >> -              (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> > > > >> +    bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> > > > >> +    if (bus_max > 255)
-> > > > >> +            bus_max = 255;
-> > > > >
-> > > > > I still don't understand the need for this part. If the cfg space is bigger
-> > > > > than bus_max, isn't that simply an invalid resource? Given that the resource
-> > > > > could be broken in other ways too, this check feels more like a specific
-> > > > > workaround rather than generally useful code.
-> > > > 
-> > > > Imagine...
-> > > > 
-> > > >    bus-range [0x80 .. 0xff], this requires a cfg.res that will cover the 
-> > > > entire range of 0..0xff.
-> > > > 
-> > > >    according to the calculations above, (resource_size(&pci->cfg.res) >> 
-> > > > pci->cfg.ops.bus_shift) - 1 will have a value of 0xff, so...
-> > > 
-> > > Extending the computation to 32 bit seems fine, but I'd rather warn loudly
-> > > if the bus range does not fit within the registers.
-> > > 
-> > > Also note that the computation is already correct with my interpretation
-> > > of the reg property.
-> > 
-> > From what Lorenzo was saying, ACPI shares the interpretation that David is
-> > implementing here and, given that the DT version seems to be subjective,
-> > aligning this reg property with MMCFG seems to make sense.
-> 
-> We should then make it very clear in the binding that the driver
-> is not allowed to actually map the registers for the buses outside
-> of the bus-range, as that is highly unusual.
-> 
-> We would also need a special exception for this if we ever get to
-> implement the DT source checker that we have been talking about for
-> years, as the reg property might then overlap with a property from
-> another device.
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Completely agreed. Having a base that isn't actually safe to map is horrible
-and should be called out.
+This patch is needed in order to unify the PCIe designware framework for ARM and
+ARM64 architectures. In the PCIe designware unification process we are calling
+pci_create_root_bus() passing a "sysdata" parameter that is the same for both
+ARM and ARM64 and is of type "struct pcie_port*". In the ARM case this will
+cause a problem with the function pcibios_align_resource(); in fact this will
+cast "dev->sysdata" to "struct pci_sys_data*", whereas designware had passed a
+"struct pcie_port*" pointer.
 
-Will
+This patch solves the issue by removing "align_resource" from "pci_sys_data"
+struct and defining a static global function pointer in "bios32.c"
+
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ arch/arm/include/asm/mach/pci.h |  6 ------
+ arch/arm/kernel/bios32.c        | 12 ++++++++----
+ 2 files changed, 8 insertions(+), 10 deletions(-)
+
+diff --git a/arch/arm/include/asm/mach/pci.h b/arch/arm/include/asm/mach/pci.h
+index 8857d28..0070e85 100644
+--- a/arch/arm/include/asm/mach/pci.h
++++ b/arch/arm/include/asm/mach/pci.h
+@@ -52,12 +52,6 @@ struct pci_sys_data {
+ 	u8		(*swizzle)(struct pci_dev *, u8 *);
+ 					/* IRQ mapping				*/
+ 	int		(*map_irq)(const struct pci_dev *, u8, u8);
+-					/* Resource alignement requirements	*/
+-	resource_size_t (*align_resource)(struct pci_dev *dev,
+-					  const struct resource *res,
+-					  resource_size_t start,
+-					  resource_size_t size,
+-					  resource_size_t align);
+ 	void		*private_data;	/* platform controller private data	*/
+ };
+ 
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 874e182..6551d28 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -17,6 +17,11 @@
+ #include <asm/mach/pci.h>
+ 
+ static int debug_pci;
++static resource_size_t (*align_resource)(struct pci_dev *dev,
++		  const struct resource *res,
++		  resource_size_t start,
++		  resource_size_t size,
++		  resource_size_t align) = NULL;
+ 
+ /*
+  * We can't use pci_get_device() here since we are
+@@ -456,7 +461,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 		sys->busnr   = busnr;
+ 		sys->swizzle = hw->swizzle;
+ 		sys->map_irq = hw->map_irq;
+-		sys->align_resource = hw->align_resource;
++		align_resource = hw->align_resource;
+ 		INIT_LIST_HEAD(&sys->resources);
+ 
+ 		if (hw->private_data)
+@@ -572,7 +577,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
+ 	struct pci_dev *dev = data;
+-	struct pci_sys_data *sys = dev->sysdata;
+ 	resource_size_t start = res->start;
+ 
+ 	if (res->flags & IORESOURCE_IO && start & 0x300)
+@@ -580,8 +584,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 
+ 	start = (start + align - 1) & ~(align - 1);
+ 
+-	if (sys->align_resource)
+-		return sys->align_resource(dev, res, start, size, align);
++	if (align_resource)
++		return align_resource(dev, res, start, size, align);
+ 
+ 	return start;
+ }
+-- 
+1.9.1
+
