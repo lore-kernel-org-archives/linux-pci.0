@@ -1,67 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <55F8BF72.5030404@oracle.com>
-Date: Wed, 16 Sep 2015 09:01:38 +0800
-From: ethan zhao <ethan.zhao@oracle.com>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:13399 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbbIORLf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:35 -0400
+From: Will Davis <wdavis@nvidia.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iov: initialize NumVFs register to 0 at the end of sriov_init()
-References: <1440150685-6690-1-git-send-email-ethan.zhao@oracle.com> <20150915161016.GB27964@google.com>
-In-Reply-To: <20150915161016.GB27964@google.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 07/22] PCI: Export pci_find_host_bridge()
+Date: Tue, 15 Sep 2015 12:10:52 -0500
+Message-ID: <1442337067-22964-8-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Return the struct pci_host_bridge corresponding to the given
+struct pci_bus.
 
-On 2015/9/16 0:10, Bjorn Helgaas wrote:
-> On Fri, Aug 21, 2015 at 06:51:25PM +0900, Ethan Zhao wrote:
->> After commit 4449f079722c ("PCI: Calculate maximum number of buses
->> required for VFs"),the initial value of NumVFs register was set to
->> non-zero after sriov_init() and no VFs was enabled in device driver.
->> this changed the behaviour of kernel exported by lspci and sysfs etc.
->> so this patch initialize the NumVFs register to zero after the
->> calculation of max_VF_buses was done.
->>
->> Tested on stable 4.1 and passed building on stable 4.2-rc7
->>
->> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
->> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
->> ---
->>   drivers/pci/iov.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index ee0ebff..6969084 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -476,6 +476,7 @@ found:
->>   	dev->is_physfn = 1;
->>   	iov->max_VF_buses = virtfn_max_buses(dev);
->>   
->> +	pci_iov_set_numvfs(dev, 0);
-> I think it would be better to put this in virtfn_max_buses(), where we
-> clobbered numVFs in the first place.  I'd also read the original value and
-> restore it, e.g.,
->
->      pci_read_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, &numvfs);
->      for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
->        ...
->      }
->      pci_iov_set_numvfs(dev, numvfs);
->      return max;
->
-> I know sriov_init() sets numVFs to zero before it calls virtfn_max_buses(),
-> but why rely on that extra knowledge?
-  Yes, I think also virtfn_max_buses() should restore the register 
-before it returns.
-  Will revise it and resend.
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+---
+ drivers/pci/host-bridge.c | 19 ++-----------------
+ include/linux/pci.h       |  7 +++++++
+ 2 files changed, 9 insertions(+), 17 deletions(-)
 
-  Thanks,
-  Ethan
->>   	return 0;
->>   
->>   failed:
->> -- 
->> 1.8.3.1
->>
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 5f4a2e0..6c2c82a 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -8,25 +8,10 @@
+ 
+ #include "pci.h"
+ 
+-static struct pci_bus *find_pci_root_bus(struct pci_bus *bus)
+-{
+-	while (bus->parent)
+-		bus = bus->parent;
+-
+-	return bus;
+-}
+-
+-struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
+-{
+-	struct pci_bus *root_bus = find_pci_root_bus(bus);
+-
+-	return to_pci_host_bridge(root_bus->bridge);
+-}
+-
+ struct device *pci_get_host_bridge_device(struct pci_dev *dev)
+ {
+-	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
+-	struct device *bridge = root_bus->bridge;
++	struct pci_host_bridge *host_bridge = pci_find_host_bridge(dev->bus);
++	struct device *bridge = &host_bridge->dev;
+ 
+ 	kobject_get(&bridge->kobj);
+ 	return bridge;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a..d58063e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -512,6 +512,13 @@ static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
+ 	return dev->bus->self;
+ }
+ 
++static inline struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus)
++{
++	while (bus->parent)
++		bus = bus->parent;
++	return to_pci_host_bridge(bus->bridge);
++}
++
+ struct device *pci_get_host_bridge_device(struct pci_dev *dev);
+ void pci_put_host_bridge_device(struct device *dev);
+ 
+-- 
+2.5.1
 
