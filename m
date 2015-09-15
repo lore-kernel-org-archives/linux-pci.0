@@ -1,122 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:35339 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752928AbbIJRiO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 13:38:14 -0400
-Received: by lbpo4 with SMTP id o4so27303322lbp.2
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 10:38:12 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
+To: Arthur Marsh <arthur.marsh@internode.on.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+ <55F6EF40.50403@internode.on.net>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <55F78306.3000802@linux.intel.com>
+Date: Tue, 15 Sep 2015 10:31:34 +0800
 MIME-Version: 1.0
-In-Reply-To: <1441893436.7900.10.camel@pengutronix.de>
-References: <loom.20150910T144529-230@post.gmane.org> <1441893436.7900.10.camel@pengutronix.de>
-From: Frank Jenner <faj6816@rit.edu>
-Date: Thu, 10 Sep 2015 13:37:53 -0400
-Message-ID: <CABFJKVLW3MsnxybhDjZ02ghUV2mKfPgj7kmMdiuJ+oK94OYFxQ@mail.gmail.com>
-Subject: Re: Multiple MSIs on ARM imx6q
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <55F6EF40.50403@internode.on.net>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
-
-Thanks for the quick response. See inline:
-
-On Thu, Sep 10, 2015 at 9:57 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Hi Frank,
->
-> Am Donnerstag, den 10.09.2015, 12:55 +0000 schrieb Frank Jenner:
->> Hello,
+On 2015/9/15 0:01, Arthur Marsh wrote:
+> 
+> 
+> Jiang Liu wrote on 14/09/15 12:38:
+>> Hi Authur,
+>>     As suggested by Bjorn, patch 1-2 set implement a PCI device
+>> driver to manage eata PCI devices. And patch 3 tries to support PCI
+>> device hot-removal for eata, but I have no change to test due to
+>> limited knowledge about scsi subsystem and lacking of hardware for
+>> tests.
+>>     So you could please help to test patch 1-2? Patch 3 is just
+>> for comments.
+>> Thanks!
+>> Gerry
 >>
->> I'm trying to develop a driver for a PCIe device which utilizes multiple
->> MSIs (up to the full 32 allowable), but I cannot seem to enable more than
->> one when calling pci_enable_msi_range(). The host platform uses a Freescale
->> i.MX 6Quad ARM SoC and is running the "linux-fslc_4.1" kernel (from the
->> Yocto project).
+>> Jiang Liu (3):
+>>    eata: Use IDA to manage eata board IDs
+>>    eata: Implement PCI driver to manage eata PCI devices
+>>    eata: Enhance eata driver to support PCI device hot-removal
 >>
->> With some investigation, I believe that this limitation is stemming from
->> arch_setup_msi_irqs() in drivers/pci/msi.c where there is an early return
->> with the comment "If an architecture wants to support multiple MSI, it needs
->> to override arch_setup_msi_irqs()". There appears to be no such override for
->> ARM.
+>>   drivers/scsi/eata.c |  232
+>> +++++++++++++++++++++++++++------------------------
+>>   1 file changed, 125 insertions(+), 107 deletions(-)
 >>
->> My first question then, is:
->>
->> 1.) Are multiple MSIs simply not yet supported on ARM as of 4.1?
->>
-> Right, multivector MSI is not supported for any ARM host bridge on any
-> released kernel version.
->
->> Both MSIs and ARM have been around for a while, and I doubt I'm the only
->> person who ever wanted to use multiple MSIs on ARM, so I can't help but
->> think maybe I'm overlooking something. I ran into a similar question
->> (http://lists.infradead.org/pipermail/linux-arm-kernel/2010-May/016858.html), but
->> as that was 5+ years ago, I'm wondering whether the situation has since changed.
->>
-> Multivector MSI is a rarely used feature on endpoints. Most devices
-> either do single vector MSI or full blown MSI-X. It's mostly FPGA
-> devices preferring the simplicity of multivector MSI over MSI-X.
-
-Ah, yes. This was the case for us. We have an FPGA that does not have
-MSI-X functionality built into the hard PCIe core, so regular MSIs
-were used for simplicity.
-
->
-> An implementation for the i.MX6 is already sitting in Bjorns PCI
-> maintainer tree and is expected to be merged in kernel 4.4.
->
-
-I took a look at Bjorn's pci-4.4/host-designware branch and saw your
-commits. It looks like the patches I'm using apply most of the same
-changes. While they do enable me to get multiple MSIs back from
-pci_enable_msi_range() and I get the correct IRQs back to my ISR, I
-still run into the issue below when attempting to get the full 32
-vectors.
-
->> Unfortunately, even if I work around the arch_setup_msi_irqs() limitation
->> (which I've done by trying out patches 448141 and 448142 from
->> http://patchwork.ozlabs.org/project/linux-pci/list/) and break through to
->> the assign_irq() function in drivers/pci/host/pcie-designware.c, I still
->> cannot allocate all 32 MSIs that my device reports.
->>
->> It appears that one of the bits in the msi_irq_in_use bitmap is already set
->> prior to my driver requesting any MSIs, meaning there aren't enough free
->> slots for the 32 MSIs I am requesting, and causing the function to fail with
->> -ENOSPC. Based on the output from /proc/interrupts, I believe that the PCIe
->> PME service driver is consuming one of the 32 available MSI slots. Thus, my
->> second question is:
->>
->> 2.) Is it possible to leverage all 32 MSIs while still using PCIe PME?
->>
->> I tried using the kernel command line argument pcie_pme=nomsi, but that
->> appeared to disable all MSIs for the device rather than just making the PME
->> service driver use some other mechanism.
->>
-> It should be possible to make PME use a legacy INT, but I would have to
-> look this up in the code.
-
-Could you please elaborate on this? I'm a little confused why PME
-occupies one of the MSI slots in the first place. Also, as I thought a
-device could only use either MSIs or legacy INTs (but not both), is it
-even possible for PME to use legacy INTs while my driver uses MSIs?
->
-> Another alternative is to extend the i.MX6 driver. It should be able to
-> provide up to 256 MSI interrupt vectors. But I have no way to test that,
-> so if you could help with testing I can certainly come up with a patch
-> for that.
-
-Where does the 256 come from?
-
-I appreciate the help, and I would be happy to test out a patch for
-you with the caveat that I'm using a custom board so I can only test
-any changes against our specific device.
-
+> 
+> With patches 1 and 2 applied, I get a successful boot with IRQ mapping:
+> 
+> [    1.147056] EATA0: IRQ 10 mapped to IO-APIC IRQ 17.
+> [    1.160404] EATA/DMA 2.0x: Copyright (C) 1994-2003 Dario Ballabio.
+> [    1.160469] EATA config options -> tm:1, lc:y, mq:16, rs:y, et:n,
+> ip:n, ep:n, pp:y.
+> [    1.160541] EATA0: 2.0C, PCI 0xd890, IRQ 17, BMST, SG 122, MB 64.
+> [    1.160600] EATA0: wide SCSI support enabled, max_id 16, max_lun 8.
+> [    1.160658] EATA0: SCSI channel 0 enabled, host target ID 7.
+> [    1.161207] scsi host0: EATA/DMA 2.0x rev. 8.10.00
+> 
+> 
+> but I still get errors when trying to do a kexec reboot, see
+> http://www.users.on.net/~arthur.marsh/20150915547.jpg
+> 
+> roughly it reads (after the synchronising SCSI cache reboot messages)
+> and a long period of a dark screen:
+> 
+> sd 0:0:6:0: abort, mbox 63.
+> EATA0: abort, mbox 63 is in use.
+> sd 0:0:6:0: reset, enter.
+> EATA0: reset, mbox 63 in reset.
+> EATA0: reset, board reset done, enabling interrupts.
+> EATA0: reset, interrupts disabled, loops 100469.
+> EATA0: reset, mbox 63 locked, DID_RESET, done.
+> EATA0: reset, exit, done.
+> sd 0:0:6:0: qcomm, mbox 0, adapter busy, will start
+> sd 0:0:6:0: abort, mbox 0.
+> EATA0: abort, timeout error.
+> sd 0:0:6:0: reset, enter.
+> EATA0: reset, exit, timeout error.
+> sd 0:0:6:0 Device offlinled - not ready after error recovery
+> sd 0:0:6:0 rejecting I/O to offline device
+> sd 0:0:6:0 rejecting I/O to offline device
+> sd 0:0:6:0 [sda] Synchronize Cache(10) failed: Result:
+> hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+> starting new kernel
+> 
+> It would be great if this problem could be fixed.
+HI Arthur,
+	Really appreciate your help to test the patches. That's
+a good sign we have moved forward a bit:)
+	For kexec, it's always challenging to me. So could you
+please help to provide full dmesg logs with working kernels
+so I could try to figure out the order among scsi and PCI devices.
+It may be shutdown order related.
 Thanks!
->
-> Regards,
-> Lucas
->
-> --
-> Pengutronix e.K.             | Lucas Stach                 |
-> Industrial Linux Solutions   | http://www.pengutronix.de/  |
->
+Gerry
+
+> 
+> Arthur.
+> 
