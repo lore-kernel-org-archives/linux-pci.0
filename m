@@ -1,86 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:37176 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755901AbbIWXcD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 19:32:03 -0400
-Received: by wicfx3 with SMTP id fx3so90557739wic.0
-        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2015 16:32:01 -0700 (PDT)
-From: Romain Bezut <rbezut@gmail.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc: Romain Bezut <rbezut@gmail.com>
-Subject: [PATCH] PCI/MSI: Export all remapped MSIs to sysfs attributes
-Date: Thu, 24 Sep 2015 01:31:16 +0200
-Message-Id: <1443051076-27716-1-git-send-email-rbezut@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jake Oshins <jakeo@microsoft.com>
+To: Marc Zyngier <marc.zyngier@arm.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: RE: [PATCH v2 00/12] New paravirtual PCI front-end for Hyper-V VMs
+Date: Tue, 15 Sep 2015 23:32:52 +0000
+Message-ID: <DM2PR0301MB1232B0C4BCB539F7452FF091AB5C0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+ <55F6E115.9050502@arm.com>
+ <DM2PR0301MB12326BCA329D5D98A587C2DCAB5D0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+ <55F7EB82.20309@arm.com>
+In-Reply-To: <55F7EB82.20309@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-irqbalance uses these attributes to populate its internal database, which is
-then used to bind the irq on the appropriate NUMA node.
+> -----Original Message-----
+> From: Marc Zyngier [mailto:marc.zyngier@arm.com]
+> Sent: Tuesday, September 15, 2015 2:57 AM
+> To: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; KY
+> Srinivasan <kys@microsoft.com>; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+> vkuznets@redhat.com; linux-pci@vger.kernel.org; bhelgaas@google.com;
+> tglx@linutronix.de; Jiang Liu <jiang.liu@linux.intel.com>
+> Subject: Re: [PATCH v2 00/12] New paravirtual PCI front-end for Hyper-V
+> VMs
+> 
 
-On a device accepting multiple MSIs and with interrupt remapping enabled,
-only the first irq entry is exported to msi_irqs directory.
-This results in irqbalance having no clue of the NUMA affinity for the extra
-irqs and starting to bind them on random nodes.
 
-This patch exports all MSI interrupts as sysfs attributes when relevant.
+> >
+> > Is there a way to do that with the infrastructure that you're
+> > introducing?
+> 
+> The ACPI/GSI stuff is a red herring, and is completely unrelated to the
+> problem you're trying to solve. What I think is of interest to you is
+> contained in the first three patches.
+> 
+> In your 4th patch, you have the following code:
+> 
+> +	pci_domain = pci_domain_nr(bus);
+> +	d = irq_find_matching_host(NULL, DOMAIN_BUS_PCI_MSI,
+> &pci_domain);
+> 
+> which really feels like you're trying to create a namespace that is
+> parallel to the one defined by the device_node parameter. What I'm
+> trying to do is to be able to replace the device_node by something more
+> generic (at the moment, you can either pass a device_node or some token
+> that the irqdomain subsystem generates for you - see patch #7 for an
+> example).
+> 
+> You could pass this token to pci_msi_create_irq_domain (which obviously
+> needs some repainting not to take a device_node), store it in your bus
+> structure, and perform the lookup based on this value. Or store the
+> actual domain there, whatever.
+> 
+> What I want to do is really to make this device_node pointer for systems
+> that do not have a DT node to pass there, which is exactly your case (by
+> the look of it, the bus number is your identifier of choice, but I
+> suspect a pointer to an internal structure would be better suited).
+> 
+> 	M.
+> --
 
-Signed-off-by: Romain Bezut <rbezut@gmail.com>
----
- drivers/pci/msi.c | 31 +++++++++++++++++--------------
- 1 file changed, 17 insertions(+), 14 deletions(-)
+Got it.  I'll rebase on your changes and send this series again, using the strategy that you outline here.  I may wait a little while until your patches make it into linux-next.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d449714..324a164 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -475,10 +475,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 	int ret = -ENOMEM;
- 	int num_msi = 0;
- 	int count = 0;
-+	int i;
- 
- 	/* Determine how many msi entries we have */
- 	for_each_pci_msi_entry(entry, pdev)
--		++num_msi;
-+		num_msi += entry->nvec_used;
- 	if (!num_msi)
- 		return 0;
- 
-@@ -487,19 +488,21 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 	if (!msi_attrs)
- 		return -ENOMEM;
- 	for_each_pci_msi_entry(entry, pdev) {
--		msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
--		if (!msi_dev_attr)
--			goto error_attrs;
--		msi_attrs[count] = &msi_dev_attr->attr;
--
--		sysfs_attr_init(&msi_dev_attr->attr);
--		msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
--						    entry->irq);
--		if (!msi_dev_attr->attr.name)
--			goto error_attrs;
--		msi_dev_attr->attr.mode = S_IRUGO;
--		msi_dev_attr->show = msi_mode_show;
--		++count;
-+		for (i = 0; i < entry->nvec_used; i++) {
-+			msi_dev_attr = kzalloc(sizeof(*msi_dev_attr), GFP_KERNEL);
-+			if (!msi_dev_attr)
-+				goto error_attrs;
-+			msi_attrs[count] = &msi_dev_attr->attr;
-+
-+			sysfs_attr_init(&msi_dev_attr->attr);
-+			msi_dev_attr->attr.name = kasprintf(GFP_KERNEL, "%d",
-+							    entry->irq + i);
-+			if (!msi_dev_attr->attr.name)
-+				goto error_attrs;
-+			msi_dev_attr->attr.mode = S_IRUGO;
-+			msi_dev_attr->show = msi_mode_show;
-+			++count;
-+		}
- 	}
- 
- 	msi_irq_group = kzalloc(sizeof(*msi_irq_group), GFP_KERNEL);
--- 
-2.4.9
+Thanks again,
+Jake Oshins
 
