@@ -1,65 +1,205 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:36433 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932082AbbIXAeS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 20:34:18 -0400
-Message-ID: <56034505.1080301@gmail.com>
-Date: Wed, 23 Sep 2015 17:34:13 -0700
-From: David Daney <ddaney.cavm@gmail.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:12044 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751699AbbIORL6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:58 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 16/22] iommu/amd: Implement (un)map_peer_resource
+Date: Tue, 15 Sep 2015 12:11:01 -0500
+Message-ID: <1442337067-22964-17-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-CC: bhelgaas@google.com, yinghai@kernel.org, rajatxjain@gmail.com,
-	mst@redhat.com, zajec5@gmail.com, gong.chen@linux.intel.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] PCI: Add support for PCI Enhanced Allocation "BARs"
-References: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
-In-Reply-To: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sean,
+Implement 'map_peer_resource' for the AMD IOMMU driver. Generalize the
+existing map_page implementation to operate on a physical address, and
+make both map_page and map_resource wrappers around that helper (and
+similarly, for unmap_page and unmap_resource).
 
-Thanks for doing this, I think we will use it for Cavium ThunderX.  A 
-couple of questions...
+This allows a device to map another's resource, to enable peer-to-peer
+transactions.
 
+Add behind CONFIG_HAS_DMA_P2P guards, since the dma_map_ops members are
+behind them as well.
 
-On 09/23/2015 03:27 PM, Sean O. Stalley wrote:
-> PCI Enhanced Allocation is a new method of allocating MMIO & IO
-> resources for PCI devices & bridges. It can be used instead
-> of the traditional PCI method of using BARs.
->
-> EA entries are hardware-initialized to a fixed address.
-> Unlike BARs, regions described by EA are cannot be moved.
-> Because of this, only devices which are permanently connected to
-> the PCI bus can use EA. A removable PCI card must not use EA.
->
-> This patchset adds support for using EA entries instead of BARs
-> on Root Complex Integrated Endpoints.
->
-> The Enhanced Allocation ECN is publicly available here:
-> https://www.pcisig.com/specifications/conventional/ECN_Enhanced_Allocation_23_Oct_2014_Final.pdf
->
->
-> Changes from V1:
-> 	- Use generic PCI resource claim functions (instead of EA-specific functions)
-> 	- Only add support for RCiEPs (instead of all devices).
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ drivers/iommu/amd_iommu.c | 99 ++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 86 insertions(+), 13 deletions(-)
 
-Why not all devices?  The spec. allows for EA on devices behind bridges.
-
-
-> 	- Removed some debugging messages leftover from early testing.
->
->
-> Sean O. Stalley (2):
->    PCI: Add Enhanced Allocation register entries
->    PCI: Add support for Enhanced Allocation devices
->
->   drivers/pci/pci.c             | 174 ++++++++++++++++++++++++++++++++++++++++++
->   drivers/pci/pci.h             |   1 +
->   drivers/pci/probe.c           |   3 +
->   include/uapi/linux/pci_regs.h |  40 +++++++++-
->   4 files changed, 217 insertions(+), 1 deletion(-)
->
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index a57e9b7..13a47f283 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -471,6 +471,10 @@ DECLARE_STATS_COUNTER(cnt_map_single);
+ DECLARE_STATS_COUNTER(cnt_unmap_single);
+ DECLARE_STATS_COUNTER(cnt_map_sg);
+ DECLARE_STATS_COUNTER(cnt_unmap_sg);
++#ifdef CONFIG_HAS_DMA_P2P
++DECLARE_STATS_COUNTER(cnt_map_peer_resource);
++DECLARE_STATS_COUNTER(cnt_unmap_peer_resource);
++#endif
+ DECLARE_STATS_COUNTER(cnt_alloc_coherent);
+ DECLARE_STATS_COUNTER(cnt_free_coherent);
+ DECLARE_STATS_COUNTER(cross_page);
+@@ -509,6 +513,10 @@ static void amd_iommu_stats_init(void)
+ 	amd_iommu_stats_add(&cnt_unmap_single);
+ 	amd_iommu_stats_add(&cnt_map_sg);
+ 	amd_iommu_stats_add(&cnt_unmap_sg);
++#ifdef CONFIG_HAS_DMA_P2P
++	amd_iommu_stats_add(&cnt_map_peer_resource);
++	amd_iommu_stats_add(&cnt_unmap_peer_resource);
++#endif
+ 	amd_iommu_stats_add(&cnt_alloc_coherent);
+ 	amd_iommu_stats_add(&cnt_free_coherent);
+ 	amd_iommu_stats_add(&cross_page);
+@@ -2585,20 +2593,16 @@ static void __unmap_single(struct dma_ops_domain *dma_dom,
+ }
+ 
+ /*
+- * The exported map_single function for dma_ops.
++ * Wrapper function that contains code common to mapping a physical address
++ * range from a page or a resource.
+  */
+-static dma_addr_t map_page(struct device *dev, struct page *page,
+-			   unsigned long offset, size_t size,
+-			   enum dma_data_direction dir,
+-			   struct dma_attrs *attrs)
++static dma_addr_t __map_phys(struct device *dev, phys_addr_t paddr,
++			     size_t size, enum dma_data_direction dir)
+ {
+ 	unsigned long flags;
+ 	struct protection_domain *domain;
+ 	dma_addr_t addr;
+ 	u64 dma_mask;
+-	phys_addr_t paddr = page_to_phys(page) + offset;
+-
+-	INC_STATS_COUNTER(cnt_map_single);
+ 
+ 	domain = get_domain(dev);
+ 	if (PTR_ERR(domain) == -EINVAL)
+@@ -2624,16 +2628,15 @@ out:
+ }
+ 
+ /*
+- * The exported unmap_single function for dma_ops.
++ * Wrapper function that contains code common to unmapping a physical address
++ * range from a page or a resource.
+  */
+-static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
+-		       enum dma_data_direction dir, struct dma_attrs *attrs)
++static void __unmap_phys(struct device *dev, dma_addr_t dma_addr, size_t size,
++			 enum dma_data_direction dir)
+ {
+ 	unsigned long flags;
+ 	struct protection_domain *domain;
+ 
+-	INC_STATS_COUNTER(cnt_unmap_single);
+-
+ 	domain = get_domain(dev);
+ 	if (IS_ERR(domain))
+ 		return;
+@@ -2707,6 +2710,72 @@ unmap:
+ }
+ 
+ /*
++ * The exported map_single function for dma_ops.
++ */
++static dma_addr_t map_page(struct device *dev, struct page *page,
++			   unsigned long offset, size_t size,
++			   enum dma_data_direction dir,
++			   struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_map_single);
++
++	return __map_phys(dev, page_to_phys(page) + offset, size, dir);
++}
++
++/*
++ * The exported unmap_single function for dma_ops.
++ */
++static void unmap_page(struct device *dev, dma_addr_t dma_addr, size_t size,
++		       enum dma_data_direction dir, struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_unmap_single);
++
++	__unmap_phys(dev, dma_addr, size, dir);
++}
++
++#ifdef CONFIG_HAS_DMA_P2P
++/*
++ * The exported map_peer_resource function for dma_ops.
++ */
++static dma_peer_addr_t map_peer_resource(struct device *dev,
++					 struct device *peer,
++					 struct resource *res,
++					 unsigned long offset,
++					 size_t size,
++					 enum dma_data_direction dir,
++					 struct dma_attrs *attrs)
++{
++	struct pci_dev *pdev;
++	struct pci_dev *ppeer;
++
++	INC_STATS_COUNTER(cnt_map_peer_resource);
++
++	if (!dev_is_pci(dev) || !dev_is_pci(peer))
++		return DMA_ERROR_CODE;
++
++	pdev = to_pci_dev(dev);
++	ppeer = to_pci_dev(peer);
++
++	if (!pci_peer_traffic_supported(pdev, ppeer))
++		return DMA_ERROR_CODE;
++
++	return __map_phys(dev, res->start + offset, size, dir);
++}
++
++/*
++ * The exported unmap_peer_resource function for dma_ops.
++ */
++static void unmap_peer_resource(struct device *dev, dma_peer_addr_t dma_addr,
++				size_t size, enum dma_data_direction dir,
++				struct dma_attrs *attrs)
++{
++	INC_STATS_COUNTER(cnt_unmap_peer_resource);
++
++	__unmap_phys(dev, dma_addr, size, dir);
++}
++#endif
++
++/*
+  * The exported map_sg function for dma_ops (handles scatter-gather
+  * lists).
+  */
+@@ -2852,6 +2921,10 @@ static struct dma_map_ops amd_iommu_dma_ops = {
+ 	.unmap_page = unmap_page,
+ 	.map_sg = map_sg,
+ 	.unmap_sg = unmap_sg,
++#ifdef CONFIG_HAS_DMA_P2P
++	.map_peer_resource = map_peer_resource,
++	.unmap_peer_resource = unmap_peer_resource,
++#endif
+ 	.dma_supported = amd_iommu_dma_supported,
+ };
+ 
+-- 
+2.5.1
 
