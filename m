@@ -1,132 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:48927 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257AbbIOMrR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 08:47:17 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
-	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
-	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
-	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
-	<jason@lakedaemon.net>, <robh@kernel.org>,
-	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
-CC: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
-	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
-	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v9 1/6] PCI: designware: move calculation of bus addresses to DRA7xx
-Date: Tue, 15 Sep 2015 20:49:16 +0800
-Message-ID: <1442321361-174300-2-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
-References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55064 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751070AbbIOR3c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Sep 2015 13:29:32 -0400
+Subject: Re: [Bug 104431] New: second connected thunderbolt dock fails
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <bug-104431-41252@https.bugzilla.kernel.org/>
+ <CAErSpo6LpJRbhnwH-Mqu3zN-=gEVgJ2u+aonpWNXbtXKQ8xCKw@mail.gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+From: Jarod Wilson <jarod@redhat.com>
+Message-ID: <55F8557D.5030609@redhat.com>
+Date: Tue, 15 Sep 2015 13:29:33 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAErSpo6LpJRbhnwH-Mqu3zN-=gEVgJ2u+aonpWNXbtXKQ8xCKw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On 2015-09-15 11:31 AM, Bjorn Helgaas wrote:
+> [+cc linux-pci]
+>
+> Hi Jarod,
+>
+> On Fri, Sep 11, 2015 at 3:19 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=104431
+>>
+>>              Bug ID: 104431
+>>             Summary: second connected thunderbolt dock fails
+>>             Product: Drivers
+>>             Version: 2.5
+>>      Kernel Version: 4.2.0 + a handful of other patches
+>>            Hardware: All
+>>                  OS: Linux
+>>                Tree: Mainline
+>>              Status: NEW
+>>            Severity: normal
+>>            Priority: P1
+>>           Component: PCI
+>>            Assignee: drivers_pci@kernel-bugs.osdl.org
+>>            Reporter: jarod@redhat.com
+>>          Regression: No
+>>
+>> I've been loaned a pair of thunderbolt docking peripherals. One is an Akitio
+>> Thunder Dock, which has usb3, esata and firewire 800 on it, the other is a
+>> StarTech Thunderbolt Docking Station, which has usb3, a usb audio device and an
+>> Intel i210 GbE device.
+>>
+>> Individually, each of the docks work fine (at least with the 4.3.x pciehp patch
+>> for my zbook and an igb patch I just sent upstream), hotplug and remove. They
+>> even work correctly if connected together -- i.e., connect the two docks
+>> together, then connect to the host, and both come up fine.
+>>
+>> However, when I connect one dock directly to the host, then the second dock,
+>> the second dock fails to function, with the following output upon connection:
+>>
+>> pciehp 0000:06:04.0:pcie24: pending interrupts 0x0008 from Slot Status
+>> pciehp 0000:06:04.0:pcie24: Card present on Slot(4-1)
+>> pciehp 0000:06:04.0:pcie24: pending interrupts 0x0100 from Slot Status
+>> pciehp 0000:06:04.0:pcie24: pciehp_check_link_active: lnk_status = 3041
+>> pciehp 0000:06:04.0:pcie24: slot(4-1): Link Up event
+>> pciehp 0000:06:04.0:pcie24: Link Up event ignored on slot(4-1): already
+>> powering on
+>> pciehp 0000:06:04.0:pcie24: pciehp_check_link_active: lnk_status = 3041
+>> pciehp 0000:06:04.0:pcie24: pciehp_check_link_status: lnk_status = 3041
+>> pci 0000:0b:00.0: [8086:1547] type 01 class 0x060400
+>> pci 0000:0b:00.0: supports D1 D2
+>> pci 0000:0b:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+>> No bus number available for hot-added bridge 0000:0b:00.0
+>> pcieport 0000:06:04.0: bridge window [io  0x1000-0x0fff] to [bus 0b] add_size
+>> 1000
+>> pcieport 0000:06:04.0: res[13]=[io  0x1000-0x0fff] res_to_dev_res add_size 1000
+>> min_align    1000
+>> pcieport 0000:06:04.0: res[13]=[io  0x1000-0x1fff] res_to_dev_res add_size 1000
+>> min_align    1000
+>> pcieport 0000:06:04.0: BAR 13: no space for [io  size 0x1000]
+>> pcieport 0000:06:04.0: BAR 13: failed to assign [io  size 0x1000]
+>> pcieport 0000:06:04.0: BAR 13: no space for [io  size 0x1000]
+>> pcieport 0000:06:04.0: BAR 13: failed to assign [io  size 0x1000]
+>> pcieport 0000:06:04.0: PCI bridge to [bus 0b]
+>> pcieport 0000:06:04.0:   bridge window [mem 0xb4700000-0xb49fffff]
+>> pcieport 0000:06:04.0:   bridge window [mem 0x90700000-0x909fffff 64bit pref]
+>>
+>> I'll attach full dmesg dumps from both simultaneous and one at a time
+>> connection attempts shortly.
+>
+> Thanks for the report.  The logs only start from the hotplug, so they
+> don't show the initial enumeration at boot.  Can you also attach
+> "lspci -vv" output from the working case, so we can see which devices
+> are in which dock?  I started working it out from the logs, but that's
+> pretty tedious.
 
-Commit f4c55c5a3f7f ("PCI: designware: Program ATU with untranslated
-address") added the calculation of PCI BUS addresses in designware,
-storing them in new fields added in "struct pcie_port". This
-calculation is done for every designware user even if is only
-applicable to DRA7xx.
-This patch moves the calculation of the bus addresses to the DRA7xx
-driver and is needed to allow the rework of designware to use
-the new DT parsing API.
+I just attached dmesg from a fresh boot prior to attaching any 
+thunderbolt devices, as well as full lspci -vv output with both docks 
+attached.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
----
- drivers/pci/host/pci-dra7xx.c      | 13 +++++++++++++
- drivers/pci/host/pcie-designware.c | 15 ++++-----------
- 2 files changed, 17 insertions(+), 11 deletions(-)
+> I *think* the second dock that fails is rooted at 0b:00.0, and it's
+> being added below 06:04.0  Since the 0b:00.0 tree wasn't present at
+> boot, we don't know how many bus numbers to reserve for 06:04.0, and
+> we only reserved one (bus 0b).  Obviously that's not enough for all
+> the devices in that dock.
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 199e29a..ebdffa0 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -62,6 +62,7 @@
- 
- #define	PCIECTRL_DRA7XX_CONF_PHY_CS			0x010C
- #define	LINK_UP						BIT(16)
-+#define	CPU_TO_BUS_ADDR					0x0FFFFFFF
- 
- struct dra7xx_pcie {
- 	void __iomem		*base;
-@@ -151,6 +152,18 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
- static void dra7xx_pcie_host_init(struct pcie_port *pp)
- {
- 	dw_pcie_setup_rc(pp);
-+
-+	if (pp->io_mod_base)
-+		pp->io_mod_base &= CPU_TO_BUS_ADDR;
-+
-+	if (pp->mem_mod_base)
-+		pp->mem_mod_base &= CPU_TO_BUS_ADDR;
-+
-+	if (pp->cfg0_mod_base) {
-+		pp->cfg0_mod_base &= CPU_TO_BUS_ADDR;
-+		pp->cfg1_mod_base &= CPU_TO_BUS_ADDR;
-+	}
-+
- 	dra7xx_pcie_establish_link(pp);
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
- 		dw_pcie_msi_init(pp);
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 52aa6e3..75338a6 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -365,14 +365,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
- 	struct resource *cfg_res;
--	u32 val, na, ns;
-+	u32 val, ns;
- 	const __be32 *addrp;
- 	int i, index, ret;
- 
--	/* Find the address cell size and the number of cells in order to get
--	 * the untranslated address.
--	 */
--	of_property_read_u32(np, "#address-cells", &na);
- 	ns = of_n_size_cells(np);
- 
- 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-@@ -415,8 +411,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->io_base = range.cpu_addr;
- 
- 			/* Find the untranslated IO space address */
--			pp->io_mod_base = of_read_number(parser.range -
--							 parser.np + na, ns);
-+			pp->io_mod_base = range.cpu_addr;
- 		}
- 		if (restype == IORESOURCE_MEM) {
- 			of_pci_range_to_resource(&range, np, &pp->mem);
-@@ -425,8 +420,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->mem_bus_addr = range.pci_addr;
- 
- 			/* Find the untranslated MEM space address */
--			pp->mem_mod_base = of_read_number(parser.range -
--							  parser.np + na, ns);
-+			pp->mem_mod_base = range.cpu_addr;
- 		}
- 		if (restype == 0) {
- 			of_pci_range_to_resource(&range, np, &pp->cfg);
-@@ -436,8 +430,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			pp->cfg1_base = pp->cfg.start + pp->cfg0_size;
- 
- 			/* Find the untranslated configuration space address */
--			pp->cfg0_mod_base = of_read_number(parser.range -
--							   parser.np + na, ns);
-+			pp->cfg0_mod_base = range.cpu_addr;
- 			pp->cfg1_mod_base = pp->cfg0_mod_base +
- 					    pp->cfg0_size;
- 		}
+I need to double-check possible differences with reversing the ordering 
+of connection, but that seems to be what I'm seeing. I'm assuming the 
+first dock connected just sucks up as many resources as it can grab, and 
+the second one gets resource-starved.
+
+> For memory and I/O, we reserve default amounts of space
+> (pci_hotplug_mem_size and pci_hotplug_io_size), but I don't think we
+> do anything corresponding for bus numbers.  Maybe we should.
+
+Sounds plausible.
+
 -- 
-1.9.1
-
+Jarod Wilson
+jarod@redhat.com
