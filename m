@@ -1,71 +1,176 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:53803 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827AbbI1XFj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Sep 2015 19:05:39 -0400
-Date: Tue, 29 Sep 2015 00:05:32 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: pci_generic_config_write32() access size problem
-Message-ID: <20150928230532.GG21513@n2100.arm.linux.org.uk>
-References: <20150928220854.GA16110@localhost>
- <CAL_JsqL_O2qqESs69spQCPuDfKG5g8_GZkhiYFo-+U8ttxnJng@mail.gmail.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:12006 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbbIORLk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:40 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	"Mark Hounschell" <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	"Will Davis" <wdavis@nvidia.com>
+Subject: [PATCH 09/22] PCI: Add pci_peer_traffic_supported()
+Date: Tue, 15 Sep 2015 12:10:54 -0500
+Message-ID: <1442337067-22964-10-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqL_O2qqESs69spQCPuDfKG5g8_GZkhiYFo-+U8ttxnJng@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 28, 2015 at 05:42:20PM -0500, Rob Herring wrote:
-> On Mon, Sep 28, 2015 at 5:08 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > Hi Rob,
-> >
-> > Russell pointed out a problem with 1f94a94f67e1 ("PCI: Add generic config
-> > accessors").  pci_generic_config_write32() does a read/modify/write if the
-> > size is less than 32 bits, so I think we have problem if this is used with
-> > 8- or 16-bit registers that contain RW1C bits.  Any thoughts on how we can
-> > fix this?
-> 
-> My series didn't change access sizes unless I made a made a mistake
-> somewhere, so the problem should have existed before.
-> 
-> Is it known addresses we need to deal with? We could do special case
-> handling of certain addresses to mask out RW1C bits. This could be in
-> the generic functions or in wrappers around the generic functions.
-> There's already some similar examples of special address handling
-> IIRC.
+Add checks for topology and ACS configuration to determine whether or not
+peer traffic should be supported between two PCI devices.
 
-I think this originally came into being because Intel decided that their
-IOP platforms wouldn't support anything except 32-bit accesses, and
-cargo cult programming took over.  I complained about it on the Intel IOP
-platforms, but obviously if the hardware doesn't support anything else
-then your stuck with it.
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+---
+ drivers/pci/pci.c   | 99 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  3 ++
+ 2 files changed, 102 insertions(+)
 
-However, what's utterly wrong is that the generic PCI layer should give
-credence to this crap - it should _not_ provide a generic helper for
-performing only 32-bit accesses which is non-conformant to the PCI specs,
-at least without a big fat warning about it.
-
-The problem is not limited to what the PCI specs say - remember, vendors
-are free to add their own PCI configuration registers: you don't know
-where these registers are in the PCI config address space.  What's even
-worse is that you don't know what use vendors have put the neighbouring
-bytes of PCI config space to in the case of an 8-bit or 16-bit vendor
-register.
-
-For the standard PCI config registers, some addresses are well known.
-For example, the PCI status register is at fixed address 6, sharing the
-PCI command register at address 4.
-
-Others depend on the function, and whether there's capabilities present.
-For example, the PCIe device status register shares the same double-word
-as the PCI device control register, and the status register contains RW1C
-bits.
-
-The same is true for the PCIe AER capability.
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 0008c95..b8ba0f0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -25,6 +25,7 @@
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pci_hotplug.h>
++#include <linux/iommu.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include "pci.h"
+@@ -4302,6 +4303,104 @@ void pci_ignore_hotplug(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
+ 
++bool pci_peer_traffic_supported(struct pci_dev *dev, struct pci_dev *peer)
++{
++	struct pci_host_bridge *dev_host_bridge;
++	struct pci_host_bridge *peer_host_bridge;
++
++	/*
++	 * Disallow the peer-to-peer traffic if the devices do not share a
++	 * host bridge. The PCI specifications does not make any guarantees
++	 * about P2P capabilities between devices under separate domains.
++	 *
++	 * PCI Local Bus Specification Revision 3.0, section 3.10:
++	 *    "Peer-to-peer transactions crossing multiple host bridges
++	 *     PCI host bridges may, but are not required to, support PCI
++	 *     peer-to-peer transactions that traverse multiple PCI host
++	 *     bridges."
++	 */
++	dev_host_bridge = pci_find_host_bridge(dev->bus);
++	peer_host_bridge = pci_find_host_bridge(peer->bus);
++	if (dev_host_bridge != peer_host_bridge)
++		return false;
++
++	if (pci_is_pcie(dev) && pci_is_pcie(peer)) {
++		/*
++		 * Access Control Services (ACS) Checks
++		 *
++		 * ACS has a capability bit for P2P Request Redirects (RR),
++		 * but unfortunately it doesn't tell us much about the real
++		 * capabilities of the hardware.
++		 *
++		 * PCI Express Base Specification Revision 3.0, section
++		 * 6.12.1.1:
++		 *    "ACS P2P Request Redirect: must be implemented by Root
++		 *     Ports that support peer-to-peer traffic with other
++		 *     Root Ports; [80]"
++		 * but
++		 *    "[80] Root Port indication of ACS P2P Request Redirect
++		 *     or ACS P2P Completion Redirect support does not imply
++		 *     any particular level of peer-to-peer support by the
++		 *     Root Complex, or that peer-to-peer traffic is
++		 *     supported at all"
++		 */
++		struct pci_dev *rpdev = dev->bus->self;
++		struct pci_dev *rppeer = peer->bus->self;
++		struct pci_dev *common_upstream;
++		int pos;
++		u16 cap;
++
++		while ((rpdev) && (pci_is_pcie(rpdev)) &&
++		       (pci_pcie_type(rpdev) != PCI_EXP_TYPE_ROOT_PORT))
++			rpdev = rpdev->bus->self;
++
++		while ((rppeer) && (pci_is_pcie(rppeer)) &&
++		       (pci_pcie_type(rppeer) != PCI_EXP_TYPE_ROOT_PORT))
++			rppeer = rppeer->bus->self;
++
++		common_upstream = pci_find_common_upstream_dev(dev, peer);
++
++		/*
++		 * If ACS is not implemented, we have no idea about P2P
++		 * support. Optimistically allow this if there is a common
++		 * upstream device.
++		 */
++		pos = pci_find_ext_capability(rpdev, PCI_EXT_CAP_ID_ACS);
++		if (!pos)
++			return common_upstream != NULL;
++
++		/*
++		 * If the devices are under the same root port and have a common
++		 * upstream device, allow if the root port is further upstream
++		 * from the common upstream device and the common upstream
++		 * device has Upstream Forwarding disabled, or if the root port
++		 * is the common upstream device and ACS is not implemented.
++		 */
++		pci_read_config_word(rpdev, pos + PCI_ACS_CAP, &cap);
++		if ((rpdev == rppeer && common_upstream) &&
++		    (((common_upstream != rpdev) &&
++		      !pci_acs_enabled(common_upstream, PCI_ACS_UF)) ||
++		     ((common_upstream == rpdev) && ((cap & PCI_ACS_RR) == 0))))
++			return true;
++
++		/*
++		 * If ACS RR is implemented and disabled, allow only if the
++		 * devices are under the same root port.
++		 */
++		if (cap & PCI_ACS_RR && !pci_acs_enabled(rpdev, PCI_ACS_RR))
++			return rpdev == rppeer;
++
++		/*
++		 * If ACS RR is not implemented, or is implemented and enabled,
++		 * only allow if there's a translation agent enabled to do the
++		 * redirect.
++		 */
++		return iommu_present(&pci_bus_type);
++	}
++
++	return false;
++}
++
+ #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
+ static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
+ static DEFINE_SPINLOCK(resource_alignment_lock);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8262b9e..db0cb51 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -824,6 +824,8 @@ void pci_stop_root_bus(struct pci_bus *bus);
+ void pci_remove_root_bus(struct pci_bus *bus);
+ void pci_setup_cardbus(struct pci_bus *bus);
+ void pci_sort_breadthfirst(void);
++bool pci_peer_traffic_supported(struct pci_dev *dev, struct pci_dev *peer);
++
+ #define dev_is_pci(d) ((d)->bus == &pci_bus_type)
+ #define dev_is_pf(d) ((dev_is_pci(d) ? to_pci_dev(d)->is_physfn : false))
+ #define dev_num_vf(d) ((dev_is_pci(d) ? pci_num_vf(to_pci_dev(d)) : 0))
+@@ -1914,4 +1916,5 @@ static inline bool pci_ari_enabled(struct pci_bus *bus)
+ {
+ 	return bus->self && bus->self->ari_enabled;
+ }
++
+ #endif /* LINUX_PCI_H */
 -- 
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+2.5.1
+
