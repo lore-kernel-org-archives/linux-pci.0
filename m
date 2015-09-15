@@ -1,411 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: "Sean O. Stalley" <sean.stalley@intel.com>,
-	David Daney <david.daney@cavium.com>
-Subject: [RFC PATCH] PCI/pci-host-generic: Add support for Cavium Thunder fixed BARs.
-Date: Mon, 28 Sep 2015 17:56:24 -0700
-Message-Id: <1443488184-12633-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bon0077.outbound.protection.outlook.com ([157.56.111.77]:18861
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751074AbbIOSqH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Sep 2015 14:46:07 -0400
+Message-ID: <55F86764.4060502@caviumnetworks.com>
+Date: Tue, 15 Sep 2015 11:45:56 -0700
+From: David Daney <ddaney@caviumnetworks.com>
+MIME-Version: 1.0
+To: Will Deacon <will.deacon@arm.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <david.daney@cavium.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in bus_max
+ calculation.
+References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com> <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com> <20150915174934.GL31157@arm.com> <55F85D4E.9020604@caviumnetworks.com> <20150915183500.GR31157@arm.com>
+In-Reply-To: <20150915183500.GR31157@arm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On 09/15/2015 11:35 AM, Will Deacon wrote:
+> On Tue, Sep 15, 2015 at 07:02:54PM +0100, David Daney wrote:
+>> On 09/15/2015 10:49 AM, Will Deacon wrote:
+>>> On Sat, Sep 12, 2015 at 12:21:57AM +0100, David Daney wrote:
+>>>>    	/* Limit the bus-range to fit within reg */
+>>>> -	bus_max = pci->cfg.bus_range->start +
+>>>> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+>>>> +	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+>>>> +	if (bus_max > 255)
+>>>> +		bus_max = 255;
+>>>>    	pci->cfg.bus_range->end = min_t(resource_size_t,
+>>>>    					pci->cfg.bus_range->end, bus_max);
+>>>
+>>> Hmm, this is changing the meaning of the bus-range property in the
+>>> device-tree, which really needs to match what IEEE Std 1275-1994 requires.
+>>
+>> I doesn't change the bus-range.
+>
+> Not directly, but pci->cfg.bus_range is a resource populated from the
+> "bus-range" property in the device-tree, so it's changing how the driver
+> uses that property.
+>
+>>> My understanding was that the bus-range could be used to offset the config
+>>> space, which is why it's subtracted from the bus number in
+>>> gen_pci_map_cfg_bus_[e]cam.
+>>
+>> There is an inconsistency in the current code.  The calculation of the
+>> cfg.win[?] pointers is done such that the beginning of the config space
+>> specified in the "reg" property corresponds to bus 0.
+>
+> I don't follow you here. The mapping functions explicitly subtract the
+> start of the bus range when calculating the window offset:
+>
+>    resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+>
+> so if I have bus-range = <128 255>; then bus 128 lives at the start of
+> the configuration space described by the reg property, not bus 0.
+>
+> Sorry if I'm being thick; I just can't see the inconsistency.
+>
 
-Early versions of the Cavium Thunder CN88XX processor are missing
-Enhanced Allocation (EA) capabilities for the fixed BAR addresses used
-by the on-SoC hardware blocks.
+Here is the current code:
 
-Add config access functions that synthesize the missing EA
-capabilities for versions that are missing that information.  Since
-this is a little hacky, gate the inclusion of the code with a new
-Kconfig variable.
+>> 	bus_range = pci->cfg.bus_range;
+>> 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+>> 		u32 idx = busn - bus_range->start;
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
+The index is offset by the bus range start...
 
-As suggested by Bjorn Helgaas...  It is RFC at this point, but this is
-working well for me.
+>> 		u32 sz = 1 << pci->cfg.ops.bus_shift;
+>>
+>> 		pci->cfg.win[idx] = devm_ioremap(dev,
+>> 						 pci->cfg.res.start + busn * sz,
+>> 						 sz);
 
-Depends on:
+But, the offset into the "reg" property is the raw bus number.
 
-https://lkml.org/lkml/2015/9/28/796
 
- drivers/pci/host/Kconfig                  |   9 +
- drivers/pci/host/Makefile                 |   1 +
- drivers/pci/host/pci-host-generic.c       |  22 ++-
- drivers/pci/host/thunder_ecam_config_io.c | 273 ++++++++++++++++++++++++++++++
- 4 files changed, 304 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/host/thunder_ecam_config_io.c
+>> 		if (!pci->cfg.win[idx])
+>> 			return -ENOMEM;
+>> 	}
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d5e58ba..9f3a9cd 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -58,6 +58,15 @@ config PCI_HOST_GENERIC
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
- 
-+config PCI_HOST_THUNDER
-+	bool "Extensions to Generic PCI host controller for Cavium Thunder"
-+	depends on PCI_HOST_GENERIC && ARM64
-+	help
-+	  Say Y here to enable PCI config access methods needed by
-+	  CN88XX Cavium Thunder SoCs.  The access is standard ECAM,
-+	  but Enhanced Allocation (EA) capability structures are
-+	  synthesized for on-SoC devices with fixed BARs.
-+
- config PCIE_SPEAR13XX
- 	bool "STMicroelectronics SPEAr PCIe controller"
- 	depends on ARCH_SPEAR13XX
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 140d66f..8b77d62 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -7,6 +7,7 @@ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
- obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
- obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
-+obj-$(CONFIG_PCI_HOST_THUNDER) += thunder_ecam_config_io.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
- obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
- obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 6f12830..64558e5 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -91,6 +91,21 @@ static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
- 	}
- };
- 
-+#ifdef CONFIG_PCI_HOST_THUNDER
-+int thunder_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
-+			     int where, int size, u32 *val);
-+int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
-+			     int where, int size, u32 val);
-+static struct gen_pci_cfg_bus_ops gen_pci_cfg_thunder_ecam_bus_ops = {
-+	.bus_shift	= 20,
-+	.ops		= {
-+		.map_bus	= gen_pci_map_cfg_bus_ecam,
-+		.read		= thunder_ecam_config_read,
-+		.write		= thunder_ecam_config_write,
-+	}
-+};
-+#endif
-+
- static void __iomem *gen_pci_map_cfg_bus_thunder_pem(struct pci_bus *bus,
- 						     unsigned int devfn,
- 						     int where)
-@@ -108,6 +123,7 @@ static void __iomem *gen_pci_map_cfg_bus_thunder_pem(struct pci_bus *bus,
- 	return pci->cfg.win[idx] + ((devfn << 16) | where);
- }
- 
-+#ifdef CONFIG_PCI_HOST_THUNDER
- static struct gen_pci_cfg_bus_ops gen_pci_cfg_thunder_pem_bus_ops = {
- 	.bus_shift	= 24,
- 	.ops		= {
-@@ -116,6 +132,7 @@ static struct gen_pci_cfg_bus_ops gen_pci_cfg_thunder_pem_bus_ops = {
- 		.write		= pci_generic_config_write,
- 	}
- };
-+#endif
- 
- static const struct of_device_id gen_pci_of_match[] = {
- 	{ .compatible = "pci-host-cam-generic",
-@@ -126,7 +143,10 @@ static const struct of_device_id gen_pci_of_match[] = {
- 
- 	{ .compatible = "cavium,pci-host-thunder-pem",
- 	  .data = &gen_pci_cfg_thunder_pem_bus_ops },
--
-+#ifdef CONFIG_PCI_HOST_THUNDER
-+	{ .compatible = "cavium,pci-host-thunder-ecam",
-+	  .data = &gen_pci_cfg_thunder_ecam_bus_ops },
-+#endif
- 	{ },
- };
- MODULE_DEVICE_TABLE(of, gen_pci_of_match);
-diff --git a/drivers/pci/host/thunder_ecam_config_io.c b/drivers/pci/host/thunder_ecam_config_io.c
-new file mode 100644
-index 0000000..58c3109
---- /dev/null
-+++ b/drivers/pci/host/thunder_ecam_config_io.c
-@@ -0,0 +1,273 @@
-+/*
-+ *
-+ * This file is subject to the terms and conditions of the GNU General Public
-+ * License.  See the file "COPYING" in the main directory of this archive
-+ * for more details.
-+ *
-+ * Copyright (C) 2015 Cavium, Inc.
-+ *
-+ */
-+
-+#include <linux/pci.h>
-+#include <linux/ioport.h>
-+#include <linux/printk.h>
-+
-+static void set_val(u32 v, int where, int size, u32 *val)
-+{
-+	int shift = (where & 3) * 8;
-+
-+	pr_debug("set_val %04x: %08x\n", (unsigned)(where & ~3), v);
-+	v >>= shift;
-+	if (size == 1)
-+		v &= 0xff;
-+	else if (size == 2)
-+		v &= 0xffff;
-+	*val = v;
-+}
-+
-+static int handle_ea_bar(u32 e0, int bar, struct pci_bus *bus,
-+			 unsigned int devfn, int where, int size, u32 *val)
-+{
-+	void __iomem *addr;
-+	u32 v;
-+	/*
-+	 * Each entry is 16-byte aligned bits[2,3] select which word
-+	 * in the entry
-+	 */
-+	int where_a = where & 0xc;
-+
-+	if (where_a == 0) {
-+		set_val(e0, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0x4) {
-+		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		v = readl(addr);
-+		v &= ~0xf;
-+		v |= 2; /* EA entry-1. Base-L */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0x8) {
-+		u32 barl_orig;
-+		u32 barl_rb;
-+
-+		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		barl_orig = readl(addr + 0);
-+		writel(0xffffffff, addr + 0);
-+		barl_rb = readl(addr + 0);
-+		writel(barl_orig, addr + 0);
-+		/* zeros in unsettable bits. */
-+		v = ~barl_rb & ~3;
-+		v |= 0xc; /* EA entry-2. Offset-L */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0xc) {
-+		addr = bus->ops->map_bus(bus, devfn, bar + 4); /* BAR 1 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		v = readl(addr); /* EA entry-3. Base-H */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
-+			      int where, int size, u32 val)
-+{
-+	/*
-+	 * All BARs have fixed addresses, ignore BAR writes so they
-+	 * don't get corrupted.
-+	 */
-+	if ((where >= 0x10 && where < 0x2c) || (where >= 0x1a4 && where < 0x1bc))
-+		/* BAR or SRIOV BAR */
-+		return PCIBIOS_SUCCESSFUL;
-+
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+int thunder_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
-+			     int where, int size, u32 *val)
-+{
-+	u32 v;
-+	u32 vendor_device;
-+	void __iomem *addr;
-+	int cfg_type;
-+	int where_a = where & ~3;
-+
-+	/*
-+	 * All BARs have fixed addresses specified by the EA
-+	 * capability, they must return zero on read.
-+	 */
-+	if ((where >= 0x10 && where < 0x2c) || (where >= 0x1a4 && where < 0x1bc)) {
-+		/* BAR or SRIOV BAR */
-+		*val = 0;
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+
-+	addr = bus->ops->map_bus(bus, devfn, 0);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	vendor_device = readl(addr);
-+	if (vendor_device == 0xffffffff)
-+		goto no_emulation;
-+
-+	addr = bus->ops->map_bus(bus, devfn, 8);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	v = readl(addr);
-+	if (v == 0xffffffff)
-+		goto no_emulation;
-+
-+	if ((v & 0xff) < 8) {
-+		pr_debug("%04x:%04x - Fix pass#: %08x, where: %03x, devfn: %03x\n",
-+			 vendor_device & 0xffff, vendor_device >> 16, v, (unsigned) where, devfn);
-+		/* pass 1.x*/
-+	} else {
-+		pr_debug("%04x:%04x - OK pass#: %08x, devfn: %03x\n",
-+			 vendor_device & 0xffff, vendor_device >> 16, v, devfn);
-+		goto no_emulation;
-+	}
-+
-+	addr = bus->ops->map_bus(bus, devfn, 0xc);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	v = readl(addr);
-+	/* Check for non type-00 header. */
-+	cfg_type = (v >> 16) & 0x7f;
-+	if (cfg_type == 0) {
-+		bool has_msix;
-+		bool is_nic = (vendor_device == 0xa01e177d);
-+		bool is_tns = (vendor_device == 0xa01f177d);
-+
-+		addr = bus->ops->map_bus(bus, devfn, 0x70);
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		/* E_CAP */
-+		v = readl(addr);
-+		has_msix = (v & 0xff00) != 0;
-+
-+		if (!has_msix && where_a == 0x70) {
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xb0) {
-+			addr = bus->ops->map_bus(bus, devfn, where_a);
-+			if (!addr) {
-+				*val = ~0;
-+				return PCIBIOS_DEVICE_NOT_FOUND;
-+			}
-+			v = readl(addr);
-+			if (v & 0xff00)
-+				pr_err("Bad MSIX cap header: %08x\n", v);
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xbc) {
-+			if (is_nic)
-+				v = 0x40014; /* EA last in chain, 4 entries. */
-+			else if (is_tns)
-+				v = 0x40014; /* EA last in chain, 3 entries. */
-+			else if (has_msix)
-+				v = 0x20014; /* EA last in chain, 2 entries. */
-+			else
-+				v = 0x10014; /* EA last in chain, 1 entry. */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a >= 0xc0 && where_a < 0xd0)
-+			return handle_ea_bar(0x80ff0003, /* EA entry-0. PP=0, BAR0 Size:3 */
-+					     0x10, bus, devfn, where, size, val);
-+		if (where_a >= 0xd0 && where_a < 0xe0 && has_msix)
-+			return handle_ea_bar(0x80ff0043, /* EA entry-1. PP=0, BAR4 Size:3 */
-+					     0x20, bus, devfn, where, size, val);
-+		if (where_a >= 0xe0 && where_a < 0xf0 && is_tns)
-+			return handle_ea_bar(0x80ff0023, /* EA entry-2. PP=0, BAR2, Size:3 */
-+					     0x18, bus, devfn, where, size, val);
-+		if (where_a >= 0xe0 && where_a < 0xf0 && is_nic)
-+			return handle_ea_bar(0x80ff0493, /* EA entry-2. PP=4, VF_BAR0 (9), Size:3 */
-+					     0x1a4, bus, devfn, where, size, val);
-+		if (where_a >= 0xf0 && where_a < 0x100 && is_nic)
-+			return handle_ea_bar(0x80ff04d3, /* EA entry-3. PP=4, VF_BAR4 (d), Size:3 */
-+					     0x1b4, bus, devfn, where, size, val);
-+	} else if (cfg_type == 1) {
-+		if (where_a == 0x70) {
-+			addr = bus->ops->map_bus(bus, devfn, where_a);
-+			if (!addr) {
-+				*val = ~0;
-+				return PCIBIOS_DEVICE_NOT_FOUND;
-+			}
-+			v = readl(addr);
-+			if (v & 0xff00)
-+				pr_err("Bad PCIe cap header: %08x\n", v);
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xbc) {
-+			v = 0x10014; /* EA last in chain, 1 entry. */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc0) {
-+			v = 0x0101; /* subordinate:secondary = 1:1 */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc4) {
-+			v = 0x80ff0564; /* Enabled, not-Write, SP=ff, PP=05, BEI=6, ES=4 */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc8) {
-+			v = 0x00000002; /* Base-L 64-bit */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xcc) {
-+			v = 0xfffffffe; /* MaxOffset-L 64-bit */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xd0) {
-+			if (devfn == 8)
-+				v = 0x000087e0; /* RSL Base-H */
-+			else
-+				v = 0x00008430; /* NIC Base-H */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xd4) {
-+			v = 0x0000000f; /* MaxOffset-H */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+
-+	}
-+no_emulation:
-+	return pci_generic_config_read(bus, devfn, where, size, val);
-+}
--- 
-1.9.1
+
+I hope that makes it more clear.
+
+
+
+
+>> The calculation that I am changing, was done such that the beginning of
+>> the config space specified in the "reg" property corresponds to the
+>> first bus of the "bus-range"
+>>
+>> Which is correct?  I assumed that the config space specified in the
+>> "reg" property corresponds to bus 0.  Based on this assumption, I made
+>> the bus_max calculation match.
+>>
+>> Due to hardware peculiarities, our bus-range starts at a non-zero bus
+>> number.  So, something has to be done to make all the code agree on a
+>> single interpretation of the meaning "reg" property.
+>
+> I think you're the first to exercise this code, so it's definitely worth
+> us fixing whatever's going wrong.
+>
+>>> Also, why is your config space so large that
+>>> we end up overflowing bus_max?
+>>
+>> It isn't.  The part of the patch that changes the type from u8 to int
+>> was just to add some sanity.  The  code was easily susceptible to
+>> overflow failures, it seemed best to change to int.
+>
+> Can we drop this part for now if it's not actually needed?
+>
+> Will
+>
 
