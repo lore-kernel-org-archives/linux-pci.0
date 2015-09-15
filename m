@@ -1,69 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:27104 "EHLO
-	ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751397AbbIPL37 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 07:29:59 -0400
-Message-ID: <55F952B2.6080102@internode.on.net>
-Date: Wed, 16 Sep 2015 20:59:54 +0930
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
+Received: from bh-25.webhostbox.net ([208.91.199.152]:54372 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752023AbbIOQwG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 12:52:06 -0400
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com> <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com> <55F6EF40.50403@internode.on.net> <55F78306.3000802@linux.intel.com> <55F7C691.8000406@internode.on.net> <55F8F90D.2050703@linux.intel.com> <55F91C34.4070800@internode.on.net> <55F9266C.5060609@linux.intel.com>
-In-Reply-To: <55F9266C.5060609@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+References: <20150904164412.GD22997@red-moon>
+ <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+ <20150907091230.GB29293@red-moon> <20150914100929.GB18886@red-moon>
+ <CAE9FiQV-eG42xzqVcO2Q+xT3jx-Oa7uC7fEuowvopx4Fp9F7hQ@mail.gmail.com>
+ <20150914162834.GA11199@red-moon>
+ <CAE9FiQWJfbMD1Akq6XD-Yedc+tNNF8o0obPGHt8f_WnWX0pLbA@mail.gmail.com>
+ <CAE9FiQU6NTEdKJi58bNZU4u=+-rzB3mddp6vKGc4JjbZWoa9zQ@mail.gmail.com>
+ <20150915094610.GD11199@red-moon>
+ <CAErSpo5KaV7ERYcyZBzfvCEh40zSPJmymwXUCbAZkK=hb4DPSw@mail.gmail.com>
+ <20150915163000.GA16240@red-moon>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <55F84CAA.8060901@roeck-us.net>
+Date: Tue, 15 Sep 2015 09:51:54 -0700
+MIME-Version: 1.0
+In-Reply-To: <20150915163000.GA16240@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-Jiang Liu wrote on 16/09/15 17:51:
-
-> Hi Arthur,
-> 	It would be great if we could capture the text as in the
-> picture posted by you at:
-> 	http://www.users.on.net/~arthur.marsh/20150915547.jpg
-> 	I guess a serial console could help us to capture those
-> log messages. To use serial console, we need to setup serial cable,
-> configure grub and kernel to use serial port as console.
-> Thanks!
-> Gerry
->
+On 09/15/2015 09:30 AM, Lorenzo Pieralisi wrote:
+> On Tue, Sep 15, 2015 at 04:57:07PM +0100, Bjorn Helgaas wrote:
+>> On Tue, Sep 15, 2015 at 4:46 AM, Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com> wrote:
+>>> On Tue, Sep 15, 2015 at 12:58:20AM +0100, Yinghai Lu wrote:
+>>>> On Mon, Sep 14, 2015 at 10:36 AM, Yinghai Lu <yinghai@kernel.org> wrote:
+>>>>> On Mon, Sep 14, 2015 at 9:28 AM, Lorenzo Pieralisi
+>>>>> <lorenzo.pieralisi@arm.com> wrote:
+>>>>>> On Mon, Sep 14, 2015 at 05:05:50PM +0100, Yinghai Lu wrote:
+>>>>>>> We could just revert
+>>>>>>> dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
+>>>>>>> arch code")
+>>>>>>> instead.
+>>>>>>
+>>>>
+>>>>> if arch code called pci_read_bridge_bases() via pcibios_fixup_bus(),
+>>>>> then it need to have
+>>>>> to call pcibios_allocate_bus_resources() later.
+>>>>>
+>>>>> but now arm (mips ?)  does not have calling pcibios_allocate_bus_resources().
+>>>
+>>> pcibios_allocate_bus_resources() is an arch specific function and arm
+>>> and (and mips ?) does not need to create/call it because ARM reassigns
+>>> ALL resources in ALL platforms, hoping FW can provide a reasonable PCI
+>>> bridge apertures set-up on ARM is wishful thinking at present.
+>>>
+>>> If PCI core code is written with that assumption (ie that arch code zeroes
+>>> the bridge apertures if they can't be claimed), pci_read_bridge_bases()
+>>> can't be moved to PCI core code at present, sad and simple.
+>>>
+>>> I already asked many times why __pci_bus_size_bridges() cares about
+>>> the old bridge size on first scan and got no answer so I would ask Bjorn
+>>> to revert dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core
+>>> instead of arch code") or we apply an ARM specific plaster, we are making
+>>> no progress on this.
+>>>
+>>>> Found other problem that is caused by
+>>>> dff22d2054b5 (" PCI: Call pci_read_bridge_bases() from core instead of
+>>>> arch code")
+>>>>
+>>>> If that commit does not get reverted, will need to have attached patch
+>>>
+>>> I see what you mean and I see why there is a reason to apply the patch
+>>> below if we do not revert dff22d2054b5 (" PCI: Call pci_read_bridge_bases()
+>>> from core instead of arch code"), but I am afraid the commit log has to
+>>> be rewritten to explain the problem in a way that properly describes
+>>> the issue, and that's not the first one I read in the last couple of
+>>> weeks to figure out how to fix this regression.
 >>
->> Regards,
->>
->> Arthur.
+>> I'm inclined to revert dff22d2054b5 ("PCI: Call
+>> pci_read_bridge_bases() from core instead of arch code") until we can
+>> figure this out.  I think the idea of moving that work from
+>> arch-specific code to the core is good, but it seems like it leads to
+>> more hacky workarounds than real cleanup right now.  What would break
+>> if we simply reverted it?  Would that reintroduce any problems?
 >
+> None that I am aware of, I know Guenter required it for this series:
+>
+> https://lkml.org/lkml/2015/7/30/861
+>
+> but it was not merged so, as far as I understand, reverting the patch
+> should get things to normal. I think it unearthed a couple of niggles
 
-I've already included the text of what appeaered in the image above:
+It looks like me and Yinghai disagree how the problem I was trying to fix
+should be handled, I don't understand Yinghai's concerns, and unfortunately
+I just don't have the time I would need to get a better understanding.
+It is fine with me to revert your patch and abandon mine.
 
-sd 0:0:6:0: abort, mbox 63.
-EATA0: abort, mbox 63 is in use.
-sd 0:0:6:0: reset, enter.
-EATA0: reset, mbox 63 in reset.
-EATA0: reset, board reset done, enabling interrupts.
-EATA0: reset, interrupts disabled, loops 100469.
-EATA0: reset, mbox 63 locked, DID_RESET, done.
-EATA0: reset, exit, done.
-sd 0:0:6:0: qcomm, mbox 0, adapter busy, will start
-sd 0:0:6:0: abort, mbox 0.
-EATA0: abort, timeout error.
-sd 0:0:6:0: reset, enter.
-EATA0: reset, exit, timeout error.
-sd 0:0:6:0 Device offlinled - not ready after error recovery
-sd 0:0:6:0 rejecting I/O to offline device
-sd 0:0:6:0 rejecting I/O to offline device
-sd 0:0:6:0 [sda] Synchronize Cache(10) failed: Result: 
-hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
-starting new kernel
+Guenter
 
-As mentioned previously this occurred after the normal Synchronizing 
-SCSI cache messages.
-
-I don't think that there is anything else that gets sent to the console.
-
-Arthur.
