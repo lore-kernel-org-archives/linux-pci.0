@@ -1,137 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58668 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752171AbbIVQFe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Sep 2015 12:05:34 -0400
-Date: Tue, 22 Sep 2015 17:05:49 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from bh-25.webhostbox.net ([208.91.199.152]:47969 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751670AbbIOVHZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 17:07:25 -0400
+Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
+ of arch code
+To: Yinghai Lu <yinghai@kernel.org>
+References: <20150904164412.GD22997@red-moon>
+ <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
+ <20150907091230.GB29293@red-moon> <20150914100929.GB18886@red-moon>
+ <CAE9FiQV-eG42xzqVcO2Q+xT3jx-Oa7uC7fEuowvopx4Fp9F7hQ@mail.gmail.com>
+ <20150914162834.GA11199@red-moon>
+ <CAE9FiQWJfbMD1Akq6XD-Yedc+tNNF8o0obPGHt8f_WnWX0pLbA@mail.gmail.com>
+ <CAE9FiQU6NTEdKJi58bNZU4u=+-rzB3mddp6vKGc4JjbZWoa9zQ@mail.gmail.com>
+ <20150915094610.GD11199@red-moon>
+ <CAErSpo5KaV7ERYcyZBzfvCEh40zSPJmymwXUCbAZkK=hb4DPSw@mail.gmail.com>
+ <20150915163000.GA16240@red-moon> <55F84CAA.8060901@roeck-us.net>
+ <CAE9FiQXrr2w5=QRpP9kL=xE4djwCz80wTPn1SA93Wg_u=6Tp3Q@mail.gmail.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 3/3] PCI: generic: Add support for Cavium ThunderX PCIe
- root complexes.
-Message-ID: <20150922160549.GE17444@red-moon>
-References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com>
- <1442529694-1792-4-git-send-email-ddaney.cavm@gmail.com>
+	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"James E.J. Bottomley" <jejb@parisc-linux.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Richard Henderson <rth@twiddle.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	David Howells <dhowells@redhat.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Tony Luck <tony.luck@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Ingo Molnar <mingo@redhat.com>,
+	Michal Simek <monstr@monstr.eu>,
+	Chris Zankel <chris@zankel.net>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <55F88885.9070707@roeck-us.net>
+Date: Tue, 15 Sep 2015 14:07:17 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442529694-1792-4-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <CAE9FiQXrr2w5=QRpP9kL=xE4djwCz80wTPn1SA93Wg_u=6Tp3Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 11:41:34PM +0100, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> The config space for external PCIe root complexes on some Cavium
-> ThunderX SoCs is very similar to CAM and ECAM, but differs in the
-> shift values that have to be applied to the bus and devfn numbers to
-> compose that address window offset.  These root complexes also have
-> the interesting property that there is no root bridge, so the standard
-> manner of limiting scanning to only the first device doesn't work.  We
-> can use the standard pci-host-generic driver if we make a minor
-> addition to handle these differences, so we...
-> 
-> Add a mapping function for ThunderX PCIe root complexes with a bus
-> shift of 24 and devfn shift of 16.  Ignore accesses for devices other
-> than the first device on the primary bus.
-> 
-> Document the whole thing in devicetree/bindings/pci/host-generic-pci.txt
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  .../devicetree/bindings/pci/host-generic-pci.txt   |  8 +++---
->  drivers/pci/host/pci-host-generic.c                | 29 ++++++++++++++++++++++
->  2 files changed, 34 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> index 105a968..a5aed0f 100644
-> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> @@ -14,9 +14,11 @@ tree bindings communicated in pci.txt:
->  
->  Properties of the host controller node:
->  
-> -- compatible     : Must be "pci-host-cam-generic" or "pci-host-ecam-generic"
-> -                   depending on the layout of configuration space (CAM vs
-> -                   ECAM respectively).
-> +- compatible     : One of the following with bus:devfn:reg mapped to the
-> +                   PCI config space address window in the bit positions shown:
-> +                   "pci-host-cam-generic" -- 'CAM'  bits 16:8:0
-> +                   "pci-host-ecam-generic" -- 'ECAM'  bits 20:12:0
-> +                   "cavium,pci-host-thunder-pem" --  bits 24:16:0
+On 09/15/2015 01:17 PM, Yinghai Lu wrote:
+> On Tue, Sep 15, 2015 at 9:51 AM, Guenter Roeck <linux@roeck-us.net> wrote:
+>> On 09/15/2015 09:30 AM, Lorenzo Pieralisi wrote:
+>>
+>> It looks like me and Yinghai disagree how the problem I was trying to fix
+>> should be handled, I don't understand Yinghai's concerns, and unfortunately
+>> I just don't have the time I would need to get a better understanding.
+>> It is fine with me to revert your patch and abandon mine.
+>
+> I put one simplified version in one my branch.
+>
+> https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/patch/?id=cdf4bfbc1ce12d826abd49a8987eb3ca7e129332
+>
+> and will sent that later if needed.
+>
+>>From cdf4bfbc1ce12d826abd49a8987eb3ca7e129332 Mon Sep 17 00:00:00 2001
+> From: Guenter Roeck <linux@roeck-us.net>
 
-To me that's ECAM left shifted by 4. Is not it just a matter of defining
-config space base address (ie reg property) differently ?
+Yinghai,
 
-Lorenzo
+that isn't really my patch, so you should not send it under my name.
 
->  
->  - device_type    : Must be "pci".
->  
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index e364232..e1d8d5b 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -91,6 +91,32 @@ static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
->  	}
->  };
->  
-> +static void __iomem *gen_pci_map_cfg_bus_thunder_pem(struct pci_bus *bus,
-> +						     unsigned int devfn,
-> +						     int where)
-> +{
-> +	struct gen_pci *pci = bus->sysdata;
-> +	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+Thanks,
+Guenter
+
+> Date: Tue, 15 Sep 2015 12:59:11 -0700
+> Subject: PCI: Only try to assign io port only for root bus that support it
+>
+> The PCI subsystem always assumes that I/O is supported on root bus and
+> tries to assign an I/O window to each child bus even if that is not the
+> case.
+>
+> This may result in messages such as:
+>
+>    pcieport 0000:02:00.0: res[7]=[io  0x1000-0x0fff] get_res_add_size
+> add_size 1000
+>    pcieport 0000:02:00.0: BAR 7: no space for [io  size 0x1000]
+>    pcieport 0000:02:00.0: BAR 7: failed to assign [io  size 0x1000]
+>
+> for each bridge port, even if root does not support I/O in the first place.
+>
+> To avoid this message, check if root bus supports I/O, then child bus
+> will inherit the setting from parent bus, and later during sizing and
+> assigning, check that bus flags and skip those resources.
+>
+> [bhelgaas: reverse sense of new pci_bus_flags_t value]
+> [yinghai: only check root bus io port, and use flag on sizing and assigning]
+> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index c4c6947..5d946bd 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -339,6 +339,9 @@ static void pci_read_bridge_io(struct pci_bus *child)
+>    struct pci_bus_region region;
+>    struct resource *res;
+>
+> + if (!(child->bus_flags & PCI_BUS_FLAGS_ROOT_SUPPORTS_IO))
+> + return;
 > +
-> +	/*
-> +	 * Thunder PEM is a PCIe RC, but without a root bridge.  On
-> +	 * the primary bus, ignore accesses for devices other than
-> +	 * the first device.
-> +	 */
-> +	if (idx == 0 && (devfn & ~7u))
-> +		return NULL;
-> +	return pci->cfg.win[idx] + ((devfn << 16) | where);
-> +}
+>    io_mask = PCI_IO_RANGE_MASK;
+>    io_granularity = 0x1000;
+>    if (dev->io_window_1k) {
+> @@ -2126,6 +2129,8 @@ struct pci_bus *pci_create_root_bus(struct
+> device *parent, int bus,
+>    } else
+>    bus_addr[0] = '\0';
+>    dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
+> + if (resource_type(res) == IORESOURCE_IO)
+> + b->bus_flags |= PCI_BUS_FLAGS_ROOT_SUPPORTS_IO;
+>    }
+>
+>    resource_list_for_each_entry(window, &bridge->windows) {
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 9d5e415..8ee5d17 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -223,6 +223,10 @@ static void pdev_assign_resources_prepare(struct
+> pci_dev *dev,
+>    if (r->flags & IORESOURCE_PCI_FIXED)
+>    continue;
+>
+> + if ((r->flags & IORESOURCE_IO) &&
+> +    !(dev->bus->bus_flags & PCI_BUS_FLAGS_ROOT_SUPPORTS_IO))
+> + continue;
 > +
-> +static struct gen_pci_cfg_bus_ops gen_pci_cfg_thunder_pem_bus_ops = {
-> +	.bus_shift	= 24,
-> +	.ops		= {
-> +		.map_bus	= gen_pci_map_cfg_bus_thunder_pem,
-> +		.read		= pci_generic_config_read,
-> +		.write		= pci_generic_config_write,
-> +	}
-> +};
+>    if (resource_disabled(r) || r->parent)
+>    continue;
+>
+> @@ -1178,6 +1182,11 @@ static void pbus_size_io(struct pci_bus *bus,
+> resource_size_t min_size,
+>    min_size = 0;
+>    }
+>
+> + if (!(bus->bus_flags & PCI_BUS_FLAGS_ROOT_SUPPORTS_IO)) {
+> + b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
+> + return;
+> + }
 > +
->  static const struct of_device_id gen_pci_of_match[] = {
->  	{ .compatible = "pci-host-cam-generic",
->  	  .data = &gen_pci_cfg_cam_bus_ops },
-> @@ -98,6 +124,9 @@ static const struct of_device_id gen_pci_of_match[] = {
->  	{ .compatible = "pci-host-ecam-generic",
->  	  .data = &gen_pci_cfg_ecam_bus_ops },
->  
-> +	{ .compatible = "cavium,pci-host-thunder-pem",
-> +	  .data = &gen_pci_cfg_thunder_pem_bus_ops },
-> +
->  	{ },
->  };
->  MODULE_DEVICE_TABLE(of, gen_pci_of_match);
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+>    min_align = window_alignment(bus, IORESOURCE_IO);
+>    list_for_each_entry(dev, &bus->devices, bus_list) {
+>    int i;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 5ed9bf1..790c534 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -193,6 +193,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
+>   enum pci_bus_flags {
+>    PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
+>    PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
+> + PCI_BUS_FLAGS_ROOT_SUPPORTS_IO = (__force pci_bus_flags_t) 4,
+>   };
+>
+>   /* These values come from the PCI Express Spec */
+>
+
