@@ -1,101 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v3 3/4] PCI/MSI:  Add helper function pci_msi_domain_get_msi_rid().
-Date: Wed, 30 Sep 2015 15:47:01 -0700
-Message-Id: <1443653222-24924-4-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:7931 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785AbbIORMB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:12:01 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	Mark Hounschell <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	Will Davis <wdavis@nvidia.com>
+Subject: [PATCH 17/22] iommu/vt-d: implement (un)map_peer_resource
+Date: Tue, 15 Sep 2015 12:11:02 -0500
+Message-ID: <1442337067-22964-18-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Implement 'map_peer_resource' for the Intel IOMMU driver. Simply translate
+the resource to a physical address and route it to the same handlers used
+by the 'map_page' API.
 
-Add pci_msi_domain_get_msi_rid() to return the MSI requester id (RID).
-Initially needed by gic-v3 based systems. It will be used by follow on
-patch to drivers/irqchip/irq-gic-v3-its-pci-msi.c
+This allows a device to map another's resource, to enable peer-to-peer
+transactions.
 
-Initially supports mapping the RID via OF device tree.  In the future,
-this could be extended to use ACPI _IORT tables as well.
+Add behind CONFIG_HAS_DMA_P2P guards, since the dma_map_ops members are
+behind them as well.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+Reviewed-by: Terence Ripperda <tripperda@nvidia.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 ---
- drivers/pci/msi.c   | 31 +++++++++++++++++++++++++++++++
- include/linux/msi.h |  1 +
- 2 files changed, 32 insertions(+)
+ drivers/iommu/intel-iommu.c | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d449714..92b6dc9 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -20,6 +20,7 @@
- #include <linux/io.h>
- #include <linux/slab.h>
- #include <linux/irqdomain.h>
-+#include <linux/of_irq.h>
- 
- #include "pci.h"
- 
-@@ -1327,4 +1328,34 @@ struct irq_domain *pci_msi_create_default_irq_domain(struct device_node *node,
- 
- 	return domain;
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index a98a7b2..0d3746f 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -3544,6 +3544,40 @@ static void intel_unmap_page(struct device *dev, dma_addr_t dev_addr,
+ 	intel_unmap(dev, dev_addr);
  }
-+
-+struct get_mis_id_data {
-+	u32	alias;
-+};
-+
-+static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
-+{
-+	struct get_mis_id_data *s = data;
-+
-+	s->alias = alias;
-+	return 0;
-+}
-+/**
-+ * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
-+ * @domain:	The interrupt domain
-+ * @pdev:	The PCI device.
-+ *
-+ * The RID for a device is formed from the alias, with a firmware
-+ * supplied mapping applied
-+ *
-+ * Returns: The RID.
-+ */
-+u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
-+{
-+	struct get_mis_id_data d;
-+
-+	d.alias = 0;
-+	pci_for_each_dma_alias(pdev, get_msi_id_cb, &d);
-+	return of_msi_map_rid(&pdev->dev, domain->of_node, d.alias);
-+}
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index ad939d0..56e3b76 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -293,6 +293,7 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 					  struct msi_desc *desc);
- int pci_msi_domain_check_cap(struct irq_domain *domain,
- 			     struct msi_domain_info *info, struct device *dev);
-+u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
- #endif /* CONFIG_PCI_MSI_IRQ_DOMAIN */
  
- #endif /* LINUX_MSI_H */
++#ifdef CONFIG_HAS_DMA_P2P
++static dma_peer_addr_t intel_map_peer_resource(struct device *dev,
++					       struct device *peer,
++					       struct resource *res,
++					       unsigned long offset,
++					       size_t size,
++					       enum dma_data_direction dir,
++					       struct dma_attrs *attrs)
++{
++	struct pci_dev *pdev;
++	struct pci_dev *ppeer;
++
++	if (!dev_is_pci(dev) || !dev_is_pci(peer))
++		return 0;
++
++	pdev = to_pci_dev(dev);
++	ppeer = to_pci_dev(peer);
++
++	if (!pci_peer_traffic_supported(pdev, ppeer))
++		return 0;
++
++	return __intel_map_single(dev, res->start + offset, size,
++				  dir, *dev->dma_mask);
++}
++
++static void intel_unmap_peer_resource(struct device *dev,
++				      dma_peer_addr_t dev_addr,
++				      size_t size, enum dma_data_direction dir,
++				      struct dma_attrs *attrs)
++{
++	intel_unmap(dev, dev_addr);
++}
++#endif
++
+ static void *intel_alloc_coherent(struct device *dev, size_t size,
+ 				  dma_addr_t *dma_handle, gfp_t flags,
+ 				  struct dma_attrs *attrs)
+@@ -3700,6 +3734,10 @@ struct dma_map_ops intel_dma_ops = {
+ 	.unmap_sg = intel_unmap_sg,
+ 	.map_page = intel_map_page,
+ 	.unmap_page = intel_unmap_page,
++#ifdef CONFIG_HAS_DMA_P2P
++	.map_peer_resource = intel_map_peer_resource,
++	.unmap_peer_resource = intel_unmap_peer_resource,
++#endif
+ 	.mapping_error = intel_mapping_error,
+ };
+ 
 -- 
-1.9.1
+2.5.1
 
