@@ -1,46 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35542 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750799AbbIWSkH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Sep 2015 14:40:07 -0400
-Date: Wed, 23 Sep 2015 19:40:05 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+Received: from szxga02-in.huawei.com ([119.145.14.65]:47792 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805AbbIOMo2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 08:44:28 -0400
+From: Zhou Wang <wangzhou1@hisilicon.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <robh@kernel.org>,
+	<gabriel.fernandez@linaro.org>, <Minghuan.Lian@freescale.com>
+CC: <linux-pci@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
-Message-ID: <20150923184005.GX7356@arm.com>
-References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
+	<devicetree@vger.kernel.org>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
+	<liguozhu@hisilicon.com>, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH v9 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+Date: Tue, 15 Sep 2015 20:49:15 +0800
+Message-ID: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 01:09:56AM +0100, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
-> Since it is arm64, create a new quirks.c file there to contain arm64
-> related quirks.  Add the ThunderX bridge quirk, gated by a new config
-> variable, so that it can be disabled for kernels that aren't expected
-> to be used on ThunderX.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  arch/arm64/Kconfig         | 11 +++++++++++
->  arch/arm64/kernel/Makefile |  2 +-
->  arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
->  3 files changed, 48 insertions(+), 1 deletion(-)
->  create mode 100644 arch/arm64/kernel/quirks.c
+This patchset adds PCIe host support for HiSilicon SoC Hip05. The PCIe hosts
+use PCIe IP core from Synopsys, So this driver is based on designware PCIe driver.
 
-Why does this have to live in the arch/arm64/ directory? The quirks have
-nothing to do with the architecture code.
+Hip05 is an ARMv8 architecture SoC. It should be able to use ARM64 PCIe API in
+designware PCIe driver. So this patch also adds ARM64 support for designware
+pcie.
 
-Will
+This patchset is based on v4.3-rc1.
+
+Change from v8:
+- Rebase on v4.3-rc1.
+- Add Tested-by from Gabriel and Minghuan.
+- Remove ITS domain parsing in msi_host_init in pcie-hisi.c, no need this as PCI
+  core does related job. Add ITS base address parsing in msi_host_init.
+- Change vmid/asid table configuration, previous configuration was wrong.
+- Add wr_own_conf callback in pcie-hisi.c.
+- Use subsys_initcall to init hisi PCIe.
+
+Change from v7:
+- Remove pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
+  spear13xx. Pass pp->busn->start to pci_create_root_bus as root bus number.
+- Remove bus-range parsing in pcie-hisi.c.
+
+Change from v6:
+- Add Pratyush's Acked-by for 1/6 and 2/6.
+- Add James' Tested-by for 3/6.
+
+Change from v5:
+- Merge 1/6 in this series, discussion about this can be found in [1]
+
+Change from v4:
+- Change the author of 1/5 to Gabriele.
+- Modify problems in 3/5 pointed by Bjorn.
+- Modify spelling problems in 4/5.
+
+Change from v3:
+- Change 1/5 to what Gabriele suggested.
+- Use win->__res.start to get *_mod_base in 2/5, this fix a bug in v3 series.
+
+Change from v2:
+- Move struct pci_dev *dev and struct pci_sys_data *sys in
+  pcibios_align_resource in 1/5.
+- Add Gabriele's codes in 2/5 which delete unnecessary information parse and
+  use of_pci_get_host_bridge_resources for both ARM32 and ARM64.
+- Add maintainer patch 5/5.
+
+Change from RFC v1:
+- Add 1/4 patch by Arnd which removes align_resource callback in ARM
+  pcibios_align_resource.
+- Change head file in pcie-designware from asm/hardirq.h to linux/hardirq.h.
+- Set pp->root_bus_nr = 0 in dra7xx, exynos, imx6, keystone, layerscape,
+  spear13xx.
+- Remove unnecessary parentheses of some macros in pcie-hisi.
+- Use macro to replace some magic values.
+- Merge two loops together and add some comments about it in context_config
+  function in pcie-hisi.
+- Modify some value of items in pcie node example in binding document. 
+
+Change from RFC:
+- delete dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+  merge related operations into dw_pcie_host_init.
+
+Link of v8:
+- http://www.spinics.net/lists/linux-pci/msg44192.html
+Link of v7:
+- http://www.spinics.net/lists/devicetree/msg90690.html
+Link of v6:
+- http://www.spinics.net/lists/linux-pci/msg43669.html
+Link of v5:
+- http://www.spinics.net/lists/devicetree/msg87959.html
+Link of v4:
+- http://www.spinics.net/lists/arm-kernel/msg433050.html
+Link of v3:
+- http://www.spinics.net/lists/linux-pci/msg42539.html
+Link of v2:
+- http://www.spinics.net/lists/linux-pci/msg41844.html
+Link of RFC v1:
+- http://www.spinics.net/lists/linux-pci/msg41305.html
+Link of RFC:
+- http://www.spinics.net/lists/linux-pci/msg40434.html
+
+[1] http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/359741.html
+
+Zhou Wang (4):
+  PCI: designware: Add ARM64 support
+  PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+  Documentation: DT: Add HiSilicon PCIe host binding
+  MAINTAINERS: Add pcie-hisi maintainer
+
+gabriele paoloni (2):
+  PCI: designware: move calculation of bus addresses to DRA7xx
+  ARM/PCI: remove align_resource in pci_sys_data
+
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |  46 +++
+ MAINTAINERS                                        |   7 +
+ arch/arm/include/asm/mach/pci.h                    |   6 -
+ arch/arm/kernel/bios32.c                           |  12 +-
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pci-dra7xx.c                      |  13 +
+ drivers/pci/host/pci-keystone-dw.c                 |   2 +-
+ drivers/pci/host/pcie-designware.c                 | 245 +++++-----------
+ drivers/pci/host/pcie-designware.h                 |  14 +-
+ drivers/pci/host/pcie-hisi.c                       | 310 +++++++++++++++++++++
+ 11 files changed, 476 insertions(+), 188 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-hisi.c
+
+-- 
+1.9.1
+
