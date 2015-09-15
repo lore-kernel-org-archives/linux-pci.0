@@ -1,95 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <5602CA55.10604@caviumnetworks.com>
-Date: Wed, 23 Sep 2015 08:50:45 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:7797 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074AbbIORLX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:23 -0400
+From: Will Davis <wdavis@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
+	Konrad Wilk <konrad.wilk@oracle.com>,
+	"Mark Hounschell" <markh@compro.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Terence Ripperda <tripperda@nvidia.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Jerome Glisse <jglisse@redhat.com>,
+	"Will Davis" <wdavis@nvidia.com>
+Subject: [PATCH 02/22] linux/types.h: Add dma_peer_addr_t type
+Date: Tue, 15 Sep 2015 12:10:47 -0500
+Message-ID: <1442337067-22964-3-git-send-email-wdavis@nvidia.com>
+In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v3 4/6] PCI: generic: Correct, and avoid overflow, in
- bus_max calculation.
-References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com> <1442965757-12925-5-git-send-email-ddaney.cavm@gmail.com> <1496061.0ds89jTH75@wuerfel>
-In-Reply-To: <1496061.0ds89jTH75@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/23/2015 01:01 AM, Arnd Bergmann wrote:
-> On Tuesday 22 September 2015 16:49:15 David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
->>
->> There are two problems with the bus_max calculation:
->>
->> 1) The u8 data type can overflow for large config space windows.
->>
->> 2) The calculation is incorrect for a bus range that doesn't start at
->>     zero.
->>
->> Since the configuration space is relative to bus zero, make bus_max
->> just be the size of the config window scaled by bus_shift.  Then clamp
->> it to a maximum of 255, per PCI.  Use a data type of int to avoid
->> overflow problems.
->>
->> Update host-generic-pci.txt to clarify the semantics of the "reg"
->> property with respect to non-zero starting bus numbers.
->>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->
-> Not sure about this one
->
->> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> index cf3e205..105a968 100644
->> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> @@ -34,7 +34,9 @@ Properties of the host controller node:
->>   - #size-cells    : Must be 2.
->>
->>   - reg            : The Configuration Space base address and size, as accessed
->> -                   from the parent bus.
->> +                   from the parent bus.  The base address corresponds to
->> +                   bus zero, even though the "bus-range" property may specify
->> +                   a different starting bus number.
->
-> This sounds like very unusual behavior. If you have a system with faked
-> bus numbers where the registers only physically exist for a subset of the
-> buses, this requires defining a reg property that contains MMIO space
-> which is outside of the device and potentially contains other devices.
+On some platforms, a dma_addr_t is only 32 bits wide, but the bus addresses
+can be 64 bits wide. For peer-to-peer DMA, a device needs to use the full
+64-bit address. Therefore, introduce a DMA address type that is not
+constrained by the CPU DMA address size.
 
-The pci-host-generic driver only maps the ranges that correspond to the 
-"bus-range" buses, so mapping of illegal address ranges should not be a 
-problem.
+This is only needed for peer-to-peer DMA, so guard this definition with a
+CONFIG_HAS_DMA_P2P check.
 
->
-> What would break if we instead defined it the expected way and only
-> list the registers for the bus numbers in the "bus-range" property?
+Signed-off-by: Will Davis <wdavis@nvidia.com>
+---
+ include/linux/types.h | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-I'm not sure if we have the luxury of being able to change the 
-definition, although the existing code only works with a starting bus 
-number of zero.  From this we might conclude that non-zero starting bus 
-numbers cannot exist in the wild, so changing the the definition of 
-"reg" so that it starts at the starting bus number might be possible.
-
-My reading of:
-
-http://www.o3one.org/hwdocs/openfirmware/pci_supplement_2_1.pdf
-
-Section 3.1.1, does not preclude your interpretation.  Although that is 
-for PCI-PCI bridges, and not this pci-host-generic root complex.
-
-If we really want to go with a different definition of what the "reg" 
-property means, then actual code has to change, and we risk breaking 
-something.
-
-David Daney
-
+diff --git a/include/linux/types.h b/include/linux/types.h
+index 8715287..dd85173 100644
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -140,13 +140,13 @@ typedef unsigned long blkcnt_t;
+ #define pgoff_t unsigned long
+ 
+ /*
+- * A dma_addr_t can hold any valid DMA address, i.e., any address returned
++ * A dma_addr_t can hold any valid DMA address, i.e., most addresses returned
+  * by the DMA API.
+  *
+  * If the DMA API only uses 32-bit addresses, dma_addr_t need only be 32
+  * bits wide.  Bus addresses, e.g., PCI BARs, may be wider than 32 bits,
+  * but drivers do memory-mapped I/O to ioremapped kernel virtual addresses,
+- * so they don't care about the size of the actual bus addresses.
++ * so they don't care about the size of the actual bus addresses in most cases.
+  */
+ #ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ typedef u64 dma_addr_t;
+@@ -154,6 +154,15 @@ typedef u64 dma_addr_t;
+ typedef u32 dma_addr_t;
+ #endif
+ 
++/*
++ * Unlike dma_addr_t, a dma_peer_addr_t can hold any bus address for the
++ * platform. Drivers should only need this for peer-to-peer use cases, where
++ * the DMA target is also on the bus.
++ */
++#ifdef CONFIG_HAS_DMA_P2P
++typedef u64 dma_peer_addr_t;
++#endif
++
+ typedef unsigned __bitwise__ gfp_t;
+ typedef unsigned __bitwise__ fmode_t;
+ typedef unsigned __bitwise__ oom_flags_t;
+-- 
+2.5.1
 
