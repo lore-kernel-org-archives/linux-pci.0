@@ -1,102 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:35632 "EHLO
-	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753048AbbIVMgr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 08:36:47 -0400
-Received: by ioiz6 with SMTP id z6so13116329ioi.2
-        for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2015 05:36:46 -0700 (PDT)
-Date: Tue, 22 Sep 2015 07:36:40 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yhlu.kernel.send@gmail.com>,
-	Ulrich Obergfell <uobergfe@redhat.com>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-pci@vger.kernel.org,
-	virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
-Message-ID: <20150922123640.GT25767@google.com>
-References: <1441553385-3810-1-git-send-email-mst@redhat.com>
- <20150921182147.GC27964@google.com>
- <20150921223622-mutt-send-email-mst@redhat.com>
- <20150921221043.GR25767@google.com>
- <20150922131303-mutt-send-email-mst@redhat.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:56036 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751722AbbIOOT4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 10:19:56 -0400
+Date: Tue, 15 Sep 2015 10:19:54 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Roland Weber <r-o-l@web.de>
+cc: linux-usb@vger.kernel.org, Mathias Nyman <mathias.nyman@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: PROBLEM: lsusb -v freezes kernel on Acer ES1-111M
+In-Reply-To: <trinity-22d19320-d992-458f-a911-d05c6c60a012-1442276254269@3capp-webde-bs08>
+Message-ID: <Pine.LNX.4.44L0.1509151010160.1420-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150922131303-mutt-send-email-mst@redhat.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 22, 2015 at 02:29:03PM +0300, Michael S. Tsirkin wrote:
-> On Mon, Sep 21, 2015 at 05:10:43PM -0500, Bjorn Helgaas wrote:
-> > On Mon, Sep 21, 2015 at 10:42:13PM +0300, Michael S. Tsirkin wrote:
-> > > On Mon, Sep 21, 2015 at 01:21:47PM -0500, Bjorn Helgaas wrote:
-> > > > On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
-> > > > > On some hypervisors, virtio devices tend to generate spurious interrupts
-> > > > > when switching between MSI and non-MSI mode.  Normally, either MSI or
-> > > > > non-MSI is used and all is well, but during shutdown, linux disables MSI
-> > > > > which then causes an "irq %d: nobody cared" message, with irq being
-> > > > > subsequently disabled.
-> > > > 
-> > > > My understanding is:
-> > > > 
-> > > >   Linux disables MSI/MSI-X during device shutdown.  If the device
-> > > >   signals an interrupt after that, it may use INTx.
-> > > > 
-> > > > This INTx interrupt is not necessarily spurious.  Using INTx to signal an
-> > > > interrupt that occurs when MSI is disabled seems like reasonable behavior
-> > > > for any PCI device.
-> > > > And it doesn't seem related to switching between MSI and non-MSI mode.
-> > > > Yes, the INTx happens *after* disabling MSI, but it is not at all
-> > > > *because* we disabled MSI.  So I wouldn't say "they generate spurious
-> > > > interrupts when switching between MSI and non-MSI."
-> > > > 
-> > > > Why doesn't virtio-pci just register an INTx handler in addition to an MSI
-> > > > handler?
-> > > 
-> > > The handler causes an expensive exit to the hypervisor,
-> > > and the INTx lines are shared with other devices.
-> > 
-> > Do we care?  Is this a performance path?  I thought we were in a kexec
-> > shutdown path.
+On Tue, 15 Sep 2015, Roland Weber wrote:
+
+> Hi Alan,
 > 
-> Yes but the handler would always have to be registered, right?
-
-The pci_device_shutdown() path you're modifying calls drv->shutdown()
-immediately before disabling MSI, so I suppose you could register a
-handler in a virtio shutdown method.
-
-> > > Seems silly to slow them down just so we can do something
-> > > that triggers the device bug.  The bus master is disabled by that time,
-> > > if linux can just desist from touching MSI enable device won't
-> > > send either INTx (because MSI is on) or MSI
-> > > (because bus master is on) and all will be well.
+> > > ehci_halt: premature readl returned 10001
 > > 
-> > It would also be silly to put special-purpose code in the PCI core
-> > if there's a reasonable way to handle this in a driver.
-> > 
-> > Can you describe exactly what the device bug is?  Apparently you're
-> > saying that if we shut down MSI, it triggers the bug?  And I guess
-> > you're talking about a virtio device as implemented in qemu or other
-> > hypervisors?
+> > Note: 10001 instead of 10000, which is what you saw in the other 
+> > kernel.  That could be highly relevant.
 > 
-> Yes. Basically depending on an internal device state, disabling MSI
-> sometimes wedges it.  The most easy to debug effect is if it starts
-> sending INTx interrupts, for which there's no handler currently.
-> Full system reset always gets us out of the bad state.
+> Really? And I thought that was the least significant bit...
 
-If disabling MSI causes the device to use INTx interrupts, that sounds
-perfectly normal to me.
+It is the least significant bit in the register, but it is the bit that
+indicates whether or not the controller is running, which makes it one
+of the most important.  :-)
 
-If disabling MSI causes the device to hang, *that* sounds like a bug.
-Since this is virtio, we should be able to figure out exactly where
-that happens.  Do you have a pointer to a virtio bug report, or even a
-QEMU commit that fixes this virtio bug?
+> I had a lucky guess among the 2000+ lines of diff output with
+> which I started: CONFIG_PM_RUNTIME makes the difference.
+> If it's on, the kernel can freeze.
 
-I understand that even if there is a virtio fix in QEMU, we want a
-solution that works even with an old QEMU that doesn't contain the
-fix.  But a pointer to a QEMU fix would really help understand and
-document the Linux fix.
+Aha, good.  I was heading in the same general direction.
 
-Bjorn
+> I'll have to add the debug output you asked for tomorrow,
+> didn't expect to succeed so soon.
+> 
+> Should I put the statements into the 3.17 kernel, or should I
+> try to compile a 4.2 without CONFIG_PM_RUNTIME instead? And
+> would you like the output of a freezing or non-freezing kernel
+> first? I'll only be able to try out one tomorrow, the rest
+> will follow a day or two later.
+
+As long as the 4.2 kernel can do what you want, you may as well use it.  
+However, note that CONFIG_PM_RUNTIME doesn't exist any more in 4.2; it 
+is now covered by CONFIG_PM.
+
+Assuming things work out as expected, try this: In core/hub.c, remove 
+the calls to usb_enable_autosuspend(hdev) in hub_probe() and leave 
+CONFIG_PM enabled.
+
+Alan Stern
+
