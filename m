@@ -1,142 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from pandora.arm.linux.org.uk ([78.32.30.218]:42271 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753744AbbIWRRh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 13:17:37 -0400
-In-Reply-To: <20150923171706.GL21084@n2100.arm.linux.org.uk>
-References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 2/6] pci: mvebu: generate proper configuration access cycles
+Received: from foss.arm.com ([217.140.101.70]:52355 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751005AbbIOSfA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Sep 2015 14:35:00 -0400
+Date: Tue, 15 Sep 2015 19:35:01 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <david.daney@cavium.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in
+ bus_max calculation.
+Message-ID: <20150915183500.GR31157@arm.com>
+References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+ <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
+ <20150915174934.GL31157@arm.com>
+ <55F85D4E.9020604@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
-Date: Wed, 23 Sep 2015 18:17:32 +0100
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55F85D4E.9020604@caviumnetworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The idea that you can arbitarily read 32-bits from PCI configuration
-space, modify a sub-field (like the command register) and write it
-back without consequence is deeply flawed.
+On Tue, Sep 15, 2015 at 07:02:54PM +0100, David Daney wrote:
+> On 09/15/2015 10:49 AM, Will Deacon wrote:
+> > On Sat, Sep 12, 2015 at 12:21:57AM +0100, David Daney wrote:
+> >>   	/* Limit the bus-range to fit within reg */
+> >> -	bus_max = pci->cfg.bus_range->start +
+> >> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> >> +	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> >> +	if (bus_max > 255)
+> >> +		bus_max = 255;
+> >>   	pci->cfg.bus_range->end = min_t(resource_size_t,
+> >>   					pci->cfg.bus_range->end, bus_max);
+> >
+> > Hmm, this is changing the meaning of the bus-range property in the
+> > device-tree, which really needs to match what IEEE Std 1275-1994 requires.
+> 
+> I doesn't change the bus-range.
 
-Status registers (such as the status register, PCIe device status
-register, etc) contain status bits which are read, write-one-to-clear.
+Not directly, but pci->cfg.bus_range is a resource populated from the
+"bus-range" property in the device-tree, so it's changing how the driver
+uses that property.
 
-What this means is that reading 32-bits from the command register,
-modifying the command register, and then writing it back has the effect
-of clearing any status bits that were indicating at that time.  Same for
-the PCIe device control register clearing bits in the PCIe device status
-register.
+> > My understanding was that the bus-range could be used to offset the config
+> > space, which is why it's subtracted from the bus number in
+> > gen_pci_map_cfg_bus_[e]cam.
+> 
+> There is an inconsistency in the current code.  The calculation of the 
+> cfg.win[?] pointers is done such that the beginning of the config space 
+> specified in the "reg" property corresponds to bus 0.
 
-Since the Armada chips support byte, 16-bit and 32-bit accesses to the
-registers (unless otherwise stated) and the PCI configuration data
-register does not specify otherwise, it seems logical that the chip can
-indeed generate the proper configuration access cycles down to byte
-level.
+I don't follow you here. The mapping functions explicitly subtract the
+start of the bus range when calculating the window offset:
 
-Testing with an ASM1062 PCIe to SATA mini-PCIe card on Armada 388.
-PCIe capability at 0x80, DevCtl at 0x88, DevSta at 0x8a.
+  resource_size_t idx = bus->number - pci->cfg.bus_range->start;
 
-Before:
-/# setpci -s 1:0.0 0x88.l		- DevSta: CorrErr+
-00012810
-/# setpci -s 1:0.0 0x88.w=0x2810	- Write DevCtl only
-/# setpci -s 1:0.0 0x88.l		- CorrErr cleared - FAIL
-00002810
+so if I have bus-range = <128 255>; then bus 128 lives at the start of
+the configuration space described by the reg property, not bus 0.
 
-After:
-/# setpci -s 1:0.0 0x88.l		- DevSta: CorrErr+
-00012810
-/# setpci -s 1:0.0 0x88.w=0x2810	- check DevCtl only write
-/# setpci -s 1:0.0 0x88.l		- CorErr remains set
-00012810
-/# setpci -s 1:0.0 0x88.w=0x281f	- check DevCtl write works
-/# setpci -s 1:0.0 0x88.l		- devctl field updated
-0001281f
-/# setpci -s 1:0.0 0x8a.w=0xffff	- clear DevSta
-/# setpci -s 1:0.0 0x88.l		- CorrErr now cleared
-0000281f
-/# setpci -s 1:0.0 0x88.w=0x2810	- restore DevCtl
-/# setpci -s 1:0.0 0x88.l		- check
-00002810
+Sorry if I'm being thick; I just can't see the inconsistency.
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/pci/host/pci-mvebu.c | 43 ++++++++++++++++++++++++++-----------------
- 1 file changed, 26 insertions(+), 17 deletions(-)
+> The calculation that I am changing, was done such that the beginning of 
+> the config space specified in the "reg" property corresponds to the 
+> first bus of the "bus-range"
+> 
+> Which is correct?  I assumed that the config space specified in the 
+> "reg" property corresponds to bus 0.  Based on this assumption, I made 
+> the bus_max calculation match.
+> 
+> Due to hardware peculiarities, our bus-range starts at a non-zero bus 
+> number.  So, something has to be done to make all the code agree on a 
+> single interpretation of the meaning "reg" property.
 
-diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-index b6a096bc9422..0d9f3eae4315 100644
---- a/drivers/pci/host/pci-mvebu.c
-+++ b/drivers/pci/host/pci-mvebu.c
-@@ -254,15 +254,22 @@ static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
- 				 struct pci_bus *bus,
- 				 u32 devfn, int where, int size, u32 *val)
- {
-+	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
-+
- 	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
- 		     PCIE_CONF_ADDR_OFF);
- 
--	*val = mvebu_readl(port, PCIE_CONF_DATA_OFF);
--
--	if (size == 1)
--		*val = (*val >> (8 * (where & 3))) & 0xff;
--	else if (size == 2)
--		*val = (*val >> (8 * (where & 3))) & 0xffff;
-+	switch (size) {
-+	case 1:
-+		*val = readb_relaxed(conf_data + (where & 3));
-+		break;
-+	case 2:
-+		*val = readw_relaxed(conf_data + (where & 2));
-+		break;
-+	case 4:
-+		*val = readl_relaxed(conf_data);
-+		break;
-+	}
- 
- 	return PCIBIOS_SUCCESSFUL;
- }
-@@ -271,22 +278,24 @@ static int mvebu_pcie_hw_wr_conf(struct mvebu_pcie_port *port,
- 				 struct pci_bus *bus,
- 				 u32 devfn, int where, int size, u32 val)
- {
--	u32 _val, shift = 8 * (where & 3);
-+	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
- 
- 	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
- 		     PCIE_CONF_ADDR_OFF);
--	_val = mvebu_readl(port, PCIE_CONF_DATA_OFF);
- 
--	if (size == 4)
--		_val = val;
--	else if (size == 2)
--		_val = (_val & ~(0xffff << shift)) | ((val & 0xffff) << shift);
--	else if (size == 1)
--		_val = (_val & ~(0xff << shift)) | ((val & 0xff) << shift);
--	else
-+	switch (size) {
-+	case 1:
-+		writeb(val, conf_data + (where & 3));
-+		break;
-+	case 2:
-+		writew(val, conf_data + (where & 2));
-+		break;
-+	case 4:
-+		writel(val, conf_data);
-+		break;
-+	default:
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
--
--	mvebu_writel(port, _val, PCIE_CONF_DATA_OFF);
-+	}
- 
- 	return PCIBIOS_SUCCESSFUL;
- }
--- 
-2.1.0
+I think you're the first to exercise this code, so it's definitely worth
+us fixing whatever's going wrong.
 
+> > Also, why is your config space so large that
+> > we end up overflowing bus_max?
+> 
+> It isn't.  The part of the patch that changes the type from u8 to int 
+> was just to add some sanity.  The  code was easily susceptible to 
+> overflow failures, it seemed best to change to int.
+
+Can we drop this part for now if it's not actually needed?
+
+Will
