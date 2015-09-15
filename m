@@ -1,145 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47773 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753581AbbIPV7B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:59:01 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 40/53] PCI: Restore pref MMIO allocation logic for host bridge without mmio64
-Date: Wed, 16 Sep 2015 14:57:38 -0700
-Message-Id: <1442440671-5361-41-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55F7EB82.20309@arm.com>
+Date: Tue, 15 Sep 2015 10:57:22 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+MIME-Version: 1.0
+To: Jake Oshins <jakeo@microsoft.com>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH v2 00/12] New paravirtual PCI front-end for Hyper-V VMs
+References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com> <55F6E115.9050502@arm.com> <DM2PR0301MB12326BCA329D5D98A587C2DCAB5D0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+In-Reply-To: <DM2PR0301MB12326BCA329D5D98A587C2DCAB5D0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
-resources), we change the logic for pref mmio allocation:
-When bridge pref support mmio64, we will only put children pref
-that support mmio64 into it, and will put children pref mmio32
-into bridge's non-pref mmio32.
+On 14/09/15 18:59, Jake Oshins wrote:
+>> -----Original Message-----
+>> From: Marc Zyngier [mailto:marc.zyngier@arm.com]
+>> Sent: Monday, September 14, 2015 8:01 AM
+>> To: Jake Oshins <jakeo@microsoft.com>; gregkh@linuxfoundation.org; KY
+>> Srinivasan <kys@microsoft.com>; linux-kernel@vger.kernel.org;
+>> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+>> vkuznets@redhat.com; linux-pci@vger.kernel.org; bhelgaas@google.com;
+>> tglx@linutronix.de; Jiang Liu <jiang.liu@linux.intel.com>
+>> Subject: Re: [PATCH v2 00/12] New paravirtual PCI front-end for Hyper-V
+>> VMs
+>>
+>> Hi Jake,
+>>
+>> In the future, please CC me on anything that touches irqdomains, along
+>> with Jiang Liu as we both co-maintain this piece of code.
+>>
+> 
+> Absolutely.  Sorry for that omission.
+> 
+>> On 11/09/15 01:00, jakeo@microsoft.com wrote:
+>>> From: Jake Oshins <jakeo@microsoft.com>
+>>>
+>>> The patch series updates the one sent about a month ago in three ways.  It
+>>> integrated with other IRQ domain work done in linux-next in that time, it
+>>> distributes interrupts to multiple virtual processors in the guest VM, and it
+>>> incorporates feedback from Thomas Gleixner and others.
+>>>
+>>> These patches change the IRQ domain code so that an IRQ domain can
+>> match on both
+>>> bus type and on the PCI domain.  The IRQ domain match code is modified
+>> so that
+>>> IRQ domains can have a "rank," allowing for a default one which matches
+>> every
+>>> x86 PC and more specific ones that replace the default.
+>>
+>> I'm not really fond of this approach. We already have a way to match an
+>> IRQ domain, and that's the device node. It looks to me that you're going
+>> through a lot of pain inventing a new infrastructure to avoid divorcing
+>> the two. If you could lookup your PCI IRQ domain directly based some
+>> (non-DT) identifier, and then possibly fallback to the default one,
+>> would that help?
+>>
+>> If so, here's the deal: I have been working on a patch series that
+>> addresses the above for unrelated reasons (ACPI support on arm64). It
+>> has been posted twice already:
+>>
+>> http://lists.infradead.org/pipermail/linux-arm-kernel/2015-July/358768.html
+>>
+>> and the latest version is there:
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/maz/arm-
+>> platforms.git/log/?h=irq/gsi-irq-domain-v3
+>>
+>> I have the feeling that you could replace a lot of your patches with
+>> this infrastructure.
+>>
+>> Thoughts?
+>>
+>> 	M.
+>> --
+> 
+> First, thank you so much for reviewing this.  I've read the patch
+> series above, but I'm sure that I might have misinterpreted it.  It
+> seems to merge the DT and ACPI GSI infrastructure, which I think is a
+> great idea.  I'm not sure, however, that it would, as it stands,
+> provide what I need here.  Please do tell me if I'm wrong.
+> 
+> The series above allows you to supply different IRQ domains for
+> separate parts of the ACPI GSI space, which is fine for IRQs which
+> are actually defined by ACPI.  Message-signaled interrupts (MSI),
+> however, aren't defined by ACPI.  ACPI only talks about the routing
+> of interrupts with pins and traces (or ones which have equivalent
+> mechanisms like the INTx# protocol in PCI Express.)
+> 
+> What the older DT layer code allowed was for the PCI driver to look
+> up an IRQ domain by walking up the device tree looking for a node
+> that claimed to be an IRQ domain.  The match() function on the IRQ
+> domain allowed it to say that it supported interrupts on PCI buses.
+> 
+> What's not clear to me is how I would create an IRQ domain that
+> matches not on ACPI GSI ranges (because ACPI doesn't talk about MSI)
+> and not just on generic PCI buses.  I need to be able to ask for an
+> IRQ domain "from my parent" which doesn't really exist without the OF
+> device tree or "for a specific PCI bus domain."  That second one is
+> what I was trying to enable.
+> 
+> Is there a way to do that with the infrastructure that you're
+> introducing?
 
-That could leave bridge pref bar not used when that pref bar is mmio64,
-and children res only has mmio32.
-Also could have allocation failure when non-pref mmio32 is not big
-enough space for those children pref mmio32.
+The ACPI/GSI stuff is a red herring, and is completely unrelated to the
+problem you're trying to solve. What I think is of interest to you is
+contained in the first three patches.
 
-That is not rational when the host bridge does not 64bit mmio above 4g
-at all.
+In your 4th patch, you have the following code:
 
-The patch restore to old logic:
-when host bridge does not have has_mem64, put children pref mmio64 and
-pref mmio32 all under bridges pref bars.
++	pci_domain = pci_domain_nr(bus);
++	d = irq_find_matching_host(NULL, DOMAIN_BUS_PCI_MSI, &pci_domain);
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c       |  4 +++-
- drivers/pci/setup-bus.c | 13 +++++++++----
- drivers/pci/setup-res.c |  9 ++++++---
- 3 files changed, 18 insertions(+), 8 deletions(-)
+which really feels like you're trying to create a namespace that is
+parallel to the one defined by the device_node parameter. What I'm
+trying to do is to be able to replace the device_node by something more
+generic (at the moment, you can either pass a device_node or some token
+that the irqdomain subsystem generates for you - see patch #7 for an
+example).
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6fbd3f2..b043bdf 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -202,8 +202,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
- {
- #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
- 	int rc;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
- 
--	if (res->flags & IORESOURCE_MEM_64) {
-+	if (res->flags & mmio64) {
- 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
- 					       type_mask, alignf, alignf_data,
- 					       &pci_high);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a3a8318..92ac7a6 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1856,7 +1856,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
- 		mask = IORESOURCE_MEM;
- 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
--		if (b_res[2].flags & IORESOURCE_MEM_64) {
-+		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
-+		    pci_find_host_bridge(bus)->has_mem64) {
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
-@@ -2012,17 +2013,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 *	  io port.
- 	 *     2. if there is non pref mmio assign fail, release bridge
- 	 *	  nonpref mmio.
--	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
-+	 *     3. if there is pref mmio assign fail, and host bridge does
-+	 *	  have 64bit mmio, release bridge pref mmio.
-+	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
- 	 *	  is 64bit, release bridge pref mmio.
--	 *     4. if there is pref mmio assign fail, and bridge pref is
-+	 *     5. if there is pref mmio assign fail, and bridge pref is
- 	 *	  32bit mmio, release bridge pref mmio
--	 *     5. if there is pref mmio assign fail, and bridge pref is not
-+	 *     6. if there is pref mmio assign fail, and bridge pref is not
- 	 *	  assigned, release bridge nonpref mmio.
- 	 */
- 	if (type & IORESOURCE_IO)
- 		idx = 0;
- 	else if (!(type & IORESOURCE_PREFETCH))
- 		idx = 1;
-+	else if (!pci_find_host_bridge(bus)->has_mem64)
-+		idx = 2;
- 	else if ((type & IORESOURCE_MEM_64) &&
- 		 (b_res[2].flags & IORESOURCE_MEM_64))
- 		idx = 2;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index b19aa5b..26aedde 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -205,6 +205,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	struct resource *res = dev->resource + resno;
- 	resource_size_t min;
- 	int ret;
-+	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
-+				IORESOURCE_MEM_64 : 0;
- 
- 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
- 
-@@ -216,7 +218,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * things differently than they were sized, not everything will fit.
- 	 */
- 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
--				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
-+				     IORESOURCE_PREFETCH | mmio64,
- 				     pcibios_align_resource, dev);
- 	if (ret == 0)
- 		return 0;
-@@ -225,7 +227,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * If the prefetchable window is only 32 bits wide, we can put
- 	 * 64-bit prefetchable resources in it.
- 	 */
--	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
-+	if (mmio64 &&
-+	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
- 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
- 					     IORESOURCE_PREFETCH,
-@@ -240,7 +243,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- 	 * non-prefetchable, the first call already tried the only possibility
- 	 * so we don't need to try again.
- 	 */
--	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
-+	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
- 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
- 					     pcibios_align_resource, dev);
- 
+You could pass this token to pci_msi_create_irq_domain (which obviously
+needs some repainting not to take a device_node), store it in your bus
+structure, and perform the lookup based on this value. Or store the
+actual domain there, whatever.
+
+What I want to do is really to make this device_node pointer for systems
+that do not have a DT node to pass there, which is exactly your case (by
+the look of it, the bus number is your identifier of choice, but I
+suspect a pointer to an internal structure would be better suited).
+
+	M.
 -- 
-1.8.4.5
-
+Jazz is not dead. It just smells funny...
