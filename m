@@ -1,164 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0091.outbound.protection.outlook.com ([157.56.111.91]:24544
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757028AbbIUVXF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Sep 2015 17:23:05 -0400
-From: Jay Cornwall <jay@jcornwall.me>
-To: <linux-pci@vger.kernel.org>
-CC: Jay Cornwall <jay@jcornwall.me>
-Subject: [PATCH v2] PCI: Add pci_enable_atomic_request
-Date: Mon, 21 Sep 2015 08:47:12 -0500
-Message-ID: <1442843232-12936-1-git-send-email-jay@jcornwall.me>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 25/53] PCI: Don't add too much optional size for hotplug bridge io
+Date: Wed, 16 Sep 2015 14:57:23 -0700
+Message-Id: <1442440671-5361-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be requested
-by, routed through and completed by PCIe components. Routing and completion
-do not require software support. Component support for each is detectable via
-the DEVCAP2 register.
+Same as patch for MMIO (PCI: Don't add too much optional size for hotplug
+bridge MMIO), and this one is for io port.
 
-AtomicOp requests are permitted only if a component's
-DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot be
-detected but is a no-op if set on a component with no support. These requests
-can only be serviced if the upstream components support AtomicOp completion
-and/or routing to a component which does.
+It will compare required+optional with min_sum_size to get smaller
+optional size.
 
-A concrete example is the AMD Fiji-class GPU, which is specified to support
-AtomicOp requests, routed through a PLX 8747 switch (advertising AtomicOp
-routing) to a Haswell host bridge (advertising AtomicOp completion support).
-When AtomicOp requests are disabled the GPU logs attempts to initiate requests
-to an MMIO register for debugging.
-
-Add pci_enable_atomic_request for per-device control over AtomicOp requests.
-Upstream bridges are checked for AtomicOp routing capability and the call
-fails if any lack this capability. The root port is checked for AtomicOp
-completion capabilities and the call fails if it does not support any.
-Routes to other PCIe components are not checked for AtomicOp routing and
-completion capabilities.
-
-Signed-off-by: Jay Cornwall <jay@jcornwall.me>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/pci.c             | 67 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h           |  1 +
- include/uapi/linux/pci_regs.h |  5 ++++
- 3 files changed, 73 insertions(+)
+ drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6a9a111..58819e4 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2453,6 +2453,73 @@ bool pci_acs_path_enabled(struct pci_dev *start,
- }
- 
- /**
-+ * pci_enable_atomic_request - enable or disable AtomicOp requester
-+ * @dev: the PCI device
-+ *
-+ * Return true if the device is capable of generating AtomicOp requests,
-+ * all upstream bridges support AtomicOp routing, and the root port supports
-+ * 32-bit, 64-bit and/or 128-bit AtomicOp completion.
-+ */
-+bool pci_enable_atomic_request(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->bus;
-+
-+	if (!pci_is_pcie(dev))
-+		return false;
-+
-+	switch (pci_pcie_type(dev)) {
-+	/* PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
-+	 * to implement AtomicOp requester capabilities.
-+	 */
-+	case PCI_EXP_TYPE_ENDPOINT:
-+	case PCI_EXP_TYPE_LEG_END:
-+	case PCI_EXP_TYPE_RC_END:
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+		break;
-+	default:
-+		return false;
-+	}
-+
-+	while (bus->parent) {
-+		struct pci_dev *bridge = bus->self;
-+		u32 cap;
-+
-+		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
-+
-+		switch (pci_pcie_type(bridge)) {
-+		/* PCIe 3.0, 6.15 specifies that upstream, downstream and
-+		 * root ports may implement AtomicOp routing capabilities.
-+		 * AtomicOp routing via a root port is not considered here.
-+		 */
-+		case PCI_EXP_TYPE_UPSTREAM:
-+		case PCI_EXP_TYPE_DOWNSTREAM:
-+			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTING))
-+				return false;
-+			break;
-+
-+		/* PCIe 3.0, 6.15 specifies that root ports are permitted to
-+		 * implement AtomicOp completion capabilities.
-+		 */
-+		case PCI_EXP_TYPE_ROOT_PORT:
-+			if (!(cap & (PCI_EXP_DEVCAP2_ATOMIC_COMP32 |
-+				     PCI_EXP_DEVCAP2_ATOMIC_COMP64 |
-+				     PCI_EXP_DEVCAP2_ATOMIC_COMP128)))
-+				return false;
-+			break;
-+		}
-+
-+
-+		bus = bus->parent;
-+	}
-+
-+	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
-+				 PCI_EXP_DEVCTL2_ATOMICOP_REQ);
-+
-+	return true;
-+}
-+EXPORT_SYMBOL(pci_enable_atomic_request);
-+
-+/**
-  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
-  * @dev: the PCI device
-  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e90eb22..755f061 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1801,6 +1801,7 @@ void pci_request_acs(void);
- bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
- bool pci_acs_path_enabled(struct pci_dev *start,
- 			  struct pci_dev *end, u16 acs_flags);
-+bool pci_enable_atomic_request(struct pci_dev *dev);
- 
- #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
- #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 413417f..013c2bd 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -571,6 +571,10 @@
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 43b34a7..073435d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1139,7 +1139,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  *
+  * @bus : the bus
+  * @min_size : the minimum io window that must to be allocated
+- * @add_size : additional optional io window
+  * @realloc_head : track the additional io window on this list
+  *
+  * Sizing the IO windows of the PCI-PCI bridge is trivial,
+@@ -1148,9 +1147,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  * We must be careful with the ISA aliasing though.
   */
- #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
- #define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
-+#define  PCI_EXP_DEVCAP2_ATOMIC_ROUTING	0x00000040 /* AtomicOp routing */
-+#define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
-+#define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
-+#define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion*/
- #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
- #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
- #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
-@@ -578,6 +582,7 @@
- #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
- #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
- #define  PCI_EXP_DEVCTL2_ARI		0x0020	/* Alternative Routing-ID */
-+#define  PCI_EXP_DEVCTL2_ATOMICOP_REQ	0x0040	/* Allow AtomicOp requests */
- #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
- #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
- #define  PCI_EXP_DEVCTL2_LTR_EN		0x0400	/* Enable LTR mechanism */
+ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+-		resource_size_t add_size, struct list_head *realloc_head)
++			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
++	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+@@ -1160,6 +1161,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	if (!b_res)
+ 		return;
+ 
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+@@ -1189,10 +1195,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_iosize(size, min_size, add_size + size1,
++	sum_add_size = children_add_size + size + size1;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
++	size1 = !realloc_head ? size0 :
++		calculate_iosize(size, min_size, sum_add_size - size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+@@ -1718,7 +1725,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t min_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, min_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
+ 
+@@ -1751,13 +1758,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	case PCI_CLASS_BRIDGE_PCI:
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+-			additional_io_size  = pci_hotplug_io_size;
++			min_io_size  = pci_hotplug_io_size;
+ 			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+-		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
+-			     additional_io_size, realloc_head);
++		pbus_size_io(bus, min_io_size, realloc_head);
+ 
+ 		/*
+ 		 * If there's a 64-bit prefetchable MMIO window, compute
 -- 
-1.9.1
+1.8.4.5
 
