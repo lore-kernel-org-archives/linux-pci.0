@@ -1,4 +1,4 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -6,149 +6,102 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 33/53] PCI: Add support for more than two alt_size entries under same bridge
-Date: Wed, 30 Sep 2015 22:53:07 -0700
-Message-Id: <1443678807-786-34-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [PATCH v5 13/53] PCI: Separate realloc list checking after allocation
+Date: Wed, 16 Sep 2015 14:57:11 -0700
+Message-Id: <1442440671-5361-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When we have two bridges under parent bridge, and each child
-bridge has alt_size, we need to increase parent alt_size to make
-sure it could fit all alt entries.
+We check the realloc list, as list must be empty after allocation.
 
-In the patch, we first select one big size, and then keep reducing
-the size and retrying to get the minimum value for alt_size.
+Separate the realloc list checking to another function.
 
-For example, two bridges:
-  one have 8M/8M, and 1M/1M children res.
-  one have 4M/4M, and 1M/1M children res.
+Add checking that is missed in acpiphp driver.
 
-Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
-Before this patch, parent bridge alt_align/alt_size is 8M/14M
-that is wrong, as it can not fit two alt entries at all.
-With this patch	parent bridge alt_align/alt_size: 8M/17M.
-               8M            16M   20M   24M
-  |------------|-------------|-----|-----|
-	       8M			   25M
-	       |---------------------------|
-			       17M
-               |---9M----------|   |-5M----|
+-v2: change to WARN_ON addording to Rafael.
 
-
-At same time, child bridges required align/size: 4M/12M, 2M/6M.
-and prarent bridge required align/size: 4M/20M.
-
-So at last, we use 8M/17M as parent bridge alt_align/alt_size.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
-Reported-by: Yijing Wang <wangyijing@huawei.com>
-Tested-by: Yijing Wang <wangyijing@huawei.com>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
 ---
- drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 54 insertions(+), 2 deletions(-)
+ drivers/pci/hotplug/acpiphp_glue.c |  1 +
+ drivers/pci/pci.h                  |  1 +
+ drivers/pci/setup-bus.c            | 12 +++++++++---
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f19b098..ba5635a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1335,6 +1335,47 @@ out:
- 	return good_align;
- }
- 
-+static resource_size_t calculate_mem_alt_size(struct list_head *head,
-+				resource_size_t max_align, resource_size_t size,
-+				resource_size_t align_low)
-+{
-+	struct align_test_res *p;
-+	resource_size_t tmp;
-+	resource_size_t good_size, bad_size;
-+	int count = 0, order;
-+
-+	good_size = ALIGN(size, align_low);
-+
-+	list_for_each_entry(p, head, list)
-+		count++;
-+
-+	if (count <= 1)
-+		goto out;
-+
-+	sort_align_test(head);
-+
-+	tmp = max(size, max_align);
-+	order = __fls(count);
-+	if ((1ULL << order) < count)
-+		order++;
-+	good_size = ALIGN((tmp << order), align_low);
-+	bad_size = ALIGN(size, align_low) - align_low;
-+	size = good_size;
-+	while (size > bad_size) {
-+		/* check if align/size fit all entries */
-+		if (is_align_size_good(head, max_align, size, 0))
-+			good_size = size;
-+		else
-+			bad_size = size;
-+
-+		size = bad_size + ((good_size - bad_size) >> 1);
-+		size = round_down(size, align_low);
-+	}
-+
-+out:
-+	return good_size;
-+}
-+
- static inline bool is_optional(int i)
- {
- 
-@@ -1381,6 +1422,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					mask | IORESOURCE_PREFETCH, type);
- 	LIST_HEAD(align_test_list);
- 	LIST_HEAD(align_test_add_list);
-+	LIST_HEAD(align_test_alt_list);
- 	resource_size_t alt_size = 0, alt_align = 0;
- 	resource_size_t window_align;
- 
-@@ -1454,10 +1496,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 				dev_res = res_to_dev_res(realloc_head, r);
- 				if (dev_res && dev_res->alt_size) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						dev_res->alt_align,
-+						dev_res->alt_size);
- 					alt_size += dev_res->alt_size;
- 					if (alt_align < dev_res->alt_align)
- 						alt_align = dev_res->alt_align;
- 				} else if (r_size > 1) {
-+					add_to_align_test_list(
-+						&align_test_alt_list,
-+						align, r_size);
- 					alt_size += r_size;
- 					if (alt_align < align)
- 						alt_align = align;
-@@ -1477,14 +1526,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 
- 	if (size0 && realloc_head) {
- 		alt_align = max(alt_align, window_align);
--		alt_size = calculate_memsize(alt_size, min_size,
--					     0, window_align);
-+		/* need to increase size to fit more alt */
-+		alt_size = calculate_mem_alt_size(&align_test_alt_list,
-+						  alt_align, alt_size,
-+						  window_align);
- 		/* required is better ? */
- 		if (alt_size >= size0) {
- 			alt_align = 0;
- 			alt_size = 0;
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index ff53856..ce9fb21 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
  		}
  	}
-+	free_align_test_list(&align_test_alt_list);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
++	pci_bus_check_realloc(&add_list);
  
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
+ 	acpiphp_sanitize_bus(bus);
+ 	pcie_bus_configure_settings(bus);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 24ba9dc..45a28c4 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -237,6 +237,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
+ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *realloc_head,
+ 				struct list_head *fail_head);
++void pci_bus_check_realloc(struct list_head *realloc_head);
+ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
+ 
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9d7adab..c2482da 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -349,6 +349,12 @@ out:
+ 	}
+ }
+ 
++void pci_bus_check_realloc(struct list_head *realloc_head)
++{
++	if (WARN_ON(!list_empty(realloc_head)))
++		free_list(realloc_head);
++}
++
+ /**
+  * assign_requested_resources_sorted() - satisfy resource requests
+  *
+@@ -1860,7 +1866,7 @@ again:
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+-		BUG_ON(!list_empty(add_list));
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	/* any device complain? */
+@@ -1935,7 +1941,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+@@ -1994,6 +2000,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 							 &add_list);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
 -- 
 1.8.4.5
 
