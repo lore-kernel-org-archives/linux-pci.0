@@ -1,253 +1,429 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:9374 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927AbbIKJbv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 05:31:51 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write() and  dw_pcie_cfg_read()
-Date: Fri, 11 Sep 2015 17:38:26 +0800
-Message-ID: <1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from mail-io0-f177.google.com ([209.85.223.177]:34071 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752343AbbIPVpy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:45:54 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5042629.WJWA6bekh1@vostro.rjw.lan>
+References: <5042629.WJWA6bekh1@vostro.rjw.lan>
+Date: Wed, 16 Sep 2015 16:45:51 -0500
+Message-ID: <CAFSKS=OrfLH3q0xrt3T4L20nCcPYTsEB0YDVahmHa3-O79rE3A@mail.gmail.com>
+Subject: Re: [PATCH] ACPI / PNP: Reserve ACPI resources at the
+ fs_initcall_sync stage
+From: George McCollister <george.mccollister@gmail.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, g5983969@trbvm.com,
+	Roland Dreier <roland@purestorage.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Unfortunately I just got around to trying linux 4.1.6 (which contains
+this commit) on the Versalogic Tiger (VL-EPM-24)
+http://www.versalogic.com/tiger and this commit breaks it, seems to be
+back to the old behavior reported here:
 
-This patch changes the implementation of dw_pcie_cfg_read() and
-dw_pcie_cfg_write() to improve the function usage from the callers
-perspective.
-Currently the callers are obliged to pass the 32bit aligned address
-of the register that contains the field of the PCI header that they
-want to read/write; also they have to pass the offset of the field
-in that register. This is quite tricky to use as the callers are
-obliged to sum the PCI header base address to the field offset
-masked to retrieve the 32b aligned register address.
+http://marc.info/?t=143092384600002&r=1&w=2
 
-With the new API the callers have to pass the base address of the
-PCI header and the offset corresponding to the field they intend to
-read/write.
+Before reversing the commit it shows:
+pci 0000:00:1c.0: BAR 13: assigned [io  0x2000-0x2fff]
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
----
- drivers/pci/host/pci-exynos.c      |  5 ++---
- drivers/pci/host/pci-keystone-dw.c |  4 ++--
- drivers/pci/host/pcie-designware.c | 28 ++++++++++++++--------------
- drivers/pci/host/pcie-spear13xx.c  | 26 ++++++++++++--------------
- 4 files changed, 30 insertions(+), 33 deletions(-)
+After reversing the commit it shows:
+pci 0000:00:1c.0: BAR 13: assigned [io  0x3000-0x3fff]
 
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index f9f468d..8b0e04b 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -454,7 +454,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_r_mode(pp, true);
--	ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
-+	ret = dw_pcie_cfg_read(pp->dbi_base, where, size, val);
- 	exynos_pcie_sideband_dbi_r_mode(pp, false);
- 	return ret;
- }
-@@ -465,8 +465,7 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_w_mode(pp, true);
--	ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
--			where, size, val);
-+	ret = dw_pcie_cfg_write(pp->dbi_base, where, size, val);
- 	exynos_pcie_sideband_dbi_w_mode(pp, false);
- 	return ret;
- }
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index e71da99..6648f9be 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -398,7 +398,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
- 
--	return dw_pcie_cfg_read(addr + (where & ~0x3), where, size, val);
-+	return dw_pcie_cfg_read(addr, where, size, val);
- }
- 
- int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-@@ -410,7 +410,7 @@ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
- 
--	return dw_pcie_cfg_write(addr + (where & ~0x3), where, size, val);
-+	return dw_pcie_cfg_write(addr, where, size, val);
- }
- 
- /**
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 52aa6e3..cb23e31 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -82,12 +82,14 @@ static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
- 
- int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
- {
-+	addr += (where & ~0x3);
- 	*val = readl(addr);
-+	where &= 3;
- 
- 	if (size == 1)
--		*val = (*val >> (8 * (where & 3))) & 0xff;
-+		*val = (*val >> (8 * where)) & 0xff;
- 	else if (size == 2)
--		*val = (*val >> (8 * (where & 3))) & 0xffff;
-+		*val = (*val >> (8 * where)) & 0xffff;
- 	else if (size != 4)
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
-@@ -96,12 +98,14 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
- 
- int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
- {
-+	addr += where;
-+
- 	if (size == 4)
- 		writel(val, addr);
- 	else if (size == 2)
--		writew(val, addr + (where & 2));
-+		writew(val, addr);
- 	else if (size == 1)
--		writeb(val, addr + (where & 3));
-+		writeb(val, addr);
- 	else
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
-@@ -132,8 +136,7 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->rd_own_conf)
- 		ret = pp->ops->rd_own_conf(pp, where, size, val);
- 	else
--		ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where,
--				size, val);
-+		ret = dw_pcie_cfg_read(pp->dbi_base, where, size, val);
- 
- 	return ret;
- }
-@@ -146,8 +149,7 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->wr_own_conf)
- 		ret = pp->ops->wr_own_conf(pp, where, size, val);
- 	else
--		ret = dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where,
--				size, val);
-+		ret = dw_pcie_cfg_write(pp->dbi_base, where, size, val);
- 
- 	return ret;
- }
-@@ -539,13 +541,12 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 *val)
- {
- 	int ret, type;
--	u32 address, busdev, cfg_size;
-+	u32 busdev, cfg_size;
- 	u64 cpu_addr;
- 	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
--	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
-@@ -562,7 +563,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_read(va_cfg_base + address, where, size, val);
-+	ret = dw_pcie_cfg_read(va_cfg_base, where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
- 				  pp->io_bus_addr, pp->io_size);
-@@ -574,13 +575,12 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 val)
- {
- 	int ret, type;
--	u32 address, busdev, cfg_size;
-+	u32 busdev, cfg_size;
- 	u64 cpu_addr;
- 	void __iomem *va_cfg_base;
- 
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
--	address = where & ~0x3;
- 
- 	if (bus->parent->number == pp->root_bus_nr) {
- 		type = PCIE_ATU_TYPE_CFG0;
-@@ -597,7 +597,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_write(va_cfg_base + address, where, size, val);
-+	ret = dw_pcie_cfg_write(va_cfg_base, where, size, val);
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX0,
- 				  PCIE_ATU_TYPE_IO, pp->io_mod_base,
- 				  pp->io_bus_addr, pp->io_size);
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index 0754ea3..cd30d8a 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -163,36 +163,34 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
--				0, 2, &val);
-+	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
--				0, 2, val);
-+	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 2, val);
- 
--	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
--	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
-+	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
-+	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
- 
- 	/*
- 	 * if is_gen1 is set then handle it, so that some buggy card
- 	 * also works
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
--		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
--					0, 4, &val);
-+		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP,
-+					4, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--						PCI_EXP_LNKCAP, 0, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
-+				PCI_EXP_LNKCAP, 4, val);
- 		}
- 
--		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
--					0, 2, &val);
-+		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2,
-+					2, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--						PCI_EXP_LNKCTL2, 0, 2, val);
-+			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
-+					PCI_EXP_LNKCTL2, 2, val);
- 		}
- 	}
- 
--- 
-1.9.1
+I don't have a solution to propose at this point and haven't tried the
+latest upstream so I'll just be building with this commit reversed
+(which solves the problem) until I have a chance to look into this
+further.
 
+Regards,
+George McCollister
+
+On Fri, Jul 3, 2015 at 8:09 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> This effectively reverts the following three commits:
+>
+>  7bc10388ccdd ACPI / resources: free memory on error in add_region_before()
+>  0f1b414d1907 ACPI / PNP: Avoid conflicting resource reservations
+>  b9a5e5e18fbf ACPI / init: Fix the ordering of acpi_reserve_resources()
+>
+> (commit b9a5e5e18fbf introduced regressions some of which, but not
+> all, were addressed by commit 0f1b414d1907 and commit 7bc10388ccdd
+> was a fixup on top of the latter) and causes ACPI fixed hardware
+> resources to be reserved at the fs_initcall_sync stage of system
+> initialization.
+>
+> The story is as follows.  First, a boot regression was reported due
+> to an apparent resource reservation ordering change after a commit
+> that shouldn't lead to such changes.  Investigation led to the
+> conclusion that the problem happened because acpi_reserve_resources()
+> was executed at the device_initcall() stage of system initialization
+> which wasn't strictly ordered with respect to driver initialization
+> (and with respect to the initialization of the pcieport driver in
+> particular), so a random change causing the device initcalls to be
+> run in a different order might break things.
+>
+> The response to that was to attempt to run acpi_reserve_resources()
+> as soon as we knew that ACPI would be in use (commit b9a5e5e18fbf).
+> However, that turned out to be too early, because it caused resource
+> reservations made by the PNP system driver to fail on at least one
+> system and that failure was addressed by commit 0f1b414d1907.
+>
+> That fix still turned out to be insufficient, though, because
+> calling acpi_reserve_resources() before the fs_initcall stage of
+> system initialization caused a boot regression to happen on the
+> eCAFE EC-800-H20G/S netbook.  That meant that we only could call
+> acpi_reserve_resources() at the fs_initcall initialization stage
+> or later, but then we might just as well call it after the PNP
+> initalization in which case commit 0f1b414d1907 wouldn't be
+> necessary any more.
+>
+> For this reason, the changes made by commit 0f1b414d1907 are reverted
+> (along with a memory leak fixup on top of that commit), the changes
+> made by commit b9a5e5e18fbf that went too far are reverted too and
+> acpi_reserve_resources() is changed into fs_initcall_sync, which
+> will cause it to be executed after the PNP subsystem initialization
+> (which is an fs_initcall) and before device initcalls (including
+> the pcieport driver initialization) which should avoid the initial
+> issue.
+>
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=100581
+> Link: http://marc.info/?t=143092384600002&r=1&w=2
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=99831
+> Link: http://marc.info/?t=143389402600001&r=1&w=2
+> Fixes: b9a5e5e18fbf "ACPI / init: Fix the ordering of acpi_reserve_resources()"
+> Reported-by: Roland Dreier <roland@purestorage.com>
+> Reported-by-and-tested-by: <g5983969@trbvm.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/acpi/osl.c      |   12 ++-
+>  drivers/acpi/resource.c |  162 ------------------------------------------------
+>  drivers/pnp/system.c    |   35 ++--------
+>  include/linux/acpi.h    |   10 --
+>  4 files changed, 18 insertions(+), 201 deletions(-)
+>
+> Index: linux-pm/drivers/acpi/resource.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/resource.c
+> +++ linux-pm/drivers/acpi/resource.c
+> @@ -26,7 +26,6 @@
+>  #include <linux/device.h>
+>  #include <linux/export.h>
+>  #include <linux/ioport.h>
+> -#include <linux/list.h>
+>  #include <linux/slab.h>
+>
+>  #ifdef CONFIG_X86
+> @@ -622,164 +621,3 @@ int acpi_dev_filter_resource_type(struct
+>         return (type & types) ? 0 : 1;
+>  }
+>  EXPORT_SYMBOL_GPL(acpi_dev_filter_resource_type);
+> -
+> -struct reserved_region {
+> -       struct list_head node;
+> -       u64 start;
+> -       u64 end;
+> -};
+> -
+> -static LIST_HEAD(reserved_io_regions);
+> -static LIST_HEAD(reserved_mem_regions);
+> -
+> -static int request_range(u64 start, u64 end, u8 space_id, unsigned long flags,
+> -                        char *desc)
+> -{
+> -       unsigned int length = end - start + 1;
+> -       struct resource *res;
+> -
+> -       res = space_id == ACPI_ADR_SPACE_SYSTEM_IO ?
+> -               request_region(start, length, desc) :
+> -               request_mem_region(start, length, desc);
+> -       if (!res)
+> -               return -EIO;
+> -
+> -       res->flags &= ~flags;
+> -       return 0;
+> -}
+> -
+> -static int add_region_before(u64 start, u64 end, u8 space_id,
+> -                            unsigned long flags, char *desc,
+> -                            struct list_head *head)
+> -{
+> -       struct reserved_region *reg;
+> -       int error;
+> -
+> -       reg = kmalloc(sizeof(*reg), GFP_KERNEL);
+> -       if (!reg)
+> -               return -ENOMEM;
+> -
+> -       error = request_range(start, end, space_id, flags, desc);
+> -       if (error) {
+> -               kfree(reg);
+> -               return error;
+> -       }
+> -
+> -       reg->start = start;
+> -       reg->end = end;
+> -       list_add_tail(&reg->node, head);
+> -       return 0;
+> -}
+> -
+> -/**
+> - * acpi_reserve_region - Reserve an I/O or memory region as a system resource.
+> - * @start: Starting address of the region.
+> - * @length: Length of the region.
+> - * @space_id: Identifier of address space to reserve the region from.
+> - * @flags: Resource flags to clear for the region after requesting it.
+> - * @desc: Region description (for messages).
+> - *
+> - * Reserve an I/O or memory region as a system resource to prevent others from
+> - * using it.  If the new region overlaps with one of the regions (in the given
+> - * address space) already reserved by this routine, only the non-overlapping
+> - * parts of it will be reserved.
+> - *
+> - * Returned is either 0 (success) or a negative error code indicating a resource
+> - * reservation problem.  It is the code of the first encountered error, but the
+> - * routine doesn't abort until it has attempted to request all of the parts of
+> - * the new region that don't overlap with other regions reserved previously.
+> - *
+> - * The resources requested by this routine are never released.
+> - */
+> -int acpi_reserve_region(u64 start, unsigned int length, u8 space_id,
+> -                       unsigned long flags, char *desc)
+> -{
+> -       struct list_head *regions;
+> -       struct reserved_region *reg;
+> -       u64 end = start + length - 1;
+> -       int ret = 0, error = 0;
+> -
+> -       if (space_id == ACPI_ADR_SPACE_SYSTEM_IO)
+> -               regions = &reserved_io_regions;
+> -       else if (space_id == ACPI_ADR_SPACE_SYSTEM_MEMORY)
+> -               regions = &reserved_mem_regions;
+> -       else
+> -               return -EINVAL;
+> -
+> -       if (list_empty(regions))
+> -               return add_region_before(start, end, space_id, flags, desc, regions);
+> -
+> -       list_for_each_entry(reg, regions, node)
+> -               if (reg->start == end + 1) {
+> -                       /* The new region can be prepended to this one. */
+> -                       ret = request_range(start, end, space_id, flags, desc);
+> -                       if (!ret)
+> -                               reg->start = start;
+> -
+> -                       return ret;
+> -               } else if (reg->start > end) {
+> -                       /* No overlap.  Add the new region here and get out. */
+> -                       return add_region_before(start, end, space_id, flags,
+> -                                                desc, &reg->node);
+> -               } else if (reg->end == start - 1) {
+> -                       goto combine;
+> -               } else if (reg->end >= start) {
+> -                       goto overlap;
+> -               }
+> -
+> -       /* The new region goes after the last existing one. */
+> -       return add_region_before(start, end, space_id, flags, desc, regions);
+> -
+> - overlap:
+> -       /*
+> -        * The new region overlaps an existing one.
+> -        *
+> -        * The head part of the new region immediately preceding the existing
+> -        * overlapping one can be combined with it right away.
+> -        */
+> -       if (reg->start > start) {
+> -               error = request_range(start, reg->start - 1, space_id, flags, desc);
+> -               if (error)
+> -                       ret = error;
+> -               else
+> -                       reg->start = start;
+> -       }
+> -
+> - combine:
+> -       /*
+> -        * The new region is adjacent to an existing one.  If it extends beyond
+> -        * that region all the way to the next one, it is possible to combine
+> -        * all three of them.
+> -        */
+> -       while (reg->end < end) {
+> -               struct reserved_region *next = NULL;
+> -               u64 a = reg->end + 1, b = end;
+> -
+> -               if (!list_is_last(&reg->node, regions)) {
+> -                       next = list_next_entry(reg, node);
+> -                       if (next->start <= end)
+> -                               b = next->start - 1;
+> -               }
+> -               error = request_range(a, b, space_id, flags, desc);
+> -               if (!error) {
+> -                       if (next && next->start == b + 1) {
+> -                               reg->end = next->end;
+> -                               list_del(&next->node);
+> -                               kfree(next);
+> -                       } else {
+> -                               reg->end = end;
+> -                               break;
+> -                       }
+> -               } else if (next) {
+> -                       if (!ret)
+> -                               ret = error;
+> -
+> -                       reg = next;
+> -               } else {
+> -                       break;
+> -               }
+> -       }
+> -
+> -       return ret ? ret : error;
+> -}
+> -EXPORT_SYMBOL_GPL(acpi_reserve_region);
+> Index: linux-pm/drivers/acpi/osl.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/osl.c
+> +++ linux-pm/drivers/acpi/osl.c
+> @@ -175,10 +175,14 @@ static void __init acpi_request_region (
+>         if (!addr || !length)
+>                 return;
+>
+> -       acpi_reserve_region(addr, length, gas->space_id, 0, desc);
+> +       /* Resources are never freed */
+> +       if (gas->space_id == ACPI_ADR_SPACE_SYSTEM_IO)
+> +               request_region(addr, length, desc);
+> +       else if (gas->space_id == ACPI_ADR_SPACE_SYSTEM_MEMORY)
+> +               request_mem_region(addr, length, desc);
+>  }
+>
+> -static void __init acpi_reserve_resources(void)
+> +static int __init acpi_reserve_resources(void)
+>  {
+>         acpi_request_region(&acpi_gbl_FADT.xpm1a_event_block, acpi_gbl_FADT.pm1_event_length,
+>                 "ACPI PM1a_EVT_BLK");
+> @@ -207,7 +211,10 @@ static void __init acpi_reserve_resource
+>         if (!(acpi_gbl_FADT.gpe1_block_length & 0x1))
+>                 acpi_request_region(&acpi_gbl_FADT.xgpe1_block,
+>                                acpi_gbl_FADT.gpe1_block_length, "ACPI GPE1_BLK");
+> +
+> +       return 0;
+>  }
+> +fs_initcall_sync(acpi_reserve_resources);
+>
+>  void acpi_os_printf(const char *fmt, ...)
+>  {
+> @@ -1862,7 +1869,6 @@ acpi_status __init acpi_os_initialize(vo
+>
+>  acpi_status __init acpi_os_initialize1(void)
+>  {
+> -       acpi_reserve_resources();
+>         kacpid_wq = alloc_workqueue("kacpid", 0, 1);
+>         kacpi_notify_wq = alloc_workqueue("kacpi_notify", 0, 1);
+>         kacpi_hotplug_wq = alloc_ordered_workqueue("kacpi_hotplug", 0);
+> Index: linux-pm/drivers/pnp/system.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pnp/system.c
+> +++ linux-pm/drivers/pnp/system.c
+> @@ -7,7 +7,6 @@
+>   *     Bjorn Helgaas <bjorn.helgaas@hp.com>
+>   */
+>
+> -#include <linux/acpi.h>
+>  #include <linux/pnp.h>
+>  #include <linux/device.h>
+>  #include <linux/init.h>
+> @@ -23,41 +22,25 @@ static const struct pnp_device_id pnp_de
+>         {"", 0}
+>  };
+>
+> -#ifdef CONFIG_ACPI
+> -static bool __reserve_range(u64 start, unsigned int length, bool io, char *desc)
+> -{
+> -       u8 space_id = io ? ACPI_ADR_SPACE_SYSTEM_IO : ACPI_ADR_SPACE_SYSTEM_MEMORY;
+> -       return !acpi_reserve_region(start, length, space_id, IORESOURCE_BUSY, desc);
+> -}
+> -#else
+> -static bool __reserve_range(u64 start, unsigned int length, bool io, char *desc)
+> -{
+> -       struct resource *res;
+> -
+> -       res = io ? request_region(start, length, desc) :
+> -               request_mem_region(start, length, desc);
+> -       if (res) {
+> -               res->flags &= ~IORESOURCE_BUSY;
+> -               return true;
+> -       }
+> -       return false;
+> -}
+> -#endif
+> -
+>  static void reserve_range(struct pnp_dev *dev, struct resource *r, int port)
+>  {
+>         char *regionid;
+>         const char *pnpid = dev_name(&dev->dev);
+>         resource_size_t start = r->start, end = r->end;
+> -       bool reserved;
+> +       struct resource *res;
+>
+>         regionid = kmalloc(16, GFP_KERNEL);
+>         if (!regionid)
+>                 return;
+>
+>         snprintf(regionid, 16, "pnp %s", pnpid);
+> -       reserved = __reserve_range(start, end - start + 1, !!port, regionid);
+> -       if (!reserved)
+> +       if (port)
+> +               res = request_region(start, end - start + 1, regionid);
+> +       else
+> +               res = request_mem_region(start, end - start + 1, regionid);
+> +       if (res)
+> +               res->flags &= ~IORESOURCE_BUSY;
+> +       else
+>                 kfree(regionid);
+>
+>         /*
+> @@ -66,7 +49,7 @@ static void reserve_range(struct pnp_dev
+>          * have double reservations.
+>          */
+>         dev_info(&dev->dev, "%pR %s reserved\n", r,
+> -                reserved ? "has been" : "could not be");
+> +                res ? "has been" : "could not be");
+>  }
+>
+>  static void reserve_resources_of_dev(struct pnp_dev *dev)
+> Index: linux-pm/include/linux/acpi.h
+> ===================================================================
+> --- linux-pm.orig/include/linux/acpi.h
+> +++ linux-pm/include/linux/acpi.h
+> @@ -309,9 +309,6 @@ int acpi_check_region(resource_size_t st
+>
+>  int acpi_resources_are_enforced(void);
+>
+> -int acpi_reserve_region(u64 start, unsigned int length, u8 space_id,
+> -                       unsigned long flags, char *desc);
+> -
+>  #ifdef CONFIG_HIBERNATION
+>  void __init acpi_no_s4_hw_signature(void);
+>  #endif
+> @@ -507,13 +504,6 @@ static inline int acpi_check_region(reso
+>         return 0;
+>  }
+>
+> -static inline int acpi_reserve_region(u64 start, unsigned int length,
+> -                                     u8 space_id, unsigned long flags,
+> -                                     char *desc)
+> -{
+> -       return -ENXIO;
+> -}
+> -
+>  struct acpi_table_header;
+>  static inline int acpi_table_parse(char *id,
+>                                 int (*handler)(struct acpi_table_header *))
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
