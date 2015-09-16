@@ -1,149 +1,246 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 15 Sep 2015 18:40:38 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>, lorenzo.pieralisi@arm.com
-Subject: Re: [PATCH 3/6] PCI: generic: Quit clobbering our pci_ops.
-Message-ID: <20150915174038.GK31157@arm.com>
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
- <1442013719-5001-4-git-send-email-ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442013719-5001-4-git-send-email-ddaney.cavm@gmail.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 35/53] PCI: Add debug print out for min_align and alt_size
+Date: Wed, 16 Sep 2015 14:57:33 -0700
+Message-Id: <1442440671-5361-36-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 12, 2015 at 12:21:56AM +0100, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> The pci-host-generic driver keeps a global struct pci_ops which it
-> then patches with the .map_bus method appropriate for the bus device.
-> A problem arises when the driver is used for two different types of
-> bus devices, the .map_bus method for the last device probed clobbers
-> the method for all previous devices.  The result, only the last bus
-> device probed has the proper .map_bus, and the others fail.
-> 
-> Move the struct pci_ops into the bus specific structure, and
-> initialize it when the bus device is probed.  Keep a copy of the
-> gen_pci_cfg_bus_ops structure, instead of a pointer to a global copy,
-> to future proof against the addition of bus specific elements to
-> struct pci_ops.
+Put all print out for all children align/size and result align/size
+together.
 
-This looks ok to me:
+We can print out device name at same time with min_align/alt_size
+calculation.
 
-  Acked-by: Will Deacon <will.deacon@arm.com>
+So we can shut off debug print out from get_res_add_size() and
+get_res_add_align().
 
-Will
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 76 ++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 56 insertions(+), 20 deletions(-)
 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/pci/host/pci-host-generic.c | 31 +++++++++++++++++--------------
->  1 file changed, 17 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index a0fb241..cd6f898 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -27,7 +27,7 @@
->  
->  struct gen_pci_cfg_bus_ops {
->  	u32 bus_shift;
-> -	void __iomem *(*map_bus)(struct pci_bus *, unsigned int, int);
-> +	struct pci_ops ops;
->  };
->  
->  struct gen_pci_cfg_windows {
-> @@ -35,7 +35,7 @@ struct gen_pci_cfg_windows {
->  	struct resource				*bus_range;
->  	void __iomem				**win;
->  
-> -	const struct gen_pci_cfg_bus_ops	*ops;
-> +	struct gen_pci_cfg_bus_ops		ops;
->  };
->  
->  /*
-> @@ -65,7 +65,11 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
->  
->  static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
->  	.bus_shift	= 16,
-> -	.map_bus	= gen_pci_map_cfg_bus_cam,
-> +	.ops		= {
-> +		.map_bus	= gen_pci_map_cfg_bus_cam,
-> +		.read		= pci_generic_config_read,
-> +		.write		= pci_generic_config_write,
-> +	}
->  };
->  
->  static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
-> @@ -80,12 +84,11 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
->  
->  static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
->  	.bus_shift	= 20,
-> -	.map_bus	= gen_pci_map_cfg_bus_ecam,
-> -};
-> -
-> -static struct pci_ops gen_pci_ops = {
-> -	.read	= pci_generic_config_read,
-> -	.write	= pci_generic_config_write,
-> +	.ops		= {
-> +		.map_bus	= gen_pci_map_cfg_bus_ecam,
-> +		.read		= pci_generic_config_read,
-> +		.write		= pci_generic_config_write,
-> +	}
->  };
->  
->  static const struct of_device_id gen_pci_of_match[] = {
-> @@ -175,7 +178,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  
->  	/* Limit the bus-range to fit within reg */
->  	bus_max = pci->cfg.bus_range->start +
-> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
-> +		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
->  	pci->cfg.bus_range->end = min_t(resource_size_t,
->  					pci->cfg.bus_range->end, bus_max);
->  
-> @@ -193,7 +196,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
->  	bus_range = pci->cfg.bus_range;
->  	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
->  		u32 idx = busn - bus_range->start;
-> -		u32 sz = 1 << pci->cfg.ops->bus_shift;
-> +		u32 sz = 1 << pci->cfg.ops.bus_shift;
->  
->  		pci->cfg.win[idx] = devm_ioremap(dev,
->  						 pci->cfg.res.start + busn * sz,
-> @@ -240,8 +243,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	}
->  
->  	of_id = of_match_node(gen_pci_of_match, np);
-> -	pci->cfg.ops = of_id->data;
-> -	gen_pci_ops.map_bus = pci->cfg.ops->map_bus;
-> +	pci->cfg.ops = *(struct gen_pci_cfg_bus_ops *)of_id->data;
->  	pci->host.dev.parent = dev;
->  	INIT_LIST_HEAD(&pci->host.windows);
->  	INIT_LIST_HEAD(&pci->resources);
-> @@ -262,7 +264,8 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	if (!pci_has_flag(PCI_PROBE_ONLY))
->  		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
->  
-> -	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
-> +	bus = pci_scan_root_bus(dev, 0,
-> +				&pci->cfg.ops.ops, pci, &pci->resources);
->  	if (!bus) {
->  		dev_err(dev, "Scanning rootbus failed");
->  		return -ENODEV;
-> -- 
-> 1.7.11.7
-> 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 28e9768..f2aaead 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -159,11 +159,6 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 	if (!dev_res || !dev_res->add_size)
+ 		return 0;
+ 
+-	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
+-		   (int)(res - &dev_res->dev->resource[0]),
+-		   res, (unsigned long long)dev_res->add_size);
+-
+ 	return dev_res->add_size;
+ }
+ 
+@@ -176,11 +171,6 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	if (!dev_res || !dev_res->min_align)
+ 		return 0;
+ 
+-	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
+-		   (int)(res - &dev_res->dev->resource[0]),
+-		   res, (unsigned long long)dev_res->min_align);
+-
+ 	return dev_res->min_align;
+ }
+ 
+@@ -1233,6 +1223,8 @@ struct align_test_res {
+ 	struct resource res;
+ 	resource_size_t size;
+ 	resource_size_t align;
++	struct device *dev;
++	int idx;
+ };
+ 
+ static void free_align_test_list(struct list_head *head)
+@@ -1246,7 +1238,8 @@ static void free_align_test_list(struct list_head *head)
+ }
+ 
+ static int add_to_align_test_list(struct list_head *head,
+-				  resource_size_t align, resource_size_t size)
++				  resource_size_t align, resource_size_t size,
++				  struct device *dev, int idx)
+ {
+ 	struct align_test_res *tmp;
+ 
+@@ -1256,6 +1249,8 @@ static int add_to_align_test_list(struct list_head *head,
+ 
+ 	tmp->align = align;
+ 	tmp->size = size;
++	tmp->dev = dev;
++	tmp->idx = idx;
+ 
+ 	list_add_tail(&tmp->list, head);
+ 
+@@ -1321,6 +1316,19 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 	resource_size_t min_align, good_align, aligned_size, start;
+ 	int count = 0;
+ 
++	list_for_each_entry(p, head, list)
++		count++;
++
++	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_align========\n");
++	if (count) {
++		printk(KERN_DEBUG "  align/size:\n");
++		list_for_each_entry(p, head, list)
++			dev_printk(KERN_DEBUG, p->dev,
++				   "BAR %d:     %08llx/%08llx\n", p->idx,
++				   (unsigned long long)p->align,
++				   (unsigned long long)p->size);
++	}
++
+ 	if (max_align <= align_low) {
+ 		good_align = align_low;
+ 		goto out;
+@@ -1328,9 +1336,6 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 
+ 	good_align = max_align;
+ 
+-	list_for_each_entry(p, head, list)
+-		count++;
+-
+ 	if (count <= 1)
+ 		goto out;
+ 
+@@ -1355,6 +1360,11 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 	} while (min_align > align_low);
+ 
+ out:
++	printk(KERN_DEBUG "      min_align/aligned_size: %08llx/%08llx\n",
++			(unsigned long long)good_align,
++			(unsigned long long)ALIGN(size, good_align));
++	printk(KERN_DEBUG "  ===========END===calculate_mem_align==========\n");
++
+ 	return good_align;
+ }
+ 
+@@ -1372,6 +1382,16 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
+ 	list_for_each_entry(p, head, list)
+ 		count++;
+ 
++	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_alt_size=====\n");
++	if (count) {
++		printk(KERN_DEBUG "  align/size:\n");
++		list_for_each_entry(p, head, list)
++			dev_printk(KERN_DEBUG, p->dev,
++				   "BAR %d:     %08llx/%08llx\n", p->idx,
++				   (unsigned long long)p->align,
++				   (unsigned long long)p->size);
++	}
++
+ 	if (count <= 1)
+ 		goto out;
+ 
+@@ -1396,6 +1416,11 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
+ 	}
+ 
+ out:
++	printk(KERN_DEBUG "   alt_align/alt_size: %08llx/%08llx\n",
++			(unsigned long long)max_align,
++			(unsigned long long)good_size);
++	printk(KERN_DEBUG "  ===========END===calculate_mem_alt_size=======\n");
++
+ 	return good_size;
+ }
+ 
+@@ -1476,7 +1501,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* put SRIOV/ROM res to realloc list */
+ 			if (realloc_head && is_optional(i)) {
+ 				add_to_align_test_list(&align_test_add_list,
+-							align, r_size);
++						align, r_size, &dev->dev, i);
+ 				r->end = r->start - 1;
+ 				__add_to_list(realloc_head, dev, r,
+ 					      r_size, align, 0, 0);
+@@ -1495,7 +1520,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			if (r_size > 1) {
+ 				add_to_align_test_list(&align_test_list,
+-							align, r_size);
++						align, r_size, &dev->dev, i);
+ 				size += r_size;
+ 				if (align > max_align)
+ 					max_align = align;
+@@ -1512,7 +1537,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					add_align = align;
+ 				add_to_align_test_list(&align_test_add_list,
+ 							add_align,
+-							r_size + add_r_size);
++							r_size + add_r_size,
++							&dev->dev, i);
+ 				sum_add_size += r_size + add_r_size;
+ 				if (add_align > max_add_align)
+ 					max_add_align = add_align;
+@@ -1522,14 +1548,14 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					add_to_align_test_list(
+ 						&align_test_alt_list,
+ 						dev_res->alt_align,
+-						dev_res->alt_size);
++						dev_res->alt_size, &dev->dev, i);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+ 				} else if (r_size > 1) {
+ 					add_to_align_test_list(
+ 						&align_test_alt_list,
+-						align, r_size);
++						align, r_size, &dev->dev, i);
+ 					alt_size += r_size;
+ 					if (alt_align < align)
+ 						alt_align = align;
+@@ -1540,6 +1566,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	max_align = max(max_align, window_align);
+ 	if (size || min_size) {
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for MUST\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+ 						size, window_align);
+ 		size0 = calculate_size(size, min_size,
+@@ -1549,6 +1578,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	if (size0 && realloc_head) {
+ 		alt_align = max(alt_align, window_align);
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for ALT\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		/* need to increase size to fit more alt */
+ 		alt_size = calculate_mem_alt_size(&align_test_alt_list,
+ 						  alt_align, alt_size,
+@@ -1564,6 +1596,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for ADD\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+ 					window_align);
+@@ -1621,7 +1656,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				      final_add_size, min_add_align,
+ 				      alt_size, alt_align);
+ 			dev_printk(KERN_DEBUG, &bus->self->dev,
+-				   "bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
++				   "BAR %d: bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
++				   (int)(b_res - &bus->self->resource[0]),
+ 				   b_res, &bus->busn_res,
+ 				   (unsigned long long)final_add_size,
+ 				   (unsigned long long)min_add_align,
+-- 
+1.8.4.5
+
