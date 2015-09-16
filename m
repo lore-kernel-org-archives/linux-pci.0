@@ -1,69 +1,101 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
-Date: Fri, 11 Sep 2015 16:21:57 -0700
-Message-Id: <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 10/53] PCI: Treat ROM resource as optional during realloc
+Date: Wed, 16 Sep 2015 14:57:08 -0700
+Message-Id: <1442440671-5361-11-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Current on realloc path, we just ignore ROM resource if we can not assign
+them in first try.
 
-There are two problems with the bus_max calculation:
+Treat ROM resources as optional resources,so try to allocate them together
+with required ones, if can not assign them, could go with other required
+resources only, and try to allocate them second time in expand path.
 
-1) The u8 data type can overflow for large config space windows.
-
-2) The calculation is incorrect for a bus range that doesn't start at
-   zero.
-
-Since the configuration space is relative to bus zero, make bus_max
-just be the size of the config window scaled by bus_shift.  Then clamp
-it to a maximum of 255, per PCI.  Use a data type of int to avoid
-overflow problems.
-
-Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pci-host-generic.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/pci/setup-bus.c | 37 ++++++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index cd6f898..fce5bf7 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -164,7 +164,7 @@ out_release_res:
- static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
- {
- 	int err;
--	u8 bus_max;
-+	int bus_max;
- 	resource_size_t busn;
- 	struct resource *bus_range;
- 	struct device *dev = pci->host.dev.parent;
-@@ -177,8 +177,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1fd0b8d..eca319e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -371,18 +371,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		idx = res - &dev_res->dev->resource[0];
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+-			if (fail_head) {
+-				/*
+-				 * if the failed res is for ROM BAR, and it will
+-				 * be enabled later, don't add it to the list
+-				 */
+-				if (!((idx == PCI_ROM_RESOURCE) &&
+-				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
+-					add_to_list(fail_head,
+-						    dev_res->dev, res,
+-						    0 /* don't care */,
+-						    0 /* don't care */);
+-			}
++			if (fail_head)
++				add_to_list(fail_head, dev_res->dev, res,
++					    0 /* don't care */,
++					    0 /* don't care */);
+ 			reset_resource(res);
+ 		}
  	}
+@@ -1142,6 +1134,19 @@ out:
+ 	return good_align;
+ }
  
- 	/* Limit the bus-range to fit within reg */
--	bus_max = pci->cfg.bus_range->start +
--		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-+	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-+	if (bus_max > 255)
-+		bus_max = 255;
- 	pci->cfg.bus_range->end = min_t(resource_size_t,
- 					pci->cfg.bus_range->end, bus_max);
++static inline bool is_optional(int i)
++{
++
++	if (i == PCI_ROM_RESOURCE)
++		return true;
++
++#ifdef CONFIG_PCI_IOV
++	if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
++		return true;
++#endif
++
++	return false;
++}
+ /**
+  * pbus_size_mem() - size the memory window of a given bus
+  *
+@@ -1198,10 +1203,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
  
+ 			r_size = resource_size(r);
+ 			align = pci_resource_alignment(dev, r);
+-#ifdef CONFIG_PCI_IOV
+-			/* put SRIOV requested res to the optional list */
+-			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+-					i <= PCI_IOV_RESOURCE_END) {
++			/* put SRIOV/ROM res to realloc list */
++			if (realloc_head && is_optional(i)) {
+ 				add_to_align_test_list(&align_test_add_list,
+ 							align, r_size);
+ 				r->end = r->start - 1;
+@@ -1211,7 +1214,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					max_add_align = align;
+ 				continue;
+ 			}
+-#endif
++
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
 -- 
-1.7.11.7
+1.8.4.5
 
