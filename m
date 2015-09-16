@@ -7,106 +7,76 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 12/53] PCI: Simplify res reference using in __assign_resources_sorted()
-Date: Wed, 16 Sep 2015 14:57:10 -0700
-Message-Id: <1442440671-5361-13-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v5 09/53] PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
+Date: Wed, 16 Sep 2015 14:57:07 -0700
+Message-Id: <1442440671-5361-10-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are couples of dev_res->res reference, to make code more readable
-use res instead of dev_res->res directly.
+pdev_sort_resources() etc was checking devices resources and putting
+resources that need to assign to one list in sorted order.
+
+Now we don't do sorting in those functions anymore, so change to
+pdev_assign_resources_prepare() instead.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ drivers/pci/setup-bus.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a3d48ef..9d7adab 100644
+index 44d63c0..1fd0b8d 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -452,6 +452,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
- 	resource_size_t add_align;
-+	struct resource *res;
+@@ -205,8 +205,8 @@ static resource_size_t __pci_resource_alignment(
+ 	return r_align;
+ }
  
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -467,8 +468,8 @@ static void __assign_resources_sorted(struct list_head *head,
+-/* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev,
++/* check resources and save to the list */
++static void pdev_assign_resources_prepare(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+@@ -242,7 +242,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
+ 	}
+ }
  
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
--		dev_res->res->end += get_res_add_size(realloc_head,
--							dev_res->res);
-+		res = dev_res->res;
-+		res->end += get_res_add_size(realloc_head, res);
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
-@@ -477,16 +478,16 @@ static void __assign_resources_sorted(struct list_head *head,
- 		 * 2. resource with IORESOURCE_SIZEALIGN
- 		 *    update size above already change alignment.
- 		 */
--		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+		if (!(res->flags & IORESOURCE_STARTALIGN))
- 			continue;
- 
--		add_align = get_res_add_align(realloc_head, dev_res->res);
-+		add_align = get_res_add_align(realloc_head, res);
- 
- 		if (add_align) {
--			resource_size_t r_size = resource_size(dev_res->res);
-+			resource_size_t r_size = resource_size(res);
- 
--			dev_res->res->start = add_align;
--			dev_res->res->end = add_align + r_size - 1;
-+			res->start = add_align;
-+			res->end = add_align + r_size - 1;
-                }
+-static void __dev_sort_resources(struct pci_dev *dev,
++static void __dev_assign_resources_prepare(struct pci_dev *dev,
+ 				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+@@ -260,7 +260,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
  	}
  
-@@ -508,21 +509,21 @@ static void __assign_resources_sorted(struct list_head *head,
- 	/* check failed type */
- 	fail_type = pci_fail_res_type_mask(&local_fail_head);
- 	/* remove not need to be released assigned res from head list etc */
--	list_for_each_entry_safe(dev_res, tmp_res, head, list)
--		if (dev_res->res->parent &&
--		    !pci_need_to_release(fail_type, dev_res->res)) {
-+	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
-+		res = dev_res->res;
-+		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
--			remove_from_list(realloc_head, dev_res->res);
--			remove_from_list(&save_head, dev_res->res);
-+			remove_from_list(realloc_head, res);
-+			remove_from_list(&save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-+	}
+-	pdev_sort_resources(dev, realloc_head, head);
++	pdev_assign_resources_prepare(dev, realloc_head, head);
+ }
  
- 	free_list(&local_fail_head);
- 	/* Release assigned resource */
- 	list_for_each_entry(dev_res, head, list) {
--		struct resource *res = dev_res->res;
--
-+		res = dev_res->res;
- 		if (res->parent) {
- 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
- 				   "BAR %d: released %pR\n",
-@@ -533,8 +534,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	/* Restore start/end/flags from saved list */
- 	list_for_each_entry(save_res, &save_head, list) {
--		struct resource *res = save_res->res;
--
-+		res = save_res->res;
- 		res->start = save_res->start;
- 		res->end = save_res->end;
- 		res->flags = save_res->flags;
+ static inline void reset_resource(struct resource *res)
+@@ -560,7 +560,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
+ 
+-	__dev_sort_resources(dev, add_head, &head);
++	__dev_assign_resources_prepare(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -573,7 +573,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, realloc_head, &head);
++		__dev_assign_resources_prepare(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
 -- 
 1.8.4.5
 
