@@ -1,53 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:37446 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752597AbbIBUDv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Sep 2015 16:03:51 -0400
-Date: Wed, 2 Sep 2015 13:01:27 -0700
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
-Message-ID: <20150902200127.GA3347@sean.stalley.intel.com>
-References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
- <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
- <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
- <20150902174612.GA2700@sean.stalley.intel.com>
- <CAErSpo4qZ9AXskyo86gXG1cb3AqCn-HB05nj7qT9wovZdLt2Tg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo4qZ9AXskyo86gXG1cb3AqCn-HB05nj7qT9wovZdLt2Tg@mail.gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:17463 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbbIPDMr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 23:12:47 -0400
+From: Ethan Zhao <ethan.zhao@oracle.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ethan Zhao <ethan.zhao@oracle.com>
+Subject: [PATCH v2] iov: restore NumVFs register to 0 before return from virtfn_max_buses()
+Date: Wed, 16 Sep 2015 12:19:53 +0900
+Message-Id: <1442373593-8342-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 02, 2015 at 02:25:50PM -0500, Bjorn Helgaas wrote:
-> On Wed, Sep 2, 2015 at 12:46 PM, Sean O. Stalley <sean.stalley@intel.com> wrote:
-> 
-> > Would it be better to modify pci_claim_resource() to support EA instead of adding pci_ea_claim_resource()?
-> > That way, EA entries would be claimed at the same time as traditional BARs.
-> 
-> Yes, I think so.
+After commit 4449f079722c ("PCI: Calculate maximum number of buses
+required for VFs"),the initial value of NumVFs register was left to
+non-zero after sriov_init() and no VFs was enabled in device driver.
+this changed the behaviour of kernel exported by lspci and sysfs etc.
+so this patch restore the NumVFs register to zero after the
+calculation of max_VF_buses was done and before return from
+virtfn_max_buses().
 
-Ok, I'll make it work this way in the next patchset.
+Tested on stable 4.1 and passed building on stable 4.3-rc1
 
-> Why wouldn't pci_claim_resource() work as-is for EA?  I see that
-> pci_ea_get_parent_resource() defaults to iomem_resource or
-> ioport_resource if we don't find a parent, but I don't understand why
-> that's necessary.
+Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+---
+v1..v2:
+ -Suggestions from Bjorn Helgaas (move the restoration of NumVFs register
+  to virtfn_max_buses())
+---
+ drivers/pci/iov.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-EA resources may (or may not) be in the parent's range[1].
-If the parent doesn't describe this range, we want to default to the top-level resource.
-Other than that case, I think pci_claim_resource would work as-is.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ee0ebff..92cee06 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -71,6 +71,8 @@ static inline u8 virtfn_max_buses(struct pci_dev *dev)
+ 			max = busnr;
+ 	}
+ 
++	/* restore NumVFs register to 0 */
++	pci_iov_set_numvfs(dev, 0);
+ 	return max;
+ }
+ 
+-- 
+1.8.3.1
 
--Sean
-
-[1] From the EA ECN:
-For a bridge function that is permitted to implement EA based on the rules above, it is
-permitted, but not required, for the bridge function to use EA mechanisms to indicate
-resource ranges that are located behind the bridge Function (see Section 6.9.1.2).
