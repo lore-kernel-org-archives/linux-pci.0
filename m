@@ -1,93 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:7915 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673AbbIORLw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:52 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH 14/22] swiotlb-xen: add map_peer_resource stub
-Date: Tue, 15 Sep 2015 12:10:59 -0500
-Message-ID: <1442337067-22964-15-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, stable@vger.kernel.org
+Subject: [PATCH v5 50/53] PCI: Set resource to FIXED for LSI devices
+Date: Wed, 16 Sep 2015 14:57:48 -0700
+Message-Id: <1442440671-5361-51-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Xen stub of the map_peer_resource DMA API. Return an error to
-indicate no bounce-buffer implementation is available yet.
+LSI HBA firmware stop responding pci read from host if pci core ever change
+pci device BAR values.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
+Set their resources to FIXED, so will allow realloc to skip them.
+
+Reported-by: Paul Johnson <pjay@nwtrail.com>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=92351
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: stable@vger.kernel.org
 ---
- drivers/xen/swiotlb-xen.c | 20 ++++++++++++++++++++
- include/xen/swiotlb-xen.h | 11 +++++++++++
- 2 files changed, 31 insertions(+)
+ drivers/pci/pci.h       |  1 +
+ drivers/pci/quirks.c    | 20 ++++++++++++++++++++
+ drivers/pci/setup-bus.c |  4 ++++
+ 3 files changed, 25 insertions(+)
 
-diff --git a/drivers/xen/swiotlb-xen.c b/drivers/xen/swiotlb-xen.c
-index 4c54932..b9879dc 100644
---- a/drivers/xen/swiotlb-xen.c
-+++ b/drivers/xen/swiotlb-xen.c
-@@ -475,6 +475,26 @@ void xen_swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f0440b7..c34c2aa 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -170,6 +170,7 @@ static inline void pci_msix_clear_and_set_ctrl(struct pci_dev *dev, u16 clear, u
  }
- EXPORT_SYMBOL_GPL(xen_swiotlb_unmap_page);
  
-+#ifdef CONFIG_HAS_DMA_P2P
+ void pci_realloc_get_opt(char *);
++bool pci_realloc_user_enabled(void);
+ 
+ static inline int pci_no_d1d2(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index c1d9a78..00c0a3a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -323,6 +323,26 @@ static void quirk_s3_64M(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_868,		quirk_s3_64M);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_S3,	PCI_DEVICE_ID_S3_968,		quirk_s3_64M);
+ 
 +/*
-+ * Maps a single region from a peer device's resource for DMA streaming. This is
-+ * currently unimplemented for Xen because the only peer DMA mappings we're
-+ * capable of creating are direct mappings with no explicit synchronization,
-+ * e.g., there's no bounce buffer abstraction for peer mappings.
++ * LSI devices firmware does not like BAR get changed
 + */
-+dma_peer_addr_t xen_swiotlb_map_peer_resource(struct device *hwdev,
-+					      struct device *hwpeer,
-+					      struct resource *res,
-+					      unsigned long offset,
-+					      size_t size,
-+					      enum dma_data_direction dir,
-+					      struct dma_attrs *attrs)
++static void quirk_bar_fixed(struct pci_dev *dev)
 +{
-+	return DMA_ERROR_CODE;
++	int i;
++
++	if (pci_realloc_user_enabled())
++		return;
++
++	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (!r->start || !r->flags)
++			continue;
++		r->flags |= IORESOURCE_PCI_FIXED;
++	}
 +}
-+EXPORT_SYMBOL_GPL(xen_swiotlb_map_peer_resource);
-+#endif
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC,	PCI_ANY_ID,	quirk_bar_fixed);
 +
- /*
-  * Make physical memory consistent for a single streaming mode DMA translation
-  * after a transfer.
-diff --git a/include/xen/swiotlb-xen.h b/include/xen/swiotlb-xen.h
-index 8b2eb93..dc08a4f 100644
---- a/include/xen/swiotlb-xen.h
-+++ b/include/xen/swiotlb-xen.h
-@@ -24,6 +24,17 @@ extern dma_addr_t xen_swiotlb_map_page(struct device *dev, struct page *page,
- extern void xen_swiotlb_unmap_page(struct device *hwdev, dma_addr_t dev_addr,
- 				   size_t size, enum dma_data_direction dir,
- 				   struct dma_attrs *attrs);
-+
-+#ifdef CONFIG_HAS_DMA_P2P
-+extern dma_peer_addr_t xen_swiotlb_map_peer(struct device *hwdev,
-+					    struct device *hwpeer,
-+					    struct resource *res,
-+					    unsigned long offset,
-+					    size_t size,
-+					    enum dma_data_direction dir,
-+					    struct dma_attrs *attrs);
-+#endif
-+
- extern int
- xen_swiotlb_map_sg_attrs(struct device *hwdev, struct scatterlist *sgl,
- 			 int nelems, enum dma_data_direction dir,
+ /* for pci remove and rescan */
+ static void quirk_allocate_fixed(struct pci_dev *dev)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 0f9fda0..e6c649a 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -2176,6 +2176,10 @@ void __init pci_realloc_get_opt(char *str)
+ 	else if (!strncmp(str, "on", 2))
+ 		pci_realloc_enable = user_enabled;
+ }
++bool pci_realloc_user_enabled(void)
++{
++	return pci_realloc_enable == user_enabled;
++}
+ static bool pci_realloc_enabled(enum enable_type enable)
+ {
+ 	return enable >= user_enabled;
 -- 
-2.5.1
+1.8.4.5
 
