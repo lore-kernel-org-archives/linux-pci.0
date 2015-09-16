@@ -1,75 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:58811 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754951AbbIRPMm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 11:12:42 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-pci@vger.kernel.org, kernel@pengutronix.de,
-	patchwork-lst@pengutronix.de
-Subject: [PATCH v5 5/5] PCI: designware: Set up high part of MSI target address
-Date: Fri, 18 Sep 2015 17:12:39 +0200
-Message-Id: <1442589159-28201-6-git-send-email-l.stach@pengutronix.de>
-In-Reply-To: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
-References: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 18/53] PCI: Move comment to pci_need_to_release()
+Date: Wed, 16 Sep 2015 14:57:16 -0700
+Message-Id: <1442440671-5361-19-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Set up the high part of the MSI target address to allow the MSI target to
-be above 4GB on 64bit and PAE systems.
+Move comment from caller to pci_need_to_release(), as we will have one new
+caller for alt_size support.
 
-[bhelgaas: changelog]
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pcie-designware.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/pci/setup-bus.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 3a2b8bce27a6..4eada6bc5fef 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -205,12 +205,16 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c067ae0..eee7481 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -415,6 +415,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
  
- void dw_pcie_msi_init(struct pcie_port *pp)
+ static bool pci_need_to_release(unsigned long mask, struct resource *res)
  {
-+	u64 msi_target;
++	/*
++	 * Separate three resource type checking if we need to release
++	 * assigned resource.
++	 *	1. if there is io port assign fail, will release assigned
++	 *	   io port.
++	 *	2. if there is pref mmio assign fail, release assigned
++	 *	   pref mmio.
++	 *	   if assigned pref mmio's parent is non-pref mmio and there
++	 *	   is non-pref mmio assign fail, will release that assigned
++	 *	   pref mmio.
++	 *	3. if there is non-pref mmio assign fail or pref mmio
++	 *	   assigned fail, will release assigned non-pref mmio.
++	 */
 +
- 	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
-+	msi_target = virt_to_phys((void *)pp->msi_data);
+ 	if (res->flags & IORESOURCE_IO)
+ 		return !!(mask & IORESOURCE_IO);
  
- 	/* program the msi_data */
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
--			virt_to_phys((void *)pp->msi_data));
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
-+			    (u32)(msi_target & 0xffffffff));
-+	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
-+			    (u32)(msi_target >> 32 & 0xffffffff));
- }
- 
- static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-@@ -299,12 +303,15 @@ no_valid_irq:
- static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
- {
- 	struct msi_msg msg;
-+	u64 msi_target;
- 
- 	if (pp->ops->get_msi_addr)
--		msg.address_lo = pp->ops->get_msi_addr(pp);
-+		msi_target = pp->ops->get_msi_addr(pp);
- 	else
--		msg.address_lo = virt_to_phys((void *)pp->msi_data);
--	msg.address_hi = 0x0;
-+		msi_target = virt_to_phys((void *)pp->msi_data);
+@@ -471,19 +485,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 *  if could do that, could get out early.
+ 	 *  if could not do that, we still try to assign requested at first,
+ 	 *    then try to reassign add_size for some resources.
+-	 *
+-	 * Separate three resource type checking if we need to release
+-	 * assigned resource after requested + add_size try.
+-	 *	1. if there is io port assign fail, will release assigned
+-	 *	   io port.
+-	 *	2. if there is pref mmio assign fail, release assigned
+-	 *	   pref mmio.
+-	 *	   if assigned pref mmio's parent is non-pref mmio and there
+-	 *	   is non-pref mmio assign fail, will release that assigned
+-	 *	   pref mmio.
+-	 *	3. if there is non-pref mmio assign fail or pref mmio
+-	 *	   assigned fail, will release assigned non-pref mmio.
+ 	 */
 +
-+	msg.address_lo = (u32)(msi_target & 0xffffffff);
-+	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
- 
- 	if (pp->ops->get_msi_data)
- 		msg.data = pp->ops->get_msi_data(pp, pos);
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
 -- 
-2.5.1
+1.8.4.5
 
