@@ -1,77 +1,253 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp01.br.ibm.com ([32.104.18.85]:43124 "EHLO
-	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751162AbbIGXEa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Sep 2015 19:04:30 -0400
-Received: from /spool/local
-	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Mon, 7 Sep 2015 20:04:28 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id 1DE361DC007E
-	for <linux-pci@vger.kernel.org>; Mon,  7 Sep 2015 19:03:23 -0400 (EDT)
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t87N4o3S4845654
-	for <linux-pci@vger.kernel.org>; Mon, 7 Sep 2015 20:04:50 -0300
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t87N4Npv026426
-	for <linux-pci@vger.kernel.org>; Mon, 7 Sep 2015 20:04:24 -0300
-Subject: Re: [PATCH v2 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
- probe time in OF case
-To: Michael Ellerman <mpe@ellerman.id.au>,
-	"Michael S. Tsirkin" <mst@redhat.com>
-References: <1439932430-13375-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <20150903175624.GI829@google.com> <55EA2678.5030801@linux.vnet.ibm.com>
- <20150906173838-mutt-send-email-mst@redhat.com>
- <1441595823.12945.4.camel@ellerman.id.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
-	benh@kernel.crashing.org, paulus@samba.org,
-	Fam Zheng <famz@redhat.com>, Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	"David S. Miller" <davem@davemloft.net>
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Message-ID: <55EE17F6.8010807@linux.vnet.ibm.com>
-Date: Mon, 7 Sep 2015 20:04:22 -0300
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:13841 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753350AbbIPAjR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 20:39:17 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>
+Subject: [PATCH 7/8] PCI: iproc: Add outbound mapping support
+Date: Tue, 15 Sep 2015 17:39:21 -0700
+Message-ID: <1442363962-29805-8-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
+References: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1441595823.12945.4.camel@ellerman.id.au>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Sun, 2015-09-06 at 17:44 +0300, Michael S. Tsirkin wrote:
+Certain iProc SoCs require the PCIe outbound mapping to be configured in
+SW. This patch adds support for those chips
 
->>> My question is: is necessary to initialize MSI capabilities even with
->>> CONFIG_PCI_MSI not set? In negative case, would be "cleaner" revert the 3
->>> commits, right?
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc-platform.c |  27 ++++++++
+ drivers/pci/host/pcie-iproc.c          | 113 +++++++++++++++++++++++++++++++++
+ drivers/pci/host/pcie-iproc.h          |  17 +++++
+ 3 files changed, 157 insertions(+)
 
->> I think the reason why it's necessary is explained in
->> commit log for commit 1851617cd2da9cc53cdc1738f4148f4f042c0e56 (that's
->> [3] below).
-
-Thanks very much Michael. I re-read the text of your commit, and makes 
-sense then to initialize the MSI capabilities even with CONFIG_PCI_MSI 
-not set.
-
-
-> On 09/07/2015 12:17 AM, Michael Ellerman wrote:
-> Well yes and no.
->
-> What we want to do when CONFIG_PCI_MSI=n is disable MSI on the device. In order
-> to do that the code first initialises dev->msi[x]_cap.
->
-> But arguably that's wrong, ie. when CONFIG_PCI_MSI=n dev->msi[x]_cap *should*
-> be zero so that any code which erroneously tries to use them will fail.
->
-> But perhaps that's being too pedantic :)
-
-I thought exactly this - that was the reason of my questioning. Thanks 
-for your opinion Michael - I'd call the argument logical, not pedantic 
-hehehe
-
-
-Cheers
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 9aedc8e..c9550dc 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -54,6 +54,33 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
++	if (of_property_read_bool(np, "brcm,pcie-ob")) {
++		u32 val;
++
++		ret = of_property_read_u32(np, "brcm,pcie-ob-axi-offset",
++					   &val);
++		if (ret) {
++			dev_err(pcie->dev,
++				"missing brcm,pcie-ob-axi-offset property\n");
++			return ret;
++		}
++		pcie->ob.axi_offset = val;
++
++		ret = of_property_read_u32(np, "brcm,pcie-ob-window-size",
++					   &val);
++		if (ret) {
++			dev_err(pcie->dev,
++				"missing brcm,pcie-ob-window-size property\n");
++			return ret;
++		}
++		pcie->ob.window_size = (resource_size_t)val * SZ_1M;
++
++		if (of_property_read_bool(np, "brcm,pcie-ob-oarr-size"))
++			pcie->ob.set_oarr_size = true;
++
++		pcie->need_ob_cfg = true;
++	}
++
+ 	/* PHY use is optional */
+ 	pcie->phy = devm_phy_get(&pdev->dev, "pcie-phy");
+ 	if (IS_ERR(pcie->phy)) {
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 62e8085..2ba3c4b 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -66,6 +66,18 @@
+ #define PCIE_DL_ACTIVE_SHIFT         2
+ #define PCIE_DL_ACTIVE               BIT(PCIE_DL_ACTIVE_SHIFT)
+ 
++#define OARR_VALID_SHIFT             0
++#define OARR_VALID                   BIT(OARR_VALID_SHIFT)
++#define OARR_SIZE_CFG_SHIFT          1
++#define OARR_SIZE_CFG                BIT(OARR_SIZE_CFG_SHIFT)
++
++#define OARR_LO(window)              (0xd20 + (window) * 8)
++#define OARR_HI(window)              (0xd24 + (window) * 8)
++#define OMAP_LO(window)              (0xd40 + (window) * 8)
++#define OMAP_HI(window)              (0xd44 + (window) * 8)
++
++#define MAX_NUM_OB_WINDOWS           2
++
+ static inline struct iproc_pcie *iproc_data(struct pci_bus *bus)
+ {
+ 	struct iproc_pcie *pcie;
+@@ -212,6 +224,99 @@ static void iproc_pcie_enable(struct iproc_pcie *pcie)
+ 	writel(SYS_RC_INTX_MASK, pcie->base + SYS_RC_INTX_EN);
+ }
+ 
++/**
++ * Some iProc SoCs require the SW to configure the outbound address mapping
++ *
++ * Outbound address translation:
++ *
++ * iproc_pcie_address = axi_address - axi_offset
++ * OARR = iproc_pcie_address
++ * OMAP = pci_addr
++ *
++ * axi_addr -> iproc_pcie_address -> OARR -> OMAP -> pci_address
++ */
++static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
++			       u64 pci_addr, resource_size_t size)
++{
++	struct iproc_pcie_ob *ob = &pcie->ob;
++	unsigned i;
++	u64 max_size = (u64)ob->window_size * MAX_NUM_OB_WINDOWS;
++
++	if (size > max_size) {
++		dev_err(pcie->dev,
++			"res size 0x%llx exceeds max supported size 0x%llx\n",
++			(u64)size, max_size);
++		return -EINVAL;
++	}
++
++	if (size % ob->window_size) {
++		dev_err(pcie->dev,
++			"res size 0x%llx needs to be multiple of "
++			"window size 0x%llx\n", (u64)size, ob->window_size);
++		return -EINVAL;
++	}
++
++	if (axi_addr < ob->axi_offset) {
++		dev_err(pcie->dev,
++			"axi address %pap less than offset %pap\n",
++			&axi_addr, &ob->axi_offset);
++		return -EINVAL;
++	}
++
++	/*
++	 * Translate the AXI address to the internal address used by the iProc
++	 * PCIe core before programming the OARR
++	 */
++	axi_addr -= ob->axi_offset;
++
++	for (i = 0; i < MAX_NUM_OB_WINDOWS; i++) {
++		writel(lower_32_bits(axi_addr) | OARR_VALID |
++		       (ob->set_oarr_size ? 1 : 0), pcie->base + OARR_LO(i));
++		writel(upper_32_bits(axi_addr), pcie->base + OARR_HI(i));
++		writel(lower_32_bits(pci_addr), pcie->base + OMAP_LO(i));
++		writel(upper_32_bits(pci_addr), pcie->base + OMAP_HI(i));
++
++		size -= ob->window_size;
++		if (size == 0)
++			break;
++
++		axi_addr += ob->window_size;
++		pci_addr += ob->window_size;
++	}
++
++	return 0;
++}
++
++static int iproc_pcie_map_ranges(struct iproc_pcie *pcie,
++				 struct list_head *resources)
++{
++	struct resource_entry *window;
++	int ret;
++
++	resource_list_for_each_entry(window, resources) {
++		struct resource *res = window->res;
++		u64 res_type = resource_type(res);
++
++		switch (res_type) {
++		case IORESOURCE_IO:
++		case IORESOURCE_BUS:
++			break;
++		case IORESOURCE_MEM:
++			ret = iproc_pcie_setup_ob(pcie, res->start,
++						  res->start - window->offset,
++						  resource_size(res));
++			if (ret)
++				return ret;
++			break;
++		default:
++			dev_err(pcie->dev, "invalid resource %pR\n", res);
++			return -EINVAL;
++		}
++	}
++
++	return 0;
++}
++
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ {
+ 	int ret;
+@@ -235,6 +340,14 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 
+ 	iproc_pcie_reset(pcie);
+ 
++	if (pcie->need_ob_cfg) {
++		ret = iproc_pcie_map_ranges(pcie, res);
++		if (ret) {
++			dev_err(pcie->dev, "map failed\n");
++			goto err_power_off_phy;
++		}
++	}
++
+ #ifdef CONFIG_ARM
+ 	pcie->sysdata.private_data = pcie;
+ 	sysdata = &pcie->sysdata;
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index ecaad57..d3dc940 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -15,6 +15,19 @@
+ #define _PCIE_IPROC_H
+ 
+ /**
++ * iProc PCIe outbound mapping
++ * @set_oarr_size: indicates the OARR size bit needs to be set
++ * @axi_offset: offset from the AXI address to the internal address used by
++ * the iProc PCIe core
++ * @window_size: outbound window size
++ */
++struct iproc_pcie_ob {
++	bool set_oarr_size;
++	resource_size_t axi_offset;
++	resource_size_t window_size;
++};
++
++/**
+  * iProc PCIe device
+  * @dev: pointer to device data structure
+  * @base: PCIe host controller I/O register base
+@@ -23,6 +36,8 @@
+  * @phy: optional PHY device that controls the Serdes
+  * @irqs: interrupt IDs
+  * @map_irq: function callback to map interrupts
++ * @need_ob_cfg: indidates SW needs to configure the outbound mapping window
++ * @ob: outbound mapping parameters
+  */
+ struct iproc_pcie {
+ 	struct device *dev;
+@@ -33,6 +48,8 @@ struct iproc_pcie {
+ 	struct pci_bus *root_bus;
+ 	struct phy *phy;
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
++	bool need_ob_cfg;
++	struct iproc_pcie_ob ob;
+ };
+ 
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+-- 
+1.9.1
 
