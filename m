@@ -1,49 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 10/11] drivers:hv: Define the channel type for Hyper-V PCI Express pass-through
-Date: Fri, 11 Sep 2015 00:01:09 +0000
-Message-Id: <1441929670-10058-11-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:36429 "EHLO
+	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772AbbIPDZR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 23:25:17 -0400
+Message-ID: <55F8E0EF.3040900@hisilicon.com>
+Date: Wed, 16 Sep 2015 11:24:31 +0800
+From: Zhou Wang <wangzhou1@hisilicon.com>
+MIME-Version: 1.0
+To: Rob Herring <robh@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<pratyush.anand@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+	<linux@arm.linux.org.uk>, <thomas.petazzoni@free-electrons.com>,
+	<gabriele.paoloni@huawei.com>, <lorenzo.pieralisi@arm.com>,
+	<james.morse@arm.com>, <Liviu.Dudau@arm.com>,
+	<jason@lakedaemon.net>, <gabriel.fernandez@linaro.org>,
+	<Minghuan.Lian@freescale.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <zhangjukuo@huawei.com>,
+	<qiuzhenfa@hisilicon.com>, <liudongdong3@huawei.com>,
+	<qiujiang@huawei.com>, <xuwei5@hisilicon.com>,
+	<liguozhu@hisilicon.com>
+Subject: Re: [PATCH v9 5/6] Documentation: DT: Add HiSilicon PCIe host binding
+References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com> <1442321361-174300-6-git-send-email-wangzhou1@hisilicon.com> <55F874F9.1060804@kernel.org> <55F8C268.2020809@hisilicon.com> <55F8D12D.50107@kernel.org>
+In-Reply-To: <55F8D12D.50107@kernel.org>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On 2015/9/16 10:17, Rob Herring wrote:
+> On 09/15/2015 08:14 PM, Zhou Wang wrote:
+>> On 2015/9/16 3:43, Rob Herring wrote:
+>>> On 09/15/2015 07:49 AM, Zhou Wang wrote:
+>>>> This patch adds related DTS binding document for HiSilicon PCIe host driver.
+>>>>
+>>>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+>>>> ---
+>>>>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
+>>>>  1 file changed, 46 insertions(+)
+>>>>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>>>> new file mode 100644
+>>>> index 0000000..2afc9d1
+>>>> --- /dev/null
+>>>> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>>>> @@ -0,0 +1,46 @@
+>>>> +HiSilicon PCIe host bridge DT description
+>>>> +
+>>>> +HiSilicon PCIe host controller is based on Designware PCI core.
+>>>> +It shares common functions with PCIe Designware core driver and inherits
+>>>> +common properties defined in
+>>>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+>>>> +
+>>>> +Additional properties are described here:
+>>>> +
+>>>> +Required properties:
+>>>> +- compatible: Should contain "hisilicon,hip05-pcie".
+>>>> +- reg: Should contain rc_dbi, subctrl, config registers location and length.
+>>>> +- reg-names: Must include the following entries:
+>>>> +  "rc_dbi": controller configuration registers;
+>>>> +  "subctrl": whole PCIe hosts configuration registers;
+>>>> +  "config": PCIe configuration space registers.
+>>>> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
+>>>> +- port-id: Should be 0, 1, 2 or 3.
+>>>
+>>> What is port-id for? Use of instance indexes need to have good reason.
+>>>
+>>> Rob
+>>
+>> There are four PCIe controllers in HiSilicon Hip05 SoC, port-id just indicates
+>> which one we use. And we will use port-id to locate related registers in driver.
+> 
+> Just having multiple instances is not a reason. So looking at the
+> driver, port-id is used to calculate register addresses for these registers:
+> 
+> #define PCIE_SUBCTRL_MODE_REG                           0x2800
+> #define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
+> 
+> Is the base address of subctrl the same on all 4 ports? If so, you
 
-This defines the channel type for PCI front-ends in Hyper-V VMs.
+Yes, same subctrl address for 4 ports. Will use syscon to access subctrl
+registers in next version.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- include/linux/hyperv.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+Many thanks for pointing this,
+Zhou
 
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 033fe59..af0f2e7 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1140,6 +1140,17 @@ u64 do_hypercall(u64 control, void *input, void *output);
- 		}
- 
- /*
-+ * PCI Express Pass Through
-+ * {44C4F61D-4444-4400-9D52-802E27EDE19F}
-+ */
-+
-+#define HV_PCIE_GUID \
-+	.guid = { \
-+			0x1D, 0xF6, 0xC4, 0x44, 0x44, 0x44, 0x00, 0x44, \
-+			0x9D, 0x52, 0x80, 0x2E, 0x27, 0xED, 0xE1, 0x9F \
-+		}
-+
-+/*
-  * Common header for Hyper-V ICs
-  */
- 
--- 
-1.9.1
+> should not have overlapping resources in the DT. Either split these 2
+> registers into 2 reg regions (for each register) or use syscon to
+> provide access to the region.
+> 
+> Rob
+> 
+> 
+> .
+> 
+
 
