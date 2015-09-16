@@ -1,60 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f49.google.com ([209.85.213.49]:32950 "EHLO
+	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689AbbIPTd6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 15:33:58 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAErSpo5VAb_YRpz7PEzuZ9AthAQ67quMKE3Y0dfMHVKjw0OTxA@mail.gmail.com>
+References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
+	<1440138067-4314-5-git-send-email-yinghai@kernel.org>
+	<20150914202123.GA27964@google.com>
+	<CAE9FiQXr3vqusta0Tb35BovbWh7jDZ5uVQer741ioWKhYr7xmA@mail.gmail.com>
+	<CAErSpo5VAb_YRpz7PEzuZ9AthAQ67quMKE3Y0dfMHVKjw0OTxA@mail.gmail.com>
+Date: Wed, 16 Sep 2015 12:33:57 -0700
+Message-ID: <CAE9FiQWbRuFvXiYif7_SiLW17m=WcnM0EZZHsjwO5W6F0K6kwQ@mail.gmail.com>
+Subject: Re: [PATCH v4 04/52] PCI: Optimize bus min_align/size calculation
+ during sizing
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: David Miller <davem@davemloft.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
 	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Anton Blanchard <anton@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v5 43/53] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Wed, 16 Sep 2015 14:57:41 -0700
-Message-Id: <1442440671-5361-44-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	Yijing Wang <wangyijing@huawei.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource, so set
-IORESOUCE_MEM_64 for 64bit resource during of device resource flags
-parsing.
+On Tue, Sep 15, 2015 at 7:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> Any future series you post should be based on the most recent -rc1 at
+> the time.  I apply patches to branches based on -rc1 unless they
+> actually depend on something merged after -rc1.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Anton Blanchard <anton@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci_of_scan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ok, will post v5 based on v4.3-rc1.
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 2e710c1..d934ed8 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
- 
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
--- 
-1.8.4.5
+Thanks
 
+Yinghai
