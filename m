@@ -1,102 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44658 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932984AbbIDQuX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Sep 2015 12:50:23 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
+Received: from bombadil.infradead.org ([198.137.202.9]:34082 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752145AbbIPNmg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 09:42:36 -0400
+Date: Wed, 16 Sep 2015 06:42:11 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v4 1/4] of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
-Date: Fri,  4 Sep 2015 17:50:08 +0100
-Message-Id: <1441385411-7624-2-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
-References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	"James E.J. Bottomley" <JBottomley@odin.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+Subject: Re: [Bugfix 3/3] eata: Enhance eata driver to support PCI device
+ hot-removal
+Message-ID: <20150916134211.GA21535@infradead.org>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
+ <55F6837A.5020807@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55F6837A.5020807@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Both pci-host-generic and Pseries parse the "linux,pci-probe-only"
-property to engage the PCI_PROBE_ONLY mode, and both have a subtle
-bug that can be triggered if the property has no parameter.
+On Mon, Sep 14, 2015 at 10:21:14AM +0200, Hannes Reinecke wrote:
+> Welll ... if you don't have hardware (and I strongly hope you refer to
+> 'hardware able to do hotplugging', not 'hardware for the eata driver'
+> ...) why add the code at all?
+> Chances are no-one will ever need eata PCI hotplug; SCSI parallel
+> typically isn't very good at hotplugging, so throwing in PCI hotplug
+> will only confuse matters more.
+> Plus due to the sheer mechanics involved here I find it very unlikely
+> anyone will be using it in real life.
 
-Provide a generic, safe implementation that can be used by both.
+Because it's used for module removal and we want every driver to use
+the standard interface that.
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/of/of_pci.c    | 28 ++++++++++++++++++++++++++++
- include/linux/of_pci.h |  3 +++
- 2 files changed, 31 insertions(+)
+Jiang, you also need to convert the driver to
+scsi_add_host/scsi_remove_host from the legacy scsi_register interface,
+otherwise the SCSI layer will be very unhappy.
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 5751dc5..5dd4966 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -118,6 +118,34 @@ int of_get_pci_domain_nr(struct device_node *node)
- EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
- 
- /**
-+ * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
-+ *                           is present and valid
-+ *
-+ * @node: device tree node that may contain the property (usually "chosen")
-+ *
-+ */
-+void of_pci_check_probe_only(void)
-+{
-+	u32 val;
-+	int ret;
-+
-+	ret = of_property_read_u32(of_chosen, "linux,pci-probe-only", &val);
-+	if (ret) {
-+		if (ret == -ENODATA || ret == -EOVERFLOW)
-+			pr_warn("linux,pci-probe-only without valid value, ignoring\n");
-+		return;
-+	}
-+
-+	if (val)
-+		pci_add_flags(PCI_PROBE_ONLY);
-+	else
-+		pci_clear_flags(PCI_PROBE_ONLY);
-+
-+	pr_info("PCI: PROBE_ONLY %sabled\n", val ? "en" : "dis");
-+}
-+EXPORT_SYMBOL_GPL(of_pci_check_probe_only);
-+
-+/**
-  * of_pci_dma_configure - Setup DMA configuration
-  * @dev: ptr to pci_dev struct of the PCI device
-  *
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-index 29fd3fe..38c0533 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -17,6 +17,7 @@ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin);
- int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
- int of_get_pci_domain_nr(struct device_node *node);
- void of_pci_dma_configure(struct pci_dev *pci_dev);
-+void of_pci_check_probe_only(void);
- #else
- static inline int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq)
- {
-@@ -53,6 +54,8 @@ of_get_pci_domain_nr(struct device_node *node)
- }
- 
- static inline void of_pci_dma_configure(struct pci_dev *pci_dev) { }
-+
-+static inline void of_pci_check_probe_only(void) { }
- #endif
- 
- #if defined(CONFIG_OF_ADDRESS)
--- 
-2.1.4
-
+Take a look at commit 0d31f8759109cbc1e6fc196d08e6b0e8a9e93b3f for
+example, the change should be straight forward.
