@@ -1,136 +1,271 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:35083 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728AbbIKAJo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 20:09:44 -0400
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 02/12] kernel:irq: Change signature of irq_find_matching_host()
-Date: Fri, 11 Sep 2015 00:01:01 +0000
-Message-Id: <1441929670-10058-3-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 34/53] PCI, x86: Allocate from high in available window for MMIO
+Date: Wed, 16 Sep 2015 14:57:32 -0700
+Message-Id: <1442440671-5361-35-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Current code just use aligned start from avialable window, that could waste
+big alignment from start.
 
-In order to use the facility introduced in the last patch (the ability to
-match on both bus type and something that identifies the specific bus of that
-type,) irq_find_matching_host() needs to take that bus-specific parameter.
+We can align to the end from avialable window, so will save
+start with big align to others: like second try for pref mmio
+after first try already have non-pref assigned.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+pci tree:
+-[0000:00]-+-00.0
+           +-1c.0-[01-10]--+-00.0-[02-10]--+-01.0-[03]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               +-02.0-[04-09]--+-00.0-[05-09]--+-01.0-[06]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               |               |               +-02.0-[07]----00.0  Broadcom Corporation Device 8650
+           |               |               |               |               +-03.0-[08]--
+           |               |               |               |               \-04.0-[09]----00.0  Altera Corporation Device 0201
+           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
+           |               |               +-03.0-[0a-0f]--+-00.0-[0b-0f]--+-01.0-[0c]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               |               |               +-02.0-[0d]----00.0  Broadcom Corporation Device 8650
+           |               |               |               |               +-03.0-[0e]--
+           |               |               |               |               \-04.0-[0f]----00.0  Altera Corporation Device 0201
+           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
+           |               |               \-04.0-[10]--
+           |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               \-00.4  PLX Technology, Inc. Device 87d0
+           +-1c.3-[11]----00.0
+
+hotplug device under 0000:02:03.0
+
+before the patch:
+
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 8: assigned [mem 0xb0000000-0xb01fffff]  **************
+pci 0000:0a:00.0: BAR 0: assigned [mem 0xb0200000-0xb023ffff]
+pci 0000:0a:00.1: BAR 0: assigned [mem 0xb0240000-0xb0241fff]
+pci 0000:0a:00.2: BAR 0: assigned [mem 0xb0242000-0xb0243fff]
+pci 0000:0a:00.3: BAR 0: assigned [mem 0xb0244000-0xb0245fff]
+pci 0000:0a:00.4: BAR 0: assigned [mem 0xb0246000-0xb0247fff]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:01.0: BAR 8: assigned [mem 0xb0000000-0xb00fffff]
+pci 0000:0b:02.0: BAR 8: assigned [mem 0xb0100000-0xb01fffff]
+pci 0000:0c:00.0: BAR 0: assigned [mem 0xb0000000-0xb003ffff]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
+pci 0000:0d:00.0: BAR 0: assigned [mem 0xb0100000-0xb013ffff 64bit]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+pcieport 0000:02:03.0:   bridge window [mem 0x80200000-0x803fffff 64bit pref]
+PCI: No. 2 try to assign unassigned res
+pcieport 0000:02:03.0: resource 9 [mem 0x80200000-0x803fffff 64bit pref] released
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+
+
+after the patch:
+
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 8: assigned [mem 0xb2300000-0xb24fffff]   *************
+pci 0000:0a:00.0: BAR 0: assigned [mem 0xb22c0000-0xb22fffff]
+pci 0000:0a:00.1: BAR 0: assigned [mem 0xb22be000-0xb22bffff]
+pci 0000:0a:00.2: BAR 0: assigned [mem 0xb22bc000-0xb22bdfff]
+pci 0000:0a:00.3: BAR 0: assigned [mem 0xb22ba000-0xb22bbfff]
+pci 0000:0a:00.4: BAR 0: assigned [mem 0xb22b8000-0xb22b9fff]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:01.0: BAR 8: assigned [mem 0xb2400000-0xb24fffff]
+pci 0000:0b:02.0: BAR 8: assigned [mem 0xb2300000-0xb23fffff]
+pci 0000:0c:00.0: BAR 0: assigned [mem 0xb24c0000-0xb24fffff]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
+pci 0000:0d:00.0: BAR 0: assigned [mem 0xb23c0000-0xb23fffff 64bit]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+pcieport 0000:02:03.0:   bridge window [mem 0x9fc00000-0x9fdfffff 64bit pref]
+PCI: No. 2 try to assign unassigned res
+pcieport 0000:02:03.0: resource 9 [mem 0x9fc00000-0x9fdfffff 64bit pref] released
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: assigned [mem 0xb0000000-0xb1ffffff 64bit pref]   ********
+pci 0000:0f:00.0: BAR 2: assigned [mem 0xb20f0000-0xb20fffff 64bit pref]   ********
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0b:04.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+
+So we allocate high for 0a:00.0 and etc, and leave low range like 0xb0000000 to
+0b:04.0 and 0f:00.0
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/irqchip/irq-gic-v3-its-pci-msi.c      | 2 +-
- drivers/irqchip/irq-gic-v3-its-platform-msi.c | 2 +-
- drivers/of/irq.c                              | 2 +-
- drivers/pci/of.c                              | 2 +-
- include/linux/irqdomain.h                     | 5 +++--
- kernel/irq/irqdomain.c                        | 6 ++++--
- 6 files changed, 11 insertions(+), 8 deletions(-)
+ arch/x86/pci/i386.c     | 20 ++++++++++++++++++++
+ drivers/pci/setup-bus.c | 11 ++++++++++-
+ include/linux/pci.h     |  3 +++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-index cf351c6..51521b5 100644
---- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
-@@ -118,7 +118,7 @@ static int __init its_pci_msi_init(void)
- 		if (!of_property_read_bool(np, "msi-controller"))
- 			continue;
- 
--		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
-+		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS, NULL);
- 		if (!parent || !msi_get_domain_info(parent)) {
- 			pr_err("%s: unable to locate ITS domain\n",
- 			       np->full_name);
-diff --git a/drivers/irqchip/irq-gic-v3-its-platform-msi.c b/drivers/irqchip/irq-gic-v3-its-platform-msi.c
-index a865505..5a3ac02 100644
---- a/drivers/irqchip/irq-gic-v3-its-platform-msi.c
-+++ b/drivers/irqchip/irq-gic-v3-its-platform-msi.c
-@@ -71,7 +71,7 @@ static int __init its_pmsi_init(void)
- 		if (!of_property_read_bool(np, "msi-controller"))
- 			continue;
- 
--		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS);
-+		parent = irq_find_matching_host(np, DOMAIN_BUS_NEXUS, NULL);
- 		if (!parent || !msi_get_domain_info(parent)) {
- 			pr_err("%s: unable to locate ITS domain\n",
- 			       np->full_name);
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index 55317fa..1c9c944 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -593,7 +593,7 @@ void of_msi_configure(struct device *dev, struct device_node *np)
- 	if (!msi_np)
- 		return;
- 
--	d = irq_find_matching_host(msi_np, DOMAIN_BUS_PLATFORM_MSI);
-+	d = irq_find_matching_host(msi_np, DOMAIN_BUS_PLATFORM_MSI, NULL);
- 	if (!d)
- 		d = irq_find_host(msi_np);
- 	dev_set_msi_domain(dev, d);
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 2e99a50..0da3bce 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -80,7 +80,7 @@ struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
- 	if (!np)
- 		np = bus->dev.of_node;
- 
--	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
-+	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI, NULL);
- 	if (d)
- 		return d;
- 
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 4d89f98..12acddb 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -178,12 +178,13 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
- 					 const struct irq_domain_ops *ops,
- 					 void *host_data);
- extern struct irq_domain *irq_find_matching_host(struct device_node *node,
--						 enum irq_domain_bus_token bus_token);
-+						 enum irq_domain_bus_token bus_token,
-+						 void *bus_data);
- extern void irq_set_default_host(struct irq_domain *host);
- 
- static inline struct irq_domain *irq_find_host(struct device_node *node)
- {
--	return irq_find_matching_host(node, DOMAIN_BUS_ANY);
-+	return irq_find_matching_host(node, DOMAIN_BUS_ANY, NULL);
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 3f17726..21f3e3e 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -129,6 +129,24 @@ static void __init pcibios_fw_addr_list_del(void)
+ 	pcibios_fw_addr_done = true;
  }
  
- /**
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 8a8ef31..b4c15af 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -190,9 +190,11 @@ EXPORT_SYMBOL_GPL(irq_domain_add_legacy);
-  * irq_find_matching_host() - Locates a domain for a given device node
-  * @node: device-tree node of the interrupt controller
-  * @bus_token: domain-specific data
-+ * @bus_data: bus-specific data
-  */
- struct irq_domain *irq_find_matching_host(struct device_node *node,
--					  enum irq_domain_bus_token bus_token)
-+					  enum irq_domain_bus_token bus_token,
-+					  void *bus_data)
- {
- 	struct irq_domain *h, *found = NULL;
- 	int rc;
-@@ -209,7 +211,7 @@ struct irq_domain *irq_find_matching_host(struct device_node *node,
- 	mutex_lock(&irq_domain_mutex);
- 	list_for_each_entry(h, &irq_domain_list, link) {
- 		if (h->ops->match)
--			rc = h->ops->match(h, node, bus_token, NULL);
-+			rc = h->ops->match(h, node, bus_token, bus_data);
- 		else
- 			rc = ((h->of_node != NULL) && (h->of_node == node) &&
- 			      ((bus_token == DOMAIN_BUS_ANY) ||
++resource_size_t
++pcibios_align_end_resource(void *data, const struct resource *res,
++			resource_size_t size, resource_size_t align)
++{
++	resource_size_t start = res->start;
++
++	/* Take near end */
++	if (res->end + 1 > size) {
++		resource_size_t new_start;
++
++		new_start = round_down(res->end + 1 - size, align);
++		if (new_start > start)
++			start = new_start;
++	}
++
++	return start;
++}
++
+ /*
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+@@ -155,6 +173,8 @@ pcibios_align_resource(void *data, const struct resource *res,
+ 		if (start & 0x300)
+ 			start = (start + 0x3ff) & ~0x3ff;
+ 	} else if (res->flags & IORESOURCE_MEM) {
++		start = pcibios_align_end_resource(data, res, size, align);
++
+ 		/* The low 1MB range is reserved for ISA cards */
+ 		if (start < BIOS_END)
+ 			start = BIOS_END;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 86d29db..28e9768 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1281,6 +1281,15 @@ static void sort_align_test(struct list_head *head)
+ 	}
+ }
+ 
++resource_size_t __weak pcibios_align_end_resource(void *data,
++					  const struct resource *res,
++					  resource_size_t size,
++					  resource_size_t align)
++{
++	/* default is not aligned to end */
++	return res->start;
++}
++
+ static bool is_align_size_good(struct list_head *head,
+ 			resource_size_t min_align, resource_size_t size,
+ 			resource_size_t start)
+@@ -1298,7 +1307,7 @@ static bool is_align_size_good(struct list_head *head,
+ 	list_for_each_entry(p, head, list)
+ 		if (allocate_resource(&root, &p->res, p->size,
+ 				0, (resource_size_t)-1ULL,
+-				p->align, NULL, NULL))
++				p->align, pcibios_align_end_resource, NULL))
+ 			return false;
+ 
+ 	return true;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..acb9c56 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -772,6 +772,9 @@ char *pcibios_setup(char *str);
+ resource_size_t pcibios_align_resource(void *, const struct resource *,
+ 				resource_size_t,
+ 				resource_size_t);
++resource_size_t pcibios_align_end_resource(void *, const struct resource *,
++				resource_size_t,
++				resource_size_t);
+ void pcibios_update_irq(struct pci_dev *, int irq);
+ 
+ /* Weak but can be overriden by arch */
 -- 
-1.9.1
+1.8.4.5
 
