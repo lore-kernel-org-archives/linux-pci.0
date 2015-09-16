@@ -1,49 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:58867 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750951AbbIBGjQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Sep 2015 02:39:16 -0400
-Date: Wed, 2 Sep 2015 16:39:14 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [GIT PULL] Power management and ACPI updates for v4.3-rc1
-Message-ID: <20150902163914.34988848@canb.auug.org.au>
-In-Reply-To: <CAJZ5v0j71Zwe8H7Lais82+N97-eF==Yjf4SPnb40kdyBLu2THw@mail.gmail.com>
-References: <CAJZ5v0j71Zwe8H7Lais82+N97-eF==Yjf4SPnb40kdyBLu2THw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 29/53] PCI: Allow bridge optional only io port resource required size to be 0
+Date: Wed, 16 Sep 2015 14:57:27 -0700
+Message-Id: <1442440671-5361-30-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+When there is no child device under the non hotplug bridge,
+We can use 0 for required size, and do not use old size as required size.
 
-On Wed, 2 Sep 2015 01:41:11 +0200 "Rafael J. Wysocki" <rafael@kernel.org> wrote:
->
-> Hi Linus,
-> 
-> Please pull from
-> 
->  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
->  pm+acpi-4.3-rc1
-> 
-> to receive power management and ACPI material for v4.3-rc1 with
-> top-most commit e625ccec1fa6c24620f38fd72d5b2fd62230ad2b
-> 
->  Merge branches 'pm-tools' and 'powercap'
-> 
-> on top of commit 64291f7db5bd8150a74ad2036f1037e6a0428df2
-> 
->  Linux 4.2
+That will save some io port range for other bridges, as BIOS could do
+some partial assign, and we want to use those not used io port range.
 
-So there are about 20 commits in here that have not been in linux-next
-(unless they have bee rebased) and about 10 of those will be in today's
-linux-next.  Not judging, just notiing.
+When there is child device, size will not be 0.
+when the bridge supports hotplug, min_size will not be 0.
+So they will still honor the old size as required size.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9f35aec..7a6476f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1192,8 +1192,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size = size_aligned_for_isa(size);
+ 	size += size1;
+-	size0 = calculate_size(size, min_size,
+-			resource_size(b_res), min_align);
++	if (size || min_size)
++		size0 = calculate_size(size, min_size,
++					resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+@@ -1209,7 +1210,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		return;
+ 	}
+ 
+-	b_res->start = min_align;
++	b_res->start = size0 ? min_align : 0;
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
 -- 
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
+1.8.4.5
+
