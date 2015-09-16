@@ -1,61 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:32807 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbbIJTzm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 15:55:42 -0400
-Received: by lbcjc2 with SMTP id jc2so29133592lbc.0
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 12:55:40 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 10 Sep 2015 12:55:40 -0700
-Message-ID: <CAHX5tOGkZ+ZtDymyViYrvEi+LdRbYzHU_mOa4uZK_t58G7KcqQ@mail.gmail.com>
-Subject: reg: difference in pcie behavior in fedora16 vs fedora20
-From: zubin kumar <zubinkumar@gmail.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from aserp1040.oracle.com ([141.146.126.69]:23100 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751965AbbIPV61 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:58:27 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 06/53] PCI: Don't add too much optional size for hotplug bridge MMIO
+Date: Wed, 16 Sep 2015 14:57:04 -0700
+Message-Id: <1442440671-5361-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-hi,
+Current code will always add 2M for hotplug bridge MMIO even
+there is child device under it already.
 
-i had some queries regarding pcie behavior in fedora16 vs fedora20.
+For example:
+	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
+					 \- 45:00.1
 
-observation on fedora16 -
-when i connect a pcie device in slot#3 with fedora16, the pcie device
-comes up properly. i am able to see the pcie device ID, class code and
-all the memory bars.
+44:02.0 will need 1M as must for 45:00.0 and 45:00.1
+When we calculate add_size for 44:02.0, we pass 2M as additional
+size for hotplug bridge, total will be 3M.
 
-observation on fedora20 -
-however when i connect the same device to a fedora20 system, the
-machine itself does not boot. and the motherboard keeps sending out
-the fundamental reset. then it keeps looping in a reset-bootup
-sequence.
+That is different from code before changes for optional support,
+or even current code that treat optional as required directly by
+not passing realloc list. We only need 2M as total.
 
-fedora16 kernel - 3.6.11 fc16 x86x64 arch
-fedora20 kernel - 3.11.10-4 fc20 x86x64 arch
+The optional size should be 1M, and total size should be 2M.
 
-queries -
-1) i was wondering if pcie enumeration is effected by OS or is it
-controlled directly by motherboard and OS settings/kernel etc. dont
-impact PCIe enum at all?
-2) what could be the differences between fedora16 Vs fedora20 that
-could cause the pc to boot properly in fedora16 but go into a
-reset-boot loop in fedora20?
-3) any log file i can check to see what might be causing the issue on the host?
-4) my pcie device enumerates as an memory device. could this impact
-the fedora16 / fedora20 differently?
+This patch change to comparing required+optional with min_sum_size to
+get smaller optional size.
 
-additional observation -
-i have tried other pcie slots on both fedora16 and fedora20 machines.
-either machines are not able to even detect the pcie device if i use
-any slot other than slot#3. i checked the BIOS settings and all the
-pcie slots are enabled.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
 
-if anyone can give some insight into what could be causing the
-difference in behavior in pcie enum in fedora16 vs fedora20, that
-would be great.
-
-thanks in advance ...
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6cccbe4..e4aa93e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1155,7 +1155,6 @@ out:
+  * @type2: second match type
+  * @type3: third match type
+  * @min_size : the minimum memory window that must to be allocated
+- * @add_size : additional optional memory window
+  * @realloc_head : track the additional memory window on this list
+  *
+  * Calculate the size of the bus and minimal alignment which
+@@ -1168,10 +1167,11 @@ out:
+ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 unsigned long type, unsigned long type2,
+ 			 unsigned long type3,
+-			 resource_size_t min_size, resource_size_t add_size,
++			 resource_size_t min_size,
+ 			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
+ 	resource_size_t min_align = 0, min_add_align = 0;
+ 	resource_size_t max_align = 0, max_add_align = 0;
+ 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
+@@ -1183,6 +1183,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (!b_res)
+ 		return -ENOSPC;
+ 
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+@@ -1253,8 +1258,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	}
+ 	free_align_test_list(&align_test_list);
+ 
+-	if ((sum_add_size - size) < add_size)
+-		sum_add_size = size + add_size;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+@@ -1391,7 +1396,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t additional_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, additional_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
+ 
+@@ -1425,7 +1430,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+-			additional_mem_size = pci_hotplug_mem_size;
++			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+@@ -1444,8 +1449,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+-				  realloc_head ? 0 : additional_mem_size,
+-				  additional_mem_size, realloc_head);
++				  min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, all non-prefetchable resources
+@@ -1468,8 +1472,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask &= ~IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 					 prefmask, prefmask,
+-					 realloc_head ? 0 : additional_mem_size,
+-					 additional_mem_size, realloc_head);
++					 min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, only non-prefetchable resources
+@@ -1478,7 +1481,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			if (ret == 0)
+ 				mask = prefmask;
+ 			else
+-				additional_mem_size += additional_mem_size;
++				min_mem_size += min_mem_size;
+ 
+ 			type2 = type3 = IORESOURCE_MEM;
+ 		}
+@@ -1499,8 +1502,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		 * window.
+ 		 */
+ 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
+-				realloc_head ? 0 : additional_mem_size,
+-				additional_mem_size, realloc_head);
++				min_mem_size, realloc_head);
+ 		break;
+ 	}
+ }
 -- 
-Thanks and regards,
-Zubin Kumar
+1.8.4.5
+
