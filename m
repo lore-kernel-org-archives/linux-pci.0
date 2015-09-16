@@ -1,8 +1,4 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27493 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752503AbbJAFyK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:54:10 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -11,80 +7,56 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 10/53] PCI: Get new realloc size for bridge for last try
-Date: Wed, 30 Sep 2015 22:52:44 -0700
-Message-Id: <1443678807-786-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH v5 11/53] PCI: Add debug printout during releasing partial assigned resources
+Date: Wed, 16 Sep 2015 14:57:09 -0700
+Message-Id: <1442440671-5361-12-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current realloc path would not shrink bridge resource through
-pbus_size_mem() checking with the old size.
+We try to assign required+optional at first, and we only accept the result
+if all resources get allocated. Otherwise will release assigned in the
+list, and try to assign required and expand to optional.
 
-That cause problem: when "required+optional" resource allocation fails,
-the cached bridge resource size will prevent "required" resource to get
-allocated smaller resource.
+We have to do that to make sure any required has priority over any optional.
 
-Clear the old resource size for last try or third and later try.
+When that happens, we only print out "assigned" info, that is confusing
+as it looks like same range is assigned to two peer resources at the same
+time.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
+Add printout for releasing so we have whole picture in debug messages.
+
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+ drivers/pci/setup-bus.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9961ab2..8477cf5 100644
+index eca319e..a3d48ef 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1648,6 +1648,17 @@ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- }
- #endif
+@@ -520,9 +520,17 @@ static void __assign_resources_sorted(struct list_head *head,
  
-+static void reset_bridge_resource_size(struct pci_dev *dev,
-+				       struct resource *res)
-+{
-+	int idx = res - &dev->resource[0];
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+-	list_for_each_entry(dev_res, head, list)
+-		if (dev_res->res->parent)
+-			release_resource(dev_res->res);
++	list_for_each_entry(dev_res, head, list) {
++		struct resource *res = dev_res->res;
 +
-+	if (idx >= PCI_BRIDGE_RESOURCES && idx <= PCI_BRIDGE_RESOURCE_END) {
-+		res->start = 0;
-+		res->end = res->start - 1;
++		if (res->parent) {
++			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++				   "BAR %d: released %pR\n",
++				   (int)(res - &dev_res->dev->resource[0]),
++				   res);
++			release_resource(res);
++		}
 +	}
-+}
-+
- /*
-  * first try will not touch pci bridge res
-  * second and later try will clear small leaf bridge res
-@@ -1732,8 +1743,13 @@ again:
- 		res->start = fail_res->start;
- 		res->end = fail_res->end;
- 		res->flags = fail_res->flags;
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last or third times and later */
-+			if (tried_times + 1 == pci_try_num ||
-+			    tried_times + 1 > 2)
-+				reset_bridge_resource_size(fail_res->dev, res);
-+		}
- 	}
- 	free_list(&fail_head);
- 
-@@ -1807,8 +1823,11 @@ again:
- 		res->start = fail_res->start;
- 		res->end = fail_res->end;
- 		res->flags = fail_res->flags;
--		if (fail_res->dev->subordinate)
-+		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
-+			/* last time */
-+			reset_bridge_resource_size(fail_res->dev, res);
-+		}
- 	}
- 	free_list(&fail_head);
- 
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+ 		struct resource *res = save_res->res;
 -- 
 1.8.4.5
 
