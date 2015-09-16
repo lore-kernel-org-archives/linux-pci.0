@@ -1,60 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55F8BF72.5030404@oracle.com>
+Date: Wed, 16 Sep 2015 09:01:38 +0800
+From: ethan zhao <ethan.zhao@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
-References: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
-Date: Wed, 23 Sep 2015 20:21:59 -0700
-Message-ID: <CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
-Subject: Re: [RFC] PCI: Unassigned Expansion ROM BARs
-From: Yinghai Lu <yinghai@kernel.org>
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iov: initialize NumVFs register to 0 at the end of sriov_init()
+References: <1440150685-6690-1-git-send-email-ethan.zhao@oracle.com> <20150915161016.GB27964@google.com>
+In-Reply-To: <20150915161016.GB27964@google.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 7:47 PM, Myron Stowe <myron.stowe@gmail.com> wrote:
+
+On 2015/9/16 0:10, Bjorn Helgaas wrote:
+> On Fri, Aug 21, 2015 at 06:51:25PM +0900, Ethan Zhao wrote:
+>> After commit 4449f079722c ("PCI: Calculate maximum number of buses
+>> required for VFs"),the initial value of NumVFs register was set to
+>> non-zero after sriov_init() and no VFs was enabled in device driver.
+>> this changed the behaviour of kernel exported by lspci and sysfs etc.
+>> so this patch initialize the NumVFs register to zero after the
+>> calculation of max_VF_buses was done.
+>>
+>> Tested on stable 4.1 and passed building on stable 4.2-rc7
+>>
+>> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+>> Tested-by: Sriharsha Yadagudde <sriharsha.devdas@oracle.com>
+>> ---
+>>   drivers/pci/iov.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index ee0ebff..6969084 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -476,6 +476,7 @@ found:
+>>   	dev->is_physfn = 1;
+>>   	iov->max_VF_buses = virtfn_max_buses(dev);
+>>   
+>> +	pci_iov_set_numvfs(dev, 0);
+> I think it would be better to put this in virtfn_max_buses(), where we
+> clobbered numVFs in the first place.  I'd also read the original value and
+> restore it, e.g.,
 >
-> The kernel expects device Expansion ROM BARs to be programmed with valid
-> values - even if the respective Expansion ROM's Enable bit is 0 (i.e. the
-> device’s expansion ROM address space is disabled).  This seems to be the
-> main contention point with said BIOS engineers.  If an Expansion ROM BAR is
-> not programmed, the kernel will attempt to find available resources and, if
-> successful, program it.  As this occurs various 'dmesg' entries
-> related to kernel's actions are output.
-...
-> There is a kernel boot parameter, pci=norom, that is intended to disable the
-> kernel's resource assignment actions for Expansion ROMs that do not already
-> have BIOS assigned address ranges.  Note however, if I remember correctly,
-> that this only works if the Expansion ROM BAR is set to "0" by the BIOS
-> before hand-off.
+>      pci_read_config_word(dev, iov->pos + PCI_SRIOV_NUM_VF, &numvfs);
+>      for (nr_virtfn = 1; nr_virtfn <= iov->total_VFs; nr_virtfn++) {
+>        ...
+>      }
+>      pci_iov_set_numvfs(dev, numvfs);
+>      return max;
+>
+> I know sriov_init() sets numVFs to zero before it calls virtfn_max_buses(),
+> but why rely on that extra knowledge?
+  Yes, I think also virtfn_max_buses() should restore the register 
+before it returns.
+  Will revise it and resend.
 
-option rom is used by legacy bios to enable booting from external device.
-usually BIOS call the option rom, so the firmware will be loaded to
-add on cards.
-and firmware get started.
-Also option rom would include tools that is used to configure behavior of cards
-like add/remove raid.
+  Thanks,
+  Ethan
+>>   	return 0;
+>>   
+>>   failed:
+>> -- 
+>> 1.8.3.1
+>>
 
-Also there is some use case that kernel driver try to get some parameters from
-BIOS. like intel soft raid ? --- bad practice !
-
-I would like to treat option rom BAR as optional resources during
-resource allocation.
-
-https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/patch/?id=7f689da33302e4871fd18aee2c19abb5e3ea5261
-
-Subject: PCI: Treat ROM resource as optional during realloc
-
-Current on realloc path, we just ignore ROM resource if we can not assign
-them in first try.
-
-Treat ROM resources as optional resources,so try to allocate them together
-with required ones, if can not assign them, could go with other required
-resources only, and try to allocate them second time in expand path.
-
-Thanks
-
-Yinghai
