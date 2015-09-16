@@ -1,62 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20403 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751098AbbJAFyL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:54:11 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 11/53] PCI: Don't release sibling bridge resources during hotplug
-Date: Wed, 30 Sep 2015 22:52:45 -0700
-Message-Id: <1443678807-786-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:62492 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751112AbbIPFHc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Sep 2015 01:07:32 -0400
+Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
+To: Arthur Marsh <arthur.marsh@internode.on.net>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+ <55F6EF40.50403@internode.on.net> <55F78306.3000802@linux.intel.com>
+ <55F7C691.8000406@internode.on.net>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <55F8F90D.2050703@linux.intel.com>
+Date: Wed, 16 Sep 2015 13:07:25 +0800
+MIME-Version: 1.0
+In-Reply-To: <55F7C691.8000406@internode.on.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On hotplug path, we can not touch sibling bridges that is outside
-of the slot.
-
-That could happen when BIOS does not assign some bridge BARs and
-later kernel can not assign resource to them in first try.
-
-Check if fail dev is the parent bridge, then just use subordinate
-bus instead use parent bus.
-
-Reported-by: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 8477cf5..6b6a4ed 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1811,10 +1811,16 @@ again:
- 	 * Try to release leaf bridge's resources that doesn't fit resource of
- 	 * child device under that bridge
- 	 */
--	list_for_each_entry(fail_res, &fail_head, list)
--		pci_bus_release_bridge_resources(fail_res->dev->bus,
-+	list_for_each_entry(fail_res, &fail_head, list) {
-+		struct pci_bus *bus = fail_res->dev->bus;
-+
-+		if (fail_res->dev == bridge)
-+			bus = bridge->subordinate;
-+
-+		pci_bus_release_bridge_resources(bus,
- 						 fail_res->flags & type_mask,
- 						 whole_subtree);
-+	}
- 
- 	/* restore size and flags */
- 	list_for_each_entry(fail_res, &fail_head, list) {
--- 
-1.8.4.5
-
+On 2015/9/15 15:19, Arthur Marsh wrote:
+> 
+> 
+> Jiang Liu wrote on 15/09/15 12:01:
+> 
+>> HI Arthur,
+>>     Really appreciate your help to test the patches. That's
+>> a good sign we have moved forward a bit:)
+>>     For kexec, it's always challenging to me. So could you
+>> please help to provide full dmesg logs with working kernels
+>> so I could try to figure out the order among scsi and PCI devices.
+>> It may be shutdown order related.
+>> Thanks!
+>> Gerry
+> 
+> OK, attached is the dmesg output from the 4.2.0 kernel where kexec worked.
+Hi Arthur,
+	Could you please also help to capture the log messages
+of kexec, I need to those log messages to figure out the order
+to shutdown PCI devices and scsi devices during kexec.
+Thanks!
+Gerry
