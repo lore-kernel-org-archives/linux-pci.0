@@ -1,47 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f169.google.com ([209.85.160.169]:35699 "EHLO
-	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835AbbIKMJI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 08:09:08 -0400
-Received: by ykdu9 with SMTP id u9so89215654ykd.2
-        for <linux-pci@vger.kernel.org>; Fri, 11 Sep 2015 05:09:07 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: l.stach@pengutronix.de, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH v2 1/2] PCI: imx6: Return the real error code
-Date: Fri, 11 Sep 2015 09:08:52 -0300
-Message-Id: <1441973333-3346-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 24/53] PCI: Fix size calculation with old_size on rescan path
+Date: Wed, 16 Sep 2015 14:57:22 -0700
+Message-Id: <1442440671-5361-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On booting path, we don't pass realloc at first, and treat all optional
+just as required, in some case we can have smaller size/align with optional
+than required only.
 
-When devm_request_irq() fails we should better return the real
-error code instead of returning a 'fake' one.
+  04:00.0 has children bridges: 05:03.0, 05:04.0
+pref layout after booting path like followings:
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
+pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:05:03.0: PCI bridge to [bus 08-0f]
+pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:05:04.0: PCI bridge to [bus 10]
+pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:04:00.0: PCI bridge to [bus 05-10]
+pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
+
+so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
+
+during remove and rescan:
+
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
+pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
+
+align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
+so for 04:00.0 will have big must and no optional size anymore.
+
+So don't align old size, then we will have same size0 and size1,
+and use smaller add_align as must align.
+
+After the patch, rescan works properly.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
-Changes since v1:
-- None
+ drivers/pci/setup-bus.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
- drivers/pci/host/pci-imx6.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 8f3a981..2d0d0fe 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -539,7 +539,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
- 				       IRQF_SHARED, "mx6-pcie-msi", pp);
- 		if (ret) {
- 			dev_err(&pdev->dev, "failed to request MSI irq\n");
--			return -ENODEV;
-+			return ret;
- 		}
- 	}
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f3077db..43b34a7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1096,9 +1096,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
++	size = ALIGN(size, align);
+ 	if (size < old_size)
+ 		size = old_size;
+-	size = ALIGN(size, align);
+ 	return size;
+ }
  
+@@ -1556,6 +1556,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		b_res->flags = 0;
+ 		return 0;
+ 	}
++
++	/*
++	 * It happens when boot path is not passing realloc
++	 * and later rescan is passing realloc.
++	 * The old value from boot path is bigger, and calculate_size will
++	 * use old value as size0 and size1, and also have
++	 * chance optional align is smaller than must only align.
++	 */
++	if(size0 == size1 && min_align > min_add_align)
++		min_align = min_add_align;
++
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
 -- 
-1.9.1
+1.8.4.5
 
