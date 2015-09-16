@@ -1,82 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jiang Liu <jiang.liu@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	Dario Ballabio <ballabio_dario@emc.com>,
-	"James E.J. Bottomley" <JBottomley@odin.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-Subject: [Bugfix 3/3] eata: Enhance eata driver to support PCI device hot-removal
-Date: Mon, 14 Sep 2015 11:08:59 +0800
-Message-Id: <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50669 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753827AbbIPWD4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 18:03:56 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v5 42/53] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Wed, 16 Sep 2015 14:57:40 -0700
+Message-Id: <1442440671-5361-43-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Due to having no hardware for testing, this is just a sample code
-to support PCI device hot-removal. It just passing compilation,
-no any tests.
+For device resource PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource, so set
+IORESOUCE_MEM_64 for 64bit resource during of device resource flags
+parsing.
 
-Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
 ---
- drivers/scsi/eata.c |   26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ arch/sparc/kernel/of_device_32.c | 5 +++--
+ arch/sparc/kernel/of_device_64.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index b92e6856f909..f3bd7cbf260e 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -1474,6 +1474,21 @@ static unsigned int port_probe(unsigned long port_base,
- #ifdef CONFIG_PCI
- static int eata2x_pci_device_count;
- 
-+/* TODO: need help here to shutdown the scsi host and release resources */
-+static void port_remove(unsigned int id, resource_size_t port_base,
-+			struct pci_dev *pdev)
-+{
-+	struct Scsi_Host *shost = sh[id];
-+
-+	/* TODO: stop scsi device */
-+	scsi_unregister(shost);
-+	/* TODO: clean up resources allocated by port_detect() */
-+	clear_bit(id, eata_board_bitmap);
-+	free_irq(shost->irq, &sha[id]);
-+	release_region(port_base, REGION_SIZE);
-+	ida_simple_remove(&eata_ida, id);
-+}
-+
- static int eata2x_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- {
- 	int i, ret = -ENXIO;
-@@ -1521,6 +1536,16 @@ out_error:
- 	return ret;
- }
- 
-+static void eata2x_pci_remove(struct pci_dev *pdev)
-+{
-+	int id = (int)(long)dev_get_drvdata(&pdev->dev);
-+	resource_size_t port_base;
-+
-+	port_base = pci_resource_start(pdev, 0) + PCI_BASE_ADDRESS_0;
-+	port_remove(id, port_base, pdev);
-+	pci_disable_device(pdev);
-+}
-+
- static struct pci_device_id eata2x_tbl[] = {
- 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_SCSI << 8, PCI_ANY_ID) },
- 	{ },
-@@ -1531,6 +1556,7 @@ static struct pci_driver eata2x_pci_driver = {
- 	.name		= "eata",
- 	.id_table	= eata2x_tbl,
- 	.probe		= eata2x_pci_probe,
-+	.remove		= eata2x_pci_remove,
- };
- 
- static int eata2x_probe_pci_devices(struct scsi_host_template *tpnt)
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 185aa96..3e9f273 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index 7bbdc26..defee61 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
 -- 
-1.7.10.4
+1.8.4.5
 
