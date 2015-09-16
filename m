@@ -1,86 +1,206 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:12021 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074AbbIORLo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:44 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH 11/22] swiotlb: Add map_peer_resource stub
-Date: Tue, 15 Sep 2015 12:10:56 -0500
-Message-ID: <1442337067-22964-12-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 33/53] resources: Make allocate_resource() return best fit resource
+Date: Wed, 16 Sep 2015 14:57:31 -0700
+Message-Id: <1442440671-5361-34-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add swiotlb stub of the 'map_peer_resource' DMA operation.
+Current code just allocate from first avail window.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
+We can find all suitable empty slots and pick one with smallest size, so
+we could save the big slot for needed ones later when we have several pci
+bridges under parent bridge and some bridges get assigned from bios and we
+need to assign others in kernel.
+
+For examples: we have window
+[0xc0000000, 0xd0000000), and [0xe0000000,0xe1000000)
+
+and we try allocate 0x200000 size resource.
+
+in this patch will reserve [0xc0000000, 0xd0000000) and
+[0xe0000000,0xe1000000) at first, then pick [0xe0000000,0xe1000000)
+to allocate 0x200000 size.
+
+-v2: updated after __allocate_resource change, and add field in constraint
+	instead of passing it directly.
+-v3: Use best fit instead of just fit according to Bjorn.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- include/linux/swiotlb.h |  8 ++++++++
- lib/swiotlb.c           | 17 +++++++++++++++++
- 2 files changed, 25 insertions(+)
+ kernel/resource.c | 81 ++++++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 68 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
-index e7a018e..872463a 100644
---- a/include/linux/swiotlb.h
-+++ b/include/linux/swiotlb.h
-@@ -87,6 +87,14 @@ swiotlb_unmap_sg_attrs(struct device *hwdev, struct scatterlist *sgl,
- 		       int nelems, enum dma_data_direction dir,
- 		       struct dma_attrs *attrs);
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 07dea6f..ef8c495 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -48,6 +48,7 @@ struct resource_constraint {
+ 	resource_size_t (*alignf)(void *, const struct resource *,
+ 			resource_size_t, resource_size_t);
+ 	void *alignf_data;
++	bool fit;
+ };
  
-+#ifdef CONFIG_HAS_DMA_P2P
-+extern dma_peer_addr_t
-+swiotlb_map_peer_resource(struct device *hwdev, struct device *hwpeer,
-+			  struct resource *res, unsigned long offset,
-+			  size_t size, enum dma_data_direction dir,
-+			  struct dma_attrs *attrs);
-+#endif
+ static DEFINE_RWLOCK(resource_lock);
+@@ -565,12 +566,15 @@ static void resource_clip(struct resource *res, resource_size_t min,
+  * alignment constraints
+  */
+ static int __find_resource(struct resource *root, struct resource *old,
+-			 struct resource *new,
++			 struct resource *new, struct resource *avail,
+ 			 resource_size_t  size,
+ 			 struct resource_constraint *constraint)
+ {
+ 	struct resource *this = root->child;
+-	struct resource tmp = *new, avail, alloc;
++	struct resource tmp = *new, availx, alloc;
 +
- extern void
- swiotlb_sync_single_for_cpu(struct device *hwdev, dma_addr_t dev_addr,
- 			    size_t size, enum dma_data_direction dir);
-diff --git a/lib/swiotlb.c b/lib/swiotlb.c
-index 76f29ec..61522a7 100644
---- a/lib/swiotlb.c
-+++ b/lib/swiotlb.c
-@@ -945,6 +945,23 @@ swiotlb_unmap_sg(struct device *hwdev, struct scatterlist *sgl, int nelems,
++	if (!avail || avail == new)
++		avail = &availx;
+ 
+ 	tmp.start = root->start;
+ 	/*
+@@ -594,15 +598,16 @@ static int __find_resource(struct resource *root, struct resource *old,
+ 		arch_remove_reservations(&tmp);
+ 
+ 		/* Check for overflow after ALIGN() */
+-		avail.start = ALIGN(tmp.start, constraint->align);
+-		avail.end = tmp.end;
+-		avail.flags = new->flags & ~IORESOURCE_UNSET;
+-		if (avail.start >= tmp.start) {
+-			alloc.flags = avail.flags;
+-			alloc.start = constraint->alignf(constraint->alignf_data, &avail,
++		avail->start = ALIGN(tmp.start, constraint->align);
++		avail->end = tmp.end;
++		avail->flags = new->flags & ~IORESOURCE_UNSET;
++		if (avail->start >= tmp.start) {
++			alloc.flags = avail->flags;
++			alloc.start = constraint->alignf(
++					constraint->alignf_data, avail,
+ 					size, constraint->align);
+ 			alloc.end = alloc.start + size - 1;
+-			if (resource_contains(&avail, &alloc)) {
++			if (resource_contains(avail, &alloc)) {
+ 				new->start = alloc.start;
+ 				new->end = alloc.end;
+ 				return 0;
+@@ -619,6 +624,11 @@ next:		if (!this || this->end == root->end)
+ 	return -EBUSY;
  }
- EXPORT_SYMBOL(swiotlb_unmap_sg);
  
-+#ifdef CONFIG_HAS_DMA_P2P
-+/*
-+ * Maps a single region from a peer device's resource for DMA streaming. This
-+ * is currently unimplemented because there's no bounce buffer abstraction for
-+ * peer mappings.
-+ */
-+dma_peer_addr_t
-+swiotlb_map_peer_resource(struct device *hwdev, struct device *hwpeer,
-+			  struct resource *res, unsigned long offset,
-+			  size_t size, enum dma_data_direction dir,
-+			  struct dma_attrs *attrs)
-+{
-+	return phys_to_dma(hwdev, io_tlb_overflow_buffer);
-+}
-+EXPORT_SYMBOL(swiotlb_map_peer_resource);
-+#endif
-+
++struct good_resource {
++	struct list_head list;
++	struct resource avail;
++	struct resource new;
++};
  /*
-  * Make physical memory consistent for a set of streaming mode DMA translations
-  * after a transfer.
+  * Find empty slot in the resource tree given range and alignment.
+  */
+@@ -626,7 +636,49 @@ static int find_resource(struct resource *root, struct resource *new,
+ 			resource_size_t size,
+ 			struct resource_constraint  *constraint)
+ {
+-	return  __find_resource(root, NULL, new, size, constraint);
++	int ret = -1;
++	LIST_HEAD(head);
++	struct good_resource *good, *tmp;
++	resource_size_t avail_size = (resource_size_t)-1ULL;
++
++	if (!constraint->fit)
++		return __find_resource(root, NULL, new, NULL, size,
++					constraint);
++
++	/* find all suitable ones and add to the list */
++	for (;;) {
++		good = kzalloc(sizeof(*good), GFP_KERNEL);
++		if (!good)
++			break;
++
++		good->new.start = new->start;
++		good->new.end = new->end;
++		good->new.flags = new->flags;
++		ret = __find_resource(root, NULL, &good->new, &good->avail,
++					size, constraint);
++		if (ret || __request_resource(root, &good->avail)) {
++			ret = -EBUSY;
++			kfree(good);
++			break;
++		}
++
++		list_add(&good->list, &head);
++	}
++
++	/* pick up the smallest one and delete the list */
++	list_for_each_entry_safe(good, tmp, &head, list) {
++		if (resource_size(&good->avail) < avail_size) {
++			avail_size = resource_size(&good->avail);
++			new->start = good->new.start;
++			new->end = good->new.end;
++			ret = 0;
++		}
++		list_del(&good->list);
++		__release_resource(&good->avail);
++		kfree(good);
++	}
++
++	return ret;
+ }
+ 
+ /**
+@@ -647,7 +699,8 @@ static int __reallocate_resource(struct resource *root, struct resource *old,
+ 	struct resource new = *old;
+ 	struct resource *conflict;
+ 
+-	if ((err = __find_resource(root, old, &new, newsize, constraint)))
++	err = __find_resource(root, old, &new, NULL, newsize, constraint);
++	if (err)
+ 		goto out;
+ 
+ 	if (resource_contains(&new, old)) {
+@@ -686,6 +739,7 @@ out:
+  * @align: alignment requested, in bytes
+  * @alignf: alignment function, optional, called if not NULL
+  * @alignf_data: arbitrary data to pass to the @alignf function
++ * @fit: only allocate fit range.
+  *
+  * Caller need to hold resource_lock if needed.
+  */
+@@ -696,7 +750,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 						  const struct resource *,
+ 						  resource_size_t,
+ 						  resource_size_t),
+-				void *alignf_data)
++				void *alignf_data, bool fit)
+ {
+ 	int err;
+ 	struct resource_constraint constraint;
+@@ -709,6 +763,7 @@ static int __allocate_resource(struct resource *root, struct resource *new,
+ 	constraint.align = align;
+ 	constraint.alignf = alignf;
+ 	constraint.alignf_data = alignf_data;
++	constraint.fit = fit;
+ 
+ 	if (new->parent) {
+ 		/* resource is already allocated, try reallocating with
+@@ -749,7 +804,7 @@ int allocate_resource(struct resource *root, struct resource *new,
+ 
+ 	write_lock(&resource_lock);
+ 	ret = __allocate_resource(root, new, size, min, max, align,
+-				   alignf, alignf_data);
++				   alignf, alignf_data, true);
+ 	write_unlock(&resource_lock);
+ 
+ 	return ret;
 -- 
-2.5.1
+1.8.4.5
 
