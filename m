@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20551 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:23151 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755443AbbJAFy3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:54:29 -0400
+	with ESMTP id S1752937AbbIPV6c (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:58:32 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -11,103 +11,65 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 29/53] PCI: Separate required+optional assigning to another function
-Date: Wed, 30 Sep 2015 22:53:03 -0700
-Message-Id: <1443678807-786-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v5 15/53] PCI: Cache window alignment value during bus sizing
+Date: Wed, 16 Sep 2015 14:57:13 -0700
+Message-Id: <1442440671-5361-16-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__assign_resources_sorted() is getting too big if we put alt_size support
-into it.  Split out required+optional assigning code to another function.
+There are several calling to window_alignment(), and we will have more
+for alt_size support, cache the value instead of keeping on getting it.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+ drivers/pci/setup-bus.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 5f5737e..e39de7c 100644
+index 12633ab..a5b3ec1 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- 	res->flags = save_res->flags;
- }
+@@ -1203,6 +1203,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	resource_size_t window_align;
  
--static void __assign_resources_sorted(struct list_head *head,
--				 struct list_head *realloc_head,
--				 struct list_head *fail_head)
-+static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *realloc_head)
- {
--	/*
--	 * Should not assign requested resources at first.
--	 *   they could be adjacent, so later reassign can not reallocate
--	 *   them one by one in parent resource window.
--	 * Try to assign requested + add_size at beginning
--	 *  if could do that, could get out early.
--	 *  if could not do that, we still try to assign requested at first,
--	 *    then try to reassign add_size for some resources.
--	 */
--
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
-@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	resource_size_t add_align;
- 	struct resource *res;
- 
--	/* Check if optional add_size is there */
--	if (!realloc_head || list_empty(realloc_head))
--		goto requested_and_reassign;
--
- 	if (!save_resources(head, &save_head))
--		goto requested_and_reassign;
-+		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 			remove_from_list(realloc_head, dev_res->res);
- 		free_list(&save_head);
- 		free_list(head);
--		return;
-+
-+		return true;
+ 	if (!b_res)
+ 		return -ENOSPC;
+@@ -1212,6 +1213,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		min_size = 0;
  	}
  
- 	/* check failed type */
-@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	free_list(&save_head);
- 
--requested_and_reassign:
-+	return false;
-+}
++	window_align = window_alignment(bus, b_res->flags);
 +
-+static void __assign_resources_sorted(struct list_head *head,
-+				 struct list_head *realloc_head,
-+				 struct list_head *fail_head)
-+{
-+	/*
-+	 * Should not assign required resources at first.
-+	 *   they could be adjacent, so later reassign can not reallocate
-+	 *   them one by one in parent resource window.
-+	 * Try to assign required + optional at beginning
-+	 *  if could do that, could get out early.
-+	 *  if could not do that, we still try to assign required at first,
-+	 *    then try to reassign add_size for some resources.
-+	 */
-+
-+	/* Check required+optional add */
-+	if (realloc_head && !list_empty(realloc_head) &&
-+	    __assign_resources_required_optional_sorted(head, realloc_head))
-+		return;
-+
- 	sort_resources(head);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
  
- 	/* Satisfy the must-have resource requests */
+@@ -1272,10 +1275,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		}
+ 	}
+ 
+-	max_align = max(max_align, window_alignment(bus, b_res->flags));
++	max_align = max(max_align, window_align);
+ 	if (size || min_size) {
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+-				 size, window_alignment(bus, b_res->flags));
++						size, window_align);
+ 		size0 = calculate_memsize(size, min_size,
+ 				  resource_size(b_res), min_align);
+ 	}
+@@ -1286,7 +1289,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+-					window_alignment(bus, b_res->flags));
++					window_align);
+ 		size1 = calculate_memsize(sum_add_size, min_size,
+ 				 resource_size(b_res), min_add_align);
+ 	}
 -- 
 1.8.4.5
 
