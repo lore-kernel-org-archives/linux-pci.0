@@ -1,86 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:7847 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005AbbIORLh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:37 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH 08/22] PCI: Add pci_find_common_upstream_dev()
-Date: Tue, 15 Sep 2015 12:10:53 -0500
-Message-ID: <1442337067-22964-9-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 16 Sep 2015 11:41:53 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <david.daney@cavium.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in
+ bus_max calculation.
+Message-ID: <20150916104152.GC28771@arm.com>
+References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+ <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
+ <20150915174934.GL31157@arm.com>
+ <55F85D4E.9020604@caviumnetworks.com>
+ <20150915183500.GR31157@arm.com>
+ <55F86764.4060502@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55F86764.4060502@caviumnetworks.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add an interface to find the first device which is upstream of both
-devices.
+On Tue, Sep 15, 2015 at 07:45:56PM +0100, David Daney wrote:
+> On 09/15/2015 11:35 AM, Will Deacon wrote:
+> > On Tue, Sep 15, 2015 at 07:02:54PM +0100, David Daney wrote:
+> >> On 09/15/2015 10:49 AM, Will Deacon wrote:
+> >>> On Sat, Sep 12, 2015 at 12:21:57AM +0100, David Daney wrote:
+> >>>>    	/* Limit the bus-range to fit within reg */
+> >>>> -	bus_max = pci->cfg.bus_range->start +
+> >>>> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> >>>> +	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> >>>> +	if (bus_max > 255)
+> >>>> +		bus_max = 255;
+> >>>>    	pci->cfg.bus_range->end = min_t(resource_size_t,
+> >>>>    					pci->cfg.bus_range->end, bus_max);
+> >>>
+> >>> Hmm, this is changing the meaning of the bus-range property in the
+> >>> device-tree, which really needs to match what IEEE Std 1275-1994 requires.
+> >>
+> >> I doesn't change the bus-range.
+> >
+> > Not directly, but pci->cfg.bus_range is a resource populated from the
+> > "bus-range" property in the device-tree, so it's changing how the driver
+> > uses that property.
+> >
+> >>> My understanding was that the bus-range could be used to offset the config
+> >>> space, which is why it's subtracted from the bus number in
+> >>> gen_pci_map_cfg_bus_[e]cam.
+> >>
+> >> There is an inconsistency in the current code.  The calculation of the
+> >> cfg.win[?] pointers is done such that the beginning of the config space
+> >> specified in the "reg" property corresponds to bus 0.
+> >
+> > I don't follow you here. The mapping functions explicitly subtract the
+> > start of the bus range when calculating the window offset:
+> >
+> >    resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+> >
+> > so if I have bus-range = <128 255>; then bus 128 lives at the start of
+> > the configuration space described by the reg property, not bus 0.
+> >
+> > Sorry if I'm being thick; I just can't see the inconsistency.
+> >
+> 
+> Here is the current code:
+> 
+> >> 	bus_range = pci->cfg.bus_range;
+> >> 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+> >> 		u32 idx = busn - bus_range->start;
+> 
+> The index is offset by the bus range start...
+> 
+> >> 		u32 sz = 1 << pci->cfg.ops.bus_shift;
+> >>
+> >> 		pci->cfg.win[idx] = devm_ioremap(dev,
+> >> 						 pci->cfg.res.start + busn * sz,
+> >> 						 sz);
+> 
+> But, the offset into the "reg" property is the raw bus number.
+> 
+> 
+> >> 		if (!pci->cfg.win[idx])
+> >> 			return -ENOMEM;
+> >> 	}
+> 
+> 
+> I hope that makes it more clear.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
----
- drivers/pci/search.c | 25 +++++++++++++++++++++++++
- include/linux/pci.h  |  2 ++
- 2 files changed, 27 insertions(+)
+Got it. So we should be using idx instead of busn in the devm_ioremap
+call above.
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index a20ce7d..b6ed554 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -384,3 +384,28 @@ int pci_dev_present(const struct pci_device_id *ids)
- 	return 0;
- }
- EXPORT_SYMBOL(pci_dev_present);
-+
-+/**
-+ * pci_find_common_upstream_dev - Returns the first common upstream device
-+ * @dev: the PCI device from which the bus hierarchy walk will start
-+ * @other: the PCI device whose bus number will be used for the search
-+ *
-+ * Walks up the bus hierarchy from the @dev device, looking for the first bus
-+ * which the @other device is downstream of. Returns %NULL if the devices do
-+ * not share any upstream devices.
-+ */
-+struct pci_dev *pci_find_common_upstream_dev(struct pci_dev *dev,
-+					     struct pci_dev *other)
-+{
-+	struct pci_dev *pdev = dev;
-+
-+	while (pdev != NULL) {
-+		if ((other->bus->number >= pdev->bus->busn_res.start) &&
-+		    (other->bus->number <= pdev->bus->busn_res.end))
-+			return pdev;
-+		pdev = pci_upstream_bridge(pdev);
-+	}
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(pci_find_common_upstream_dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d58063e..8262b9e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -860,6 +860,8 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
- }
- struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
- int pci_dev_present(const struct pci_device_id *ids);
-+struct pci_dev *pci_find_common_upstream_dev(struct pci_dev *from,
-+					     struct pci_dev *to);
- 
- int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
- 			     int where, u8 *val);
--- 
-2.5.1
-
+Will
