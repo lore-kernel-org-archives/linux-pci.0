@@ -1,139 +1,130 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 05/11] x86, pci, acpi: Move arch-agnostic MMCONFIG (aka
- ECAM) and ACPI code out of arch/x86/ directory
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <55F9A94B.4070702@caviumnetworks.com>
+Date: Wed, 16 Sep 2015 10:39:23 -0700
+From: David Daney <ddaney@caviumnetworks.com>
+MIME-Version: 1.0
+To: Will Deacon <will.deacon@arm.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-References: <1432644564-24746-1-git-send-email-hanjun.guo@linaro.org>
- <1432644564-24746-6-git-send-email-hanjun.guo@linaro.org>
- <20150526170817.GU1565@arm.com> <55657B02.5090805@linaro.org>
- <20150602133215.GC23650@red-moon> <55701A31.808@linaro.org>
- <20150604102253.GA31773@red-moon> <5570447D.3020705@linaro.org>
- <557504A2.3060203@linaro.org> <20150608151443.GA16151@red-moon>
- <55E4340D.6050004@linaro.org>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>,
-	Liviu Dudau <Liviu.Dudau@arm.com>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <Catalin.Marinas@arm.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"suravee.suthikulpanit@amd.com" <suravee.suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
-From: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Message-ID: <55ED6010.3020406@linaro.org>
-Date: Mon, 7 Sep 2015 11:59:44 +0200
-MIME-Version: 1.0
-In-Reply-To: <55E4340D.6050004@linaro.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in bus_max
+ calculation.
+References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com> <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com> <20150915174934.GL31157@arm.com> <55F85D4E.9020604@caviumnetworks.com> <20150915183500.GR31157@arm.com> <55F86764.4060502@caviumnetworks.com> <20150916104152.GC28771@arm.com> <20150916112852.GC17510@red-moon> <20150916172935.GT28771@arm.com>
+In-Reply-To: <20150916172935.GT28771@arm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31.08.2015 13:01, Tomasz Nowicki wrote:
-> On 08.06.2015 17:14, Lorenzo Pieralisi wrote:
->> On Mon, Jun 08, 2015 at 03:57:38AM +0100, Hanjun Guo wrote:
->>
->> [...]
->>
->>>>>>>>> Why can't we make use of the ECAM implementation used by
->>>>>>>>> pci-host-generic
->>>>>>>>> and drivers/pci/access.c?
->>>>>>>>
->>>>>>>> We had that question when I had posted MMCFG patch set separately,
->>>>>>>> please see:
->>>>>>>> https://lkml.org/lkml/2015/3/11/492
->>>>>>>
->>>>>>> Yes, but the real question is, why do we need to have PCI config
->>>>>>> space
->>>>>>> up and running before a bus struct is even created ? I think the
->>>>>>> reason is
->>>>>>> the PCI configuration address space format (ACPI 6.0, Table 5-27,
->>>>>>> page
->>>>>>> 108):
->>>>>>>
->>>>>>> "PCI Configuration space addresses must be confined to devices on
->>>>>>> PCI Segment Group 0, bus 0. This restriction exists to accommodate
->>>>>>> access to fixed hardware prior to PCI bus enumeration".
->>>>>>>
->>>>>>> On HW reduced platforms I do not even think this is required at all,
->>>>>>> we have to look into this to avoid code duplication that might well
->>>>>>> turn out useless.
->>>>>>
->>>>>> This is only for the fixed hardware, which will be not available for
->>>>>> ARM64 (reduced hardware mode), but in Generic Hardware Programming
->>>>>> Model, we using OEM-provided ACPI Machine Language (AML) code to
->>>>>> access
->>>>>> generic hardware registers, this will be available for reduced
->>>>>> hardware
->>>>>> too.
->>>>>>
->>>>>> So in ACPI spec, it says: (ACPI 6.0 page 66, last paragraph)
->>>>>>
->>>>>> ACPI defines eight address spaces that may be accessed by generic
->>>>>> hardware implementations. These include:
->>>>>> * System I/O space
->>>>>> * System memory space
->>>>>> * PCI configuration space
->>>>>> * Embedded controller space
->>>>>> * System Management Bus (SMBus) space
->>>>>> * CMOS
->>>>>> * PCI BAR Target
->>>>>> * IPMI space
->>>>>>
->>>>>> So if any device using the PCI address space for control, such
->>>>>> as a system reset control device, its address space can be reside
->>>>>> in PCI configuration space (who can prevent a OEM do that crazy
->>>>>> thing? :) ), and it should be accessible before the PCI bus is
->>>>>> created.
->>>>>
->>>>> Us, by changing attitude and questioning features whose usefulness
->>>>> is questionable. I will look into this and raise the point, I am not
->>>>> thrilled by the idea of adding another set of PCI accessor functions
->>>>> and drivers because we have to access a register through PCI before
->>>>> enumerating the bus (and on arm64 this is totally useless since
->>>>> we are not meant to support fixed HW anyway). Maybe we can make acpica
->>>>> code use a "special" stub (ACPI specific, PCI configuration space
->>>>> address
->>>>> space has restrictions anyway), I have to review this set in its
->>>>> entirety to see how to do that (and I would kindly ask you to do
->>>>> it too, before saying it is not possible to implement it).
+On 09/16/2015 10:29 AM, Will Deacon wrote:
+> Hi Lorenzo,
+>
+> On Wed, Sep 16, 2015 at 12:28:52PM +0100, Lorenzo Pieralisi wrote:
+>> On Wed, Sep 16, 2015 at 11:41:53AM +0100, Will Deacon wrote:
+>>>> Here is the current code:
 >>>>
->>>> I'm willing to do that, actually, if we don't need a mechanism to
->>>> access PCI config space before the bus is created, the code can be
->>>> simplified a lot.
+>>>>>> 	bus_range = pci->cfg.bus_range;
+>>>>>> 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+>>>>>> 		u32 idx = busn - bus_range->start;
+>>>>
+>>>> The index is offset by the bus range start...
+>>>>
+>>>>>> 		u32 sz = 1 << pci->cfg.ops.bus_shift;
+>>>>>>
+>>>>>> 		pci->cfg.win[idx] = devm_ioremap(dev,
+>>>>>> 						 pci->cfg.res.start + busn * sz,
+>>>>>> 						 sz);
+>>>>
+>>>> But, the offset into the "reg" property is the raw bus number.
+>>>>
+>>>>
+>>>>>> 		if (!pci->cfg.win[idx])
+>>>>>> 			return -ENOMEM;
+>>>>>> 	}
+>>>>
+>>>>
+>>>> I hope that makes it more clear.
 >>>
->>> After more investigation on the spec and the ACPI core code, I'm
->>> still not convinced that accessing to PCI config space before PCI
->>> bus creating is impossible, also there is no enough ARM64 hardware
->>> to prove that too. But I think we can go in this way, reuse the
->>> ECAM implementation by pci-host-generic for now, and implement the PCI
->>> accessor functions before enumerating PCI bus when needed in the
->>> future, does it make sense?
+>>> Got it. So we should be using idx instead of busn in the devm_ioremap
+>>> call above.
 >>
->> You mean we rewrite the patch to make sure we can use the PCI host
->> generic
->> driver with MCFG and we leave the acpica PCI config call empty stubs on
->> arm64 (as they are now) ?
+>> I think that's not what's specified in the PCI firmware specification,
+>> at least for the MMCFG regions. For MMCFG regions (quoting the specs)
+>> the "base address of the memory mapped configuration space always
+>> corresponds to bus number 0 (regardless of the start bus number decoded
+>> by the host bridge)..."
 >>
+>> For the x86 implementation have a look at:
+>>
+>> arch/x86/pci/mmconfig_64.c mcfg_ioremap()
+>>
+>> static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+>> {
+>> 	void __iomem *addr;
+>> 	u64 start, size;
+>> 	int num_buses;
+>>
+>> 	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+>> 	num_buses = cfg->end_bus - cfg->start_bus + 1;
+>> 	size = PCI_MMCFG_BUS_OFFSET(num_buses);
+>> 	addr = ioremap_nocache(start, size);
+>> 	if (addr)
+>> 		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+>> 	return addr;
+>> }
+>>
+>> The MCFG config accessors add back the PCI_MMCFG_BUS_OFFSET(cfg->start_bus)
+>> to the virtual address so that the proper virtual address is used when
+>> issuing the config cycles, that's my understanding.
 >
-> Hi Bjorn, Rafael,
+> Ok. I think that whether the config space mapping or the config accessors
+> do the fixup should remain an implementation detail, but the resource
+> identifying config space should be dealt with consistently.
 >
-> Lorenzo pointed out very important problem we are having with PCI config
-> space access for ARM64. Please refer to the above discussion and add
-> your 2 cents. Can we forget about accessing PCI config space (for
-> Hardware Reduced profile) before PCI bus creation? If not, do you see a
-> way to use drivers/pci/access.c accessors here, like acpica change? Any
-> opinion is very appreciated.
+> So that means the reg property should describe everything from bus 0,
+> but then we only map the region corresponding to the bus-range.
 >
+>> So IMO we have to define what "reg" represents for ECAM in DT, we can't
+>> leave this open to interpretation (and I think makng MCFG and DT config
+>> work the same way would be ideal).
 
-Kindly remainder.
+I will update the 
+Documentation/devicetree/bindings/pci/host-generic-pci.txt to reflect 
+this interpretation.
 
-Thanks,
-Tomasz
+>
+> If we define reg to cover the whole config space from bus 0 onwards,
+> then I think the driver should work as-is today. It's slightly odd, in
+> that there may be a prefix of config space that maps to god-knows-where,
+> but it's consistent with ACPI and doesn't require us to change the driver.
+>
+> David?
+
+I agree with this approach for two reasons:
+
+1) My interpretation of relevant specifications agrees with Lorenzo's
+
+2) It is less work for me, as this is how my firmware is currently 
+configured.
+
+This patch 4/6 is still necessary, as the bus_max calculation is broken 
+for non-zero start_bus.
+
+I anticipate sending a new version of the patch set later today (PDT). 
+I will add any Acked-by/Reviewed-by that I receive to the new set.
+
+David Daney
+
+
