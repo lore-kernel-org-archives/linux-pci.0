@@ -1,64 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52153 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751074AbbIORzT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Sep 2015 13:55:19 -0400
-Date: Tue, 15 Sep 2015 18:55:20 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>, lorenzo.pieralisi@arm.com
-Subject: Re: [PATCH 5/6] PCI: generic: Pass proper starting bus number to
- pci_scan_root_bus().
-Message-ID: <20150915175519.GN31157@arm.com>
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
- <1442013719-5001-6-git-send-email-ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442013719-5001-6-git-send-email-ddaney.cavm@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:47652 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830AbbIPV6q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:58:46 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 27/53] PCI: Don't add too much io port for hotplug bridge with old size
+Date: Wed, 16 Sep 2015 14:57:25 -0700
+Message-Id: <1442440671-5361-28-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Sep 12, 2015 at 12:21:58AM +0100, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> If the bus is being configured with a bus-range that does not start at
-> zero, pass that starting bus number to pci_scan_root_bus().  Passing
-> the incorrect value of zero causes attempted config accesses outside
-> of the supported range, which cascades to an OOPs spew and eventual
-> kernel panic.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  drivers/pci/host/pci-host-generic.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index fce5bf7..8219c0b 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -265,7 +265,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	if (!pci_has_flag(PCI_PROBE_ONLY))
->  		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
->  
-> -	bus = pci_scan_root_bus(dev, 0,
-> +	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
->  				&pci->cfg.ops.ops, pci, &pci->resources);
->  	if (!bus) {
->  		dev_err(dev, "Scanning rootbus failed");
+Now we add too much for hotplug bridge io port.
+For example, when hotplug bridge has two children bridges,
+every child bridge will need 0x1000, so size1 will be 0x2000
+and size is 0. The min_size for the hotplug bridge is 0x100.
+with old version calculate_iosize, we get 0x3000 for final
+size as we are using size to compare with min_size at first.
+That is not right, we should have 0x2000.
 
-Acked-by: Will Deacon <will.deacon@arm.com>
+We can check size+size1 with min_size for io port, and just add size1
+to size without passing extra size1 into calculate_iosize().
 
-Will
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1c34992..a0be5e2 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1068,7 +1068,6 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
+ 
+ static resource_size_t calculate_iosize(resource_size_t size,
+ 		resource_size_t min_size,
+-		resource_size_t size1,
+ 		resource_size_t old_size,
+ 		resource_size_t align)
+ {
+@@ -1076,7 +1075,7 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	size = ALIGN(size + size1, align);
++	size = ALIGN(size, align);
+ 	if (size < old_size)
+ 		size = old_size;
+ 	return size;
+@@ -1207,14 +1206,15 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	}
+ 
+ 	size = size_aligned_for_isa(size);
+-	size0 = calculate_iosize(size, min_size, size1,
++	size += size1;
++	size0 = calculate_iosize(size, min_size,
+ 			resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(sum_add_size, min_size, 0,
++		calculate_iosize(sum_add_size, min_size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+-- 
+1.8.4.5
+
