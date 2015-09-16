@@ -1,81 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39855 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755060AbbICMQn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Sep 2015 08:16:43 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v3 3/4] powerpc: PCI: Fix lookup of linux,pci-probe-only property
-Date: Thu,  3 Sep 2015 13:16:15 +0100
-Message-Id: <1441282576-7304-4-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1441282576-7304-1-git-send-email-marc.zyngier@arm.com>
-References: <1441282576-7304-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:32785 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816AbbIPCRT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 22:17:19 -0400
+Subject: Re: [PATCH v9 5/6] Documentation: DT: Add HiSilicon PCIe host binding
+To: Zhou Wang <wangzhou1@hisilicon.com>
+References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
+ <1442321361-174300-6-git-send-email-wangzhou1@hisilicon.com>
+ <55F874F9.1060804@kernel.org> <55F8C268.2020809@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, jingoohan1@gmail.com,
+	pratyush.anand@gmail.com, Arnd Bergmann <arnd@arndb.de>,
+	linux@arm.linux.org.uk, thomas.petazzoni@free-electrons.com,
+	gabriele.paoloni@huawei.com, lorenzo.pieralisi@arm.com,
+	james.morse@arm.com, Liviu.Dudau@arm.com, jason@lakedaemon.net,
+	gabriel.fernandez@linaro.org, Minghuan.Lian@freescale.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org, zhangjukuo@huawei.com,
+	qiuzhenfa@hisilicon.com, liudongdong3@huawei.com,
+	qiujiang@huawei.com, xuwei5@hisilicon.com, liguozhu@hisilicon.com
+From: Rob Herring <robh@kernel.org>
+Message-ID: <55F8D12D.50107@kernel.org>
+Date: Tue, 15 Sep 2015 21:17:17 -0500
+MIME-Version: 1.0
+In-Reply-To: <55F8C268.2020809@hisilicon.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When find_and_init_phbs() looks for the probe-only property, it seems
-to trust the firmware to be correctly written, and assumes that there
-is a parameter to the property.
+On 09/15/2015 08:14 PM, Zhou Wang wrote:
+> On 2015/9/16 3:43, Rob Herring wrote:
+>> On 09/15/2015 07:49 AM, Zhou Wang wrote:
+>>> This patch adds related DTS binding document for HiSilicon PCIe host driver.
+>>>
+>>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+>>> ---
+>>>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 46 ++++++++++++++++++++++
+>>>  1 file changed, 46 insertions(+)
+>>>  create mode 100644 Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>>> new file mode 100644
+>>> index 0000000..2afc9d1
+>>> --- /dev/null
+>>> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>>> @@ -0,0 +1,46 @@
+>>> +HiSilicon PCIe host bridge DT description
+>>> +
+>>> +HiSilicon PCIe host controller is based on Designware PCI core.
+>>> +It shares common functions with PCIe Designware core driver and inherits
+>>> +common properties defined in
+>>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+>>> +
+>>> +Additional properties are described here:
+>>> +
+>>> +Required properties:
+>>> +- compatible: Should contain "hisilicon,hip05-pcie".
+>>> +- reg: Should contain rc_dbi, subctrl, config registers location and length.
+>>> +- reg-names: Must include the following entries:
+>>> +  "rc_dbi": controller configuration registers;
+>>> +  "subctrl": whole PCIe hosts configuration registers;
+>>> +  "config": PCIe configuration space registers.
+>>> +- msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
+>>> +- port-id: Should be 0, 1, 2 or 3.
+>>
+>> What is port-id for? Use of instance indexes need to have good reason.
+>>
+>> Rob
+> 
+> There are four PCIe controllers in HiSilicon Hip05 SoC, port-id just indicates
+> which one we use. And we will use port-id to locate related registers in driver.
 
-It is conceivable that the firmware could not be that perfect, and it
-could expose this property naked (at least one arm64 platform seems to
-exhibit this exact behaviour). The setup code the ends up making
-a decision based on whatever the property pointer points to, which
-is likely to be junk.
+Just having multiple instances is not a reason. So looking at the
+driver, port-id is used to calculate register addresses for these registers:
 
-Instead, switch to the common of_pci.c implementation that doesn't
-suffer from this problem and ignore the property if the firmware
-couldn't make up its mind.
+#define PCIE_SUBCTRL_MODE_REG                           0x2800
+#define PCIE_SUBCTRL_SYS_STATE4_REG                     0x6818
 
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- arch/powerpc/platforms/pseries/setup.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+Is the base address of subctrl the same on all 4 ports? If so, you
+should not have overlapping resources in the DT. Either split these 2
+registers into 2 reg regions (for each register) or use syscon to
+provide access to the region.
 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 39a74fa..412531f 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -40,6 +40,7 @@
- #include <linux/seq_file.h>
- #include <linux/root_dev.h>
- #include <linux/of.h>
-+#include <linux/of_pci.h>
- #include <linux/kexec.h>
- 
- #include <asm/mmu.h>
-@@ -495,18 +496,7 @@ static void __init find_and_init_phbs(void)
- 	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
- 	 * in chosen.
- 	 */
--	if (of_chosen) {
--		const int *prop;
--
--		prop = of_get_property(of_chosen,
--				"linux,pci-probe-only", NULL);
--		if (prop) {
--			if (*prop)
--				pci_add_flags(PCI_PROBE_ONLY);
--			else
--				pci_clear_flags(PCI_PROBE_ONLY);
--		}
--	}
-+	of_pci_check_probe_only(of_chosen);
- }
- 
- static void __init pSeries_setup_arch(void)
--- 
-2.1.4
+Rob
 
