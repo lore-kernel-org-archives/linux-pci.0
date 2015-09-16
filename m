@@ -1,203 +1,182 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([122.248.162.4]:49610 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754795AbbIIDg1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Sep 2015 23:36:27 -0400
-Received: from /spool/local
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 9 Sep 2015 09:06:25 +0530
-Received: from d28relay05.in.ibm.com (d28relay05.in.ibm.com [9.184.220.62])
-	by d28dlp03.in.ibm.com (Postfix) with ESMTP id 8768E125801B
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2015 09:05:41 +0530 (IST)
-Received: from d28av04.in.ibm.com (d28av04.in.ibm.com [9.184.220.66])
-	by d28relay05.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t893aIbf33554598
-	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 09:06:18 +0530
-Received: from d28av04.in.ibm.com (localhost [127.0.0.1])
-	by d28av04.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t893aHJF028246
-	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 09:06:18 +0530
-Date: Wed, 9 Sep 2015 11:36:16 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, bhelgaas@google.com,
-	mpe@ellerman.id.au, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org, aik@ozlabs.ru
-Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
-Message-ID: <20150909033616.GA5148@richards-mbp.cn.ibm.com>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150729031718.GA18069@richard>
- <20150909024820.GA6808@gwshan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150909024820.GA6808@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 14/53] PCI: Add __add_to_list()
+Date: Wed, 16 Sep 2015 14:57:12 -0700
+Message-Id: <1442440671-5361-15-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 09, 2015 at 12:48:21PM +1000, Gavin Shan wrote:
->On Wed, Jul 29, 2015 at 11:17:18AM +0800, Wei Yang wrote:
->>Hi, Michael
->>
->>Hope you didn't take this yet. We may change this patch a little.
->>
->
->[Cc Alexey who might concern the SRIOV status]
->
->Richard, do you have plan to get it upstream? It seems it's hanged
->over here for long time.
->
+For alt_size support, we will add more entries to realloc list.
 
-The VF EEH is hung since we re-designed the SRIOV. After the re-design, we
-don't have VF groups.
+Add new __add_to_list() to take alt_size, alt_align.
 
-My plan is to push the VF EEH patch set after the SRIOV Redesign is accepted.
+And simplify add_to_list() not to take add/alt input.
 
->>On Fri, Jul 17, 2015 at 02:02:41PM +0800, Wei Yang wrote:
->>>When VF BAR size is larger than 64MB, we group VFs in terms of M64 BAR,
->>>which means those VFs in a group should form a compound PE.
->>>
->>>This patch links those VF PEs into compound PE in this case.
->>>
->>>[gwshan: code refactoring for a bit]
->>>Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
->>>Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>>---
->>> arch/powerpc/platforms/powernv/pci-ioda.c |   46 +++++++++++++++++++++++++----
->>> arch/powerpc/platforms/powernv/pci.c      |   17 +++++++++--
->>> 2 files changed, 56 insertions(+), 7 deletions(-)
->>>
->>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>index 5738d31..d1530cb 100644
->>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>>@@ -1359,9 +1359,20 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->>> 	}
->>>
->>> 	list_for_each_entry_safe(pe, pe_n, &phb->ioda.pe_list, list) {
->>>+		struct pnv_ioda_pe *s, *sn;
->>> 		if (pe->parent_dev != pdev)
->>> 			continue;
->>>
->>>+		if ((pe->flags & PNV_IODA_PE_MASTER) &&
->>>+		    (pe->flags & PNV_IODA_PE_VF)) {
->>>+			list_for_each_entry_safe(s, sn, &pe->slaves, list) {
->>>+				pnv_pci_ioda2_release_dma_pe(pdev, s);
->>>+				list_del(&s->list);
->>>+				pnv_ioda_deconfigure_pe(phb, s);
->>>+				pnv_ioda_free_pe(phb, s->pe_number);
->>>+			}
->>>+		}
->>>+
->>> 		pnv_pci_ioda2_release_dma_pe(pdev, pe);
->>>
->>> 		/* Remove from list */
->>>@@ -1414,7 +1425,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->>> 	struct pci_bus        *bus;
->>> 	struct pci_controller *hose;
->>> 	struct pnv_phb        *phb;
->>>-	struct pnv_ioda_pe    *pe;
->>>+	struct pnv_ioda_pe    *pe, *master_pe;
->>> 	int                    pe_num;
->>> 	u16                    vf_index;
->>> 	struct pci_dn         *pdn;
->>>@@ -1456,10 +1467,13 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->>> 			continue;
->>> 		}
->>>
->>>-		/* Put PE to the list */
->>>-		mutex_lock(&phb->ioda.pe_list_mutex);
->>>-		list_add_tail(&pe->list, &phb->ioda.pe_list);
->>>-		mutex_unlock(&phb->ioda.pe_list_mutex);
->>>+		/* Put PE to the list, or postpone it for compound PEs */
->>>+		if ((pdn->m64_per_iov != M64_PER_IOV) ||
->>>+		    (num_vfs <= M64_PER_IOV)) {
->>>+			mutex_lock(&phb->ioda.pe_list_mutex);
->>>+			list_add_tail(&pe->list, &phb->ioda.pe_list);
->>>+			mutex_unlock(&phb->ioda.pe_list_mutex);
->>>+		}
->>>
->>> 		pnv_pci_ioda2_setup_dma_pe(phb, pe);
->>> 	}
->>>@@ -1472,10 +1486,32 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->>> 		vf_per_group = roundup_pow_of_two(num_vfs) / pdn->m64_per_iov;
->>>
->>> 		for (vf_group = 0; vf_group < M64_PER_IOV; vf_group++) {
->>>+			master_pe = NULL;
->>>+
->>> 			for (vf_index = vf_group * vf_per_group;
->>> 			     vf_index < (vf_group + 1) * vf_per_group &&
->>> 			     vf_index < num_vfs;
->>> 			     vf_index++) {
->>>+
->>>+				/*
->>>+				 * Figure out the master PE and put all slave
->>>+				 * PEs to master PE's list.
->>>+				 */
->>>+				pe = &phb->ioda.pe_array[pdn->offset + vf_index];
->>>+				if (!master_pe) {
->>>+					pe->flags |= PNV_IODA_PE_MASTER;
->>>+					INIT_LIST_HEAD(&pe->slaves);
->>>+					master_pe = pe;
->>>+					mutex_lock(&phb->ioda.pe_list_mutex);
->>>+					list_add_tail(&pe->list, &phb->ioda.pe_list);
->>>+					mutex_unlock(&phb->ioda.pe_list_mutex);
->>>+				} else {
->>>+					pe->flags |= PNV_IODA_PE_SLAVE;
->>>+					pe->master = master_pe;
->>>+					list_add_tail(&pe->list,
->>>+						&master_pe->slaves);
->>>+				}
->>>+
->>> 				for (vf_index1 = vf_group * vf_per_group;
->>> 				     vf_index1 < (vf_group + 1) * vf_per_group &&
->>> 				     vf_index1 < num_vfs;
->>>diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
->>>index 0e4f42e..f3aead0 100644
->>>--- a/arch/powerpc/platforms/powernv/pci.c
->>>+++ b/arch/powerpc/platforms/powernv/pci.c
->>>@@ -739,7 +739,7 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
->>> 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
->>> 	struct pnv_phb *phb = hose->private_data;
->>> #ifdef CONFIG_PCI_IOV
->>>-	struct pnv_ioda_pe *pe;
->>>+	struct pnv_ioda_pe *pe, *slave;
->>> 	struct pci_dn *pdn;
->>>
->>> 	/* Fix the VF pdn PE number */
->>>@@ -751,10 +751,23 @@ void pnv_pci_dma_dev_setup(struct pci_dev *pdev)
->>> 			    (pdev->devfn & 0xff))) {
->>> 				pdn->pe_number = pe->pe_number;
->>> 				pe->pdev = pdev;
->>>-				break;
->>>+				goto found;
->>>+			}
->>>+
->>>+			if ((pe->flags & PNV_IODA_PE_MASTER) &&
->>>+			    (pe->flags & PNV_IODA_PE_VF)) {
->>>+				list_for_each_entry(slave, &pe->slaves, list) {
->>>+					if (slave->rid == ((pdev->bus->number << 8)
->>>+					   | (pdev->devfn & 0xff))) {
->>>+						pdn->pe_number = slave->pe_number;
->>>+						slave->pdev = pdev;
->>>+						goto found;
->>>+					}
->>>+				}
->>> 			}
->>> 		}
->>> 	}
->>>+found:
->>> #endif /* CONFIG_PCI_IOV */
->>>
->>> 	if (phb && phb->dma_dev_setup)
->>>-- 
->>>1.7.9.5
->>
->>-- 
->>Richard Yang
->>Help you, Help me
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 31 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c2482da..12633ab 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -66,6 +66,8 @@ struct pci_dev_resource {
+ 	resource_size_t end;
+ 	resource_size_t add_size;
+ 	resource_size_t min_align;
++	resource_size_t alt_size;
++	resource_size_t alt_align;
+ 	unsigned long flags;
+ };
+ 
+@@ -88,15 +90,16 @@ static void free_list(struct list_head *head)
+  * @add_size:	additional size to be optionally added
+  *              to the resource
+  */
+-static int add_to_list(struct list_head *head,
++static int __add_to_list(struct list_head *head,
+ 		 struct pci_dev *dev, struct resource *res,
+-		 resource_size_t add_size, resource_size_t min_align)
++		 resource_size_t add_size, resource_size_t min_align,
++		 resource_size_t alt_size, resource_size_t alt_align)
+ {
+ 	struct pci_dev_resource *tmp;
+ 
+ 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
+ 	if (!tmp) {
+-		pr_warn("add_to_list: kmalloc() failed!\n");
++		pr_warn("__add_to_list: kmalloc() failed!\n");
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -107,12 +110,20 @@ static int add_to_list(struct list_head *head,
+ 	tmp->flags = res->flags;
+ 	tmp->add_size = add_size;
+ 	tmp->min_align = min_align;
++	tmp->alt_size = alt_size;
++	tmp->alt_align = alt_align;
+ 
+ 	list_add(&tmp->list, head);
+ 
+ 	return 0;
+ }
+ 
++static int add_to_list(struct list_head *head,
++		 struct pci_dev *dev, struct resource *res)
++{
++	return __add_to_list(head, dev, res, 0, 0, 0, 0);
++}
++
+ static void remove_from_list(struct list_head *head,
+ 				 struct resource *res)
+ {
+@@ -378,9 +389,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+ 			if (fail_head)
+-				add_to_list(fail_head, dev_res->dev, res,
+-					    0 /* don't care */,
+-					    0 /* don't care */);
++				add_to_list(fail_head, dev_res->dev, res);
+ 			reset_resource(res);
+ 		}
+ 	}
+@@ -466,7 +475,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Save original start, end, flags etc at first */
+ 	list_for_each_entry(dev_res, head, list) {
+-		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
++		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
+ 			free_list(&save_head);
+ 			goto requested_and_reassign;
+ 		}
+@@ -1019,8 +1028,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0,
+-			    min_align);
++		__add_to_list(realloc_head, bus->self, b_res,
++			      size1 - size0, min_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long)size1-size0);
+@@ -1222,7 +1231,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				add_to_align_test_list(&align_test_add_list,
+ 							align, r_size);
+ 				r->end = r->start - 1;
+-				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
++				__add_to_list(realloc_head, dev, r,
++					      r_size, align, 0, 0);
+ 				sum_add_size += r_size;
+ 				if (align > max_add_align)
+ 					max_add_align = align;
+@@ -1293,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
+-				min_add_align);
++		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
++				min_add_align, 0, 0);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long) (size1 - size0),
+@@ -1331,8 +1341,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[0].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
+-				pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_1:
+@@ -1343,8 +1353,8 @@ handle_b_res_1:
+ 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[1].end -= pci_cardbus_io_size;
+-		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
+-				 pci_cardbus_io_size);
++		__add_to_list(realloc_head, bridge, b_res + 1,
++			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
+ 	}
+ 
+ handle_b_res_2:
+@@ -1381,8 +1391,9 @@ handle_b_res_2:
+ 				  IORESOURCE_STARTALIGN;
+ 		if (realloc_head) {
+ 			b_res[2].end -= pci_cardbus_mem_size;
+-			add_to_list(realloc_head, bridge, b_res+2,
+-				 pci_cardbus_mem_size, pci_cardbus_mem_size);
++			__add_to_list(realloc_head, bridge, b_res + 2,
++				pci_cardbus_mem_size, pci_cardbus_mem_size,
++				0, 0);
+ 		}
+ 
+ 		/* reduce that to half */
+@@ -1397,8 +1408,8 @@ handle_b_res_3:
+ 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
+ 	if (realloc_head) {
+ 		b_res[3].end -= b_res_3_size;
+-		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
+-				 pci_cardbus_mem_size);
++		__add_to_list(realloc_head, bridge, b_res + 3,
++				b_res_3_size, pci_cardbus_mem_size, 0, 0);
+ 	}
+ 
+ handle_done:
 -- 
-Richard Yang
-Help you, Help me
+1.8.4.5
 
