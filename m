@@ -1,123 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailuogwdur.emc.com ([128.221.224.79]:52239 "EHLO
-	mailuogwdur.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444AbbINIaL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 04:30:11 -0400
-From: "Ballabio, Dario" <dario.ballabio@emc.com>
-To: Hannes Reinecke <hare@suse.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Arthur Marsh <arthur.marsh@internode.on.net>,
-	"James E.J. Bottomley" <JBottomley@odin.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>
-Date: Mon, 14 Sep 2015 04:31:06 -0400
-Subject: RE: [Bugfix 3/3] eata: Enhance eata driver to support PCI device
- hot-removal
-Message-ID: <EB35ED741F0E024A8A7C30A8B22D7DA61FAF5D3D98@MX27A.corp.emc.com>
-References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
- <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
- <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
- <55F6837A.5020807@suse.de>
-In-Reply-To: <55F6837A.5020807@suse.de>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:3867 "EHLO
+	ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751739AbbIPHh3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 03:37:29 -0400
+Message-ID: <55F91C34.4070800@internode.on.net>
+Date: Wed, 16 Sep 2015 17:07:24 +0930
+From: Arthur Marsh <arthur.marsh@internode.on.net>
 MIME-Version: 1.0
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com> <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com> <55F6EF40.50403@internode.on.net> <55F78306.3000802@linux.intel.com> <55F7C691.8000406@internode.on.net> <55F8F90D.2050703@linux.intel.com>
+In-Reply-To: <55F8F90D.2050703@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Agreed, It does not make sense to have  this driver converted to a hot plug api.
-
-Cheers,
 
 
+Jiang Liu wrote on 16/09/15 14:37:
+> On 2015/9/15 15:19, Arthur Marsh wrote:
+>>
+>>
+>> Jiang Liu wrote on 15/09/15 12:01:
+>>
+>>> HI Arthur,
+>>>      Really appreciate your help to test the patches. That's
+>>> a good sign we have moved forward a bit:)
+>>>      For kexec, it's always challenging to me. So could you
+>>> please help to provide full dmesg logs with working kernels
+>>> so I could try to figure out the order among scsi and PCI devices.
+>>> It may be shutdown order related.
+>>> Thanks!
+>>> Gerry
+>>
+>> OK, attached is the dmesg output from the 4.2.0 kernel where kexec worked.
+> Hi Arthur,
+> 	Could you please also help to capture the log messages
+> of kexec, I need to those log messages to figure out the order
+> to shutdown PCI devices and scsi devices during kexec.
+> Thanks!
+> Gerry
+>
 
-***************************************
-Ph.D. Dario Ballabio
-Principal Field Support Specialist, EMC EMEA 
-Mobile phone: +393487978851
+How would I capture the log messages of kexec (assuming that there are 
+any, I couldn't see from the manual page entries and haven't seen 
+anything beyond the screen images that I have already sent you)?
 
+Regards,
 
-
------Original Message-----
-From: Hannes Reinecke [mailto:hare@suse.de] 
-Sent: Monday, September 14, 2015 10:21 AM
-To: Jiang Liu; Thomas Gleixner; Bjorn Helgaas; Arthur Marsh; Ballabio, Dario; James E.J. Bottomley
-Cc: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org; linux-scsi@vger.kernel.org; x86@kernel.org
-Subject: Re: [Bugfix 3/3] eata: Enhance eata driver to support PCI device hot-removal
-
-On 09/14/2015 05:08 AM, Jiang Liu wrote:
-> Due to having no hardware for testing, this is just a sample code to 
-> support PCI device hot-removal. It just passing compilation, no any 
-> tests.
-> 
-> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->  drivers/scsi/eata.c |   26 ++++++++++++++++++++++++++
->  1 file changed, 26 insertions(+)
-> 
-> diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c index 
-> b92e6856f909..f3bd7cbf260e 100644
-> --- a/drivers/scsi/eata.c
-> +++ b/drivers/scsi/eata.c
-> @@ -1474,6 +1474,21 @@ static unsigned int port_probe(unsigned long 
-> port_base,  #ifdef CONFIG_PCI  static int eata2x_pci_device_count;
->  
-> +/* TODO: need help here to shutdown the scsi host and release 
-> +resources */ static void port_remove(unsigned int id, resource_size_t port_base,
-> +			struct pci_dev *pdev)
-> +{
-> +	struct Scsi_Host *shost = sh[id];
-> +
-> +	/* TODO: stop scsi device */
-> +	scsi_unregister(shost);
-> +	/* TODO: clean up resources allocated by port_detect() */
-> +	clear_bit(id, eata_board_bitmap);
-> +	free_irq(shost->irq, &sha[id]);
-> +	release_region(port_base, REGION_SIZE);
-> +	ida_simple_remove(&eata_ida, id);
-> +}
-> +
->  static int eata2x_pci_probe(struct pci_dev *dev, const struct 
-> pci_device_id *id)  {
->  	int i, ret = -ENXIO;
-> @@ -1521,6 +1536,16 @@ out_error:
->  	return ret;
->  }
->  
-> +static void eata2x_pci_remove(struct pci_dev *pdev) {
-> +	int id = (int)(long)dev_get_drvdata(&pdev->dev);
-> +	resource_size_t port_base;
-> +
-> +	port_base = pci_resource_start(pdev, 0) + PCI_BASE_ADDRESS_0;
-> +	port_remove(id, port_base, pdev);
-> +	pci_disable_device(pdev);
-> +}
-> +
->  static struct pci_device_id eata2x_tbl[] = {
->  	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_SCSI << 8, PCI_ANY_ID) },
->  	{ },
-> @@ -1531,6 +1556,7 @@ static struct pci_driver eata2x_pci_driver = {
->  	.name		= "eata",
->  	.id_table	= eata2x_tbl,
->  	.probe		= eata2x_pci_probe,
-> +	.remove		= eata2x_pci_remove,
->  };
->  
->  static int eata2x_probe_pci_devices(struct scsi_host_template *tpnt)
-> 
-Welll ... if you don't have hardware (and I strongly hope you refer to 'hardware able to do hotplugging', not 'hardware for the eata driver'
-...) why add the code at all?
-Chances are no-one will ever need eata PCI hotplug; SCSI parallel typically isn't very good at hotplugging, so throwing in PCI hotplug will only confuse matters more.
-Plus due to the sheer mechanics involved here I find it very unlikely anyone will be using it in real life.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+Arthur.
