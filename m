@@ -1,102 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46649 "EHLO mx1.redhat.com"
+Received: from foss.arm.com ([217.140.101.70]:55052 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752591AbbIEUWE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 5 Sep 2015 16:22:04 -0400
-Message-ID: <55EB4EEA.2070409@redhat.com>
-Date: Sat, 05 Sep 2015 16:22:02 -0400
-From: Jon Masters <jcm@redhat.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>, Duc Dang <dhdang@apm.com>
-CC: Tanmay Inamdar <tinamdar@apm.com>,
+	id S1752182AbbIPL2j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Sep 2015 07:28:39 -0400
+Date: Wed, 16 Sep 2015 12:28:52 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+Cc: David Daney <ddaney@caviumnetworks.com>,
+	David Daney <ddaney.cavm@gmail.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	"grant.likely@linaro.org" <grant.likely@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: X-Gene: Unhandled fault: synchronous external abort in pci_generic_config_read32
-References: <20150724224258.GA23990@google.com> <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com> <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com> <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com> <20150728212944.GA12958@google.com> <CADaLNDkOLiyPmVC3VwpnbrfAKFmNwSVJKdChjQFdQqs7XP-Ddg@mail.gmail.com> <20150729012255.GA18606@google.com> <20150729155509.GA31170@google.com> <CADaLNDk=+J_yOer1ferSCNb_xAC42ULtP2FyCLmYMwa+Gj=vfA@mail.gmail.com> <CAErSpo4VFh7rv81sCAG-eCXVyZh4ub8Trh-ntZhyfy7BzqTr5g@mail.gmail.com> <CADaLNDkUQHzGACfFmYDeJWnaNrKmJUDx4Rby60OWr4FzOjx3rA@mail.gmail.com> <CAErSpo7aDYKwy4MC6ZPf7hNd4MPE-LARiOVKutFfDFFkHY7qjQ@mail.gmail.com> <CADaLNDmnnZOoB1fxO=rQQa-eqT=B9G24rUrN_GzwAkFoC3Acbw@mail.gmail.com> <CAErSpo59jH3qeqThG-OO_dqB0fU5gmgC89Xued5QKrbB0dt2yg@mail.gmail.com> <55EB4CD8.8080405@redhat.com>
-In-Reply-To: <55EB4CD8.8080405@redhat.com>
-Content-Type: text/plain; charset=utf-8
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in
+ bus_max calculation.
+Message-ID: <20150916112852.GC17510@red-moon>
+References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com>
+ <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com>
+ <20150915174934.GL31157@arm.com>
+ <55F85D4E.9020604@caviumnetworks.com>
+ <20150915183500.GR31157@arm.com>
+ <55F86764.4060502@caviumnetworks.com>
+ <20150916104152.GC28771@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150916104152.GC28771@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/05/2015 04:13 PM, Jon Masters wrote:
-> On 08/11/2015 03:28 PM, Bjorn Helgaas wrote:
->> On Mon, Aug 10, 2015 at 2:07 PM, Duc Dang <dhdang@apm.com> wrote:
->>> On Mon, Aug 10, 2015 at 10:42 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>> On Mon, Aug 10, 2015 at 12:16 PM, Duc Dang <dhdang@apm.com> wrote:
->>>>> On Monday, August 10, 2015, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>>>>>
->>>>>> On Fri, Jul 31, 2015 at 12:00 PM, Duc Dang <dhdang@apm.com> wrote:
->>>>>>> On Wed, Jul 29, 2015 at 8:55 AM, Bjorn Helgaas <bhelgaas@google.com>
->>>>>>> wrote:
->>>>>>>> On Tue, Jul 28, 2015 at 08:22:55PM -0500, Bjorn Helgaas wrote:
->>>>>>>>> On Tue, Jul 28, 2015 at 02:50:39PM -0700, Duc Dang wrote:
->>>>>>>>
->>>>>>>>>> Do you have another PCIe card to try on the same reboot test on this
->>>>>>>>>> board?
->>>>>>>>>
->>>>>>>>> I've seen this on at least two Mellanox cards.  I'm running similar
->>>>>>>>> tests
->>>>>>>>> on a different type of card now.
->>>>>>>>
->>>>>>>> FWIW, reboot tests on two machines with Mellanox cards failed, while
->>>>>>>> the
->>>>>>>> same test on a machine with a different proprietary card succeeded.
->>>>>>>
->>>>>>> Thanks, Bjorn.
->>>>>>>
->>>>>>> I don't have the same Mellanox card as yours, but I will also run
->>>>>>> similar reboot test to see if I hit the same issue with my card.
->>>>>>
->>>>>> Any more hints on this?  Nothing has changed on my end, so of course
->>>>>> I'm still seeing this, always on machines with Mellanox, and never on
->>>>>> other machines.  Could this be a hardware issue like a signal
->>>>>> integrity or margin issue?  I don't know where to go from here because
->>>>>> I'm not a hardware person, and I don't know anything to do in
->>>>>> software.
->>>>>
->>>>>
->>>>> Hi Bjorn,
->>>>>
->>>>> I tried to run similar reboot tests on 2 different Mellanox cards (Connect-X
->>>>> family, one card has 2 10G interfaces, the other one has 1 port that
->>>>> supports InfiniBand) with U-Boot 1.15.12 and linux 4.2-rc5 and I did not see
->>>>> the crash that you encounterred.
->>>>>
->>>>> Did you check if your Mellanox cards have latest firmware? I did see some
->>>>> link issues on my Mellanox cards with its old firmware before.
->>>>
->>>> Good idea; I'll check that, too.  Also, I just learned that these
->>>> cards on installed with an extender card because of some space issues,
->>>> so we're going to test again without the extender.
->>>
->>> Hi Bjorn,
->>>
->>> Are other cards that passed your test installed directly to the
->>> on-board PCIe slot?
->>> If yes, then this is a good data point and it will be useful to test
->>> the case where
->>> your Mellanox cards are directly installed into the on-board PCIe slot.
->>
->> The cards that passed the test were installed directly, with  no
->> extender.  We removed the extender from one of the machines with the
->> Mellanox card and have not seen this issue since then.  I think it's
->> very likely that the problem is related to using the extender.
+On Wed, Sep 16, 2015 at 11:41:53AM +0100, Will Deacon wrote:
+
+[...]
+
+> > Here is the current code:
+> > 
+> > >> 	bus_range = pci->cfg.bus_range;
+> > >> 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+> > >> 		u32 idx = busn - bus_range->start;
+> > 
+> > The index is offset by the bus range start...
+> > 
+> > >> 		u32 sz = 1 << pci->cfg.ops.bus_shift;
+> > >>
+> > >> 		pci->cfg.win[idx] = devm_ioremap(dev,
+> > >> 						 pci->cfg.res.start + busn * sz,
+> > >> 						 sz);
+> > 
+> > But, the offset into the "reg" property is the raw bus number.
+> > 
+> > 
+> > >> 		if (!pci->cfg.win[idx])
+> > >> 			return -ENOMEM;
+> > >> 	}
+> > 
+> > 
+> > I hope that makes it more clear.
 > 
-> If you're trying to use Mellanox cards in (for example) an APM Mustang
-> like system with a PCIe extender card (for example a 90 degree angle
-> adjustment for a low profile server case), you might want to ping me
-> offline. I have procured a number of these over the past couple of years
-> for my home lab and have found one that works (almost) reliably on that
-> particular hardware platform and does 10G in my home lab.
+> Got it. So we should be using idx instead of busn in the devm_ioremap
+> call above.
 
-Traveling for the holiday, but I guess it doesn't need to be a secret. I
-think I have found some success with this one (but I have ordered many
-different ones over the past year so will confirm next week):
+I think that's not what's specified in the PCI firmware specification,
+at least for the MMCFG regions. For MMCFG regions (quoting the specs)
+the "base address of the memory mapped configuration space always
+corresponds to bus number 0 (regardless of the start bus number decoded
+by the host bridge)..."
 
-http://www.amazon.com/gp/product/B00H8VVD00?psc=1&redirect=true&ref_=oh_aui_search_detailpage
+For the x86 implementation have a look at:
 
-Specifically, the fixed angle adapter brackets generally DO NOT work.
+arch/x86/pci/mmconfig_64.c mcfg_ioremap()
 
-Jon.
+static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
+{
+	void __iomem *addr;
+	u64 start, size;
+	int num_buses;
 
+	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+	num_buses = cfg->end_bus - cfg->start_bus + 1;
+	size = PCI_MMCFG_BUS_OFFSET(num_buses);
+	addr = ioremap_nocache(start, size);
+	if (addr)
+		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
+	return addr;
+}
+
+The MCFG config accessors add back the PCI_MMCFG_BUS_OFFSET(cfg->start_bus)
+to the virtual address so that the proper virtual address is used when
+issuing the config cycles, that's my understanding.
+
+So IMO we have to define what "reg" represents for ECAM in DT, we can't
+leave this open to interpretation (and I think makng MCFG and DT config
+work the same way would be ideal).
+
+Thoughts appreciated, I will countercheck on my side.
+
+Lorenzo
