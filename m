@@ -1,40 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:64093 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752009AbbIRHUH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 03:20:07 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 2/3] PCI: Add quirks for devices found on Cavium ThunderX SoCs.
-Date: Fri, 18 Sep 2015 09:19:46 +0200
-Message-ID: <3066583.BWDZlYWxXU@wuerfel>
-In-Reply-To: <1442529694-1792-3-git-send-email-ddaney.cavm@gmail.com>
-References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com> <1442529694-1792-3-git-send-email-ddaney.cavm@gmail.com>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:27104 "EHLO
+	ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751397AbbIPL37 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 07:29:59 -0400
+Message-ID: <55F952B2.6080102@internode.on.net>
+Date: Wed, 16 Sep 2015 20:59:54 +0930
+From: Arthur Marsh <arthur.marsh@internode.on.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+Subject: Re: [Bugfix 0/3] Convert eata driver to a normal PCI device driver
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com> <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com> <55F6EF40.50403@internode.on.net> <55F78306.3000802@linux.intel.com> <55F7C691.8000406@internode.on.net> <55F8F90D.2050703@linux.intel.com> <55F91C34.4070800@internode.on.net> <55F9266C.5060609@linux.intel.com>
+In-Reply-To: <55F9266C.5060609@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 17 September 2015 15:41:33 David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> The on-chip devices all have fixed bars.  So, fix them up.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> 
 
-You should be able to just mark the BARs as fixed in DT and not need
-this hack. If that doesn't work with current kernels, it would be
-better to fix the kernel to respect the flags.
 
-	Arnd
+Jiang Liu wrote on 16/09/15 17:51:
+
+> Hi Arthur,
+> 	It would be great if we could capture the text as in the
+> picture posted by you at:
+> 	http://www.users.on.net/~arthur.marsh/20150915547.jpg
+> 	I guess a serial console could help us to capture those
+> log messages. To use serial console, we need to setup serial cable,
+> configure grub and kernel to use serial port as console.
+> Thanks!
+> Gerry
+>
+>>
+>> Regards,
+>>
+>> Arthur.
+>
+
+I've already included the text of what appeaered in the image above:
+
+sd 0:0:6:0: abort, mbox 63.
+EATA0: abort, mbox 63 is in use.
+sd 0:0:6:0: reset, enter.
+EATA0: reset, mbox 63 in reset.
+EATA0: reset, board reset done, enabling interrupts.
+EATA0: reset, interrupts disabled, loops 100469.
+EATA0: reset, mbox 63 locked, DID_RESET, done.
+EATA0: reset, exit, done.
+sd 0:0:6:0: qcomm, mbox 0, adapter busy, will start
+sd 0:0:6:0: abort, mbox 0.
+EATA0: abort, timeout error.
+sd 0:0:6:0: reset, enter.
+EATA0: reset, exit, timeout error.
+sd 0:0:6:0 Device offlinled - not ready after error recovery
+sd 0:0:6:0 rejecting I/O to offline device
+sd 0:0:6:0 rejecting I/O to offline device
+sd 0:0:6:0 [sda] Synchronize Cache(10) failed: Result: 
+hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+starting new kernel
+
+As mentioned previously this occurred after the normal Synchronizing 
+SCSI cache messages.
+
+I don't think that there is anything else that gets sent to the console.
+
+Arthur.
