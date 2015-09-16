@@ -1,106 +1,112 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <56063AB7.9030309@internode.on.net>
-Date: Sat, 26 Sep 2015 15:57:03 +0930
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-MIME-Version: 1.0
-To: Jiang Liu <jiang.liu@linux.intel.com>,
-	James Bottomley <James.Bottomley@HansenPartnership.com>
-CC: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Ballabio Dario <dario.ballabio@emc.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Dario Ballabio <ballabio_dario@emc.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, x86@kernel.org
-Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
- device drivers
-References: <20150916134211.GA21535@infradead.org> <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com> <5601D550.5000801@internode.on.net> <1442961929.15264.4.camel@HansenPartnership.com> <5601E5FE.7020706@internode.on.net> <56023771.5010006@linux.intel.com> <5602829C.5090500@internode.on.net> <1443019207.2240.27.camel@HansenPartnership.com> <56037C09.5050201@linux.intel.com> <560390A1.5060503@internode.on.net>
-In-Reply-To: <560390A1.5060503@internode.on.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 12/53] PCI: Simplify res reference using in __assign_resources_sorted()
+Date: Wed, 16 Sep 2015 14:57:10 -0700
+Message-Id: <1442440671-5361-13-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+There are couples of dev_res->res reference, to make code more readable
+use res instead of dev_res->res directly.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
 
-Arthur Marsh wrote on 24/09/15 15:26:
->
->
-> Jiang Liu wrote on 24/09/15 13:58:
->
->> Hi James,
->>     Thanks for review. How about the attached patch which addresses
->> the three suggestions from you?
->> Thanks!
->> Gerry
->
-> I've applied the patch, rebuilt the kernel and verified that it allows
-> unloading of the eata module and reloading it, as well as a successful
-> kexec.
->
-> Regards,
->
-> Arthur.
-
-After some more thorough testing I've encountered an ongoing problem 
-trying to use kexec with filesystems mounted with the eata driver.
-
-If I boot up and have the eata driver loaded but no filesystem check or 
-mounting of filesystems on the disk attached to the DPT2044W controller, 
-then attempt a kexec reboot I get the reboot pausing after the 
-"synchronizing scsi cache" messages and getting the errors that I have 
-included as pictures in my previous reports.
-
-If I do a normal boot which includes eata being loaded, the disk 
-attached to the DPT2044W controller having its filesystems checked and 
-mounted, then attempt a kexec reboot, I get the reboot pausing after the 
-"synchronizing SCSI cache" messages as before.
-
-If I un-mount the filesystems on the disk attached to the DPT2044W 
-controller after start-up and try a reboot I get the same problem.
-
-If I do modprobe -r eata after un-mounting the filesystems on the disk 
-attached to the DPT2044W controller after a start-up kexec *works fine*.
-
-If I do:
-
-start-up
-un-mount filesystems on disk attached to DPT2044W controller
-modprobe -r eata
-modprobe eata
-fsck -a of filesystems on disk attached to DPT2044W controller
-mount filesystems
-
-then a kexec reboot works fine.
-
-I did some more experimenting and found a workaround:
-
-I was unable to blacklist the eata module but if I did:
-
-modprobe -r eata
-modprobe eata
-
-in a cron job before the fsck and mount commands then
-I could then perform a kexec reboot successfully.
-
-I also verified that if I did:
-
-modprobe -r eata
-
-after eata was loaded on boot-up without any fsck or mounting of 
-filesystems on the disk attached to the DPT2044W controller using the 
-eata the kexec reboot worked fine.
-
-In summary:
-
-if eata is loaded kexec reboot will fail unless a modprobe -r eata is 
-done either manually or by a cron job.
-
-if a modprobe -r eata has been done, then even if I modprobe eata and 
-fsck and mount filesystems, kexec reboot works.
-
-Any suggestions for further tests or checks welcome.
-
-Arthur.
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a3d48ef..9d7adab 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -452,6 +452,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+ 	resource_size_t add_align;
++	struct resource *res;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -467,8 +468,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+-		dev_res->res->end += get_res_add_size(realloc_head,
+-							dev_res->res);
++		res = dev_res->res;
++		res->end += get_res_add_size(realloc_head, res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+@@ -477,16 +478,16 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		 * 2. resource with IORESOURCE_SIZEALIGN
+ 		 *    update size above already change alignment.
+ 		 */
+-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++		if (!(res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+-		add_align = get_res_add_align(realloc_head, dev_res->res);
++		add_align = get_res_add_align(realloc_head, res);
+ 
+ 		if (add_align) {
+-			resource_size_t r_size = resource_size(dev_res->res);
++			resource_size_t r_size = resource_size(res);
+ 
+-			dev_res->res->start = add_align;
+-			dev_res->res->end = add_align + r_size - 1;
++			res->start = add_align;
++			res->end = add_align + r_size - 1;
+                }
+ 	}
+ 
+@@ -508,21 +509,21 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	/* check failed type */
+ 	fail_type = pci_fail_res_type_mask(&local_fail_head);
+ 	/* remove not need to be released assigned res from head list etc */
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list)
+-		if (dev_res->res->parent &&
+-		    !pci_need_to_release(fail_type, dev_res->res)) {
++	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++		res = dev_res->res;
++		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+-			remove_from_list(realloc_head, dev_res->res);
+-			remove_from_list(&save_head, dev_res->res);
++			remove_from_list(realloc_head, res);
++			remove_from_list(&save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
++	}
+ 
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+ 	list_for_each_entry(dev_res, head, list) {
+-		struct resource *res = dev_res->res;
+-
++		res = dev_res->res;
+ 		if (res->parent) {
+ 			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+ 				   "BAR %d: released %pR\n",
+@@ -533,8 +534,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+-		struct resource *res = save_res->res;
+-
++		res = save_res->res;
+ 		res->start = save_res->start;
+ 		res->end = save_res->end;
+ 		res->flags = save_res->flags;
+-- 
+1.8.4.5
 
