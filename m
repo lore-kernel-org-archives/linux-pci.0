@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29111 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:20204 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756049AbbJAF7X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:59:23 -0400
+	with ESMTP id S1752349AbbIPWPJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 18:15:09 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -11,95 +11,144 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Yijing Wang <wangyijing@huawei.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 21/53] PCI: Treat ROM resource as optional during realloc
-Date: Wed, 30 Sep 2015 22:52:55 -0700
-Message-Id: <1443678807-786-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v5 03/53] PCI: Use correct align for optional only resources during sorting
+Date: Wed, 16 Sep 2015 14:57:01 -0700
+Message-Id: <1442440671-5361-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current on realloc path, we just ignore ROM resource if we can not assign
-them in first try.
+During sorting before assign, we only put resource with non-zero align
+in the sorted list, so for optional resources that required size is 0 and
+only have optional parts, we need to have correct align.
 
-Treat ROM resources as optional resources,so try to allocate them together
-with required ones, if can not assign them, could go with other required
-resources only, and try to allocate them second time in expand path.
+While treating SRIOV as optional resources, we always read alignment for
+SRIOV bars every time, so they are ok.
+Hotplug bridge resources are using STARTALIGN so it is ok when size is 0
+if we have correct start for them.
 
+Later we want to treat the ROM BAR as optional resource, and it has
+SIZEALIGN, so align=size will be 0. We need to find a way to get align
+for them.
+
+We can use optional resource align instead in that case, and it
+is ok for SRIOV path and hotplug bridge resource path.
+
+We need to pass realloc list from sizing stage to sorting stage, and
+get entry from realloc list and calculate align from the entry.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
+ drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 42 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 0a89d06..554d019 100644
+index f816472..aea35b6 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -377,18 +377,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		idx = res - &dev_res->dev->resource[0];
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
--			if (fail_head) {
--				/*
--				 * if the failed res is for ROM BAR, and it will
--				 * be enabled later, don't add it to the list
--				 */
--				if (!((idx == PCI_ROM_RESOURCE) &&
--				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
--					add_to_list(fail_head,
--						    dev_res->dev, res,
--						    0 /* don't care */,
--						    0 /* don't care */);
--			}
-+			if (fail_head)
-+				add_to_list(fail_head, dev_res->dev, res,
-+					    0 /* don't care */,
-+					    0 /* don't care */);
- 			reset_resource(res);
- 		}
- 	}
-@@ -1148,6 +1140,19 @@ out:
- 	return good_align;
+@@ -145,9 +145,42 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	return dev_res->min_align;
  }
  
-+static inline bool is_optional(int i)
++static resource_size_t __pci_resource_alignment(
++				struct pci_dev *dev,
++				struct resource *r,
++				struct list_head *realloc_head)
 +{
++	resource_size_t r_align = pci_resource_alignment(dev, r);
++	resource_size_t orig_start, orig_end;
++	struct pci_dev_resource *dev_res;
 +
-+	if (i == PCI_ROM_RESOURCE)
-+		return true;
++	if (r_align || !realloc_head)
++		return r_align;
 +
-+#ifdef CONFIG_PCI_IOV
-+	if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
-+		return true;
-+#endif
++	dev_res = res_to_dev_res(realloc_head, r);
++	if (!dev_res || !dev_res->add_size)
++		return r_align;
 +
-+	return false;
++	orig_start = r->start;
++	orig_end = r->end;
++	r->end += dev_res->add_size;
++	if ((r->flags & IORESOURCE_STARTALIGN)) {
++		resource_size_t r_size = resource_size(r);
++
++		r->start = dev_res->min_align;
++		r->end = r->start + r_size - 1;
++	}
++	r_align = pci_resource_alignment(dev, r);
++	r->start = orig_start;
++	r->end = orig_end;
++
++	return r_align;
 +}
- /**
-  * pbus_size_mem() - size the memory window of a given bus
-  *
-@@ -1204,10 +1209,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
  
- 			r_size = resource_size(r);
- 			align = pci_resource_alignment(dev, r);
--#ifdef CONFIG_PCI_IOV
--			/* put SRIOV requested res to the optional list */
--			if (realloc_head && i >= PCI_IOV_RESOURCES &&
--					i <= PCI_IOV_RESOURCE_END) {
-+			/* put SRIOV/ROM res to realloc list */
-+			if (realloc_head && is_optional(i)) {
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
-@@ -1217,7 +1220,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 					max_add_align = align;
- 				continue;
- 			}
--#endif
-+
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
+ /* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
++static void pdev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
++				 struct list_head *head)
+ {
+ 	int i;
+ 
+@@ -165,7 +198,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		if (!(r->flags) || r->parent)
+ 			continue;
+ 
+-		r_align = pci_resource_alignment(dev, r);
++		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+ 				 i, r);
+@@ -183,8 +216,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		list_for_each_entry(dev_res, head, list) {
+ 			resource_size_t align;
+ 
+-			align = pci_resource_alignment(dev_res->dev,
+-							 dev_res->res);
++			align = __pci_resource_alignment(dev_res->dev,
++							 dev_res->res,
++							 realloc_head);
+ 
+ 			if (r_align > align) {
+ 				n = &dev_res->list;
+@@ -197,6 +231,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ }
+ 
+ static void __dev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+ 	u16 class = dev->class >> 8;
+@@ -213,7 +248,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
+ 
+-	pdev_sort_resources(dev, head);
++	pdev_sort_resources(dev, realloc_head, head);
+ }
+ 
+ static inline void reset_resource(struct resource *res)
+@@ -501,7 +536,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
+ 
+-	__dev_sort_resources(dev, &head);
++	__dev_sort_resources(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -514,7 +549,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, &head);
++		__dev_sort_resources(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
 -- 
 1.8.4.5
 
