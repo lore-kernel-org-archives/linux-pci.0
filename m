@@ -1,122 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:37785 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754857AbbI3JT0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 05:19:26 -0400
-Received: by wicfx3 with SMTP id fx3so51993260wic.0
-        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2015 02:19:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAHM4w1=g=UFoz=R-6hxJC0=fSieN1WDvZT97ykL1b3_YPhBjZg@mail.gmail.com>
-References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
- <1440678857-27118-4-git-send-email-gabriel.fernandez@linaro.org> <CAHM4w1=g=UFoz=R-6hxJC0=fSieN1WDvZT97ykL1b3_YPhBjZg@mail.gmail.com>
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Date: Wed, 30 Sep 2015 11:18:45 +0200
-Message-ID: <CAG374jAx8DN8GXkv7O0jcgnvVTnH4U3LegX-hPq5RWo1_cy+OQ@mail.gmail.com>
-Subject: Re: [PATCH v4 3/4] PCI: st: Provide support for the sti PCIe controller
-To: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 21/53] PCI: Move saved required resource list out of required+optional assigning
+Date: Wed, 16 Sep 2015 14:57:19 -0700
+Message-Id: <1442440671-5361-22-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Pratyush,
+We will need to share saved required list for alt_size support, so move
+it out from required+optional assigning.
 
-Thanks for the review.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
 
-Best regards
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 16e5f3d..1af84f3 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -456,6 +456,9 @@ static bool has_addon(struct list_head *head,
+ 	int add_count = 0;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 
++	if (!realloc_head)
++		return false;
++
+ 	/* check if we have add really */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
+@@ -492,9 +495,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
+ }
+ 
+ static bool __assign_resources_required_optional_sorted(struct list_head *head,
++				 struct list_head *save_head,
+ 				 struct list_head *realloc_head)
+ {
+-	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+@@ -502,12 +505,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 	resource_size_t add_align, add_size;
+ 	struct resource *res;
+ 
+-	if (!has_addon(head, realloc_head))
+-		return false;
+-
+-	if (!save_resources(head, &save_head))
+-		return false;
+-
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+@@ -548,7 +545,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 		/* Remove head list from realloc_head list */
+ 		list_for_each_entry(dev_res, head, list)
+ 			remove_from_list(realloc_head, dev_res->res);
+-		free_list(&save_head);
+ 		free_list(head);
+ 
+ 		return true;
+@@ -562,7 +558,7 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 		if (res->parent && !pci_need_to_release(fail_type, res)) {
+ 			/* remove it from realloc_head list */
+ 			remove_from_list(realloc_head, res);
+-			remove_from_list(&save_head, res);
++			remove_from_list(save_head, res);
+ 			list_del(&dev_res->list);
+ 			kfree(dev_res);
+ 		}
+@@ -581,11 +577,9 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 		}
+ 	}
+ 	/* Restore start/end/flags from saved list */
+-	list_for_each_entry(save_res, &save_head, list)
++	list_for_each_entry(save_res, save_head, list)
+ 		restore_resource(save_res, save_res->res);
+ 
+-	free_list(&save_head);
+-
+ 	return false;
+ }
+ 
+@@ -603,16 +597,24 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 *    then try to reassign add_size for some resources.
+ 	 */
+ 
++	LIST_HEAD(save_head);
++
+ 	/* Check required+optional add */
+-	if (realloc_head &&
+-	    __assign_resources_required_optional_sorted(head, realloc_head))
++	if (has_addon(head, realloc_head) &&
++	    save_resources(head, &save_head) &&
++	    __assign_resources_required_optional_sorted(head, &save_head,
++					       realloc_head)) {
++		free_list(&save_head);
+ 		return;
++	}
+ 
+ 	sort_resources(head);
+ 
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
+ 
++	free_list(&save_head);
++
+ 	/* Try to satisfy any additional optional resource
+ 		requests */
+ 	if (realloc_head)
+-- 
+1.8.4.5
 
-Gabriel
-
-On 27 August 2015 at 19:31, Pratyush Anand <pratyush.anand@gmail.com> wrote:
-> Hi Gabriel,
->
-> Looks good to me.
->
-> On Thu, Aug 27, 2015 at 6:04 PM, Gabriel Fernandez
-> <gabriel.fernandez@linaro.org> wrote:
->> sti pcie is built around a Synopsis Designware PCIe IP.
->>
->> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->
->
->> +static int st_pcie_link_up(struct pcie_port *pp)
->> +{
->> +       u32 status;
->> +       int link_up;
->
-> nit: why not bool
-
-i prefer to keep it as 'int' because the prototype of link_up callback
-is an 'int'.
-
->
->> +       int count = 0;
->
-> [...]
->
->> +static void st_pcie_board_reset(struct pcie_port *pp)
->> +{
->> +       struct st_pcie *pcie = to_st_pcie(pp);
->> +
->> +       if (!gpio_is_valid(pcie->reset_gpio))
->> +               return;
->> +
->> +       if (gpio_direction_output(pcie->reset_gpio, 0)) {
->> +               dev_err(pp->dev, "Cannot set PERST# (gpio %u) to output\n",
->> +                       pcie->reset_gpio);
->> +               return;
->> +       }
->> +
->> +       /* From PCIe spec */
->> +       msleep(2);
->> +       gpio_direction_output(pcie->reset_gpio, 1);
->> +
->> +       /*
->> +        * PCIe specification states that you should not issue any config
->> +        * requests until 100ms after asserting reset, so we enforce that here
->> +        */
->> +       msleep(100);
->
-> IIRC, specification says to wait after link training completes. So
-> shouldn't it be after st_pcie_enable_ltssm. Moreover, I wonder why
-> others do not need it.
->
-Ok i will fix it.
-
-> Reviewed-by: Pratyush Anand <pratyush.anand@gmail.com>
