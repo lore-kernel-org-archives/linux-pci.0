@@ -1,83 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:52508 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752962AbbIRTq2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 15:46:28 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	David Daney <ddaney.cavm@gmail.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 2/3] PCI: Add quirks for devices found on Cavium ThunderX SoCs.
-Date: Fri, 18 Sep 2015 21:45:50 +0200
-Message-ID: <2512701.zkjk3n3AQS@wuerfel>
-In-Reply-To: <55FC4330.10302@caviumnetworks.com>
-References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com> <3066583.BWDZlYWxXU@wuerfel> <55FC4330.10302@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from aserp1040.oracle.com ([141.146.126.69]:23246 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753136AbbIPV6m (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 17:58:42 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v5 23/53] PCI: Add support for more than two alt_size entries under same bridge
+Date: Wed, 16 Sep 2015 14:57:21 -0700
+Message-Id: <1442440671-5361-24-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
+References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 18 September 2015 10:00:32 David Daney wrote:
-> On 09/18/2015 12:19 AM, Arnd Bergmann wrote:
-> > On Thursday 17 September 2015 15:41:33 David Daney wrote:
-> >> From: David Daney <david.daney@cavium.com>
-> >>
-> >> The on-chip devices all have fixed bars.  So, fix them up.
-> >>
-> >> Signed-off-by: David Daney <david.daney@cavium.com>
-> >>
-> >
-> > You should be able to just mark the BARs as fixed in DT
-> 
-> In the case of ACPI, there is no DT.  So we would need a different 
-> solution for ACPI.  What would you recommend for ACPI?
+When we have two bridges under parent bridge, and each child
+bridge has alt_size, we need to increase parent alt_size to make
+sure it could fit all alt entries.
 
-I would expect that this does not matter at all on ACPI, because
-the devices that need it are not hot-plugged, and all boot-time
-devices are probed by the firmware: the ACPI PCI implementation
-does not reassign any BARs, except for the hotplug case.
+In the patch, we first select one big size, and then keep reducing
+the size and retrying to get the minimum value for alt_size.
 
-> Also, can you point me to the OF device tree specification where it 
-> tells how to specify PCI BAR addresses, I would especially be interested 
-> in knowing how to specify fixed SRIOV BAR addresses in the device tree.
+For example, two bridges:
+  one have 8M/8M, and 1M/1M children res.
+  one have 4M/4M, and 1M/1M children res.
 
-This is the 'n' bit mentioned sections 2.1.3 and 2.2.1.1 of the
-PCI binding. When it is set, the OS is not supposed to try to
-reassign the BAR even on machines that otherwise do a complete
-rescan.
+Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
+Before this patch, parent bridge alt_align/alt_size is 8M/14M
+that is wrong, as it can not fit two alt entries at all.
+With this patch	parent bridge alt_align/alt_size: 8M/17M.
+               8M            16M   20M   24M
+  |------------|-------------|-----|-----|
+	       8M			   25M
+	       |---------------------------|
+			       17M
+               |---9M----------|   |-5M----|
 
-The PCI binding traditionally requires you to list all PCI devices
-in DT, Linux as an extension (for the flattened DT format) allows
-leaving out the devices, but in this case you probably need to
-list every device that has a fixed BAR.
 
-> Yes, it is a bit of a hack.  That is why I put it in its own file, and 
-> only try to hack up PCI devices that exactly match the vendor and device 
-> ids that need fixing.
-> 
-> IMHO, putting infrastructure into drivers/pci/probe.c, et al. to handle 
-> this would be much more intrusive.
+At same time, child bridges required align/size: 4M/12M, 2M/6M.
+and prarent bridge required align/size: 4M/20M.
 
-My guess is that it's already there, but even if it's not, this is a
-generic well-defined case that has a standardized binding, and we should
-implement that.
+So at last, we use 8M/17M as parent bridge alt_align/alt_size.
 
-> For the record:  The PCI Enhanced Allocation (EA) capability (approved 
-> by PCI SIG on 23 October 2014) is the proper way to handle this going 
-> forward.  However, this is not yet implemented in the SoCs that this 
-> patch addresses.  Our plan is to implement the EA capability in the core 
-> PCI code, so that we do not need to keep adding devices to this fixup code.
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Tested-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 54 insertions(+), 2 deletions(-)
 
-Good, but still this should only be required for the embedded case where
-you don't have a firmware to probe the bus.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index c7e5bf3..f3077db 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1335,6 +1335,47 @@ out:
+ 	return good_align;
+ }
+ 
++static resource_size_t calculate_mem_alt_size(struct list_head *head,
++				resource_size_t max_align, resource_size_t size,
++				resource_size_t align_low)
++{
++	struct align_test_res *p;
++	resource_size_t tmp;
++	resource_size_t good_size, bad_size;
++	int count = 0, order;
++
++	good_size = ALIGN(size, align_low);
++
++	list_for_each_entry(p, head, list)
++		count++;
++
++	if (count <= 1)
++		goto out;
++
++	sort_align_test(head);
++
++	tmp = max(size, max_align);
++	order = __fls(count);
++	if ((1ULL << order) < count)
++		order++;
++	good_size = ALIGN((tmp << order), align_low);
++	bad_size = ALIGN(size, align_low) - align_low;
++	size = good_size;
++	while (size > bad_size) {
++		/* check if align/size fit all entries */
++		if (is_align_size_good(head, max_align, size, 0))
++			good_size = size;
++		else
++			bad_size = size;
++
++		size = bad_size + ((good_size - bad_size) >> 1);
++		size = round_down(size, align_low);
++	}
++
++out:
++	return good_size;
++}
++
+ static inline bool is_optional(int i)
+ {
+ 
+@@ -1381,6 +1422,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	LIST_HEAD(align_test_alt_list);
+ 	resource_size_t alt_size = 0, alt_align = 0;
+ 	resource_size_t window_align;
+ 
+@@ -1454,10 +1496,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 				dev_res = res_to_dev_res(realloc_head, r);
+ 				if (dev_res && dev_res->alt_size) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						dev_res->alt_align,
++						dev_res->alt_size);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+ 				} else if (r_size > 1) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						align, r_size);
+ 					alt_size += r_size;
+ 					if (alt_align < align)
+ 						alt_align = align;
+@@ -1477,14 +1526,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	if (size0 && realloc_head) {
+ 		alt_align = max(alt_align, window_align);
+-		alt_size = calculate_memsize(alt_size, min_size,
+-					     0, window_align);
++		/* need to increase size to fit more alt */
++		alt_size = calculate_mem_alt_size(&align_test_alt_list,
++						  alt_align, alt_size,
++						  window_align);
+ 		/* required is better ? */
+ 		if (alt_size >= size0) {
+ 			alt_align = 0;
+ 			alt_size = 0;
+ 		}
+ 	}
++	free_align_test_list(&align_test_alt_list);
+ 
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+-- 
+1.8.4.5
 
-	Arnd
