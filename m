@@ -1,75 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp1.it.da.ut.ee ([193.40.5.66]:54306 "EHLO smtp1.it.da.ut.ee"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751469AbbINHkJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Sep 2015 03:40:09 -0400
-Date: Mon, 14 Sep 2015 10:41:03 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-To: Helge Deller <deller@gmx.de>
-cc: linux-parisc@vger.kernel.org,
-	James Bottomley <James.Bottomley@HansenPartnership.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI,parisc: Enable 64-bit bus addresses on PA-RISC
-In-Reply-To: <20150902161729.GA2444@ls3530.box>
-Message-ID: <alpine.LRH.2.20.1509141040190.31198@math.ut.ee>
-References: <20150902161729.GA2444@ls3530.box>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:13841 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751811AbbIPAjK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 20:39:10 -0400
+From: Ray Jui <rjui@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	Ray Jui <rjui@broadcom.com>
+Subject: [PATCH 3/8] PCI: iproc: Remove ARCH specific flag
+Date: Tue, 15 Sep 2015 17:39:17 -0700
+Message-ID: <1442363962-29805-4-git-send-email-rjui@broadcom.com>
+In-Reply-To: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
+References: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Commit 3a9ad0b ("PCI: Add pci_bus_addr_t") unconditionally introduced usage of
-> 64-bit PCI bus addresses on all 64-bit platforms which broke PA-RISC.
-> 
-> It turned out that due to enabling the 64-bit addresses, the PCI logic decided
-> to use the GMMIO instead of the LMMIO region. This commit simply disables
-> registering the GMMIO and thus we fall back to use the LMMIO region as before.
-> 
-> Reverts commit 45ea2a5fed6dacb9bb0558d8b21eacc1c45d5bb4
-> ("PCI: Don't use 64-bit bus addresses on PA-RISC")
+Now setup-irq.o is built for arm64, in 'commit 459a07721c11
+("PCI: Build setup-irq.o for arm64")' by Jayachandran, pci_fixup_irqs
+can be referenced. We no longer need the CONFIG_ARM flag to wrap
+around call to pci_fixup_irqs
 
-Seems to work fine on my A500, RP3410 and RP3440, with 4.3.0-rc1.
+Signed-off-by: Ray Jui <rjui@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-> To: linux-parisc@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Meelis Roos <mroos@linux.ee>
-> Cc: stable@vger.kernel.org  # v3.19+
-> Signed-off-by: Helge Deller <deller@gmx.de>
-> 
-> 
-> diff --git a/drivers/parisc/lba_pci.c b/drivers/parisc/lba_pci.c
-> index dceb9dd..a32c1f6 100644
-> --- a/drivers/parisc/lba_pci.c
-> +++ b/drivers/parisc/lba_pci.c
-> @@ -1556,8 +1556,11 @@ lba_driver_probe(struct parisc_device *dev)
->  	if (lba_dev->hba.lmmio_space.flags)
->  		pci_add_resource_offset(&resources, &lba_dev->hba.lmmio_space,
->  					lba_dev->hba.lmmio_space_offset);
-> -	if (lba_dev->hba.gmmio_space.flags)
-> -		pci_add_resource(&resources, &lba_dev->hba.gmmio_space);
-> +	if (lba_dev->hba.gmmio_space.flags) {
-> +		/* pci_add_resource(&resources, &lba_dev->hba.gmmio_space); */
-> +		pr_warn("LBA: Not registering GMMIO space %pR\n",
-> +			&lba_dev->hba.gmmio_space);
-> +	}
->  
->  	pci_add_resource(&resources, &lba_dev->hba.bus_num);
->  
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 944f500..73de4ef 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -2,7 +2,7 @@
->  # PCI configuration
->  #
->  config PCI_BUS_ADDR_T_64BIT
-> -	def_bool y if (ARCH_DMA_ADDR_T_64BIT || (64BIT && !PARISC))
-> +	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
->  	depends on PCI
->  
->  config PCI_MSI
-> 
-
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index fe2efb1..52e7ff2 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -238,9 +238,7 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
+-#ifdef CONFIG_ARM
+ 	pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+-#endif
+ 	pci_bus_add_devices(bus);
+ 
+ 	return 0;
 -- 
-Meelis Roos (mroos@linux.ee)
+1.9.1
+
