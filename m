@@ -1,91 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38784 "EHLO mx1.redhat.com"
+Received: from foss.arm.com ([217.140.101.70]:42599 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752480AbbIFOoj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 6 Sep 2015 10:44:39 -0400
-Date: Sun, 6 Sep 2015 17:44:32 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org,
-	mpe@ellerman.id.au, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, benh@kernel.crashing.org,
-	paulus@samba.org, Fam Zheng <famz@redhat.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Yijing Wang <wangyijing@huawei.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v2 2/2] powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
- probe time in OF case
-Message-ID: <20150906173838-mutt-send-email-mst@redhat.com>
-References: <1439932430-13375-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <1439932077-11427-3-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <1440010450-4549-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <20150903175624.GI829@google.com>
- <55EA2678.5030801@linux.vnet.ibm.com>
+	id S1751310AbbIQRRm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Sep 2015 13:17:42 -0400
+Message-ID: <55FAF5B1.1030401@arm.com>
+Date: Thu, 17 Sep 2015 18:17:37 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55EA2678.5030801@linux.vnet.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Paul Mackerras <paulus@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Will Deacon <will.deacon@arm.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 0/4] PCI: arm64/powerpc: Fix parsing of linux,pci-probe-only
+References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com> <20150917153009.GH25767@google.com>
+In-Reply-To: <20150917153009.GH25767@google.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 04, 2015 at 08:17:12PM -0300, Guilherme G. Piccoli wrote:
-> Hello Bjorn,
+On 17/09/15 16:30, Bjorn Helgaas wrote:
+> On Fri, Sep 04, 2015 at 05:50:07PM +0100, Marc Zyngier wrote:
+>> The pci-host-generic driver parses the linux,pci-probe-only property,
+>> and assumes that it will have a boolean parameter.
+>>
+>> Turns out that the Seattle DTS file has a naked "linux,pci-probe-only"
+>> property, which leads to the driver dereferencing some unsuspecting
+>> memory location. Nothing really bad happens (we end up reading some
+>> other bit of DT, fortunately), but that not a reason to keep it this
+>> way. Turns out that the Pseries code (where this code was lifted from)
+>> may suffer from the same issue.
+>>
+>> The first patch introduces a common (and fixed) version of that check
+>> that can be used by drivers and architectures that require it. The two
+>> following patches change the pci-host-generic driver and the powerpc
+>> code to use it.
+>>
+>> Finally, the bad property is removed from the Seatle DTS, because it
+>> is simply not necessary (it actually prevents me from using SR-IOV,
+>> which otherwise runs fine without the probe-only thing).
+>>
+>> This has been tested on the offending Seattle board.
+>>
+>> * From v3:
+>>   - Restrict the property lookup to /chosen (Rob)
+>>   - Acked-by on patch #4 from Suravee
+>>   - I swear this is the last time I rework these patches! ;-)
+>>
+>> * From v2:
+>>   - Use of_property_read_u32 to safely read the property (Rob)
+>>   - Add a log message to indicate when we enable probe-only
+>>     (probably quite useful for debugging)
+>>
+>> * From v1:
+>>   - Consolidate the parsing in of_pci.c (Bjorn)
+>>
+>> Marc Zyngier (4):
+>>   of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
+>>   PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
+>>   powerpc: PCI: Fix lookup of linux,pci-probe-only property
+>>   arm64: dts: Drop linux,pci-probe-only from the Seattle DTS
+>>
+>>  arch/arm64/boot/dts/amd/amd-overdrive.dts |  1 -
+>>  arch/powerpc/platforms/pseries/setup.c    | 14 ++------------
+>>  drivers/of/of_pci.c                       | 28 ++++++++++++++++++++++++++++
+>>  drivers/pci/host/pci-host-generic.c       |  9 +--------
+>>  include/linux/of_pci.h                    |  3 +++
+>>  5 files changed, 34 insertions(+), 21 deletions(-)
 > 
-> >of_create_pci_dev() already has a lot of code that duplicates
-> >pci_setup_device(), and it's a shame to add more.  There's also a sparc
-> >version of of_create_pci_dev() that presumably has the same problem you're
-> >fixing for powerpc.
-> 
-> Thanks for the information!
-> 
-> >Michael originally called pci_msi_setup_pci_dev() from
-> >pci_init_capabilities() [1].  A subsequent patch moved the call
-> >to pci_setup_device() [2] because an early quirk (called from
-> >pci_setup_device()) used pci_msi_off(), which depended on
-> >pci_msi_setup_pci_dev().
-> >
-> >But we later removed pci_msi_off() completely, so I think we probably
-> >*could* call pci_msi_setup_pci_dev() from pci_init_capabilities().
-> >
-> >That would be much nicer because it makes more sense there, and it
-> >would do the right thing for powerpc and sparc because they both
-> >already use that path.
-> >
-> >Can you look into moving the call?
-> 
-> I might have misunderstood something here (sorry if it's the case), but
-> moving the call to pci_init_capabilities() has the same practical
-> implications than reverting my 2 commmits [1] [2] and Michael Tsirkin's
-> commit [3], except when CONFIG_PCI_MSI is not set - in this case, moving the
-> call would initialize MSI capabilities anyway, since pci_init_capabilities()
-> executes even if CONFIG_PCI_MSI isn't set.
-> 
-> My question is: is necessary to initialize MSI capabilities even with
-> CONFIG_PCI_MSI not set? In negative case, would be "cleaner" revert the 3
-> commits, right?
-> 
-> On the other hand, if it's necessary to initialize MSI capabilities on
-> devices anyway, we can change the call place.
+> Applied with the comment tweak and acks to pci/host-generic for v4.4,
+> thanks!
 
-I think the reason why it's necessary is explained in
-commit log for commit 1851617cd2da9cc53cdc1738f4148f4f042c0e56 (that's
-[3] below).
+Turns out that the 01.org infrastructure has picked up on a compilation
+bug with randconfig. The following patch seems to fix it and should be
+applied on the first patch:
 
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 485d625..2da5abc 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -6,6 +6,8 @@
+ #include <linux/of_pci.h>
+ #include <linux/slab.h>
+ 
++#include <asm-generic/pci-bridge.h>
++
+ static inline int __of_pci_pci_compare(struct device_node *node,
+ 				       unsigned int data)
+ {
 
-> Let me know your opinion, and I'm sorry if I misunderstood something here.
-> 
-> Cheers,
-> 
-> 
-> Guilherme Piccoli
-> 
-> 
-> 
-> [1] commit 22b6839b914b ("PCI: Make pci_msi_setup_pci_dev() non-static for
-> use by arch code")
-> 
-> [2] commit 4d9aac397a5d ("powerpc/PCI: Disable MSI/MSI-X interrupts at PCI
-> probe time in OF case")
-> 
-> [3] commit 1851617cd2da ("PCI/MSI: Disable MSI at enumeration even if kernel
-> doesn't support MSI")
+Sorry for the annoyance.
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
