@@ -1,48 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:54920 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751272AbbIOUfx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Sep 2015 16:35:53 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: George McCollister <george.mccollister@gmail.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, g5983969@trbvm.com,
+	Roland Dreier <roland@purestorage.com>
+Subject: Re: [PATCH] ACPI / PNP: Reserve ACPI resources at the fs_initcall_sync stage
+Date: Thu, 17 Sep 2015 02:44:34 +0200
+Message-ID: <1939916.sIenfPkyq6@vostro.rjw.lan>
+In-Reply-To: <CAFSKS=OrfLH3q0xrt3T4L20nCcPYTsEB0YDVahmHa3-O79rE3A@mail.gmail.com>
+References: <5042629.WJWA6bekh1@vostro.rjw.lan> <CAFSKS=OrfLH3q0xrt3T4L20nCcPYTsEB0YDVahmHa3-O79rE3A@mail.gmail.com>
 MIME-Version: 1.0
-Message-ID: <trinity-72039782-5a6d-4245-add2-93502d0d5827-1442349348195@3capp-webde-bs58>
-From: "Roland Weber" <r-o-l@web.de>
-To: linux-usb@vger.kernel.org
-Cc: "Mathias Nyman" <mathias.nyman@intel.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: PROBLEM: lsusb -v freezes kernel on Acer ES1-111M
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 15 Sep 2015 22:35:48 +0200
-In-Reply-To: <Pine.LNX.4.44L0.1509151010160.1420-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1509151010160.1420-100000@iolanthe.rowland.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alan,
+On Wednesday, September 16, 2015 04:45:51 PM George McCollister wrote:
+> Unfortunately I just got around to trying linux 4.1.6 (which contains
+> this commit) on the Versalogic Tiger (VL-EPM-24)
+> http://www.versalogic.com/tiger and this commit breaks it, seems to be
+> back to the old behavior reported here:
+> 
+> http://marc.info/?t=143092384600002&r=1&w=2
+> 
+> Before reversing the commit it shows:
+> pci 0000:00:1c.0: BAR 13: assigned [io  0x2000-0x2fff]
+> 
+> After reversing the commit it shows:
+> pci 0000:00:1c.0: BAR 13: assigned [io  0x3000-0x3fff]
+> 
+> I don't have a solution to propose at this point and haven't tried the
+> latest upstream so I'll just be building with this commit reversed
+> (which solves the problem) until I have a chance to look into this
+> further.
 
-> However, note that CONFIG_PM_RUNTIME doesn't exist any more in 4.2; it 
-> is now covered by CONFIG_PM.
+It looks like on your system the ACPI resources really need to be reserved
+before the PCI bus is initialized, but we can't do that unconditionally
+for everyone without introducing regressions, so the only way to address
+that I can see would be to blacklist your system.
 
-That explains why the setting was disabled in the first place.
-I had taken a config from 4.2 and ran "make oldconfig" on it
-with the 3.17 kernel.
+Thanks,
+Rafael
 
-Actually, the configurations with CONFIG_PM_RUNTIME disabled give
-me warnings about some cross-dependencies that are not satisfied.
-With "make menuconfig", I haven't been able to switch off the
-setting, because CONFIG_PM_SLEEP and something else forces it on,
-and I have no idea where in the menus I would find those. And if I
-edit .config directly, I don't know what other cross-dependencies
-I'll violate that way.
-
-I only had a few minutes to spare today to select a config and
-kick off the compilation. Now I have a 3.17 kernel with some more
-debug output, but which freezes on 'bind' instead of 'unbind'. *sigh*
-I'm afraid I've been doing too much just-before-bedtime debugging
-lately and need to take a step back.
-I'll set aside a few hours on Thursday to prepare a proper config
-with a behavior that is comparable to the ones I've observed earlier.
-Then I will send decent debug output over the week-end. It's not
-like this problem will run away if I don't track it fast enough :-)
-
-cheers and thanks,
-  Roland
