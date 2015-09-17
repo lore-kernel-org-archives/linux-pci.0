@@ -1,131 +1,106 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 07/12] drivers:x86:pci: Make it possible to implement a PCI MSI IRQ Domain in a module.
-Date: Fri, 11 Sep 2015 00:01:06 +0000
-Message-Id: <1441929670-10058-8-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+Date: Thu, 17 Sep 2015 09:59:49 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	" David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, m-karicheri2@ti.com,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel@stlinux.com,
+	linux-pci@vger.kernel.org, Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH v4 0/4] PCI: st: provide support for dw pcie
+Message-ID: <20150917145949.GF25767@google.com>
+References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Hi Gabriel,
 
-The Linux kernel already has the concept of IRQ domain, wherein a component
-can expose a set of IRQs which are managed by a particular interrupt controller
-chip or other subsystem.  The PCI driver exposes the notion of an IRQ domain
-for Message-Signaled Interrupts (MSI) from PCI Express devices.  This patch
-exposes the functions which are necessary for making an MSI IRQ domain within
-a module.
+On Thu, Aug 27, 2015 at 02:34:13PM +0200, Gabriel Fernandez wrote:
+> 
+> This patchset is based on v4.2-rc1 and is based on 
+> [PATCH v8 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+> patchset from Zhou Wang.
+> 
+> Changes in v4:
+>  - Remove pci: designware: remove my pci_common_init_dev() patch and
+> 	use [PATCH v8 3/6] PCI: designware: Add ARM64 support instead.
+> 	This patch is a good solution for me to disable IO support.
+>  - add __init to st_pcie_probe() and use module_init() instead
+> 	device_initcall() to prevent the probe function from being
+> 	deferred and to prevent module unloading.
+> 
+> Changes in v3:
+>  - Remove power management functions (was not fully tested)
+>  - Remove configuration space range from dt binding
+>  - Remove pci_common_init_dev() call in pcie-designware.c to avoid 
+>    default IO space declaration. 
+> 
+> Changes in v2:
+>  - comestic corrections in device tree binding
+>  - add pci-st.c into MAINTAINERS
+>  - remove st_pcie_ops structure to avoid another level of indirection
+>  - remove nasty busy-loop
+>  - remove useless test using virt_to_phys()
+>  - move disable io support into dw-pcie driver
+> 
+> I don't change the st_pcie_abort_handler() function because abort handling
+> is masked during boot.
+> 
+> 
+> This patch-set introduces a STMicroelectronics PCIe controller.
+> It's based on designware PCIe driver.
+> 
+> Gabriel Fernandez (4):
+>   ARM: STi: Kconfig update for PCIe support
+>   PCI: st: Add Device Tree bindings for sti pcie
+>   PCI: st: Provide support for the sti PCIe controller
+>   MAINTAINERS: Add pci-st.c to ARCH/STI architecture
 
-The same goal could be accomplished by building an MSI IRQ domain for Hyper-V
-into the kernel itself, but this would have required pulling in a lot of other
-code which currently exists in modules, and it seemed cleaner to avoid that.
+Rob had some questions, so I'm waiting for an update that responds to
+those.  When you post that, can you also squash the last two patches
+together?
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- arch/x86/include/asm/msi.h    | 4 ++++
- arch/x86/kernel/apic/msi.c    | 5 +++--
- arch/x86/kernel/apic/vector.c | 2 ++
- drivers/pci/msi.c             | 2 ++
- kernel/irq/chip.c             | 1 +
- 5 files changed, 12 insertions(+), 2 deletions(-)
+Thanks,
+  Bjorn
 
-diff --git a/arch/x86/include/asm/msi.h b/arch/x86/include/asm/msi.h
-index 93724cc..e8b7924 100644
---- a/arch/x86/include/asm/msi.h
-+++ b/arch/x86/include/asm/msi.h
-@@ -1,7 +1,11 @@
- #ifndef _ASM_X86_MSI_H
- #define _ASM_X86_MSI_H
- #include <asm/hw_irq.h>
-+#include <asm/irqdomain.h>
- 
- typedef struct irq_alloc_info msi_alloc_info_t;
- 
-+int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
-+		    msi_alloc_info_t *arg);
-+
- #endif /* _ASM_X86_MSI_H */
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 5f1feb6..bdb28fc 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -96,8 +96,8 @@ static irq_hw_number_t pci_msi_get_hwirq(struct msi_domain_info *info,
- 	return arg->msi_hwirq;
- }
- 
--static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
--			   int nvec, msi_alloc_info_t *arg)
-+int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
-+		    msi_alloc_info_t *arg)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	struct msi_desc *desc = first_pci_msi_entry(pdev);
-@@ -113,6 +113,7 @@ static int pci_msi_prepare(struct irq_domain *domain, struct device *dev,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pci_msi_prepare);
- 
- static void pci_msi_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
- {
-diff --git a/arch/x86/kernel/apic/vector.c b/arch/x86/kernel/apic/vector.c
-index 1bbd0fe..b16d915 100644
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -29,6 +29,7 @@ struct apic_chip_data {
- };
- 
- struct irq_domain *x86_vector_domain;
-+EXPORT_SYMBOL_GPL(x86_vector_domain);
- static DEFINE_RAW_SPINLOCK(vector_lock);
- static cpumask_var_t vector_cpumask;
- static struct irq_chip lapic_controller;
-@@ -66,6 +67,7 @@ struct irq_cfg *irqd_cfg(struct irq_data *irq_data)
- 
- 	return data ? &data->cfg : NULL;
- }
-+EXPORT_SYMBOL_GPL(irqd_cfg);
- 
- struct irq_cfg *irq_cfg(unsigned int irq)
- {
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index c7ad8ce..1aaa26d 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1119,6 +1119,7 @@ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
- {
- 	return to_pci_dev(desc->dev);
- }
-+EXPORT_SYMBOL(msi_desc_to_pci_dev);
- 
- void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
- {
-@@ -1274,6 +1275,7 @@ struct irq_domain *pci_msi_create_irq_domain(struct device_node *node,
- 	domain->bus_token = DOMAIN_BUS_PCI_MSI;
- 	return domain;
- }
-+EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
- 
- /**
-  * pci_msi_domain_alloc_irqs - Allocate interrupts for @dev in @domain
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 6e40a95..b0d9ecd 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -935,6 +935,7 @@ void irq_chip_ack_parent(struct irq_data *data)
- 	data = data->parent_data;
- 	data->chip->irq_ack(data);
- }
-+EXPORT_SYMBOL_GPL(irq_chip_ack_parent);
- 
- /**
-  * irq_chip_mask_parent - Mask the parent interrupt
--- 
-1.9.1
-
+>  Documentation/devicetree/bindings/pci/st-pcie.txt |  53 ++
+>  MAINTAINERS                                       |   1 +
+>  arch/arm/mach-sti/Kconfig                         |   2 +
+>  drivers/pci/host/Kconfig                          |   9 +
+>  drivers/pci/host/Makefile                         |   1 +
+>  drivers/pci/host/pci-st.c                         | 583 ++++++++++++++++++++++
+>  6 files changed, 649 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
+>  create mode 100644 drivers/pci/host/pci-st.c
+> 
+> -- 
+> 1.9.1
+> 
