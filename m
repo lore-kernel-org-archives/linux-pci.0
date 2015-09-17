@@ -1,77 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp01.in.ibm.com ([122.248.162.1]:36784 "EHLO
-	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbbIIGBy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 02:01:54 -0400
-Received: from /spool/local
-	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 9 Sep 2015 11:31:51 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id ABCB2394005C
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2015 11:31:47 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t8961XtJ8323276
-	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 11:31:33 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t8961V0l030674
-	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 11:31:32 +0530
-Date: Wed, 9 Sep 2015 14:01:29 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
-	mpe@ellerman.id.au, linuxppc-dev@lists.ozlabs.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
-Message-ID: <20150909060129.GC7684@Richards-MacBook-Pro.local>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150729031718.GA18069@richard>
- <20150909024820.GA6808@gwshan>
- <20150909033616.GA5148@richards-mbp.cn.ibm.com>
- <55EFC200.10209@ozlabs.ru>
+Received: from xspv0103.northgrum.com ([134.223.120.78]:13364 "EHLO
+	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752828AbbIQVWg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2015 17:22:36 -0400
+From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: [PATCH v1 00/07]: PCI: Static Enumeration
+Date: Thu, 17 Sep 2015 21:10:35 +0000
+Message-ID: <c9fbda5b67024d81895e5ca70a52db71@XCGVAG27.northgrum.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55EFC200.10209@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 09, 2015 at 03:22:08PM +1000, Alexey Kardashevskiy wrote:
->On 09/09/2015 01:36 PM, Richard Yang wrote:
->>On Wed, Sep 09, 2015 at 12:48:21PM +1000, Gavin Shan wrote:
->>>On Wed, Jul 29, 2015 at 11:17:18AM +0800, Wei Yang wrote:
->>>>Hi, Michael
->>>>
->>>>Hope you didn't take this yet. We may change this patch a little.
->>>>
->>>
->>>[Cc Alexey who might concern the SRIOV status]
->>>
->>>Richard, do you have plan to get it upstream? It seems it's hanged
->>>over here for long time.
->>>
->>
->>The VF EEH is hung since we re-designed the SRIOV. After the re-design, we
->>don't have VF groups.
->>
->>My plan is to push the VF EEH patch set after the SRIOV Redesign is accepted.
->
->
->Can you please rebase on v4.2 (or v4.2 + sriov rework) and repost VF EEH
->patchset just to me? Or share the tree somewhere where I can pull it from?
->Thanks.
->
+On many architectures, PCI devices are enumerated by the BIOS/firmware
+prior to the kernel booting. This is a problem if a PCI device is
+powered on after the PCI subsystem has scanned the various root
+complexes. Whereas PCI Hotplug devices have memory ranges reserved for
+them ahead of time, no such facility exists for bridges or other
+endpoints.
 
-Yep, this is what I am planning to do.
+The upcoming patches modifies PCI Hotplug to support static enumeration.
+Via the kcmdline, the user can specify how many bus numbers to reserve
+for hotplug bridges. This is necessary for the case where a bridge is
+hot-added after enumeration. The patches also allow the user to specify
+which bridges are hotpluggable, even though that bridge might not
+natively have that PCI capability.
 
->As for now, I cannot tell what difference your SRIOV patchset actually makes.
->
->-- 
->Alexey
+The kcmdline syntax for static enumeration is as follows:
 
--- 
-Richard Yang
-Help you, Help me
+  pci=hpbuses=<val>,enum=<device1>;<device2...>
 
+"hpbuses" is used to reserve bus numbers for hotplug bridges. "enum" is
+used mark bridges as hotpluggable. <device> has the form:
+
+  <domain>:<bus>:<slot>.<func>
+
+All <device> values are in hexadecimal.
+
+These patches were tested on an x86_64 system that was booted over PXE
+and with a ramdisk. With static enumeration, the root filesystem cannot
+be on a PCI device. Reenumeration occurs during system initialization,
+prior to loading any devices. If an initrd normally mounts the real root
+filesystem from a PCI device, that device's addresses could change as a
+result of enumeration.
+
+The v0 patches and original discussions are at
+http://permalink.gmane.org/gmane.linux.kernel.pci/42082.
+
+Changes from v0 -> v1:
+  * Rewrite, by adding support for hotpluggable bridges
+  * New hpbuses kcmdline to reserve buses for hotplug bridges
+  * Simplified enumeration code
+  * Rebased to kernel 4.2-rc7
+
+
+Jason Tang (7):
+      PCI: Use child bus's number instead of assuming max+1
+      PCI: Track subordinate values in struct pci_bus
+      PCI: Let kcmdline reserve bus numbers for hotplug bridges
+      PCI: Add Kconfig option for static enumeration
+      PCI: Let kcmdline specify static enumeration profile
+      PCI: Use static enumeration to mark a bridge as hotpluggable
+      PCI: Override firmware settings if static enumeration is set
+
+ Documentation/kernel-parameters.txt |  11 ++++
+ drivers/pci/Kconfig                 |  12 ++++
+ drivers/pci/Makefile                |   2 +
+ drivers/pci/pci.c                   |   7 +++
+ drivers/pci/pci.h                   |  10 +++
+ drivers/pci/pci_static_enum.c       | 120 ++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c                 |  32 ++++++++--
+ include/linux/pci.h                 |   2 +
+ 8 files changed, 191 insertions(+), 5 deletions(-)
