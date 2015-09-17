@@ -1,46 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:33964 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923AbbIJOwG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 10:52:06 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v2 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-Date: Thu, 10 Sep 2015 22:58:55 +0800
-Message-ID: <1441897138-23251-1-git-send-email-gabriele.paoloni@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jiang Liu <jiang.liu@linux.intel.com>
+To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>, wfg@linux.intel.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, x86@kernel.org
+Subject: [Bugfix 1/2] ACPI, PCI, irq: Do not share PCI IRQ with ISA IRQ
+Date: Thu, 17 Sep 2015 14:02:45 +0800
+Message-Id: <1442469766-31264-1-git-send-email-jiang.liu@linux.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Avoid IRQs occupied by ISA IRQs when allocating IRQs for PCI link devices,
+otherwise it may cause interrupt storm due to incompatible pin attributes.
 
-This patchset:
-1) fixes a bug in spear13xx when calling dw_pcie_cfg_read and
-   dw_pcie_cfg_write;
-2) reworks dw_pcie_cfg_read/dw_pcie_cfg_write in pcie-designware.c in
-   order to make it easier for callers to pass input parameters;
-3) adds sanity checks in dw_pcie_cfg_read/dw_pcie_cfg_write to make
-   sure the PCI header offset does not conflict with the size of
-   the read/written field.
+This issue was triggered on a KVM virtual machine, which
+1) uses IRQ9 for SCI in high level mode.
+2) defines an PCI interrupt link device (LNKS) with IRQ9 as the only
+   possible irq.
+3) has an PCI device referring to link device LNKS.
+So it causes interrupt storm when enabling the PCI device because PCI IRQ
+works in low level mode.
 
-gabriele paoloni (3):
-  PCIE: spear13xx: fix addresses in dw_pcie_cfg_read and
-    dw_pcie_cfg_write
-  PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-  PCIE: designware: add sanity checks on the header offset in
-    dw_pcie_cfg_read and dw_pcie_cfg_write
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ drivers/acpi/pci_irq.c  |    1 +
+ drivers/acpi/pci_link.c |   13 +++++++++++++
+ include/linux/acpi.h    |    1 +
+ 3 files changed, 15 insertions(+)
 
- drivers/pci/host/pci-exynos.c      |  5 ++--
- drivers/pci/host/pci-keystone-dw.c |  4 ++--
- drivers/pci/host/pcie-designware.c | 47 +++++++++++++++++++++++---------------
- 3 files changed, 32 insertions(+), 24 deletions(-)
-
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 6da0f9beab19..c9336751e5e3 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -372,6 +372,7 @@ static int acpi_isa_register_gsi(struct pci_dev *dev)
+ 
+ 	/* Interrupt Line values above 0xF are forbidden */
+ 	if (dev->irq > 0 && (dev->irq <= 0xF) &&
++	    acpi_isa_irq_available(dev->irq) &&
+ 	    (acpi_isa_irq_to_gsi(dev->irq, &dev_gsi) == 0)) {
+ 		dev_warn(&dev->dev, "PCI INT %c: no GSI - using ISA IRQ %d\n",
+ 			 pin_name(dev->pin), dev->irq);
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 3b4ea98e3ea0..246e50d22120 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -553,6 +553,13 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 				irq = link->irq.possible[i];
+ 		}
+ 	}
++	if (acpi_irq_penalty[irq] >= PIRQ_PENALTY_ISA_ALWAYS) {
++		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
++			    "Try pci=noacpi or acpi=off\n",
++			    acpi_device_name(link->device),
++			    acpi_device_bid(link->device));
++		return -ENODEV;
++	}
+ 
+ 	/* Attempt to enable the link device at this IRQ. */
+ 	if (acpi_pci_link_set(link, irq)) {
+@@ -821,6 +828,12 @@ void acpi_penalize_isa_irq(int irq, int active)
+ 	}
+ }
+ 
++bool acpi_isa_irq_available(int irq)
++{
++	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
++			    acpi_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
++}
++
+ /*
+  * Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict with
+  * PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be use for
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 7235c4851460..43856d19cf4d 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -217,6 +217,7 @@ struct pci_dev;
+ 
+ int acpi_pci_irq_enable (struct pci_dev *dev);
+ void acpi_penalize_isa_irq(int irq, int active);
++bool acpi_isa_irq_available(int irq);
+ void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
 -- 
-1.9.1
+1.7.10.4
 
