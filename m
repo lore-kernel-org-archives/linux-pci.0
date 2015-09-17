@@ -1,88 +1,54 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux-Arch <linux-arch@vger.kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] nios2: Add architectural support for PCIe
-Date: Tue, 22 Sep 2015 13:42:28 +0200
-Message-ID: <5408024.XroFc5QNep@wuerfel>
-In-Reply-To: <CAFiDJ59EeokEJVXCY7DEmDRp0hnd3he3f2fwjO-2tNN5VXrBgQ@mail.gmail.com>
-References: <1442906367-10935-1-git-send-email-lftan@altera.com> <65590637.5YmBIDOvTf@wuerfel> <CAFiDJ59EeokEJVXCY7DEmDRp0hnd3he3f2fwjO-2tNN5VXrBgQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v2 2/5] PCI: generic: Only fixup irqs for bus we are creating.
+Date: Thu, 17 Sep 2015 15:02:09 -0700
+Message-Id: <1442527332-1174-3-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 22 September 2015 18:53:50 Ley Foon Tan wrote:
-> On Tue, Sep 22, 2015 at 4:18 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Tuesday 22 September 2015 15:19:26 Ley Foon Tan wrote:
-> > I might be missing something though. Bjorn?
-> >
-> >> @@ -14,7 +14,7 @@
-> >>  #include <linux/types.h>
-> >>  #include <asm/pgtable-bits.h>
-> >>
-> >> -/* PCI is not supported in nios2, set this to 0. */
-> >> +/* PCI I/O space is not supported, set this to 0. */
-> >>  #define IO_SPACE_LIMIT 0
-> >>
-> >>  #define readb_relaxed(addr)  readb(addr)
-> >
-> > It might be useful to enable this, just in case someone connects
-> > a PCI host bridge that does support I/O space.
-> >
-> > Which host bridge do you use? Are you sure there is no I/O space?
-> > Most of them use a set of translation windows to set up a mapping
-> > between bus address (memory, config and io space) and physical
-> > (mmio) space.
->
-> I'm using Altera PCIe IP. But, you are right. We should enable this,
-> because it shouldn't limited to support Altera PCIe only.
-> BTW, any rule/requirement for the IO_SPACE_LIMIT?
+From: David Daney <david.daney@cavium.com>
 
-If you want to allow just one PCI host bridge, set it to 0xffff, otherwise
-use 0xfffff (for up to 16 bridges)
+If we create multiple buses with pci-host-generic, or there are buses
+created by other drivers, we don't want to call pci_fixup_irqs() which
+operates on all devices, not just the devices on the bus being added.
+The consequence is that either the fixups are done more than once, or
+in some cases incorrect fixups could be applied.
 
-> And PCIBIOS_MIN_IO should be non-zero if we enable IO_SPACE_LIMIT?
+Call pci_bus_fixup_irqs() instead of pci_fixup_irqs().
 
-If you define pcibios_align_resource() as an empty function, that can
-remain zero as well, it's only meant to stay out of the way of ISA
-devices.
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+Changes from v1: Moved most of the code to pci_bus_fixup_irqs(),
+making this patch very simple.
 
-> >> diff --git a/arch/nios2/include/asm/pci.h b/arch/nios2/include/asm/pci.h
-> >> new file mode 100644
-> >> index 0000000..f2cba05
-> >> --- /dev/null
-> >> +++ b/arch/nios2/include/asm/pci.h
-> >
-> > What happens if you use the asm-generic header? If there is something
-> > missing in it, we can try to get it to do the right things.
-> All the defines in arch/nios2/include/asm/pci.h are required by PCI framework.
-> It will trigger undefined symbols/define error if without them. Seem
-> all architectures must provide all these defines.
-> So, we can consider to add default defines for these in asm-generic.
+ drivers/pci/host/pci-host-generic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I think that would be good, yes. We probably picked defaults for the
-asm-generic version that are enough to build with CONFIG_PCI disabled,
-but there are useful defaults for the other case as well.
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 265dd25..9e9f1c3 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -262,7 +262,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 		return -ENODEV;
+ 	}
+ 
+-	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_bus_fixup_irqs(bus, pci_common_swizzle, of_irq_parse_and_map_pci);
+ 
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+ 		pci_bus_size_bridges(bus);
+-- 
+1.9.1
 
-Most architectures that use the file don't support PCI, so you can just
-add stuff inside of #ifdef CONFIG_PCI. For the remaining 13 architectures
-(git grep -l generic/pci.h  | wc), see whether there are conflicts first.
-The normal way would be to have the arch specific definition come before
-the #include, and then do something like
-
-#ifndef pci_proc_domain
-#define pci_proc_domain pci_proc_domain
-static inline int pci_proc_domain(struct pci_bus *bus)
-{
-#ifdef CONFIG_PCI_DOMAINS_GENERIC
-        return pci_domain_nr(bus);
-#else
-	return 1;
-}
-#endif
-
-	Arnd
