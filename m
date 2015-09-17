@@ -1,104 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:42599 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751310AbbIQRRm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 17 Sep 2015 13:17:42 -0400
-Message-ID: <55FAF5B1.1030401@arm.com>
-Date: Thu, 17 Sep 2015 18:17:37 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
+Received: from xspv0103.northgrum.com ([134.223.120.78]:13364 "EHLO
+	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752811AbbIQVWf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Sep 2015 17:22:35 -0400
+From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: [PATCH v1 2/7] PCI: Track subordinate values in struct pci_bus
+Date: Thu, 17 Sep 2015 21:10:55 +0000
+Message-ID: <2014ce5807474d70b101b601a29c3550@XCGVAG27.northgrum.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 0/4] PCI: arm64/powerpc: Fix parsing of linux,pci-probe-only
-References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com> <20150917153009.GH25767@google.com>
-In-Reply-To: <20150917153009.GH25767@google.com>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/09/15 16:30, Bjorn Helgaas wrote:
-> On Fri, Sep 04, 2015 at 05:50:07PM +0100, Marc Zyngier wrote:
->> The pci-host-generic driver parses the linux,pci-probe-only property,
->> and assumes that it will have a boolean parameter.
->>
->> Turns out that the Seattle DTS file has a naked "linux,pci-probe-only"
->> property, which leads to the driver dereferencing some unsuspecting
->> memory location. Nothing really bad happens (we end up reading some
->> other bit of DT, fortunately), but that not a reason to keep it this
->> way. Turns out that the Pseries code (where this code was lifted from)
->> may suffer from the same issue.
->>
->> The first patch introduces a common (and fixed) version of that check
->> that can be used by drivers and architectures that require it. The two
->> following patches change the pci-host-generic driver and the powerpc
->> code to use it.
->>
->> Finally, the bad property is removed from the Seatle DTS, because it
->> is simply not necessary (it actually prevents me from using SR-IOV,
->> which otherwise runs fine without the probe-only thing).
->>
->> This has been tested on the offending Seattle board.
->>
->> * From v3:
->>   - Restrict the property lookup to /chosen (Rob)
->>   - Acked-by on patch #4 from Suravee
->>   - I swear this is the last time I rework these patches! ;-)
->>
->> * From v2:
->>   - Use of_property_read_u32 to safely read the property (Rob)
->>   - Add a log message to indicate when we enable probe-only
->>     (probably quite useful for debugging)
->>
->> * From v1:
->>   - Consolidate the parsing in of_pci.c (Bjorn)
->>
->> Marc Zyngier (4):
->>   of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
->>   PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
->>   powerpc: PCI: Fix lookup of linux,pci-probe-only property
->>   arm64: dts: Drop linux,pci-probe-only from the Seattle DTS
->>
->>  arch/arm64/boot/dts/amd/amd-overdrive.dts |  1 -
->>  arch/powerpc/platforms/pseries/setup.c    | 14 ++------------
->>  drivers/of/of_pci.c                       | 28 ++++++++++++++++++++++++++++
->>  drivers/pci/host/pci-host-generic.c       |  9 +--------
->>  include/linux/of_pci.h                    |  3 +++
->>  5 files changed, 34 insertions(+), 21 deletions(-)
-> 
-> Applied with the comment tweak and acks to pci/host-generic for v4.4,
-> thanks!
+This commit adds the field 'subordinate' to struct pci_bus.  Normally,
+the subordinate is automatically calculated while scanning children of
+the bus and counting their downstream buses.
 
-Turns out that the 01.org infrastructure has picked up on a compilation
-bug with randconfig. The following patch seems to fix it and should be
-applied on the first patch:
+This heuristic fails for hot-added bridges.  A hot-added bridge will
+need to increase its subordinate if additional bridges are hot-added
+underneath it.  Without the 'subordinate' field, newly added bridges
+will not have a valid secondary number, without reshuffling all
+existing devices.
 
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 485d625..2da5abc 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -6,6 +6,8 @@
- #include <linux/of_pci.h>
- #include <linux/slab.h>
- 
-+#include <asm-generic/pci-bridge.h>
+By storing the bus's intended subordinate number, the scanning
+algorithm can skip over reserved numbers while enumerating devices.  A
+subordinate value of 0 means to use the existing enumeration
+algorithm.  An upcoming commit will set that subordinate field to a
+non-zero value.
+
+Signed-off-by: Jason Tang <jason.tang2@ngc.com>
+---
+ drivers/pci/probe.c | 23 ++++++++++++++++++++---
+ include/linux/pci.h |  1 +
+ 2 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c905db3..58ae892 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -863,8 +863,17 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 			if (!child)
+ 				goto out;
+ 			pci_bus_insert_busn_res(child, child->number, 0xff);
++			/* child's subordinate bus will be calculated
++			   during pass 2 */
+ 		}
+-		max++;
 +
- static inline int __of_pci_pci_compare(struct device_node *node,
- 				       unsigned int data)
- {
-
-Sorry for the annoyance.
-
-	M.
++		/* if the child bus has a subordinate value set, then
++		   use that bus's subordinate+1 as the next probed bus
++		   number */
++		if (max < child->subordinate)
++			max = child->subordinate + 1;
++		else
++			max++;
+ 		buses = (buses & 0xff000000)
+ 		      | ((unsigned int)(child->primary)     <<  0)
+ 		      | ((unsigned int)(child->busn_res.start)   <<  8)
+@@ -921,8 +930,10 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+ 		/*
+ 		 * Set the subordinate bus number to its real value.
+ 		 */
+-		pci_bus_update_busn_res_end(child, max);
+-		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS, max);
++		child->subordinate = max;
++		pci_bus_update_busn_res_end(child, child->subordinate);
++		pci_write_config_byte(dev, PCI_SUBORDINATE_BUS,
++				      child->subordinate);
+ 	}
+ 
+ 	sprintf(child->name,
+@@ -1896,6 +1907,12 @@ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ 		}
+ 
+ 	/*
++	 * Adjust max if this bus has a set subordinate number
++	 */
++	if (max < bus->subordinate)
++		max = bus->subordinate;
++
++	/*
+ 	 * We've scanned the bus and so we know all about what's on
+ 	 * the other side of any bridges that may be on this bus plus
+ 	 * any devices.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8a0321a..384106c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -458,6 +458,7 @@ struct pci_bus {
+ 
+ 	unsigned char	number;		/* bus number */
+ 	unsigned char	primary;	/* number of primary bridge */
++	unsigned char	subordinate;	/* subordinate number on secondary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
 -- 
-Jazz is not dead. It just smells funny...
+1.8.3.1
+
