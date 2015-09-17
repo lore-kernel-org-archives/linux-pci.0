@@ -1,105 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:59107 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753476AbbIIRiS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Sep 2015 13:38:18 -0400
-Date: Wed, 9 Sep 2015 18:38:28 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
- of arch code
-Message-ID: <20150909173828.GB12341@red-moon>
-References: <20150902203250.GB829@google.com>
- <20150903100115.GA15308@red-moon>
- <20150903162140.GG829@google.com>
- <20150904141903.GA22997@red-moon>
- <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
- <20150904164412.GD22997@red-moon>
- <CAE9FiQVB0swnTao3eS1kOLvwU-hm0aEpOTXP7wDKFGqtLQta5g@mail.gmail.com>
- <20150909113235.GA10991@red-moon>
- <CAE9FiQUsRHgqQ6F58yx5pyWeLJc1U72dWOf2p6OUO2PAbFwF=A@mail.gmail.com>
- <CAE9FiQWUr6f_KsTyJrntRg-uuF1OL9VCqfUXB6eJ3Kpj+bf9=A@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 17 Sep 2015 19:03:37 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	linux-pci@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
+Message-ID: <20150917185638-mutt-send-email-mst@redhat.com>
+References: <1441553385-3810-1-git-send-email-mst@redhat.com>
+ <20150917154424.GI25767@google.com>
+ <874mitxczx.fsf@x220.int.ebiederm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQWUr6f_KsTyJrntRg-uuF1OL9VCqfUXB6eJ3Kpj+bf9=A@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <874mitxczx.fsf@x220.int.ebiederm.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 09, 2015 at 06:22:34PM +0100, Yinghai Lu wrote:
-> On Wed, Sep 9, 2015 at 9:59 AM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Wed, Sep 9, 2015 at 4:32 AM, Lorenzo Pieralisi
-> > <lorenzo.pieralisi@arm.com> wrote:
-> >> Subject: [PATCH] PCI: remove dead code in pci_claim_bridge_resource()
-> >>
-> > That should be regression from c770cb4cb505 ("PCI: Mark invalid BARs
-> > as unassigned")
-> > so right fix should be:
+On Thu, Sep 17, 2015 at 10:49:06AM -0500, Eric W. Biederman wrote:
+> Bjorn Helgaas <bhelgaas@google.com> writes:
 > 
-> completed format as attached:
+> > On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
+> >> On some hypervisors, virtio devices tend to generate spurious interrupts
+> >> when switching between MSI and non-MSI mode.  Normally, either MSI or
+> >> non-MSI is used and all is well, but during shutdown, linux disables MSI
+> >> which then causes an "irq %d: nobody cared" message, with irq being
+> >> subsequently disabled.
+> >> 
+> >> Since bus mastering is already disabled at this point, disabling MSI
+> >> isn't actually useful for spec compliant devices: MSI interrupts are
+> >> in-bus memory writes so disabling Bus Master (which is already done)
+> >> disables these as well: after some research, it appears to be there for
+> >> the benefit of devices that ignore the bus master bit.
+> >> 
+> >> As it's not clear how common this kind of bug is, this patch simply adds
+> >> a quirk, to be set by devices that wish to skip disabling msi on
+> >> shutdown, relying on bus master instead.
+> >> 
+> >> We set this quirk in virtio core.
+> >> 
+> >> Reported-by: Fam Zheng <famz@redhat.com>
+> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> >> Cc: Yinghai Lu <yhlu.kernel.send@gmail.com>
+> >> Cc: Ulrich Obergfell <uobergfe@redhat.com>
+> >> Cc: Rusty Russell <rusty@rustcorp.com.au>
+> >> Cc: "Eric W. Biederman" <ebiederm@xmission.com>
+> >> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> >
+> > Eric, what do you think of this?  You had many comments on previous
+> > versions.
+> 
+> I still think it is a hack to avoid actually fixing a driver.
 
-> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Subject: [PATCH] PCI: Fix clipped bridge resource reserve
-> 
-> Commit 8505e729a2f6eb ("PCI: Add pci_claim_bridge_resource() to clip
-> window if necessary") introduced a new API to claim bridge resources.
-> pci_claim_bridge_resource() tries to claim a bridge resource, and if
-> the claiming fails the function tries to clip the resource to make
-> it fit within the parent resource window.
-> If the clipping succeeds the bridge apertures are set-up accordingly
-> and the pci_claim_bridge_resource() tries to claim the resource
-> again.
-> 
-> Commit c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") added
-> code that sets the IORESOURCE_UNSET flag on claiming failure.
-> 
-> This means that the second resource claiming after window clipping will
-> always fail, since the resource flags contain IORESOURCE_UNSET,
-> previously set on failure by pci_claim_resource(), so the subsequent
-> pci_claim_resource() call ends up spitting a log message and return
-> failure with no chance whatsoever to succeed.
-> 
-> This patch clear the UNSET in resource flags, and it makes second
-> pci_claim_resource() work again.
-> 
-> Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
-> Cc: stable@vger.kernel.org [v4.1+]
-> [change to clear UNSET instead, Yinghai]
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+The bug's in the hypervisor though.
 
-My Signed-off-by is missing, if you do not mind given that I reported
-it and I obviously knew this was the real fix (I said that) I will
-send the updated patch to the list accordingly or Bjorn can fix it up,
-as you both prefer.
+> I think the hack is better as a quirk.
 
-Thanks,
-Lorenzo
+You mean put it in drivers/pci/quirks.c?
 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 508cc56..76b3349 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -733,6 +733,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
->  		return -EINVAL;
->  	}
->  
-> +	bridge->resource[i].flags &= ~IORESOURCE_UNSET;
->  	if (pci_claim_resource(bridge, i) == 0)
->  		return 0;	/* claimed a smaller window */
->  
+>  I think the quirk would tend to
+> be better if it was limited to whatever set of hypervisors where this is
+> actually a problem.
 
+I guess we might add a new flag "msi disable at shutdown is safe" in future
+hypervisors. Until such hypervisors ship I don't see a way to detect
+this.
+
+> And of course given that on any sane configuration we have the irq
+> watchdog I don't see what this is fixing in practice.
+> 
+> Other than suggesting this hack become find a way to limit itself to the
+> driver that is actually having problems I don't see a way to improve it.
+
+It's already limited: virtio is the only one that sets
+PCI_DEV_FLAGS_NO_MSI_SHUTDOWN. Did you notice this?
+
+> > Minor comment on a comment below.
+> >
+> >> ---
+> >> 
+> >> 
+> >> changes from v6:
+> >> 	limit changes to virtio only
+> >> changes from v5:
+> >>         rebased on top of pci/msi
+> >>         fixed commit log, including comments by Bjorn
+> >>         and adding explanation to address comments/questions by Eric
+> >>         dropped stable Cc, this patch does not seem to qualify for stable
+> >> changes from v4:
+> >>         Yijing Wang <wangyijing@huawei.com> noted that
+> >>         early fixups rely on pci_msi_off.
+> >>         Split out the functionality and move off the
+> >>         required part to run early during pci_device_setup.
+> >> Changes from v3:
+> >>         fix a copy-and-paste error in
+> >>           pci: drop some duplicate code
+> >>         other patches are unchanged
+> >>         drop Cc stable for now
+> >> Changes from v2:
+> >>         move code from probe to device enumeration
+> >>         add patches to unexport pci_msi_off
+> >> 
+> >> 
+> >>  include/linux/pci.h                | 2 ++
+> >>  drivers/pci/pci-driver.c           | 6 ++++--
+> >>  drivers/virtio/virtio_pci_common.c | 4 ++++
+> >>  3 files changed, 10 insertions(+), 2 deletions(-)
+> >> 
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index 860c751..80f3494 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -180,6 +180,8 @@ enum pci_dev_flags {
+> >>  	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
+> >>  	/* Do not use PM reset even if device advertises NoSoftRst- */
+> >>  	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
+> >> +	/* Do not disable MSI on shutdown, disable bus master instead */
+> >
+> > This comment doesn't really match what the patch does.  The patch merely
+> > does "Do not disable MSI on shutdown."  It doesn't "disable bus master
+> > instead."
+> >
+> > Bus master may be disabled elsewhere, but that is independent of the
+> > PCI_DEV_FLAGS_NO_MSI_SHUTDOWN flag.
+> >
+> >> +	PCI_DEV_FLAGS_NO_MSI_SHUTDOWN = (__force pci_dev_flags_t) (1 << 8),
+> >>  };
+> >>  
+> >>  enum pci_irq_reroute_variant {
+> >> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> >> index 3cb2210..59d9e40 100644
+> >> --- a/drivers/pci/pci-driver.c
+> >> +++ b/drivers/pci/pci-driver.c
+> >> @@ -450,8 +450,10 @@ static void pci_device_shutdown(struct device *dev)
+> >>  
+> >>  	if (drv && drv->shutdown)
+> >>  		drv->shutdown(pci_dev);
+> >> -	pci_msi_shutdown(pci_dev);
+> >> -	pci_msix_shutdown(pci_dev);
+> >> +	if (!(pci_dev->dev_flags & PCI_DEV_FLAGS_NO_MSI_SHUTDOWN)) {
+> >> +		pci_msi_shutdown(pci_dev);
+> >> +		pci_msix_shutdown(pci_dev);
+> >> +	}
+> >>  
+> >>  #ifdef CONFIG_KEXEC
+> >>  	/*
+> >> diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+> >> index 78f804a..26f46c3 100644
+> >> --- a/drivers/virtio/virtio_pci_common.c
+> >> +++ b/drivers/virtio/virtio_pci_common.c
+> >> @@ -528,6 +528,8 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
+> >>  	if (rc)
+> >>  		goto err_register;
+> >>  
+> >> +	pci_dev->dev_flags |= PCI_DEV_FLAGS_NO_MSI_SHUTDOWN;
+> >> +
+> >>  	return 0;
+> >>  
+> >>  err_register:
+> >> @@ -546,6 +548,8 @@ static void virtio_pci_remove(struct pci_dev *pci_dev)
+> >>  {
+> >>  	struct virtio_pci_device *vp_dev = pci_get_drvdata(pci_dev);
+> >>  
+> >> +	pci_dev->dev_flags &= ~PCI_DEV_FLAGS_NO_MSI_SHUTDOWN;
+> >> +
+> >>  	unregister_virtio_device(&vp_dev->vdev);
+> >>  
+> >>  	if (vp_dev->ioaddr)
+> >> -- 
+> >> MST
