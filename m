@@ -1,75 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44636 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932951AbbIDQuV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Sep 2015 12:50:21 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [Bugfix 3/3] eata: Enhance eata driver to support PCI device
+ hot-removal
+To: Christoph Hellwig <hch@infradead.org>,
+	Hannes Reinecke <hare@suse.de>
+References: <CAErSpo4oignSpK-LCLO=deW_FZ-V58GUhBxJ5uvmXe4DYo4WdA@mail.gmail.com>
+ <1442200140-30808-1-git-send-email-jiang.liu@linux.intel.com>
+ <1442200140-30808-4-git-send-email-jiang.liu@linux.intel.com>
+ <55F6837A.5020807@suse.de> <20150916134211.GA21535@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v4 0/4] PCI: arm64/powerpc: Fix parsing of linux,pci-probe-only
-Date: Fri,  4 Sep 2015 17:50:07 +0100
-Message-Id: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	"James E.J. Bottomley" <JBottomley@odin.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+From: Jiang Liu <jiang.liu@linux.intel.com>
+Message-ID: <55FA6280.3050000@linux.intel.com>
+Date: Thu, 17 Sep 2015 14:49:36 +0800
+MIME-Version: 1.0
+In-Reply-To: <20150916134211.GA21535@infradead.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci-host-generic driver parses the linux,pci-probe-only property,
-and assumes that it will have a boolean parameter.
-
-Turns out that the Seattle DTS file has a naked "linux,pci-probe-only"
-property, which leads to the driver dereferencing some unsuspecting
-memory location. Nothing really bad happens (we end up reading some
-other bit of DT, fortunately), but that not a reason to keep it this
-way. Turns out that the Pseries code (where this code was lifted from)
-may suffer from the same issue.
-
-The first patch introduces a common (and fixed) version of that check
-that can be used by drivers and architectures that require it. The two
-following patches change the pci-host-generic driver and the powerpc
-code to use it.
-
-Finally, the bad property is removed from the Seatle DTS, because it
-is simply not necessary (it actually prevents me from using SR-IOV,
-which otherwise runs fine without the probe-only thing).
-
-This has been tested on the offending Seattle board.
-
-* From v3:
-  - Restrict the property lookup to /chosen (Rob)
-  - Acked-by on patch #4 from Suravee
-  - I swear this is the last time I rework these patches! ;-)
-
-* From v2:
-  - Use of_property_read_u32 to safely read the property (Rob)
-  - Add a log message to indicate when we enable probe-only
-    (probably quite useful for debugging)
-
-* From v1:
-  - Consolidate the parsing in of_pci.c (Bjorn)
-
-Marc Zyngier (4):
-  of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
-  PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
-  powerpc: PCI: Fix lookup of linux,pci-probe-only property
-  arm64: dts: Drop linux,pci-probe-only from the Seattle DTS
-
- arch/arm64/boot/dts/amd/amd-overdrive.dts |  1 -
- arch/powerpc/platforms/pseries/setup.c    | 14 ++------------
- drivers/of/of_pci.c                       | 28 ++++++++++++++++++++++++++++
- drivers/pci/host/pci-host-generic.c       |  9 +--------
- include/linux/of_pci.h                    |  3 +++
- 5 files changed, 34 insertions(+), 21 deletions(-)
-
--- 
-2.1.4
-
+On 2015/9/16 21:42, Christoph Hellwig wrote:
+> On Mon, Sep 14, 2015 at 10:21:14AM +0200, Hannes Reinecke wrote:
+>> Welll ... if you don't have hardware (and I strongly hope you refer to
+>> 'hardware able to do hotplugging', not 'hardware for the eata driver'
+>> ...) why add the code at all?
+>> Chances are no-one will ever need eata PCI hotplug; SCSI parallel
+>> typically isn't very good at hotplugging, so throwing in PCI hotplug
+>> will only confuse matters more.
+>> Plus due to the sheer mechanics involved here I find it very unlikely
+>> anyone will be using it in real life.
+> 
+> Because it's used for module removal and we want every driver to use
+> the standard interface that.
+> 
+> Jiang, you also need to convert the driver to
+> scsi_add_host/scsi_remove_host from the legacy scsi_register interface,
+> otherwise the SCSI layer will be very unhappy.
+> 
+> Take a look at commit 0d31f8759109cbc1e6fc196d08e6b0e8a9e93b3f for
+> example, the change should be straight forward.
+Hi Christoph,
+	I have taken a look at the commit 0d31f8759109cb and it seems
+that the conversion is not so big. But I have no hardware for testing,
+so could only ask for help from community.
+Thanks!
+Gerry
