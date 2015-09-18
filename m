@@ -1,70 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, tglx@linutronix.de
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 04/12] drivers:pci: Add IRQ domain lookup by PCI domain
-Date: Fri, 11 Sep 2015 00:01:03 +0000
-Message-Id: <1441929670-10058-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2on0088.outbound.protection.outlook.com ([65.55.169.88]:33395
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752109AbbIRRAm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 18 Sep 2015 13:00:42 -0400
+Message-ID: <55FC4330.10302@caviumnetworks.com>
+Date: Fri, 18 Sep 2015 10:00:32 -0700
+From: David Daney <ddaney@caviumnetworks.com>
+MIME-Version: 1.0
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	"David Daney" <david.daney@cavium.com>
+Subject: Re: [PATCH 2/3] PCI: Add quirks for devices found on Cavium ThunderX
+ SoCs.
+References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com> <1442529694-1792-3-git-send-email-ddaney.cavm@gmail.com> <3066583.BWDZlYWxXU@wuerfel>
+In-Reply-To: <3066583.BWDZlYWxXU@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On 09/18/2015 12:19 AM, Arnd Bergmann wrote:
+> On Thursday 17 September 2015 15:41:33 David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> The on-chip devices all have fixed bars.  So, fix them up.
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>>
+>
+> You should be able to just mark the BARs as fixed in DT
 
-The PCI driver currently looks up IRQ domains for root PCI buses by walking
-up the Open Firmware tree looking for any that cover this particular PCI root.
-Since x86 PCs don't implement Open Firmware, this patch offers an alternative
-lookup by the PCI domain ID (known as "segment" in the PCI and ACPI specs.)
+In the case of ACPI, there is no DT.  So we would need a different 
+solution for ACPI.  What would you recommend for ACPI?
 
-I could have tried to build a (fake) Open Firmware tree and leverage the old
-code, but I rejected that possibility both because it would have required
-changes in lots of other places and because most distributions don't even
-compile in the OF infrastructure when targeting PCs.
+Also, can you point me to the OF device tree specification where it 
+tells how to specify PCI BAR addresses, I would especially be interested 
+in knowing how to specify fixed SRIOV BAR addresses in the device tree.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/pci/probe.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+Thanks,
+David Daney
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 0b2be17..e7e5ff3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -12,6 +12,7 @@
- #include <linux/module.h>
- #include <linux/cpumask.h>
- #include <linux/pci-aspm.h>
-+#include <linux/irqdomain.h>
- #include <asm-generic/pci-bridge.h>
- #include "pci.h"
- 
-@@ -663,12 +664,22 @@ static void pci_set_bus_speed(struct pci_bus *bus)
- static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
- {
- 	struct irq_domain *d;
-+	int pci_domain;
- 
- 	/*
- 	 * Any firmware interface that can resolve the msi_domain
- 	 * should be called from here.
- 	 */
- 	d = pci_host_bridge_of_msi_domain(bus);
-+	if (d)
-+		return d;
-+
-+	/*
-+	 * If firmware couldn't help find, it try looking it up by PCI
-+	 * domain/segment.
-+	 */
-+	pci_domain = pci_domain_nr(bus);
-+	d = irq_find_matching_host(NULL, DOMAIN_BUS_PCI_MSI, &pci_domain);
- 
- 	return d;
- }
--- 
-1.9.1
+> and not need
+> this hack.
+
+Yes, it is a bit of a hack.  That is why I put it in its own file, and 
+only try to hack up PCI devices that exactly match the vendor and device 
+ids that need fixing.
+
+IMHO, putting infrastructure into drivers/pci/probe.c, et al. to handle 
+this would be much more intrusive.
+
+For the record:  The PCI Enhanced Allocation (EA) capability (approved 
+by PCI SIG on 23 October 2014) is the proper way to handle this going 
+forward.  However, this is not yet implemented in the SoCs that this 
+patch addresses.  Our plan is to implement the EA capability in the core 
+PCI code, so that we do not need to keep adding devices to this fixup code.
+
+David Daney
 
