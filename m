@@ -1,91 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54936 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751234AbbIGELs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Sep 2015 00:11:48 -0400
-From: Pratyush Anand <panand@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Pratyush Anand <panand@redhat.com>,
-	stable@vger.kernel.org.#.v3.17+,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org (open list),
-	Pratyush Anand <pratyush.anand@gmail.com>
-Subject: [PATCH] PCIe: SPEAr13xx: fix dw_pcie_cfg_read/write() usage
-Date: Mon,  7 Sep 2015 09:40:30 +0530
-Message-Id: <f80c925090a4c0116a9a028c10836685148e1bbd.1441598691.git.panand@redhat.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:35744 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754915AbbIRPMm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 11:12:42 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-pci@vger.kernel.org, kernel@pengutronix.de,
+	patchwork-lst@pengutronix.de
+Subject: [PATCH v5 4/5] PCI: designware: Make get_msi_addr() return phys_addr_t, not u32
+Date: Fri, 18 Sep 2015 17:12:38 +0200
+Message-Id: <1442589159-28201-5-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
+References: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-dw_pcie_cfg_read/write() expects 1st argument 'addr' as a 32 bit word
-aligned address, 2nd argument 'where' as the offset within that word(0, 1,
-2 or 3) and 3rd argument 'size' is the number of bytes need to be read at
-the offset(could be 1, 2 ,4).
+Make get_msi_addr() return phys_addr_t, not u32.  This allows the MSI
+target address to be above 4GB for 64bit or PAE systems.
 
-SPEAr13xx is using dw_pcie_cfg_read() and dw_pcie_cfg_write() incorrectly.
-Without this fix, SPEAr13xx host will never work with  few buggy gen1 card
-which connects with only gen1 host and also with any endpoint which would
-generate a read request of more than 128 bytes.
+No functional change for the current 32bit platform users as phys_addr_t
+maps to u32 for them.
 
-Cc: stable@vger.kernel.org # v3.17+
-Signed-off-by: Pratyush Anand <panand@redhat.com>
-Reported-by: Bjorn Helgaas <bhelgaas@google.com>
+[bhelgaas: changelog]
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
 ---
- drivers/pci/host/pcie-spear13xx.c | 26 ++++++++++++++------------
- 1 file changed, 14 insertions(+), 12 deletions(-)
+ drivers/pci/host/pci-keystone-dw.c | 2 +-
+ drivers/pci/host/pci-keystone.h    | 2 +-
+ drivers/pci/host/pcie-designware.h | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index c49fbdc0f6e4..40862681f010 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -163,34 +163,36 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
-+	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
-+				0, 2, &val);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
-+	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL,
-+				0, 2, val);
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index e71da991949b..3cf55cdb7f87 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -70,7 +70,7 @@ static inline void update_reg_offset_bit_pos(u32 offset, u32 *reg_offset,
+ 	*bit_pos = offset >> 3;
+ }
  
--	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
--	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 0, 2, 0x104A);
-+	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 2, 0xCD80);
+-u32 ks_dw_pcie_get_msi_addr(struct pcie_port *pp)
++phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp)
+ {
+ 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pp);
  
- 	/*
- 	 * if is_gen1 is set then handle it, so that some buggy card
- 	 * also works
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
--				 &val);
-+		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
-+					0, 4, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCAP, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
-+						PCI_EXP_LNKCAP, 0, 4, val);
- 		}
+diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
+index 478d932b602d..f0944e8c4b02 100644
+--- a/drivers/pci/host/pci-keystone.h
++++ b/drivers/pci/host/pci-keystone.h
+@@ -37,7 +37,7 @@ struct keystone_pcie {
  
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
--				 &val);
-+		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
-+					0, 2, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCTL2, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
-+						PCI_EXP_LNKCTL2, 0, 2, val);
- 		}
- 	}
+ /* Keystone DW specific MSI controller APIs/definitions */
+ void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie, int offset);
+-u32 ks_dw_pcie_get_msi_addr(struct pcie_port *pp);
++phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp);
  
+ /* Keystone specific PCI controller APIs */
+ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie);
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index d0bbd276840d..35123d9362c5 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -70,7 +70,7 @@ struct pcie_host_ops {
+ 	void (*host_init)(struct pcie_port *pp);
+ 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
+ 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
+-	u32 (*get_msi_addr)(struct pcie_port *pp);
++	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
+ 	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
+ 	void (*scan_bus)(struct pcie_port *pp);
+ 	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
 -- 
-2.5.0
+2.5.1
 
