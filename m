@@ -1,76 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:41042 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752679AbbIKMPY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 08:15:24 -0400
-Message-ID: <1441973721.3126.15.camel@pengutronix.de>
-Subject: Re: [PATCH v2 2/2] PCI: imx6: Add some defines for improving code
- readability
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Date: Fri, 11 Sep 2015 14:15:21 +0200
-In-Reply-To: <1441973333-3346-2-git-send-email-festevam@gmail.com>
-References: <1441973333-3346-1-git-send-email-festevam@gmail.com>
-	 <1441973333-3346-2-git-send-email-festevam@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:33750 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752196AbbIRVBf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 17:01:35 -0400
+Received: by igbkq10 with SMTP id kq10so44548203igb.0
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2015 14:01:34 -0700 (PDT)
+Date: Fri, 18 Sep 2015 16:01:30 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Zhen Lei <thunder.leizhen@huawei.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Zefan Li <lizefan@huawei.com>, Xinwei Hu <huxinwei@huawei.com>,
+	Tianhong Ding <dingtianhong@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [PATCH 1/1] PCI: remove an unnecessary if statement
+Message-ID: <20150918210130.GN25767@google.com>
+References: <1441881631-5044-1-git-send-email-thunder.leizhen@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1441881631-5044-1-git-send-email-thunder.leizhen@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 11.09.2015, 09:08 -0300 schrieb Fabio Estevam:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
+On Thu, Sep 10, 2015 at 06:40:31PM +0800, Zhen Lei wrote:
+> This patch have no functional change. Successful return count, otherwise
+> return -ENODEV.
 > 
-> Instead of having some hardcoded values, it is preferred to use
-> defines when possible.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Applied with changelog below to pci/misc for v4.4, thanks!
 
+commit 9222097f0d2f88db602c0340d19d90a1c72b5fec
+Author: Zhen Lei <thunder.leizhen@huawei.com>
+Date:   Thu Sep 10 18:40:31 2015 +0800
+
+    PCI: Remove unnecessary "if" statement
+    
+    In store_remove_id(), set the default return value to -ENODEV, and
+    overwrite it with the input buffer size if we find a matching list entry.
+    Then we don't need to test whether to return an error or the count.
+    
+    No functional change.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+ 
 > ---
-> Changes since v1:
-> - Make clear that the defines represent bitfields (Lucas)
+>  drivers/pci/pci-driver.c | 8 +++-----
+>  1 file changed, 3 insertions(+), 5 deletions(-)
 > 
->  drivers/pci/host/pci-imx6.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 52a880c..02919ec 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -172,7 +172,7 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
+>  	__u32 vendor, device, subvendor = PCI_ANY_ID,
+>  		subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
+>  	int fields = 0;
+> -	int retval = -ENODEV;
+> +	size_t retval = -ENODEV;
 > 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 2d0d0fe..6f43086 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -55,6 +55,7 @@ struct imx6_pcie {
->  #define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
->  #define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
->  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
-> +#define PCIE_PHY_DEBUG_R0_LTSSM_MASK		(0x3f << 0)
->  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
->  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
->  #define PCIE_PHY_DEBUG_R1_XMLH_LINK_UP		(1 << 4)
-> @@ -74,6 +75,7 @@ struct imx6_pcie {
->  
->  /* PHY registers (not memory-mapped) */
->  #define PCIE_PHY_RX_ASIC_OUT 0x100D
-> +#define PCIE_PHY_RX_ASIC_OUT_VALID	(1 << 0)
->  
->  #define PHY_RX_OVRD_IN_LO 0x1005
->  #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
-> @@ -503,10 +505,10 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
->  	pcie_phy_read(pp->dbi_base, PCIE_PHY_RX_ASIC_OUT, &rx_valid);
->  	debug_r0 = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0);
->  
-> -	if (rx_valid & 0x01)
-> +	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
->  		return 0;
->  
-> -	if ((debug_r0 & 0x3f) != 0x0d)
-> +	if ((debug_r0 & PCIE_PHY_DEBUG_R0_LTSSM_MASK) != 0x0d)
->  		return 0;
->  
->  	dev_err(pp->dev, "transition to gen2 is stuck, reset PHY!\n");
-
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+>  	fields = sscanf(buf, "%x %x %x %x %x %x",
+>  			&vendor, &device, &subvendor, &subdevice,
+> @@ -190,15 +190,13 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
+>  		    !((id->class ^ class) & class_mask)) {
+>  			list_del(&dynid->node);
+>  			kfree(dynid);
+> -			retval = 0;
+> +			retval = count;
+>  			break;
+>  		}
+>  	}
+>  	spin_unlock(&pdrv->dynids.lock);
+> 
+> -	if (retval)
+> -		return retval;
+> -	return count;
+> +	return retval;
+>  }
+>  static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
+> 
+> --
+> 2.5.0
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
