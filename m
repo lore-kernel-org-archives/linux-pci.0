@@ -1,67 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 30 Sep 2015 15:50:11 -0700
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-api@vger.kernel.org, yinghai@kernel.org,
-	rajatxjain@gmail.com, gong.chen@linux.intel.com,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v3 2/2] PCI: Add support for Enhanced Allocation devices
-Message-ID: <20150930225011.GA4244@sean.stalley.intel.com>
-References: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com>
- <1443485439-12081-3-git-send-email-ddaney.cavm@gmail.com>
- <20150929192737.GA2517@sean.stalley.intel.com>
- <560AF3D7.80908@gmail.com>
- <20150929224727.GB2517@sean.stalley.intel.com>
- <560B2470.9080100@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f170.google.com ([209.85.223.170]:33686 "EHLO
+	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbbIRUqb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 16:46:31 -0400
+Received: by iofh134 with SMTP id h134so69072180iof.0
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2015 13:46:31 -0700 (PDT)
+Date: Fri, 18 Sep 2015 15:46:25 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: jingoohan1@gmail.com, pratyush.anand@gmail.com,
+	linux-pci@vger.kernel.org, wangzhou1@hisilicon.com,
+	yuanzhichang@hisilicon.com, zhudacai@hisilicon.com,
+	zhangjukuo@huawei.com, qiuzhenfa@hisilicon.com,
+	liguozhu@hisilicon.com
+Subject: Re: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write() and
+ dw_pcie_cfg_read()
+Message-ID: <20150918204625.GL25767@google.com>
+References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <560B2470.9080100@caviumnetworks.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 29, 2015 at 04:53:20PM -0700, David Daney wrote:
-> On 09/29/2015 03:47 PM, Sean O. Stalley wrote:
-> [...]
-> >>>>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >>>>index 6a9a111..7c60b16 100644
-> >>>>--- a/drivers/pci/pci.c
-> >>>>+++ b/drivers/pci/pci.c
-> >>>>@@ -2148,6 +2148,284 @@ void pci_pm_init(struct pci_dev *dev)
-> >>>>  	}
-> >>>>  }
-> >>>>
-> >>>>+static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
-> >>>>+{
-> >>>>+	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_SIZEALIGN;
-> >>>
-> >>>Why did you add the IORESOURCE_SIZEALIGN flag? EA allows for unaligned resources.
-> >>
-> >>pci_bus_assign_resources() fails causing the devices to be unusable
-> >>if resource_alignment() returns zero.  The easiest fix for this was
-> >>to specify IORESOURCE_SIZEALIGN.
-> >>
-> >>An alternative would be to change the code in setup-bus.c so that
-> >>for IORESOURCE_PCI_FIXED resources, it didn't barf.
-> >
-> >I would do this alternative, but with a IORESOURCE_PCI_EA flag.
-> >
+On Fri, Sep 11, 2015 at 05:38:26PM +0800, Gabriele Paoloni wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
 > 
-> I don't think we need IORESOURCE_PCI_EA.  If a resource is tagged as
-> IORESOURCE_PCI_FIXED that means that it cannot be changed, we
-> shouldn't care why it is fixed (due to an EA capability for
-> example).  We just need to gracefully handle IORESOURCE_PCI_FIXED in
-> the places where things currently go wrong.
+> This patch changes the implementation of dw_pcie_cfg_read() and
+> dw_pcie_cfg_write() to improve the function usage from the callers
+> perspective.
+> Currently the callers are obliged to pass the 32bit aligned address
+> of the register that contains the field of the PCI header that they
+> want to read/write; also they have to pass the offset of the field
+> in that register. This is quite tricky to use as the callers are
+> obliged to sum the PCI header base address to the field offset
+> masked to retrieve the 32b aligned register address.
 > 
-> David Daney
+> With the new API the callers have to pass the base address of the
+> PCI header and the offset corresponding to the field they intend to
+> read/write.
 > 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-I agree that we need to make sure fixed things stay fixed,
-regardless of if they are fixed by EA or something else.
 
-The question is: do we want to allow all fixed resources to be non-aligned, or just EA?
+>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>  {
+> +	addr += (where & ~0x3);
+>  	*val = readl(addr);
+> +	where &= 3;
+>  
+>  	if (size == 1)
+> -		*val = (*val >> (8 * (where & 3))) & 0xff;
+> +		*val = (*val >> (8 * where)) & 0xff;
+>  	else if (size == 2)
+> -		*val = (*val >> (8 * (where & 3))) & 0xffff;
+> +		*val = (*val >> (8 * where)) & 0xffff;
+>  	else if (size != 4)
+>  		return PCIBIOS_BAD_REGISTER_NUMBER;
+>  
+> @@ -96,12 +98,14 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>  
+>  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
+>  {
+> +	addr += where;
+> +
+>  	if (size == 4)
+>  		writel(val, addr);
+>  	else if (size == 2)
+> -		writew(val, addr + (where & 2));
+> +		writew(val, addr);
+>  	else if (size == 1)
+> -		writeb(val, addr + (where & 3));
+> +		writeb(val, addr);
+>  	else
+>  		return PCIBIOS_BAD_REGISTER_NUMBER;
 
--Sean
+I just noticed the asymmetry between dw_pcie_cfg_read() and
+dw_pcie_cfg_write(): in dw_pcie_cfg_read() we always do 32-bit reads and
+mask out the parts we won't want, but in dw_pcie_cfg_write() we do 8-, 16-,
+or 32-byte writes.
+
+That was there even before your patch, but I wonder why.  Either both
+should work the same way, or there should be a comment explaining why they
+are different.
+
+Jingoo, Pratyush?
