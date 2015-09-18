@@ -1,111 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0096.outbound.protection.outlook.com ([157.56.111.96]:23466
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755806AbbIWP5J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Sep 2015 11:57:09 -0400
-Message-ID: <5602CBCB.4030605@caviumnetworks.com>
-Date: Wed, 23 Sep 2015 08:56:59 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:34686 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbbIRUxK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 16:53:10 -0400
+Received: by igcpb10 with SMTP id pb10so44412699igc.1
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2015 13:53:09 -0700 (PDT)
+Date: Fri, 18 Sep 2015 15:53:01 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: jingoohan1@gmail.com, pratyush.anand@gmail.com,
+	linux-pci@vger.kernel.org, wangzhou1@hisilicon.com,
+	yuanzhichang@hisilicon.com, zhudacai@hisilicon.com,
+	zhangjukuo@huawei.com, qiuzhenfa@hisilicon.com,
+	liguozhu@hisilicon.com
+Subject: Re: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write() and
+ dw_pcie_cfg_read()
+Message-ID: <20150918205301.GM25767@google.com>
+References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	"David Daney" <david.daney@cavium.com>
-Subject: Re: [PATCH v3 3/6] PCI: generic: Quit clobbering our pci_ops.
-References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com> <1442965757-12925-4-git-send-email-ddaney.cavm@gmail.com> <1729894.341fjYUAKl@wuerfel>
-In-Reply-To: <1729894.341fjYUAKl@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/23/2015 01:21 AM, Arnd Bergmann wrote:
-> On Tuesday 22 September 2015 16:49:14 David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
->>
->> The pci-host-generic driver keeps a global struct pci_ops which it
->> then patches with the .map_bus method appropriate for the bus device.
->> A problem arises when the driver is used for two different types of
->> bus devices, the .map_bus method for the last device probed clobbers
->> the method for all previous devices.  The result, only the last bus
->> device probed has the proper .map_bus, and the others fail.
->>
->> Move the struct pci_ops into the bus specific structure, and
->> initialize it when the bus device is probed.  Keep a copy of the
->> gen_pci_cfg_bus_ops structure, instead of a pointer to a global copy,
->
-> This is a very useful change.
->
->> to future proof against the addition of bus specific elements to
->> struct pci_ops.
->
-> but I don't like this part. We should just not have bus specific
-> elements in pci_ops. We don't really have that here either, except
-> that the gen_pci driver had a hack for reusing the same operations
-> for things that are actually different.
->
-> It's an established practice that anything named '*_operations' is
-> meant to be constant and ideally defined as 'static const ... *_ops;'
-> in the driver. We could try to enforce this better by marking
-> bus->ops as 'const' and changing all the instances of this structure
-> accordingly.
->
->> @@ -65,7 +65,11 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
->>
->>   static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
->>   	.bus_shift	= 16,
->> -	.map_bus	= gen_pci_map_cfg_bus_cam,
->> +	.ops		= {
->> +		.map_bus	= gen_pci_map_cfg_bus_cam,
->> +		.read		= pci_generic_config_read,
->> +		.write		= pci_generic_config_write,
->> +	}
->>   };
->
-> So this is good. We could in theory unify the map_bus functions
-> like this now:
->
-> static void __iomem *gen_pci_map_cfg_bus(struct pci_bus *bus,
->                                           unsigned int devfn,
->                                           int where)
-> {
->          struct gen_pci *pci = bus->sysdata;
-> 	struct gen_pci_cfg_bus_ops *ops;
->          resource_size_t idx;
->
-> 	ops = container_of(bus->ops, struct gen_pci_cfg_bus_ops, ops);
-> 	idx = bus->number - pci->cfg.bus_range->start;
->
->          return pci->cfg.win[idx] + ((devfn << ops->dev_shift) | where);
-> }
->
-> Not sure if that improves clarity or not, up to Will.
->
->> @@ -234,8 +237,7 @@ static int gen_pci_probe(struct platform_device *pdev)
->>   	}
->>
->>   	of_id = of_match_node(gen_pci_of_match, np);
->> -	pci->cfg.ops = of_id->data;
->> +	pci->cfg.ops = *(struct gen_pci_cfg_bus_ops *)of_id->data;
->
-> This is the part that grabbed my attention, we should not do it like this.
->
+On Fri, Sep 11, 2015 at 05:38:26PM +0800, Gabriele Paoloni wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> 
+> This patch changes the implementation of dw_pcie_cfg_read() and
+> dw_pcie_cfg_write() to improve the function usage from the callers
+> perspective.
+> Currently the callers are obliged to pass the 32bit aligned address
+> of the register that contains the field of the PCI header that they
+> want to read/write; also they have to pass the offset of the field
+> in that register. This is quite tricky to use as the callers are
+> obliged to sum the PCI header base address to the field offset
+> masked to retrieve the 32b aligned register address.
+> 
+> With the new API the callers have to pass the base address of the
+> PCI header and the offset corresponding to the field they intend to
+> read/write.
+> 
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> ---
+>  drivers/pci/host/pci-exynos.c      |  5 ++---
+>  drivers/pci/host/pci-keystone-dw.c |  4 ++--
+>  drivers/pci/host/pcie-designware.c | 28 ++++++++++++++--------------
+>  drivers/pci/host/pcie-spear13xx.c  | 26 ++++++++++++--------------
+>  4 files changed, 30 insertions(+), 33 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index f9f468d..8b0e04b 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -454,7 +454,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+>  	int ret;
+>  
+>  	exynos_pcie_sideband_dbi_r_mode(pp, true);
+> -	ret = dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, size, val);
+> +	ret = dw_pcie_cfg_read(pp->dbi_base, where, size, val);
+>  	exynos_pcie_sideband_dbi_r_mode(pp, false);
+>  	return ret;
+>  }
 
-I will consider changing this so that a structure copy is not used, 
-perhaps as you suggest above.
+Is there really any value in keeping "addr" and "where" separate?
+dw_pcie_cfg_write() clearly doesn't care; it just adds them together.  I
+don't think dw_pcie_cfg_read() needs to care either: it could round the
+address down to a 32-bit boundary and use the difference to compute the
+mask and shift.
 
-David Daney.
+So I'm proposing something like this:
 
+  int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
+  int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
 
-> 	Arnd
->
-
+>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>  {
+> +	addr += (where & ~0x3);
+>  	*val = readl(addr);
+> +	where &= 3;
+>  
+>  	if (size == 1)
+> -		*val = (*val >> (8 * (where & 3))) & 0xff;
+> +		*val = (*val >> (8 * where)) & 0xff;
+>  	else if (size == 2)
+> -		*val = (*val >> (8 * (where & 3))) & 0xffff;
+> +		*val = (*val >> (8 * where)) & 0xffff;
+>  	else if (size != 4)
+>  		return PCIBIOS_BAD_REGISTER_NUMBER;
+>  
+> @@ -96,12 +98,14 @@ int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32 *val)
+>  
+>  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
+>  {
+> +	addr += where;
+> +
+>  	if (size == 4)
+>  		writel(val, addr);
+>  	else if (size == 2)
+> -		writew(val, addr + (where & 2));
+> +		writew(val, addr);
+>  	else if (size == 1)
+> -		writeb(val, addr + (where & 3));
+> +		writeb(val, addr);
+>  	else
+>  		return PCIBIOS_BAD_REGISTER_NUMBER;
