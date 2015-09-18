@@ -1,43 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f178.google.com ([209.85.160.178]:36153 "EHLO
-	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbbIJXnr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 19:43:47 -0400
-Received: by ykdt18 with SMTP id t18so54897816ykd.3
-        for <linux-pci@vger.kernel.org>; Thu, 10 Sep 2015 16:43:47 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: l.stach@pengutronix.de, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH 1/2] PCI: imx6: Return the real error code
-Date: Thu, 10 Sep 2015 20:43:28 -0300
-Message-Id: <1441928609-21921-1-git-send-email-festevam@gmail.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:58811 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754951AbbIRPMm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 11:12:42 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-pci@vger.kernel.org, kernel@pengutronix.de,
+	patchwork-lst@pengutronix.de
+Subject: [PATCH v5 5/5] PCI: designware: Set up high part of MSI target address
+Date: Fri, 18 Sep 2015 17:12:39 +0200
+Message-Id: <1442589159-28201-6-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
+References: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+Set up the high part of the MSI target address to allow the MSI target to
+be above 4GB on 64bit and PAE systems.
 
-When devm_request_irq() fails we should better return the real
-error code instead of returning a 'fake' one.
-
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+[bhelgaas: changelog]
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
 ---
- drivers/pci/host/pci-imx6.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/host/pcie-designware.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 8f3a981..2d0d0fe 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -539,7 +539,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
- 				       IRQF_SHARED, "mx6-pcie-msi", pp);
- 		if (ret) {
- 			dev_err(&pdev->dev, "failed to request MSI irq\n");
--			return -ENODEV;
-+			return ret;
- 		}
- 	}
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 3a2b8bce27a6..4eada6bc5fef 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -205,12 +205,16 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
  
+ void dw_pcie_msi_init(struct pcie_port *pp)
+ {
++	u64 msi_target;
++
+ 	pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
++	msi_target = virt_to_phys((void *)pp->msi_data);
+ 
+ 	/* program the msi_data */
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+-			virt_to_phys((void *)pp->msi_data));
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4, 0);
++			    (u32)(msi_target & 0xffffffff));
++	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
++			    (u32)(msi_target >> 32 & 0xffffffff));
+ }
+ 
+ static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+@@ -299,12 +303,15 @@ no_valid_irq:
+ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ {
+ 	struct msi_msg msg;
++	u64 msi_target;
+ 
+ 	if (pp->ops->get_msi_addr)
+-		msg.address_lo = pp->ops->get_msi_addr(pp);
++		msi_target = pp->ops->get_msi_addr(pp);
+ 	else
+-		msg.address_lo = virt_to_phys((void *)pp->msi_data);
+-	msg.address_hi = 0x0;
++		msi_target = virt_to_phys((void *)pp->msi_data);
++
++	msg.address_lo = (u32)(msi_target & 0xffffffff);
++	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+ 
+ 	if (pp->ops->get_msi_data)
+ 		msg.data = pp->ops->get_msi_data(pp, pos);
 -- 
-1.9.1
+2.5.1
 
