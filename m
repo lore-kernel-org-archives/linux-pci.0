@@ -1,101 +1,126 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0064.outbound.protection.outlook.com ([157.56.110.64]:59650
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753284AbbIWQYg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 23 Sep 2015 12:24:36 -0400
-Message-ID: <5602D231.5090709@caviumnetworks.com>
-Date: Wed, 23 Sep 2015 09:24:17 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Received: from mail-io0-f172.google.com ([209.85.223.172]:34802 "EHLO
+	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753375AbbIRWbG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 18:31:06 -0400
+Received: by iofb144 with SMTP id b144so71500287iof.1
+        for <linux-pci@vger.kernel.org>; Fri, 18 Sep 2015 15:31:04 -0700 (PDT)
+Date: Fri, 18 Sep 2015 17:30:59 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: Fix pci_claim_bridge_resource() resource claiming
+Message-ID: <20150918223059.GO25767@google.com>
+References: <1441877628-28879-1-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 2/3] PCI: Add quirks for devices found on Cavium ThunderX
- SoCs.
-References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com> <3066583.BWDZlYWxXU@wuerfel> <55FC4330.10302@caviumnetworks.com> <2512701.zkjk3n3AQS@wuerfel> <55FCB3AC.8080709@caviumnetworks.com> <20150922131916.GE27964@google.com>
-In-Reply-To: <20150922131916.GE27964@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1441877628-28879-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/22/2015 06:19 AM, Bjorn Helgaas wrote:
-> Hi David,
->
-> On Fri, Sep 18, 2015 at 06:00:28PM -0700, David Daney wrote:
->> On 09/18/2015 12:45 PM, Arnd Bergmann wrote:
->>> On Friday 18 September 2015 10:00:32 David Daney wrote:
->>>> On 09/18/2015 12:19 AM, Arnd Bergmann wrote:
->>>>> On Thursday 17 September 2015 15:41:33 David Daney wrote:
->>>>>> From: David Daney <david.daney@cavium.com>
->>>>>>
->>>>>> The on-chip devices all have fixed bars.  So, fix them up.
->>>>>>
->>>>>> Signed-off-by: David Daney <david.daney@cavium.com>
->>>>>>
->>>>>
->>>>> You should be able to just mark the BARs as fixed in DT
->>
->> I think we can switch to PCI_PROBE_ONLY, and have all non-fixed BAR
->> devices configured by firmware.  This may significantly simplify any
->> quirks required in the kernel.
->
-> I don't like PCI_PROBE_ONLY, and I'd like to avoid it when we can.
+On Thu, Sep 10, 2015 at 10:33:48AM +0100, Lorenzo Pieralisi wrote:
+> Commit 8505e729a2f6eb ("PCI: Add pci_claim_bridge_resource() to clip
+> window if necessary") introduced a new API to claim bridge resources.
+> pci_claim_bridge_resource() tries to claim a bridge resource, and if
+> the claiming fails the function tries to clip the resource to make
+> it fit within the parent resource window.
+> If the clipping succeeds the bridge aperture is set-up accordingly
+> and pci_claim_bridge_resource() tries to claim the resource again.
+> 
+> Commit c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") added
+> code that sets the IORESOURCE_UNSET flag on claiming failure.
+> 
+> This means that the second resource claiming after window clipping will
+> always fail, since the resource flags contain IORESOURCE_UNSET,
+> previously set on failure by pci_claim_resource(), so the subsequent
+> pci_claim_resource() call ends up spitting a log message and return
+> failure with no chance whatsoever to succeed.
+> 
+> This patch clears the IORESOURCE_UNSET in the bridge resource flags
+> after clipping the bridge window successfully, so that the subsequent
+> pci_claim_resource() has a chance to succeed.
+> 
+> Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: <stable@vger.kernel.org> # 4.1+
+> ---
+>  drivers/pci/setup-bus.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 508cc56..6de55d0 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -733,6 +733,13 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+>  		return -EINVAL;
+>  	}
+>  
+> +	/*
+> +	 * Clear the IORESOURCE_UNSET flag set by the previous
+> +	 * pci_claim_resource() failure so that the resource
+> +	 * claiming can actually be carried out
+> +	 */
+> +	bridge->resource[i].flags &= ~IORESOURCE_UNSET;
+> +
+>  	if (pci_claim_resource(bridge, i) == 0)
+>  		return 0;	/* claimed a smaller window */
+>  
 
-I don't like it either, but if it were the only way the PCI maintainers 
-would allow us to support the hardware, I would rewrite the firmware to 
-make it possible.  However, as you say below ...
+Thanks, Lorenzo, this is definitely a problem.  I propose the
+patch below instead because:
 
->
-> Your original patch description said the on-chip devices have "fixed
-> BARs."  In what sense are they "fixed"?  I assume they are writable
-> enough so we can learn their sizes?
+  - I like clearing IORESOURCE_UNSET at the point where we actually
+    update res->start and res->end (which will also fix any other
+    future callers of pci_bus_clip_resource()), and
 
-Yes.  The BAR registers are writable, but ignored.  So, the size is 
-correctly probed.  The BAR registers are initialized by 
-hardware/firmware to the proper value.
+  - Doing it there means the printk will show how we changed the
+    addresses, not just the size change.
 
->  If we can't learn their sizes, we
-> have bigger problems because we can't tell what space is used.
->
-> Are there other parts of the system, e.g., run-time firmware, that
-> depend on the devices not being moved?
+Can you try this out and see if it also solves the problem you're
+seeing?
 
-The devices cannot move, the address decoding is not programmable.  The 
-BAR registers are provided as an aid in integrating the devices with OS 
-PCI infrastructure.  Although, one might argue that they don't do a very 
-good job of adhering to the PCI specifications...
+I wasn't sure about the provenance of your patch, Lorenzo.  You had a
+Signed-off-by from Yinghai, but I didn't see the original posting.  If
+it originally came from Yinghai, I should change the
+"Based-on-patch-by" below.
 
->
->>>> For the record:  The PCI Enhanced Allocation (EA) capability (approved
->>>> by PCI SIG on 23 October 2014) is the proper way to handle this going
->>>> forward.  However, this is not yet implemented in the SoCs that this
->>>> patch addresses.  Our plan is to implement the EA capability in the core
->>>> PCI code, so that we do not need to keep adding devices to this fixup code.
->
-> Sean Stalley has posted some patches to add EA support to Linux, but I
-> haven't merged them yet.  If we had that, another option would be to
-> hook into your config accessors and fabricate an EA capability.
-
-To me, this is the most interesting part of your message.  If you really 
-would accept a config read accessor that presented a synthetic EA 
-capability, that would be ideal.  We know exactly which roots contain 
-the fixed devices, so it would be a trivial exercise to provide a custom 
-config accessor.
-
-I am going to work on this in hope of eventual acceptance of this strategy.
-
-Thanks,
-David Daney
+Bjorn
 
 
+commit a4ad03352739c96842af5d06387595665cdd875e
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Fri Sep 18 17:15:01 2015 -0500
+
+    PCI: Clear IORESOURCE_UNSET when clipping a bridge window
+    
+    c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") sets IORESOURCE_UNSET
+    if we fail to claim a resource.  If we tried to claim a bridge window,
+    failed, clipped the window, and tried to claim the clipped window, we
+    failed again because of IORESOURCE_UNSET.
+    
+    When pci_bus_clip_resource() clips a bridge window to fit inside an
+    upstream window, we're reassigning the window, so clear the
+    IORESOURCE_UNSET flag.  Also clear IORESOURCE_UNSET in our copy of the
+    unclipped window so we can see exactly what the original window was and how
+    it now fits inside the upstream window.
+    
+    Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
+    Based-on-patch-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# 4.1+
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6fbd3f2..d3346d2 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -256,6 +256,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
+ 
+ 		res->start = start;
+ 		res->end = end;
++		res->flags &= ~IORESOURCE_UNSET;
++		orig_res.flags &= ~IORESOURCE_UNSET;
+ 		dev_printk(KERN_DEBUG, &dev->dev, "%pR clipped to %pR\n",
+ 				 &orig_res, res);
+ 
