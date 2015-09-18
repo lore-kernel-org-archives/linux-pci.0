@@ -1,79 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 20 Sep 2015 12:58:48 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-	<tglx@linutronix.de>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI/MSI: Fix MSI IRQ domains for SR-IOV
-Message-ID: <20150920125848.37d04b21@arm.com>
-In-Reply-To: <20150918210648.19363.35694.stgit@gimli.home>
-References: <20150918210648.19363.35694.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:54249 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753932AbbIRObu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 10:31:50 -0400
+Date: Fri, 18 Sep 2015 10:31:49 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH] PCI / PM: Update runtime PM documentation for PCI devices
+In-Reply-To: <2256432.RWZW2V6rYx@vostro.rjw.lan>
+Message-ID: <Pine.LNX.4.44L0.1509181028130.1681-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 18 Sep 2015 15:08:54 -0600
-Alex Williamson <alex.williamson@redhat.com> wrote:
+On Fri, 18 Sep 2015, Rafael J. Wysocki wrote:
 
-Hi Alex,
-
-> SR-IOV creates a virtual bus where bus->self is NULL.  This results
-> in a segfault as VFs are added and we scan for an MSI domain without
-> taking that into account.  Detect this and scan up to the parent bus
-> until we find a real bridge.
-
-Irk. Sorry about the breakage.
-
-> Fixes: 44aa0c657e3e ("PCI/MSI: Add hooks to populate the msi_domain field")
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Section 3.2 "Device Runtime Power Management" of pci.txt has become
+> outdated, so update it to correctly reflect the current code flow.
+> 
+> Also update the comment in local_pci_probe() to document the fact
+> that pm_runtime_put_noidle() is not the only runtime PM helper
+> function that can be used to decrement the device's runtime PM
+> usage counter in .probe().
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > ---
->  drivers/pci/probe.c |   17 +++++++++++------
->  1 file changed, 11 insertions(+), 6 deletions(-)
+>  Documentation/power/pci.txt |   51 ++++++++++++++++++++++++++++++++------------
+>  drivers/pci/pci-driver.c    |    7 +++---
+>  2 files changed, 42 insertions(+), 16 deletions(-)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 0b2be17..b42419e 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -676,15 +676,20 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
->  static void pci_set_bus_msi_domain(struct pci_bus *bus)
->  {
->  	struct irq_domain *d;
-> +	struct pci_bus *b;
->  
->  	/*
-> -	 * Either bus is the root, and we must obtain it from the
-> -	 * firmware, or we inherit it from the bridge device.
-> +	 * The bus can be a root bus, a subordinate bus, or a virtual bus
-> +	 * created by an SR-IOV device.  Walk up to the first bridge device
-> +	 * found or derive the domain from the host bridge.
->  	 */
-> -	if (pci_is_root_bus(bus))
-> -		d = pci_host_bridge_msi_domain(bus);
-> -	else
-> -		d = dev_get_msi_domain(&bus->self->dev);
-> +	for (b = bus, d = NULL; !d && !pci_is_root_bus(b); b = b->parent) {
-> +		if (b->self)
-> +			d = dev_get_msi_domain(&b->self->dev);
-> +	}
-> +
-> +	if (!d)
-> +		d = pci_host_bridge_msi_domain(b);
->  
->  	dev_set_msi_domain(&bus->dev, d);
->  }
-> 
+> Index: linux-pm/Documentation/power/pci.txt
+> ===================================================================
+> --- linux-pm.orig/Documentation/power/pci.txt
+> +++ linux-pm/Documentation/power/pci.txt
+> @@ -979,20 +979,45 @@ every time right after the runtime_resum
 
-Out of curiosity, is this a common behaviour? I've tested the original
-code with an Intel i350 Ethernet interface (IGB+IGBVF), and used it
-with virtual functions on my arm64-based Seattle, without any issue. Do
-we have divergent implementations of the same functionality in the
-kernel? Otherwise:
+...
 
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> +It is important to remember that the driver's runtime_suspend() callback
+> +may be executed right after the usage counter has been decremented, because
+> +user space may already have cuased the pm_runtime_allow() helper function
 
-Thanks,
+s/cuased/caused/.  Otherwise,
 
-	M.
--- 
-Jazz is not dead. It just smells funny.
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+
