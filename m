@@ -1,144 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52640 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752192AbbIUJ54 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Sep 2015 05:57:56 -0400
-Date: Mon, 21 Sep 2015 10:58:13 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:49519 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754928AbbIRPMm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 11:12:42 -0400
+From: Lucas Stach <l.stach@pengutronix.de>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] PCI: Fix pci_claim_bridge_resource() resource claiming
-Message-ID: <20150921095813.GA13325@red-moon>
-References: <1441877628-28879-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20150918223059.GO25767@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150918223059.GO25767@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-pci@vger.kernel.org, kernel@pengutronix.de,
+	patchwork-lst@pengutronix.de
+Subject: [PATCH v5 2/5] PCI: designware: Factor out MSI msg setup
+Date: Fri, 18 Sep 2015 17:12:36 +0200
+Message-Id: <1442589159-28201-3-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
+References: <1442589159-28201-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 18, 2015 at 11:30:59PM +0100, Bjorn Helgaas wrote:
-> On Thu, Sep 10, 2015 at 10:33:48AM +0100, Lorenzo Pieralisi wrote:
-> > Commit 8505e729a2f6eb ("PCI: Add pci_claim_bridge_resource() to clip
-> > window if necessary") introduced a new API to claim bridge resources.
-> > pci_claim_bridge_resource() tries to claim a bridge resource, and if
-> > the claiming fails the function tries to clip the resource to make
-> > it fit within the parent resource window.
-> > If the clipping succeeds the bridge aperture is set-up accordingly
-> > and pci_claim_bridge_resource() tries to claim the resource again.
-> > 
-> > Commit c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") added
-> > code that sets the IORESOURCE_UNSET flag on claiming failure.
-> > 
-> > This means that the second resource claiming after window clipping will
-> > always fail, since the resource flags contain IORESOURCE_UNSET,
-> > previously set on failure by pci_claim_resource(), so the subsequent
-> > pci_claim_resource() call ends up spitting a log message and return
-> > failure with no chance whatsoever to succeed.
-> > 
-> > This patch clears the IORESOURCE_UNSET in the bridge resource flags
-> > after clipping the bridge window successfully, so that the subsequent
-> > pci_claim_resource() has a chance to succeed.
-> > 
-> > Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
-> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: <stable@vger.kernel.org> # 4.1+
-> > ---
-> >  drivers/pci/setup-bus.c | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> > 
-> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > index 508cc56..6de55d0 100644
-> > --- a/drivers/pci/setup-bus.c
-> > +++ b/drivers/pci/setup-bus.c
-> > @@ -733,6 +733,13 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
-> >  		return -EINVAL;
-> >  	}
-> >  
-> > +	/*
-> > +	 * Clear the IORESOURCE_UNSET flag set by the previous
-> > +	 * pci_claim_resource() failure so that the resource
-> > +	 * claiming can actually be carried out
-> > +	 */
-> > +	bridge->resource[i].flags &= ~IORESOURCE_UNSET;
-> > +
-> >  	if (pci_claim_resource(bridge, i) == 0)
-> >  		return 0;	/* claimed a smaller window */
-> >  
-> 
-> Thanks, Lorenzo, this is definitely a problem.  I propose the
-> patch below instead because:
-> 
->   - I like clearing IORESOURCE_UNSET at the point where we actually
->     update res->start and res->end (which will also fix any other
->     future callers of pci_bus_clip_resource()), and
-> 
->   - Doing it there means the printk will show how we changed the
->     addresses, not just the size change.
-> 
-> Can you try this out and see if it also solves the problem you're
-> seeing?
+Factor out the PCI MSI message setup from the single MSI setup function.
+This will be reused by the multivector MSI setup.
 
-Thanks Bjorn, yes that makes sense and it solves the problem.
+No functional change yet.
 
-> I wasn't sure about the provenance of your patch, Lorenzo.  You had a
-> Signed-off-by from Yinghai, but I didn't see the original posting.  If
-> it originally came from Yinghai, I should change the
-> "Based-on-patch-by" below.
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+---
+ drivers/pci/host/pcie-designware.c | 28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
-As Yinghai mentioned, I posted a patch to show that the second resource
-claim in pci_claim_bridge_resource() was basically dead code in mainline,
-to get your attention and obviously I knew what the real fix was,
-I mentioned that when I inlined the patch.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 52aa6e34002b..7a168ea25e2f 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -293,19 +293,9 @@ no_valid_irq:
+ 	return -ENOSPC;
+ }
+ 
+-static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+-			struct msi_desc *desc)
++static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ {
+-	int irq, pos;
+ 	struct msi_msg msg;
+-	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
+-
+-	if (desc->msi_attrib.is_msix)
+-		return -EINVAL;
+-
+-	irq = assign_irq(1, desc, &pos);
+-	if (irq < 0)
+-		return irq;
+ 
+ 	if (pp->ops->get_msi_addr)
+ 		msg.address_lo = pp->ops->get_msi_addr(pp);
+@@ -319,6 +309,22 @@ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+ 		msg.data = pos;
+ 
+ 	pci_write_msi_msg(irq, &msg);
++}
++
++static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
++			struct msi_desc *desc)
++{
++	int irq, pos;
++	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
++
++	if (desc->msi_attrib.is_msix)
++		return -EINVAL;
++
++	irq = assign_irq(1, desc, &pos);
++	if (irq < 0)
++		return irq;
++
++	dw_msi_setup_msg(pp, irq, pos);
+ 
+ 	return 0;
+ }
+-- 
+2.5.1
 
-You can keep patch below as is or give Yinghai Based-on-patch-by
-accreditation and add a reported-by with my tag, I do not care as long
-as we fix it.
-
-You can also add:
-
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-Thanks,
-Lorenzo
-
-> commit a4ad03352739c96842af5d06387595665cdd875e
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Fri Sep 18 17:15:01 2015 -0500
-> 
->     PCI: Clear IORESOURCE_UNSET when clipping a bridge window
->     
->     c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") sets IORESOURCE_UNSET
->     if we fail to claim a resource.  If we tried to claim a bridge window,
->     failed, clipped the window, and tried to claim the clipped window, we
->     failed again because of IORESOURCE_UNSET.
->     
->     When pci_bus_clip_resource() clips a bridge window to fit inside an
->     upstream window, we're reassigning the window, so clear the
->     IORESOURCE_UNSET flag.  Also clear IORESOURCE_UNSET in our copy of the
->     unclipped window so we can see exactly what the original window was and how
->     it now fits inside the upstream window.
->     
->     Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
->     Based-on-patch-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     CC: stable@vger.kernel.org	# 4.1+
-> 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 6fbd3f2..d3346d2 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -256,6 +256,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
->  
->  		res->start = start;
->  		res->end = end;
-> +		res->flags &= ~IORESOURCE_UNSET;
-> +		orig_res.flags &= ~IORESOURCE_UNSET;
->  		dev_printk(KERN_DEBUG, &dev->dev, "%pR clipped to %pR\n",
->  				 &orig_res, res);
->  
-> 
