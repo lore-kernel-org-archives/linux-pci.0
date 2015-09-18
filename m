@@ -1,52 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f42.google.com ([209.85.213.42]:34573 "EHLO
-	mail-vk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756298AbbIUVcR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2015 17:32:17 -0400
-Received: by vkhf67 with SMTP id f67so74072869vkh.1
-        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2015 14:32:17 -0700 (PDT)
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:32796 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222AbbIRGaj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Sep 2015 02:30:39 -0400
+Received: by wiclk2 with SMTP id lk2so50788491wic.0
+        for <linux-pci@vger.kernel.org>; Thu, 17 Sep 2015 23:30:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <c7712b0f947d43db957a199f5085ae33@XCGVAG27.northgrum.com>
-References: <c7712b0f947d43db957a199f5085ae33@XCGVAG27.northgrum.com>
-Date: Mon, 21 Sep 2015 14:32:17 -0700
-Message-ID: <CAE9FiQWN9BhdOb2HOgoWibgV2wdXoy-jyazzmvDV3tmcfv8Pdw@mail.gmail.com>
-Subject: Re: :Re: [PATCH v1 3/7] PCI: Let kcmdline reserve bus numbers for
- hotplug bridges
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <20150917145949.GF25767@google.com>
+References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org> <20150917145949.GF25767@google.com>
+From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
+Date: Fri, 18 Sep 2015 08:29:58 +0200
+Message-ID: <CAG374jAPc8o47uy=0u7FKSZzgMqX9UQ2HCB0Kjme2Xce_tC2aQ@mail.gmail.com>
+Subject: Re: [PATCH v4 0/4] PCI: st: provide support for dw pcie
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Maxime Coquelin <maxime.coquelin@st.com>,
+	Patrice Chotard <patrice.chotard@st.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Jingoo Han <jg1.han@samsung.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Fabrice Gasnier <fabrice.gasnier@st.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Muralidharan Karicheri <m-karicheri2@ti.com>,
+	Sachin Kamat <sachin.kamat@samsung.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Liviu Dudau <liviu.dudau@arm.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"kernel@stlinux.com" <kernel@stlinux.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Lee Jones <lee.jones@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 21, 2015 at 9:01 AM, Tang, Jason (ES) <Jason.Tang2@ngc.com> wrote:
->> -----Original Message-----
->> From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
->> Yinghai Lu
->> Sent: Sunday, September 20, 2015 02:20
->> To: Bjorn Helgaas
->> Cc: Tang, Jason (ES); linux-pci@vger.kernel.org
->> Subject: EXT :Re: [PATCH v1 3/7] PCI: Let kcmdline reserve bus numbers for
->> hotplug bridges
+No problem
+
+Thanks
+
+Gabriel
+
+On 17 September 2015 at 16:59, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> Hi Gabriel,
+>
+> On Thu, Aug 27, 2015 at 02:34:13PM +0200, Gabriel Fernandez wrote:
 >>
->> from bus [old_max, old_max+pci_hotplug_buses) could be used by other
->> bridges,
->> and other bridges could even get probed yet.
+>> This patchset is based on v4.2-rc1 and is based on
+>> [PATCH v8 0/6] PCI: hisi: Add PCIe host support for HiSilicon SoC Hip05
+>> patchset from Zhou Wang.
+>>
+>> Changes in v4:
+>>  - Remove pci: designware: remove my pci_common_init_dev() patch and
+>>       use [PATCH v8 3/6] PCI: designware: Add ARM64 support instead.
+>>       This patch is a good solution for me to disable IO support.
+>>  - add __init to st_pcie_probe() and use module_init() instead
+>>       device_initcall() to prevent the probe function from being
+>>       deferred and to prevent module unloading.
+>>
+>> Changes in v3:
+>>  - Remove power management functions (was not fully tested)
+>>  - Remove configuration space range from dt binding
+>>  - Remove pci_common_init_dev() call in pcie-designware.c to avoid
+>>    default IO space declaration.
+>>
+>> Changes in v2:
+>>  - comestic corrections in device tree binding
+>>  - add pci-st.c into MAINTAINERS
+>>  - remove st_pcie_ops structure to avoid another level of indirection
+>>  - remove nasty busy-loop
+>>  - remove useless test using virt_to_phys()
+>>  - move disable io support into dw-pcie driver
+>>
+>> I don't change the st_pcie_abort_handler() function because abort handling
+>> is masked during boot.
+>>
+>>
+>> This patch-set introduces a STMicroelectronics PCIe controller.
+>> It's based on designware PCIe driver.
+>>
+>> Gabriel Fernandez (4):
+>>   ARM: STi: Kconfig update for PCIe support
+>>   PCI: st: Add Device Tree bindings for sti pcie
+>>   PCI: st: Provide support for the sti PCIe controller
+>>   MAINTAINERS: Add pci-st.c to ARCH/STI architecture
 >
-> I have tested the case where a subsequent bridge has not been probed yet and the BIOS is assigning it the same bus number. The behavior I observed is that conflicting bus numbers will be fixed during the second pass of PCI probing. See pci_scan_bridge() in drivers/pci/probe.c, lines 875-880 on tag v4.3-rc2. Also observe how patch 7 in my series updates the preceding conditional (line 874) to also check if the device is a hotpluggable bridge.
+> Rob had some questions, so I'm waiting for an update that responds to
+> those.  When you post that, can you also squash the last two patches
+> together?
 >
-
-so there is a window that two peer bridges have been configured to
-overlapped bus range?
-
->> Also it could even cross the boundary to other peer root bus range.
+> Thanks,
+>   Bjorn
 >
-> I am not sure what you mean by this. Can you elaborate?
-
-couple peer bus range:
-root bus 0: [0,7f], root bus [80, ff]
-if one bridge under first root bus get add range blindly, it will
-cross the boundary at 0x7f.
-
-Yinghai
+>>  Documentation/devicetree/bindings/pci/st-pcie.txt |  53 ++
+>>  MAINTAINERS                                       |   1 +
+>>  arch/arm/mach-sti/Kconfig                         |   2 +
+>>  drivers/pci/host/Kconfig                          |   9 +
+>>  drivers/pci/host/Makefile                         |   1 +
+>>  drivers/pci/host/pci-st.c                         | 583 ++++++++++++++++++++++
+>>  6 files changed, 649 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
+>>  create mode 100644 drivers/pci/host/pci-st.c
+>>
+>> --
+>> 1.9.1
+>>
