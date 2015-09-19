@@ -1,79 +1,91 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/3] PCI: Add quirks for devices found on Cavium ThunderX
+ SoCs.
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com>
+ <3066583.BWDZlYWxXU@wuerfel> <55FC4330.10302@caviumnetworks.com>
+ <2512701.zkjk3n3AQS@wuerfel>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	David Daney <david.daney@cavium.com>
+From: David Daney <ddaney@caviumnetworks.com>
+Message-ID: <55FCB3AC.8080709@caviumnetworks.com>
+Date: Fri, 18 Sep 2015 18:00:28 -0700
 MIME-Version: 1.0
-In-Reply-To: <CAKsTQn=skDo7mbTrvFfQHW+nD1Ggy-g+qT922WOrjiwqyK5BwQ@mail.gmail.com>
-References: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
-	<CAE9FiQXaOkMKk2PddYOXApK9tKLkgusH18sYgvLHA04BRdXR-g@mail.gmail.com>
-	<CAKsTQn=u5HuMCz5_L1jbx6Fvz5Rf_e14tNeEPwxy1o8dxk4J8g@mail.gmail.com>
-	<CAE9FiQWxiLV0YeWfUAd=vJaxtV-0PrqBqm1ptKnFoEM0jQDaiQ@mail.gmail.com>
-	<CAKsTQn=skDo7mbTrvFfQHW+nD1Ggy-g+qT922WOrjiwqyK5BwQ@mail.gmail.com>
-Date: Mon, 21 Sep 2015 16:06:26 +0200
-Message-ID: <CAKsTQn=aigrfTz5hYmzvERK3w6Ax1yxEyZfzWt_NaT6d+-DYuA@mail.gmail.com>
-Subject: Re: PCIe bus (re-)numbering
-From: Ruud <netwerkforens@gmail.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <2512701.zkjk3n3AQS@wuerfel>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2015-09-21 9:49 GMT+02:00 Ruud <netwerkforens@gmail.com>:
->>       /sbin/setpci -s $NAME 0x1a.b=0
->>       N=`find /sys/devices/pci0000:"$BUS"/"$NAME"/remove -name "remove"`
->>       echo $N
->>       echo -n 1 > "$N"
->>       sleep 1s
->>     done
->> done
->>
->
-> Thanks for the script!
->
->>
+On 09/18/2015 12:45 PM, Arnd Bergmann wrote:
+> On Friday 18 September 2015 10:00:32 David Daney wrote:
+>> On 09/18/2015 12:19 AM, Arnd Bergmann wrote:
+>>> On Thursday 17 September 2015 15:41:33 David Daney wrote:
+>>>> From: David Daney <david.daney@cavium.com>
+>>>>
+>>>> The on-chip devices all have fixed bars.  So, fix them up.
+>>>>
+>>>> Signed-off-by: David Daney <david.daney@cavium.com>
+>>>>
 >>>
->>> I will test next monday.
+>>> You should be able to just mark the BARs as fixed in DT
+
+I think we can switch to PCI_PROBE_ONLY, and have all non-fixed BAR 
+devices configured by firmware.  This may significantly simplify any 
+quirks required in the kernel.
+
+
 >>
-
-
-Test result based upon
-
-http://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-7e3fad2 (for-pci-v4.3-rc1)
-
-Unfortunately your script hangs the system, I modified it for my
-situation (only one root complex, 1 PCI switch will be affected).
- It seems to aggressive on the BAR's..tried to troubleshoot but don't
-understand the details on
-
-      /sbin/setpci -s $NAME 0x20.l=0
-      /sbin/setpci -s $NAME 0x24.l=0
-      /sbin/setpci -s $NAME 0x28.l=0
-      /sbin/setpci -s $NAME 0x2c.l=0
-
-why you zero these (besides the bus numbers).
-
-I got the full system working by just zeroing the busnumbers on the
-switch at root complex level, remove the switch and rescan it. In this
-procedure I need to take care of the some physical aspects: I can not
-turn on the chassis when the PCIe switch is removed, some interrupt
-comes through and will result in a kernel panic.
-
-Thus the procedure that works is:
-1) Chassis off
-2) Boot linux
-3) Chassis on
-4) setpci busnrs to 0
-5) remove switch
-6) rescan
-
-Cards recognised and functional, memory regions look ok, running out
-of iospace but not much can be done about that.
-
-Same procedure on 3.2.0 kernel (debian stock)  results in all cards
-being recognized (enum ok) but fails to assign BAR's (tries to fit
-them below 4G)
-
-
-Best regards,
-
-Ruud
+>> In the case of ACPI, there is no DT.  So we would need a different
+>> solution for ACPI.  What would you recommend for ACPI?
+>
+> I would expect that this does not matter at all on ACPI, because
+> the devices that need it are not hot-plugged, and all boot-time
+> devices are probed by the firmware: the ACPI PCI implementation
+> does not reassign any BARs, except for the hotplug case.
+>
+>> Also, can you point me to the OF device tree specification where it
+>> tells how to specify PCI BAR addresses, I would especially be interested
+>> in knowing how to specify fixed SRIOV BAR addresses in the device tree.
+>
+> This is the 'n' bit mentioned sections 2.1.3 and 2.2.1.1 of the
+> PCI binding. When it is set, the OS is not supposed to try to
+> reassign the BAR even on machines that otherwise do a complete
+> rescan.
+>
+> The PCI binding traditionally requires you to list all PCI devices
+> in DT, Linux as an extension (for the flattened DT format) allows
+> leaving out the devices, but in this case you probably need to
+> list every device that has a fixed BAR.
+>
+>> Yes, it is a bit of a hack.  That is why I put it in its own file, and
+>> only try to hack up PCI devices that exactly match the vendor and device
+>> ids that need fixing.
+>>
+>> IMHO, putting infrastructure into drivers/pci/probe.c, et al. to handle
+>> this would be much more intrusive.
+>
+> My guess is that it's already there, but even if it's not, this is a
+> generic well-defined case that has a standardized binding, and we should
+> implement that.
+>
+>> For the record:  The PCI Enhanced Allocation (EA) capability (approved
+>> by PCI SIG on 23 October 2014) is the proper way to handle this going
+>> forward.  However, this is not yet implemented in the SoCs that this
+>> patch addresses.  Our plan is to implement the EA capability in the core
+>> PCI code, so that we do not need to keep adding devices to this fixup code.
+>
+> Good, but still this should only be required for the embedded case where
+> you don't have a firmware to probe the bus.
+>
+> 	Arnd
+>
