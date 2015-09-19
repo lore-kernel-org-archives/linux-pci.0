@@ -1,65 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:4514 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751289AbbIJKoz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 06:44:55 -0400
-From: Zhen Lei <thunder.leizhen@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-CC: Zefan Li <lizefan@huawei.com>, Xinwei Hu <huxinwei@huawei.com>,
-	"Tianhong Ding" <dingtianhong@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH 1/1] PCI: remove an unnecessary if statement
-Date: Thu, 10 Sep 2015 18:40:31 +0800
-Message-ID: <1441881631-5044-1-git-send-email-thunder.leizhen@huawei.com>
+Received: from mail-vk0-f43.google.com ([209.85.213.43]:35867 "EHLO
+	mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020AbbISU6L (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 19 Sep 2015 16:58:11 -0400
+Received: by vkfp126 with SMTP id p126so46916742vkf.3
+        for <linux-pci@vger.kernel.org>; Sat, 19 Sep 2015 13:58:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <66c9da3f76f74ee5a81473d35777a59b@XCGVAG27.northgrum.com>
+References: <66c9da3f76f74ee5a81473d35777a59b@XCGVAG27.northgrum.com>
+Date: Sat, 19 Sep 2015 13:58:10 -0700
+Message-ID: <CAE9FiQWbL+WLfV7enKpJttYo6xyOMX5NR9zbNL9he2qfVt5UeQ@mail.gmail.com>
+Subject: Re: [PATCH v1 3/7] PCI: Let kcmdline reserve bus numbers for hotplug bridges
+From: Yinghai Lu <yinghai@kernel.org>
+To: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch have no functional change. Successful return count, otherwise
-return -ENODEV.
+On Thu, Sep 17, 2015 at 2:11 PM, Tang, Jason (ES) <Jason.Tang2@ngc.com> wrote:
+> This introduces a new kernel command line parameter, "hpbuses", that
+> allows the user to set how many bus numbers to reserve for hotplug
+> bridges.  The default value is 0, which means do not reserve any bus
+> numbers for bridges that are hot-added after enumeration completes.
+>
+> During device probing, increment a hotplug bridge's subordinate bus
+> number by the amount set by "hpbuses".  This way, bridges that are
+> hot-added after enumeration can have buses reserved for them.
 
-Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
----
- drivers/pci/pci-driver.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 58ae892..553b345 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -930,6 +930,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>                 /*
+>                  * Set the subordinate bus number to its real value.
+>                  */
+> +               if (child->self->is_hotplug_bridge)
+> +                       max += pci_hotplug_buses;
+>                 child->subordinate = max;
+>                 pci_bus_update_busn_res_end(child, child->subordinate);
+>                 pci_write_config_byte(dev, PCI_SUBORDINATE_BUS,
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 52a880c..02919ec 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -172,7 +172,7 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
- 	__u32 vendor, device, subvendor = PCI_ANY_ID,
- 		subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
- 	int fields = 0;
--	int retval = -ENODEV;
-+	size_t retval = -ENODEV;
+No, you can not increase the max blindly.
 
- 	fields = sscanf(buf, "%x %x %x %x %x %x",
- 			&vendor, &device, &subvendor, &subdevice,
-@@ -190,15 +190,13 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
- 		    !((id->class ^ class) & class_mask)) {
- 			list_del(&dynid->node);
- 			kfree(dynid);
--			retval = 0;
-+			retval = count;
- 			break;
- 		}
- 	}
- 	spin_unlock(&pdrv->dynids.lock);
-
--	if (retval)
--		return retval;
--	return count;
-+	return retval;
- }
- static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
-
---
-2.5.0
-
-
+Yinghai
