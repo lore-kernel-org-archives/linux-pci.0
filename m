@@ -1,67 +1,143 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 22 Sep 2015 19:33:20 +0100
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<lftan.linux@gmail.com>, Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v7 3/6] pci:host: Add Altera PCIe host controller driver
-Message-ID: <20150922193320.37997c15@arm.com>
-In-Reply-To: <1442801587-3812-4-git-send-email-lftan@altera.com>
-References: <1442801587-3812-1-git-send-email-lftan@altera.com>
-	<1442801587-3812-4-git-send-email-lftan@altera.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f51.google.com ([209.85.213.51]:35593 "EHLO
+	mail-vk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753001AbbITRDq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Sep 2015 13:03:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAKsTQn=u5HuMCz5_L1jbx6Fvz5Rf_e14tNeEPwxy1o8dxk4J8g@mail.gmail.com>
+References: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
+	<CAE9FiQXaOkMKk2PddYOXApK9tKLkgusH18sYgvLHA04BRdXR-g@mail.gmail.com>
+	<CAKsTQn=u5HuMCz5_L1jbx6Fvz5Rf_e14tNeEPwxy1o8dxk4J8g@mail.gmail.com>
+Date: Sun, 20 Sep 2015 10:03:45 -0700
+Message-ID: <CAE9FiQWxiLV0YeWfUAd=vJaxtV-0PrqBqm1ptKnFoEM0jQDaiQ@mail.gmail.com>
+Subject: Re: PCIe bus (re-)numbering
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ruud <netwerkforens@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 21 Sep 2015 10:13:04 +0800
-Ley Foon Tan <lftan@altera.com> wrote:
+On Sun, Sep 20, 2015 at 2:17 AM, Ruud <netwerkforens@gmail.com> wrote:
+>
+> The current procedure I follow is to boot with two PCIe switches in the host.
+> (one at the root complex level, intel based, one level above PLX
+> based, and the whole tree in the chassis).
+>
+> - I turn off the chassis (as it conflicts with the BIOS :( )
+> - Reboot into linux.
+> - remove the intel based switch (has no relevant childs) (echo 1
+>>.../remove  sorry for the missing numbers its weekend)
+> - turn on chassis
+> - rescan starting at the root complex  (echo 1 > .../rescan )
+>
+> During the rescan, it will map in the original busnumber-range which
+> is too small. I understand from your email that by clearing the
+> busnumber range in the switch (perhaps both host switces), the kernel
+> will pick a different range which is not clamped in by the other
+> busnumbers of surrounding other switches?
 
-> This patch adds the Altera PCIe host controller driver.
-> 
-> Signed-off-by: Ley Foon Tan <lftan@altera.com>
-> ---
->  drivers/pci/host/Kconfig       |   8 +
->  drivers/pci/host/Makefile      |   1 +
->  drivers/pci/host/pcie-altera.c | 591 +++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 600 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-altera.c
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index d5e58ba..df9ed4f 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -145,4 +145,12 @@ config PCIE_IPROC_BCMA
->  	  Say Y here if you want to use the Broadcom iProc PCIe controller
->  	  through the BCMA bus interface
->  
-> +config PCIE_ALTERA
-> +	tristate "Altera PCIe controller"
-> +	depends on ARCH_SOCFPGA || NIOS2
-> +	select PCI_DOMAINS
-> +	help
-> +	  Say Y here if you want to enable PCIe controller support for Altera
-> +	  SoCFPGA family of SoCs.
-> +
+Yes.
 
-Is there anything in this driver that is actually specific to any of
-these two platforms/architectures? I'd don't think we should restrict
-if we can avoid it (hint: the companion MSI driver is not restricted to
-any architecture).
+Only need to clear root port.
 
-Thanks,
+here the scripts that I used to test busn_alloc and other mmio
+resource allocation.
+The system could have 8 peer pci root buses.
 
-	M.
--- 
-Jazz is not dead. It just smells funny.
+#
+# for x4-4, x4-8, x5-4, x5-8
+
+BUSES='00 20 40 60 80 a0 c0 e0'
+DEV_FUNCS='02.0 03.2'
+
+echo "Remove all child devices at first"
+for BUS in $BUSES; do
+    for DEV_FUNC in $DEV_FUNCS; do
+      NAME=0000:"$BUS":"$DEV_FUNC"
+      LINE=`/sbin/lspci -nn -s $NAME | wc -l`
+      if [ $LINE -eq 0 ]; then
+        continue
+      fi
+      echo $NAME
+      NA=`find /sys/devices/pci0000:"$BUS"/"$NAME"/*/remove -name "remove"`
+      for N in $NA; do
+        echo $N
+        echo -n 1 > "$N"
+        sleep 1s
+      done
+    done
+done
+
+sleep 5s
+
+echo "Clear bridge mmio BARs and busn"
+for BUS in $BUSES; do
+    for DEV_FUNC in $DEV_FUNCS; do
+      NAME=0000:"$BUS":"$DEV_FUNC"
+      LINE=`/sbin/lspci -nn -s $NAME | wc -l`
+      if [ $LINE -eq 0 ]; then
+        continue
+      fi
+      echo $NAME
+      /sbin/setpci -s $NAME 0x20.l=0
+      /sbin/setpci -s $NAME 0x24.l=0
+      /sbin/setpci -s $NAME 0x28.l=0
+      /sbin/setpci -s $NAME 0x2c.l=0
+      /sbin/setpci -s $NAME 0x18.w=0
+      /sbin/setpci -s $NAME 0x1a.b=0
+      N=`find /sys/devices/pci0000:"$BUS"/"$NAME"/remove -name "remove"`
+      echo $N
+      echo -n 1 > "$N"
+      sleep 1s
+    done
+done
+
+
+>
+> I will test next monday.
+
+Good. Please check current upstream and my tree for-pci-v4.3-rc1 branch.
+
+>
+> What I did get to work is the following procedure:
+>> - I turn off the chassis (as it conflicts with the BIOS :(  )
+> - Boot linux with parameter pci=assign-busses (BIOS will have
+> configured the switches in the host without a serious busnumber range)
+> - remove the intel based switch (has no relevant childs) (echo 1
+>>.../remove  sorry for the missing numbers its weekend)
+> - turn on chassis
+> - rescan starting at the root complex  (echo 1 > .../rescan )
+> During rescan the numbering is messed up, and dmesg fills up with
+> ethernet renaming "errors", didn;t dare to look at other side-effects.
+
+assign-busses may be too destructive.  May make some card firmware
+not happy.
+
+>
+>>
+>>>
+>>
+>> Do you mean changing bus number without unloading driver ?
+>>
+>> No, you can not do that.
+>>
+>> some device firmware like lsi cards, if you change it's primary bus number,
+>> the device will stop working, but that is another problem.
+>>
+>
+> Are these settings in the binary driver? I do not see that much need
+> for a driver to use the geographical addressing after the BAR's have
+> been set. I thus wondered if it is feasable to hide the geographical
+> addressing from the driver and offer an API for it from the PCIe layer
+> to the drivers...
+
+Card firmware.  Assume those card firmware would trap pci conf read cycle
+and compare something inside.
+The only workaround that I found is reset the link to make firmware rebooting.
+but that will have problem if you are use the disk as root etc.
+
+Thanks
+
+Yinghai
