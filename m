@@ -1,169 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:33706 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751184AbbI3JTN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 05:19:13 -0400
-Received: by wiclk2 with SMTP id lk2so188102121wic.0
-        for <linux-pci@vger.kernel.org>; Wed, 30 Sep 2015 02:19:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAL_Jsq+A-3bF2vdqQnD4HJXLoxDEnm1w=yBynbKYahgLe8CVPQ@mail.gmail.com>
-References: <1440678857-27118-1-git-send-email-gabriel.fernandez@linaro.org>
- <1440678857-27118-3-git-send-email-gabriel.fernandez@linaro.org> <CAL_Jsq+A-3bF2vdqQnD4HJXLoxDEnm1w=yBynbKYahgLe8CVPQ@mail.gmail.com>
-From: Gabriel Fernandez <gabriel.fernandez@linaro.org>
-Date: Wed, 30 Sep 2015 11:18:32 +0200
-Message-ID: <CAG374jDTu52AUL8hzH9LuU2fkhSo2+qgo3ba5Ne4gzhA8cN7BQ@mail.gmail.com>
-Subject: Re: [PATCH v4 2/4] PCI: st: Add Device Tree bindings for sti pcie
-To: Rob Herring <robherring2@gmail.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Maxime Coquelin <maxime.coquelin@st.com>,
-	Patrice Chotard <patrice.chotard@st.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jg1.han@samsung.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Fabrice Gasnier <fabrice.gasnier@st.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Thierry Reding <treding@nvidia.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Minghuan Lian <Minghuan.Lian@freescale.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Sachin Kamat <sachin.kamat@samsung.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"kernel@stlinux.com" <kernel@stlinux.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx01.mykolab.com ([95.128.36.1]:18467 "EHLO
+	mx-out01.mykolab.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755306AbbITTZu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Sep 2015 15:25:50 -0400
+From: Knuth Posern <knuth@posern.org>
+Subject: [PATCH] thunderbolt: Allow loading of module on recent Apple MacBooks
+ with thunderbolt 2 controller
+To: linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Greg KH <greg@kroah.com>, linux-pci@vger.kernel.org
+Message-ID: <55FF0822.90901@posern.org>
+Date: Sun, 20 Sep 2015 21:25:22 +0200
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="fTqi1bhE7EwrRxa9AAtsga1ESSwo9lCMH"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--fTqi1bhE7EwrRxa9AAtsga1ESSwo9lCMH
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the review.
+The pci device ids listed in the thunderbolt driver are to restrictive,
+which prevents the driver from being loaded on recent Apple MacBooks
+using a thunderbolt 2 controller. In particular this prevented any
+hot-plugging functionality for thunderbolt based ethernet dongles
+(i.e. Apples thunderbolt gigabit ethernet broadcom tg3 based dongle
+Model A1433 EMC 2590).
 
-Best regards
+Changing the subvendor and subdevice to PCI_ANY_ID the thunderbolt driver=
 
-Gabriel
+loads and binds to the pci device 07:00.0 System peripheral:
+Intel Corporation Device 156c which is the thunderbolt 2 controller on
+the MacBookPro12,1.
 
-On 28 August 2015 at 02:06, Rob Herring <robherring2@gmail.com> wrote:
-> On Thu, Aug 27, 2015 at 7:34 AM, Gabriel Fernandez
-> <gabriel.fernandez@linaro.org> wrote:
->> sti pcie is built around a Synopsis Designware PCIe IP.
->>
->> Signed-off-by: Fabrice Gasnier <fabrice.gasnier@st.com>
->> Signed-off-by: Gabriel Fernandez <gabriel.fernandez@linaro.org>
->> ---
->>  Documentation/devicetree/bindings/pci/st-pcie.txt | 53 +++++++++++++++++++++++
->>  1 file changed, 53 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/st-pcie.txt
->>
->> diff --git a/Documentation/devicetree/bindings/pci/st-pcie.txt b/Documentation/devicetree/bindings/pci/st-pcie.txt
->> new file mode 100644
->> index 0000000..25fcab3
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/st-pcie.txt
->> @@ -0,0 +1,53 @@
->> +STMicroelectronics STi PCIe controller
->> +
->> +This PCIe host controller is based on the Synopsis Designware PCIe IP
->> +and thus inherits all the common properties defined in designware-pcie.txt.
->> +
->> +Required properties:
->> + - compatible: "st,stih407-pcie"
->
-> What about "snps,dw-pcie" as well?
->
-You are right.
+Successfully tested on MacBookPro12,1. With the patch the thunderbolt
+module gets now loaded on boot. And it provides hot-plugging support both=
 
->> + - reg: base address and length of the pcie controller, mem-window address
->> +   and length available to the controller.
->
-> What is mem-window? Seems rather large and perhaps should be under ranges.
->
-No the purpose is to specify the physical memory available to the controller.
-reg property is more appropriate.
+for a cold-plugged and a warm-plugged ethernet dongle.
 
->> + - interrupts: A list of interrupt outputs of the controller. Must contain an
->> +   entry for each entry in the interrupt-names property.
->
-> Define how many interrupts.
->
-ok i will fix it.
+Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+Acked-by: Knuth Posern <knuth@posern.org>
+---
 
->> + - interrupt-names: Should be "msi". STi interrupt that is asserted when an
->> +   MSI is received.
->
-> Kind of pointless with a single interrupt.
->
-ok
+=2E.. never 2 without 3 ;)
 
->> + - st,syscfg : should be a phandle of the syscfg node. Also contains syscfg
->> +   offset for IP configuration.
->> + - resets, reset-names: the power-down and soft-reset lines of PCIe IP.
->> +   Associated names must be "powerdown" and "softreset".
->> + - phys, phy-names: the phandle for the PHY device.
->> +   Associated name must be "pcie"
->
-> What does this mean?
->
-i will reformulate this paragraph.
+This patch is submitted for upstream inclusion.
 
->> +
->> +Optional properties:
->> + - reset-gpio: a GPIO spec to define which pin is connected to the bus reset.
->> +
->> +Example:
->> +
->> +pcie0: pcie@9b00000 {
->> +       compatible = "st,pcie", "snps,dw-pcie";
->> +       device_type = "pci";
->> +       reg = <0x09b00000 0x4000>,      /* dbi cntrl registers */
->> +             <0x2fff0000 0x00010000>,  /* configuration space */
->> +             <0x40000000 0x80000000>;  /* lmi mem window */
->> +       reg-names = "dbi", "config", "mem-window";
->> +       st,syscfg = <&syscfg_core 0xd8 0xe0>;
->> +       #address-cells = <3>;
->> +       #size-cells = <2>;
->> +       ranges = <0x82000000 0 0x20000000 0x20000000 0 0x0FFF0000>; /* non-prefetchable memory */
->
-> No i/o support?
->
-Exactly there is no i/o support.
+Thanks to Greg and Andreas helping coming up with the patch fixing the
+bug:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D100191
 
->> +       num-lanes = <1>;
->> +       interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
->> +       interrupt-names = "msi";
->> +       #interrupt-cells = <1>;
->> +       interrupt-map-mask = <0 0 0 7>;
->> +       interrupt-map = <0 0 0 1 &intc GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>, /* INT A */
->> +                       <0 0 0 2 &intc GIC_SPI 161 IRQ_TYPE_LEVEL_HIGH>, /* INT B */
->> +                       <0 0 0 3 &intc GIC_SPI 162 IRQ_TYPE_LEVEL_HIGH>, /* INT C */
->> +                       <0 0 0 4 &intc GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>; /* INT D */
->> +
->> +       resets = <&powerdown STIH407_PCIE0_POWERDOWN>,
->> +                <&softreset STIH407_PCIE0_SOFTRESET>;
->> +       reset-names = "powerdown",
->> +                     "softreset";
->> +       phys = <&phy_port0 PHY_TYPE_PCIE>;
->> +       phy-names = "pcie";
->> +};
->> --
->> 1.9.1
->>
+This is a first for me, so I hope the format of this mail is
+convenient :)
+For the changelog/comment, I tried to follow Andrew Mortons guide
+https://www.ozlabs.org/~akpm/stuff/tpp.txt
+
+- why the kernel needed patching
+1st paragraph.
+
+- the overall design approach in the patch
+- implementation details
+2nd paragraph
+
+- testing results
+3rd paragraph
+
+Cheers,
+
+Knuth.
+
+--- linux/drivers/thunderbolt/nhi.c.orig	2015-09-20 17:36:14.014964300 +0=
+200
++++ linux/drivers/thunderbolt/nhi.c	2015-09-13 09:58:18.000000000 +0200
+@@ -643,7 +643,7 @@ static struct pci_device_id nhi_ids[] =3D
+ 	{
+ 		.class =3D PCI_CLASS_SYSTEM_OTHER << 8, .class_mask =3D ~0,
+ 		.vendor =3D PCI_VENDOR_ID_INTEL, .device =3D 0x156c,
+-		.subvendor =3D 0x2222, .subdevice =3D 0x1111,
++		.subvendor =3D PCI_ANY_ID, .subdevice =3D PCI_ANY_ID,
+ 	},
+ 	{ 0,}
+ };
+
+
+--fTqi1bhE7EwrRxa9AAtsga1ESSwo9lCMH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJV/wg4AAoJEMkMg1OiIJvy4ukP/09cWw/+whs42K/kG7E1U2hw
+0i8bVSiVa398jwN/2IB98phkHn2h6XDykZkUr7eTF0/ZH1zTvCHstEAFVo5LN8hk
+5u3WbiqHaab4lpGvVS+JmR1xSdJ3wLzK3H+9eOPAZ+ioSbmCLmtg9ZVMDrSdTMCv
+fTBGhRJ+PMj8o3ANAXcegKjGnkFjwHCqHWTrcCM8WcUNhnKtpiLbABI0sjp++BnH
+8PZHPBZEGJ/2z31QsKMcqq+pM3ej/5S8ZYbMPMEl6yhOkh5JIMe4kwA7V7qIlNi3
+MRcNLPfADtc/TCo8cNk9ciCSb3dTyHEPQujMFt7tJsbujud8MKWEBLGjzQtktVKM
+g3RY2m5lo8hPV9grAWoQBh3XIPGJ9FXmH8QIfeqbxkrFnueN8J3pA8QtcK0Opns7
+sh1DYTa2vHFVEsvoYL4rpKJEx/1KAQWESuN9rPAR4erRi+vNpbX/jL8YK2vHzNeA
+jAckCtbur7DBNvtUe8MqT8iV9kqikx8/I/eBjAEJztcc+PDgRxa2G1MuGZyB+Cju
+0+68GPmfRgMTJGDmhDOhENr7e8RcnPF+3QKYNQoihpJMk7XZLevZTkRDIE4tZKOf
+PomjyHnABjFHn2h2YbroqUr758j0v+WzFWYIXkwsuUgX5g8zXR/8fWzM09ccKVwA
+UdTVcMI+TsJh8CzJulE3
+=i9uG
+-----END PGP SIGNATURE-----
+
+--fTqi1bhE7EwrRxa9AAtsga1ESSwo9lCMH--
