@@ -1,130 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:35254 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754167AbbIWQYu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 12:24:50 -0400
-Received: by wicge5 with SMTP id ge5so215256214wic.0
-        for <linux-pci@vger.kernel.org>; Wed, 23 Sep 2015 09:24:49 -0700 (PDT)
+Received: from mail-vk0-f53.google.com ([209.85.213.53]:36667 "EHLO
+	mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750955AbbITGTo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Sep 2015 02:19:44 -0400
+Received: by vkfp126 with SMTP id p126so49602742vkf.3
+        for <linux-pci@vger.kernel.org>; Sat, 19 Sep 2015 23:19:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1622BC36@lhreml503-mbb>
-References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
- <1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
- <20150918204625.GL25767@google.com> <CAHM4w1nWNj-Ws0CiYt2vGCa4V7XJsjjwHRSkgdpVSCPmdeARqA@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1622BC36@lhreml503-mbb>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 23 Sep 2015 11:24:29 -0500
-Message-ID: <CAErSpo4hWUyaGrt3iTYffCxP0XHiR=DeZ8OEp9XnhAP3C8D+HQ@mail.gmail.com>
-Subject: Re: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+In-Reply-To: <CAErSpo5Mdn9CLzW-6LOPbsdHWpdUL9ogzajuS39PZXqRVyip7Q@mail.gmail.com>
+References: <66c9da3f76f74ee5a81473d35777a59b@XCGVAG27.northgrum.com>
+	<CAE9FiQWbL+WLfV7enKpJttYo6xyOMX5NR9zbNL9he2qfVt5UeQ@mail.gmail.com>
+	<CAErSpo5Mdn9CLzW-6LOPbsdHWpdUL9ogzajuS39PZXqRVyip7Q@mail.gmail.com>
+Date: Sat, 19 Sep 2015 23:19:43 -0700
+Message-ID: <CAE9FiQUXgjz_C_+8U2UDCec00Ghsnuk0B48F3hBOUbgLS6RjcQ@mail.gmail.com>
+Subject: Re: [PATCH v1 3/7] PCI: Let kcmdline reserve bus numbers for hotplug bridges
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 11:20 AM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
-> Hi guys sorry for the late reply I have been OOO for the last 5 days
->
->> -----Original Message-----
->> From: Pratyush Anand [mailto:pratyush.anand@gmail.com]
->> Sent: Saturday, September 19, 2015 4:04 AM
->> To: Bjorn Helgaas
->> Cc: Gabriele Paoloni; Jingoo Han; linux-pci@vger.kernel.org; Wangzhou
->> (B); Yuanzhichang; Zhudacai; zhangjukuo; qiuzhenfa; Liguozhu (Kenneth)
->> Subject: Re: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write()
->> and dw_pcie_cfg_read()
+On Sat, Sep 19, 2015 at 7:11 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> On Sat, Sep 19, 2015 at 3:58 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+>> On Thu, Sep 17, 2015 at 2:11 PM, Tang, Jason (ES) <Jason.Tang2@ngc.com> wrote:
+>>> This introduces a new kernel command line parameter, "hpbuses", that
+>>> allows the user to set how many bus numbers to reserve for hotplug
+>>> bridges.  The default value is 0, which means do not reserve any bus
+>>> numbers for bridges that are hot-added after enumeration completes.
+>>>
+>>> During device probing, increment a hotplug bridge's subordinate bus
+>>> number by the amount set by "hpbuses".  This way, bridges that are
+>>> hot-added after enumeration can have buses reserved for them.
 >>
->> On Sat, Sep 19, 2015 at 2:16 AM, Bjorn Helgaas <bhelgaas@google.com>
->> wrote:
->> > On Fri, Sep 11, 2015 at 05:38:26PM +0800, Gabriele Paoloni wrote:
->> >> From: gabriele paoloni <gabriele.paoloni@huawei.com>
->> >>
->> >> This patch changes the implementation of dw_pcie_cfg_read() and
->> >> dw_pcie_cfg_write() to improve the function usage from the callers
->> >> perspective.
->> >> Currently the callers are obliged to pass the 32bit aligned address
->> >> of the register that contains the field of the PCI header that they
->> >> want to read/write; also they have to pass the offset of the field
->> >> in that register. This is quite tricky to use as the callers are
->> >> obliged to sum the PCI header base address to the field offset
->> >> masked to retrieve the 32b aligned register address.
->> >>
->> >> With the new API the callers have to pass the base address of the
->> >> PCI header and the offset corresponding to the field they intend to
->> >> read/write.
->> >>
->> >> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->> >
->> >
->> >>  int dw_pcie_cfg_read(void __iomem *addr, int where, int size, u32
->> *val)
->> >>  {
->> >> +     addr += (where & ~0x3);
->> >>       *val = readl(addr);
->> >> +     where &= 3;
->> >>
->> >>       if (size == 1)
->> >> -             *val = (*val >> (8 * (where & 3))) & 0xff;
->> >> +             *val = (*val >> (8 * where)) & 0xff;
->> >>       else if (size == 2)
->> >> -             *val = (*val >> (8 * (where & 3))) & 0xffff;
->> >> +             *val = (*val >> (8 * where)) & 0xffff;
->> >>       else if (size != 4)
->> >>               return PCIBIOS_BAD_REGISTER_NUMBER;
->> >>
->> >> @@ -96,12 +98,14 @@ int dw_pcie_cfg_read(void __iomem *addr, int
->> where, int size, u32 *val)
->> >>
->> >>  int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32
->> val)
->> >>  {
->> >> +     addr += where;
->> >> +
->> >>       if (size == 4)
->> >>               writel(val, addr);
->> >>       else if (size == 2)
->> >> -             writew(val, addr + (where & 2));
->> >> +             writew(val, addr);
->> >>       else if (size == 1)
->> >> -             writeb(val, addr + (where & 3));
->> >> +             writeb(val, addr);
->> >>       else
->> >>               return PCIBIOS_BAD_REGISTER_NUMBER;
->> >
->> > I just noticed the asymmetry between dw_pcie_cfg_read() and
->> > dw_pcie_cfg_write(): in dw_pcie_cfg_read() we always do 32-bit reads
->> and
->> > mask out the parts we won't want, but in dw_pcie_cfg_write() we do 8-,
->> 16-,
->> > or 32-byte writes.
->> >
->> > That was there even before your patch, but I wonder why.  Either both
->> > should work the same way, or there should be a comment explaining why
->> they
->> > are different.
->> >
->> > Jingoo, Pratyush?
+>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>> index 58ae892..553b345 100644
+>>> --- a/drivers/pci/probe.c
+>>> +++ b/drivers/pci/probe.c
+>>> @@ -930,6 +930,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
+>>>                 /*
+>>>                  * Set the subordinate bus number to its real value.
+>>>                  */
+>>> +               if (child->self->is_hotplug_bridge)
+>>> +                       max += pci_hotplug_buses;
+>>>                 child->subordinate = max;
+>>>                 pci_bus_update_busn_res_end(child, child->subordinate);
+>>>                 pci_write_config_byte(dev, PCI_SUBORDINATE_BUS,
 >>
->> As I said earlier, I just vaguely remember that there was some issue
->> with a SOC in reading non word aligned addresses.
->> (1) I do not have any reference for it and (2) even if some where
->> there could be such issue they can always have platform specific
->> accessor . So I support your idea and both read and write can be made
->> symmetric.
+>> No, you can not increase the max blindly.
 >
-> I agree with the idea but, what if doing so we break other drivers?
-> Is the correct flow to break them first and let the single maintainers fix them then...?
+> It would be really useful if you could explain *why* this doesn't
+> work.  Then Jason might be able to rework it so it would work.
 
-Since we don't know which (if any) systems would break, I think the
-best we can do is see if anybody has objections, then put it in and
-see if anything breaks.
-
-Bjorn
+from bus [old_max, old_max+pci_hotplug_buses) could be used by other bridges,
+and other bridges could even get probed yet.
+Also it could even cross the boundary to other peer root bus range.
