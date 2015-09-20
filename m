@@ -1,101 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:36542 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752187AbbIBJvT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Sep 2015 05:51:19 -0400
-Received: by pacik9 with SMTP id ik9so568095pac.3
-        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2015 02:51:18 -0700 (PDT)
+Received: from mout3.freenet.de ([195.4.92.93]:52367 "EHLO mout3.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751380AbbITHEi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 20 Sep 2015 03:04:38 -0400
+Subject: Re: [dm-devel] AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command:
+ READ FPDMA QUEUED errors since Linux 4.0
+To: Mikulas Patocka <mpatocka@redhat.com>,
+	Andreas Hartmann <andihartmann@freenet.de>,
+	Joerg Roedel <joro@8bytes.org>,
+	iommu@lists.linux-foundation.org, Leo Duran <leo.duran@amd.com>
+References: <55B7BEA2.30205@01019freenet.de>
+ <20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
+ <20150728192908.GA25264@redhat.com> <55BCD5A7.2080708@maya.org>
+ <55BE1D5E.6020709@maya.org>
+ <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	device-mapper development <dm-devel@redhat.com>,
+	Milan Broz <mbroz@redhat.com>, Jens Axboe <axboe@fb.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <55FE5740.2060701@maya.org>
+Date: Sun, 20 Sep 2015 08:50:40 +0200
 MIME-Version: 1.0
-Date: Wed, 2 Sep 2015 11:51:18 +0200
-Message-ID: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
-Subject: trouble with PCI: Call pci_read_bridge_bases() from core instead of
- arch code
-From: oe5hpm <oe5hpm@gmail.com>
-To: "CC: Ralf Baechle" <ralf@linux-mips.org>,
-	"CC: James E.J. Bottomley" <jejb@parisc-linux.org>,
-	"CC: Michael Ellerman" <mpe@ellerman.id.au>,
-	"CC: Bjorn Helgaas" <bhelgaas@google.com>,
-	"CC: Richard Henderson" <rth@twiddle.net>,
-	"CC: Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
-	"CC: David Howells" <dhowells@redhat.com>,
-	"CC: Russell King" <linux@arm.linux.org.uk>,
-	"CC: Tony Luck" <tony.luck@intel.com>,
-	"CC: David S. Miller" <davem@davemloft.net>,
-	"CC: Ingo Molnar" <mingo@redhat.com>,
-	"CC: Guenter Roeck" <linux@roeck-us.net>,
-	"CC: Michal Simek" <monstr@monstr.eu>,
-	"CC: Chris Zankel" <chris@zankel.net>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+On 08/02/2015 at 07:57 PM, Mikulas Patocka wrote:
+> 
+> 
+> On Sun, 2 Aug 2015, Andreas Hartmann wrote:
+> 
+>> On 08/01/2015 at 04:20 PM Andreas Hartmann wrote:
+>>> On 07/28/2015 at 09:29 PM, Mike Snitzer wrote:
+>>> [...]
+>>>> Mikulas was saying to biect what is causing ATA to fail.
+>>>
+>>> Some good news and some bad news. The good news first:
+>>>
+>>> Your patchset
+>>>
+>>> f3396c58fd8442850e759843457d78b6ec3a9589,
+>>> cf2f1abfbd0dba701f7f16ef619e4d2485de3366,
+>>> 7145c241a1bf2841952c3e297c4080b357b3e52d,
+>>> 94f5e0243c48aa01441c987743dc468e2d6eaca2,
+>>> dc2676210c425ee8e5cb1bec5bc84d004ddf4179,
+>>> 0f5d8e6ee758f7023e4353cca75d785b2d4f6abe,
+>>> b3c5fd3052492f1b8d060799d4f18be5a5438add
+>>>
+>>> seems to work fine w/ 3.18.19 !!
+>>>
+>>> Why did I test it with 3.18.x now? Because I suddenly got two ata errors
+>>> (ata1 and ata2) with clean 3.19.8 (w/o the AMD-Vi IO_PAGE_FAULTs) during
+>>> normal operation. This means: 3.19 must already be broken, too.
+>>>
+>>> Therefore, I applied your patchset to 3.18.x and it seems to work like a
+>>> charme - I don't get any AMD-Vi IO_PAGE_FAULTs on boot and no ata errors
+>>> (until now).
+>>>
+>>>
+>>> Next I did: I tried to bisect between 3.18 and 3.19 with your patchset
+>>> applied, because w/ this patchset applied, the problem can be seen
+>>> easily and directly on boot. Unfortunately, this does work only a few
+>>> git bisect rounds until I got stuck because of interferences with your
+>>> extra patches applied:
+>>
+>> [Resolved the problems written at the last post.]
+>>
+>> Bisecting ended here:
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
+>>
+>> block: remove artifical max_hw_sectors cap
+>>
+>>
+>> Removing this patch on 3.19 and 4.1 make things working again. Didn't
+>> test 4.0, but I think it's the same. No more AMD-Vi IO_PAGE_FAULTS  with
+>> that patch reverted.
 
-today i tried to boot up the most recent vanilla kernel on my
-Freescale i.mx6 board.
-I ran into trouble regarding PCI enumeration.
+After long period of testing, I now can say, that max_sectors_kb can be
+set to 1024 - higher values produce AMD-Vi IO_PAGE_FAULTS and ata faults.
 
-[    0.431949] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
-[    0.431976] pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
-[    0.431996] pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-[    0.432022] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    0.433271] PCI: bus0: Fast back to back transfers disabled
-[    0.433629] pci 0000:00:00.0: PCI bridge to [bus 01-ff]
-[    0.435181] PCI: bus1: Fast back to back transfers disabled
-[    0.435564] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
-[    0.435593] pci 0000:00:00.0: BAR 8: no space for [mem size 0x01000000]
-[    0.435613] pci 0000:00:00.0: BAR 8: failed to assign [mem size 0x01000000]
-[    0.435635] pci 0000:00:00.0: BAR 9: assigned [mem
-0x01100000-0x011fffff pref]
-[    0.435655] pci 0000:00:00.0: BAR 6: assigned [mem
-0x01200000-0x0120ffff pref]
-[    0.435676] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-[    0.435705] pci 0000:01:00.0: BAR 2: no space for [mem size 0x00200000]
-[    0.435722] pci 0000:01:00.0: BAR 2: failed to assign [mem size 0x00200000]
-[    0.435739] pci 0000:01:00.0: BAR 1: no space for [mem size 0x00004000]
-[    0.435754] pci 0000:01:00.0: BAR 1: failed to assign [mem size 0x00004000]
-[    0.435770] pci 0000:01:00.0: BAR 0: no space for [mem size 0x00000100]
-[    0.435786] pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x00000100]
-[    0.435804] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    0.435826] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-[    0.435855] pci 0000:00:00.0:   bridge window [mem
-0x01100000-0x011fffff pref]
 
-there are several fails assigning memory ressources to pci-devices.
+This patch "sd: Fix maximum I/O size for BLOCK_PC requests"[1] as part
+of 4.1.7 produces ata / AMD-Vi IO_PAGE_FAULTS already during boot, too -
+no matter if "block: remove artifical max_hw_sectors cap"[2] has been
+applied or not.
 
-i bisect down this trouble to commit id:
-dff22d2054b5dbb1889f20c03959dd0c494fab8c : PCI: Call
-pci_read_bridge_bases() from core instead of arch code
 
-For testing purpose i've reverted this commit on a local branch and
-everythings works fine, as before.
+Next I tested was "dm crypt: constrain crypt device's max_segment_size
+to PAGE_SIZE" patch[3] applied to an unchanged 4.1.7 kernel w/o setting
+max_sectors_kb to 1024.
 
-[    0.431976] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
-[    0.432004] pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
-[    0.432023] pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
-[    0.432047] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    0.433302] PCI: bus0: Fast back to back transfers disabled
-[    0.435122] PCI: bus1: Fast back to back transfers disabled
-[    0.435504] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
-[    0.435535] pci 0000:00:00.0: BAR 8: assigned [mem 0x01100000-0x013fffff]
-[    0.435557] pci 0000:00:00.0: BAR 6: assigned [mem
-0x01400000-0x0140ffff pref]
-[    0.435585] pci 0000:01:00.0: BAR 2: assigned [mem 0x01200000-0x013fffff]
-[    0.435626] pci 0000:01:00.0: BAR 1: assigned [mem 0x01100000-0x01103fff]
-[    0.435665] pci 0000:01:00.0: BAR 0: assigned [mem 0x01104000-0x011040ff]
-[    0.435703] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    0.435728] pci 0000:00:00.0:   bridge window [mem 0x01100000-0x013fffff]
+Interesting effect was, that booting has been fine, but I could see lots
+of ata errors afterwards as soon as there is load on the md raid 1
+(during kernel compile e.g.), which is built on *rotational* disks:
 
-Further i can break down the failure to "drivers/pci/probe.c" line #924.
-If i comment out the "pci_read_bridge_bases(child);" also everything works well.
 
-I have to confess, that my knowledge about the whole PCI thing in the
-kernel is not very deep, so it is not possible for me to figure out
-what is going wrong.
+[  367.264873] ata2.00: exception Emask 0x0 SAct 0x7fbfffff SErr 0x0
+action 0x6 frozen
+[  367.264883] ata2.00: failed command: WRITE FPDMA QUEUED
+[  367.264893] ata2.00: cmd 61/40:00:b0:7b:d4/05:00:06:00:00/40 tag 0
+ncq 688128 out
+[  367.264893]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  367.264899] ata2.00: status: { DRDY }
+...
+[  367.265332] ata2.00: failed command: WRITE FPDMA QUEUED
+[  367.265339] ata2.00: cmd 61/40:f0:30:71:d4/05:00:06:00:00/40 tag 30
+ncq 688128 out
+[  367.265339]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  367.265343] ata2.00: status: { DRDY }
+[  367.265350] ata2: hard resetting link
+[  367.775330] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+[  367.776970] ata2.00: configured for UDMA/133
+[  367.776997] ata2.00: device reported invalid CHS sector 0
+...
+[  367.777761] ata2: EH complete
 
-maybe some of you can help?
 
-best regards,
-Hannes
+Iow: Using an unpatched kernel >= 3.19 means high risk to break
+filesystems if there are given some yet unknown conditions [4].
+
+>>
+>>
+>> Please check why this patch triggers AMD-Vi IO_PAGE_FAULTS.
+> 
+> I would submit this bug to maintainers of AMD-Vi. They understand the 
+> hardware, so they should tell why do large I/O requests result in 
+> IO_PAGE_FAULTs.
+> 
+> It is probably bug either in AMD-Vi driver or in hardware.
+
+Until now, I didn't hear anything from the maintainers of AMD-Vi.
+
+
+Regards,
+Andreas Hartmann
+
+
+[1] http://thread.gmane.org/gmane.linux.kernel.commits.head/538464
+[2]
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
+[3]
+http://news.gmane.org/find-root.php?group=gmane.linux.kernel&article=2036495
+[4] http://thread.gmane.org/gmane.linux.kernel.pci/43851/focus=44011
