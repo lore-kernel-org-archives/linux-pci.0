@@ -1,70 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:42670 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752739AbbITRYe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Sep 2015 13:24:34 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-	by mailout.nyi.internal (Postfix) with ESMTP id 802A220194
-	for <linux-pci@vger.kernel.org>; Sun, 20 Sep 2015 13:24:33 -0400 (EDT)
-Date: Sun, 20 Sep 2015 10:24:31 -0700
-From: Greg KH <greg@kroah.com>
-To: Knuth Posern <knuth@posern.org>
-Cc: linux-kernel@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] Thunderbolt 2 driver for recent Apple MacBooks
-Message-ID: <20150920172431.GB27148@kroah.com>
-References: <55FEDAAD.6000804@posern.org>
+Received: from mail-vk0-f45.google.com ([209.85.213.45]:34901 "EHLO
+	mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755738AbbIUBjR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Sep 2015 21:39:17 -0400
+Received: by vkao3 with SMTP id o3so56561287vka.2
+        for <linux-pci@vger.kernel.org>; Sun, 20 Sep 2015 18:39:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55FEDAAD.6000804@posern.org>
+In-Reply-To: <20150918223059.GO25767@google.com>
+References: <1441877628-28879-1-git-send-email-lorenzo.pieralisi@arm.com>
+	<20150918223059.GO25767@google.com>
+Date: Sun, 20 Sep 2015 18:32:32 -0700
+Message-ID: <CAE9FiQXMZzQ+eB5X8N=zMEV8BWxLfpmASK7Jdfz-UKFzaHk+_A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Fix pci_claim_bridge_resource() resource claiming
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Sep 20, 2015 at 06:11:25PM +0200, Knuth Posern wrote:
-> Hi,
-> 
-> This patch is submitted for upstream inclusion.
-> This is a first for me, so I hope the format of this mail is convenient.
-> 
-> Thanks to Greg and Andreas the attached patch (diff -up) fixes the bug:
-> https://bugzilla.kernel.org/show_bug.cgi?id=100191
-> 
-> The pci device ids listed in the tb driver are to restrictive, which
-> prevents the driver from being loaded. We have had a similar issue
-> with the new Mac mini.
-> 
-> Changing the subvendor and subdevice to PCI_ANY_ID in
-> 	drivers/thunderbolt/nhi.c
-> the thunderbolt driver loads and binds to the pci device
-> 07:00.0 System peripheral: Intel Corporation Device 156c
-> which is the thunderbolt 2 controller.
-> 
-> 
-> Cheers,
-> 
-> Knuth.
-> 
+On Fri, Sep 18, 2015 at 3:30 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>
+> commit a4ad03352739c96842af5d06387595665cdd875e
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Fri Sep 18 17:15:01 2015 -0500
+>
+>     PCI: Clear IORESOURCE_UNSET when clipping a bridge window
+>
+>     c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") sets IORESOURCE_UNSET
+>     if we fail to claim a resource.  If we tried to claim a bridge window,
+>     failed, clipped the window, and tried to claim the clipped window, we
+>     failed again because of IORESOURCE_UNSET.
+>
+>     When pci_bus_clip_resource() clips a bridge window to fit inside an
+>     upstream window, we're reassigning the window, so clear the
+>     IORESOURCE_UNSET flag.  Also clear IORESOURCE_UNSET in our copy of the
+>     unclipped window so we can see exactly what the original window was and how
+>     it now fits inside the upstream window.
+>
+>     Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
+>     Based-on-patch-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: stable@vger.kernel.org  # 4.1+
+>
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 6fbd3f2..d3346d2 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -256,6 +256,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
+>
+>                 res->start = start;
+>                 res->end = end;
+> +               res->flags &= ~IORESOURCE_UNSET;
+> +               orig_res.flags &= ~IORESOURCE_UNSET;
+>                 dev_printk(KERN_DEBUG, &dev->dev, "%pR clipped to %pR\n",
+>                                  &orig_res, res);
+>
 
-> --- linux/drivers/thunderbolt/nhi.c.orig	2015-09-20 17:36:14.014964300 +0200
-> +++ linux/drivers/thunderbolt/nhi.c	2015-09-13 09:58:18.000000000 +0200
-> @@ -643,7 +643,7 @@ static struct pci_device_id nhi_ids[] =
->  	{
->  		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
->  		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x156c,
-> -		.subvendor = 0x2222, .subdevice = 0x1111,
-> +		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
->  	},
->  	{ 0,}
->  };
-> 
-> 
+I put this patch in
+https://bugzilla.kernel.org/show_bug.cgi?id=85491
 
-
-This looks good, but can you resend it in the format described in
-Documentation/SubmittingPatches so that I can apply it (i.e. a cleaned
-up changelog comment and a signed-off-by: line?)
-
-thanks,
-
-greg k-h
+after niam <mailto:niaminbox@gmail.com> test that, you may apply that directly.
