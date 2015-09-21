@@ -1,57 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Ray Jui <rjui@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49590 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754613AbbIUTmR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Sep 2015 15:42:17 -0400
+Date: Mon, 21 Sep 2015 22:42:13 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>,
-	"Jon Mason" <jonmason@broadcom.com>
-Subject: [PATCH 8/8] PCI: iproc: Fix compile warnings
-Date: Tue, 15 Sep 2015 17:39:22 -0700
-Message-ID: <1442363962-29805-9-git-send-email-rjui@broadcom.com>
-In-Reply-To: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
-References: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
+Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-pci@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
+Message-ID: <20150921223622-mutt-send-email-mst@redhat.com>
+References: <1441553385-3810-1-git-send-email-mst@redhat.com>
+ <20150921182147.GC27964@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150921182147.GC27964@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are several compile warnings in pcie-iproc.c related to the
-printing of a size_t value.  This is a 32bit value on arm, and 64bit on
-arm64.  However, the printks are for 64bit values (thus the warning).
-Using the %pap printk for these values (per
-Documentation/printk-formats.txt) corrects the issue.
+On Mon, Sep 21, 2015 at 01:21:47PM -0500, Bjorn Helgaas wrote:
+> On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
+> > On some hypervisors, virtio devices tend to generate spurious interrupts
+> > when switching between MSI and non-MSI mode.  Normally, either MSI or
+> > non-MSI is used and all is well, but during shutdown, linux disables MSI
+> > which then causes an "irq %d: nobody cared" message, with irq being
+> > subsequently disabled.
+> 
+> My understanding is:
+> 
+>   Linux disables MSI/MSI-X during device shutdown.  If the device
+>   signals an interrupt after that, it may use INTx.
+> 
+> This INTx interrupt is not necessarily spurious.  Using INTx to signal an
+> interrupt that occurs when MSI is disabled seems like reasonable behavior
+> for any PCI device.
+> And it doesn't seem related to switching between MSI and non-MSI mode.
+> Yes, the INTx happens *after* disabling MSI, but it is not at all
+> *because* we disabled MSI.  So I wouldn't say "they generate spurious
+> interrupts when switching between MSI and non-MSI."
+> 
+> Why doesn't virtio-pci just register an INTx handler in addition to an MSI
+> handler?
+> 
+> Bjorn
 
-Signed-off-by: Jon Mason <jonmason@broadcom.com>
----
- drivers/pci/host/pcie-iproc.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+The handler causes an expensive exit to the hypervisor,
+and the INTx lines are shared with other devices.
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 2ba3c4b..f3481dd 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -244,15 +244,15 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
- 
- 	if (size > max_size) {
- 		dev_err(pcie->dev,
--			"res size 0x%llx exceeds max supported size 0x%llx\n",
--			(u64)size, max_size);
-+			"res size 0x%pap exceeds max supported size 0x%llx\n",
-+			&size, max_size);
- 		return -EINVAL;
- 	}
- 
- 	if (size % ob->window_size) {
- 		dev_err(pcie->dev,
--			"res size 0x%llx needs to be multiple of "
--			"window size 0x%llx\n", (u64)size, ob->window_size);
-+			"res size %pap needs to be multiple of window size %pap\n",
-+			&size, &ob->window_size);
- 		return -EINVAL;
- 	}
- 
+Seems silly to slow them down just so we can do something
+that triggers the device bug.  The bus master is disabled by that time,
+if linux can just desist from touching MSI enable device won't
+send either INTx (because MSI is on) or MSI
+(because bus master is on) and all will be well.
+
 -- 
-1.9.1
-
+MST
