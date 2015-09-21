@@ -1,81 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44686 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933120AbbIDQu3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Sep 2015 12:50:29 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v4 3/4] powerpc: PCI: Fix lookup of linux,pci-probe-only property
-Date: Fri,  4 Sep 2015 17:50:10 +0100
-Message-Id: <1441385411-7624-4-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
-References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
+Received: from mail-by2on0083.outbound.protection.outlook.com ([207.46.100.83]:61248
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755973AbbIUCN4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 20 Sep 2015 22:13:56 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie device tree binding
+Date: Mon, 21 Sep 2015 10:13:06 +0800
+Message-ID: <1442801587-3812-6-git-send-email-lftan@altera.com>
+In-Reply-To: <1442801587-3812-1-git-send-email-lftan@altera.com>
+References: <1442801587-3812-1-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When find_and_init_phbs() looks for the probe-only property, it seems
-to trust the firmware to be correctly written, and assumes that there
-is a parameter to the property.
+This patch adds the bindings for Altera PCIe host controller driver and
+Altera PCIe MSI driver.
 
-It is conceivable that the firmware could not be that perfect, and it
-could expose this property naked (at least one arm64 platform seems to
-exhibit this exact behaviour). The setup code the ends up making
-a decision based on whatever the property pointer points to, which
-is likely to be junk.
-
-Instead, switch to the common of_pci.c implementation that doesn't
-suffer from this problem and ignore the property if the firmware
-couldn't make up its mind.
-
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
 ---
- arch/powerpc/platforms/pseries/setup.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+ .../devicetree/bindings/pci/altera-pcie-msi.txt    | 28 +++++++++++++
+ .../devicetree/bindings/pci/altera-pcie.txt        | 49 ++++++++++++++++++++++
+ 2 files changed, 77 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
 
-diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-index 39a74fa..6016709 100644
---- a/arch/powerpc/platforms/pseries/setup.c
-+++ b/arch/powerpc/platforms/pseries/setup.c
-@@ -40,6 +40,7 @@
- #include <linux/seq_file.h>
- #include <linux/root_dev.h>
- #include <linux/of.h>
-+#include <linux/of_pci.h>
- #include <linux/kexec.h>
- 
- #include <asm/mmu.h>
-@@ -495,18 +496,7 @@ static void __init find_and_init_phbs(void)
- 	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
- 	 * in chosen.
- 	 */
--	if (of_chosen) {
--		const int *prop;
--
--		prop = of_get_property(of_chosen,
--				"linux,pci-probe-only", NULL);
--		if (prop) {
--			if (*prop)
--				pci_add_flags(PCI_PROBE_ONLY);
--			else
--				pci_clear_flags(PCI_PROBE_ONLY);
--		}
--	}
-+	of_pci_check_probe_only();
- }
- 
- static void __init pSeries_setup_arch(void)
+diff --git a/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+new file mode 100644
+index 0000000..53ad2388
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+@@ -0,0 +1,28 @@
++* Altera PCIe MSI controller
++
++Required properties:
++- compatible:	should contain "altr,msi-1.0"
++- reg:		specifies the physical base address of the controller and
++		the length of the memory mapped region.
++- reg-names:	must include the following entries:
++		"csr": CSR registers
++		"vector_slave": vectors slave port region
++- interrupt-parent:	interrupt source phandle.
++- interrupts:	specifies the interrupt source of the parent interrupt
++		controller. The format of the interrupt specifier depends on the
++		parent interrupt controller.
++- num-vectors:	number of vectors, range 1 to 32.
++- msi-controller:	indicates that this is MSI controller node
++
++
++Example
++msi0: msi@0xFF200000 {
++	compatible = "altr,msi-1.0";
++	reg = <0xFF200000 0x00000010
++		0xFF200010 0x00000080>;
++	reg-names = "csr", "vector_slave";
++	interrupt-parent = <&hps_0_arm_gic_0>;
++	interrupts = <0 42 4>;
++	msi-controller = <1>;
++	num-vectors = <32>;
++};
+diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+new file mode 100644
+index 0000000..4440db1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
+@@ -0,0 +1,49 @@
++* Altera PCIe controller
++
++Required properties:
++- compatible :	should contain "altr,pcie-root-port-1.0"
++- reg:		a list of physical base address and length for TXS and CRA.
++- reg-names:	must include the following entries:
++		"Txs" or "txs": TX slave port region
++		"Cra" or "cra": Control register access region
++- interrupt-parent:	interrupt source phandle.
++- interrupts:	specifies the interrupt source of the parent interrupt controller.
++		The format of the interrupt specifier depends on the parent interrupt
++		controller.
++- device_type:	must be "pci"
++- #address-cells:	set to <3>
++- #size-cells:	set to <2>
++- #interrupt-cells:	set to <1>
++- ranges:		describes the translation of addresses for root ports and standard
++		PCI regions.
++- interrupt-map-mask and interrupt-map: standard PCI properties to define the
++		mapping of the PCIe interface to interrupt numbers.
++
++Optional properties:
++- msi-parent:	Link to the hardware entity that serves as the MSI controller for this PCIe
++		controller.
++- bus-range:	PCI bus numbers covered
++
++Example
++	pcie_0: pcie@0xc00000000 {
++		compatible = "altr,pcie-root-port-1.0";
++		reg = <0xc0000000 0x20000000>,
++			<0xff220000 0x00004000>;
++		reg-names = "Txs", "Cra";
++		interrupt-parent = <&hps_0_arm_gic_0>;
++		interrupts = <0 40 4>;
++		interrupt-controller;
++		#interrupt-cells = <1>;
++		bus-range = <0x0 0xFF>;
++		device_type = "pci";
++		msi-parent = <&msi_to_gic_gen_0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_0 1>,
++			            <0 0 0 2 &pcie_0 2>,
++			            <0 0 0 3 &pcie_0 3>,
++			            <0 0 0 4 &pcie_0 4>;
++		ranges = <0x82000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x10000000
++			    0x82000000 0x00000000 0x10000000 0xd0000000 0x00000000 0x10000000>;
++	};
 -- 
-2.1.4
+1.8.2.1
 
