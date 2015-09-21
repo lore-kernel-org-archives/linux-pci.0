@@ -1,55 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH 1/3] PCI: Allow quirks to override SRIOV BARs.
-Date: Thu, 17 Sep 2015 15:41:32 -0700
-Message-Id: <1442529694-1792-2-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:33034 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757127AbbIUPnP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2015 11:43:15 -0400
+Received: by iofh134 with SMTP id h134so124052037iof.0
+        for <linux-pci@vger.kernel.org>; Mon, 21 Sep 2015 08:43:14 -0700 (PDT)
+Date: Mon, 21 Sep 2015 10:43:09 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: jakeo@microsoft.com
+Cc: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	linux-pci@vger.kernel.org, tglx@linutronix.de
+Subject: Re: [PATCH v2 04/12] drivers:pci: Add IRQ domain lookup by PCI domain
+Message-ID: <20150921154309.GQ25767@google.com>
+References: <1441929670-10058-1-git-send-email-jakeo@microsoft.com>
+ <1441929670-10058-5-git-send-email-jakeo@microsoft.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1441929670-10058-5-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Hi Jake,
 
-Devices with fixed BARs can install BAR resources with
-IORESOURCE_PCI_FIXED from the header fixup.  Allow this to work with
-the SRIOV BARs as well by testing if the BAR resource has already been
-set before attempting to read it from the config space.
+I don't know how this will be morphed after Marc's comments, but when you
+repost this series, please take a look at the existing change history,
+e.g.,  with "git log --oneline drivers/pci/probe.c", and make your subject
+lines follow the existing conventions.  In this case, they look like:
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/iov.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+  PCI: Make pci_msi_setup_pci_dev() non-static for use by arch code
+  PCI: Set MPS to match upstream bridge
+  PCI: Move MPS configuration check to pci_configure_device()
+  PCI: Add pci_scan_root_bus_msi()
+  PCI: Tolerate hierarchies with no Root Port
+  ...
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index ee0ebff..f8a6e1e 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -436,8 +436,13 @@ found:
- 	nres = 0;
- 	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
- 		res = &dev->resource[i + PCI_IOV_RESOURCES];
--		bar64 = __pci_read_base(dev, pci_bar_unknown, res,
--					pos + PCI_SRIOV_BAR + i * 4);
-+		if (res->flags)
-+			/* Already populated by quirks, just set bar64. */
-+			bar64 = (res->flags & IORESOURCE_MEM_64) ? 1 : 0;
-+		else
-+			bar64 = __pci_read_base(dev, pci_bar_unknown, res,
-+						pos + PCI_SRIOV_BAR + i * 4);
-+
- 		if (!res->flags)
- 			continue;
- 		if (resource_size(res) & (PAGE_SIZE - 1)) {
--- 
-1.9.1
+Bjorn
 
+On Fri, Sep 11, 2015 at 12:01:03AM +0000, jakeo@microsoft.com wrote:
+> From: Jake Oshins <jakeo@microsoft.com>
+> 
+> The PCI driver currently looks up IRQ domains for root PCI buses by walking
+> up the Open Firmware tree looking for any that cover this particular PCI root.
+> Since x86 PCs don't implement Open Firmware, this patch offers an alternative
+> lookup by the PCI domain ID (known as "segment" in the PCI and ACPI specs.)
+> 
+> I could have tried to build a (fake) Open Firmware tree and leverage the old
+> code, but I rejected that possibility both because it would have required
+> changes in lots of other places and because most distributions don't even
+> compile in the OF infrastructure when targeting PCs.
+> 
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> ---
+>  drivers/pci/probe.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 0b2be17..e7e5ff3 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -12,6 +12,7 @@
+>  #include <linux/module.h>
+>  #include <linux/cpumask.h>
+>  #include <linux/pci-aspm.h>
+> +#include <linux/irqdomain.h>
+>  #include <asm-generic/pci-bridge.h>
+>  #include "pci.h"
+>  
+> @@ -663,12 +664,22 @@ static void pci_set_bus_speed(struct pci_bus *bus)
+>  static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+>  {
+>  	struct irq_domain *d;
+> +	int pci_domain;
+>  
+>  	/*
+>  	 * Any firmware interface that can resolve the msi_domain
+>  	 * should be called from here.
+>  	 */
+>  	d = pci_host_bridge_of_msi_domain(bus);
+> +	if (d)
+> +		return d;
+> +
+> +	/*
+> +	 * If firmware couldn't help find, it try looking it up by PCI
+> +	 * domain/segment.
+> +	 */
+> +	pci_domain = pci_domain_nr(bus);
+> +	d = irq_find_matching_host(NULL, DOMAIN_BUS_PCI_MSI, &pci_domain);
+>  
+>  	return d;
+>  }
+> -- 
+> 1.9.1
+> 
