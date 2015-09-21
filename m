@@ -1,130 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0077.outbound.protection.outlook.com ([157.56.111.77]:18861
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751074AbbIOSqH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Sep 2015 14:46:07 -0400
-Message-ID: <55F86764.4060502@caviumnetworks.com>
-Date: Tue, 15 Sep 2015 11:45:56 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Received: from foss.arm.com ([217.140.101.70]:52640 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752192AbbIUJ54 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Sep 2015 05:57:56 -0400
+Date: Mon, 21 Sep 2015 10:58:13 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: Fix pci_claim_bridge_resource() resource claiming
+Message-ID: <20150921095813.GA13325@red-moon>
+References: <1441877628-28879-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20150918223059.GO25767@google.com>
 MIME-Version: 1.0
-To: Will Deacon <will.deacon@arm.com>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	"grant.likely@linaro.org" <grant.likely@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Daney <david.daney@cavium.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-Subject: Re: [PATCH 4/6] PCI: generic: Correct, and avoid overflow, in bus_max
- calculation.
-References: <1442013719-5001-1-git-send-email-ddaney.cavm@gmail.com> <1442013719-5001-5-git-send-email-ddaney.cavm@gmail.com> <20150915174934.GL31157@arm.com> <55F85D4E.9020604@caviumnetworks.com> <20150915183500.GR31157@arm.com>
-In-Reply-To: <20150915183500.GR31157@arm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150918223059.GO25767@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/15/2015 11:35 AM, Will Deacon wrote:
-> On Tue, Sep 15, 2015 at 07:02:54PM +0100, David Daney wrote:
->> On 09/15/2015 10:49 AM, Will Deacon wrote:
->>> On Sat, Sep 12, 2015 at 12:21:57AM +0100, David Daney wrote:
->>>>    	/* Limit the bus-range to fit within reg */
->>>> -	bus_max = pci->cfg.bus_range->start +
->>>> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
->>>> +	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
->>>> +	if (bus_max > 255)
->>>> +		bus_max = 255;
->>>>    	pci->cfg.bus_range->end = min_t(resource_size_t,
->>>>    					pci->cfg.bus_range->end, bus_max);
->>>
->>> Hmm, this is changing the meaning of the bus-range property in the
->>> device-tree, which really needs to match what IEEE Std 1275-1994 requires.
->>
->> I doesn't change the bus-range.
->
-> Not directly, but pci->cfg.bus_range is a resource populated from the
-> "bus-range" property in the device-tree, so it's changing how the driver
-> uses that property.
->
->>> My understanding was that the bus-range could be used to offset the config
->>> space, which is why it's subtracted from the bus number in
->>> gen_pci_map_cfg_bus_[e]cam.
->>
->> There is an inconsistency in the current code.  The calculation of the
->> cfg.win[?] pointers is done such that the beginning of the config space
->> specified in the "reg" property corresponds to bus 0.
->
-> I don't follow you here. The mapping functions explicitly subtract the
-> start of the bus range when calculating the window offset:
->
->    resource_size_t idx = bus->number - pci->cfg.bus_range->start;
->
-> so if I have bus-range = <128 255>; then bus 128 lives at the start of
-> the configuration space described by the reg property, not bus 0.
->
-> Sorry if I'm being thick; I just can't see the inconsistency.
->
+On Fri, Sep 18, 2015 at 11:30:59PM +0100, Bjorn Helgaas wrote:
+> On Thu, Sep 10, 2015 at 10:33:48AM +0100, Lorenzo Pieralisi wrote:
+> > Commit 8505e729a2f6eb ("PCI: Add pci_claim_bridge_resource() to clip
+> > window if necessary") introduced a new API to claim bridge resources.
+> > pci_claim_bridge_resource() tries to claim a bridge resource, and if
+> > the claiming fails the function tries to clip the resource to make
+> > it fit within the parent resource window.
+> > If the clipping succeeds the bridge aperture is set-up accordingly
+> > and pci_claim_bridge_resource() tries to claim the resource again.
+> > 
+> > Commit c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") added
+> > code that sets the IORESOURCE_UNSET flag on claiming failure.
+> > 
+> > This means that the second resource claiming after window clipping will
+> > always fail, since the resource flags contain IORESOURCE_UNSET,
+> > previously set on failure by pci_claim_resource(), so the subsequent
+> > pci_claim_resource() call ends up spitting a log message and return
+> > failure with no chance whatsoever to succeed.
+> > 
+> > This patch clears the IORESOURCE_UNSET in the bridge resource flags
+> > after clipping the bridge window successfully, so that the subsequent
+> > pci_claim_resource() has a chance to succeed.
+> > 
+> > Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
+> > Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: <stable@vger.kernel.org> # 4.1+
+> > ---
+> >  drivers/pci/setup-bus.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> > index 508cc56..6de55d0 100644
+> > --- a/drivers/pci/setup-bus.c
+> > +++ b/drivers/pci/setup-bus.c
+> > @@ -733,6 +733,13 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+> >  		return -EINVAL;
+> >  	}
+> >  
+> > +	/*
+> > +	 * Clear the IORESOURCE_UNSET flag set by the previous
+> > +	 * pci_claim_resource() failure so that the resource
+> > +	 * claiming can actually be carried out
+> > +	 */
+> > +	bridge->resource[i].flags &= ~IORESOURCE_UNSET;
+> > +
+> >  	if (pci_claim_resource(bridge, i) == 0)
+> >  		return 0;	/* claimed a smaller window */
+> >  
+> 
+> Thanks, Lorenzo, this is definitely a problem.  I propose the
+> patch below instead because:
+> 
+>   - I like clearing IORESOURCE_UNSET at the point where we actually
+>     update res->start and res->end (which will also fix any other
+>     future callers of pci_bus_clip_resource()), and
+> 
+>   - Doing it there means the printk will show how we changed the
+>     addresses, not just the size change.
+> 
+> Can you try this out and see if it also solves the problem you're
+> seeing?
 
-Here is the current code:
+Thanks Bjorn, yes that makes sense and it solves the problem.
 
->> 	bus_range = pci->cfg.bus_range;
->> 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
->> 		u32 idx = busn - bus_range->start;
+> I wasn't sure about the provenance of your patch, Lorenzo.  You had a
+> Signed-off-by from Yinghai, but I didn't see the original posting.  If
+> it originally came from Yinghai, I should change the
+> "Based-on-patch-by" below.
 
-The index is offset by the bus range start...
+As Yinghai mentioned, I posted a patch to show that the second resource
+claim in pci_claim_bridge_resource() was basically dead code in mainline,
+to get your attention and obviously I knew what the real fix was,
+I mentioned that when I inlined the patch.
 
->> 		u32 sz = 1 << pci->cfg.ops.bus_shift;
->>
->> 		pci->cfg.win[idx] = devm_ioremap(dev,
->> 						 pci->cfg.res.start + busn * sz,
->> 						 sz);
+You can keep patch below as is or give Yinghai Based-on-patch-by
+accreditation and add a reported-by with my tag, I do not care as long
+as we fix it.
 
-But, the offset into the "reg" property is the raw bus number.
+You can also add:
 
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
->> 		if (!pci->cfg.win[idx])
->> 			return -ENOMEM;
->> 	}
+Thanks,
+Lorenzo
 
-
-I hope that makes it more clear.
-
-
-
-
->> The calculation that I am changing, was done such that the beginning of
->> the config space specified in the "reg" property corresponds to the
->> first bus of the "bus-range"
->>
->> Which is correct?  I assumed that the config space specified in the
->> "reg" property corresponds to bus 0.  Based on this assumption, I made
->> the bus_max calculation match.
->>
->> Due to hardware peculiarities, our bus-range starts at a non-zero bus
->> number.  So, something has to be done to make all the code agree on a
->> single interpretation of the meaning "reg" property.
->
-> I think you're the first to exercise this code, so it's definitely worth
-> us fixing whatever's going wrong.
->
->>> Also, why is your config space so large that
->>> we end up overflowing bus_max?
->>
->> It isn't.  The part of the patch that changes the type from u8 to int
->> was just to add some sanity.  The  code was easily susceptible to
->> overflow failures, it seemed best to change to int.
->
-> Can we drop this part for now if it's not actually needed?
->
-> Will
->
-
+> commit a4ad03352739c96842af5d06387595665cdd875e
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Fri Sep 18 17:15:01 2015 -0500
+> 
+>     PCI: Clear IORESOURCE_UNSET when clipping a bridge window
+>     
+>     c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") sets IORESOURCE_UNSET
+>     if we fail to claim a resource.  If we tried to claim a bridge window,
+>     failed, clipped the window, and tried to claim the clipped window, we
+>     failed again because of IORESOURCE_UNSET.
+>     
+>     When pci_bus_clip_resource() clips a bridge window to fit inside an
+>     upstream window, we're reassigning the window, so clear the
+>     IORESOURCE_UNSET flag.  Also clear IORESOURCE_UNSET in our copy of the
+>     unclipped window so we can see exactly what the original window was and how
+>     it now fits inside the upstream window.
+>     
+>     Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
+>     Based-on-patch-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: stable@vger.kernel.org	# 4.1+
+> 
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 6fbd3f2..d3346d2 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -256,6 +256,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
+>  
+>  		res->start = start;
+>  		res->end = end;
+> +		res->flags &= ~IORESOURCE_UNSET;
+> +		orig_res.flags &= ~IORESOURCE_UNSET;
+>  		dev_printk(KERN_DEBUG, &dev->dev, "%pR clipped to %pR\n",
+>  				 &orig_res, res);
+>  
+> 
