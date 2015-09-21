@@ -1,102 +1,24 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <55FAF5B1.1030401@arm.com>
-References: <1441385411-7624-1-git-send-email-marc.zyngier@arm.com>
- <20150917153009.GH25767@google.com> <55FAF5B1.1030401@arm.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 17 Sep 2015 12:21:41 -0500
-Message-ID: <CAErSpo4KosLZa=YWvdVErEk-bNDr7witNEO76d1oJXdSmUP2yQ@mail.gmail.com>
-Subject: Re: [PATCH v4 0/4] PCI: arm64/powerpc: Fix parsing of linux,pci-probe-only
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Will Deacon <will.deacon@arm.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Alexander Graf <agraf@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+In-Reply-To: <CAKsTQn=skDo7mbTrvFfQHW+nD1Ggy-g+qT922WOrjiwqyK5BwQ@mail.gmail.com>
+References: <CAKsTQnn-+13Q=+hM581p=dvWnZXtnG6W-t5K4-ioNUTkEmyLMg@mail.gmail.com>
+	<CAE9FiQXaOkMKk2PddYOXApK9tKLkgusH18sYgvLHA04BRdXR-g@mail.gmail.com>
+	<CAKsTQn=u5HuMCz5_L1jbx6Fvz5Rf_e14tNeEPwxy1o8dxk4J8g@mail.gmail.com>
+	<CAE9FiQWxiLV0YeWfUAd=vJaxtV-0PrqBqm1ptKnFoEM0jQDaiQ@mail.gmail.com>
+	<CAKsTQn=skDo7mbTrvFfQHW+nD1Ggy-g+qT922WOrjiwqyK5BwQ@mail.gmail.com>
+Date: Mon, 21 Sep 2015 14:22:31 -0700
+Message-ID: <CAE9FiQVFj93zemMa4H1N1JtObXPPyK-u-iwub48aAb3UNYLtqg@mail.gmail.com>
+Subject: Re: PCIe bus (re-)numbering
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ruud <netwerkforens@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 12:17 PM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> On 17/09/15 16:30, Bjorn Helgaas wrote:
->> On Fri, Sep 04, 2015 at 05:50:07PM +0100, Marc Zyngier wrote:
->>> The pci-host-generic driver parses the linux,pci-probe-only property,
->>> and assumes that it will have a boolean parameter.
->>>
->>> Turns out that the Seattle DTS file has a naked "linux,pci-probe-only"
->>> property, which leads to the driver dereferencing some unsuspecting
->>> memory location. Nothing really bad happens (we end up reading some
->>> other bit of DT, fortunately), but that not a reason to keep it this
->>> way. Turns out that the Pseries code (where this code was lifted from)
->>> may suffer from the same issue.
->>>
->>> The first patch introduces a common (and fixed) version of that check
->>> that can be used by drivers and architectures that require it. The two
->>> following patches change the pci-host-generic driver and the powerpc
->>> code to use it.
->>>
->>> Finally, the bad property is removed from the Seatle DTS, because it
->>> is simply not necessary (it actually prevents me from using SR-IOV,
->>> which otherwise runs fine without the probe-only thing).
->>>
->>> This has been tested on the offending Seattle board.
->>>
->>> * From v3:
->>>   - Restrict the property lookup to /chosen (Rob)
->>>   - Acked-by on patch #4 from Suravee
->>>   - I swear this is the last time I rework these patches! ;-)
->>>
->>> * From v2:
->>>   - Use of_property_read_u32 to safely read the property (Rob)
->>>   - Add a log message to indicate when we enable probe-only
->>>     (probably quite useful for debugging)
->>>
->>> * From v1:
->>>   - Consolidate the parsing in of_pci.c (Bjorn)
->>>
->>> Marc Zyngier (4):
->>>   of/pci: Add of_pci_check_probe_only to parse "linux,pci-probe-only"
->>>   PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
->>>   powerpc: PCI: Fix lookup of linux,pci-probe-only property
->>>   arm64: dts: Drop linux,pci-probe-only from the Seattle DTS
->>>
->>>  arch/arm64/boot/dts/amd/amd-overdrive.dts |  1 -
->>>  arch/powerpc/platforms/pseries/setup.c    | 14 ++------------
->>>  drivers/of/of_pci.c                       | 28 ++++++++++++++++++++++++++++
->>>  drivers/pci/host/pci-host-generic.c       |  9 +--------
->>>  include/linux/of_pci.h                    |  3 +++
->>>  5 files changed, 34 insertions(+), 21 deletions(-)
->>
->> Applied with the comment tweak and acks to pci/host-generic for v4.4,
->> thanks!
->
-> Turns out that the 01.org infrastructure has picked up on a compilation
-> bug with randconfig. The following patch seems to fix it and should be
-> applied on the first patch:
->
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 485d625..2da5abc 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -6,6 +6,8 @@
->  #include <linux/of_pci.h>
->  #include <linux/slab.h>
->
-> +#include <asm-generic/pci-bridge.h>
-> +
->  static inline int __of_pci_pci_compare(struct device_node *node,
->                                        unsigned int data)
->  {
->
-> Sorry for the annoyance.
+On Mon, Sep 21, 2015 at 12:49 AM, Ruud <netwerkforens@gmail.com> wrote:
+> Sorry for the rookie question: which version do you mean by "current
+> upstream", the current main trunk rc?.
 
-Folded in and re-pushed, thanks!
+current linus tree like v4.2 or v4.3-rc1 etc
