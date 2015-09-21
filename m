@@ -1,57 +1,69 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 22 Sep 2015 19:52:30 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH 3/3] PCI: generic: Add support for Cavium ThunderX PCIe
- root complexes.
-Message-ID: <20150922185230.GR7356@arm.com>
-References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com>
- <1442529694-1792-4-git-send-email-ddaney.cavm@gmail.com>
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v7 6/6] MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+Date: Mon, 21 Sep 2015 10:13:07 +0800
+Message-ID: <1442801587-3812-7-git-send-email-lftan@altera.com>
+In-Reply-To: <1442801587-3812-1-git-send-email-lftan@altera.com>
+References: <1442801587-3812-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442529694-1792-4-git-send-email-ddaney.cavm@gmail.com>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 17, 2015 at 11:41:34PM +0100, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> The config space for external PCIe root complexes on some Cavium
-> ThunderX SoCs is very similar to CAM and ECAM, but differs in the
-> shift values that have to be applied to the bus and devfn numbers to
-> compose that address window offset.  These root complexes also have
-> the interesting property that there is no root bridge, so the standard
-> manner of limiting scanning to only the first device doesn't work.  We
-> can use the standard pci-host-generic driver if we make a minor
-> addition to handle these differences, so we...
-> 
-> Add a mapping function for ThunderX PCIe root complexes with a bus
-> shift of 24 and devfn shift of 16.  Ignore accesses for devices other
-> than the first device on the primary bus.
-> 
-> Document the whole thing in devicetree/bindings/pci/host-generic-pci.txt
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  .../devicetree/bindings/pci/host-generic-pci.txt   |  8 +++---
->  drivers/pci/host/pci-host-generic.c                | 29 ++++++++++++++++++++++
->  2 files changed, 34 insertions(+), 3 deletions(-)
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+---
+ MAINTAINERS | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-Thanks, this looks better now:
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7ba7ab7..eeb9ec9 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7938,6 +7938,14 @@ F:	include/linux/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
+ 
++PCI DRIVER FOR ALTERA PCIE IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie.txt
++F:	drivers/pci/host/pcie-altera.c
++
+ PCI DRIVER FOR ARM VERSATILE PLATFORM
+ M:	Rob Herring <robh@kernel.org>
+ L:	linux-pci@vger.kernel.org
+@@ -8039,6 +8047,14 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*spear*
+ 
++PCI MSI DRIVER FOR ALTERA MSI IP
++M:	Ley Foon Tan <lftan@altera.com>
++L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
++L:	linux-pci@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
++F:	drivers/pci/host/pcie-altera-msi.c
++
+ PCI MSI DRIVER FOR APPLIEDMICRO XGENE
+ M:	Duc Dang <dhdang@apm.com>
+ L:	linux-pci@vger.kernel.org
+-- 
+1.8.2.1
 
-  Acked-by: Will Deacon <will.deacon@arm.com>
-
-Will
