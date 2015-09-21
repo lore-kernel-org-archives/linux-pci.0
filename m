@@ -1,153 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33448 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752364AbbIXTuZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Sep 2015 15:50:25 -0400
-Date: Thu, 24 Sep 2015 14:50:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, mark.d.rustad@intel.com,
-	myron.stowe@redhat.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Relax function 0 VPD test and relocate
-Message-ID: <20150924195019.GB10481@localhost>
-References: <20150916041858.26694.97435.stgit@gimli.home>
+Received: from mail-bl2on0088.outbound.protection.outlook.com ([65.55.169.88]:4000
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755667AbbIUCN0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 20 Sep 2015 22:13:26 -0400
+From: Ley Foon Tan <lftan@altera.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Marc Zyngier <marc.zyngier@arm.com>
+CC: Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	Ley Foon Tan <lftan@altera.com>, <lftan.linux@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v7 0/6] Altera PCIe host controller driver with MSI support
+Date: Mon, 21 Sep 2015 10:13:01 +0800
+Message-ID: <1442801587-3812-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150916041858.26694.97435.stgit@gimli.home>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 15, 2015 at 10:24:46PM -0600, Alex Williamson wrote:
-> When we quirk a device with PCI_DEV_FLAGS_VPD_REF_F0 we're expecting
-> to find a device where all the functions are identical.  If we don't
-> find that, we don't make VPD accessible through pci_vpd_ops.  That
-> means that if we quirk devices we shouldn't, we filter them out by
-> hiding VPD entirely rather than allowing default access.  Instead, we
-> can flip this around to only quirk devices that match a slightly more
-> rigorous test in the quirk, allowing regular access for anything else.
-> 
-> Tests for the multifunction flag are removed since a) function 0 and
-> the function under test are clearly a multifunction device if we're
-> scanning a non-zero function in the same slot and b) at this point the
-> flag is only set in the device under test if the multifunction bit is
-> set in the PCI HEADER, which is a point of interpretation for the PCI
-> spec.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
-> 
-> This is potentially another stable candiate since we're continuing to
-> iterate on 932c435caba8, but since we don't actually know of a device
-> where VPD is blocked (we don't think my Skylake example actually
-> supports VPD), I'm not including it.  I would support it if requested
-> though.
+This is the 7th version of patch set to add support for Altera PCIe host
+controller with MSI feature on Altera FPGA device families. This patchset
+mainly resolve comments from Lorenzo Pieralisi in v6 and minor fixes.
 
-Applied with acks from Myron & Mark to for-linus for v4.3 with the
-changelog below.  I added a stable tag on the theory that there's not
-really any benefit in having different flavors of this brand-new code.
+This patchset is based on v4.3-rc1.
 
-    PCI: Use function 0 VPD for identical functions, regular VPD for others
-    
-    932c435caba8 ("PCI: Add dev_flags bit to access VPD through function 0")
-    added PCI_DEV_FLAGS_VPD_REF_F0.  Previously, we set the flag on every
-    non-zero function of quirked devices.  If a function turned out to be
-    different from function 0, i.e., it had a different class, vendor ID, or
-    device ID, the flag remained set but we didn't make VPD accessible at all.
-    
-    Flip this around so we only set PCI_DEV_FLAGS_VPD_REF_F0 for functions that
-    are identical to function 0, and allow regular VPD access for any other
-    functions.
-    
-    [bhelgaas: changelog, stable tag]
-    Fixes: 932c435caba8 ("PCI: Add dev_flags bit to access VPD through function 0")
-    Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-    Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
-    Acked-by: Myron Stowe <myron.stowe@redhat.com>
-    Acked-by: Mark Rustad <mark.d.rustad@intel.com>
-    CC: stable@vger.kernel.org
+v6->v7 changes:
+-pcie-altera: add pcie_bus_configure_settings()
+-pcie-altera: update comment
+-pcie-altera: merge tlp_write_packet_unaligned and tlp_write_packet_aligned
+-pcie-altera: pass in NULL for iobase for of_pci_get_host_bridge_resources
+-pcie-altera: remove pcie->root_bus_nr = 0
 
-> 
->  drivers/pci/access.c |   22 ----------------------
->  drivers/pci/quirks.c |   20 ++++++++++++++++++--
->  2 files changed, 18 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index 5a5f0a7..59ac36f 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -475,23 +475,6 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
->  	.release = pci_vpd_pci22_release,
->  };
->  
-> -static int pci_vpd_f0_dev_check(struct pci_dev *dev)
-> -{
-> -	struct pci_dev *tdev = pci_get_slot(dev->bus,
-> -					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-> -	int ret = 0;
-> -
-> -	if (!tdev)
-> -		return -ENODEV;
-> -	if (!tdev->vpd || !tdev->multifunction ||
-> -	    dev->class != tdev->class || dev->vendor != tdev->vendor ||
-> -	    dev->device != tdev->device)
-> -		ret = -ENODEV;
-> -
-> -	pci_dev_put(tdev);
-> -	return ret;
-> -}
-> -
->  int pci_vpd_pci22_init(struct pci_dev *dev)
->  {
->  	struct pci_vpd_pci22 *vpd;
-> @@ -500,12 +483,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
->  	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
->  	if (!cap)
->  		return -ENODEV;
-> -	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
-> -		int ret = pci_vpd_f0_dev_check(dev);
->  
-> -		if (ret)
-> -			return ret;
-> -	}
->  	vpd = kzalloc(sizeof(*vpd), GFP_ATOMIC);
->  	if (!vpd)
->  		return -ENOMEM;
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6a30252..b03373f 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -1907,11 +1907,27 @@ static void quirk_netmos(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NETMOS, PCI_ANY_ID,
->  			 PCI_CLASS_COMMUNICATION_SERIAL, 8, quirk_netmos);
->  
-> +/*
-> + * Quirk non-zero PCI functions to route VPD access through function 0 for
-> + * devices that share VPD resources between functions.  The functions are
-> + * expected to be identical devices.
-> + */
->  static void quirk_f0_vpd_link(struct pci_dev *dev)
->  {
-> -	if (!dev->multifunction || !PCI_FUNC(dev->devfn))
-> +	struct pci_dev *f0;
-> +
-> +	if (!PCI_FUNC(dev->devfn))
->  		return;
-> -	dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
-> +
-> +	f0 = pci_get_slot(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-> +	if (!f0)
-> +		return;
-> +
-> +	if (f0->vpd && dev->class == f0->class &&
-> +	    dev->vendor == f0->vendor && dev->device == f0->device)
-> +		dev->dev_flags |= PCI_DEV_FLAGS_VPD_REF_F0;
-> +
-> +	pci_dev_put(f0);
->  }
->  DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
->  			      PCI_CLASS_NETWORK_ETHERNET, 8, quirk_f0_vpd_link);
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+History:
+-------
+[v1]: https://lkml.org/lkml/2015/7/28/395
+[v2]: https://lkml.org/lkml/2015/7/31/267
+[v3]: http://www.kernelhub.org/?msg=811940&p=2
+[v4]: https://lkml.org/lkml/2015/8/17/141
+[v5]: https://lkml.org/lkml/2015/8/25/238
+[v6]: https://lkml.org/lkml/2015/9/1/177
+
+Ley Foon Tan (6):
+  arm: add msi.h to Kbuild
+  pci: add Altera PCI vendor ID
+  pci:host: Add Altera PCIe host controller driver
+  pci: altera: Add Altera PCIe MSI driver
+  Documentation: dt-bindings: pci: altera pcie device tree binding
+  MAINTAINERS: Add Altera PCIe and MSI drivers maintainer
+
+ .../devicetree/bindings/pci/altera-pcie-msi.txt    |  28 +
+ .../devicetree/bindings/pci/altera-pcie.txt        |  49 ++
+ MAINTAINERS                                        |  16 +
+ arch/arm/include/asm/Kbuild                        |   1 +
+ drivers/pci/host/Kconfig                           |  16 +
+ drivers/pci/host/Makefile                          |   2 +
+ drivers/pci/host/pcie-altera-msi.c                 | 310 +++++++++++
+ drivers/pci/host/pcie-altera.c                     | 591 +++++++++++++++++++++
+ include/linux/pci_ids.h                            |   2 +
+ 9 files changed, 1015 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie-msi.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/altera-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-altera-msi.c
+ create mode 100644 drivers/pci/host/pcie-altera.c
+
+-- 
+1.8.2.1
+
