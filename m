@@ -1,77 +1,69 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5601D550.5000801@internode.on.net>
+Date: Wed, 23 Sep 2015 07:55:20 +0930
+From: Arthur Marsh <arthur.marsh@internode.on.net>
 MIME-Version: 1.0
-In-Reply-To: <CAFiDJ59PuhRj3F288A_451pLiKnqPUKin9C2t5uuH2iNPnJfAg@mail.gmail.com>
-References: <1442801587-3812-1-git-send-email-lftan@altera.com>
- <1442801587-3812-6-git-send-email-lftan@altera.com> <5606171A.5000609@kernel.org>
- <CAFiDJ59PuhRj3F288A_451pLiKnqPUKin9C2t5uuH2iNPnJfAg@mail.gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Mon, 28 Sep 2015 12:31:36 -0500
-Message-ID: <CAL_JsqL9eoTRa2-eeNJgVoO=0LyuaaJ87E4_BS0KocRKBXGdGA@mail.gmail.com>
-Subject: Re: [PATCH v7 5/6] Documentation: dt-bindings: pci: altera pcie
- device tree binding
-To: Ley Foon Tan <lftan@altera.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Dinh Nguyen <dinguyen@opensource.altera.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
+To: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Ballabio Dario <dario.ballabio@emc.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	"James E.J. Bottomley" <JBottomley@odin.com>
+CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
+ device drivers
+References: <20150916134211.GA21535@infradead.org> <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com>
+In-Reply-To: <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 28, 2015 at 12:38 AM, Ley Foon Tan <lftan@altera.com> wrote:
-> On Sat, Sep 26, 2015 at 11:55 AM, Rob Herring <robh@kernel.org> wrote:
->>
->> On 09/20/2015 09:13 PM, Ley Foon Tan wrote:
->> > This patch adds the bindings for Altera PCIe host controller driver and
->> > Altera PCIe MSI driver.
 
-[...]
 
->> > +     num-vectors = <32>;
->> > +};
->> > diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Documentation/devicetree/bindings/pci/altera-pcie.txt
->> > new file mode 100644
->> > index 0000000..4440db1
->> > --- /dev/null
->> > +++ b/Documentation/devicetree/bindings/pci/altera-pcie.txt
->> > @@ -0,0 +1,49 @@
->> > +* Altera PCIe controller
->> > +
->> > +Required properties:
->> > +- compatible :       should contain "altr,pcie-root-port-1.0"
->> > +- reg:               a list of physical base address and length for TXS and CRA.
->> > +- reg-names: must include the following entries:
->> > +             "Txs" or "txs": TX slave port region
->> > +             "Cra" or "cra": Control register access region
->>
->> Why both cases? Can we please just have one (or none is better IMO).
-> The PCIe IP on different device families use different register names.
-> And our device tree generator will auto generate the register names
-> based on the hardware description name. Too bad we can't change the
-> hardware description names now.
+Jiang Liu wrote on 22/09/15 17:00:
+> Previously the eata driver just grabs and accesses eata PCI devices
+> without implementing a PCI device driver, that causes troubles with
+> latest IRQ related
+>
+> Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+> pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
+> for PCI devices on x86 platforms. Instead of allocating PCI legacy
+> IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
+> will be called by pci_device_probe() to allocate PCI legacy IRQs
+> when binding PCI drivers to PCI devices.
+>
+> But the eata driver directly accesses PCI devices without implementing
+> corresponding PCI drivers, so pcibios_alloc_irq() won't be called for
+> those PCI devices and wrong IRQ number may be used to manage the PCI
+> device.
+>
+> This patch implements a PCI device driver to manage eata PCI devices,
+> so eata driver could properly cooperate with the PCI core. It also
+> provides headroom for PCI hotplug with eata driver.
+>
+> It also represents non-PCI eata devices as platform devices, so it could
+> be managed as normal devices.
+>
+> Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Ballabio, Dario <dario.ballabio@emc.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> ---
 
-Okay, your problem to maintain. Hopefully the driver just goes by index then.
+Not really any change with this driver:
 
-Strictly speaking, if you have undocumented bindings downstream that
-is your problem and we don't have to accept them as-is upstream. I'm
-not going to worry about that here.
+previously
 
->> txs contains the config space?
-> It is not the config space, but a memory slave port.
+http://www.users.on.net/~arthur.marsh/20150915547.jpg
 
-Then where is the config space? It should not be part of "ranges" is
-all I care about.
+now
 
-Rob
+http://www.users.on.net/~arthur.marsh/20150922553.jpg
+
+If there was any way of capturing any more debug output I'd be happy to 
+do it.
+
+Arthur.
