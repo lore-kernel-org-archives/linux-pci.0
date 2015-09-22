@@ -1,48 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:36437 "EHLO
-	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbbI2MIH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Sep 2015 08:08:07 -0400
-Received: by vkgp185 with SMTP id p185so271317vkg.3
-        for <linux-pci@vger.kernel.org>; Tue, 29 Sep 2015 05:08:07 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 22 Sep 2015 10:46:24 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-pci@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
+Message-ID: <20150922154624.GF27964@google.com>
+References: <1441553385-3810-1-git-send-email-mst@redhat.com>
+ <20150921182147.GC27964@google.com>
+ <20150921223622-mutt-send-email-mst@redhat.com>
+ <20150921221043.GR25767@google.com>
+ <20150922131303-mutt-send-email-mst@redhat.com>
+ <20150922123640.GT25767@google.com>
+ <20150922164107-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1443526447-228817-1-git-send-email-gabriele.paoloni@huawei.com>
-Date: Tue, 29 Sep 2015 17:38:07 +0530
-Message-ID: <CAHM4w1mKMxy_MyZuSa_+pt3zF1Oi_gXYgMLUJAni3HLDRQmyFw@mail.gmail.com>
-Subject: Re: [PATCH v4 0/3] PCI: designware: change dw_pcie_cfg_write() and dw_pcie_cfg_read()
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Zhichang Yuan <yuanzhichang@hisilicon.com>,
-	zhudacai@hisilicon.com, Zhang Jukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa@hisilicon.com, Liguozhu <liguozhu@hisilicon.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150922164107-mutt-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gab,
+On Tue, Sep 22, 2015 at 05:07:19PM +0300, Michael S. Tsirkin wrote:
+> On Tue, Sep 22, 2015 at 07:36:40AM -0500, Bjorn Helgaas wrote:
+> > On Tue, Sep 22, 2015 at 02:29:03PM +0300, Michael S. Tsirkin wrote:
+> > > On Mon, Sep 21, 2015 at 05:10:43PM -0500, Bjorn Helgaas wrote:
 
-On Tue, Sep 29, 2015 at 5:04 PM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
->
-> This patchset:
-> 1) fixes a bug in spear13xx when calling dw_pcie_cfg_read and
->    dw_pcie_cfg_write usign the patch from Pratyush in
->    https://lkml.org/lkml/2015/9/7/5
+> > > > Can you describe exactly what the device bug is?  Apparently you're
+> > > > saying that if we shut down MSI, it triggers the bug?  And I guess
+> > > > you're talking about a virtio device as implemented in qemu or other
+> > > > hypervisors?
+> > > 
+> > > Yes. Basically depending on an internal device state, disabling MSI
+> > > sometimes wedges it.  The most easy to debug effect is if it starts
+> > > sending INTx interrupts, for which there's no handler currently.
+> > > Full system reset always gets us out of the bad state.
+> > 
+> > If disabling MSI causes the device to use INTx interrupts, that sounds
+> > perfectly normal to me.
+> > 
+> > If disabling MSI causes the device to hang, *that* sounds like a bug.
+> > Since this is virtio, we should be able to figure out exactly where
+> > that happens.  Do you have a pointer to a virtio bug report, or even a
+> > QEMU commit that fixes this virtio bug?
+> > 
+> > I understand that even if there is a virtio fix in QEMU, we want a
+> > solution that works even with an old QEMU that doesn't contain the
+> > fix.  But a pointer to a QEMU fix would really help understand and
+> > document the Linux fix.
+> 
+> I'm not sure we ever understood it completely.
+> 
+> I think some of it has to do with the way the whole virtio 0
+> device register layout changes when you enable/disable MSI.  So should
+> be ok when using the modern virtio 1 model since we fixed this thing.
 
-I think, you forgot to take this, and replaced with another version.
-We have already discussed [1] that, why the version added in this
-series is not preferable.
-Please let me know if you see any issue in taking [2].
+If you know that:
 
-Thanks
+  - pci_device_shutdown() disables MSI,
+  - disabling MSI changes the virtio register layout, and
+  - the driver may touch the device after pci_device_shutdown(),
 
-~Pratyush
+it seems like you might want a virtio shutdown method so you can
+find out when the register layout changes.  Changing the register
+layout sounds completely broken, and dealing with it sounds racy, but
+it sounds like a mess that should be handled by the driver.
 
-[1] http://www.spinics.net/lists/linux-pci/msg44440.html
-[2] https://lkml.org/lkml/2015/9/7/5
+> I was hoping that since disabling MSI in pci core is only useful as a
+> work-around (for devices with a broken bus master enable - even though I
+> don't think we know what these are exactly), a flag for not disabling it
+> won't be held to such a high standard.
+
+Well, I suppose you see the problem with adding workarounds on top of
+workarounds, especially when we don't have a clear understanding of
+why we need them.  The "disable MSI on shutdown" code was added here:
+
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=d52877c7b1af
+
+and there is no information in that patch about it being a workaround
+for devices with broken bus master enable.
+
+The cumulative effect of stuff like this is that it becomes impossible
+to do any meaningful restructuring in the core without breaking some
+corner case.
+
+Bjorn
