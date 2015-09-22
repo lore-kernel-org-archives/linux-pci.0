@@ -1,69 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13825 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752692AbbIHJpC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Sep 2015 05:45:02 -0400
-Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices
- managed by non-PCI drivers
-To: Arthur Marsh <arthur.marsh@internode.on.net>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-References: <55EE8106.6060100@internode.on.net>
- <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
- <55EEA45D.2070709@internode.on.net>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Message-ID: <55EEAE19.2070606@linux.intel.com>
-Date: Tue, 8 Sep 2015 17:44:57 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5601A5C2.4030206@caviumnetworks.com>
+Date: Tue, 22 Sep 2015 12:02:26 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <55EEA45D.2070709@internode.on.net>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+To: Will Deacon <will.deacon@arm.com>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 3/3] PCI: generic: Add support for Cavium ThunderX PCIe
+ root complexes.
+References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com> <1442529694-1792-4-git-send-email-ddaney.cavm@gmail.com> <20150922185230.GR7356@arm.com>
+In-Reply-To: <20150922185230.GR7356@arm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2015/9/8 17:03, Arthur Marsh wrote:
-> 
-> 
-> Jiang Liu wrote on 08/09/15 16:56:
-> Thanks, I removed the test patch and applied the revised patch and built
-> and rebooted the kernel and successfully mounted file systems on a disk
-> attached to the DPT 2044W card using the eata driver:
-> 
-> [    0.000000] Linux version 4.2.0+ (root@victoria) (gcc version 5.2.1
-> 20150903
-> (Debian 5.2.1-16) ) #31 SMP PREEMPT Tue Sep 8 17:36:28 ACST 2015
-> ...
-> 
-> [   80.691097] EATA0: IRQ 10 mapped to IO-APIC IRQ 17.
-> [   80.724519] EATA/DMA 2.0x: Copyright (C) 1994-2003 Dario Ballabio.
-> [   80.752035] EATA config options -> tm:1, lc:y, mq:16, rs:y, et:n,
-> ip:n, ep:n, pp:y.
-> [   80.777063] EATA0: 2.0C, PCI 0xd890, IRQ 17, BMST, SG 122, MB 64.
-> [   80.802391] EATA0: wide SCSI support enabled, max_id 16, max_lun 8.
-> [   80.827959] EATA0: SCSI channel 0 enabled, host target ID 7.
-> [   80.853413] scsi host3: EATA/DMA 2.0x rev. 8.10.00
-> [   82.445662] scsi 3:0:6:0: Direct-Access     IBM      DCAS-34330W
->  S65A PQ: 0 ANSI: 2
-> [   82.471584] scsi 3:0:6:0: cmds/lun 16, sorted, simple tags.
-> [   84.571451] sd 3:0:6:0: Attached scsi generic sg4 type 0
-> [   84.597572] sd 3:0:6:0: [sdd] 8466688 512-byte logical blocks: (4.33
-> GB/4.03 GiB)
-> [   84.659874] sd 3:0:6:0: [sdd] Write Protect is off
-> [   84.688543] sd 3:0:6:0: [sdd] Mode Sense: b3 00 00 08
-> [   84.714021] sd 3:0:6:0: [sdd] Write cache: enabled, read cache:
-> enabled, doesn't support DPO or FUA
-> [   84.817682]  sdd: sdd1 sdd2 < sdd5 >
-> [   84.919267] sd 3:0:6:0: [sdd] Attached SCSI disk
-Hi Arthur,
-Thanks for testing:)
+On 09/22/2015 11:52 AM, Will Deacon wrote:
+> On Thu, Sep 17, 2015 at 11:41:34PM +0100, David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> The config space for external PCIe root complexes on some Cavium
+>> ThunderX SoCs is very similar to CAM and ECAM, but differs in the
+>> shift values that have to be applied to the bus and devfn numbers to
+>> compose that address window offset.  These root complexes also have
+>> the interesting property that there is no root bridge, so the standard
+>> manner of limiting scanning to only the first device doesn't work.  We
+>> can use the standard pci-host-generic driver if we make a minor
+>> addition to handle these differences, so we...
+>>
+>> Add a mapping function for ThunderX PCIe root complexes with a bus
+>> shift of 24 and devfn shift of 16.  Ignore accesses for devices other
+>> than the first device on the primary bus.
+>>
+>> Document the whole thing in devicetree/bindings/pci/host-generic-pci.txt
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> ---
+>>   .../devicetree/bindings/pci/host-generic-pci.txt   |  8 +++---
+>>   drivers/pci/host/pci-host-generic.c                | 29 ++++++++++++++++++++++
+>>   2 files changed, 34 insertions(+), 3 deletions(-)
+>
+> Thanks, this looks better now:
+>
+>    Acked-by: Will Deacon <will.deacon@arm.com>
+>
 
-> 
-> Arthur.
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Thanks Will.
+
+Because patches 1/3 and 2/3 will be reworked, I will re-send this as a 
+stand-alone patch.
+
+David Daney
+
+
+> Will
+>
+
