@@ -1,104 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:35905 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753751AbbIOPcB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 11:32:01 -0400
-Received: by wicgb1 with SMTP id gb1so34261642wic.1
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2015 08:32:00 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 22 Sep 2015 17:07:19 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-pci@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
+Message-ID: <20150922164107-mutt-send-email-mst@redhat.com>
+References: <1441553385-3810-1-git-send-email-mst@redhat.com>
+ <20150921182147.GC27964@google.com>
+ <20150921223622-mutt-send-email-mst@redhat.com>
+ <20150921221043.GR25767@google.com>
+ <20150922131303-mutt-send-email-mst@redhat.com>
+ <20150922123640.GT25767@google.com>
 MIME-Version: 1.0
-In-Reply-To: <bug-104431-41252@https.bugzilla.kernel.org/>
-References: <bug-104431-41252@https.bugzilla.kernel.org/>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 15 Sep 2015 10:31:40 -0500
-Message-ID: <CAErSpo6LpJRbhnwH-Mqu3zN-=gEVgJ2u+aonpWNXbtXKQ8xCKw@mail.gmail.com>
-Subject: Re: [Bug 104431] New: second connected thunderbolt dock fails
-To: Jarod Wilson <jarod@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150922123640.GT25767@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+On Tue, Sep 22, 2015 at 07:36:40AM -0500, Bjorn Helgaas wrote:
+> On Tue, Sep 22, 2015 at 02:29:03PM +0300, Michael S. Tsirkin wrote:
+> > On Mon, Sep 21, 2015 at 05:10:43PM -0500, Bjorn Helgaas wrote:
+> > > On Mon, Sep 21, 2015 at 10:42:13PM +0300, Michael S. Tsirkin wrote:
+> > > > On Mon, Sep 21, 2015 at 01:21:47PM -0500, Bjorn Helgaas wrote:
+> > > > > On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
+> > > > > > On some hypervisors, virtio devices tend to generate spurious interrupts
+> > > > > > when switching between MSI and non-MSI mode.  Normally, either MSI or
+> > > > > > non-MSI is used and all is well, but during shutdown, linux disables MSI
+> > > > > > which then causes an "irq %d: nobody cared" message, with irq being
+> > > > > > subsequently disabled.
+> > > > > 
+> > > > > My understanding is:
+> > > > > 
+> > > > >   Linux disables MSI/MSI-X during device shutdown.  If the device
+> > > > >   signals an interrupt after that, it may use INTx.
+> > > > > 
+> > > > > This INTx interrupt is not necessarily spurious.  Using INTx to signal an
+> > > > > interrupt that occurs when MSI is disabled seems like reasonable behavior
+> > > > > for any PCI device.
+> > > > > And it doesn't seem related to switching between MSI and non-MSI mode.
+> > > > > Yes, the INTx happens *after* disabling MSI, but it is not at all
+> > > > > *because* we disabled MSI.  So I wouldn't say "they generate spurious
+> > > > > interrupts when switching between MSI and non-MSI."
+> > > > > 
+> > > > > Why doesn't virtio-pci just register an INTx handler in addition to an MSI
+> > > > > handler?
+> > > > 
+> > > > The handler causes an expensive exit to the hypervisor,
+> > > > and the INTx lines are shared with other devices.
+> > > 
+> > > Do we care?  Is this a performance path?  I thought we were in a kexec
+> > > shutdown path.
+> > 
+> > Yes but the handler would always have to be registered, right?
+> 
+> The pci_device_shutdown() path you're modifying calls drv->shutdown()
+> immediately before disabling MSI, so I suppose you could register a
+> handler in a virtio shutdown method.
 
-Hi Jarod,
+I guess we could. Not sure what we'd do e.g. if that fails.
 
-On Fri, Sep 11, 2015 at 3:19 PM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=104431
->
->             Bug ID: 104431
->            Summary: second connected thunderbolt dock fails
->            Product: Drivers
->            Version: 2.5
->     Kernel Version: 4.2.0 + a handful of other patches
->           Hardware: All
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: PCI
->           Assignee: drivers_pci@kernel-bugs.osdl.org
->           Reporter: jarod@redhat.com
->         Regression: No
->
-> I've been loaned a pair of thunderbolt docking peripherals. One is an Akitio
-> Thunder Dock, which has usb3, esata and firewire 800 on it, the other is a
-> StarTech Thunderbolt Docking Station, which has usb3, a usb audio device and an
-> Intel i210 GbE device.
->
-> Individually, each of the docks work fine (at least with the 4.3.x pciehp patch
-> for my zbook and an igb patch I just sent upstream), hotplug and remove. They
-> even work correctly if connected together -- i.e., connect the two docks
-> together, then connect to the host, and both come up fine.
->
-> However, when I connect one dock directly to the host, then the second dock,
-> the second dock fails to function, with the following output upon connection:
->
-> pciehp 0000:06:04.0:pcie24: pending interrupts 0x0008 from Slot Status
-> pciehp 0000:06:04.0:pcie24: Card present on Slot(4-1)
-> pciehp 0000:06:04.0:pcie24: pending interrupts 0x0100 from Slot Status
-> pciehp 0000:06:04.0:pcie24: pciehp_check_link_active: lnk_status = 3041
-> pciehp 0000:06:04.0:pcie24: slot(4-1): Link Up event
-> pciehp 0000:06:04.0:pcie24: Link Up event ignored on slot(4-1): already
-> powering on
-> pciehp 0000:06:04.0:pcie24: pciehp_check_link_active: lnk_status = 3041
-> pciehp 0000:06:04.0:pcie24: pciehp_check_link_status: lnk_status = 3041
-> pci 0000:0b:00.0: [8086:1547] type 01 class 0x060400
-> pci 0000:0b:00.0: supports D1 D2
-> pci 0000:0b:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> No bus number available for hot-added bridge 0000:0b:00.0
-> pcieport 0000:06:04.0: bridge window [io  0x1000-0x0fff] to [bus 0b] add_size
-> 1000
-> pcieport 0000:06:04.0: res[13]=[io  0x1000-0x0fff] res_to_dev_res add_size 1000
-> min_align    1000
-> pcieport 0000:06:04.0: res[13]=[io  0x1000-0x1fff] res_to_dev_res add_size 1000
-> min_align    1000
-> pcieport 0000:06:04.0: BAR 13: no space for [io  size 0x1000]
-> pcieport 0000:06:04.0: BAR 13: failed to assign [io  size 0x1000]
-> pcieport 0000:06:04.0: BAR 13: no space for [io  size 0x1000]
-> pcieport 0000:06:04.0: BAR 13: failed to assign [io  size 0x1000]
-> pcieport 0000:06:04.0: PCI bridge to [bus 0b]
-> pcieport 0000:06:04.0:   bridge window [mem 0xb4700000-0xb49fffff]
-> pcieport 0000:06:04.0:   bridge window [mem 0x90700000-0x909fffff 64bit pref]
->
-> I'll attach full dmesg dumps from both simultaneous and one at a time
-> connection attempts shortly.
+> > > > Seems silly to slow them down just so we can do something
+> > > > that triggers the device bug.  The bus master is disabled by that time,
+> > > > if linux can just desist from touching MSI enable device won't
+> > > > send either INTx (because MSI is on) or MSI
+> > > > (because bus master is on) and all will be well.
+> > > 
+> > > It would also be silly to put special-purpose code in the PCI core
+> > > if there's a reasonable way to handle this in a driver.
+> > > 
+> > > Can you describe exactly what the device bug is?  Apparently you're
+> > > saying that if we shut down MSI, it triggers the bug?  And I guess
+> > > you're talking about a virtio device as implemented in qemu or other
+> > > hypervisors?
+> > 
+> > Yes. Basically depending on an internal device state, disabling MSI
+> > sometimes wedges it.  The most easy to debug effect is if it starts
+> > sending INTx interrupts, for which there's no handler currently.
+> > Full system reset always gets us out of the bad state.
+> 
+> If disabling MSI causes the device to use INTx interrupts, that sounds
+> perfectly normal to me.
+> 
+> If disabling MSI causes the device to hang, *that* sounds like a bug.
+> Since this is virtio, we should be able to figure out exactly where
+> that happens.  Do you have a pointer to a virtio bug report, or even a
+> QEMU commit that fixes this virtio bug?
+> 
+> I understand that even if there is a virtio fix in QEMU, we want a
+> solution that works even with an old QEMU that doesn't contain the
+> fix.  But a pointer to a QEMU fix would really help understand and
+> document the Linux fix.
+> 
+> Bjorn
 
-Thanks for the report.  The logs only start from the hotplug, so they
-don't show the initial enumeration at boot.  Can you also attach
-"lspci -vv" output from the working case, so we can see which devices
-are in which dock?  I started working it out from the logs, but that's
-pretty tedious.
+I'm not sure we ever understood it completely.
 
-I *think* the second dock that fails is rooted at 0b:00.0, and it's
-being added below 06:04.0  Since the 0b:00.0 tree wasn't present at
-boot, we don't know how many bus numbers to reserve for 06:04.0, and
-we only reserved one (bus 0b).  Obviously that's not enough for all
-the devices in that dock.
+I think some of it has to do with the way the whole virtio 0
+device register layout changes when you enable/disable MSI.  So should
+be ok when using the modern virtio 1 model since we fixed this thing.
 
-For memory and I/O, we reserve default amounts of space
-(pci_hotplug_mem_size and pci_hotplug_io_size), but I don't think we
-do anything corresponding for bus numbers.  Maybe we should.
+I was hoping that since disabling MSI in pci core is only useful as a
+work-around (for devices with a broken bus master enable - even though I
+don't think we know what these are exactly), a flag for not disabling it
+won't be held to such a high standard.
 
-Bjorn
+-- 
+MST
