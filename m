@@ -1,128 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:40107 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753534AbbIGISB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Sep 2015 04:18:01 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"thomas.petazzoni@free-electrons.com"
-	<thomas.petazzoni@free-electrons.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"james.morse@arm.com" <james.morse@arm.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"robh@kernel.org" <robh@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	qiujiang <qiujiang@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v8 0/6] PCI: hisi: Add PCIe host support for HiSilicon
- SoC Hip05
-Date: Mon, 7 Sep 2015 08:17:20 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1620A175@lhreml503-mbs>
-References: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
-In-Reply-To: <1440496734-18417-1-git-send-email-wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v3 1/6] PCI: Add pci_bus_fixup_irqs().
+Date: Tue, 22 Sep 2015 16:49:12 -0700
+Message-Id: <1442965757-12925-2-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4gYW5kIGFsbA0KDQpEbyB5b3UgaGF2ZSBhbnkgY29tbWVudCBvbiB0aGlzIHBhdGNo
-c2V0PyBJIHRoaW5rIHdlIHNob3VsZCBiZSBjbG9zZSB0byBhIGZpbmFsIG9uZS4uLg0KDQpUaGFu
-a3MgYW5kIFJlZ2FyZHMNCg0KR2FiDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4g
-RnJvbTogV2FuZ3pob3UgKEIpDQo+IFNlbnQ6IDI1IEF1Z3VzdCAyMDE1IDEwOjU5DQo+IFRvOiBC
-am9ybiBIZWxnYWFzOyBqaW5nb29oYW4xQGdtYWlsLmNvbTsgcHJhdHl1c2guYW5hbmRAZ21haWwu
-Y29tOyBBcm5kDQo+IEJlcmdtYW5uOyBsaW51eEBhcm0ubGludXgub3JnLnVrOyB0aG9tYXMucGV0
-YXp6b25pQGZyZWUtZWxlY3Ryb25zLmNvbTsNCj4gR2FicmllbGUgUGFvbG9uaTsgbG9yZW56by5w
-aWVyYWxpc2lAYXJtLmNvbTsgamFtZXMubW9yc2VAYXJtLmNvbTsNCj4gTGl2aXUuRHVkYXVAYXJt
-LmNvbTsgamFzb25AbGFrZWRhZW1vbi5uZXQ7IHJvYmhAa2VybmVsLm9yZw0KPiBDYzogbGludXgt
-cGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3Jn
-Ow0KPiBkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgemhhbmdqdWt1bzsgcWl1emhlbmZhOyBs
-aXVkb25nZG9uZyAoQyk7IHFpdWppYW5nOw0KPiB4dXdlaSAoTyk7IExpZ3Vvemh1IChLZW5uZXRo
-KTsgV2FuZ3pob3UgKEIpDQo+IFN1YmplY3Q6IFtQQVRDSCB2OCAwLzZdIFBDSTogaGlzaTogQWRk
-IFBDSWUgaG9zdCBzdXBwb3J0IGZvciBIaVNpbGljb24gU29DDQo+IEhpcDA1DQo+IA0KPiBUaGlz
-IHBhdGNoc2V0IGFkZHMgUENJZSBob3N0IHN1cHBvcnQgZm9yIEhpU2lsaWNvbiBTb0MgSGlwMDUu
-IFRoZSBQQ0llIGhvc3RzDQo+IHVzZSBQQ0llIElQIGNvcmUgZnJvbSBTeW5vcHN5cywgU28gdGhp
-cyBkcml2ZXIgaXMgYmFzZSBvbiBkZXNpZ253YXJlIFBDSWUNCj4gZHJpdmVyLg0KPiANCj4gSGlw
-MDUgaXMgYW4gQVJNdjggYXJjaGl0ZWN0dXJlIFNvQy4gSXQgc2hvdWxkIGJlIGFibGUgdG8gdXNl
-IEFSTTY0IFBDSWUgQVBJIGluDQo+IGRlc2lnbmV3YXJlIFBDSWUgZHJpdmVyLiBTbyB0aGlzIHBh
-dGNoIGFsc28gYWRkcyBBUk02NCBzdXBwb3J0IGZvciBkZXNpZ253YXJlDQo+IHBjaWUuDQo+IA0K
-PiBUaGlzIHBhdGNoc2V0IGlzIGJhc2VkIG9uIHY0LjItcmMxLg0KPiANCj4gQ2hhbmdlIGZyb20g
-djc6DQo+IC0gUmVtb3ZlIHBwLT5yb290X2J1c19uciA9IDAgaW4gZHJhN3h4LCBleHlub3MsIGlt
-eDYsIGtleXN0b25lLCBsYXllcnNjYXBlLA0KPiAgIHNwZWFyMTN4eC4gUGFzcyBwcC0+YnVzbi0+
-c3RhcnQgdG8gcGNpX2NyZWF0ZV9yb290X2J1cyBhcyByb290IGJ1cyBudW1iZXIuDQo+IC0gUmVt
-b3ZlIGJ1cy1yYW5nZSBwYXJzaW5nIGluIHBjaWUtaGlzaS5jLg0KPiANCj4gQ2hhbmdlIGZyb20g
-djY6DQo+IC0gQWRkIFByYXR5dXNoJ3MgQWNrZWQtYnkgZm9yIDEvNiBhbmQgMi82Lg0KPiAtIEFk
-ZCBKYW1lcycgVGVzdGVkLWJ5IGZvciAzLzYuDQo+IA0KPiBDaGFuZ2UgZnJvbSB2NToNCj4gLSBN
-ZXJnZSAxLzYgaW4gdGhpcyBzZXJpZXMsIGRpc2N1c3Npb24gYWJvdXQgdGhpcyBjYW4gYmUgZm91
-bmQgaW4gWzFdDQo+IA0KPiBDaGFuZ2UgZnJvbSB2NDoNCj4gLSBDaGFuZ2UgdGhlIGF1dGhvciBv
-ZiAxLzUgdG8gR2FicmllbGUuDQo+IC0gTW9kaWZ5IHByb2JsZW1zIGluIDMvNSBwb2ludGVkIGJ5
-IEJqb3JuLg0KPiAtIE1vZGlmeSBzcGVsbGluZyBwcm9ibGVtcyBpbiA0LzUuDQo+IA0KPiBDaGFu
-Z2UgZnJvbSB2MzoNCj4gLSBDaGFuZ2UgMS81IHRvIHdoYXQgR2FicmllbGUgc3VnZ2VzdGVkLg0K
-PiAtIFVzZSB3aW4tPl9fcmVzLnN0YXJ0IHRvIGdldCAqX21vZF9iYXNlIGluIDIvNSwgdGhpcyBm
-aXggYSBidWcgaW4gdjMgc2VyaWVzLg0KPiANCj4gQ2hhbmdlIGZyb20gdjI6DQo+IC0gTW92ZSBz
-dHJ1Y3QgcGNpX2RldiAqZGV2IGFuZCBzdHJ1Y3QgcGNpX3N5c19kYXRhICpzeXMgaW4NCj4gICBw
-Y2liaW9zX2FsaWduX3Jlc291cmNlIGluIDEvNS4NCj4gLSBBZGQgR2FicmllbGUncyBjb2RlcyBp
-biAyLzUgd2hpY2ggZGVsZXRlIHVubmVjZXNzYXJ5IGluZm9ybWF0aW9uIHBhcnNlIGFuZA0KPiAg
-IHVzZSBvZl9wY2lfZ2V0X2hvc3RfYnJpZGdlX3Jlc291cmNlcyBmb3IgYm90aCBBUk0zMiBhbmQg
-QVJNNjQuDQo+IC0gQWRkIG1haW50YWluZXIgcGF0Y2ggNS81Lg0KPiANCj4gQ2hhbmdlIGZyb20g
-UkZDIHYxOg0KPiAtIEFkZCAxLzQgcGF0Y2ggYnkgQXJuZCB3aGljaCByZW1vdmVzIGFsaWduX3Jl
-c291cmNlIGNhbGxiYWNrIGluIEFSTQ0KPiAgIHBjaWJpb3NfYWxpZ25fcmVzb3VyY2UuDQo+IC0g
-Q2hhbmdlIGhlYWQgZmlsZSBpbiBwY2llLWRlc2lnbndhcmUgZnJvbSBhc20vaGFyZGlycS5oIHRv
-IGxpbnV4L2hhcmRpcnEuaC4NCj4gLSBTZXQgcHAtPnJvb3RfYnVzX25yID0gMCBpbiBkcmE3eHgs
-IGV4eW5vcywgaW14Niwga2V5c3RvbmUsIGxheWVyc2NhcGUsDQo+ICAgc3BlYXIxM3h4Lg0KPiAt
-IFJlbW92ZSB1bm5lY2Vzc2FyeSBwYXJlbnRoZXNlcyBvZiBzb21lIG1hY3JvcyBpbiBwY2llLWhp
-c2kuDQo+IC0gVXNlIG1hY3JvIHRvIHJlcGxhY2Ugc29tZSBtYWdpYyB2YWx1ZXMuDQo+IC0gTWVy
-Z2UgdHdvIGxvb3BzIHRvZ2V0aGVyIGFuZCBhZGQgc29tZSBjb21tZW50cyBhYm91dCBpdCBpbiBj
-b250ZXh0X2NvbmZpZw0KPiAgIGZ1bmN0aW9uIGluIHBjaWUtaGlzaS4NCj4gLSBNb2RpZnkgc29t
-ZSB2YWx1ZSBvZiBpdGVtcyBpbiBwY2llIG5vZGUgZXhhbXBsZSBpbiBiaW5kaW5nIGRvY3VtZW50
-Lg0KPiANCj4gQ2hhbmdlIGZyb20gUkZDOg0KPiAtIGRlbGV0ZSBkd19wY2llX3NldHVwLCBkd19w
-Y2llX3NjYW5fYnVzLCBkd19wY2llX21hcF9pcnEgYW5kIHN0cnVjdCBod19wY2ksDQo+ICAgbWVy
-Z2UgcmVsYXRlZCBvcGVyYXRpb25zIGludG8gZHdfcGNpZV9ob3N0X2luaXQuDQo+IA0KPiBMaW5r
-IG9mIHY3Og0KPiAtIGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvZGV2aWNldHJlZS9tc2c5
-MDY5MC5odG1sDQo+IExpbmsgb2YgdjY6DQo+IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0
-cy9saW51eC1wY2kvbXNnNDM2NjkuaHRtbA0KPiBMaW5rIG9mIHY1Og0KPiAtIGh0dHA6Ly93d3cu
-c3Bpbmljcy5uZXQvbGlzdHMvZGV2aWNldHJlZS9tc2c4Nzk1OS5odG1sDQo+IExpbmsgb2YgdjQ6
-DQo+IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9hcm0ta2VybmVsL21zZzQzMzA1MC5o
-dG1sDQo+IExpbmsgb2YgdjM6DQo+IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51
-eC1wY2kvbXNnNDI1MzkuaHRtbA0KPiBMaW5rIG9mIHYyOg0KPiAtIGh0dHA6Ly93d3cuc3Bpbmlj
-cy5uZXQvbGlzdHMvbGludXgtcGNpL21zZzQxODQ0Lmh0bWwNCj4gTGluayBvZiBSRkMgdjE6DQo+
-IC0gaHR0cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1wY2kvbXNnNDEzMDUuaHRtbA0K
-PiBMaW5rIG9mIFJGQzoNCj4gLSBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LXBj
-aS9tc2c0MDQzNC5odG1sDQo+IA0KPiBbMV0gaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvcGlw
-ZXJtYWlsL2xpbnV4LWFybS1rZXJuZWwvMjAxNS0NCj4gSnVseS8zNTk3NDEuaHRtbA0KPiANCj4g
-DQo+IFpob3UgV2FuZyAoNCk6DQo+ICAgUENJOiBkZXNpZ253YXJlOiBBZGQgQVJNNjQgc3VwcG9y
-dA0KPiAgIFBDSTogaGlzaTogQWRkIFBDSWUgaG9zdCBzdXBwb3J0IGZvciBIaVNpbGljb24gU29D
-IEhpcDA1DQo+ICAgRG9jdW1lbnRhdGlvbjogRFQ6IEFkZCBIaVNpbGljb24gUENJZSBob3N0IGJp
-bmRpbmcNCj4gICBNQUlOVEFJTkVSUzogQWRkIHBjaWUtaGlzaSBtYWludGFpbmVyDQo+IA0KPiBn
-YWJyaWVsZSBwYW9sb25pICgyKToNCj4gICBQQ0k6IGRlc2lnbndhcmU6IG1vdmUgY2FsY3VsYXRp
-b24gb2YgYnVzIGFkZHJlc3NlcyB0byBEUkE3eHgNCj4gICBBUk0vUENJOiByZW1vdmUgYWxpZ25f
-cmVzb3VyY2UgaW4gcGNpX3N5c19kYXRhDQo+IA0KPiAgLi4uL2RldmljZXRyZWUvYmluZGluZ3Mv
-cGNpL2hpc2lsaWNvbi1wY2llLnR4dCAgICAgfCAgNDYgKysrKw0KPiAgTUFJTlRBSU5FUlMgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDcgKw0KPiAgYXJjaC9hcm0v
-aW5jbHVkZS9hc20vbWFjaC9wY2kuaCAgICAgICAgICAgICAgICAgICAgfCAgIDUgLQ0KPiAgYXJj
-aC9hcm0va2VybmVsL2Jpb3MzMi5jICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMTIgKy0N
-Cj4gIGRyaXZlcnMvcGNpL2hvc3QvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgICAgICAgIHwg
-ICA4ICsNCj4gIGRyaXZlcnMvcGNpL2hvc3QvTWFrZWZpbGUgICAgICAgICAgICAgICAgICAgICAg
-ICAgIHwgICAxICsNCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWRyYTd4eC5jICAgICAgICAgICAg
-ICAgICAgICAgIHwgIDEzICsrDQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS1rZXlzdG9uZS1kdy5j
-ICAgICAgICAgICAgICAgICB8ICAgMiArLQ0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2ln
-bndhcmUuYyAgICAgICAgICAgICAgICAgfCAyMzcgKysrKysrKy0tLS0tLS0tLS0tLS0NCj4gIGRy
-aXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLmggICAgICAgICAgICAgICAgIHwgIDE0ICst
-DQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtaGlzaS5jICAgICAgICAgICAgICAgICAgICAgICB8
-IDI0Nw0KPiArKysrKysrKysrKysrKysrKysrKysNCj4gIDExIGZpbGVzIGNoYW5nZWQsIDQxMyBp
-bnNlcnRpb25zKCspLCAxNzkgZGVsZXRpb25zKC0pDQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgRG9j
-dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9oaXNpbGljb24tcGNpZS50eHQNCj4g
-IGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtaGlzaS5jDQo+IA0KPiAt
-LQ0KPiAxLjkuMQ0KDQo=
+From: David Daney <david.daney@cavium.com>
+
+pci_bus_fixup_irqs() works like pci_fixup_irqs(), except it only does
+the fixups for devices on the specified bus.
+
+Follow-on patch will use the new function.
+
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+No change from v2.
+
+This patch didn't exist in v1 of the set.
+
+ drivers/pci/setup-irq.c | 30 ++++++++++++++++++++++++++++++
+ include/linux/pci.h     |  4 ++++
+ 2 files changed, 34 insertions(+)
+
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 95c225b..189ad17 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -66,3 +66,33 @@ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+ 		pdev_fixup_irq(dev, swizzle, map_irq);
+ }
+ EXPORT_SYMBOL_GPL(pci_fixup_irqs);
++
++struct pci_bus_fixup_cb_info {
++	u8 (*swizzle)(struct pci_dev *, u8 *);
++	int (*map_irq)(const struct pci_dev *, u8, u8);
++};
++
++static int pci_bus_fixup_irq_cb(struct pci_dev *dev, void *arg)
++{
++	struct pci_bus_fixup_cb_info *info = arg;
++
++	pdev_fixup_irq(dev, info->swizzle, info->map_irq);
++	return 0;
++}
++
++/*
++ * Fixup the irqs only for devices on the given bus using supplied
++ * swizzle and map_irq function pointers
++ */
++void pci_bus_fixup_irqs(struct pci_bus *bus,
++			u8 (*swizzle)(struct pci_dev *, u8 *),
++			int (*map_irq)(const struct pci_dev *, u8, u8))
++{
++	struct pci_bus_fixup_cb_info info;
++
++	info.swizzle = swizzle;
++	info.map_irq = map_irq;
++	pci_walk_bus(bus, pci_bus_fixup_irq_cb, &info);
++
++}
++EXPORT_SYMBOL_GPL(pci_bus_fixup_irqs);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..b505b50 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1120,6 +1120,10 @@ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+ 		    int (*)(const struct pci_dev *, u8, u8));
++void pci_bus_fixup_irqs(struct pci_bus *,
++			u8 (*)(struct pci_dev *, u8 *),
++			int (*)(const struct pci_dev *, u8, u8));
++
+ #define HAVE_PCI_REQ_REGIONS	2
+ int __must_check pci_request_regions(struct pci_dev *, const char *);
+ int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
+-- 
+1.9.1
+
