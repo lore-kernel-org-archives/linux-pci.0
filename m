@@ -1,51 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:51607 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115AbbIKIZd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Sep 2015 04:25:33 -0400
-Message-ID: <1441959930.3126.0.camel@pengutronix.de>
-Subject: Re: [PATCH 1/2] PCI: imx6: Return the real error code
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Date: Fri, 11 Sep 2015 10:25:30 +0200
-In-Reply-To: <1441928609-21921-1-git-send-email-festevam@gmail.com>
-References: <1441928609-21921-1-git-send-email-festevam@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from xspv0103.northgrum.com ([134.223.120.78]:50645 "EHLO
+	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932920AbbIVQRR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 12:17:17 -0400
+From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: :Re: :Re: [PATCH v1 3/7] PCI: Let kcmdline reserve bus numbers
+ for hotplug bridges
+Date: Tue, 22 Sep 2015 16:16:15 +0000
+Message-ID: <e387283cc26d4d758d24ba454328abed@XCGVAG27.northgrum.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 10.09.2015, 20:43 -0300 schrieb Fabio Estevam:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> When devm_request_irq() fails we should better return the real
-> error code instead of returning a 'fake' one.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-
-> ---
->  drivers/pci/host/pci-imx6.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 8f3a981..2d0d0fe 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -539,7 +539,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->  				       IRQF_SHARED, "mx6-pcie-msi", pp);
->  		if (ret) {
->  			dev_err(&pdev->dev, "failed to request MSI irq\n");
-> -			return -ENODEV;
-> +			return ret;
->  		}
->  	}
->  
-
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiB5aGx1Lmtlcm5lbEBnbWFpbC5j
+b20gW21haWx0bzp5aGx1Lmtlcm5lbEBnbWFpbC5jb21dIE9uIEJlaGFsZiBPZg0KPiBZaW5naGFp
+IEx1DQo+IFNlbnQ6IE1vbmRheSwgU2VwdGVtYmVyIDIxLCAyMDE1IDE3OjMyDQo+IFRvOiBUYW5n
+LCBKYXNvbiAoRVMpDQo+IENjOiBCam9ybiBIZWxnYWFzOyBsaW51eC1wY2lAdmdlci5rZXJuZWwu
+b3JnDQo+IFN1YmplY3Q6IFJlOiA6UmU6IFtQQVRDSCB2MSAzLzddIFBDSTogTGV0IGtjbWRsaW5l
+IHJlc2VydmUgYnVzDQo+IG51bWJlcnMgZm9yIGhvdHBsdWcgYnJpZGdlcw0KPiANCj4gT24gTW9u
+LCBTZXAgMjEsIDIwMTUgYXQgOTowMSBBTSwgVGFuZywgSmFzb24gKEVTKSA8SmFzb24uVGFuZzJA
+bmdjLmNvbT4NCj4gd3JvdGU6DQo+ID4gSSBoYXZlIHRlc3RlZCB0aGUgY2FzZSB3aGVyZSBhIHN1
+YnNlcXVlbnQgYnJpZGdlIGhhcyBub3QgYmVlbiBwcm9iZWQgeWV0DQo+IGFuZCB0aGUgQklPUyBp
+cyBhc3NpZ25pbmcgaXQgdGhlIHNhbWUgYnVzIG51bWJlci4gVGhlIGJlaGF2aW9yIEkgb2JzZXJ2
+ZWQNCj4gaXMgdGhhdCBjb25mbGljdGluZyBidXMgbnVtYmVycyB3aWxsIGJlIGZpeGVkIGR1cmlu
+ZyB0aGUgc2Vjb25kIHBhc3Mgb2YNCj4gUENJIHByb2JpbmcuIFNlZSBwY2lfc2Nhbl9icmlkZ2Uo
+KSBpbiBkcml2ZXJzL3BjaS9wcm9iZS5jLCBsaW5lcyA4NzUtODgwDQo+IG9uIHRhZyB2NC4zLXJj
+Mi4gQWxzbyBvYnNlcnZlIGhvdyBwYXRjaCA3IGluIG15IHNlcmllcyB1cGRhdGVzIHRoZQ0KPiBw
+cmVjZWRpbmcgY29uZGl0aW9uYWwgKGxpbmUgODc0KSB0byBhbHNvIGNoZWNrIGlmIHRoZSBkZXZp
+Y2UgaXMgYQ0KPiBob3RwbHVnZ2FibGUgYnJpZGdlLg0KPiA+DQo+IA0KPiBzbyB0aGVyZSBpcyBh
+IHdpbmRvdyB0aGF0IHR3byBwZWVyIGJyaWRnZXMgaGF2ZSBiZWVuIGNvbmZpZ3VyZWQgdG8NCj4g
+b3ZlcmxhcHBlZCBidXMgcmFuZ2U/DQoNCkZyb20gd2hhdCBJIGhhdmUgc2VlbiwgeWVzLCBmb3Ig
+YSBicmllZiBtb21lbnQgYnJpZGdlcy9lbmRwb2ludHMgd2lsbCBoYXZlIG92ZXJsYXBwaW5nIG51
+bWJlcnMuIEF0IGxlYXN0IG9uIG15IHN5c3RlbSwgdGhlIGtlcm5lbCBmaXhlcyB0aGF0IHByb2Js
+ZW0gZHVyaW5nIHBhc3MgMiBieSByZWVudW1lcmF0aW5nIGRldmljZXMgaW4gcmV2ZXJzZSBvcmRl
+ci4NCg0KPiA+PiBBbHNvIGl0IGNvdWxkIGV2ZW4gY3Jvc3MgdGhlIGJvdW5kYXJ5IHRvIG90aGVy
+IHBlZXIgcm9vdCBidXMgcmFuZ2UuDQo+ID4NCj4gPiBJIGFtIG5vdCBzdXJlIHdoYXQgeW91IG1l
+YW4gYnkgdGhpcy4gQ2FuIHlvdSBlbGFib3JhdGU/DQo+IA0KPiBjb3VwbGUgcGVlciBidXMgcmFu
+Z2U6DQo+IHJvb3QgYnVzIDA6IFswLDdmXSwgcm9vdCBidXMgWzgwLCBmZl0NCj4gaWYgb25lIGJy
+aWRnZSB1bmRlciBmaXJzdCByb290IGJ1cyBnZXQgYWRkIHJhbmdlIGJsaW5kbHksIGl0IHdpbGwN
+Cj4gY3Jvc3MgdGhlIGJvdW5kYXJ5IGF0IDB4N2YuDQoNCk5vbmUgb2YgbXkgdGVzdCBzeXN0ZW1z
+IGhhdmUgbXVsdGlwbGUgcm9vdHMsIHNvIEkgYW0gdW5hYmxlIHRvIHRlc3QgdGhpcyBzY2VuYXJp
+by4NCg0K
