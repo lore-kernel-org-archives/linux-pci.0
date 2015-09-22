@@ -1,69 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:33188 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751759AbbIOO6S (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 10:58:18 -0400
-Received: by wiclk2 with SMTP id lk2so32915986wic.0
-        for <linux-pci@vger.kernel.org>; Tue, 15 Sep 2015 07:58:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAE9FiQXr3vqusta0Tb35BovbWh7jDZ5uVQer741ioWKhYr7xmA@mail.gmail.com>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
- <1440138067-4314-5-git-send-email-yinghai@kernel.org> <20150914202123.GA27964@google.com>
- <CAE9FiQXr3vqusta0Tb35BovbWh7jDZ5uVQer741ioWKhYr7xmA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 15 Sep 2015 09:57:57 -0500
-Message-ID: <CAErSpo5VAb_YRpz7PEzuZ9AthAQ67quMKE3Y0dfMHVKjw0OTxA@mail.gmail.com>
-Subject: Re: [PATCH v4 04/52] PCI: Optimize bus min_align/size calculation
- during sizing
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 22 Sep 2015 16:39:31 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: David Daney <ddaney@caviumnetworks.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+	Will Deacon <Will.Deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 2/3] PCI: Add quirks for devices found on Cavium ThunderX
+ SoCs.
+Message-ID: <20150922153931.GD17444@red-moon>
+References: <1442529694-1792-1-git-send-email-ddaney.cavm@gmail.com>
+ <3066583.BWDZlYWxXU@wuerfel>
+ <55FC4330.10302@caviumnetworks.com>
+ <2512701.zkjk3n3AQS@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2512701.zkjk3n3AQS@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Sep 14, 2015 at 4:37 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> On Mon, Sep 14, 2015 at 1:21 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> I spent a couple hours trying to understand the v3 version of this
->> patch, and I gave you some detailed examples and questions.  If you
->> want me to look at v4, I expect you to try to clarify the changelog to
->> help answer those questions.
->
-> you example is  addressed in following patch that support alt_size
+On Fri, Sep 18, 2015 at 08:45:50PM +0100, Arnd Bergmann wrote:
+> On Friday 18 September 2015 10:00:32 David Daney wrote:
+> > On 09/18/2015 12:19 AM, Arnd Bergmann wrote:
+> > > On Thursday 17 September 2015 15:41:33 David Daney wrote:
+> > >> From: David Daney <david.daney@cavium.com>
+> > >>
+> > >> The on-chip devices all have fixed bars.  So, fix them up.
+> > >>
+> > >> Signed-off-by: David Daney <david.daney@cavium.com>
+> > >>
+> > >
+> > > You should be able to just mark the BARs as fixed in DT
+> > 
+> > In the case of ACPI, there is no DT.  So we would need a different 
+> > solution for ACPI.  What would you recommend for ACPI?
+> 
+> I would expect that this does not matter at all on ACPI, because
+> the devices that need it are not hot-plugged, and all boot-time
+> devices are probed by the firmware: the ACPI PCI implementation
+> does not reassign any BARs, except for the hotplug case.
 
-My fundamental question about this changelog was "I want to understand
-what makes 256M/768M 'optimal.'"  That needs to be addressed in the
-changelog for *this* patch, and this changelog is essentially
-unchanged from v3.
+What do you mean by "the ACPI PCI implementation does not reassign
+any BARs" ? Do you mean on x86 ? The resource assignment is part
+of the resource survey on x86, where all resources that can be claimed
+are claimed, but still, some of them may be still reassigned IIUC.
 
->> The goal is that someone with reasonable familiarity with Linux and
->> PCI would be able to read the changelogs and understand what happened,
->> without having to search out all the email discussions.
->
-> Agreed. But changelog for this should not talk alt_size support in
-> following patch.
+On arm64 we do not carry out any resource survey at present, but
+if we do (and we should), it will have to work for both DT and ACPI
+systems.
 
-Maybe you split the patches in a way that makes this changelog not
-match this patch.  I don't know, and I don't really have time to
-figure it all out myself.
+> > Also, can you point me to the OF device tree specification where it 
+> > tells how to specify PCI BAR addresses, I would especially be interested 
+> > in knowing how to specify fixed SRIOV BAR addresses in the device tree.
+> 
+> This is the 'n' bit mentioned sections 2.1.3 and 2.2.1.1 of the
+> PCI binding. When it is set, the OS is not supposed to try to
+> reassign the BAR even on machines that otherwise do a complete
+> rescan.
 
-> Also please let me know if you prefer to reviewing v5 that would be
-> re-based on v4.3-rc1
-> instead of v4. or I could wait to post v5 after you finish v4.
+I do not see any code in the kernel taking care of that bit and
+if I am not mistaken the code that allows creating pci devices
+exists in PowerPC arch code (arch/powerpc/kernel/pci_of_scan.c) and
+should be moved out of there for the other arches to use it.
 
-Any future series you post should be based on the most recent -rc1 at
-the time.  I apply patches to branches based on -rc1 unless they
-actually depend on something merged after -rc1.
+Or maybe we can use DT just to fix-up the resource flags (ie
+every PCI device will have its own of_node set if it is present
+in the DT, we can use it to fixup its resources and related flags,
+pcibios_add_device() ?).
 
-We are not communicating effectively, so I'm going to dispose of some
-of the other pending patches before returning to this series.  If
-there are simple patches with good changelogs early in the series, I
-can apply those incrementally.  But this patch is [04/52] and is a
-sticking point, so that strategy doesn't get me very far.
+> The PCI binding traditionally requires you to list all PCI devices
+> in DT, Linux as an extension (for the flattened DT format) allows
+> leaving out the devices, but in this case you probably need to
+> list every device that has a fixed BAR.
+> 
+> > Yes, it is a bit of a hack.  That is why I put it in its own file, and 
+> > only try to hack up PCI devices that exactly match the vendor and device 
+> > ids that need fixing.
+> > 
+> > IMHO, putting infrastructure into drivers/pci/probe.c, et al. to handle 
+> > this would be much more intrusive.
+> 
+> My guess is that it's already there, but even if it's not, this is a
+> generic well-defined case that has a standardized binding, and we should
+> implement that.
 
-Bjorn
+See above.
+
+Thanks,
+Lorenzo
+
+> > Forthe record:  The PCI Enhanced Allocation (EA) capability (approved 
+> > by PCI SIG on 23 October 2014) is the proper way to handle this going 
+> > forward.  However, this is not yet implemented in the SoCs that this 
+> > patch addresses.  Our plan is to implement the EA capability in the core 
+> > PCI code, so that we do not need to keep adding devices to this fixup code.
+> 
+> Good, but still this should only be required for the embedded case where
+> you don't have a firmware to probe the bus.
+> 
+> 	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
