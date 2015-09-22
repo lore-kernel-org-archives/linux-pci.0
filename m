@@ -1,68 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:35419 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753280AbbI3WrJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Sep 2015 18:47:09 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v3 0/4] MSI, of, irqchip/gicv3-its: Handle "msi-map" properties.
-Date: Wed, 30 Sep 2015 15:46:58 -0700
-Message-Id: <1443653222-24924-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+	lftan.linux@gmail.com
+Subject: Re: [PATCH 1/2] nios2: Add architectural support for PCIe
+Date: Tue, 22 Sep 2015 10:18:58 +0200
+Message-ID: <65590637.5YmBIDOvTf@wuerfel>
+In-Reply-To: <1442906367-10935-2-git-send-email-lftan@altera.com>
+References: <1442906367-10935-1-git-send-email-lftan@altera.com> <1442906367-10935-2-git-send-email-lftan@altera.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Tuesday 22 September 2015 15:19:26 Ley Foon Tan wrote:
+> +
+> +config PCI_SYSCALL
+> +	def_bool PCI
 
-The first patch from Mark Rutland adds the OF device tree binding
-description, which explains what we are attempting to do here.  For
-MSI messages on GICv3 systems there is some side-band data that
-accompanies the message, this data is specified in the OF device tree
-"msi-map" property of the PCI host driver.
+IIRC, PCI_SYSCALL is deprecated and you should just leave that
+turned off.
 
-The second patch adds a parser to get the required information out of
-the device tree.
+In any case, you enable the syscalls here but don't assign a
+system call number, so that is rather pointless. I 
 
-The third patch creates the pci_msi_domain_get_msi_rid() function to
-make it more convenient to generate the proper PCI/MSI requester id.
+I might be missing something though. Bjorn?
 
-The final patch converts gicv3-its to use the new infrastructure.
+> @@ -14,7 +14,7 @@
+>  #include <linux/types.h>
+>  #include <asm/pgtable-bits.h>
+>  
+> -/* PCI is not supported in nios2, set this to 0. */
+> +/* PCI I/O space is not supported, set this to 0. */
+>  #define IO_SPACE_LIMIT 0
+>  
+>  #define readb_relaxed(addr)	readb(addr)
 
-Changes from v1: Factor out the device tree access code to a separate
-function in drivers/of/irq.c
+It might be useful to enable this, just in case someone connects
+a PCI host bridge that does support I/O space.
 
-Changes from v2: Added the pci_msi_domain_get_msi_rid() patch to
-generalize the support a bit more.
+Which host bridge do you use? Are you sure there is no I/O space?
+Most of them use a set of translation windows to set up a mapping
+between bus address (memory, config and io space) and physical
+(mmio) space.
 
-David Daney (3):
-  of/irq: Add new function of_msi_map_rid()
-  PCI/MSI:  Add helper function pci_msi_domain_get_msi_rid().
-  irqchip/gic-v3-its:  Add handling of PCI requester id.
+> diff --git a/arch/nios2/include/asm/pci.h b/arch/nios2/include/asm/pci.h
+> new file mode 100644
+> index 0000000..f2cba05
+> --- /dev/null
+> +++ b/arch/nios2/include/asm/pci.h
 
-Mark Rutland (1):
-  Docs: dt: Add PCI MSI map bindings
+What happens if you use the asm-generic header? If there is something
+missing in it, we can try to get it to do the right things.
 
- Documentation/devicetree/bindings/pci/pci-msi.txt | 220 ++++++++++++++++++++++
- drivers/irqchip/irq-gic-v3-its-pci-msi.c          |   4 +-
- drivers/of/irq.c                                  |  84 +++++++++
- drivers/pci/msi.c                                 |  31 +++
- include/linux/msi.h                               |   1 +
- include/linux/of_irq.h                            |   7 +
- 6 files changed, 344 insertions(+), 3 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-msi.txt
-
--- 
-1.9.1
-
+	Arnd
