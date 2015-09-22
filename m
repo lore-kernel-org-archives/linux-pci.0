@@ -1,154 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29076 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755539AbbJAF7U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 1 Oct 2015 01:59:20 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v6 17/53] PCI: Don't add too much optional size for hotplug bridge MMIO
-Date: Wed, 30 Sep 2015 22:52:51 -0700
-Message-Id: <1443678807-786-18-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1443678807-786-1-git-send-email-yinghai@kernel.org>
-References: <1443678807-786-1-git-send-email-yinghai@kernel.org>
+Received: from jcornwall.me ([50.116.27.114]:39304 "EHLO jcornwall.me"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752845AbbIVASw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Sep 2015 20:18:52 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 21 Sep 2015 19:16:08 -0500
+From: Jay Cornwall <jay@jcornwall.me>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC 0/1] Add AtomicOp Requester support
+In-Reply-To: <20150921224629.GS25767@google.com>
+References: <1440018602-4212-1-git-send-email-jay@jcornwall.me>
+ <20150914195840.GA25767@google.com>
+ <96e2c6b2b12b99282c59c97dbb8e5b69@jcornwall.me>
+ <20150921224629.GS25767@google.com>
+Message-ID: <99163c8fb92c573ec65219b14cb653ea@jcornwall.me>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will always add 2M for hotplug bridge MMIO even
-there is child device under it already.
+On 2015-09-21 17:46, Bjorn Helgaas wrote:
+> On Mon, Sep 21, 2015 at 03:44:59PM -0500, Jay Cornwall wrote:
+>> On 2015-09-14 14:58, Bjorn Helgaas wrote:
+>> 
+>> >00:1c.0: PCI bridge to [bus 01-04] Root Port, with AtomicOp Routing
+>> >01:00.0: PCI bridge to [bus 02-04] Upstream Port, with AtomicOp Routing
+>> >02:00.0: PCI bridge to [bus 03] Downstream Port, with AtomicOp Routing
+>> >03:00.0: endpoint AtomicOp Completer Supported
+>> >02:00.1: PCI bridge to [bus 04] Downstream Port, with AtomicOp Routing
+>> >04:00.0: endpoint no AtomicOp Completer support
+>> >
+>> >It's true that we wouldn't want to enable AtomicOp routing to 04:00.0,
+>> >but isn't that what the AtomicOp Egress Blocking bit is for? If we
+>> >set that in 02:00.1, we should be safe in the sense that AtomicOps
+>> >targeting 04:00.0 should cause non-fatal errors.
+>> 
+>> If 02:00.1 had egress blocking then, if I understand correctly, a
+>> 00:1c.0 -> 04:00.0 AtomicOp request would be blocked.
+> 
+> Yes, a 1c.0 -> 04:00.0 AtomicOp request would be blocked, but 04:00.0
+> doesn't support AtomicOps, so we *want* that request to be blocked,
+> don't we?  If 04:00.0 received an AtomicOp, I think it would handle it
+> as a Malformed TLP, which by default is a Fatal Error.
 
-For example:
-	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
-					 \- 45:00.1
+I think I was confused by your earlier comment:
 
-44:02.0 will need 1M as must for 45:00.0 and 45:00.1
-When we calculate add_size for 44:02.0, we pass 2M as additional
-size for hotplug bridge, total will be 3M.
+>> >I assume the common usage scenario is to enable AtomicOps for
+>> >host-to-device and/or device-to-host transactions, and we can ignore
+>> >device-to-device transactions for now.
 
-That is different from code before changes for optional support,
-or even current code that treat optional as required directly by
-not passing realloc list. We only need 2M as total.
+00:1c.0 -> 04:00.0 would be the host-to-device scenario. It's true that 
+04:00.0 does not support AtomicOp completion in the above example. 
+However, enabling AtomicOp requests for 04:00.0 would cause egress 
+blocks to be set in the 00:1c.0 -> 03:00.0 path.
 
-The optional size should be 1M, and total size should be 2M.
+Our immediate use case for AtomicOps is indeed device-to-host, and I 
+expect this is the most common case. I can make a V3 patch which 
+explicitly supports this case only by setting egress blocks on 
+downstream ports of upstream bridges.
 
-This patch change to comparing required+optional with min_sum_size to
-get smaller optional size.
+This would guarantee that AtomicOp requests terminate correctly, at the 
+expense of potential users of host-to-device or device-to-device 
+scenarios.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 3797b71..6fda7ad 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1161,7 +1161,6 @@ out:
-  * @type2: second match type
-  * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-- * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-  *
-  * Calculate the size of the bus and minimal alignment which
-@@ -1174,10 +1173,11 @@ out:
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 unsigned long type, unsigned long type2,
- 			 unsigned long type3,
--			 resource_size_t min_size, resource_size_t add_size,
-+			 resource_size_t min_size,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
- 	resource_size_t min_align = 0, min_add_align = 0;
- 	resource_size_t max_align = 0, max_add_align = 0;
- 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
-@@ -1189,6 +1189,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (!b_res)
- 		return -ENOSPC;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1259,8 +1264,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	free_align_test_list(&align_test_list);
- 
--	if ((sum_add_size - size) < add_size)
--		sum_add_size = size + add_size;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
-@@ -1397,7 +1402,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, additional_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1431,7 +1436,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
-@@ -1450,8 +1455,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				  min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1474,8 +1478,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+					 min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1484,7 +1487,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				min_mem_size += min_mem_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1505,8 +1508,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+				min_mem_size, realloc_head);
- 		break;
- 	}
- }
 -- 
-1.8.4.5
-
+Jay Cornwall
