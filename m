@@ -1,39 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:32990 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755206AbbIBT0L (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Sep 2015 15:26:11 -0400
-Received: by wicmc4 with SMTP id mc4so76569284wic.0
-        for <linux-pci@vger.kernel.org>; Wed, 02 Sep 2015 12:26:10 -0700 (PDT)
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:34887 "EHLO
+	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756309AbbIVRFO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 13:05:14 -0400
 MIME-Version: 1.0
-In-Reply-To: <20150902174612.GA2700@sean.stalley.intel.com>
-References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
- <1440089947-2839-3-git-send-email-sean.stalley@intel.com> <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
- <20150902174612.GA2700@sean.stalley.intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 2 Sep 2015 14:25:50 -0500
-Message-ID: <CAErSpo4qZ9AXskyo86gXG1cb3AqCn-HB05nj7qT9wovZdLt2Tg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, Rajat Jain <rajatxjain@gmail.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
+In-Reply-To: <5600C285.5090603@hisilicon.com>
+References: <1442321361-174300-1-git-send-email-wangzhou1@hisilicon.com>
+	<1442321361-174300-4-git-send-email-wangzhou1@hisilicon.com>
+	<5600C285.5090603@hisilicon.com>
+Date: Tue, 22 Sep 2015 22:35:13 +0530
+Message-ID: <CAHM4w1mabn8SiE_oqWBbr1chrQTUPiUhc8fCsxJ0t=AyOZOadA@mail.gmail.com>
+Subject: Re: [PATCH v9 3/6] PCI: designware: Add ARM64 support
+From: Pratyush Anand <pratyush.anand@gmail.com>
+To: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	lorenzo.pieralisi@arm.com, James Morse <james.morse@arm.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>,
+	Jason Cooper <jason@lakedaemon.net>, robh@kernel.org,
+	Gabriel Fernandez <gabriel.fernandez@linaro.org>,
+	Minghuan Lian <Minghuan.Lian@freescale.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-api@vger.kernel.org
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Zhang Jukuo <zhangjukuo@huawei.com>, qiuzhenfa@hisilicon.com,
+	liudongdong3@huawei.com, qiujiang@huawei.com, xuwei5@hisilicon.com,
+	Liguozhu <liguozhu@hisilicon.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 2, 2015 at 12:46 PM, Sean O. Stalley <sean.stalley@intel.com> wrote:
+Hi Zhou,
 
-> Would it be better to modify pci_claim_resource() to support EA instead of adding pci_ea_claim_resource()?
-> That way, EA entries would be claimed at the same time as traditional BARs.
+On Tue, Sep 22, 2015 at 8:22 AM, Zhou Wang <wangzhou1@hisilicon.com> wrote:
+> On 2015/9/15 20:49, Zhou Wang wrote:
+>> This patch tries to unify ARM32 and ARM64 PCIe in designware driver. Delete
+>> function dw_pcie_setup, dw_pcie_scan_bus, dw_pcie_map_irq and struct hw_pci,
+>> move related operations to dw_pcie_host_init.
+>>
+>> This patch also try to use of_pci_get_host_bridge_resources for ARM32 and ARM64
+>> according to the suggestion for Gabriele[1]
+>>
+>> This patch reverts commit f4c55c5a3f7f ("PCI: designware: Program ATU with
+>> untranslated address") based on 1/6 in this series. we delete *_mod_base in
+>> pcie-designware. This was discussed in [2]
+>>
+>> I have compiled the driver with multi_v7_defconfig. However, I don't have
+>> ARM32 PCIe related board to do test. It will be appreciated if someone could
+>> help to test it.
+>>
+>> Signed-off-by: Zhou Wang <wangzhou1@hisilicon.com>
+>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> Tested-by: James Morse <james.morse@arm.com>
+>> Tested-by: Gabriel Fernandez <gabriel.fernandez@st.com>
+>> Tested-by: Minghuan Lian <Minghuan.Lian@freescale.com>
 
-Yes, I think so.
+Sorry for delayed response. Since I moved from ST, I do not have any
+test board having designware PCIe controller :(, and also I do
+designware work only in my hobby time,  so it took time to understand
+few modifications. Anyway, all modifications looks fine to me. So,
 
-Why wouldn't pci_claim_resource() work as-is for EA?  I see that
-pci_ea_get_parent_resource() defaults to iomem_resource or
-ioport_resource if we don't find a parent, but I don't understand why
-that's necessary.
+Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+
+PS: Does someone know about a economical test board from any vendor
+with designware PCIe IP?
