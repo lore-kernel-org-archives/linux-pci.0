@@ -1,95 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:38124 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751564AbbICU7w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Sep 2015 16:59:52 -0400
-Received: by igbut12 with SMTP id ut12so1565480igb.1
-        for <linux-pci@vger.kernel.org>; Thu, 03 Sep 2015 13:59:51 -0700 (PDT)
-Date: Thu, 3 Sep 2015 15:59:43 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: linux-pci@vger.kernel.org, wangzhou1@hisilicon.com,
-	jingoohan1@gmail.com, pratyush.anand@gmail.com,
-	yuanzhichang@hisilicon.com, zhudacai@hisilicon.com,
-	zhangjukuo@huawei.com, qiuzhenfa@hisilicon.com,
-	liguozhu@hisilicon.com
-Subject: Re: [PATCH] PCI: designware: fix dw_pcie_cfg_write
-Message-ID: <20150903205943.GJ829@google.com>
-References: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41520 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751415AbbIVL3J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Sep 2015 07:29:09 -0400
+Date: Tue, 22 Sep 2015 14:29:03 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-pci@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
+Message-ID: <20150922131303-mutt-send-email-mst@redhat.com>
+References: <1441553385-3810-1-git-send-email-mst@redhat.com>
+ <20150921182147.GC27964@google.com>
+ <20150921223622-mutt-send-email-mst@redhat.com>
+ <20150921221043.GR25767@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440079113-165527-1-git-send-email-gabriele.paoloni@huawei.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20150921221043.GR25767@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 20, 2015 at 09:58:33PM +0800, Gabriele Paoloni wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Mon, Sep 21, 2015 at 05:10:43PM -0500, Bjorn Helgaas wrote:
+> On Mon, Sep 21, 2015 at 10:42:13PM +0300, Michael S. Tsirkin wrote:
+> > On Mon, Sep 21, 2015 at 01:21:47PM -0500, Bjorn Helgaas wrote:
+> > > On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
+> > > > On some hypervisors, virtio devices tend to generate spurious interrupts
+> > > > when switching between MSI and non-MSI mode.  Normally, either MSI or
+> > > > non-MSI is used and all is well, but during shutdown, linux disables MSI
+> > > > which then causes an "irq %d: nobody cared" message, with irq being
+> > > > subsequently disabled.
+> > > 
+> > > My understanding is:
+> > > 
+> > >   Linux disables MSI/MSI-X during device shutdown.  If the device
+> > >   signals an interrupt after that, it may use INTx.
+> > > 
+> > > This INTx interrupt is not necessarily spurious.  Using INTx to signal an
+> > > interrupt that occurs when MSI is disabled seems like reasonable behavior
+> > > for any PCI device.
+> > > And it doesn't seem related to switching between MSI and non-MSI mode.
+> > > Yes, the INTx happens *after* disabling MSI, but it is not at all
+> > > *because* we disabled MSI.  So I wouldn't say "they generate spurious
+> > > interrupts when switching between MSI and non-MSI."
+> > > 
+> > > Why doesn't virtio-pci just register an INTx handler in addition to an MSI
+> > > handler?
+> > 
+> > The handler causes an expensive exit to the hypervisor,
+> > and the INTx lines are shared with other devices.
 > 
-> Currently in dw_pcie_cfg_write() if the input size is 2 bytes
-> the address offset is wrongly calculated as we mask also bit0
-> of "where" input parameter. Instead we should mask all bits of
-> "where" except bit0 and bit1.
+> Do we care?  Is this a performance path?  I thought we were in a kexec
+> shutdown path.
 
-I think there are two problems in this area:
+Yes but the handler would always have to be registered, right?
 
-1) Most calls of dw_pcie_cfg_write() are of the form:
-
-    dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, ...)
-    dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where, ...)
-
-   This is needlessly repetitive because the caller has to mention
-   "where" twice and do the masking itself.  We could simply pass
-   "pp->dbi_base" and "where" and let dw_pcie_cfg_write() do all the
-   required masking internally.
-
-2) Pratyush, this one's for you :)  spear13xx_pcie_establish_link()
-   calls dw_pcie_cfg_read() and dw_pcie_cfg_write() several times like
-   this:
-
-    dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, ...)
-    dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, ...)
-
-   I think these are incorrect because dw_pcie_cfg_read() and
-   dw_pcie_cfg_write() don't add anything to the "addr" argument
-   ("pp->dbi_base" in this case) except the 0-3 byte select offset, so
-   they use the correct alignment, but access the wrong registers.
-
-As far as the original patch below, I don't think I have a strong
-opinion either way.  You could consider doing something like:
-
-  if (size == 4) {
-    if (addr & 3) return PCIBIOS_BAD_REGISTER_NUMBER;
-    writel(val, addr);
-  } else if (size == 2) {
-    if (addr & 1) return PCIBIOS_BAD_REGISTER_NUMBER;
-    writew(val, addr);
-  } ...
-
-This is similar to what we do in pci_bus_write_config_word() (see
-drivers/pci/access.c).
-
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> ---
->  drivers/pci/host/pcie-designware.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> > Seems silly to slow them down just so we can do something
+> > that triggers the device bug.  The bus master is disabled by that time,
+> > if linux can just desist from touching MSI enable device won't
+> > send either INTx (because MSI is on) or MSI
+> > (because bus master is on) and all will be well.
 > 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 69486be..a27f536 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -99,7 +99,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int where, int size, u32 val)
->  	if (size == 4)
->  		writel(val, addr);
->  	else if (size == 2)
-> -		writew(val, addr + (where & 2));
-> +		writew(val, addr + (where & 3));
->  	else if (size == 1)
->  		writeb(val, addr + (where & 3));
->  	else
-> -- 
-> 1.9.1
+> It would also be silly to put special-purpose code in the PCI core
+> if there's a reasonable way to handle this in a driver.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Can you describe exactly what the device bug is?  Apparently you're
+> saying that if we shut down MSI, it triggers the bug?  And I guess
+> you're talking about a virtio device as implemented in qemu or other
+> hypervisors?
+
+Yes. Basically depending on an internal device state, disabling MSI
+sometimes wedges it.  The most easy to debug effect is if it starts
+sending INTx interrupts, for which there's no handler currently.
+Full system reset always gets us out of the bad state.
+
+
+> If we leave MSI enabled (as your patch does), then the device has MSI
+> enabled and Bus Master disabled.  I can see these possibilities:
+> 
+>   1) the device never recognizes an interrupt condition
+>   2) the device sets the pending bit but doesn't issue the MSI write,
+>      so the OS doesn't see the interrupt unless it polls for it
+>   3) the device signals MSI and we still have an MSI handler
+>      registered, so we silently handle it
+>   4) the device signals INTx
+> You seem to suggest that if we leave MSI enabled (as your patch does),
+> we're in case 1.  But I doubt that disabling MSI causes the device to
+> interrupt.
+> 
+> Case 2 seems more likely to me: the device recognized an interrupt
+> condition, e.g., an event occurred, and the OS simply doesn't see the
+> interrupt because the device can't issue the MSI message.
+> 
+> Case 3 does seem like it would be a device bug, because the device
+> shouldn't do an MSI write when Bus Master is disabled.  I don't see
+> this case mentioned explicitly in the PCI spec, but PCIe r3.0 spec sec
+> 7.5.1.1 does make it clear that disabling Bus Master also disables MSI
+> messages.
+> 
+> I don't know whether case 4 would be legal or not.  But apparently it
+> doesn't happen with the virtio device anyway, so it's not really a
+> concern here.
+> 
+> Bjorn
+
+It's case 2. Except it doesn't actually set the pending
+bit, because PCI spec has language like
+
+	"While a vector is masked, the function is prohibited from sending the
+	associated message, and the function must set the associated Pending bit"
+
+but doesn't actually require to set pending if bus master enable
+prevents sending MSI.
+
+-- 
+MST
