@@ -1,62 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:64517 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757491AbbIXRhx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Sep 2015 13:37:53 -0400
-MIME-Version: 1.0
-Message-ID: <trinity-8ba3da91-51c4-496e-8c40-91bbecacd141-1443116266781@3capp-webde-bs43>
-From: "Roland Weber" <r-o-l@web.de>
-To: linux-usb@vger.kernel.org
-Cc: "Mathias Nyman" <mathias.nyman@intel.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: PROBLEM: lsusb -v freezes kernel on Acer ES1-111M
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 24 Sep 2015 19:37:46 +0200
-In-Reply-To: <Pine.LNX.4.44L0.1509231058110.1670-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1509231058110.1670-100000@iolanthe.rowland.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:37977 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758811AbbIVXtZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 19:49:25 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v3 0/6] PCI: generic: Misc. bug fixes/enhancements
+Date: Tue, 22 Sep 2015 16:49:11 -0700
+Message-Id: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alan,
+From: David Daney <david.daney@cavium.com>
 
-> > Frankly, I don't dare to upgrade the BIOS right now.
-> 
-> All right.  Maybe at some point in the future.  The thing is, I don't 
-> want to patch the kernel only to find that the problem has already been 
-> fixed in a newer BIOS.
+While using the pci-host-generic driver to add PCI support for the
+Cavium ThunderX processors, several bugs were discovered.  This patch
+set fixes the bugs, a follow-on set will add the ThunderX support.
 
-Fair enough. I'll see if I can make time for setting things up over
-the next few weeks. Andrew's report on this matter is encouraging.
+Changes from v2:
 
-> The unavoidable conclusion is that your system doesn't work right when 
-> this root hub is suspended.  (I still think it's the BIOS's fault.)
+  - Added " PCI: generic: Claim device resources if PCI_PROBE_ONLY"
 
-I've been using the machine in legacy BIOS mode ever since I wasted
-three days trying to get an installed Linux booting in UEFI mode. I'm
-planning a clean installation anyway, this weekend or early next week.
-I'll give UEFI mode (without secure boot) another chance. Maybe it
-works when I get rid of the factory boot entries in that menu.
-At the very least, I can boot a Linux live disk with UEFI to see
-if that one freezes, and what the EHCI registers have to say.
+Changes from v1:
 
-> Which suggests yet another test: Under a kernel with CONFIG_PM and
-> CONFIG_PM_SLEEP enabled, what happens when you suspend the system
-> (i.e., suspend-to-RAM) and then wake it up?
+  - "PCI: generic: Allow bus default MSI controller to be specified."
+    patch was dropped as it is no longer necessary.
 
-Well, there's the second big problem I have with the machine. It has
-an eMMC rather than a real hard disk or SSD. AIUI, the Linux MMC driver
-has no way of distinguishing removable from non-removable MMC media.
-So it treats all MMC as removable and expects that the disk contents
-may have changed while it was asleep. Kind of an unmount on sleep or so.
-Which means that when the machine wakes up, the root filesystem is gone.
-IIRC, it did wake up but then hung up when I entered a command. It's
-been a while since I tried.
-There is a boot parameter to tell the MMC driver that all media are to
-be treated as non-removable. I gave it a try back then and it didn't work.
-But I'll give it another try a.s.a.p. Maybe I just had the prefix wrong.
+  - "PCI: Make global and export pdev_fixup_irq()." and "PCI: generic:
+    Only fixup irqs for bus we are creating." were rewritten to move
+    the support into a somewhat more generic form in setup-irq.c.
 
-Thanks a lot, Alan. I'll provide more information as soon as I can
-gather it.
+  - Add some clarifying text to host-generic-pci.txt
 
-cheers,
-  Roland
+  - Add some Acked-by:
+
+
+David Daney (6):
+  PCI: Add pci_bus_fixup_irqs().
+  PCI: generic: Only fixup irqs for bus we are creating.
+  PCI: generic: Quit clobbering our pci_ops.
+  PCI: generic: Correct, and avoid overflow, in bus_max calculation.
+  PCI: generic: Pass proper starting bus number to pci_scan_root_bus().
+  PCI: generic: Claim device resources if PCI_PROBE_ONLY
+
+ .../devicetree/bindings/pci/host-generic-pci.txt   |  4 +-
+ drivers/pci/host/pci-host-generic.c                | 59 +++++++++++++++-------
+ drivers/pci/setup-irq.c                            | 30 +++++++++++
+ include/linux/pci.h                                |  4 ++
+ 4 files changed, 79 insertions(+), 18 deletions(-)
+
+-- 
+1.9.1
+
