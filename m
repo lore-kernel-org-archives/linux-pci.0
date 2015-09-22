@@ -1,154 +1,141 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 07/53] PCI: Reorder resources list for required/optional resources
-Date: Wed, 16 Sep 2015 14:57:05 -0700
-Message-Id: <1442440671-5361-8-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f181.google.com ([209.85.223.181]:36194 "EHLO
+	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758811AbbIVXt2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 19:49:28 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH v3 3/6] PCI: generic: Quit clobbering our pci_ops.
+Date: Tue, 22 Sep 2015 16:49:14 -0700
+Message-Id: <1442965757-12925-4-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We try to allocate required+optional before allocate required only and
-expand with optional.
+From: David Daney <david.daney@cavium.com>
 
-At first we update size and alignment for required+optional resource.
-And after that we reorder them with new alignment, but current we only
-do that STARTALIGN ones.
+The pci-host-generic driver keeps a global struct pci_ops which it
+then patches with the .map_bus method appropriate for the bus device.
+A problem arises when the driver is used for two different types of
+bus devices, the .map_bus method for the last device probed clobbers
+the method for all previous devices.  The result, only the last bus
+device probed has the proper .map_bus, and the others fail.
 
-For SIZEALIGN type resource, after add back add_size, the alignment
-get changed, so need to do sorting like STARTALIGN type resources.
+Move the struct pci_ops into the bus specific structure, and
+initialize it when the bus device is probed.  Keep a copy of the
+gen_pci_cfg_bus_ops structure, instead of a pointer to a global copy,
+to future proof against the addition of bus specific elements to
+struct pci_ops.
 
-Also we need to reorder the sorting back after we restore
-resource to required only when required+optional fail to allocate for all.
-
-So move out the reordering code from the loop to separated function,
-and call it two times accordingly.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Signed-off-by: David Daney <david.daney@cavium.com>
 ---
- drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 37 insertions(+), 25 deletions(-)
+No change from v1 or v2.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index e4aa93e..555a7a3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -286,6 +286,31 @@ static inline void reset_resource(struct resource *res)
- 	res->flags = 0;
- }
+ drivers/pci/host/pci-host-generic.c | 31 +++++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 9e9f1c3..77cf4bd 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -27,7 +27,7 @@
  
-+static void sort_resources(struct list_head *head)
-+{
-+	struct pci_dev_resource *res1, *tmp_res, *res2;
-+
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		resource_size_t align1, size1, align2, size2;
-+
-+		align1 = pci_resource_alignment(res1->dev, res1->res);
-+		size1 = resource_size(res1->res);
-+
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			align2 = pci_resource_alignment(res2->dev, res2->res);
-+			size2 = resource_size(res2->res);
-+			if (is_before(align1, size1, align2, size2)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
+ struct gen_pci_cfg_bus_ops {
+ 	u32 bus_shift;
+-	void __iomem *(*map_bus)(struct pci_bus *, unsigned int, int);
++	struct pci_ops ops;
+ };
+ 
+ struct gen_pci_cfg_windows {
+@@ -35,7 +35,7 @@ struct gen_pci_cfg_windows {
+ 	struct resource				*bus_range;
+ 	void __iomem				**win;
+ 
+-	const struct gen_pci_cfg_bus_ops	*ops;
++	struct gen_pci_cfg_bus_ops		ops;
+ };
+ 
+ /*
+@@ -65,7 +65,11 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+ 
+ static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
+ 	.bus_shift	= 16,
+-	.map_bus	= gen_pci_map_cfg_bus_cam,
++	.ops		= {
++		.map_bus	= gen_pci_map_cfg_bus_cam,
++		.read		= pci_generic_config_read,
++		.write		= pci_generic_config_write,
 +	}
-+}
-+
- /**
-  * reassign_resources_sorted() - satisfy any additional resource requests
-  *
-@@ -448,9 +473,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
-+	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align, align;
-+	resource_size_t add_align;
+ };
  
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -465,47 +490,32 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
+ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+@@ -80,12 +84,11 @@ static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
  
- 	/* Update res in head list with add_size in realloc_head list */
--	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
-+	list_for_each_entry(dev_res, head, list) {
- 		dev_res->res->end += get_res_add_size(realloc_head,
- 							dev_res->res);
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
--		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
--		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
--		 * Here just fix the additional alignment for bridge
-+		 * 1. bridge resource with IORESOURCE_STARTALIGN
-+		 *    need to update start to change alignment
-+		 * 2. resource with IORESOURCE_SIZEALIGN
-+		 *    update size above already change alignment.
- 		 */
- 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
- 			continue;
- 
- 		add_align = get_res_add_align(realloc_head, dev_res->res);
- 
--		/*
--		 * The "head" list is sorted by the alignment to make sure
--		 * resources with bigger alignment will be assigned first.
--		 * After we change the alignment of a dev_res in "head" list,
--		 * we need to reorder the list by alignment to make it
--		 * consistent.
--		 */
--		if (add_align > dev_res->res->start) {
-+		if (add_align) {
- 			resource_size_t r_size = resource_size(dev_res->res);
- 
- 			dev_res->res->start = add_align;
- 			dev_res->res->end = add_align + r_size - 1;
+ static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
+ 	.bus_shift	= 20,
+-	.map_bus	= gen_pci_map_cfg_bus_ecam,
+-};
 -
--			list_for_each_entry(dev_res2, head, list) {
--				align = pci_resource_alignment(dev_res2->dev,
--							       dev_res2->res);
--				if (add_align > align) {
--					list_move_tail(&dev_res->list,
--						       &dev_res2->list);
--					break;
--				}
--			}
-                }
--
+-static struct pci_ops gen_pci_ops = {
+-	.read	= pci_generic_config_read,
+-	.write	= pci_generic_config_write,
++	.ops		= {
++		.map_bus	= gen_pci_map_cfg_bus_ecam,
++		.read		= pci_generic_config_read,
++		.write		= pci_generic_config_write,
++	}
+ };
+ 
+ static const struct of_device_id gen_pci_of_match[] = {
+@@ -175,7 +178,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 
+ 	/* Limit the bus-range to fit within reg */
+ 	bus_max = pci->cfg.bus_range->start +
+-		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
++		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+ 	pci->cfg.bus_range->end = min_t(resource_size_t,
+ 					pci->cfg.bus_range->end, bus_max);
+ 
+@@ -193,7 +196,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	bus_range = pci->cfg.bus_range;
+ 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+ 		u32 idx = busn - bus_range->start;
+-		u32 sz = 1 << pci->cfg.ops->bus_shift;
++		u32 sz = 1 << pci->cfg.ops.bus_shift;
+ 
+ 		pci->cfg.win[idx] = devm_ioremap(dev,
+ 						 pci->cfg.res.start + busn * sz,
+@@ -234,8 +237,7 @@ static int gen_pci_probe(struct platform_device *pdev)
  	}
  
-+	sort_resources(head);
-+
- 	/* Try updated head list with add_size added */
- 	assign_requested_resources_sorted(head, &local_fail_head);
+ 	of_id = of_match_node(gen_pci_of_match, np);
+-	pci->cfg.ops = of_id->data;
+-	gen_pci_ops.map_bus = pci->cfg.ops->map_bus;
++	pci->cfg.ops = *(struct gen_pci_cfg_bus_ops *)of_id->data;
+ 	pci->host.dev.parent = dev;
+ 	INIT_LIST_HEAD(&pci->host.windows);
+ 	INIT_LIST_HEAD(&pci->resources);
+@@ -256,7 +258,8 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	if (!pci_has_flag(PCI_PROBE_ONLY))
+ 		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
  
-@@ -547,6 +557,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
- 
-+	sort_resources(head);
-+
- requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
+-	bus = pci_scan_root_bus(dev, 0, &gen_pci_ops, pci, &pci->resources);
++	bus = pci_scan_root_bus(dev, 0,
++				&pci->cfg.ops.ops, pci, &pci->resources);
+ 	if (!bus) {
+ 		dev_err(dev, "Scanning rootbus failed");
+ 		return -ENODEV;
 -- 
-1.8.4.5
+1.9.1
 
