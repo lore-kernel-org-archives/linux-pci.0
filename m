@@ -1,50 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:7903 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601AbbIORLt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:11:49 -0400
-From: Will Davis <wdavis@nvidia.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	"Mark Hounschell" <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	"Will Davis" <wdavis@nvidia.com>
-Subject: [PATCH 13/22] x86, platform: Add swiotlb_map_peer_resource() to sta2x11_dma_ops
-Date: Tue, 15 Sep 2015 12:10:58 -0500
-Message-ID: <1442337067-22964-14-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+Received: from mail-io0-f176.google.com ([209.85.223.176]:35632 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753048AbbIVMgr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 08:36:47 -0400
+Received: by ioiz6 with SMTP id z6so13116329ioi.2
+        for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2015 05:36:46 -0700 (PDT)
+Date: Tue, 22 Sep 2015 07:36:40 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Fam Zheng <famz@redhat.com>,
+	Yinghai Lu <yhlu.kernel.send@gmail.com>,
+	Ulrich Obergfell <uobergfe@redhat.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-pci@vger.kernel.org,
+	virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH v7] pci: quirk to skip msi disable on shutdown
+Message-ID: <20150922123640.GT25767@google.com>
+References: <1441553385-3810-1-git-send-email-mst@redhat.com>
+ <20150921182147.GC27964@google.com>
+ <20150921223622-mutt-send-email-mst@redhat.com>
+ <20150921221043.GR25767@google.com>
+ <20150922131303-mutt-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150922131303-mutt-send-email-mst@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
----
- arch/x86/pci/sta2x11-fixup.c | 3 +++
- 1 file changed, 3 insertions(+)
+On Tue, Sep 22, 2015 at 02:29:03PM +0300, Michael S. Tsirkin wrote:
+> On Mon, Sep 21, 2015 at 05:10:43PM -0500, Bjorn Helgaas wrote:
+> > On Mon, Sep 21, 2015 at 10:42:13PM +0300, Michael S. Tsirkin wrote:
+> > > On Mon, Sep 21, 2015 at 01:21:47PM -0500, Bjorn Helgaas wrote:
+> > > > On Sun, Sep 06, 2015 at 06:32:35PM +0300, Michael S. Tsirkin wrote:
+> > > > > On some hypervisors, virtio devices tend to generate spurious interrupts
+> > > > > when switching between MSI and non-MSI mode.  Normally, either MSI or
+> > > > > non-MSI is used and all is well, but during shutdown, linux disables MSI
+> > > > > which then causes an "irq %d: nobody cared" message, with irq being
+> > > > > subsequently disabled.
+> > > > 
+> > > > My understanding is:
+> > > > 
+> > > >   Linux disables MSI/MSI-X during device shutdown.  If the device
+> > > >   signals an interrupt after that, it may use INTx.
+> > > > 
+> > > > This INTx interrupt is not necessarily spurious.  Using INTx to signal an
+> > > > interrupt that occurs when MSI is disabled seems like reasonable behavior
+> > > > for any PCI device.
+> > > > And it doesn't seem related to switching between MSI and non-MSI mode.
+> > > > Yes, the INTx happens *after* disabling MSI, but it is not at all
+> > > > *because* we disabled MSI.  So I wouldn't say "they generate spurious
+> > > > interrupts when switching between MSI and non-MSI."
+> > > > 
+> > > > Why doesn't virtio-pci just register an INTx handler in addition to an MSI
+> > > > handler?
+> > > 
+> > > The handler causes an expensive exit to the hypervisor,
+> > > and the INTx lines are shared with other devices.
+> > 
+> > Do we care?  Is this a performance path?  I thought we were in a kexec
+> > shutdown path.
+> 
+> Yes but the handler would always have to be registered, right?
 
-diff --git a/arch/x86/pci/sta2x11-fixup.c b/arch/x86/pci/sta2x11-fixup.c
-index 5ceda85..4b8be04 100644
---- a/arch/x86/pci/sta2x11-fixup.c
-+++ b/arch/x86/pci/sta2x11-fixup.c
-@@ -186,6 +186,9 @@ static struct dma_map_ops sta2x11_dma_ops = {
- 	.unmap_page = swiotlb_unmap_page,
- 	.map_sg = swiotlb_map_sg_attrs,
- 	.unmap_sg = swiotlb_unmap_sg_attrs,
-+#ifdef CONFIG_HAS_DMA_P2P
-+	.map_peer_resource = swiotlb_map_peer_resource,
-+#endif
- 	.sync_single_for_cpu = swiotlb_sync_single_for_cpu,
- 	.sync_single_for_device = swiotlb_sync_single_for_device,
- 	.sync_sg_for_cpu = swiotlb_sync_sg_for_cpu,
--- 
-2.5.1
+The pci_device_shutdown() path you're modifying calls drv->shutdown()
+immediately before disabling MSI, so I suppose you could register a
+handler in a virtio shutdown method.
 
+> > > Seems silly to slow them down just so we can do something
+> > > that triggers the device bug.  The bus master is disabled by that time,
+> > > if linux can just desist from touching MSI enable device won't
+> > > send either INTx (because MSI is on) or MSI
+> > > (because bus master is on) and all will be well.
+> > 
+> > It would also be silly to put special-purpose code in the PCI core
+> > if there's a reasonable way to handle this in a driver.
+> > 
+> > Can you describe exactly what the device bug is?  Apparently you're
+> > saying that if we shut down MSI, it triggers the bug?  And I guess
+> > you're talking about a virtio device as implemented in qemu or other
+> > hypervisors?
+> 
+> Yes. Basically depending on an internal device state, disabling MSI
+> sometimes wedges it.  The most easy to debug effect is if it starts
+> sending INTx interrupts, for which there's no handler currently.
+> Full system reset always gets us out of the bad state.
+
+If disabling MSI causes the device to use INTx interrupts, that sounds
+perfectly normal to me.
+
+If disabling MSI causes the device to hang, *that* sounds like a bug.
+Since this is virtio, we should be able to figure out exactly where
+that happens.  Do you have a pointer to a virtio bug report, or even a
+QEMU commit that fixes this virtio bug?
+
+I understand that even if there is a virtio fix in QEMU, we want a
+solution that works even with an old QEMU that doesn't contain the
+fix.  But a pointer to a QEMU fix would really help understand and
+document the Linux fix.
+
+Bjorn
