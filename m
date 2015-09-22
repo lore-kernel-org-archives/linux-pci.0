@@ -1,84 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:4556 "EHLO
-	ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752119AbbIITE6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 15:04:58 -0400
-Message-ID: <55F082C5.4010806@internode.on.net>
-Date: Thu, 10 Sep 2015 04:34:37 +0930
-From: Arthur Marsh <arthur.marsh@internode.on.net>
-MIME-Version: 1.0
+Received: from mx2.suse.de ([195.135.220.15]:59308 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751500AbbIVU1g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Sep 2015 16:27:36 -0400
+Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
+ device drivers
 To: Jiang Liu <jiang.liu@linux.intel.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org
-CC: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [Bugfix] PCI, x86: Correctly allocate IRQs for PCI devices managed
- by non-PCI drivers
-References: <55EE8106.6060100@internode.on.net> <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
-In-Reply-To: <1441697190-27993-1-git-send-email-jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Arthur Marsh <arthur.marsh@internode.on.net>,
+	Ballabio Dario <dario.ballabio@emc.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	"James E.J. Bottomley" <JBottomley@odin.com>
+References: <20150916134211.GA21535@infradead.org>
+ <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <5601B9B0.4090302@suse.de>
+Date: Tue, 22 Sep 2015 22:27:28 +0200
+MIME-Version: 1.0
+In-Reply-To: <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-Jiang Liu wrote on 08/09/15 16:56:
+On 09/22/2015 09:30 AM, Jiang Liu wrote:
+> Previously the eata driver just grabs and accesses eata PCI devices
+> without implementing a PCI device driver, that causes troubles with
+> latest IRQ related
+> 
 > Commit 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
 > pcibios_free_irq()") changes the way to allocate PCI legacy IRQ
 > for PCI devices on x86 platforms. Instead of allocating PCI legacy
 > IRQs when pcibios_enable_device() gets called, now pcibios_alloc_irq()
 > will be called by pci_device_probe() to allocate PCI legacy IRQs
 > when binding PCI drivers to PCI devices.
->
-> But some device drivers, such as eata, directly access PCI devices
-> without implementing corresponding PCI drivers, so pcibios_alloc_irq()
-> won't be called for those PCI devices and wrong IRQ number may be
-> used to manage the PCI device.
->
-> So detect such a case in pcibios_enable_device() by checking
-> pci_dev->driver is NULL and call pcibios_alloc_irq() to allocate PCI
-> legacy IRQs.
->
+> 
+> But the eata driver directly accesses PCI devices without implementing
+> corresponding PCI drivers, so pcibios_alloc_irq() won't be called for
+> those PCI devices and wrong IRQ number may be used to manage the PCI
+> device.
+> 
+> This patch implements a PCI device driver to manage eata PCI devices,
+> so eata driver could properly cooperate with the PCI core. It also
+> provides headroom for PCI hotplug with eata driver.
+> 
+> It also represents non-PCI eata devices as platform devices, so it could
+> be managed as normal devices.
+> 
 > Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> ---
->   arch/x86/pci/common.c |   10 ++++++++++
->   1 file changed, 10 insertions(+)
->
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 09d3afc0a181..60b237783582 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -685,6 +685,16 @@ void pcibios_free_irq(struct pci_dev *dev)
->
->   int pcibios_enable_device(struct pci_dev *dev, int mask)
->   {
-> +	/*
-> +	 * By design, pcibios_alloc_irq() will be called by pci_device_probe()
-> +	 * when binding a PCI device to a PCI driver. But some device drivers,
-> +	 * such as eata, directly make use of PCI devices without implementing
-> +	 * PCI device drivers, so pcibios_alloc_irq() won't be called for those
-> +	 * PCI devices.
-> +	 */
-> +	if (!dev->driver)
-> +		pcibios_alloc_irq(dev);
-> +
->   	return pci_enable_resources(dev, mask);
->   }
->
->
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Ballabio, Dario <dario.ballabio@emc.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Sorry for the late report but this patch messes up things for kexec - 
-rebooting is delayed with the error messages as shown in the fuzzy 
-screen image here:
+Cheers,
 
-http://www.users.on.net/~arthur.marsh/20150910541.jpg
-
-(the error messages are similar to what I was seeing on boot-up before 
-Jiang Liu's patch)
-
-and the SCSI card is not recognised by the kernel after a kexec restart, 
-and eata fails to load.
-
-Arthur.
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
