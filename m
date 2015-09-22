@@ -1,51 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:12074 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827AbbIORMM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 13:12:12 -0400
-From: Will Davis <wdavis@nvidia.com>
+Received: from mail-bn1bon0088.outbound.protection.outlook.com ([157.56.111.88]:3776
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756627AbbIVHTi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Sep 2015 03:19:38 -0400
+From: Ley Foon Tan <lftan@altera.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	<iommu@lists.linux-foundation.org>, <linux-pci@vger.kernel.org>,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>,
-	Will Davis <wdavis@nvidia.com>
-Subject: [PATCH 22/22] x86: declare support for DMA P2P
-Date: Tue, 15 Sep 2015 12:11:07 -0500
-Message-ID: <1442337067-22964-23-git-send-email-wdavis@nvidia.com>
-In-Reply-To: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-arch@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, Ley Foon Tan <lftan@altera.com>,
+	<lftan.linux@gmail.com>
+Subject: [PATCH 0/2] Add PCI support on nios2 architecture
+Date: Tue, 22 Sep 2015 15:19:25 +0800
+Message-ID: <1442906367-10935-1-git-send-email-lftan@altera.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use CONFIG_HAS_DMA_P2P to declare that we want the DMA peer resource APIs
-enabled on x86.
+This patchset adding pci support for nios2 architecture.
+It requires pci_fixup_irqs() from setup-irq.c.
 
-Signed-off-by: Will Davis <wdavis@nvidia.com>
----
- arch/x86/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+Ley Foon Tan (2):
+  nios2: Add architectural support for PCIe
+  PCI: Build setup-irq.o for nios2
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 3dbb7e7..581d1ad 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -149,6 +149,7 @@ config X86
- 	select VIRT_TO_BUS
- 	select X86_DEV_DMA_OPS			if X86_64
- 	select X86_FEATURE_NAMES		if PROC_FS
-+	select HAS_DMA_P2P
- 
- config INSTRUCTION_DECODER
- 	def_bool y
+ arch/nios2/Kconfig            | 24 +++++++++++++++++++++
+ arch/nios2/include/asm/Kbuild |  2 +-
+ arch/nios2/include/asm/io.h   | 11 +++++++++-
+ arch/nios2/include/asm/pci.h  | 50 +++++++++++++++++++++++++++++++++++++++++++
+ arch/nios2/kernel/Makefile    |  1 +
+ arch/nios2/kernel/pci.c       | 33 ++++++++++++++++++++++++++++
+ drivers/pci/Makefile          |  1 +
+ 7 files changed, 120 insertions(+), 2 deletions(-)
+ create mode 100644 arch/nios2/include/asm/pci.h
+ create mode 100644 arch/nios2/kernel/pci.c
+
 -- 
-2.5.1
+1.8.2.1
 
