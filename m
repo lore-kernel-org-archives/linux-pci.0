@@ -1,339 +1,190 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f170.google.com ([209.85.223.170]:36431 "EHLO
+	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932886AbbIVNFS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 09:05:18 -0400
+Received: by ioii196 with SMTP id i196so13901395ioi.3
+        for <linux-pci@vger.kernel.org>; Tue, 22 Sep 2015 06:05:17 -0700 (PDT)
+Date: Tue, 22 Sep 2015 08:05:11 -0500
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Jay Cornwall <jay@jcornwall.me>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Add pci_enable_atomic_request
+Message-ID: <20150922130511.GD27964@google.com>
+References: <1442843232-12936-1-git-send-email-jay@jcornwall.me>
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVXox9UbaQKZvatLwdqbEp6k9QpRcSCeFNROdK6=5qq2Q@mail.gmail.com>
-References: <CAL-B5D3FgF+o7BcLBe7O_gcxy2jf3w43bXeDJuRH2VS2ES0A7Q@mail.gmail.com>
-	<CAE9FiQWY1gdpzdqToBM0sNgfCRnRfEEgJfn-J9igorLH1K80JA@mail.gmail.com>
-	<CAL-B5D0f10Q6C5jmjzysowDjJ=Z8iA1tSSAQwUp9qcxW-WeMPw@mail.gmail.com>
-	<CAE9FiQVXox9UbaQKZvatLwdqbEp6k9QpRcSCeFNROdK6=5qq2Q@mail.gmail.com>
-Date: Thu, 24 Sep 2015 21:35:20 -0700
-Message-ID: <CAE9FiQWd69=6-UvCWsPOHvnZ96grJyzEt_+WR0-Q3M9wHz69hw@mail.gmail.com>
-Subject: Re: [RFC] PCI: Unassigned Expansion ROM BARs
-From: Yinghai Lu <yinghai@kernel.org>
-To: Myron Stowe <myron.stowe@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1442843232-12936-1-git-send-email-jay@jcornwall.me>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Sep 24, 2015 at 12:01 PM, Yinghai Lu <yinghai@kernel.org> wrote:
+Hi Jay,
 
-> Or do we want to keep a white list to say which device should have
-> ROM bar as mush have, and other is optional to have ?
+These are some minor procedural comments, independent of the larger
+design issues.
 
-Subject: [RFC PATCH] PCI: Add pci_dev_need_rom_bar()
+On Mon, Sep 21, 2015 at 08:47:12AM -0500, Jay Cornwall wrote:
+> The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be requested
+> by, routed through and completed by PCIe components. Routing and completion
+> do not require software support. Component support for each is detectable via
+> the DEVCAP2 register.
+> 
+> AtomicOp requests are permitted only if a component's
+> DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot be
+> detected but is a no-op if set on a component with no support. These requests
+> can only be serviced if the upstream components support AtomicOp completion
+> and/or routing to a component which does.
+> 
+> A concrete example is the AMD Fiji-class GPU, which is specified to support
+> AtomicOp requests, routed through a PLX 8747 switch (advertising AtomicOp
+> routing) to a Haswell host bridge (advertising AtomicOp completion support).
+> When AtomicOp requests are disabled the GPU logs attempts to initiate requests
+> to an MMIO register for debugging.
+> 
+> Add pci_enable_atomic_request for per-device control over AtomicOp requests.
+> Upstream bridges are checked for AtomicOp routing capability and the call
+> fails if any lack this capability. The root port is checked for AtomicOp
+> completion capabilities and the call fails if it does not support any.
+> Routes to other PCIe components are not checked for AtomicOp routing and
+> completion capabilities.
+> 
+> Signed-off-by: Jay Cornwall <jay@jcornwall.me>
+> ---
+>  drivers/pci/pci.c             | 67 +++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h           |  1 +
+>  include/uapi/linux/pci_regs.h |  5 ++++
+>  3 files changed, 73 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6a9a111..58819e4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2453,6 +2453,73 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+>  }
+>  
+>  /**
+> + * pci_enable_atomic_request - enable or disable AtomicOp requester
+> + * @dev: the PCI device
+> + *
+> + * Return true if the device is capable of generating AtomicOp requests,
+> + * all upstream bridges support AtomicOp routing, and the root port supports
+> + * 32-bit, 64-bit and/or 128-bit AtomicOp completion.
+> + */
+> +bool pci_enable_atomic_request(struct pci_dev *dev)
 
-Only set that for
-1. if BIOS/firmware already set ROM bar.
-2. via quirks for some devices.
+I'd prefer a "return zero for success or a negative error value (-ENODEV,
+etc.)" interface.
 
-We assign those needed ROM bar as required
-and other ROM bars as optional resources.
+> +{
+> +	struct pci_bus *bus = dev->bus;
+> +
+> +	if (!pci_is_pcie(dev))
+> +		return false;
+> +
+> +	switch (pci_pcie_type(dev)) {
+> +	/* PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
+> +	 * to implement AtomicOp requester capabilities.
+> +	 */
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Thanks for the spec references.  Since all the references are to the
+same section, we might not need to repeat that.  Please follow the
+comment style in the rest of the file, i.e.,
 
----
- arch/x86/pci/i386.c        |    9 +++++-
- drivers/dma/pch_dma.c      |    1
- drivers/gpio/gpio-ml-ioh.c |    2 -
- drivers/misc/pch_phub.c    |   12 --------
- drivers/pci/probe.c        |    7 +++++
- drivers/pci/quirks.c       |   63 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/setup-bus.c    |   18 ++++++++++--
- include/linux/pci.h        |   13 +++++++++
- include/linux/pci_ids.h    |    7 +++++
- 9 files changed, 112 insertions(+), 20 deletions(-)
+    /*
+     * Text...
+     */
 
-Index: linux-2.6/arch/x86/pci/i386.c
-===================================================================
---- linux-2.6.orig/arch/x86/pci/i386.c
-+++ linux-2.6/arch/x86/pci/i386.c
-@@ -377,11 +377,16 @@ static void pcibios_allocate_rom_resourc
-     }
- }
-
-+bool pci_assign_roms(void)
-+{
-+    return !!(pci_probe & PCI_ASSIGN_ROMS);
-+}
-+
- static int __init pcibios_assign_resources(void)
- {
-     struct pci_host_bridge *host_bridge = NULL;
-
--    if (!(pci_probe & PCI_ASSIGN_ROMS))
-+    if (!pci_assign_roms())
-         for_each_pci_host_bridge(host_bridge)
-             pcibios_allocate_rom_resources(host_bridge->bus);
-
-@@ -406,7 +411,7 @@ void pcibios_resource_survey_bus(struct
-     pcibios_allocate_resources(bus, 0);
-     pcibios_allocate_resources(bus, 1);
-
--    if (!(pci_probe & PCI_ASSIGN_ROMS))
-+    if (!pci_assign_roms())
-         pcibios_allocate_rom_resources(bus);
- }
-
-Index: linux-2.6/drivers/pci/probe.c
-===================================================================
---- linux-2.6.orig/drivers/pci/probe.c
-+++ linux-2.6/drivers/pci/probe.c
-@@ -224,6 +224,13 @@ int __pci_read_base(struct pci_dev *dev,
-         l64 = l & PCI_ROM_ADDRESS_MASK;
-         sz64 = sz & PCI_ROM_ADDRESS_MASK;
-         mask64 = (u32)PCI_ROM_ADDRESS_MASK;
-+        /* simple validation */
-+        if (l64 && sz64 &&
-+            (l64 & 0xff000000) != 0xff000000 &&
-+            system_state == SYSTEM_BOOTING) {
-+            dev_printk(KERN_DEBUG, &dev->dev, "set dev_flags NEED_ROM_BAR\n");
-+            pci_dev_set_need_rom_bar(dev);
-+        }
-     }
-
-     if (res->flags & IORESOURCE_MEM_64) {
-Index: linux-2.6/drivers/pci/quirks.c
-===================================================================
---- linux-2.6.orig/drivers/pci/quirks.c
-+++ linux-2.6/drivers/pci/quirks.c
-@@ -4197,3 +4197,66 @@ static void quirk_intel_qat_vf_cap(struc
-     }
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
-+
-+/* from drivers/mtd/maps/pci.c */
-+static void quirk_set_need_rom_bar(struct pci_dev *pdev)
-+{
-+    if (!pci_dev_need_rom_bar(pdev)) {
-+        dev_printk(KERN_DEBUG, &pdev->dev, "set dev_flags NEED_ROM_BAR\n");
-+        pci_dev_set_need_rom_bar(pdev);
-+    }
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_DEC, PCI_DEVICE_ID_DEC_21285,
-+             quirk_set_need_rom_bar);
-+
-+#ifdef CONFIG_PARISC
-+/* from drivers/video/console/sticore.c */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_VISUALIZE_EG,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_VISUALIZE_FX6,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_VISUALIZE_FX4,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_VISUALIZE_FX2,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_VISUALIZE_FXE,
-+             quirk_set_need_rom_bar);
-+#endif
-+
-+/* from drivers/misc/pch_phub.c */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_PCH1_PHUB,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ROHM_ML7213_PHUB,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ROHM_ML7223_mPHUB,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ROHM_ML7223_nPHUB,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ROHM_ML7831_PHUB,
-+             quirk_set_need_rom_bar);
-+
-+/* from drivers/net/ethernet/sun/sungem.c */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_SUN, PCI_DEVICE_ID_SUN_GEM,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_SUN, PCI_DEVICE_ID_SUN_RIO_GEM,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_UNI_N_GMAC,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_UNI_N_GMACP,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_UNI_N_GMAC2,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_K2_GMAC,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_SH_SUNGEM,
-+             quirk_set_need_rom_bar);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_APPLE, PCI_DEVICE_ID_APPLE_IPID2_GMAC,
-+             quirk_set_need_rom_bar);
-+
-+/* from drivers/net/ethernet/sun/sunhme.c */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_SUN, PCI_DEVICE_ID_SUN_HAPPYMEAL,
-+             quirk_set_need_rom_bar);
-+
-+/* from drm and fbdev */
-+DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_DISPLAY_VGA,
-+                8, quirk_set_need_rom_bar);
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -226,6 +226,10 @@ static void pdev_assign_resources_prepar
-         if (resource_disabled(r) || r->parent)
-             continue;
-
-+        if (i == PCI_ROM_RESOURCE &&
-+            !pci_assign_roms() && !pci_dev_need_rom_bar(dev))
-+            continue;
-+
-         if ((r->flags & IORESOURCE_IO) &&
-             !pci_find_host_bridge(dev->bus)->has_ioport)
-             continue;
-@@ -1461,11 +1465,16 @@ out:
-     return good_size;
- }
-
--static inline bool is_optional(int i)
-+bool __weak pci_assign_roms(void)
-+{
-+    return false;
-+}
-+
-+static inline bool is_optional(struct pci_dev *dev, int i)
- {
-
-     if (i == PCI_ROM_RESOURCE)
--        return true;
-+        return !pci_assign_roms() && !pci_dev_need_rom_bar(dev);
-
- #ifdef CONFIG_PCI_IOV
-     if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
-@@ -1538,7 +1547,7 @@ static int pbus_size_mem(struct pci_bus
-             r_size = resource_size(r);
-             align = pci_resource_alignment(dev, r);
-             /* put SRIOV/ROM res to realloc list */
--            if (realloc_head && is_optional(i)) {
-+            if (realloc_head && is_optional(dev, i)) {
-                 add_to_align_test_list(&align_test_add_list,
-                         align, r_size, &dev->dev, i);
-                 r->end = r->start - 1;
-@@ -1549,6 +1558,9 @@ static int pbus_size_mem(struct pci_bus
-                     max_add_align = align;
-                 continue;
-             }
-+            if (!realloc_head && i == PCI_ROM_RESOURCE &&
-+                !pci_assign_roms() && !pci_dev_need_rom_bar(dev))
-+                continue;
-
-             if (align > (1ULL<<37)) { /*128 Gb*/
-                 dev_warn(&dev->dev, "disabling BAR %d: %pR (bad
-alignment %#llx)\n",
-Index: linux-2.6/include/linux/pci.h
-===================================================================
---- linux-2.6.orig/include/linux/pci.h
-+++ linux-2.6/include/linux/pci.h
-@@ -182,6 +182,8 @@ enum pci_dev_flags {
-     PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-     /* Get VPD from function 0 VPD */
-     PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
-+    /* Need to have ROM BAR */
-+    PCI_DEV_FLAGS_NEED_ROM_BAR = (__force pci_dev_flags_t) (1 << 9),
- };
-
- enum pci_irq_reroute_variant {
-@@ -1965,6 +1967,14 @@ static inline bool pci_is_dev_assigned(s
- {
-     return (pdev->dev_flags & PCI_DEV_FLAGS_ASSIGNED) ==
-PCI_DEV_FLAGS_ASSIGNED;
- }
-+static inline void pci_dev_set_need_rom_bar(struct pci_dev *pdev)
-+{
-+    pdev->dev_flags |= PCI_DEV_FLAGS_NEED_ROM_BAR;
-+}
-+static inline bool pci_dev_need_rom_bar(struct pci_dev *pdev)
-+{
-+    return !!(pdev->dev_flags & PCI_DEV_FLAGS_NEED_ROM_BAR);
-+}
-
- /**
-  * pci_ari_enabled - query ARI forwarding status
-@@ -1976,4 +1986,7 @@ static inline bool pci_ari_enabled(struc
- {
-     return bus->self && bus->self->ari_enabled;
- }
-+
-+bool pci_assign_roms(void);
-+
- #endif /* LINUX_PCI_H */
-Index: linux-2.6/drivers/misc/pch_phub.c
-===================================================================
---- linux-2.6.orig/drivers/misc/pch_phub.c
-+++ linux-2.6/drivers/misc/pch_phub.c
-@@ -49,7 +49,6 @@
-
- /* MAX number of INT_REDUCE_CONTROL registers */
- #define MAX_NUM_INT_REDUCE_CONTROL_REG 128
--#define PCI_DEVICE_ID_PCH1_PHUB 0x8801
- #define PCH_MINOR_NOS 1
- #define CLKCFG_CAN_50MHZ 0x12000000
- #define CLKCFG_CANCLK_MASK 0xFF000000
-@@ -61,17 +60,6 @@
- #define CLKCFG_PLL2VCO                (8 << 9)
- #define CLKCFG_UARTCLKSEL            (1 << 18)
-
--/* Macros for ML7213 */
--#define PCI_VENDOR_ID_ROHM            0x10db
--#define PCI_DEVICE_ID_ROHM_ML7213_PHUB        0x801A
--
--/* Macros for ML7223 */
--#define PCI_DEVICE_ID_ROHM_ML7223_mPHUB    0x8012 /* for Bus-m */
--#define PCI_DEVICE_ID_ROHM_ML7223_nPHUB    0x8002 /* for Bus-n */
--
--/* Macros for ML7831 */
--#define PCI_DEVICE_ID_ROHM_ML7831_PHUB 0x8801
--
- /* SROM ACCESS Macro */
- #define PCH_WORD_ADDR_MASK (~((1 << 2) - 1))
-
-Index: linux-2.6/include/linux/pci_ids.h
-===================================================================
---- linux-2.6.orig/include/linux/pci_ids.h
-+++ linux-2.6/include/linux/pci_ids.h
-@@ -1122,6 +1122,12 @@
- #define PCI_VENDOR_ID_TCONRAD        0x10da
- #define PCI_DEVICE_ID_TCONRAD_TOKENRING    0x0508
-
-+#define PCI_VENDOR_ID_ROHM             0x10DB
-+#define PCI_DEVICE_ID_ROHM_ML7213_PHUB          0x801A
-+#define PCI_DEVICE_ID_ROHM_ML7223_mPHUB 0x8012 /* for Bus-m */
-+#define PCI_DEVICE_ID_ROHM_ML7223_nPHUB 0x8002 /* for Bus-n */
-+#define PCI_DEVICE_ID_ROHM_ML7831_PHUB 0x8801
-+
- #define PCI_VENDOR_ID_NVIDIA            0x10de
- #define PCI_DEVICE_ID_NVIDIA_TNT        0x0020
- #define PCI_DEVICE_ID_NVIDIA_TNT2        0x0028
-@@ -2900,6 +2906,7 @@
- #define PCI_DEVICE_ID_INTEL_82454NX     0x84cb
- #define PCI_DEVICE_ID_INTEL_84460GX    0x84ea
- #define PCI_DEVICE_ID_INTEL_IXP4XX    0x8500
-+#define PCI_DEVICE_ID_PCH1_PHUB 0x8801
- #define PCI_DEVICE_ID_INTEL_IXP2800    0x9004
- #define PCI_DEVICE_ID_INTEL_S21152BB    0xb152
-
-Index: linux-2.6/drivers/dma/pch_dma.c
-===================================================================
---- linux-2.6.orig/drivers/dma/pch_dma.c
-+++ linux-2.6/drivers/dma/pch_dma.c
-@@ -976,7 +976,6 @@ static void pch_dma_remove(struct pci_de
- }
-
- /* PCI Device ID of DMA device */
--#define PCI_VENDOR_ID_ROHM             0x10DB
- #define PCI_DEVICE_ID_EG20T_PCH_DMA_8CH        0x8810
- #define PCI_DEVICE_ID_EG20T_PCH_DMA_4CH        0x8815
- #define PCI_DEVICE_ID_ML7213_DMA1_8CH    0x8026
-Index: linux-2.6/drivers/gpio/gpio-ml-ioh.c
-===================================================================
---- linux-2.6.orig/drivers/gpio/gpio-ml-ioh.c
-+++ linux-2.6/drivers/gpio/gpio-ml-ioh.c
-@@ -31,8 +31,6 @@
-
- #define IOH_IRQ_BASE        0
-
--#define PCI_VENDOR_ID_ROHM             0x10DB
--
- struct ioh_reg_comn {
-     u32    ien;
-     u32    istatus;
+> +	case PCI_EXP_TYPE_ENDPOINT:
+> +	case PCI_EXP_TYPE_LEG_END:
+> +	case PCI_EXP_TYPE_RC_END:
+> +	case PCI_EXP_TYPE_ROOT_PORT:
+> +		break;
+> +	default:
+> +		return false;
+> +	}
+> +
+> +	while (bus->parent) {
+> +		struct pci_dev *bridge = bus->self;
+> +		u32 cap;
+> +
+> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+> +
+> +		switch (pci_pcie_type(bridge)) {
+> +		/* PCIe 3.0, 6.15 specifies that upstream, downstream and
+> +		 * root ports may implement AtomicOp routing capabilities.
+> +		 * AtomicOp routing via a root port is not considered here.
+> +		 */
+> +		case PCI_EXP_TYPE_UPSTREAM:
+> +		case PCI_EXP_TYPE_DOWNSTREAM:
+> +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTING))
+> +				return false;
+> +			break;
+> +
+> +		/* PCIe 3.0, 6.15 specifies that root ports are permitted to
+> +		 * implement AtomicOp completion capabilities.
+> +		 */
+> +		case PCI_EXP_TYPE_ROOT_PORT:
+> +			if (!(cap & (PCI_EXP_DEVCAP2_ATOMIC_COMP32 |
+> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP64 |
+> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP128)))
+> +				return false;
+> +			break;
+> +		}
+> +
+> +
+> +		bus = bus->parent;
+> +	}
+> +
+> +	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
+> +				 PCI_EXP_DEVCTL2_ATOMICOP_REQ);
+> +
+> +	return true;
+> +}
+> +EXPORT_SYMBOL(pci_enable_atomic_request);
+> +
+> +/**
+>   * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+>   * @dev: the PCI device
+>   * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e90eb22..755f061 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1801,6 +1801,7 @@ void pci_request_acs(void);
+>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+>  bool pci_acs_path_enabled(struct pci_dev *start,
+>  			  struct pci_dev *end, u16 acs_flags);
+> +bool pci_enable_atomic_request(struct pci_dev *dev);
+>  
+>  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+>  #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 413417f..013c2bd 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -571,6 +571,10 @@
+>   */
+>  #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
+>  #define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_ROUTING	0x00000040 /* AtomicOp routing */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion*/
+>  #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
+>  #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+>  #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+> @@ -578,6 +582,7 @@
+>  #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
+>  #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
+>  #define  PCI_EXP_DEVCTL2_ARI		0x0020	/* Alternative Routing-ID */
+> +#define  PCI_EXP_DEVCTL2_ATOMICOP_REQ	0x0040	/* Allow AtomicOp requests */
+>  #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
+>  #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
+>  #define  PCI_EXP_DEVCTL2_LTR_EN		0x0400	/* Enable LTR mechanism */
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
