@@ -1,68 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([122.248.162.2]:55924 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947AbbIIFxh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Sep 2015 01:53:37 -0400
-Received: from /spool/local
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <weiyang@linux.vnet.ibm.com>;
-	Wed, 9 Sep 2015 11:23:35 +0530
-Received: from d28relay02.in.ibm.com (d28relay02.in.ibm.com [9.184.220.59])
-	by d28dlp02.in.ibm.com (Postfix) with ESMTP id DAF7F394005A
-	for <linux-pci@vger.kernel.org>; Wed,  9 Sep 2015 11:23:32 +0530 (IST)
-Received: from d28av01.in.ibm.com (d28av01.in.ibm.com [9.184.220.63])
-	by d28relay02.in.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t895rV579371836
-	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 11:23:32 +0530
-Received: from d28av01.in.ibm.com (localhost [127.0.0.1])
-	by d28av01.in.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t895rUT4020515
-	for <linux-pci@vger.kernel.org>; Wed, 9 Sep 2015 11:23:31 +0530
-Date: Wed, 9 Sep 2015 13:53:29 +0800
-From: Richard Yang <weiyang@linux.vnet.ibm.com>
-To: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Cc: Richard Yang <weiyang@linux.vnet.ibm.com>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>, aik@ozlabs.ru,
-	linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH V9 11/11] powerpc/powernv: compound PE for VFs
-Message-ID: <20150909055329.GA7684@Richards-MacBook-Pro.local>
-Reply-To: Richard Yang <weiyang@linux.vnet.ibm.com>
-References: <1437112961-17275-1-git-send-email-weiyang@linux.vnet.ibm.com>
- <1437112961-17275-12-git-send-email-weiyang@linux.vnet.ibm.com>
- <20150729031718.GA18069@richard>
- <20150909024820.GA6808@gwshan>
- <20150909033616.GA5148@richards-mbp.cn.ibm.com>
- <1441774751.2767.20.camel@au1.ibm.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:50698 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613AbbIWHwP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 03:52:15 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v2] PCI: generic: Add support for Cavium ThunderX PCIe root complexes.
+Date: Wed, 23 Sep 2015 09:51:30 +0200
+Message-ID: <1524364.fcqUh1gtkt@wuerfel>
+In-Reply-To: <1442967415-13595-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1442967415-13595-1-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1441774751.2767.20.camel@au1.ibm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 09, 2015 at 02:59:11PM +1000, Benjamin Herrenschmidt wrote:
->On Wed, 2015-09-09 at 11:36 +0800, Richard Yang wrote:
->> The VF EEH is hung since we re-designed the SRIOV. After the re
->> -design, we
->> don't have VF groups.
->> 
->> My plan is to push the VF EEH patch set after the SRIOV Redesign is
->> accepted.
->
->What do you mean taht we don't have VF groups ?
->
+On Tuesday 22 September 2015 17:16:55 David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> The config space for external PCIe root complexes on some Cavium
+> ThunderX SoCs is very similar to CAM and ECAM, but differs in the
+> shift values that have to be applied to the bus and devfn numbers to
+> compose that address window offset.  These root complexes also have
+> the interesting property that there is no root bridge, so the standard
+> manner of limiting scanning to only the first device doesn't work.  We
+> can use the standard pci-host-generic driver if we make a minor
+> addition to handle these differences, so we...
+> 
+> Add a mapping function for ThunderX PCIe root complexes with a bus
+> shift of 24 and devfn shift of 16.  Ignore accesses for devices other
+> than the first device on the primary bus.
+> 
+> Document the whole thing in devicetree/bindings/pci/host-generic-pci.txt
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> Acked-by: Will Deacon <will.deacon@arm.com>
+> 
 
-Before we redesign the SRIOV, several VFs may share one M64 segment. This
-introduced the compound PE for VFs. The VF group in previous mail means the
-compound PE composed of a master VF PE will have several slave VF PEs.
-
->If we don't have IOMMU groups per VF that means we can't assign them to
->KVM partitions -> they are completely useless.
-
-Yes, I don't mean for the IOMMU group.
-
->
->Ben.
-
--- 
-Richard Yang
-Help you, Help me
-
+Acked-by: Arnd Bergmann <arnd@arndb.de>
