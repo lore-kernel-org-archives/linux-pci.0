@@ -1,95 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:38920 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751462AbbIJOwK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Sep 2015 10:52:10 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<pratyush.anand@gmail.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-	<wangzhou1@hisilicon.com>, <yuanzhichang@hisilicon.com>,
-	<zhudacai@hisilicon.com>, <zhangjukuo@huawei.com>,
-	<qiuzhenfa@hisilicon.com>, <liguozhu@hisilicon.com>
-Subject: [PATCH v2 1/3] PCI: spear13xx: fix addresses in dw_pcie_cfg_read and dw_pcie_cfg_write
-Date: Thu, 10 Sep 2015 22:58:56 +0800
-Message-ID: <1441897138-23251-2-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1441897138-23251-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1441897138-23251-1-git-send-email-gabriele.paoloni@huawei.com>
+Received: from foss.arm.com ([217.140.101.70]:34663 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755249AbbIWPPU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Sep 2015 11:15:20 -0400
+Date: Wed, 23 Sep 2015 16:15:19 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Ley Foon Tan <lftan@altera.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Dinh Nguyen <dinguyen@opensource.altera.com>,
+	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v7 3/6] pci:host: Add Altera PCIe host controller driver
+Message-ID: <20150923161519.15e0dd87@arm.com>
+In-Reply-To: <CAFiDJ5-JTmU39wZ7A+h3X37zj8M09+6mmUxK=J2DOaD9VzPC5w@mail.gmail.com>
+References: <1442801587-3812-1-git-send-email-lftan@altera.com>
+	<1442801587-3812-4-git-send-email-lftan@altera.com>
+	<20150922193320.37997c15@arm.com>
+	<CAFiDJ5-JTmU39wZ7A+h3X37zj8M09+6mmUxK=J2DOaD9VzPC5w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Wed, 23 Sep 2015 17:33:09 +0800
+Ley Foon Tan <lftan@altera.com> wrote:
 
-Currently spear13xx passes the wrong "address" in many calls to
-dw_pcie_cfg_read and dw_pcie_cfg_write: the passed address is
-always pp->dbi_base, that is wrong as it does not consider
-the offset to access the right register of the PCI header.
-This patches fixes these function calls passing the address to
-access the right register.
+> On Wed, Sep 23, 2015 at 2:33 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> > On Mon, 21 Sep 2015 10:13:04 +0800
+> > Ley Foon Tan <lftan@altera.com> wrote:
+> >
+> >> This patch adds the Altera PCIe host controller driver.
+> >>
+> >> Signed-off-by: Ley Foon Tan <lftan@altera.com>
+> >> ---
+> >>  drivers/pci/host/Kconfig       |   8 +
+> >>  drivers/pci/host/Makefile      |   1 +
+> >>  drivers/pci/host/pcie-altera.c | 591 +++++++++++++++++++++++++++++++++++++++++
+> >>  3 files changed, 600 insertions(+)
+> >>  create mode 100644 drivers/pci/host/pcie-altera.c
+> >>
+> >> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> >> index d5e58ba..df9ed4f 100644
+> >> --- a/drivers/pci/host/Kconfig
+> >> +++ b/drivers/pci/host/Kconfig
+> >> @@ -145,4 +145,12 @@ config PCIE_IPROC_BCMA
+> >>         Say Y here if you want to use the Broadcom iProc PCIe controller
+> >>         through the BCMA bus interface
+> >>
+> >> +config PCIE_ALTERA
+> >> +     tristate "Altera PCIe controller"
+> >> +     depends on ARCH_SOCFPGA || NIOS2
+> >> +     select PCI_DOMAINS
+> >> +     help
+> >> +       Say Y here if you want to enable PCIe controller support for Altera
+> >> +       SoCFPGA family of SoCs.
+> >> +
+> >
+> > Is there anything in this driver that is actually specific to any of
+> > these two platforms/architectures? I'd don't think we should restrict
+> > if we can avoid it (hint: the companion MSI driver is not restricted to
+> > any architecture).
+> No specific dependency on these 2 architectures. Then I will remove this.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
----
- drivers/pci/host/pcie-spear13xx.c | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
+OK. If you fix this, you can put my
 
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index c49fbdc..5f3513b 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -146,6 +146,7 @@ struct pcie_app_reg {
- static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- {
- 	u32 val;
-+	int where;
- 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
- 	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
- 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
-@@ -163,9 +164,10 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, &val);
-+	where = exp_cap_off + PCI_EXP_DEVCTL;
-+	dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4, &val);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_cfg_write(pp->dbi_base, exp_cap_off + PCI_EXP_DEVCTL, 4, val);
-+	dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3), where, 4, val);
- 
- 	dw_pcie_cfg_write(pp->dbi_base, PCI_VENDOR_ID, 2, 0x104A);
- 	dw_pcie_cfg_write(pp->dbi_base, PCI_DEVICE_ID, 2, 0xCD80);
-@@ -175,22 +177,24 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	 * also works
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCAP, 4,
-+		where = exp_cap_off + PCI_EXP_LNKCAP;
-+		dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4,
- 				 &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCAP, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
-+					where, 4, val);
- 		}
- 
--		dw_pcie_cfg_read(pp->dbi_base, exp_cap_off + PCI_EXP_LNKCTL2, 4,
-+		where = exp_cap_off + PCI_EXP_LNKCTL2;
-+		dw_pcie_cfg_read(pp->dbi_base + (where & ~0x3), where, 4,
- 				 &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base, exp_cap_off +
--					  PCI_EXP_LNKCTL2, 4, val);
-+			dw_pcie_cfg_write(pp->dbi_base + (where & ~0x3),
-+					where, 4, val);
- 		}
- 	}
- 
+Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+
+on this patch.
+
+Thanks,
+
+	M.
 -- 
-1.9.1
-
+Jazz is not dead. It just smells funny.
