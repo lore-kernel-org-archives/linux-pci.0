@@ -1,96 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:53336 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753885AbbIWQUi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 12:20:38 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Jingoo Han <jingoohan1@gmail.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 23 Sep 2015 20:47:53 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <ddaney@caviumnetworks.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	Yuanzhichang <yuanzhichang@hisilicon.com>,
-	Zhudacai <zhudacai@hisilicon.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	qiuzhenfa <qiuzhenfa@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write() and
- dw_pcie_cfg_read()
-Date: Wed, 23 Sep 2015 16:20:22 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1622BC36@lhreml503-mbb>
-References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
-	<1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
-	<20150918204625.GL25767@google.com>
- <CAHM4w1nWNj-Ws0CiYt2vGCa4V7XJsjjwHRSkgdpVSCPmdeARqA@mail.gmail.com>
-In-Reply-To: <CAHM4w1nWNj-Ws0CiYt2vGCa4V7XJsjjwHRSkgdpVSCPmdeARqA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	David Daney <david.daney@cavium.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 4/5] PCI: generic: Correct, and avoid overflow, in
+ bus_max calculation.
+Message-ID: <20150923194753.GA7356@arm.com>
+References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
+ <3751968.n8LRgots8n@wuerfel>
+ <20150923193545.GZ7356@arm.com>
+ <1707525.QvfFzUYq4E@wuerfel>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1707525.QvfFzUYq4E@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgZ3V5cyBzb3JyeSBmb3IgdGhlIGxhdGUgcmVwbHkgSSBoYXZlIGJlZW4gT09PIGZvciB0aGUg
-bGFzdCA1IGRheXMNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBQcmF0
-eXVzaCBBbmFuZCBbbWFpbHRvOnByYXR5dXNoLmFuYW5kQGdtYWlsLmNvbV0NCj4gU2VudDogU2F0
-dXJkYXksIFNlcHRlbWJlciAxOSwgMjAxNSA0OjA0IEFNDQo+IFRvOiBCam9ybiBIZWxnYWFzDQo+
-IENjOiBHYWJyaWVsZSBQYW9sb25pOyBKaW5nb28gSGFuOyBsaW51eC1wY2lAdmdlci5rZXJuZWwu
-b3JnOyBXYW5nemhvdQ0KPiAoQik7IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87
-IHFpdXpoZW5mYTsgTGlndW96aHUgKEtlbm5ldGgpDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMg
-Mi8zXSBQQ0k6IGRlc2lnbndhcmU6IGNoYW5nZSBkd19wY2llX2NmZ193cml0ZSgpDQo+IGFuZCBk
-d19wY2llX2NmZ19yZWFkKCkNCj4gDQo+IE9uIFNhdCwgU2VwIDE5LCAyMDE1IGF0IDI6MTYgQU0s
-IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQo+IHdyb3RlOg0KPiA+IE9uIEZy
-aSwgU2VwIDExLCAyMDE1IGF0IDA1OjM4OjI2UE0gKzA4MDAsIEdhYnJpZWxlIFBhb2xvbmkgd3Jv
-dGU6DQo+ID4+IEZyb206IGdhYnJpZWxlIHBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2Vp
-LmNvbT4NCj4gPj4NCj4gPj4gVGhpcyBwYXRjaCBjaGFuZ2VzIHRoZSBpbXBsZW1lbnRhdGlvbiBv
-ZiBkd19wY2llX2NmZ19yZWFkKCkgYW5kDQo+ID4+IGR3X3BjaWVfY2ZnX3dyaXRlKCkgdG8gaW1w
-cm92ZSB0aGUgZnVuY3Rpb24gdXNhZ2UgZnJvbSB0aGUgY2FsbGVycw0KPiA+PiBwZXJzcGVjdGl2
-ZS4NCj4gPj4gQ3VycmVudGx5IHRoZSBjYWxsZXJzIGFyZSBvYmxpZ2VkIHRvIHBhc3MgdGhlIDMy
-Yml0IGFsaWduZWQgYWRkcmVzcw0KPiA+PiBvZiB0aGUgcmVnaXN0ZXIgdGhhdCBjb250YWlucyB0
-aGUgZmllbGQgb2YgdGhlIFBDSSBoZWFkZXIgdGhhdCB0aGV5DQo+ID4+IHdhbnQgdG8gcmVhZC93
-cml0ZTsgYWxzbyB0aGV5IGhhdmUgdG8gcGFzcyB0aGUgb2Zmc2V0IG9mIHRoZSBmaWVsZA0KPiA+
-PiBpbiB0aGF0IHJlZ2lzdGVyLiBUaGlzIGlzIHF1aXRlIHRyaWNreSB0byB1c2UgYXMgdGhlIGNh
-bGxlcnMgYXJlDQo+ID4+IG9ibGlnZWQgdG8gc3VtIHRoZSBQQ0kgaGVhZGVyIGJhc2UgYWRkcmVz
-cyB0byB0aGUgZmllbGQgb2Zmc2V0DQo+ID4+IG1hc2tlZCB0byByZXRyaWV2ZSB0aGUgMzJiIGFs
-aWduZWQgcmVnaXN0ZXIgYWRkcmVzcy4NCj4gPj4NCj4gPj4gV2l0aCB0aGUgbmV3IEFQSSB0aGUg
-Y2FsbGVycyBoYXZlIHRvIHBhc3MgdGhlIGJhc2UgYWRkcmVzcyBvZiB0aGUNCj4gPj4gUENJIGhl
-YWRlciBhbmQgdGhlIG9mZnNldCBjb3JyZXNwb25kaW5nIHRvIHRoZSBmaWVsZCB0aGV5IGludGVu
-ZCB0bw0KPiA+PiByZWFkL3dyaXRlLg0KPiA+Pg0KPiA+PiBTaWduZWQtb2ZmLWJ5OiBHYWJyaWVs
-ZSBQYW9sb25pIDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+DQo+ID4NCj4gPg0KPiA+PiAg
-aW50IGR3X3BjaWVfY2ZnX3JlYWQodm9pZCBfX2lvbWVtICphZGRyLCBpbnQgd2hlcmUsIGludCBz
-aXplLCB1MzINCj4gKnZhbCkNCj4gPj4gIHsNCj4gPj4gKyAgICAgYWRkciArPSAod2hlcmUgJiB+
-MHgzKTsNCj4gPj4gICAgICAgKnZhbCA9IHJlYWRsKGFkZHIpOw0KPiA+PiArICAgICB3aGVyZSAm
-PSAzOw0KPiA+Pg0KPiA+PiAgICAgICBpZiAoc2l6ZSA9PSAxKQ0KPiA+PiAtICAgICAgICAgICAg
-ICp2YWwgPSAoKnZhbCA+PiAoOCAqICh3aGVyZSAmIDMpKSkgJiAweGZmOw0KPiA+PiArICAgICAg
-ICAgICAgICp2YWwgPSAoKnZhbCA+PiAoOCAqIHdoZXJlKSkgJiAweGZmOw0KPiA+PiAgICAgICBl
-bHNlIGlmIChzaXplID09IDIpDQo+ID4+IC0gICAgICAgICAgICAgKnZhbCA9ICgqdmFsID4+ICg4
-ICogKHdoZXJlICYgMykpKSAmIDB4ZmZmZjsNCj4gPj4gKyAgICAgICAgICAgICAqdmFsID0gKCp2
-YWwgPj4gKDggKiB3aGVyZSkpICYgMHhmZmZmOw0KPiA+PiAgICAgICBlbHNlIGlmIChzaXplICE9
-IDQpDQo+ID4+ICAgICAgICAgICAgICAgcmV0dXJuIFBDSUJJT1NfQkFEX1JFR0lTVEVSX05VTUJF
-UjsNCj4gPj4NCj4gPj4gQEAgLTk2LDEyICs5OCwxNCBAQCBpbnQgZHdfcGNpZV9jZmdfcmVhZCh2
-b2lkIF9faW9tZW0gKmFkZHIsIGludA0KPiB3aGVyZSwgaW50IHNpemUsIHUzMiAqdmFsKQ0KPiA+
-Pg0KPiA+PiAgaW50IGR3X3BjaWVfY2ZnX3dyaXRlKHZvaWQgX19pb21lbSAqYWRkciwgaW50IHdo
-ZXJlLCBpbnQgc2l6ZSwgdTMyDQo+IHZhbCkNCj4gPj4gIHsNCj4gPj4gKyAgICAgYWRkciArPSB3
-aGVyZTsNCj4gPj4gKw0KPiA+PiAgICAgICBpZiAoc2l6ZSA9PSA0KQ0KPiA+PiAgICAgICAgICAg
-ICAgIHdyaXRlbCh2YWwsIGFkZHIpOw0KPiA+PiAgICAgICBlbHNlIGlmIChzaXplID09IDIpDQo+
-ID4+IC0gICAgICAgICAgICAgd3JpdGV3KHZhbCwgYWRkciArICh3aGVyZSAmIDIpKTsNCj4gPj4g
-KyAgICAgICAgICAgICB3cml0ZXcodmFsLCBhZGRyKTsNCj4gPj4gICAgICAgZWxzZSBpZiAoc2l6
-ZSA9PSAxKQ0KPiA+PiAtICAgICAgICAgICAgIHdyaXRlYih2YWwsIGFkZHIgKyAod2hlcmUgJiAz
-KSk7DQo+ID4+ICsgICAgICAgICAgICAgd3JpdGViKHZhbCwgYWRkcik7DQo+ID4+ICAgICAgIGVs
-c2UNCj4gPj4gICAgICAgICAgICAgICByZXR1cm4gUENJQklPU19CQURfUkVHSVNURVJfTlVNQkVS
-Ow0KPiA+DQo+ID4gSSBqdXN0IG5vdGljZWQgdGhlIGFzeW1tZXRyeSBiZXR3ZWVuIGR3X3BjaWVf
-Y2ZnX3JlYWQoKSBhbmQNCj4gPiBkd19wY2llX2NmZ193cml0ZSgpOiBpbiBkd19wY2llX2NmZ19y
-ZWFkKCkgd2UgYWx3YXlzIGRvIDMyLWJpdCByZWFkcw0KPiBhbmQNCj4gPiBtYXNrIG91dCB0aGUg
-cGFydHMgd2Ugd29uJ3Qgd2FudCwgYnV0IGluIGR3X3BjaWVfY2ZnX3dyaXRlKCkgd2UgZG8gOC0s
-DQo+IDE2LSwNCj4gPiBvciAzMi1ieXRlIHdyaXRlcy4NCj4gPg0KPiA+IFRoYXQgd2FzIHRoZXJl
-IGV2ZW4gYmVmb3JlIHlvdXIgcGF0Y2gsIGJ1dCBJIHdvbmRlciB3aHkuICBFaXRoZXIgYm90aA0K
-PiA+IHNob3VsZCB3b3JrIHRoZSBzYW1lIHdheSwgb3IgdGhlcmUgc2hvdWxkIGJlIGEgY29tbWVu
-dCBleHBsYWluaW5nIHdoeQ0KPiB0aGV5DQo+ID4gYXJlIGRpZmZlcmVudC4NCj4gPg0KPiA+IEpp
-bmdvbywgUHJhdHl1c2g/DQo+IA0KPiBBcyBJIHNhaWQgZWFybGllciwgSSBqdXN0IHZhZ3VlbHkg
-cmVtZW1iZXIgdGhhdCB0aGVyZSB3YXMgc29tZSBpc3N1ZQ0KPiB3aXRoIGEgU09DIGluIHJlYWRp
-bmcgbm9uIHdvcmQgYWxpZ25lZCBhZGRyZXNzZXMuDQo+ICgxKSBJIGRvIG5vdCBoYXZlIGFueSBy
-ZWZlcmVuY2UgZm9yIGl0IGFuZCAoMikgZXZlbiBpZiBzb21lIHdoZXJlDQo+IHRoZXJlIGNvdWxk
-IGJlIHN1Y2ggaXNzdWUgdGhleSBjYW4gYWx3YXlzIGhhdmUgcGxhdGZvcm0gc3BlY2lmaWMNCj4g
-YWNjZXNzb3IgLiBTbyBJIHN1cHBvcnQgeW91ciBpZGVhIGFuZCBib3RoIHJlYWQgYW5kIHdyaXRl
-IGNhbiBiZSBtYWRlDQo+IHN5bW1ldHJpYy4NCg0KSSBhZ3JlZSB3aXRoIHRoZSBpZGVhIGJ1dCwg
-d2hhdCBpZiBkb2luZyBzbyB3ZSBicmVhayBvdGhlciBkcml2ZXJzPw0KSXMgdGhlIGNvcnJlY3Qg
-ZmxvdyB0byBicmVhayB0aGVtIGZpcnN0IGFuZCBsZXQgdGhlIHNpbmdsZSBtYWludGFpbmVycyBm
-aXggdGhlbSB0aGVuLi4uPw0KDQo=
+On Wed, Sep 23, 2015 at 08:39:27PM +0100, Arnd Bergmann wrote:
+> On Wednesday 23 September 2015 20:35:45 Will Deacon wrote:
+> > On Wed, Sep 23, 2015 at 08:27:41PM +0100, Arnd Bergmann wrote:
+> > > On Wednesday 23 September 2015 11:21:56 David Daney wrote:
+> > > > >>
+> > > > >>      /* Limit the bus-range to fit within reg */
+> > > > >> -    bus_max = pci->cfg.bus_range->start +
+> > > > >> -              (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> > > > >> +    bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> > > > >> +    if (bus_max > 255)
+> > > > >> +            bus_max = 255;
+> > > > >
+> > > > > I still don't understand the need for this part. If the cfg space is bigger
+> > > > > than bus_max, isn't that simply an invalid resource? Given that the resource
+> > > > > could be broken in other ways too, this check feels more like a specific
+> > > > > workaround rather than generally useful code.
+> > > > 
+> > > > Imagine...
+> > > > 
+> > > >    bus-range [0x80 .. 0xff], this requires a cfg.res that will cover the 
+> > > > entire range of 0..0xff.
+> > > > 
+> > > >    according to the calculations above, (resource_size(&pci->cfg.res) >> 
+> > > > pci->cfg.ops.bus_shift) - 1 will have a value of 0xff, so...
+> > > 
+> > > Extending the computation to 32 bit seems fine, but I'd rather warn loudly
+> > > if the bus range does not fit within the registers.
+> > > 
+> > > Also note that the computation is already correct with my interpretation
+> > > of the reg property.
+> > 
+> > From what Lorenzo was saying, ACPI shares the interpretation that David is
+> > implementing here and, given that the DT version seems to be subjective,
+> > aligning this reg property with MMCFG seems to make sense.
+> 
+> We should then make it very clear in the binding that the driver
+> is not allowed to actually map the registers for the buses outside
+> of the bus-range, as that is highly unusual.
+> 
+> We would also need a special exception for this if we ever get to
+> implement the DT source checker that we have been talking about for
+> years, as the reg property might then overlap with a property from
+> another device.
+
+Completely agreed. Having a base that isn't actually safe to map is horrible
+and should be called out.
+
+Will
