@@ -1,115 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:53270 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753554AbbIXWbf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Sep 2015 18:31:35 -0400
-Date: Fri, 25 Sep 2015 00:23:22 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Russell King <rmk+kernel@arm.linux.org.uk>
-Cc: Jason Cooper <jason@lakedaemon.net>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/6] pci: mvebu: generate proper configuration access
- cycles
-Message-ID: <20150924222322.GF20825@lunn.ch>
-References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
- <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <5602CA55.10604@caviumnetworks.com>
+Date: Wed, 23 Sep 2015 08:50:45 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
-Sender: linux-pci-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v3 4/6] PCI: generic: Correct, and avoid overflow, in
+ bus_max calculation.
+References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com> <1442965757-12925-5-git-send-email-ddaney.cavm@gmail.com> <1496061.0ds89jTH75@wuerfel>
+In-Reply-To: <1496061.0ds89jTH75@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Testing with an ASM1062 PCIe to SATA mini-PCIe card on Armada 388.
-> PCIe capability at 0x80, DevCtl at 0x88, DevSta at 0x8a.
-> 
-> Before:
-> /# setpci -s 1:0.0 0x88.l		- DevSta: CorrErr+
-> 00012810
-> /# setpci -s 1:0.0 0x88.w=0x2810	- Write DevCtl only
-> /# setpci -s 1:0.0 0x88.l		- CorrErr cleared - FAIL
-> 00002810
-> 
-> After:
-> /# setpci -s 1:0.0 0x88.l		- DevSta: CorrErr+
-> 00012810
-> /# setpci -s 1:0.0 0x88.w=0x2810	- check DevCtl only write
-> /# setpci -s 1:0.0 0x88.l		- CorErr remains set
-> 00012810
-> /# setpci -s 1:0.0 0x88.w=0x281f	- check DevCtl write works
-> /# setpci -s 1:0.0 0x88.l		- devctl field updated
-> 0001281f
-> /# setpci -s 1:0.0 0x8a.w=0xffff	- clear DevSta
-> /# setpci -s 1:0.0 0x88.l		- CorrErr now cleared
-> 0000281f
-> /# setpci -s 1:0.0 0x88.w=0x2810	- restore DevCtl
-> /# setpci -s 1:0.0 0x88.l		- check
-> 00002810
+On 09/23/2015 01:01 AM, Arnd Bergmann wrote:
+> On Tuesday 22 September 2015 16:49:15 David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> There are two problems with the bus_max calculation:
+>>
+>> 1) The u8 data type can overflow for large config space windows.
+>>
+>> 2) The calculation is incorrect for a bus range that doesn't start at
+>>     zero.
+>>
+>> Since the configuration space is relative to bus zero, make bus_max
+>> just be the size of the config window scaled by bus_shift.  Then clamp
+>> it to a maximum of 255, per PCI.  Use a data type of int to avoid
+>> overflow problems.
+>>
+>> Update host-generic-pci.txt to clarify the semantics of the "reg"
+>> property with respect to non-zero starting bus numbers.
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>
+> Not sure about this one
+>
+>> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>> index cf3e205..105a968 100644
+>> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>> @@ -34,7 +34,9 @@ Properties of the host controller node:
+>>   - #size-cells    : Must be 2.
+>>
+>>   - reg            : The Configuration Space base address and size, as accessed
+>> -                   from the parent bus.
+>> +                   from the parent bus.  The base address corresponds to
+>> +                   bus zero, even though the "bus-range" property may specify
+>> +                   a different starting bus number.
+>
+> This sounds like very unusual behavior. If you have a system with faked
+> bus numbers where the registers only physically exist for a subset of the
+> buses, this requires defining a reg property that contains MMIO space
+> which is outside of the device and potentially contains other devices.
 
-Hi Russell
+The pci-host-generic driver only maps the ranges that correspond to the 
+"bus-range" buses, so mapping of illegal address ranges should not be a 
+problem.
 
-Can you give me some hints how to test this in my Kirkwood board.
+>
+> What would break if we instead defined it the expected way and only
+> list the registers for the bus numbers in the "bus-range" property?
 
-root@dir665:~# lspci -nvvvv
-00:01.0 0604: 11ab:6281 (rev 02) (prog-if 00 [Normal decode])
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-        I/O behind bridge: 00010000-00010fff
-        Memory behind bridge: e0000000-e00fffff
-        Prefetchable memory behind bridge: 00000000-000fffff
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+I'm not sure if we have the luxury of being able to change the 
+definition, although the existing code only works with a starting bus 
+number of zero.  From this we might conclude that non-zero starting bus 
+numbers cannot exist in the wild, so changing the the definition of 
+"reg" so that it starts at the starting bus number might be possible.
 
-01:00.0 0200: 11ab:2a40
-        Subsystem: 11ab:2a40
-        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 83
-        Region 0: Memory at e0000000 (64-bit, non-prefetchable) [disabled] [size=64K]
-        Region 2: Memory at e0010000 (64-bit, non-prefetchable) [disabled] [size=64K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=1 PME-
-        Capabilities: [5c] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [e0] Express (v1) Legacy Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s unlimited, L1 unlimited
-                        ClockPM+ Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 1f, GenCap- CGenEn- ChkCap- ChkEn-
-        Capabilities: [130 v1] Device Serial Number 00-00-00-00-00-00-00-00
+My reading of:
 
-root@dir665:~# setpci -s 1:0.0 0x88.l
-00000000
+http://www.o3one.org/hwdocs/openfirmware/pci_supplement_2_1.pdf
 
-Nothing there, so your test does not work directly.
+Section 3.1.1, does not preclude your interpretation.  Although that is 
+for PCI-PCI bridges, and not this pci-host-generic root complex.
 
-I tried
+If we really want to go with a different definition of what the "reg" 
+property means, then actual code has to change, and we risk breaking 
+something.
 
-root@dir665:~# setpci -s 1:0.0 0xe8.l
-00102000
-root@dir665:~# setpci -s 1:0.0 0xe8.w=0x2000
-root@dir665:~# setpci -s 1:0.0 0xe8.l
-00102000
+David Daney
 
-but that is not producing the FAIL you had.
 
-Thanks
-	Andrew
