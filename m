@@ -1,56 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:33560 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759757AbbIVXt1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 19:49:27 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: David Daney <david.daney@cavium.com>
-Subject: [PATCH v3 5/6] PCI: generic: Pass proper starting bus number to pci_scan_root_bus().
-Date: Tue, 22 Sep 2015 16:49:16 -0700
-Message-Id: <1442965757-12925-6-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:38852 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753422AbbIWTMU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Sep 2015 15:12:20 -0400
+Subject: [PATCH 1/2] PCI: Clear IORESOURCE_UNSET when clipping a bridge
+ window
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <helgaas@kernel.org>
+Cc: kordikmarek@gmail.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	airlied@linux.ie, zermond@gmail.com, gob_iron@hotmail.com,
+	weiyang.kernel@gmail.com, alexander.deucher@amd.com,
+	niaminbox@gmail.com, Yinghai Lu <yinghai@kernel.org>
+Date: Wed, 23 Sep 2015 14:12:16 -0500
+Message-ID: <20150923191216.21781.33925.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20150923191159.21781.66169.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20150923191159.21781.66169.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-If the bus is being configured with a bus-range that does not start at
-zero, pass that starting bus number to pci_scan_root_bus().  Passing
-the incorrect value of zero causes attempted config accesses outside
-of the supported range, which cascades to an OOPs spew and eventual
-kernel panic.
+c770cb4cb505 ("PCI: Mark invalid BARs as unassigned") sets IORESOURCE_UNSET
+if we fail to claim a resource.  If we tried to claim a bridge window,
+failed, clipped the window, and tried to claim the clipped window, we
+failed again because of IORESOURCE_UNSET:
 
-Acked-by: Will Deacon <will.deacon@arm.com>
-Signed-off-by: David Daney <david.daney@cavium.com>
+  pci_bus 0000:00: root bus resource [mem 0xc0000000-0xffffffff window]
+  pci 0000:00:01.0: can't claim BAR 15 [mem 0xbdf00000-0xddefffff 64bit pref]: no compatible bridge window
+  pci 0000:00:01.0: [mem size 0x20000000 64bit pref] clipped to [mem size 0x1df00000 64bit pref]
+  pci 0000:00:01.0:   bridge window [mem size 0x1df00000 64bit pref]
+  pci 0000:00:01.0: can't claim BAR 15 [mem size 0x1df00000 64bit pref]: no address assigned
+
+The 00:01.0 window started as [mem 0xbdf00000-0xddefffff 64bit pref].  That
+starts before the host bridge window [mem 0xc0000000-0xffffffff window], so
+we clipped the 00:01.0 window to [mem 0xc0000000-0xddefffff 64bit pref].
+But we left it marked IORESOURCE_UNSET, so the second claim failed when it
+should have succeeded.
+
+This means downstream devices will also fail for lack of resources, e.g.,
+in the bugzilla below,
+
+  radeon 0000:01:00.0: Fatal error during GPU init
+
+Clear IORESOURCE_UNSET when we clip a bridge window.  Also clear
+IORESOURCE_UNSET in our copy of the unclipped window so we can see exactly
+what the original window was and how it now fits inside the upstream
+window.
+
+Fixes: c770cb4cb505 ("PCI: Mark invalid BARs as unassigned")
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=85491#c47
+Based-on-patch-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Based-on-patch-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Yinghai Lu <yinghai@kernel.org>
+CC: stable@vger.kernel.org	# 4.1+
 ---
-No change from v1 or v2.
+ drivers/pci/bus.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
- drivers/pci/host/pci-host-generic.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 0a9c453..e364232 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -259,7 +259,7 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	if (!pci_has_flag(PCI_PROBE_ONLY))
- 		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6fbd3f2..d3346d2 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -256,6 +256,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
  
--	bus = pci_scan_root_bus(dev, 0,
-+	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
- 				&pci->cfg.ops.ops, pci, &pci->resources);
- 	if (!bus) {
- 		dev_err(dev, "Scanning rootbus failed");
--- 
-1.9.1
+ 		res->start = start;
+ 		res->end = end;
++		res->flags &= ~IORESOURCE_UNSET;
++		orig_res.flags &= ~IORESOURCE_UNSET;
+ 		dev_printk(KERN_DEBUG, &dev->dev, "%pR clipped to %pR\n",
+ 				 &orig_res, res);
+ 
 
