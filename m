@@ -1,73 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39841 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754844AbbICMQk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Sep 2015 08:16:40 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
+Received: from mout.kundenserver.de ([212.227.17.13]:53381 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751921AbbIWHvM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 03:51:12 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: David Daney <ddaney.cavm@gmail.com>, linux-kernel@vger.kernel.org,
 	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v3 2/4] PCI: pci-host-generic: Fix lookup of linux,pci-probe-only property
-Date: Thu,  3 Sep 2015 13:16:14 +0100
-Message-Id: <1441282576-7304-3-git-send-email-marc.zyngier@arm.com>
-In-Reply-To: <1441282576-7304-1-git-send-email-marc.zyngier@arm.com>
-References: <1441282576-7304-1-git-send-email-marc.zyngier@arm.com>
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
+Date: Wed, 23 Sep 2015 09:51 +0200
+Message-ID: <1675889.xYIhzenZEC@wuerfel>
+In-Reply-To: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When pci-host-generic looks for the probe-only property, it seems
-to trust the DT to be correctly written, and assumes that there
-is a parameter to the property.
+On Tuesday 22 September 2015 17:09:56 David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
+> 
+> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
+> Since it is arm64, create a new quirks.c file there to contain arm64
+> related quirks.  Add the ThunderX bridge quirk, gated by a new config
+> variable, so that it can be disabled for kernels that aren't expected
+> to be used on ThunderX.
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  arch/arm64/Kconfig         | 11 +++++++++++
+>  arch/arm64/kernel/Makefile |  2 +-
+>  arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
+>  3 files changed, 48 insertions(+), 1 deletion(-)
+>  create mode 100644 arch/arm64/kernel/quirks.c
+> 
 
-Unfortunately, this is not always the case, and some firmware expose
-this property naked. The driver ends up making a decision based on
-whatever the property pointer points to, which is likely to be junk.
+Looks reasonable to me. Just one question: Is the same bridge used
+on MIPS machines? If so, maybe it should be moved to drivers/pci/quirks.c
+instead for better reuse.
 
-Switch to the common of_pci.c implementation that doesn't suffer
-from this problem.
-
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/pci/host/pci-host-generic.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
-
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 265dd25..545ff4e 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -210,7 +210,6 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	int err;
- 	const char *type;
- 	const struct of_device_id *of_id;
--	const int *prop;
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
- 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-@@ -225,13 +224,7 @@ static int gen_pci_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
--	prop = of_get_property(of_chosen, "linux,pci-probe-only", NULL);
--	if (prop) {
--		if (*prop)
--			pci_add_flags(PCI_PROBE_ONLY);
--		else
--			pci_clear_flags(PCI_PROBE_ONLY);
--	}
-+	of_pci_check_probe_only(of_chosen);
- 
- 	of_id = of_match_node(gen_pci_of_match, np);
- 	pci->cfg.ops = of_id->data;
--- 
-2.1.4
-
+	Arnd
