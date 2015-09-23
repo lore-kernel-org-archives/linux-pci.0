@@ -1,98 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:33968 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640AbbIPW6b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 18:58:31 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v5 01/53] PCI: Cleanup res_to_dev_res() printout
-Date: Wed, 16 Sep 2015 14:56:59 -0700
-Message-Id: <1442440671-5361-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-References: <1442440671-5361-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1443019207.2240.27.camel@HansenPartnership.com>
+Subject: Re: [RFT v3] eata: Convert eata driver as normal PCI and platform
+ device drivers
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Arthur Marsh <arthur.marsh@internode.on.net>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Ballabio Dario <dario.ballabio@emc.com>,
+	Christoph Hellwig <hch@infradead.org>,
+	Dario Ballabio <ballabio_dario@emc.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, x86@kernel.org
+Date: Wed, 23 Sep 2015 07:40:07 -0700
+In-Reply-To: <5602829C.5090500@internode.on.net>
+References: <20150916134211.GA21535@infradead.org>
+	 <1442907023-12709-1-git-send-email-jiang.liu@linux.intel.com>
+	 <5601D550.5000801@internode.on.net>
+	 <1442961929.15264.4.camel@HansenPartnership.com>
+	 <5601E5FE.7020706@internode.on.net> <56023771.5010006@linux.intel.com>
+	 <5602829C.5090500@internode.on.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now get_res_add_size() and get_res_add_align() all have same printout
-from res_to_dev_res(), and it is confusing.
+On Wed, 2015-09-23 at 20:14 +0930, Arthur Marsh wrote:
+> 
+> Jiang Liu wrote on 23/09/15 14:54:
+> 
+> > Hi Arthur,
+> > 	I have found the cause of the warning messages, it's caused
+> > by a flaw in the conversion. But according to my understanding,
+> > it isn't related to the kexec/kdump failure. Could you please help
+> > to test the attached new version?
+> > Thanks!
+> > Gerry
+> >
+> 
+> Thanks, the patch worked, I could successfully unload and reload the 
+> eata module, and perform a kexec reboot with the eata module loading 
+> successfully afterwards.
 
-Move out debug messages printout from res_to_dev_res(),
-so later we will reuse res_to_dev_res() in other functions.
+Great, so the bug was unconditionally unregistering the platform driver
+when it would fail to attach if none of the legacy IO ports were
+detected.
 
--v2: does not print out when add_size or min_align is 0
--v3: change to %#llx according to Bjorn.
+I think the driver needs a bit of a tidy up.  There's no need at all to
+use ida_get_simple(): the only reason for a dense array of numbers was
+for storing the hba private data in the array you got rid of; we can now
+simply use shost->host_no ... it's more useful anyway because the
+numbers match those SCSI is using.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 34 ++++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 14 deletions(-)
+Also, if you insist on converting the printk's to dev warn, you no
+longer need to print out the driver name ... dev_printk already prints
+out the device and driver name as the prefix.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 508cc56..6d0815e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -104,19 +104,9 @@ static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
- {
- 	struct pci_dev_resource *dev_res;
- 
--	list_for_each_entry(dev_res, head, list) {
--		if (dev_res->res == res) {
--			int idx = res - &dev_res->dev->resource[0];
--
--			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
--				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
--				 idx, dev_res->res,
--				 (unsigned long long)dev_res->add_size,
--				 (unsigned long long)dev_res->min_align);
--
-+	list_for_each_entry(dev_res, head, list)
-+		if (dev_res->res == res)
- 			return dev_res;
--		}
--	}
- 
- 	return NULL;
- }
-@@ -127,7 +117,15 @@ static resource_size_t get_res_add_size(struct list_head *head,
- 	struct pci_dev_resource *dev_res;
- 
- 	dev_res = res_to_dev_res(head, res);
--	return dev_res ? dev_res->add_size : 0;
-+	if (!dev_res || !dev_res->add_size)
-+		return 0;
-+
-+	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
-+		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
-+		   (int)(res - &dev_res->dev->resource[0]),
-+		   res, (unsigned long long)dev_res->add_size);
-+
-+	return dev_res->add_size;
- }
- 
- static resource_size_t get_res_add_align(struct list_head *head,
-@@ -136,7 +134,15 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	struct pci_dev_resource *dev_res;
- 
- 	dev_res = res_to_dev_res(head, res);
--	return dev_res ? dev_res->min_align : 0;
-+	if (!dev_res || !dev_res->min_align)
-+		return 0;
-+
-+	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
-+		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
-+		   (int)(res - &dev_res->dev->resource[0]),
-+		   res, (unsigned long long)dev_res->min_align);
-+
-+	return dev_res->min_align;
- }
- 
- 
--- 
-1.8.4.5
+The if (error == 0) is usually written as if (!error) but that's minor.
+
+Thanks for doing the conversion,
+
+James
+
 
