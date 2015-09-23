@@ -1,81 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0093.outbound.protection.outlook.com ([65.55.169.93]:59185
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1on0063.outbound.protection.outlook.com ([157.56.110.63]:64432
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754457AbbI3XB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Sep 2015 19:01:29 -0400
-Message-ID: <560C69BF.6000205@caviumnetworks.com>
-Date: Wed, 30 Sep 2015 16:01:19 -0700
+	id S1753284AbbIWQAp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Sep 2015 12:00:45 -0400
+Message-ID: <5602CCA4.8070606@caviumnetworks.com>
+Date: Wed, 23 Sep 2015 09:00:36 -0700
 From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	<linux-api@vger.kernel.org>, <yinghai@kernel.org>,
-	<rajatxjain@gmail.com>, <gong.chen@linux.intel.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v3 2/2] PCI: Add support for Enhanced Allocation devices
-References: <1443485439-12081-1-git-send-email-ddaney.cavm@gmail.com> <1443485439-12081-3-git-send-email-ddaney.cavm@gmail.com> <20150929192737.GA2517@sean.stalley.intel.com> <560AF3D7.80908@gmail.com> <20150929224727.GB2517@sean.stalley.intel.com> <560B2470.9080100@caviumnetworks.com> <20150930225011.GA4244@sean.stalley.intel.com>
-In-Reply-To: <20150930225011.GA4244@sean.stalley.intel.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	<linux-pci@vger.kernel.org>, David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
+References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com> <1675889.xYIhzenZEC@wuerfel>
+In-Reply-To: <1675889.xYIhzenZEC@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/30/2015 03:50 PM, Sean O. Stalley wrote:
-> On Tue, Sep 29, 2015 at 04:53:20PM -0700, David Daney wrote:
->> On 09/29/2015 03:47 PM, Sean O. Stalley wrote:
->> [...]
->>>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>>>> index 6a9a111..7c60b16 100644
->>>>>> --- a/drivers/pci/pci.c
->>>>>> +++ b/drivers/pci/pci.c
->>>>>> @@ -2148,6 +2148,284 @@ void pci_pm_init(struct pci_dev *dev)
->>>>>>   	}
->>>>>>   }
->>>>>>
->>>>>> +static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
->>>>>> +{
->>>>>> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_SIZEALIGN;
->>>>>
->>>>> Why did you add the IORESOURCE_SIZEALIGN flag? EA allows for unaligned resources.
->>>>
->>>> pci_bus_assign_resources() fails causing the devices to be unusable
->>>> if resource_alignment() returns zero.  The easiest fix for this was
->>>> to specify IORESOURCE_SIZEALIGN.
->>>>
->>>> An alternative would be to change the code in setup-bus.c so that
->>>> for IORESOURCE_PCI_FIXED resources, it didn't barf.
->>>
->>> I would do this alternative, but with a IORESOURCE_PCI_EA flag.
->>>
+On 09/23/2015 12:51 AM, Arnd Bergmann wrote:
+> On Tuesday 22 September 2015 17:09:56 David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
 >>
->> I don't think we need IORESOURCE_PCI_EA.  If a resource is tagged as
->> IORESOURCE_PCI_FIXED that means that it cannot be changed, we
->> shouldn't care why it is fixed (due to an EA capability for
->> example).  We just need to gracefully handle IORESOURCE_PCI_FIXED in
->> the places where things currently go wrong.
+>> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
+>> Since it is arm64, create a new quirks.c file there to contain arm64
+>> related quirks.  Add the ThunderX bridge quirk, gated by a new config
+>> variable, so that it can be disabled for kernels that aren't expected
+>> to be used on ThunderX.
 >>
->> David Daney
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> ---
+>>   arch/arm64/Kconfig         | 11 +++++++++++
+>>   arch/arm64/kernel/Makefile |  2 +-
+>>   arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
+>>   3 files changed, 48 insertions(+), 1 deletion(-)
+>>   create mode 100644 arch/arm64/kernel/quirks.c
 >>
 >
-> I agree that we need to make sure fixed things stay fixed,
-> regardless of if they are fixed by EA or something else.
->
-> The question is: do we want to allow all fixed resources to be non-aligned, or just EA?
+> Looks reasonable to me. Just one question: Is the same bridge used
+> on MIPS machines?
 
-The alignment should only be important if a new address is being 
-calculated for a BAR or behind the bridge memory/io region.  If the 
-resource is fixed, I would almost say that "alignment" is an undefined 
-concept.  So, in the places were we need special treatment for 
-IORESOURCE_PCI_FIXED, I would argue that we shouldn't be use the 
-resource alignment information.
+No.  The MIPS64 based OCTEON family of SoCs does not contain 
+PCI-buses/config-space/bridges for on-chip hardware blocks.  The on-chip 
+blocks in OCTEON are all platform devices.  So, ...
+
+> If so, maybe it should be moved to drivers/pci/quirks.c
+> instead for better reuse.
+
+The quirk is specific to some arm64 based SoCs, thus my idea to have 
+arch specific quirks.
 
 David Daney
 
->
-> -Sean
->
 
