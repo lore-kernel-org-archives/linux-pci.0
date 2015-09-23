@@ -1,88 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39143 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752254AbbIXVgq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 24 Sep 2015 17:36:46 -0400
-Date: Thu, 24 Sep 2015 16:36:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Will Davis <wdavis@nvidia.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-	Konrad Wilk <konrad.wilk@oracle.com>,
-	Mark Hounschell <markh@compro.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Terence Ripperda <tripperda@nvidia.com>,
-	John Hubbard <jhubbard@nvidia.com>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [PATCH 10/22] PCI: Add pci_resource_to_peer()
-Message-ID: <20150924213643.GG10481@localhost>
-References: <1442337067-22964-1-git-send-email-wdavis@nvidia.com>
- <1442337067-22964-11-git-send-email-wdavis@nvidia.com>
+Received: from mout.kundenserver.de ([212.227.126.131]:61499 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751932AbbIWThR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 15:37:17 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: David Daney <ddaney@caviumnetworks.com>,
+	David Daney <david.daney@cavium.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	linux-kernel@vger.kernel.org, David Daney <ddaney.cavm@gmail.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
+Date: Wed, 23 Sep 2015 21:36:42 +0200
+Message-ID: <29453556.BCB7AZ5P6c@wuerfel>
+In-Reply-To: <5602CCA4.8070606@caviumnetworks.com>
+References: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com> <1675889.xYIhzenZEC@wuerfel> <5602CCA4.8070606@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1442337067-22964-11-git-send-email-wdavis@nvidia.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 15, 2015 at 12:10:55PM -0500, Will Davis wrote:
-> Add helper to convert a struct resource to a peer DMA address.
+On Wednesday 23 September 2015 09:00:36 David Daney wrote:
+> On 09/23/2015 12:51 AM, Arnd Bergmann wrote:
+> > On Tuesday 22 September 2015 17:09:56 David Daney wrote:
+> >> From: David Daney <david.daney@cavium.com>
+> >>
+> >> The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
+> >> Since it is arm64, create a new quirks.c file there to contain arm64
+> >> related quirks.  Add the ThunderX bridge quirk, gated by a new config
+> >> variable, so that it can be disabled for kernels that aren't expected
+> >> to be used on ThunderX.
+> >>
+> >> Signed-off-by: David Daney <david.daney@cavium.com>
+> >> ---
+> >>   arch/arm64/Kconfig         | 11 +++++++++++
+> >>   arch/arm64/kernel/Makefile |  2 +-
+> >>   arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
+> >>   3 files changed, 48 insertions(+), 1 deletion(-)
+> >>   create mode 100644 arch/arm64/kernel/quirks.c
+> >>
+> >
+> > Looks reasonable to me. Just one question: Is the same bridge used
+> > on MIPS machines?
 > 
-> Signed-off-by: Will Davis <wdavis@nvidia.com>
-> ---
->  include/linux/pci.h | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
+> No.  The MIPS64 based OCTEON family of SoCs does not contain 
+> PCI-buses/config-space/bridges for on-chip hardware blocks.  The on-chip 
+> blocks in OCTEON are all platform devices.  So, ...
 > 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index db0cb51..2a9deff 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1508,6 +1508,22 @@ static inline void pci_resource_to_user(const struct pci_dev *dev, int bar,
->  }
->  #endif /* HAVE_ARCH_PCI_RESOURCE_TO_USER */
->  
-> +#ifdef CONFIG_HAS_DMA_P2P
-> +static inline bool pci_resource_to_peer(struct pci_dev *dev,
-
-I'm not really a fan of functions that return bool unless the
-function name is obviously a predicate.  So in this case, I'd
-return 0 or a negative errno.
-
-> +					struct pci_dev *peer,
-> +					struct resource *res,
-> +					dma_peer_addr_t *peer_addr) {
-> +	if (pci_peer_traffic_supported(dev, peer)) {
-> +		struct pci_bus_region region;
-> +
-> +		pcibios_resource_to_bus(dev->bus, &region, res);
-> +		*peer_addr = region.start;
-> +		return true;
-> +	}
-> +
-> +	return false;
-
-It's trivial, but I'd structure it like this, which is sort of the
-typical "return errors early" pattern, and reduces indentation of the
-mainline path:
-
-  if (!pci_peer_traffic_supported(dev, peer))
-    return -EINVAL;
-
-  pcibios_resource_to_bus(dev->bus, &region, res);
-  *peer_addr = region.start;
-  return 0;
-
-> +}
-> +#endif /* CONFIG_HAS_DMA_P2P */
->  
->  /*
->   *  The world is not perfect and supplies us with broken PCI devices.
-> -- 
-> 2.5.1
+> > If so, maybe it should be moved to drivers/pci/quirks.c
+> > instead for better reuse.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The quirk is specific to some arm64 based SoCs, thus my idea to have 
+> arch specific quirks.
+
+Ok.
+
+	Arnd
