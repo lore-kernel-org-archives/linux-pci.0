@@ -1,97 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:33852 "EHLO
-	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029AbbIAXOJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Sep 2015 19:14:09 -0400
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:42271 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753744AbbIWRRh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 13:17:37 -0400
+In-Reply-To: <20150923171706.GL21084@n2100.arm.linux.org.uk>
+References: <20150923171706.GL21084@n2100.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+To: Jason Cooper <jason@lakedaemon.net>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 2/6] pci: mvebu: generate proper configuration access cycles
 MIME-Version: 1.0
-In-Reply-To: <1440089947-2839-3-git-send-email-sean.stalley@intel.com>
-References: <1440089947-2839-1-git-send-email-sean.stalley@intel.com>
-	<1440089947-2839-3-git-send-email-sean.stalley@intel.com>
-Date: Tue, 1 Sep 2015 16:14:08 -0700
-Message-ID: <CAE9FiQUQacSJXPqv9GQJ4AF0TN7uxcBiAYHVbHwvFhEfWgWKHg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: Add support for Enhanced Allocation devices
-From: Yinghai Lu <yinghai@kernel.org>
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rajat Jain <rajatxjain@gmail.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"gong.chen@linux.intel.com" <gong.chen@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-api@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1Zenfg-0004d5-Dg@rmk-PC.arm.linux.org.uk>
+Date: Wed, 23 Sep 2015 18:17:32 +0100
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 20, 2015 at 9:59 AM, Sean O. Stalley <sean.stalley@intel.com> wrote:
-> Add support for devices using Enhanced Allocation entries instead of BARs.
-> This patch allows the kernel to parse the EA Extended Capability structure
-> in PCI configspace and claim the BAR-equivalent resources.
->
-> Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-> ---
->  drivers/pci/pci.c   | 219 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/pci.h   |   1 +
->  drivers/pci/probe.c |   3 +
->  3 files changed, 223 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 0008c95..c8217a8 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-...
-> +
-> +/* Read an Enhanced Allocation (EA) entry */
-> +static int pci_ea_read(struct pci_dev *dev, int offset)
-> +{
-...
-> +       res->name = pci_name(dev);
-> +       res->start = start;
-> +       res->end = end;
-> +       res->flags = flags;
-> +
-> +       pci_ea_claim_resource(dev, res);
-> +
-> +out:
-> +       return offset + ent_size;
-> +}
-> +
-> +/* Enhanced Allocation Initalization */
-> +void pci_ea_init(struct pci_dev *dev)
-> +{
-...
-> +
-> +       for (i = 0; i < num_ent; ++i) {
-> +               /* parse each EA entry */
-> +               dev_dbg(&dev->dev, "%s: parsing entry %i...\n", __func__, i);
-> +               offset = pci_ea_read(dev, offset);
-> +       }
-> +}
-> +
->  static void pci_add_saved_cap(struct pci_dev *pci_dev,
->         struct pci_cap_saved_state *new_cap)
->  {
+The idea that you can arbitarily read 32-bits from PCI configuration
+space, modify a sub-field (like the command register) and write it
+back without consequence is deeply flawed.
 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index cefd636..4cadf35 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1522,6 +1522,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
->
->  static void pci_init_capabilities(struct pci_dev *dev)
->  {
-> +       /* Enhanced Allocation */
-> +       pci_ea_init(dev);
-> +
->         /* MSI/MSI-X list */
->         pci_msi_init_pci_dev(dev);
->
+Status registers (such as the status register, PCIe device status
+register, etc) contain status bits which are read, write-one-to-clear.
 
-Should not call pci_ea_claim_resource() that early.
+What this means is that reading 32-bits from the command register,
+modifying the command register, and then writing it back has the effect
+of clearing any status bits that were indicating at that time.  Same for
+the PCIe device control register clearing bits in the PCIe device status
+register.
 
-For x86 and other arches, we call
-pcibios_resource_survey/pcibios_allocate_bus_resouce/pcibios_allocate_resources
-quite late.
+Since the Armada chips support byte, 16-bit and 32-bit accesses to the
+registers (unless otherwise stated) and the PCI configuration data
+register does not specify otherwise, it seems logical that the chip can
+indeed generate the proper configuration access cycles down to byte
+level.
 
-Yinghai
+Testing with an ASM1062 PCIe to SATA mini-PCIe card on Armada 388.
+PCIe capability at 0x80, DevCtl at 0x88, DevSta at 0x8a.
+
+Before:
+/# setpci -s 1:0.0 0x88.l		- DevSta: CorrErr+
+00012810
+/# setpci -s 1:0.0 0x88.w=0x2810	- Write DevCtl only
+/# setpci -s 1:0.0 0x88.l		- CorrErr cleared - FAIL
+00002810
+
+After:
+/# setpci -s 1:0.0 0x88.l		- DevSta: CorrErr+
+00012810
+/# setpci -s 1:0.0 0x88.w=0x2810	- check DevCtl only write
+/# setpci -s 1:0.0 0x88.l		- CorErr remains set
+00012810
+/# setpci -s 1:0.0 0x88.w=0x281f	- check DevCtl write works
+/# setpci -s 1:0.0 0x88.l		- devctl field updated
+0001281f
+/# setpci -s 1:0.0 0x8a.w=0xffff	- clear DevSta
+/# setpci -s 1:0.0 0x88.l		- CorrErr now cleared
+0000281f
+/# setpci -s 1:0.0 0x88.w=0x2810	- restore DevCtl
+/# setpci -s 1:0.0 0x88.l		- check
+00002810
+
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/pci/host/pci-mvebu.c | 43 ++++++++++++++++++++++++++-----------------
+ 1 file changed, 26 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index b6a096bc9422..0d9f3eae4315 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -254,15 +254,22 @@ static int mvebu_pcie_hw_rd_conf(struct mvebu_pcie_port *port,
+ 				 struct pci_bus *bus,
+ 				 u32 devfn, int where, int size, u32 *val)
+ {
++	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
++
+ 	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
+ 		     PCIE_CONF_ADDR_OFF);
+ 
+-	*val = mvebu_readl(port, PCIE_CONF_DATA_OFF);
+-
+-	if (size == 1)
+-		*val = (*val >> (8 * (where & 3))) & 0xff;
+-	else if (size == 2)
+-		*val = (*val >> (8 * (where & 3))) & 0xffff;
++	switch (size) {
++	case 1:
++		*val = readb_relaxed(conf_data + (where & 3));
++		break;
++	case 2:
++		*val = readw_relaxed(conf_data + (where & 2));
++		break;
++	case 4:
++		*val = readl_relaxed(conf_data);
++		break;
++	}
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+@@ -271,22 +278,24 @@ static int mvebu_pcie_hw_wr_conf(struct mvebu_pcie_port *port,
+ 				 struct pci_bus *bus,
+ 				 u32 devfn, int where, int size, u32 val)
+ {
+-	u32 _val, shift = 8 * (where & 3);
++	void __iomem *conf_data = port->base + PCIE_CONF_DATA_OFF;
+ 
+ 	mvebu_writel(port, PCIE_CONF_ADDR(bus->number, devfn, where),
+ 		     PCIE_CONF_ADDR_OFF);
+-	_val = mvebu_readl(port, PCIE_CONF_DATA_OFF);
+ 
+-	if (size == 4)
+-		_val = val;
+-	else if (size == 2)
+-		_val = (_val & ~(0xffff << shift)) | ((val & 0xffff) << shift);
+-	else if (size == 1)
+-		_val = (_val & ~(0xff << shift)) | ((val & 0xff) << shift);
+-	else
++	switch (size) {
++	case 1:
++		writeb(val, conf_data + (where & 3));
++		break;
++	case 2:
++		writew(val, conf_data + (where & 2));
++		break;
++	case 4:
++		writel(val, conf_data);
++		break;
++	default:
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+-
+-	mvebu_writel(port, _val, PCIE_CONF_DATA_OFF);
++	}
+ 
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+-- 
+2.1.0
+
