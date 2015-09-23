@@ -1,62 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:5263 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753186AbbIPAjN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Sep 2015 20:39:13 -0400
-From: Ray Jui <rjui@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<bcm-kernel-feedback-list@broadcom.com>,
-	Ray Jui <rjui@broadcom.com>
-Subject: [PATCH 0/8] Broadcom iProc PCIe fixes and outbound mapping support
-Date: Tue, 15 Sep 2015 17:39:14 -0700
-Message-ID: <1442363962-29805-1-git-send-email-rjui@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:38724 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934608AbbIWAKA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Sep 2015 20:10:00 -0400
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: David Daney <david.daney@cavium.com>
+Subject: [PATCH] arm64/pci: Add quirks for Cavium Thunder PCI bridges.
+Date: Tue, 22 Sep 2015 17:09:56 -0700
+Message-Id: <1442966996-13419-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series contains various fixes and outbound mapping support for
-the Broadcom iProc PCIe driver. Some of the critical fixes include 1) fix of
-PCIe core reset logic and therefore remove its dependency on the bootloader;
-2) improved link detection logic that works for more iProc based SoCs.
+From: David Daney <david.daney@cavium.com>
 
-This patch series also adds the outbound address mapping support. While
-outbound address mapping support is not required on chips like North Star,
-Cygnus, and etc., some of the newer iProc based chips like North Star 2 require
-this support to properly map the AXI address into the address used in the iProc
-PCIe core
+The Cavium ThunderX SoC needs a PCI quirk for its on-chip bridges.
+Since it is arm64, create a new quirks.c file there to contain arm64
+related quirks.  Add the ThunderX bridge quirk, gated by a new config
+variable, so that it can be disabled for kernels that aren't expected
+to be used on ThunderX.
 
-This patch series is constructed based on Linux v4.3-rc1 (with workaround to
-disable calls to pci_read_bridge_bases in pci/probe.c that breaks some of the
-ARM based PCIe devices including iProc)
+Signed-off-by: David Daney <david.daney@cavium.com>
+---
+ arch/arm64/Kconfig         | 11 +++++++++++
+ arch/arm64/kernel/Makefile |  2 +-
+ arch/arm64/kernel/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 48 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm64/kernel/quirks.c
 
-This patch series is tested on the following platforms with an Intel e1000e
-based PCIe x1 NIC card:
-- ARM32 based Cygnus BCM958305K Wireless Audio board
-- ARM64 based North Star 2 SVK board
-
-code available at GITHUB:
-https://github.com/Broadcom/cygnus-linux/tree/iproc-pcie-fix-v1
-
-Ray Jui (8):
-  PCI: iproc: Fix code comment
-  PCI: iproc: Remove unused code
-  PCI: iproc: Remove ARCH specific flag
-  PCI: iproc: Fix PCIe reset logic
-  PCI: iproc: Improve link detection logic
-  PCI: iproc: Update iProc PCIe device tree bindings
-  PCI: iproc: Add outbound mapping support
-  PCI: iproc: Fix compile warnings
-
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  20 +++
- drivers/pci/host/pcie-iproc-platform.c             |  27 ++++
- drivers/pci/host/pcie-iproc.c                      | 159 +++++++++++++++++++--
- drivers/pci/host/pcie-iproc.h                      |  20 ++-
- 4 files changed, 210 insertions(+), 16 deletions(-)
-
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 8bd55c5..7fdf94a 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -359,6 +359,17 @@ config CAVIUM_ERRATUM_23154
+ 
+ 	  If unsure, say Y.
+ 
++config CAVIUM_THUNDER_PCI_QUIRKS
++	bool "Cavium PCI quirk workarounds"
++	depends on PCI
++	help
++
++	  Some ThunderX systems have PCI quirk workarounds that must
++	  be enabled to be able to use PCI devices.  This option
++	  enables the workarounds.
++
++	  If unsure, say Y.
++
+ endmenu
+ 
+ 
+diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+index 22dc9bc..f80aa01 100644
+--- a/arch/arm64/kernel/Makefile
++++ b/arch/arm64/kernel/Makefile
+@@ -33,7 +33,7 @@ arm64-obj-$(CONFIG_CPU_IDLE)		+= cpuidle.o
+ arm64-obj-$(CONFIG_JUMP_LABEL)		+= jump_label.o
+ arm64-obj-$(CONFIG_KGDB)		+= kgdb.o
+ arm64-obj-$(CONFIG_EFI)			+= efi.o efi-stub.o efi-entry.o
+-arm64-obj-$(CONFIG_PCI)			+= pci.o
++arm64-obj-$(CONFIG_PCI)			+= pci.o quirks.o
+ arm64-obj-$(CONFIG_ARMV8_DEPRECATED)	+= armv8_deprecated.o
+ arm64-obj-$(CONFIG_ACPI)		+= acpi.o
+ 
+diff --git a/arch/arm64/kernel/quirks.c b/arch/arm64/kernel/quirks.c
+new file mode 100644
+index 0000000..7352bd4
+--- /dev/null
++++ b/arch/arm64/kernel/quirks.c
+@@ -0,0 +1,36 @@
++/*
++ * PCIe quirks for arm64
++ *
++ * Copyright (C) 2015 Cavium, Inc.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ */
++
++#include <linux/pci.h>
++
++#ifdef CONFIG_CAVIUM_THUNDER_PCI_QUIRKS
++static void thunder_bridge_fixup(struct pci_dev *dev)
++{
++	/*
++	 * This bridge is broken in that it doesn't have correct
++	 * resource ranges for the buses behind it.
++	 *
++	 * The upstream bus resources are a close enough approximation
++	 * to what is needed, that they can be used instead.  Copy
++	 * upstream root bus resources so that resource claiming for
++	 * downstream devices can be done.
++	 */
++	int resno;
++	struct pci_bus *bus = dev->subordinate;
++
++	for (resno = 0; resno < PCI_BRIDGE_RESOURCE_NUM; resno++) {
++		bus->resource[resno] =
++			pci_bus_resource_n(bus->parent,
++					   PCI_BRIDGE_RESOURCE_NUM + resno);
++	}
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa002, thunder_bridge_fixup);
++#endif /* CONFIG_CAVIUM_THUNDER_PCI_QUIRKS */
 -- 
 1.9.1
 
