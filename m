@@ -1,354 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f178.google.com ([209.85.160.178]:33972 "EHLO
-	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751634AbbINUV2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Sep 2015 16:21:28 -0400
-Received: by ykdg206 with SMTP id g206so164542878ykd.1
-        for <linux-pci@vger.kernel.org>; Mon, 14 Sep 2015 13:21:27 -0700 (PDT)
-Date: Mon, 14 Sep 2015 15:21:23 -0500
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 04/52] PCI: Optimize bus min_align/size calculation
- during sizing
-Message-ID: <20150914202123.GA27964@google.com>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
- <1440138067-4314-5-git-send-email-yinghai@kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:53336 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753885AbbIWQUi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 12:20:38 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	Yuanzhichang <yuanzhichang@hisilicon.com>,
+	Zhudacai <zhudacai@hisilicon.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	qiuzhenfa <qiuzhenfa@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [PATCH v3 2/3] PCI: designware: change dw_pcie_cfg_write() and
+ dw_pcie_cfg_read()
+Date: Wed, 23 Sep 2015 16:20:22 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1622BC36@lhreml503-mbb>
+References: <1441964307-126942-1-git-send-email-gabriele.paoloni@huawei.com>
+	<1441964307-126942-3-git-send-email-gabriele.paoloni@huawei.com>
+	<20150918204625.GL25767@google.com>
+ <CAHM4w1nWNj-Ws0CiYt2vGCa4V7XJsjjwHRSkgdpVSCPmdeARqA@mail.gmail.com>
+In-Reply-To: <CAHM4w1nWNj-Ws0CiYt2vGCa4V7XJsjjwHRSkgdpVSCPmdeARqA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1440138067-4314-5-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I spent a couple hours trying to understand the v3 version of this
-patch, and I gave you some detailed examples and questions.  If you
-want me to look at v4, I expect you to try to clarify the changelog to
-help answer those questions.
-
-The goal is that someone with reasonable familiarity with Linux and
-PCI would be able to read the changelogs and understand what happened,
-without having to search out all the email discussions.
-
-On Thu, Aug 20, 2015 at 11:20:19PM -0700, Yinghai Lu wrote:
-> Current code try to get align as small as possible and use that to
-> align final size. But it does not handle resource that size is bigger
-> than align in optimal way, kernel only use max align for them.
-> 
-> For example:
->  when we have resources with align/size: 1M/2M, 512M/512M,
->    bus resource min_align/size0 will be 512M/1024M,
->    but optimal value should be 256M/768M.
-> 
-> For following cases that we have resource size that is bigger
-> than resource alignment:
-> 1. SRIOV bar.
-> 2. PCI bridges with children that need several MMIOs that are more than 1M.
-> 
-> We can keep on trying to allocate children devices resources under range
-> [offset, offset + aligned_size) and offset is aligned with half_align.
-> If sucesses, we can use that half_align as new min_align.
-> 
-> After this patch, we get:
->  align/size: 1M/2M, 2M/4M, 4M/8M, 8M/16M
->  new min_align/min_size: 4M/32M, and old is 8M/32M
-> 
->  align/size: 1M/2M, 2M/4M, 4M/8M
->  new min_align/min_size: 2M/14M, and old is 4M/16M
-> 
->  align/size: 1M/2M, 512M/512M
->  new min_align/min_size: 256M/768M, and old is 512M/1024M
-> 
-> The real result from one system with one pcie card that has
-> four functions that support sriov:
->  children resources with align/size:
->    00800000/00800000
->    00800000/00800000
->    00800000/00800000
->    00800000/00800000
->    00010000/00200000
->    00010000/00200000
->    00010000/00200000
->    00010000/00200000
->    00008000/00008000
->    00008000/00008000
->    00008000/00008000
->    00008000/00008000
->    00004000/00080000
->    00004000/00080000
->    00004000/00080000
->    00004000/00080000
-> the for the bridge
-> with orig code we have min_align/min_size: 00400000/02c00000
-> and with this patch we have min_align/min_size: 00100000/02b00000
-> So align will be 1M instead of 4M and even have smaller size.
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-> Reported-by: TJ <linux@iam.tj>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/setup-bus.c | 195 ++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 157 insertions(+), 38 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index aea35b6..861fe68 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -30,6 +30,34 @@
->  
->  unsigned int pci_flags;
->  
-> +static inline bool is_before(resource_size_t align1, resource_size_t size1,
-> +			     resource_size_t align2, resource_size_t size2)
-> +{
-> +	resource_size_t size1_left, size2_left;
-> +
-> +	/* big align is before small align */
-> +	if (align1 > align2)
-> +		return true;
-> +
-> +	/*
-> +	 * for same align:
-> +	 *   aligned is before not aligned
-> +	 *   for not aligned, big remainder is before small remainder
-> +	 */
-> +	if (align1 == align2) {
-> +		size1_left = size1 & (align1 - 1);
-> +		if (!size1_left)
-> +			size1_left = align1;
-> +		size2_left = size2 & (align2 - 1);
-> +		if (!size2_left)
-> +			size2_left = align2;
-> +		if (size1_left > size2_left)
-> +			return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
->  struct pci_dev_resource {
->  	struct list_head list;
->  	struct resource *res;
-> @@ -998,26 +1026,125 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
->  	}
->  }
->  
-> -static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
-> -						  int max_order)
-> +struct align_test_res {
-> +	struct list_head list;
-> +	struct resource res;
-> +	resource_size_t size;
-> +	resource_size_t align;
-> +};
-> +
-> +static void free_align_test_list(struct list_head *head)
->  {
-> -	resource_size_t align = 0;
-> -	resource_size_t min_align = 0;
-> -	int order;
-> +	struct align_test_res *p, *tmp;
->  
-> -	for (order = 0; order <= max_order; order++) {
-> -		resource_size_t align1 = 1;
-> +	list_for_each_entry_safe(p, tmp, head, list) {
-> +		list_del(&p->list);
-> +		kfree(p);
-> +	}
-> +}
->  
-> -		align1 <<= (order + 20);
-> +static int add_to_align_test_list(struct list_head *head,
-> +				  resource_size_t align, resource_size_t size)
-> +{
-> +	struct align_test_res *tmp;
-> +
-> +	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
-> +	if (!tmp)
-> +		return -ENOMEM;
-> +
-> +	tmp->align = align;
-> +	tmp->size = size;
-> +
-> +	list_add_tail(&tmp->list, head);
-> +
-> +	return 0;
-> +}
-> +
-> +static void sort_align_test(struct list_head *head)
-> +{
-> +	struct align_test_res *res1, *tmp_res, *res2;
->  
-> -		if (!align)
-> -			min_align = align1;
-> -		else if (ALIGN(align + min_align, min_align) < align1)
-> -			min_align = align1 >> 1;
-> -		align += aligns[order];
-> +	list_for_each_entry_safe(res1, tmp_res, head, list) {
-> +		/* reorder it */
-> +		list_for_each_entry(res2, head, list) {
-> +			if (res2 == res1)
-> +				break;
-> +
-> +			if (is_before(res1->align, res1->size,
-> +				      res2->align, res2->size)) {
-> +				list_move_tail(&res1->list, &res2->list);
-> +				break;
-> +			}
-> +		}
-> +	}
-> +}
-> +
-> +static bool is_align_size_good(struct list_head *head,
-> +			resource_size_t min_align, resource_size_t size,
-> +			resource_size_t start)
-> +{
-> +	struct align_test_res *p;
-> +	struct resource root;
-> +
-> +	memset(&root, 0, sizeof(root));
-> +	root.start = start;
-> +	root.end = start + size - 1;
-> +
-> +	list_for_each_entry(p, head, list)
-> +		memset(&p->res, 0, sizeof(p->res));
-> +
-> +	list_for_each_entry(p, head, list)
-> +		if (allocate_resource(&root, &p->res, p->size,
-> +				0, (resource_size_t)-1ULL,
-> +				p->align, NULL, NULL))
-> +			return false;
-> +
-> +	return true;
-> +}
-> +
-> +static resource_size_t calculate_mem_align(struct list_head *head,
-> +				resource_size_t max_align, resource_size_t size,
-> +				resource_size_t align_low)
-> +{
-> +	struct align_test_res *p;
-> +	resource_size_t min_align, good_align, aligned_size, start;
-> +	int count = 0;
-> +
-> +	if (max_align <= align_low) {
-> +		good_align = align_low;
-> +		goto out;
->  	}
->  
-> -	return min_align;
-> +	good_align = max_align;
-> +
-> +	list_for_each_entry(p, head, list)
-> +		count++;
-> +
-> +	if (count <= 1)
-> +		goto out;
-> +
-> +	sort_align_test(head);
-> +
-> +	do {
-> +		/* check if we can use smaller align */
-> +		min_align = good_align >> 1;
-> +		aligned_size = ALIGN(size, min_align);
-> +
-> +		/* need to make sure every offset work */
-> +		for (start = min_align; start < max_align; start += min_align) {
-> +			/* checked already with last align ? */
-> +			if (!(start & (good_align - 1)))
-> +				continue;
-> +
-> +			if (!is_align_size_good(head, min_align, aligned_size,
-> +					       start))
-> +				goto out;
-> +		}
-> +		good_align = min_align;
-> +	} while (min_align > align_low);
-> +
-> +out:
-> +	return good_align;
->  }
->  
->  /**
-> @@ -1047,19 +1174,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  {
->  	struct pci_dev *dev;
->  	resource_size_t min_align, align, size, size0, size1;
-> -	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
-> -	int order, max_order;
-> +	resource_size_t max_align = 0;
->  	struct resource *b_res = find_free_bus_resource(bus,
->  					mask | IORESOURCE_PREFETCH, type);
->  	resource_size_t children_add_size = 0;
->  	resource_size_t children_add_align = 0;
->  	resource_size_t add_align = 0;
-> +	LIST_HEAD(align_test_list);
->  
->  	if (!b_res)
->  		return -ENOSPC;
->  
-> -	memset(aligns, 0, sizeof(aligns));
-> -	max_order = 0;
->  	size = 0;
->  
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> @@ -1085,29 +1210,20 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  				continue;
->  			}
->  #endif
-> -			/*
-> -			 * aligns[0] is for 1MB (since bridge memory
-> -			 * windows are always at least 1MB aligned), so
-> -			 * keep "order" from being negative for smaller
-> -			 * resources.
-> -			 */
->  			align = pci_resource_alignment(dev, r);
-> -			order = __ffs(align) - 20;
-> -			if (order < 0)
-> -				order = 0;
-> -			if (order >= ARRAY_SIZE(aligns)) {
-> +			if (align > (1ULL<<37)) { /*128 Gb*/
->  				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
-> -					 i, r, (unsigned long long) align);
-> +					i, r, (unsigned long long) align);
->  				r->flags = 0;
->  				continue;
->  			}
-> +
-> +			if (r_size > 1)
-> +				add_to_align_test_list(&align_test_list,
-> +							align, r_size);
->  			size += r_size;
-> -			/* Exclude ranges with size > align from
-> -			   calculation of the alignment. */
-> -			if (r_size == align)
-> -				aligns[order] += align;
-> -			if (order > max_order)
-> -				max_order = order;
-> +			if (align > max_align)
-> +				max_align = align;
->  
->  			if (realloc_head) {
->  				children_add_size += get_res_add_size(realloc_head, r);
-> @@ -1117,9 +1233,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
->  		}
->  	}
->  
-> -	min_align = calculate_mem_align(aligns, max_order);
-> -	min_align = max(min_align, window_alignment(bus, b_res->flags));
-> -	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
-> +	max_align = max(max_align, window_alignment(bus, b_res->flags));
-> +	min_align = calculate_mem_align(&align_test_list, max_align, size,
-> +					window_alignment(bus, b_res->flags));
-> +	size0 = calculate_memsize(size, min_size, 0,
-> +				  resource_size(b_res), min_align);
-> +	free_align_test_list(&align_test_list);
->  	add_align = max(min_align, add_align);
->  	if (children_add_size > add_size)
->  		add_size = children_add_size;
-> -- 
-> 1.8.4.5
-> 
+SGkgZ3V5cyBzb3JyeSBmb3IgdGhlIGxhdGUgcmVwbHkgSSBoYXZlIGJlZW4gT09PIGZvciB0aGUg
+bGFzdCA1IGRheXMNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBQcmF0
+eXVzaCBBbmFuZCBbbWFpbHRvOnByYXR5dXNoLmFuYW5kQGdtYWlsLmNvbV0NCj4gU2VudDogU2F0
+dXJkYXksIFNlcHRlbWJlciAxOSwgMjAxNSA0OjA0IEFNDQo+IFRvOiBCam9ybiBIZWxnYWFzDQo+
+IENjOiBHYWJyaWVsZSBQYW9sb25pOyBKaW5nb28gSGFuOyBsaW51eC1wY2lAdmdlci5rZXJuZWwu
+b3JnOyBXYW5nemhvdQ0KPiAoQik7IFl1YW56aGljaGFuZzsgWmh1ZGFjYWk7IHpoYW5nanVrdW87
+IHFpdXpoZW5mYTsgTGlndW96aHUgKEtlbm5ldGgpDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMg
+Mi8zXSBQQ0k6IGRlc2lnbndhcmU6IGNoYW5nZSBkd19wY2llX2NmZ193cml0ZSgpDQo+IGFuZCBk
+d19wY2llX2NmZ19yZWFkKCkNCj4gDQo+IE9uIFNhdCwgU2VwIDE5LCAyMDE1IGF0IDI6MTYgQU0s
+IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+DQo+IHdyb3RlOg0KPiA+IE9uIEZy
+aSwgU2VwIDExLCAyMDE1IGF0IDA1OjM4OjI2UE0gKzA4MDAsIEdhYnJpZWxlIFBhb2xvbmkgd3Jv
+dGU6DQo+ID4+IEZyb206IGdhYnJpZWxlIHBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2Vp
+LmNvbT4NCj4gPj4NCj4gPj4gVGhpcyBwYXRjaCBjaGFuZ2VzIHRoZSBpbXBsZW1lbnRhdGlvbiBv
+ZiBkd19wY2llX2NmZ19yZWFkKCkgYW5kDQo+ID4+IGR3X3BjaWVfY2ZnX3dyaXRlKCkgdG8gaW1w
+cm92ZSB0aGUgZnVuY3Rpb24gdXNhZ2UgZnJvbSB0aGUgY2FsbGVycw0KPiA+PiBwZXJzcGVjdGl2
+ZS4NCj4gPj4gQ3VycmVudGx5IHRoZSBjYWxsZXJzIGFyZSBvYmxpZ2VkIHRvIHBhc3MgdGhlIDMy
+Yml0IGFsaWduZWQgYWRkcmVzcw0KPiA+PiBvZiB0aGUgcmVnaXN0ZXIgdGhhdCBjb250YWlucyB0
+aGUgZmllbGQgb2YgdGhlIFBDSSBoZWFkZXIgdGhhdCB0aGV5DQo+ID4+IHdhbnQgdG8gcmVhZC93
+cml0ZTsgYWxzbyB0aGV5IGhhdmUgdG8gcGFzcyB0aGUgb2Zmc2V0IG9mIHRoZSBmaWVsZA0KPiA+
+PiBpbiB0aGF0IHJlZ2lzdGVyLiBUaGlzIGlzIHF1aXRlIHRyaWNreSB0byB1c2UgYXMgdGhlIGNh
+bGxlcnMgYXJlDQo+ID4+IG9ibGlnZWQgdG8gc3VtIHRoZSBQQ0kgaGVhZGVyIGJhc2UgYWRkcmVz
+cyB0byB0aGUgZmllbGQgb2Zmc2V0DQo+ID4+IG1hc2tlZCB0byByZXRyaWV2ZSB0aGUgMzJiIGFs
+aWduZWQgcmVnaXN0ZXIgYWRkcmVzcy4NCj4gPj4NCj4gPj4gV2l0aCB0aGUgbmV3IEFQSSB0aGUg
+Y2FsbGVycyBoYXZlIHRvIHBhc3MgdGhlIGJhc2UgYWRkcmVzcyBvZiB0aGUNCj4gPj4gUENJIGhl
+YWRlciBhbmQgdGhlIG9mZnNldCBjb3JyZXNwb25kaW5nIHRvIHRoZSBmaWVsZCB0aGV5IGludGVu
+ZCB0bw0KPiA+PiByZWFkL3dyaXRlLg0KPiA+Pg0KPiA+PiBTaWduZWQtb2ZmLWJ5OiBHYWJyaWVs
+ZSBQYW9sb25pIDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+DQo+ID4NCj4gPg0KPiA+PiAg
+aW50IGR3X3BjaWVfY2ZnX3JlYWQodm9pZCBfX2lvbWVtICphZGRyLCBpbnQgd2hlcmUsIGludCBz
+aXplLCB1MzINCj4gKnZhbCkNCj4gPj4gIHsNCj4gPj4gKyAgICAgYWRkciArPSAod2hlcmUgJiB+
+MHgzKTsNCj4gPj4gICAgICAgKnZhbCA9IHJlYWRsKGFkZHIpOw0KPiA+PiArICAgICB3aGVyZSAm
+PSAzOw0KPiA+Pg0KPiA+PiAgICAgICBpZiAoc2l6ZSA9PSAxKQ0KPiA+PiAtICAgICAgICAgICAg
+ICp2YWwgPSAoKnZhbCA+PiAoOCAqICh3aGVyZSAmIDMpKSkgJiAweGZmOw0KPiA+PiArICAgICAg
+ICAgICAgICp2YWwgPSAoKnZhbCA+PiAoOCAqIHdoZXJlKSkgJiAweGZmOw0KPiA+PiAgICAgICBl
+bHNlIGlmIChzaXplID09IDIpDQo+ID4+IC0gICAgICAgICAgICAgKnZhbCA9ICgqdmFsID4+ICg4
+ICogKHdoZXJlICYgMykpKSAmIDB4ZmZmZjsNCj4gPj4gKyAgICAgICAgICAgICAqdmFsID0gKCp2
+YWwgPj4gKDggKiB3aGVyZSkpICYgMHhmZmZmOw0KPiA+PiAgICAgICBlbHNlIGlmIChzaXplICE9
+IDQpDQo+ID4+ICAgICAgICAgICAgICAgcmV0dXJuIFBDSUJJT1NfQkFEX1JFR0lTVEVSX05VTUJF
+UjsNCj4gPj4NCj4gPj4gQEAgLTk2LDEyICs5OCwxNCBAQCBpbnQgZHdfcGNpZV9jZmdfcmVhZCh2
+b2lkIF9faW9tZW0gKmFkZHIsIGludA0KPiB3aGVyZSwgaW50IHNpemUsIHUzMiAqdmFsKQ0KPiA+
+Pg0KPiA+PiAgaW50IGR3X3BjaWVfY2ZnX3dyaXRlKHZvaWQgX19pb21lbSAqYWRkciwgaW50IHdo
+ZXJlLCBpbnQgc2l6ZSwgdTMyDQo+IHZhbCkNCj4gPj4gIHsNCj4gPj4gKyAgICAgYWRkciArPSB3
+aGVyZTsNCj4gPj4gKw0KPiA+PiAgICAgICBpZiAoc2l6ZSA9PSA0KQ0KPiA+PiAgICAgICAgICAg
+ICAgIHdyaXRlbCh2YWwsIGFkZHIpOw0KPiA+PiAgICAgICBlbHNlIGlmIChzaXplID09IDIpDQo+
+ID4+IC0gICAgICAgICAgICAgd3JpdGV3KHZhbCwgYWRkciArICh3aGVyZSAmIDIpKTsNCj4gPj4g
+KyAgICAgICAgICAgICB3cml0ZXcodmFsLCBhZGRyKTsNCj4gPj4gICAgICAgZWxzZSBpZiAoc2l6
+ZSA9PSAxKQ0KPiA+PiAtICAgICAgICAgICAgIHdyaXRlYih2YWwsIGFkZHIgKyAod2hlcmUgJiAz
+KSk7DQo+ID4+ICsgICAgICAgICAgICAgd3JpdGViKHZhbCwgYWRkcik7DQo+ID4+ICAgICAgIGVs
+c2UNCj4gPj4gICAgICAgICAgICAgICByZXR1cm4gUENJQklPU19CQURfUkVHSVNURVJfTlVNQkVS
+Ow0KPiA+DQo+ID4gSSBqdXN0IG5vdGljZWQgdGhlIGFzeW1tZXRyeSBiZXR3ZWVuIGR3X3BjaWVf
+Y2ZnX3JlYWQoKSBhbmQNCj4gPiBkd19wY2llX2NmZ193cml0ZSgpOiBpbiBkd19wY2llX2NmZ19y
+ZWFkKCkgd2UgYWx3YXlzIGRvIDMyLWJpdCByZWFkcw0KPiBhbmQNCj4gPiBtYXNrIG91dCB0aGUg
+cGFydHMgd2Ugd29uJ3Qgd2FudCwgYnV0IGluIGR3X3BjaWVfY2ZnX3dyaXRlKCkgd2UgZG8gOC0s
+DQo+IDE2LSwNCj4gPiBvciAzMi1ieXRlIHdyaXRlcy4NCj4gPg0KPiA+IFRoYXQgd2FzIHRoZXJl
+IGV2ZW4gYmVmb3JlIHlvdXIgcGF0Y2gsIGJ1dCBJIHdvbmRlciB3aHkuICBFaXRoZXIgYm90aA0K
+PiA+IHNob3VsZCB3b3JrIHRoZSBzYW1lIHdheSwgb3IgdGhlcmUgc2hvdWxkIGJlIGEgY29tbWVu
+dCBleHBsYWluaW5nIHdoeQ0KPiB0aGV5DQo+ID4gYXJlIGRpZmZlcmVudC4NCj4gPg0KPiA+IEpp
+bmdvbywgUHJhdHl1c2g/DQo+IA0KPiBBcyBJIHNhaWQgZWFybGllciwgSSBqdXN0IHZhZ3VlbHkg
+cmVtZW1iZXIgdGhhdCB0aGVyZSB3YXMgc29tZSBpc3N1ZQ0KPiB3aXRoIGEgU09DIGluIHJlYWRp
+bmcgbm9uIHdvcmQgYWxpZ25lZCBhZGRyZXNzZXMuDQo+ICgxKSBJIGRvIG5vdCBoYXZlIGFueSBy
+ZWZlcmVuY2UgZm9yIGl0IGFuZCAoMikgZXZlbiBpZiBzb21lIHdoZXJlDQo+IHRoZXJlIGNvdWxk
+IGJlIHN1Y2ggaXNzdWUgdGhleSBjYW4gYWx3YXlzIGhhdmUgcGxhdGZvcm0gc3BlY2lmaWMNCj4g
+YWNjZXNzb3IgLiBTbyBJIHN1cHBvcnQgeW91ciBpZGVhIGFuZCBib3RoIHJlYWQgYW5kIHdyaXRl
+IGNhbiBiZSBtYWRlDQo+IHN5bW1ldHJpYy4NCg0KSSBhZ3JlZSB3aXRoIHRoZSBpZGVhIGJ1dCwg
+d2hhdCBpZiBkb2luZyBzbyB3ZSBicmVhayBvdGhlciBkcml2ZXJzPw0KSXMgdGhlIGNvcnJlY3Qg
+ZmxvdyB0byBicmVhayB0aGVtIGZpcnN0IGFuZCBsZXQgdGhlIHNpbmdsZSBtYWludGFpbmVycyBm
+aXggdGhlbSB0aGVuLi4uPw0KDQo=
