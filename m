@@ -1,40 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f49.google.com ([209.85.213.49]:32950 "EHLO
-	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689AbbIPTd6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Sep 2015 15:33:58 -0400
+Received: from mail-bn1bon0096.outbound.protection.outlook.com ([157.56.111.96]:23466
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755806AbbIWP5J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Sep 2015 11:57:09 -0400
+Message-ID: <5602CBCB.4030605@caviumnetworks.com>
+Date: Wed, 23 Sep 2015 08:56:59 -0700
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5VAb_YRpz7PEzuZ9AthAQ67quMKE3Y0dfMHVKjw0OTxA@mail.gmail.com>
-References: <1440138067-4314-1-git-send-email-yinghai@kernel.org>
-	<1440138067-4314-5-git-send-email-yinghai@kernel.org>
-	<20150914202123.GA27964@google.com>
-	<CAE9FiQXr3vqusta0Tb35BovbWh7jDZ5uVQer741ioWKhYr7xmA@mail.gmail.com>
-	<CAErSpo5VAb_YRpz7PEzuZ9AthAQ67quMKE3Y0dfMHVKjw0OTxA@mail.gmail.com>
-Date: Wed, 16 Sep 2015 12:33:57 -0700
-Message-ID: <CAE9FiQWbRuFvXiYif7_SiLW17m=WcnM0EZZHsjwO5W6F0K6kwQ@mail.gmail.com>
-Subject: Re: [PATCH v4 04/52] PCI: Optimize bus min_align/size calculation
- during sizing
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-arm-kernel@lists.infradead.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	"David Daney" <david.daney@cavium.com>
+Subject: Re: [PATCH v3 3/6] PCI: generic: Quit clobbering our pci_ops.
+References: <1442965757-12925-1-git-send-email-ddaney.cavm@gmail.com> <1442965757-12925-4-git-send-email-ddaney.cavm@gmail.com> <1729894.341fjYUAKl@wuerfel>
+In-Reply-To: <1729894.341fjYUAKl@wuerfel>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Sep 15, 2015 at 7:57 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+On 09/23/2015 01:21 AM, Arnd Bergmann wrote:
+> On Tuesday 22 September 2015 16:49:14 David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> The pci-host-generic driver keeps a global struct pci_ops which it
+>> then patches with the .map_bus method appropriate for the bus device.
+>> A problem arises when the driver is used for two different types of
+>> bus devices, the .map_bus method for the last device probed clobbers
+>> the method for all previous devices.  The result, only the last bus
+>> device probed has the proper .map_bus, and the others fail.
+>>
+>> Move the struct pci_ops into the bus specific structure, and
+>> initialize it when the bus device is probed.  Keep a copy of the
+>> gen_pci_cfg_bus_ops structure, instead of a pointer to a global copy,
 >
-> Any future series you post should be based on the most recent -rc1 at
-> the time.  I apply patches to branches based on -rc1 unless they
-> actually depend on something merged after -rc1.
+> This is a very useful change.
+>
+>> to future proof against the addition of bus specific elements to
+>> struct pci_ops.
+>
+> but I don't like this part. We should just not have bus specific
+> elements in pci_ops. We don't really have that here either, except
+> that the gen_pci driver had a hack for reusing the same operations
+> for things that are actually different.
+>
+> It's an established practice that anything named '*_operations' is
+> meant to be constant and ideally defined as 'static const ... *_ops;'
+> in the driver. We could try to enforce this better by marking
+> bus->ops as 'const' and changing all the instances of this structure
+> accordingly.
+>
+>> @@ -65,7 +65,11 @@ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+>>
+>>   static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
+>>   	.bus_shift	= 16,
+>> -	.map_bus	= gen_pci_map_cfg_bus_cam,
+>> +	.ops		= {
+>> +		.map_bus	= gen_pci_map_cfg_bus_cam,
+>> +		.read		= pci_generic_config_read,
+>> +		.write		= pci_generic_config_write,
+>> +	}
+>>   };
+>
+> So this is good. We could in theory unify the map_bus functions
+> like this now:
+>
+> static void __iomem *gen_pci_map_cfg_bus(struct pci_bus *bus,
+>                                           unsigned int devfn,
+>                                           int where)
+> {
+>          struct gen_pci *pci = bus->sysdata;
+> 	struct gen_pci_cfg_bus_ops *ops;
+>          resource_size_t idx;
+>
+> 	ops = container_of(bus->ops, struct gen_pci_cfg_bus_ops, ops);
+> 	idx = bus->number - pci->cfg.bus_range->start;
+>
+>          return pci->cfg.win[idx] + ((devfn << ops->dev_shift) | where);
+> }
+>
+> Not sure if that improves clarity or not, up to Will.
+>
+>> @@ -234,8 +237,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+>>   	}
+>>
+>>   	of_id = of_match_node(gen_pci_of_match, np);
+>> -	pci->cfg.ops = of_id->data;
+>> +	pci->cfg.ops = *(struct gen_pci_cfg_bus_ops *)of_id->data;
+>
+> This is the part that grabbed my attention, we should not do it like this.
+>
 
-ok, will post v5 based on v4.3-rc1.
+I will consider changing this so that a structure copy is not used, 
+perhaps as you suggest above.
 
-Thanks
+David Daney.
 
-Yinghai
+
+> 	Arnd
+>
+
