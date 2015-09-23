@@ -1,114 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:49419 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757332AbbIUS4I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Sep 2015 14:56:08 -0400
-Date: Mon, 21 Sep 2015 14:56:07 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Roland Weber <r-o-l@web.de>
-cc: linux-usb@vger.kernel.org, Mathias Nyman <mathias.nyman@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>
-Subject: Re: PROBLEM: lsusb -v freezes kernel on Acer ES1-111M
-In-Reply-To: <trinity-6fe55839-fa6d-4fe3-81cc-32af1961ceac-1442775309104@3capp-webde-bs04>
-Message-ID: <Pine.LNX.4.44L0.1509211435230.1713-100000@iolanthe.rowland.org>
+Received: from mout.kundenserver.de ([212.227.17.10]:50180 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751033AbbIWTjp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Sep 2015 15:39:45 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Will Deacon <will.deacon@arm.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	David Daney <ddaney@caviumnetworks.com>,
+	Mark Rutland <Mark.Rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Pawel Moll <Pawel.Moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Marc Zyngier <Marc.Zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 4/5] PCI: generic: Correct, and avoid overflow, in bus_max calculation.
+Date: Wed, 23 Sep 2015 21:39:27 +0200
+Message-ID: <1707525.QvfFzUYq4E@wuerfel>
+In-Reply-To: <20150923193545.GZ7356@arm.com>
+References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com> <3751968.n8LRgots8n@wuerfel> <20150923193545.GZ7356@arm.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 20 Sep 2015, Roland Weber wrote:
-
-> Hi Alan, hi all,
+On Wednesday 23 September 2015 20:35:45 Will Deacon wrote:
+> On Wed, Sep 23, 2015 at 08:27:41PM +0100, Arnd Bergmann wrote:
+> > On Wednesday 23 September 2015 11:21:56 David Daney wrote:
+> > > >>
+> > > >>      /* Limit the bus-range to fit within reg */
+> > > >> -    bus_max = pci->cfg.bus_range->start +
+> > > >> -              (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> > > >> +    bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
+> > > >> +    if (bus_max > 255)
+> > > >> +            bus_max = 255;
+> > > >
+> > > > I still don't understand the need for this part. If the cfg space is bigger
+> > > > than bus_max, isn't that simply an invalid resource? Given that the resource
+> > > > could be broken in other ways too, this check feels more like a specific
+> > > > workaround rather than generally useful code.
+> > > 
+> > > Imagine...
+> > > 
+> > >    bus-range [0x80 .. 0xff], this requires a cfg.res that will cover the 
+> > > entire range of 0..0xff.
+> > > 
+> > >    according to the calculations above, (resource_size(&pci->cfg.res) >> 
+> > > pci->cfg.ops.bus_shift) - 1 will have a value of 0xff, so...
+> > 
+> > Extending the computation to 32 bit seems fine, but I'd rather warn loudly
+> > if the bus range does not fit within the registers.
+> > 
+> > Also note that the computation is already correct with my interpretation
+> > of the reg property.
 > 
-> in my previous mail, I wrote:
-> > With "make menuconfig", I haven't been able to switch off the
-> > setting, because CONFIG_PM_SLEEP and something else forces it on
-> 
-> For the records, there are no menu entries for CONFIG_PM_SLEEP
-> and CONFIG_HIBERNATE_CALLBACKS. Those are enabled implicitly.
-> I had to disable "Linux guest support" within section
-> "Processor types and features" to switch off CONFIG_PM.
-> 
-> I've now compiled two 4.2 kernels with extra debug output:
-> -f: CONFIG_PM enabled, the kernel freezes on unbind
-> -g: CONFIG_PM disabled, the kernel does not freeze
-> I also compiled two other 4.2 kernels where I replaced the
-> alloc_workqueue with alloc_ordered_workqueue. That undoes
-> the change from 3.17 to 3.18 which unearthed the problem.
-> However, those two kernels behave no differently from the
-> two above. Apparently, there have been other changes since
-> 3.18 which also result in the revised order of initialization.
-> I don't plan to pursue that legacy route any longer.
-> 
-> I've put ehci_info statements in ehci_suspend and ehci_resume,
-> but there's no output from them. See below for details. Next,
-> I'll try to remove the usb_enable_autosuspend(hdev) calls.
-> 
-> cheers and thanks,
->   Roland
-> 
-> = kernel -f, the one which freezes =
+> From what Lorenzo was saying, ACPI shares the interpretation that David is
+> implementing here and, given that the DT version seems to be subjective,
+> aligning this reg property with MMCFG seems to make sense.
 
-Did you turn off the computer before booting these kernels (i.e., a
-"cold" boot) or did you reboot when the machine was already running (a
-"warm" boot)?
+We should then make it very clear in the binding that the driver
+is not allowed to actually map the registers for the buses outside
+of the bus-range, as that is highly unusual.
 
-It may make a difference.  I'm beginning to suspect the problem is
-caused by the BIOS.  Have you checked to see if any BIOS updates are
-available?
+We would also need a special exception for this if we ever get to
+implement the DT source checker that we have been talking about for
+years, as the reg property might then overlap with a property from
+another device.
 
-Here's a significant part of the -f kernel log:
-
-> [    1.012653] pci 0000:00:02.0: Video device with shadowed ROM
-> [    2.613000] pci 0000:00:1d.0: EHCI: BIOS handoff failed (BIOS bug?) 01010001
-> [    2.613126] PCI: CLS 64 bytes, default 64
-
-Here's the corresponding part of the -g kernel log:
-
-> [    1.017430] pci 0000:00:02.0: Video device with shadowed ROM
-> [    1.017971] PCI: CLS 64 bytes, default 64
-
-See the difference?  A similarly relevant difference shows up in the
-"registers" file.  For the -f kernel:
-
-> /sys/kernel/debug/usb/ehci/0000:00:1d.0/registers now contains:
-> bus pci, device 0000:00:1d.0
-> EHCI Host Controller
-> EHCI 1.00, rh state suspended
-> ownership 01000001 linux
-
-and for the -g kernel:
-
-> /sys/kernel/debug/usb/ehci/0000:00:1d.0/registers now contains:
-> bus pci, device 0000:00:1d.0
-> EHCI Host Controller
-> EHCI 1.00, rh state running
-> ownership 00000001
-
-The difference in "rh state" is caused by the CONFIG_PM change.  But
-the difference in the ownership values is a direct consequence of the
-BIOS's behavior.
-
-If there is no BIOS update for you to install, or if it still doesn't
-work, there are a few other thing you can try.  Under a kernel with 
-CONFIG_PM enabled, before unbinding the driver try doing:
-
-	echo on >/sys/bus/pci/devices/0000:00:1d.0/usb3/power/control
-
-That alone might cause the system to freeze, but if it doesn't then 
-there's a good chance the unbind and shutdown won't either.
-
-Here's another experiment.  At the start of ehci_halt(), before the
-spin_lock_irq(), add this:
-
-	if (ehci->rh_state == EHCI_RH_SUSPENDED) {
-		ehci_writel(ehci, CMD_RUN, &ehci->regs->command);
-		msleep(10);
-	}
-
-This may end up doing about the same thing as the previous test.  Let's 
-see.
-
-Alan Stern
-
+	Arnd
