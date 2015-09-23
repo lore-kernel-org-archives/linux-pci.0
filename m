@@ -1,84 +1,240 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 23 Sep 2015 20:33:18 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: David Daney <ddaney.cavm@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <Pawel.Moll@arm.com>,
-	Mark Rutland <Mark.Rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Marc Zyngier <Marc.Zyngier@arm.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v2 4/5] PCI: generic: Correct, and avoid overflow, in
- bus_max calculation.
-Message-ID: <20150923193318.GY7356@arm.com>
-References: <1442527332-1174-1-git-send-email-ddaney.cavm@gmail.com>
- <1442527332-1174-5-git-send-email-ddaney.cavm@gmail.com>
- <20150923180157.GV7356@arm.com>
- <5602EDC4.3040603@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5602EDC4.3040603@caviumnetworks.com>
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: bhelgaas@google.com, yinghai@kernel.org, rajatxjain@gmail.com,
+	mst@redhat.com, zajec5@gmail.com, gong.chen@linux.intel.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-api@vger.kernel.org
+Cc: sean.stalley@intel.com
+Subject: [PATCH v2 2/2] PCI: Add support for Enhanced Allocation devices
+Date: Wed, 23 Sep 2015 15:27:44 -0700
+Message-Id: <1443047264-4003-3-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
+References: <1443047264-4003-1-git-send-email-sean.stalley@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Sep 23, 2015 at 07:21:56PM +0100, David Daney wrote:
-> On 09/23/2015 11:01 AM, Will Deacon wrote:
-> > On Thu, Sep 17, 2015 at 11:02:11PM +0100, David Daney wrote:
-> [...]
-> >
-> >>   Properties of the /chosen node:
-> >> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> >> index 77cf4bd..0a9c453 100644
-> >> --- a/drivers/pci/host/pci-host-generic.c
-> >> +++ b/drivers/pci/host/pci-host-generic.c
-> >> @@ -164,7 +164,7 @@ out_release_res:
-> >>   static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
-> >>   {
-> >>   	int err;
-> >> -	u8 bus_max;
-> >> +	int bus_max;
-> >>   	resource_size_t busn;
-> >>   	struct resource *bus_range;
-> >>   	struct device *dev = pci->host.dev.parent;
-> >> @@ -177,8 +177,9 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
-> >>   	}
-> >>
-> >>   	/* Limit the bus-range to fit within reg */
-> >> -	bus_max = pci->cfg.bus_range->start +
-> >> -		  (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> >> +	bus_max = (resource_size(&pci->cfg.res) >> pci->cfg.ops.bus_shift) - 1;
-> >> +	if (bus_max > 255)
-> >> +		bus_max = 255;
-> >
-> > I still don't understand the need for this part. If the cfg space is bigger
-> > than bus_max, isn't that simply an invalid resource? Given that the resource
-> > could be broken in other ways too, this check feels more like a specific
-> > workaround rather than generally useful code.
-> 
-> Imagine...
-> 
->    bus-range [0x80 .. 0xff], this requires a cfg.res that will cover the 
-> entire range of 0..0xff.
-> 
->    according to the calculations above, (resource_size(&pci->cfg.res) >> 
-> pci->cfg.ops.bus_shift) - 1 will have a value of 0xff, so...
-> 
->    bus_max = 0x80 + 0xff -> OVERFLOW of u8!
-> 
-> That is not useful.  bus_max should represent the largest bus number 
-> that can be covered by cfg.res.  That is what my patch is attempting to 
-> accomplish.  Calculate the largest bus number that can be accommodated 
-> by cfg.res, and then clamp it to 0xff.
+Add support for devices using Enhanced Allocation entries instead of BARs.
+This patch allows the kernel to parse the EA Extended Capability structure
+in PCI configspace and claim the BAR-equivalent resources.
 
-Sorry, I should've been more specific. The only part I don't like is the
-'if (bus_max > 255)' check.
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+---
+ drivers/pci/pci.c   | 174 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h   |   1 +
+ drivers/pci/probe.c |   3 +
+ 3 files changed, 178 insertions(+)
 
-Will
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 6a9a111..bdf5d37 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2148,6 +2148,180 @@ void pci_pm_init(struct pci_dev *dev)
+ 	}
+ }
+ 
++static unsigned long pci_ea_set_flags(struct pci_dev *dev, u8 prop)
++{
++	unsigned long flags = IORESOURCE_PCI_FIXED;
++
++	switch (prop) {
++	case PCI_EA_P_MEM:
++		flags |= IORESOURCE_MEM;
++		break;
++	case PCI_EA_P_MEM_PREFETCH:
++		flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
++		break;
++	case PCI_EA_P_IO:
++		flags |= IORESOURCE_IO;
++		break;
++	default:
++		return 0;
++	}
++
++	return flags;
++}
++
++static struct resource *pci_ea_get_resource(struct pci_dev *dev, u8 bei)
++{
++	if (bei <= PCI_STD_RESOURCE_END)
++		return &dev->resource[bei];
++	else if (bei == PCI_EA_BEI_ROM)
++		return &dev->resource[PCI_ROM_RESOURCE];
++	else
++		return NULL;
++}
++
++/* Read an Enhanced Allocation (EA) entry */
++static int pci_ea_read(struct pci_dev *dev, int offset)
++{
++	struct resource *res;
++	int ent_offset = offset;
++	int ent_size;
++	resource_size_t start;
++	resource_size_t end;
++	unsigned long flags;
++	u32 dw0;
++	u32 base;
++	u32 max_offset;
++	bool support_64 = (sizeof(resource_size_t) >= 8);
++
++	pci_read_config_dword(dev, ent_offset, &dw0);
++	ent_offset += 4;
++
++	/* Entry size field indicates DWORDs after 1st */
++	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
++
++	if (!(dw0 & PCI_EA_ENABLE)) /* Entry not enabled */
++		goto out;
++
++	res = pci_ea_get_resource(dev, PCI_EA_BEI(dw0));
++	if (!res) {
++		dev_err(&dev->dev, "%s: Unsupported EA entry BEI\n", __func__);
++		goto out;
++	}
++
++	/* Try to use primary properties, otherwise fall back to secondary */
++	flags = pci_ea_set_flags(dev, PCI_EA_PP(dw0));
++	if (!flags)
++		flags = pci_ea_set_flags(dev, PCI_EA_SP(dw0));
++
++	if (!flags) {
++		dev_err(&dev->dev, "%s: Entry EA properties not supported\n",
++			__func__);
++		goto out;
++	}
++
++	/* Read Base */
++	pci_read_config_dword(dev, ent_offset, &base);
++	start = (base & PCI_EA_FIELD_MASK);
++	ent_offset += 4;
++
++	/* Read MaxOffset */
++	pci_read_config_dword(dev, ent_offset, &max_offset);
++	ent_offset += 4;
++
++	/* Read Base MSBs (if 64-bit entry) */
++	if (base & PCI_EA_IS_64) {
++		u32 base_upper;
++
++		pci_read_config_dword(dev, ent_offset, &base_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry starts above 32-bit boundary, can't use */
++		if (!support_64 && base_upper)
++			goto out;
++
++		if (support_64)
++			start |= ((u64)base_upper << 32);
++	}
++
++	dev_dbg(&dev->dev, "%s: start = %pa\n", __func__, &start);
++
++	end = start + (max_offset | 0x03);
++
++	/* Read MaxOffset MSBs (if 64-bit entry) */
++	if (max_offset & PCI_EA_IS_64) {
++		u32 max_offset_upper;
++
++		pci_read_config_dword(dev, ent_offset, &max_offset_upper);
++		ent_offset += 4;
++
++		flags |= IORESOURCE_MEM_64;
++
++		/* entry too big, can't use */
++		if (!support_64 && max_offset_upper)
++			goto out;
++
++		if (support_64)
++			end += ((u64)max_offset_upper << 32);
++	}
++
++	dev_dbg(&dev->dev, "%s: end = %pa\n", __func__, &end);
++
++	if (end < start) {
++		dev_err(&dev->dev, "EA Entry crosses address boundary\n");
++		goto out;
++	}
++
++	if (ent_size != ent_offset - offset) {
++		dev_err(&dev->dev, "EA entry size does not match length read\n"
++			"(Entry Size:%u Length Read:%u)\n",
++			ent_size, ent_offset - offset);
++		goto out;
++	}
++
++	res->name = pci_name(dev);
++	res->start = start;
++	res->end = end;
++	res->flags = flags;
++
++out:
++	return offset + ent_size;
++}
++
++/* Enhanced Allocation Initalization */
++void pci_ea_init(struct pci_dev *dev)
++{
++	int ea;
++	u8 num_ent;
++	int offset;
++	int i;
++
++	/* find PCI EA capability in list */
++	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
++	if (!ea)
++		return;
++
++	/* Only Support EA for RCiEPs */
++	if (!pci_is_root_bus(dev->bus))
++		return;
++
++	/* determine the number of entries */
++	pci_bus_read_config_byte(dev->bus, dev->devfn, ea + PCI_EA_NUM_ENT,
++					&num_ent);
++	num_ent &= PCI_EA_NUM_ENT_MASK;
++
++	offset = ea + PCI_EA_FIRST_ENT;
++
++	/* Skip DWORD 2 for type 1 functions */
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
++		offset += 4;
++
++	/* parse each EA entry */
++	for (i = 0; i < num_ent; ++i)
++		offset = pci_ea_read(dev, offset);
++}
++
+ static void pci_add_saved_cap(struct pci_dev *pci_dev,
+ 	struct pci_cap_saved_state *new_cap)
+ {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 24ba9dc..a160733 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -78,6 +78,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+ void pci_config_pm_runtime_put(struct pci_dev *dev);
+ void pci_pm_init(struct pci_dev *dev);
++void pci_ea_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+ void pci_free_cap_save_buffers(struct pci_dev *dev);
+ 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0b2be17..4293eec 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1598,6 +1598,9 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 
+ static void pci_init_capabilities(struct pci_dev *dev)
+ {
++	/* Enhanced Allocation */
++	pci_ea_init(dev);
++
+ 	/* MSI/MSI-X list */
+ 	pci_msi_init_pci_dev(dev);
+ 
+-- 
+1.9.1
+
