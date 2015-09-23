@@ -1,93 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44600 "EHLO foss.arm.com"
+Received: from mga14.intel.com ([192.55.52.115]:45252 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760207AbbIDQoG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Sep 2015 12:44:06 -0400
-Date: Fri, 4 Sep 2015 17:44:12 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"oe5hpm@gmail.com" <oe5hpm@gmail.com>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"James E.J. Bottomley" <jejb@parisc-linux.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Richard Henderson <rth@twiddle.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	David Howells <dhowells@redhat.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Tony Luck <tony.luck@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Ingo Molnar <mingo@redhat.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Michal Simek <monstr@monstr.eu>,
-	Chris Zankel <chris@zankel.net>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: trouble with PCI: Call pci_read_bridge_bases() from core instead
- of arch code
-Message-ID: <20150904164412.GD22997@red-moon>
-References: <CAAa04yFQEUJm7Jj1qMT57-LG7ZGtnhNDBe=PpSRa70Mj+XhW-A@mail.gmail.com>
- <20150902174716.GA6305@red-moon>
- <20150902203250.GB829@google.com>
- <20150903100115.GA15308@red-moon>
- <20150903162140.GG829@google.com>
- <20150904141903.GA22997@red-moon>
- <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
+	id S1753694AbbIWTL2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Sep 2015 15:11:28 -0400
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"myron.stowe@redhat.com" <myron.stowe@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Fix devfn for VPD access through function 0
+Date: Wed, 23 Sep 2015 19:11:19 +0000
+Message-ID: <409211CA-FEAB-4CB6-B418-CBF9FA50DB6A@intel.com>
+References: <20150915171216.7049.58119.stgit@gimli.home>
+In-Reply-To: <20150915171216.7049.58119.stgit@gimli.home>
+Content-Type: multipart/signed;
+	boundary="Apple-Mail=_1C680143-7EEE-49FD-B33B-845B452A5FE9";
+	protocol="application/pgp-signature"; micalg=pgp-sha256
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQXeByB6zakDKKC=P68fWD-sKiP1tzn-DWZ+kBsVnXZLxg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Sep 04, 2015 at 05:00:35PM +0100, Yinghai Lu wrote:
-> On Fri, Sep 4, 2015 at 7:19 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> 
-> > By keeping the bridge old size while sizing the bridge if the new size
-> > is < old size (ie bridge never shrinks), we implicitly assume that upon
-> > first scan of the bridge apertures that are not claimed should be set to
-> > size = 0 (ie as Bjorn said the size should be irrelevant in that case
-> > because we are sizing the bridge to figure out what the size should be),
-> > otherwise we might end up triggering issues as this thread shows because
-> > the old size is always taken into consideration.
-> 
-> oh, we have patches that will ignore old_size in last retry.
+--Apple-Mail=_1C680143-7EEE-49FD-B33B-845B452A5FE9
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-The problem here is not the last retry, it is the first bridge scan.
+> On Sep 15, 2015, at 10:17 AM, Alex Williamson =
+<alex.williamson@redhat.com> wrote:
+>=20
+> Commit 932c435caba8 ("PCI: Add dev_flags bit to access VPD through
+> function 0") passes PCI_SLOT(devfn) for the devfn parameter of
+> pci_get_slot().  Generally this works because we're fairly well
+> guaranteed that a PCIe device is at slot address 0, but for the
+> general case, including conventional PCI, it's incorrect.  We need
+> to get the slot and then convert it back into a devfn.
+>=20
+> Fixes: 932c435caba8 ("PCI: Add dev_flags bit to access VPD through =
+function 0")
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: stable@vger.kernel.org
+> ---
+>=20
+> Since the original patch and quirk was marked for stable and applies
+> to all Intel NICs, regardless of the bus type, I assume this needs to
+> chase it or VPD might disappear on e1000/e100 if it currently exists.
 
-By moving pci_read_bridge_bases() to core PCI code, if we do not
-vet the bridge apertures (ie claim them and reset them if the claiming
-fails) we end up calling (on ARM) __pci_bus_size_bridges() with apertures
-that can have sizes != 0, which does not make any sense since we are calling
-__pci_bus_size_bridges() to *discover* what the aperture size should
-be on first bridge scan, correct ?
+This looks good to me.
+Acked-by: Mark Rustad <mark.d.rustad@intel.com>
 
-__pci_bus_size_bridges() expects the "old_size" to be set to a sensible
-value, and it seems to me that it should be 0 on first scan given
-the current __pci_bus_size_bridges() implementation and my question
-is where the bridge aperture resources must be reset for systems
-(eg ARM) that reassign the whole PCI resource space.
+--
+Mark Rustad, Networking Division, Intel Corporation
 
-The platform triggering this issue was working without any need for
-realloc before, so your patches are indeed useful but I would like
-to understand what you think about the issue described above.
 
-Thanks you !
-Lorenzo
+--Apple-Mail=_1C680143-7EEE-49FD-B33B-845B452A5FE9
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Message signed with OpenPGP using GPGMail
 
-> 
-> Please check
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git
-> for-pci-v4.3-next
-> 
-> exact patches should be:
-> https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/patch/?id=e8539db0a669fc076ac50800e274af165ce3c5fe
-> PCI: Treat optional as required in first try for bridge rescan
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/yinghai/linux-yinghai.git/patch/?id=a7a2e984194a051e77b88f59e2db030dd4d99e64
-> PCI: Get new realloc size for bridge for last try
-> 
-> Thanks
-> 
-> Yinghai
-> 
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBCAAGBQJWAvlWAAoJEDwO/+eO4+5uM2gQAIh1SfENjAcIsBr2g5eu3Hs6
+f1HfjSPjlPD7xCZLDJ2qRtLRb1h0FtA+Z+bZ2Uq2gXu1A9AscnRi+N8usBMtop3j
+J3rBO5i2rYwN/1sGpsOTLKYUgN/tasqLpqkEgeF2huFK9uSI/qmdwbvPd4EN8OoU
+Q3eEOk5ynBAy/tOQSiYZQgEZ7xwdrFHOXJD7Xfy3XUorGu5UJ5MzlD8nl8AFRO5L
+BLpDMDdhLo3kOSo8x6qoiRq2NfZP/T0e+lTxqBJ9uIVWfcsQDrXJtbIIs6iG13dM
+b4MPvq9/h56BS3BnkMrHrDXSqNrTflvNtrLaHlbdsirqF90ZvZHVzgZeEYbDSvm9
+YQWk9/JHu7wEnPhq0exae89+x3TmgInIk4kZwwMvMTmxWhDeATwdvchUugrhL0zE
+yRCqqxlXatDrEdWiBzL8tTS0GK0NP7tphRuy32ONucBqXGDLLSaa8u9/WkpTInXE
+OUjcjq5SV2qIQEXg/8+DI6nJMesCi4guq/kgxXfdG8p5rFKauE2Fkz/qaQ7weoaf
+kubanTe2/m874gD8YxsY2y4Y17kNA7PgerYkIWy2weG0QM5ZDuR7OgDY/apRJQWD
+BhmJ0xDQqc92fdSts2n7x42a5OncGIA3ZWOJ/o/7MoxAaEJcavnjKWuuCQARJmpe
+LwBiFEoS2ciTQ/3USShZ
+=MhfJ
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_1C680143-7EEE-49FD-B33B-845B452A5FE9--
